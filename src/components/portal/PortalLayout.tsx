@@ -1,5 +1,4 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
 import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal";
@@ -16,7 +15,6 @@ export default function PortalLayout() {
   const navigate = useNavigate();
   const { data: clienteName } = usePortalClienteName();
   const { data: orgName } = usePortalOrgName();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const labels = useBreadcrumbLabels();
   const breadcrumbs = usePortalBreadcrumbs(location.pathname, labels);
   const activeSection = getActiveSectionLabel(location.pathname);
@@ -36,8 +34,6 @@ export default function PortalLayout() {
         pathname={location.pathname}
         orgName={orgName}
         activeSection={activeSection}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
         initials={initials}
         clienteName={clienteName}
         email={user?.email}
