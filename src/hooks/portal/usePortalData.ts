@@ -63,6 +63,22 @@ export function usePortalFacturas(clienteIds: string[]) {
   });
 }
 
+export function usePortalFactura(id?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.factura(id ?? ""),
+    queryFn: () => fetchPortalFactura(id!),
+    enabled: !!id,
+  });
+}
+
+export function usePortalPagosFactura(facturaId?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.pagosFactura(facturaId ?? ""),
+    queryFn: () => fetchPortalPagosFactura(facturaId!),
+    enabled: !!facturaId,
+  });
+}
+
 export function usePortalClientUsers() {
   return useQuery({
     queryKey: queryKeys.portal.clientUsers,
