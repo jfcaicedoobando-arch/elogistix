@@ -10,6 +10,7 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalEmbarquesMobileFilters } from "@/components/portal/PortalEmbarquesMobileFilters";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/hooks/portal";
 import { useIsMobile } from "@/hooks/shared";
@@ -48,7 +49,8 @@ export default function PortalEmbarques() {
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
       />
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Filtros: en desktop fila completa, en mobile search + sheet con filtros */}
+      <div className="hidden sm:flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -79,6 +81,18 @@ export default function PortalEmbarques() {
           </SelectContent>
         </Select>
       </div>
+
+      <PortalEmbarquesMobileFilters
+        search={search}
+        onSearchChange={setSearch}
+        estados={estados}
+        modos={modos}
+        filtroEstado={filtroEstado}
+        setFiltroEstado={setFiltroEstado}
+        filtroModo={filtroModo}
+        setFiltroModo={setFiltroModo}
+      />
+
 
       {filtered.length === 0 ? (
         <EmptyState
