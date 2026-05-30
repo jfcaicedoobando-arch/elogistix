@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.19.0] - 2026-05-30
+- **feat(facturas)**: Pagos de facturas a clientes (parciales y totales, multi-moneda). Nueva tabla `pagos_factura` con RLS multi-tenant + cliente puede leer sus pagos. Nuevo estado `Parcialmente pagada` (badge amber). Trigger `recalcular_estado_factura` actualiza automáticamente `estado` y `fecha_pago` de la factura al insertar/editar/eliminar pagos (Emitida → Parcialmente pagada → Pagada, o vuelve a Vencida/Emitida si se elimina todo). Nueva columna **Pagos** en la tabla de facturas con botón **Pagar** (estados Emitida/Vencida/Parcialmente pagada) y **Ver pagos** (historial con eliminación). Conversión USD/EUR ↔ MXN usando `useExchangeRates`. Hooks `usePagosFactura`, `useRegistrarPagoFactura`, `useEliminarPagoFactura`. Bitácora registra crear/eliminar pago.
+
 ## [12.18.1] - 2026-05-30
 - **chore(edge)**: Limpieza de deuda técnica en `supabase/functions/_shared/auth.ts`. Reemplazados los `@ts-expect-error` (que ya no aplicaban con la nueva versión del runtime) por (1) import vía `npm:@supabase/supabase-js@2` en lugar de esm.sh y (2) `declare const Deno` tipado. Resultado: `supabase test_edge_functions` pasa 25/25 sin warnings.
 
