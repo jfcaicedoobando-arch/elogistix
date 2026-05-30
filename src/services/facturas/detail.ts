@@ -1,0 +1,70 @@
+/**
+ * fetchFacturaById — lee una factura completa con todas las columnas
+ * necesarias para la página de detalle. RLS de `public.facturas` restringe
+ * por `organization_id`; si la fila no es visible para el usuario actual,
+ * la consulta devuelve `null` (no se considera error).
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+export type FacturaDetalle = Pick<
+  Tables<"facturas">,
+  | "id"
+  | "numero"
+  | "cliente_id"
+  | "cliente_nombre"
+  | "expediente"
+  | "embarque_id"
+  | "proforma_id"
+  | "fecha_emision"
+  | "fecha_vencimiento"
+  | "subtotal"
+  | "iva"
+  | "total"
+  | "moneda"
+  | "tipo_cambio"
+  | "estado"
+  | "referencia_bl"
+  | "notas"
+  | "factura_pdf_url"
+  | "factura_xml_url"
+  | "snapshot_emision"
+  | "organization_id"
+> & {
+  proformas: { numero: string } | null;
+};
+
+const COLUMNS = [
+  "id",
+  "numero",
+  "cliente_id",
+  "cliente_nombre",
+  "expediente",
+  "embarque_id",
+  "proforma_id",
+  "fecha_emision",
+  "fecha_vencimiento",
+  "subtotal",
+  "iva",
+  "total",
+  "moneda",
+  "tipo_cambio",
+  "estado",
+  "referencia_bl",
+  "notas",
+  "factura_pdf_url",
+  "factura_xml_url",
+  "snapshot_emision",
+  "organization_id",
+  "proformas:proformas(numero)",
+].join(", ");
+
+export async function fetchFacturaById(id: string): Promise<FacturaDetalle | null> {
+  const { data, error } = await supabase
+    .from("facturas")
+    .select(COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as FacturaDetalle | null;
+}
