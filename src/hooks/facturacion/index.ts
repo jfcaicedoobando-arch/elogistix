@@ -8,3 +8,4 @@ export * from './useTabProformasPendientesController';
 export * from './useTabProformasState';
 export * from './useTabProyeccionController';
 export * from './usePagosFactura';
+export * from './useFactura';
