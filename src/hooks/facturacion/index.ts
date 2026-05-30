@@ -7,3 +7,4 @@ export * from './useTabProformasController';
 export * from './useTabProformasPendientesController';
 export * from './useTabProformasState';
 export * from './useTabProyeccionController';
+export * from './usePagosFactura';
