@@ -1,99 +1,67 @@
-## Objetivo
+# Pulido del Portal de Clientes — UX/UI (Mobile-first)
 
-Construir una página de **detalle de factura** completa para la app principal (`/facturacion/:id`) que reemplace la dependencia actual de los diálogos modales `DialogHistorialPagos` y `DialogRegistrarPago` para tareas de revisión profunda, y **alinear el portal del cliente** (`/portal/facturas/:id` — ya existe desde 12.23.0) para compartir componentes presentacionales cuando sea seguro y no rompa la separación de capas (app/portal).
+Auditoría visual ejecutada con subagente sobre `/portal/*` en mobile (390px) y desktop. Se identificaron 16 hallazgos. El plan los agrupa en 3 oleadas implementables, todas restringidas a presentación (sin tocar lógica de negocio, RLS, ni queries).
 
-## Alcance
+Versión destino: **12.25.0**
 
-- **Nuevo**: página de detalle en app principal con acciones admin (registrar pago, descargar PDF/XML, regenerar, ver embarque, ver proforma origen, ver bitácora).
-- **Refinamiento**: portal existente — extraer componentes puramente presentacionales a `src/components/facturacion/shared/` para reuso, sin filtrar lógica admin al portal.
-- **Sin cambios**: schema, RLS, lógica de cálculo financiero, lifecycle de estados.
+---
 
-## App principal — `/facturacion/:id`
+## Oleada 1 — P0 Críticos (mobile rotos)
 
-### Ruta y navegación
-- Registrar en `src/routes/appRoutes.tsx`:
-  ```
-  /facturacion/:id → FacturaDetalle (lazy)
-  ```
-- En `facturacionColumns.tsx`: la columna `# Factura` (sticky) se convierte en `<Link to={`/facturacion/${f.id}`}>` con `e.stopPropagation()` para no romper los handlers de fila existentes. Se añade botón "Ver" en el menú de acciones por fila.
-- Breadcrumb: `Facturación › {numero}` vía `useRegisterBreadcrumbLabel`.
+1. **`src/components/portal/PortalLayout.tsx`** — Eliminar zona muerta de ~200px al fondo en mobile.
+   - Quitar el `pb-16` redundante del `<footer>` y ocultar footer en `<sm` (`hidden md:block`). El `pb-24` del `<main>` ya libera espacio para el bottom nav.
 
-### Datos
-Crear `src/services/facturas/queries.ts`:
-- `fetchFacturaById(id)` — `from('facturas').select(...).eq('id', id).maybeSingle()` con columnas: las de lista + `tipo_cambio, referencia_bl, notas, embarque_id, proforma_id, factura_pdf_url, factura_xml_url, snapshot_emision, cliente_id, organization_id, fecha_emision, fecha_vencimiento, subtotal, iva, total, moneda, estado`.
-- `fetchPagosFactura(facturaId)` — ya existe parcialmente en `usePagosFactura`; reusar.
-- `fetchBitacoraFactura(facturaId)` — `from('bitacora').select(...).eq('entidad','factura').eq('entidad_id', facturaId)`.
+2. **`src/components/portal/layout/PortalBottomNav.tsx`** — Agrandar áreas tap.
+   - Cada `<Link>` con `min-h-[56px] w-full justify-center py-3`, ícono `h-5 w-5`, label `text-[11px]`. Asegurar que cada celda del grid llene el `safe-area-inset-bottom`.
 
-Hooks en `src/hooks/facturacion/`:
-- `useFactura(id?)` — `queryKey: queryKeys.facturas.detail(id)`.
-- `useBitacoraFactura(id?)` — opcional, sólo si admin.
+3. **`src/pages/portal/PortalFacturas.tsx`** + nuevo **`src/components/portal/facturas/PortalFacturasMobileFilters.tsx`** — Espejar el patrón de `PortalEmbarques`: filtros desktop con `hidden sm:flex`, en mobile sólo input de búsqueda + botón "Filtros" que abre un `Sheet` con estado/fechas.
 
-Keys nuevas en `src/lib/query/keys/facturas.ts`: `facturas.detail(id)`, `facturas.bitacora(id)`.
+4. **`src/pages/portal/PortalEmbarqueDetalle.tsx`** — Header sin overflow en 390px.
+   - Dividir en dos filas: título + ModoIcon en línea 1, badge de estado + meta (`tipo • modo • incoterm`) en línea 2. `h1` responsive `text-xl sm:text-2xl`. Botón "Volver" como ícono cuadrado de 40px en mobile.
 
-### UI (todos los archivos ≤ 200 líneas, Power of 10)
+## Oleada 2 — P1 Importantes
 
-- **`src/pages/facturacion/FacturaDetalle.tsx`** (~150 ln)
-  - Header sticky en mobile con número + estado badge + total grande.
-  - Botón "Volver" → `/facturacion` (preservando query string si viene de la lista).
-  - Acciones: Registrar pago, Marcar pagada (si admin y estado permite), Descargar PDF/XML, Ver embarque, Ver proforma origen, Regenerar (placeholder — fuera de alcance si requiere lógica nueva).
-  - Permisos: usa `usePermissions()`; lectura para todos los roles internos, acciones sólo `admin`/`operador`.
+5. **`src/components/portal/layout/portalNav.ts`** + **`PortalBottomNav.tsx`** — Exponer Perfil en mobile.
+   - Agregar item `Perfil` (`User` icon, `/portal/perfil`) y cambiar grid a `grid-cols-5`. Alternativa si queda apretado: reemplazar "Cotizaciones" por "Perfil" (cotizaciones queda en hamburger).
 
-- **`src/components/facturacion/detalle/FacturaResumenCard.tsx`** (~90 ln)
-  - Grid con: Cliente (link a `/clientes/:id`), Expediente (link a `/embarques/:id`), Proforma origen, Fechas, Moneda, Tipo de cambio, BL ref, Notas.
-  - Pills de subtotal / IVA / total.
+6. **`src/components/portal/PortalLayout.tsx`** / **`PortalBreadcrumbsBar`** — Ocultar breadcrumbs en `<sm` para evitar duplicado con el título del header sticky (`hidden sm:block`).
 
-- **`src/components/facturacion/detalle/FacturaConceptosTable.tsx`** (~80 ln)
-  - Lee `snapshot_emision` (jsonb). Tabla desktop / cards mobile. Empty state si falta snapshot.
+7. **`src/pages/portal/PortalFacturaDetalle.tsx`** — Botones CTA en mobile.
+   - Pasar de `flex flex-wrap` a `grid grid-cols-2 sm:flex sm:flex-wrap`: PDF y XML como `col-span-1`, "Ver embarque" como `col-span-2 sm:col-span-1`. Subir tamaño del label "Total" a `text-sm`.
 
-- **`src/components/facturacion/detalle/FacturaPagosSection.tsx`** (~120 ln)
-  - Lista de pagos con: fecha, monto+moneda, tipo de cambio, monto aplicado en MXN, forma de pago, referencia.
-  - Calcula saldo pendiente = `total − Σ monto_aplicado_factura` (helper en `financialUtils.ts`).
-  - Botón "Registrar pago" (admin) abre el `DialogRegistrarPago` ya existente.
-  - Acción por fila: eliminar pago (admin, con doble confirmación typable "ELIMINAR").
+8. **`src/components/portal/EmbarqueCard.tsx`** — Ruta sin truncar.
+   - Ocultar el badge de `tipoLabel` en mobile (`hidden sm:flex`) para liberar ancho a la ruta `origen → destino`.
 
-- **`src/components/facturacion/detalle/FacturaBitacoraCard.tsx`** (~80 ln)
-  - Timeline cronológica de eventos (emisión, pagos, regeneración). Sólo visible para admin.
+9. **`src/pages/portal/PortalPerfil.tsx`** — Mover "Cambiar contraseña" fuera del `CardHeader` (al final del `CardContent` como acción secundaria), para que el título "Datos personales" no se trunque.
 
-### Tabs internos (mobile-first)
-En `<sm` se usan tabs (`Resumen | Conceptos | Pagos | Bitácora`). En desktop todas las secciones se apilan verticalmente. Patrón ya usado en `EmbarqueDetalle`.
+10. **`src/components/portal/embarqueDetalle/PortalEmbarqueStepper.tsx`** — Estabilizar el cálculo de la línea de progreso (`scaleY` basado en índice/último, en lugar de `calc(% - 1rem)` que se rompe con muchos pasos).
 
-## Portal del cliente — `/portal/facturas/:id` (ajustes)
+## Oleada 3 — P2 Polish
 
-La página ya existe; los ajustes son menores:
-- **Extracción de componentes presentacionales** a `src/components/facturacion/shared/`:
-  - `FacturaConceptosView` (lee snapshot, render tabla/cards) — el portal y la app la consumen.
-  - `FacturaResumenGrid` (subset de campos no-sensibles).
-  - `PagosList` (lista presentacional sin acciones admin).
-- El portal **no recibe** botones de "Registrar pago" ni "Eliminar pago" — la versión admin envuelve los presentacionales con su barra de acciones.
-- Agregar al portal: link "Ver detalle de pago" (modal read-only) si el cliente quiere ver la referencia / forma de pago de un pago aplicado.
+11. **`PortalKpiGrid.tsx`** — `shortLabel` a `text-xs font-medium` (más legible que `text-[10px]`).
+12. **`PortalEmbarqueTimeline.tsx`** — Reemplazar mapa `ICONO_EVENTO` de emojis por íconos Lucide consistentes en todas las plataformas.
+13. **`PortalWelcomeCard.tsx`** — Usar la prop `orgName` ya recibida en el subtítulo: `"{orgName} · Consulta el estado..."`.
+14. **`PortalEstadoEmbarquesCard.tsx`** — Agregar `focus-visible:ring-2 ring-ring ring-offset-1 rounded-sm` a cada segmento `<Link>` de la barra.
+15. **`PortalDashboard.tsx`** — Skeleton mobile: 3 KPIs en `grid-cols-3 h-20` en lugar de 3 stacked `h-32`.
+16. **`EmbarqueCard.tsx`** + **`PortalEmbarqueDetalle.tsx`** — Agregar `title="Fecha estimada de salida"` / `"Fecha estimada de arribo"` a ETD/ETA.
 
-## Permisos / Seguridad
+---
 
-- App: RLS existente para `facturas` ya restringe por `organization_id`. Sin cambios.
-- Portal: RLS existente para `cliente` ya restringe por `cliente_id IN current_user_client_ids()`. Sin cambios.
-- Mutaciones admin (registrar pago, eliminar pago) ya viven en `usePagosFactura`; reusar.
+## Notas técnicas
 
-## Testing
+- Todo es frontend/presentación, sin migraciones, sin cambios a RPCs, sin tocar RLS.
+- Usar tokens semánticos (`text-muted-foreground`, `bg-card`, `ring-ring`, etc.) — nada de colores hex en componentes.
+- Mantener cada componente ≤200 líneas (Power of 10). El nuevo `PortalFacturasMobileFilters` queda en ~120 líneas siguiendo `PortalEmbarquesMobileFilters` como referencia.
+- Verificación: tras cambios, navegar con el subagente al portal en mobile (390x844) y capturar dashboard, lista de embarques, detalle, lista de facturas, detalle factura, perfil. Confirmar que cada P0 se ve resuelto.
 
-- Unit: `fetchFacturaById` con mock supabase (caso ok, not found, RLS-bloqueado → null).
-- Unit: cálculo de saldo pendiente en `financialUtils.ts` (extender tests).
-- E2E (`e2e/specs/03-factura.spec.ts`): añadir flujo "abrir detalle desde lista → registrar pago → ver saldo actualizado".
+## Changelog y versión
 
-## Versión y changelog
-
-- `APP_VERSION` → `12.24.0`.
-- Entrada:
-  - feat(facturacion): nueva página de detalle `/facturacion/:id` con resumen, conceptos, pagos y bitácora.
-  - chore(portal): componentes presentacionales de factura compartidos con la app principal.
+- Bump `APP_VERSION` → `12.25.0` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` raíz con `## [12.25.0] - 2026-05-30` y bullets por oleada.
 
 ## Fuera de alcance
 
-- Regeneración de PDF/XML (requiere RPC nueva — decisión de producto).
-- Edición de campos de la factura (la factura emitida es inmutable).
-- Cancelación con CFDI (flujo SAT que requiere PAC — fuera del alcance del frontend).
-- Refactor de `DialogRegistrarPago` / `DialogHistorialPagos` (se reusan tal cual).
-
-## Riesgos
-
-- Si `snapshot_emision` está vacío en facturas viejas → mostrar empty state, no romper.
-- Si la columna `# Factura` se vuelve link, hay que verificar que `e.stopPropagation()` no rompe la selección/expansión actual de fila (test manual).
+- Rediseño visual mayor del portal (paleta, tipografía, layout global).
+- Nuevas funcionalidades (notificaciones, chat, tracking en tiempo real).
+- Cambios a permisos, RPCs, o esquema de BD.
+- Refactor de los componentes de la app interna (`/facturacion`, `/embarques`).

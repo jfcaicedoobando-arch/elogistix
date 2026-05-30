@@ -1,4 +1,4 @@
-import { Ship, FileText, Receipt, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { Ship, FileText, Receipt, LayoutDashboard, User, type LucideIcon } from "lucide-react";
 
 export interface PortalNavItem {
   label: string;
@@ -11,6 +11,7 @@ export const PORTAL_NAV_ITEMS: PortalNavItem[] = [
   { label: "Embarques", href: "/portal/embarques", icon: Ship },
   { label: "Cotizaciones", href: "/portal/cotizaciones", icon: FileText },
   { label: "Facturas", href: "/portal/facturas", icon: Receipt },
+  { label: "Perfil", href: "/portal/perfil", icon: User },
 ];
 
 export const PORTAL_BREADCRUMB_MAP: Record<string, string> = {
@@ -18,6 +19,7 @@ export const PORTAL_BREADCRUMB_MAP: Record<string, string> = {
   "/portal/embarques": "Embarques",
   "/portal/cotizaciones": "Cotizaciones",
   "/portal/facturas": "Facturas",
+  "/portal/perfil": "Perfil",
 };
 
 export function getActiveSectionLabel(pathname: string): string | null {

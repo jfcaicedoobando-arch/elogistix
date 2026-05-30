@@ -77,20 +77,20 @@ export default function PortalFacturaDetalle() {
           </p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-2xl font-bold tabular-nums text-accent">
             {formatCurrency(factura.total, factura.moneda)}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
         {factura.factura_pdf_url && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleDownload(factura.factura_pdf_url!, "PDF")}
-            className="flex-1 sm:flex-initial"
+            className="col-span-1 sm:flex-initial"
           >
             <FileText className="h-4 w-4 mr-1.5 text-destructive" /> Descargar PDF
           </Button>
@@ -100,13 +100,13 @@ export default function PortalFacturaDetalle() {
             variant="outline"
             size="sm"
             onClick={() => handleDownload(factura.factura_xml_url!, "XML")}
-            className="flex-1 sm:flex-initial"
+            className="col-span-1 sm:flex-initial"
           >
             <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Descargar XML
           </Button>
         )}
         {factura.embarque_id && (
-          <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-initial">
+          <Button variant="outline" size="sm" asChild className="col-span-2 sm:col-span-1 sm:flex-initial">
             <Link to={`/portal/embarques/${factura.embarque_id}`}>
               <Ship className="h-4 w-4 mr-1.5" /> Ver embarque
             </Link>

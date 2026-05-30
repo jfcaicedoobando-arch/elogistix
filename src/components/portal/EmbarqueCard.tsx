@@ -79,7 +79,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               <span className="truncate">{origen} → {destino}</span>
             </span>
             {tipoLabel && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 font-normal">
+              <Badge variant="outline" className="hidden sm:flex text-[10px] px-1.5 py-0 flex-shrink-0 font-normal">
                 {tipoLabel}
               </Badge>
             )}
@@ -96,11 +96,11 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               );
             })()}
             <div className="flex items-center gap-3 ml-auto">
-              <span className="text-xs text-muted-foreground flex items-center gap-1 tabular-nums">
+              <span className="text-xs text-muted-foreground flex items-center gap-1 tabular-nums" title="Fecha estimada de salida">
                 <CalendarClock className="h-3 w-3 flex-shrink-0" />
                 ETD: {formatDate(e.etd || "", "dd/MM/yy")}
               </span>
-              <span className={cn("text-xs flex items-center gap-1 tabular-nums", etaCls)}>
+              <span className={cn("text-xs flex items-center gap-1 tabular-nums", etaCls)} title="Fecha estimada de arribo">
                 <CalendarClock className="h-3 w-3 flex-shrink-0" />
                 ETA: {formatDate(e.eta || "", "dd/MM/yy")}
               </span>

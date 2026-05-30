@@ -48,17 +48,19 @@ export default function PortalPerfil() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <UserIcon className="h-4 w-4 text-accent" /> Datos personales
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setCambiarPass(true)}>
-            <KeyRound className="h-4 w-4 mr-1.5" /> Cambiar contraseña
-          </Button>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Correo electrónico" value={email} />
           <Field label="Rol" value="Cliente" />
+          <div className="sm:col-span-2 pt-1">
+            <Button variant="outline" size="sm" onClick={() => setCambiarPass(true)}>
+              <KeyRound className="h-4 w-4 mr-1.5" /> Cambiar contraseña
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

@@ -9,6 +9,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { Search, Receipt, Filter, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalFacturasMobileFilters } from "@/components/portal/facturas/PortalFacturasMobileFilters";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -49,7 +50,7 @@ export default function PortalFacturas() {
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
       />
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="hidden sm:flex flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -70,6 +71,14 @@ export default function PortalFacturas() {
           </SelectContent>
         </Select>
       </div>
+
+      <PortalFacturasMobileFilters
+        search={search}
+        onSearchChange={setSearch}
+        estados={estados}
+        filtroEstado={filtroEstado}
+        setFiltroEstado={setFiltroEstado}
+      />
 
       {filtered.length === 0 ? (
         <EmptyState
