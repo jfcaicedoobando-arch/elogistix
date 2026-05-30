@@ -1,83 +1,79 @@
-# Plan: Pulir Portal de Cliente (UI/UX, foco mobile)
+## Objetivo
 
-Auditoría completada (subagente revisó las 7 rutas: `/portal`, `/embarques`, `/embarques/:id`, `/cotizaciones`, `/cotizaciones/:id`, `/facturas`, `/perfil`). Confirmado que ~78% de los problemas son mobile-only. Propongo 3 fases incrementales, cada una termina en un release con bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
+Permitir al cliente abrir una factura desde `/portal/facturas` y ver el desglose completo, descargar PDF/XML, y consultar los pagos registrados.
 
----
+## Alcance
 
-## Fase 1 — Quick Wins (1 commit, ~1h)
+Solo capa de presentación + 1 query nueva. RLS ya cubre lectura para `cliente` en `facturas` y `pagos_factura` — sin cambios de schema.
 
-Cambios pequeños, alto ROI, sin refactor:
+## Ruta y navegación
 
-1. **Notificaciones overflow mobile** — `PortalNotificationsBell.tsx`: `w-80` → `w-[min(320px,calc(100vw-24px))]`.
-2. **Facturas card sin acción** — quitar `hover:shadow-sm` engañoso en `PortalFacturas.tsx` (o añadir cursor + tooltip "Sin detalle").
-3. **Tooltips en puertos truncados** — añadir `title` en Origen/Destino de `PortalEmbarqueDetalle.tsx`.
-4. **Perfil padding doble** — eliminar `px-3 sm:px-6` redundante en `PortalPerfil.tsx`.
-5. **Collapsible expedientes** — `defaultOpen={false}` en mobile para `PortalEmbarques.tsx` (con `useIsMobile`).
-6. **Documentos overflow temporal** — envolver `DataTable` con `overflow-x-auto -mx-4 px-4` hasta refactor cards.
-7. **Dashboard layout shift** — `PortalEstadoEmbarquesCard` y `PortalFacturacionPendienteCard`: reemplazar `return null` con empty state inline; fijar colspan de `PortalEmbarquesRecientesCard`.
+- Nueva ruta: `/portal/facturas/:id` → `PortalFacturaDetalle.tsx` (registrada en `src/routes/portalRoutes.tsx`).
+- En `PortalFacturas.tsx`: convertir cada `<Card>` en `<Link to={`/portal/facturas/${f.id}`}>`. Quitar el `hover:shadow-sm` engañoso anterior; ahora la card sí es accionable (cursor pointer, focus ring).
+- Breadcrumb: `Inicio › Facturas › {numero}` vía `PORTAL_BREADCRUMB_MAP` dinámico (ya hay patrón en cotización detalle).
 
-**Versión:** 12.20.0
+## Datos
 
----
+Extender `src/services/portal/columns.ts`:
+- `PORTAL_FACTURA_DETAIL_COLUMNS` = lista actual + `tipo_cambio, referencia_bl, notas, embarque_id, factura_pdf_url, factura_xml_url, snapshot_emision, cliente_id`.
 
-## Fase 2 — Críticos Mobile (2-3 commits)
+Extender `src/services/portal/queries.ts`:
+- `fetchPortalFactura(id)` — `from('facturas').select(PORTAL_FACTURA_DETAIL_COLUMNS).eq('id', id).maybeSingle()`. Retorna `null` si RLS bloquea.
+- `fetchPortalPagosFactura(facturaId)` — `from('pagos_factura').select('id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia').eq('factura_id', facturaId).order('fecha_pago', { ascending: false })`.
 
-### F2.1 — Bottom Navigation Bar (mobile)
-Nuevo `src/components/portal/layout/PortalBottomNav.tsx`:
-- 4 íconos+label: Inicio · Embarques · Cotizaciones · Facturas
-- `fixed bottom-0`, `z-50`, `md:hidden`, `pb-[env(safe-area-inset-bottom)]`
-- Activo: `bg-accent/10 text-accent` (igual patrón que header)
-- Integrar en `PortalLayout.tsx`; añadir `pb-16 md:pb-0` al `<main>` para no tapar contenido
-- Hamburger queda solo para Perfil + Cerrar sesión + Tema
-- Añadir `/portal/perfil` al drawer (bug B1)
+Extender `src/hooks/portal/usePortalData.ts`:
+- `usePortalFactura(id?)` y `usePortalPagosFactura(facturaId?)` siguiendo el patrón existente.
+- Agregar keys en `src/lib/query/keys/`: `portal.factura(id)` y `portal.pagosFactura(id)`.
 
-### F2.2 — Header de Cotización mobile (C1)
-`PortalCotizacionHeader.tsx`: en mobile, mover botones "Rechazar"/"Aceptar" a una **action bar sticky bottom** (`fixed bottom-16` por encima del bottom-nav) con `md:hidden`. En desktop mantener layout actual.
+## Componentes UI
 
-### F2.3 — Documentos como cards en mobile (C2)
-`PortalEmbarqueDocumentos.tsx`: extraer `PortalDocumentoCard.tsx`. En `<md` render lista de cards (nombre, badge estado, botón descarga full-width). En `md+` mantener `DataTable`.
+Dividir para mantener todos los archivos < 200 líneas (Power of 10):
 
-### F2.4 — Stepper vertical en mobile (C3)
-`PortalEmbarqueDetalle.tsx` líneas 71-116: extraer a `PortalEmbarqueStepper.tsx`. En `<sm` render vertical (línea izquierda, label completo, paso actual destacado). En `sm+` mantener horizontal.
+- `src/pages/portal/PortalFacturaDetalle.tsx` (~120 ln)
+  - Header: número factura, badge estado, monto total grande, botón "Volver".
+  - Acciones: descargar PDF (si `factura_pdf_url`) y XML (si `factura_xml_url`) usando `usePortalDocumentDownload` (ya existe — verificar que acepta urls externas o adaptar; si las URLs son del bucket privado, usar `supabase.storage.from(...).createSignedUrl()`).
+  - Link al embarque relacionado: `/portal/embarques/:embarque_id`.
 
-**Versión:** 12.21.0
+- `src/components/portal/factura/PortalFacturaResumenCard.tsx` (~80 ln)
+  - Grid con: Cliente, Expediente, Fecha emisión, Fecha vencimiento, Moneda, Tipo de cambio, Referencia BL, Notas.
+  - Pills de subtotal / IVA / total con formato MXN.
 
----
+- `src/components/portal/factura/PortalFacturaConceptosTable.tsx` (~80 ln)
+  - Lee `snapshot_emision` (jsonb con los conceptos al momento de emitir). Si no existe, muestra empty state "Factura sin desglose disponible".
+  - Mobile: cards apiladas. Desktop: tabla simple (concepto, cantidad, precio, importe).
 
-## Fase 3 — Cards y filtros responsive (1-2 commits)
+- `src/components/portal/factura/PortalFacturaPagosCard.tsx` (~80 ln)
+  - Lista de pagos: fecha, monto + moneda, forma de pago, referencia, monto aplicado.
+  - Empty state si no hay pagos: "Aún no se han registrado pagos para esta factura."
+  - Pie: "Saldo pendiente: $X" calculado en cliente = `total - sum(monto_aplicado_factura)`.
 
-### F3.1 — `EmbarqueCard` rediseño mobile (A1)
-Eliminar `pl-[52px]` hardcoded. En `<sm`:
-- Row 1: ícono modo + expediente + badge estado
-- Row 2: ruta con `MapPin`, sin indent
-- Row 3: ETD/ETA como dos pills + carrier (truncado si no cabe)
+## Mobile (sigue patrón portal v12.21+)
 
-### F3.2 — Filtros mobile en lista (M3)
-`PortalEmbarques.tsx`: reutilizar patrón `CotizacionesMobileFilters` (ya existe en `src/components/cotizacion/`) — search input visible + botón "Filtros (n)" que abre `Sheet` con selects.
+- `PortalBottomNav` ya cubre la navegación inferior — no se toca.
+- Header con monto total sticky-top en `<sm` para que siempre se vea el saldo.
+- Botones de descarga full-width en mobile, inline en desktop.
 
-### F3.3 — KPI grid horizontal mobile (M1)
-`PortalKpiGrid.tsx`: en mobile `grid-cols-3` compacto (número + label corto) en lugar de stack vertical.
+## Cambios menores en lista
 
-**Versión:** 12.22.0
+- `PortalFacturas.tsx`: card → link, añadir `ChevronRight` mobile, agregar `aria-label="Ver factura {numero}"`.
 
----
+## Constraints
 
-## Fuera de alcance (propuestas futuras, no en este plan)
+- Sin cambios de RLS ni schema (políticas existentes ya permiten `cliente` leer facturas y pagos de sus clientes).
+- Sin `style={{}}`, tokens semánticos (`bg-accent`, `text-muted-foreground`).
+- Reutilizar `formatCurrency`, `formatDate`, `getEstadoColor`, `EmptyState`, `PageHeader`.
+- Tests: extender `src/services/portal/__tests__/queries.test.ts` con `fetchPortalFactura` y `fetchPortalPagosFactura` (mock supabase, ordering, propagación de error).
 
-- **Página de detalle de factura** (E4): nueva ruta, hook, RLS check — requiere decisión de producto (¿hay PDF en `archivo`? ¿qué muestra?).
-- **`TablaConceptosGenerico` responsive** (E5): afecta también vista admin — refactor cross-cutting.
-- **Refactor del header desktop en `md` breakpoint** (M6): bajo impacto, esperar feedback.
+## Versión y changelog
 
----
+- Bump `APP_VERSION` → `12.23.0`.
+- Entrada en `CHANGELOG.md`:
+  - Nueva página de detalle de factura en el portal del cliente.
+  - Descarga de PDF y XML cuando estén disponibles.
+  - Historial de pagos visible con saldo pendiente calculado.
 
-## Detalles técnicos
+## Fuera de alcance
 
-- **Sin cambios de backend, RLS, schema, hooks de datos.** Solo capa de presentación.
-- **Cumple Power of 10**: cada componente nuevo ≤200 líneas; extracciones (`PortalDocumentoCard`, `PortalEmbarqueStepper`, `PortalBottomNav`) mantienen archivos padres bajo el límite.
-- **Sin `style={{}}`** salvo `paddingBottom: env(safe-area-inset-bottom)` (excepción dinámica permitida).
-- **Tokens semánticos**: usar `bg-accent`, `text-accent`, `bg-muted`, `border-border` — no colores hardcoded.
-- **Reutilización**: `useIsMobile` de `@/hooks/shared`, patrón `Sheet` de filtros ya existente en cotizaciones, `BrandLockup` ya en uso.
-- **Changelog**: una entrada por fase con bullets visibles para el usuario final (en español MX).
-- **Verificación por fase**: `npm test` (suite actual 781), screenshots manuales en `390x844` y `1366x768`.
-
-¿Procedo con Fase 1 primero, o quieres reordenar prioridades (p.ej. ir directo al bottom nav)?
+- Generar PDF on-the-fly si `factura_pdf_url` está vacío (requiere lógica de emisión — decisión de producto).
+- Permitir al cliente "reportar pago" desde el portal (requiere mutation + RLS insert para `cliente`).
+- Refactor de `TablaConceptosGenerico` (cross-cutting con vista admin).
