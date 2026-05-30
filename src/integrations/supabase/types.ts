@@ -2245,6 +2245,63 @@ export type Database = {
         }
         Relationships: []
       }
+      pagos_factura: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          factura_id: string
+          fecha_pago: string
+          forma_pago: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          monto_aplicado_factura: number
+          notas: string
+          organization_id: string
+          referencia: string
+          tipo_cambio: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          factura_id: string
+          fecha_pago: string
+          forma_pago?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto: number
+          monto_aplicado_factura: number
+          notas?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          factura_id?: string
+          fecha_pago?: string
+          forma_pago?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          monto_aplicado_factura?: number
+          notas?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       planes: {
         Row: {
           activo: boolean
@@ -3532,6 +3589,7 @@ export type Database = {
         | "Pagada"
         | "Vencida"
         | "Cancelada"
+        | "Parcialmente pagada"
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
       estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
@@ -3758,7 +3816,14 @@ export const Constants = {
         "Arribo",
         "EIR",
       ],
-      estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
+      estado_factura: [
+        "Borrador",
+        "Emitida",
+        "Pagada",
+        "Vencida",
+        "Cancelada",
+        "Parcialmente pagada",
+      ],
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
       estado_proforma: ["Pendiente", "Facturada", "Cancelada"],

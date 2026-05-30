@@ -132,6 +132,7 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   Borrador: { ...DEFAULT_VISUAL },
   Emitida: { ...DEFAULT_VISUAL, badge: "bg-info/15 text-info border border-info/30" },
   Pagada: { ...DEFAULT_VISUAL, badge: "bg-success/15 text-success border border-success/30" },
+  "Parcialmente pagada": { ...DEFAULT_VISUAL, badge: "bg-warning/15 text-warning border border-warning/30" },
   Vencida: { ...DEFAULT_VISUAL, badge: "bg-destructive/15 text-destructive border border-destructive/30" },
   Cancelada: { ...DEFAULT_VISUAL, badge: "bg-destructive/15 text-destructive border border-destructive/30" },
   Pendiente: { ...DEFAULT_VISUAL, badge: "bg-warning/15 text-warning border border-warning/30" },

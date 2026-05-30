@@ -1,58 +1,85 @@
-# Plan: 4 mejoras a Acceso al Portal de Cliente
+# Pagos de facturas a clientes — enfoque completo
 
-Versión objetivo: **APP_VERSION → 12.18.0** (feature, no patch).
+Permitir registrar pagos (totales y parciales, multi-moneda) sobre facturas emitidas, recalculando automáticamente el saldo y el estado (`Emitida` → `Parcialmente pagada` → `Pagada`).
 
-## Alcance
+## 1. Base de datos
 
-En `TabPortalCliente` (tab "Portal" del detalle de cliente), enriquecer la tabla de usuarios con acceso al portal y agregar acciones.
+Nueva tabla `public.pagos_factura`:
 
-### 1. Mostrar email
-- Hoy la tabla muestra solo `user_id` truncado. Mostrar el **email real** del usuario.
-- Backend: nueva edge function `list-client-users` (service role) que recibe `cliente_id`, valida que el caller sea staff de la organización dueña del cliente (admin/operador/super_admin), lee `client_users` por `cliente_id` y enriquece con `auth.admin.getUserById()` para devolver `{ id, user_id, email, created_at, last_sign_in_at, email_confirmed_at }`.
-- Reemplaza el `useClientUsers` actual (que hace `select * from client_users`) para que llame la edge function vía un nuevo service `fetchClientUsersEnriched`.
+- `id`, `factura_id` (FK facturas), `organization_id` (default `current_user_org_id()`)
+- `fecha_pago` (date), `monto` (numeric), `moneda` (enum `moneda`)
+- `tipo_cambio` (numeric, opcional — para pagos en moneda distinta a la factura)
+- `monto_aplicado_factura` (numeric — monto convertido a moneda de la factura)
+- `forma_pago` (text: Transferencia, Cheque, Efectivo, Otro)
+- `referencia` (text), `notas` (text)
+- `created_by`, `created_at`, `deleted_at`, `deleted_by` (soft delete)
 
-### 2. Último login
-- Mostrar columna **"Último acceso"** con `last_sign_in_at` formateado (`dd MMM yyyy HH:mm`) o "Nunca".
-- Resaltar en `text-muted-foreground` si >30 días o "Nunca" → ayuda a detectar usuarios inactivos.
+GRANTs estándar + RLS multi-tenant (mismo patrón que `conceptos_costo`: Tenant CRUD para admin/operador/super_admin, viewer SELECT, hide soft-deleted, cliente puede leer pagos de sus propias facturas para el portal).
 
-### 3. Reenviar invitación
-- Botón **"Reenviar invitación"** (icono `Mail`) visible solo cuando `email_confirmed_at IS NULL` **o** `last_sign_in_at IS NULL` (usuario nunca estableció contraseña / nunca entró).
-- Reutiliza la edge function existente `invite-client-user` pasando el mismo email + `cliente_id` + `organization_id`. La función ya maneja "usuario existente" y reenvía link de recovery (ajuste menor: forzar generación de link `recovery` si el usuario ya existe pero no ha confirmado).
+Nuevo enum value en `estado_factura`: `'Parcialmente pagada'` (si no existe ya).
 
-### 4. Indicador visual "N usuarios con acceso"
-- En el header del Card (`CardTitle`), badge al lado del título: `<Badge variant="secondary">{count} usuario{s} con acceso</Badge>`.
-- Si `count === 0`, badge `outline` con texto "Sin acceso".
+Trigger `recalcular_estado_factura()` que en INSERT/UPDATE/DELETE de `pagos_factura`:
+- suma `monto_aplicado_factura` de pagos no soft-deleted
+- si `suma >= factura.total` → estado `'Pagada'`, `fecha_pago = max(fecha_pago)`
+- si `suma > 0` → `'Parcialmente pagada'`
+- si `suma = 0` → vuelve a `'Emitida'` o `'Vencida'` según `fecha_vencimiento`
 
-## Cambios técnicos
+Índice en `(factura_id)` y `(organization_id, fecha_pago)`.
 
-### Backend
-- **Nueva edge function**: `supabase/functions/list-client-users/index.ts`
-  - Body: `{ cliente_id: string }`
-  - Valida JWT, valida que el caller pertenezca a la org dueña del `cliente_id` con rol admin/operador/super_admin.
-  - Devuelve array enriquecido.
-  - CORS estándar, validación con zod.
-- **Edge function existente** `invite-client-user`: pequeño ajuste — si el usuario ya existe pero `email_confirmed_at IS NULL`, generar un `recovery` link y enviarlo (idempotente para "reenviar"). Si ya está confirmado, devolver mensaje claro "Usuario ya activo" sin reenviar.
+Registrar en `bitacora_actividad` desde el código (no trigger) para mantener consistencia con el resto.
 
-### Frontend
-- `src/services/cliente-usuarios/index.ts`: agregar `fetchClientUsersEnriched(clienteId)` que invoca `list-client-users`, y `resendClientUserInvite(params)` que reusa `inviteClientUser`.
-- `src/hooks/cliente/useClientUsersMutations.ts`: 
-  - Cambiar `useClientUsers` para usar el nuevo fetcher enriquecido.
-  - Agregar `useResendClientUserInvite(clienteId)`.
-  - Exportar tipo `ClientUserEnriched`.
-- `src/components/cliente/TabPortalCliente.tsx`:
-  - Nuevas columnas: Email, Último acceso, Estado (badge "Activo"/"Pendiente"/"Inactivo").
-  - Reemplazar columna `Usuario ID` por `Email`.
-  - Botón "Reenviar invitación" condicional en columna de acciones.
-  - Badge de conteo en el header.
-- Sin cambios en RLS ni migraciones (la edge function usa service role).
+## 2. Servicios y hooks
 
-### Versionado
-- `APP_VERSION` → `12.18.0`
-- Entrada en `CHANGELOG.md` describiendo las 4 mejoras.
+`src/services/pagos-factura/index.ts`:
+- `listarPagosFactura(facturaId)`
+- `registrarPago(input)` con validación: monto > 0, no exceder saldo pendiente
+- `eliminarPago(id)` (soft delete)
 
-## Fuera de alcance
-- Revocar/reasignar usuarios entre clientes.
-- Auditoría de logins (ya cubierta por `bitacora_actividad`).
-- Notificaciones por email cuando un usuario del portal entra.
+`src/hooks/facturacion/usePagosFactura.ts`:
+- `usePagosFactura(facturaId)` — query
+- `useRegistrarPagoFactura()` — mutation, invalida `facturas` y `pagos_factura`
+- `useEliminarPagoFactura()` — mutation
 
-¿Procedo?
+Invalidar `queryKeys.facturas.byOrg` tras cada mutación para refrescar estado/badge.
+
+## 3. UI — Pre-Facturación (`src/pages/facturacion/`)
+
+En `facturacionColumns.tsx`, columna **Acciones** para facturas (no solo gastos):
+- Botón "Registrar pago" (visible si `canEdit` y estado ∈ `Emitida`/`Vencida`/`Parcialmente pagada`)
+- Menú secundario "Ver pagos" para abrir el detalle
+
+Nuevo componente `DialogRegistrarPago.tsx`:
+- Muestra: total factura, pagado acumulado, saldo pendiente
+- Form (RHF + Zod): fecha, monto, moneda, tipo de cambio (auto si moneda distinta, usando `useExchangeRates`), forma de pago, referencia, notas
+- Validación: no permitir monto que exceda el saldo (con tolerancia 0.01)
+- Confirmación previa antes de guardar
+
+Nuevo componente `DialogHistorialPagos.tsx`:
+- Tabla de pagos con fecha, monto, moneda, forma, referencia
+- Botón eliminar con doble confirmación tipo ELIMINAR (memoria `data-safety-confirmations`)
+
+Badge de estado en la columna existente: `Parcialmente pagada` → color amber (extender `getEstadoColor`).
+
+## 4. Portal del Cliente (`src/pages/portal/PortalFacturas.tsx`)
+
+- Mostrar columna "Pagado" y "Saldo" cuando aplique
+- Badge `Parcialmente pagada` visible
+- Solo lectura (los pagos los registra el staff)
+
+`PortalFacturacionPendienteCard`: descontar pagos parciales del monto pendiente mostrado.
+
+## 5. Tests y changelog
+
+- Test unitario del trigger (`supabase/tests/rls/`): pagos parciales → estado correcto.
+- Test del hook `useRegistrarPagoFactura` (validación de saldo).
+- Test del dialog (no permite exceder saldo).
+- Bump `APP_VERSION` (12.19.0) y entrada en `CHANGELOG.md` raíz.
+- Actualizar memoria `mem://features/shipment-liquidation-status` mencionando el nuevo flujo de pagos a clientes.
+
+## Detalles técnicos clave
+
+- Conversión multi-moneda usa `useExchangeRates` (Frankfurter, ya integrado).
+- `monto_aplicado_factura` se calcula en el cliente y se valida en el trigger por defensa.
+- Soft delete en lugar de hard delete para auditoría.
+- RLS: cliente lee sus pagos vía `factura_id IN (facturas del cliente)`, igual que el patrón de `conceptos_venta`.
+- Mantener componentes ≤200 líneas (Power of 10): separar form en sub-componente si es necesario.
