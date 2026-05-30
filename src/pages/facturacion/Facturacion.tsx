@@ -73,6 +73,18 @@ export default function Facturacion() {
     handleMarcarPagado, exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController({ isInRange });
 
+  const [pagoFactura, setPagoFactura] = useState<Factura | null>(null);
+  const [historialFactura, setHistorialFactura] = useState<Factura | null>(null);
+
+  const facturaColumns = useMemo(
+    () => buildFacturaColumns({
+      canEdit,
+      onRegistrarPago: setPagoFactura,
+      onVerPagos: setHistorialFactura,
+    }),
+    [canEdit],
+  );
+
   const gastoColumns = useMemo(
     () => buildGastoColumns({ canEdit, marcarPagadoPending, handleMarcarPagado }),
     [canEdit, marcarPagadoPending, handleMarcarPagado],
