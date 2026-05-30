@@ -45,7 +45,7 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
               <Link
                 key={estado}
                 to={`/portal/embarques?estado=${encodeURIComponent(estado)}`}
-                className={`${getEstadoBarColor(estado)} transition-all hover:opacity-80`}
+                className={`${getEstadoBarColor(estado)} transition-all hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm`}
                 style={{ width: `${pct}%` }}
                 title={`${estado}: ${count}`}
                 aria-label={`Filtrar por ${estado}`}

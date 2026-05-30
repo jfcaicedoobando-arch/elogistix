@@ -50,19 +50,21 @@ export default function PortalEmbarqueDetalle() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/portal/embarques")} className="mt-0.5" aria-label="Volver a mis embarques">
+      <div className="flex items-start gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/portal/embarques")} className="mt-0.5 shrink-0" aria-label="Volver a mis embarques">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
-            <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold break-all">{embarque.expediente}</h1>
             <ModoIcon modo={embarque.modo} size={18} circle />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {embarque.tipo} • {embarque.modo} • {embarque.incoterm}
-          </p>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {embarque.tipo} • {embarque.modo} • {embarque.incoterm}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -91,13 +93,13 @@ export default function PortalEmbarqueDetalle() {
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">ETD</p>
+            <p className="text-[10px] text-muted-foreground font-medium" title="Fecha estimada de salida">ETD</p>
             <p className="text-xs font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">ETA</p>
+            <p className="text-[10px] text-muted-foreground font-medium" title="Fecha estimada de arribo">ETA</p>
             <p className="text-xs font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
           </CardContent>
         </Card>

@@ -34,9 +34,10 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
             <span aria-hidden className="absolute left-7 top-2 bottom-2 w-0.5 bg-border" />
             <span
               aria-hidden
-              className="absolute left-7 top-2 w-0.5 bg-accent transition-all duration-500"
-              style={{ height: `calc(${progressPct}% - 1rem)` }}
+              className="absolute left-7 top-2 bottom-2 w-0.5 bg-accent origin-top transition-transform duration-500"
+              style={{ transform: `scaleY(${lastIdx === 0 ? 0 : currentStepIndex / lastIdx})` }}
             />
+
             {progressSteps.map((step, i) => {
               const isCompleted = i < currentStepIndex;
               const isCurrent = i === currentStepIndex;

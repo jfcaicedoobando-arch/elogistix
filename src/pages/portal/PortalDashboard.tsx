@@ -39,8 +39,8 @@ export default function PortalDashboard() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 sm:h-32" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Skeleton className="h-64" />
