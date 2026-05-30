@@ -12,6 +12,8 @@ import {
   fetchPortalDocumentos,
   fetchPortalCotizaciones,
   fetchPortalFacturas,
+  fetchPortalFactura,
+  fetchPortalPagosFactura,
 } from "@/services/portal/queries";
 
 beforeEach(() => {
