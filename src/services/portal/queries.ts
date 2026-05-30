@@ -8,6 +8,8 @@ import {
   PORTAL_DOCUMENTO_COLUMNS,
   PORTAL_COTIZACION_LIST_COLUMNS,
   PORTAL_FACTURA_LIST_COLUMNS,
+  PORTAL_FACTURA_DETAIL_COLUMNS,
+  PORTAL_PAGO_FACTURA_COLUMNS,
 } from "./columns";
 
 // Schema reutilizable para joins anidados que devuelven { nombre } o null.
@@ -127,6 +129,26 @@ export async function fetchPortalFacturas(clienteIds: string[]) {
     .select(PORTAL_FACTURA_LIST_COLUMNS)
     .in("cliente_id", clienteIds)
     .order("fecha_emision", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchPortalFactura(id: string) {
+  const { data, error } = await supabase
+    .from("facturas")
+    .select(PORTAL_FACTURA_DETAIL_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchPortalPagosFactura(facturaId: string) {
+  const { data, error } = await supabase
+    .from("pagos_factura")
+    .select(PORTAL_PAGO_FACTURA_COLUMNS)
+    .eq("factura_id", facturaId)
+    .order("fecha_pago", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }

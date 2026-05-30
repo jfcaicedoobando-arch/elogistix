@@ -12,6 +12,8 @@ import {
   fetchPortalDocumentos,
   fetchPortalCotizaciones,
   fetchPortalFacturas,
+  fetchPortalFactura,
+  fetchPortalPagosFactura,
 } from "@/services/portal/queries";
 
 beforeEach(() => {
@@ -76,5 +78,31 @@ describe("portal/queries", () => {
     const r = await fetchPortalFacturas(["cli-1"]);
     expect(r).toEqual([{ id: "f1" }]);
     expect(mock.tableCalls[0].ops).toContain("order");
+  });
+
+  it("fetchPortalFactura: consulta tabla facturas por id", async () => {
+    mock.setTableResult("facturas", { data: { id: "f1" }, error: null });
+    const r = await fetchPortalFactura("f1");
+    expect(r).toEqual({ id: "f1" });
+    expect(mock.tableCalls[0].table).toBe("facturas");
+    expect(mock.tableCalls[0].ops).toContain("eq");
+  });
+
+  it("fetchPortalFactura: propaga error", async () => {
+    mock.setTableResult("facturas", { data: null, error: new Error("rls") });
+    await expect(fetchPortalFactura("x")).rejects.toThrow("rls");
+  });
+
+  it("fetchPortalPagosFactura: ordena por fecha_pago desc", async () => {
+    mock.setTableResult("pagos_factura", { data: [{ id: "p1" }], error: null });
+    const r = await fetchPortalPagosFactura("f1");
+    expect(r).toEqual([{ id: "p1" }]);
+    expect(mock.tableCalls[0].table).toBe("pagos_factura");
+    expect(mock.tableCalls[0].ops).toContain("order");
+  });
+
+  it("fetchPortalPagosFactura: propaga error", async () => {
+    mock.setTableResult("pagos_factura", { data: null, error: new Error("rls") });
+    await expect(fetchPortalPagosFactura("f1")).rejects.toThrow("rls");
   });
 });

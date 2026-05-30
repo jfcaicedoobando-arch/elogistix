@@ -6,6 +6,8 @@ export const portal = {
   cotizaciones: (clienteIds: string[]) => ['portal', 'cotizaciones', clienteIds] as const,
   cotizacion: (id: string) => ['portal', 'cotizacion', id] as const,
   facturas: (clienteIds: string[]) => ['portal', 'facturas', clienteIds] as const,
+  factura: (id: string) => ['portal', 'factura', id] as const,
+  pagosFactura: (id: string) => ['portal', 'pagos_factura', id] as const,
   clientUsers: ['portal', 'client_users'] as const,
   clienteName: ['portal', 'cliente_nombre'] as const,
   orgName: ['portal', 'org_name'] as const,

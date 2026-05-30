@@ -8,6 +8,8 @@ import {
   fetchPortalCotizaciones,
   fetchPortalCotizacion,
   fetchPortalFacturas,
+  fetchPortalFactura,
+  fetchPortalPagosFactura,
   fetchPortalClientUsers,
   fetchPortalClienteName,
   fetchPortalOrgName,
@@ -58,6 +60,22 @@ export function usePortalFacturas(clienteIds: string[]) {
     queryKey: queryKeys.portal.facturas(clienteIds),
     queryFn: () => fetchPortalFacturas(clienteIds),
     enabled: clienteIds.length > 0,
+  });
+}
+
+export function usePortalFactura(id?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.factura(id ?? ""),
+    queryFn: () => fetchPortalFactura(id!),
+    enabled: !!id,
+  });
+}
+
+export function usePortalPagosFactura(facturaId?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.pagosFactura(facturaId ?? ""),
+    queryFn: () => fetchPortalPagosFactura(facturaId!),
+    enabled: !!facturaId,
   });
 }
 

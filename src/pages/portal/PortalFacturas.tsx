@@ -6,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePortalFacturas, usePortalClientUsers } from "@/hooks/portal";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { Search, Receipt, Filter, AlertTriangle } from "lucide-react";
+import { Search, Receipt, Filter, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 export default function PortalFacturas() {
   const { data: clientUsers = [] } = usePortalClientUsers();
@@ -84,29 +85,38 @@ export default function PortalFacturas() {
       ) : (
         <div className="grid gap-3">
           {facturas.length > 0 && filtered.map((f) => (
-            <Card key={f.id}>
-              <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <Badge className={`${getEstadoColor(f.estado)} text-[11px] shrink-0`}>
-                    {f.estado}
-                  </Badge>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-sm font-mono tabular-nums">{f.numero}</p>
-                      {f.estado === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+            <Card key={f.id} className="transition-all hover:shadow-sm hover:border-accent/40 focus-within:ring-2 focus-within:ring-accent/40">
+              <Link
+                to={`/portal/facturas/${f.id}`}
+                aria-label={`Ver factura ${f.numero}`}
+                className="block focus:outline-none"
+              >
+                <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Badge className={`${getEstadoColor(f.estado)} text-[11px] shrink-0`}>
+                      {f.estado}
+                    </Badge>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm font-mono tabular-nums">{f.numero}</p>
+                        {f.estado === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        Exp: <span className="font-mono">{f.expediente}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      Exp: <span className="font-mono">{f.expediente}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
-                    </p>
                   </div>
-                </div>
-                <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
-                  {formatCurrency(f.total, f.moneda)}
-                </p>
-              </CardContent>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <p className="text-sm font-bold tabular-nums text-right min-w-[110px]">
+                      {formatCurrency(f.total, f.moneda)}
+                    </p>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Link>
             </Card>
           ))}
         </div>
