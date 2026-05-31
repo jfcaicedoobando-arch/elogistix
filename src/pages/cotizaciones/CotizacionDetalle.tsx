@@ -89,11 +89,15 @@ export default function CotizacionDetalle() {
           esProspecto={cotizacion.es_prospecto}
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id!}
+          embarqueIdVinculado={cotizacion.embarque_id ?? null}
+          isCreandoBorrador={crearBorrador.isPending}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
           onAbrirGenerarEmbarques={() => setShowConfirmarConvertir(true)}
+          onCrearBorrador={handleCrearBorrador}
         />
       )}
+
 
       {/* Info de prospecto */}
       {cotizacion.es_prospecto && (
