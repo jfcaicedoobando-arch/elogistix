@@ -115,6 +115,16 @@ export default function EmbarqueDetalle() {
           <TabsTrigger value="tracking">Tracking</TabsTrigger>
           <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
         </TabsList>
+      {estadoVisual === "Borrador" && (
+        <Alert variant="warning">
+          <FileEdit className="h-4 w-4" />
+          <AlertTitle>Embarque en borrador</AlertTitle>
+          <AlertDescription>
+            Este embarque fue generado desde la cotización. Complétalo y cambia su estado a Confirmado para continuar con la operación.
+          </AlertDescription>
+        </Alert>
+      )}
+
 
         <TabsContent value="resumen" className="space-y-6">
           <TabResumen embarque={embarque} />
