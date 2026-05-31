@@ -40,6 +40,7 @@ export function Layout() {
             <Breadcrumbs />
             <div className="ml-auto flex items-center gap-1 sm:gap-2 shrink-0">
               <GlobalSearch />
+              <NotificacionesPopover />
               <FeedbackButton />
               <ThemeToggle />
             </div>
