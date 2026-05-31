@@ -9,6 +9,7 @@ import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
+import { NotificacionesPopover } from "@/components/layout/NotificacionesPopover";
 
 export function Layout() {
   // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
@@ -39,6 +40,7 @@ export function Layout() {
             <Breadcrumbs />
             <div className="ml-auto flex items-center gap-1 sm:gap-2 shrink-0">
               <GlobalSearch />
+              <NotificacionesPopover />
               <FeedbackButton />
               <ThemeToggle />
             </div>
