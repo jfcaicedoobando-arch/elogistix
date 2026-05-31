@@ -5,8 +5,10 @@ import type { CotizacionRow } from '@/types/cotizacion';
 import {
   convertirProspectoACliente,
   convertirCotizacionAEmbarques,
+  crearEmbarqueBorradorDesdeCotizacion,
   type ProspectoAClienteInput,
 } from '@/services/cotizacion';
+
 
 /** Convierte un prospecto en cliente y actualiza la cotización */
 export function useConvertirProspectoACliente() {
