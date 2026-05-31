@@ -2186,6 +2186,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notificaciones_internas: {
+        Row: {
+          created_at: string
+          enlace: string | null
+          entidad_id: string | null
+          entidad_tipo: string | null
+          id: string
+          leida: boolean
+          leida_at: string | null
+          mensaje: string
+          organization_id: string
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          enlace?: string | null
+          entidad_id?: string | null
+          entidad_tipo?: string | null
+          id?: string
+          leida?: boolean
+          leida_at?: string | null
+          mensaje: string
+          organization_id: string
+          tipo: string
+          titulo: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          enlace?: string | null
+          entidad_id?: string | null
+          entidad_tipo?: string | null
+          id?: string
+          leida?: boolean
+          leida_at?: string | null
+          mensaje?: string
+          organization_id?: string
+          tipo?: string
+          titulo?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           created_at: string | null
