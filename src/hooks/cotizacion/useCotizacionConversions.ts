@@ -41,3 +41,18 @@ export function useConvertirCotizacionAEmbarques() {
     },
   });
 }
+
+/** Crea un embarque borrador (1 clic) desde una cotización Aceptada vía RPC. */
+export function useCrearEmbarqueBorrador() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (cotizacionId: string) => crearEmbarqueBorradorDesdeCotizacion(cotizacionId),
+    onSuccess: (_embarqueId, cotizacionId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });
+    },
+  });
+}
+
