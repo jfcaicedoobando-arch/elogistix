@@ -195,3 +195,18 @@ export async function convertirCotizacionAEmbarques(
 
   return [embarque];
 }
+
+/**
+ * Crea un embarque borrador desde una cotización aceptada usando la RPC
+ * `crear_embarque_borrador_desde_cotizacion`. Idempotente (devuelve el embarque
+ * existente si la cotización ya tiene uno vinculado).
+ */
+export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
+    p_cotizacion_id: cotizacionId,
+  });
+  if (error) throw error;
+  if (!data) throw new Error("La función no devolvió un embarque");
+  return data as string;
+}
+
