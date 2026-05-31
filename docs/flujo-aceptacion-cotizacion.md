@@ -130,50 +130,50 @@ A partir de aquí el cliente sigue el embarque desde
 
 ## 7. Notificaciones
 
-### Estado actual
+### Estado actual (12.27.0)
 
 | Destinatario | Canal | ¿Implementado? |
 |---|---|---|
 | Cliente — acuse de aceptación | Email / in-app | ❌ No. |
-| Operaciones / Admin de la org | In-app (campana) | ❌ No. |
-| Operaciones / Admin de la org | Email | ❌ No. |
+| Operaciones / Admin de la org | In-app (campana) | ✅ Sí (Fase 2, 12.27.0). |
+| Operaciones / Admin de la org | Email | 🟡 Código listo, **inactivo** hasta configurar dominio de email. |
 
-El diálogo de confirmación del portal dice *"el equipo de operaciones será
-notificado"*, pero hoy es texto informativo: **no existe código que envíe
-notificación al staff al momento de aceptar**. Operaciones se entera al
-revisar el listado de cotizaciones manualmente.
+La RPC `portal_responder_cotizacion` inserta una fila por cada `admin`/`operador`
+de la organización dueña de la cotización en `notificaciones_internas` al
+aceptar/rechazar. El header de la app principal muestra una campana
+(`NotificacionesPopover`) con badge de no leídas y refresco realtime via
+`useNotificacionesInternas`.
 
-### Recomendación a futuro (fuera de alcance de este documento)
+### Activación futura del email (Fase 2.1)
 
-Implementar notificación **dual** al rol `operador` y `admin` de la
-organización dueña de la cotización:
+El template `supabase/functions/_shared/transactional-email-templates/cotizacion-respuesta.tsx`
+y el call-site (`src/services/cotizacion/conversiones/portal.ts` → `// TODO Fase 2.1 — Email`)
+ya existen pero están **inactivos**. Para activar:
 
-1. **Notificación in-app** — fila en `notificaciones_internas` (tabla a crear
-   o reutilizar `app_logs` según diseño) que alimente la campana del header
-   de la app principal.
-2. **Email transaccional** — vía la infraestructura de Lovable Emails:
-   template `cotizacion-aceptada-staff`, disparado desde la RPC mediante
-   `pg_net` o desde un trigger AFTER UPDATE que invoque
-   `send-transactional-email` con `idempotencyKey = cotizacion_id + '-aceptada'`.
-
-Ambos canales deben respetar la membresía organizacional: solo notificar a
-usuarios cuya `organizacion_id` coincida con la del cliente/cotización.
+1. Configurar dominio de email en Lovable Cloud (Connectors → Emails).
+2. Ejecutar `setup_email_infra` (crea queues pgmq, RPCs, cron).
+3. Ejecutar `scaffold_transactional_email` (genera `registry.ts` y la edge
+   function `send-transactional-email`).
+4. Registrar `cotizacion-respuesta` en `registry.ts`.
+5. Descomentar el bloque `// TODO Fase 2.1 — Email` y resolver destinatarios
+   en backend (no exponer emails de staff al cliente del portal). Idealmente
+   mover el envío a un trigger/edge function que lea
+   `notificaciones_internas` recién creadas.
+6. Deployar la edge function.
 
 ---
 
 ## 8. Brechas conocidas
 
-| # | Brecha | Impacto | Severidad |
+| # | Brecha | Estado | Severidad |
 |---|---|---|---|
-| 1 | **Sin notificación al staff** al aceptar. | Operaciones puede tardar en enterarse; la promesa del diálogo no se cumple. | Alta |
-| 2 | **No existe `cotizaciones.fecha_aceptacion`** — solo `updated_at`, que se pisa en cualquier edición. | Sin auditoría temporal confiable del momento exacto de aceptación. | Media |
-| 3 | **Sin bitácora dedicada** para cambios de estado de cotización (no hay trigger de auditoría ni tabla `bitacora_cotizaciones`). | El histórico de quién/cuándo cambió cada estado se pierde. | Media |
-| 4 | **Sin acuse al cliente** (email ni in-app) confirmando que su aceptación fue recibida. | El cliente solo ve el cambio visual del badge en el portal. | Media |
-| 5 | **Estado `Confirmada` huérfano** en el enum. | Ruido en el modelo de dominio, riesgo de uso accidental. | Baja |
-| 6 | **No se crea embarque borrador automático** al aceptar. | Operaciones repite trabajo (capturar cliente, contactos, ruta) que ya estaba en la cotización. | Baja (decisión de producto) |
+| 1 | **Notificación al staff** al aceptar. | ✅ In-app cerrada en 12.27.0. 🟡 Email pendiente de dominio. | Alta |
+| 2 | **`cotizaciones.fecha_aceptacion` / `fecha_rechazo`**. | ✅ Cerrada en 12.26.0. | Media |
+| 3 | **Bitácora de cambios de estado** de cotización. | ✅ Cerrada en 12.26.0 (vía `bitacora_actividad`). | Media |
+| 4 | **Sin acuse al cliente** (email ni in-app) confirmando que su aceptación fue recibida. | ❌ Pendiente. | Media |
+| 5 | **Estado `Confirmada` huérfano** en el enum. | ❌ Pendiente (Fase 3). | Baja |
+| 6 | **No se crea embarque borrador automático** al aceptar. | ❌ Pendiente (Fase 4, decisión de producto). | Baja |
 
-Cualquier iteración futura debería abrir un plan dedicado para cerrar las
-brechas 1–3 (las más críticas para auditoría y SLA interno).
 
 ---
 
