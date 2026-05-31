@@ -881,6 +881,8 @@ export type Database = {
           embarque_id: string | null
           es_prospecto: boolean
           estado: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_aceptacion: string | null
+          fecha_rechazo: string | null
           fecha_vigencia: string | null
           folio: string
           frecuencia: string
@@ -938,6 +940,8 @@ export type Database = {
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_aceptacion?: string | null
+          fecha_rechazo?: string | null
           fecha_vigencia?: string | null
           folio: string
           frecuencia?: string
@@ -995,6 +999,8 @@ export type Database = {
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_aceptacion?: string | null
+          fecha_rechazo?: string | null
           fecha_vigencia?: string | null
           folio?: string
           frecuencia?: string
