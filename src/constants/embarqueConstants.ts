@@ -8,7 +8,7 @@ export function getDocsForMode(modo: string): string[] {
   return ['Carta Porte', 'Factura', 'Lista de Empaque'];
 }
 
-export const ESTADOS_EMBARQUE = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado'] as const;
+export const ESTADOS_EMBARQUE = ['Borrador', 'Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado'] as const;
 
 export const ESTADOS_ACTIVOS = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado'] as const;
 
