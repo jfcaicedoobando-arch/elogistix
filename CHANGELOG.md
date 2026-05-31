@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.25.2] - 2026-05-31
+- **chore(observability)**: Se añaden a `Sentry.init.ignoreErrors` los patrones `Should have a queue` (React Refresh / HMR de Vite) y `Invalid Refresh Token: Refresh Token Not Found` (Supabase tras expirar sesión local). Ambos son ruido transitorio que no representa bugs reales en producción. Issue Sentry JAVASCRIPT-REACT-J marcado como resolved (release 10.2.2, hook `useNotificacionesInternas` ya inexistente). Sin cambios funcionales.
+
 ## [12.25.1] - 2026-05-30
 - **refactor(portal)**: Eliminado el menú hamburguesa móvil (`PortalMobileNav`) del portal de cliente. En mobile ahora existe **una sola fuente de verdad** para la navegación: el `PortalBottomNav` de 5 items (Inicio, Embarques, Cotizaciones, Facturas, Perfil). El ícono de hamburguesa y el drawer `Sheet` duplicaban las 5 rutas principales y confundían a los usuarios. "Cerrar sesión" y "Mi perfil" siguen accesibles vía el dropdown del avatar (`PortalUserMenu`). Se eliminaron las props `mobileOpen`/`setMobileOpen` de `PortalHeader` y `PortalLayout`, y se borró el componente `PortalMobileNav.tsx`. Sin cambios en RLS, esquema, ni RPCs.
 
