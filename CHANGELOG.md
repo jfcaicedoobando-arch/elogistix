@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.26.0] - 2026-05-31
+- **feat(cotizaciones)**: Fase 1 del cierre de brechas del flujo de aceptación. Se agregan columnas `fecha_aceptacion` y `fecha_rechazo` a `cotizaciones`. La RPC `portal_responder_cotizacion` ahora sella la fecha correspondiente al estado y registra un evento (`cotizacion_aceptada` / `cotizacion_rechazada`) en `bitacora_actividad` con el comentario del cliente y metadatos (folio, cliente, estado anterior). La pantalla de detalle muestra la fecha de respuesta junto al estado. Brechas B y parcial C de `docs/flujo-aceptacion-cotizacion.md` cerradas.
+
 ## [12.25.3] - 2026-05-31
 - **docs(cotizaciones)**: Nuevo `docs/flujo-aceptacion-cotizacion.md` que describe el proceso end-to-end cuando un cliente acepta una cotización desde el portal (estados, RPC `portal_responder_cotizacion`, triggers CRM y vínculo de embarque), reglas de negocio, brechas conocidas (sin notificación al staff, sin `fecha_aceptacion`, sin bitácora dedicada, estado `Confirmada` huérfano) y referencias de código y migraciones. Sin cambios funcionales.
 
