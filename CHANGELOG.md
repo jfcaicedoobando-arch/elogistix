@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.30.1] - 2026-05-31
+- **feat(embarques)**: Banner informativo en `EmbarqueDetalle` cuando `estado === 'Borrador'`, indicando que el embarque fue generado desde una cotización y debe completarse y avanzarse a Confirmado. Cierra el pendiente UI de la Fase 5.
+
 ## [12.30.0] - 2026-05-31
 - **feat(cotizaciones/embarques)**: Fase 5 del cierre de brechas — embarque borrador desde cotización aceptada (Brecha 6). Nuevo valor `Borrador` en el enum `estado_embarque` (queda fuera de `ESTADOS_ACTIVOS`). Nueva RPC `crear_embarque_borrador_desde_cotizacion(p_cotizacion_id)` (`SECURITY DEFINER`, idempotente): valida tenencia, exige rol admin/operador y `estado='Aceptada'`, bloquea prospectos, genera expediente, crea el embarque en `Borrador`, replica N contenedores repartiendo peso/volumen/piezas, copia costos (BL una vez, Contenedor por hijo) y conceptos de venta, vincula la cotización al embarque sin moverla a `En operación`, registra bitácora y notifica in-app a admins/operadores. Trigger `sync_cotizacion_embarque_link` ajustado: la cotización pasa a `En operación` solo cuando el embarque deja `Borrador`. UI: nuevo botón "Crear embarque borrador" en `CotizacionDetalle` (cotización Aceptada sin prospecto y sin embarque vinculado); si ya hay borrador, se muestra "Ver embarque borrador"; los flujos existentes (wizard manual + Generar Embarques) se conservan como secundarios. Brecha 6 cerrada (canal email sigue dependiendo de dominio).
 
