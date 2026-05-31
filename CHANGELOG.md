@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.25.3] - 2026-05-31
+- **docs(cotizaciones)**: Nuevo `docs/flujo-aceptacion-cotizacion.md` que describe el proceso end-to-end cuando un cliente acepta una cotización desde el portal (estados, RPC `portal_responder_cotizacion`, triggers CRM y vínculo de embarque), reglas de negocio, brechas conocidas (sin notificación al staff, sin `fecha_aceptacion`, sin bitácora dedicada, estado `Confirmada` huérfano) y referencias de código y migraciones. Sin cambios funcionales.
+
 ## [12.25.2] - 2026-05-31
 - **chore(observability)**: Se añaden a `Sentry.init.ignoreErrors` los patrones `Should have a queue` (React Refresh / HMR de Vite) y `Invalid Refresh Token: Refresh Token Not Found` (Supabase tras expirar sesión local). Ambos son ruido transitorio que no representa bugs reales en producción. Issue Sentry JAVASCRIPT-REACT-J marcado como resolved (release 10.2.2, hook `useNotificacionesInternas` ya inexistente). Sin cambios funcionales.
 
