@@ -36,9 +36,11 @@ export type { CotizacionCostoLookup } from "./costos";
 export {
   convertirProspectoACliente,
   convertirCotizacionAEmbarques,
+  crearEmbarqueBorradorDesdeCotizacion,
   portalResponderCotizacion,
 } from "./conversiones";
 export type { ProspectoAClienteInput } from "./conversiones";
+
 
 // Wizard (orquestadores de pasos)
 export { savePaso1, savePaso2, savePaso3, savePasoFinal } from "./wizard";
