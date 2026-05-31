@@ -3207,6 +3207,10 @@ export type Database = {
           total_count: number
         }[]
       }
+      crear_embarque_borrador_desde_cotizacion: {
+        Args: { p_cotizacion_id: string }
+        Returns: string
+      }
       crear_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
@@ -3623,6 +3627,7 @@ export type Database = {
       estado_documento: "Pendiente" | "Recibido" | "Validado"
       estado_embarque:
         | "Cotización"
+        | "Borrador"
         | "Confirmado"
         | "En Tránsito"
         | "Llegada"
@@ -3854,6 +3859,7 @@ export const Constants = {
       estado_documento: ["Pendiente", "Recibido", "Validado"],
       estado_embarque: [
         "Cotización",
+        "Borrador",
         "Confirmado",
         "En Tránsito",
         "Llegada",
