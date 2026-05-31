@@ -105,6 +105,17 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     }
   };
 
+  const handleCrearBorrador = async () => {
+    if (!cotizacion) return;
+    try {
+      const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
+      notifySuccess(toast, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
+      navigate(`/embarques/${embarqueId}`);
+    } catch (err: unknown) {
+      notifyError(toast, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
+    }
+  };
+
   return {
     showConvertir, setShowConvertir,
     showConfirmarConvertir, setShowConfirmarConvertir,
@@ -113,7 +124,11 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     abrirDialogConvertir,
     handleConvertir,
     handleGenerarEmbarques,
+    handleCrearBorrador,
     convertirProspecto,
     convertirAEmbarques,
+    crearBorrador,
   };
+}
+
 }
