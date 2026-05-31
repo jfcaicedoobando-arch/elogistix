@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
+  useCrearEmbarqueBorrador,
   type CotizacionRow,
 } from "@/hooks/cotizacion/useCotizaciones";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -18,9 +20,12 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  */
 export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefined) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const actualizarEstado = useUpdateEstadoCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
   const convertirAEmbarques = useConvertirCotizacionAEmbarques();
+  const crearBorrador = useCrearEmbarqueBorrador();
+
 
   const [showConvertir, setShowConvertir] = useState(false);
   const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
