@@ -3616,10 +3616,9 @@ export type Database = {
       estado_cotizacion:
         | "Borrador"
         | "Enviada"
-        | "Confirmada"
+        | "Aceptada"
         | "Rechazada"
         | "Vencida"
-        | "Aceptada"
         | "En operación"
       estado_documento: "Pendiente" | "Recibido" | "Validado"
       estado_embarque:
@@ -3847,10 +3846,9 @@ export const Constants = {
       estado_cotizacion: [
         "Borrador",
         "Enviada",
-        "Confirmada",
+        "Aceptada",
         "Rechazada",
         "Vencida",
-        "Aceptada",
         "En operación",
       ],
       estado_documento: ["Pendiente", "Recibido", "Validado"],
