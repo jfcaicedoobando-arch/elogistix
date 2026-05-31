@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid) FROM PUBLIC, anon;
