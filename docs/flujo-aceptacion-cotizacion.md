@@ -130,11 +130,12 @@ A partir de aquí el cliente sigue el embarque desde
 
 ## 7. Notificaciones
 
-### Estado actual (12.27.0)
+### Estado actual (12.29.0)
 
 | Destinatario | Canal | ¿Implementado? |
 |---|---|---|
-| Cliente — acuse de aceptación | Email / in-app | ❌ No. |
+| Cliente — acuse de aceptación / rechazo | In-app (banner + toast + tarjeta del listado) | ✅ Sí (Fase 4, 12.29.0). |
+| Cliente — acuse de aceptación / rechazo | Email | ❌ Pendiente (depende de dominio). |
 | Operaciones / Admin de la org | In-app (campana) | ✅ Sí (Fase 2, 12.27.0). |
 | Operaciones / Admin de la org | Email | 🟡 Código listo, **inactivo** hasta configurar dominio de email. |
 
@@ -142,7 +143,10 @@ La RPC `portal_responder_cotizacion` inserta una fila por cada `admin`/`operador
 de la organización dueña de la cotización en `notificaciones_internas` al
 aceptar/rechazar. El header de la app principal muestra una campana
 (`NotificacionesPopover`) con badge de no leídas y refresco realtime via
-`useNotificacionesInternas`.
+`useNotificacionesInternas`. En el portal del cliente, el banner persistente
+en `/portal/cotizaciones/:id` y el indicador en cada tarjeta del listado
+funcionan como acuse permanente; el toast tras la mutación da feedback
+inmediato.
 
 ### Activación futura del email (Fase 2.1)
 
@@ -170,9 +174,9 @@ ya existen pero están **inactivos**. Para activar:
 | 1 | **Notificación al staff** al aceptar. | ✅ In-app cerrada en 12.27.0. 🟡 Email pendiente de dominio. | Alta |
 | 2 | **`cotizaciones.fecha_aceptacion` / `fecha_rechazo`**. | ✅ Cerrada en 12.26.0. | Media |
 | 3 | **Bitácora de cambios de estado** de cotización. | ✅ Cerrada en 12.26.0 (vía `bitacora_actividad`). | Media |
-| 4 | **Sin acuse al cliente** (email ni in-app) confirmando que su aceptación fue recibida. | ❌ Pendiente. | Media |
+| 4 | **Sin acuse al cliente** confirmando que su aceptación fue recibida. | ✅ In-app cerrada en 12.29.0 (banner + toast + tarjeta listado). 🟡 Email pendiente de dominio. | Media |
 | 5 | **Estado `Confirmada` huérfano** en el enum. | ✅ Cerrada en 12.28.0. | Baja |
-| 6 | **No se crea embarque borrador automático** al aceptar. | ❌ Pendiente (Fase 4, decisión de producto). | Baja |
+| 6 | **No se crea embarque borrador automático** al aceptar. | ❌ Pendiente (Fase 5, decisión de producto). | Baja |
 
 
 ---
