@@ -42,7 +42,7 @@ Enum `public.estado_cotizacion`:
 | `Rechazada` | Cliente (portal) | El cliente rechazó. Termina el ciclo. |
 | `Vencida` | Sistema (fecha vigencia) | Se pasó la fecha de validez sin respuesta. |
 | `En operación` | Sistema (trigger) | Hay un embarque vinculado a la cotización. |
-| `Confirmada` | — | **Legado. Sin uso actual.** No usar en flujos nuevos. |
+> El valor `Confirmada` existía en el enum como código muerto y fue eliminado en 12.28.0.
 
 ### Transiciones válidas
 
