@@ -9,6 +9,7 @@ import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
+import { NotificacionesPopover } from "@/components/layout/NotificacionesPopover";
 
 export function Layout() {
   // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
