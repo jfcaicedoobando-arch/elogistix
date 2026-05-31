@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.29.0] - 2026-05-31
+- **feat(portal)**: Fase 4 del cierre de brechas — acuse in-app al cliente tras aceptar/rechazar una cotización (Brecha 4). El banner `PortalCotizacionEstadoBanner` ahora muestra: copy explícito ("Tu respuesta fue registrada"), fecha de respuesta formateada `DD/MM/YYYY HH:mm` (leyendo `fecha_aceptacion`/`fecha_rechazo` ya disponibles desde 12.26.0) y mensaje de siguiente paso. El toast post-acción incluye descripción con la fecha y el plan de seguimiento. En `/portal/cotizaciones` cada tarjeta de cotización ya muestra "Aceptada/Rechazada el DD/MM/YYYY HH:mm" debajo de la vigencia. Sin cambios en RPC, RLS ni esquema; solo presentación. El canal email queda pendiente de la configuración de dominio. Brecha 4 cerrada en su canal in-app.
+
 ## [12.28.0] - 2026-05-31
 - **chore(cotizaciones)**: Fase 3 del cierre de brechas. Se elimina el valor `Confirmada` del enum `estado_cotizacion` (código muerto: 0 filas afectadas, 0 referencias en `src/`). El catálogo queda en 6 estados: Borrador, Enviada, Aceptada, Rechazada, Vencida, En operación. La migración recrea temporalmente la policy `Cliente read own cotizaciones`, los triggers `trg_cotizacion_acepta_oportunidad`/`trg_cotizacion_cierra_oportunidad` y la función `cotizaciones_listado` (todos dependían del tipo) sin cambios funcionales. Salvaguarda: la migración aborta si encuentra alguna cotización con estado `Confirmada`. Brecha E de `docs/flujo-aceptacion-cotizacion.md` cerrada.
 

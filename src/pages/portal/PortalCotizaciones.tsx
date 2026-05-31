@@ -89,6 +89,10 @@ export default function PortalCotizaciones() {
           {filtered.map((c) => {
             const expediente = (c as { embarque_expediente?: string | null }).embarque_expediente;
             const tieneEmbarque = Boolean(c.embarque_id && expediente);
+            const fechaAceptacion = (c as { fecha_aceptacion?: string | null }).fecha_aceptacion ?? null;
+            const fechaRechazo = (c as { fecha_rechazo?: string | null }).fecha_rechazo ?? null;
+            const fechaRespuesta = fechaAceptacion ?? fechaRechazo;
+            const fechaRespuestaLabel = fechaAceptacion ? "Aceptada" : fechaRechazo ? "Rechazada" : null;
             return (
               <Card
                 key={c.id}
@@ -108,6 +112,11 @@ export default function PortalCotizaciones() {
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
                       </p>
+                      {fechaRespuesta && fechaRespuestaLabel && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
+                          {fechaRespuestaLabel} el {formatDate(fechaRespuesta, "dd/MM/yyyy HH:mm")}
+                        </p>
+                      )}
                       {tieneEmbarque && (
                         <button
                           type="button"
