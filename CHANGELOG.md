@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.27.0] - 2026-05-31
+- **feat(notificaciones)**: Fase 2 del cierre de brechas del flujo de aceptación de cotización (notificación in-app a operaciones). Nueva tabla `notificaciones_internas` con RLS (cada usuario lee/marca solo las suyas; inserción exclusiva vía RPC `SECURITY DEFINER`) y habilitada para realtime. La RPC `portal_responder_cotizacion` ahora inserta una notificación por cada `admin`/`operador` de la organización dueña de la cotización al aceptar o rechazar desde el portal. Nuevo hook `useNotificacionesInternas` (React Query + suscripción realtime con cleanup) y componente `NotificacionesPopover` (campana con badge de no leídas, marcar individual/todas, navegación al enlace) integrado en el header del `Layout`. Brecha A de `docs/flujo-aceptacion-cotizacion.md` cerrada parcialmente (in-app ✅, email pendiente).
+- **chore(emails)**: Se deja preparado el template React Email `cotizacion-respuesta.tsx` en `supabase/functions/_shared/transactional-email-templates/` con branding Libre Carga (#1B2B4B / #2563EB / Inter) y el call-site comentado en `services/cotizacion/conversiones/portal.ts` (`// TODO Fase 2.1 — Email`). Inactivo hasta configurar dominio de email en Lovable Cloud; pasos de activación documentados dentro del propio template y en `docs/flujo-aceptacion-cotizacion.md`.
+
 ## [12.26.0] - 2026-05-31
 - **feat(cotizaciones)**: Fase 1 del cierre de brechas del flujo de aceptación. Se agregan columnas `fecha_aceptacion` y `fecha_rechazo` a `cotizaciones`. La RPC `portal_responder_cotizacion` ahora sella la fecha correspondiente al estado y registra un evento (`cotizacion_aceptada` / `cotizacion_rechazada`) en `bitacora_actividad` con el comentario del cliente y metadatos (folio, cliente, estado anterior). La pantalla de detalle muestra la fecha de respuesta junto al estado. Brechas B y parcial C de `docs/flujo-aceptacion-cotizacion.md` cerradas.
 
