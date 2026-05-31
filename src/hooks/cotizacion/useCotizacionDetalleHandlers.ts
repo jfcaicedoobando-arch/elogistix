@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
+  useCrearEmbarqueBorrador,
   type CotizacionRow,
 } from "@/hooks/cotizacion/useCotizaciones";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -18,9 +20,12 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  */
 export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefined) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const actualizarEstado = useUpdateEstadoCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
   const convertirAEmbarques = useConvertirCotizacionAEmbarques();
+  const crearBorrador = useCrearEmbarqueBorrador();
+
 
   const [showConvertir, setShowConvertir] = useState(false);
   const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
@@ -100,6 +105,17 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     }
   };
 
+  const handleCrearBorrador = async () => {
+    if (!cotizacion) return;
+    try {
+      const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
+      notifySuccess(toast, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
+      navigate(`/embarques/${embarqueId}`);
+    } catch (err: unknown) {
+      notifyError(toast, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
+    }
+  };
+
   return {
     showConvertir, setShowConvertir,
     showConfirmarConvertir, setShowConfirmarConvertir,
@@ -108,7 +124,10 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     abrirDialogConvertir,
     handleConvertir,
     handleGenerarEmbarques,
+    handleCrearBorrador,
     convertirProspecto,
     convertirAEmbarques,
+    crearBorrador,
   };
 }
+

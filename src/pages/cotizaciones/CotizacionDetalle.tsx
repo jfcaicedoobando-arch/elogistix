@@ -37,10 +37,11 @@ export default function CotizacionDetalle() {
     showConvertir, setShowConvertir,
     showConfirmarConvertir, setShowConfirmarConvertir,
     clienteForm, setClienteForm,
-    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques,
-    convertirProspecto, convertirAEmbarques, navigate,
+    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques, handleCrearBorrador,
+    convertirProspecto, convertirAEmbarques, crearBorrador, navigate,
   } = useCotizacionDetalleState(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
+
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
@@ -88,11 +89,15 @@ export default function CotizacionDetalle() {
           esProspecto={cotizacion.es_prospecto}
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id!}
+          embarqueIdVinculado={cotizacion.embarque_id ?? null}
+          isCreandoBorrador={crearBorrador.isPending}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
           onAbrirGenerarEmbarques={() => setShowConfirmarConvertir(true)}
+          onCrearBorrador={handleCrearBorrador}
         />
       )}
+
 
       {/* Info de prospecto */}
       {cotizacion.es_prospecto && (

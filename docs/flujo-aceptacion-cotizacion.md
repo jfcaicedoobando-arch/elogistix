@@ -176,7 +176,8 @@ ya existen pero están **inactivos**. Para activar:
 | 3 | **Bitácora de cambios de estado** de cotización. | ✅ Cerrada en 12.26.0 (vía `bitacora_actividad`). | Media |
 | 4 | **Sin acuse al cliente** confirmando que su aceptación fue recibida. | ✅ In-app cerrada en 12.29.0 (banner + toast + tarjeta listado). 🟡 Email pendiente de dominio. | Media |
 | 5 | **Estado `Confirmada` huérfano** en el enum. | ✅ Cerrada en 12.28.0. | Baja |
-| 6 | **No se crea embarque borrador automático** al aceptar. | ❌ Pendiente (Fase 5, decisión de producto). | Baja |
+| 6 | **No se crea embarque borrador automático** al aceptar. | ✅ Cerrada en 12.30.0 (semiautomático: botón "Crear embarque borrador" en cotización Aceptada, RPC `crear_embarque_borrador_desde_cotizacion`, nuevo estado `Borrador` en embarques). | Baja |
+
 
 
 ---

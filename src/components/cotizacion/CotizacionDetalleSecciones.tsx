@@ -59,14 +59,17 @@ interface AccionesProps {
   esProspecto: boolean;
   numContenedores: number;
   cotizacionId: string;
+  embarqueIdVinculado: string | null;
+  isCreandoBorrador: boolean;
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
   onAbrirGenerarEmbarques: () => void;
+  onCrearBorrador: () => void;
 }
 
 export function CotizacionDetalleAcciones({
-  estado, esProspecto, numContenedores, cotizacionId,
-  onCambiarEstado, onAbrirConvertir, onAbrirGenerarEmbarques,
+  estado, esProspecto, numContenedores, cotizacionId, embarqueIdVinculado, isCreandoBorrador,
+  onCambiarEstado, onAbrirConvertir, onAbrirGenerarEmbarques, onCrearBorrador,
 }: AccionesProps) {
   const navigate = useNavigate();
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
@@ -93,16 +96,24 @@ export function CotizacionDetalleAcciones({
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
-      {esAceptada && !esProspecto && (
+      {esAceptada && !esProspecto && embarqueIdVinculado && (
+        <Button size="sm" onClick={() => navigate(`/embarques/${embarqueIdVinculado}`)}>
+          Ver embarque borrador
+        </Button>
+      )}
+      {esAceptada && !esProspecto && !embarqueIdVinculado && (
         <>
+          <Button size="sm" onClick={onCrearBorrador} disabled={isCreandoBorrador}>
+            {isCreandoBorrador ? "Creando…" : "Crear embarque borrador"}
+          </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
           >
-            Crear Embarque
+            Crear Embarque (wizard)
           </Button>
-          <Button size="sm" onClick={onAbrirGenerarEmbarques}>
+          <Button size="sm" variant="outline" onClick={onAbrirGenerarEmbarques}>
             Generar Embarques
             <Badge className="ml-2">{numContenedores}</Badge>
           </Button>
@@ -111,3 +122,4 @@ export function CotizacionDetalleAcciones({
     </div>
   );
 }
+
