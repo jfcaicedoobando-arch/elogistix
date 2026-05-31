@@ -42,6 +42,9 @@ export function initSentry(): void {
       /error loading dynamically imported module/i,
       /Loading chunk \d+ failed/i,
       /ChunkLoadError/i,
+      // React Refresh / HMR de Vite: ruido exclusivo de desarrollo local.
+      /Should have a queue\. This is likely a bug in React/i,
+      /Invalid Refresh Token: Refresh Token Not Found/i,
     ],
     beforeSend(event, hint) {
       // Filtrar errores transitorios de carga de chunks (Vite): la app se
