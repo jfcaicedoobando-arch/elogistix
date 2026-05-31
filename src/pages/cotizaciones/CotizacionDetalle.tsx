@@ -37,10 +37,11 @@ export default function CotizacionDetalle() {
     showConvertir, setShowConvertir,
     showConfirmarConvertir, setShowConfirmarConvertir,
     clienteForm, setClienteForm,
-    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques,
-    convertirProspecto, convertirAEmbarques, navigate,
+    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques, handleCrearBorrador,
+    convertirProspecto, convertirAEmbarques, crearBorrador, navigate,
   } = useCotizacionDetalleState(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
+
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
