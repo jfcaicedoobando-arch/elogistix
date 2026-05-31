@@ -15,7 +15,7 @@ import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMe
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
 import { CotizacionDatosGeneralesCard } from "@/components/cotizacion/detalle/CotizacionDatosGeneralesCard";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { toTitleCase } from "@/lib/formatters";
+import { toTitleCase, formatDateTime } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
