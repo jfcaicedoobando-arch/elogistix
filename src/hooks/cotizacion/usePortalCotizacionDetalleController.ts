@@ -29,11 +29,23 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
       { respuesta: confirmAction, comentario },
       {
         onSuccess: () => {
+          const fechaTxt = new Date().toLocaleString("es-MX", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
           notifySuccess(toast, {
             title:
               confirmAction === "Aceptada"
-                ? "Cotización aceptada exitosamente"
-                : "Cotización rechazada"});
+                ? "Tu respuesta fue registrada"
+                : "Cotización rechazada",
+            description:
+              confirmAction === "Aceptada"
+                ? `Aceptaste la cotización el ${fechaTxt}. El equipo de Libre Carga ha sido notificado y dará seguimiento.`
+                : `Registramos tu rechazo el ${fechaTxt}. El equipo de operaciones podrá contactarte si necesitas una nueva propuesta.`,
+          });
           reset();
         },
         onError: (err: unknown) => {
