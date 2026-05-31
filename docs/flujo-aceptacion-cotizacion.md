@@ -42,7 +42,7 @@ Enum `public.estado_cotizacion`:
 | `Rechazada` | Cliente (portal) | El cliente rechazó. Termina el ciclo. |
 | `Vencida` | Sistema (fecha vigencia) | Se pasó la fecha de validez sin respuesta. |
 | `En operación` | Sistema (trigger) | Hay un embarque vinculado a la cotización. |
-| `Confirmada` | — | **Legado. Sin uso actual.** No usar en flujos nuevos. |
+> El valor `Confirmada` existía en el enum como código muerto y fue eliminado en 12.28.0.
 
 ### Transiciones válidas
 
@@ -171,7 +171,7 @@ ya existen pero están **inactivos**. Para activar:
 | 2 | **`cotizaciones.fecha_aceptacion` / `fecha_rechazo`**. | ✅ Cerrada en 12.26.0. | Media |
 | 3 | **Bitácora de cambios de estado** de cotización. | ✅ Cerrada en 12.26.0 (vía `bitacora_actividad`). | Media |
 | 4 | **Sin acuse al cliente** (email ni in-app) confirmando que su aceptación fue recibida. | ❌ Pendiente. | Media |
-| 5 | **Estado `Confirmada` huérfano** en el enum. | ❌ Pendiente (Fase 3). | Baja |
+| 5 | **Estado `Confirmada` huérfano** en el enum. | ✅ Cerrada en 12.28.0. | Baja |
 | 6 | **No se crea embarque borrador automático** al aceptar. | ❌ Pendiente (Fase 4, decisión de producto). | Baja |
 
 

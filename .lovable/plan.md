@@ -1,94 +1,67 @@
-# Fase 2 — Notificación a operaciones (sin configurar dominio de email)
+# Fase 3 — Limpieza del enum `estado_cotizacion` (brecha E)
 
-Objetivo: dejar **todo el código** de la Fase 2 implementado y funcional para notificaciones in-app, y el código de envío de email **escrito pero inactivo** hasta que se configure el dominio en otra ocasión.
+## Contexto
+
+El enum `estado_cotizacion` contiene el valor `'Confirmada'` que es **código muerto**:
+- 0 filas en `cotizaciones` lo usan (verificado: solo existen Borrador, Enviada, Aceptada, Rechazada, En operación).
+- No aparece referenciado en código de aplicación (`src/`) ni en edge functions activas — solo en migraciones históricas.
+- La RPC `portal_responder_cotizacion` solo acepta `Aceptada` o `Rechazada`.
+- Es ruido en el modelo de dominio y riesgo de uso accidental.
+
+Estado actual del enum:
+`{Borrador, Enviada, Confirmada, Rechazada, Vencida, Aceptada, "En operación"}`
+
+Estado objetivo:
+`{Borrador, Enviada, Aceptada, Rechazada, Vencida, "En operación"}`
 
 ## Alcance
 
-### 1. Tabla `notificaciones_internas` (migración)
+### 1. Migración SQL — recrear el enum sin `Confirmada`
 
-Columnas:
-- `id` (uuid pk)
-- `organization_id` (uuid, FK lógico)
-- `usuario_id` (uuid) — destinatario
-- `tipo` (text) — ej. `cotizacion_aceptada`, `cotizacion_rechazada`
-- `titulo` (text)
-- `mensaje` (text)
-- `enlace` (text nullable) — ej. `/cotizaciones/:id`
-- `entidad_tipo` (text nullable) — ej. `cotizacion`
-- `entidad_id` (uuid nullable)
-- `leida` (boolean default false)
-- `leida_at` (timestamptz nullable)
-- `created_at` (timestamptz default now)
+Postgres no soporta `DROP VALUE` en enums, así que el patrón estándar es:
 
-RLS:
-- SELECT/UPDATE: solo el `usuario_id` dueño (`auth.uid() = usuario_id`)
-- INSERT: vía RPC `SECURITY DEFINER` (sin policy para clientes)
-- GRANTs: `authenticated` (select, update), `service_role` (all)
+1. Crear `estado_cotizacion_new` con los 6 valores válidos (sin `Confirmada`).
+2. `ALTER TABLE cotizaciones ALTER COLUMN estado TYPE estado_cotizacion_new USING estado::text::estado_cotizacion_new` — seguro porque ya validamos 0 filas con `Confirmada`.
+3. Hacer lo mismo con cualquier otra tabla/función que use el tipo (verificar `pg_depend`/`information_schema.columns` antes de la migración para detectar dependencias).
+4. `DROP TYPE estado_cotizacion`.
+5. `ALTER TYPE estado_cotizacion_new RENAME TO estado_cotizacion`.
+6. Recrear el `DEFAULT` de la columna si existía.
 
-Índices: `(usuario_id, leida, created_at desc)`.
+**Salvaguarda**: la migración hace `SELECT count(*) FROM cotizaciones WHERE estado::text = 'Confirmada'` y lanza `RAISE EXCEPTION` si encuentra >0 (evita pérdida silenciosa si algo cambió entre planning y ejecución).
 
-### 2. RPC `portal_responder_cotizacion` (extensión)
+### 2. Verificar funciones que referencian el enum
 
-Después de actualizar la cotización y registrar en `bitacora_actividad`, agregar bloque que:
-- Busca usuarios con rol `operador` o `admin` en la `organization_id` de la cotización (vía `user_roles` + `organization_members`).
-- Inserta una fila en `notificaciones_internas` por cada destinatario con:
-  - `tipo`: `cotizacion_aceptada` | `cotizacion_rechazada`
-  - `titulo`: "Cotización {folio} {aceptada|rechazada}"
-  - `mensaje`: cliente + comentario opcional
-  - `enlace`: `/cotizaciones/{id}`
-- Mantiene idempotencia (solo dispara cuando transiciona desde `Enviada`).
+Antes de soltar el tipo, listar funciones que lo referencien con:
+```sql
+SELECT proname FROM pg_proc WHERE prosrc ILIKE '%estado_cotizacion%';
+```
+Si alguna usa `'Confirmada'::estado_cotizacion` literal, ajustar (no debería haber según el grep, pero verificamos en build mode).
 
-### 3. UI — Centro de notificaciones
+### 3. Documentación
 
-- **`src/hooks/useNotificacionesInternas.ts`**: hook con React Query que lee `notificaciones_internas` del usuario actual (paginado, máx 50 recientes) + suscripción realtime (`ALTER PUBLICATION supabase_realtime ADD TABLE notificaciones_internas`).
-- **`src/components/layout/NotificacionesPopover.tsx`**: ícono campana en el header con badge de no leídas, lista de notificaciones, acción "marcar como leída" y navegación al `enlace`.
-- Integración en `AppHeader` (o equivalente) junto a los otros íconos.
+- `docs/flujo-aceptacion-cotizacion.md` → actualizar sección 8 (Brechas conocidas): brecha 5 (`Confirmada` huérfano) marcada como ✅ cerrada en 12.28.0, y la sección de estados en la parte superior del doc eliminando `Confirmada` del listado.
 
-### 4. Código de email (escrito pero inactivo)
+### 4. Versión y changelog
 
-Crear **template** y **call site comentado** para activación futura:
-
-- **`supabase/functions/_shared/transactional-email-templates/cotizacion-respuesta.tsx`**: template React Email con branding Libre Carga (#1B2B4B / #2563EB / Inter). Props: `folio`, `cliente`, `estado` (Aceptada/Rechazada), `comentario?`, `enlace`.
-- **`supabase/functions/_shared/transactional-email-templates/registry.ts`**: registrar `cotizacion-respuesta` (solo si el archivo registry ya existe; si no existe, dejar el `.tsx` listo para registrarse cuando se haga el scaffold).
-- En la RPC, **NO** invocar el envío (se hará desde el cliente o un trigger en fase posterior). En su lugar, dejar dentro del hook/handler de UI un bloque `// TODO Fase 2.1` con la llamada `supabase.functions.invoke('send-transactional-email', ...)` comentada y documentada.
-- Documentar en `docs/flujo-aceptacion-cotizacion.md` los pasos exactos para activar el email cuando se configure el dominio:
-  1. Configurar dominio de email en Lovable Cloud
-  2. Ejecutar setup de infraestructura de emails
-  3. Hacer scaffold de transactional emails
-  4. Descomentar el call site en el handler
-  5. Verificar registro del template en `registry.ts`
-
-### 5. Versión y changelog
-
-- `src/constants/appVersion.ts` → `12.27.0`
-- `CHANGELOG.md` → entrada `[12.27.0] - 2026-05-31` describiendo:
-  - Tabla `notificaciones_internas` + RLS
-  - Notificaciones in-app a operadores/admins al aceptar/rechazar cotización
-  - Campana de notificaciones en header con realtime
-  - Template de email `cotizacion-respuesta` listo (inactivo hasta configurar dominio)
-- `docs/flujo-aceptacion-cotizacion.md` → actualizar sección "Brecha A" indicando estado parcial (in-app ✅, email pendiente de dominio).
-
-## Detalles técnicos
-
-- **Seguridad**: la RPC usa `SECURITY DEFINER` con `SET search_path = public`. La inserción en `notificaciones_internas` se hace dentro de la RPC, por lo que respeta el modelo (cliente del portal no puede insertar directo).
-- **Realtime**: agregar `notificaciones_internas` a `supabase_realtime`. El hook se suscribe filtrando `usuario_id=eq.{auth.uid()}`.
-- **Cleanup obligatorio** (regla del proyecto): el `useEffect` del hook debe llamar `supabase.removeChannel(channel)` en cleanup.
-- **Tipado estricto**: sin `any`. Tipos derivados de `Database['public']['Tables']['notificaciones_internas']['Row']`.
-- **Componente ≤200 líneas**: `NotificacionesPopover` separado del header.
-- **Paginación**: el query usa `.range(0, 49)` (regla Power of 10).
-- **Memorias aplicables**: `mem://features/seguridad-y-roles` (resolver operador/admin), `mem://principles/power-of-10`, `mem://technical/architecture-and-standards`.
+- `src/constants/appVersion.ts` → `12.28.0`
+- `CHANGELOG.md` → entrada `[12.28.0] - 2026-05-31`:
+  - Removido `'Confirmada'` del enum `estado_cotizacion` (código muerto, 0 filas afectadas).
+  - Brecha E del flujo de aceptación cerrada.
 
 ## Lo que **NO** se hace en esta fase
 
-- No se configura dominio de email.
-- No se ejecuta `setup_email_infra` ni `scaffold_transactional_email`.
-- No se envían emails reales (el call site queda comentado con TODO claro).
-- No se toca el enum `estado_cotizacion` (eso es Fase 3).
-- No se crea embarque borrador automático (eso es Fase 4).
+- No se toca lógica de la RPC ni de notificaciones (eso quedó listo en Fases 1 y 2).
+- No se crea embarque borrador automático (eso es Fase 4, requiere decisión de producto).
+- No se activa el envío de email (sigue esperando configuración de dominio).
+
+## Detalles técnicos
+
+- **Riesgo**: bajo. 0 filas afectadas + 0 referencias en código.
+- **Tipo regenerado**: `src/integrations/supabase/types.ts` se actualizará automáticamente; el campo `estado` en TypeScript pasará de tener 7 literales a 6.
+- **Compatibilidad**: cualquier código que hiciera `if (estado === 'Confirmada')` (no encontrado en grep) dejará de compilar — esto es deseable, expone uso accidental.
 
 ## Resultado esperado
 
-Al terminar:
-- Operadores y admins ven una campana en el header con notificación en tiempo real cuando un cliente acepta/rechaza una cotización en el portal.
-- La cotización registra fecha + bitácora (ya hecho en Fase 1) y ahora también notifica in-app.
-- Todo el código de email está escrito y revisado, solo falta configurar dominio + descomentar 1 línea para activarlo en el futuro.
+- Enum limpio, 6 estados válidos, alineado con la lógica real de la app.
+- Brecha E cerrada en la doc.
+- Sin cambios funcionales visibles al usuario.
