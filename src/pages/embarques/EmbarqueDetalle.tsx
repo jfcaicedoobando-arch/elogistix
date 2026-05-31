@@ -5,6 +5,8 @@ import { useState } from "react";
 import EmptyState from "@/components/empty/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FileEdit } from "lucide-react";
 import { usePermissions, useTabsParam } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
