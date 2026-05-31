@@ -71,6 +71,8 @@ export default function PortalCotizacionDetalle() {
         comentarioCliente={comentarioCliente}
         embarqueId={(cot as { embarque_id?: string | null }).embarque_id ?? null}
         embarqueExpediente={(cot as { embarque_expediente?: string | null }).embarque_expediente ?? null}
+        fechaAceptacion={(cot as { fecha_aceptacion?: string | null }).fecha_aceptacion ?? null}
+        fechaRechazo={(cot as { fecha_rechazo?: string | null }).fecha_rechazo ?? null}
       />
 
       {/* Datos generales */}

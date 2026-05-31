@@ -1,13 +1,27 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Info, MessageSquare, Ship, ArrowRight } from "lucide-react";
+import { CheckCircle2, XCircle, Info, MessageSquare, Ship, ArrowRight, CalendarCheck2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatDate } from "@/lib/formatters";
 
 interface PortalCotizacionEstadoBannerProps {
   estado: string;
   comentarioCliente?: string | null;
   embarqueId?: string | null;
   embarqueExpediente?: string | null;
+  fechaAceptacion?: string | null;
+  fechaRechazo?: string | null;
+}
+
+function FechaRespuesta({ label, fecha }: { label: string; fecha: string }) {
+  return (
+    <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <CalendarCheck2 className="h-3.5 w-3.5" />
+      <span>
+        {label} el <span className="font-medium tabular-nums">{formatDate(fecha, "dd/MM/yyyy HH:mm")}</span>
+      </span>
+    </p>
+  );
 }
 
 /** Banner contextual según el estado de la cotización (Aceptada/En operación/Rechazada/Enviada). */
@@ -16,6 +30,8 @@ export default function PortalCotizacionEstadoBanner({
   comentarioCliente,
   embarqueId,
   embarqueExpediente,
+  fechaAceptacion,
+  fechaRechazo,
 }: PortalCotizacionEstadoBannerProps) {
   const navigate = useNavigate();
 
@@ -42,6 +58,7 @@ export default function PortalCotizacionEstadoBanner({
               Ver embarque <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           </div>
+          {fechaAceptacion && <FechaRespuesta label="Aceptada" fecha={fechaAceptacion} />}
           {comentarioCliente && (
             <p className="mt-2 flex items-start gap-1.5 text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
@@ -58,7 +75,11 @@ export default function PortalCotizacionEstadoBanner({
       <Alert className="border-success/40 bg-success/15">
         <CheckCircle2 className="h-4 w-4 text-success" />
         <AlertDescription className="text-foreground">
-          <p>Esta cotización fue aceptada. Te notificaremos cuando inicie la operación.</p>
+          <p className="font-medium">Tu respuesta fue registrada. Aceptaste esta cotización.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            El equipo de Libre Carga dará seguimiento y te avisará cuando tu embarque sea creado.
+          </p>
+          {fechaAceptacion && <FechaRespuesta label="Aceptada" fecha={fechaAceptacion} />}
           {comentarioCliente && (
             <p className="mt-2 flex items-start gap-1.5 text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
@@ -75,7 +96,11 @@ export default function PortalCotizacionEstadoBanner({
       <Alert className="border-destructive/50 bg-destructive/10">
         <XCircle className="h-4 w-4 text-destructive" />
         <AlertDescription className="text-destructive">
-          <p>Esta cotización fue rechazada.</p>
+          <p className="font-medium">Tu respuesta fue registrada. Rechazaste esta cotización.</p>
+          <p className="text-sm opacity-80 mt-0.5">
+            Si necesitas cambios, contacta al equipo de operaciones para generar una nueva propuesta.
+          </p>
+          {fechaRechazo && <FechaRespuesta label="Rechazada" fecha={fechaRechazo} />}
           {comentarioCliente && (
             <p className="mt-2 flex items-start gap-1.5">
               <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
