@@ -15,7 +15,7 @@ import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMe
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
 import { CotizacionDatosGeneralesCard } from "@/components/cotizacion/detalle/CotizacionDatosGeneralesCard";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { toTitleCase } from "@/lib/formatters";
+import { toTitleCase, formatDate } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
@@ -63,7 +63,19 @@ export default function CotizacionDetalle() {
           <h1 className="text-2xl font-bold">{cotizacion.folio}</h1>
           <p className="text-sm text-muted-foreground truncate">{toTitleCase(nombreDestinatario)}</p>
         </div>
-        <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
+          {cotizacion.fecha_aceptacion && (
+            <span className="text-xs text-muted-foreground">
+              Aceptada el {formatDate(cotizacion.fecha_aceptacion, "dd/MM/yyyy HH:mm")}
+            </span>
+          )}
+          {cotizacion.fecha_rechazo && (
+            <span className="text-xs text-muted-foreground">
+              Rechazada el {formatDate(cotizacion.fecha_rechazo, "dd/MM/yyyy HH:mm")}
+            </span>
+          )}
+        </div>
         <Button variant="outline" size="sm" onClick={() => handleExportarPdf(cotizacion, tasaIva)}>
           <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
         </Button>

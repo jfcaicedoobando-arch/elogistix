@@ -1,68 +1,93 @@
-# Plan: documentar el proceso oficial de aceptación de cotización
+# Plan: Cerrar brechas del flujo de aceptación de cotización
 
-## Objetivo
+Documentadas en `docs/flujo-aceptacion-cotizacion.md` (v12.25.3). Se atacan en 4 fases incrementales, cada una entregable e independiente, priorizando trazabilidad antes que automatización.
 
-Crear **`docs/flujo-aceptacion-cotizacion.md`** que describa, en español de México, el proceso end-to-end cuando un cliente acepta una cotización desde el portal. El documento sirve como referencia para operaciones, soporte y futuros desarrolladores. **No se modifica código ni schema**.
+---
 
-## Entregable
+## Fase 1 — Trazabilidad (brechas B + C parcial)
 
-Un único archivo nuevo: `docs/flujo-aceptacion-cotizacion.md`.
+**Objetivo:** Dejar huella temporal y auditable de cada aceptación/rechazo, sin tocar UI ni notificaciones.
 
-## Estructura del documento
+### Migraciones
+- `ALTER TABLE public.cotizaciones ADD COLUMN fecha_aceptacion timestamptz NULL` (también `fecha_rechazo`).
+- Modificar RPC `portal_responder_cotizacion`:
+  - Si `nuevo_estado = 'Aceptada'` → `fecha_aceptacion = now()`.
+  - Si `nuevo_estado = 'Rechazada'` → `fecha_rechazo = now()`.
+  - Insertar registro en `bitacora_actividad` con `accion = 'cotizacion_aceptada' | 'cotizacion_rechazada'`, `entidad = 'cotizacion'`, `entidad_id = cotizacion_id`, metadata con comentario del cliente y `cliente_id`.
 
-1. **Resumen ejecutivo** — diagrama lineal en bloque `text` del happy path:
+### Frontend
+- Mostrar `fecha_aceptacion` en `CotizacionDetalle` interno (timeline / header).
+- Filtrar bitácora por entidad cotización en el detalle.
 
-   ```text
-   Borrador → Enviada → (cliente acepta en portal) → Aceptada
-       → (operaciones crea + vincula embarque) → En operación
-   ```
+**Versión:** 12.26.0 · **Riesgo:** bajo · **Sin breaking changes.**
 
-2. **Actores y responsabilidades**
-   - Cliente (portal): acepta / rechaza / comenta.
-   - Operaciones (app interna): da seguimiento, crea embarque, lo vincula.
-   - Sistema: valida, cambia estados, cierra oportunidades CRM.
+---
 
-3. **Estados de la cotización (`estado_cotizacion`)** — tabla con los 7 valores, descripción, quién los dispara, y transiciones válidas. Marcar `Confirmada` como **legado / sin uso**.
+## Fase 2 — Notificación a operaciones (brecha A + C completa)
 
-4. **Paso a paso del flujo actual** — qué hace cada capa cuando el cliente pulsa "Aceptar":
-   - UI portal (`PortalCotizacionDetalle` + diálogo de confirmación con comentario).
-   - RPC `portal_responder_cotizacion` (validaciones de tenencia y de estado, columnas que actualiza: `estado`, `comentario_cliente`, `updated_at`).
-   - Trigger `crm_cierra_oportunidad_desde_cotizacion` cuando hay `oportunidad_id`.
-   - Acción manual de operaciones: crear embarque y vincular `embarques.cotizacion_id`.
-   - Trigger `sync_cotizacion_embarque_link` que pasa la cotización a `En operación`.
+**Objetivo:** Cumplir la promesa del diálogo del portal ("se notificará al equipo").
 
-5. **Flujo de rechazo y vencimiento** — sección breve para completar el cuadro.
+### Backend
+- Crear tabla `public.notificaciones_internas` (si no existe ya equivalente): `id`, `organization_id`, `user_id` (nullable = broadcast por rol), `tipo`, `titulo`, `mensaje`, `entidad`, `entidad_id`, `leida`, `created_at`. Con RLS por org + GRANTs estándar.
+- Extender RPC `portal_responder_cotizacion` para insertar notificación dirigida a `operador` + `admin` de la organización dueña de la cotización.
+- Edge function `send-cotizacion-respuesta-email`:
+  - Trigger desde el RPC vía `pg_net` **o** invocación desde el cliente tras el RPC (preferible: cliente, evita acoplar DB ↔ red).
+  - Plantilla transaccional usando infraestructura Lovable Emails (`send-transactional-email` + template `cotizacion-respondida`).
+  - Destinatarios: emails de usuarios con rol `operador`/`admin` de la org.
 
-6. **Reglas de negocio**
-   - Solo el cliente dueño puede aceptar (RLS / `current_user_client_ids`).
-   - Solo cotizaciones en `Enviada` son aceptables; en cualquier otro estado el portal oculta el botón y la RPC rechaza.
-   - El comentario del cliente es opcional, se almacena tal cual sin saneamiento HTML (es texto plano).
-   - La aceptación **no** crea embarque ni factura automáticamente.
+### Frontend
+- Badge de notificaciones nuevas en sidebar interno (reusar patrón de `sidebar-alerts-badge`).
+- Panel/popover de notificaciones internas.
+- Tras aceptar/rechazar en portal: invocar edge function con `idempotencyKey = cotizacion-resp-${id}`.
 
-7. **Notificaciones**
-   - **Estado actual**: el diálogo del portal indica que "el equipo será notificado", pero **no hay código** que envíe email ni notificación in-app a operaciones.
-   - **Recomendación a futuro** (no implementar ahora): notificación dual al rol `operador`/`admin` de la organización dueña — campana in-app + email transaccional vía la infraestructura de Lovable Emails.
+**Prerrequisito:** configurar dominio de email Lovable Cloud (si no está). Se detectará y se pedirá al usuario en su momento.
 
-8. **Brechas conocidas**
-   - No existe `cotizaciones.fecha_aceptacion`; solo `updated_at` (se sobreescribe en cualquier edición).
-   - No hay bitácora dedicada para cambios de estado de cotización.
-   - No hay notificación al staff al momento de la aceptación.
-   - Estado `Confirmada` huérfano en el enum.
+**Versión:** 12.27.0 · **Riesgo:** medio (requiere dominio de email).
 
-9. **Apéndice — referencias de código**
-   - `src/pages/portal/PortalCotizacionDetalle.tsx`
-   - `src/components/portal/cotizacion/PortalCotizacionHeader.tsx`
-   - `src/hooks/portal/usePortalCotizacionDetalleController.ts`
-   - `src/hooks/portal/usePortalCotizacionMutations.ts`
-   - `src/services/cotizacion/conversiones/portal.ts`
-   - Migraciones relevantes: enum (`20260302165947`, `20260302171122`, `20260427015721`), RPC (`20260410005236`), trigger CRM (`20260525232901`), trigger vínculo embarque (`20260427025307`).
+---
 
-## Pasos de implementación (solo edición de docs)
+## Fase 3 — Limpieza de modelo (brecha E)
 
-1. Crear `docs/flujo-aceptacion-cotizacion.md` con la estructura de arriba.
-2. Actualizar `CHANGELOG.md` (root) con entrada `docs(cotizaciones)` y bump de `APP_VERSION` a **12.25.3** (regla del proyecto: cualquier cambio versionable, incluida documentación, registra changelog + versión).
+**Objetivo:** Eliminar ruido del enum.
 
-## Fuera de alcance
+- Verificar con query que `estado = 'Confirmada'` no existe en ninguna fila.
+- Migración: recrear `estado_cotizacion` sin `'Confirmada'` (drop + create + cast columnas dependientes), o dejar el valor pero documentarlo como deprecated si hay riesgo.
+- Actualizar tipos TS consumidos y cualquier `switch`/badge que lo referencie.
 
-- Ningún cambio en `src/`, migraciones, edge functions, RLS, ni en el enum.
-- No se implementa notificación a staff, columna `fecha_aceptacion`, bitácora, ni creación automática de embarque borrador. Quedan listadas como brechas en el propio documento para una futura iteración.
+**Versión:** 12.28.0 · **Riesgo:** bajo-medio (cambio de enum).
+
+---
+
+## Fase 4 — Embarque borrador automático (brecha D) — OPCIONAL
+
+**Objetivo:** Reducir trabajo manual de operaciones.
+
+- Al aceptar, el RPC (o un trigger `AFTER UPDATE` sobre `cotizaciones`) crea un `embarques` en estado `Borrador` con:
+  - `cotizacion_id`, `cliente_id`, `organization_id`, incoterm, puertos, modalidad, contactos heredados.
+  - Conceptos de costo copiados desde `cotizacion_conceptos` (reusar lógica existente de `quotation-data-reconciliation`).
+- Cambiar trigger `sync_cotizacion_embarque_link` para tolerar el borrador pre-existente (UPSERT por `cotizacion_id`).
+- UI operaciones: badge "Generado desde cotización" en el embarque borrador.
+
+**Versión:** 12.29.0 · **Riesgo:** alto — requiere validación cuidadosa con operaciones. **Se recomienda discutir y aprobar diseño antes de implementar.**
+
+---
+
+## Detalles técnicos transversales
+
+- Cada fase: bump `APP_VERSION` + entrada en `CHANGELOG.md` (root) + actualizar `docs/flujo-aceptacion-cotizacion.md` marcando la brecha como cerrada.
+- Toda nueva tabla pública: `GRANT` + RLS + policies en la misma migración (regla del proyecto).
+- RPCs como `SECURITY DEFINER` con `SET search_path = public`.
+- Idempotencia: `portal_responder_cotizacion` ya valida `estado = 'Enviada'`, la bitácora y notificación sólo se insertan dentro de esa rama.
+- No tocar `Confirmada` hasta Fase 3.
+- No tocar el botón "Aceptar" del portal en Fase 1.
+
+---
+
+## Orden recomendado de aprobación
+
+1. ✅ Aprobar Fase 1 → implementar y validar.
+2. Confirmar dominio de email disponible → aprobar Fase 2.
+3. Aprobar Fase 3 cuando Fase 2 esté estable.
+4. Discutir Fase 4 por separado (cambio de proceso operativo).
+
+¿Arrancamos con Fase 1?
