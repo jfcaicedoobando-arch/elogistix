@@ -1,12 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
@@ -14,9 +8,8 @@ import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirPro
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
 import { CotizacionDatosGeneralesCard } from "@/components/cotizacion/detalle/CotizacionDatosGeneralesCard";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { toTitleCase, formatDate } from "@/lib/formatters";
-import { ArrowLeft, FileDown } from "lucide-react";
+import { CotizacionDetalleHeader } from "@/components/cotizacion/detalle/CotizacionDetalleHeader";
+import { DialogGenerarEmbarques } from "@/components/cotizacion/detalle/DialogGenerarEmbarques";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
@@ -42,7 +35,6 @@ export default function CotizacionDetalle() {
   } = useCotizacionDetalleState(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
-
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
   }
@@ -51,38 +43,15 @@ export default function CotizacionDetalle() {
     return <div className="text-center py-12 text-muted-foreground">Cotización no encontrada</div>;
   }
 
-  
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Encabezado */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/cotizaciones")} aria-label="Volver a cotizaciones">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold">{cotizacion.folio}</h1>
-          <p className="text-sm text-muted-foreground truncate">{toTitleCase(nombreDestinatario)}</p>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
-          {cotizacion.fecha_aceptacion && (
-            <span className="text-xs text-muted-foreground">
-              Aceptada el {formatDate(cotizacion.fecha_aceptacion, "dd/MM/yyyy HH:mm")}
-            </span>
-          )}
-          {cotizacion.fecha_rechazo && (
-            <span className="text-xs text-muted-foreground">
-              Rechazada el {formatDate(cotizacion.fecha_rechazo, "dd/MM/yyyy HH:mm")}
-            </span>
-          )}
-        </div>
-        <Button variant="outline" size="sm" onClick={() => handleExportarPdf(cotizacion, tasaIva)}>
-          <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
-        </Button>
-      </div>
+      <CotizacionDetalleHeader
+        cotizacion={cotizacion}
+        nombreDestinatario={nombreDestinatario}
+        onBack={() => navigate("/cotizaciones")}
+        onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
+      />
 
-      {/* Acciones según estado */}
       {canEdit && (
         <CotizacionDetalleAcciones
           estado={cotizacion.estado}
@@ -98,8 +67,6 @@ export default function CotizacionDetalle() {
         />
       )}
 
-
-      {/* Info de prospecto */}
       {cotizacion.es_prospecto && (
         <Card className="border-warning/30 bg-warning/10">
           <CardContent className="p-4">
@@ -116,18 +83,13 @@ export default function CotizacionDetalle() {
         </Card>
       )}
 
-      {/* Datos generales */}
       <CotizacionDatosGeneralesCard cotizacion={cotizacion} />
-
-      {/* Mercancía */}
       <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
 
-      {/* Conceptos de venta */}
       <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} total={totalUSD} />
       <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />
       <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
 
-      {/* Costos Internos P&L */}
       {canEdit && (
         <SeccionCostosInternosPLUnificado
           tipo="detalle"
@@ -137,7 +99,6 @@ export default function CotizacionDetalle() {
         />
       )}
 
-      {/* Comentario del cliente */}
       {cotizacion.comentario_cliente && (
         <Card className="border-info/50">
           <CardHeader><CardTitle className="text-lg">Comentario del Cliente</CardTitle></CardHeader>
@@ -147,7 +108,6 @@ export default function CotizacionDetalle() {
         </Card>
       )}
 
-      {/* Notas */}
       {cotizacion.notas && (
         <Card>
           <CardHeader><CardTitle className="text-lg">Notas</CardTitle></CardHeader>
@@ -157,13 +117,11 @@ export default function CotizacionDetalle() {
         </Card>
       )}
 
-      {/* Embarques Generados */}
       <CotizacionDetalleEmbarques
         embarques={embarquesVinculados}
         cotizacionEstado={cotizacion.estado}
       />
 
-      {/* Dialog Convertir Prospecto */}
       <DialogConvertirProspecto
         open={showConvertir}
         onOpenChange={setShowConvertir}
@@ -173,28 +131,13 @@ export default function CotizacionDetalle() {
         isPending={convertirProspecto.isPending}
       />
 
-      {/* AlertDialog Confirmar Conversión a Embarques */}
-      <AlertDialog open={showConfirmarConvertir} onOpenChange={setShowConfirmarConvertir}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Generar embarques?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se crearán {cotizacion.num_contenedores} embarque{cotizacion.num_contenedores > 1 ? 's' : ''} desde esta cotización.
-              Los conceptos por Contenedor se copiarán a cada embarque.
-              Los conceptos por BL solo al primer embarque.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={convertirAEmbarques.isPending}
-              onClick={handleGenerarEmbarques}
-            >
-              {convertirAEmbarques.isPending ? 'Generando…' : 'Confirmar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DialogGenerarEmbarques
+        open={showConfirmarConvertir}
+        onOpenChange={setShowConfirmarConvertir}
+        numContenedores={cotizacion.num_contenedores}
+        isPending={convertirAEmbarques.isPending}
+        onConfirmar={handleGenerarEmbarques}
+      />
     </div>
   );
 }

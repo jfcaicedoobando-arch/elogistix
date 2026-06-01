@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.36.2] - 2026-06-01
+- **refactor(cotizaciones)**: `CotizacionDetalle.tsx` baja de 201 → 143 líneas extrayendo `CotizacionDetalleHeader` (encabezado + estado + botón Exportar PDF) y `DialogGenerarEmbarques` (AlertDialog de confirmación) a `src/components/cotizacion/detalle/`. Cumple Power-of-10 (≤200 líneas) y desbloquea `architecture-baseline.test.ts`. Adicionalmente se renombra el título duplicado `"propaga el error de la RPC"` en `services/embarque/contenedores/__tests__/crud.test.ts` a `"…al sincronizar contenedores"` para resolver `audit:tests` y `audit-report.test.ts`. Sin cambios funcionales: el comportamiento, estado y handlers de la página son idénticos.
+
 ## [12.36.1] - 2026-06-01
 - **fix(sentry)**: Filtro en `beforeSend` para errores de React Refresh / HMR (ej. `ReferenceError: pendienteOpen is not defined`). Se agregan `isReactRefreshHmrError` y `isReactRefreshStackTrace` para detectar `ReferenceError` cuyo stack trace contenga `@react-refresh`, `performReactRefresh` o `scheduleRefresh`, y descartarlos antes de enviar a Sentry. Estos errores ocurren cuando un bundle stale intenta re-renderizar componentes con variables que ya no existen tras hot reload; no representan bugs reales. Tests unitarios en `src/lib/__tests__/sentry.test.ts` (9 casos).
 
