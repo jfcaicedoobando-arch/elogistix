@@ -69,8 +69,24 @@ Deno.serve(async (req) => {
     const { userId, adminClient } = await authenticate(req);
     const { isGlobalAdmin, orgId: adminOrgId } = await checkAdminAccess(adminClient, userId);
 
-    // Permitir a cualquier miembro de la organización listar usuarios de su propia
-    // org (necesario para selects de vendedor/responsable en CRM, auditoría, etc.).
+    // 12.32.0: restringir a roles admin/operador/super_admin (no viewer/cliente).
+    const { data: rolesData } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const globalRoles = new Set((rolesData ?? []).map((r: { role: string }) => r.role));
+    const { data: orgRoles } = await adminClient
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", userId);
+    const orgRoleSet = new Set((orgRoles ?? []).map((r: { role: string }) => r.role));
+    const ALLOWED = new Set(["admin", "operador", "super_admin"]);
+    const allowed = [...globalRoles, ...orgRoleSet].some((r) => ALLOWED.has(r));
+    if (!allowed) {
+      log.finish(403, "role_not_allowed", { user_id: userId });
+      return errorResponse("Solo admins/operadores pueden listar usuarios", 403, cors);
+    }
+
     let orgId: string | null;
     try {
       orgId = await resolveOrgScope(adminClient, userId, isGlobalAdmin, adminOrgId);

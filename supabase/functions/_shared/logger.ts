@@ -41,21 +41,8 @@ export interface Logger {
   finish: (status_code: number, msg?: string, ctx?: LogContext) => void;
 }
 
-/**
- * Intenta extraer el `user_id` del JWT del request sin verificar firma
- * (solo decodificación). Sirve como pista; no para autorización.
- */
-function tryExtractUserId(req: Request): string | null {
-  try {
-    const auth = req.headers.get("Authorization") ?? "";
-    const token = auth.replace(/^Bearer\s+/i, "");
-    if (!token || !token.includes(".")) return null;
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return typeof payload?.sub === "string" ? payload.sub : null;
-  } catch {
-    return null;
-  }
-}
+// 12.32.0: ya no decodificamos JWT sin verificar firma. El caller debe pasar
+// `userId` ya verificado vía `setUserId()` cuando esté disponible.
 
 let cachedClient: ReturnType<typeof createClient> | null = null;
 function getServiceClient() {
