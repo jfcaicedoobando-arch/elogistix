@@ -1,17 +1,17 @@
-# Cast Audit — generado 2026-05-30
+# Cast Audit — generado 2026-06-01
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **793**
+Total de `as` casts detectados: **798**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 345     | 43.5% |
+| SAFE      | 0 | 348     | 43.6% |
 | LOW       | 1 | 7      | 0.9% |
-| MEDIUM    | 2 | 441   | 55.6% |
+| MEDIUM    | 2 | 443   | 55.5% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -42,8 +42,8 @@ Total de `as` casts detectados: **793**
 | 11 | `src/lib/mappers/cotizacion.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 | 12 | `src/lib/ui/errorDetailsExtract.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 | 13 | `src/services/__tests__/tracking.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 14 | `src/services/cotizacion/mutations/payloadBuilders.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 15 | `src/services/cotizacion/mutations/update.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 14 | `src/services/cotizacion/conversiones/embarques.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 15 | `src/services/cotizacion/mutations/payloadBuilders.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
