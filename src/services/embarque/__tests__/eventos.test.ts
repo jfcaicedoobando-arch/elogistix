@@ -59,8 +59,9 @@ describe("insertEventoEmbarque", () => {
         usuario: "op@demo.com",
       }),
     ).resolves.toBeUndefined();
-    const call = mock.tableCalls.find((c) => c.table === "eventos_embarque");
-    expect(call?.ops).toContain("insert");
+    const insertCall = mock.tableCalls.at(-1);
+    expect(insertCall?.table).toBe("eventos_embarque");
+    expect(insertCall?.ops).toContain("insert");
   });
 
   it("throws when supabase insert fails", async () => {
