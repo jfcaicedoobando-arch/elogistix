@@ -41,7 +41,8 @@ export interface ExchangeRates {
 // ─── Navieras ────────────────────────────────────────────────────────────────
 
 export async function fetchNavieras(includeInactive = false): Promise<Naviera[]> {
-  let query = supabase.from("navieras").select("*").order("name");
+  // 12.34.0: .limit(500) defensivo (evita el cap silencioso de 1000 de PostgREST).
+  let query = supabase.from("navieras").select("*").order("name").limit(500);
   if (!includeInactive) query = query.eq("activo", true);
   const { data, error } = await query;
   if (error) throw error;
@@ -66,7 +67,7 @@ export async function deleteNaviera(id: string): Promise<void> {
 // ─── Puertos ─────────────────────────────────────────────────────────────────
 
 export async function fetchPuertos(includeInactive = false): Promise<Puerto[]> {
-  let query = supabase.from("puertos").select("*").order("country").order("name");
+  let query = supabase.from("puertos").select("*").order("country").order("name").limit(500);
   if (!includeInactive) query = query.eq("activo", true);
   const { data, error } = await query;
   if (error) throw error;
@@ -91,7 +92,7 @@ export async function deletePuerto(id: string): Promise<void> {
 // ─── Tipos de contenedor ─────────────────────────────────────────────────────
 
 export async function fetchTiposContenedor(includeInactive = false): Promise<TipoContenedor[]> {
-  let query = supabase.from("tipos_contenedor").select("*").order("name");
+  let query = supabase.from("tipos_contenedor").select("*").order("name").limit(500);
   if (!includeInactive) query = query.eq("activo", true);
   const { data, error } = await query;
   if (error) throw error;
