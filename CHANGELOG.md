@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.36.1] - 2026-06-01
+- **fix(sentry)**: Filtro en `beforeSend` para errores de React Refresh / HMR (ej. `ReferenceError: pendienteOpen is not defined`). Se agregan `isReactRefreshHmrError` y `isReactRefreshStackTrace` para detectar `ReferenceError` cuyo stack trace contenga `@react-refresh`, `performReactRefresh` o `scheduleRefresh`, y descartarlos antes de enviar a Sentry. Estos errores ocurren cuando un bundle stale intenta re-renderizar componentes con variables que ya no existen tras hot reload; no representan bugs reales. Tests unitarios en `src/lib/__tests__/sentry.test.ts` (9 casos).
+
 ## [12.36.0] - 2026-06-01
 - **test(embarques)**: Ampliada cobertura crítica del dominio Embarque (follow-up Fase 4). Nuevos tests: `services/embarque/__tests__/mutations.test.ts` (14 casos sobre `crearEmbarqueRpc`, `actualizarEmbarqueRpc`, `avanzarEstadoEmbarqueRpc`, `duplicarEmbarqueRpc`, `eliminarEmbarqueRpc`, `actualizarEstadoEmbarque`, `insertarNotaEmbarque` — valida zod boundary, shape de RPC, propagación de errores Supabase y rechazo de UUIDs inválidos); `services/embarque/contenedores/__tests__/crud.test.ts` (6 casos para `listarPorEmbarque`, `crearMuchos` con early-return en lista vacía, `sincronizarContenedores` vía RPC); `hooks/embarque/mutations/__tests__/useMutationsEmbarque.test.tsx` (6 casos para `useCreateEmbarque`, `useUpdateEmbarque`, `useEliminarEmbarque` — verifica orquestación service + invalidación de `queryKeys`). Total +26 tests en verde, suite sube de 748 → 774 passed; los 3 fallos rojos restantes son baselines pre-existentes (`audit-report` + `architecture-baseline` por archivos > 200 líneas heredados, no introducidos en este cambio). Todos los archivos nuevos respetan el límite Power-of-10 (<200 líneas).
 
