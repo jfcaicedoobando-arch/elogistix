@@ -9,7 +9,7 @@ import { queryKeys } from "@/lib/query";
  */
 const EXPECTED_DOMAINS = [
   "embarques", "proformas", "cotizaciones", "clientes", "facturas",
-  "proveedores", "configuracion", "trackingLinks", "jsonCargo",
+  "proveedores", "configuracion", "trackingLinks",
   "clienteFinancials", "puertos", "exchangeRates", "bitacora", "dashboard",
   "operadores", "operaciones", "reportes", "configuracionGlobal", "planes",
   "configuracionOrg", "navieras", "tiposContenedor", "portal", "sidebar",

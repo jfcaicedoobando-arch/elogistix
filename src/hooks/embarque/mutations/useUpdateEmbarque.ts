@@ -12,7 +12,6 @@ import {
   insertEventoEmbarque,
   uploadDocumentoEmbarque,
   deleteDocumentoEmbarque,
-  invokeJsonCargoTrackBackground,
   createDocumentoEmbarqueRow,
 } from '@/services/embarque';
 import { sincronizarContenedores } from '@/services/embarque/contenedores';
@@ -22,9 +21,7 @@ import {
   tipoEventoParaEstado,
   descripcionEventoCambioEstado,
 } from '@/lib/domain/embarque';
-import { mapNavieraToJsonCargo } from '@/lib/jsoncargo/navieras';
 import { newRequestId } from '@/lib/idempotency';
-import { logger } from "@/lib/observability/logger";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -47,12 +44,6 @@ export function useUpdateEmbarque() {
       if (input.contenedores !== undefined) {
         await sincronizarContenedores(input.id, input.contenedores);
       }
-      // Auto-sync JSONCargo si aplica (fire-and-forget) — deprecado, se removerá.
-      const e = input.embarque;
-      if (e.modo === 'Marítimo' && e.contenedor && mapNavieraToJsonCargo(e.naviera ?? null)) {
-        invokeJsonCargoTrackBackground(input.id)
-          .catch((err) => logger.warn('jsoncargo-track auto-sync:', err));
-      }
       return { id: input.id } as EmbarqueRow;
     },
     onSuccess: (embarqueActualizado) => {
@@ -60,7 +51,6 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.jsonCargo.byEmbarque(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: [CONTENEDORES_QUERY_KEY, embarqueActualizado.id] });
     },
   });

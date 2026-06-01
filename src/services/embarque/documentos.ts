@@ -172,3 +172,19 @@ export async function deleteDocumentoEmbarque(docId: string, archivoPath?: strin
     }
   }
 }
+
+export async function createDocumentoEmbarqueRow(params: {
+  embarqueId: string;
+  nombre: string;
+  notas?: string;
+}): Promise<void> {
+  const { error } = await supabase
+    .from("documentos_embarque")
+    .insert({
+      embarque_id: params.embarqueId,
+      nombre: params.nombre,
+      estado: "Pendiente",
+      notas: params.notas ?? null,
+    });
+  if (error) throw error;
+}

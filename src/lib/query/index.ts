@@ -24,7 +24,7 @@ import { auditoria } from "./keys/auditoria";
 import { facturacion } from "./keys/facturacion";
 import { profit } from "./keys/profit";
 import {
-  bitacora, trackingLinks, jsonCargo, clienteFinancials,
+  bitacora, trackingLinks, clienteFinancials,
   pdfPreviewCotizacion, trackingPublico,
 } from "./keys/misc";
 
@@ -37,7 +37,6 @@ export const queryKeys = {
   proveedores,
   configuracion,
   trackingLinks,
-  jsonCargo,
   clienteFinancials,
   puertos,
   exchangeRates,

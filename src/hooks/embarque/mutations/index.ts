@@ -4,4 +4,3 @@
 export * from "./useCreateEmbarque";
 export * from "./useUpdateEmbarque";
 export * from "./useDeleteEmbarque";
-export * from "./useActualizarContenedorEmbarque";
