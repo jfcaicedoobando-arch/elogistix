@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import type { Logger } from "./logger.ts";
 
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -11,9 +12,10 @@ export interface AuthContext {
 
 /**
  * Valida el JWT del request y retorna clientes pre-configurados.
+ * Si se pasa `log`, asigna el `user_id` verificado al logger (12.32.0).
  * Lanza Error con mensaje "401:..." o "500:..." para manejo en el caller.
  */
-export async function authenticate(req: Request): Promise<AuthContext> {
+export async function authenticate(req: Request, log?: Logger): Promise<AuthContext> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     throw new Error("401:No autorizado");
@@ -33,8 +35,11 @@ export async function authenticate(req: Request): Promise<AuthContext> {
     throw new Error("401:Token inválido");
   }
 
+  const userId = data.claims.sub;
+  log?.setUserId(userId);
+
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
-  return { userId: data.claims.sub, authHeader, anonClient, adminClient };
+  return { userId, authHeader, anonClient, adminClient };
 }
 
 /**
