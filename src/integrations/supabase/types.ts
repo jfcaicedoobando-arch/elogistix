@@ -2717,6 +2717,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ratelimit_buckets: {
+        Row: {
+          bucket_key: string
+          count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          bucket_key?: string
+          count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       tipos_contenedor: {
         Row: {
           activo: boolean
@@ -3034,6 +3055,10 @@ export type Database = {
       can_manage_document_object: {
         Args: { _object_name: string }
         Returns: boolean
+      }
+      check_ratelimit: {
+        Args: { p_key: string; p_max?: number; p_window_seconds?: number }
+        Returns: Json
       }
       clientes_listado: {
         Args: {
@@ -3392,6 +3417,7 @@ export type Database = {
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
+      get_tracking_public: { Args: { p_token: string }; Returns: Json }
       get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
       has_org_role: {
@@ -3442,6 +3468,18 @@ export type Database = {
           label: string
           organization_id: string
         }[]
+      }
+      log_client_error_v1: {
+        Args: {
+          p_app_version?: string
+          p_component_stack?: string
+          p_message: string
+          p_request_id?: string
+          p_route?: string
+          p_stack?: string
+          p_user_agent?: string
+        }
+        Returns: string
       }
       marcar_proforma_facturada: {
         Args: {
