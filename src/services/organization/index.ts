@@ -14,10 +14,12 @@ export interface OrganizationRow {
 }
 
 export async function listActiveOrganizations<T = OrganizationRow>(): Promise<T[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("organizations")
     .select("*")
     .eq("activo", true)
-    .order("nombre");
+    .order("nombre")
+    .limit(500);
+  if (error) throw error;
   return fromDb<T[]>(data ?? []);
 }
