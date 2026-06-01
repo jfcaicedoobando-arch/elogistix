@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.31.0] - 2026-06-01
+- **chore(embarques)**: Removida toda la integración con JSONCargo (edge function `jsoncargo-track`, shared helpers, hooks `useJsonCargoTracking`/`useJsonCargoBolLookup`/`useTrackingLiveCard`/`useDialogBolContainers`, mutación `useActualizarContenedorEmbarque`, servicios `jsoncargo`/`jsoncargoFechas`, libs `lib/jsoncargo/*`, componentes `TrackingLiveCard`/`DialogBolContainers`/`trackingLive/*`/`dialogBol/*`, tests asociados y key `queryKeys.jsonCargo`). Tab Tracking del embarque y portal cliente quedan solo con timeline manual y fases. La tabla `tracking_externo` se conserva como caché para el futuro proveedor (ver `docs/deprecation-jsoncargo.md`). Pendiente: eliminar manualmente el secret `JSONCARGO_API_KEY` en Lovable Cloud.
+
 ## [12.30.1] - 2026-05-31
 - **feat(embarques)**: Banner informativo en `EmbarqueDetalle` cuando `estado === 'Borrador'`, indicando que el embarque fue generado desde una cotización y debe completarse y avanzarse a Confirmado. Cierra el pendiente UI de la Fase 5.
 
