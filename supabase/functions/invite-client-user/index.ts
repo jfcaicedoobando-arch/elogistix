@@ -26,10 +26,14 @@ async function verifyClienteOrg(adminClient: SupabaseClient, cliente_id: string,
 }
 
 async function findExistingUser(adminClient: SupabaseClient, email: string) {
-  const { data } = await adminClient.auth.admin.listUsers();
-  return data?.users?.find(
-    (u: { email?: string | null }) => u.email?.toLowerCase() === email.toLowerCase(),
-  );
+  // O(1): consulta directa a auth.users vía service role en lugar de listUsers() (paginado costoso).
+  const { data } = await adminClient
+    .schema("auth")
+    .from("users")
+    .select("id, email")
+    .ilike("email", email)
+    .maybeSingle();
+  return data ? { id: data.id as string, email: data.email as string } : undefined;
 }
 
 async function resolveUserId(

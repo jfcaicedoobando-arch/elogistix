@@ -1,15 +1,11 @@
 /**
  * client-error-log — recibe errores del frontend (ErrorBoundary) y los persiste
- * en `app_logs` con fn='client' para que aparezcan en /admin/diagnostico.
+ * en `app_logs` con fn='client' mediante la RPC `log_client_error_v1`.
  *
- * Seguridad (12.23.1):
- *  - Si llega `Authorization: Bearer ...`, se valida la firma con
- *    `auth.getClaims(token)`. Sólo entonces se atribuye el `user_id`. Tokens
- *    inválidos no fallan el request (endpoint es público porque un crash
- *    puede ocurrir pre-auth), pero `user_id` queda en null.
- *  - Rate limit in-memory por IP (20 req/min). Best-effort; mitiga abuso
- *    casual y previene el disparo del cron `detectar_alertas_app_logs`.
- *    Para protección dura habría que mover a Upstash/Redis.
+ * Seguridad (12.32.0):
+ *  - Usa ANON_KEY + RPC SECURITY DEFINER (no service role en el endpoint).
+ *  - La RPC atribuye `auth.uid()` automáticamente cuando el caller envía JWT.
+ *  - Rate limit persistente vía RPC `check_ratelimit` (tabla `ratelimit_buckets`).
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -28,54 +24,10 @@ interface ClientErrorPayload {
   app_version?: unknown;
 }
 
-// ──────── Rate limit in-memory ────────
-const RL_WINDOW_MS = 60_000;
-const RL_MAX = 20;
-const RL_PURGE_MS = 5 * 60_000;
-interface RateBucket { count: number; windowStart: number }
-const rateMap = new Map<string, RateBucket>();
-
 export function getClientIp(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
   return req.headers.get("cf-connecting-ip") ?? "unknown";
-}
-
-export function checkRateLimit(ip: string, now = Date.now()): { ok: boolean; retryAfter: number } {
-  // Purga perezosa
-  if (rateMap.size > 1000) {
-    for (const [k, v] of rateMap) {
-      if (now - v.windowStart > RL_PURGE_MS) rateMap.delete(k);
-    }
-  }
-  const bucket = rateMap.get(ip);
-  if (!bucket || now - bucket.windowStart > RL_WINDOW_MS) {
-    rateMap.set(ip, { count: 1, windowStart: now });
-    return { ok: true, retryAfter: 0 };
-  }
-  bucket.count++;
-  if (bucket.count > RL_MAX) {
-    const retryAfter = Math.ceil((RL_WINDOW_MS - (now - bucket.windowStart)) / 1000);
-    return { ok: false, retryAfter: Math.max(1, retryAfter) };
-  }
-  return { ok: true, retryAfter: 0 };
-}
-
-async function verifyUserId(req: Request, supabaseUrl: string, anonKey: string): Promise<string | null> {
-  const auth = req.headers.get("Authorization");
-  if (!auth?.startsWith("Bearer ")) return null;
-  const token = auth.slice(7);
-  try {
-    const anonClient = createClient(supabaseUrl, anonKey, {
-      auth: { persistSession: false },
-      global: { headers: { Authorization: auth } },
-    });
-    const { data, error } = await anonClient.auth.getClaims(token);
-    if (error || !data?.claims?.sub) return null;
-    return typeof data.claims.sub === "string" ? data.claims.sub : null;
-  } catch {
-    return null;
-  }
 }
 
 export function truncate(value: unknown, max: number): string | null {
@@ -95,16 +47,36 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Rate limit
+  const url = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!url || !anonKey) {
+    return new Response(JSON.stringify({ error: "config_missing" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  const client = createClient(url, anonKey, {
+    auth: { persistSession: false },
+    global: authHeader ? { headers: { Authorization: authHeader } } : {},
+  });
+
+  // Rate limit persistente
   const ip = getClientIp(req);
-  const rl = checkRateLimit(ip);
-  if (!rl.ok) {
+  const { data: rl } = await client.rpc("check_ratelimit", {
+    p_key: `client-error-log:${ip}`,
+    p_window_seconds: 60,
+    p_max: 20,
+  });
+  const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
+  if (rlResult && rlResult.ok === false) {
     return new Response(JSON.stringify({ error: "rate_limited" }), {
       status: 429,
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
-        "Retry-After": String(rl.retryAfter),
+        "Retry-After": String(rlResult.retry_after ?? 60),
       },
     });
   }
@@ -119,49 +91,23 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const message = truncate(body.message, 1000) ?? "(sin mensaje)";
-  const stack = truncate(body.stack, 8000);
-  const componentStack = truncate(body.component_stack, 4000);
-  const route = truncate(body.route, 500);
-  const userAgent = truncate(body.user_agent, 500);
-  const appVersion = truncate(body.app_version, 50);
-
-  const url = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? anonKey;
-  if (!url || !serviceKey || !anonKey) {
-    return new Response(JSON.stringify({ error: "config_missing" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const userId = await verifyUserId(req, url, anonKey);
-  const client = createClient(url, serviceKey, { auth: { persistSession: false } });
   const requestId =
     req.headers.get("x-request-id") ??
     req.headers.get("x-correlation-id") ??
     crypto.randomUUID();
 
-  try {
-    await client.from("app_logs").insert({
-      level: "error",
-      fn: "client",
-      msg: message,
-      request_id: requestId,
-      user_id: userId,
-      status_code: 500,
-      latency_ms: null,
-      payload: {
-        stack,
-        component_stack: componentStack,
-        route,
-        user_agent: userAgent,
-        app_version: appVersion,
-      },
-    });
-  } catch (err) {
-    console.error("client-error-log insert failed:", err);
+  const { error } = await client.rpc("log_client_error_v1", {
+    p_message: truncate(body.message, 1000) ?? "(sin mensaje)",
+    p_stack: truncate(body.stack, 8000),
+    p_component_stack: truncate(body.component_stack, 4000),
+    p_route: truncate(body.route, 500),
+    p_user_agent: truncate(body.user_agent, 500),
+    p_app_version: truncate(body.app_version, 50),
+    p_request_id: requestId,
+  });
+
+  if (error) {
+    console.error("client-error-log rpc failed:", error.message);
     return new Response(JSON.stringify({ error: "insert_failed" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

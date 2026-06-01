@@ -82,11 +82,15 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const clienteSeleccionado = clientes.find(c => c.id === clienteId);
 
   const handleCambiarTipoEmbarque = useCallback((nuevoTipo: "FCL" | "LCL") => {
-    form.setValue("tipoEmbarque", nuevoTipo);
-    form.setValue("tipoContenedor", "");
-    form.setValue("tipoPeso", "Peso Normal");
-    form.setValue("dimensionesLCL", [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }]);
-    form.setValue("tipoCarga", "Carga General");
+    // 12.35.0: setValue con shouldValidate/shouldDirty + trigger() para que el wizard
+    // recalcule errors y avance step (mem://core RHF rule).
+    const opts = { shouldValidate: true, shouldDirty: true } as const;
+    form.setValue("tipoEmbarque", nuevoTipo, opts);
+    form.setValue("tipoContenedor", "", opts);
+    form.setValue("tipoPeso", "Peso Normal", opts);
+    form.setValue("dimensionesLCL", [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }], opts);
+    form.setValue("tipoCarga", "Carga General", opts);
+    void form.trigger(["tipoEmbarque", "tipoContenedor", "tipoPeso", "dimensionesLCL", "tipoCarga"]);
     setMsdsFile(null);
   }, [form]);
 

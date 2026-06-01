@@ -1,78 +1,119 @@
-# Plan: Retirar integración JSONCargo
+# Plan de Remediación Integral — v12.32.0 → v12.36.0
 
-Basado en `docs/deprecation-jsoncargo.md`. Se elimina todo el código activo del proveedor. La tabla `tracking_externo` **se conserva** (servirá de caché para el reemplazo). El Tab Tracking del embarque queda solo con eventos manuales / hitos del wizard.
+Basado en los 5 reportes de auditoría. Organizado en 4 fases lanzables independientemente, cada una con bump de versión y entrada en `CHANGELOG.md`.
 
-## 1. Edge Functions (Supabase)
+---
 
-- Eliminar carpeta `supabase/functions/jsoncargo-track/` (incluye `index.ts` y `validate_test.ts`).
-- Eliminar `supabase/functions/_shared/jsoncargoSync.ts` y `supabase/functions/_shared/jsoncargo.ts`.
-- Llamar `supabase--delete_edge_functions` con `["jsoncargo-track"]` para retirar el deploy.
-- Revisar `supabase/config.toml` por si hay bloque específico de `jsoncargo-track` (actualmente no parece haberlo).
+## FASE 1 — Seguridad crítica (v12.32.0)
 
-## 2. Frontend — Hooks y servicios
+**Objetivo:** Cerrar todas las vulnerabilidades 🔴/🟠 de seguridad y BD.
 
-Eliminar (no hay otros consumidores fuera de la familia JSONCargo):
+### 1.1 Edge Functions
 
-- `src/hooks/embarque/useJsonCargoTracking.ts`
-- `src/hooks/embarque/useJsonCargoBolLookup.ts`
-- `src/hooks/embarque/useTrackingLiveCard.ts`
-- `src/hooks/embarque/useDialogBolContainers.ts`
-- `src/hooks/embarque/mutations/useActualizarContenedorEmbarque.ts` (su única función es disparar sync JSONCargo)
-- `src/services/embarque/jsoncargo.ts`
-- `src/services/embarque/jsoncargoFechas.ts`
-- `src/services/embarque/__tests__/jsoncargoFechas.test.ts`
-- Toda la carpeta `src/lib/jsoncargo/` (helpers, navieras, prefixes, summary, externalTracking, tests).
+- `**tracking-public**`: cambiar `SERVICE_ROLE_KEY` → `ANON_KEY` + crear policy `SELECT TO anon` en `tracking_links` con `expires_at > now()`.
+- `**invite-client-user**`: reemplazar `listUsers()` (carga miles) por `getUserByEmail()` (O(1)).
+- `**client-error-log**`: migrar rate limiter in-memory a tabla `ratelimit_buckets` con RPC `SECURITY DEFINER`; cambiar a anon key con policy INSERT específica.
+- `**auditoria-snapshot-daily**`: `corsHeaders` → `buildCors(req)` + `handlePreflightStrict`.
+- `**list-users**`: restringir a roles `admin`/`operador`/`super_admin` (no `viewer`/`cliente`).
+- `**_shared/logger.ts**`: dejar de decodificar JWT sin verificar; aceptar `userId` ya verificado como parámetro.
 
-Actualizar barrels:
-- `src/hooks/embarque/index.ts`: quitar exports de `useJsonCargoBolLookup`, `useJsonCargoTracking`, `useTrackingLiveCard`.
-- `src/services/embarque/index.ts`: quitar `export * from "./jsoncargo"`.
-- `src/lib/query/keys/misc.ts`: quitar el namespace `jsonCargo` (`byEmbarque`).
+### 1.2 Migración BD (verificar + remediar)
 
-## 3. Frontend — UI
+- **Verificar primero** con `psql` el estado vivo de GRANTs en las 39 tablas reportadas (el auditor solo leyó migraciones; pueden existir hotfixes manuales). Solo aplicar GRANTs faltantes reales.
+- Storage policies `documentos`: `{public}` → `{authenticated}` (3 policies).
+- `REVOKE EXECUTE ON can_manage_document_object FROM anon`.
+- `reportes_feedback.organization_id` → `SET NOT NULL`.
+- Agregar `SET search_path TO 'public'` a ~15 funciones SECURITY DEFINER faltantes (idempotency_*, CRM triggers, notif triggers, duplicar_embarque_completo, sync_embarque_desde_contenedor).
+- `can_manage_document_object`: quitar `storage` del search_path, usar `storage.foldername()` calificado.
 
-- Eliminar componentes:
-  - `src/components/embarque/TrackingLiveCard.tsx`
-  - `src/components/embarque/trackingLive/TrackingWarnings.tsx`
-  - `src/components/embarque/trackingLive/TrackingSummaryGrid.tsx`
-  - `src/components/embarque/trackingLive/TrackingFechasPropuestas.tsx`
-  - `src/components/embarque/DialogBolContainers.tsx`
-- `src/components/embarque/TabTracking.tsx`: quitar import y render de `<TrackingLiveCard>`. Si tras la limpieza la prop de naviera/contenedor queda sin uso, simplificar la interfaz del componente y su llamada en `EmbarqueDetalle`. El tab queda solo con eventos manuales / timeline.
-- `src/pages/portal/PortalEmbarqueDetalle.tsx`: quitar import y render de `<TrackingLiveCard>` (mismo comportamiento que el detalle interno).
+---
 
-## 4. Mutaciones de embarque
+## FASE 2 — Arquitectura & tests bloqueantes (v12.33.0)
 
-- `src/hooks/embarque/mutations/useUpdateEmbarque.ts` (~línea 44): eliminar el bloque que invoca `jsoncargo-track` tras actualizar embarque marítimo.
-- `src/hooks/embarque/mutations/useCreateEmbarque.ts`: verificar y limpiar cualquier invocación residual (búsqueda confirma que no hay, pero re-validar).
-- Eliminar referencias al hook `useActualizarContenedorEmbarque` si existen consumidores; reemplazar por update directo del contenedor sin trigger de sync.
+**Objetivo:** Desbloquear el CI (4 tests fallando) y resolver violaciones arquitectónicas.
 
-## 5. Documentación
+### 2.1 Refactors de tamaño (Power-of-10)
 
-- Marcar `docs/integrations/jsoncargo-api.md` como histórico (mover a `docs/archive/` o anteponer banner "DEPRECATED — proveedor retirado en vX.Y.Z").
-- Actualizar `docs/deprecation-jsoncargo.md` con la fecha de remoción y nota "Ejecutado".
-- Limpiar menciones en `docs/rc-qa-checklist.md`, `docs/release-notes-12.0.md`, `docs/audit-cleanslate-11.69.0.md`, `docs/pagination-audit.md` (solo notas; no romper estructura).
+- Dividir `src/services/cotizacion/conversiones/embarques.ts` (213 líneas): extraer `construirHijosPayload`, `construirCostosRows`, `parsearVentasJsonb` a `src/lib/domain/cotizacionConversion.ts` y `src/lib/mappers/cotizacion.ts`.
+- Reducir `src/pages/cotizaciones/CotizacionDetalle.tsx` (201 líneas) extrayendo un sub-componente a `<200`.
 
-## 6. Base de datos
+### 2.2 Layering
 
-- **No tocar** la tabla `tracking_externo` (se conserva como caché para el próximo proveedor según el doc de deprecación).
-- No se requiere migración SQL.
+- Crear `src/services/notificaciones/index.ts` con `fetchNotificaciones`, `marcarLeida`, `marcarTodasLeidas`, `subscribeNotificaciones`.
+- Refactor `useNotificacionesInternas` para consumir el servicio + `useAuth()` (elimina 3× `getUser()` duplicados y el import directo de supabase client).
+- Mover JSONB parsing de `usePortalCotizacionDetalle.ts` → `lib/mappers/cotizacion.ts`.
 
-## 7. Secretos
+### 2.3 Guardrail nuevo
 
-- Tras el merge, pedir al usuario eliminar `JSONCARGO_API_KEY` (y similares) en Lovable Cloud → Edge Function secrets. No se borra desde código.
+- Agregar 3er test en `src/lib/__tests__/architecture.test.ts`: hooks/contexts no importan `@/integrations/supabase/client` directamente.
 
-## 8. Changelog y versión
+---
 
-- `CHANGELOG.md`: nueva entrada `## [12.31.0] - 2026-06-01` con bullet "Removida integración JSONCargo (edge function, hooks, UI, libs y tests). La tabla `tracking_externo` se conserva como caché para el futuro proveedor de tracking."
-- `src/constants/appVersion.ts`: bump a `12.31.0` (cambio mayor de feature → minor bump).
+## FASE 3 — Performance (v12.34.0)
 
-## 9. Validación
+**Objetivo:** Eliminar refetches redundantes (mayor ROI percibido por el usuario).
 
-- `rg "jsoncargo|JSONCargo|JSONCARGO|JsonCargo" src/ supabase/functions/` debe devolver vacío (solo permanecen menciones históricas en `docs/`).
-- Build/typecheck automáticos del harness deben pasar.
-- Smoke manual: abrir un embarque marítimo y el portal cliente equivalente; confirmar que el Tab Tracking renderiza sin el card de "Tracking en vivo" y sin errores en consola.
+### 3.1 React Query
 
-## Notas técnicas
+- Agregar `staleTime: 60_000` (listas user-facing) o `5 * 60_000` (catálogos/admin) a los **35+ hooks** listados sin staleTime. Usar `useDashboardData.ts` como patrón.
+- Agregar `refetchIntervalInBackground: false` a `useNotificacionesCliente`, `useAppLogsHealth`, `useAlertasSistema`.
 
-- Se elimina ~35 archivos (hooks/services/lib/components/tests/edge functions).
-- Cancela la tarea original "tracking multi-contenedor" de Fase 2 (`mem://audit/pendings`), reemplazada por esta remoción + futura integración del nuevo proveedor.
-- Riesgo bajo: el código a remover está autocontenido bajo el namespace `jsoncargo`, sin acoplamientos cruzados fuera de los puntos enumerados en §3 y §4.
+### 3.2 Re-renders
+
+- Envolver `defineColumns([...])` con `useMemo` en los 13 componentes identificados (`HistorialFacturas`, `HistorialProformas`, `ReportesTablaClientes`, tabs de Configuración, Papelera, Idempotencia, etc.).
+
+### 3.3 Pagination defensiva
+
+- Agregar `.limit(500)` explícito a `navieras`, `puertos`, `tipos_contenedor`, `organizations`, `proveedores` para evitar el cap silencioso de 1000.
+
+---
+
+## FASE 4 — Calidad de código & tests (v12.35.0–v12.36.0)
+
+### 4.1 React Hook Form (mem://core)
+
+- Añadir `{ shouldValidate: true, shouldDirty: true }` + `trigger()` a ~25 `setValue` en 9 archivos del wizard cotización/embarque.
+
+### 4.2 Manejo de errores Supabase
+
+- `organization/index.ts:17`, `crm/leads/convertir.ts:33`, `admin/members.ts:27`: destructurar `error` y lanzar/loguear.
+
+### 4.3 Cleanup
+
+- Regenerar `docs/pagination-audit.md` con `bun run audit:pagination`.
+- Tachar items JSONCargo en `docs/rc-qa-checklist.md`.
+
+### 4.4 Tests críticos (v12.36.0)
+
+- Cobertura mínima en `hooks/embarque/` (30 archivos, 1 test) y `hooks/cotizacion/` (18 archivos, 1 test): empezar por `useEmbarqueSubmitOrchestrator`, `useNuevoEmbarqueWizard`, `useCotizacionDetalleHandlers`, `useCotizacionWizardForm`.
+- Tests para `services/`: `cotizacion/mutations/{crear,update,estado}`, `embarque/mutations`, `embarque/eventos`, `proforma/crud`, `crm/{oportunidades,actividades,forecast}`, `auth/loginAudit`.
+- E2E nuevos: CRM pipeline, wizard cotización completo, nuevo embarque wizard, admin/org management.
+
+---
+
+## Fuera de alcance (decisión separada)
+
+- **Sesiones en `localStorage` (XSS):** cambio arquitectónico mayor — requiere endpoint server-side y revisión de UX. Decidir aparte.
+- **Trigger `on_auth_user_created` en `auth.users`:** migrar a Supabase Auth Hook requiere planning de cutover.
+- **Consolidar `user_roles` legacy + `organization_members`:** auditoría de todos los callers de `user_roles` y migración de `has_role()`. Riesgo de regresión alto.
+- **443 casts `as Tables<X>` fuera de mappers:** lint rule + migración progresiva — un sprint propio.
+
+---
+
+## Detalles técnicos
+
+```text
+Archivos a tocar (estimado):
+  Edge functions:   6 archivos
+  Migraciones:      3-4 nuevas
+  Frontend hooks:   ~40 (staleTime) + ~10 (refactor)
+  Componentes:      ~13 (useMemo) + ~9 (setValue)
+  Servicios:        5-6 nuevos/movidos
+  Tests:            ~15-20 nuevos
+```
+
+Cada fase: 1 PR/versión + entrada `CHANGELOG.md` + bump `APP_VERSION`. Verificar `bun run audit:arch`, `audit:casts`, `audit:pagination` y `vitest run` antes de cada cierre de fase.
+
+## Pregunta pendiente
+
+¿Apruebas ejecutar las 4 fases secuencialmente, o prefieres que pause tras Fase 1 (seguridad crítica) para validar antes de continuar? Ejecuta todas las fases. 

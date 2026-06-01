@@ -5,10 +5,14 @@ import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      // 12.34.0: subido de 30s → 60s para reducir refetches innecesarios al
+      // navegar entre pantallas. Los hooks que necesiten mayor frescura
+      // pueden sobrescribir con su propio staleTime.
+      staleTime: 60_000,
       gcTime: 5 * 60_000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      refetchIntervalInBackground: false,
       retry: 1,
     },
   },

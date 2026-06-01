@@ -30,11 +30,12 @@ export async function resolveClienteForConversion(
     return { clienteId: data.id, clienteNombre: data.nombre };
   }
   if (p.clienteIdExistente) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("clientes")
       .select("nombre")
       .eq("id", p.clienteIdExistente)
       .maybeSingle();
+    if (error) throw error;
     return { clienteId: p.clienteIdExistente, clienteNombre: data?.nombre ?? p.lead.empresa };
   }
   return { clienteId: null, clienteNombre: "" };

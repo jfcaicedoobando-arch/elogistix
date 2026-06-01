@@ -6,12 +6,13 @@
  */
 // @ts-expect-error Deno remote import
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders, handlePreflight } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
 Deno.serve(async (req) => {
-  const preflight = handlePreflight(req);
+  const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
+  const corsHeaders = buildCors(req);
 
   const log = createLogger(req, "auditoria-snapshot-daily");
 

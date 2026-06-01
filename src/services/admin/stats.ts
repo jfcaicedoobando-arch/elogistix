@@ -26,7 +26,7 @@ export interface AdminRecentOrg {
 
 export async function fetchAdminOrgActivity(): Promise<AdminOrgActivity[]> {
   const [orgsRes, embRes, cotRes] = await Promise.all([
-    supabase.from("organizations").select("id, nombre").order("nombre"),
+    supabase.from("organizations").select("id, nombre").order("nombre").limit(500),
     supabase.from("embarques").select("organization_id"),
     supabase.from("cotizaciones").select("organization_id"),
   ]);
