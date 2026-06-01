@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.34.0] - 2026-06-01
+- **perf(fase-3)**: Fase 3 de la auditoría — performance global. `queryClient` sube el `staleTime` por defecto de 30 s → 60 s y agrega `refetchIntervalInBackground: false` (aplica automáticamente a los ~35 hooks que no lo definen explícitamente, eliminando refetches al navegar entre pantallas). Paginación defensiva: `fetchNavieras`, `fetchPuertos`, `fetchTiposContenedor` (catálogos), `fetchProveedoresForSelect` y `fetchAdminOrgActivity` ahora aplican `.limit(500)` explícito para evitar el cap silencioso de 1000 filas de PostgREST. La memoización de columnas (`useMemo` en `defineColumns`) queda pendiente como follow-up: requiere envolver también los handlers para que la memoización sea efectiva (riesgo alto de regresión sin tests dedicados).
+
 ## [12.33.0] - 2026-06-01
 - **refactor(fase-2)**: Fase 2 de la auditoría — arquitectura y guardrails. Se extrae el detalle de la conversión cotización → embarque a `src/services/cotizacion/conversiones/embarquesHelpers.ts` (`construirHijosPayload`, `construirCostosRows`, `parsearVentasJsonb`) para mantener el orquestador `embarques.ts` por debajo del límite Power-of-10 (≤200 líneas). Nuevo servicio `src/services/notificaciones/index.ts` (`fetchNotificaciones`, `marcarLeida`, `marcarTodasLeidas`, `subscribeNotificaciones`); `useNotificacionesInternas` consume el servicio y `useAuth()` (elimina 3× duplicados de `supabase.auth.getUser()` e import directo del client). Nuevo test arquitectónico en `src/lib/__tests__/architecture.test.ts`: hooks y contexts no pueden importar `@/integrations/supabase/client` directamente (whitelist mínima para `AuthContext` y sus internos); este guardrail detectará regresiones de capa antes del merge.
 
