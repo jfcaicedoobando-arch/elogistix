@@ -12,7 +12,7 @@ import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeli
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
 import { PortalEmbarqueResumenTab } from "@/components/portal/embarqueDetalle/PortalEmbarqueResumenTab";
 import { PortalEmbarqueStepper } from "@/components/portal/embarqueDetalle/PortalEmbarqueStepper";
-import { TrackingLiveCard } from "@/components/embarque/TrackingLiveCard";
+
 import { usePortalEmbarqueDetalleController } from "@/hooks/embarque";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
@@ -127,13 +127,6 @@ export default function PortalEmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="tracking" className="space-y-4">
-          <TrackingLiveCard
-            embarqueId={embarque.id}
-            modo={embarque.modo}
-            naviera={embarque.naviera}
-            contenedor={embarque.contenedor}
-            readOnly
-          />
           <PortalEmbarqueTimeline eventos={eventos} />
         </TabsContent>
 

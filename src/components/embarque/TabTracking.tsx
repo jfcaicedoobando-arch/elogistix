@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useEventosEmbarque } from "@/hooks/embarque";
 import { usePermissions } from "@/hooks/shared";
-import { TrackingLiveCard } from "./TrackingLiveCard";
+
 import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
 import { TabNotas } from "./TabNotas";
 import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
@@ -14,7 +14,7 @@ import type { NotaEmbarqueRow } from "@/hooks/embarque";
 
 type EmbarqueTrackingProps = Pick<
   Tables<"embarques">,
-  "modo" | "tipo" | "estado" | "naviera" | "contenedor" | "bl_master" | "etd" | "eta" | "fecha_llegada_real" | "fecha_creacion" | "cotizacion_id" | "updated_at"
+  "modo" | "tipo" | "estado" | "etd" | "eta" | "fecha_llegada_real" | "fecha_creacion" | "cotizacion_id" | "updated_at"
 >;
 
 interface Props {
@@ -43,18 +43,6 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
             cotizacion_id: embarque.cotizacion_id,
             updated_at: embarque.updated_at,
           }}
-        />
-      )}
-      {embarque && (
-        <TrackingLiveCard
-          embarqueId={embarqueId}
-          modo={embarque.modo}
-          naviera={embarque.naviera}
-          contenedor={embarque.contenedor}
-          blMaster={embarque.bl_master}
-          etd={embarque.etd}
-          eta={embarque.eta}
-          fechaLlegadaReal={embarque.fecha_llegada_real}
         />
       )}
       {canEdit && (

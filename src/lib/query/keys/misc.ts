@@ -9,9 +9,6 @@ export const trackingLinks = {
   byEmbarque: (embarqueId?: string) => ['tracking_links', embarqueId] as const,
 } as const;
 
-export const jsonCargo = {
-  byEmbarque: (embarqueId?: string) => ['tracking_externo', 'jsoncargo', embarqueId] as const,
-} as const;
 
 export const clienteFinancials = {
   byCliente: (clienteId?: string) => ['cliente-financials', clienteId] as const,
