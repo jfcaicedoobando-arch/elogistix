@@ -81,6 +81,13 @@ export function initSentry(): void {
       if (isDynamicImportErrorMessage(event.message)) return null;
       const values = event.exception?.values;
       if (values && values.some((v) => isDynamicImportErrorMessage(v.value))) return null;
+
+      // Filtrar errores de React Refresh / HMR: el bundle stale intenta
+      // re-renderizar componentes con variables que ya no existen tras hot reload.
+      const exc = hint?.originalException as Error | undefined;
+      if (exc && isReactRefreshHmrError(exc)) return null;
+      if (values && values.some((v) => isReactRefreshStackTrace(v.stacktrace))) return null;
+
       return event;
     },
     integrations: [
