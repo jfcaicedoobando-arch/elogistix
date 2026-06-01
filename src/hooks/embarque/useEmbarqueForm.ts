@@ -40,22 +40,24 @@ export function useEmbarqueForm() {
   // Sync tipos de cambio remotos al formulario
   useEffect(() => {
     if (tiposDeCambio) {
-      methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn));
-      methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn));
+      const opts = { shouldValidate: true, shouldDirty: true } as const;
+      methods.setValue("tipoCambioUSD", String(tiposDeCambio.usdMxn), opts);
+      methods.setValue("tipoCambioEUR", String(tiposDeCambio.eurMxn), opts);
     }
   }, [tiposDeCambio, methods]);
 
   const handleMsdsUpload = async (archivo: File) => {
-    methods.setValue("subiendoMsds", true);
+    const opts = { shouldValidate: true, shouldDirty: true } as const;
+    methods.setValue("subiendoMsds", true, opts);
     try {
       const { sanitizeFileName } = await import("@/lib/storage");
       const ruta = `embarques/msds/${Date.now()}_${sanitizeFileName(archivo.name)}`;
       await uploadFile(ruta, archivo);
-      methods.setValue("msdsArchivo", ruta);
+      methods.setValue("msdsArchivo", ruta, opts);
     } catch {
       notifyError(toast, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     } finally {
-      methods.setValue("subiendoMsds", false);
+      methods.setValue("subiendoMsds", false, opts);
     }
   };
 
