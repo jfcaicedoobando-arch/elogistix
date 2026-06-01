@@ -102,7 +102,7 @@ describe("construirCostosRows", () => {
   });
 
   it("unidad_medida nula → trata como Contenedor (default)", () => {
-    const costoSinUM = { ...costoBL, unidad_medida: null } as Tables<"cotizacion_costos">;
+    const costoSinUM = { ...costoBL, unidad_medida: null } as unknown as Tables<"cotizacion_costos">;
     const rows = construirCostosRows([costoSinUM], "emb-1", hijos);
     expect(rows).toHaveLength(2); // se replica por hijo
   });
