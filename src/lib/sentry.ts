@@ -14,6 +14,31 @@ import * as Sentry from "@sentry/react";
 import { APP_VERSION } from "@/constants/appVersion";
 import { isDynamicImportErrorMessage } from "@/lib/ui/dynamicImportError";
 
+/** Detecta si un error proviene de React Refresh / HMR de Vite.
+ *  Ocurre cuando un bundle stale intenta re-renderizar y referencia
+ *  variables (hooks, estado) que ya no existen tras hot reload.
+ *  Ejemplo: "ReferenceError: pendienteOpen is not defined". */
+function isReactRefreshHmrError(error: Error): boolean {
+  if (!error.message?.includes("is not defined")) return false;
+  const stack = error.stack ?? "";
+  return /react-refresh|performReactRefresh|scheduleRefresh/i.test(stack);
+}
+
+/** Detecta stacktrace de React Refresh en frames de Sentry. */
+function isReactRefreshStackTrace(
+  stacktrace: unknown
+): boolean {
+  if (!stacktrace || typeof stacktrace !== "object") return false;
+  const frames = (stacktrace as { frames?: Array<{ abs_path?: string; function?: string }> }).frames;
+  if (!Array.isArray(frames)) return false;
+  return frames.some(
+    (f) =>
+      f.abs_path?.includes("@react-refresh") ||
+      f.function?.includes("performReactRefresh") ||
+      f.function?.includes("scheduleRefresh")
+  );
+}
+
 // DSN configurable vía VITE_SENTRY_DSN. Sin valor → no se inicializa Sentry
 // (evita ruido de telemetría en entornos de desarrollo / locales).
 const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
@@ -56,6 +81,13 @@ export function initSentry(): void {
       if (isDynamicImportErrorMessage(event.message)) return null;
       const values = event.exception?.values;
       if (values && values.some((v) => isDynamicImportErrorMessage(v.value))) return null;
+
+      // Filtrar errores de React Refresh / HMR: el bundle stale intenta
+      // re-renderizar componentes con variables que ya no existen tras hot reload.
+      const exc = hint?.originalException as Error | undefined;
+      if (exc && isReactRefreshHmrError(exc)) return null;
+      if (values && values.some((v) => isReactRefreshStackTrace(v.stacktrace))) return null;
+
       return event;
     },
     integrations: [
