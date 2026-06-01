@@ -70,7 +70,7 @@ describe("sincronizarContenedores", () => {
     expect(args.p_contenedores).toHaveLength(1);
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("propaga el error de la RPC al sincronizar contenedores", async () => {
     mock.setRpcResult("sincronizar_contenedores_embarque", { data: null, error: new Error("conflict") });
     await expect(sincronizarContenedores(EMB, [])).rejects.toThrow("conflict");
   });
