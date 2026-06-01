@@ -37,6 +37,8 @@ export interface Logger {
   info: (msg: string, ctx?: LogContext) => void;
   warn: (msg: string, ctx?: LogContext) => void;
   error: (msg: string, ctx?: LogContext) => void;
+  /** Asigna el user_id verificado (post-authenticate). */
+  setUserId: (userId: string | null) => void;
   /** Marca el final del handler con status_code y latencia automática. */
   finish: (status_code: number, msg?: string, ctx?: LogContext) => void;
 }
@@ -94,8 +96,8 @@ async function writeLog(
 }
 
 /**
- * Crea un logger atado al request actual. Captura `user_id` desde el JWT y
- * mide latencia desde la creación si se llama `finish()`.
+ * Crea un logger atado al request actual. El `user_id` queda en `null` hasta
+ * que el handler llame `setUserId()` con el sub verificado por `authenticate()`.
  */
 export function createLogger(req: Request, fn: string): Logger {
   const t0 = performance.now();
@@ -103,13 +105,13 @@ export function createLogger(req: Request, fn: string): Logger {
     req.headers.get("x-request-id") ??
     req.headers.get("x-correlation-id") ??
     crypto.randomUUID();
-  const userId = tryExtractUserId(req);
-  const base: LogContext = { request_id: requestId, user_id: userId };
+  const base: LogContext = { request_id: requestId, user_id: null };
 
   return {
     info: (msg, ctx) => void writeLog("info", fn, msg, base, ctx),
     warn: (msg, ctx) => void writeLog("warn", fn, msg, base, ctx),
     error: (msg, ctx) => void writeLog("error", fn, msg, base, ctx),
+    setUserId: (userId) => { base.user_id = userId; },
     finish: (status_code, msg = "request finished", ctx) => {
       const latency_ms = Math.round(performance.now() - t0);
       const level: Level = status_code >= 500 ? "error" : status_code >= 400 ? "warn" : "info";
