@@ -3,9 +3,39 @@ import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
 
+type TrackingRpcResult = {
+  error?: string;
+  embarque?: unknown;
+  eventos?: unknown;
+  organizacion?: unknown;
+} | null;
+
+export type TrackingOutcome =
+  | { ok: true; embarque: unknown; eventos: unknown; organizacion: unknown }
+  | { ok: false; status: 400 | 404 | 410; error: string };
+
+/** Pure helper: maps the RPC result to a typed outcome (no network). */
+export function classifyTrackingResult(
+  token: string | null,
+  result: TrackingRpcResult,
+): TrackingOutcome {
+  if (!token) return { ok: false, status: 400, error: "Token requerido" };
+  const r = result;
+  if (!r || r.error === "not_found") {
+    return { ok: false, status: 404, error: "Enlace de tracking no encontrado" };
+  }
+  if (r.error === "expired") {
+    return { ok: false, status: 410, error: "Este enlace de tracking ha expirado" };
+  }
+  return {
+    ok: true,
+    embarque: r.embarque,
+    eventos: r.eventos ?? [],
+    organizacion: r.organizacion ?? null,
+  };
+}
+
 // Endpoint público: usa ANON_KEY + RPC SECURITY DEFINER (get_tracking_public).
-// La RPC valida expiración y devuelve sólo los campos necesarios; no se expone
-// SERVICE_ROLE_KEY al endpoint.
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
@@ -32,21 +62,17 @@ Deno.serve(async (req) => {
       return errorResponse("Error consultando tracking", 500);
     }
 
-    const result = data as { error?: string; embarque?: unknown; eventos?: unknown; organizacion?: unknown } | null;
-    if (!result || result.error === "not_found") {
-      log.finish(404, "link_not_found", { payload: { token: token.slice(0, 8) } });
-      return errorResponse("Enlace de tracking no encontrado", 404);
-    }
-    if (result.error === "expired") {
-      log.finish(410, "link_expired");
-      return errorResponse("Este enlace de tracking ha expirado", 410);
+    const outcome = classifyTrackingResult(token, data as TrackingRpcResult);
+    if (!outcome.ok) {
+      log.finish(outcome.status, "tracking_classified");
+      return errorResponse(outcome.error, outcome.status);
     }
 
     log.finish(200, "tracking_served");
     return jsonResponse({
-      embarque: result.embarque,
-      eventos: result.eventos ?? [],
-      organizacion: result.organizacion ?? null,
+      embarque: outcome.embarque,
+      eventos: outcome.eventos,
+      organizacion: outcome.organizacion,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
