@@ -3,6 +3,22 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 
+/** Parse y valida el body de la request. Devuelve null si es inválido. */
+export function parseDeleteBody(raw: unknown): { user_id: string } | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.user_id !== "string" || !r.user_id) return null;
+  return { user_id: r.user_id };
+}
+
+/** Devuelve mensaje de error si la operación de delete no está permitida (self-delete o target vacío). */
+export function assertCanDelete(callerId: string, targetId: string): string | null {
+  if (!targetId) return "user_id es requerido";
+  if (targetId === callerId) return "No puedes eliminar tu propia cuenta";
+  return null;
+}
+
+
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
