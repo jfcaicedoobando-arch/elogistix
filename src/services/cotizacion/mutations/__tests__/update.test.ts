@@ -24,7 +24,7 @@ describe("updateCotizacion", () => {
     expect(mock.tableCalls[0]?.ops).toContain("eq");
   });
 
-  it("propaga error de Supabase", async () => {
+  it("propaga error de Supabase al actualizar cotización", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "RLS denied" } });
     await expect(updateCotizacion("cot-1", { notas: "x" })).rejects.toBeTruthy();
   });

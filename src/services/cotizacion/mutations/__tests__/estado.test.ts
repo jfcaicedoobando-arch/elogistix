@@ -32,7 +32,7 @@ describe("updateEstadoCotizacion", () => {
     expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq"]);
   });
 
-  it("propaga error de Supabase", async () => {
+  it("propaga error de Supabase al cambiar estado", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "row not found" } });
     await expect(updateEstadoCotizacion("cot-x", "Aceptada")).rejects.toBeTruthy();
   });

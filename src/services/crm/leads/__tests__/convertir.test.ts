@@ -112,7 +112,7 @@ describe("fetchPrimeraEtapaAbierta", () => {
     await expect(fetchPrimeraEtapaAbierta()).rejects.toThrow(/etapas abiertas/);
   });
 
-  it("propaga error de Supabase", async () => {
+  it("propaga error de Supabase al consultar etapa abierta", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
     await expect(fetchPrimeraEtapaAbierta()).rejects.toBeTruthy();
   });

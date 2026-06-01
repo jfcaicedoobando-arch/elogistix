@@ -41,7 +41,7 @@ describe("createLead", () => {
     expect(mock.tableCalls[0]?.ops).toContain("insert");
   });
 
-  it("propaga error de Supabase", async () => {
+  it("propaga error de Supabase al crear lead", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "unique" } });
     await expect(createLead(leadInput, user)).rejects.toBeTruthy();
   });
@@ -60,7 +60,7 @@ describe("updateLead", () => {
     expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq"]);
   });
 
-  it("propaga error de Supabase", async () => {
+  it("propaga error de Supabase al actualizar lead", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "x" } });
     await expect(updateLead("lead-1", {})).rejects.toBeTruthy();
   });
@@ -83,7 +83,7 @@ describe("softDeleteLead", () => {
     await expect(softDeleteLead("lead-1", null)).resolves.toBeUndefined();
   });
 
-  it("propaga error de Supabase", async () => {
+  it("propaga error de Supabase al soft-delete lead", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "RLS" } });
     await expect(softDeleteLead("lead-1", "usr-1")).rejects.toBeTruthy();
   });
