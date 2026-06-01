@@ -12,7 +12,7 @@ const validInsert = {
   nombre: "Acme SA de CV",
   rfc: "ACM010101AAA",
   email: "admin@acme.com",
-  organization_id: "org-1",
+  organization_id: "00000000-0000-0000-0000-000000000001",
 } as Parameters<typeof createCliente>[0];
 
 beforeEach(() => { mock.tableCalls.length = 0; });
