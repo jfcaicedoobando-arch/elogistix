@@ -1,119 +1,182 @@
-# Plan de Remediación Integral — v12.32.0 → v12.36.0
+# Plan de cobertura de tests — v12.37.0+
 
-Basado en los 5 reportes de auditoría. Organizado en 4 fases lanzables independientemente, cada una con bump de versión y entrada en `CHANGELOG.md`.
-
----
-
-## FASE 1 — Seguridad crítica (v12.32.0)
-
-**Objetivo:** Cerrar todas las vulnerabilidades 🔴/🟠 de seguridad y BD.
-
-### 1.1 Edge Functions
-
-- `**tracking-public**`: cambiar `SERVICE_ROLE_KEY` → `ANON_KEY` + crear policy `SELECT TO anon` en `tracking_links` con `expires_at > now()`.
-- `**invite-client-user**`: reemplazar `listUsers()` (carga miles) por `getUserByEmail()` (O(1)).
-- `**client-error-log**`: migrar rate limiter in-memory a tabla `ratelimit_buckets` con RPC `SECURITY DEFINER`; cambiar a anon key con policy INSERT específica.
-- `**auditoria-snapshot-daily**`: `corsHeaders` → `buildCors(req)` + `handlePreflightStrict`.
-- `**list-users**`: restringir a roles `admin`/`operador`/`super_admin` (no `viewer`/`cliente`).
-- `**_shared/logger.ts**`: dejar de decodificar JWT sin verificar; aceptar `userId` ya verificado como parámetro.
-
-### 1.2 Migración BD (verificar + remediar)
-
-- **Verificar primero** con `psql` el estado vivo de GRANTs en las 39 tablas reportadas (el auditor solo leyó migraciones; pueden existir hotfixes manuales). Solo aplicar GRANTs faltantes reales.
-- Storage policies `documentos`: `{public}` → `{authenticated}` (3 policies).
-- `REVOKE EXECUTE ON can_manage_document_object FROM anon`.
-- `reportes_feedback.organization_id` → `SET NOT NULL`.
-- Agregar `SET search_path TO 'public'` a ~15 funciones SECURITY DEFINER faltantes (idempotency_*, CRM triggers, notif triggers, duplicar_embarque_completo, sync_embarque_desde_contenedor).
-- `can_manage_document_object`: quitar `storage` del search_path, usar `storage.foldername()` calificado.
+Inventario completo basado en auditoría cross-reference `src/` ↔ `__tests__/` y revisión de `e2e/specs/`. **Estado actual**: 786 tests / 118 archivos en verde.
 
 ---
 
-## FASE 2 — Arquitectura & tests bloqueantes (v12.33.0)
+## Resumen ejecutivo
 
-**Objetivo:** Desbloquear el CI (4 tests fallando) y resolver violaciones arquitectónicas.
 
-### 2.1 Refactors de tamaño (Power-of-10)
+| Categoría                      | Archivos faltantes | LOC estimados  |
+| ------------------------------ | ------------------ | -------------- |
+| Services sin test              | ~18                | ~900           |
+| Hooks sin test                 | ~15                | ~1,200         |
+| `lib/` sin test                | ~8                 | ~400           |
+| Edge Functions sin `*_test.ts` | ~7                 | ~350           |
+| E2E nuevos                     | 10 specs           | ~600           |
+| **Total**                      | **~58 archivos**   | **~3,450 LOC** |
 
-- Dividir `src/services/cotizacion/conversiones/embarques.ts` (213 líneas): extraer `construirHijosPayload`, `construirCostosRows`, `parsearVentasJsonb` a `src/lib/domain/cotizacionConversion.ts` y `src/lib/mappers/cotizacion.ts`.
-- Reducir `src/pages/cotizaciones/CotizacionDetalle.tsx` (201 líneas) extrayendo un sub-componente a `<200`.
 
-### 2.2 Layering
+**Hallazgos secundarios** (positivos):
 
-- Crear `src/services/notificaciones/index.ts` con `fetchNotificaciones`, `marcarLeida`, `marcarTodasLeidas`, `subscribeNotificaciones`.
-- Refactor `useNotificacionesInternas` para consumir el servicio + `useAuth()` (elimina 3× `getUser()` duplicados y el import directo de supabase client).
-- Mover JSONB parsing de `usePortalCotizacionDetalle.ts` → `lib/mappers/cotizacion.ts`.
-
-### 2.3 Guardrail nuevo
-
-- Agregar 3er test en `src/lib/__tests__/architecture.test.ts`: hooks/contexts no importan `@/integrations/supabase/client` directamente.
-
----
-
-## FASE 3 — Performance (v12.34.0)
-
-**Objetivo:** Eliminar refetches redundantes (mayor ROI percibido por el usuario).
-
-### 3.1 React Query
-
-- Agregar `staleTime: 60_000` (listas user-facing) o `5 * 60_000` (catálogos/admin) a los **35+ hooks** listados sin staleTime. Usar `useDashboardData.ts` como patrón.
-- Agregar `refetchIntervalInBackground: false` a `useNotificacionesCliente`, `useAppLogsHealth`, `useAlertasSistema`.
-
-### 3.2 Re-renders
-
-- Envolver `defineColumns([...])` con `useMemo` en los 13 componentes identificados (`HistorialFacturas`, `HistorialProformas`, `ReportesTablaClientes`, tabs de Configuración, Papelera, Idempotencia, etc.).
-
-### 3.3 Pagination defensiva
-
-- Agregar `.limit(500)` explícito a `navieras`, `puertos`, `tipos_contenedor`, `organizations`, `proveedores` para evitar el cap silencioso de 1000.
+- 0 residuos JSONCargo (eliminado limpio en 12.31.0).
+- 0 tests con `.skip` / `.todo` sin issue link.
+- Typo detectado: `queryKeys.tiposContenedorns` y `queryKeys.puertosns` (sufijo espurio) — corregir antes de añadir tests de query keys.
 
 ---
 
-## FASE 4 — Calidad de código & tests (v12.35.0–v12.36.0)
+## FASE A — Sprint 1: P0 seguridad y core (v12.37.0)
 
-### 4.1 React Hook Form (mem://core)
+**Objetivo:** Cerrar riesgos de seguridad en edge functions + cubrir mutaciones core de cotización.
 
-- Añadir `{ shouldValidate: true, shouldDirty: true }` + `trigger()` a ~25 `setValue` en 9 archivos del wizard cotización/embarque.
+### A.1 Edge functions críticas (Deno)
 
-### 4.2 Manejo de errores Supabase
+- `supabase/functions/delete-user/delete_test.ts` — guard self-delete + cross-org + flujo correcto.
+- `supabase/functions/invite-client-user/invite_test.ts` — body inválido, user existente vs nuevo, cliente de otra org.
 
-- `organization/index.ts:17`, `crm/leads/convertir.ts:33`, `admin/members.ts:27`: destructurar `error` y lanzar/loguear.
+### A.2 Cotización mutations
 
-### 4.3 Cleanup
+- `src/services/cotizacion/mutations/__tests__/crear.test.ts` — folio, zod validation, errores Supabase.
+- `src/services/cotizacion/mutations/__tests__/update.test.ts` — serialización JSONB (`conceptos_venta`, `dimensiones_lcl/aereas`), enums.
+- `src/services/cotizacion/mutations/__tests__/estado.test.ts` — transiciones válidas/inválidas.
 
-- Regenerar `docs/pagination-audit.md` con `bun run audit:pagination`.
-- Tachar items JSONCargo en `docs/rc-qa-checklist.md`.
+### A.3 Conversión cotización → embarque (feature 12.30.0)
 
-### 4.4 Tests críticos (v12.36.0)
+- `src/services/cotizacion/conversiones/__tests__/embarques.test.ts` — mapeo de campos + missing data.
 
-- Cobertura mínima en `hooks/embarque/` (30 archivos, 1 test) y `hooks/cotizacion/` (18 archivos, 1 test): empezar por `useEmbarqueSubmitOrchestrator`, `useNuevoEmbarqueWizard`, `useCotizacionDetalleHandlers`, `useCotizacionWizardForm`.
-- Tests para `services/`: `cotizacion/mutations/{crear,update,estado}`, `embarque/mutations`, `embarque/eventos`, `proforma/crud`, `crm/{oportunidades,actividades,forecast}`, `auth/loginAudit`.
-- E2E nuevos: CRM pipeline, wizard cotización completo, nuevo embarque wizard, admin/org management.
+### A.4 CRM core
+
+- `src/services/crm/leads/__tests__/convertir.test.ts` — invariantes lead → oportunidad.
+- `src/services/crm/leads/__tests__/mutations.test.ts` — CRUD + deduplicación.
 
 ---
 
-## Fuera de alcance (decisión separada)
+## FASE B — Sprint 2: E2E críticos (v12.38.0)
 
-- **Sesiones en `localStorage` (XSS):** cambio arquitectónico mayor — requiere endpoint server-side y revisión de UX. Decidir aparte.
-- **Trigger `on_auth_user_created` en `auth.users`:** migrar a Supabase Auth Hook requiere planning de cutover.
-- **Consolidar `user_roles` legacy + `organization_members`:** auditoría de todos los callers de `user_roles` y migración de `has_role()`. Riesgo de regresión alto.
-- **443 casts `as Tables<X>` fuera de mappers:** lint rule + migración progresiva — un sprint propio.
+**Objetivo:** Cobertura end-to-end real de los flujos de negocio. Los 5 specs actuales son smoke tests; ninguno valida mutaciones complejas.
+
+
+| Spec                                         | Flujo                                                                                                                        |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `e2e/specs/06-cotizacion-wizard.spec.ts`     | Wizard cotización completo: Paso1 (FCL+cliente) → Paso2 (conceptos) → Paso3 (preview) → guardar borrador → verificar listado |
+| `e2e/specs/07-cotizacion-conversion.spec.ts` | Aceptar desde portal cliente → operador convierte a embarque borrador (feature 12.30.0) → verificar mapeo                    |
+| `e2e/specs/09-crm-pipeline.spec.ts`          | Lead → oportunidad → cambio etapa "Propuesta" → cotización desde oportunidad → verificar lineage                             |
+| `e2e/specs/10-portal-accept-reject.spec.ts`  | Portal cliente: aceptar y rechazar cotización pendiente → verificar acuse y estado backoffice                                |
+
+
+---
+
+## FASE C — Sprint 3: Embarque y financiero (v12.39.0)
+
+### C.1 Hooks embarque (regresión costosa)
+
+- `src/hooks/embarque/__tests__/useEmbarqueSubmitOrchestrator.test.tsx` — orquestación create/update, idempotencia, rollback.
+- `src/hooks/embarque/__tests__/useNuevoEmbarqueWizard.test.tsx` — steps, validación, vinculación cotización.
+- `src/hooks/embarque/__tests__/useEditarEmbarqueWizard.test.tsx` — hydration desde DB, dirty detection.
+- `src/hooks/embarque/__tests__/useEmbarqueForm.test.tsx`, `useEmbarqueDocumentosActions`, `useEmbarqueEstadoActions`, `useEventosEmbarque`.
+
+### C.2 Hooks cotización
+
+- `src/hooks/cotizacion/wizard/__tests__/useCotizacionWizardSteps.test.tsx`.
+- `src/hooks/cotizacion/wizard/__tests__/useCotizacionWizardForm.test.tsx`.
+- `src/hooks/cotizacion/mutations/__tests__/useCotizacionMutations.test.tsx`.
+- `useCotizacionDetalleHandlers`, `useCotizacionConversions`.
+
+### C.3 Services embarque
+
+- `src/services/embarque/__tests__/eventos.test.ts` — enum `tipo_evento_tracking`.
+- `src/services/embarque/__tests__/documentos.test.ts` — `resolverExpediente` (con/sin BL master).
+- `src/services/embarque/queries/__tests__/{detalle,listado,conceptos}.test.ts`.
+
+### C.4 E2E financieros
+
+- `e2e/specs/08-nuevo-embarque-wizard.spec.ts` — wizard nuevo embarque end-to-end.
+- `e2e/specs/11-facturacion-proforma.spec.ts` — embarque liquidado → proforma → facturar → hueco.
+- `e2e/specs/13-embarque-liquidacion.spec.ts` — tránsito → docs → arribo → liquidación.
+
+### C.5 Hooks facturación + portal
+
+- `useHuecoFacturacion`, `usePagosFactura`, `useTabProformasController`.
+- `usePortalCotizacionDetalle`, `usePortalDocumentDownload`.
+
+---
+
+## FASE D — Sprint 4: Completitud y limpieza (v12.40.0)
+
+### D.1 `lib/domain/` sin test (quick wins)
+
+- `__tests__/conceptosPorContenedor.test.ts` (53 LOC src).
+- `__tests__/embarqueWizardRuta.test.ts` (169 LOC src).
+- `__tests__/estadoResultados.test.ts` (161 LOC src).
+- `__tests__/proformaAgrupacion.test.ts` (151 LOC src).
+
+### D.2 Otros services
+
+- `src/services/auth/__tests__/loginAudit.test.ts` (auditoría P1).
+- `src/services/cliente/__tests__/crud.test.ts` (171 LOC src sin test).
+- `src/services/pagos-factura/__tests__/pagos.test.ts`.
+- `src/services/crm/__tests__/{oportunidades,actividades,forecast}.test.ts`.
+- `src/services/crm/vincularCotizacion/__tests__/{sincronizarEtapa,propagarConversion}.test.ts`.
+
+### D.3 Edge functions restantes
+
+- `auditoria-snapshot-daily/snapshot_test.ts` — CRON_SECRET + idempotencia.
+- `auditoria-weekly-digest/digest_test.ts` — `esc()` HTML, dry-run sin API key.
+- `exchange-rates/exchange_test.ts` — caché, fallback timeout.
+- `tracking-public`, `list-users`, `list-client-users` — schema + auth guard.
+
+### D.4 E2E P1/P2
+
+- `e2e/specs/12-admin-org-management.spec.ts` — crear org, invitar usuario, asignar rol.
+- `e2e/specs/14-bitacora-audit.spec.ts` — modificar embarque → verificar bitácora.
+- `e2e/specs/15-portal-documentos.spec.ts` — download con URL firmada.
+
+---
+
+## FASE E — Tests a borrar / consolidar
+
+**Ninguno requiere borrado puro** (cero JSONCargo residual, cero skip/todo huérfanos). Lo que sí hace falta:
+
+
+| Pares duplicados                                                                            | Acción                                                           |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `architecture-baseline.test.ts` + `architecture.test.ts`                                    | Auditar solapamiento → fusionar o documentar separación          |
+| `services/__tests__/idempotency.integration.test.ts` + `lib/__tests__/idempotency.test.tsx` | Eliminar el más débil tras verificar cobertura                   |
+| `financialUtils.edge.test.ts` + `financialUtils.test.ts`                                    | Mover edge cases a `describe("edge cases")` dentro del principal |
+| `useAuditoriaEjecutivo.edge.test.tsx` + `useAuditoriaEjecutivo.test.tsx`                    | Consolidar (mismo anti-patrón)                                   |
+| `services/crm/__tests__/computeLeaderboard.test.ts` vs `lib/crm/__tests__/`                 | Revisar solapamiento antes de borrar                             |
+
+
+**Esfuerzo:** S (≤0.5 días). Recomendado hacerlo al cierre de cada sprint para no dejar deuda.
+
+---
+
+## Pre-requisito (antes de Sprint 1)
+
+Corregir typo: `queryKeys.tiposContenedorns` y `queryKeys.puertosns` en `src/hooks/catalogos/{useTiposContenedor,usePuertos}.ts`. Sufijo `ns` espurio rompe el bucket de caché aunque no falle en runtime.
 
 ---
 
 ## Detalles técnicos
 
 ```text
-Archivos a tocar (estimado):
-  Edge functions:   6 archivos
-  Migraciones:      3-4 nuevas
-  Frontend hooks:   ~40 (staleTime) + ~10 (refactor)
-  Componentes:      ~13 (useMemo) + ~9 (setValue)
-  Servicios:        5-6 nuevos/movidos
-  Tests:            ~15-20 nuevos
+Esfuerzo por sprint:
+  Sprint 1 (A):  ~5 días   — 7 archivos, P0 seguridad/core
+  Sprint 2 (B):  ~7 días   — 4 specs E2E P0
+  Sprint 3 (C):  ~12 días  — 16 archivos (hooks + services + E2E)
+  Sprint 4 (D):  ~8 días   — 18 archivos + 3 E2E P1/P2
+  Fase E:        ~0.5 día  — consolidación duplicados
+
+Total: ~32 días de trabajo de QA dedicado.
+
+Cierre de cada sprint:
+  - bump APP_VERSION + entrada CHANGELOG.md
+  - bun run audit:tests   (higiene)
+  - bun run audit:report  (baselines)
+  - bunx vitest run       (suite completa)
+  - bunx playwright test  (E2E)
 ```
 
-Cada fase: 1 PR/versión + entrada `CHANGELOG.md` + bump `APP_VERSION`. Verificar `bun run audit:arch`, `audit:casts`, `audit:pagination` y `vitest run` antes de cada cierre de fase.
+## Decisión pendiente
 
-## Pregunta pendiente
-
-¿Apruebas ejecutar las 4 fases secuencialmente, o prefieres que pause tras Fase 1 (seguridad crítica) para validar antes de continuar? Ejecuta todas las fases. 
+¿Ejecutamos los 4 sprints secuencialmente, o paramos tras Sprint 1 (P0 seguridad/core) para validar antes de seguir? Ejecuta un subagente para cada false en paralelo
