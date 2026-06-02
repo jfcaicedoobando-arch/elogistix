@@ -3,16 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
-import { fetchEstadoResultadosMes } from "@/services/profit";
+import { fetchEstadoResultadosMes, fetchEstadoResultadosDevengado } from "@/services/profit";
 import { generarMesesDisponibles, mesActualKey } from "@/lib/domain/proyeccionFacturacion";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/storage";
 
 const MES_MINIMO = "2026-04";
+
+export type FuenteEERR = "embarques" | "facturas";
 
 export function useEstadoResultados() {
   const { organizationId } = useOrgFilter();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Lista de meses desde Abril 2026 hacia adelante.
   const mesesDisponibles = useMemo(
     () => generarMesesDisponibles().filter((m) => m.key >= MES_MINIMO),
     [],
@@ -22,6 +24,15 @@ export function useEstadoResultados() {
   const mesValido = mesesDisponibles.find((m) => m.key === mesQp);
   const defaultMes = mesesDisponibles.find((m) => m.key === mesActualKey()) ?? mesesDisponibles[0];
   const [mesKey, setMesKeyState] = useState<string>(mesValido?.key ?? defaultMes.key);
+
+  const [fuente, setFuenteState] = useState<FuenteEERR>(() => {
+    const stored = safeLocalStorage.getItem(STORAGE_KEYS.eerrFuente ?? "eerr_fuente");
+    return stored === "facturas" ? "facturas" : "embarques";
+  });
+  const setFuente = useCallback((f: FuenteEERR) => {
+    setFuenteState(f);
+    safeLocalStorage.setItem(STORAGE_KEYS.eerrFuente ?? "eerr_fuente", f);
+  }, []);
 
   const setMesKey = useCallback(
     (key: string) => {
@@ -47,13 +58,13 @@ export function useEstadoResultados() {
   }, [indiceMes, mesesDisponibles, setMesKey]);
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.profit.estadoResultados(organizationId, mesActual.key),
-    queryFn: () =>
-      fetchEstadoResultadosMes({
-        organizationId: organizationId ?? null,
-        year: mesActual.year,
-        month: mesActual.month,
-      }),
+    queryKey: [...queryKeys.profit.estadoResultados(organizationId, mesActual.key), fuente],
+    queryFn: () => {
+      const p = { organizationId: organizationId ?? null, year: mesActual.year, month: mesActual.month };
+      return fuente === "facturas"
+        ? fetchEstadoResultadosDevengado(p)
+        : fetchEstadoResultadosMes(p);
+    },
     staleTime: 60_000,
   });
 
@@ -67,5 +78,7 @@ export function useEstadoResultados() {
     puedeIrAdelante: indiceMes < mesesDisponibles.length - 1,
     data,
     isLoading,
+    fuente,
+    setFuente,
   };
 }
