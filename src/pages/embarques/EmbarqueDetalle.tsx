@@ -140,9 +140,11 @@ export default function EmbarqueDetalle() {
             uploadingDocId={uploadingDocId}
             downloadingDocId={downloadingDocId}
             deletingDocId={deletingDocId}
+            togglingNoAplicaDocId={togglingNoAplicaDocId}
             onUpload={handleUpload}
             onDownload={handleDownload}
             onDelete={handleDeleteDoc}
+            onToggleNoAplica={handleToggleNoAplica}
           />
         </TabsContent>
 
