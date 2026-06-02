@@ -132,10 +132,11 @@ export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: stri
             disabled={!c.puedeConsolidar || c.isConsolidarPending}
             onClick={c.handleConsolidar}
             title={
-              c.expedientesEnSeleccion > 1
-                ? 'Solo puedes consolidar proformas del mismo expediente'
+              c.embarquesEnSeleccion > 1
+                ? 'Solo puedes consolidar proformas del mismo embarque'
                 : 'Consolidar las proformas seleccionadas en una sola y aprobar'
             }
+
           >
             <Layers className="h-4 w-4 mr-2" /> Consolidar y aprobar
           </Button>

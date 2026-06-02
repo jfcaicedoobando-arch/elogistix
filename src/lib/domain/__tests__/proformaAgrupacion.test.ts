@@ -11,11 +11,12 @@ const mkP = (
   id: string,
   expediente: string,
   contenedores_lista?: ProformaPendienteLite["contenedores_lista"],
+  embarqueId?: string,
 ): ProformaPendienteLite => ({
   id,
   numero: `PRO-${id}`,
   expediente,
-  embarque_id: `emb-${expediente}`,
+  embarque_id: embarqueId ?? `emb-${expediente}`,
   cliente_id: "cli1",
   cliente_nombre: "ACME",
   operador: null,
@@ -25,6 +26,7 @@ const mkP = (
   total_mxn: 0,
   contenedores_lista,
 });
+
 
 // ─── agruparProformasPendientes ───────────────────────────────────────────
 
@@ -72,7 +74,29 @@ describe("agruparProformasPendientes (agrupacion)", () => {
     const grupos = agruparProformasPendientes(ps);
     expect(grupos[0].expediente).toBe("EXP-AA");
   });
+
+  it("mismo expediente con embarques distintos genera grupos separados", () => {
+    const ps = [
+      mkP("p1", "EXP-01", undefined, "emb-A"),
+      mkP("p2", "EXP-01", undefined, "emb-B"),
+    ];
+    const grupos = agruparProformasPendientes(ps);
+    expect(grupos).toHaveLength(2);
+    expect(grupos.every((g) => g.expediente === "EXP-01")).toBe(true);
+    expect(new Set(grupos.map((g) => g.embarqueId))).toEqual(new Set(["emb-A", "emb-B"]));
+  });
+
+  it("mismo expediente y mismo embarque permanece como un solo grupo", () => {
+    const ps = [
+      mkP("p1", "EXP-01", undefined, "emb-A"),
+      mkP("p2", "EXP-01", undefined, "emb-A"),
+    ];
+    const grupos = agruparProformasPendientes(ps);
+    expect(grupos).toHaveLength(1);
+    expect(grupos[0].proformas).toHaveLength(2);
+  });
 });
+
 
 // ─── montoPrincipalProforma ───────────────────────────────────────────────
 

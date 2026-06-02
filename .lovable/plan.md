@@ -1,132 +1,57 @@
-# Sprint 6 — Dashboard Ejecutivo Financiero (v12.49.0)
+## Problema
 
-Consolidar en una sola vista los módulos financieros existentes (EERR, Cartera, Tesorería, Comisiones, Presupuesto, Flujo 90d) para que dirección tenga un tablero único de decisión.
+En `/facturacion → Proformas pendientes`, al seleccionar proformas y presionar **"Consolidar y aprobar"** no pasa nada. El log del navegador muestra:
 
-## Objetivo
+```
+[consolidar] selección con embarques/clientes mixtos, abortando
+```
 
-Una ruta `/profit/dashboard-ejecutivo` que muestre el estado financiero global de la organización en menos de 2s, con datos reales de los servicios ya construidos en Sprints 1-4. Sin duplicar lógica, sin nuevas tablas.
+### Causa raíz (verificada en BD)
 
-## Alcance funcional
+`agruparProformasPendientes` agrupa por **`expediente`**, pero en los datos reales un mismo expediente (p. ej. `ELIMP00007`) tiene **varias proformas con `embarque_id` distintos** (cada contenedor/instancia genera su propio embarque). El guard en `useTabProformasPendientesController.handleConsolidar` exige `embarque_id` único y aborta **silenciosamente** con `console.warn` cuando esa condición se rompe — para el usuario "no pasa nada".
 
-### 1. Selector de periodo (header)
-- Presets: Mes actual / Mes anterior / YTD / Trimestre / Personalizado.
-- Default: Mes actual. Persistido en `safeSessionStorage` (`STORAGE_KEYS`).
-- Filtro de moneda visualización: MXN (base) / USD (convertido con `useTasaCambio`).
+Verificación BD (extracto, expediente `ELIMP00007`, 6 proformas con 6 `embarque_id` diferentes):
 
-### 2. Banda de 6 KPI cards
-- Ingresos del periodo
-- Utilidad neta + margen %
-- Saldo total en bancos (todas las cuentas activas)
-- Cartera vencida >0 días (monto + count)
-- CxP por pagar próximos 7 días
-- Variación presupuesto vs real (color: verde <100%, ámbar 100-110%, rojo >110%)
+```
+PRO-2026-0082  embarque_id 06425649…
+PRO-2026-0084  embarque_id 33b14b26…
+PRO-2026-0080  embarque_id afddd80d…
+PRO-2026-0083  embarque_id b55ca3a2…
+PRO-2026-0081  embarque_id d60bebde…
+PRO-2026-0079  embarque_id d60bebde…
+```
 
-Cada card: valor principal, delta vs periodo anterior, ícono, click → ruta del módulo origen.
+## Solución
 
-### 3. Gráfico EERR 12 meses (`ComposedChart` Recharts)
-- Barras: Ingresos / Costos / Gastos.
-- Línea: Utilidad neta.
-- Reusa `fetchEstadoResultados` con rango rolling 12m.
+Agrupar la lista de pendientes por **`embarque_id`** (no por `expediente`), mantener el expediente como etiqueta visible, y reemplazar el `console.warn` silencioso por un toast de error explícito como red de seguridad.
 
-### 4. Tarjeta saldos por banco
-- Tabla compacta: banco, cuenta, saldo MXN, saldo USD.
-- Total al pie.
-- Reusa `fetchResumenTesoreria`.
+### Cambios
 
-### 5. Top 5 deudores / Top 5 acreedores (dos tarjetas lado a lado)
-- Cliente/Proveedor, monto, días vencido, badge de severidad.
-- Reusa servicios de cartera CxC/CxP.
+1. **`src/lib/domain/proformaAgrupacion.ts`**
+   - `agruparProformasPendientes`: cambiar la clave de agrupación de `p.expediente` a `p.embarque_id` (fallback al expediente si por algún motivo viniera null, que hoy nunca pasa con `deleted_at IS NULL`).
+   - `GrupoExpediente` mantiene los mismos campos; sólo cambia cómo se construye la clave. Renombrarlo internamente a `GrupoEmbarque` queda fuera de alcance para minimizar diff.
+   - Añadir 2 tests en `__tests__/proformaAgrupacion.test.ts`: (a) mismas claves de expediente con embarque distinto → 2 grupos; (b) mismas claves de expediente y mismo embarque → 1 grupo.
 
-### 6. Mini flujo proyectado 4 semanas
-- `LineChart` con saldo proyectado semanal.
-- Reusa `fetchFlujoProyectado(28)`.
+2. **`src/hooks/facturacion/useTabProformasPendientesController.ts`**
+   - `seleccionPorExpediente`: cambiar la `Map` a llave por `embarqueId` (renombrar variable a `seleccionPorEmbarque` y `expedientesEnSeleccion` → `embarquesEnSeleccion`).
+   - `handleConsolidar`: en lugar de `console.warn` + return, mostrar un `toast.error("No se pueden consolidar proformas de embarques o clientes distintos.")` (importando `sonner`). El guard sigue ahí como defensa, pero ahora visible.
+   - Exponer la variable renombrada al componente (`embarquesEnSeleccion`).
 
-### 7. Panel de alertas (lateral derecha)
-- Reglas deterministas (sin IA):
-  - Saldo bancario proyectado < 0 en próximas 4 semanas
-  - Facturas CxC vencidas >30 días con monto >umbral configurable
-  - Categoría de presupuesto con variación >110%
-  - CxP vencidas
-- Cada alerta: severidad, descripción, link a la vista de origen.
+3. **`src/components/facturacion/TabProformasPendientes.tsx`**
+   - Reemplazar `expedientesEnSeleccion` por `embarquesEnSeleccion` en el `title` del botón ("Solo puedes consolidar proformas del mismo embarque").
+   - El render del grupo sigue mostrando `EXPEDIENTE {grupo.expediente}` + `BL`; cuando un expediente se repite en varios embarques se verán como tarjetas separadas con distinto BL/Cliente, lo cual es el comportamiento correcto.
 
-## Arquitectura técnica
+4. **Tests existentes**
+   - Ajustar `src/lib/domain/__tests__/proforma.test.ts` y `proformaAgrupacion.test.ts` si alguna assertion espera agrupación por expediente puro.
 
-### Backend / servicios
-- `src/services/dashboard-ejecutivo/agregador.ts` — orquestador único que llama en paralelo (`Promise.all`) a los servicios ya existentes:
-  - `fetchEstadoResultados(periodo)`
-  - `fetchEstadoResultados(rolling12m)`
-  - `fetchResumenTesoreria()`
-  - `fetchFlujoProyectado(28)`
-  - `fetchPresupuestoVsReal(periodo)`
-  - `fetchComisionesDevengadas(periodo)`
-  - `fetchTopDeudores(5)` / `fetchTopAcreedores(5)` (nuevos wrappers ligeros sobre servicios CxC/CxP existentes)
-- Cálculo de alertas: función pura `calcularAlertas(snapshot)` en `src/services/dashboard-ejecutivo/alertas.ts`.
-- Tipos en `src/services/dashboard-ejecutivo/types.ts`.
-- Sin nueva tabla. Sin RPC nueva. Sin migración.
+### Fuera de alcance
 
-### Hook
-- `src/hooks/dashboard-ejecutivo/useDashboardEjecutivo.ts`
-  - `useQuery` con `queryKey: queryKeys.dashboardEjecutivo.snapshot(periodo, organizationId)`
-  - `staleTime: 60_000`, `gcTime: 300_000`
-- Registrar dominio en `EXPECTED_DOMAINS` (`src/lib/query/index.ts`) + keys en `src/lib/query/keys/dashboardEjecutivo.ts`.
+- No se toca el RPC `consolidar_proformas` (la lógica server-side ya es correcta).
+- No se cambia el tab de proformas aprobadas ni `TabFacturacion` del detalle de embarque.
+- No se renombra el tipo público `GrupoExpediente` (sólo cambia su semántica interna).
 
-### UI / componentes (todos ≤200 LOC)
-- `src/pages/profit/ProfitDashboardEjecutivo.tsx` (página, ≤150 LOC)
-- `src/components/dashboard-ejecutivo/SelectorPeriodo.tsx`
-- `src/components/dashboard-ejecutivo/BandaKPIs.tsx` + `KpiCard.tsx`
-- `src/components/dashboard-ejecutivo/GraficoEERR12m.tsx`
-- `src/components/dashboard-ejecutivo/SaldosBancosCard.tsx`
-- `src/components/dashboard-ejecutivo/TopListaCard.tsx` (reusable deudores/acreedores)
-- `src/components/dashboard-ejecutivo/MiniFlujoCard.tsx`
-- `src/components/dashboard-ejecutivo/AlertasPanel.tsx`
-- Skeletons en cada tarjeta; error boundary local.
+### Verificación
 
-### Ruta y navegación
-- Registrar en `src/routes/appRoutes.tsx` con lazy load + chunk recovery.
-- Item en sidebar bajo grupo "Profit" como primer hijo, ícono `LayoutDashboard`.
-- Permisos: `admin`, `contador` → vista completa; `comercial`, `vendedor` → sólo KPIs de ingresos/cartera; `operador` → sin acceso.
-
-### Exportación PDF
-- `src/pdf/documents/ReporteEjecutivoDocument.tsx` (3 páginas):
-  1. Header + KPIs + EERR 12m + saldos bancos
-  2. Top deudores + Top acreedores + alertas
-  3. Mini flujo + variación presupuesto
-- Botón "Exportar PDF" en header, usa `@react-pdf/renderer` ya instalado.
-
-### Localización y formato
-- `es-MX`, MXN base, `DD/MM/YYYY`, `financialUtils.ts` para sumas, `useTasaIVA` no requerido (vista informativa).
-- Conversión USD vía `useTasaCambio` (cache 1h Frankfurter).
-
-### Tests
-- `src/services/dashboard-ejecutivo/__tests__/alertas.test.ts` — reglas deterministas (≥6 casos).
-- `src/lib/query/__tests__/keys-shape.test.ts` — incluir nuevo dominio.
-- `src/pages/profit/__tests__/ProfitDashboardEjecutivo.test.tsx` — smoke con mocks.
-
-## Fuera de alcance
-- Comparativo año contra año.
-- Drilldown interactivo dentro de las gráficas.
-- Export Excel.
-- Notificaciones push / email (Sprint 5).
-- Personalización de layout por usuario.
-
-## Power of 10 / cumplimiento
-- Componentes ≤200 LOC.
-- Cero `any`.
-- Sin `style={{}}` estático.
-- Multi-tenant: todas las queries filtran por `organization_id` activo del contexto.
-- Cleanup en `useEffect` (no hay suscripciones realtime en este sprint).
-- `safeSessionStorage` para persistencia de filtro.
-
-## Entregables
-1. Servicios + tipos + alertas
-2. Hook + query keys
-3. UI (página + 7 componentes)
-4. Ruta + sidebar + permisos
-5. PDF ejecutivo
-6. Tests (alertas + smoke + keys-shape)
-7. `CHANGELOG.md` + bump `APP_VERSION` → `12.49.0`
-
-## Riesgos
-- Tiempo de carga si los 6 servicios se ejecutan en serie → mitigado con `Promise.all`.
-- Inconsistencia de monedas → forzar MXN base, conversión sólo en UI.
-- Permisos comercial/vendedor: validar en agregador, no sólo en UI.
+- `vitest run src/lib/domain/__tests__/proformaAgrupacion.test.ts src/hooks/facturacion`.
+- Prueba manual en `/facturacion`: seleccionar 2 proformas del mismo embarque → botón habilitado y consolida; seleccionar 2 de embarques distintos → botón deshabilitado (no aparecen en mismo grupo) o, si por algún edge case llegan, toast claro.
+- Actualizar `CHANGELOG.md` + bump de `APP_VERSION` (patch: `12.49.1`).
