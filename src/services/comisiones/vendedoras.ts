@@ -1,14 +1,32 @@
 /**
  * Servicio para vendedoras: config de % y catálogo de usuarios con rol vendedor.
+ * Nombres/emails vía edge function `list-users` (no hay tabla profiles).
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { fetchAvailableUsers } from "@/services/admin/members";
 
 export type VendedoraConfigRow = Tables<"vendedora_config">;
 
 export interface VendedoraConfig extends VendedoraConfigRow {
   nombre: string | null;
   email: string | null;
+}
+
+export interface UsuarioVendedor { id: string; nombre: string; email: string }
+
+async function buildEmailMap(ids: string[]): Promise<Record<string, string>> {
+  if (ids.length === 0) return {};
+  try {
+    const users = await fetchAvailableUsers();
+    const map: Record<string, string> = {};
+    for (const u of users) {
+      if (ids.includes(u.id)) map[u.id] = u.email;
+    }
+    return map;
+  } catch {
+    return {};
+  }
 }
 
 export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
@@ -19,20 +37,11 @@ export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
     .limit(200);
   if (error) throw error;
   const configs = (data ?? []) as VendedoraConfigRow[];
-  const ids = configs.map((c) => c.user_id);
-  if (ids.length === 0) return [];
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, email")
-    .in("id", ids);
-  type ProfileLite = { id: string; full_name: string | null; email: string | null };
-  const map = new Map<string, ProfileLite>(
-    ((profiles ?? []) as ProfileLite[]).map((p) => [p.id, p]),
-  );
+  const map = await buildEmailMap(configs.map((c) => c.user_id));
   return configs.map((c) => ({
     ...c,
-    nombre: map.get(c.user_id)?.full_name ?? null,
-    email: map.get(c.user_id)?.email ?? null,
+    nombre: map[c.user_id] ?? null,
+    email: map[c.user_id] ?? null,
   }));
 }
 
@@ -53,25 +62,21 @@ export async function updateVendedoraConfig(
   if (error) throw error;
 }
 
-/** Lista usuarios miembros de la organización actual con rol `vendedor` o `admin`. */
-export interface UsuarioVendedor { id: string; full_name: string | null; email: string | null }
-
+/** Usuarios de la org con rol vendedor o admin (candidatos a vendedora). */
 export async function fetchUsuariosVendedores(): Promise<UsuarioVendedor[]> {
-  // user_roles + profiles join. Filtramos por rol vendedor.
   const { data, error } = await supabase
-    .from("user_roles")
-    .select("user_id, role")
-    .in("role", ["vendedor", "admin"]);
+    .from("organization_members")
+    .select("user_id, role");
   if (error) throw error;
-  const ids = Array.from(new Set(((data ?? []) as Array<{ user_id: string }>).map((r) => r.user_id)));
-  if (ids.length === 0) return [];
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, email")
-    .in("id", ids);
-  return ((profiles ?? []) as UsuarioVendedor[]).sort((a, b) =>
-    (a.full_name ?? a.email ?? "").localeCompare(b.full_name ?? b.email ?? ""),
-  );
+  const rows = ((data ?? []) as Array<{ user_id: string; role: string }>)
+    .filter((r) => r.role === "vendedor" || r.role === "admin");
+  const ids = Array.from(new Set(rows.map((r) => r.user_id)));
+  const map = await buildEmailMap(ids);
+  return ids.map((id) => ({
+    id,
+    nombre: map[id] ?? id,
+    email: map[id] ?? "",
+  })).sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 
 export interface EmbarqueSinVendedora {
