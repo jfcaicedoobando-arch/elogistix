@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.50.3] - 2026-06-02
+- **feat(embarques/documentos)**: Nueva acción **"No aplica"** en el tab Documentos del detalle de embarque. Permite marcar documentos opcionales que no aplican a un embarque específico (ej. ficha técnica, packing list) para que dejen de aparecer en los conteos de "Docs faltantes" del dashboard del operador, sidebar y auditoría. Se agregó el valor `'No aplica'` al enum `estado_documento`, nueva función de servicio `setDocumentoEstadoNoAplica`, hook `useSetDocumentoNoAplica` y nueva acción `handleToggleNoAplica` (con bitácora: `marcar_documento_no_aplica` / `revertir_documento_no_aplica`). El **BL Master** queda excluido de esta opción — siempre es obligatorio (`DOCUMENTOS_OBLIGATORIOS` en `useDocumentoColumns`). La acción sólo está disponible cuando no hay archivo adjunto y se puede revertir con "Marcar pendiente". Indicador visual gris (`bg-muted-foreground/40`) para el estado "No aplica" en `getDocEstadoColorClass`. Bump 12.50.3.
+
 ## [12.50.2] - 2026-06-02
 - **feat(dashboard/operador)**: El dashboard principal (`/`) ahora inicia con el tab **"Míos"** predeterminado en lugar de **"Todos"** para usuarios con rol `operador`. Los usuarios admin, super_admin y vendedor mantienen "Todos" como predeterminado. Bump 12.50.2.
 
