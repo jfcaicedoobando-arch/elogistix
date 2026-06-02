@@ -15,6 +15,7 @@ interface Props {
   embarques: EmbarqueMesSiguiente[];
   resumen: ResumenFacturacion;
   isLoading: boolean;
+  hideFinancials?: boolean;
 }
 
 const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<EmbarqueMesSiguiente>([
