@@ -58,6 +58,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
       <Card>
         <CardContent className="p-0">
           <DataTable
+            key={c.filtroEstado}
             columns={columns}
             data={c.paginated}
             isLoading={c.isLoading}

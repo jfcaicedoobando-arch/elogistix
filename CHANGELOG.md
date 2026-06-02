@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.49.6] - 2026-06-02
+- **fix(facturacion/proformas-filtro)**: Al alternar entre los botones Todas / Pendientes / Facturadas en el tab "2. Proformas" la tabla no reflejaba el cambio (los botones cambiaban de estado visual pero las filas no). Se fuerza el remount del `<DataTable>` con `key={filtroEstado}` para garantizar que el row model de TanStack se reconstruya en cada cambio de filtro. Bump 12.49.6.
+
 ## [12.49.5] - 2026-06-02
 - **chore(facturacion/proformas-columnas)**: Se simplificó la tabla del tab "2. Proformas" en Pre-Facturación eliminando las columnas BL Master, Tipo (Individual/Consolidada), Días Crédito, Monto USD, Monto MXN y Folio Factura. Quedan: # Proforma, Expediente, Cliente, Operador, Fecha, Estado y Acciones. La exportación CSV sigue incluyendo todos los campos. Bump 12.49.5.
 
