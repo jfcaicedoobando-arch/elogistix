@@ -92,6 +92,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
   const { data, error } = await query;
   if (error) throw error;
 
+  // SAFE-CAST: `RawFactura` modela el join con pagos_factura; Supabase tipa unknown.
   const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {
     const pagado = (f.pagos_factura ?? [])
       .filter((p) => !p.deleted_at)

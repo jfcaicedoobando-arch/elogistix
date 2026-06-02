@@ -83,6 +83,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   const { data, error } = await q;
   if (error) throw error;
 
+  // SAFE-CAST: tipo `Joined` modela el shape del select con embeds; Supabase devuelve unknown.
   const rows = ((data as unknown as Joined[] | null) ?? []).map((f): FacturaCxP => {
     const pagado = (f.pagos_proveedor ?? [])
       .filter(p => !p.deleted_at)

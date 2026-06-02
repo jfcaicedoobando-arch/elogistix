@@ -9,14 +9,16 @@ import {
   updateProveedor as svcUpdate,
   deleteProveedor as svcDelete,
   fetchProveedorOperaciones,
+  fetchProveedoresLite,
   type Proveedor,
   type ProveedorListItem,
   type ProveedorOperacion,
+  type ProveedorLite,
 } from "@/services/proveedor";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
-export type { Proveedor, ProveedorListItem, ProveedorOperacion };
+export type { Proveedor, ProveedorListItem, ProveedorOperacion, ProveedorLite };
 
 interface UseProveedoresPaginadosParams {
   tipo: TipoProveedor;
@@ -85,5 +87,13 @@ export function useProveedorOperaciones(proveedorId: string | undefined) {
     queryKey: queryKeys.proveedores.operaciones(proveedorId!),
     enabled: !!proveedorId,
     queryFn: () => fetchProveedorOperaciones(proveedorId!),
+  });
+}
+
+export function useProveedoresLite() {
+  return useQuery({
+    queryKey: queryKeys.proveedores.lite(),
+    queryFn: fetchProveedoresLite,
+    staleTime: 5 * 60_000,
   });
 }
