@@ -54,6 +54,13 @@ export default function ProfitEstadoResultados() {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          <Select value={c.fuente} onValueChange={(v) => c.setFuente(v as typeof c.fuente)}>
+            <SelectTrigger className="w-[230px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="embarques">Operativa (por ETA del embarque)</SelectItem>
+              <SelectItem value="facturas">Devengada (facturas + CxP)</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex-1" />
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
@@ -63,7 +70,10 @@ export default function ProfitEstadoResultados() {
 
       <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
         <Info className="h-3 w-3" />
-        Montos en MXN. Conceptos en USD/EUR convertidos con el tipo de cambio del propio embarque. Excluye embarques cancelados y modalidad Multimodal.
+        {c.fuente === "facturas"
+          ? "Fuente devengada: facturas emitidas (CxC) menos NC aplicadas, contra facturas de proveedor (CxP) del mismo mes."
+          : "Fuente operativa: conceptos del embarque cuya ETA cae en el mes. Excluye Cancelados y Multimodal."}
+        {" "}Montos en MXN.
       </p>
 
       <Card>

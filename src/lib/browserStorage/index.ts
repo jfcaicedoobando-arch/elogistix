@@ -19,6 +19,7 @@ export const STORAGE_KEYS = {
   queryCache: "lc-query-cache-v1",
   loginLoggedPrefix: "lc:login-logged:",
   appVersion: "lc-app-version",
+  eerrFuente: "lc-eerr-fuente",
 } as const;
 
 export const loginLoggedKey = (userId: string): string =>

@@ -24,6 +24,7 @@ import { auditoria } from "./keys/auditoria";
 import { facturacion } from "./keys/facturacion";
 import { profit } from "./keys/profit";
 import { cxp } from "./keys/cxp";
+import { tesoreria } from "./keys/tesoreria";
 import {
   bitacora, trackingLinks, clienteFinancials,
   pdfPreviewCotizacion, trackingPublico,
@@ -61,6 +62,7 @@ export const queryKeys = {
   facturacion,
   profit,
   cxp,
+  tesoreria,
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,

@@ -39,6 +39,9 @@ const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
 const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
 const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
 const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
+const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
+const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
+const TesoreriaConciliacion = lazy(() => import("@/pages/tesoreria/TesoreriaConciliacion"));
 
 const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
 const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
@@ -76,6 +79,30 @@ export const appRoutes = (
       element={
         <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
           <Cxp />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tesoreria"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <Tesoreria />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tesoreria/cuentas"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <TesoreriaCuentas />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tesoreria/conciliacion"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <TesoreriaConciliacion />
         </ProtectedRoute>
       }
     />
