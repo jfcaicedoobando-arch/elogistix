@@ -60,6 +60,7 @@ export const queryKeys = {
   appLogs,
   facturacion,
   profit,
+  cxp,
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,
