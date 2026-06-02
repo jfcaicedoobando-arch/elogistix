@@ -124,6 +124,10 @@ export default function Facturacion() {
             />
           </TabsContent>
 
+          <TabsContent value="cobranza" className="space-y-4">
+            <TabCobranza />
+          </TabsContent>
+
           <TabsContent value="liquidacion" className="space-y-4">
             {dateBar}
             <Card>
