@@ -39,6 +39,7 @@ const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
 const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
 const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
 const ProfitPresupuesto = lazy(() => import("@/pages/profit/ProfitPresupuesto"));
+const ProfitDashboardEjecutivo = lazy(() => import("@/pages/profit/ProfitDashboardEjecutivo"));
 const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
 const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
 const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
