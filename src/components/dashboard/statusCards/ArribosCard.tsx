@@ -24,9 +24,10 @@ export interface ArribosEsteMes {
 interface Props {
   arribosEsteMes: ArribosEsteMes;
   isLoading: boolean;
+  hideFinancials?: boolean;
 }
 
-export function ArribosCard({ arribosEsteMes, isLoading }: Props) {
+export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false }: Props) {
   const pct = arribosEsteMes.total > 0
     ? Math.round((arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100)
     : 0;
@@ -42,7 +43,7 @@ export function ArribosCard({ arribosEsteMes, isLoading }: Props) {
             <span className="text-sm font-semibold text-foreground">Arribos este mes</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 flex-1">
+          <div className={`grid ${hideFinancials ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"} gap-3 sm:gap-6 flex-1`}>
             <div className="text-center">
               {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                 <span className="text-xl font-bold text-foreground tabular-nums">{arribosEsteMes.total}</span>
@@ -70,6 +71,7 @@ export function ArribosCard({ arribosEsteMes, isLoading }: Props) {
               <p className="text-[11px] text-muted-foreground font-medium">En camino</p>
             </div>
 
+            {!hideFinancials && (
             <div className="text-center">
               {isLoading ? <Skeleton className="h-6 w-20 mx-auto" /> : (
                 <TooltipProvider delayDuration={150}>
@@ -125,6 +127,7 @@ export function ArribosCard({ arribosEsteMes, isLoading }: Props) {
               )}
               <p className="text-[11px] text-muted-foreground font-medium">Profit MXN proyectado</p>
             </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 xl:w-40 shrink-0">

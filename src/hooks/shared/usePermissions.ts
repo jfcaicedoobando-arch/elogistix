@@ -7,7 +7,10 @@ export function usePermissions() {
   const canEdit = roleStr === "admin" || roleStr === "operador" || roleStr === "super_admin";
   const isAdmin = roleStr === "admin" || roleStr === "super_admin";
   const isSuperAdmin = (role as AppRole) === "super_admin";
+  const isOperador = roleStr === "operador";
+  /** Operador NO debe ver información financiera (profit, venta, costo, margen, facturado). */
+  const canViewFinancials = !isOperador;
   /** Permite editar en módulo CRM: incluye al rol vendedor además de los staff. */
   const canEditCrm = canEdit || roleStr === "vendedor";
-  return { canEdit, canEditCrm, isAdmin, isSuperAdmin, role: effectiveRole };
+  return { canEdit, canEditCrm, isAdmin, isSuperAdmin, isOperador, canViewFinancials, role: effectiveRole };
 }
