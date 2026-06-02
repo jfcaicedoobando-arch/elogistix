@@ -2523,6 +2523,81 @@ export type Database = {
           },
         ]
       }
+      pagos_proveedor: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          diferencia_cambiaria_mxn: number | null
+          fecha_pago: string
+          id: string
+          metodo_pago: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          notas: string
+          organization_id: string
+          proveedor_factura_id: string
+          referencia: string
+          tipo_cambio_usd: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          diferencia_cambiaria_mxn?: number | null
+          fecha_pago?: string
+          id?: string
+          metodo_pago?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          notas?: string
+          organization_id?: string
+          proveedor_factura_id: string
+          referencia?: string
+          tipo_cambio_usd?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          diferencia_cambiaria_mxn?: number | null
+          fecha_pago?: string
+          id?: string
+          metodo_pago?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          notas?: string
+          organization_id?: string
+          proveedor_factura_id?: string
+          referencia?: string
+          tipo_cambio_usd?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+        ]
+      }
       planes: {
         Row: {
           activo: boolean
@@ -2795,6 +2870,216 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      proveedor_facturas: {
+        Row: {
+          archivo_pdf_url: string | null
+          archivo_xml_url: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number
+          embarque_id: string | null
+          estado: Database["public"]["Enums"]["estado_proveedor_factura"]
+          fecha_emision: string
+          fecha_vencimiento: string | null
+          folio_proveedor: string
+          id: string
+          iva: number
+          moneda: Database["public"]["Enums"]["moneda"]
+          notas: string
+          organization_id: string
+          proveedor_id: string
+          proveedor_nombre: string
+          retenciones: number
+          rfc_proveedor: string | null
+          subtotal: number
+          tipo_cambio_usd: number
+          total: number
+          updated_at: string
+          uuid_fiscal: string | null
+        }
+        Insert: {
+          archivo_pdf_url?: string | null
+          archivo_xml_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dias_credito?: number
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          folio_proveedor: string
+          id?: string
+          iva?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string
+          organization_id?: string
+          proveedor_id: string
+          proveedor_nombre?: string
+          retenciones?: number
+          rfc_proveedor?: string | null
+          subtotal?: number
+          tipo_cambio_usd?: number
+          total?: number
+          updated_at?: string
+          uuid_fiscal?: string | null
+        }
+        Update: {
+          archivo_pdf_url?: string | null
+          archivo_xml_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dias_credito?: number
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          folio_proveedor?: string
+          id?: string
+          iva?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string
+          organization_id?: string
+          proveedor_id?: string
+          proveedor_nombre?: string
+          retenciones?: number
+          rfc_proveedor?: string | null
+          subtotal?: number
+          tipo_cambio_usd?: number
+          total?: number
+          updated_at?: string
+          uuid_fiscal?: string | null
+        }
+        Relationships: []
+      }
+      proveedor_facturas_conceptos: {
+        Row: {
+          cantidad: number
+          concepto_costo_id: string | null
+          created_at: string
+          descripcion: string
+          id: string
+          monto: number
+          organization_id: string
+          proveedor_factura_id: string
+        }
+        Insert: {
+          cantidad?: number
+          concepto_costo_id?: string | null
+          created_at?: string
+          descripcion?: string
+          id?: string
+          monto?: number
+          organization_id?: string
+          proveedor_factura_id: string
+        }
+        Update: {
+          cantidad?: number
+          concepto_costo_id?: string | null
+          created_at?: string
+          descripcion?: string
+          id?: string
+          monto?: number
+          organization_id?: string
+          proveedor_factura_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_facturas_conceptos_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_facturas_conceptos_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+        ]
+      }
+      proveedor_notas_credito: {
+        Row: {
+          aprobada_at: string | null
+          aprobada_por: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          descripcion: string
+          estado: Database["public"]["Enums"]["estado_nota_credito_proveedor"]
+          fecha: string
+          folio_nc: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
+          organization_id: string
+          proveedor_factura_id: string
+          updated_at: string
+        }
+        Insert: {
+          aprobada_at?: string | null
+          aprobada_por?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion?: string
+          estado?: Database["public"]["Enums"]["estado_nota_credito_proveedor"]
+          fecha?: string
+          folio_nc?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          motivo?: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
+          organization_id?: string
+          proveedor_factura_id: string
+          updated_at?: string
+        }
+        Update: {
+          aprobada_at?: string | null
+          aprobada_por?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion?: string
+          estado?: Database["public"]["Enums"]["estado_nota_credito_proveedor"]
+          fecha?: string
+          folio_nc?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          motivo?: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
+          organization_id?: string
+          proveedor_factura_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_notas_credito_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_notas_credito_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
           },
         ]
       }
@@ -3154,7 +3439,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_proveedor_facturas_saldo: {
+        Row: {
+          notas_credito_aplicadas: number | null
+          organization_id: string | null
+          pagado: number | null
+          proveedor_factura_id: string | null
+          saldo: number | null
+          total: number | null
+        }
+        Insert: {
+          notas_credito_aplicadas?: never
+          organization_id?: string | null
+          pagado?: never
+          proveedor_factura_id?: string | null
+          saldo?: never
+          total?: number | null
+        }
+        Update: {
+          notas_credito_aplicadas?: never
+          organization_id?: string | null
+          pagado?: never
+          proveedor_factura_id?: string | null
+          saldo?: never
+          total?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       actualizar_cotizacion_costos: {
@@ -3193,6 +3504,10 @@ export type Database = {
           total: number
           warns: number
         }[]
+      }
+      aprobar_nota_credito_proveedor: {
+        Args: { _nc_id: string }
+        Returns: undefined
       }
       auditoria_capturar_snapshot: {
         Args: { p_organization_id: string }
@@ -3863,7 +4178,13 @@ export type Database = {
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
       estado_nota_credito: "Borrador" | "Aprobada" | "Aplicada" | "Cancelada"
+      estado_nota_credito_proveedor:
+        | "Borrador"
+        | "Aprobada"
+        | "Aplicada"
+        | "Cancelada"
       estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
+      estado_proveedor_factura: "Borrador" | "Vigente" | "Pagada" | "Cancelada"
       incoterm:
         | "EXW"
         | "FOB"
@@ -3883,6 +4204,13 @@ export type Database = {
         | "Error"
         | "Devolucion"
         | "Bonificacion"
+        | "Otro"
+      motivo_nota_credito_proveedor:
+        | "Devolucion"
+        | "Bonificacion"
+        | "Descuento"
+        | "ErrorFacturacion"
+        | "Cancelacion"
         | "Otro"
       origen_proveedor: "Nacional" | "Extranjero"
       tipo_contacto: "Proveedor" | "Exportador" | "Importador"
@@ -4104,7 +4432,14 @@ export const Constants = {
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
       estado_nota_credito: ["Borrador", "Aprobada", "Aplicada", "Cancelada"],
+      estado_nota_credito_proveedor: [
+        "Borrador",
+        "Aprobada",
+        "Aplicada",
+        "Cancelada",
+      ],
       estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
+      estado_proveedor_factura: ["Borrador", "Vigente", "Pagada", "Cancelada"],
       incoterm: [
         "EXW",
         "FOB",
@@ -4125,6 +4460,14 @@ export const Constants = {
         "Error",
         "Devolucion",
         "Bonificacion",
+        "Otro",
+      ],
+      motivo_nota_credito_proveedor: [
+        "Devolucion",
+        "Bonificacion",
+        "Descuento",
+        "ErrorFacturacion",
+        "Cancelacion",
         "Otro",
       ],
       origen_proveedor: ["Nacional", "Extranjero"],

@@ -23,6 +23,7 @@ import { portal } from "./keys/portal";
 import { auditoria } from "./keys/auditoria";
 import { facturacion } from "./keys/facturacion";
 import { profit } from "./keys/profit";
+import { cxp } from "./keys/cxp";
 import {
   bitacora, trackingLinks, clienteFinancials,
   pdfPreviewCotizacion, trackingPublico,
@@ -59,6 +60,7 @@ export const queryKeys = {
   appLogs,
   facturacion,
   profit,
+  cxp,
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,

@@ -19,6 +19,7 @@ import {
   Target,
   TrendingUp,
   PiggyBank,
+  Receipt,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -36,6 +37,7 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Pre-Facturación", url: "/facturacion", icon: FileText },
+  { title: "Cuentas por Pagar", url: "/cxp", icon: Receipt },
 ];
 
 export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
