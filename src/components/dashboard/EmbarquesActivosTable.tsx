@@ -103,7 +103,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
   },
 ]);
 
-export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) {
+export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinancials = false }: Props) {
   const navigate = useNavigate();
   const nombreMesCap = resumen.nombreMes
     ? resumen.nombreMes.charAt(0).toUpperCase() + resumen.nombreMes.slice(1)
@@ -112,6 +112,10 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
     ? Math.round((resumen.facturados / resumen.totalEmbarques) * 100)
     : 0;
   const colorClass = pctFacturados >= 75 ? "[&>div]:bg-success" : pctFacturados >= 25 ? "[&>div]:bg-warning" : "[&>div]:bg-destructive";
+
+  const visibleColumns = hideFinancials
+    ? columns.filter((c) => c.id !== "profit" && c.id !== "facturado")
+    : columns;
 
   return (
     <Card>
@@ -123,7 +127,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Resumen de facturación */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className={`grid gap-3 ${hideFinancials ? "grid-cols-1" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
             <Package className="h-4 w-4 text-muted-foreground shrink-0" />
             <div className="min-w-0">
@@ -131,48 +135,52 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
               <p className="text-[10px] text-muted-foreground">Embarques</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <DollarSign className="h-4 w-4 text-info shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
-              <p className="text-[10px] text-muted-foreground">Venta MXN</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <DollarSign className="h-4 w-4 text-warning shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
-              <p className="text-[10px] text-muted-foreground">Costo MXN</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
-            <div className="min-w-0">
-              <p className={`text-sm font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
-                {formatCurrency(resumen.profitMXN, "MXN")}
-              </p>
-              <p className="text-[10px] text-muted-foreground">Profit MXN</p>
-            </div>
-          </div>
-          <div className="col-span-2 md:col-span-3 lg:col-span-1 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
-            <div className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-sm font-bold text-foreground">
-                    {resumen.facturados}/{resumen.totalEmbarques}
-                  </p>
-                  <span className="text-[10px] text-muted-foreground">{pctFacturados}%</span>
+          {!hideFinancials && (
+            <>
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+                <DollarSign className="h-4 w-4 text-info shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
+                  <p className="text-[10px] text-muted-foreground">Venta MXN</p>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Facturados</p>
               </div>
-            </div>
-            <Progress value={pctFacturados} className={`h-1.5 ${colorClass}`} />
-          </div>
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+                <DollarSign className="h-4 w-4 text-warning shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
+                  <p className="text-[10px] text-muted-foreground">Costo MXN</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+                <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
+                <div className="min-w-0">
+                  <p className={`text-sm font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
+                    {formatCurrency(resumen.profitMXN, "MXN")}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Profit MXN</p>
+                </div>
+              </div>
+              <div className="col-span-2 md:col-span-3 lg:col-span-1 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="h-4 w-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-sm font-bold text-foreground">
+                        {resumen.facturados}/{resumen.totalEmbarques}
+                      </p>
+                      <span className="text-[10px] text-muted-foreground">{pctFacturados}%</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Facturados</p>
+                  </div>
+                </div>
+                <Progress value={pctFacturados} className={`h-1.5 ${colorClass}`} />
+              </div>
+            </>
+          )}
         </div>
 
         <DataTable
-          columns={columns}
+          columns={visibleColumns}
           data={embarques}
           isLoading={isLoading}
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
