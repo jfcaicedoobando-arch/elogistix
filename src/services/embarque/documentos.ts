@@ -188,3 +188,26 @@ export async function createDocumentoEmbarqueRow(params: {
     });
   if (error) throw error;
 }
+
+/**
+ * Marca un documento como "No aplica" (o lo revierte a "Pendiente").
+ * Sólo permitido cuando no hay archivo adjunto. No se permite marcar como
+ * "No aplica" un documento obligatorio (ej. "BL Master") — esa validación
+ * vive en la UI; el servicio sólo aplica la mutación.
+ */
+export async function setDocumentoEstadoNoAplica(
+  docId: string,
+  noAplica: boolean,
+): Promise<void> {
+  const nuevoEstado: DocumentoEstado = noAplica ? 'No aplica' : 'Pendiente';
+  const { data: updated, error } = await supabase
+    .from('documentos_embarque')
+    .update({ estado: nuevoEstado, archivo: null })
+    .eq('id', docId)
+    .is('archivo', null)
+    .select('id');
+  if (error) throw error;
+  if (!updated || updated.length === 0) {
+    throw new Error('No se pudo actualizar el documento (verifica que no tenga archivo adjunto).');
+  }
+}
