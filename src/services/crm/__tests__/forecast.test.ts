@@ -25,7 +25,7 @@ describe("fetchEtapaTipos", () => {
     expect(m.get("e-2")).toBe("ganada");
   });
 
-  it("propaga error supabase", async () => {
+  it("propaga error supabase al calcular forecast", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "err" } });
     await expect(fetchEtapaTipos()).rejects.toBeTruthy();
   });

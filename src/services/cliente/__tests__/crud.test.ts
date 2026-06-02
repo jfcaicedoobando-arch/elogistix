@@ -25,7 +25,7 @@ describe("createCliente", () => {
     expect(mock.tableCalls[0]?.ops).toContain("insert");
   });
 
-  it("propaga error de supabase", async () => {
+  it("propaga error de supabase al crear cliente", async () => {
     mock.setTableResult("clientes", { data: null, error: { message: "RLS denied" } });
     await expect(createCliente(validInsert)).rejects.toBeTruthy();
   });

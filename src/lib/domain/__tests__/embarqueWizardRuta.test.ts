@@ -3,7 +3,7 @@ import { validateStepRuta, sugerirETA } from "../embarqueWizardRuta";
 
 // ─── sugerirETA ────────────────────────────────────────────────────────────
 
-describe("sugerirETA", () => {
+describe("sugerirETA (ruta)", () => {
   it("adds transit days to a valid ETD", () => {
     expect(sugerirETA("2024-01-10", 5)).toBe("2024-01-15");
   });

@@ -18,14 +18,14 @@ const validInput = {
 };
 
 describe("crearActividad", () => {
-  it("inserta y devuelve id", async () => {
+  it("inserta actividad y devuelve id", async () => {
     mock.setTableResult("crm_actividades", { data: { id: "act-1" }, error: null });
     const r = await crearActividad(validInput, { id: "u-1", email: "a@b.com" });
     expect(r.id).toBe("act-1");
     expect(mock.tableCalls[0]?.ops).toContain("insert");
   });
 
-  it("propaga error supabase", async () => {
+  it("propaga error supabase al crear actividad", async () => {
     mock.setTableResult("crm_actividades", { data: null, error: { message: "err" } });
     await expect(crearActividad(validInput, null)).rejects.toBeTruthy();
   });

@@ -28,7 +28,7 @@ const mkP = (
 
 // ─── agruparProformasPendientes ───────────────────────────────────────────
 
-describe("agruparProformasPendientes", () => {
+describe("agruparProformasPendientes (agrupacion)", () => {
   it("happy path: groups by expediente then by container", () => {
     const ps = [
       mkP("p1", "EXP-01", [{ numero: "CONT001", tipo: "20GP" }]),
@@ -76,7 +76,7 @@ describe("agruparProformasPendientes", () => {
 
 // ─── montoPrincipalProforma ───────────────────────────────────────────────
 
-describe("montoPrincipalProforma", () => {
+describe("montoPrincipalProforma (agrupacion)", () => {
   it("returns USD when usd > 0", () => {
     expect(montoPrincipalProforma({ total_usd: 500, total_mxn: 8500 })).toEqual({ valor: 500, moneda: "USD" });
   });
@@ -92,7 +92,7 @@ describe("montoPrincipalProforma", () => {
 
 // ─── totalesProformasSeleccionadas ────────────────────────────────────────
 
-describe("totalesProformasSeleccionadas", () => {
+describe("totalesProformasSeleccionadas (agrupacion)", () => {
   const ps = [
     { ...mkP("p1", "E1"), total_usd: 100, total_mxn: 1700 },
     { ...mkP("p2", "E1"), total_usd: 50,  total_mxn: 850 },

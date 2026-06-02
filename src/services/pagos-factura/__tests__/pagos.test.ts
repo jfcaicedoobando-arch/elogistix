@@ -38,7 +38,7 @@ describe("listarPagosFactura", () => {
     expect(r).toEqual([]);
   });
 
-  it("propaga error de supabase", async () => {
+  it("propaga error de supabase al listar pagos", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "err" } });
     await expect(listarPagosFactura("fac-1")).rejects.toBeTruthy();
   });
@@ -64,7 +64,7 @@ describe("eliminarPagoFactura", () => {
     expect(mock.tableCalls[0]?.ops).toContain("update");
   });
 
-  it("propaga error de supabase", async () => {
+  it("propaga error de supabase al registrar pago", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "rls" } });
     await expect(eliminarPagoFactura("p-1")).rejects.toBeTruthy();
   });
