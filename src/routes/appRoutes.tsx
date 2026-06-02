@@ -122,7 +122,15 @@ export const appRoutes = (
       path="/comisiones"
       element={<Comisiones />}
     />
-    <Route path="/profit" element={<Navigate to="/profit/proyeccion" replace />} />
+    <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
+    <Route
+      path="/profit/dashboard"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <ProfitDashboardEjecutivo />
+        </ProtectedRoute>
+      }
+    />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
     <Route
