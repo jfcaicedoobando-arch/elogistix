@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.49.4] - 2026-06-02
+- **feat(sidebar/rol-operador)**: El sidebar del rol `operador` ahora muestra sólo módulos de operación diaria: Dashboards (Principal, Operaciones), Gestión (Cotizaciones, Embarques, Pre-Facturación), Directorio (Clientes, Proveedores) y Ayuda. Se ocultan CxP, Tesorería, Comisiones, Profit, CRM, Reportes, Auditoría, Bitácora y Sentry. Admin, super_admin y vendedor sin cambios. Bump 12.49.4.
+
 ## [12.49.3] - 2026-06-02
 - **fix(facturacion/consolidar-rpc)**: La consolidación devolvía `PGRST203: Could not choose the best candidate function` porque en la base existían **dos versiones** de `public.consolidar_proformas` con los mismos parámetros nombrados y tipos, sólo en distinto orden — PostgREST no podía resolver el overload. Se eliminó la versión antigua (cuerpo más corto, orden `p_organization_id` primero) y se conservó la vigente. Verificado: queda una sola definición en `pg_proc`. Bump 12.49.3.
 

@@ -44,6 +44,21 @@ export function useAppSidebarSections(): SidebarSection[] {
     ];
   }
 
+  // El rol "operador" se enfoca en operación diaria: dashboards, cotizaciones/embarques/pre-facturación,
+  // directorio y ayuda. Oculta finanzas (CxP, Tesorería, Comisiones), Profit, CRM, Reportes y Sistema técnico.
+  if (effectiveRole === "operador") {
+    const gestionOperador = SIDEBAR_GESTION_ITEMS.filter((it) =>
+      ["/cotizaciones", "/embarques", "/facturacion"].includes(it.url),
+    );
+    return [
+      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+      { label: "Gestión", items: gestionOperador },
+      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
+    ];
+  }
+
+
   const sections: SidebarSection[] = [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
