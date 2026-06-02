@@ -1923,6 +1923,134 @@ export type Database = {
           },
         ]
       }
+      factura_notas_credito: {
+        Row: {
+          aprobada_at: string | null
+          aprobada_por: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          descripcion: string
+          estado: Database["public"]["Enums"]["estado_nota_credito"]
+          factura_id: string
+          fecha_emision: string
+          folio: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo: Database["public"]["Enums"]["motivo_nota_credito"]
+          organization_id: string
+          tipo_cambio: number
+          updated_at: string
+        }
+        Insert: {
+          aprobada_at?: string | null
+          aprobada_por?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion?: string
+          estado?: Database["public"]["Enums"]["estado_nota_credito"]
+          factura_id: string
+          fecha_emision?: string
+          folio: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
+          organization_id: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Update: {
+          aprobada_at?: string | null
+          aprobada_por?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion?: string
+          estado?: Database["public"]["Enums"]["estado_nota_credito"]
+          factura_id?: string
+          fecha_emision?: string
+          folio?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
+          organization_id?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factura_notas_credito_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factura_notas_credito_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factura_series: {
+        Row: {
+          activa: boolean
+          codigo: string
+          created_at: string
+          descripcion: string | null
+          es_default: boolean
+          folio_actual: number
+          folio_inicial: number
+          id: string
+          organization_id: string
+          prefijo: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          codigo: string
+          created_at?: string
+          descripcion?: string | null
+          es_default?: boolean
+          folio_actual?: number
+          folio_inicial?: number
+          id?: string
+          organization_id: string
+          prefijo?: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          codigo?: string
+          created_at?: string
+          descripcion?: string | null
+          es_default?: boolean
+          folio_actual?: number
+          folio_inicial?: number
+          id?: string
+          organization_id?: string
+          prefijo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factura_series_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facturas: {
         Row: {
           cliente_id: string
@@ -1930,6 +2058,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          dias_credito: number | null
           embarque_id: string
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
@@ -1937,19 +2066,26 @@ export type Database = {
           factura_xml_url: string | null
           fecha_emision: string
           fecha_vencimiento: string
+          folio_fiscal: number | null
+          forma_pago: string | null
           id: string
           iva: number
+          metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           notas: string | null
           numero: string
           organization_id: string
           proforma_id: string | null
           referencia_bl: string | null
+          rfc_cliente: string | null
+          serie_id: string | null
           snapshot_emision: Json | null
           subtotal: number
           tipo_cambio: number
           total: number
           updated_at: string
+          uso_cfdi: string | null
+          uuid_fiscal: string | null
         }
         Insert: {
           cliente_id: string
@@ -1957,6 +2093,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          dias_credito?: number | null
           embarque_id: string
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -1964,19 +2101,26 @@ export type Database = {
           factura_xml_url?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
+          folio_fiscal?: number | null
+          forma_pago?: string | null
           id?: string
           iva?: number
+          metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           notas?: string | null
           numero: string
           organization_id?: string
           proforma_id?: string | null
           referencia_bl?: string | null
+          rfc_cliente?: string | null
+          serie_id?: string | null
           snapshot_emision?: Json | null
           subtotal?: number
           tipo_cambio?: number
           total?: number
           updated_at?: string
+          uso_cfdi?: string | null
+          uuid_fiscal?: string | null
         }
         Update: {
           cliente_id?: string
@@ -1984,6 +2128,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          dias_credito?: number | null
           embarque_id?: string
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -1991,19 +2136,26 @@ export type Database = {
           factura_xml_url?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
+          folio_fiscal?: number | null
+          forma_pago?: string | null
           id?: string
           iva?: number
+          metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           notas?: string | null
           numero?: string
           organization_id?: string
           proforma_id?: string | null
           referencia_bl?: string | null
+          rfc_cliente?: string | null
+          serie_id?: string | null
           snapshot_emision?: Json | null
           subtotal?: number
           tipo_cambio?: number
           total?: number
           updated_at?: string
+          uso_cfdi?: string | null
+          uuid_fiscal?: string | null
         }
         Relationships: [
           {
@@ -2032,6 +2184,13 @@ export type Database = {
             columns: ["proforma_id"]
             isOneToOne: false
             referencedRelation: "proformas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_serie_id_fkey"
+            columns: ["serie_id"]
+            isOneToOne: false
+            referencedRelation: "factura_series"
             referencedColumns: ["id"]
           },
         ]
@@ -2302,6 +2461,7 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           deleted_by: string | null
+          diferencia_cambiaria_mxn: number
           factura_id: string
           fecha_pago: string
           forma_pago: string
@@ -2320,6 +2480,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          diferencia_cambiaria_mxn?: number
           factura_id: string
           fecha_pago: string
           forma_pago?: string
@@ -2338,6 +2499,7 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          diferencia_cambiaria_mxn?: number
           factura_id?: string
           fecha_pago?: string
           forma_pago?: string
@@ -3584,6 +3746,13 @@ export type Database = {
         }
         Returns: Json
       }
+      reservar_folio_factura: {
+        Args: { _serie_id: string }
+        Returns: {
+          folio: number
+          numero: string
+        }[]
+      }
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
@@ -3685,6 +3854,7 @@ export type Database = {
         | "Parcialmente pagada"
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
+      estado_nota_credito: "Borrador" | "Aprobada" | "Aplicada" | "Cancelada"
       estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
       incoterm:
         | "EXW"
@@ -3700,6 +3870,12 @@ export type Database = {
         | "N/A"
       modo_transporte: "Marítimo" | "Aéreo" | "Terrestre" | "Multimodal"
       moneda: "MXN" | "USD" | "EUR"
+      motivo_nota_credito:
+        | "Descuento"
+        | "Error"
+        | "Devolucion"
+        | "Bonificacion"
+        | "Otro"
       origen_proveedor: "Nacional" | "Extranjero"
       tipo_contacto: "Proveedor" | "Exportador" | "Importador"
       tipo_evento_tracking:
@@ -3919,6 +4095,7 @@ export const Constants = {
       ],
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
+      estado_nota_credito: ["Borrador", "Aprobada", "Aplicada", "Cancelada"],
       estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
       incoterm: [
         "EXW",
@@ -3935,6 +4112,13 @@ export const Constants = {
       ],
       modo_transporte: ["Marítimo", "Aéreo", "Terrestre", "Multimodal"],
       moneda: ["MXN", "USD", "EUR"],
+      motivo_nota_credito: [
+        "Descuento",
+        "Error",
+        "Devolucion",
+        "Bonificacion",
+        "Otro",
+      ],
       origen_proveedor: ["Nacional", "Extranjero"],
       tipo_contacto: ["Proveedor", "Exportador", "Importador"],
       tipo_evento_tracking: [
