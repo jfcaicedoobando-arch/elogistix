@@ -68,6 +68,7 @@ export const queryKeys = {
   tesoreria,
   comisiones,
   presupuesto,
+  dashboardEjecutivo,
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,
