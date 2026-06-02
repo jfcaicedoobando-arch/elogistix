@@ -133,7 +133,7 @@ export function useTabProformasPendientesController(opts?: {
     selectedIds, collapsed,
     isLoading, grupos,
     toggleSelect, toggleCollapse,
-    totalesSeleccion, totalSeleccionadas, expedientesEnSeleccion,
+    totalesSeleccion, totalSeleccionadas, embarquesEnSeleccion,
     puedeConsolidar, puedeAprobar,
     handleConsolidar, handleAprobar,
     isAprobarPending: aprobar.isPending,
