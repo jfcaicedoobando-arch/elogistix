@@ -190,9 +190,9 @@ export const MiOperacionSection = memo(function MiOperacionSection({
             <Row
               key={t.id}
               onClick={() => navigate(`/embarques/${t.id}`)}
-              badge={t.diasSinUpdate === null ? "—" : `${t.diasSinUpdate}d`}
-              badgeClass="bg-muted-foreground"
-              title={t.expediente}
+              badge={t.proximoArribo ? "ETA" : t.diasSinUpdate === null ? "—" : `${t.diasSinUpdate}d`}
+              badgeClass={t.proximoArribo ? "bg-warning" : "bg-muted-foreground"}
+              title={`${t.expediente}${t.proximoArribo ? " · Próximo a arribar" : ""}`}
               subtitle={`${toTitleCase(t.cliente_nombre)} · ${t.estado}`}
             />
           ))}
