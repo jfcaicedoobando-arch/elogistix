@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
 import { TabFacturasEmitidas } from "@/components/facturacion/TabFacturasEmitidas";
+import { TabCobranza } from "@/components/facturacion/TabCobranza";
 import { DialogRegistrarPago } from "@/components/facturacion/DialogRegistrarPago";
 import { DialogHistorialPagos } from "@/components/facturacion/DialogHistorialPagos";
 import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
