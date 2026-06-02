@@ -25,7 +25,7 @@ type Scope = "todos" | "mios";
 export default function Dashboard() {
   const { user } = useAuth();
   const { isOperador, canViewFinancials } = usePermissions();
-  const [scope, setScope] = useState<Scope>("todos");
+  const [scope, setScope] = useState<Scope>(isOperador ? "mios" : "todos");
 
   const {
     isLoading,

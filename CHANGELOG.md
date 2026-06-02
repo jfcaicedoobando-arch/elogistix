@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.50.2] - 2026-06-02
+- **feat(dashboard/operador)**: El dashboard principal (`/`) ahora inicia con el tab **"Míos"** predeterminado en lugar de **"Todos"** para usuarios con rol `operador`. Los usuarios admin, super_admin y vendedor mantienen "Todos" como predeterminado. Bump 12.50.2.
+
 ## [12.50.1] - 2026-06-02
 - **feat(usuarios/nuevo-usuario)**: Se agrega la opción **Vendedor** al selector de rol en el diálogo "Nuevo Usuario" (`NuevoUsuarioDialog`), tanto en la vista de organización (`/usuarios`) como en la global (`/admin/usuarios`). El rol ya existía en el enum `app_role` de la base de datos y se usa en el módulo de Comisiones, pero no estaba expuesto en el UI de creación. Bump 12.50.1.
 
