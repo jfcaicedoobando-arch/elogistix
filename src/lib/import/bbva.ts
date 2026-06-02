@@ -140,6 +140,7 @@ export async function parseEstadoCuentaBBVA(file: File): Promise<MovimientoParse
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
   const sheet = wb.Sheets[wb.SheetNames[0]];
+  // SAFE-CAST: XLSX retorna unknown[][]; sólo lo usamos como strings en filasAMovimientos.
   const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true }) as unknown as string[][];
   return filasAMovimientos(rows);
 }
