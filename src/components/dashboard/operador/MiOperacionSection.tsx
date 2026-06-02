@@ -125,8 +125,8 @@ export const MiOperacionSection = memo(function MiOperacionSection({
   isLoading,
 }: Props) {
   const navigate = useNavigate();
-  const { data: docs = [], isLoading: loadingDocs } = useDocsFaltantesOperador();
-  const { data: sinTracking = [], isLoading: loadingTracking } = useSinTrackingOperador();
+  const { data: docs = [] as DocsFaltantesItem[], isLoading: loadingDocs } = useDocsFaltantesOperador();
+  const { data: sinTracking = [] as SinTrackingItem[], isLoading: loadingTracking } = useSinTrackingOperador();
 
   const pendientes = buildPendientes(alertasDemora, proximosArribos).slice(0, MAX_ITEMS);
   const docsTop: DocsFaltantesItem[] = docs.slice(0, MAX_ITEMS);
