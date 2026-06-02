@@ -1,7 +1,7 @@
 /**
  * Tabla expandible: una fila por semana ISO con totales + detalle al click.
  */
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,9 +41,8 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
               const saldoNeg = s.saldo_proyectado_mxn < 0;
               const rowBg = i % 2 === 1 ? "bg-muted/20" : "";
               return (
-                <>
+                <Fragment key={s.semana_iso}>
                   <tr
-                    key={s.semana_iso}
                     className={`border-t cursor-pointer hover:bg-accent/10 ${rowBg}`}
                     onClick={() => toggle(s.semana_iso)}
                   >
@@ -69,7 +68,7 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>
