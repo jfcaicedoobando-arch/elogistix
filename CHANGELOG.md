@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.50.0] - 2026-06-02
+- **feat(dashboard/operador)**: El dashboard principal (`/`) ahora se adapta al rol `operador`: (1) bloqueo financiero total — se oculta la tabla "Profit MXN — Arribos este mes", el tile de Profit proyectado en `ArribosCard`, los KPI tiles Venta/Costo/Profit/Facturados y las columnas Profit/Facturado de "Embarques activos — próximo mes"; (2) tabs **Todos / Míos** que filtran demoras, próximos arribos, profit del mes y embarques del próximo mes por `operador = user.email` (case-insensitive), recalculando `conteoPorEstado`, `totalActivos`, arribos del mes y resumen del próximo mes desde las listas filtradas; (3) nueva sección **"Mi operación"** visible solo para operador con 3 widgets: *Mis pendientes hoy* (demoras + arribos con `diasRestantes ≤ 1`, derivado de `useDashboardData`), *Docs faltantes* (query a `documentos_embarque` con `estado='Pendiente'` para embarques activos del operador) y *Sin tracking reciente* (embarques En Tránsito/Arribo/En Aduana cuyo `tracking_externo.last_event_at` es `>3 días` o nulo). Nuevo hook `useDashboardOperador` con `useDocsFaltantesOperador` y `useSinTrackingOperador`. `usePermissions` ahora expone `isOperador` y `canViewFinancials`. Admin, super_admin y vendedor mantienen la vista completa sin cambios. Bump 12.50.0.
+
 ## [12.49.6] - 2026-06-02
 - **fix(facturacion/proformas-filtro)**: Al alternar entre los botones Todas / Pendientes / Facturadas en el tab "2. Proformas" la tabla no reflejaba el cambio (los botones cambiaban de estado visual pero las filas no). Se fuerza el remount del `<DataTable>` con `key={filtroEstado}` para garantizar que el row model de TanStack se reconstruya en cada cambio de filtro. Bump 12.49.6.
 
