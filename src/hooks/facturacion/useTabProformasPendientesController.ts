@@ -70,11 +70,11 @@ export function useTabProformasPendientesController(opts?: {
     });
   };
 
-  const seleccionPorExpediente = useMemo(() => {
+  const seleccionPorEmbarque = useMemo(() => {
     const map = new Map<string, ProformaPendienteConEmbarque[]>();
     for (const g of grupos) {
       const sel = g.proformas.filter((p) => selectedIds.has(p.id));
-      if (sel.length > 0) map.set(g.expediente, sel);
+      if (sel.length > 0) map.set(g.embarqueId, sel);
     }
     return map;
   }, [grupos, selectedIds]);
@@ -85,24 +85,21 @@ export function useTabProformasPendientesController(opts?: {
   );
 
   const totalSeleccionadas = selectedIds.size;
-  const expedientesEnSeleccion = seleccionPorExpediente.size;
-  const puedeConsolidar = totalSeleccionadas >= 2 && expedientesEnSeleccion === 1;
+  const embarquesEnSeleccion = seleccionPorEmbarque.size;
+  const puedeConsolidar = totalSeleccionadas >= 2 && embarquesEnSeleccion === 1;
   const puedeAprobar = totalSeleccionadas >= 1;
 
   const handleConsolidar = () => {
     if (!puedeConsolidar) return;
-    const [expediente, sel] = Array.from(seleccionPorExpediente.entries())[0];
-    const grupo = grupos.find((g) => g.expediente === expediente);
+    const [embarqueId, sel] = Array.from(seleccionPorEmbarque.entries())[0];
+    const grupo = grupos.find((g) => g.embarqueId === embarqueId);
     if (!grupo) return;
-    // Guard defensivo (v12.14.1): aunque la agrupación por expediente ya garantiza
-    // mismo embarque + mismo cliente, validamos explícitamente antes de invocar el
-    // RPC para fallar rápido y con mensaje claro si una proforma trae metadata
-    // inconsistente.
-    const embarqueIds = new Set(sel.map((p) => p.embarque_id));
+    // Guard defensivo: la agrupación por embarque_id ya garantiza mismo embarque,
+    // pero validamos cliente_id explícitamente antes de invocar el RPC para fallar
+    // rápido con mensaje claro si una proforma trae metadata inconsistente.
     const clienteIds = new Set(sel.map((p) => p.cliente_id));
-    if (embarqueIds.size > 1 || clienteIds.size > 1) {
-      // Caso imposible bajo el agrupado actual, pero falla rápido si cambia.
-      console.warn("[consolidar] selección con embarques/clientes mixtos, abortando");
+    if (clienteIds.size > 1) {
+      toast.error("No se pueden consolidar proformas de clientes distintos.");
       return;
     }
     consolidar.mutate(
@@ -121,6 +118,7 @@ export function useTabProformasPendientesController(opts?: {
       { onSuccess: () => { reqId.reset(); setSelectedIds(new Set()); } },
     );
   };
+
 
   const handleAprobar = () => {
     if (!puedeAprobar) return;
