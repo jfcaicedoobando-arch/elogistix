@@ -15,7 +15,7 @@ const EXPECTED_DOMAINS = [
   "configuracionOrg", "navieras", "tiposContenedor", "portal", "sidebar",
   "usuarios", "admin", "crm", "auditoria", "appLogs", "facturacion", "profit",
   "papelera", "idempotenciaLog", "pdfPreviewCotizacion", "trackingPublico",
-  "cxp", "tesoreria",
+  "cxp", "tesoreria", "comisiones",
 ] as const;
 
 describe("queryKeys shape", () => {
