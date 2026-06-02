@@ -92,7 +92,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
   const { data, error } = await query;
   if (error) throw error;
 
-  const rows = ((data as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {
+  const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {
     const pagado = (f.pagos_factura ?? [])
       .filter((p) => !p.deleted_at)
       .reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
