@@ -6,6 +6,7 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   useUploadDocumentoEmbarque,
   useDeleteDocumentoEmbarque,
+  useSetDocumentoNoAplica,
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
 } from "@/hooks/embarque/useEmbarques";
@@ -20,6 +21,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
   const registrarActividad = useRegistrarActividad();
   const uploadDoc = useUploadDocumentoEmbarque();
   const deleteDoc = useDeleteDocumentoEmbarque();
+  const setNoAplica = useSetDocumentoNoAplica();
 
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
@@ -102,12 +104,44 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
     }
   };
 
+  const handleToggleNoAplica = async (doc: DocumentoEmbarqueRow) => {
+    if (!id) return;
+    if (doc.archivo) return; // safety: no se permite si hay archivo adjunto
+    const noAplica = doc.estado !== 'No aplica';
+    try {
+      await setNoAplica.mutateAsync({ embarqueId: id, docId: doc.id, noAplica });
+      registrarActividad.mutate({
+        accion: noAplica ? 'marcar_documento_no_aplica' : 'revertir_documento_no_aplica',
+        modulo: 'embarques',
+        entidad_id: id,
+        entidad_nombre: embarque?.expediente ?? '',
+        detalles: { documento: doc.nombre },
+      });
+      notifySuccess(toast, {
+        title: noAplica
+          ? `"${doc.nombre}" marcado como No aplica`
+          : `"${doc.nombre}" marcado como Pendiente`,
+      });
+    } catch (err: unknown) {
+      notifyError(toast, {
+        phase: "actualización de estado de documento",
+        title: "Error al actualizar el documento",
+        description: getErrorMessage(err),
+        error: err,
+        context: { embarqueId: id, documentoId: doc.id, documentoNombre: doc.nombre, noAplica },
+        method: "HANDLE_TOGGLE_NO_APLICA",
+      });
+    }
+  };
+
   return {
     handleUpload,
     handleDeleteDoc,
     handleDownload,
+    handleToggleNoAplica,
     downloadingDocId,
     uploadDoc,
     deleteDoc,
+    setNoAplica,
   };
 }

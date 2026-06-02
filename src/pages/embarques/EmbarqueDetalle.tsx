@@ -70,8 +70,8 @@ export default function EmbarqueDetalle() {
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   const {
-    handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
-    downloadingDocId, avanzarEstado, uploadDoc, deleteDoc,
+    handleUpload, handleDeleteDoc, handleDownload, handleToggleNoAplica, handleAvanzarEstado,
+    downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
   const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
@@ -85,6 +85,7 @@ export default function EmbarqueDetalle() {
   const siguienteEstado = getSiguienteEstado(estadoVisual);
   const uploadingDocId = uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null;
   const deletingDocId = deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null;
+  const togglingNoAplicaDocId = setNoAplica.isPending ? (setNoAplica.variables?.docId ?? null) : null;
 
   return (
     <div className="space-y-6">
@@ -139,9 +140,11 @@ export default function EmbarqueDetalle() {
             uploadingDocId={uploadingDocId}
             downloadingDocId={downloadingDocId}
             deletingDocId={deletingDocId}
+            togglingNoAplicaDocId={togglingNoAplicaDocId}
             onUpload={handleUpload}
             onDownload={handleDownload}
             onDelete={handleDeleteDoc}
+            onToggleNoAplica={handleToggleNoAplica}
           />
         </TabsContent>
 

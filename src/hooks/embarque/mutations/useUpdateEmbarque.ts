@@ -13,6 +13,7 @@ import {
   uploadDocumentoEmbarque,
   deleteDocumentoEmbarque,
   createDocumentoEmbarqueRow,
+  setDocumentoEstadoNoAplica,
 } from '@/services/embarque';
 import { sincronizarContenedores } from '@/services/embarque/contenedores';
 import type { ContenedorBorrador } from '@/types/embarque/contenedor';
@@ -149,6 +150,22 @@ export function useCreateDocumentoEmbarque() {
   return useMutation({
     mutationFn: ({ embarqueId, nombre, notas }: { embarqueId: string; nombre: string; notas?: string }) =>
       createDocumentoEmbarqueRow({ embarqueId, nombre, notas }),
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+    },
+  });
+}
+
+/**
+ * Marca un documento como "No aplica" (o lo revierte a "Pendiente").
+ * Usado para excluir documentos opcionales del checklist de "faltantes".
+ */
+export function useSetDocumentoNoAplica() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ docId, noAplica }: { embarqueId: string; docId: string; noAplica: boolean }) =>
+      setDocumentoEstadoNoAplica(docId, noAplica),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });

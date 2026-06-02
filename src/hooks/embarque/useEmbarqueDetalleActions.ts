@@ -18,10 +18,12 @@ export function useEmbarqueDetalleActions(embarque: EmbarqueRow | undefined, id:
     handleUpload: docs.handleUpload,
     handleDeleteDoc: docs.handleDeleteDoc,
     handleDownload: docs.handleDownload,
+    handleToggleNoAplica: docs.handleToggleNoAplica,
     handleAvanzarEstado: estado.handleAvanzarEstado,
     downloadingDocId: docs.downloadingDocId,
     avanzarEstado: estado.avanzarEstado,
     uploadDoc: docs.uploadDoc,
     deleteDoc: docs.deleteDoc,
+    setNoAplica: docs.setNoAplica,
   };
 }
