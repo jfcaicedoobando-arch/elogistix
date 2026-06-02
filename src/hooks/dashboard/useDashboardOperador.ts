@@ -31,9 +31,12 @@ export interface DocsFaltantesItem extends OperadorEmbarqueLite {
 
 export interface SinTrackingItem extends OperadorEmbarqueLite {
   diasSinUpdate: number | null;
+  /** True si está dentro de los 2 días previos a la ETA (alerta de "pre-arribo"). */
+  proximoArribo: boolean;
 }
 
-const DIAS_TRACKING_ESTANCADO = 3;
+const DIAS_TRACKING_ESTANCADO = 7;
+const DIAS_PRE_ARRIBO = 2;
 
 export function useDocsFaltantesOperador() {
   const { user } = useAuth();
