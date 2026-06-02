@@ -21,6 +21,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
   const registrarActividad = useRegistrarActividad();
   const uploadDoc = useUploadDocumentoEmbarque();
   const deleteDoc = useDeleteDocumentoEmbarque();
+  const setNoAplica = useSetDocumentoNoAplica();
 
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
