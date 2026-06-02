@@ -13,6 +13,12 @@ export interface RegistrarPagoInput {
   forma_pago: string;
   referencia?: string;
   notas?: string;
+  /**
+   * Diferencia cambiaria en MXN. Aplica cuando la factura es USD/EUR y el
+   * pago se recibe en MXN: monto MXN recibido − (monto_aplicado_factura × TC
+   * de emisión). El UI calcula y manda el valor; default 0.
+   */
+  diferencia_cambiaria_mxn?: number;
 }
 
 export async function listarPagosFactura(facturaId: string): Promise<PagoFactura[]> {
@@ -39,6 +45,7 @@ export async function registrarPagoFactura(input: RegistrarPagoInput): Promise<v
     forma_pago: input.forma_pago,
     referencia: input.referencia ?? "",
     notas: input.notas ?? "",
+    diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
     created_by,
   });
   if (error) throw error;
