@@ -82,6 +82,30 @@ export const appRoutes = (
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/tesoreria"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <Tesoreria />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tesoreria/cuentas"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <TesoreriaCuentas />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tesoreria/conciliacion"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <TesoreriaConciliacion />
+        </ProtectedRoute>
+      }
+    />
     <Route path="/profit" element={<Navigate to="/profit/proyeccion" replace />} />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
