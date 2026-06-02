@@ -1,48 +1,44 @@
-## Fix: eliminar overload duplicado de `consolidar_proformas`
+## Objetivo
 
-### Diagnóstico
+Limitar el sidebar del rol `operador` a su trabajo diario, ocultando módulos financieros, de análisis y técnicos.
 
-En la base de datos existen **dos versiones** de la función `public.consolidar_proformas` con **exactamente los mismos parámetros nombrados y tipos**, sólo cambia el orden:
+## Visibilidad por sección (rol operador)
 
-| OID | Orden de parámetros | Tamaño cuerpo |
-|---|---|---|
-| **77648** (más reciente) | `p_embarque_id, p_cliente_id, ..., p_organization_id, p_proforma_ids, p_tasa_iva, p_request_id` | 3,744 bytes |
-| **71271** (más antigua) | `p_organization_id, p_proforma_ids, p_embarque_id, p_cliente_id, ..., p_tasa_iva, p_request_id` | 3,254 bytes |
+**Visible**
+- Dashboards: Principal, Operaciones
+- Gestión: Cotizaciones, Embarques, Pre-Facturación
+- Directorio: Clientes, Proveedores
+- Sistema: Ayuda
 
-PostgREST no puede decidir cuál llamar (los argumentos nombrados son idénticos) y devuelve `PGRST203: Could not choose the best candidate function`. Esto bloquea el botón "Consolidar y aprobar" en `/facturacion`.
+**Oculto**
+- Gestión: Cuentas por Pagar, Tesorería, Comisiones
+- Profit (sección completa)
+- CRM (sección completa)
+- Reportes (sección completa)
+- Sistema: Auditoría, Bitácora, Sentry
+- Administración y Super Admin (ya estaban ocultos)
 
-El cliente (`src/services/proforma/consolidar.ts`) invoca por nombre — no le importa el orden, sólo necesita **una** definición.
+Admin, super_admin y vendedor mantienen su comportamiento actual sin cambios.
 
-### Cambio propuesto
+## Cambios técnicos
 
-Eliminar la versión antigua (OID 71271, cuerpo más corto = versión previa al último fix) y conservar la nueva (OID 77648):
+Archivo: `src/hooks/layout/useAppSidebarSections.ts`
 
-```sql
-DROP FUNCTION public.consolidar_proformas(
-  p_organization_id uuid,
-  p_proforma_ids uuid[],
-  p_embarque_id uuid,
-  p_cliente_id uuid,
-  p_cliente_nombre text,
-  p_expediente text,
-  p_bl_master text,
-  p_operador text,
-  p_dias_credito integer,
-  p_tasa_iva numeric,
-  p_request_id uuid
-);
-```
+1. Añadir rama específica para `effectiveRole === "operador"` (antes del bloque genérico), retornando sólo:
+   - Dashboards: `SIDEBAR_DASHBOARD_ITEMS` completo
+   - Gestión: filtrar a `/cotizaciones`, `/embarques`, `/facturacion`
+   - Directorio: `SIDEBAR_DIRECTORIO_ITEMS` completo
+   - Sistema: filtrar a `/ayuda`
+2. No tocar items globales (`sidebarItems.ts`) para no afectar a otros roles.
+3. No tocar rutas ni guardas; sólo es ocultamiento visual en el sidebar (las rutas siguen accesibles por URL para no romper permisos existentes — si más adelante se quiere bloquear acceso por ruta, se hace en una iteración aparte).
 
-Luego verifico que sólo quede una definición y que `supabase.rpc("consolidar_proformas", ...)` resuelva sin ambigüedad.
+## Versionado
 
-### Verificación post-fix
+- Bump `APP_VERSION` a la siguiente patch (12.49.4).
+- Entrada en `CHANGELOG.md` (root): "Sidebar del rol operador limitado a operación diaria (oculta Profit, CRM, Reportes, CxP, Tesorería, Comisiones, Auditoría, Bitácora, Sentry)."
 
-1. `SELECT count(*) FROM pg_proc ... WHERE proname='consolidar_proformas'` → debe ser **1**.
-2. Probar consolidación desde la UI con un par de proformas reales.
-3. Bump `APP_VERSION` a `12.49.3` y entrada en `CHANGELOG.md`.
+## Validación
 
-### Out of scope
-
-- No se modifica el cliente TS (los argumentos nombrados ya coinciden con la versión que se conserva).
-- No se modifica la lógica interna de la función conservada.
-- No se tocan otras RPCs.
+- Login como Alan Hernández (operador) → confirmar secciones visibles.
+- Login como admin → sidebar sin cambios.
+- Login como vendedor → sin cambios (rama existente).
