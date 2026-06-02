@@ -136,8 +136,8 @@ export default function Dashboard() {
 
       <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
         <TabsList>
-          <TabsTrigger value="todos">Todos</TabsTrigger>
           <TabsTrigger value="mios" disabled={!operadorEmail}>Míos</TabsTrigger>
+          <TabsTrigger value="todos">Todos</TabsTrigger>
         </TabsList>
       </Tabs>
 
