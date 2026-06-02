@@ -67,9 +67,9 @@ describe("useRegistrarPagoFactura", () => {
     mockRegistrar.mockRejectedValue(new Error("DB error"));
     const { result } = renderHook(() => useRegistrarPagoFactura(), { wrapper: makeWrapper() });
     await act(async () => {
-      await result.current.mutateAsync({ factura_id: "fac-1", monto: 200 } as never).catch(() => {});
+      result.current.mutate({ factura_id: "fac-1", monto: 200 } as never);
     });
-    expect(result.current.isError).toBe(true);
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });
 

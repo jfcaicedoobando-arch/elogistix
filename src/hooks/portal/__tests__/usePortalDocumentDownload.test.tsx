@@ -4,15 +4,12 @@ import { renderHook, act } from "@testing-library/react";
 vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
-
 vi.mock("@/services/search", () => ({
   createDocumentoSignedUrl: vi.fn(),
 }));
-
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
-
 vi.mock("@/lib/domain/errorCatalog", () => ({
   ERROR_CODES: { VALIDATION_FAILED: "VALIDATION_FAILED" },
 }));
@@ -27,7 +24,6 @@ const mockNotifyError = vi.mocked(notifyError);
 beforeEach(() => {
   vi.clearAllMocks();
 
-  // Mock fetch and DOM APIs for blob download
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
     blob: () => Promise.resolve(new Blob(["pdf"], { type: "application/pdf" })),
@@ -36,14 +32,20 @@ beforeEach(() => {
   global.URL.createObjectURL = vi.fn(() => "blob:fake");
   global.URL.revokeObjectURL = vi.fn();
 
-  const a = { href: "", download: "", click: vi.fn(), style: {} };
-  vi.spyOn(document, "createElement").mockReturnValue(a as never);
-  vi.spyOn(document.body, "appendChild").mockImplementation(() => a as never);
-  vi.spyOn(document.body, "removeChild").mockImplementation(() => a as never);
+  // Only stub the anchor creation, not ALL createElement calls
+  const origCreate = document.createElement.bind(document);
+  vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+    if (tag === "a") {
+      const a = origCreate("a");
+      vi.spyOn(a, "click").mockImplementation(() => {});
+      return a;
+    }
+    return origCreate(tag);
+  });
 });
 
 describe("usePortalDocumentDownload", () => {
-  it("happy path: sets downloadingId during download and resets after", async () => {
+  it("happy path: completa la descarga y resetea downloadingId", async () => {
     mockCreateUrl.mockResolvedValue("https://signed-url/file.pdf");
 
     const { result } = renderHook(() => usePortalDocumentDownload());
@@ -55,9 +57,10 @@ describe("usePortalDocumentDownload", () => {
 
     expect(result.current.downloadingId).toBeNull();
     expect(mockCreateUrl).toHaveBeenCalledWith("path/to/file.pdf", 300);
+    expect(mockNotifyError).not.toHaveBeenCalled();
   });
 
-  it("error path: calls notifyError when createDocumentoSignedUrl rejects", async () => {
+  it("error path: llama notifyError cuando createDocumentoSignedUrl falla", async () => {
     mockCreateUrl.mockRejectedValue(new Error("storage error"));
 
     const { result } = renderHook(() => usePortalDocumentDownload());
