@@ -14,6 +14,210 @@ export type Database = {
   }
   public: {
     Tables: {
+      _backup_merge_embarques_20260602: {
+        Row: {
+          _merge_backed_up_at: string | null
+          _merge_padre_id: string | null
+          aerolinea: string | null
+          aeropuerto_destino: string | null
+          aeropuerto_origen: string | null
+          agente: string | null
+          bl_house: string | null
+          bl_master: string | null
+          carta_porte: string | null
+          ciudad_destino: string | null
+          ciudad_origen: string | null
+          cliente_id: string | null
+          cliente_nombre: string | null
+          consignatario: string | null
+          contenedor: string | null
+          cotizacion_id: string | null
+          created_at: string | null
+          created_by: string | null
+          created_by_email: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          descripcion_mercancia: string | null
+          estado: Database["public"]["Enums"]["estado_embarque"] | null
+          eta: string | null
+          eta_original: string | null
+          etd: string | null
+          etd_original: string | null
+          expediente: string | null
+          fecha_creacion: string | null
+          fecha_llegada_real: string | null
+          hawb: string | null
+          id: string | null
+          incoterm: Database["public"]["Enums"]["incoterm"] | null
+          mawb: string | null
+          modo: Database["public"]["Enums"]["modo_transporte"] | null
+          msds_archivo: string | null
+          naviera: string | null
+          operador: string | null
+          organization_id: string | null
+          peso_kg: number | null
+          piezas: number | null
+          puerto_destino: string | null
+          puerto_origen: string | null
+          shipper: string | null
+          tiene_proforma: boolean | null
+          tipo: Database["public"]["Enums"]["tipo_operacion"] | null
+          tipo_cambio_eur: number | null
+          tipo_cambio_usd: number | null
+          tipo_carga: string | null
+          tipo_contenedor: string | null
+          tipo_servicio:
+            | Database["public"]["Enums"]["tipo_servicio_maritimo"]
+            | null
+          transportista: string | null
+          updated_at: string | null
+          vendedora_id: string | null
+          volumen_m3: number | null
+        }
+        Insert: {
+          _merge_backed_up_at?: string | null
+          _merge_padre_id?: string | null
+          aerolinea?: string | null
+          aeropuerto_destino?: string | null
+          aeropuerto_origen?: string | null
+          agente?: string | null
+          bl_house?: string | null
+          bl_master?: string | null
+          carta_porte?: string | null
+          ciudad_destino?: string | null
+          ciudad_origen?: string | null
+          cliente_id?: string | null
+          cliente_nombre?: string | null
+          consignatario?: string | null
+          contenedor?: string | null
+          cotizacion_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_by_email?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion_mercancia?: string | null
+          estado?: Database["public"]["Enums"]["estado_embarque"] | null
+          eta?: string | null
+          eta_original?: string | null
+          etd?: string | null
+          etd_original?: string | null
+          expediente?: string | null
+          fecha_creacion?: string | null
+          fecha_llegada_real?: string | null
+          hawb?: string | null
+          id?: string | null
+          incoterm?: Database["public"]["Enums"]["incoterm"] | null
+          mawb?: string | null
+          modo?: Database["public"]["Enums"]["modo_transporte"] | null
+          msds_archivo?: string | null
+          naviera?: string | null
+          operador?: string | null
+          organization_id?: string | null
+          peso_kg?: number | null
+          piezas?: number | null
+          puerto_destino?: string | null
+          puerto_origen?: string | null
+          shipper?: string | null
+          tiene_proforma?: boolean | null
+          tipo?: Database["public"]["Enums"]["tipo_operacion"] | null
+          tipo_cambio_eur?: number | null
+          tipo_cambio_usd?: number | null
+          tipo_carga?: string | null
+          tipo_contenedor?: string | null
+          tipo_servicio?:
+            | Database["public"]["Enums"]["tipo_servicio_maritimo"]
+            | null
+          transportista?: string | null
+          updated_at?: string | null
+          vendedora_id?: string | null
+          volumen_m3?: number | null
+        }
+        Update: {
+          _merge_backed_up_at?: string | null
+          _merge_padre_id?: string | null
+          aerolinea?: string | null
+          aeropuerto_destino?: string | null
+          aeropuerto_origen?: string | null
+          agente?: string | null
+          bl_house?: string | null
+          bl_master?: string | null
+          carta_porte?: string | null
+          ciudad_destino?: string | null
+          ciudad_origen?: string | null
+          cliente_id?: string | null
+          cliente_nombre?: string | null
+          consignatario?: string | null
+          contenedor?: string | null
+          cotizacion_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_by_email?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion_mercancia?: string | null
+          estado?: Database["public"]["Enums"]["estado_embarque"] | null
+          eta?: string | null
+          eta_original?: string | null
+          etd?: string | null
+          etd_original?: string | null
+          expediente?: string | null
+          fecha_creacion?: string | null
+          fecha_llegada_real?: string | null
+          hawb?: string | null
+          id?: string | null
+          incoterm?: Database["public"]["Enums"]["incoterm"] | null
+          mawb?: string | null
+          modo?: Database["public"]["Enums"]["modo_transporte"] | null
+          msds_archivo?: string | null
+          naviera?: string | null
+          operador?: string | null
+          organization_id?: string | null
+          peso_kg?: number | null
+          piezas?: number | null
+          puerto_destino?: string | null
+          puerto_origen?: string | null
+          shipper?: string | null
+          tiene_proforma?: boolean | null
+          tipo?: Database["public"]["Enums"]["tipo_operacion"] | null
+          tipo_cambio_eur?: number | null
+          tipo_cambio_usd?: number | null
+          tipo_carga?: string | null
+          tipo_contenedor?: string | null
+          tipo_servicio?:
+            | Database["public"]["Enums"]["tipo_servicio_maritimo"]
+            | null
+          transportista?: string | null
+          updated_at?: string | null
+          vendedora_id?: string | null
+          volumen_m3?: number | null
+        }
+        Relationships: []
+      }
+      _backup_merge_fk_remap_20260602: {
+        Row: {
+          backed_up_at: string
+          embarque_id_anterior: string
+          embarque_id_nuevo: string
+          fila_id: string
+          tabla: string
+        }
+        Insert: {
+          backed_up_at?: string
+          embarque_id_anterior: string
+          embarque_id_nuevo: string
+          fila_id: string
+          tabla: string
+        }
+        Update: {
+          backed_up_at?: string
+          embarque_id_anterior?: string
+          embarque_id_nuevo?: string
+          fila_id?: string
+          tabla?: string
+        }
+        Relationships: []
+      }
       alertas_sistema: {
         Row: {
           acknowledged_at: string | null
