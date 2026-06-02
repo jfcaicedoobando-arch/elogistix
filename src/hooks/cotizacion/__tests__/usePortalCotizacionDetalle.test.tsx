@@ -6,7 +6,7 @@ vi.mock("@/hooks/catalogos/useTasaIVA", () => ({
 }));
 
 vi.mock("@/lib/supabase/cast", () => ({
-  fromDb: <T>(v: T): T => v,
+  fromDb: <T,>(v: T): T => v,
 }));
 
 import { usePortalCotizacionDetalle } from "../usePortalCotizacionDetalle";
