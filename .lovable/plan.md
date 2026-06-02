@@ -1,131 +1,55 @@
+# Sprint 1 CxC – Capa de aplicación (UI + servicios)
 
-# Master Plan ERP — Elogistix / Libre Carga (v2, post-discovery)
+La migración ya está aplicada (`facturas` fiscalizada, `factura_series`, `factura_notas_credito`, `reservar_folio_factura`, `pagos_factura.diferencia_cambiaria_mxn`). Toca exponerla a la operación del Contador y permitir que la cobranza viva dentro del ERP.
 
-Plan consolidado tras la sesión de descubrimiento. Cierre fiscal (CFDI) sigue **fuera de alcance** hasta Fase 6. Go-live objetivo: **Junio 2026**, arranque **en limpio** (sin migración histórica).
+## Alcance
 
----
+1. **Servicios y hooks (capa de datos)**
+   - `src/services/facturacion/series.ts`: list/create/update/setDefault + `reservarFolio(serieId)` (RPC).
+   - `src/services/facturacion/notasCredito.ts`: CRUD + `aplicarNotaCredito` (marca `estado=Aplicada`, descuenta saldo de la factura origen vía trigger o lógica en service).
+   - `src/services/facturacion/cobranza.ts`: listado de facturas con saldo, agrupado por estatus (Vigente / Por vencer / Vencida), filtros por cliente, rango fechas, moneda.
+   - `src/hooks/facturacion/useFacturaSeries.ts`, `useNotasCredito.ts`, `useCobranza.ts` (React Query, server-side pagination + debounce, siguiendo `mem://technical/server-side-pagination`).
 
-## 1. Decisiones de diseño ya cerradas
+2. **UI – Tab "Cobranza" en `Facturacion.tsx`**
+   - Nuevo tab junto a Proformas/Facturas: tabla con columnas Folio, Cliente, Emisión, Vencimiento, Días vencido, Moneda, Total, Pagado, Saldo, Estatus, Acciones.
+   - Zebra-striping, densidad y paginación según `mem://technical/ui-table-standardization` y `mem://features/ui-pagination-density-controls`.
+   - Badges de estatus (Vigente / Por vencer ≤3d / Vencida / Pagada / Con NC).
+   - Acciones por fila: Registrar pago, Crear nota de crédito, Ver detalle (`e.stopPropagation` en menú).
+   - KPIs arriba: Total por cobrar MXN/USD, Vencido, Por vencer 7d (conversión USD→MXN con `useTasaIVA`/exchange-rates cache).
 
-Estas decisiones se aplican transversalmente a todos los módulos:
+3. **Diálogos**
+   - `DialogRegistrarPago`: usa `pagos_factura` existente, agrega campo `diferencia_cambiaria_mxn` cuando la factura es USD y el pago se hace en MXN (cálculo automático con tipo de cambio del día).
+   - `DialogNotaCredito`: motivo (enum), monto, moneda heredada, estado inicial `Borrador`. Acciones Aprobar/Aplicar/Cancelar respetando flujo de estados.
+   - `DialogAsignarFolio`: al pasar una proforma → factura, reserva folio con `reservar_folio_factura` y captura datos fiscales (`rfc_cliente`, `uso_cfdi`, `forma_pago`, `metodo_pago`, `dias_credito` heredado del cliente).
 
-- **Series de factura**: 1 sola serie por organización al inicio, pero el modelo soporta N series con prefijo + consecutivo.
-- **Crédito**: por cliente, **días naturales**.
-- **Anticipos**: no se facturan ni aplican (fuera de alcance).
-- **Notas de crédito**: existen, sin aprobación hoy → se añadirá workflow.
-- **FX**: factura USD se puede cobrar en USD (cuenta USD) o MXN al TC del día de pago → módulo registra diferencia cambiaria.
-- **Split de proforma → facturas**: por contenedor; prorrateo de conceptos compartidos **a definir** (default propuesto: por contenedor; configurable a peso/valor).
-- **Recordatorios CxC**: nuevos, en −3, día, +7, +15 (correo cliente + aviso interno).
-- **CxP**: pagos contra recepción hoy → migrar a **1–2 días fijos/semana** para proveedores con crédito; tolerancia 3-way match ±5% / ±$500; **provisiones** de costo al cerrar embarque sin factura.
-- **Proveedores**: catálogo nuevo, carga automática via **CSF (parse-csf existente)**.
-- **Bancos**: 1 MXN + 1 USD (BBVA); soportar export estándar BBVA Empresas (.xlsx/.txt) **y** BBVA Net Cash CSV; conciliación **semanal**, módulo simple.
-- **Sin caja chica, sin gastos a comprobar, sin activos fijos formales** (solo registro opcional simple para laptops/celulares).
-- **Centros de costo**: se implementan ligados a modos del EERR (Marítimo, Aéreo, Terrestre, Admin, Comercial).
-- **Pricing**: captura manual, tarifa Spot vigencia 1 semana, mayormente por contenedor; alertas si venta < margen mínimo; aprobación DG **y** Jefa Comercial.
-- **Comisiones**: solo Vendedora, esquema simple (% sobre margen cobrado), **solo al 100% cobrado**, con **clawback** si hay devolución/cancelación, **metas mensuales**.
-- **Nómina**: outsourcing → solo se captura **1 factura mensual** de proveedor; no hay RH interno.
-- **Aprobaciones DG**: workflow formal con **auto-aprobación para gastos recurrentes/menores**.
-- **Cierre mensual**: día 10 del mes siguiente; reportes firmados = **EERR + CxC vencidas**.
-- **Roles**: nuevos roles formales (`director_general`, `jefa_comercial`, `vendedora`, `pricing`, `contador`) + migración desde `app_role` actual; Vendedora solo ve sus clientes/embarques/comisiones; Contador ve todo (incluye buy rate).
-- **Histórico**: arranque limpio en go-live; sin migración.
-- **Externos**: WhatsApp Business diferido a Fase 6+; sin Carta Porte.
+4. **Configuración → Series de Facturación**
+   - Pantalla en módulo Configuración para crear/editar series (solo admin/contador), marcar default, ver folio actual. Default seedeado ('A') ya existe.
 
----
+5. **EERR**
+   - Ajuste de `src/lib/domain/estadoResultados.ts` (y service correspondiente) para leer ingresos desde `facturas` (estado ≠ Cancelada) restando notas de crédito `Aplicada`, en lugar de proformas. Mantener backward compatibility detrás de feature flag `EERR_FUENTE=facturas` por si se necesita rollback.
 
-## 2. Fases y orden de sprints
+6. **Recordatorios CxC (preparación, sin enviar correos aún)**
+   - Edge function `cxc-recordatorios` (stub) que liste facturas vencidas/por vencer en -3 / +7 / +15 y devuelva JSON. El envío real (Resend/WhatsApp) queda fuera de este sprint.
 
-```text
-Fase 1  CxC + CxP + Bancos              ── desbloquea EERR real
-Fase 2  Gastos + Plan de cuentas + CC   ── EERR completo
-Fase 3  Tarifario + Comisiones + Metas  ── comercial formal
-Fase 4  Nómina outsourcing + Workflows  ── operación interna
-Fase 5  Cierre + Presupuesto + Tablero  ── control y dirección
-Fase 6  CFDI + WhatsApp Business        ── fuera de alcance hoy
-```
+## Permisos / Roles
+- `contador` y `admin_org`: full access a Cobranza, Series, NC.
+- `comercial` / `vendedora`: solo lectura sobre cobranza de sus clientes.
+- `operador`: sin acceso al tab.
+- Usa `has_role` existente; no se modifica el enum `app_role` en este sprint.
 
-### Fase 1 — Ciclo financiero (Sprints 1–4)
+## Fuera de alcance (Sprint 1)
+- Timbrado CFDI / UUID real (campos quedan opcionales).
+- Carta Porte.
+- Envío automático de recordatorios por correo/WhatsApp.
+- Conciliación bancaria (Sprint 2 – BBVA importer).
+- Comisiones (Sprint 3).
 
-- **S1 — CxC**: tabla `facturas` (campos fiscales nullables), series/folios por org, estados, antigüedad, notas de crédito internas (con aprobación DG configurable).
-- **S2 — Cobranza**: pagos parciales, FX USD↔MXN con diferencia cambiaria, recordatorios automáticos (Edge Function cron + correo).
-- **S3 — CxP**: catálogo de proveedores con **alta vía CSF**, captura de facturas de proveedor ligadas a `concepto_costo`, 3-way match con tolerancia ±5%/±$500, provisiones automáticas al cerrar embarque.
-- **S4 — Bancos**: cuentas MXN/USD, importador BBVA Empresas (.xlsx/.txt) + BBVA Net Cash (CSV), conciliación semanal simple (match manual asistido), saldo y flujo 30/60/90.
+## Detalles técnicos clave
+- Toda mutación pasa por servicios (no `supabase.from()` en componentes).
+- `facturas.saldo` se calcula como `total - SUM(pagos_factura.monto) - SUM(notas_credito.monto WHERE estado='Aplicada')`. Crear vista `v_facturas_saldo` o calcular en hook (preferencia: vista SQL en una micro-migración pequeña dentro del sprint si la performance lo amerita; arrancamos con cálculo en service).
+- Conversión USD→MXN usa `useDynamicExchangeRate` (Frankfurter, cache 1h).
+- Versionado: bump a `12.40.0` + entrada en `CHANGELOG.md` describiendo Cobranza, Series UI, Notas de Crédito.
+- Tests: unitarios para `cobranza.ts` (cálculo de saldo y estatus), `notasCredito.ts` (transiciones de estado), `series.ts` (reserva atómica de folio).
 
-### Fase 2 — Gastos y contabilidad (Sprints 5–6)
-
-- **S5 — Gastos generales**: captura por categoría + centro de costo (Marítimo/Aéreo/Terrestre/Admin/Comercial), adjuntos, sin workflow de comprobación.
-- **S6 — Plan de cuentas + mapeo**: catálogo simple construido desde cero (template inicial), mapeo `concepto_venta`/`concepto_costo`/`gasto`/`comisión` → cuenta contable; EERR ahora muestra SG&A real.
-
-### Fase 3 — Comercial (Sprints 7–9)
-
-- **S7 — Tarifario maestro**: tarifas buy/sell por naviera/ruta/contenedor/modo, vigencia (default semanal), recargos dinámicos (BAF/LSS/GRI). Borrador/publicado **preparado** pero misma tarifa al inicio.
-- **S8 — Margen mínimo + alertas**: regla por modo/cliente/ruta, alerta + bloqueo blando que requiere aprobación DG o Jefa Comercial.
-- **S9 — Comisiones + metas**: % simple sobre margen **cobrado** (CxC en estado Pagada), liquidación mensual, clawback automático si cancelación/devolución, metas mensuales por vendedora.
-
-### Fase 4 — Operación interna (Sprint 10)
-
-- **S10 — Nómina outsourcing + Workflows aprobación**: factura mensual de outsourcing como CxP especial (se mapea a SG&A); workflow de aprobaciones con bandeja DG, **reglas de auto-aprobación** por monto/categoría/recurrencia (gastos recurrentes y menores no notifican DG).
-
-### Fase 5 — Cierre y dirección (Sprints 11–13)
-
-- **S11 — Cierre mensual guiado**: checklist día 10 (facturas emitidas del mes, CxP capturadas, provisiones, conciliación bancaria, comisiones liquidadas), bloqueo de periodo.
-- **S12 — Presupuesto vs Real**: presupuesto anual por mes/cuenta/CC, variaciones con semáforo.
-- **S13 — Tablero DG**: KPIs recomendados:
-  - Diario: cash disponible (MXN+USD), CxC vencida >30d, embarques en riesgo, ventas día/mes vs meta, margen promedio del mes.
-  - Mensual: EERR, DSO, DPO, margen por modo y CC, top 5 clientes, top 5 proveedores, comisiones devengadas vs liquidadas.
-
-### Fase 6 — Diferidos
-
-- CFDI 4.0 (timbrado, complemento pagos, cancelaciones).
-- Integración WhatsApp Business (notificaciones a clientes y aprobaciones DG).
-
----
-
-## 3. Detalle técnico
-
-- **Multi-tenant**: cada tabla nueva con `organization_id`, RLS con `has_role`, GRANT a `authenticated`/`service_role`.
-- **Roles nuevos**: ampliar enum `app_role` con `director_general`, `jefa_comercial`, `vendedora`, `pricing`, `contador`; migración de usuarios existentes en script. Vendedora: filtros server-side por `vendedor_asignado_id` (cliente, embarque, comisión).
-- **Tablas nuevas principales**:
-  - CxC: `facturas`, `factura_pagos`, `factura_notas_credito`, `factura_series`.
-  - CxP: `proveedores` (extendida con datos CSF), `proveedor_facturas`, `proveedor_pagos`, `proveedor_provisiones`.
-  - Bancos: `cuentas_bancarias`, `movimientos_bancarios`, `conciliacion_items`, `importacion_bancaria_jobs`.
-  - Gastos/contabilidad: `gastos`, `centros_costo`, `cuentas_contables`, `mapeo_contable`.
-  - Comercial: `tarifas`, `tarifa_recargos`, `metas_comerciales`, `comisiones`, `comision_movimientos` (incluye clawback).
-  - Workflows: `aprobaciones`, `aprobacion_reglas` (auto-aprobación).
-  - Cierre: `periodos_contables`, `presupuestos`, `presupuesto_lineas`.
-- **Campos fiscales nullables** en `facturas` y `proveedor_facturas` (RFC, uso CFDI, forma/método pago, UUID, serie/folio fiscal) → Fase 6 solo timbra.
-- **Cálculos puros** en `src/lib/domain/` (antigüedad, conciliación, comisiones, 3-way match, diferencia cambiaria, prorrateo, presupuesto vs real, EERR ampliado).
-- **Edge Functions nuevas**:
-  - `cxc-recordatorios` (cron diario, correo cliente + bitácora).
-  - `bbva-importer` (parsea .xlsx/.txt/.csv).
-  - `comisiones-calcular` (cron mensual sobre CxC pagada).
-  - `cierre-mensual` (snapshot EERR + bloqueo periodo).
-  - `proveedor-csf-importer` (reutiliza `parse-csf` para alta de proveedores).
-- **Reuso**: `lib/financial/financialUtils.ts`, `useTasaIVA`, `useExchangeRates`, `DataTable`, `useOrgFilter`, `convertirAMXN`, `safeLocalStorage`.
-- **Power of 10** en todo: componentes ≤200 LOC, sin `any`, paginación server-side, cleanup en effects, manejo de `error` de Supabase, sin inline styles estáticos.
-- **CHANGELOG.md** + bump `APP_VERSION` por cada sprint.
-- **Tests**: domain puros 100%, services con mocks Supabase, hooks con RTL, edge functions con Deno test, E2E Playwright (login → cotización → embarque → proforma → factura → cobro → conciliación).
-
----
-
-## 4. Decisiones que aún hay que cerrar (no bloquean Sprint 1)
-
-Estas se pueden resolver durante el sprint correspondiente:
-
-1. **Prorrateo de conceptos compartidos** al partir proforma en N facturas → propuesta default: **por contenedor**, con override manual por línea.
-2. **Umbrales de auto-aprobación** (monto MXN para gastos recurrentes y menores) → definir junto con DG antes de Fase 4.
-3. **Plantilla inicial del plan de cuentas** → propongo borrador simple (Ingresos / COGS / SG&A / Financieros / Impuestos) en Fase 2 para que Contador lo ajuste.
-4. **Esquema exacto de % de comisión** (plano vs escalonado) → arrancar plano configurable por vendedora en Fase 3.
-
----
-
-## 5. Próximo paso recomendado
-
-Arrancar **Sprint 1 (CxC)** que es lo que desbloquea el EERR real y es independiente del resto:
-
-1. Migración: tabla `facturas` + `factura_series` + `factura_pagos` + `factura_notas_credito` con RLS y GRANTs.
-2. Backfill: una serie default por organización existente.
-3. UI: extender `Facturacion.tsx` con tab "Cobranza" (antigüedad + acciones).
-4. Hook + service de cobranza, recordatorios (Edge Function en S2).
-5. EERR pasa a leer `facturas` (no proforma) para reconocer ingreso.
-
-Cuando apruebes este plan, paso a build mode y arranco con la migración de Sprint 1.
+## Entregable
+Contador puede: emitir factura desde proforma con folio consecutivo, registrar pagos con diferencia cambiaria, emitir/aplicar notas de crédito, ver cartera vencida y por vencer con KPIs; DG ve EERR alimentado por facturas reales.
