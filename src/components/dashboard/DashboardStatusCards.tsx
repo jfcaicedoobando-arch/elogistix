@@ -7,17 +7,19 @@ interface Props {
   totalActivos: number;
   isLoading: boolean;
   arribosEsteMes: ArribosEsteMes;
+  hideFinancials?: boolean;
 }
 
 export function DashboardStatusCards({
   conteoPorEstado,
   isLoading,
   arribosEsteMes,
+  hideFinancials = false,
 }: Props) {
   return (
     <div className="space-y-4">
       <TimelineEstadosCard conteoPorEstado={conteoPorEstado} isLoading={isLoading} />
-      <ArribosCard arribosEsteMes={arribosEsteMes} isLoading={isLoading} />
+      <ArribosCard arribosEsteMes={arribosEsteMes} isLoading={isLoading} hideFinancials={hideFinancials} />
     </div>
   );
 }
