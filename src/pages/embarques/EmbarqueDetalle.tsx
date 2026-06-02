@@ -85,6 +85,7 @@ export default function EmbarqueDetalle() {
   const siguienteEstado = getSiguienteEstado(estadoVisual);
   const uploadingDocId = uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null;
   const deletingDocId = deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null;
+  const togglingNoAplicaDocId = setNoAplica.isPending ? (setNoAplica.variables?.docId ?? null) : null;
 
   return (
     <div className="space-y-6">
