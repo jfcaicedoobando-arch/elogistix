@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.50.1] - 2026-06-02
+- **feat(usuarios/nuevo-usuario)**: Se agrega la opción **Vendedor** al selector de rol en el diálogo "Nuevo Usuario" (`NuevoUsuarioDialog`), tanto en la vista de organización (`/usuarios`) como en la global (`/admin/usuarios`). El rol ya existía en el enum `app_role` de la base de datos y se usa en el módulo de Comisiones, pero no estaba expuesto en el UI de creación. Bump 12.50.1.
+
 ## [12.50.0] - 2026-06-02
 - **feat(dashboard/operador)**: El dashboard principal (`/`) ahora se adapta al rol `operador`: (1) bloqueo financiero total — se oculta la tabla "Profit MXN — Arribos este mes", el tile de Profit proyectado en `ArribosCard`, los KPI tiles Venta/Costo/Profit/Facturados y las columnas Profit/Facturado de "Embarques activos — próximo mes"; (2) tabs **Todos / Míos** que filtran demoras, próximos arribos, profit del mes y embarques del próximo mes por `operador = user.email` (case-insensitive), recalculando `conteoPorEstado`, `totalActivos`, arribos del mes y resumen del próximo mes desde las listas filtradas; (3) nueva sección **"Mi operación"** visible solo para operador con 3 widgets: *Mis pendientes hoy* (demoras + arribos con `diasRestantes ≤ 1`, derivado de `useDashboardData`), *Docs faltantes* (query a `documentos_embarque` con `estado='Pendiente'` para embarques activos del operador) y *Sin tracking reciente* (embarques En Tránsito/Arribo/En Aduana cuyo `tracking_externo.last_event_at` es `>3 días` o nulo). Nuevo hook `useDashboardOperador` con `useDocsFaltantesOperador` y `useSinTrackingOperador`. `usePermissions` ahora expone `isOperador` y `canViewFinancials`. Admin, super_admin y vendedor mantienen la vista completa sin cambios. Bump 12.50.0.
 
