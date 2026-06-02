@@ -70,8 +70,8 @@ export default function EmbarqueDetalle() {
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   const {
-    handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
-    downloadingDocId, avanzarEstado, uploadDoc, deleteDoc,
+    handleUpload, handleDeleteDoc, handleDownload, handleToggleNoAplica, handleAvanzarEstado,
+    downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
   const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
