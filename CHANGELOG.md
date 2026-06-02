@@ -6,8 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.49.2] - 2026-06-02
+- **data(embarques/unificación-retroactiva)**: Migración de datos que consolida embarques duplicados generados por el flujo antiguo "1 embarque por contenedor". Clave de agrupación `(organization_id, expediente, cliente_id, COALESCE(bl_master,''))`; padre = embarque más antiguo por `created_at`. **34 grupos unificados**, **124 embarques eliminados** (267 → 143), **1,915 filas hijas re-mapeadas** en 14 tablas (`embarque_contenedores`, `proformas`, `facturas`, `conceptos_costo`, `conceptos_venta`, `documentos_embarque`, `eventos_embarque`, `notas_embarque`, `tracking_links`, `tracking_externo`, `cotizaciones`, `auditoria_revisiones`, `comisiones_devengadas`, `proforma_conceptos_consolidados`). Peso, volumen y piezas se suman al padre; orden de contenedores se renumera 1..N. Duplicados en `tracking_externo (embarque_id, provider)` se resuelven conservando el del padre. Triggers de usuario desactivados durante la transacción (`session_replication_role = replica`) para permitir re-mapeo de FK en facturas/proformas congeladas. Backups en `_backup_merge_embarques_20260602` y `_backup_merge_fk_remap_20260602` (RLS activo, sólo `service_role`) para rollback manual. Validación atómica en la misma transacción: 0 huérfanos, 0 duplicados restantes. A partir de ahora, los contenedores del mismo expediente quedan en un solo embarque y "Consolidar y aprobar" puede agrupar todas sus proformas. Bump 12.49.2.
+
 ## [12.49.1] - 2026-06-02
 - **fix(facturacion/proformas-pendientes)**: El botón "Consolidar y aprobar" no hacía nada cuando se seleccionaban proformas del mismo expediente que pertenecían a embarques distintos (mismo expediente puede repartirse en varios embarques, uno por contenedor). `agruparProformasPendientes` ahora agrupa por `embarque_id` en lugar de por `expediente`, por lo que cada embarque aparece como tarjeta independiente con su expediente y BL. El guard residual en `handleConsolidar` reemplaza el `console.warn` silencioso por un `toast.error` explícito si llegan clientes mixtos. Tests añadidos para verificar separación por embarque y agrupado correcto. Bump 12.49.1.
+
 
 ## [12.49.0] - 2026-06-02
 
