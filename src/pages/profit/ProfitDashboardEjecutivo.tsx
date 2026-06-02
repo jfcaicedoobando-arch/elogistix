@@ -20,7 +20,7 @@ import { safeSessionStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { toast } from "sonner";
 
 function periodoInicial(): string {
-  const guardado = safeSessionStorage.get(STORAGE_KEYS.DASHBOARD_EJECUTIVO_PERIODO);
+  const guardado = safeSessionStorage.getItem(STORAGE_KEYS.dashboardEjecutivoPeriodo);
   if (guardado && /^\d{4}-\d{2}$/.test(guardado)) return guardado;
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
