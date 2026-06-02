@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
 import { TabFacturasEmitidas } from "@/components/facturacion/TabFacturasEmitidas";
+import { TabCobranza } from "@/components/facturacion/TabCobranza";
 import { DialogRegistrarPago } from "@/components/facturacion/DialogRegistrarPago";
 import { DialogHistorialPagos } from "@/components/facturacion/DialogHistorialPagos";
 import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
@@ -75,7 +76,8 @@ export default function Facturacion() {
     { value: "pendientes", label: "1. Por aprobar", hint: "Proformas generadas pendientes de revisión. Consolida y aprueba aquí.", badge: proformasPendientes.length },
     { value: "proformas", label: "2. Proformas", hint: "Histórico completo de proformas (pendientes y facturadas)." },
     { value: "facturas", label: "3. Facturas emitidas", hint: "Facturas ya generadas. Export CSV y layout contable para el contador." },
-    { value: "liquidacion", label: "4. Pagos a proveedores", hint: "Costos de proveedores pendientes de pago (cuentas por pagar)." },
+    { value: "cobranza", label: "4. Cobranza", hint: "Cartera por cobrar: saldos, vencimientos, pagos y notas de crédito." },
+    { value: "liquidacion", label: "5. Pagos a proveedores", hint: "Costos de proveedores pendientes de pago (cuentas por pagar)." },
   ];
 
   const dateBar = (
@@ -120,6 +122,10 @@ export default function Facturacion() {
               page={page} totalPages={totalPages} setPage={setPage}
               pageSize={pageSize} setPageSize={setPageSize}
             />
+          </TabsContent>
+
+          <TabsContent value="cobranza" className="space-y-4">
+            <TabCobranza />
           </TabsContent>
 
           <TabsContent value="liquidacion" className="space-y-4">
