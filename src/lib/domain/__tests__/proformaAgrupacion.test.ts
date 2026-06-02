@@ -11,11 +11,12 @@ const mkP = (
   id: string,
   expediente: string,
   contenedores_lista?: ProformaPendienteLite["contenedores_lista"],
+  embarqueId?: string,
 ): ProformaPendienteLite => ({
   id,
   numero: `PRO-${id}`,
   expediente,
-  embarque_id: `emb-${expediente}`,
+  embarque_id: embarqueId ?? `emb-${expediente}`,
   cliente_id: "cli1",
   cliente_nombre: "ACME",
   operador: null,
@@ -25,6 +26,7 @@ const mkP = (
   total_mxn: 0,
   contenedores_lista,
 });
+
 
 // ─── agruparProformasPendientes ───────────────────────────────────────────
 
