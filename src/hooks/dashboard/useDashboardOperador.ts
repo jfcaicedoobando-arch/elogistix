@@ -1,7 +1,13 @@
 /**
  * Datos operativos del dashboard del rol Operador.
  * - Embarques con documentación pendiente (operador = email del usuario).
- * - Embarques sin actualización de tracking reciente (>3 días).
+ * - Embarques sin actualización de tracking reciente. Reglas (v12.51.0):
+ *     · Más de 7 días sin un evento manual nuevo, o
+ *     · Faltan ≤ 2 días para la ETA y el último evento es anterior a (ETA − 2 días).
+ *
+ * Fuente del "último evento": tabla `eventos_embarque` (eventos manuales que el
+ * operador registra al consultar la web de la naviera), no `tracking_externo`
+ * (queda como tabla legacy reservada para integraciones automáticas futuras).
  *
  * Las queries se filtran por `operador = user.email` (cómo se asigna el campo
  * al crear/editar un embarque — ver `useEmbarqueSubmitOrchestrator`).
