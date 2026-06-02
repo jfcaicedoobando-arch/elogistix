@@ -125,8 +125,8 @@ export const MiOperacionSection = memo(function MiOperacionSection({
   isLoading,
 }: Props) {
   const navigate = useNavigate();
-  const { data: docs = [], isLoading: loadingDocs } = useDocsFaltantesOperador();
-  const { data: sinTracking = [], isLoading: loadingTracking } = useSinTrackingOperador();
+  const { data: docs = [] as DocsFaltantesItem[], isLoading: loadingDocs } = useDocsFaltantesOperador();
+  const { data: sinTracking = [] as SinTrackingItem[], isLoading: loadingTracking } = useSinTrackingOperador();
 
   const pendientes = buildPendientes(alertasDemora, proximosArribos).slice(0, MAX_ITEMS);
   const docsTop: DocsFaltantesItem[] = docs.slice(0, MAX_ITEMS);
@@ -190,9 +190,9 @@ export const MiOperacionSection = memo(function MiOperacionSection({
             <Row
               key={t.id}
               onClick={() => navigate(`/embarques/${t.id}`)}
-              badge={t.diasSinUpdate === null ? "—" : `${t.diasSinUpdate}d`}
-              badgeClass="bg-muted-foreground"
-              title={t.expediente}
+              badge={t.proximoArribo ? "ETA" : t.diasSinUpdate === null ? "—" : `${t.diasSinUpdate}d`}
+              badgeClass={t.proximoArribo ? "bg-warning" : "bg-muted-foreground"}
+              title={`${t.expediente}${t.proximoArribo ? " · Próximo a arribar" : ""}`}
               subtitle={`${toTitleCase(t.cliente_nombre)} · ${t.estado}`}
             />
           ))}

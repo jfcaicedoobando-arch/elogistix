@@ -2689,6 +2689,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          tracking_url_template: string | null
         }
         Insert: {
           activo?: boolean
@@ -2696,6 +2697,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          tracking_url_template?: string | null
         }
         Update: {
           activo?: boolean
@@ -2703,6 +2705,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          tracking_url_template?: string | null
         }
         Relationships: []
       }

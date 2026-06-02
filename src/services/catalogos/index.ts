@@ -14,6 +14,7 @@ export interface Naviera {
   name: string;
   activo: boolean;
   created_at: string;
+  tracking_url_template: string | null;
 }
 
 export interface Puerto {

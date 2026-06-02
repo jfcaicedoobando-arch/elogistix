@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Clock, AlertTriangle } from "lucide-react";
 import { useEventosEmbarque } from "@/hooks/embarque";
 import { usePermissions } from "@/hooks/shared";
 
@@ -9,12 +10,26 @@ import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
 import { TabNotas } from "./TabNotas";
 import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
 import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
+import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
+import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
 import type { NotaEmbarqueRow } from "@/hooks/embarque";
 
 type EmbarqueTrackingProps = Pick<
   Tables<"embarques">,
-  "modo" | "tipo" | "estado" | "etd" | "eta" | "fecha_llegada_real" | "fecha_creacion" | "cotizacion_id" | "updated_at"
+  | "modo"
+  | "tipo"
+  | "estado"
+  | "etd"
+  | "eta"
+  | "fecha_llegada_real"
+  | "fecha_creacion"
+  | "cotizacion_id"
+  | "updated_at"
+  | "naviera"
+  | "aerolinea"
+  | "bl_master"
+  | "mawb"
 >;
 
 interface Props {
@@ -23,10 +38,39 @@ interface Props {
   notas?: NotaEmbarqueRow[];
 }
 
+const DAY_MS = 86_400_000;
+
 export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const { canEdit } = usePermissions();
   const [formAbierto, setFormAbierto] = useState(false);
+
+  const freshness = useMemo(() => {
+    if (eventos.length === 0) return { label: "Sin eventos registrados", critical: true };
+    const ultimo = eventos[0];
+    const dias = Math.floor((Date.now() - new Date(ultimo.fecha).getTime()) / DAY_MS);
+    const etaProxima =
+      embarque?.eta != null &&
+      Math.ceil((new Date(embarque.eta).getTime() - Date.now()) / DAY_MS) <= 2 &&
+      Math.ceil((new Date(embarque.eta).getTime() - Date.now()) / DAY_MS) >= 0;
+    return {
+      label:
+        dias === 0
+          ? `Último evento hoy — ${ultimo.tipo}`
+          : `Último evento hace ${dias} día${dias === 1 ? "" : "s"} — ${ultimo.tipo}${
+              ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : ""
+            }`,
+      critical: dias >= 7 || etaProxima,
+      etaProxima,
+      dias,
+    };
+  }, [eventos, embarque?.eta]);
+
+  const etaVencida =
+    embarque?.eta != null &&
+    new Date(embarque.eta).getTime() < Date.now() &&
+    embarque.estado !== "Entregado" &&
+    embarque.estado !== "Cerrado";
 
   return (
     <div className="space-y-6">
@@ -45,16 +89,54 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
           }}
         />
       )}
-      {canEdit && (
-        <div className="flex justify-end">
-          <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
-            <Plus className="h-4 w-4 mr-1" /> Registrar Evento
-          </Button>
+
+      {embarque && (
+        <TrackingNavieraActions
+          modo={embarque.modo}
+          naviera={embarque.naviera}
+          aerolinea={embarque.aerolinea}
+          blMaster={embarque.bl_master}
+          mawb={embarque.mawb}
+        />
+      )}
+
+      {etaVencida && embarque?.eta && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+          <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <div className="font-medium text-destructive">ETA vencida</div>
+            <div className="text-muted-foreground">
+              La ETA era {formatDate(embarque.eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
+              actualiza el estado o la fecha de llegada real.
+            </div>
+          </div>
         </div>
       )}
 
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2 text-sm">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">{freshness.label}</span>
+          {freshness.critical && (
+            <Badge variant="warning">
+              {freshness.etaProxima ? "Actualiza antes del arribo" : "Requiere actualización"}
+            </Badge>
+          )}
+        </div>
+        {canEdit && (
+          <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
+            <Plus className="h-4 w-4 mr-1" /> Registrar Evento
+          </Button>
+        )}
+      </div>
+
       {formAbierto && (
-        <TrackingNuevoEventoForm embarqueId={embarqueId} onClose={() => setFormAbierto(false)} />
+        <TrackingNuevoEventoForm
+          embarqueId={embarqueId}
+          estadoActual={embarque?.estado}
+          fechaLlegadaRealActual={embarque?.fecha_llegada_real}
+          onClose={() => setFormAbierto(false)}
+        />
       )}
 
       <Card>

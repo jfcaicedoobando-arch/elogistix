@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.0] - 2026-06-02
+- **feat(tracking)**: UX mejorada para tracking manual asistido en el tab Tracking del detalle de embarque.
+  - Nueva tarjeta **"Consultar tracking en {Naviera}"** con botón para abrir la página de tracking de la naviera en una pestaña nueva (URL por naviera vía nueva columna `navieras.tracking_url_template` con placeholder `{BL}`; templates iniciales para COSCO, Maersk, MSC, Hapag-Lloyd, ONE, CMA-CGM, Evergreen, Yang Ming, HMM, ZIM, OOCL) y botón para **copiar el BL Master / MAWB** al portapapeles (feedback ✓ Copiado por 2 s).
+  - Form **"Registrar Evento"** ahora pre-selecciona el tipo de evento según el estado del embarque (En Tránsito → Arribo a Puerto, Arribo → Despacho Aduanal, etc.) y, al guardar eventos de tipo **Arribo a Puerto / Entrega**, ofrece actualizar la **fecha de llegada real** del embarque con la fecha del evento (AlertDialog).
+  - Banner de **frescura** arriba del timeline: "Último evento hace X días" + badge ámbar "Requiere actualización" si ≥ 7 días o falta ≤ 2 días para la ETA.
+  - Alert destructivo si la **ETA está vencida** y el embarque no está Entregado/Cerrado.
+- **feat(dashboard/operador)**: Nueva regla del card **"Sin tracking reciente"**: ahora marca embarques con > 7 días sin evento (antes 3 días) **o** dentro de las 48 h previas a la ETA con último evento anterior a (ETA − 2 d). Los "próximos a arribar" se ordenan primero y muestran badge **ETA** ámbar. Fuente cambiada de `tracking_externo` (legacy) a `eventos_embarque` (eventos manuales reales).
+- Bump 12.51.0.
+
 ## [12.50.4] - 2026-06-02
 - **feat(dashboard)**: Toggle de scope en el dashboard reordenado a **Míos / Todos** (antes Todos / Míos) y default **"Míos"** para todos los roles (antes sólo operador). Bump 12.50.4.
 

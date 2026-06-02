@@ -1,7 +1,13 @@
 /**
  * Datos operativos del dashboard del rol Operador.
  * - Embarques con documentación pendiente (operador = email del usuario).
- * - Embarques sin actualización de tracking reciente (>3 días).
+ * - Embarques sin actualización de tracking reciente. Reglas (v12.51.0):
+ *     · Más de 7 días sin un evento manual nuevo, o
+ *     · Faltan ≤ 2 días para la ETA y el último evento es anterior a (ETA − 2 días).
+ *
+ * Fuente del "último evento": tabla `eventos_embarque` (eventos manuales que el
+ * operador registra al consultar la web de la naviera), no `tracking_externo`
+ * (queda como tabla legacy reservada para integraciones automáticas futuras).
  *
  * Las queries se filtran por `operador = user.email` (cómo se asigna el campo
  * al crear/editar un embarque — ver `useEmbarqueSubmitOrchestrator`).
@@ -25,9 +31,12 @@ export interface DocsFaltantesItem extends OperadorEmbarqueLite {
 
 export interface SinTrackingItem extends OperadorEmbarqueLite {
   diasSinUpdate: number | null;
+  /** True si está dentro de los 2 días previos a la ETA (alerta de "pre-arribo"). */
+  proximoArribo: boolean;
 }
 
-const DIAS_TRACKING_ESTANCADO = 3;
+const DIAS_TRACKING_ESTANCADO = 7;
+const DIAS_PRE_ARRIBO = 2;
 
 export function useDocsFaltantesOperador() {
   const { user } = useAuth();
@@ -79,7 +88,7 @@ export function useSinTrackingOperador() {
     queryKey: ["dashboard-operador", "sin-tracking", email],
     enabled: !!email,
     staleTime: 60_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<SinTrackingItem[]> => {
       const { data: embarques, error } = await supabase
         .from("embarques")
         .select("id, expediente, cliente_nombre, estado, eta")
@@ -89,23 +98,30 @@ export function useSinTrackingOperador() {
       if (error) throw error;
       if (!embarques || embarques.length === 0) return [];
       const ids = embarques.map((e) => e.id);
-      const { data: tracking, error: tErr } = await supabase
-        .from("tracking_externo")
-        .select("embarque_id, last_event_at")
-        .in("embarque_id", ids);
-      if (tErr) throw tErr;
-      const ultimo = new Map<string, string | null>();
-      for (const t of tracking ?? []) {
-        const prev = ultimo.get(t.embarque_id);
-        if (!prev || (t.last_event_at && (!prev || new Date(t.last_event_at) > new Date(prev)))) {
-          ultimo.set(t.embarque_id, t.last_event_at);
-        }
+      const { data: eventos, error: eErr } = await supabase
+        .from("eventos_embarque")
+        .select("embarque_id, fecha")
+        .in("embarque_id", ids)
+        .order("fecha", { ascending: false });
+      if (eErr) throw eErr;
+      const ultimo = new Map<string, string>();
+      for (const ev of eventos ?? []) {
+        if (!ultimo.has(ev.embarque_id)) ultimo.set(ev.embarque_id, ev.fecha);
       }
       const ahora = Date.now();
+      const DAY_MS = 86_400_000;
       return embarques
-        .map((e) => {
-          const last = ultimo.get(e.id);
-          const dias = last ? Math.floor((ahora - new Date(last).getTime()) / 86_400_000) : null;
+        .map((e): SinTrackingItem => {
+          const last = ultimo.get(e.id) ?? null;
+          const dias = last ? Math.floor((ahora - new Date(last).getTime()) / DAY_MS) : null;
+          const diasHastaEta = e.eta
+            ? Math.ceil((new Date(e.eta).getTime() - ahora) / DAY_MS)
+            : null;
+          const lastBeforePreArrival = last && e.eta
+            ? new Date(last).getTime() < new Date(e.eta).getTime() - DIAS_PRE_ARRIBO * DAY_MS
+            : true;
+          const proximoArribo =
+            diasHastaEta !== null && diasHastaEta <= DIAS_PRE_ARRIBO && diasHastaEta >= 0 && lastBeforePreArrival;
           return {
             id: e.id,
             expediente: e.expediente,
@@ -113,10 +129,14 @@ export function useSinTrackingOperador() {
             estado: e.estado,
             eta: e.eta,
             diasSinUpdate: dias,
+            proximoArribo,
           };
         })
-        .filter((e) => e.diasSinUpdate === null || e.diasSinUpdate >= DIAS_TRACKING_ESTANCADO)
-        .sort((a, b) => (b.diasSinUpdate ?? 999) - (a.diasSinUpdate ?? 999));
+        .filter((e) => e.diasSinUpdate === null || e.diasSinUpdate >= DIAS_TRACKING_ESTANCADO || e.proximoArribo)
+        .sort((a, b) => {
+          if (a.proximoArribo !== b.proximoArribo) return a.proximoArribo ? -1 : 1;
+          return (b.diasSinUpdate ?? 999) - (a.diasSinUpdate ?? 999);
+        });
     },
   });
 }
