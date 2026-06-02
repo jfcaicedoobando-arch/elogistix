@@ -1,108 +1,132 @@
-# Sprint 5 — Recordatorios automáticos de cobranza (12.49.0)
+# Sprint 6 — Dashboard Ejecutivo Financiero (v12.49.0)
 
-Cerramos el ciclo financiero conectando la edge function `cxc-recordatorios` (que ya segmenta facturas en buckets T-3 / T+7 / T+15) con un envío real por email vía **Resend** + log de envíos + UI de control. WhatsApp queda fuera de alcance (requiere WhatsApp Business API + número aprobado — se evalúa en sprint posterior).
+Consolidar en una sola vista los módulos financieros existentes (EERR, Cartera, Tesorería, Comisiones, Presupuesto, Flujo 90d) para que dirección tenga un tablero único de decisión.
 
-Versión: `12.49.0`.
+## Objetivo
 
----
+Una ruta `/profit/dashboard-ejecutivo` que muestre el estado financiero global de la organización en menos de 2s, con datos reales de los servicios ya construidos en Sprints 1-4. Sin duplicar lógica, sin nuevas tablas.
 
-## 1. Infraestructura de email (Resend)
+## Alcance funcional
 
-- **Conector**: usar Resend vía `standard_connectors--connect` (gateway Lovable, sin manejar API key directa).
-- Secret esperado en edge functions: `RESEND_API_KEY` + `LOVABLE_API_KEY` (ambos auto-inyectados al vincular).
-- Remitente por defecto: `cobranza@libre-carga.mx` (configurable por org en `configuracion`).
-- **Nota**: si el dominio aún no está verificado en Resend, fallback a `onboarding@resend.dev` en modo test.
+### 1. Selector de periodo (header)
+- Presets: Mes actual / Mes anterior / YTD / Trimestre / Personalizado.
+- Default: Mes actual. Persistido en `safeSessionStorage` (`STORAGE_KEYS`).
+- Filtro de moneda visualización: MXN (base) / USD (convertido con `useTasaCambio`).
 
-## 2. Migración (12.49.0)
+### 2. Banda de 6 KPI cards
+- Ingresos del periodo
+- Utilidad neta + margen %
+- Saldo total en bancos (todas las cuentas activas)
+- Cartera vencida >0 días (monto + count)
+- CxP por pagar próximos 7 días
+- Variación presupuesto vs real (color: verde <100%, ámbar 100-110%, rojo >110%)
 
-Nuevas tablas (multi-tenant, RLS por `organization_id` con `user_belongs_to_org`):
+Cada card: valor principal, delta vs periodo anterior, ícono, click → ruta del módulo origen.
 
-- `recordatorios_cxc_config`: `id, organization_id (unique), activo bool, hora_envio time DEFAULT '09:00', remitente_email, remitente_nombre, cc_emails text[], firma_html, dias_antes int[] DEFAULT '{3}', dias_despues int[] DEFAULT '{7,15}', creado_por, timestamps`. Una fila por org.
-- `recordatorios_cxc_log`: `id, organization_id, factura_id, cliente_id, bucket text ('T-3'|'T+7'|'T+15'), email_destino, estado text ('Enviado'|'Fallido'|'Omitido'), resend_message_id, error_mensaje, enviado_en timestamptz, created_at`. Append-only, indexado por `(organization_id, factura_id, bucket, enviado_en)`.
-- Constraint: evitar duplicado mismo `(factura_id, bucket)` el mismo día (unique parcial sobre `date(enviado_en)`).
+### 3. Gráfico EERR 12 meses (`ComposedChart` Recharts)
+- Barras: Ingresos / Costos / Gastos.
+- Línea: Utilidad neta.
+- Reusa `fetchEstadoResultados` con rango rolling 12m.
 
-GRANTs: `authenticated` SELECT/INSERT/UPDATE en config (admin/contador vía RLS); SELECT en log; `service_role` ALL en ambos.
+### 4. Tarjeta saldos por banco
+- Tabla compacta: banco, cuenta, saldo MXN, saldo USD.
+- Total al pie.
+- Reusa `fetchResumenTesoreria`.
 
-RLS:
-- `config`: SELECT/UPSERT sólo admin+contador de la org.
-- `log`: SELECT admin+contador+comercial; INSERT sólo `service_role`.
+### 5. Top 5 deudores / Top 5 acreedores (dos tarjetas lado a lado)
+- Cliente/Proveedor, monto, días vencido, badge de severidad.
+- Reusa servicios de cartera CxC/CxP.
 
-## 3. Edge function `cxc-recordatorios` (extender existente)
+### 6. Mini flujo proyectado 4 semanas
+- `LineChart` con saldo proyectado semanal.
+- Reusa `fetchFlujoProyectado(28)`.
 
-Hoy devuelve `buckets`. Cambios:
+### 7. Panel de alertas (lateral derecha)
+- Reglas deterministas (sin IA):
+  - Saldo bancario proyectado < 0 en próximas 4 semanas
+  - Facturas CxC vencidas >30 días con monto >umbral configurable
+  - Categoría de presupuesto con variación >110%
+  - CxP vencidas
+- Cada alerta: severidad, descripción, link a la vista de origen.
 
-- Aceptar `mode: 'preview' | 'send'` (default `preview` — preserva comportamiento actual para diagnóstico).
-- En `send`: para cada factura del bucket → obtener email contacto (`clientes.email_facturacion` o `contactos_cliente` con flag `cobranza`), renderizar template HTML, invocar Resend vía gateway, insertar fila en `recordatorios_cxc_log`. Saltar si ya hay log exitoso hoy para `(factura_id, bucket)`.
-- Templates inline en función (3 variantes por bucket, MX español, locale `es-MX`, formato MXN/USD según `factura.moneda`).
-- Variables: `{{cliente_nombre}}, {{factura_numero}}, {{saldo}}, {{moneda}}, {{fecha_vencimiento}}, {{dias_restantes|vencidos}}, {{firma_html}}`.
+## Arquitectura técnica
 
-## 4. Edge function nueva: `cxc-recordatorios-scheduler`
+### Backend / servicios
+- `src/services/dashboard-ejecutivo/agregador.ts` — orquestador único que llama en paralelo (`Promise.all`) a los servicios ya existentes:
+  - `fetchEstadoResultados(periodo)`
+  - `fetchEstadoResultados(rolling12m)`
+  - `fetchResumenTesoreria()`
+  - `fetchFlujoProyectado(28)`
+  - `fetchPresupuestoVsReal(periodo)`
+  - `fetchComisionesDevengadas(periodo)`
+  - `fetchTopDeudores(5)` / `fetchTopAcreedores(5)` (nuevos wrappers ligeros sobre servicios CxC/CxP existentes)
+- Cálculo de alertas: función pura `calcularAlertas(snapshot)` en `src/services/dashboard-ejecutivo/alertas.ts`.
+- Tipos en `src/services/dashboard-ejecutivo/types.ts`.
+- Sin nueva tabla. Sin RPC nueva. Sin migración.
 
-- Cron-friendly (sin args). Lee `recordatorios_cxc_config WHERE activo=true`, itera por org e invoca `cxc-recordatorios` con `mode='send'` + `organization_id`.
-- Registrada en `supabase/config.toml` con `verify_jwt = false` para permitir cron de Supabase.
-- **No** configuramos `pg_cron` automáticamente (requiere admin DB); documentamos en `CHANGELOG.md` que el usuario debe activar el cron `0 15 * * * → cxc-recordatorios-scheduler` (15:00 UTC = 09:00 CDMX) desde Cloud → Cron Jobs. Opcional: botón "Ejecutar ahora" en UI para invocar manualmente.
+### Hook
+- `src/hooks/dashboard-ejecutivo/useDashboardEjecutivo.ts`
+  - `useQuery` con `queryKey: queryKeys.dashboardEjecutivo.snapshot(periodo, organizationId)`
+  - `staleTime: 60_000`, `gcTime: 300_000`
+- Registrar dominio en `EXPECTED_DOMAINS` (`src/lib/query/index.ts`) + keys en `src/lib/query/keys/dashboardEjecutivo.ts`.
 
-## 5. UI — Página `/facturacion` nueva tab "Recordatorios"
+### UI / componentes (todos ≤200 LOC)
+- `src/pages/profit/ProfitDashboardEjecutivo.tsx` (página, ≤150 LOC)
+- `src/components/dashboard-ejecutivo/SelectorPeriodo.tsx`
+- `src/components/dashboard-ejecutivo/BandaKPIs.tsx` + `KpiCard.tsx`
+- `src/components/dashboard-ejecutivo/GraficoEERR12m.tsx`
+- `src/components/dashboard-ejecutivo/SaldosBancosCard.tsx`
+- `src/components/dashboard-ejecutivo/TopListaCard.tsx` (reusable deudores/acreedores)
+- `src/components/dashboard-ejecutivo/MiniFlujoCard.tsx`
+- `src/components/dashboard-ejecutivo/AlertasPanel.tsx`
+- Skeletons en cada tarjeta; error boundary local.
 
-Componente principal: `src/pages/facturacion/TabRecordatorios.tsx` (sustituye sub-página si conviene).
+### Ruta y navegación
+- Registrar en `src/routes/appRoutes.tsx` con lazy load + chunk recovery.
+- Item en sidebar bajo grupo "Profit" como primer hijo, ícono `LayoutDashboard`.
+- Permisos: `admin`, `contador` → vista completa; `comercial`, `vendedor` → sólo KPIs de ingresos/cartera; `operador` → sin acceso.
 
-Subcomponentes (≤200 LOC c/u):
-- `components/recordatorios/FormConfigRecordatorios.tsx`: form RHF con activo, hora, remitente, CC, firma (textarea HTML), días antes/después (multi-input numérico).
-- `components/recordatorios/TablaLogRecordatorios.tsx`: DataTable paginado (server-side, `range()`), columnas Fecha, Cliente, Factura, Bucket badge, Estado badge, Error truncado.
-- `components/recordatorios/PreviewBucketsCard.tsx`: invoca edge en modo `preview`, muestra conteos por bucket + botón "Enviar ahora" (confirm doble).
-- `components/recordatorios/DialogPreviewEmail.tsx`: render preview HTML del template antes de enviar.
+### Exportación PDF
+- `src/pdf/documents/ReporteEjecutivoDocument.tsx` (3 páginas):
+  1. Header + KPIs + EERR 12m + saldos bancos
+  2. Top deudores + Top acreedores + alertas
+  3. Mini flujo + variación presupuesto
+- Botón "Exportar PDF" en header, usa `@react-pdf/renderer` ya instalado.
 
-Servicios:
-- `src/services/recordatorios/config.ts` — get/upsert.
-- `src/services/recordatorios/log.ts` — `fetchLog({ desde, hasta, bucket, estado, page })` con paginación.
-- `src/services/recordatorios/preview.ts` — invoca edge `cxc-recordatorios` modo preview.
-- `src/services/recordatorios/enviar.ts` — invoca modo send con confirmación.
+### Localización y formato
+- `es-MX`, MXN base, `DD/MM/YYYY`, `financialUtils.ts` para sumas, `useTasaIVA` no requerido (vista informativa).
+- Conversión USD vía `useTasaCambio` (cache 1h Frankfurter).
 
-Hooks:
-- `src/hooks/recordatorios/{useRecordatoriosConfig,useRecordatoriosLog,useRecordatoriosPreview}.ts`.
+### Tests
+- `src/services/dashboard-ejecutivo/__tests__/alertas.test.ts` — reglas deterministas (≥6 casos).
+- `src/lib/query/__tests__/keys-shape.test.ts` — incluir nuevo dominio.
+- `src/pages/profit/__tests__/ProfitDashboardEjecutivo.test.tsx` — smoke con mocks.
 
-Query keys: `src/lib/query/keys/recordatorios.ts` registrado en `EXPECTED_DOMAINS`.
+## Fuera de alcance
+- Comparativo año contra año.
+- Drilldown interactivo dentro de las gráficas.
+- Export Excel.
+- Notificaciones push / email (Sprint 5).
+- Personalización de layout por usuario.
 
-## 6. Integración cliente
+## Power of 10 / cumplimiento
+- Componentes ≤200 LOC.
+- Cero `any`.
+- Sin `style={{}}` estático.
+- Multi-tenant: todas las queries filtran por `organization_id` activo del contexto.
+- Cleanup en `useEffect` (no hay suscripciones realtime en este sprint).
+- `safeSessionStorage` para persistencia de filtro.
 
-- En `ClienteDetalle` tab Contactos: nuevo checkbox "Recibe recordatorios de cobranza" en cada contacto (campo `contactos_cliente.notif_cobranza bool` ya existente — si no, agregar en migración).
-- Si ningún contacto marcado, fallback a `cliente.email_facturacion`.
+## Entregables
+1. Servicios + tipos + alertas
+2. Hook + query keys
+3. UI (página + 7 componentes)
+4. Ruta + sidebar + permisos
+5. PDF ejecutivo
+6. Tests (alertas + smoke + keys-shape)
+7. `CHANGELOG.md` + bump `APP_VERSION` → `12.49.0`
 
-## 7. Permisos
-
-- `admin` / `contador`: config + log + envío manual.
-- `comercial` / `vendedor`: sólo lectura de log de sus clientes.
-- `operador`: sin acceso.
-
-## 8. Tests
-
-- Unit: `formatTemplate` (sustitución variables, escape HTML, locale MX).
-- Unit: dedup logic (mismo factura+bucket+día).
-- Deno test edge function: mock Resend gateway, verifica payload y log insert.
-- Actualizar `keys-shape.test.ts` con `recordatorios`.
-
-## 9. Out of scope Sprint 5
-
-- WhatsApp Business (sprint posterior — requiere número aprobado y plantillas Meta).
-- Recordatorios para CxP (proveedores) — sólo CxC.
-- Personalización avanzada de templates por cliente (sólo firma por org).
-- A/B testing de subject lines.
-
-## 10. Orden de ejecución
-
-1. `standard_connectors--connect` Resend → confirmar `RESEND_API_KEY` disponible.
-2. Migración (config + log + GRANTs + RLS + índices + columna `notif_cobranza` si falta).
-3. Extender `cxc-recordatorios` con `mode` y send real + log insert.
-4. Nueva edge `cxc-recordatorios-scheduler`.
-5. Services + hooks + query keys.
-6. UI tab Recordatorios + integración ClienteDetalle.
-7. Tests + `EXPECTED_DOMAINS` + bump `APP_VERSION` 12.49.0 + `CHANGELOG.md`.
-8. Documentar en CHANGELOG instrucción de activar cron diario 09:00 CDMX.
-
-## Detalles técnicos
-
-- **Power of 10**: todos los componentes ≤200 LOC, sin `any`, cleanup en effects, paginación server-side en log.
-- **Multi-tenant**: cada query filtra por `organization_id`; edge usa `service_role` pero filtra explícito por org del payload.
-- **Idempotencia**: unique parcial sobre `(factura_id, bucket, date(enviado_en))` previene reenvíos accidentales.
-- **Observabilidad**: errores Resend (4xx/5xx) se loguean en `recordatorios_cxc_log.estado='Fallido'` con `error_mensaje` truncado a 500 chars.
-- **Locale**: fechas DD/MM/YYYY, montos `formatCurrency(monto, moneda)` ya existente.
+## Riesgos
+- Tiempo de carga si los 6 servicios se ejecutan en serie → mitigado con `Promise.all`.
+- Inconsistencia de monedas → forzar MXN base, conversión sólo en UI.
+- Permisos comercial/vendedor: validar en agregador, no sólo en UI.
