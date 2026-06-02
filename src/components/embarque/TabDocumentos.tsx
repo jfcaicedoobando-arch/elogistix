@@ -19,21 +19,23 @@ interface Props {
   uploadingDocId: string | null;
   downloadingDocId: string | null;
   deletingDocId?: string | null;
+  togglingNoAplicaDocId?: string | null;
   onUpload: (docId: string, file: File) => void;
   onDownload: (archivo: string, docId: string) => void;
   onDelete?: (doc: DocumentoEmbarqueRow) => void;
+  onToggleNoAplica?: (doc: DocumentoEmbarqueRow) => void;
 }
 
 export function TabDocumentos({
-  embarqueId, modo, documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId,
-  onUpload, onDownload, onDelete,
+  embarqueId, modo, documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
+  onUpload, onDownload, onDelete, onToggleNoAplica,
 }: Props) {
   const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
   const columns = useDocumentoColumns({
-    canEdit, uploadingDocId, downloadingDocId, deletingDocId,
-    onUpload, onDownload, onDelete,
+    canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
+    onUpload, onDownload, onDelete, onToggleNoAplica,
     onRequestDelete: setDocToDelete,
   });
 
