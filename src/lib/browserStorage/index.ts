@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   loginLoggedPrefix: "lc:login-logged:",
   appVersion: "lc-app-version",
   eerrFuente: "lc-eerr-fuente",
+  dashboardEjecutivoPeriodo: "lc-dashboard-ejec-periodo",
 } as const;
 
 export const loginLoggedKey = (userId: string): string =>

@@ -27,6 +27,7 @@ import { cxp } from "./keys/cxp";
 import { tesoreria } from "./keys/tesoreria";
 import { comisiones } from "./keys/comisiones";
 import { presupuesto } from "./keys/presupuesto";
+import { dashboardEjecutivo } from "./keys/dashboardEjecutivo";
 import {
   bitacora, trackingLinks, clienteFinancials,
   pdfPreviewCotizacion, trackingPublico,
@@ -67,6 +68,7 @@ export const queryKeys = {
   tesoreria,
   comisiones,
   presupuesto,
+  dashboardEjecutivo,
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,
