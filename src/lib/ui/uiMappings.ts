@@ -73,6 +73,7 @@ export const getNotaTipoColorClass = (tipo: string): string => {
 /** Color del indicador de estado de un documento de embarque. */
 export const getDocEstadoColorClass = (estado: string): string => {
   if (estado === "Validado" || estado === "Recibido") return "bg-success";
+  if (estado === "No aplica") return "bg-muted-foreground/40";
   return "bg-destructive";
 };
 
