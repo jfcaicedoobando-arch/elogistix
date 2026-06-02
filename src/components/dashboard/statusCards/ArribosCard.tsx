@@ -24,9 +24,10 @@ export interface ArribosEsteMes {
 interface Props {
   arribosEsteMes: ArribosEsteMes;
   isLoading: boolean;
+  hideFinancials?: boolean;
 }
 
-export function ArribosCard({ arribosEsteMes, isLoading }: Props) {
+export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false }: Props) {
   const pct = arribosEsteMes.total > 0
     ? Math.round((arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100)
     : 0;
@@ -42,7 +43,7 @@ export function ArribosCard({ arribosEsteMes, isLoading }: Props) {
             <span className="text-sm font-semibold text-foreground">Arribos este mes</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 flex-1">
+          <div className={`grid ${hideFinancials ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"} gap-3 sm:gap-6 flex-1`}>
             <div className="text-center">
               {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                 <span className="text-xl font-bold text-foreground tabular-nums">{arribosEsteMes.total}</span>
