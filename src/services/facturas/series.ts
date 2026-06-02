@@ -62,7 +62,7 @@ export interface FolioReservado {
 }
 
 export async function reservarFolio(serieId: string): Promise<FolioReservado> {
-  const { data, error } = await supabase.rpc("reservar_folio_factura", { p_serie_id: serieId });
+  const { data, error } = await supabase.rpc("reservar_folio_factura", { _serie_id: serieId });
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) throw new Error("RPC reservar_folio_factura no devolvió folio");
