@@ -38,6 +38,7 @@ const Facturacion = lazy(() => import("@/pages/facturacion/Facturacion"));
 const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
 const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
 const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
+const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
 
 const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
 const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
@@ -70,6 +71,14 @@ export const appRoutes = (
     <Route path="/embarques/:id/editar" element={<EditarEmbarque />} />
     <Route path="/facturacion" element={<Facturacion />} />
     <Route path="/facturacion/:id" element={<FacturaDetalle />} />
+    <Route
+      path="/cxp"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <Cxp />
+        </ProtectedRoute>
+      }
+    />
     <Route path="/profit" element={<Navigate to="/profit/proyeccion" replace />} />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
