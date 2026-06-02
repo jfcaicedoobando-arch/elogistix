@@ -6,6 +6,7 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   useUploadDocumentoEmbarque,
   useDeleteDocumentoEmbarque,
+  useSetDocumentoNoAplica,
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
 } from "@/hooks/embarque/useEmbarques";
