@@ -82,6 +82,19 @@ export async function fetchProveedoresPaginados(
   return { data: mapped, count };
 }
 
+export interface ProveedorLite { id: string; nombre: string }
+
+export async function fetchProveedoresLite(): Promise<ProveedorLite[]> {
+  const { data, error } = await supabase
+    .from("proveedores")
+    .select("id, nombre")
+    .is("deleted_at", null)
+    .order("nombre", { ascending: true })
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as ProveedorLite[];
+}
+
 export async function fetchProveedor(id: string): Promise<Proveedor | null> {
   const { data, error } = await supabase
     .from("proveedores")
