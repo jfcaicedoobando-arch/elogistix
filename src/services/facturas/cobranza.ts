@@ -79,7 +79,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
       pagos_factura(monto_aplicado_factura, deleted_at),
       factura_notas_credito(monto, estado, deleted_at)
     `)
-    .in("estado", ESTADOS_ACTIVOS as unknown as string[])
+    .in("estado", [...ESTADOS_ACTIVOS])
     .order("fecha_vencimiento", { ascending: true })
     .limit(2000);
 
