@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useCurrentOrganization } from "@/hooks/shared/useCurrentOrganization";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useLiquidaciones, useGenerarLiquidacion, useRegistrarPagoLiquidacion,
 } from "@/hooks/comisiones";
@@ -86,15 +86,15 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
 function DialogGenerar({
   open, onOpenChange, vendedoras,
 }: { open: boolean; onOpenChange: (o: boolean) => void; vendedoras: VendedoraOpt[] }) {
-  const { data: org } = useCurrentOrganization();
+  const { organizationId } = useOrganization();
   const [vendedoraId, setVendedoraId] = useState("");
   const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7));
   const gen = useGenerarLiquidacion();
 
   const submit = () => {
-    if (!vendedoraId || !periodo || !org?.id) return;
+    if (!vendedoraId || !periodo || !organizationId) return;
     gen.mutate(
-      { vendedora_id: vendedoraId, periodo, organization_id: org.id },
+      { vendedora_id: vendedoraId, periodo, organization_id: organizationId },
       {
         onSuccess: () => {
           toast.success("Liquidación generada");

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Plus, Save } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/formatters";
-import { useCurrentOrganization } from "@/hooks/shared/useCurrentOrganization";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useVendedorasConfig, useUpsertVendedoraConfig, useUpdateVendedoraConfig,
   useEmbarquesSinVendedora, useAsignarVendedoraEmbarque,
@@ -29,7 +29,7 @@ export function TabVendedorasConfig({ vendedoras }: { vendedoras: VendedoraOpt[]
 
 function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
   const { data: configs = [] } = useVendedorasConfig();
-  const { data: org } = useCurrentOrganization();
+  const { organizationId } = useOrganization();
   const upsert = useUpsertVendedoraConfig();
   const update = useUpdateVendedoraConfig();
 
@@ -38,9 +38,9 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
   const [pcts, setPcts] = useState<Record<string, string>>({});
 
   const agregar = () => {
-    if (!nuevaVendedora || !org?.id) return;
+    if (!nuevaVendedora || !organizationId) return;
     upsert.mutate({
-      organization_id: org.id,
+      organization_id: organizationId,
       user_id: nuevaVendedora,
       porcentaje_default: Number(nuevoPct) || 0,
       activa: true,
