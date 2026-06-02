@@ -1,23 +1,34 @@
 import { useMemo } from "react";
-import { Upload, Download, Loader2, Trash2 } from "lucide-react";
+import { Upload, Download, Loader2, Trash2, Ban, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
 import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
+
+/**
+ * Nombres de documentos considerados SIEMPRE obligatorios.
+ * Para estos no se permite marcar "No aplica".
+ */
+const DOCUMENTOS_OBLIGATORIOS = new Set(["BL Master"]);
 
 interface Options {
   canEdit: boolean;
   uploadingDocId: string | null;
   downloadingDocId: string | null;
   deletingDocId?: string | null;
+  togglingNoAplicaDocId?: string | null;
   onUpload: (docId: string, file: File) => void;
   onDownload: (archivo: string, docId: string) => void;
   onDelete?: (doc: DocumentoEmbarqueRow) => void;
+  onToggleNoAplica?: (doc: DocumentoEmbarqueRow) => void;
   onRequestDelete: (doc: DocumentoEmbarqueRow) => void;
 }
 
 export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueRow, unknown>[] {
-  const { canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete, onRequestDelete } = opts;
+  const {
+    canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
+    onUpload, onDownload, onDelete, onToggleNoAplica, onRequestDelete,
+  } = opts;
   return useMemo<ColumnDef<DocumentoEmbarqueRow, unknown>[]>(() => defineColumns<DocumentoEmbarqueRow>([
     { id: "nombre", header: "Documento", meta: { className: "font-medium" }, cell: ({ row }) => row.original.nombre },
     {
@@ -36,9 +47,13 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
       header: "Acciones",
       cell: ({ row }) => {
         const doc = row.original;
+        const esObligatorio = DOCUMENTOS_OBLIGATORIOS.has(doc.nombre);
+        const esNoAplica = doc.estado === "No aplica";
+        const puedeMarcarNoAplica =
+          canEdit && !!onToggleNoAplica && !doc.archivo && !esObligatorio;
         return (
           <div className="flex gap-2">
-            {canEdit && (
+            {canEdit && !esNoAplica && (
               <Button
                 variant="outline"
                 size="sm"
@@ -56,6 +71,22 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
               >
                 {uploadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
                 Subir
+              </Button>
+            )}
+            {puedeMarcarNoAplica && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={togglingNoAplicaDocId === doc.id}
+                onClick={(e) => { e.stopPropagation(); onToggleNoAplica!(doc); }}
+                title={esNoAplica ? "Volver a marcar como pendiente" : "Marcar como no aplica para este embarque"}
+              >
+                {togglingNoAplicaDocId === doc.id
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  : esNoAplica
+                    ? <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                    : <Ban className="h-3.5 w-3.5 mr-1" />}
+                {esNoAplica ? "Marcar pendiente" : "No aplica"}
               </Button>
             )}
             {doc.archivo && (
@@ -87,5 +118,5 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
         );
       },
     },
-  ]), [canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete, onRequestDelete]);
+  ]), [canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId, onUpload, onDownload, onDelete, onToggleNoAplica, onRequestDelete]);
 }
