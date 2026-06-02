@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { Wallet, ArrowRight, FileText } from "lucide-react";
+import { Wallet, ArrowRight, FileText, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useResumenTesoreria } from "@/hooks/tesoreria";
@@ -41,12 +41,15 @@ export default function Tesoreria() {
         title="Tesorería"
         description="Saldo bancario, cartera y flujo esperado a 30 días"
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={handlePdf} disabled={!data}>
               <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
             <Button variant="outline" asChild>
               <Link to="/tesoreria/cuentas"><Wallet className="h-4 w-4 mr-2" /> Cuentas</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/tesoreria/flujo"><TrendingUp className="h-4 w-4 mr-2" /> Flujo 90 días</Link>
             </Button>
             <Button asChild>
               <Link to="/tesoreria/conciliacion">Conciliación <ArrowRight className="h-4 w-4 ml-2" /></Link>

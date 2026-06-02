@@ -42,6 +42,7 @@ const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
 const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
 const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
 const TesoreriaConciliacion = lazy(() => import("@/pages/tesoreria/TesoreriaConciliacion"));
+const TesoreriaFlujo = lazy(() => import("@/pages/tesoreria/TesoreriaFlujo"));
 const Comisiones = lazy(() => import("@/pages/comisiones/Comisiones"));
 
 const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
@@ -104,6 +105,14 @@ export const appRoutes = (
       element={
         <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
           <TesoreriaConciliacion />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/tesoreria/flujo"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <TesoreriaFlujo />
         </ProtectedRoute>
       }
     />

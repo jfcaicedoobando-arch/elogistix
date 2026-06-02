@@ -1,0 +1,89 @@
+/**
+ * Flujo de caja proyectado a 90 días.
+ */
+import { lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/formatters/numbers";
+import { useFlujoProyectado } from "@/hooks/tesoreria";
+
+const GraficoFlujoProyectado = lazy(() => import("@/components/tesoreria/GraficoFlujoProyectado"));
+const TablaFlujoSemanal = lazy(() => import("@/components/tesoreria/TablaFlujoSemanal"));
+
+function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" | "success" | "warn" }) {
+  const tt = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : tone === "warn" ? "text-warning" : "text-foreground";
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className={`text-lg font-semibold tabular-nums ${tt}`}>{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function TesoreriaFlujo() {
+  const { data, isLoading } = useFlujoProyectado(90);
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Flujo de caja proyectado · 90 días"
+        description="Proyección semanal de entradas (CxC) y salidas (CxP + comisiones) sobre vencimientos."
+        actions={
+          <Button variant="outline" asChild>
+            <Link to="/tesoreria"><ArrowLeft className="h-4 w-4 mr-2" /> Tesorería</Link>
+          </Button>
+        }
+      />
+
+      {isLoading || !data ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Kpi label="Saldo hoy (MXN aprox)" value={formatCurrency(data.saldo_inicial_mxn, "MXN")} />
+            <Kpi label="Entradas 90 días" value={formatCurrency(data.total_entradas_mxn, "MXN")} tone="success" />
+            <Kpi label="Salidas 90 días" value={formatCurrency(data.total_salidas_mxn, "MXN")} tone="warn" />
+            <Kpi
+              label="Saldo final proyectado"
+              value={formatCurrency(data.saldo_final_mxn, "MXN")}
+              tone={data.saldo_final_mxn >= 0 ? "success" : "danger"}
+            />
+          </div>
+
+          {data.alertas_negativas > 0 && (
+            <Card className="border-destructive/40 bg-destructive/5">
+              <CardContent className="p-3 flex items-center gap-2 text-sm">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <span>
+                  <strong>{data.alertas_negativas}</strong> semana{data.alertas_negativas === 1 ? "" : "s"} con saldo proyectado negativo.
+                  Revisa cobranza o reprograma pagos.
+                </span>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold mb-3">Flujo semanal (MXN)</h3>
+              <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                <GraficoFlujoProyectado semanas={data.semanas} />
+              </Suspense>
+            </CardContent>
+          </Card>
+
+          <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+            <TablaFlujoSemanal semanas={data.semanas} />
+          </Suspense>
+        </>
+      )}
+    </div>
+  );
+}
