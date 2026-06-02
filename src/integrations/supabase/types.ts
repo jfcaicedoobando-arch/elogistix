@@ -1960,7 +1960,7 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           monto: number
           motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
-          organization_id: string
+          organization_id?: string
           tipo_cambio?: number
           updated_at?: string
         }
@@ -2024,7 +2024,7 @@ export type Database = {
           folio_actual?: number
           folio_inicial?: number
           id?: string
-          organization_id: string
+          organization_id?: string
           prefijo?: string
           updated_at?: string
         }

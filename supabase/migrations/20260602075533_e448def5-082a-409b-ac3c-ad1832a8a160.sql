@@ -1,0 +1,2 @@
+ALTER TABLE public.factura_series ALTER COLUMN organization_id SET DEFAULT current_user_org_id();
+ALTER TABLE public.factura_notas_credito ALTER COLUMN organization_id SET DEFAULT current_user_org_id();
