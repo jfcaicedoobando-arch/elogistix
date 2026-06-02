@@ -263,6 +263,84 @@ export type Database = {
         }
         Relationships: []
       }
+      bbva_movimientos: {
+        Row: {
+          abono: number
+          cargo: number
+          concepto: string
+          conciliado_at: string | null
+          conciliado_por: string | null
+          cuenta_bancaria_id: string
+          estado_conciliacion: Database["public"]["Enums"]["estado_conciliacion"]
+          fecha: string
+          hash_dedupe: string
+          id: string
+          importado_en: string
+          importado_por: string | null
+          motivo_ignorar: string
+          organization_id: string
+          pago_factura_id: string | null
+          pago_proveedor_id: string | null
+          referencia: string
+          saldo: number | null
+        }
+        Insert: {
+          abono?: number
+          cargo?: number
+          concepto?: string
+          conciliado_at?: string | null
+          conciliado_por?: string | null
+          cuenta_bancaria_id: string
+          estado_conciliacion?: Database["public"]["Enums"]["estado_conciliacion"]
+          fecha: string
+          hash_dedupe: string
+          id?: string
+          importado_en?: string
+          importado_por?: string | null
+          motivo_ignorar?: string
+          organization_id?: string
+          pago_factura_id?: string | null
+          pago_proveedor_id?: string | null
+          referencia?: string
+          saldo?: number | null
+        }
+        Update: {
+          abono?: number
+          cargo?: number
+          concepto?: string
+          conciliado_at?: string | null
+          conciliado_por?: string | null
+          cuenta_bancaria_id?: string
+          estado_conciliacion?: Database["public"]["Enums"]["estado_conciliacion"]
+          fecha?: string
+          hash_dedupe?: string
+          id?: string
+          importado_en?: string
+          importado_por?: string | null
+          motivo_ignorar?: string
+          organization_id?: string
+          pago_factura_id?: string | null
+          pago_proveedor_id?: string | null
+          referencia?: string
+          saldo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbva_movimientos_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbva_movimientos_pago_proveedor_id_fkey"
+            columns: ["pago_proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_proveedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bitacora_actividad: {
         Row: {
           accion: string
@@ -1556,6 +1634,57 @@ export type Database = {
           id?: string
           nombre?: string
           organization_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cuentas_bancarias: {
+        Row: {
+          activa: boolean
+          alias: string
+          banco: string
+          clabe: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          notas: string
+          numero_cuenta: string
+          organization_id: string
+          saldo_inicial: number
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          alias: string
+          banco?: string
+          clabe?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string
+          numero_cuenta?: string
+          organization_id?: string
+          saldo_inicial?: number
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          alias?: string
+          banco?: string
+          clabe?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string
+          numero_cuenta?: string
+          organization_id?: string
+          saldo_inicial?: number
           updated_at?: string
         }
         Relationships: []
@@ -4147,6 +4276,7 @@ export type Database = {
         | "Llamada en frío"
         | "Evento"
         | "Otro"
+      estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado"
       estado_cotizacion:
         | "Borrador"
         | "Enviada"
@@ -4398,6 +4528,7 @@ export const Constants = {
         "Evento",
         "Otro",
       ],
+      estado_conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
       estado_cotizacion: [
         "Borrador",
         "Enviada",
