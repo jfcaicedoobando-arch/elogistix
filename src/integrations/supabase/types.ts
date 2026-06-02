@@ -4687,7 +4687,7 @@ export type Database = {
         | "Rechazada"
         | "Vencida"
         | "En operación"
-      estado_documento: "Pendiente" | "Recibido" | "Validado"
+      estado_documento: "Pendiente" | "Recibido" | "Validado" | "No aplica"
       estado_embarque:
         | "Cotización"
         | "Borrador"
@@ -4941,7 +4941,7 @@ export const Constants = {
         "Vencida",
         "En operación",
       ],
-      estado_documento: ["Pendiente", "Recibido", "Validado"],
+      estado_documento: ["Pendiente", "Recibido", "Validado", "No aplica"],
       estado_embarque: [
         "Cotización",
         "Borrador",

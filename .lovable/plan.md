@@ -1,66 +1,43 @@
-# Dashboard del Operador — Limpieza financiera + valor operativo
-
 ## Objetivo
 
-Adaptar el dashboard principal (`/`) para que el rol **operador** vea solo información operativa, sin datos financieros de la empresa, y agregue widgets que apoyen su trabajo diario.
+Permitir marcar documentos como **"No aplica"** desde el tab Documentos del embarque, para que queden excluidos de los conteos de "documentos faltantes" (dashboard del operador, sidebar y auditoría). El **BL Master** queda excluido de esta opción: siempre es obligatorio.
 
 ## Cambios
 
-### 1. Bloqueo financiero total (operador)
+### 1. Base de datos (migración)
+- Agregar el valor `'No aplica'` al enum `estado_documento` (ya tiene `Pendiente`, `Recibido`, `Validado`).
 
-Usar `usePermissions` (existe `role === "operador"`) para condicionar render.
+### 2. Servicio
+`src/services/embarque/documentos.ts`
+- Nueva función `marcarDocumentoNoAplica(docId)` → `UPDATE estado = 'No aplica', archivo = null`.
+- Nueva función `marcarDocumentoPendiente(docId)` → revierte a `'Pendiente'` (para deshacer).
 
-- **Ocultar por completo:**
-  - `ProfitTable` (tabla "Profit MXN — Arribos este mes")
-  - En `ArribosCard`: tiles de Venta MXN / Costo MXN / Profit MXN (dejar Total / Ya llegaron / En camino)
-  - En `EmbarquesActivosTable`:
-    - Columnas: Profit MXN, Facturado
-    - KPI tiles: Venta MXN, Costo MXN, Profit MXN, Facturados (dejar solo "Embarques: N")
+### 3. Hook de acciones
+`src/hooks/embarque/useEmbarqueDocumentosActions.ts`
+- Agregar `handleToggleNoAplica(doc)`: si `estado === 'No aplica'` → vuelve a `Pendiente`; si no, marca `No aplica`. Registra en bitácora (`marcar_documento_no_aplica` / `revertir_documento_no_aplica`) y dispara invalidación de la query de documentos.
 
-- Admin / super_admin / vendedor → siguen viendo todo igual.
+### 4. UI — columnas del tab
+`src/components/embarque/tabDocumentos/useDocumentoColumns.tsx`
+- Nueva acción **"No aplica"** (icono `Ban` / `MinusCircle`) visible cuando:
+  - `canEdit === true`
+  - `doc.archivo` está vacío (no se permite marcar No aplica si ya hay archivo subido)
+  - `doc.nombre !== 'BL Master'` (siempre obligatorio)
+- Si `doc.estado === 'No aplica'` el botón cambia a **"Marcar pendiente"** para deshacer.
+- Cuando un documento está en `No aplica`: ocultar el botón "Subir" para evitar confusión (se reactiva al deshacer).
 
-### 2. Tabs "Todos / Míos" en el dashboard
+### 5. UI — visual del estado
+`src/lib/ui/uiMappings.ts` → `getDocEstadoColorClass`: agregar caso `"No aplica"` → `bg-muted-foreground/40` (gris neutro). El badge del estado mostrará "No aplica" igual que los demás (texto del enum).
 
-Tab bar arriba del contenido (debajo del `PageHeader`). Por defecto **Todos**.
+### 6. Conteos / dashboards (sin cambios funcionales, sólo verificación)
+- `useDashboardOperador.ts` ya filtra `.eq("estado", "Pendiente")` → automáticamente excluye "No aplica". ✓
+- Auditoría `docs_faltantes` ya busca sólo `Pendiente`. ✓
+- Sidebar / badges de "Docs incompletos" usan el mismo criterio. ✓
 
-- **Todos**: comportamiento actual (sin financieros si es operador).
-- **Míos**: filtra todas las listas (`alertasDemora`, `proximosArribos`, `embarquesMesSiguiente`, `cargasPorCliente`, conteo por estado, etc.) por `embarque.operador === currentUser.nombre/email`.
+### 7. Mantenimiento
+- Bump `APP_VERSION` a **12.50.3**.
+- Entrada en `CHANGELOG.md` describiendo la nueva acción y la regla de BL Master.
 
-Filtrado en cliente sobre los datos que ya devuelve `useDashboardData`. No cambia RPCs.
-
-### 3. Tres widgets nuevos (operativos, sin $)
-
-Nueva sección "Mi operación" visible solo para operador (y admin si quiere monitor):
-
-- **Mis pendientes hoy** — embarques asignados al usuario con acciones pendientes detectadas:
-  - Falta confirmar arribo (ETA ≤ hoy y estado aún En Tránsito)
-  - Falta evento de tracking del día
-  - Documentación incompleta
-  
-- **Docs faltantes** — conteo + lista corta de embarques activos del operador con documentos faltantes (reutilizar la lógica del badge "Docs Alert" ya existente — ver `mem://features/shipment-docs-alert`).
-
-- **Sin tracking reciente** — embarques En Tránsito / En Aduana sin nuevo evento de tracking en los últimos N días (default 3).
-
-Cada card: header con icono + título + contador, lista compacta de máx. 5, link "Ver todos".
-
-## Detalle técnico
-
-- `src/pages/dashboard/Dashboard.tsx`: agregar `usePermissions`, `useState` para tab activo (`"todos" | "mios"`), condicionar render de `ProfitTable` por `!isOperador`, pasar `scope` a los componentes que lo necesiten, montar nueva sección `<MiOperacionSection />` cuando `isOperador`.
-- `src/components/dashboard/ArribosCard.tsx`: prop `hideFinancials?: boolean` — oculta los 3 tiles de $.
-- `src/components/dashboard/EmbarquesActivosTable.tsx`: prop `hideFinancials?: boolean` — filtra columnas (`columns.filter(c => !["profit","facturado"].includes(c.id))`) y oculta tiles de $.
-- Nuevo `src/components/dashboard/operador/MiOperacionSection.tsx` (≤200 líneas) con 3 sub-cards. Si crece, separar cada widget en su propio archivo.
-- Nuevo hook `src/hooks/dashboard/useDashboardOperador.ts` que consulta:
-  - embarques activos del operador con flags `tracking_atrasado`, `docs_incompletos`, `arribo_pendiente`
-  - reutilizar selects existentes; servicio en `src/services/dashboard/operador.ts`
-- Filtro Tab "Míos": en el hook actual o memos del `Dashboard.tsx`, filtrar por `e.operador`. Identificar al usuario actual vía `useAuth().profile?.nombre_completo` (verificar campo exacto al implementar).
-
-## Versión y changelog
-
-- Bump `APP_VERSION` a **12.50.0** (nueva feature, no patch).
-- Entrada en `CHANGELOG.md` describiendo: bloqueo financiero para operador, tabs Todos/Míos, widgets Mis pendientes / Docs faltantes / Sin tracking reciente.
-
-## Fuera de alcance
-
-- Cambios en RLS o RPCs (los datos ya están disponibles).
-- Dashboard ejecutivo / Profit (esos no los ve el operador).
-- Cambios en sidebar u otras rutas.
+## Notas técnicas
+- `BL Master` se identifica por el nombre exacto (es el documento sembrado por defecto en `useCreateEmbarque`). No se introduce un campo `obligatorio` en BD para mantener el cambio mínimo; si más adelante se requiere marcar otros como obligatorios, se puede migrar a un flag booleano.
+- El UPDATE pasa por las políticas RLS existentes (`Tenant CRUD documentos_embarque`), no se requieren cambios de seguridad.
+- Las funciones de servicio reutilizan el patrón `.select('id')` para detectar 0 filas afectadas y lanzar error explícito.

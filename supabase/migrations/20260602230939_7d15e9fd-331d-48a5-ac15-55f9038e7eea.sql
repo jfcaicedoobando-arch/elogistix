@@ -1,0 +1,1 @@
+ALTER TYPE public.estado_documento ADD VALUE IF NOT EXISTS 'No aplica';
