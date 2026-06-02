@@ -9,6 +9,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
+/** Returns true when the provided secret matches the header value. */
+export function checkCronSecret(
+  secret: string | undefined,
+  headerValue: string | null,
+): boolean {
+  return !!(secret && headerValue === secret);
+}
+
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -19,7 +27,7 @@ Deno.serve(async (req) => {
   // @ts-expect-error Deno global
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
-  if (!cronSecret || headerSecret !== cronSecret) {
+  if (!checkCronSecret(cronSecret, headerSecret)) {
     log.finish(401, "unauthorized_cron");
     return new Response(
       JSON.stringify({ ok: false, error: "Unauthorized" }),

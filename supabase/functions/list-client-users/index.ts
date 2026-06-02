@@ -7,7 +7,7 @@ import { createLogger } from "../_shared/logger.ts";
 
 interface Body { cliente_id: string }
 
-function parseBody(raw: unknown): Body | null {
+export function parseBody(raw: unknown): Body | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (typeof r.cliente_id !== "string" || !r.cliente_id) return null;

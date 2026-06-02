@@ -2,8 +2,16 @@ import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
 
-const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5 };
+export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5 };
 const FETCH_TIMEOUT_MS = 5000;
+
+/** Pure helper: derives usdMxn / eurMxn from a Frankfurter API response. */
+export function computeRates(data: unknown): { usdMxn: number; eurMxn: number } {
+  const d = data as { rates?: { USD?: number; EUR?: number } } | null;
+  const usdMxn = d?.rates?.USD ? +(1 / d.rates.USD).toFixed(4) : FALLBACK.usdMxn;
+  const eurMxn = d?.rates?.EUR ? +(1 / d.rates.EUR).toFixed(4) : FALLBACK.eurMxn;
+  return { usdMxn, eurMxn };
+}
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);
@@ -20,9 +28,7 @@ Deno.serve(async (req) => {
     );
     if (!res.ok) throw new Error(`frankfurter ${res.status}`);
     const data = await res.json();
-
-    const usdMxn = data.rates?.USD ? +(1 / data.rates.USD).toFixed(4) : FALLBACK.usdMxn;
-    const eurMxn = data.rates?.EUR ? +(1 / data.rates.EUR).toFixed(4) : FALLBACK.eurMxn;
+    const { usdMxn, eurMxn } = computeRates(data);
 
     log.finish(200, "rates_ok", { payload: { usdMxn, eurMxn } });
     return jsonResponse({ usdMxn, eurMxn });

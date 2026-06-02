@@ -22,7 +22,7 @@ type AdminClient = {
  * - Si no es admin y no hay org del helper → busca membresía explícita.
  * Lanza "403:Sin organización" si el usuario no-admin no tiene membresía.
  */
-async function resolveOrgScope(
+export async function resolveOrgScope(
   adminClient: AdminClient,
   userId: string,
   isGlobalAdmin: boolean,
@@ -44,7 +44,7 @@ async function resolveOrgScope(
  * Filtra la lista de usuarios al scope de la organización pedida.
  * Para global admins (orgId puede ser null) devuelve todos los users.
  */
-async function filterUsersByOrg<T extends { id: string }>(
+export async function filterUsersByOrg<T extends { id: string }>(
   adminClient: AdminClient,
   users: T[],
   isGlobalAdmin: boolean,
