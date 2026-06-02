@@ -13,6 +13,7 @@ import {
   uploadDocumentoEmbarque,
   deleteDocumentoEmbarque,
   createDocumentoEmbarqueRow,
+  setDocumentoEstadoNoAplica,
 } from '@/services/embarque';
 import { sincronizarContenedores } from '@/services/embarque/contenedores';
 import type { ContenedorBorrador } from '@/types/embarque/contenedor';
