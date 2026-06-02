@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { ProveedorCombobox } from "./ProveedorCombobox";
 import { useCrearFacturaProveedor } from "@/hooks/cxp";
+import { usePresupuestoCategorias } from "@/hooks/presupuesto";
 import type { Database } from "@/integrations/supabase/types";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
@@ -31,6 +32,7 @@ function addDays(iso: string, days: number): string {
 export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
   const { user } = useAuth();
   const crear = useCrearFacturaProveedor();
+  const cats = usePresupuestoCategorias(true);
   const today = new Date().toISOString().slice(0, 10);
 
   const [provId, setProvId] = useState("");
@@ -44,6 +46,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
   const [iva, setIva] = useState(0);
   const [retenciones, setRetenciones] = useState(0);
   const [notas, setNotas] = useState("");
+  const [categoriaId, setCategoriaId] = useState<string>("");
 
   const total = Number(subtotal) + Number(iva) - Number(retenciones);
   const venc = addDays(emision, Number(diasCredito) || 0);
@@ -51,7 +54,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
   const reset = () => {
     setProvId(""); setProvNombre(""); setFolio(""); setEmision(today);
     setDiasCredito(30); setMoneda("MXN"); setTc(0);
-    setSubtotal(0); setIva(0); setRetenciones(0); setNotas("");
+    setSubtotal(0); setIva(0); setRetenciones(0); setNotas(""); setCategoriaId("");
   };
 
   const submit = async () => {
@@ -74,6 +77,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
         total,
         estado: "Vigente",
         notas,
+        categoria_presupuesto_id: categoriaId || null,
         created_by: user?.id,
       });
       toast.success("Factura de proveedor capturada");
@@ -144,6 +148,18 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
           <div>
             <Label>Total</Label>
             <Input value={total.toFixed(2)} readOnly className="bg-muted font-semibold tabular-nums" />
+          </div>
+          <div className="col-span-2">
+            <Label>Categoría presupuestal (opcional)</Label>
+            <Select value={categoriaId || "ninguna"} onValueChange={(v) => setCategoriaId(v === "ninguna" ? "" : v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ninguna">Sin categoría</SelectItem>
+                {(cats.data ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="col-span-2">
             <Label>Notas</Label>

@@ -107,3 +107,5 @@ export function useResumenTesoreria() {
     staleTime: 60_000,
   });
 }
+
+export { useFlujoProyectado } from "./useFlujoProyectado";

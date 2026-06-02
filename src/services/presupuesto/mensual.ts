@@ -1,0 +1,51 @@
+/**
+ * Captura del presupuesto mensual: lectura por año + upsert por celda.
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+export type PresupuestoMensualRow = Tables<"presupuesto_mensual">;
+
+export interface CeldaPresupuesto {
+  categoria_id: string;
+  periodo: string; // YYYY-MM
+  monto_mxn: number;
+  id?: string;
+}
+
+export async function fetchPresupuestoMensualAnio(anio: number): Promise<PresupuestoMensualRow[]> {
+  const desde = `${anio}-01`;
+  const hasta = `${anio}-12`;
+  const { data, error } = await supabase
+    .from("presupuesto_mensual")
+    .select("*")
+    .gte("periodo", desde)
+    .lte("periodo", hasta)
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as PresupuestoMensualRow[];
+}
+
+export interface UpsertCeldaParams {
+  categoria_id: string;
+  periodo: string;
+  monto_mxn: number;
+  organization_id: string;
+  creado_por?: string | null;
+}
+
+export async function upsertCeldaPresupuesto(p: UpsertCeldaParams): Promise<void> {
+  const { error } = await supabase
+    .from("presupuesto_mensual")
+    .upsert(
+      {
+        categoria_id: p.categoria_id,
+        periodo: p.periodo,
+        monto_mxn: p.monto_mxn,
+        organization_id: p.organization_id,
+        creado_por: p.creado_por ?? null,
+      },
+      { onConflict: "organization_id,categoria_id,periodo" },
+    );
+  if (error) throw error;
+}

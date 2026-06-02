@@ -2884,6 +2884,80 @@ export type Database = {
         }
         Relationships: []
       }
+      presupuesto_categorias: {
+        Row: {
+          activa: boolean
+          created_at: string
+          id: string
+          nombre: string
+          orden: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          created_at?: string
+          id?: string
+          nombre: string
+          orden?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          created_at?: string
+          id?: string
+          nombre?: string
+          orden?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      presupuesto_mensual: {
+        Row: {
+          categoria_id: string
+          creado_por: string | null
+          created_at: string
+          id: string
+          monto_mxn: number
+          notas: string | null
+          organization_id: string
+          periodo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria_id: string
+          creado_por?: string | null
+          created_at?: string
+          id?: string
+          monto_mxn?: number
+          notas?: string | null
+          organization_id?: string
+          periodo: string
+          updated_at?: string
+        }
+        Update: {
+          categoria_id?: string
+          creado_por?: string | null
+          created_at?: string
+          id?: string
+          monto_mxn?: number
+          notas?: string | null
+          organization_id?: string
+          periodo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presupuesto_mensual_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "presupuesto_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proforma_conceptos_consolidados: {
         Row: {
           aplica_iva: boolean
@@ -3130,6 +3204,7 @@ export type Database = {
         Row: {
           archivo_pdf_url: string | null
           archivo_xml_url: string | null
+          categoria_presupuesto_id: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -3158,6 +3233,7 @@ export type Database = {
         Insert: {
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
+          categoria_presupuesto_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -3186,6 +3262,7 @@ export type Database = {
         Update: {
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
+          categoria_presupuesto_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -3211,7 +3288,15 @@ export type Database = {
           updated_at?: string
           uuid_fiscal?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_facturas_categoria_presupuesto_id_fkey"
+            columns: ["categoria_presupuesto_id"]
+            isOneToOne: false
+            referencedRelation: "presupuesto_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proveedor_facturas_conceptos: {
         Row: {
@@ -4380,6 +4465,10 @@ export type Database = {
       }
       restore_record: {
         Args: { _id: string; _table: string }
+        Returns: undefined
+      }
+      seed_presupuesto_categorias: {
+        Args: { p_organization_id: string }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
