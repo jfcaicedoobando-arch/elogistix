@@ -64,7 +64,7 @@ describe("fetchEmbarquesPaginados", () => {
     expect(result.extras.docs["r1"]).toEqual({ total: 10, pendientes: 3 });
   });
 
-  it("throws when RPC returns an error", async () => {
+  it("throws when fetchEmbarquesPaginados RPC errors", async () => {
     mock.setRpcResult("embarques_listado", { data: null, error: new Error("timeout") });
     await expect(fetchEmbarquesPaginados(BASE_FILTERS)).rejects.toThrow("timeout");
   });
@@ -79,7 +79,7 @@ describe("fetchEmbarquesRelacionados", () => {
     expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq", "order"]));
   });
 
-  it("throws when supabase returns an error", async () => {
+  it("throws when fetchEmbarquesRelacionados supabase errors", async () => {
     mock.setTableResult("embarques", { data: null, error: new Error("bl error") });
     await expect(fetchEmbarquesRelacionados("emb-1", "BL-X")).rejects.toThrow("bl error");
   });
@@ -110,7 +110,7 @@ describe("fetchEmbarquesListExtras", () => {
     expect(result.docs["e1"]).toEqual({ total: 5, pendientes: 2 });
   });
 
-  it("throws when RPC returns an error", async () => {
+  it("throws when fetchEmbarquesListExtras RPC errors", async () => {
     mock.setRpcResult("embarques_list_extras", { data: null, error: new Error("extras fail") });
     await expect(fetchEmbarquesListExtras(["e1"])).rejects.toThrow("extras fail");
   });

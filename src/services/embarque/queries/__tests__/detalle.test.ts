@@ -23,7 +23,7 @@ describe("fetchEmbarqueById", () => {
     expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq"]));
   });
 
-  it("throws when supabase returns an error", async () => {
+  it("throws when fetchEmbarqueById supabase errors", async () => {
     mock.setTableResult("embarques", { data: null, error: new Error("not found") });
     await expect(fetchEmbarqueById(UUID)).rejects.toThrow("not found");
   });
@@ -81,7 +81,7 @@ describe("fetchEmbarqueFull", () => {
     expect(result?.facturas).toEqual([]);
   });
 
-  it("throws when RPC returns an error", async () => {
+  it("throws when fetchEmbarqueFull RPC errors", async () => {
     mock.setRpcResult("get_embarque_full", { data: null, error: new Error("rpc fail") });
     await expect(fetchEmbarqueFull(UUID)).rejects.toThrow("rpc fail");
   });

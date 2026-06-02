@@ -33,7 +33,7 @@ describe("fetchEmbarqueConceptosVenta", () => {
     expect(result[0]?.descripcion).toBe("Flete");
   });
 
-  it("throws when supabase returns an error", async () => {
+  it("throws when fetchEmbarqueConceptosVenta supabase errors", async () => {
     mock.setTableResult("conceptos_venta", { data: null, error: new Error("rls") });
     await expect(fetchEmbarqueConceptosVenta(EMBARQUE_ID)).rejects.toThrow("rls");
   });
@@ -56,7 +56,7 @@ describe("fetchEmbarqueConceptosCosto", () => {
     expect(result[0]?.concepto).toBe("Almacenaje");
   });
 
-  it("throws when supabase returns an error", async () => {
+  it("throws when fetchEmbarqueConceptosCosto supabase errors", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: new Error("db err") });
     await expect(fetchEmbarqueConceptosCosto(EMBARQUE_ID)).rejects.toThrow("db err");
   });

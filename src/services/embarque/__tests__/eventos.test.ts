@@ -40,7 +40,7 @@ describe("fetchEventosEmbarque", () => {
     expect(result[0]?.tipo).toBe("arribo");
   });
 
-  it("throws when supabase returns an error", async () => {
+  it("throws when insertEventoEmbarque supabase returns an error", async () => {
     mock.setTableResult("eventos_embarque", { data: null, error: new Error("db error") });
     await expect(fetchEventosEmbarque(EMBARQUE_ID)).rejects.toThrow("db error");
   });
