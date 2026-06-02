@@ -105,6 +105,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="operador">Operador</SelectItem>
+                <SelectItem value="vendedor">Vendedor</SelectItem>
                 <SelectItem value="viewer">Viewer</SelectItem>
               </SelectContent>
             </Select>
