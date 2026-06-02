@@ -81,12 +81,16 @@ function resolverBucketContenedor(
 export function agruparProformasPendientes<T extends ProformaPendienteLite>(
   proformas: T[],
 ): GrupoExpediente<T>[] {
-  const porExpediente = new Map<string, GrupoExpediente<T>>();
+  const porEmbarque = new Map<string, GrupoExpediente<T>>();
 
   for (const p of proformas) {
-    const key = p.expediente;
-    if (!porExpediente.has(key)) {
-      porExpediente.set(key, {
+    // Agrupar por embarque_id (no por expediente): el mismo expediente puede
+    // estar repartido en varios embarques (un embarque por contenedor) y la
+    // consolidación a nivel RPC exige un único embarque_id. Fallback al
+    // expediente sólo por defensa para datos legacy donde embarque_id fuera null.
+    const key = p.embarque_id ?? `exp:${p.expediente}`;
+    if (!porEmbarque.has(key)) {
+      porEmbarque.set(key, {
         expediente: p.expediente,
         embarqueId: p.embarque_id!,
         blMaster: p.embarques?.bl_master ?? p.bl_master ?? null,
@@ -98,10 +102,10 @@ export function agruparProformasPendientes<T extends ProformaPendienteLite>(
         contenedores: [],
       });
     }
-    porExpediente.get(key)!.proformas.push(p);
+    porEmbarque.get(key)!.proformas.push(p);
   }
 
-  for (const grupo of porExpediente.values()) {
+  for (const grupo of porEmbarque.values()) {
     const porContenedor = new Map<string, GrupoContenedor<T>>();
     for (const p of grupo.proformas) {
       const { numero, tipo } = resolverBucketContenedor(p);
@@ -114,10 +118,12 @@ export function agruparProformasPendientes<T extends ProformaPendienteLite>(
     grupo.contenedores = Array.from(porContenedor.values());
   }
 
-  return Array.from(porExpediente.values()).sort((a, b) =>
-    a.expediente.localeCompare(b.expediente),
-  );
+  return Array.from(porEmbarque.values()).sort((a, b) => {
+    const cmp = a.expediente.localeCompare(b.expediente);
+    return cmp !== 0 ? cmp : a.embarqueId.localeCompare(b.embarqueId);
+  });
 }
+
 
 /**
  * Devuelve el monto principal a mostrar de una proforma pendiente:
