@@ -43,33 +43,6 @@ export function buildProformasColumns({
       cell: ({ row }) => row.original.expediente,
     },
     {
-      id: "bl_master",
-      header: "BL Master",
-      accessorFn: (p) => p.bl_master ?? "",
-      enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.bl_master),
-      meta: { width: "w-[140px]", className: "text-xs font-mono whitespace-nowrap" },
-      cell: ({ row }) => row.original.bl_master || <span className="text-muted-foreground">—</span>,
-    },
-    {
-      id: "tipo",
-      header: "Tipo",
-      accessorFn: (p) => (p.es_consolidada ? `Consolidada-${p.proformas_origen?.length ?? 0}` : "Individual"),
-      enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) =>
-        p.es_consolidada ? `Consolidada-${p.proformas_origen?.length ?? 0}` : "Individual",
-      ),
-      meta: { width: "w-[140px]" },
-      cell: ({ row }) => {
-        const p = row.original;
-        if (p.es_consolidada) {
-          const n = p.proformas_origen?.length ?? 0;
-          return <Badge variant="info" className="whitespace-nowrap">Consolidada{n > 0 ? ` (${n})` : ""}</Badge>;
-        }
-        return <Badge variant="neutral" className="whitespace-nowrap">Individual</Badge>;
-      },
-    },
-    {
       id: "cliente",
       header: "Cliente",
       accessorFn: (p) => p.cliente_nombre,
@@ -86,33 +59,6 @@ export function buildProformasColumns({
       sortingFn: sortByString<ProformaConFactura>((p) => p.operador),
       meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap" },
       cell: ({ row }) => row.original.operador ? nombreDesdeEmail(row.original.operador) : <span className="text-muted-foreground">—</span>,
-    },
-    {
-      id: "dias_credito",
-      header: "Días Crédito",
-      accessorFn: (p) => p.dias_credito ?? -1,
-      enableSorting: true,
-      sortingFn: sortByNumber<ProformaConFactura>((p) => p.dias_credito),
-      meta: { width: "w-[110px]", className: "text-right text-xs whitespace-nowrap" },
-      cell: ({ row }) => formatDiasCredito(row.original.dias_credito),
-    },
-    {
-      id: "monto_usd",
-      header: "Monto USD",
-      accessorFn: (p) => Number(p.total_usd),
-      enableSorting: true,
-      sortingFn: sortByNumber<ProformaConFactura>((p) => Number(p.total_usd)),
-      meta: { width: "w-[130px]", className: "text-right whitespace-nowrap" },
-      cell: ({ row }) => Number(row.original.total_usd) > 0 ? formatCurrency(Number(row.original.total_usd), "USD") : "—",
-    },
-    {
-      id: "monto_mxn",
-      header: "Monto MXN",
-      accessorFn: (p) => Number(p.total_mxn),
-      enableSorting: true,
-      sortingFn: sortByNumber<ProformaConFactura>((p) => Number(p.total_mxn)),
-      meta: { width: "w-[140px]", className: "text-right whitespace-nowrap" },
-      cell: ({ row }) => Number(row.original.total_mxn) > 0 ? formatCurrency(Number(row.original.total_mxn), "MXN") : "—",
     },
     {
       id: "fecha",
@@ -135,27 +81,6 @@ export function buildProformasColumns({
         return estado === "facturada"
           ? <Badge variant="success">Facturada</Badge>
           : <Badge variant="warning">Pendiente</Badge>;
-      },
-    },
-    {
-      id: "folio_factura",
-      header: "Folio Factura",
-      accessorFn: (p) => p.folio_factura_externa ?? "",
-      enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.folio_factura_externa),
-      meta: { width: "w-[180px]", className: "text-xs" },
-      cell: ({ row }) => {
-        const p = row.original;
-        if (!p.folio_factura_externa) return <span className="text-muted-foreground">—</span>;
-        const pdfUrl = p.facturas?.factura_pdf_url;
-        const xmlUrl = p.facturas?.factura_xml_url;
-        return (
-          <div className="flex items-center gap-1">
-            <span className="font-mono">{p.folio_factura_externa}</span>
-            {pdfUrl && <FacturaDownloadButton stored={pdfUrl} kind="pdf" size="sm" />}
-            {xmlUrl && <FacturaDownloadButton stored={xmlUrl} kind="xml" size="sm" />}
-          </div>
-        );
       },
     },
     {
