@@ -124,6 +124,14 @@ export const appRoutes = (
     <Route path="/profit" element={<Navigate to="/profit/proyeccion" replace />} />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
+    <Route
+      path="/profit/presupuesto"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+          <ProfitPresupuesto />
+        </ProtectedRoute>
+      }
+    />
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
     <Route path="/proveedores" element={<Proveedores />} />

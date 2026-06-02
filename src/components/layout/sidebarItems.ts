@@ -28,6 +28,7 @@ import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 export const SIDEBAR_PROFIT_ITEMS: SidebarItem[] = [
   { title: "Proyección", url: "/profit/proyeccion", icon: TrendingUp },
   { title: "Estado de Resultados", url: "/profit/estado-resultados", icon: PiggyBank },
+  { title: "Presupuesto vs Real", url: "/profit/presupuesto", icon: BarChart3 },
 ];
 
 export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
