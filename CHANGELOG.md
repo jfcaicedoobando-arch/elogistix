@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.49.5] - 2026-06-02
+- **chore(facturacion/proformas-columnas)**: Se simplificó la tabla del tab "2. Proformas" en Pre-Facturación eliminando las columnas BL Master, Tipo (Individual/Consolidada), Días Crédito, Monto USD, Monto MXN y Folio Factura. Quedan: # Proforma, Expediente, Cliente, Operador, Fecha, Estado y Acciones. La exportación CSV sigue incluyendo todos los campos. Bump 12.49.5.
+
 ## [12.49.4] - 2026-06-02
 - **feat(sidebar/rol-operador)**: El sidebar del rol `operador` ahora muestra sólo módulos de operación diaria: Dashboards (Principal, Operaciones), Gestión (Cotizaciones, Embarques, Pre-Facturación), Directorio (Clientes, Proveedores) y Ayuda. Se ocultan CxP, Tesorería, Comisiones, Profit, CRM, Reportes, Auditoría, Bitácora y Sentry. Admin, super_admin y vendedor sin cambios. Bump 12.49.4.
 
