@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { dialogSize } from "@/lib/ui/dialogTokens";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
 import { useToast } from "@/hooks/shared";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import {
@@ -22,6 +22,7 @@ import {
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
+import { HistorialNotasCredito } from "./HistorialNotasCredito";
 import type { Database } from "@/integrations/supabase/types";
 
 type Motivo = Database["public"]["Enums"]["motivo_nota_credito"];
@@ -43,12 +44,6 @@ interface Props {
   canApprove: boolean;
 }
 
-const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
-  Borrador: "bg-muted text-muted-foreground",
-  Aprobada: "bg-warning/10 text-warning border-warning/20",
-  Aplicada: "bg-success/10 text-success border-success/20",
-  Cancelada: "bg-destructive/10 text-destructive border-destructive/20",
-};
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -175,52 +170,13 @@ export function DialogNotaCredito({ open, onOpenChange, factura, canApprove }: P
 
           <div className="space-y-2">
             <h4 className="text-sm font-semibold">Historial</h4>
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Cargando…</p>
-            ) : notas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No hay notas de crédito.</p>
-            ) : (
-              <div className="space-y-1.5">
-                {notas.map((n) => (
-                  <div key={n.id} className="flex items-center justify-between gap-2 rounded border p-2 text-sm">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs">{n.folio}</span>
-                        <Badge variant="outline" className={ESTADO_COLOR[n.estado]}>{n.estado}</Badge>
-                        <span className="text-xs text-muted-foreground">{n.motivo}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(n.fecha_emision)} · {n.descripcion || "—"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium tabular-nums">
-                        {formatCurrency(Number(n.monto), n.moneda)}
-                      </span>
-                      {canApprove && n.estado === "Borrador" && (
-                        <Button size="sm" variant="outline"
-                          disabled={cambiar.isPending}
-                          onClick={() => handleCambioEstado(n.id, "Borrador", "Aprobada")}>
-                          Aprobar
-                        </Button>
-                      )}
-                      {canApprove && n.estado === "Aprobada" && (
-                        <Button size="sm" disabled={cambiar.isPending}
-                          onClick={() => handleCambioEstado(n.id, "Aprobada", "Aplicada")}>
-                          Aplicar
-                        </Button>
-                      )}
-                      {(n.estado === "Borrador" || n.estado === "Aprobada") && (
-                        <Button size="sm" variant="ghost" disabled={cambiar.isPending}
-                          onClick={() => handleCambioEstado(n.id, n.estado, "Cancelada")}>
-                          Cancelar
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <HistorialNotasCredito
+              notas={notas as Parameters<typeof HistorialNotasCredito>[0]["notas"]}
+              isLoading={isLoading}
+              canApprove={canApprove}
+              isPending={cambiar.isPending}
+              onCambiarEstado={handleCambioEstado}
+            />
           </div>
         </div>
 
