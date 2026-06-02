@@ -5,13 +5,12 @@
  * compone con celdas visuales.
  */
 import { Download, FileCheck2 } from "lucide-react";
-import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail, formatDiasCredito } from "@/lib/formatters";
+import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque";
-import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 
 interface BuildArgs {
   descargar: (p: ProformaConFactura) => void;
