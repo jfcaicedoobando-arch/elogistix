@@ -72,20 +72,20 @@ export function ReporteCarteraDocument({ fechaCorte, cxc, cxp, emisor }: Props) 
           </View>
         </View>
 
-        <Text style={[styles.h2, { marginTop: 8 }]}>Cuentas por cobrar — Antigüedad</Text>
+        <Text style={[styles.h3, { marginTop: 8 }]}>Cuentas por cobrar — Antigüedad</Text>
         <DataTable columns={colsAging} rows={agingCxC} />
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Top 10 clientes con saldo vencido</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Top 10 clientes con saldo vencido</Text>
         {topCxC.length === 0 ? (
           <Text style={styles.paragraph}>Sin cartera vencida.</Text>
         ) : (
           <DataTable columns={colsTopCxC} rows={topCxC} />
         )}
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Cuentas por pagar — Antigüedad</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Cuentas por pagar — Antigüedad</Text>
         <DataTable columns={colsAging} rows={agingCxP} />
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Top 10 proveedores con saldo</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Top 10 proveedores con saldo</Text>
         {topCxP.length === 0 ? (
           <Text style={styles.paragraph}>Sin facturas por pagar.</Text>
         ) : (

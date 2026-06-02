@@ -15,7 +15,7 @@ interface Props {
 const MODOS: ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre"];
 
 type FilaPlana = {
-  descripcion: string;
+  concepto: string;
   total: number;
   maritimo: number;
   aereo: number;
@@ -24,7 +24,7 @@ type FilaPlana = {
 
 function aplanar(filas: FilaER[]): FilaPlana[] {
   return filas.map((f) => ({
-    descripcion: f.descripcion,
+    concepto: f.concepto,
     total: f.total,
     maritimo: f.porModo["Marítimo"] ?? 0,
     aereo: f.porModo["Aéreo"] ?? 0,
@@ -33,7 +33,7 @@ function aplanar(filas: FilaER[]): FilaPlana[] {
 }
 
 const cols: PdfColumn<FilaPlana>[] = [
-  { key: "desc", title: "Concepto", cellStyle: styles.cellDesc, render: (r) => r.descripcion },
+  { key: "desc", title: "Concepto", cellStyle: styles.cellDesc, render: (r) => r.concepto },
   { key: "mar", title: "Marítimo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.maritimo, "MXN") },
   { key: "aer", title: "Aéreo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.aereo, "MXN") },
   { key: "ter", title: "Terrestre", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.terrestre, "MXN") },
@@ -84,10 +84,10 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
           </View>
         </View>
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Ingresos</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Ingresos</Text>
         <DataTable columns={cols} rows={ingresos} />
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Costos</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Costos</Text>
         <DataTable columns={cols} rows={costos} />
 
         <View style={{ marginTop: 12, padding: 8, backgroundColor: "#F8FAFC", borderRadius: 4 }}>

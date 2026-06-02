@@ -35,14 +35,14 @@ export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props)
           </View>
         </View>
 
-        <Text style={[styles.h2, { marginTop: 8 }]}>Saldos en bancos</Text>
+        <Text style={[styles.h3, { marginTop: 8 }]}>Saldos en bancos</Text>
         {resumen.cuentas.length === 0 ? (
           <Text style={styles.paragraph}>Sin cuentas bancarias configuradas.</Text>
         ) : (
           <DataTable columns={colsCuentas} rows={resumen.cuentas} />
         )}
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Flujo esperado 30 días</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Flujo esperado 30 días</Text>
         <View style={styles.kpiRow}>
           <View style={styles.kpiCard}>
             <View style={styles.kpiInner}>
@@ -70,14 +70,14 @@ export function ReporteTesoreriaDocument({ fechaCorte, resumen, emisor }: Props)
           </View>
         </View>
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Top 5 deudores vencidos</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 deudores vencidos</Text>
         {resumen.top_deudores.length === 0 ? (
           <Text style={styles.paragraph}>Sin deudores vencidos.</Text>
         ) : (
           <DataTable columns={colsTop} rows={resumen.top_deudores} />
         )}
 
-        <Text style={[styles.h2, { marginTop: 12 }]}>Top 5 vencimientos próximos a proveedor</Text>
+        <Text style={[styles.h3, { marginTop: 12 }]}>Top 5 vencimientos próximos a proveedor</Text>
         {resumen.top_acreedores.length === 0 ? (
           <Text style={styles.paragraph}>Sin vencimientos próximos.</Text>
         ) : (
