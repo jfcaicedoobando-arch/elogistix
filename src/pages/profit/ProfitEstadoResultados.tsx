@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Calendar, Download, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Download, FileText, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,8 @@ import {
   buildEstadoResultadosCsvRows,
 } from "@/components/profit/EstadoResultadosTable";
 import { exportToCsv } from "@/generators/exportCsv";
+import { descargarPdf } from "@/pdf/render/descargarPdf";
+import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -23,6 +25,14 @@ export default function ProfitEstadoResultados() {
       `estado-resultados-${c.mesActual.key}.csv`,
       ESTADO_RESULTADOS_CSV_HEADERS,
       buildEstadoResultadosCsvRows(data),
+    );
+  };
+
+  const handleExportPdf = async () => {
+    if (!data) return;
+    await descargarPdf(
+      <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} />,
+      `Reporte_EERR_${c.mesActual.key}.pdf`,
     );
   };
 
@@ -64,6 +74,9 @@ export default function ProfitEstadoResultados() {
           <div className="flex-1" />
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
+          </Button>
+          <Button variant="outline" onClick={handleExportPdf} disabled={!data || sinDatos === true}>
+            <FileText className="h-4 w-4 mr-2" /> PDF
           </Button>
         </CardContent>
       </Card>

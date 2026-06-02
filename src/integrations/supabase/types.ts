@@ -492,6 +492,82 @@ export type Database = {
           },
         ]
       }
+      comisiones_devengadas: {
+        Row: {
+          comision_mxn: number
+          created_at: string
+          embarque_id: string | null
+          estado: Database["public"]["Enums"]["estado_comision"]
+          factura_id: string
+          id: string
+          liquidacion_id: string | null
+          monto_cobrado_mxn: number
+          nota: string | null
+          organization_id: string
+          pago_factura_id: string
+          porcentaje_aplicado: number
+          updated_at: string
+          utilidad_prorrateada_mxn: number
+          vendedora_id: string | null
+        }
+        Insert: {
+          comision_mxn?: number
+          created_at?: string
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_comision"]
+          factura_id: string
+          id?: string
+          liquidacion_id?: string | null
+          monto_cobrado_mxn?: number
+          nota?: string | null
+          organization_id: string
+          pago_factura_id: string
+          porcentaje_aplicado?: number
+          updated_at?: string
+          utilidad_prorrateada_mxn?: number
+          vendedora_id?: string | null
+        }
+        Update: {
+          comision_mxn?: number
+          created_at?: string
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_comision"]
+          factura_id?: string
+          id?: string
+          liquidacion_id?: string | null
+          monto_cobrado_mxn?: number
+          nota?: string | null
+          organization_id?: string
+          pago_factura_id?: string
+          porcentaje_aplicado?: number
+          updated_at?: string
+          utilidad_prorrateada_mxn?: number
+          vendedora_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comisiones_devengadas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_devengadas_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_devengadas_pago_factura_id_fkey"
+            columns: ["pago_factura_id"]
+            isOneToOne: true
+            referencedRelation: "pagos_factura"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conceptos_costo: {
         Row: {
           concepto: string
@@ -1857,6 +1933,7 @@ export type Database = {
             | null
           transportista: string | null
           updated_at: string
+          vendedora_id: string | null
           volumen_m3: number
         }
         Insert: {
@@ -1913,6 +1990,7 @@ export type Database = {
             | null
           transportista?: string | null
           updated_at?: string
+          vendedora_id?: string | null
           volumen_m3?: number
         }
         Update: {
@@ -1969,6 +2047,7 @@ export type Database = {
             | null
           transportista?: string | null
           updated_at?: string
+          vendedora_id?: string | null
           volumen_m3?: number
         }
         Relationships: [
@@ -2351,6 +2430,51 @@ export type Database = {
           organization_id?: string
           response?: Json | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      liquidaciones_comision: {
+        Row: {
+          creada_por: string | null
+          created_at: string
+          fecha_pago: string | null
+          id: string
+          metodo_pago: string | null
+          notas: string | null
+          organization_id: string
+          periodo: string
+          referencia: string | null
+          total_mxn: number
+          updated_at: string
+          vendedora_id: string
+        }
+        Insert: {
+          creada_por?: string | null
+          created_at?: string
+          fecha_pago?: string | null
+          id?: string
+          metodo_pago?: string | null
+          notas?: string | null
+          organization_id: string
+          periodo: string
+          referencia?: string | null
+          total_mxn?: number
+          updated_at?: string
+          vendedora_id: string
+        }
+        Update: {
+          creada_por?: string | null
+          created_at?: string
+          fecha_pago?: string | null
+          id?: string
+          metodo_pago?: string | null
+          notas?: string | null
+          organization_id?: string
+          periodo?: string
+          referencia?: string | null
+          total_mxn?: number
+          updated_at?: string
+          vendedora_id?: string
         }
         Relationships: []
       }
@@ -3566,6 +3690,39 @@ export type Database = {
         }
         Relationships: []
       }
+      vendedora_config: {
+        Row: {
+          activa: boolean
+          created_at: string
+          fecha_alta: string
+          id: string
+          organization_id: string
+          porcentaje_default: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activa?: boolean
+          created_at?: string
+          fecha_alta?: string
+          id?: string
+          organization_id: string
+          porcentaje_default?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activa?: boolean
+          created_at?: string
+          fecha_alta?: string
+          id?: string
+          organization_id?: string
+          porcentaje_default?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_proveedor_facturas_saldo: {
@@ -3665,6 +3822,10 @@ export type Database = {
           tipo: string
           url: string
         }[]
+      }
+      calcular_comision_pago: {
+        Args: { p_pago_factura_id: string }
+        Returns: undefined
       }
       can_manage_document_object: {
         Args: { _object_name: string }
@@ -4029,6 +4190,14 @@ export type Database = {
         }[]
       }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
+      generar_liquidacion_comision: {
+        Args: {
+          p_organization_id: string
+          p_periodo: string
+          p_vendedora_id: string
+        }
+        Returns: string
+      }
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
       get_tracking_public: { Args: { p_token: string }; Returns: Json }
@@ -4276,6 +4445,7 @@ export type Database = {
         | "Llamada en frío"
         | "Evento"
         | "Otro"
+      estado_comision: "Devengada" | "Liquidada" | "Cancelada"
       estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado"
       estado_cotizacion:
         | "Borrador"
@@ -4528,6 +4698,7 @@ export const Constants = {
         "Evento",
         "Otro",
       ],
+      estado_comision: ["Devengada", "Liquidada", "Cancelada"],
       estado_conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
       estado_cotizacion: [
         "Borrador",

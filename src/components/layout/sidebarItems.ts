@@ -21,6 +21,7 @@ import {
   PiggyBank,
   Receipt,
   Landmark,
+  Percent,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -40,6 +41,7 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Pre-Facturación", url: "/facturacion", icon: FileText },
   { title: "Cuentas por Pagar", url: "/cxp", icon: Receipt },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
+  { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
 
 export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [

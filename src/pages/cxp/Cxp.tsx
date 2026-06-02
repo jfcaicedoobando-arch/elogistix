@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,9 @@ import { buildCxPColumns } from "@/components/cxp/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/components/cxp/DialogNuevaFacturaProveedor";
 import { DialogRegistrarPagoProveedor } from "@/components/cxp/DialogRegistrarPagoProveedor";
 import { DialogDetallePagosProveedor } from "@/components/cxp/DialogDetallePagosProveedor";
+import { useCobranza } from "@/hooks/facturacion";
+import { descargarPdf } from "@/pdf/render/descargarPdf";
+import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP, EstatusCxP } from "@/services/cxp/proveedorFacturas";
 
 const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
@@ -41,6 +44,17 @@ export default function Cxp() {
   const { data = [], isLoading, kpis } = useFacturasCxP({
     search: search || undefined, estatus, moneda,
   });
+  const { data: cxc = [] } = useCobranza({});
+
+  const handlePdf = async () => {
+    await descargarPdf(
+      <ReporteCarteraDocument
+        fechaCorte={new Date().toISOString().slice(0, 10)}
+        cxc={cxc} cxp={data}
+      />,
+      `Reporte_Cartera_${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  };
 
   const [openNueva, setOpenNueva] = useState(false);
   const [pagar, setPagar] = useState<FacturaCxP | null>(null);
@@ -69,11 +83,16 @@ export default function Cxp() {
         title="Cuentas por Pagar"
         description="Facturas recibidas de proveedores y su saldo pendiente"
         actions={
-          isAdmin && (
-            <Button onClick={() => setOpenNueva(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Capturar factura
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handlePdf}>
+              <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
-          )
+            {isAdmin && (
+              <Button onClick={() => setOpenNueva(true)}>
+                <Plus className="h-4 w-4 mr-2" /> Capturar factura
+              </Button>
+            )}
+          </div>
         }
       />
 

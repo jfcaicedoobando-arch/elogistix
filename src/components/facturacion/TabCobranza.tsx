@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -8,10 +10,13 @@ import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useCobranza } from "@/hooks/facturacion";
+import { useFacturasCxP } from "@/hooks/cxp";
 import { buildCobranzaColumns } from "./cobranzaColumns";
 import { DialogRegistrarPago } from "./DialogRegistrarPago";
 import { DialogNotaCredito } from "./DialogNotaCredito";
 import { DialogHistorialPagos } from "./DialogHistorialPagos";
+import { descargarPdf } from "@/pdf/render/descargarPdf";
+import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCobranza, EstatusCobranza } from "@/services/facturas/cobranza";
 
 const ESTATUS: Array<EstatusCobranza | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
@@ -40,10 +45,21 @@ export function TabCobranza() {
     estatus,
     moneda,
   });
+  const { data: cxp = [] } = useFacturasCxP({});
 
   const [pagoFactura, setPagoFactura] = useState<FacturaCobranza | null>(null);
   const [ncFactura, setNcFactura] = useState<FacturaCobranza | null>(null);
   const [detalleFactura, setDetalleFactura] = useState<FacturaCobranza | null>(null);
+
+  const handlePdf = async () => {
+    await descargarPdf(
+      <ReporteCarteraDocument
+        fechaCorte={new Date().toISOString().slice(0, 10)}
+        cxc={data} cxp={cxp}
+      />,
+      `Reporte_Cartera_${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  };
 
   const columns = useMemo(
     () => buildCobranzaColumns({
@@ -95,6 +111,9 @@ export function TabCobranza() {
               <SelectItem value="EUR">EUR</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={handlePdf}>
+            <FileText className="h-4 w-4 mr-2" /> Reporte PDF
+          </Button>
         </CardContent>
       </Card>
 

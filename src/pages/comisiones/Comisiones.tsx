@@ -1,0 +1,116 @@
+import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { DataTable } from "@/components/shared/DataTable";
+import { formatCurrency } from "@/lib/formatters";
+import { useComisionesDevengadas, useUsuariosVendedores } from "@/hooks/comisiones";
+import { buildComisionesColumns } from "@/components/comisiones/comisionesColumns";
+import { TabLiquidaciones } from "@/components/comisiones/TabLiquidaciones";
+import { TabVendedorasConfig } from "@/components/comisiones/TabVendedorasConfig";
+import type { EstadoComision } from "@/services/comisiones/devengadas";
+
+function KPICard({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-lg font-semibold tabular-nums">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+const ESTADOS: Array<EstadoComision | "todos"> = ["todos", "Devengada", "Liquidada", "Cancelada"];
+
+export default function Comisiones() {
+  const [vendedora, setVendedora] = useState<string>("todas");
+  const [estado, setEstado] = useState<EstadoComision | "todos">("todos");
+  const [periodo, setPeriodo] = useState<string>("");
+
+  const { data: vendedoras = [] } = useUsuariosVendedores();
+  const { data: comisiones = [], isLoading, kpis } = useComisionesDevengadas({
+    vendedora_id: vendedora as string | "todas",
+    estado,
+    periodo: periodo || undefined,
+  });
+
+  const columns = useMemo(() => buildComisionesColumns(), []);
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="Comisiones"
+        description="Comisiones devengadas al cobrar facturas y liquidaciones a vendedoras"
+      />
+
+      <Tabs defaultValue="devengadas" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="devengadas">Devengadas</TabsTrigger>
+          <TabsTrigger value="liquidaciones">Liquidaciones</TabsTrigger>
+          <TabsTrigger value="config">Configuración</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="devengadas" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <KPICard label="Devengado del mes" value={formatCurrency(kpis.devengado_mes_mxn, "MXN")} />
+            <KPICard label="Pendiente de liquidar" value={formatCurrency(kpis.pendiente_liquidar_mxn, "MXN")} />
+            <KPICard label="Liquidado del mes" value={formatCurrency(kpis.liquidado_mes_mxn, "MXN")} />
+          </div>
+
+          <Card>
+            <CardContent className="p-4 flex flex-wrap gap-3">
+              <Select value={vendedora} onValueChange={setVendedora}>
+                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas las vendedoras</SelectItem>
+                  {vendedoras.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>{v.nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={estado} onValueChange={(v) => setEstado(v as EstadoComision | "todos")}>
+                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ESTADOS.map((e) => (
+                    <SelectItem key={e} value={e}>{e === "todos" ? "Todos los estados" : e}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                type="month"
+                value={periodo}
+                onChange={(e) => setPeriodo(e.target.value)}
+                className="border rounded px-2 py-1.5 text-sm bg-background"
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-0">
+              <DataTable
+                columns={columns}
+                data={comisiones}
+                isLoading={isLoading}
+                emptyMessage="No hay comisiones devengadas"
+                rowKey={(c) => c.id}
+                density="comfortable"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="liquidaciones">
+          <TabLiquidaciones vendedoras={vendedoras} />
+        </TabsContent>
+
+        <TabsContent value="config">
+          <TabVendedorasConfig vendedoras={vendedoras} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

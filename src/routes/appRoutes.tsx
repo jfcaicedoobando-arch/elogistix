@@ -42,6 +42,7 @@ const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
 const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
 const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
 const TesoreriaConciliacion = lazy(() => import("@/pages/tesoreria/TesoreriaConciliacion"));
+const Comisiones = lazy(() => import("@/pages/comisiones/Comisiones"));
 
 const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
 const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
@@ -105,6 +106,10 @@ export const appRoutes = (
           <TesoreriaConciliacion />
         </ProtectedRoute>
       }
+    />
+    <Route
+      path="/comisiones"
+      element={<Comisiones />}
     />
     <Route path="/profit" element={<Navigate to="/profit/proyeccion" replace />} />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />

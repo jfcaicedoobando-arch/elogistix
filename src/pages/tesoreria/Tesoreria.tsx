@@ -1,11 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { Wallet, ArrowRight } from "lucide-react";
+import { Wallet, ArrowRight, FileText } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useResumenTesoreria } from "@/hooks/tesoreria";
 import { formatCurrency } from "@/lib/formatters";
+import { descargarPdf } from "@/pdf/render/descargarPdf";
+import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -22,6 +24,17 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
 export default function Tesoreria() {
   const { data, isLoading } = useResumenTesoreria();
 
+  const handlePdf = async () => {
+    if (!data) return;
+    await descargarPdf(
+      <ReporteTesoreriaDocument
+        fechaCorte={new Date().toISOString().slice(0, 10)}
+        resumen={data}
+      />,
+      `Reporte_Tesoreria_${new Date().toISOString().slice(0, 10)}.pdf`,
+    );
+  };
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -29,6 +42,9 @@ export default function Tesoreria() {
         description="Saldo bancario, cartera y flujo esperado a 30 días"
         actions={
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handlePdf} disabled={!data}>
+              <FileText className="h-4 w-4 mr-2" /> Reporte PDF
+            </Button>
             <Button variant="outline" asChild>
               <Link to="/tesoreria/cuentas"><Wallet className="h-4 w-4 mr-2" /> Cuentas</Link>
             </Button>
