@@ -34,7 +34,7 @@ export default function ProfitDashboardEjecutivo() {
   const handlePeriodo = (p: string, pr: PresetPeriodo) => {
     setPeriodo(p);
     setPreset(pr);
-    safeSessionStorage.set(STORAGE_KEYS.DASHBOARD_EJECUTIVO_PERIODO, p);
+    safeSessionStorage.setItem(STORAGE_KEYS.dashboardEjecutivoPeriodo, p);
   };
 
   const exportar = useMemo(() => async () => {
