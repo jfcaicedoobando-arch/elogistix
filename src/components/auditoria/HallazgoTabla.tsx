@@ -35,8 +35,6 @@ function formatEta(eta: string | null): string {
 }
 
 export function HallazgoTabla({ hallazgos }: Props) {
-  const navigate = useNavigate();
-
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
     { id: "sev", header: "Severidad", meta: { width: "w-[110px]" },
       cell: ({ row }) => (
@@ -70,12 +68,19 @@ export function HallazgoTabla({ hallazgos }: Props) {
         const h = row.original;
         return (
           <Button
+            asChild
             size="sm" variant="ghost" className="h-7 gap-1 text-xs"
-            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
-            aria-label={`Abrir embarque ${h.expediente}`}
-            title={`Abrir embarque ${h.expediente}`}
           >
-            <ExternalLink className="h-3.5 w-3.5" /> Abrir
+            <a
+              href={`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Abrir embarque ${h.expediente} en nueva pestaña`}
+              title={`Abrir embarque ${h.expediente} en nueva pestaña`}
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Abrir
+            </a>
           </Button>
         );
       } },
