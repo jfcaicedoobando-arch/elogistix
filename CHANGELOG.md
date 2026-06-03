@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.4] - 2026-06-03
+- **feat(auditoria)**: El botón "Abrir" en la tabla de hallazgos ahora abre el embarque en una nueva pestaña del navegador para no perder el contexto de revisión. Bump 12.51.4.
+
 ## [12.51.3] - 2026-06-03
 - **fix(dashboard)**: El toggle "Míos / Todos" ahora se muestra solo a operadores y vendedores. Los admins (que no tienen operaciones propias) ven siempre "Todos" sin el selector. Bump 12.51.3.
 
