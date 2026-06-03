@@ -33,7 +33,13 @@ function isVencida(fechaLimite: string | null): boolean {
 }
 
 export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onMarcarRevisado, onAsignarResponsable }: Props) {
-  const navigate = useNavigate();
+  const abrirEmbarque = (h: HallazgoAuditoria) => {
+    window.open(
+      `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   const getRevision = (h: HallazgoAuditoria) => revisiones?.get(revisionKey(h)) ?? null;
 
