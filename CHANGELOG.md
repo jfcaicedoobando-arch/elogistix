@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.12] - 2026-06-03
+- **fix(embarques/detalle/get_embarque_full)**: Auditoría preventiva del mismo patrón del bug 12.51.11. Se agregó `ORDER BY created_at, id` a los `jsonb_agg` restantes de `get_embarque_full` (`conceptosVenta`, `conceptosCosto`, `facturas`) para que las filas no se reposicionen al editarse en el Tab Financiero y en la sección de facturas. El resto de RPCs del catálogo (`dashboard_*`, `operaciones_stats`, `auditoria_embarques_org`, `get_tracking_public`, `reportes_resumen`, `sincronizar_contenedores_embarque`) ya tenían orden estable. Bump 12.51.12.
+
 ## [12.51.11] - 2026-06-03
 - **fix(embarques/detalle/documentos)**: Las filas del tab Documentos ya no cambian de posición al marcar "No aplica". Se agregó `ORDER BY created_at, id` al `jsonb_agg` de documentos dentro del RPC `get_embarque_full`, garantizando orden estable que coincide con la lista canónica de `getDocsForMode`. Bump 12.51.11.
 
