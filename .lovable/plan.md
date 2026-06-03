@@ -1,13 +1,19 @@
-## Objetivo
-Ocultar las cards del dashboard del operador cuando no haya items en ellas (pendientes, docs faltantes, sin tracking).
+## Plan: Ocultar toggle Míos/Todos para no-operadores
 
-## Cambios
+### Contexto
 
-### 1. `MiOperacionSection.tsx`
-- Modificar `WidgetCard` para que cuando `count === 0` y no esté cargando, no renderice nada (retornar `null`).
-- Esto hará que las 3 cards desaparezcan automáticamente cuando estén vacías.
-- Si las 3 cards desaparecen, la sección "Mi operación" se verá vacía (solo quedaría el título); en ese caso, ocultar también el título de la sección cuando no haya nada que mostrar.
+El dashboard tiene un toggle "Míos / Todos" (Tabs) que permite a los operadores filtrar su vista entre sus propias operaciones y todas las de la organización. Los usuarios Admin no tienen operaciones propias asignadas, por lo que este toggle no tiene sentido para ellos.
 
-## Resultado esperado
-- Dashboard del operador limpio: solo se ven las cards que tienen contenido relevante.
-- Sin mensajes de "Sin pendientes hoy" / "Sin documentación pendiente" / "Tracking al día" ocupando espacio.
+### Cambios
+
+**Archivo:** `src/pages/dashboard/Dashboard.tsx`
+
+1. **Inicialización de scope condicional:** Cambiar `useState<Scope>("mios")` a que dependa del rol:
+  - Si `isOperador === true` → inicializa en `"mios"`
+  - Si no → inicializa en `"todos"`
+2. **Render condicional del toggle:** Envolver el bloque `<Tabs>` para que solo se renderice cuando `isOperador` sea `true`.
+
+### Resultado esperado
+
+- Los operadores ven el toggle y pueden cambiar entre "Míos" y "Todos" (default: Míos).
+- Admins, vendedores y demás roles no ven el toggle y el dashboard siempre muestra todos los embarques.  Los vendedores si ven el toggle.
