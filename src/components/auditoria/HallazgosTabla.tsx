@@ -3,7 +3,7 @@
  */
 import { format } from "date-fns";
 import { CheckCircle2, ExternalLink, UserPlus, UserCheck, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -33,7 +33,13 @@ function isVencida(fechaLimite: string | null): boolean {
 }
 
 export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onMarcarRevisado, onAsignarResponsable }: Props) {
-  const navigate = useNavigate();
+  const abrirEmbarque = (h: HallazgoAuditoria) => {
+    window.open(
+      `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   const getRevision = (h: HallazgoAuditoria) => revisiones?.get(revisionKey(h)) ?? null;
 
@@ -49,7 +55,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
         return (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
             className="text-primary hover:underline focus:outline-none focus:underline"
             title={`Abrir embarque ${h.expediente}`}
           >
@@ -150,7 +156,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
         const h = row.original;
         return (
           <Button size="icon" variant="ghost" className="h-7 w-7"
-            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
             aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
           >
             <ExternalLink className="h-3.5 w-3.5" />
