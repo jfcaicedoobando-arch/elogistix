@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.9] - 2026-06-03
+- **fix(embarque/contenedores)**: El botón de basurero en la sección Contenedores del detalle ahora pide confirmación antes de quitar la fila (AlertDialog con Cancelar/Eliminar). Filas vacías se eliminan directo sin diálogo. Evita borrados accidentales como el reportado en ELIMP00102. Bump 12.51.9.
+
 ## [12.51.8] - 2026-06-03
 - **fix(auditoria/docs_faltantes)**: Eliminados falsos positivos en "documentos faltantes". (1) Documentos marcados como **"No aplica"** ya cuentan como satisfechos. (2) Removido **"EIR"** de la lista de documentos requeridos para embarques marítimos: EIR es un estado del embarque, no un tipo de documento del catálogo. Caso verificado: ELIMP00108. Bump 12.51.8.
 
