@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.2] - 2026-06-03
+- **feat(dashboard/operador)**: Las cards de "Mis pendientes hoy", "Docs faltantes" y "Sin tracking reciente" ahora se ocultan automáticamente cuando están vacías. Si las tres están vacías, la sección "Mi operación" completa desaparece para mantener el dashboard limpio. Bump 12.51.2.
+
 ## [12.51.1] - 2026-06-03
 - **feat(tracking)**: Simplificación del formulario "Registrar Evento" en tab Tracking. Se eliminan los campos **Ubicación** y **Descripción**; ahora solo quedan **Tipo de evento** y **Fecha** (input `type="date"`, sin hora). El backend sigue recibiendo strings vacíos para compatibilidad. El diálogo de confirmación de fecha de llegada real ahora muestra solo la fecha. Bump 12.51.1.
 

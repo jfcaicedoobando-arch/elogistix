@@ -70,7 +70,8 @@ interface WidgetProps {
   children: React.ReactNode;
 }
 
-function WidgetCard({ icon: Icon, title, count, empty, isLoading, iconClass, children }: WidgetProps) {
+function WidgetCard({ icon: Icon, title, count, empty: _empty, isLoading, iconClass, children }: WidgetProps) {
+  if (!isLoading && count === 0) return null;
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -85,8 +86,6 @@ function WidgetCard({ icon: Icon, title, count, empty, isLoading, iconClass, chi
       <CardContent className="space-y-1 max-h-[260px] overflow-y-auto">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
-        ) : count === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">{empty}</p>
         ) : (
           children
         )}
@@ -94,6 +93,7 @@ function WidgetCard({ icon: Icon, title, count, empty, isLoading, iconClass, chi
     </Card>
   );
 }
+
 
 function Row({ onClick, badge, badgeClass, title, subtitle }: {
   onClick: () => void;
@@ -132,12 +132,17 @@ export const MiOperacionSection = memo(function MiOperacionSection({
   const docsTop: DocsFaltantesItem[] = docs.slice(0, MAX_ITEMS);
   const trackingTop: SinTrackingItem[] = sinTracking.slice(0, MAX_ITEMS);
 
+  const anyLoading = isLoading || loadingDocs || loadingTracking;
+  const totalCount = pendientes.length + docs.length + sinTracking.length;
+  if (!anyLoading && totalCount === 0) return null;
+
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
         Mi operación
       </h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
         <WidgetCard
           icon={AlertCircle}
           title="Mis pendientes hoy"
