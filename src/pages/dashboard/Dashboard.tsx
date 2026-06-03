@@ -24,8 +24,9 @@ type Scope = "todos" | "mios";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { isOperador, canViewFinancials } = usePermissions();
-  const [scope, setScope] = useState<Scope>("mios");
+  const { isOperador, canViewFinancials, role } = usePermissions();
+  const showScopeToggle = isOperador || role === "vendedor";
+  const [scope, setScope] = useState<Scope>(showScopeToggle ? "mios" : "todos");
 
   const {
     isLoading,
@@ -134,12 +135,14 @@ export default function Dashboard() {
         }
       />
 
-      <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
-        <TabsList>
-          <TabsTrigger value="mios" disabled={!operadorEmail}>Míos</TabsTrigger>
-          <TabsTrigger value="todos">Todos</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {showScopeToggle && (
+        <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
+          <TabsList>
+            <TabsTrigger value="mios" disabled={!operadorEmail}>Míos</TabsTrigger>
+            <TabsTrigger value="todos">Todos</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       {isOperador && (
         <MiOperacionSection
