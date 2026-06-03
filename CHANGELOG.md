@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.8] - 2026-06-03
+- **fix(auditoria/docs_faltantes)**: Eliminados falsos positivos en "documentos faltantes". (1) Documentos marcados como **"No aplica"** ya cuentan como satisfechos. (2) Removido **"EIR"** de la lista de documentos requeridos para embarques marítimos: EIR es un estado del embarque, no un tipo de documento del catálogo. Caso verificado: ELIMP00108. Bump 12.51.8.
+
 ## [12.51.7] - 2026-06-03
 - **fix(auditoria/HallazgosTabla)**: Los dos botones de abrir embarque (link del expediente y botón "ExternalLink") ahora abren el embarque en una nueva pestaña del navegador usando `window.open` con URL absoluta. Bump 12.51.7.
 

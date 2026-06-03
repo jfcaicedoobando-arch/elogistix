@@ -1,20 +1,41 @@
-## Cambio
+## Problema
 
-En `src/components/auditoria/HallazgosTabla.tsx` hay **dos botones** "Abrir embarque" que aún usan `navigate(...)` (líneas 52 y 153) — abren en la misma pestaña.
+La regla `docs_faltantes` del reporte de auditoría marca documentos como faltantes incluso cuando el usuario los configuró explícitamente como **"No aplica"** en el embarque. Caso verificado: `ELIMP00108` (Marítimo, Cerrado) tiene BL House subido y los demás en "No aplica", pero la auditoría reporta 6 documentos faltantes.
 
-Replicar el patrón que ya usa `HallazgoTabla.tsx` (singular): reemplazar `navigate(...)` por `window.open(URL_absoluta, "_blank", "noopener,noreferrer")` con `e.preventDefault()` + `e.stopPropagation()`.
+**Causa raíz:** En la RPC `auditar_embarques_org` (migración `20260516020347_...`), el CTE `docs_existentes` solo evalúa `tiene_archivo = bool_or(archivo IS NOT NULL)` y el JOIN de `faltantes` exige `tiene_archivo = true`. El campo `documentos_embarque.estado` (que puede ser `'No aplica'`) nunca se consulta.
 
-### Pasos
-1. En ambos `onClick` (líneas 52 y 153), cambiar a:
-   ```ts
-   (e) => {
-     e.preventDefault();
-     e.stopPropagation();
-     window.open(`${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`, "_blank", "noopener,noreferrer");
-   }
-   ```
-2. Eliminar el import/uso de `useNavigate` si ya no se usa en otra parte del archivo.
-3. Bump `APP_VERSION` → `12.51.7` y entrada en `CHANGELOG.md`.
+## Solución
 
-### Resultado
-Los dos botones de abrir embarque en la tabla de hallazgos abren el embarque en una pestaña nueva del navegador, preservando el contexto de auditoría.
+Reemplazar la RPC `auditar_embarques_org` para que un documento se considere **satisfecho** cuando se cumple cualquiera de:
+
+- `archivo IS NOT NULL` (subido), o
+- `estado = 'No aplica'` (marcado como no aplicable por el usuario), o
+- `estado = 'Recibido'` (recibido aunque sin archivo, ya cubierto hoy vía `tiene_archivo` cuando hay binario)
+
+Cambio puntual en el CTE:
+
+```sql
+docs_existentes AS (
+  SELECT embarque_id, nombre,
+         bool_or(archivo IS NOT NULL OR estado = 'No aplica') AS satisfecho
+  FROM documentos_embarque
+  WHERE embarque_id IN (SELECT id FROM emb)
+  GROUP BY embarque_id, nombre
+)
+```
+
+Y el JOIN en `faltantes` pasa de `AND de.tiene_archivo = true` a `AND de.satisfecho = true`.
+
+El resto de las reglas (`docs_pendientes_avanzado`, fechas, ventas, etc.) no se tocan.
+
+## Pasos
+
+1. **Migración SQL**: `CREATE OR REPLACE FUNCTION public.auditar_embarques_org(...)` con el CTE corregido. Sin cambios de firma ni de columnas devueltas.
+2. **Verificar** ejecutando la RPC contra `ELIMP00108`: debe desaparecer el hallazgo `docs_faltantes` (o al menos reducirse a documentos genuinamente faltantes sin marcar "No aplica").
+3. **CHANGELOG.md** + bump `APP_VERSION` a `12.51.8` con nota: "Auditoría: documentos con estado 'No aplica' ya no se reportan como faltantes."
+
+## Notas técnicas
+
+- Sin cambios en frontend ni en tipos.
+- Sin cambios en RLS ni en GRANTs (solo reemplazo de función).
+- La regla `docs_pendientes_avanzado` sigue alertando sobre documentos en estado `'Pendiente'` en embarques avanzados, lo cual es correcto y complementario.
