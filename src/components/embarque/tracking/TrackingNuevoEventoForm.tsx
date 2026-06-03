@@ -54,7 +54,7 @@ function tipoSugerido(estado: string | null | undefined): string {
 
 const defaultEventoValues = (estado?: string | null): EventoFormValues => ({
   tipo: tipoSugerido(estado),
-  fecha: new Date().toISOString().slice(0, 16),
+  fecha: new Date().toISOString().slice(0, 10),
   ubicacion: "",
   descripcion: "",
 });
