@@ -1,29 +1,29 @@
-# Fix: filas de documentos cambian de posición al marcar "No aplica"
+## Contexto
 
-## Causa
-El RPC `public.get_embarque_full` arma el array `documentos` con `jsonb_agg(to_jsonb(d.*))` **sin `ORDER BY`**. Postgres devuelve filas en orden arbitrario del heap, y ese orden puede cambiar tras un `UPDATE` (por ejemplo, al marcar un documento como "No aplica"), porque la fila actualizada se reubica físicamente. Por eso "Packing List" salta al final tras togglear.
+El bug del Tab Documentos (filas que se movían al togglear "No aplica") era causado por `jsonb_agg(to_jsonb(d.*))` sin `ORDER BY` en la RPC `get_embarque_full`. Ya quedó corregido para `documentos` y `notas` en 12.51.11.
 
-El portal del cliente (`fetchPortalDocumentos`) ya ordena por `created_at`; sólo el detalle interno carece de orden.
+Revisando la RPC completa y el resto del catálogo, quedan **3 agregaciones más en `get_embarque_full` sin `ORDER BY`** que sufren exactamente la misma clase de bug — el frontend renderiza esos arrays en el orden recibido, y al editar una fila puede reposicionarse:
 
-## Cambio
-Nueva migración que reemplaza `get_embarque_full` agregando orden estable al `jsonb_agg` de documentos:
+- `conceptosVenta` → render en Tab Financiero (lista de conceptos de venta)
+- `conceptosCosto` → render en Tab Financiero (lista de conceptos de costo)
+- `facturas` → render en sección facturas del embarque
 
-```sql
-'documentos', COALESCE((
-  SELECT jsonb_agg(to_jsonb(d.*) ORDER BY d.created_at, d.id)
-  FROM documentos_embarque d
-  WHERE d.embarque_id = p_embarque_id
-), '[]'::jsonb),
-```
+El resto del catálogo (`dashboard_details`, `dashboard_stats`, `operaciones_stats`, `auditoria_embarques_org`, `get_tracking_public`, `reportes_resumen`, `sincronizar_contenedores_embarque`) ya tiene `ORDER BY` en cada `jsonb_agg`. Los dos triggers (`congelar_factura_al_emitir`, `congelar_proforma_al_aprobar`) usan `jsonb_agg` para comparar snapshots, no para render, así que no aplica.
 
-`created_at` refleja el orden de inserción, que coincide con la lista canónica de `getDocsForMode` (BL Master → BL House → Packing List → Factura Comercial → …). Se añade `d.id` como desempate determinista. Resto del RPC y firma sin cambios (mismo `SECURITY INVOKER`, `STABLE`, `search_path = public`, mismo `GRANT`).
+## Cambios
 
-## Archivos
-- **Nueva migración** `supabase/migrations/...sql` — `CREATE OR REPLACE FUNCTION public.get_embarque_full` con el ORDER BY agregado.
-- **`CHANGELOG.md`** — entrada 12.51.11: "Fix: documentos del embarque ya no cambian de posición al marcar 'No aplica' (orden estable por fecha de creación)."
-- **`src/constants/appVersion.ts`** — bump a `12.51.11`.
+1. **Migración** que reemplaza `public.get_embarque_full` agregando `ORDER BY` a las tres agregaciones restantes:
+   - `conceptosVenta` → `ORDER BY cv.created_at, cv.id`
+   - `conceptosCosto` → `ORDER BY cc.created_at, cc.id`
+   - `facturas` → `ORDER BY f.created_at, f.id`
+
+   Resto de la función (SECURITY INVOKER implícito SQL STABLE, search_path, `documentos`/`notas` ya ordenados) se mantiene igual.
+
+2. **`CHANGELOG.md`** — entrada 12.51.12 describiendo el fix preventivo.
+
+3. **`src/constants/appVersion.ts`** — bump a `12.51.12`.
 
 ## Fuera de alcance
-- Frontend (`TabDocumentos`, `useDocumentoColumns`): no se toca; ya renderiza en el orden recibido.
-- Portal: ya ordenado correctamente.
-- Otras secciones del RPC (conceptos, facturas): no presentan el síntoma reportado.
+
+- Sin cambios en frontend (los componentes ya consumen el array en el orden recibido).
+- Sin cambios en otras RPCs (ya están ordenadas o no aplican).
