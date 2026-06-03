@@ -179,20 +179,12 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
               {errors.tipo && <p className="text-xs text-destructive">{errors.tipo.message}</p>}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Fecha y hora *</label>
-              <Input type="datetime-local" {...register("fecha")} required />
+              <label className="text-sm font-medium">Fecha *</label>
+              <Input type="date" {...register("fecha")} required />
               {errors.fecha && <p className="text-xs text-destructive">{errors.fecha.message}</p>}
               <p className="text-xs text-muted-foreground">
                 Usa la fecha del último evento publicado por la naviera.
               </p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Ubicación</label>
-              <Input {...register("ubicacion")} placeholder="Puerto, ciudad, terminal..." />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium">Descripción</label>
-              <Textarea {...register("descripcion")} placeholder="Detalles del evento (copia/pega desde la web de la naviera)..." rows={2} />
             </div>
             <div className="md:col-span-2 flex gap-2 justify-end">
               <Button type="button" variant="outline" size="sm" onClick={onClose}>
@@ -212,7 +204,7 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
             <AlertDialogTitle>¿Actualizar fecha de llegada real?</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Quieres registrar{" "}
-              <strong>{confirmLlegada ? formatDate(confirmLlegada, "dd/MM/yyyy HH:mm") : ""}</strong> como
+              <strong>{confirmLlegada ? formatDate(confirmLlegada, "dd/MM/yyyy") : ""}</strong> como
               la fecha de llegada real del embarque? Esto actualiza la ETA real visible para todos.
             </AlertDialogDescription>
           </AlertDialogHeader>
