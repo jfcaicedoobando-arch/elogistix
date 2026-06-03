@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.13] - 2026-06-03
+- **fix(embarques/listado/docs-pendientes)**: El triángulo amarillo "doc(s) pendientes" en la lista de embarques ya no cuenta documentos eliminados. Se agregó `AND deleted_at IS NULL` al RPC `embarques_list_extras` para los subqueries de `documentos_embarque` y `conceptos_costo`. Caso reportado: `ELIMP00216` mostraba "1 doc pendiente" por un Certificado de Origen soft-deleted. Bump 12.51.13.
+
 ## [12.51.12] - 2026-06-03
 - **fix(embarques/detalle/get_embarque_full)**: Auditoría preventiva del mismo patrón del bug 12.51.11. Se agregó `ORDER BY created_at, id` a los `jsonb_agg` restantes de `get_embarque_full` (`conceptosVenta`, `conceptosCosto`, `facturas`) para que las filas no se reposicionen al editarse en el Tab Financiero y en la sección de facturas. El resto de RPCs del catálogo (`dashboard_*`, `operaciones_stats`, `auditoria_embarques_org`, `get_tracking_public`, `reportes_resumen`, `sincronizar_contenedores_embarque`) ya tenían orden estable. Bump 12.51.12.
 
