@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.11] - 2026-06-03
+- **fix(embarques/detalle/documentos)**: Las filas del tab Documentos ya no cambian de posición al marcar "No aplica". Se agregó `ORDER BY created_at, id` al `jsonb_agg` de documentos dentro del RPC `get_embarque_full`, garantizando orden estable que coincide con la lista canónica de `getDocsForMode`. Bump 12.51.11.
+
 ## [12.51.10] - 2026-06-03
 - **fix(embarques/lista/docs_pendientes)**: El triángulo amarillo de "docs pendientes" en la lista de embarques ya no cuenta como pendientes los documentos marcados como **"No aplica"**. Se actualizó la RPC `embarques_list_extras` para contar como pendiente solo cuando `archivo IS NULL AND estado <> 'No aplica'`. Casos verificados: ELIMP00108 y ELIMP00058 pasan de 6 → 0; ELIMP00102 sigue en 4 (correcto). Bump 12.51.10.
 
