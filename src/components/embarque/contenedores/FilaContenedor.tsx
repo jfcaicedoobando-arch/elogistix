@@ -1,6 +1,7 @@
 /**
  * Una fila editable para un contenedor dentro de ListaContenedoresEditable.
  */
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/types/embarque/contenedor";
 import type { TipoContenedor } from "@/hooks/catalogos";
@@ -35,6 +46,18 @@ export function FilaContenedor({
   onDelete,
   disabled,
 }: Props) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const filaVacia =
+    !value.numero_contenedor.trim() && !value.tipo_contenedor.trim();
+
+  const handleTrashClick = () => {
+    if (filaVacia) {
+      onDelete();
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
   return (
     <div className="rounded-md border border-border bg-card p-3 space-y-3">
       <div className="flex items-center justify-between">
@@ -47,13 +70,39 @@ export function FilaContenedor({
             variant="ghost"
             size="sm"
             disabled={disabled}
-            onClick={onDelete}
+            onClick={handleTrashClick}
             aria-label={`Eliminar contenedor ${index + 1}`}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         )}
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar contenedor #{index + 1}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se quitará el contenedor «{value.numero_contenedor || "sin número"}»
+              {value.tipo_contenedor ? ` (${value.tipo_contenedor})` : ""} de la lista.
+              El cambio se aplica al presionar <strong>Guardar cambios</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                onDelete();
+                setConfirmOpen(false);
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
