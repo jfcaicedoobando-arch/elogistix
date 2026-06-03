@@ -1,34 +1,36 @@
-## Contexto
+## Bug
 
-En `ELIMP00102` el contenedor `BEAU4808252` sigue intacto en la base — el borrado quedó en estado local del formulario. Como confirmaste que reapareció al recargar, **no hay nada que restaurar**.
+El triángulo amarillo de "docs pendientes" en la lista de embarques cuenta los documentos marcados como **"No aplica"** como si estuvieran pendientes. La RPC `public.embarques_list_extras` usa el filtro:
 
-Resta endurecer el workflow para que un clic accidental al ícono de basurero no elimine la fila sin confirmación.
+```sql
+count(*) FILTER (WHERE d.estado NOT IN ('Recibido', 'Validado')) AS pendientes
+```
 
-## Cambio
+Eso incluye `'No aplica'` (168 docs en BD así marcados) → falsos positivos en el listado.
 
-Agregar un diálogo de confirmación al botón de eliminar contenedor en `SeccionContenedores` (vista detalle del embarque). Sólo afecta esa pantalla; el wizard queda igual.
+## Fix
 
-### Comportamiento
+Reemplazar la función con el mismo criterio que usa auditoría: un documento está **satisfecho** si tiene archivo subido **o** está marcado como "No aplica". Por lo tanto pendiente =
 
-- Al hacer clic en el basurero de una fila se abre un `AlertDialog` simple:
-  - Título: "¿Eliminar contenedor #N?"
-  - Descripción: "Se quitará el contenedor «{numero}» ({tipo}) de la lista. El cambio se aplica al presionar Guardar cambios."
-  - Botones: Cancelar / Eliminar (destructivo).
-- Al confirmar se ejecuta el `onDelete` actual (quita la fila del borrador local).
-- Si la fila está vacía (sin número ni tipo) se elimina directamente sin diálogo, para no estorbar cuando el usuario agregó una fila por error.
+```sql
+d.archivo IS NULL AND d.estado <> 'No aplica'
+```
 
-### Por qué AlertDialog sencillo y no el `DoubleConfirmDeleteDialog`
+## Verificación post-fix (esperado)
 
-El borrado de la fila es reversible (sólo afecta el borrador local hasta presionar Guardar) → un solo paso es suficiente. El doble confirm escribiendo "ELIMINAR" se reserva para borrados destructivos en BD.
+| Expediente | Antes | Después |
+|------------|------:|--------:|
+| ELIMP00108 | 6 | 0 |
+| ELIMP00058 | 6 | 0 |
+| ELIMP00102 | 4 | 4 |
 
 ## Archivos
 
-- `src/components/embarque/contenedores/FilaContenedor.tsx` — envolver el botón Trash en `AlertDialog`, con shortcut para filas vacías.
-- `CHANGELOG.md` — entrada `12.51.9`.
-- `src/constants/appVersion.ts` — bump a `12.51.9`.
+- Nueva migración: `CREATE OR REPLACE FUNCTION public.embarques_list_extras` con el filtro corregido (mantengo la firma, `SECURITY DEFINER`, `search_path = public`).
+- `CHANGELOG.md` → entrada `12.51.10`.
+- `src/constants/appVersion.ts` → bump a `12.51.10`.
 
 ## Fuera de alcance
 
-- Wizard de Nuevo/Editar embarque (no se toca).
-- Restauración de datos en BD (no se requiere).
-- Bitácora de eliminación de contenedores (sigue dependiendo del Guardar; la confirmación previa basta).
+- Frontend (`embarqueColumns.tsx`, `useEmbarquesPageController`) no requiere cambios: ya pinta `docInfo.pendientes`.
+- El tooltip y badge de "Datos pendientes" (BL Master / contenedores incompletos) es otro indicador distinto y queda igual.

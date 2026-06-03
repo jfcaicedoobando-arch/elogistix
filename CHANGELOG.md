@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.10] - 2026-06-03
+- **fix(embarques/lista/docs_pendientes)**: El triángulo amarillo de "docs pendientes" en la lista de embarques ya no cuenta como pendientes los documentos marcados como **"No aplica"**. Se actualizó la RPC `embarques_list_extras` para contar como pendiente solo cuando `archivo IS NULL AND estado <> 'No aplica'`. Casos verificados: ELIMP00108 y ELIMP00058 pasan de 6 → 0; ELIMP00102 sigue en 4 (correcto). Bump 12.51.10.
+
 ## [12.51.9] - 2026-06-03
 - **fix(embarque/contenedores)**: El botón de basurero en la sección Contenedores del detalle ahora pide confirmación antes de quitar la fila (AlertDialog con Cancelar/Eliminar). Filas vacías se eliminan directo sin diálogo. Evita borrados accidentales como el reportado en ELIMP00102. Bump 12.51.9.
 
