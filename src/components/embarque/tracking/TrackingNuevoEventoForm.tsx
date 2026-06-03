@@ -97,12 +97,12 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const fechaIso = new Date(values.fecha).toISOString();
+      const fechaIso = new Date(`${values.fecha}T00:00:00`).toISOString();
       await crearEvento.mutateAsync({
         embarqueId,
         tipo: values.tipo,
-        descripcion: values.descripcion ?? "",
-        ubicacion: values.ubicacion ?? "",
+        descripcion: "",
+        ubicacion: "",
         fecha: fechaIso,
         usuario: user?.email ?? "",
       });
