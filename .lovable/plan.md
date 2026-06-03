@@ -1,19 +1,16 @@
-## Plan: Ocultar toggle Míos/Todos para no-operadores
+## Objetivo
+En el módulo de Auditoría, pestaña Hallazgos, el botón "Abrir" de cada fila debe abrir el embarque en una nueva pestaña del navegador en lugar de navegar en la pestaña actual.
 
-### Contexto
+## Cambio técnico
+**Archivo:** `src/components/auditoria/HallazgoTabla.tsx`
 
-El dashboard tiene un toggle "Míos / Todos" (Tabs) que permite a los operadores filtrar su vista entre sus propias operaciones y todas las de la organización. Los usuarios Admin no tienen operaciones propias asignadas, por lo que este toggle no tiene sentido para ellos.
+1. Reemplazar el `<Button>` con `onClick={() => navigate(...)}` por un `<Button asChild>` que contenga un `<a>` con:
+   - `href` con la URL del embarque (incluyendo el tab query param según la regla)
+   - `target="_blank"`
+   - `rel="noopener noreferrer"`
+   - `onClick={(e) => e.stopPropagation()}` para preservar el bloqueo del click en la fila
 
-### Cambios
+2. Remover el import de `useNavigate` de `react-router-dom` y su uso en el componente, ya que ya no será necesario.
 
-**Archivo:** `src/pages/dashboard/Dashboard.tsx`
-
-1. **Inicialización de scope condicional:** Cambiar `useState<Scope>("mios")` a que dependa del rol:
-  - Si `isOperador === true` → inicializa en `"mios"`
-  - Si no → inicializa en `"todos"`
-2. **Render condicional del toggle:** Envolver el bloque `<Tabs>` para que solo se renderice cuando `isOperador` sea `true`.
-
-### Resultado esperado
-
-- Los operadores ven el toggle y pueden cambiar entre "Míos" y "Todos" (default: Míos).
-- Admins, vendedores y demás roles no ven el toggle y el dashboard siempre muestra todos los embarques.  Los vendedores si ven el toggle.
+## Resultado esperado
+Al hacer clic en "Abrir" en cualquier hallazgo, el detalle del embarque se abre en una nueva pestaña del navegador manteniendo la vista actual de auditoría abierta.
