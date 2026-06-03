@@ -66,21 +66,20 @@ export function HallazgoTabla({ hallazgos }: Props) {
     { id: "acc", header: "", meta: { width: "w-[90px]" },
       cell: ({ row }) => {
         const h = row.original;
+        const url = `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`;
         return (
           <Button
-            asChild
             size="sm" variant="ghost" className="h-7 gap-1 text-xs"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.open(url, "_blank", "noopener,noreferrer");
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            aria-label={`Abrir embarque ${h.expediente} en nueva pestaña`}
+            title={`Abrir embarque ${h.expediente} en nueva pestaña`}
           >
-            <a
-              href={`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={`Abrir embarque ${h.expediente} en nueva pestaña`}
-              title={`Abrir embarque ${h.expediente} en nueva pestaña`}
-            >
-              <ExternalLink className="h-3.5 w-3.5" /> Abrir
-            </a>
+            <ExternalLink className="h-3.5 w-3.5" /> Abrir
           </Button>
         );
       } },

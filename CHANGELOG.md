@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.5] - 2026-06-03
+- **fix(auditoria)**: El botón "Abrir" en la tabla de hallazgos ahora usa `window.open` con URL absoluta para garantizar que el embarque se abra realmente en una pestaña nueva del navegador. Bump 12.51.5.
+
 ## [12.51.4] - 2026-06-03
 - **feat(auditoria)**: El botón "Abrir" en la tabla de hallazgos ahora abre el embarque en una nueva pestaña del navegador para no perder el contexto de revisión. Bump 12.51.4.
 
