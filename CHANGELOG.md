@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.3] - 2026-06-03
+- **fix(dashboard)**: El toggle "Míos / Todos" ahora se muestra solo a operadores y vendedores. Los admins (que no tienen operaciones propias) ven siempre "Todos" sin el selector. Bump 12.51.3.
+
 ## [12.51.2] - 2026-06-03
 - **feat(dashboard/operador)**: Las cards de "Mis pendientes hoy", "Docs faltantes" y "Sin tracking reciente" ahora se ocultan automáticamente cuando están vacías. Si las tres están vacías, la sección "Mi operación" completa desaparece para mantener el dashboard limpio. Bump 12.51.2.
 
