@@ -70,7 +70,7 @@ interface WidgetProps {
   children: React.ReactNode;
 }
 
-function WidgetCard({ icon: Icon, title, count, empty, isLoading, iconClass, children }: WidgetProps) {
+function WidgetCard({ icon: Icon, title, count, empty: _empty, isLoading, iconClass, children }: WidgetProps) {
   if (!isLoading && count === 0) return null;
   return (
     <Card>
