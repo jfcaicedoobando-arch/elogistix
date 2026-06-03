@@ -1,36 +1,29 @@
-## Bug
+# Fix: filas de documentos cambian de posición al marcar "No aplica"
 
-El triángulo amarillo de "docs pendientes" en la lista de embarques cuenta los documentos marcados como **"No aplica"** como si estuvieran pendientes. La RPC `public.embarques_list_extras` usa el filtro:
+## Causa
+El RPC `public.get_embarque_full` arma el array `documentos` con `jsonb_agg(to_jsonb(d.*))` **sin `ORDER BY`**. Postgres devuelve filas en orden arbitrario del heap, y ese orden puede cambiar tras un `UPDATE` (por ejemplo, al marcar un documento como "No aplica"), porque la fila actualizada se reubica físicamente. Por eso "Packing List" salta al final tras togglear.
 
-```sql
-count(*) FILTER (WHERE d.estado NOT IN ('Recibido', 'Validado')) AS pendientes
-```
+El portal del cliente (`fetchPortalDocumentos`) ya ordena por `created_at`; sólo el detalle interno carece de orden.
 
-Eso incluye `'No aplica'` (168 docs en BD así marcados) → falsos positivos en el listado.
-
-## Fix
-
-Reemplazar la función con el mismo criterio que usa auditoría: un documento está **satisfecho** si tiene archivo subido **o** está marcado como "No aplica". Por lo tanto pendiente =
+## Cambio
+Nueva migración que reemplaza `get_embarque_full` agregando orden estable al `jsonb_agg` de documentos:
 
 ```sql
-d.archivo IS NULL AND d.estado <> 'No aplica'
+'documentos', COALESCE((
+  SELECT jsonb_agg(to_jsonb(d.*) ORDER BY d.created_at, d.id)
+  FROM documentos_embarque d
+  WHERE d.embarque_id = p_embarque_id
+), '[]'::jsonb),
 ```
 
-## Verificación post-fix (esperado)
-
-| Expediente | Antes | Después |
-|------------|------:|--------:|
-| ELIMP00108 | 6 | 0 |
-| ELIMP00058 | 6 | 0 |
-| ELIMP00102 | 4 | 4 |
+`created_at` refleja el orden de inserción, que coincide con la lista canónica de `getDocsForMode` (BL Master → BL House → Packing List → Factura Comercial → …). Se añade `d.id` como desempate determinista. Resto del RPC y firma sin cambios (mismo `SECURITY INVOKER`, `STABLE`, `search_path = public`, mismo `GRANT`).
 
 ## Archivos
-
-- Nueva migración: `CREATE OR REPLACE FUNCTION public.embarques_list_extras` con el filtro corregido (mantengo la firma, `SECURITY DEFINER`, `search_path = public`).
-- `CHANGELOG.md` → entrada `12.51.10`.
-- `src/constants/appVersion.ts` → bump a `12.51.10`.
+- **Nueva migración** `supabase/migrations/...sql` — `CREATE OR REPLACE FUNCTION public.get_embarque_full` con el ORDER BY agregado.
+- **`CHANGELOG.md`** — entrada 12.51.11: "Fix: documentos del embarque ya no cambian de posición al marcar 'No aplica' (orden estable por fecha de creación)."
+- **`src/constants/appVersion.ts`** — bump a `12.51.11`.
 
 ## Fuera de alcance
-
-- Frontend (`embarqueColumns.tsx`, `useEmbarquesPageController`) no requiere cambios: ya pinta `docInfo.pendientes`.
-- El tooltip y badge de "Datos pendientes" (BL Master / contenedores incompletos) es otro indicador distinto y queda igual.
+- Frontend (`TabDocumentos`, `useDocumentoColumns`): no se toca; ya renderiza en el orden recibido.
+- Portal: ya ordenado correctamente.
+- Otras secciones del RPC (conceptos, facturas): no presentan el síntoma reportado.
