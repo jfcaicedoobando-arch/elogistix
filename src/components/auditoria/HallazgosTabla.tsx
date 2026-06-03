@@ -156,7 +156,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
         const h = row.original;
         return (
           <Button size="icon" variant="ghost" className="h-7 w-7"
-            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
             aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
           >
             <ExternalLink className="h-3.5 w-3.5" />
