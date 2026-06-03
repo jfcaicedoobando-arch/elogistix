@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.6] - 2026-06-03
+- **fix(facturacion/ELIMP00058)**: Limpieza de 4 conceptos de venta pendientes ($9,085 MXN) que se agregaron por error después de cerrar el embarque. Las 2 facturas detectadas (USD + MXN) son correctas — corresponden al diseño del sistema (una factura por moneda).
+- **feat(prevención)**: Nuevo trigger DB `bloquear_conceptos_en_embarque_cerrado` que impide INSERT/UPDATE de `conceptos_venta` y `conceptos_costo` cuando el embarque está en estado `Cerrado` (excepto soft-delete). Evita que vuelvan a generarse facturaciones pendientes "fantasma" después del cierre. Bump 12.51.6.
+
 ## [12.51.5] - 2026-06-03
 - **fix(auditoria)**: El botón "Abrir" en la tabla de hallazgos ahora usa `window.open` con URL absoluta para garantizar que el embarque se abra realmente en una pestaña nueva del navegador. Bump 12.51.5.
 
