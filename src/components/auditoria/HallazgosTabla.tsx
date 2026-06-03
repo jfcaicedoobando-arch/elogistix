@@ -55,7 +55,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
         return (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
             className="text-primary hover:underline focus:outline-none focus:underline"
             title={`Abrir embarque ${h.expediente}`}
           >
