@@ -135,12 +135,14 @@ export default function Dashboard() {
         }
       />
 
-      <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
-        <TabsList>
-          <TabsTrigger value="mios" disabled={!operadorEmail}>Míos</TabsTrigger>
-          <TabsTrigger value="todos">Todos</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {showScopeToggle && (
+        <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
+          <TabsList>
+            <TabsTrigger value="mios" disabled={!operadorEmail}>Míos</TabsTrigger>
+            <TabsTrigger value="todos">Todos</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       {isOperador && (
         <MiOperacionSection
