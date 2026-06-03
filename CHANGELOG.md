@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.1] - 2026-06-03
+- **feat(tracking)**: Simplificación del formulario "Registrar Evento" en tab Tracking. Se eliminan los campos **Ubicación** y **Descripción**; ahora solo quedan **Tipo de evento** y **Fecha** (input `type="date"`, sin hora). El backend sigue recibiendo strings vacíos para compatibilidad. El diálogo de confirmación de fecha de llegada real ahora muestra solo la fecha. Bump 12.51.1.
+
 ## [12.51.0] - 2026-06-02
 - **feat(tracking)**: UX mejorada para tracking manual asistido en el tab Tracking del detalle de embarque.
   - Nueva tarjeta **"Consultar tracking en {Naviera}"** con botón para abrir la página de tracking de la naviera en una pestaña nueva (URL por naviera vía nueva columna `navieras.tracking_url_template` con placeholder `{BL}`; templates iniciales para COSCO, Maersk, MSC, Hapag-Lloyd, ONE, CMA-CGM, Evergreen, Yang Ming, HMM, ZIM, OOCL) y botón para **copiar el BL Master / MAWB** al portapapeles (feedback ✓ Copiado por 2 s).

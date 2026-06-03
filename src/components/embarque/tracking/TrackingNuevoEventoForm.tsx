@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
@@ -55,7 +54,7 @@ function tipoSugerido(estado: string | null | undefined): string {
 
 const defaultEventoValues = (estado?: string | null): EventoFormValues => ({
   tipo: tipoSugerido(estado),
-  fecha: new Date().toISOString().slice(0, 16),
+  fecha: new Date().toISOString().slice(0, 10),
   ubicacion: "",
   descripcion: "",
 });
@@ -98,12 +97,12 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const fechaIso = new Date(values.fecha).toISOString();
+      const fechaIso = new Date(`${values.fecha}T00:00:00`).toISOString();
       await crearEvento.mutateAsync({
         embarqueId,
         tipo: values.tipo,
-        descripcion: values.descripcion ?? "",
-        ubicacion: values.ubicacion ?? "",
+        descripcion: "",
+        ubicacion: "",
         fecha: fechaIso,
         usuario: user?.email ?? "",
       });
@@ -180,20 +179,12 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
               {errors.tipo && <p className="text-xs text-destructive">{errors.tipo.message}</p>}
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Fecha y hora *</label>
-              <Input type="datetime-local" {...register("fecha")} required />
+              <label className="text-sm font-medium">Fecha *</label>
+              <Input type="date" {...register("fecha")} required />
               {errors.fecha && <p className="text-xs text-destructive">{errors.fecha.message}</p>}
               <p className="text-xs text-muted-foreground">
                 Usa la fecha del último evento publicado por la naviera.
               </p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Ubicación</label>
-              <Input {...register("ubicacion")} placeholder="Puerto, ciudad, terminal..." />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium">Descripción</label>
-              <Textarea {...register("descripcion")} placeholder="Detalles del evento (copia/pega desde la web de la naviera)..." rows={2} />
             </div>
             <div className="md:col-span-2 flex gap-2 justify-end">
               <Button type="button" variant="outline" size="sm" onClick={onClose}>
@@ -213,7 +204,7 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
             <AlertDialogTitle>¿Actualizar fecha de llegada real?</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Quieres registrar{" "}
-              <strong>{confirmLlegada ? formatDate(confirmLlegada, "dd/MM/yyyy HH:mm") : ""}</strong> como
+              <strong>{confirmLlegada ? formatDate(confirmLlegada, "dd/MM/yyyy") : ""}</strong> como
               la fecha de llegada real del embarque? Esto actualiza la ETA real visible para todos.
             </AlertDialogDescription>
           </AlertDialogHeader>
