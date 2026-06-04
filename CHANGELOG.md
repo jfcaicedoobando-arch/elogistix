@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.54.2] - 2026-06-04
+- **feat(mappers) — `genericPayloadMapper` reusable**: nueva utilidad declarativa en `src/lib/mappers/genericPayloadMapper.ts` que reemplaza el patrón repetitivo de pares `xxxFromDb.ts` / `xxxToDb.ts`. Acepta un schema de rutas estructurales (`DotPath<T>` tipado en compile-time hasta 4 niveles), un mini-DSL `F.{raw,str,num,emptyNull,zod}` con coerciones comunes, hooks `computedToDb` / `computedFromDb` para lógica derivada y validación runtime opcional vía Zod (`rowSchema` / `formSchema`). Tests con 6 casos cubriendo coerciones, direccionalidad, round-trip, errores Zod y validación de payload final. Sin cambios de runtime para usuarios: los mappers existentes (`embarqueToDb`, `embarqueFromDb`, etc.) se mantienen y se migrarán en PRs posteriores.
+
 ## [12.54.1] - 2026-06-04
 - **chore(lint) — barrels y allowlist post-refactor embarques**: se completan re-exports en los barrels de `services/{facturas,configuracion}` (cobranza, emisor) y `hooks/{dashboard,dashboard-ejecutivo}` (operador, ejecutivo), se reescriben ~84 archivos para importar desde el barrel `@/services/<dominio>` / `@/hooks/<dominio>` en vez de archivos internos, y se actualiza la allowlist de `@/components/ui/table` en `eslint.config.js` para reflejar las nuevas rutas bajo `src/features/embarques/components/**`. Se invierte la dependencia `EmbarqueListExtras` (ahora vive en `features/embarques/domain/embarquesPageHelpers.ts` y los services lo re-exportan) para cumplir la regla `features/*/domain` no puede importar de `features/*/services`. Se quitan escapes innecesarios en regex de `src/lib/import/bbva.ts`. `tsc --noEmit` y `eslint src` quedan en 0 errores.
 
