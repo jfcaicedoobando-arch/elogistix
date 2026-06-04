@@ -95,8 +95,8 @@ export async function createUserViaEdgeFunction(
   params: CreateUserParams,
 ): Promise<CreateUserResponse> {
   const token = await getAuthToken();
-  const res = await supabase.functions.invoke("create-user", {
-    body: { email: params.email, password: params.password, role: params.role },
+  const res = await supabase.functions.invoke("user-management", {
+    body: { action: "create", email: params.email, password: params.password, role: params.role },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw new Error(res.error.message || "Error al crear usuario");
@@ -121,8 +121,8 @@ export async function createUserViaEdgeFunction(
 
 export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unknown> {
   const token = await getAuthToken();
-  const res = await supabase.functions.invoke("delete-user", {
-    body: { user_id: userId },
+  const res = await supabase.functions.invoke("user-management", {
+    body: { action: "delete", user_id: userId },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw new Error(res.error.message || "Error al eliminar usuario");
