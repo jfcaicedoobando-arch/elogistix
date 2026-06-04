@@ -15,8 +15,8 @@ export interface ClientUserEnriched {
 }
 
 export async function fetchClientUsers(clienteId: string): Promise<ClientUserEnriched[]> {
-  const { data, error } = await supabase.functions.invoke("list-client-users", {
-    body: { cliente_id: clienteId },
+  const { data, error } = await supabase.functions.invoke("user-management", {
+    body: { action: "list-clients", cliente_id: clienteId },
   });
   if (error) throw error;
   return (data ?? []) as ClientUserEnriched[];
@@ -29,8 +29,8 @@ export interface InviteClientUserParams {
 }
 
 export async function inviteClientUser(params: InviteClientUserParams) {
-  const { data, error } = await supabase.functions.invoke("invite-client-user", {
-    body: params,
+  const { data, error } = await supabase.functions.invoke("user-management", {
+    body: { action: "invite-client", ...params },
   });
   if (error) throw error;
   return data;
