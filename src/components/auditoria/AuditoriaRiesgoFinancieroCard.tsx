@@ -5,6 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingDown } from "lucide-react";
 import type { ReglaAuditoria } from "@/types/auditoria";
+import { formatCurrency } from "@/lib/formatters/numbers";
 
 interface Props {
   total: number;
@@ -17,11 +18,9 @@ const reglaLabel: Partial<Record<ReglaAuditoria, string>> = {
   proforma_vencida: "Proformas vencidas",
 };
 
-const fmt = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 0,
-});
+/** Riesgo financiero se muestra sin decimales para ahorrar espacio en la tarjeta. */
+const fmt = (n: number): string =>
+  formatCurrency(Math.round(n), "MXN").replace(/\.00$/, "");
 
 export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
   const items = Object.entries(porRegla)
@@ -38,7 +37,7 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="text-3xl font-bold tabular-nums text-warning">
-          {fmt.format(total)}
+          {fmt(total)}
         </div>
         {items.length === 0 ? (
           <p className="text-xs text-muted-foreground">
@@ -55,7 +54,7 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
                   {reglaLabel[regla as ReglaAuditoria] ?? regla}
                 </span>
                 <span className="font-semibold tabular-nums">
-                  {fmt.format(monto ?? 0)}
+                  {fmt(monto ?? 0)}
                 </span>
               </div>
             ))}

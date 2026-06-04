@@ -9,6 +9,7 @@ import {
 import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/hooks/crm";
 import { insertBitacora } from "@/services/bitacora";
 import { useAuth } from "@/contexts/AuthContext";
+import { buildWhatsappUrl } from "@/constants/externalUrls";
 
 interface Props {
   canal: PlantillaCanal;
@@ -35,7 +36,7 @@ export default function PlantillaSelector({ canal, destino, vars, entidadTipo, e
     } else {
       const tel = sanitizeTel(destino);
       if (!tel) return;
-      window.open(`https://wa.me/${tel}?text=${encodeURIComponent(cuerpoR)}`, "_blank", "noopener");
+      window.open(buildWhatsappUrl(tel, cuerpoR), "_blank", "noopener");
     }
     // Bitácora best-effort
     if (user?.id) {
