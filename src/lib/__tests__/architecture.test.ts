@@ -61,17 +61,20 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
     expect(violators, `Violaciones en services/:\n${violators.join("\n")}`).toEqual([]);
   });
 
-  it("src/features/*/domain no importa hooks, components, pages, routes ni services", () => {
-    const pattern = /from\s+["'](@\/(hooks|components|pages)\/|@\/features\/[^/]+\/(hooks|components|routes|services)\/)/;
+  it("src/features/*/domain no importa hooks, components, pages, routes ni services (runtime)", () => {
+    // Type-only imports (`import type ...`) están permitidos: no generan
+    // acoplamiento en runtime y los tipos pueden cruzar capas.
+    const pattern = /^\s*import\s+(?!type\s)[^;]*from\s+["'](@\/(hooks|components|pages)\/|@\/features\/[^/]+\/(hooks|components|routes|services)\/)/m;
     const violators = featureSubdirs("domain").flatMap((d) => findViolators(d, pattern));
     expect(violators, `Violaciones en features/*/domain:\n${violators.join("\n")}`).toEqual([]);
   });
 
-  it("src/features/*/services no importa hooks, components, pages, contexts ni routes", () => {
-    const pattern = /from\s+["'](@\/(hooks|components|pages|contexts)\/|@\/features\/[^/]+\/(hooks|components|routes)\/)/;
+  it("src/features/*/services no importa hooks, components, pages, contexts ni routes (runtime)", () => {
+    const pattern = /^\s*import\s+(?!type\s)[^;]*from\s+["'](@\/(hooks|components|pages|contexts)\/|@\/features\/[^/]+\/(hooks|components|routes)\/)/m;
     const violators = featureSubdirs("services").flatMap((d) => findViolators(d, pattern));
     expect(violators, `Violaciones en features/*/services:\n${violators.join("\n")}`).toEqual([]);
   });
+
 
   it("hooks y contexts no importan @/integrations/supabase/client directamente", () => {
     // Whitelist: archivos que SÍ pueden tocar el client directamente.
