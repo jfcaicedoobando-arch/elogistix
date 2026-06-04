@@ -13,7 +13,7 @@ import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocu
 import { PortalEmbarqueResumenTab } from "@/components/portal/embarqueDetalle/PortalEmbarqueResumenTab";
 import { PortalEmbarqueStepper } from "@/components/portal/embarqueDetalle/PortalEmbarqueStepper";
 
-import { usePortalEmbarqueDetalleController } from "@/hooks/embarque";
+import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalEmbarqueDetalle() {

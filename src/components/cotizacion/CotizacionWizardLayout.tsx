@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info } from "lucide-react";
-import { StepIndicator } from "@/components/embarque/StepIndicator";
+import { StepIndicator } from "@/features/embarques/components/StepIndicator";
 import SeccionConceptosVentaCotizacion from "@/components/cotizacion/SeccionConceptosVentaCotizacion";
 import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/components/cotizacion/PasoResumenCotizacion";

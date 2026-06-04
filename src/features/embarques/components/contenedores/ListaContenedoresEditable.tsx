@@ -1,0 +1,89 @@
+/**
+ * Editor de lista dinámica de contenedores. Reutilizable en wizard y vista detalle.
+ */
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTiposContenedor } from "@/hooks/catalogos";
+import {
+  crearContenedorVacio,
+  type ContenedorBorrador,
+} from "@/features/embarques/types/contenedor";
+import { FilaContenedor } from "./FilaContenedor";
+
+const SOFT_CAP = 50;
+
+interface Props {
+  value: ContenedorBorrador[];
+  onChange: (next: ContenedorBorrador[]) => void;
+  disabled?: boolean;
+  minRows?: number;
+}
+
+export function ListaContenedoresEditable({
+  value,
+  onChange,
+  disabled,
+  minRows = 1,
+}: Props) {
+  const { data: tiposContenedor = [] } = useTiposContenedor();
+
+  const handleAgregar = () => {
+    if (value.length >= SOFT_CAP) {
+      const ok = window.confirm(
+        `Ya tienes ${value.length} contenedores. ¿Seguro que quieres agregar más?`,
+      );
+      if (!ok) return;
+    }
+    const next = [...value, crearContenedorVacio(value.length + 1)];
+    onChange(next);
+  };
+
+  const handleCambio = (
+    index: number,
+    cambios: Partial<ContenedorBorrador>,
+  ) => {
+    const next = value.map((row, i) => (i === index ? { ...row, ...cambios } : row));
+    onChange(next);
+  };
+
+  const handleEliminar = (index: number) => {
+    const next = value
+      .filter((_, i) => i !== index)
+      .map((row, i) => ({ ...row, orden: i + 1 }));
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-3">
+      {value.length === 0 ? (
+        <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          Sin contenedores. Agrega el primero para continuar.
+        </div>
+      ) : (
+        value.map((row, idx) => (
+          <FilaContenedor
+            key={row.id ?? `nuevo-${idx}`}
+            index={idx}
+            value={row}
+            tiposContenedor={tiposContenedor}
+            canDelete={value.length > minRows}
+            onChange={(cambios) => handleCambio(idx, cambios)}
+            onDelete={() => handleEliminar(idx)}
+            disabled={disabled}
+          />
+        ))
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleAgregar}
+        disabled={disabled}
+      >
+        <Plus className="h-4 w-4 mr-1" />
+        Agregar contenedor
+      </Button>
+    </div>
+  );
+}

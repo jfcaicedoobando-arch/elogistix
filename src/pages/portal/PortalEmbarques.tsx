@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
-import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";

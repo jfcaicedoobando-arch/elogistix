@@ -6,7 +6,7 @@ import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useProformasPendientes } from "@/hooks/embarque/useProformas";
+import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";

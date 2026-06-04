@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 
 interface EmbarqueItem {

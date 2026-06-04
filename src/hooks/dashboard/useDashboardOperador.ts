@@ -1,6 +1,6 @@
 /**
  * Hooks de React Query para el dashboard del rol Operador.
- * Las queries a Supabase viven en `@/services/embarque/dashboardOperador`
+ * Las queries a Supabase viven en `@/features/embarques/services/dashboardOperador`
  * (regla de capas Pages→Hooks→Services).
  */
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import {
   type DocsFaltantesItem,
   type SinTrackingItem,
   type OperadorEmbarqueLite,
-} from "@/services/embarque/dashboardOperador";
+} from "@/features/embarques/services/dashboardOperador";
 
 export type { DocsFaltantesItem, SinTrackingItem, OperadorEmbarqueLite };
 

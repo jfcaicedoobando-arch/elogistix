@@ -22,7 +22,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: { rpc: (...args: unknown[]) => rpcMock(...args) },
 }));
 
-import { crearEmbarqueRpc } from "@/services/embarque/mutations";
+import { crearEmbarqueRpc } from "@/features/embarques/services/mutations";
 import { consolidarProformas } from "@/services/proforma/consolidar";
 import { useStableRequestId } from "@/lib/idempotency";
 

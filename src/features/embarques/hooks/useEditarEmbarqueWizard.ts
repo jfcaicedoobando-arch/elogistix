@@ -1,0 +1,196 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/shared";
+import {
+  useEmbarque,
+  useEmbarqueConceptosVenta,
+  useEmbarqueConceptosCosto,
+  useProveedoresForSelect,
+  useUpdateEmbarque,
+} from "@/features/embarques/hooks/useEmbarques";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
+import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
+import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
+import { getErrorMessage } from "@/lib/errors";
+import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
+import { resolverValorContactoDesdeTexto } from "@/lib/contacto";
+
+/**
+ * Controller hook para la página EditarEmbarque.
+ * Encapsula carga del embarque, hidratación de formularios, y submit.
+ */
+export function useEditarEmbarqueWizard(id: string | undefined) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const { data: embarque, isLoading } = useEmbarque(id);
+  const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
+  const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);
+  const { data: contenedoresDb = [], isLoading: cargandoContenedores } = useContenedoresEmbarque(id);
+  const { data: clientes = [] } = useClientesForSelect();
+  const { data: proveedoresDb = [] } = useProveedoresForSelect();
+  const updateEmbarque = useUpdateEmbarque();
+  const registrarActividad = useRegistrarActividad();
+
+  const [initialized, setInitialized] = useState(false);
+  const [hidratoContactos, setHidratoContactos] = useState(false);
+  const [hidratoContenedores, setHidratoContenedores] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const {
+    methods,
+    handleMsdsUpload,
+    inicializarDesdeEmbarque,
+    buildEmbarquePayload,
+    buildConceptosVentaPayload,
+    buildConceptosCostoPayload,
+  } = useEmbarqueForm();
+  const clienteId = methods.watch('clienteId');
+  const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
+
+  const conceptosForm = useConceptosForm();
+  const {
+    conceptosVenta, conceptosCosto,
+    inicializarVenta, inicializarCosto,
+  } = conceptosForm;
+
+  useEffect(() => {
+    if (!embarque || initialized) return;
+    inicializarDesdeEmbarque(embarque);
+    setInitialized(true);
+  }, [embarque, initialized, inicializarDesdeEmbarque]);
+
+  useEffect(() => {
+    if (!initialized || conceptosVentaDb.length === 0) return;
+    inicializarVenta(conceptosVentaDb.map((v, i) => ({
+      id: i + 1,
+      concepto: v.descripcion,
+      cantidad: v.cantidad,
+      precioUnitario: Number(v.precio_unitario),
+      moneda: v.moneda,
+      contenedorId: v.contenedor_id ?? null,
+    })));
+  }, [conceptosVentaDb, initialized, inicializarVenta]);
+
+  useEffect(() => {
+    if (!initialized || conceptosCostoDb.length === 0) return;
+    inicializarCosto(conceptosCostoDb.map((c, i) => ({
+      id: i + 1,
+      proveedorId: c.proveedor_id ?? '',
+      concepto: c.concepto,
+      monto: Number(c.monto),
+      moneda: c.moneda,
+      contenedorId: c.contenedor_id ?? null,
+    })));
+  }, [conceptosCostoDb, initialized, inicializarCosto]);
+
+  const selectedCliente = clientes.find(c => c.id === clienteId);
+
+  // Resolución inversa de shipper/consignatario: en BD se guardan como string
+  // ("Nombre — Tipo (País)" o el nombre del cliente), pero los <Select> del
+  // wizard esperan contacto.id, '__cliente__' o '__otro__'. Corre una sola vez
+  // tras inicializar el form y tener disponibles los contactos del cliente.
+  useEffect(() => {
+    if (!initialized || hidratoContactos || !embarque) return;
+    const shipperResuelto = resolverValorContactoDesdeTexto(
+      embarque.shipper, contactos, selectedCliente?.nombre,
+    );
+    const consigResuelto = resolverValorContactoDesdeTexto(
+      embarque.consignatario, contactos, selectedCliente?.nombre, { permitirCliente: true },
+    );
+    methods.setValue('shipper', shipperResuelto.value, { shouldDirty: false });
+    methods.setValue('shipperManual', shipperResuelto.manual, { shouldDirty: false });
+    methods.setValue('consignatario', consigResuelto.value, { shouldDirty: false });
+    methods.setValue('consignatarioManual', consigResuelto.manual, { shouldDirty: false });
+    setHidratoContactos(true);
+  }, [initialized, hidratoContactos, embarque, contactos, selectedCliente, methods]);
+
+  // Hidratación de contenedores hijos (Fase 2 v12.11.0). Una vez tras initialized.
+  useEffect(() => {
+    if (!initialized || hidratoContenedores || cargandoContenedores) return;
+    methods.setValue(
+      'contenedores',
+      contenedoresDb.map(rowAContenedorBorrador),
+      { shouldDirty: false },
+    );
+    setHidratoContenedores(true);
+  }, [initialized, hidratoContenedores, cargandoContenedores, contenedoresDb, methods]);
+
+  const handleSave = async () => {
+    if (!id || !embarque) return;
+    try {
+      const nuevoEmbarquePayload = buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '');
+      const nuevosVenta = buildConceptosVentaPayload(conceptosVenta);
+      const nuevosCosto = buildConceptosCostoPayload(conceptosCosto, proveedoresDb);
+
+      // Diff de campos sensibles ANTES de mutar (Bloque 3.6 ext).
+      const cambiosEmbarque = diffFields(
+        embarque,
+        nuevoEmbarquePayload,
+        SENSITIVE_FIELDS.embarque,
+      );
+      const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
+      const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
+
+      const contenedoresActuales = methods.getValues('contenedores') ?? [];
+      await updateEmbarque.mutateAsync({
+        id,
+        embarque: nuevoEmbarquePayload,
+        conceptosVenta: nuevosVenta,
+        conceptosCosto: nuevosCosto,
+        contenedores: contenedoresActuales,
+      });
+
+      const v = methods.getValues();
+      const tuvoCambios = cambiosEmbarque.length > 0
+        || cambiosVenta.agregados + cambiosVenta.eliminados + cambiosVenta.modificados > 0
+        || cambiosCosto.agregados + cambiosCosto.eliminados + cambiosCosto.modificados > 0;
+      registrarActividad.mutate({
+        accion: 'editar',
+        modulo: 'embarques',
+        entidad_id: id,
+        entidad_nombre: embarque.expediente,
+        detalles: {
+          cliente: selectedCliente?.nombre ?? '',
+          modo: v.modo,
+          tipo: v.tipo,
+          ...(tuvoCambios && {
+            cambios: JSON.parse(JSON.stringify({
+              embarque: cambiosEmbarque,
+              ventas: cambiosVenta,
+              costos: cambiosCosto,
+            })),
+          }),
+        },
+      });
+
+      notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
+      navigate(`/embarques/${id}`);
+    } catch (err: unknown) {
+      notifyError(toast, { title: "Error al actualizar", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE" });
+    }
+  };
+
+  return {
+    embarque,
+    isLoading: isLoading || cargandoVenta || cargandoCosto || cargandoContenedores,
+    methods,
+    currentStep,
+    setCurrentStep,
+    clientes,
+    proveedoresDb,
+    contactos,
+    selectedCliente,
+    handleMsdsUpload,
+    handleSave,
+    isPending: updateEmbarque.isPending,
+    navigate,
+    conceptosForm,
+  };
+}

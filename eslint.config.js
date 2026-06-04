@@ -131,11 +131,43 @@ export default tseslint.config(
   {
     // Hooks y services pueden hacer imports internos a su propio árbol
     // (composición intra-dominio, sub-barrels, helpers privados).
-    files: ["src/hooks/**", "src/services/**"],
+    files: ["src/hooks/**", "src/services/**", "src/features/**"],
     rules: {
       "no-restricted-imports": "off",
     },
   },
+  {
+    // `src/features/*/domain/**`: mismas garantías que `src/lib/**`
+    // (capa pura, sin React, sin dependencias hacia arriba).
+    files: ["src/features/*/domain/**"],
+    ignores: ["src/features/*/domain/**/__tests__/**"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          { group: ["@/hooks/*", "@/hooks/**", "@/features/*/hooks/**"], message: "features/<x>/domain no puede importar de hooks/." },
+          { group: ["@/components/*", "@/components/**", "@/features/*/components/**"], message: "features/<x>/domain no puede importar de components/. domain/ es puro (sin React)." },
+          { group: ["@/pages/*", "@/pages/**", "@/features/*/routes/**"], message: "features/<x>/domain no puede importar de pages/routes/." },
+          { group: ["@/features/*/services/**"], message: "features/<x>/domain no puede importar de services/. Invierte la dependencia." },
+        ],
+      }],
+    },
+  },
+  {
+    // `src/features/*/services/**`: mismas garantías que `src/services/**`.
+    files: ["src/features/*/services/**"],
+    ignores: ["src/features/*/services/**/__tests__/**"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          { group: ["@/hooks/*", "@/hooks/**", "@/features/*/hooks/**"], message: "features/<x>/services no puede importar de hooks/." },
+          { group: ["@/components/*", "@/components/**", "@/features/*/components/**"], message: "features/<x>/services no puede importar de components/. services/ es puro (sin React)." },
+          { group: ["@/pages/*", "@/pages/**", "@/features/*/routes/**"], message: "features/<x>/services no puede importar de pages/routes/." },
+          { group: ["@/contexts/*", "@/contexts/**"], message: "features/<x>/services no puede importar de contexts/. Pasa el dato como parámetro." },
+        ],
+      }],
+    },
+  },
+
   {
     // `src/lib/**` es la capa más baja: NO puede depender de hooks ni de
     // componentes (eso invierte la jerarquía Pages→Hooks→Services→Lib).

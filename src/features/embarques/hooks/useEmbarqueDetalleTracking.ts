@@ -1,0 +1,30 @@
+import { useCreateTrackingLink } from "@/features/embarques/hooks/useTrackingLinks";
+import { useToast } from "@/hooks/shared";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+/**
+ * Encapsula la creación y copiado al portapapeles del enlace público
+ * de tracking para un embarque dado.
+ */
+export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
+  const createTrackingLink = useCreateTrackingLink();
+  const { toast } = useToast();
+
+  const handleCompartirTracking = async () => {
+    if (!embarqueId) return;
+    try {
+      const link = await createTrackingLink.mutateAsync({ embarqueId });
+      const url = `${window.location.origin}/tracking/${link.token}`;
+      await navigator.clipboard.writeText(url);
+      notifySuccess(toast, { title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
+    } catch {
+      notifyError(toast, { title: "Error al generar enlace", method: "HANDLE_COMPARTIR_TRACKING", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    }
+  };
+
+  return {
+    handleCompartirTracking,
+    isPending: createTrackingLink.isPending,
+  };
+}

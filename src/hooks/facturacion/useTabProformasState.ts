@@ -3,7 +3,7 @@
  * Sin dependencias de mutaciones ni de columnas de UI.
  */
 import { useState, useMemo } from "react";
-import type { ProformaConFactura } from "@/hooks/embarque/useProformas";
+import type { ProformaConFactura } from "@/features/embarques/hooks/useProformas";
 import { DEFAULT_PAGE_SIZE } from "@/hooks/shared/useListPageState";
 export type FiltroEstadoProforma = "todas" | "pendiente" | "facturada";
 

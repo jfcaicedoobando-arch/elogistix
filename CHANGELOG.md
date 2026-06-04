@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.54.0] - 2026-06-04
+- **refactor(arquitectura) — feature slice `src/features/embarques/`**: se migra todo el dominio de embarques desde el layout horizontal (`components/embarque`, `hooks/embarque`, `pages/embarques`, `services/embarque`, `lib/domain/embarque*`, `lib/embarque`, `types/embarque*`, `constants/embarqueConstants`, `lib/query/keys/embarques`) a un único slice cohesivo con subcarpetas co-ubicadas: `routes/`, `components/`, `hooks/`, `domain/`, `services/`, `types/`, `constants/`, `queryKeys.ts`, `index.ts` (barrel público). ~152 archivos movidos, 111 archivos con imports reescritos. Sin cambios de comportamiento. Se extienden las reglas de arquitectura (`src/lib/__tests__/architecture.test.ts` + `eslint.config.js`) para que `features/*/domain` y `features/*/services` cumplan las mismas garantías de capa que `lib/` y `services/`. Primer dominio migrado; el resto (clientes, cotización, facturación, etc.) seguirá el mismo patrón en PRs posteriores.
+
 ## [12.53.13] - 2026-06-04
 - **refactor(tables) — `VirtualDataTable` adelgazado**: se extrae la maquinaria (instancia de TanStack + virtualizer + cálculo de `gridTemplate`) al hook headless `useVirtualTableState` (`src/components/shared/dataTable/useVirtualTableState.ts`) y el contenedor absoluto de filas a `VirtualRowsContainer` (`src/components/shared/VirtualRowsContainer.tsx`). `VirtualDataTable.tsx` queda como ensamblador delgado (<110 líneas). API pública y comportamiento sin cambios; `DataTable` y `useListPageState` no se tocan para preservar la fuente de verdad de URL state.
 

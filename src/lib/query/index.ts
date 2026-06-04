@@ -6,7 +6,7 @@
  * cumplir Power of 10 (archivos ≤200 líneas). API pública intacta —
  * `import { queryKeys } from "@/lib/query"` sigue funcionando idéntico.
  */
-import { embarques } from "./keys/embarques";
+import { embarques } from "@/features/embarques/queryKeys";
 import { proformas } from "./keys/proformas";
 import { cotizaciones } from "./keys/cotizaciones";
 import { clientes } from "./keys/clientes";

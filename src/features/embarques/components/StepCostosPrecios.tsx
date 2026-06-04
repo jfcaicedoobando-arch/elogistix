@@ -1,0 +1,190 @@
+import { useMemo } from "react";
+import { useFormContext } from "react-hook-form";
+import { Trash2 } from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
+import { aUSD, sumarEnUSD } from "@/lib/financial/costosUSD";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
+import { ValidationAlert } from "@/components/feedback/ValidationAlert";
+import { NumericInput } from "@/components/shared/NumericInput";
+import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
+import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
+
+interface Proveedor {
+  id: string;
+  nombre: string;
+}
+
+interface Props {
+  conceptosVenta: ConceptoVentaRow[];
+  conceptosCosto: ConceptoCostoRow[];
+  proveedoresDb: Proveedor[];
+  subtotalVenta: number;
+  totalCosto: number;
+  utilidadEstimada: number;
+  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean | null) => void;
+  addConceptoVenta: () => void;
+  removeConceptoVenta: (id: number) => void;
+  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean | null) => void;
+  addConceptoCosto: () => void;
+  removeConceptoCosto: (id: number) => void;
+  errors?: StepValidationErrors;
+  /** Sólo presente al editar un embarque existente. Habilita la columna "Contenedor". */
+  embarqueId?: string;
+}
+
+export function StepCostosPrecios(props: Props) {
+  const {
+    conceptosVenta, conceptosCosto, proveedoresDb,
+    utilidadEstimada,
+    updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
+    updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
+    errors = {},
+    embarqueId,
+  } = props;
+
+  const { watch, register } = useFormContext<EmbarqueFormValues>();
+  const tipoCambioUSD = watch('tipoCambioUSD');
+  const tipoCambioEUR = watch('tipoCambioEUR');
+
+  const tcUSD = parseFloat(tipoCambioUSD) || 1;
+  const tcEUR = parseFloat(tipoCambioEUR) || 1;
+
+  const toUSD = (monto: number, moneda: string) => aUSD(monto, moneda, tcUSD, tcEUR);
+
+  const totalCostoUSD = useMemo(
+    () => sumarEnUSD(conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda })), tcUSD, tcEUR),
+    [conceptosCosto, tcUSD, tcEUR]
+  );
+  const totalVentaUSD = useMemo(
+    () => sumarEnUSD(conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda })), tcUSD, tcEUR),
+    [conceptosVenta, tcUSD, tcEUR]
+  );
+
+  const hasErrors = Object.keys(errors).length > 0;
+
+  // Sólo en edición: si el embarque tiene ≥2 contenedores, mostramos columna extra.
+  const { data: contenedoresEmb = [] } = useContenedoresEmbarque(embarqueId ?? '');
+  const showContenedorCol = !!embarqueId && contenedoresEmb.length >= 2;
+
+  const costoCols = showContenedorCol
+    ? "grid-cols-[1fr_1fr_120px_90px_140px_110px_40px]"
+    : "grid-cols-[1fr_1fr_120px_90px_110px_40px]";
+  const ventaCols = showContenedorCol
+    ? "grid-cols-[1fr_80px_120px_90px_140px_110px_40px]"
+    : "grid-cols-[1fr_80px_120px_90px_110px_40px]";
+
+  return (
+    <div className="space-y-6">
+      {hasErrors && <ValidationAlert severity="error" errors={errors} />}
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className={`grid ${costoCols} gap-2 text-xs font-medium text-muted-foreground`}>
+              <span>Proveedor</span><span>Concepto</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
+              {showContenedorCol && <span>Contenedor</span>}
+              <span>Total USD</span><span></span>
+            </div>
+            {conceptosCosto.map(costo => {
+              const totalUSD = toUSD(costo.monto, costo.moneda);
+              return (
+                <div key={costo.id} className={`grid ${costoCols} gap-2 items-center`}>
+                  <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
+                    <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Select value={costo.concepto} onValueChange={v => updateConceptoCosto(costo.id, 'concepto', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <NumericInput decimals value={costo.monto} onChange={n => updateConceptoCosto(costo.id, 'monto', n)} className="text-sm h-10" aria-label="Subtotal costo" />
+                  <Select value={costo.moneda} onValueChange={v => updateConceptoCosto(costo.id, 'moneda', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
+                  </Select>
+                  {showContenedorCol && (
+                    <SelectContenedorConcepto
+                      embarqueId={embarqueId!}
+                      value={costo.contenedorId ?? null}
+                      onChange={v => updateConceptoCosto(costo.id, 'contenedorId', v)}
+                      className="text-sm"
+                    />
+                  )}
+                  <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1} aria-label="Eliminar concepto de costo">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              );
+            })}
+            <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
+            <div className="border-t pt-3 mt-3 text-sm text-right">
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalCostoUSD, 'USD')}</span></div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className={`grid ${ventaCols} gap-2 text-xs font-medium text-muted-foreground`}>
+              <span>Concepto</span><span>Cantidad</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
+              {showContenedorCol && <span>Contenedor</span>}
+              <span>Total USD</span><span></span>
+            </div>
+            {conceptosVenta.map(venta => {
+              const totalUSD = toUSD(venta.precioUnitario, venta.moneda);
+              return (
+                <div key={venta.id} className={`grid ${ventaCols} gap-2 items-center`}>
+                  <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <NumericInput value={venta.cantidad} onChange={n => updateConceptoVenta(venta.id, 'cantidad', n)} className="text-sm h-10" aria-label="Cantidad venta" />
+                  <NumericInput decimals value={venta.precioUnitario} onChange={n => updateConceptoVenta(venta.id, 'precioUnitario', n)} className="text-sm h-10" aria-label="Subtotal venta" />
+                  <Select value={venta.moneda} onValueChange={v => updateConceptoVenta(venta.id, 'moneda', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
+                  </Select>
+                  {showContenedorCol && (
+                    <SelectContenedorConcepto
+                      embarqueId={embarqueId!}
+                      value={venta.contenedorId ?? null}
+                      onChange={v => updateConceptoVenta(venta.id, 'contenedorId', v)}
+                      className="text-sm"
+                    />
+                  )}
+                  <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1} aria-label="Eliminar concepto de venta">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              );
+            })}
+            <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
+            <div className="border-t pt-3 mt-3 text-sm text-right">
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalVentaUSD, 'USD')}</span></div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div><p className="text-xs text-muted-foreground">Tipo de Cambio USD</p><Input type="number" {...register('tipoCambioUSD')} className="text-center mt-1" /></div>
+            <div><p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p><Input type="number" {...register('tipoCambioEUR')} className="text-center mt-1" /></div>
+            <div><p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p><p className={`text-xl font-bold mt-2 ${utilidadEstimada >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(totalVentaUSD - totalCostoUSD, 'USD')}</p></div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

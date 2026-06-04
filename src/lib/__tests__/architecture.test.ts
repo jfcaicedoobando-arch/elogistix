@@ -30,6 +30,24 @@ function findViolators(root: string, pattern: RegExp): string[] {
   return violators;
 }
 
+function featureSubdirs(sub: "domain" | "services" | "hooks"): string[] {
+  const root = "src/features";
+  const out: string[] = [];
+  try {
+    for (const f of readdirSync(root)) {
+      const p = join(root, f, sub);
+      try {
+        if (statSync(p).isDirectory()) out.push(p);
+      } catch {
+        /* missing subdir */
+      }
+    }
+  } catch {
+    /* features dir may not exist */
+  }
+  return out;
+}
+
 describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () => {
   it("src/lib no importa @/hooks, @/components o @/pages", () => {
     const pattern = /from\s+["']@\/(hooks|components|pages)\//;
@@ -43,6 +61,18 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
     expect(violators, `Violaciones en services/:\n${violators.join("\n")}`).toEqual([]);
   });
 
+  it("src/features/*/domain no importa hooks, components, pages, routes ni services", () => {
+    const pattern = /from\s+["'](@\/(hooks|components|pages)\/|@\/features\/[^/]+\/(hooks|components|routes|services)\/)/;
+    const violators = featureSubdirs("domain").flatMap((d) => findViolators(d, pattern));
+    expect(violators, `Violaciones en features/*/domain:\n${violators.join("\n")}`).toEqual([]);
+  });
+
+  it("src/features/*/services no importa hooks, components, pages, contexts ni routes", () => {
+    const pattern = /from\s+["'](@\/(hooks|components|pages|contexts)\/|@\/features\/[^/]+\/(hooks|components|routes)\/)/;
+    const violators = featureSubdirs("services").flatMap((d) => findViolators(d, pattern));
+    expect(violators, `Violaciones en features/*/services:\n${violators.join("\n")}`).toEqual([]);
+  });
+
   it("hooks y contexts no importan @/integrations/supabase/client directamente", () => {
     // Whitelist: archivos que SÍ pueden tocar el client directamente.
     // Mantener mínimo; preferir crear un servicio en src/services/.
@@ -53,7 +83,11 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
       "src/contexts/AuthContext.tsx",
     ]);
     const pattern = /from\s+["']@\/integrations\/supabase\/client["']/;
-    const all = [...walk("src/hooks"), ...walk("src/contexts")];
+    const all = [
+      ...walk("src/hooks"),
+      ...walk("src/contexts"),
+      ...featureSubdirs("hooks").flatMap((d) => walk(d)),
+    ];
     const violators = all.filter((f) => {
       if (WHITELIST.has(f.replace(/\\/g, "/"))) return false;
       const src = readFileSync(f, "utf8");
@@ -65,3 +99,4 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
     ).toEqual([]);
   });
 });
+

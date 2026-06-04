@@ -1,0 +1,190 @@
+/**
+ * Orquestador del submit de "Nuevo Embarque".
+ *
+ * Encapsula la cadena:
+ *   resolverExpediente → subirDocumentos → createEmbarque
+ *   → updateEstadoCotizacion (si hay vínculo) → registrarActividad
+ *
+ * Extraído de useNuevoEmbarqueWizard (v8.79) para separar la orquestación
+ * de side-effects de la gestión de estado del wizard.
+ */
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/shared";
+import { notifyError, notifyWarning, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import {
+  useCreateEmbarque,
+  type ExpedienteCliente,
+} from "@/features/embarques/hooks/useEmbarques";
+import {
+  useUpdateEstadoCotizacion,
+  type CotizacionRow,
+} from "@/hooks/cotizacion/useCotizaciones";
+import {
+  resolverExpediente,
+  subirDocumentosEmbarque,
+} from "@/features/embarques/services";
+import {
+  resolveExpedienteForSubmit,
+  buildBitacoraDetalles,
+} from "@/features/embarques/domain/embarqueWizard";
+import { getErrorMessage } from "@/lib/errors";
+import { useStableRequestId } from "@/lib/idempotency";
+import type { Tables } from "@/integrations/supabase/types";
+import type { DocumentoChecklist } from "@/types/documentoChecklist";
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
+import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
+import type { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
+
+type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
+type ProveedorRow = { id: string; nombre: string };
+type ModoExpediente = "nuevo" | "existente";
+type EmbarqueFormApi = ReturnType<typeof useEmbarqueForm>;
+
+export interface SubmitOrchestratorParams {
+  /** Valores actuales del formulario (RHF.getValues()). */
+  values: { modo: string; tipo: string; blMaster: string; tipoServicio?: string; contenedores?: ContenedorBorrador[] };
+  modoExpediente: ModoExpediente;
+  expedienteSeleccionado: ExpedienteCliente | null;
+  cotizacionVinculada: CotizacionRow | null;
+  contactos: ContactoRow[];
+  selectedClienteNombre: string;
+  proveedoresDb: ProveedorRow[];
+  documentosArchivos: Record<string, File>;
+  // Builders inyectados desde useEmbarqueForm (tipos reales)
+  buildEmbarquePayload: EmbarqueFormApi["buildEmbarquePayload"];
+  buildConceptosVentaPayload: EmbarqueFormApi["buildConceptosVentaPayload"];
+  buildConceptosCostoPayload: EmbarqueFormApi["buildConceptosCostoPayload"];
+  getDocumentosChecklist: (modo: string) => DocumentoChecklist[];
+  conceptosVenta: ConceptoVentaLocal[];
+  conceptosCosto: ConceptoCostoLocal[];
+}
+
+
+export function useEmbarqueSubmitOrchestrator() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const createEmbarque = useCreateEmbarque();
+  const updateEstadoCotizacion = useUpdateEstadoCotizacion();
+  const registrarActividad = useRegistrarActividad();
+  const reqId = useStableRequestId();
+
+  const submit = useCallback(
+    async (p: SubmitOrchestratorParams): Promise<boolean> => {
+      // Fase 1: resolver expediente
+      let expediente: string;
+      try {
+        expediente = await resolveExpedienteForSubmit({
+          modoExpediente: p.modoExpediente,
+          expedienteSeleccionado: p.expedienteSeleccionado,
+          blMaster: p.values.blMaster,
+          tipo: p.values.tipo,
+          resolverNuevo: resolverExpediente,
+        });
+      } catch (err: unknown) {
+        notifyError(toast, {
+          title: "Error: generación de expediente",
+          description: getErrorMessage(err),
+          error: err,
+          method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR",
+        });
+        return false;
+      }
+
+      // Fase 2: subir documentos
+      let docPayload;
+      try {
+        docPayload = await subirDocumentosEmbarque(
+          expediente,
+          p.getDocumentosChecklist(p.values.modo),
+          p.documentosArchivos,
+        );
+      } catch (err: unknown) {
+        notifyError(toast, {
+          title: "Error: subida de documentos",
+          description: getErrorMessage(err),
+          error: err,
+          method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR",
+        });
+        return false;
+      }
+
+      // Fase 3: crear embarque
+      try {
+        const embarquePayload = {
+          expediente,
+          ...p.buildEmbarquePayload(p.contactos, p.selectedClienteNombre, user?.email || ""),
+          ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
+        };
+
+        // Derivar contenedores efectivos: en LCL forzar fila auto-LCL.
+        const contenedoresPayload =
+          p.values.modo === "Marítimo"
+            ? p.values.tipoServicio === "LCL"
+              ? [{ numero_contenedor: "", tipo_contenedor: "LCL", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 1 }]
+              : p.values.contenedores ?? []
+            : [];
+
+        await createEmbarque.mutateAsync({
+          embarque: embarquePayload,
+          conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
+          conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
+          documentos: docPayload,
+          contenedores: contenedoresPayload,
+          requestId: reqId.get(),
+        });
+        reqId.reset();
+
+      } catch (err: unknown) {
+        notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
+        return false;
+      }
+
+      // Fase 4: actualizar cotización (no bloqueante)
+      if (p.cotizacionVinculada) {
+        try {
+          await updateEstadoCotizacion.mutateAsync({
+            id: p.cotizacionVinculada.id,
+            estado: "En operación",
+          });
+        } catch (err: unknown) {
+          notifyWarning(toast, {
+            title: "Embarque creado con advertencia",
+            description: `Cotización: no se pudo actualizar el estado (${getErrorMessage(err)}).`,
+          });
+        }
+      }
+
+      // Fase 5: bitácora (no bloqueante)
+      registrarActividad.mutate({
+        accion: "crear",
+        modulo: "embarques",
+        entidad_nombre: expediente,
+        detalles: buildBitacoraDetalles({
+          modo: p.values.modo,
+          tipo: p.values.tipo,
+          clienteNombre: p.selectedClienteNombre,
+          cotizacionFolio: p.cotizacionVinculada?.folio ?? null,
+          modoExpediente: p.modoExpediente,
+        }),
+      });
+
+      notifySuccess(toast, {
+        title: "Embarque creado",
+        description: `Expediente ${expediente}: registrado correctamente.`,
+      });
+      navigate("/embarques");
+      return true;
+    },
+    [createEmbarque, updateEstadoCotizacion, registrarActividad, toast, navigate, user?.email, reqId],
+  );
+
+  return {
+    submit,
+    isPending: createEmbarque.isPending,
+  };
+}
