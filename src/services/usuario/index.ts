@@ -22,7 +22,8 @@ interface ListUsersRow {
 
 /**
  * Lista los miembros de la organización combinando organization_members
- * con la edge function list-users para resolver emails y created_at de auth.
+ * con la edge function `user-management` (action: "list") para resolver
+ * emails y created_at de auth.
  */
 export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   const { data: membersData, error: membersError } = await supabase
@@ -35,7 +36,9 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
 
   const emailMap: Record<string, { email: string; created_at: string }> = {};
   try {
-    const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
+    const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
+      body: { action: "list" },
+    });
     if (!fnError && Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
         emailMap[u.id] = { email: u.email, created_at: u.created_at };
@@ -62,8 +65,8 @@ export async function updateUserRole(userId: string, newRole: AppRole): Promise<
 }
 
 export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown> {
-  const { data, error } = await supabase.functions.invoke("delete-user", {
-    body: { user_id: userId },
+  const { data, error } = await supabase.functions.invoke("user-management", {
+    body: { action: "delete", user_id: userId },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
@@ -92,8 +95,8 @@ export async function createUserViaEdgeFunction(
   params: CreateUserParams,
 ): Promise<CreateUserResponse> {
   const token = await getAuthToken();
-  const res = await supabase.functions.invoke("create-user", {
-    body: { email: params.email, password: params.password, role: params.role },
+  const res = await supabase.functions.invoke("user-management", {
+    body: { action: "create", email: params.email, password: params.password, role: params.role },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw new Error(res.error.message || "Error al crear usuario");
@@ -118,8 +121,8 @@ export async function createUserViaEdgeFunction(
 
 export async function deleteUserViaEdgeFunctionAuth(userId: string): Promise<unknown> {
   const token = await getAuthToken();
-  const res = await supabase.functions.invoke("delete-user", {
-    body: { user_id: userId },
+  const res = await supabase.functions.invoke("user-management", {
+    body: { action: "delete", user_id: userId },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (res.error) throw new Error(res.error.message || "Error al eliminar usuario");

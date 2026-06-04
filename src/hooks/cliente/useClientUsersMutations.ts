@@ -39,7 +39,7 @@ export function useRevokeClientUser(clienteId: string) {
 }
 
 /**
- * Reenvía la invitación a un usuario del portal reutilizando `invite-client-user`,
+ * Reenvía la invitación a un usuario del portal reutilizando `user-management` (action `invite-client`),
  * que es idempotente cuando el usuario ya existe (genera nuevo link de recuperación).
  */
 export function useResendClientUserInvite(_clienteId: string) {

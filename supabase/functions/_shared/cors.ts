@@ -5,8 +5,7 @@
  *   (ej. `tracking-public`, `exchange-rates`).
  * - `buildCors(req)`: refleja el `Origin` sólo si está en la whitelist; en
  *   caso contrario devuelve `"null"`. Úsalo en TODA edge function que
- *   requiera JWT (create-user, list-users, parse-csf, invite-client-user,
- *   delete-user, auditoria-*).
+ *   requiera JWT (user-management, parse-csf, auditoria-*).
  *
  * Whitelist: dominios `*.lovable.app` (preview + published) + dominio custom
  * `elogistix.lovable.app` + `localhost:8080` para dev.

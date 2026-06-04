@@ -24,7 +24,9 @@ export interface OrgMemberRow {
 }
 
 export async function fetchAvailableUsers(): Promise<UserOption[]> {
-  const { data, error } = await supabase.functions.invoke("list-users");
+  const { data, error } = await supabase.functions.invoke("user-management", {
+    body: { action: "list" },
+  });
   if (error) throw error;
   return Array.isArray(data) ? (data as UserOption[]) : [];
 }
