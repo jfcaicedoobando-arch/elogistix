@@ -9,6 +9,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Sandbox de Lovable: máximo 600s por ejecución. Subimos el timeout por test
+    // y por hook para que la suite completa (~289 archivos) no se corte.
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "json", "json-summary", "lcov", "html"],

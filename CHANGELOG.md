@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.2] - 2026-06-04
+- **chore(tests) — timeouts explícitos en vitest**: agregué `testTimeout: 60_000` y `hookTimeout: 60_000` en `vitest.config.ts` para evitar cortes prematuros al correr la suite completa (~289 archivos) dentro del sandbox de Lovable (límite duro 600s por ejecución).
+
 ## [12.60.1] - 2026-06-04
 - **fix(crm) — menú "+ Nuevo" se abría solo al entrar al CRM**: `QuickAddMenu` tenía dos `useEffect` que reaccionaban a `openTrigger`/`dialogTrigger` y se ejecutaban en el render inicial (porque `openTrigger` arranca en `0`, que no es `undefined`), abriendo el dropdown al navegar a `/crm`. Agregué guard con `useRef` (`firstOpenRender`, `firstDialogRender`) para saltar la primera ejecución de cada efecto y solo disparar la apertura cuando el valor cambia después del montaje. Atajos `N`/`L`/`O`/`A` siguen funcionando.
 
