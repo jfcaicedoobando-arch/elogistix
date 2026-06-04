@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.52.4] - 2026-06-04
+- **fix(marketing/landing) — logo unificado con el de login**: el ícono `librecarga-icon-light.svg` parecía documento con flecha de subida, no carga. Se reemplaza en `LandingNav` y `LandingFooter` por el mismo isotipo `librecarga-logo.png` que usa la pantalla de Login (`BrandLockup`), montado en un contenedor blanco redondeado (`rounded-xl bg-white ring-1 ring-border/40 shadow-sm`) para mantener contraste sobre el navy del landing. Bump 12.52.4.
+
 ## [12.52.3] - 2026-06-04
+
 - **fix(marketing/landing/nav) — logo crisp en tablet**: en 768px (iPad portrait) el desktop nav (Módulos · Cómo funciona · Precio · FAQ · Iniciar sesión · Crear cuenta gratis) cabía a la fuerza y empujaba el wordmark "Libre Carga" a dos líneas. Se sube el breakpoint del nav desktop de `md:` a `lg:` (1024px) y se agregan `shrink-0` + `whitespace-nowrap` al lockup en `LandingNav.tsx`. Resultado: tablet y mobile usan el menú hamburguesa con el logo en una sola línea; desktop mantiene el nav completo. Bump 12.52.3.
 
 ## [12.52.2] - 2026-06-04
