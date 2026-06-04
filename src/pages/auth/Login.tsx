@@ -105,6 +105,7 @@ export default function Login() {
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
+          <h1 className="sr-only">Iniciar sesión en Libre Carga</h1>
         </CardHeader>
         <CardContent className="pt-2">
           <Tabs value={tab} onValueChange={handleTabChange} className="w-full">

@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.5] - 2026-06-04
+- **fix(seo) — h1 en login, metadata única en LogoPreview y og:url dinámico en tracking**: cierra 3 hallazgos del SEO review.
+  - `/login`: agrega `<h1 class="sr-only">Iniciar sesión en Libre Carga</h1>` para dar encabezado principal sin alterar el diseño.
+  - `/logo-preview`: añade `<Seo>` con título/description propios + `<meta name="robots" content="noindex, nofollow">` (es página interna de QA).
+  - `/tracking/:token`: el `<Seo>` ahora genera `canonical` y `og:url` self-referentes por token y un title específico al expediente.
+
 ## [12.53.4] - 2026-06-04
 - **security — endurecimiento edge functions**: cierra 2 hallazgos del security review.
   - `cxc-recordatorios`: reemplaza `corsHeaders` wildcard (`npm:@supabase/supabase-js@2/cors`) por `buildCors(req)` + `handlePreflightStrict(req)` desde `_shared/cors.ts`, alineándose con el resto de endpoints autenticados (whitelist `*.lovable.app` / `*.lovableproject.com` / localhost).

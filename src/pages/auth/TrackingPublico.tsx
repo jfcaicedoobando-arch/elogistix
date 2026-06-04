@@ -36,10 +36,12 @@ export default function TrackingPublico() {
   return (
     <div className="min-h-screen bg-background">
       <Seo
-        title="Seguimiento de embarque · Libre Carga"
-        description="Consulta el estatus en tiempo real de tu embarque internacional con Libre Carga."
-        ogTitle="Seguimiento de embarque · Libre Carga"
+        title={`Seguimiento ${e.expediente} · Libre Carga`}
+        description={`Consulta el estatus en tiempo real del embarque ${e.expediente} con Libre Carga.`}
+        canonical={`https://librecarga.com/tracking/${token}`}
+        ogTitle={`Seguimiento ${e.expediente} · Libre Carga`}
         ogDescription="Estatus en tiempo real de tu embarque con Libre Carga."
+        ogUrl={`https://librecarga.com/tracking/${token}`}
       />
       <header className="border-b bg-card">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
