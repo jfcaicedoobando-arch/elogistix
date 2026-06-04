@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.7] - 2026-06-04
+- **fix(seo) — og estático genérico de marca y sin og:url forzado a la raíz**: cierra hallazgo `agent_metadata:social_preview`.
+  - `index.html`: og:title/twitter:title genéricos ("Libre Carga"), descripciones de marca, eliminado `og:url` estático (cada ruta lo define vía `react-helmet-async`), añadido `og:site_name`.
+
 ## [12.53.6] - 2026-06-04
 - **fix(seo) — title acortado y rutas admin excluidas de indexación**: cierra 2 hallazgos del SEO review.
   - `index.html`: title/og:title/twitter:title acortados a 50 caracteres ("Libre Carga — Software de carga gratuito en México") para evitar truncamiento en SERP.
