@@ -1,7 +1,7 @@
 # Strict Mode Roadmap
 
 Plan para activar `strictNullChecks` (y eventualmente `strict: true`) en
-TypeScript sin romper el build. Compañero de [`cast-audit.md`](./cast-audit.md).
+TypeScript sin romper el build.
 
 ## Estado actual
 

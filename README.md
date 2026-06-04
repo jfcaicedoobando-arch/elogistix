@@ -2,7 +2,7 @@
 
 Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en México. Centraliza cotizaciones, embarques, facturación, portal de clientes, auditoría operativa y reportes.
 
-> **Versión actual**: ver `src/constants/appVersion.ts` y el [Changelog](./src/pages/dashboard/Changelog.tsx).
+> **Versión actual**: ver `src/constants/appVersion.ts` y el [`CHANGELOG.md`](./CHANGELOG.md).
 > **Arquitectura y convenciones**: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 > **Documentación de dominio**: [`docs/auditoria.md`](./docs/auditoria.md), [`docs/tables.md`](./docs/tables.md).
 

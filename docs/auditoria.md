@@ -1,7 +1,6 @@
 # Módulo Auditoría — Arquitectura y flujo de datos
 
-> Última revisión: **v11.69.0** (cleanslate · cierres D12/D14/D16/P1.5/P1.6 + parciales P1.7 y Cx fase 1). Ver `docs/audit-cleanslate-11.69.0.md`.
-> Acompaña a `ARCHITECTURE.md` y a `mem://features/seguridad-y-roles`.
+> Documento vivo. Acompaña a `ARCHITECTURE.md` y a `mem://features/seguridad-y-roles`.
 
 Este documento describe **cómo se compone la página de Auditoría**, qué hace
 cada hook/helper y cómo viajan los datos desde la base hasta la UI. El objetivo

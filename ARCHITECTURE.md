@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v11.59.1 — 2026-05-27**. Post Bloque A de auditoría: **0** hooks, contexts, components o pages importan `@/integrations/supabase/client` directamente (sólo `services/` y `integrations/supabase`). 18 suites en `services/`, 109 archivos / 716 tests totales.
+> Documento vivo. Fuente espejo de las reglas: `mem://technical/architecture-and-standards`. Para conteos actuales de tests/suites correr `bunx vitest run`.
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 > Documentación de dominio complementaria: [`docs/auditoria.md`](./docs/auditoria.md) (desglose de componentes y flujo de datos del módulo Auditoría), [`docs/tables.md`](./docs/tables.md) (estandarización de tablas y densidades).
 
@@ -340,7 +340,6 @@ Aceptadas explícitamente; no son deuda pendiente.
 ## 17.b Type assertions policy (`as X`)
 
 Política vigente desde v8.123.0. Compañera de
-[`docs/cast-audit.md`](./docs/cast-audit.md) y
 [`docs/strict-mode-roadmap.md`](./docs/strict-mode-roadmap.md).
 
 | Categoría | ¿Permitido? | Comentario obligatorio |
@@ -351,8 +350,7 @@ Política vigente desde v8.123.0. Compañera de
 | **HIGH** — `as unknown as X`, `as X[]` sobre respuesta sin validar | No (excepto tests con justificación escrita) | Obligatorio + revisor senior |
 | **CRITICAL** — `as any`, `JSON.parse(...) as X`, casts entre tipos no relacionados | **No** | Bloquea el merge |
 
-Para auditar el estado actual: `npm run audit:casts` (genera
-`docs/cast-audit.md`). Baseline 2026-05-08: 559 casts, 73 HIGH+CRITICAL (~13 %).
+Para auditar el estado actual: `bun scripts/audit-casts.ts` (regenera el reporte bajo demanda).
 
 ## 18. Glosario
 
@@ -399,7 +397,7 @@ El proyecto sigue **Semantic Versioning** (`MAJOR.MINOR.PATCH`). Mantener `APP_V
 
 ## 20. The Power of 10 (estándar de generación)
 
-Adoptado en v8.143.0. Inspirado en las "Power of 10 Rules" de la NASA, adaptado para React + Supabase + TypeScript. Aplica a **todo código nuevo y refactors**; el legacy se atiende por dominio según `docs/power10-baseline.md`. Versión condensada vive en `mem://principles/power-of-10` para que la IA generadora la cargue por defecto.
+Adoptado en v8.143.0. Inspirado en las "Power of 10 Rules" de la NASA, adaptado para React + Supabase + TypeScript. Aplica a **todo código nuevo y refactors**. Versión condensada vive en `mem://principles/power-of-10` para que la IA generadora la cargue por defecto.
 
 ### 20.1 Reglas
 
@@ -435,6 +433,6 @@ Adoptado en v8.143.0. Inspirado en las "Power of 10 Rules" de la NASA, adaptado 
 ### 20.2 Aplicación
 
 - **Fase 1 (v8.143.0):** Documentación + memoria — referencia obligatoria para la IA generadora.
-- **Fase 2:** Baseline read-only en `docs/power10-baseline.md` con conteos por dominio (script `scripts/audit-power10.ts`).
+- **Fase 2:** Baseline read-only (script `scripts/audit-power10.ts`) con conteos por dominio.
 - **Fase 3:** Endurecimiento de `eslint.config.js` (`no-explicit-any`, `exhaustive-deps`, `max-lines-per-function: 200` con overrides). Violaciones legacy se silencian con `// eslint-disable-next-line` + TODO; PRs nuevos no pueden agregar.
 - **Fase 4:** Limpieza por dominio (auditoría → embarque → cotización → cliente → resto), un PR por dominio.

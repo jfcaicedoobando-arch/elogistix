@@ -1,7 +1,6 @@
 # Architecture Map — Libre Carga
 
-Documento vivo (P2.11, actualizado en 11.60.0 tras el cierre de los Bloques A
-y B de auditoría). Tabla de dominio → pages → hooks → services → lib para los
+Documento vivo. Tabla de dominio → pages → hooks → services → lib para los
 dominios principales. Sirve para onboarding y como ancla del roadmap
 arquitectónico.
 

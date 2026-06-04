@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.9] - 2026-06-04
+- **docs(cleanup) — limpieza de documentación obsoleta**: eliminados 15 archivos `.md`/`.json` (referencias JSONCargo, checklists del RC/GA 12.0, snapshots de auditoría v11.69.0/12.15.0, reportes autogenerados y plan de landing ya implementado) y refrescados encabezados de `README.md`, `ARCHITECTURE.md`, `docs/architecture-map.md`, `docs/auditoria.md`, `docs/strict-mode-roadmap.md` y `docs/backups-rollback.md` para quitar fechas/versiones congeladas.
+
 ## [12.53.8] - 2026-06-04
 - **fix(security) — search_path fijo en funciones de cola de email**: cierra hallazgo `SUPA_function_search_path_mutable`.
   - `ALTER FUNCTION` aplicado a `enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq` con `SET search_path = public, pgmq` para evitar function hijacking.
