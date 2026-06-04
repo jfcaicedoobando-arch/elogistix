@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.17] - 2026-06-04
+- **refactor(quality/baseline)**: Cerrados los 6 hallazgos de la baseline de tests. (1) `useDashboardOperador.ts` ya no importa `@/integrations/supabase/client`; las dos queries se extraen al nuevo service `services/embarque/dashboardOperador.ts` (regla Pages→Hooks→Services). (2) `services/embarque/documentos.ts` baja de 214 a ≤200 líneas extrayendo `sha256Hex` y `hexToUuid` a `services/embarque/documentos/idempotencyHash.ts`. (3) `MiOperacionSection.tsx` se divide en `MiOperacionWidgets.tsx` (WidgetCard, Row) + `miOperacionUtils.ts` (buildPendientes). (4) `routes/appRoutes.tsx` baja de 207 a ~145 líneas moviendo los 50 `lazy(...)` a `routes/appRoutes.lazy.ts`. (5) Se actualizó el test `agruparProformasPendientes` para reflejar el contrato vigente (agrupa por `embarque_id`, no por `expediente`). Sin cambios de comportamiento en producción. Bump 12.51.17.
+
 ## [12.51.16] - 2026-06-04
 - **fix(observability/sentry)**: Hardcoded el DSN público del proyecto `elogistix/javascript-react` como fallback en `src/lib/sentry.ts`. Antes el SDK sólo se inicializaba si `VITE_SENTRY_DSN` estaba definida, variable que no existe en el build publicado, por lo que `/dashboard/sentry-diagnostico` reportaba "no inicializado" en producción. La env var sigue funcionando como override para otros entornos. Bump 12.51.16.
 

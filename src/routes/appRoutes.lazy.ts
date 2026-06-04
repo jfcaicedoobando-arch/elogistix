@@ -1,0 +1,59 @@
+/**
+ * Imports lazy de las páginas montadas en `appRoutes.tsx`. Extraídos para
+ * mantener el archivo de rutas ≤200 líneas (Power of 10).
+ */
+import { lazy } from "react";
+
+export const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
+export const Operaciones = lazy(() => import("@/pages/dashboard/Operaciones"));
+export const Reportes = lazy(() => import("@/pages/dashboard/Reportes"));
+export const Bitacora = lazy(() => import("@/pages/dashboard/Bitacora"));
+export const Ayuda = lazy(() => import("@/pages/dashboard/Ayuda"));
+
+export const Papelera = lazy(() => import("@/pages/admin/Papelera"));
+export const Idempotencia = lazy(() => import("@/pages/admin/Idempotencia"));
+export const Auditoria = lazy(() => import("@/pages/Auditoria"));
+export const SentryDiagnostico = lazy(() => import("@/pages/admin/SentryDiagnostico"));
+
+export const Embarques = lazy(() => import("@/pages/embarques/Embarques"));
+export const EmbarqueDetalle = lazy(() => import("@/pages/embarques/EmbarqueDetalle"));
+export const NuevoEmbarque = lazy(() => import("@/pages/embarques/NuevoEmbarque"));
+export const EditarEmbarque = lazy(() => import("@/pages/embarques/EditarEmbarque"));
+
+export const Cotizaciones = lazy(() => import("@/pages/cotizaciones/Cotizaciones"));
+export const NuevaCotizacion = lazy(() => import("@/pages/cotizaciones/NuevaCotizacion"));
+export const CotizacionDetalle = lazy(() => import("@/pages/cotizaciones/CotizacionDetalle"));
+export const EditarCotizacion = lazy(() => import("@/pages/cotizaciones/EditarCotizacion"));
+export const PdfPreviewCotizacion = lazy(() => import("@/pages/dev/PdfPreviewCotizacion"));
+
+export const Clientes = lazy(() => import("@/pages/clientes/Clientes"));
+export const ClienteDetalle = lazy(() => import("@/pages/clientes/ClienteDetalle"));
+export const Proveedores = lazy(() => import("@/pages/proveedores/Proveedores"));
+export const ProveedorDetalle = lazy(() => import("@/pages/proveedores/ProveedorDetalle"));
+export const Facturacion = lazy(() => import("@/pages/facturacion/Facturacion"));
+export const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
+export const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
+export const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
+export const ProfitPresupuesto = lazy(() => import("@/pages/profit/ProfitPresupuesto"));
+export const ProfitDashboardEjecutivo = lazy(() => import("@/pages/profit/ProfitDashboardEjecutivo"));
+export const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
+export const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
+export const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
+export const TesoreriaConciliacion = lazy(() => import("@/pages/tesoreria/TesoreriaConciliacion"));
+export const TesoreriaFlujo = lazy(() => import("@/pages/tesoreria/TesoreriaFlujo"));
+export const Comisiones = lazy(() => import("@/pages/comisiones/Comisiones"));
+
+export const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
+export const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
+
+// CRM — anidado bajo /crm con CrmLayout
+export const CrmLayout = lazy(() => import("@/pages/crm/CrmLayout"));
+export const CrmDashboard = lazy(() => import("@/pages/crm/CrmDashboard"));
+export const CrmMiDia = lazy(() => import("@/pages/crm/MiDia"));
+export const Leads = lazy(() => import("@/pages/crm/Leads"));
+export const LeadDetalle = lazy(() => import("@/pages/crm/LeadDetalle"));
+export const Oportunidades = lazy(() => import("@/pages/crm/Oportunidades"));
+export const OportunidadDetalle = lazy(() => import("@/pages/crm/OportunidadDetalle"));
+export const ActividadesCrm = lazy(() => import("@/pages/crm/Actividades"));
+export const AnaliticaCrm = lazy(() => import("@/pages/crm/Analitica"));
+export const CrmConfiguracion = lazy(() => import("@/pages/crm/Configuracion"));
