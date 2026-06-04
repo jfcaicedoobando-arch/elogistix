@@ -109,7 +109,7 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "fechas",
 ];
 
-export function reglaShortLabel(regla: ReglaAuditoria): string {
-  return REGLA_INFO[regla].shortLabel;
-}
+// `reglaShortLabel` re-exportado desde `@/lib/domain/auditoriaReglaLabels`.
+void REGLA_SHORT_LABELS;
+
 
