@@ -5,16 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { TrackingConfirmFechaLlegadaDialog } from "./TrackingConfirmFechaLlegadaDialog";
 import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/hooks/embarque";
 import { useActualizarFechaLlegadaReal } from "@/hooks/embarque/mutations/useActualizarFechaLlegadaReal";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
@@ -185,24 +176,11 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!confirmLlegada} onOpenChange={(open) => !open && setConfirmLlegada(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Actualizar fecha de llegada real?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Quieres registrar{" "}
-              <strong>{confirmLlegada ? formatDate(confirmLlegada, "dd/MM/yyyy") : ""}</strong> como
-              la fecha de llegada real del embarque? Esto actualiza la ETA real visible para todos.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setConfirmLlegada(null); onClose(); }}>
-              No, sólo el evento
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmLlegada}>Sí, actualizar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <TrackingConfirmFechaLlegadaDialog
+        fechaIso={confirmLlegada}
+        onConfirm={handleConfirmLlegada}
+        onCancel={() => { setConfirmLlegada(null); onClose(); }}
+      />
     </>
   );
 }
