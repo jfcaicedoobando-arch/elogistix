@@ -59,7 +59,7 @@ export function LandingPrecio() {
               </ul>
 
               <Button asChild size="lg" className="mt-8 w-full">
-                <Link to="/login">
+                <Link to="/login?tab=signup">
                   Crear cuenta gratis <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>

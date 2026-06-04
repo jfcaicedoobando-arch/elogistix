@@ -29,7 +29,7 @@ export function MobileStickyCta() {
       aria-label="Acción rápida"
     >
       <Button asChild size="lg" className="w-full">
-        <Link to="/login">
+        <Link to="/login?tab=signup">
           Crear cuenta gratis <ArrowRight className="ml-1 h-4 w-4" />
         </Link>
       </Button>

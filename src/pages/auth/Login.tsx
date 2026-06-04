@@ -1,25 +1,42 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { signInWithEmail, resolveLandingRoute } from "@/services/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/lib/ui/brand";
 import { notifyError } from "@/lib/ui/appFeedback";
 
+type TabKey = "login" | "signup";
+
 export default function Login() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab: TabKey = searchParams.get("tab") === "signup" ? "signup" : "login";
+  const [tab, setTab] = useState<TabKey>(initialTab);
+
+  const handleTabChange = (value: string) => {
+    const next = (value === "signup" ? "signup" : "login") as TabKey;
+    setTab(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === "signup") params.set("tab", "signup");
+    else params.delete("tab");
+    setSearchParams(params, { replace: true });
+  };
+
+  // --- Login state ---
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -27,49 +44,122 @@ export default function Login() {
       navigate(resolveLandingRoute(role), { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error al iniciar sesión", description: message, error: err, method: "HANDLE_SUBMIT" });
+      notifyError(toast, { title: "Error al iniciar sesión", description: message, error: err, method: "HANDLE_LOGIN" });
     } finally {
       setLoading(false);
     }
   };
 
+  // --- Signup state ---
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupPassword2, setSignupPassword2] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [signupDone, setSignupDone] = useState(false);
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (signupPassword !== signupPassword2) {
+      toast({ title: "Las contraseñas no coinciden", variant: "destructive" });
+      return;
+    }
+    if (!acceptTerms) {
+      toast({ title: "Debes aceptar los términos para continuar", variant: "destructive" });
+      return;
+    }
+    setSignupLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/inicio`;
+      const { error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password: signupPassword,
+        options: {
+          data: { full_name: signupName },
+          emailRedirectTo: redirectUrl,
+        },
+      });
+      if (error) throw error;
+      setSignupDone(true);
+      toast({ title: "Cuenta creada", description: "Revisa tu correo para confirmar tu cuenta." });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      notifyError(toast, { title: "Error al crear cuenta", description: message, error: err, method: "HANDLE_SIGNUP" });
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
-          <p className="text-sm text-muted-foreground">Inicia sesión para continuar</p>
         </CardHeader>
         <CardContent className="pt-2">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Iniciar sesión
-            </Button>
-          </form>
+          <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login">Iniciar sesión</TabsTrigger>
+              <TabsTrigger value="signup">Crear cuenta</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="usuario@empresa.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Iniciar sesión
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="signup">
+              {signupDone ? (
+                <div className="space-y-3 py-4 text-center">
+                  <CheckCircle2 className="mx-auto h-10 w-10 text-accent" />
+                  <p className="text-sm font-medium text-foreground">¡Listo! Te enviamos un correo de confirmación.</p>
+                  <p className="text-xs text-muted-foreground">Abre el enlace para activar tu cuenta y entrar a Libre Carga.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Nombre completo</Label>
+                    <Input id="signup-name" type="text" placeholder="Juan Pérez" value={signupName} onChange={(e) => setSignupName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email de trabajo</Label>
+                    <Input id="signup-email" type="email" placeholder="tu@agencia.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Contraseña</Label>
+                    <Input id="signup-password" type="password" placeholder="Mínimo 6 caracteres" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required minLength={6} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password2">Confirmar contraseña</Label>
+                    <Input id="signup-password2" type="password" placeholder="••••••••" value={signupPassword2} onChange={(e) => setSignupPassword2(e.target.value)} required minLength={6} />
+                  </div>
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" className="mt-0.5" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />
+                    <span>
+                      Acepto los <a href="/legal/terminos" target="_blank" className="text-accent hover:underline">Términos</a> y el <a href="/legal/privacidad" target="_blank" className="text-accent hover:underline">Aviso de privacidad</a>.
+                    </span>
+                  </label>
+                  <Button type="submit" className="w-full" disabled={signupLoading}>
+                    {signupLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Crear cuenta gratis
+                  </Button>
+                </form>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
