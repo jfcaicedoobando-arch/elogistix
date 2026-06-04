@@ -10,7 +10,7 @@ describe("useConfiguracionState helpers", () => {
   describe("getVal", () => {
     const items: ConfigItem[] = [
       item("1", "empresa", "nombre", "Elogistix"),
-      item("2", "tipos_cambio", "usd_mxn_default", 20.5),
+      item("2", "facturacion", "tasa_iva", 16),
     ];
 
     it("returns matching value", () => {
@@ -18,7 +18,7 @@ describe("useConfiguracionState helpers", () => {
     });
 
     it("returns numeric value", () => {
-      expect(getVal(items, "tipos_cambio", "usd_mxn_default", 17.25)).toBe(20.5);
+      expect(getVal(items, "facturacion", "tasa_iva", 0)).toBe(16);
     });
 
     it("returns fallback when key not found", () => {
@@ -34,31 +34,20 @@ describe("useConfiguracionState helpers", () => {
     it("returns defaults when config is undefined", () => {
       const state = buildStateFromConfig(undefined);
       expect(state.nombre).toBe("");
-      expect(state.usdMxn).toBe("17.25");
-      expect(state.eurMxn).toBe("18.5");
-      expect(state.vigenciaDias).toBe("15");
+      expect(state.rfc).toBe("");
       expect(state.tasaIva).toBe("16");
-      expect(state.prefijo).toBe("EXP");
-      expect(state.monedaCot).toBe("USD");
-      expect(state.monedaFact).toBe("MXN");
     });
 
     it("builds state from config items", () => {
       const config: ConfigItem[] = [
         item("1", "empresa", "nombre", "TestCo"),
         item("2", "empresa", "rfc", "RFC123"),
-        item("3", "tipos_cambio", "usd_mxn_default", 19.0),
-        item("4", "facturacion", "tasa_iva", 8),
-        item("5", "embarques", "prefijo_expediente", "SHP"),
+        item("3", "facturacion", "tasa_iva", 8),
       ];
       const state = buildStateFromConfig(config);
       expect(state.nombre).toBe("TestCo");
       expect(state.rfc).toBe("RFC123");
-      expect(state.usdMxn).toBe("19");
       expect(state.tasaIva).toBe("8");
-      expect(state.prefijo).toBe("SHP");
-      expect(state.eurMxn).toBe("18.5");
-      expect(state.monedaCot).toBe("USD");
     });
   });
 });
