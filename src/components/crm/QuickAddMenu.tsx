@@ -6,7 +6,7 @@
  *
  * Atajos: N abre el menú; L/O/A abren directo el popover correspondiente.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Target, Activity, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,12 +40,16 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   const [actOpen, setActOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
+  const firstOpenRender = useRef(true);
   useEffect(() => {
+    if (firstOpenRender.current) { firstOpenRender.current = false; return; }
     if (openTrigger === undefined) return;
     setMenuOpen(true);
   }, [openTrigger]);
 
+  const firstDialogRender = useRef(true);
   useEffect(() => {
+    if (firstDialogRender.current) { firstDialogRender.current = false; return; }
     if (!dialogTrigger) return;
     setQuick(dialogTrigger.kind);
   }, [dialogTrigger]);
