@@ -33,7 +33,7 @@ const embarqueStub = { id: "e-1", expediente: "EXP-001", modo: "maritimo", tipo:
 
 describe("useEmbarqueDetalleActions", () => {
   it("re-exporta getSiguienteEstado correctamente", () => {
-    expect(getSiguienteEstado("Entregado")).toBeNull();
+    expect(getSiguienteEstado("Cerrado")).toBeNull();
   });
 
   it("monta y expone la API combinada de estado + documentos", () => {

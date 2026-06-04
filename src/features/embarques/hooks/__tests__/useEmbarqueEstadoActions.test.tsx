@@ -32,7 +32,7 @@ describe("getSiguienteEstado", () => {
   });
 
   it("retorna null para el último estado", () => {
-    expect(getSiguienteEstado("Entregado")).toBeNull();
+    expect(getSiguienteEstado("Cerrado")).toBeNull();
   });
 });
 
