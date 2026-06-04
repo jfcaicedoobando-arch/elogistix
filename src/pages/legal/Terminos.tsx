@@ -19,7 +19,7 @@ export default function Terminos() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" aria-label="Libre Carga"><BrandLockup variant="inline" size="sm" /></Link>
+          <Link to="/" aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>
           <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
