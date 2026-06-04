@@ -1,39 +1,47 @@
-## Problema
+## Diagnóstico
 
-`src/lib/sentry.ts` solo inicializa Sentry si `import.meta.env.VITE_SENTRY_DSN` tiene valor. En el build publicado esa variable no existe, así que `initSentry()` retorna temprano y `SentryDiagnostico` muestra "no inicializado".
+Los 6 tests fallidos se reducen a 4 problemas reales:
 
-## Solución
-
-Hardcodear el DSN del proyecto `elogistix/javascript-react` directamente en `src/lib/sentry.ts` (el DSN es una clave pública, segura para el bundle), manteniendo `VITE_SENTRY_DSN` como override opcional para entornos alternos.
-
-DSN a usar:
-`https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160`
+| # | Hallazgo | Causa raíz |
+|---|---|---|
+| A | `proforma.test.ts > agrupa por expediente` falla | El contrato cambió: `agruparProformasPendientes` agrupa por `embarque_id` (no por expediente). El test fixture usa el mismo `embarque_id: "e1"` para ambas proformas → colapsan en 1 grupo. **No es un bug del código**; el test quedó obsoleto. |
+| B | `useDashboardOperador.ts` importa `@/integrations/supabase/client` directo | Viola la regla Pages→Hooks→Services. Las dos queries deben vivir en un service. |
+| C | `src/services/embarque/documentos.ts` (214 líneas) | Power-of-10: ≤200. Mezcla helpers de hash + operaciones CRUD. |
+| D | `src/components/dashboard/operador/MiOperacionSection.tsx` (209) | Componente con sub-componentes inline (`WidgetCard`, `Row`) + helper `buildPendientes`. |
+| E | `src/routes/appRoutes.tsx` (207) | 50 `const X = lazy(...)` + el JSX de rutas en el mismo archivo. |
 
 ## Cambios
 
-1. **`src/lib/sentry.ts`**
-   - Reemplazar:
-     ```ts
-     const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
-     ```
-     por:
-     ```ts
-     const DEFAULT_DSN = "https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160";
-     const DSN = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || DEFAULT_DSN;
-     ```
-   - Mantener el guard que evita inicializar en `mode === "development"` (sigue silenciando ruido de HMR local).
-   - Actualizar el JSDoc del archivo para reflejar que el DSN tiene fallback hardcodeado.
+### 1) Test obsoleto — `src/lib/domain/__tests__/proforma.test.ts`
+Actualizar el caso "agrupa por expediente y ordena alfabéticamente" para pasar `embarque_id` distintos por proforma (refleja el contrato real). Sin cambios de lógica.
 
-2. **`src/constants/appVersion.ts`** → bump a `12.51.16`.
+### 2) Extraer service de operador — `src/services/embarque/dashboardOperador.ts` (nuevo)
+- Mover ambos bloques de queries (`fetchDocsFaltantesOperador(email)` y `fetchSinTrackingOperador(email)`) a este service. Exportar tipos `DocsFaltantesItem` y `SinTrackingItem` desde aquí.
+- `src/hooks/dashboard/useDashboardOperador.ts` queda como wrapper delgado de `useQuery` (sin import de `supabase`). Re-exporta los tipos para no romper consumidores.
 
-3. **`CHANGELOG.md`** → entrada `## [12.51.16] - 2026-06-04`: "Hardcoded Sentry DSN público para inicializar el SDK en builds publicados (antes requería `VITE_SENTRY_DSN` que no estaba definida)."
+### 3) Partir `services/embarque/documentos.ts`
+- Mover `sha256Hex` y `hexToUuid` a `src/services/embarque/documentos/idempotencyHash.ts` (nuevo, ~25 líneas).
+- `documentos.ts` importa esos helpers; queda ~190 líneas. Sin cambios de comportamiento.
+
+### 4) Partir `MiOperacionSection.tsx`
+- Mover `WidgetCard` y `Row` a `src/components/dashboard/operador/MiOperacionWidgets.tsx` (nuevo).
+- Mover `buildPendientes` + `interface Pendiente` a `src/components/dashboard/operador/miOperacionUtils.ts` (nuevo).
+- `MiOperacionSection.tsx` queda ~130 líneas, sólo orquesta queries y renderiza las 3 columnas.
+
+### 5) Partir `appRoutes.tsx`
+- Mover los 50 `const X = lazy(...)` a `src/routes/appRoutes.lazy.ts` (nuevo). Sin cambios en agrupación; sólo export.
+- `appRoutes.tsx` importa desde ahí; queda ~140 líneas de JSX puro.
+
+### 6) Versionado y changelog
+- `src/constants/appVersion.ts` → `12.51.17`.
+- `CHANGELOG.md` → entrada `## [12.51.17] - 2026-06-04` con un bullet único que cubra los 5 fixes.
 
 ## Validación
 
-- Tras publicar, abrir `/dashboard/sentry-diagnostico` → debe mostrar Sentry activo, DSN enmascarado, release `libre-carga@12.51.16`, environment `production`.
-- En dev no cambia nada (sigue desactivado a propósito).
+`bunx vitest run` → 982/982 pasando.
 
 ## Fuera de alcance
 
-- No se toca `vite.config.ts` (el `sentryVitePlugin` para source maps sigue dependiendo de `SENTRY_AUTH_TOKEN`, que es un build secret separado).
-- No se mueve el DSN a `.env` (decisión del usuario: hardcode).
+- No se tocan otras rutas, ni la firma pública de los hooks.
+- No se cambia el comportamiento de agrupación de proformas (sólo el test).
+- No se renombran columnas, archivos consumidos por imports externos seguirán funcionando vía re-export.
