@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { signInWithEmail, resolveLandingRoute } from "@/services/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { signInWithEmail, signUpWithEmail, resolveLandingRoute } from "@/services/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,16 +71,12 @@ export default function Login() {
     }
     setSignupLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/inicio`;
-      const { error } = await supabase.auth.signUp({
+      await signUpWithEmail({
         email: signupEmail,
         password: signupPassword,
-        options: {
-          data: { full_name: signupName },
-          emailRedirectTo: redirectUrl,
-        },
+        fullName: signupName,
+        redirectTo: `${window.location.origin}/inicio`,
       });
-      if (error) throw error;
       setSignupDone(true);
       toast({ title: "Cuenta creada", description: "Revisa tu correo para confirmar tu cuenta." });
     } catch (err) {

@@ -42,3 +42,26 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
   return { userId, role: (roleData?.role ?? null) as PostLoginRole };
 }
+
+export interface SignUpInput {
+  email: string;
+  password: string;
+  fullName: string;
+  redirectTo: string;
+}
+
+/**
+ * Crea una cuenta nueva en Supabase Auth con metadata de nombre completo.
+ * Lanza si Supabase devuelve error.
+ */
+export async function signUpWithEmail(input: SignUpInput): Promise<void> {
+  const { error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: {
+      data: { full_name: input.fullName },
+      emailRedirectTo: input.redirectTo,
+    },
+  });
+  if (error) throw new Error(error.message);
+}
