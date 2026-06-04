@@ -3,7 +3,11 @@
  * Extraídos de `useEmbarquesPageState` (11.14.0).
  */
 import type { EmbarqueRow } from "@/features/embarques/types/embarque";
-import type { EmbarqueListExtras } from "@/features/embarques/services/queries";
+
+export interface EmbarqueListExtras {
+  liquidacion: Record<string, { total: number; pagados: number }>;
+  docs: Record<string, { total: number; pendientes: number }>;
+}
 
 export type SortDir = "asc" | "desc";
 
