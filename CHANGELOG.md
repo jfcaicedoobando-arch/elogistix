@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.55.0] - 2026-06-04
+- **test(coverage) — expansión masiva de cobertura en hooks, servicios y generadores**: se añaden ~25–30 archivos de tests nuevos distribuidos en 6 lotes paralelos. Cobertura nueva en `src/hooks/{cotizacion,crm,facturacion,portal,shared}/` (formularios, paginación, KPIs, conversiones, bulk actions, undo toasts), `src/generators/` y `src/pdf/proformaShared` (layouts contables, helpers PDF), y componentes con lógica interna (`ConfigOrganizacion`, `TabVendedorasConfig`, `AlertasSistemaPanel`). Nueva utilidad `src/test/utils/queryWrapper.tsx` para wrappear hooks con `QueryClientProvider` aislado. Patrón estándar: `vi.hoisted` + `_supabaseChainMock`. Sin cambios de runtime; 91/91 tests verificados en `generators/`, `pdf/` y `components/`.
+
 ## [12.54.2] - 2026-06-04
 - **feat(mappers) — `genericPayloadMapper` reusable**: nueva utilidad declarativa en `src/lib/mappers/genericPayloadMapper.ts` que reemplaza el patrón repetitivo de pares `xxxFromDb.ts` / `xxxToDb.ts`. Acepta un schema de rutas estructurales (`DotPath<T>` tipado en compile-time hasta 4 niveles), un mini-DSL `F.{raw,str,num,emptyNull,zod}` con coerciones comunes, hooks `computedToDb` / `computedFromDb` para lógica derivada y validación runtime opcional vía Zod (`rowSchema` / `formSchema`). Tests con 6 casos cubriendo coerciones, direccionalidad, round-trip, errores Zod y validación de payload final. Sin cambios de runtime para usuarios: los mappers existentes (`embarqueToDb`, `embarqueFromDb`, etc.) se mantienen y se migrarán en PRs posteriores.
 
