@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.4] - 2026-06-04
+- **fix(tests) — useProformas mocks + mitigación OOM vitest**: (1) `src/features/embarques/hooks/__tests__/useProformas.test.tsx` mockeaba la ruta equivocada (`@/features/embarques/services/proforma`) y no proveía `useOrgFilter`, por lo que las queries quedaban `enabled:false` y `data` salía `undefined`. Reescrito para mockear `@/services/proforma` (ruta real) + `@/hooks/shared` con `organizationId: "org-1"`, y aserciones más robustas (`refetch` / `mutate` definidos). (2) `vitest.config.ts`: `pool: "forks"`, `maxForks: 2`, `execArgv: ["--max-old-space-size=8192"]`, `isolate: true`, `sequence.shuffle: false`. (3) `package.json` script `test`: sharded en 2 corridas (`--shard=1/2 && --shard=2/2`) con `NODE_OPTIONS=--max-old-space-size=8192`. **Pendiente**: shard 2 sigue muriendo por OOM al final → leak real en algún test (sospechosos react-pdf / persisters de React Query / canales realtime sin cleanup); requiere bisectar con `--shard=N/4`. Shard 1 además reporta 17 tests fallidos no relacionados — se atenderán por separado.
+
 ## [12.60.3] - 2026-06-04
 - **chore(tests) — calibración de timeout vitest**: corrí `bunx vitest run` completo (189s totales antes de OOM del worker, no por timeout). Archivo más lento: 5.1s (`6 tests`); siguiente 3.1s; el resto <1s. Ajusté `testTimeout`/`hookTimeout` de 60s → **15s** en `vitest.config.ts` (≈3× margen sobre el peor caso) para no enmascarar tests colgados. Nota separada: hay 1 test fallando (`useProformas`) y un OOM del pool worker que se atenderán aparte.
 
