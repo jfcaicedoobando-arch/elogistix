@@ -4,9 +4,10 @@
  * funciones originales (create-user, delete-user, list-users,
  * invite-client-user, list-client-users) sin cambios de comportamiento.
  */
-// @ts-expect-error Deno remote import
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
+
+declare const Deno: { env: { get(key: string): string | undefined } };
 
 export interface HandlerCtx {
   req: Request;
