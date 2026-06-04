@@ -69,10 +69,13 @@ describe("agruparProformasPendientes", () => {
     total_usd: 0, total_mxn: 0, ...over,
   });
 
-  it("agrupa por expediente y ordena alfabéticamente", () => {
+  it("agrupa por embarque y ordena por expediente alfabéticamente", () => {
+    // Contrato (12.51.x): se agrupa por embarque_id — el mismo expediente puede
+    // tener varios embarques (uno por contenedor). Aquí pasamos embarque_id
+    // distintos para verificar el orden alfabético resultante por expediente.
     const grupos = agruparProformasPendientes([
-      make({ id: "1", expediente: "EXP-002" }),
-      make({ id: "2", expediente: "EXP-001" }),
+      make({ id: "1", expediente: "EXP-002", embarque_id: "e2" }),
+      make({ id: "2", expediente: "EXP-001", embarque_id: "e1" }),
     ]);
     expect(grupos).toHaveLength(2);
     expect(grupos[0].expediente).toBe("EXP-001");

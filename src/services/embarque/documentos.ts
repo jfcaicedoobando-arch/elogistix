@@ -10,6 +10,7 @@ import {
   idempotencyClaimSchema,
   isCachedClaim,
 } from '@/services/embarque/idempotencyClaimSchema';
+import { sha256Hex, hexToUuid } from '@/services/embarque/documentos/idempotencyHash';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 
@@ -55,23 +56,6 @@ export async function subirDocumentosEmbarque(
   return Promise.all(tareas);
 }
 
-/**
- * SHA-256 del contenido del archivo en hex. Usado como huella estable para
- * idempotencia: dos uploads del mismo File siempre producen el mismo hash.
- */
-async function sha256Hex(file: File): Promise<string> {
-  const buf = await file.arrayBuffer();
-  const digest = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-/** Convierte un hex >=32 chars a formato UUID v4-like determinístico. */
-function hexToUuid(hex: string): string {
-  const h = hex.slice(0, 32);
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
-}
 
 export interface UploadDocumentoResult {
   path: string;

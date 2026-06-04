@@ -1,66 +1,25 @@
 /**
  * Rutas principales de la aplicación (operativos autenticados). Bajo
  * `ProtectedRoute` + `Layout`. Incluye el sub-árbol del CRM anidado bajo /crm.
- * Extraído de `src/routes.tsx` en 11.65.0 (D12).
+ * Extraído de `src/routes.tsx` en 11.65.0 (D12). Los `lazy(...)` viven en
+ * `./appRoutes.lazy.ts` para mantener este archivo ≤200 líneas.
  */
-import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-
-const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
-const Operaciones = lazy(() => import("@/pages/dashboard/Operaciones"));
-const Reportes = lazy(() => import("@/pages/dashboard/Reportes"));
-const Bitacora = lazy(() => import("@/pages/dashboard/Bitacora"));
-const Ayuda = lazy(() => import("@/pages/dashboard/Ayuda"));
-
-const Papelera = lazy(() => import("@/pages/admin/Papelera"));
-const Idempotencia = lazy(() => import("@/pages/admin/Idempotencia"));
-const Auditoria = lazy(() => import("@/pages/Auditoria"));
-const SentryDiagnostico = lazy(() => import("@/pages/admin/SentryDiagnostico"));
-
-const Embarques = lazy(() => import("@/pages/embarques/Embarques"));
-const EmbarqueDetalle = lazy(() => import("@/pages/embarques/EmbarqueDetalle"));
-const NuevoEmbarque = lazy(() => import("@/pages/embarques/NuevoEmbarque"));
-const EditarEmbarque = lazy(() => import("@/pages/embarques/EditarEmbarque"));
-
-const Cotizaciones = lazy(() => import("@/pages/cotizaciones/Cotizaciones"));
-const NuevaCotizacion = lazy(() => import("@/pages/cotizaciones/NuevaCotizacion"));
-const CotizacionDetalle = lazy(() => import("@/pages/cotizaciones/CotizacionDetalle"));
-const EditarCotizacion = lazy(() => import("@/pages/cotizaciones/EditarCotizacion"));
-const PdfPreviewCotizacion = lazy(() => import("@/pages/dev/PdfPreviewCotizacion"));
-
-const Clientes = lazy(() => import("@/pages/clientes/Clientes"));
-const ClienteDetalle = lazy(() => import("@/pages/clientes/ClienteDetalle"));
-const Proveedores = lazy(() => import("@/pages/proveedores/Proveedores"));
-const ProveedorDetalle = lazy(() => import("@/pages/proveedores/ProveedorDetalle"));
-const Facturacion = lazy(() => import("@/pages/facturacion/Facturacion"));
-const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
-const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
-const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
-const ProfitPresupuesto = lazy(() => import("@/pages/profit/ProfitPresupuesto"));
-const ProfitDashboardEjecutivo = lazy(() => import("@/pages/profit/ProfitDashboardEjecutivo"));
-const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
-const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
-const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
-const TesoreriaConciliacion = lazy(() => import("@/pages/tesoreria/TesoreriaConciliacion"));
-const TesoreriaFlujo = lazy(() => import("@/pages/tesoreria/TesoreriaFlujo"));
-const Comisiones = lazy(() => import("@/pages/comisiones/Comisiones"));
-
-const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
-const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
-
-// CRM — anidado bajo /crm con CrmLayout
-const CrmLayout = lazy(() => import("@/pages/crm/CrmLayout"));
-const CrmDashboard = lazy(() => import("@/pages/crm/CrmDashboard"));
-const CrmMiDia = lazy(() => import("@/pages/crm/MiDia"));
-const Leads = lazy(() => import("@/pages/crm/Leads"));
-const LeadDetalle = lazy(() => import("@/pages/crm/LeadDetalle"));
-const Oportunidades = lazy(() => import("@/pages/crm/Oportunidades"));
-const OportunidadDetalle = lazy(() => import("@/pages/crm/OportunidadDetalle"));
-const ActividadesCrm = lazy(() => import("@/pages/crm/Actividades"));
-const AnaliticaCrm = lazy(() => import("@/pages/crm/Analitica"));
-const CrmConfiguracion = lazy(() => import("@/pages/crm/Configuracion"));
+import {
+  Dashboard, Operaciones, Reportes, Bitacora, Ayuda,
+  Papelera, Idempotencia, Auditoria, SentryDiagnostico,
+  Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
+  Cotizaciones, NuevaCotizacion, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
+  Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
+  Facturacion, FacturaDetalle,
+  ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
+  Cxp, Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
+  Usuarios, Configuracion,
+  CrmLayout, CrmDashboard, CrmMiDia, Leads, LeadDetalle,
+  Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion,
+} from "./appRoutes.lazy";
 
 export const appRoutes = (
   <Route
