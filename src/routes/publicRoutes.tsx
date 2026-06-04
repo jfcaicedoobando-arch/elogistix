@@ -10,6 +10,8 @@ const NotFound = lazy(() => import("@/pages/auth/NotFound"));
 const TrackingPublico = lazy(() => import("@/pages/auth/TrackingPublico"));
 const HomeRoute = lazy(() => import("@/pages/marketing/HomeRoute"));
 const LogoPreview = lazy(() => import("@/pages/marketing/LogoPreview"));
+const Privacidad = lazy(() => import("@/pages/legal/Privacidad"));
+const Terminos = lazy(() => import("@/pages/legal/Terminos"));
 
 export const publicRoutes = (
   <>
@@ -18,6 +20,8 @@ export const publicRoutes = (
     <Route path="/portal/login" element={<Navigate to="/login" replace />} />
     <Route path="/tracking/:token" element={<TrackingPublico />} />
     <Route path="/logo-preview" element={<LogoPreview />} />
+    <Route path="/legal/privacidad" element={<Privacidad />} />
+    <Route path="/legal/terminos" element={<Terminos />} />
     <Route path="*" element={<NotFound />} />
 
   </>

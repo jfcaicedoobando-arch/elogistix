@@ -4,6 +4,7 @@
  */
 import { LandingNav } from "./sections/LandingNav";
 import { LandingHero } from "./sections/LandingHero";
+import { LandingDemo } from "./sections/LandingDemo";
 import { LandingModulos } from "./sections/LandingModulos";
 import { LandingComoFunciona } from "./sections/LandingComoFunciona";
 import { LandingMexico } from "./sections/LandingMexico";
@@ -21,6 +22,7 @@ export default function Landing() {
       <LandingNav />
       <main>
         <LandingHero />
+        <LandingDemo />
         <LandingModulos />
         <LandingComoFunciona />
         <LandingMexico />

@@ -33,23 +33,23 @@ export function LandingFooter() {
           </div>
 
           <FooterCol title="Producto" links={[
+            { label: "Demo", href: "#demo" },
             { label: "Módulos", href: "#modulos" },
             { label: "Cómo funciona", href: "#como-funciona" },
             { label: "Precio", href: "#precio" },
           ]} />
           <FooterCol title="Recursos" links={[
             { label: "Preguntas frecuentes", href: "#faq" },
-            { label: "Guías (próximamente)", href: "#" },
-            { label: "Blog (próximamente)", href: "#" },
+            { label: "Contacto", href: `mailto:${FOOTER.contact}` },
           ]} />
           <FooterCol title="Acceso" links={[
             { label: "Iniciar sesión", to: "/login" },
-            { label: "Crear cuenta gratis", to: "/login" },
+            { label: "Crear cuenta gratis", to: "/login?tab=signup" },
             { label: "Portal del cliente", to: "/login" },
           ]} />
           <FooterCol title="Legal" links={[
-            { label: "Aviso de privacidad", href: "#" },
-            { label: "Términos y condiciones", href: "#" },
+            { label: "Aviso de privacidad", to: "/legal/privacidad" },
+            { label: "Términos y condiciones", to: "/legal/terminos" },
             { label: "Contacto", href: `mailto:${FOOTER.contact}` },
           ]} />
         </div>

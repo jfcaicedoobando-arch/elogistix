@@ -45,7 +45,7 @@ export function LandingHero() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link to="/login">
+              <Link to="/login?tab=signup">
                 {HERO.primaryCta} <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
@@ -55,9 +55,9 @@ export function LandingHero() {
               variant="outline"
               className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
-              <Link to="/login">
+              <a href="#demo">
                 <PlayCircle className="mr-1 h-5 w-5" /> {HERO.secondaryCta}
-              </Link>
+              </a>
             </Button>
           </div>
 

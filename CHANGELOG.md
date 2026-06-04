@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.0] - 2026-06-04
+- **feat(marketing/landing) — signup real, demo y páginas legales**: cierra los huecos de la landing pública.
+  - (1) **Signup**: `src/pages/auth/Login.tsx` envuelve el formulario en `Tabs` (Iniciar sesión / Crear cuenta). El tab Crear cuenta pide nombre, email, contraseña, confirmación y aceptación de Términos; llama `supabase.auth.signUp({ emailRedirectTo: origin + '/inicio', data: { full_name } })` y muestra confirmación "Revisa tu correo" (sin auto-confirm). Soporta `?tab=signup` para aterrizajes directos desde el landing.
+  - (2) **Demo 60s**: nueva sección `LandingDemo.tsx` con `id="demo"` entre Hero y Módulos. Reproductor `<video>` con poster que apunta a `/demo-libre-carga.mp4`; si el archivo no existe, fallback "Demo en producción" con CTA `mailto:` a `contacto@librecarga.com` para agendar demo guiada. Todos los CTAs "Ver demo" (`LandingHero`, `LandingCtaFinal`) y el link "Demo" del nav/footer ahora hacen anchor a `#demo` en vez de `/login`.
+  - (3) **Footer saneado**: se quitan los enlaces `href="#"` ("Guías/Blog próximamente"). "Aviso de privacidad" y "Términos y condiciones" apuntan a nuevas rutas `/legal/privacidad` y `/legal/terminos`. "Crear cuenta gratis" usa `/login?tab=signup`.
+  - (4) **Páginas legales**: `src/pages/legal/Privacidad.tsx` y `src/pages/legal/Terminos.tsx` (placeholder marcado "Borrador — pendiente de revisión legal") con header propio (logo + volver), `<title>` y meta description dinámicas. Registradas en `src/routes/publicRoutes.tsx`.
+  - (5) **Coherencia CTAs**: los 5 botones primarios "Crear cuenta gratis" (`LandingHero`, `LandingPrecio`, `LandingCtaFinal`, `LandingNav` desktop+móvil, `MobileStickyCta`) usan `/login?tab=signup`.
+  - Sin migraciones, sin nuevos secrets, sin cambios en lógica post-login. Bump 12.53.0.
+
 ## [12.52.5] - 2026-06-04
 - **feat(marketing/qa) — vista previa de logo en estados y fondos**: nueva ruta pública `/logo-preview` (`src/pages/marketing/LogoPreview.tsx`) que renderiza el lockup `librecarga-logo.png` + wordmark sobre 5 superficies (blanco, gris suave, navy del landing, accent `#2563EB` y degradado con imagen) en 3 estados (default, hover con ring acento, active/pressed) y 3 tamaños (sm/md/lg). Permite validar legibilidad y contraste antes de propagar cambios al nav/footer del landing. Ruta registrada en `src/routes/publicRoutes.tsx`. No enlazada desde menús públicos. Bump 12.52.5.
 

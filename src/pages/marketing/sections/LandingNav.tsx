@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const links = [
+  { href: "#demo", label: "Demo" },
   { href: "#modulos", label: "Módulos" },
   { href: "#como-funciona", label: "Cómo funciona" },
   { href: "#precio", label: "Precio" },
@@ -43,7 +44,7 @@ export function LandingNav() {
             <Link to="/login">Iniciar sesión</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/login">Crear cuenta gratis</Link>
+            <Link to="/login?tab=signup">Crear cuenta gratis</Link>
           </Button>
         </div>
 
@@ -78,7 +79,7 @@ export function LandingNav() {
                 <Link to="/login">Iniciar sesión</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/login">Crear cuenta</Link>
+                <Link to="/login?tab=signup">Crear cuenta</Link>
               </Button>
             </div>
           </nav>
