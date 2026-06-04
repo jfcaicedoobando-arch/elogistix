@@ -14,8 +14,9 @@ describe("pdf/render/descargarPdf", () => {
 
   it("debe ejecutar flujo de descarga sin lanzar error", async () => {
     // Mock simple del elemento DocumentProps
-    const _mockElement = React.createElement("div") as any;
+    const _mockElement = React.createElement("div") as unknown;
     const _mockNombre = "test-document";
+    void _mockElement; void _mockNombre;
 
     // No podemos probar el flujo completo de pdf(elemento).toBlob() fácilmente sin mocks pesados,
     // pero verificamos que la función sea llamable.

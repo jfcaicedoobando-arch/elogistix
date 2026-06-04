@@ -34,7 +34,7 @@ describe("useAuthSession", () => {
   it("actualiza user y session ante evento SIGNED_IN", async () => {
     const fakeUser = { id: "u1", email: "a@b.com" };
     const fakeSession = { user: fakeUser, access_token: "tok" };
-    mockSubscribe.mockImplementation((cb: any) => {
+    (mockSubscribe as unknown as { mockImplementation: (fn: unknown) => void }).mockImplementation((cb: (e: string, s: unknown) => void) => {
       cb("SIGNED_IN", fakeSession);
       return { unsubscribe: mockUnsubscribe };
     });
