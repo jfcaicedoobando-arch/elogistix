@@ -1,130 +1,74 @@
-# Plan: Migrar Auditoría a `src/features/auditoria/`
-
 ## Objetivo
-Consolidar todo el stack vertical del dominio **Auditoría operativa** en una sola carpeta auto-contenida, replicando el patrón ya usado en `src/features/embarques/`. Mantener URLs y comportamiento intactos — sólo reorganización + reescritura de imports.
 
-## Inventario actual (qué se mueve)
+Resolver el caso del embarque cerrado sin proforma y prevenir que vuelva a pasar, sin meter un candado rígido que estorbe al usuario.
 
-```text
-src/pages/Auditoria.tsx
-src/hooks/auditoria/**                  (16 archivos + revisiones/ + __tests__/)
-src/services/auditoria/**               (5 servicios + index + __tests__)
-src/lib/auditoria/ejecutivoAgregados.ts (+ test)
-src/lib/domain/auditoria.ts             (+ test)
-src/lib/domain/auditoriaCsv.ts          (+ test)
-src/lib/domain/auditoriaReglaLabels.ts
-src/constants/auditoria.ts
-src/types/auditoria.ts
-src/components/auditoria/**             (15 componentes + asignarResponsable/, ejecutivo/, marcarRevisado/, __tests__)
-```
+## Cambios
 
-Tablas de hooks / routing afectadas:
-- `src/routes/appRoutes.tsx` (línea 12, 147)
-- `src/routes/appRoutes.lazy.ts` (línea 15)
-- `src/components/shared/utils/auditoriaConfig.ts`
-- `src/hooks/layout/useAppSidebarSections.ts`
+### 1. Reabrir embarque (solo Admin / Global Admin)
 
-## Estructura destino
+- **Backend**: nueva RPC `reabrir_embarque(p_embarque_id, p_request_id)`:
+  - `SECURITY DEFINER`, valida org y exige rol `admin` / `global_admin` vía `has_role`.
+  - Solo procede si `estado = 'Cerrado'`. Cambia estado a `'Entregado'`.
+  - Inserta `notas_embarque` (`tipo='cambio_estado'`, contenido "Embarque reabierto desde Cerrado").
+  - Inserta `eventos_embarque` (`tipo='Otro'`, descripción "Embarque reabierto por administrador").
+  - Idempotencia con `idempotency_claim` / `idempotency_store`.
+- **Frontend**:
+  - `src/features/embarques/services/mutations.ts` → `reabrirEmbarqueRpc`.
+  - `src/features/embarques/hooks/useEmbarqueEstadoActions.ts` → `handleReabrir` + mutación `useReabrirEmbarque` en `useEmbarques`.
+  - `EmbarqueDetalleHeader.tsx`: botón secundario "Reabrir embarque" visible solo si `estado === 'Cerrado'` && rol Admin (usa `useUserRole` / `useAuth`). Con `AlertDialog` de confirmación.
+  - Registra `registrarActividad` con acción `reabrir_embarque`.
 
-```text
-src/features/auditoria/
-├── components/
-│   ├── HallazgoTabla.tsx
-│   ├── HallazgosTabla.tsx
-│   ├── HallazgosTablaPaginada.tsx
-│   ├── HallazgosFiltros.tsx
-│   ├── MarcarRevisadoDialog.tsx
-│   ├── AsignarResponsableDialog.tsx
-│   ├── AuditoriaHallazgosTab.tsx
-│   ├── AuditoriaEjecutivoTab.tsx
-│   ├── AuditoriaPorReglaTab.tsx
-│   ├── AuditoriaOperadoresCard.tsx
-│   ├── AuditoriaRiesgoFinancieroCard.tsx
-│   ├── AuditoriaTendenciaChart.tsx
-│   ├── hallazgosTablaConfig.ts
-│   ├── asignarResponsable/
-│   ├── ejecutivo/
-│   ├── marcarRevisado/
-│   └── __tests__/
-├── constants/
-│   └── index.ts            ← desde src/constants/auditoria.ts
-├── domain/
-│   ├── reglaLabels.ts      ← desde lib/domain/auditoriaReglaLabels.ts
-│   ├── csv.ts              ← desde lib/domain/auditoriaCsv.ts
-│   ├── core.ts             ← desde lib/domain/auditoria.ts
-│   ├── ejecutivoAgregados.ts ← desde lib/auditoria/
-│   └── __tests__/
-├── hooks/
-│   ├── index.ts
-│   ├── useAuditoria.ts
-│   ├── useAuditoriaPageController.ts
-│   ├── useAuditoriaEjecutivo.ts
-│   ├── useAuditoriaSnapshots.ts
-│   ├── useAuditoriaComentarios.ts
-│   ├── useAuditoriaRevisiones.ts
-│   ├── useAsignarResponsableController.ts
-│   ├── useMarcarRevisadoController.ts
-│   ├── useHallazgosTablaState.ts
-│   ├── useOrgMembersAsignables.ts
-│   ├── useSnoozeHallazgo.ts
-│   ├── hallazgosTablaFilters.ts
-│   ├── revisiones/ (query, marcar, desmarcar, asignar, hash)
-│   └── __tests__/
-├── routes/
-│   └── AuditoriaPage.tsx    ← desde src/pages/Auditoria.tsx
-├── services/
-│   ├── index.ts
-│   ├── comentarios.ts
-│   ├── reporte.ts
-│   ├── revisiones.ts
-│   ├── snapshots.ts
-│   ├── snooze.ts
-│   └── __tests__/
-├── types/
-│   └── index.ts            ← desde src/types/auditoria.ts
-└── index.ts                ← barrel público (página + hooks/servicios usados afuera)
-```
+### 2. Candado soft al cerrar sin proforma
 
-## Reescritura de imports (mapa)
+- **Frontend** en `useEmbarqueEstadoActions.handleAvanzarEstado`:
+  - Si `siguiente === 'Cerrado'`, contar conceptos de venta con `estado_facturacion !== 'en_proforma'`.
+  - Si > 0 → abrir `AlertDialog`: "Este embarque tiene N conceptos sin proforma. ¿Cerrar de todas formas?" con `confirmar` / `cancelar`.
+  - Solo prosigue con la RPC tras confirmación. No bloqueo de backend (queda como advertencia operativa).
+- Refactor mínimo: el dialog se renderiza desde `EmbarqueDetalleHeader` controlado por estado local del controller `useEmbarqueDetalleActions`.
 
-| Antes | Después |
-|---|---|
-| `@/pages/Auditoria` | `@/features/auditoria/routes/AuditoriaPage` |
-| `@/hooks/auditoria/*` | `@/features/auditoria/hooks/*` |
-| `@/services/auditoria/*` | `@/features/auditoria/services/*` |
-| `@/lib/auditoria/ejecutivoAgregados` | `@/features/auditoria/domain/ejecutivoAgregados` |
-| `@/lib/domain/auditoria` | `@/features/auditoria/domain/core` |
-| `@/lib/domain/auditoriaCsv` | `@/features/auditoria/domain/csv` |
-| `@/lib/domain/auditoriaReglaLabels` | `@/features/auditoria/domain/reglaLabels` |
-| `@/constants/auditoria` | `@/features/auditoria/constants` |
-| `@/types/auditoria` | `@/features/auditoria/types` |
-| `@/components/auditoria/*` | `@/features/auditoria/components/*` |
+### 3. Permitir Cerrados en el selector de proforma
 
-Archivos a tocar fuera del feature:
-- `src/routes/appRoutes.lazy.ts` → `lazy(() => import("@/features/auditoria/routes/AuditoriaPage"))`
-- `src/routes/appRoutes.tsx` → sin cambios (sigue usando símbolo `Auditoria`)
-- `src/components/shared/utils/auditoriaConfig.ts` → reapuntar imports de `@/lib/domain/auditoria*`
-- `src/hooks/layout/useAppSidebarSections.ts` → reapuntar si referencia constants/types
+- `src/features/embarques/services/queries/expedientes.ts:18` → quitar `.neq("estado","Cerrado")`.
+- En la UI del `ExpedientePicker` (donde se renderiza la lista), agregar `Badge variant="secondary"` con texto "Cerrado" cuando aplique para que el operador sepa que está facturando un embarque ya cerrado.
+- No tocar la RPC de generación de proforma (no valida estado, ya funciona).
 
-## Pasos de ejecución (paralelizables por subagentes)
+### 4. Arreglo puntual del embarque ya cerrado
 
-1. **S1 – Move físico**: `git mv` (vía `mv`) de los 6 grupos (pages, hooks, services, lib, constants, types, components) a `src/features/auditoria/` respetando subcarpetas y tests. Renombrar `Auditoria.tsx` → `routes/AuditoriaPage.tsx`. Renombrar archivos de `lib/domain/auditoria*` a `domain/{core,csv,reglaLabels}.ts`.
-2. **S2 – Imports internos**: dentro de `src/features/auditoria/**` corregir rutas relativas/alias entre componentes, hooks, services, domain, types.
-3. **S3 – Imports externos**: aplicar el mapa de reescritura en los ~6 archivos consumidores fuera del feature (`appRoutes.lazy.ts`, `auditoriaConfig.ts`, `useAppSidebarSections.ts`, tests en `hooks/layout/__tests__`).
-4. **S4 – Barrel `index.ts`** con la superficie pública mínima.
-5. **S5 – Verificación**: `bun run typecheck`, `bun run test`, scan `rg "hooks/auditoria|services/auditoria|lib/(auditoria|domain/auditoria)|pages/Auditoria|components/auditoria|constants/auditoria|types/auditoria" src` debe regresar 0 hits.
-6. **S6 – CHANGELOG + APP_VERSION** → `12.58.0` con entrada describiendo el vertical slice.
+Una vez aprobado el plan: el usuario podrá usar el nuevo botón "Reabrir embarque" para liberar el caso actual sin necesidad de migración manual.
+
+### 5. Tests
+
+- `mutations.test.ts` → cubrir `reabrirEmbarqueRpc` (éxito, no admin, embarque no cerrado).
+- `useEmbarqueEstadoActions.test.tsx` (nuevo) → advertencia al cerrar con conceptos pendientes / sin pendientes.
+- `expedientes.test` o equivalente → snapshot ya no excluye Cerrado.
+
+### 6. Versionado y memoria
+
+- `APP_VERSION` → bump menor (12.59.0).
+- `CHANGELOG.md` (root) → entrada `## [12.59.0]` con los 3 cambios.
+- Actualizar `mem://features/shipment-management`: documentar reapertura admin + advertencia soft + picker incluye Cerrados.
 
 ## Detalles técnicos
-- No se cambian URLs, lazy boundaries, query keys, ni firmas públicas.
-- Los `__tests__` se mueven junto con el código probado (mantienen colocación).
-- Mocks `vi.mock("@/services/auditoria/...")` en tests se reapuntan al nuevo path.
-- `src/lib/domain/auditoria*` se elimina; se valida que ningún otro dominio los importe (grep confirmó: solo Auditoría los usa).
-- Respeta Power of 10 (sin tocar tamaños de componentes; solo move + imports).
 
-## Riesgos
-- Casing: macOS/Linux. Usar `git mv` (vía `mv`) explícito para preservar historia.
-- Pueden quedar imports rotos en tests si un mock path está hardcodeado — el grep final de S5 lo detecta.
+```text
+RPC reabrir_embarque
+  ├─ has_role(auth.uid(), 'admin') OR has_role(auth.uid(), 'global_admin')
+  ├─ estado actual == 'Cerrado'           (sino RAISE EXCEPTION)
+  ├─ UPDATE embarques SET estado='Entregado'
+  ├─ INSERT notas_embarque   (cambio_estado)
+  └─ INSERT eventos_embarque (Otro)
+```
 
-## Entregable
-PR con ~60-70 archivos movidos, ~10 archivos editados fuera del feature, build + tests verdes, `APP_VERSION = 12.58.0`, entrada en `CHANGELOG.md`.
+```text
+handleAvanzarEstado(siguiente)
+  └─ if siguiente == 'Cerrado'
+       └─ contar conceptos venta sin proforma → si >0 → abrir AlertDialog
+            ├─ Cancelar → no-op
+            └─ Confirmar → avanzarEstado.mutateAsync(...)
+```
+
+## Fuera de alcance
+
+- Bloqueo duro en backend al cerrar (descartado por preferencia soft).
+- Reapertura por roles distintos a Admin (descartado).
+- Página de bitácora dedicada para reaperturas (queda en bitácora general existente).
