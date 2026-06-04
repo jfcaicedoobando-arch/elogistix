@@ -8,7 +8,7 @@
 // 12.51.14 — endurecido: requiere JWT y rol admin/operador. Para no-globalAdmin,
 // la consulta se fuerza a la organización del caller para evitar fugas
 // cross-tenant.
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 
 interface Body { organization_id?: string }
@@ -33,7 +33,9 @@ function ventana(diasParaVencer: number): "T-3" | "T+7" | "T+15" | null {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const cors = buildCors(req);
 
   try {
     // 1. Autenticación obligatoria — no se permite acceso anónimo.
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
       const status = msg.startsWith("401:") ? 401 : 500;
       return new Response(
         JSON.stringify({ ok: false, error: "No autorizado" }),
-        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
@@ -57,7 +59,7 @@ Deno.serve(async (req) => {
     if (!isGlobalAdmin && !callerOrgId) {
       return new Response(
         JSON.stringify({ ok: false, error: "Permisos insuficientes" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        { status: 403, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
@@ -109,12 +111,12 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ ok: true, generado_en: new Date().toISOString(), buckets }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ ok: false, error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500,
+      headers: { ...cors, "Content-Type": "application/json" }, status: 500,
     });
   }
 });

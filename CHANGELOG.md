@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.4] - 2026-06-04
+- **security — endurecimiento edge functions**: cierra 2 hallazgos del security review.
+  - `cxc-recordatorios`: reemplaza `corsHeaders` wildcard (`npm:@supabase/supabase-js@2/cors`) por `buildCors(req)` + `handlePreflightStrict(req)` desde `_shared/cors.ts`, alineándose con el resto de endpoints autenticados (whitelist `*.lovable.app` / `*.lovableproject.com` / localhost).
+  - `delete-user`: agrega guardrail anti-escalación — un admin de organización ya no puede eliminar a un `super_admin` global aunque sea miembro de su org (consulta `user_roles` y responde `403 privesc_blocked_super_admin`).
+
 ## [12.53.3] - 2026-06-04
 - **fix(seo) — metadata única en auth + jerarquía de encabezados**: cierra 3 hallazgos del SEO review.
   - `Login.tsx`, `NotFound.tsx` y `TrackingPublico.tsx` ahora emiten `Seo` propio (title/description/og:* únicos) para evitar reusar la metadata de la landing.
