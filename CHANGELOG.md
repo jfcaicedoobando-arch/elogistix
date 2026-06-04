@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.52.3] - 2026-06-04
+- **fix(marketing/landing/nav) — logo crisp en tablet**: en 768px (iPad portrait) el desktop nav (Módulos · Cómo funciona · Precio · FAQ · Iniciar sesión · Crear cuenta gratis) cabía a la fuerza y empujaba el wordmark "Libre Carga" a dos líneas. Se sube el breakpoint del nav desktop de `md:` a `lg:` (1024px) y se agregan `shrink-0` + `whitespace-nowrap` al lockup en `LandingNav.tsx`. Resultado: tablet y mobile usan el menú hamburguesa con el logo en una sola línea; desktop mantiene el nav completo. Bump 12.52.3.
+
 ## [12.52.2] - 2026-06-04
+
 - **fix(marketing/landing) — paleta Navy Trust bloqueada**: el hero y la mayoría de las secciones se renderizaban en azul eléctrico (no en navy) porque el landing usaba tokens semánticos (`bg-primary`, etc.) que en dark mode global de la app interna se reasignan (`--primary: 217 91% 60%`). Se introduce un scope `.landing-scope` en `src/index.css` que fija la paleta Navy Trust independientemente del tema (`--primary 216 60% 12%`, `--accent 217 91% 60%`, `--background 210 30% 99%`) y se envuelve `Landing.tsx` con `className="landing-scope"`. Además, se reduce la saturación de los blobs del hero (`bg-accent/35`→`/20`, glow secundario `0.22`→`0.14`) para que el navy respire y el H1 gane contraste. Sin cambios de lógica, rutas, tokens globales ni la app interna. Bump 12.52.2.
 
 ## [12.52.1] - 2026-06-04
