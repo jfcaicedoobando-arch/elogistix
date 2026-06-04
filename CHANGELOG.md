@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.16] - 2026-06-04
+- **fix(observability/sentry)**: Hardcoded el DSN público del proyecto `elogistix/javascript-react` como fallback en `src/lib/sentry.ts`. Antes el SDK sólo se inicializaba si `VITE_SENTRY_DSN` estaba definida, variable que no existe en el build publicado, por lo que `/dashboard/sentry-diagnostico` reportaba "no inicializado" en producción. La env var sigue funcionando como override para otros entornos. Bump 12.51.16.
+
 ## [12.51.15] - 2026-06-04
 - **refactor(quality/audit-high)**: Resolución de hallazgos HIGH de la auditoría de calidad de código. (1) `TrackingNuevoEventoForm` deja de importar `supabase` directamente: el `update` de `fecha_llegada_real` se extrae a `useActualizarFechaLlegadaReal` (hook) + `actualizarFechaLlegadaRealEmbarque` (servicio), respetando la regla de separación de capas. (2) `services/facturas/notasCredito.ts` reemplaza llamadas repetidas a `supabase.auth.getUser()` por `getCurrentUser()` de `@/services/auth`, y deja de invocarlo cuando la operación no requiere el `user.id` (`cambiarEstadoNotaCredito` sólo lo pide al aprobar). (3) `AuditoriaRiesgoFinancieroCard` usa el utilitario central `formatCurrency` en vez de un `Intl.NumberFormat` local. (4) `PlantillaSelector` usa `buildWhatsappUrl()` de un nuevo `constants/externalUrls.ts` en lugar del literal `https://wa.me/`. Bump 12.51.15.
 
