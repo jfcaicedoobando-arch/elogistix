@@ -37,7 +37,7 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 src/
 ├── pages/          → Composición de UI por ruta. NO tocan Supabase ni lógica de dominio.
 ├── components/     → Componentes reutilizables y específicos de feature.
-│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs.
+│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs, y utils de presentación (appFeedback, dialogTokens, kpiTones, uiMappings, auditoriaConfig).
 │   ├── ui/             → shadcn read-only (no editar).
 │   └── <dominio>/      → Componentes por feature (embarque, cotizacion, cliente, …).
 ├── hooks/          → React Query + estado local + side effects (toasts, navegación).
@@ -64,9 +64,9 @@ src/
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
 │   ├── financial/      → Cálculos monetarios + IVA dinámico.
 │   ├── formatters/     → Money/date/number en es-MX.
-│   ├── ui/             → appFeedback, dialogTokens, kpiTones, uiMappings.
+│   ├── errors/         → Utilidades puras de errores (dynamicImportError).
 │   ├── query/          → Query keys centralizados.
-│   └── *.ts            → utils, errors, storage, contacto.
+│   └── *.ts            → utils, storage, contacto, sentry.
 ├── content/        → Contenido editorial (changelog, copy de marketing).
 ├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard, appVersion).
 ├── types/          → Tipos compartidos entre módulos.
