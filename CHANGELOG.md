@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.6] - 2026-06-04
+- **fix(seo) — title acortado y rutas admin excluidas de indexación**: cierra 2 hallazgos del SEO review.
+  - `index.html`: title/og:title/twitter:title acortados a 50 caracteres ("Libre Carga — Software de carga gratuito en México") para evitar truncamiento en SERP.
+  - `public/robots.txt`: agrega `Disallow: /admin` y `/admin/` — las rutas administrativas son internas y no deben indexarse (en lugar de añadirlas al sitemap).
+
 ## [12.53.5] - 2026-06-04
 - **fix(seo) — h1 en login, metadata única en LogoPreview y og:url dinámico en tracking**: cierra 3 hallazgos del SEO review.
   - `/login`: agrega `<h1 class="sr-only">Iniciar sesión en Libre Carga</h1>` para dar encabezado principal sin alterar el diseño.
