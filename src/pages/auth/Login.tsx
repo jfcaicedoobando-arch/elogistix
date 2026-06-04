@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, CheckCircle2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/components/shared/utils/brand";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Seo } from "@/components/seo/Seo";
+import { translateAuthError } from "@/lib/auth/translateAuthError";
+import { ForgotPasswordDialog } from "@/pages/auth/ForgotPasswordDialog";
 
 type TabKey = "login" | "signup";
 
@@ -21,6 +24,7 @@ export default function Login() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab: TabKey = searchParams.get("tab") === "signup" ? "signup" : "login";
   const [tab, setTab] = useState<TabKey>(initialTab);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const handleTabChange = (value: string) => {
     const next = (value === "signup" ? "signup" : "login") as TabKey;
@@ -34,17 +38,24 @@ export default function Login() {
   // --- Login state ---
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [capsOn, setCapsOn] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError(null);
     try {
       const { role } = await signInWithEmail(email, password);
       navigate(resolveLandingRoute(role), { replace: true });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error al iniciar sesión", description: message, error: err, method: "HANDLE_LOGIN" });
+      const raw = err instanceof Error ? err.message : "Error desconocido";
+      const friendly = translateAuthError(raw);
+      setLoginError(friendly);
+      // notifyError mantiene el reporte interno (Sentry/bitácora) con el mensaje original.
+      notifyError(toast, { title: "No pudimos iniciar sesión", description: friendly, error: err, method: "HANDLE_LOGIN", silent: true });
     } finally {
       setLoading(false);
     }
@@ -58,15 +69,17 @@ export default function Login() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupDone, setSignupDone] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSignupError(null);
     if (signupPassword !== signupPassword2) {
-      toast({ title: "Las contraseñas no coinciden", variant: "destructive" });
+      setSignupError("Las contraseñas no coinciden.");
       return;
     }
     if (!acceptTerms) {
-      toast({ title: "Debes aceptar los términos para continuar", variant: "destructive" });
+      setSignupError("Debes aceptar los términos para continuar.");
       return;
     }
     setSignupLoading(true);
@@ -80,8 +93,9 @@ export default function Login() {
       setSignupDone(true);
       toast({ title: "Cuenta creada", description: "Revisa tu correo para confirmar tu cuenta." });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error al crear cuenta", description: message, error: err, method: "HANDLE_SIGNUP" });
+      const friendly = translateAuthError(err instanceof Error ? err.message : null);
+      setSignupError(friendly);
+      notifyError(toast, { title: "No pudimos crear la cuenta", description: friendly, error: err, method: "HANDLE_SIGNUP", silent: true });
     } finally {
       setSignupLoading(false);
     }
@@ -110,14 +124,65 @@ export default function Login() {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" noValidate>
+                {loginError && (
+                  <Alert variant="destructive" role="alert">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{loginError}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="usuario@empresa.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="usuario@empresa.com"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); if (loginError) setLoginError(null); }}
+                    required
+                    autoComplete="email"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Contraseña</Label>
+                    <button
+                      type="button"
+                      onClick={() => setForgotOpen(true)}
+                      className="text-xs text-accent hover:underline"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPwd ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); if (loginError) setLoginError(null); }}
+                      onKeyUp={(e) => setCapsOn(e.getModifierState && e.getModifierState("CapsLock"))}
+                      onKeyDown={(e) => setCapsOn(e.getModifierState && e.getModifierState("CapsLock"))}
+                      required
+                      minLength={6}
+                      autoComplete="current-password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      tabIndex={-1}
+                    >
+                      {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {capsOn && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> Bloq Mayús está activado
+                    </p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -134,22 +199,28 @@ export default function Login() {
                   <p className="text-xs text-muted-foreground">Abre el enlace para activar tu cuenta y entrar a Libre Carga.</p>
                 </div>
               ) : (
-                <form onSubmit={handleSignup} className="space-y-4">
+                <form onSubmit={handleSignup} className="space-y-4" noValidate>
+                  {signupError && (
+                    <Alert variant="destructive" role="alert">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{signupError}</AlertDescription>
+                    </Alert>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Nombre completo</Label>
-                    <Input id="signup-name" type="text" placeholder="Juan Pérez" value={signupName} onChange={(e) => setSignupName(e.target.value)} required />
+                    <Input id="signup-name" type="text" placeholder="Juan Pérez" value={signupName} onChange={(e) => setSignupName(e.target.value)} required autoComplete="name" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email de trabajo</Label>
-                    <Input id="signup-email" type="email" placeholder="tu@agencia.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required />
+                    <Input id="signup-email" type="email" placeholder="tu@agencia.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required autoComplete="email" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Contraseña</Label>
-                    <Input id="signup-password" type="password" placeholder="Mínimo 6 caracteres" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required minLength={6} />
+                    <Input id="signup-password" type="password" placeholder="Mínimo 6 caracteres" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password2">Confirmar contraseña</Label>
-                    <Input id="signup-password2" type="password" placeholder="••••••••" value={signupPassword2} onChange={(e) => setSignupPassword2(e.target.value)} required minLength={6} />
+                    <Input id="signup-password2" type="password" placeholder="••••••••" value={signupPassword2} onChange={(e) => setSignupPassword2(e.target.value)} required minLength={6} autoComplete="new-password" />
                   </div>
                   <label className="flex items-start gap-2 text-xs text-muted-foreground">
                     <input type="checkbox" className="mt-0.5" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />
@@ -167,6 +238,8 @@ export default function Login() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
     </div>
   );
 }
