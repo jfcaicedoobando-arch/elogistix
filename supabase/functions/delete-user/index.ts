@@ -59,6 +59,26 @@ Deno.serve(async (req) => {
         });
         return errorResponse("El usuario no pertenece a tu organización", 403, cors);
       }
+
+      // Guardrail anti-escalación: un admin de org no puede eliminar a un super_admin
+      // global, aun cuando este sea miembro de la organización.
+      const { data: targetRoles } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user_id);
+      const targetIsSuperAdmin = (targetRoles ?? []).some((r) => r.role === "super_admin");
+      if (targetIsSuperAdmin) {
+        log.finish(403, "privesc_blocked_super_admin", {
+          user_id: callerId,
+          organization_id: callerOrgId,
+          payload: { target_user_id: user_id },
+        });
+        return errorResponse(
+          "No tienes permiso para eliminar a un super administrador",
+          403,
+          cors,
+        );
+      }
     }
 
     await adminClient.from("organization_members").delete().eq("user_id", user_id);
