@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
@@ -7,16 +7,19 @@ import { BrandLockup } from "@/components/layout/BrandLockup";
  * Términos y condiciones. Contenido placeholder — pendiente de revisión legal.
  */
 export default function Terminos() {
-  useEffect(() => {
-    document.title = "Términos y condiciones · Libre Carga";
-    const meta = document.querySelector('meta[name="description"]');
-    const prev = meta?.getAttribute("content") ?? null;
-    meta?.setAttribute("content", "Términos y condiciones de uso de Libre Carga, la plataforma para agencias de carga mexicanas.");
-    return () => { if (prev !== null) meta?.setAttribute("content", prev); };
-  }, []);
-
+  const url = "https://librecarga.com/legal/terminos";
+  const title = "Términos y condiciones · Libre Carga";
+  const desc = "Términos y condiciones de uso de Libre Carga, la plataforma para agencias de carga mexicanas.";
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={desc} />
+        <link rel="canonical" href={url} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={desc} />
+        <meta property="og:url" content={url} />
+      </Helmet>
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link to="/" aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>

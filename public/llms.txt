@@ -1,0 +1,15 @@
+# Libre Carga
+
+> Sistema operativo gratuito para agencias de carga (freight forwarders) en México: cotizaciones, embarques (marítimo FCL/LCL, aéreo y terrestre), facturación CFDI 4.0, CxC/CxP, tesorería, CRM, comisiones y portal del cliente.
+
+Libre Carga es una plataforma SaaS multi-tenant hecha en México y para forwarders mexicanos. Reemplaza hojas de Excel, carpetas compartidas y pizarrones de embarques con una sola herramienta integrada. Es gratuita durante el lanzamiento, sin tarjeta de crédito y sin límite de usuarios.
+
+## Pages
+
+- [Inicio](/): Landing principal con módulos, módulos México, precios, FAQ y CTA para crear cuenta gratis.
+- [Iniciar sesión / Crear cuenta](/login): Acceso al producto y registro de nuevas agencias.
+
+## Optional
+
+- [Aviso de privacidad](/legal/privacidad): Tratamiento de datos personales conforme a la LFPDPPP.
+- [Términos y condiciones](/legal/terminos): Condiciones de uso del servicio.
