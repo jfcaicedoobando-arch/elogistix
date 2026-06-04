@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.3] - 2026-06-04
+- **fix(seo) — metadata única en auth + jerarquía de encabezados**: cierra 3 hallazgos del SEO review.
+  - `Login.tsx`, `NotFound.tsx` y `TrackingPublico.tsx` ahora emiten `Seo` propio (title/description/og:* únicos) para evitar reusar la metadata de la landing.
+  - `LandingPortal.tsx`: `<h4>` → `<h3>` para mantener jerarquía H1 > H2 > H3.
+
 ## [12.53.2] - 2026-06-04
 - **fix(seo) — sitemap, llms.txt, canonicals self-referentes y FAQ JSON-LD**: cierra 5 hallazgos del SEO review.
   - (1) `public/sitemap.xml` con las 4 rutas públicas indexables (`/`, `/login`, `/legal/privacidad`, `/legal/terminos`) y `public/robots.txt` declara `Sitemap: https://librecarga.com/sitemap.xml`.
