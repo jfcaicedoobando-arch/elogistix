@@ -22,7 +22,8 @@ interface ListUsersRow {
 
 /**
  * Lista los miembros de la organización combinando organization_members
- * con la edge function list-users para resolver emails y created_at de auth.
+ * con la edge function `user-management` (action: "list") para resolver
+ * emails y created_at de auth.
  */
 export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   const { data: membersData, error: membersError } = await supabase
@@ -35,7 +36,9 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
 
   const emailMap: Record<string, { email: string; created_at: string }> = {};
   try {
-    const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
+    const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
+      body: { action: "list" },
+    });
     if (!fnError && Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
         emailMap[u.id] = { email: u.email, created_at: u.created_at };
