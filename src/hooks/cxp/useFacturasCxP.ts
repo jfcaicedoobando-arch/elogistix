@@ -6,7 +6,7 @@ import {
   calcularKPIsCxP,
   type EstatusCxP,
   type FetchCxPFiltros,
-} from "@/services/cxp/proveedorFacturas";
+} from "@/services/cxp";
 
 export function useFacturasCxP(filtros: FetchCxPFiltros = {}) {
   const key = useMemo(() => filtros, [

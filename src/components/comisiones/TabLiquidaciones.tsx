@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useLiquidaciones } from "@/hooks/comisiones";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
-import type { LiquidacionRow } from "@/services/comisiones/liquidaciones";
+import type { LiquidacionRow } from "@/services/comisiones";
 
 interface VendedoraOpt { id: string; nombre: string }
 

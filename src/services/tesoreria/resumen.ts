@@ -6,8 +6,8 @@
  *   saldo = saldo_inicial + Σ(abonos) − Σ(cargos) sobre cuenta.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCobranza } from "@/services/facturas/cobranza";
-import { fetchFacturasCxP } from "@/services/cxp/proveedorFacturas";
+import { fetchCobranza } from "@/services/facturas";
+import { fetchFacturasCxP } from "@/services/cxp";
 
 export interface ResumenCuenta {
   id: string;

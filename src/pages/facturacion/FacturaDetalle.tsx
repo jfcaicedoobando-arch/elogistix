@@ -15,7 +15,7 @@ import { usePermissions, useToast } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
-import { openFacturaInNewTab } from "@/services/storage/facturas";
+import { openFacturaInNewTab } from "@/services/storage";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";

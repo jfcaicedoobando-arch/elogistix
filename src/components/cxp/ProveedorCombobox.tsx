@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useProveedoresLite } from "@/hooks/proveedor/useProveedores";
+import { useProveedoresLite } from "@/hooks/proveedor";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {

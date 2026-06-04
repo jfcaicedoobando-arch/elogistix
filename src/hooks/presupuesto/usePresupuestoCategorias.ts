@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchCategorias, crearCategoria, actualizarCategoria, eliminarCategoria,
-} from "@/services/presupuesto/categorias";
+} from "@/services/presupuesto";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export function usePresupuestoCategorias(activas = true) {

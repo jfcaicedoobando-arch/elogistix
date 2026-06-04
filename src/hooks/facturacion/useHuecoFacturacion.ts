@@ -4,12 +4,12 @@
  */
 import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 import {
   fetchHuecoFacturacion,
   type FilaHueco,
   type HuecoFacturacionResult,
-} from "@/services/facturas/huecoFacturacion";
+} from "@/services/facturas";
 import { exportToCsv } from "@/generators/exportCsv";
 import { queryKeys } from "@/lib/query";
 import {

@@ -4,7 +4,7 @@
  */
 import { useState, useMemo } from "react";
 import type { ProformaConFactura } from "@/features/embarques/hooks/useProformas";
-import { DEFAULT_PAGE_SIZE } from "@/hooks/shared/useListPageState";
+import { DEFAULT_PAGE_SIZE } from "@/hooks/shared";
 export type FiltroEstadoProforma = "todas" | "pendiente" | "facturada";
 
 export function useTabProformasState(

@@ -9,7 +9,7 @@ import {
   registrarPagoLiquidacion,
   type GenerarLiquidacionParams,
   type RegistrarPagoLiquidacionParams,
-} from "@/services/comisiones/liquidaciones";
+} from "@/services/comisiones";
 
 export function useLiquidaciones() {
   return useQuery({

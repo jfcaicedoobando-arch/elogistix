@@ -17,7 +17,7 @@ import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
 import type { SortableEmbarqueColumn } from "@/features/embarques/services/queries";
 import { SORT_KEY_TO_COLUMN } from "@/features/embarques/services/queries";
 import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/features/embarques/services";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
 import {

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { calcularAlertas } from "../alertas";
-import type { FlujoProyectado, SemanaFlujo } from "@/services/tesoreria/flujoProyectado";
-import type { ResumenTesoreria } from "@/services/tesoreria/resumen";
-import type { ResumenVsReal } from "@/services/presupuesto/vsReal";
+import type { FlujoProyectado, SemanaFlujo } from "@/services/tesoreria";
+import type { ResumenTesoreria } from "@/services/tesoreria";
+import type { ResumenVsReal } from "@/services/presupuesto";
 
 const semana = (over: Partial<SemanaFlujo> = {}): SemanaFlujo => ({
   semana_iso: "2026-W23",

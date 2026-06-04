@@ -9,8 +9,8 @@
  * Conversión USD/EUR → MXN usando `tipo_cambio` del documento (fallback 1).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCobranza } from "@/services/facturas/cobranza";
-import { fetchFacturasCxP } from "@/services/cxp/proveedorFacturas";
+import { fetchCobranza } from "@/services/facturas";
+import { fetchFacturasCxP } from "@/services/cxp";
 import { fetchResumenTesoreria } from "./resumen";
 
 export interface DetalleFlujo {

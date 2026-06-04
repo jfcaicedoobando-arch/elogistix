@@ -17,10 +17,10 @@ import {
   useClientesForSelect,
   useContactosCliente,
 } from "@/hooks/cliente/useClientes";
-import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
+import { useConceptosForm } from "@/hooks/cotizacion";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { useEmbarqueSubmitOrchestrator } from "@/features/embarques/hooks/useEmbarqueSubmitOrchestrator";
-import { useCotizacionesAceptadas } from "@/hooks/cotizacion/useCotizaciones";
+import { useCotizacionesAceptadas } from "@/hooks/cotizacion";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/components/shared/utils/appFeedback";

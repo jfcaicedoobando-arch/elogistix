@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 import {

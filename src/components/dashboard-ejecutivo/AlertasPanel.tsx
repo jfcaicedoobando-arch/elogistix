@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, AlertTriangle, Info } from "lucide-react";
-import type { AlertaEjecutiva, SeveridadAlerta } from "@/services/dashboard-ejecutivo/types";
+import type { AlertaEjecutiva, SeveridadAlerta } from "@/services/dashboard-ejecutivo";
 
 interface Props {
   alertas: AlertaEjecutiva[];

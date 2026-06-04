@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { fetchDashboardEjecutivo } from "@/services/dashboard-ejecutivo/agregador";
+import { fetchDashboardEjecutivo } from "@/services/dashboard-ejecutivo";
 
 export function useDashboardEjecutivo(periodo: string) {
   const { organizationId } = useOrganization();

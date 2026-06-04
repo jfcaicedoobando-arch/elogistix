@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   useCrearCategoriaPresupuesto, useActualizarCategoriaPresupuesto,
 } from "@/hooks/presupuesto";
-import type { CategoriaPresupuesto } from "@/services/presupuesto/categorias";
+import type { CategoriaPresupuesto } from "@/services/presupuesto";
 
 interface Props {
   open: boolean;

@@ -3,7 +3,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
-import type { ResumenTesoreria, ResumenCuenta, TopItem } from "@/services/tesoreria/resumen";
+import type { ResumenTesoreria, ResumenCuenta, TopItem } from "@/services/tesoreria";
 
 interface Props {
   fechaCorte: string;

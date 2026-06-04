@@ -6,4 +6,4 @@
  * Se mantiene el nombre `cargarEmisorEmpresa` como alias del nuevo
  * `fetchEmisorEmpresa` para no romper los 5 call sites de `src/generators/`.
  */
-export { fetchEmisorEmpresa as cargarEmisorEmpresa } from "@/services/configuracion/emisor";
+export { fetchEmisorEmpresa as cargarEmisorEmpresa } from "@/services/configuracion";

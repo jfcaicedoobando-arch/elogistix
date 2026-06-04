@@ -4,7 +4,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBitacora } from "@/hooks/shared/useBitacora";
+import { useBitacora } from "@/hooks/shared";
 import { formatDate } from "@/lib/formatters";
 import { History } from "lucide-react";
 

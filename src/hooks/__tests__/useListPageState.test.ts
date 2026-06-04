@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
-import { useListPageState, DEFAULT_PAGE_SIZE } from "@/hooks/shared/useListPageState";
+import { useListPageState, DEFAULT_PAGE_SIZE } from "@/hooks/shared";
 
 const wrapper = withNuqsTestingAdapter({ hasMemory: true });
 

@@ -3,7 +3,7 @@ import { queryKeys } from "@/lib/query";
 import {
   fetchPresupuestoMensualAnio, upsertCeldaPresupuesto,
   type UpsertCeldaParams,
-} from "@/services/presupuesto/mensual";
+} from "@/services/presupuesto";
 
 export function usePresupuestoMensualAnio(anio: number) {
   return useQuery({

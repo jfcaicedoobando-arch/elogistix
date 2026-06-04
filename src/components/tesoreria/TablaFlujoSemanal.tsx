@@ -5,7 +5,7 @@ import { Fragment, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { Card, CardContent } from "@/components/ui/card";
-import type { SemanaFlujo } from "@/services/tesoreria/flujoProyectado";
+import type { SemanaFlujo } from "@/services/tesoreria";
 
 interface Props { semanas: SemanaFlujo[] }
 

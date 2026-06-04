@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useCotizacionHydration } from "@/features/embarques/hooks/useCotizacionHydration";
-import { type CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
+import { type CotizacionRow } from "@/hooks/cotizacion";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
 import {
   mapConceptosVentaFromCotizacion,

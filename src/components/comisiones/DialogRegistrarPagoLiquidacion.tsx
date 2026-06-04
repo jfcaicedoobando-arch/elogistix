@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/formatters";
 import { useRegistrarPagoLiquidacion } from "@/hooks/comisiones";
-import type { LiquidacionRow } from "@/services/comisiones/liquidaciones";
+import type { LiquidacionRow } from "@/services/comisiones";
 
 export function DialogRegistrarPagoLiquidacion({
   open, onOpenChange, liq,

@@ -8,7 +8,7 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/hooks/catalogos";
 import { useRegistrarPagoFactura, usePagosFactura } from "@/hooks/facturacion";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
