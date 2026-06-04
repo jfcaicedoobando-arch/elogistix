@@ -261,7 +261,7 @@ RC → GA con code freeze parcial:
 Mientras la versión activa sea `X.Y.Z-rc.N`:
 
 - **Permitido**: fixes de bugs marcados como **bloqueante** o **alto** en el
-  checklist QA (`docs/rc-qa-checklist.md`), parches de seguridad HIGH/CRITICAL,
+  checklist QA del RC, parches de seguridad HIGH/CRITICAL,
   ajustes de documentación, release notes.
 - **Prohibido**: nuevas features, refactors no críticos, cambios de schema no
   forzados por un bug, bumps de dependencias mayores. Esos cambios entran a
@@ -269,8 +269,8 @@ Mientras la versión activa sea `X.Y.Z-rc.N`:
 
 ### Flujo del corte
 
-1. Cerrar gaps del checklist (`docs/rc-qa-checklist.md`).
-2. Ejecutar smoke de performance (`docs/rc-perf.md`).
+1. Cerrar gaps del checklist QA del RC.
+2. Ejecutar smoke de performance.
 3. Dry-run de rollback (`docs/backups-rollback.md`).
 4. Bump `APP_VERSION` a `X.Y.Z-rc.1`, entrada en `CHANGELOG.md` y `src/pages/Changelog.tsx`.
 5. Ventana de testing: **5-7 días hábiles**.
