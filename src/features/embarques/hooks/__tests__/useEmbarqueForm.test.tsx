@@ -1,0 +1,65 @@
+import { describe, it, expect, vi } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { createWrapper } from "@/test/utils/queryWrapper";
+import { useEmbarqueForm } from "../useEmbarqueForm";
+
+vi.mock("@/hooks/catalogos/useExchangeRates", () => ({
+  useExchangeRates: () => ({
+    data: { usdMxn: 20, eurMxn: 22 },
+  }),
+}));
+
+vi.mock("@/services/storage/index", () => ({
+  uploadFile: vi.fn().mockResolvedValue({}),
+}));
+
+const wrapper = createWrapper();
+
+describe("useEmbarqueForm", () => {
+  it("inicializa con valores por defecto y sincroniza tipos de cambio", () => {
+    const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
+    expect(result.current.methods.getValues("tipoCambioUSD")).toBe("20");
+    expect(result.current.methods.getValues("tipoCambioEUR")).toBe("22");
+  });
+
+  it("gestiona archivos de documentos", () => {
+    const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
+    const file = new File([""], "test.pdf", { type: "application/pdf" });
+    
+    act(() => {
+      result.current.setDocumentoArchivo("Factura", file);
+    });
+    
+    expect(result.current.documentosArchivos["Factura"]).toBe(file);
+    
+    const checklist = result.current.getDocumentosChecklist("Marítimo");
+    const facturaEntry = checklist.find(d => d.nombre === "Factura");
+    expect(facturaEntry?.adjuntado).toBe(true);
+  });
+
+  it("vincular y desvincular cotización actualiza campos", () => {
+    const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
+    const mockCot = {
+      id: "cot-1",
+      folio: "COT-001",
+      cliente_id: "cli-1",
+      modo: "Marítimo",
+      tipo: "FCL",
+      referencia_cliente: "REF-123",
+      bl_master: "BL123",
+    };
+
+    act(() => {
+      result.current.vincularCotizacion(mockCot as any);
+    });
+    
+    expect(result.current.methods.getValues("clienteId")).toBe("cli-1");
+    expect(result.current.methods.getValues("modo")).toBe("Marítimo");
+
+    act(() => {
+      result.current.desvincularCotizacion();
+    });
+    
+    expect(result.current.methods.getValues("clienteId")).toBe("");
+  });
+});

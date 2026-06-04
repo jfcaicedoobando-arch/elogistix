@@ -1,0 +1,30 @@
+import { describe, it, expect, vi } from 'vitest';
+import { uploadFile } from '../index';
+
+const { mockSupabase } = vi.hoisted(() => ({
+  mockSupabase: {
+    storage: {
+      from: vi.fn().mockReturnThis(),
+      upload: vi.fn().mockResolvedValue({ data: { path: 'test' }, error: null }),
+    },
+  },
+}));
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: mockSupabase,
+}));
+
+describe('storage/index', () => {
+  it('uploadFile sube archivo al bucket correcto', async () => {
+    const file = new File([''], 'test.txt');
+    await uploadFile('path/to/file', file);
+    expect(mockSupabase.storage.from).toHaveBeenCalledWith('documentos');
+    expect(mockSupabase.storage.upload).toHaveBeenCalledWith('path/to/file', file, expect.any(Object));
+  });
+
+  it('uploadFile lanza error si la subida falla', async () => {
+    mockSupabase.storage.upload.mockResolvedValueOnce({ data: null, error: new Error('Upload Failed') });
+    const file = new File([''], 'test.txt');
+    await expect(uploadFile('path', file)).rejects.toThrow('Upload Failed');
+  });
+});

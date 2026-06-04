@@ -1,101 +1,88 @@
-# Plan: Cerrar huecos de cobertura con subagentes en paralelo
+# Plan: Expansión de cobertura de tests (Fase 2)
 
 ## Diagnóstico actual
 
-- **149 archivos de test** vs **1,087 fuentes** (~14% archivos con test). Vitest + v8 configurados y verdes.
-- Capas fuertes: `lib/financial`, `lib/parsers`, `lib/formatters`, `lib/mappers`, `lib/domain` (13/19), `features/embarques/domain` (9/10).
-- Capas débiles principales:
-  - `src/services/**`: **107 fuentes / 32 tests** — 22 subcarpetas con **0 tests** (auditoria, tesoreria, presupuesto, profit, cxp, comisiones, configuracion, storage, etc.).
-  - `src/features/embarques/hooks/**`: **36 / 2** (toda la orquestación del wizard sin red).
-  - `src/hooks/**`: **160 / 19** (hooks de página y formularios).
-  - `src/contexts/**`: **3 / 0** (Auth, Organization, Theme).
-  - `src/components/**`: prácticamente sin tests salvo `shared/dataTable` y `auditoria`.
+- **1,094 archivos fuente** vs **161 tests** (~14.7% file-coverage). Vitest + v8 verde.
+- **Buena cobertura**: `lib/financial` (4/5), `lib/parsers` (5/4), `lib/mappers` (9/8), `lib/domain` (19/13), `features/embarques/{domain,services}` (32/20).
+- **Huecos críticos** (0 tests):
+  - `src/services/`: 22 subcarpetas (auditoria, cxp, tesoreria, presupuesto, profit, comisiones, proveedor, catalogos, configuracion, csf, dashboard, notificaciones, operaciones, organization, planes, reportes, search, storage, tracking, usuario, bitacora, cliente-usuarios).
+  - `src/hooks/`: 16 subcarpetas (admin 15 src, cliente 7, catalogos 7, proveedor 5, cxp 4, comisiones 4, operaciones 4, presupuesto 4, profit 2, tesoreria 2, dashboard 3, dashboard-ejecutivo 2, reportes 2, sentry 2, usuario 3, layout 2).
+  - `src/features/embarques/hooks/`: 31 archivos top-level con 0 tests.
+  - `src/contexts/`: 7 archivos con 0 tests (Auth, Organization, Theme, Breadcrumb, sub-hooks).
+  - `src/pdf/`: 26 archivos con 0 tests (documents, components, theme).
+  - `src/generators/`: 5 archivos sin tests (cotizacion/*, estadoCuentaPdf, layoutContable, rentabilidadPdf).
 
-## Estrategia
+## Objetivo
 
-Seis lotes **disjuntos por carpeta** para evitar conflictos al editarse en paralelo. Cada lote = 1 subagente (`acp_subagent--spawn_agent`, modelo `fast`, salvo lote 4 que usa `capable`). Meta por lote: **+15–25 archivos de test nuevos**, sin tocar código de producción salvo refactors menores para testabilidad (extraer helpers puros).
+Llegar a **~32% de file-coverage** (~350 tests) añadiendo **~130 archivos nuevos** en 7 lotes que se ejecutan en paralelo por subagentes independientes.
 
-**Meta global**: pasar de ~14% a ~30% de archivos con test adyacente, priorizando módulos con lógica de negocio (no UI puramente presentacional).
+## Lotes paralelizables
 
-### Convenciones para todos los lotes
+| Lote | Dominio | Archivos a testear | Tests objetivo | Modelo |
+|------|---------|--------------------|----------------|--------|
+| **L1** | `src/services/` financiero | tesoreria (5), cxp (3), comisiones (4), presupuesto (4), profit (3) | ~19 | fast |
+| **L2** | `src/services/` operativo+admin | auditoria (6), operaciones, tracking, dashboard, reportes, search, notificaciones, organization, planes, storage (2), usuario, cliente-usuarios, bitacora, csf, configuracion (2), catalogos, proveedor | ~25 | fast |
+| **L3** | `src/features/embarques/hooks/` | 31 hooks top-level (queries, financials, wizards, controllers, proformas, tracking) | ~22 | capable |
+| **L4** | `src/hooks/` admin+catálogos+cliente+proveedor | admin (15), cliente (7), catalogos (7), proveedor (5) | ~22 | fast |
+| **L5** | `src/hooks/` operativo+financiero+misc | cxp (4), comisiones (4), operaciones (4), presupuesto (4), profit (2), tesoreria (2), dashboard (3), dashboard-ejecutivo (2), reportes (2), sentry (2), usuario (3), layout (2) | ~22 | fast |
+| **L6** | `src/contexts/` + `src/generators/` restantes | AuthContext, OrganizationContext, ThemeContext, BreadcrumbContext, useAuthProfile/Session/LoginAudit, cotizacion/conceptosTables, cotizacion/datosGenerales, estadoCuentaPdf, layoutContable, rentabilidadPdf | ~12 | capable |
+| **L7** | `src/pdf/` documents + helpers puros | proformaShared (ya), emisor, theme/tokens, theme/styles*, render/descargarPdf, documents/*Document (smoke render: no crash + estructura JSX) | ~14 | fast |
 
-- Reutilizar `src/services/__tests__/_supabaseChainMock.ts` (patrón `loginAudit.test.ts`).
-- Tests adyacentes en `__tests__/` con nombre `<archivo>.test.ts(x)`.
-- Cumplir Power of 10 + `scripts/audit-tests.ts` (sin `.skip`/`.only` sin issue, sin títulos duplicados).
-- No tocar `src/integrations/supabase/{client,types}.ts`, ni `.env`, ni `config.toml`.
-- Cada lote actualiza **su** entrada en `CHANGELOG.md` y bumpea `APP_VERSION` (patch) en un commit final consolidado por el agente principal — los subagentes **no** tocan changelog para evitar conflicto de merge; reportan qué versión sugieren.
+**Total estimado**: ~136 archivos nuevos de test.
 
----
+## Convenciones obligatorias para todos los subagentes
 
-## Lote 1 — `src/services/` (financiero/operativo) [fast]
+1. **Patrón mocking**: usar `vi.hoisted(() => vi.fn())` para mocks de Supabase. Reutilizar `src/test/utils/_supabaseChainMock.ts` cuando exista cadena `.from().select()....`
+2. **Hooks con React Query**: envolver con `createWrapper()` de `src/test/utils/queryWrapper.tsx`.
+3. **Hooks con `useAuth`**: mockear `@/contexts/AuthContext` con `useAuth: () => ({ user: { id: "user-1" } })`.
+4. **Archivos prohibidos de tocar**: `src/integrations/supabase/{client,types}.ts`, `.env`, `supabase/config.toml`, `vitest.config.ts` (no subir thresholds).
+5. **Naming**: `__tests__/<archivo>.test.ts(x)` co-ubicado.
+6. **Reglas Power of 10**: cada test ≤200 líneas, sin `any`, sin `style={{...}}` estático.
+7. **Cobertura mínima por archivo**: 1 happy path + 1 error/edge path (mínimo 2 `it()` por `describe`).
+8. **PDF tests (L7)**: solo smoke (`expect(() => render(<Doc {...props}/>)).not.toThrow()`); NO comparar PNG. Para tokens/theme: validar shape de objetos.
+9. **Contextos (L6)**: probar provider + hook consumidor + caso "sin provider lanza error".
+10. **No regresiones**: NO refactorizar código de producción. Si un archivo requiere refactor >30 líneas para ser testeable, reportar como "skipped" con razón.
 
-Carpetas: `tesoreria/`, `presupuesto/`, `profit/`, `cxp/`, `comisiones/`, `pagos-factura/` (ampliar).
-Objetivo: cubrir queries, mutaciones y cálculos derivados. Mock Supabase con chain mock; validar shape de payloads, manejo de `error`, y RLS-friendly inserts (no usar `service_role`).
-Entregable: ~20 archivos de test, 1 helper compartido si aparece duplicación.
-
-## Lote 2 — `src/services/` (catálogos + admin) [fast]
-
-Carpetas: `auditoria/`, `bitacora/`, `catalogos/`, `configuracion/`, `organization/`, `cliente-usuarios/`, `usuario/`, `planes/`, `notificaciones/`, `storage/`, `search/`, `tracking/`, `csf/`, `dashboard/`, `operaciones/`, `reportes/`, `proveedor/`, `admin/` (ampliar de 1→6).
-Objetivo: smoke + happy/error path por servicio. Verificar nombres de tabla, columnas seleccionadas (regla de "explicit column constants"), y propagación de errores.
-Entregable: ~25 archivos de test.
-
-## Lote 3 — `src/features/embarques/hooks/` [fast]
-
-Hoy 2/36. Focalizar **hooks puros / con lógica** (no los meramente compositivos):
-`useEmbarqueForm`, `useEmbarquesFilters`, `useEmbarqueFinancials`, `useEditarEmbarqueWizard`, `useNuevoEmbarqueWizard`, `useEmbarqueSubmitOrchestrator`, `useContenedoresInfoMap`, `useEmbarqueDocumentosActions`, `useEmbarqueEstadoActions`, `useTrackingLinks`, `useProformaDialog`, `useDialogGenerarProformaController`, `useCotizacionHydration`, `useEmbarquesPageState`.
-Usar `@testing-library/react` `renderHook` + `QueryClientProvider` wrapper (crear `src/test/utils/queryWrapper.tsx` si no existe).
-Entregable: ~14 tests + 1 wrapper compartido.
-
-## Lote 4 — `src/hooks/` de dominio [capable]
-
-Hooks con lógica fuera de embarques: `hooks/cotizacion/`, `hooks/facturacion/`, `hooks/configuracion/`, `hooks/portal/`, `hooks/crm/`, `hooks/auditoria/`, `hooks/shared/` (ampliar). Hoy 19/160.
-Priorizar los que contengan cálculo, debouncing, paginación servidor, o sincronización RHF (`setValue` + `trigger` por memoria de proyecto). Saltar wrappers triviales de `useQuery`.
-Entregable: ~20 tests. Modelo `capable` porque requiere entender RHF + React Query.
-
-## Lote 5 — `src/contexts/` + `src/lib/` huecos [fast]
-
-- `contexts/`: `AuthContext`, `OrganizationContext`, `ThemeContext` con mocks de `supabase.auth` (sesión / `onAuthStateChange` + cleanup obligatorio por memoria).
-- `lib/crm/` (7 sin test): `cliente360`, `dashboardAggregates`, `forecast`, `forecastBuckets`, `leadEditDirty`, `nextBestActions`, `proximasActividades`, `oportunidadFormHelpers`/`State`/`Payload`.
-- `lib/domain/` faltantes (6): `auth`, `bitacoraDescripcion`, `conceptosPorContenedor`, `configuracion`, `errorCatalog`, `validationFormat`.
-- `features/embarques/services/` faltantes: `documentos.ts`, `eventos.ts`, `dashboardOperador.ts`, `columns.ts`, `mutations.ts`.
-Entregable: ~22 tests.
-
-## Lote 6 — Componentes con lógica + generators/pdf helpers [fast]
-
-- `src/generators/`: `layoutContable.ts`, `estadoCuentaPdf.ts`, helpers de `cotizacion/` (`conceptosTables`, `datosGenerales`) — sólo lógica pura, no render de PDF.
-- `src/pdf/documents/proformaShared.ts`, `src/pdf/emisor.ts`.
-- Componentes con lógica no trivial detectables por `grep -l "useMemo\|useCallback\|useState" src/components/**/*.tsx | head` — limitar a 8 representativos (filtros, tablas custom, validadores inline).
-- Migrations RLS: añadir un test que valide presencia de `GRANT` por cada `CREATE TABLE` en `supabase/migrations` (memoria del proyecto) — script + test arquitectural.
-Entregable: ~15 tests + 1 test arquitectural de migrations.
-
----
-
-## Ejecución
+## Orquestación
 
 ```text
-spawn_agent(lote 1) ─┐
-spawn_agent(lote 2) ─┤
-spawn_agent(lote 3) ─┼─► esperar notificaciones ─► agente principal:
-spawn_agent(lote 4) ─┤    - corre `bun run test` completo
-spawn_agent(lote 5) ─┤    - corre `bun run audit:tests`
-spawn_agent(lote 6) ─┘    - bumpea APP_VERSION + CHANGELOG.md (entrada única consolidada)
+┌──────────────────────────────────────────────────────────┐
+│  Agente maestro (yo)                                     │
+└────────┬─────────────────────────────────────────────────┘
+         │ spawn paralelo
+         ▼
+   ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐
+   │ L1  │ L2  │ L3  │ L4  │ L5  │ L6  │ L7  │
+   └──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┘
+      └─────┴─────┴─────┴─────┴─────┴─────┘
+                       │ resultados (lista de archivos + nº tests)
+                       ▼
+        Consolidación: bump APP_VERSION → 12.56.0
+        + entrada única en CHANGELOG.md
+        + verificación: `bun run test` (smoke) + `bun run audit:tests`
 ```
 
-System prompt por subagente incluye:
-- Convenciones arriba + ruta de `_supabaseChainMock`.
-- Restricción de carpetas (sólo su lote).
-- "No editar `CHANGELOG.md` ni `appVersion.ts`; reportar conteo de tests añadidos y archivos cubiertos".
-- "Si un archivo requiere refactor >30 líneas para ser testable, **no refactorizar**: reportarlo como pendiente y saltar".
+## Detalles técnicos por lote
+
+- **L1/L2 (services)**: tests de I/O. Verifican que `supabase.from(X).select(...).eq(...).range(...)` se llama con los argumentos esperados y que errores se propagan (`throw error`).
+- **L3 (embarques/hooks)**: tests de hooks con `renderHook`. Mockear servicios de `@/features/embarques/services` y verificar invalidaciones de `queryKey`.
+- **L4/L5 (hooks)**: mismo patrón que L3 pero sobre `src/services/<dominio>`. Para `useListPageState`-style, mockear `nuqs`.
+- **L6 (contexts)**: mockear `supabase.auth.onAuthStateChange` y `getSession`. Validar cleanup de subscription. Para generators no-PDF: tests funcionales puros sobre arrays/strings producidos.
+- **L7 (pdf)**: usar `@react-pdf/renderer` mock ligero o `renderToString`. Solo verificar que con props mínimos válidos no lanza. Tokens/styles: validar keys obligatorias.
 
 ## Fuera de alcance
 
-- E2E Playwright (ya existe en `e2e/`, se cubre por separado).
-- Tests visuales / snapshot de PDFs renderizados.
-- Edge functions Deno (suite ya separada en `supabase/functions/**/*_test.ts`).
-- Subir thresholds en `vitest.config.ts` — se hará en PR posterior una vez estabilizada la nueva línea base.
+- E2E Playwright (carpeta `e2e/`).
+- Tests visuales/snapshot de PDFs (solo smoke).
+- Tests Deno de `supabase/functions/` (ya existen `_test.ts`).
+- Tests de páginas en `src/pages/` (UI compleja, ROI bajo vs hooks).
+- Subir thresholds en `vitest.config.ts` (lo haremos en una iteración posterior cuando midamos coverage real con `vitest run --coverage`).
 
-## Entregable final
+## Entregables
 
-- ~115 archivos de test nuevos.
-- Reporte por lote: archivos cubiertos, % estimado de la carpeta, pendientes.
-- Una sola entrada de changelog (`[X.Y.Z]`) describiendo la oleada de cobertura.
+1. ~136 archivos `*.test.ts(x)` nuevos.
+2. Bump `APP_VERSION` → `12.56.0`.
+3. Entrada `## [12.56.0] - 2026-06-04` en `CHANGELOG.md` con desglose por lote y total de tests añadidos.
+4. Reporte de archivos "skipped" (si los hay) con razón.
+
+Al aprobar este plan, lanzo los 7 subagentes en paralelo y consolido la versión cuando todos reporten.

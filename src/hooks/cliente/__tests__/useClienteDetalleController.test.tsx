@@ -1,0 +1,70 @@
+import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { useClienteDetalleController } from "../useClienteDetalleController";
+import { createWrapper } from "@/test/utils/queryWrapper";
+
+vi.mock("react-router-dom", () => ({
+  useNavigate: vi.fn(),
+  useParams: vi.fn(() => ({ id: "client-1" })),
+}));
+
+vi.mock("@/hooks/cliente/useClientes", () => ({
+  useCliente: vi.fn(() => ({ data: { id: "client-1", nombre: "Client One" }, isLoading: false })),
+  useContactosCliente: vi.fn(() => ({ data: [], isLoading: false })),
+  useEmbarquesCliente: vi.fn(() => ({ data: [], isLoading: false })),
+  useCotizacionesCliente: vi.fn(() => ({ data: [], isLoading: false })),
+  useCreateContacto: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useUpdateContacto: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useDeleteContacto: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useUpdateCliente: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+}));
+
+vi.mock("@/hooks/cliente/useClienteFinancials", () => ({
+  useClienteFinancials: vi.fn(() => ({ data: null })),
+}));
+
+vi.mock("@/hooks/shared", () => ({
+  useToast: vi.fn(() => ({ toast: vi.fn() })),
+  usePermissions: vi.fn(() => ({ canEdit: true })),
+  useRegistrarActividad: vi.fn(() => ({ mutate: vi.fn() })),
+}));
+
+vi.mock("@/components/shared/utils/appFeedback", () => ({
+  notifySuccess: vi.fn(),
+  notifyError: vi.fn(),
+}));
+
+describe("useClienteDetalleController", () => {
+  it("opens the contact dialog for a new contact", () => {
+    const { result } = renderHook(() => useClienteDetalleController(), { wrapper: createWrapper() });
+    
+    act(() => {
+      result.current.openNewContact();
+    });
+    
+    expect(result.current.contactDialogOpen).toBe(true);
+    expect(result.current.editingContacto).toBeNull();
+  });
+
+  it("handles saving a client with audit logs", async () => {
+    const { result } = renderHook(() => useClienteDetalleController(), { wrapper: createWrapper() });
+    
+    const formData = {
+      nombre: "Client One Updated",
+      rfc: "RFC123",
+      direccion: "Dir",
+      ciudad: "City",
+      estado: "State",
+      cp: "123",
+      contacto: "Cont",
+      email: "email@test.com",
+      telefono: "123",
+    };
+    
+    await act(async () => {
+      await result.current.handleSaveCliente(formData);
+    });
+    
+    expect(result.current.editClienteOpen).toBe(false);
+  });
+});
