@@ -1,0 +1,37 @@
+import { describe, it, expect, vi } from "vitest";
+import { renderHook } from "@testing-library/react";
+import { OrganizationProvider, useOrganization } from "../OrganizationContext";
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: null,
+    role: null,
+    organizationId: null,
+    organization: null,
+    loading: false,
+  }),
+}));
+vi.mock("@/services/organization", () => ({
+  listActiveOrganizations: vi.fn(async () => []),
+}));
+vi.mock("@/lib/browserStorage", () => ({
+  safeLocalStorage: { getItem: vi.fn(() => null), setItem: vi.fn() },
+  STORAGE_KEYS: { superAdminActiveOrg: "sa_active_org" },
+}));
+
+const wrapper = ({ children }: { children: React.ReactNode }) => <OrganizationProvider>{children}</OrganizationProvider>;
+
+describe("OrganizationContext", () => {
+  it("provee valores por defecto para usuario sin sesión", () => {
+    const { result } = renderHook(() => useOrganization(), { wrapper });
+    expect(result.current.organizationId).toBeNull();
+    expect(result.current.isSuperAdmin).toBe(false);
+    expect(result.current.organizations).toEqual([]);
+  });
+
+  it("useOrganization fuera del provider retorna defaults (no lanza)", () => {
+    const { result } = renderHook(() => useOrganization());
+    expect(result.current.loading).toBe(true);
+    expect(typeof result.current.setActiveOrganization).toBe("function");
+  });
+});
