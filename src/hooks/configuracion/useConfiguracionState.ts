@@ -7,6 +7,18 @@ export function getVal<T>(data: ConfigItem[] | undefined, categoria: string, cla
   return item ? (item.valor as T) : fallback;
 }
 
+/**
+ * Estado del módulo Configuración. Sólo incluye los campos que actualmente
+ * tienen un consumidor real en la app:
+ *   - empresa.* → leídos por `fetchEmisorEmpresa` para los encabezados de PDF
+ *   - facturacion.tasa_iva → leído por `useTasaIVA` en cotización/proforma/factura
+ *
+ * Los campos legacy (tipos_cambio, defaults de cotizaciones/embarques, alertas,
+ * umbrales de auditoría) se removieron de la UI en 12.51.18 porque ningún
+ * consumidor los leía. Las filas históricas en la tabla `configuracion` se
+ * mantienen por compatibilidad y se purgarán en una migración separada si
+ * se confirma que no se cablearán a futuro.
+ */
 export interface ConfigState {
   nombre: string;
   subtitulo: string;
@@ -14,27 +26,7 @@ export interface ConfigState {
   direccion: string;
   email: string;
   telefono: string;
-  usdMxn: string;
-  eurMxn: string;
-  fuente: string;
-  vigenciaDias: string;
-  diasLibres: string;
-  monedaCot: string;
-  terminos: string;
   tasaIva: string;
-  diasVenc: string;
-  serieFact: string;
-  folioInicial: string;
-  monedaFact: string;
-  prefijo: string;
-  tipoCargaDefault: string;
-  monedaEmb: string;
-  diasEta: string;
-  diasEtaCritica: string;
-  diasFactVencer: string;
-  margenMinimoPct: string;
-  diasProformaVencida: string;
-  diasHuerfano: string;
 }
 
 export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigState {
@@ -45,27 +37,7 @@ export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigSt
     direccion: getVal(config, "empresa", "direccion_fiscal", ""),
     email: getVal(config, "empresa", "email", ""),
     telefono: getVal(config, "empresa", "telefono", ""),
-    usdMxn: String(getVal(config, "tipos_cambio", "usd_mxn_default", 17.25)),
-    eurMxn: String(getVal(config, "tipos_cambio", "eur_mxn_default", 18.5)),
-    fuente: getVal(config, "tipos_cambio", "fuente", "api"),
-    vigenciaDias: String(getVal(config, "cotizaciones", "vigencia_dias", 15)),
-    diasLibres: String(getVal(config, "cotizaciones", "dias_libres_destino", 0)),
-    monedaCot: getVal(config, "cotizaciones", "moneda_default", "USD"),
-    terminos: getVal(config, "cotizaciones", "terminos_condiciones", ""),
     tasaIva: String(getVal(config, "facturacion", "tasa_iva", 16)),
-    diasVenc: String(getVal(config, "facturacion", "dias_vencimiento", 30)),
-    serieFact: getVal(config, "facturacion", "serie_factura", "A"),
-    folioInicial: String(getVal(config, "facturacion", "folio_inicial", 1)),
-    monedaFact: getVal(config, "facturacion", "moneda_default", "MXN"),
-    prefijo: getVal(config, "embarques", "prefijo_expediente", "EXP"),
-    tipoCargaDefault: getVal(config, "embarques", "tipo_carga_default", "Carga General"),
-    monedaEmb: getVal(config, "embarques", "moneda_default", "USD"),
-    diasEta: String(getVal(config, "alertas", "dias_eta_alerta", 7)),
-    diasEtaCritica: String(getVal(config, "alertas", "dias_eta_critica", 3)),
-    diasFactVencer: String(getVal(config, "alertas", "dias_factura_vencer", 7)),
-    margenMinimoPct: String(getVal(config, "auditoria", "margen_minimo_pct", 5)),
-    diasProformaVencida: String(getVal(config, "auditoria", "dias_proforma_vencida", 30)),
-    diasHuerfano: String(getVal(config, "auditoria", "dias_huerfano", 5)),
   };
 }
 
@@ -98,27 +70,7 @@ export function useConfiguracionState() {
       { categoria: "empresa", clave: "direccion_fiscal", valor: s.direccion },
       { categoria: "empresa", clave: "email", valor: s.email },
       { categoria: "empresa", clave: "telefono", valor: s.telefono },
-      { categoria: "tipos_cambio", clave: "usd_mxn_default", valor: parseFloat(s.usdMxn) || 17.25 },
-      { categoria: "tipos_cambio", clave: "eur_mxn_default", valor: parseFloat(s.eurMxn) || 18.5 },
-      { categoria: "tipos_cambio", clave: "fuente", valor: s.fuente },
-      { categoria: "cotizaciones", clave: "vigencia_dias", valor: parseInt(s.vigenciaDias) || 15 },
-      { categoria: "cotizaciones", clave: "dias_libres_destino", valor: parseInt(s.diasLibres) || 0 },
-      { categoria: "cotizaciones", clave: "moneda_default", valor: s.monedaCot },
-      { categoria: "cotizaciones", clave: "terminos_condiciones", valor: s.terminos },
       { categoria: "facturacion", clave: "tasa_iva", valor: parseInt(s.tasaIva) || 16 },
-      { categoria: "facturacion", clave: "dias_vencimiento", valor: parseInt(s.diasVenc) || 30 },
-      { categoria: "facturacion", clave: "serie_factura", valor: s.serieFact },
-      { categoria: "facturacion", clave: "folio_inicial", valor: parseInt(s.folioInicial) || 1 },
-      { categoria: "facturacion", clave: "moneda_default", valor: s.monedaFact },
-      { categoria: "embarques", clave: "prefijo_expediente", valor: s.prefijo },
-      { categoria: "embarques", clave: "tipo_carga_default", valor: s.tipoCargaDefault },
-      { categoria: "embarques", clave: "moneda_default", valor: s.monedaEmb },
-      { categoria: "alertas", clave: "dias_eta_alerta", valor: parseInt(s.diasEta) || 7 },
-      { categoria: "alertas", clave: "dias_eta_critica", valor: parseInt(s.diasEtaCritica) || 3 },
-      { categoria: "alertas", clave: "dias_factura_vencer", valor: parseInt(s.diasFactVencer) || 7 },
-      { categoria: "auditoria", clave: "margen_minimo_pct", valor: parseFloat(s.margenMinimoPct) || 5 },
-      { categoria: "auditoria", clave: "dias_proforma_vencida", valor: parseInt(s.diasProformaVencida) || 30 },
-      { categoria: "auditoria", clave: "dias_huerfano", valor: parseInt(s.diasHuerfano) || 5 },
     ], {
       onSuccess: () => setBaseline(s),
     });
