@@ -1,0 +1,38 @@
+import { vi, describe, it, expect } from 'vitest';
+import { renderHook } from '@testing-library/react';
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
+}));
+vi.mock('@/hooks/auditoria', () => ({
+  useAuditoriaCount: () => ({ data: 5 }),
+}));
+vi.mock('@/hooks/admin', () => ({
+  useAlertasPendingCount: () => ({ count: 2 }),
+}));
+vi.mock('@/hooks/crm/useCrmDashboard', () => ({
+  useActividadesVencidasCount: () => ({ data: 0 }),
+}));
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useAppSidebarSections } from '../useAppSidebarSections';
+
+describe('useLayout Hooks', () => {
+  it('returns full sections for super_admin', () => {
+    (useAuth as any).mockReturnValue({ role: 'super_admin', effectiveRole: 'super_admin' });
+    const { result } = renderHook(() => useAppSidebarSections());
+    
+    const labels = result.current.map(s => s.label);
+    expect(labels).toContain('Super Admin');
+    expect(labels).toContain('Administración');
+  });
+
+  it('returns restricted sections for vendedor', () => {
+    (useAuth as any).mockReturnValue({ role: 'vendedor', effectiveRole: 'vendedor' });
+    const { result } = renderHook(() => useAppSidebarSections());
+    
+    const labels = result.current.map(s => s.label);
+    expect(labels).toEqual(['CRM', 'Directorio', 'Sistema']);
+    expect(labels).not.toContain('Profit');
+  });
+});
