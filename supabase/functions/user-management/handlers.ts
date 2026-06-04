@@ -274,9 +274,7 @@ export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): P
   if (existing) {
     await adminClient.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } });
     const anon = createClient(
-      // @ts-expect-error Deno global
       Deno.env.get("SUPABASE_URL")!,
-      // @ts-expect-error Deno global
       Deno.env.get("SUPABASE_ANON_KEY")!,
     );
     await anon.auth.resetPasswordForEmail(email, { redirectTo });
