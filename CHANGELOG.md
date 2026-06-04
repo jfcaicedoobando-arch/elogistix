@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.12] - 2026-06-04
+- **refactor(edge functions) — consolidación a `user-management`**: se unifican `create-user`, `delete-user`, `list-users`, `invite-client-user` y `list-client-users` en una sola edge function `user-management` con router por `action` (`list`, `create`, `delete`, `invite-client`, `list-clients`). CORS estricto, autenticación JWT y validación de payload centralizados en un único entry. Se actualizan `src/services/usuario`, `src/services/admin/members`, `src/services/cliente-usuarios` y comentarios de hooks. Se eliminan los 5 directorios viejos del repo y se borran las funciones desplegadas.
+
 ## [12.53.11] - 2026-06-04
 - **docs(arquitectura) — documentación actualizada tras reubicación de UI utilities**: `ARCHITECTURE.md`, `docs/auditoria.md` y `docs/architecture-map.md` reflejan ahora que las utilidades de presentación (`appFeedback`, `auditoriaConfig`, `uiMappings`, `kpiTones`, `dialogTokens`, etc.) viven en `src/components/shared/utils/`. Se añadió decisión arquitectónica explícita en §16 de `ARCHITECTURE.md` (v12.53.10). La sección de testing separa claramente `src/lib/` (puro) vs `src/components/shared/utils/` (presentación).
 
