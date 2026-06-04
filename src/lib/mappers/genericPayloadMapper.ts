@@ -212,11 +212,13 @@ export function createPayloadMapper<Form, Row>(
       return schema.rowSchema ? schema.rowSchema.parse(result) : result;
     },
     fromDb(row) {
-      let partial = runFields<Row, Form>(row, schema.fields as ReadonlyArray<FieldMap<Row, Form>>, "fromDb");
+      // SAFE-CAST: re-tipamos los fields para la dirección fromDb. Los paths
+      // son los mismos literales, sólo cambia qué lado se considera "source".
+      const reversed = schema.fields as unknown as ReadonlyArray<FieldMap<Row, Form>>;
+      let partial = runFields<Row, Form>(row, reversed, "fromDb");
       if (schema.computedFromDb) {
         partial = { ...partial, ...schema.computedFromDb(row, partial) };
       }
-      // SAFE-CAST: idem.
       const result = partial as Form;
       return schema.formSchema ? schema.formSchema.parse(result) : result;
     },
