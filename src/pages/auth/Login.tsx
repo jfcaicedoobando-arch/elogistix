@@ -54,8 +54,8 @@ export default function Login() {
       const raw = err instanceof Error ? err.message : "Error desconocido";
       const friendly = translateAuthError(raw);
       setLoginError(friendly);
-      // notifyError mantiene el reporte interno (Sentry/bitácora) con el mensaje original.
-      notifyError(toast, { title: "No pudimos iniciar sesión", description: friendly, error: err, method: "HANDLE_LOGIN", silent: true });
+      // Inline alert ya comunica el error al usuario; no emitimos toast para evitar duplicación.
+      notifyError(toast, { title: "No pudimos iniciar sesión", description: friendly, error: err, method: "HANDLE_LOGIN" });
     } finally {
       setLoading(false);
     }
@@ -95,7 +95,7 @@ export default function Login() {
     } catch (err) {
       const friendly = translateAuthError(err instanceof Error ? err.message : null);
       setSignupError(friendly);
-      notifyError(toast, { title: "No pudimos crear la cuenta", description: friendly, error: err, method: "HANDLE_SIGNUP", silent: true });
+      notifyError(toast, { title: "No pudimos crear la cuenta", description: friendly, error: err, method: "HANDLE_SIGNUP" });
     } finally {
       setSignupLoading(false);
     }
