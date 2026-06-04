@@ -5,14 +5,13 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { 
-  importarMovimientos, 
-  listarMovimientos, 
-  sugerirCandidatos, 
-  conciliarConPago, 
-  desconciliarMovimiento, 
-  ignorarMovimiento 
+import {
+  importarMovimientos,
+  listarMovimientos,
+  sugerirCandidatos,
+  conciliarConPago,
 } from "../conciliacion";
+
 
 describe("conciliacion service", () => {
   beforeEach(() => {
