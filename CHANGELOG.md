@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.8] - 2026-06-04
+- **fix(security) — search_path fijo en funciones de cola de email**: cierra hallazgo `SUPA_function_search_path_mutable`.
+  - `ALTER FUNCTION` aplicado a `enqueue_email`, `read_email_batch`, `delete_email`, `move_to_dlq` con `SET search_path = public, pgmq` para evitar function hijacking.
+
 ## [12.53.7] - 2026-06-04
 - **fix(seo) — og estático genérico de marca y sin og:url forzado a la raíz**: cierra hallazgo `agent_metadata:social_preview`.
   - `index.html`: og:title/twitter:title genéricos ("Libre Carga"), descripciones de marca, eliminado `og:url` estático (cada ruta lo define vía `react-helmet-async`), añadido `og:site_name`.
