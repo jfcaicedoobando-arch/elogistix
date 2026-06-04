@@ -4046,6 +4046,8 @@ export type Database = {
       }
     }
     Functions: {
+      _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
+      _assert_writer: { Args: { p_org: string }; Returns: undefined }
       actualizar_cotizacion_costos: {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
