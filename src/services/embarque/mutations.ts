@@ -121,6 +121,23 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
   if (error) throw error;
 }
 
+/**
+ * Actualiza la fecha de llegada real del embarque. Usada por el form de
+ * tracking cuando se registra un evento de "Arribo a Puerto" o "Entrega"
+ * y el operador confirma sincronizar la fecha visible en el resto del
+ * sistema. RLS de la tabla aplica tenancy automáticamente.
+ */
+export async function actualizarFechaLlegadaRealEmbarque(
+  embarqueId: string,
+  fechaIso: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('embarques')
+    .update({ fecha_llegada_real: fechaIso })
+    .eq('id', embarqueId);
+  if (error) throw error;
+}
+
 
 
 export async function insertarNotaEmbarque(
