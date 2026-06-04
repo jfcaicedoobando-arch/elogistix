@@ -4721,6 +4721,14 @@ export type Database = {
         Args: { _id: string; _table: string }
         Returns: undefined
       }
+      reabrir_embarque: {
+        Args: {
+          p_embarque_id: string
+          p_request_id?: string
+          p_usuario_email: string
+        }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
