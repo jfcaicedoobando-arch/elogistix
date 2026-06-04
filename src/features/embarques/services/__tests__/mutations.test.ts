@@ -147,6 +147,8 @@ describe("reabrirEmbarqueRpc", () => {
     ).rejects.toThrow("Solo administradores");
   });
 });
+
+describe("duplicarEmbarqueRpc", () => {
   it("valida el array devuelto y propaga los expedientes", async () => {
     mock.setRpcResult("duplicar_embarque_completo", {
       data: [{ id: UUID, expediente: "EXP-001" }, { id: UUID2, expediente: "EXP-002" }],
