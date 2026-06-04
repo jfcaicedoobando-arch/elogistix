@@ -19,7 +19,7 @@ describe("estadoResultados service", () => {
   it("fetchEstadoResultadosMes retorna vacio si no hay embarques", async () => {
     mock.setTableResult("embarques", { data: [], error: null });
     const res = await fetchEstadoResultadosMes({ organizationId: "o1", year: 2024, month: 1 });
-    expect(res.emb).toEqual([]);
+    expect((res as any).emb).toEqual([]);
   });
 
   it("busca conceptos_venta y conceptos_costo si hay embarques", async () => {

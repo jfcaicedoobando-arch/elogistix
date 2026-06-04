@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from "vitest";
-import React from "react";
 import { ReporteTesoreriaDocument } from "../ReporteTesoreriaDocument";
 import { render } from "@testing-library/react";
 

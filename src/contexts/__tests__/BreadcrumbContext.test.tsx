@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import { BreadcrumbProvider, useBreadcrumbLabels, useRegisterBreadcrumbLabel } from "../BreadcrumbContext";
 
 const wrapper = ({ children }: { children: React.ReactNode }) => <BreadcrumbProvider>{children}</BreadcrumbProvider>;
@@ -11,7 +11,7 @@ describe("BreadcrumbContext", () => {
   });
 
   it("setLabel registra y clearLabel elimina etiquetas", () => {
-    const { result } = renderHook(
+    renderHook(
       () => {
         const labels = useBreadcrumbLabels();
         return labels;

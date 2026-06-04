@@ -12,7 +12,7 @@ const wrapper = createWrapper();
 
 describe("useProformas", () => {
   it("useProformas retorna el query", () => {
-    const { result } = renderHook(() => useProformas("emb-1"), { wrapper });
+    const { result } = renderHook(() => useProformas(), { wrapper });
     expect(result.current.data).toBeDefined();
   });
 

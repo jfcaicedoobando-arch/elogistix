@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from "vitest";
-import React from "react";
 import { SeccionProspecto, SeccionDatosYMercancia, SeccionDimensiones } from "../cotizacionSections";
 import { render } from "@testing-library/react";
 

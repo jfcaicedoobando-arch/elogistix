@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetchNotificaciones, markAsRead, markAllAsRead } from '../index';
+import { fetchNotificaciones, marcarLeida, marcarTodasLeidas } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => {
   const chain = {
@@ -33,16 +33,16 @@ describe('notificaciones/index', () => {
     expect(result).toEqual(mockData);
   });
 
-  it('markAsRead actualiza el estado leido', async () => {
+  it('marcarLeida actualiza el estado leido', async () => {
     (mockSupabase as any)._error = null;
-    await markAsRead('notif1');
-    expect(mockSupabase.update).toHaveBeenCalledWith({ read: true, read_at: expect.any(String) });
+    await marcarLeida('notif1');
+    expect(mockSupabase.update).toHaveBeenCalledWith({ leida: true, leida_at: expect.any(String) });
     expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'notif1');
   });
 
-  it('markAllAsRead actualiza todas las no leidas', async () => {
+  it('marcarTodasLeidas actualiza todas las no leidas', async () => {
     (mockSupabase as any)._error = null;
-    await markAllAsRead('user1');
+    await marcarTodasLeidas('user1');
     expect(mockSupabase.is).toHaveBeenCalledWith('read_at', null);
     expect(mockSupabase.eq).toHaveBeenCalledWith('usuario_id', 'user1');
   });

@@ -14,7 +14,7 @@ describe("useClientUsersMutations", () => {
   it("invites a client user", async () => {
     const { result } = renderHook(() => useInviteClientUser("client-1"), { wrapper: createWrapper() });
     
-    await result.current.mutateAsync({ email: "test@test.com", clienteId: "client-1", role: "portal_admin" });
+    await result.current.mutateAsync({ email: "test@test.com", cliente_id: "client-1", role: "portal_admin" });
     
     expect(clientUsersService.inviteClientUser).toHaveBeenCalled();
   });

@@ -31,13 +31,13 @@ describe('usePresupuesto Hooks', () => {
   it('useUpsertCeldaPresupuesto calls service', async () => {
     mockUpsert.mockResolvedValueOnce({ id: '1' });
     const { result } = renderHook(() => useUpsertCeldaPresupuesto(), { wrapper: createWrapper() });
-    await result.current.mutateAsync({ categoria_id: 'c1', mes: 1, anio: 2023, monto: 100 });
+    await result.current.mutateAsync({ categoria_id: 'c1', periodo: '2023-01', monto_mxn: 100, organization_id: 'org-1' });
     expect(mockUpsert).toHaveBeenCalled();
   });
 
   it('usePresupuestoVsReal fetches comparison data', async () => {
     mockFetchVsReal.mockResolvedValueOnce([{ mes: 1, presupuesto: 100, real: 80 }]);
-    const { result } = renderHook(() => usePresupuestoVsReal(2023), { wrapper: createWrapper() });
+    const { result } = renderHook(() => usePresupuestoVsReal('2023'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
   });

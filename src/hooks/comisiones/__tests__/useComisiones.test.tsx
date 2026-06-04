@@ -30,14 +30,14 @@ describe('useComisiones Hooks', () => {
   it('useGenerarLiquidacion calls service', async () => {
     mockGenerar.mockResolvedValueOnce({ success: true });
     const { result } = renderHook(() => useGenerarLiquidacion(), { wrapper: createWrapper() });
-    await result.current.mutateAsync({ vendedora_id: 'v1', mes: 1, anio: 2023 });
+    await result.current.mutateAsync({ vendedora_id: 'v1', periodo: '2023-01', organization_id: 'org-1' });
     expect(mockGenerar).toHaveBeenCalled();
   });
 
   it('useRegistrarPagoLiquidacion calls service', async () => {
     mockRegistrar.mockResolvedValueOnce({ success: true });
     const { result } = renderHook(() => useRegistrarPagoLiquidacion(), { wrapper: createWrapper() });
-    await result.current.mutateAsync({ liquidacion_id: 'l1', fecha_pago: '2023-01-01', referencia: 'ref' });
+    await result.current.mutateAsync({ id: 'l1', fecha_pago: '2023-01-01', metodo_pago: 'transferencia', referencia: 'ref' });
     expect(mockRegistrar).toHaveBeenCalled();
   });
 

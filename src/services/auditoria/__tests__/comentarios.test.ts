@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetchComentariosAuditoria, createComentarioAuditoria, deleteComentarioAuditoria } from '../comentarios';
+import { fetchComentariosByRevision, insertComentario } from '../comentarios';
 
 const { mockSupabase } = vi.hoisted(() => {
   const chain = {
@@ -27,22 +27,18 @@ describe('auditoria/comentarios', () => {
   it('fetchComentariosAuditoria obtiene comentarios', async () => {
     const mockData = [{ id: '1' }];
     (mockSupabase as any)._data = mockData;
-    const result = await fetchComentariosAuditoria('emb1');
+    const result = await fetchComentariosByRevision('emb1');
     expect(mockSupabase.from).toHaveBeenCalledWith('auditoria_comentarios');
-    expect(mockSupabase.eq).toHaveBeenCalledWith('embarque_id', 'emb1');
+    expect(mockSupabase.eq).toHaveBeenCalledWith('revision_id', 'emb1');
     expect(result).toEqual(mockData);
   });
 
-  it('createComentarioAuditoria inserta comentario', async () => {
-    const input = { embarque_id: '1', texto: 'test', autor: 'user', autor_email: 'u@e' };
+  it('insertComentario inserta comentario', async () => {
+    const input = { revision_id: '1', autor_id: 'user', autor_email: 'u@e', contenido: 'test' };
     mockSupabase.single.mockResolvedValue({ data: input, error: null });
-    await createComentarioAuditoria(input);
+    await insertComentario(input);
     expect(mockSupabase.insert).toHaveBeenCalled();
   });
 
-  it('deleteComentarioAuditoria elimina comentario', async () => {
-    (mockSupabase as any)._error = null;
-    await deleteComentarioAuditoria('1');
-    expect(mockSupabase.delete).toHaveBeenCalled();
-  });
+
 });

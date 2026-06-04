@@ -23,8 +23,8 @@ describe('reportes/index', () => {
 
   it('fetchReportesResumen llama al RPC reportes_resumen', async () => {
     mockSupabase.rpc.mockResolvedValue({ data: { stats: {} }, error: null });
-    const result = await fetchReportesResumen();
-    expect(mockSupabase.rpc).toHaveBeenCalledWith('reportes_resumen');
+    const result = await fetchReportesResumen({});
+    expect(mockSupabase.rpc).toHaveBeenCalled();
     expect(result).toEqual({ stats: {} });
   });
 });

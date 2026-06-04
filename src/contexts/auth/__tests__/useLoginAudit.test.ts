@@ -26,7 +26,7 @@ describe("useLoginAudit", () => {
   });
 
   it("no registra login si ya existe entrada en sessionStorage", () => {
-    mockSession.getItem.mockReturnValue("1");
+    mockSession.getItem.mockReturnValue("1" as any);
     renderHook(() => useLoginAudit(FAKE_USER, "SIGNED_IN"));
     vi.advanceTimersByTime(200);
     expect(mockInsert).not.toHaveBeenCalled();

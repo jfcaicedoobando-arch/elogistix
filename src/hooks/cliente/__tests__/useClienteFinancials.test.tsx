@@ -12,7 +12,7 @@ describe("useClienteFinancials", () => {
     const { result } = renderHook(() => useClienteFinancials("client-1"), { wrapper: createWrapper() });
     
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.balance).toBe(1000);
+    expect((result.current.data as any)?.balance).toBe(1000);
   });
 
   it("is disabled when client id is missing", () => {

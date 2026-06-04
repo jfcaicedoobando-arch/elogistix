@@ -21,7 +21,7 @@ const INPUT = {
   fechaDesde: "2024-01-01",
   fechaHasta: "2024-03-31",
   modo: "Marítimo",
-  kpis: { ingresos: 100000, costos: 60000, margen: 40000, margenPct: 40 },
+  kpis: { total_venta_usd: 100000, total_costo_usd: 60000, total_profit_usd: 40000, margen_promedio: 40 },
   clientes: [],
 };
 

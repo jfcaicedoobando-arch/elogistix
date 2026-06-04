@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 
 const mockUnsubscribe = vi.fn();
 const mockSubscribe = vi.fn(() => ({ unsubscribe: mockUnsubscribe }));
@@ -34,7 +34,7 @@ describe("useAuthSession", () => {
   it("actualiza user y session ante evento SIGNED_IN", async () => {
     const fakeUser = { id: "u1", email: "a@b.com" };
     const fakeSession = { user: fakeUser, access_token: "tok" };
-    mockSubscribe.mockImplementation((cb: Function) => {
+    mockSubscribe.mockImplementation((cb: any) => {
       cb("SIGNED_IN", fakeSession);
       return { unsubscribe: mockUnsubscribe };
     });

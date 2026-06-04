@@ -33,13 +33,13 @@ describe('useReportes Hooks', () => {
     const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
     
     act(() => {
-      result.current.handleSort('cliente_nombre');
+      result.current.handleSort('profit_usd');
     });
     // Descending order for 'A', 'B' -> 'B', 'A'
     expect(result.current.sorted[0].cliente_nombre).toBe('B');
 
     act(() => {
-      result.current.handleSort('cliente_nombre');
+      result.current.handleSort('profit_usd');
     });
     // Ascending order -> 'A', 'B'
     expect(result.current.sorted[0].cliente_nombre).toBe('A');

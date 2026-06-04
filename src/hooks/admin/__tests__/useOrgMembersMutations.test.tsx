@@ -20,8 +20,8 @@ describe("useOrgMembersMutations", () => {
   it("adds an org member", async () => {
     const { result } = renderHook(() => useAddOrgMember(), { wrapper: createWrapper() });
     
-    await result.current.mutateAsync({ orgId: "org-1", userId: "user-1", role: "member" });
+    await result.current.mutateAsync({ orgId: "org-1", userId: "user-1", role: "operador" });
     
-    expect(adminService.addOrgMember).toHaveBeenCalledWith({ orgId: "org-1", userId: "user-1", role: "member" });
+    expect(adminService.addOrgMember).toHaveBeenCalledWith({ orgId: "org-1", userId: "user-1", role: "operador" });
   });
 });

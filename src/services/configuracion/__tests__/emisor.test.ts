@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchEmisorInfo } from '../emisor';
+import { describe, it, expect, vi } from 'vitest';
+import { fetchEmisorEmpresa } from '../emisor';
 
 const { mockSupabase } = vi.hoisted(() => ({
   mockSupabase: {
@@ -21,14 +21,14 @@ vi.mock('@/integrations/supabase/client', () => ({
 describe('configuracion/emisor', () => {
   it('fetchEmisorInfo obtiene datos de la tabla configuracion', async () => {
     (mockSupabase as any)._data = [{ clave: 'razonSocial', valor: 'Test Org' }];
-    const result = await fetchEmisorInfo();
+    const result = await fetchEmisorEmpresa();
     expect(mockSupabase.from).toHaveBeenCalledWith('configuracion');
     expect(result.razonSocial).toBe('Test Org');
   });
 
   it('fetchEmisorInfo usa fallback si no hay datos', async () => {
     (mockSupabase as any)._data = [];
-    const result = await fetchEmisorInfo();
+    const result = await fetchEmisorEmpresa();
     expect(result.razonSocial).toBe('Empresa');
   });
 });

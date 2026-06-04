@@ -20,7 +20,7 @@ describe("useNuevoEmbarqueExpediente", () => {
     act(() => {
       result.current.handleSeleccionarExpediente({ id: "exp-1", bl_master: "BL1" } as any);
     });
-    expect(result.current.expedienteSeleccionado?.id).toBe("exp-1");
+    expect((result.current.expedienteSeleccionado as any)?.id).toBe("exp-1");
     expect(methods.setValue).toHaveBeenCalledWith("blMaster", "BL1");
   });
 

@@ -44,7 +44,7 @@ describe('useCxP Hooks', () => {
   it('useRegistrarPagoProveedor registers a payment', async () => {
     mockRegistrarPago.mockResolvedValueOnce({ id: 'p2' });
     const { result } = renderHook(() => useRegistrarPagoProveedor(), { wrapper: createWrapper() });
-    await result.current.mutateAsync({ proveedor_factura_id: 'f1', monto: 50, fecha_pago: '2023-01-01', moneda: 'USD' });
+    await result.current.mutateAsync({ proveedor_factura_id: 'f1', monto: 50, fecha_pago: '2023-01-01', moneda: 'USD', tipo_cambio_usd: 1, metodo_pago: 'transferencia' });
     expect(mockRegistrarPago).toHaveBeenCalled();
   });
 

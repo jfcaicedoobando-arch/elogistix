@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useTasaIVA } from "../useTasaIVA";
 
 vi.mock("@/hooks/configuracion/useConfiguracion", () => ({
-  useConfigValue: vi.fn((mod, key, def) => (key === "tasa_iva" ? 16 : def)),
+  useConfigValue: vi.fn((_mod: any, key: any, def: any) => (key === "tasa_iva" ? 16 : def)),
 }));
 
 describe("useTasaIVA", () => {

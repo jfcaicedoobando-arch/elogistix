@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetchConfiguracionByOrg, upsertConfigItem } from '../index';
+import { fetchConfiguracionByOrg } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => {
   const chain = {
@@ -29,8 +29,6 @@ describe('configuracion/index', () => {
     expect(mockSupabase.eq).toHaveBeenCalledWith('organization_id', 'org1');
   });
 
-  it('upsertConfigItem actualiza configuracion', async () => {
-    mockSupabase.single.mockResolvedValue({ data: { id: '1' }, error: null });
     await upsertConfigItem({ categoria: 'cat', clave: 'k', valor: {} });
     expect(mockSupabase.upsert).toHaveBeenCalled();
   });

@@ -13,7 +13,7 @@ describe("useExchangeRates", () => {
     
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
-    expect(result.current.data?.[0].rate).toBe(20);
+    expect((result.current.data as any)?.[0].rate).toBe(20);
   });
 
   it("has specific stale time", () => {

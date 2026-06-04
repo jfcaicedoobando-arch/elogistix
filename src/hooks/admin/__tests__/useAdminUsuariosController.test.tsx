@@ -16,7 +16,7 @@ vi.mock("@/hooks/admin/useAdminData", () => ({
 
 vi.mock("@/hooks/usuario", () => ({
   useDeleteUserAuth: vi.fn(() => ({
-    mutate: vi.fn((id, callbacks) => callbacks.onSuccess()),
+    mutate: vi.fn((_id: any, callbacks: any) => callbacks.onSuccess()),
     isPending: false,
   })),
 }));

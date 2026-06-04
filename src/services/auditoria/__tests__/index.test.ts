@@ -8,7 +8,7 @@ describe('auditoria/index', () => {
   });
 
   it('exporta funciones de comentarios, snooze y snapshots', () => {
-    expect(auditoria.createComentarioAuditoria).toBeDefined();
+    expect(auditoria.insertComentario).toBeDefined();
     expect(auditoria.snoozeRevision).toBeDefined();
     expect(auditoria.fetchAuditoriaSnapshots).toBeDefined();
   });

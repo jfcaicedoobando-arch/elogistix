@@ -20,7 +20,8 @@ describe("useRentabilidadClientes", () => {
   });
 
   it("returns empty arrays when data is missing", async () => {
-    vi.mocked(adminService.fetchReportesResumen).mockResolvedValueOnce({ clientes: [], kpis: null } as any);
+    const { fetchReportesResumen } = await import("@/services/reportes");
+    vi.mocked(fetchReportesResumen).mockResolvedValueOnce({ clientes: [], kpis: null } as any);
     const { result } = renderHook(() => useRentabilidadClientes({}), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.clientes).toEqual([]);

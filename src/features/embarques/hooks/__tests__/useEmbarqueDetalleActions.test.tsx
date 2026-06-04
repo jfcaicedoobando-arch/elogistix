@@ -24,7 +24,7 @@ vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
 
 import { useEmbarqueDetalleActions, getSiguienteEstado } from "../useEmbarqueDetalleActions";
 
-const embarqueStub = { id: "e-1", expediente: "EXP-001", modo: "maritimo", tipo: "FCL", etd: null, eta: null, estado: "Confirmado" } as Parameters<typeof useEmbarqueDetalleActions>[0];
+const embarqueStub = { id: "e-1", expediente: "EXP-001", modo: "maritimo", tipo: "FCL", etd: null, eta: null, estado: "Confirmado" } as unknown as Parameters<typeof useEmbarqueDetalleActions>[0];
 
 describe("useEmbarqueDetalleActions", () => {
   it("re-exporta getSiguienteEstado correctamente", () => {

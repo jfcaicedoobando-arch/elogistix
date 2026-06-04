@@ -12,7 +12,7 @@ vi.mock("@/hooks/admin/useAdminData", () => ({
     isLoading: false,
   })),
   useCreateOrganization: vi.fn(() => ({
-    mutate: vi.fn((data, callbacks) => callbacks.onSuccess()),
+    mutate: vi.fn((_data: any, callbacks: any) => callbacks.onSuccess()),
     isPending: false,
   })),
 }));
