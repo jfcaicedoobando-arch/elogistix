@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "NODE_OPTIONS=\"--max-old-space-size=6144\" vitest run --coverage --pool=forks --poolOptions.forks.singleFork=true",
+    "coverage:report": "tsx scripts/coverage-report.ts",
     "changelog:add": "tsx scripts/add-changelog.ts",
     "changelog:json": "tsx scripts/generate-changelog-json.ts",
     "audit:casts": "tsx scripts/audit-casts.ts",

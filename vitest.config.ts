@@ -11,17 +11,32 @@ export default defineConfig({
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "text-summary", "json", "json-summary", "lcov", "html"],
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "node_modules/",
         "src/test/",
         "src/**/*.test.{ts,tsx}",
         "src/**/*.spec.{ts,tsx}",
         "src/**/*.d.ts",
+        "src/**/__tests__/**",
         "src/components/ui/**",
         "src/hooks/use-toast.ts",
         "src/lib/utils.ts",
+        "src/main.tsx",
+        "src/vite-env.d.ts",
+        "src/integrations/supabase/**",
       ],
+      // Umbrales mínimos globales. Subir gradualmente conforme avance la cobertura.
+      // Actualmente la app tiene ~14-27% de file-coverage; arrancamos en 10% para
+      // que CI no falle y vamos elevando en cada milestone.
+      thresholds: {
+        lines: 10,
+        statements: 10,
+        functions: 10,
+        branches: 50,
+      },
     },
   },
   resolve: {
