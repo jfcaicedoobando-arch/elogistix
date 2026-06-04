@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.3] - 2026-06-04
+- **chore(tests) — calibración de timeout vitest**: corrí `bunx vitest run` completo (189s totales antes de OOM del worker, no por timeout). Archivo más lento: 5.1s (`6 tests`); siguiente 3.1s; el resto <1s. Ajusté `testTimeout`/`hookTimeout` de 60s → **15s** en `vitest.config.ts` (≈3× margen sobre el peor caso) para no enmascarar tests colgados. Nota separada: hay 1 test fallando (`useProformas`) y un OOM del pool worker que se atenderán aparte.
+
 ## [12.60.2] - 2026-06-04
 - **chore(tests) — timeouts explícitos en vitest**: agregué `testTimeout: 60_000` y `hookTimeout: 60_000` en `vitest.config.ts` para evitar cortes prematuros al correr la suite completa (~289 archivos) dentro del sandbox de Lovable (límite duro 600s por ejecución).
 
