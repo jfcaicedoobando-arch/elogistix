@@ -39,9 +39,12 @@ function isReactRefreshStackTrace(
   );
 }
 
-// DSN configurable vía VITE_SENTRY_DSN. Sin valor → no se inicializa Sentry
-// (evita ruido de telemetría en entornos de desarrollo / locales).
-const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+// DSN del proyecto elogistix/javascript-react (clave pública, segura en bundle).
+// `VITE_SENTRY_DSN` permite override por entorno; si no está, usamos el default
+// para garantizar que el SDK quede inicializado en builds publicados.
+const DEFAULT_DSN =
+  "https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160";
+const DSN = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || DEFAULT_DSN;
 
 let initialized = false;
 
