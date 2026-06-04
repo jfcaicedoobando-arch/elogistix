@@ -34,8 +34,8 @@ export function LandingHero() {
           >
             {HERO.h1}
           </h1>
-          <p className="mt-5 flex items-center gap-2 text-sm font-medium text-accent">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+          <p className="mt-5 flex items-center gap-2 text-sm font-medium text-primary-foreground/90">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
             {HERO.socialBullet}
           </p>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/85">
@@ -76,7 +76,7 @@ export function LandingHero() {
                 </p>
                 <p className="font-mono text-sm font-semibold">LCG-2026-0142</p>
               </div>
-              <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-xs font-semibold text-accent">
+              <span className="rounded-full bg-primary-foreground/15 px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
                 En tránsito
               </span>
             </div>
@@ -95,13 +95,13 @@ export function LandingHero() {
             {/* Ruta */}
             <div className="mb-4 flex items-center gap-2 text-xs">
               <div className="flex-1 text-left">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">Origen</p>
-                <p className="font-semibold">Shanghái CNSHA</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/60">Origen</p>
+                <p className="font-semibold text-primary-foreground">Shanghái CNSHA</p>
               </div>
-              <Ship className="h-4 w-4 text-accent" />
+              <Ship className="h-4 w-4 text-primary-foreground" />
               <div className="flex-1 text-right">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">Destino</p>
-                <p className="font-semibold">Manzanillo MZLO</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/60">Destino</p>
+                <p className="font-semibold text-primary-foreground">Manzanillo MZLO</p>
               </div>
             </div>
 
@@ -116,15 +116,15 @@ export function LandingHero() {
                 <div key={e.label} className="flex items-center gap-3 text-xs">
                   <span
                     className={`flex h-6 w-6 flex-none items-center justify-center rounded-full ${
-                      e.done ? "bg-accent text-accent-foreground" : "bg-primary-foreground/10 text-primary-foreground/50"
+                      e.done ? "bg-primary-foreground text-primary" : "bg-primary-foreground/15 text-primary-foreground/55"
                     }`}
                   >
                     <e.icon className="h-3 w-3" />
                   </span>
-                  <span className={`flex-1 ${e.done ? "text-primary-foreground" : "text-primary-foreground/55"}`}>
+                  <span className={`flex-1 ${e.done ? "text-primary-foreground" : "text-primary-foreground/60"}`}>
                     {e.label}
                   </span>
-                  <span className="font-mono text-primary-foreground/60">{e.date}</span>
+                  <span className="font-mono text-primary-foreground/70">{e.date}</span>
                 </div>
               ))}
             </div>
@@ -157,7 +157,7 @@ export function LandingHero() {
           <div className="grid grid-cols-3 gap-4 text-center">
             {KPIS.map((k) => (
               <div key={k.label}>
-                <p className="text-3xl font-bold text-accent sm:text-4xl">{k.value}</p>
+                <p className="text-3xl font-bold text-primary-foreground sm:text-4xl">{k.value}</p>
                 <p className="text-xs text-primary-foreground/75 sm:text-sm">{k.label}</p>
               </div>
             ))}
