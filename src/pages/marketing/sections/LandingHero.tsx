@@ -19,8 +19,9 @@ export function LandingHero() {
             backgroundSize: "48px 48px",
           }}
         />
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-accent/35 blur-3xl" />
-        <div className="absolute right-[-10%] bottom-[-20%] h-[28rem] w-[28rem] rounded-full bg-[hsl(199_89%_48%/0.22)] blur-3xl" />
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
+        <div className="absolute right-[-10%] bottom-[-20%] h-[28rem] w-[28rem] rounded-full bg-[hsl(199_89%_48%/0.14)] blur-3xl" />
+
       </div>
 
       <div className="relative mx-auto grid max-w-6xl gap-14 px-4 py-24 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:py-32">

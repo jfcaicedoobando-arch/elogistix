@@ -17,7 +17,7 @@ import { MobileStickyCta } from "./sections/MobileStickyCta";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="landing-scope min-h-screen bg-background text-foreground">
       <LandingNav />
       <main>
         <LandingHero />
