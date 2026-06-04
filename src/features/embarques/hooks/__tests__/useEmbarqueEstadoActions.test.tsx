@@ -13,8 +13,13 @@ vi.mock("@/hooks/shared", () => ({
 
 vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
   useAvanzarEstadoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
+  useReabrirEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useSyncEstadoEmbarque: () => ({ mutate: vi.fn() }),
   calcularEstadoEmbarque: vi.fn().mockReturnValue("Confirmado"),
+}));
+
+vi.mock("@/features/embarques/hooks/useEmbarqueQueries", () => ({
+  useEmbarqueConceptosVenta: () => ({ data: [] }),
 }));
 
 import { useEmbarqueEstadoActions, getSiguienteEstado } from "../useEmbarqueEstadoActions";
@@ -27,7 +32,7 @@ describe("getSiguienteEstado", () => {
   });
 
   it("retorna null para el último estado", () => {
-    expect(getSiguienteEstado("Entregado")).toBeNull();
+    expect(getSiguienteEstado("Cerrado")).toBeNull();
   });
 });
 

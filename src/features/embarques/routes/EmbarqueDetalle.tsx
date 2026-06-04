@@ -71,6 +71,8 @@ export default function EmbarqueDetalle() {
 
   const {
     handleUpload, handleDeleteDoc, handleDownload, handleToggleNoAplica, handleAvanzarEstado,
+    handleReabrir, reabrirEmbarque,
+    warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
@@ -101,6 +103,12 @@ export default function EmbarqueDetalle() {
         onCompartirTracking={handleCompartirTracking}
         onAbrirEliminar={() => setDialogEliminarAbierto(true)}
         onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
+        onReabrir={handleReabrir}
+        reabriendoEstado={reabrirEmbarque.isPending}
+        warnCierreOpen={warnCierreOpen}
+        onWarnCierreOpenChange={setWarnCierreOpen}
+        onConfirmarCierreSinProforma={confirmarCierreSinProforma}
+        conceptosSinProforma={conceptosSinProforma}
       />
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />

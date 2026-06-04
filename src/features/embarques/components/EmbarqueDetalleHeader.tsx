@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, Printer, ChevronRight, Trash2, Share2, MoreHorizontal, Copy } from "lucide-react";
+import { Edit, Printer, ChevronRight, Trash2, Share2, MoreHorizontal, Copy, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 
 interface Props {
@@ -27,15 +28,27 @@ interface Props {
   onCompartirTracking: () => void;
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
+  // Reapertura admin (solo visible cuando estado === 'Cerrado' y rol admin/super_admin)
+  onReabrir: () => void;
+  reabriendoEstado: boolean;
+  // Soft warning al cerrar sin proforma
+  warnCierreOpen: boolean;
+  onWarnCierreOpenChange: (open: boolean) => void;
+  onConfirmarCierreSinProforma: () => void;
+  conceptosSinProforma: number;
 }
 
 export function EmbarqueDetalleHeader({
   embarque, estadoVisual, siguienteEstado, canEdit, avanzandoEstado,
   trackingPending, embarqueId, onAvanzarEstado, onCompartirTracking,
   onAbrirEliminar, onAbrirDuplicar,
+  onReabrir, reabriendoEstado,
+  warnCierreOpen, onWarnCierreOpenChange, onConfirmarCierreSinProforma, conceptosSinProforma,
 }: Props) {
 
   const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
+  const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
 
   return (
     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
@@ -77,6 +90,29 @@ export function EmbarqueDetalleHeader({
           </Button>
         ) : null}
 
+        {/* Reabrir embarque cerrado (solo admin / super_admin) */}
+        {puedeReabrir && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={reabriendoEstado}>
+                <Unlock className="h-4 w-4 mr-1" /> Reabrir embarque
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reabrir embarque cerrado</AlertDialogTitle>
+                <AlertDialogDescription>
+                  El embarque <strong>{embarque.expediente}</strong> regresará al estado <strong>Entregado</strong> para poder generar la proforma o ajustar facturación. La acción se registrará en la bitácora y en el tracking.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={onReabrir}>Reabrir</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
         {/* Acción secundaria visible: Compartir (frecuente, no destructiva) */}
         <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
           <Share2 className="h-4 w-4 mr-1" /> Compartir
@@ -117,6 +153,22 @@ export function EmbarqueDetalleHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Soft warning: cerrar con conceptos de venta aún sin proforma */}
+      <AlertDialog open={warnCierreOpen} onOpenChange={onWarnCierreOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hay conceptos sin facturar</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este embarque tiene <strong>{conceptosSinProforma}</strong> concepto(s) de venta sin proforma generada. Si lo cierras ahora tendrás que pedirle a un administrador que lo reabra para poder facturar. ¿Cerrar de todas formas?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirmarCierreSinProforma}>Cerrar de todas formas</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

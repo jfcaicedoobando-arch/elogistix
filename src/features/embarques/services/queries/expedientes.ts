@@ -10,13 +10,19 @@ export interface ExpedienteCliente {
   total_embarques: number;
 }
 
-export async function fetchExpedientesCliente(clienteId: string): Promise<ExpedienteCliente[]> {
-  const { data, error } = await supabase
+export async function fetchExpedientesCliente(
+  clienteId: string,
+  opts: { incluirCerrados?: boolean } = {},
+): Promise<ExpedienteCliente[]> {
+  let query = supabase
     .from("embarques")
     .select("expediente, bl_master, cliente_nombre")
     .eq("cliente_id", clienteId)
-    .neq("estado", "Cerrado")
     .order("created_at", { ascending: false });
+  if (!opts.incluirCerrados) {
+    query = query.neq("estado", "Cerrado");
+  }
+  const { data, error } = await query;
   if (error) throw error;
   const map = new Map<string, ExpedienteCliente>();
   for (const row of data ?? []) {

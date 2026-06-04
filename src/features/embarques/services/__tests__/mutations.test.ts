@@ -18,6 +18,7 @@ import {
   eliminarEmbarqueRpc,
   actualizarEstadoEmbarque,
   insertarNotaEmbarque,
+  reabrirEmbarqueRpc,
 } from "@/features/embarques/services/mutations";
 
 const UUID = "11111111-1111-4111-8111-111111111111";
@@ -125,6 +126,25 @@ describe("avanzarEstadoEmbarqueRpc", () => {
     const args = call?.args as { p_nuevo_estado: string; p_tipo_evento: string };
     expect(args.p_nuevo_estado).toBe("En tránsito");
     expect(args.p_tipo_evento).toBe("estado");
+  });
+});
+
+describe("reabrirEmbarqueRpc", () => {
+  it("invoca la RPC reabrir_embarque con los argumentos esperados", async () => {
+    mock.setRpcResult("reabrir_embarque", { data: { id: UUID, estado: "Entregado" }, error: null });
+    await reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "admin@d.com", requestId: "req-1" });
+    const call = mock.rpcCalls.find((c) => c.fn === "reabrir_embarque");
+    expect(call).toBeTruthy();
+    const args = call?.args as { p_embarque_id: string; p_usuario_email: string };
+    expect(args.p_embarque_id).toBe(UUID);
+    expect(args.p_usuario_email).toBe("admin@d.com");
+  });
+
+  it("propaga el error de Supabase (no admin, estado inválido, etc.)", async () => {
+    mock.setRpcResult("reabrir_embarque", { data: null, error: new Error("Solo administradores") });
+    await expect(
+      reabrirEmbarqueRpc({ embarqueId: UUID, usuarioEmail: "u@d.com" }),
+    ).rejects.toThrow("Solo administradores");
   });
 });
 
