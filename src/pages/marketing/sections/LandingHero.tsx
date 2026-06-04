@@ -1,29 +1,44 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Ship, Plane, Truck } from "lucide-react";
-import { HERO, PROOF, KPIS } from "../landingCopy";
+import { ArrowRight, CheckCircle2, PlayCircle, Ship, Container, FileText, Clock } from "lucide-react";
+import { HERO, PROOF_TITLE, PROOF_LOGOS, KPIS } from "../landingCopy";
 
 export function LandingHero() {
   return (
-    <section className="relative overflow-hidden bg-primary text-primary-foreground">
-      {/* Decoración */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-40"
-      >
-        <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-accent/30 blur-3xl" />
-        <div className="absolute right-[-10%] bottom-[-20%] h-96 w-96 rounded-full bg-[hsl(199_89%_48%/0.25)] blur-3xl" />
+    <section
+      aria-labelledby="hero-title"
+      className="relative overflow-hidden bg-primary text-primary-foreground"
+    >
+      {/* Grid pattern + radial glow */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(0 0% 100% / 0.15) 1px, transparent 1px), linear-gradient(to bottom, hsl(0 0% 100% / 0.15) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-accent/35 blur-3xl" />
+        <div className="absolute right-[-10%] bottom-[-20%] h-[28rem] w-[28rem] rounded-full bg-[hsl(199_89%_48%/0.22)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:py-28">
+      <div className="relative mx-auto grid max-w-6xl gap-14 px-4 py-24 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:py-32">
         <div className="flex flex-col justify-center">
-          <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary-foreground/90">
+          <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-primary-foreground/25 bg-primary-foreground/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary-foreground/95">
             {HERO.eyebrow}
           </span>
-          <h1 className="text-balance text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1
+            id="hero-title"
+            className="text-balance text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+          >
             {HERO.h1}
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-primary-foreground/80">
+          <p className="mt-5 flex items-center gap-2 text-sm font-medium text-accent">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            {HERO.socialBullet}
+          </p>
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/85">
             {HERO.sub}
           </p>
 
@@ -39,60 +54,77 @@ export function LandingHero() {
               variant="outline"
               className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
-              <Link to="/login">{HERO.secondaryCta}</Link>
+              <Link to="/login">
+                <PlayCircle className="mr-1 h-5 w-5" /> {HERO.secondaryCta}
+              </Link>
             </Button>
           </div>
 
-          <p className="mt-5 flex items-center gap-2 text-sm text-primary-foreground/70">
+          <p className="mt-5 flex items-center gap-2 text-sm text-primary-foreground/75">
             <CheckCircle2 className="h-4 w-4 text-accent" />
             Sin tarjeta de crédito. Usuarios ilimitados.
           </p>
         </div>
 
-        {/* Mockup decorativo del dashboard */}
+        {/* Mockup: vista de Embarque real */}
         <div className="relative flex items-center justify-center">
-          <div className="w-full max-w-md rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 p-5 shadow-2xl backdrop-blur-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-                Dashboard
-              </span>
-              <span className="flex gap-1">
-                <span className="h-2 w-2 rounded-full bg-[hsl(160_84%_39%)]" />
-                <span className="h-2 w-2 rounded-full bg-[hsl(38_92%_50%)]" />
-                <span className="h-2 w-2 rounded-full bg-[hsl(199_89%_48%)]" />
+          <div className="w-full max-w-md rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] p-5 shadow-2xl backdrop-blur-sm">
+            <div className="mb-4 flex items-center justify-between border-b border-primary-foreground/10 pb-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/60">
+                  Embarque · FCL
+                </p>
+                <p className="font-mono text-sm font-semibold">LCG-2026-0142</p>
+              </div>
+              <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-xs font-semibold text-accent">
+                En tránsito
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Embarques activos", value: "42", icon: Ship },
-                { label: "ETA esta semana", value: "11", icon: Plane },
-                { label: "CxC vencido", value: "$184K", icon: Truck },
-                { label: "Margen mes", value: "23.4%", icon: CheckCircle2 },
-              ].map((kpi) => (
-                <div
-                  key={kpi.label}
-                  className="rounded-xl bg-primary-foreground/10 p-4"
-                >
-                  <kpi.icon className="mb-2 h-4 w-4 text-accent" />
-                  <p className="text-xs text-primary-foreground/70">{kpi.label}</p>
-                  <p className="text-xl font-bold">{kpi.value}</p>
-                </div>
-              ))}
+
+            <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg bg-primary-foreground/[0.06] p-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">BL Master</p>
+                <p className="font-mono text-sm font-semibold">MAEU-794821</p>
+              </div>
+              <div className="rounded-lg bg-primary-foreground/[0.06] p-2.5">
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">Naviera</p>
+                <p className="text-sm font-semibold">Maersk</p>
+              </div>
             </div>
-            <div className="mt-4 space-y-2">
+
+            {/* Ruta */}
+            <div className="mb-4 flex items-center gap-2 text-xs">
+              <div className="flex-1 text-left">
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">Origen</p>
+                <p className="font-semibold">Shanghái CNSHA</p>
+              </div>
+              <Ship className="h-4 w-4 text-accent" />
+              <div className="flex-1 text-right">
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">Destino</p>
+                <p className="font-semibold">Manzanillo MZLO</p>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="space-y-2">
               {[
-                { folio: "LCG-2026-0142", estado: "En tránsito", w: "70%" },
-                { folio: "LCG-2026-0141", estado: "En puerto", w: "45%" },
-                { folio: "LCG-2026-0139", estado: "Liberado", w: "100%" },
-              ].map((row) => (
-                <div key={row.folio} className="rounded-lg bg-primary-foreground/5 p-3 text-xs">
-                  <div className="mb-1 flex justify-between">
-                    <span className="font-mono font-semibold">{row.folio}</span>
-                    <span className="text-primary-foreground/70">{row.estado}</span>
-                  </div>
-                  <div className="h-1 overflow-hidden rounded-full bg-primary-foreground/10">
-                    <div className="h-full rounded-full bg-accent" data-w={row.w} style={{ width: row.w }} />
-                  </div>
+                { icon: FileText, label: "BL emitido", date: "12/05/2026", done: true },
+                { icon: Ship, label: "Zarpado", date: "16/05/2026", done: true },
+                { icon: Container, label: "ETA puerto", date: "08/06/2026", done: false },
+                { icon: Clock, label: "Liberación", date: "—", done: false },
+              ].map((e) => (
+                <div key={e.label} className="flex items-center gap-3 text-xs">
+                  <span
+                    className={`flex h-6 w-6 flex-none items-center justify-center rounded-full ${
+                      e.done ? "bg-accent text-accent-foreground" : "bg-primary-foreground/10 text-primary-foreground/50"
+                    }`}
+                  >
+                    <e.icon className="h-3 w-3" />
+                  </span>
+                  <span className={`flex-1 ${e.done ? "text-primary-foreground" : "text-primary-foreground/55"}`}>
+                    {e.label}
+                  </span>
+                  <span className="font-mono text-primary-foreground/60">{e.date}</span>
                 </div>
               ))}
             </div>
@@ -100,15 +132,33 @@ export function LandingHero() {
         </div>
       </div>
 
-      {/* KPIs strip */}
+      {/* Prueba social: sistemas / actores */}
       <div className="relative border-t border-primary-foreground/10 bg-primary/95">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-          <p className="mb-4 text-center text-sm text-primary-foreground/70">{PROOF}</p>
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <p className="mb-4 text-center text-xs font-medium uppercase tracking-wider text-primary-foreground/55">
+            {PROOF_TITLE}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {PROOF_LOGOS.map((l) => (
+              <span
+                key={l}
+                className="text-sm font-semibold tracking-tight text-primary-foreground/70"
+              >
+                {l}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* KPIs strip */}
+      <div className="relative border-t border-primary-foreground/10 bg-primary">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <div className="grid grid-cols-3 gap-4 text-center">
             {KPIS.map((k) => (
               <div key={k.label}>
-                <p className="text-2xl font-bold text-accent sm:text-3xl">{k.value}</p>
-                <p className="text-xs text-primary-foreground/70 sm:text-sm">{k.label}</p>
+                <p className="text-3xl font-bold text-accent sm:text-4xl">{k.value}</p>
+                <p className="text-xs text-primary-foreground/75 sm:text-sm">{k.label}</p>
               </div>
             ))}
           </div>

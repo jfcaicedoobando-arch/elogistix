@@ -2,19 +2,25 @@ import { PASOS } from "../landingCopy";
 
 export function LandingComoFunciona() {
   return (
-    <section id="como-funciona" className="bg-muted/40 py-20 sm:py-24">
+    <section
+      id="como-funciona"
+      aria-labelledby="pasos-title"
+      className="bg-muted/40 py-24 sm:py-32"
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">
             Cómo funciona
           </p>
-          <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2
+            id="pasos-title"
+            className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl"
+          >
             De la solicitud al cobro en tres pasos
           </h2>
         </div>
 
-        <div className="relative mt-14 grid gap-8 md:grid-cols-3">
-          {/* Línea conectora desktop */}
+        <div className="relative mt-16 grid gap-10 md:grid-cols-3">
           <div
             aria-hidden="true"
             className="absolute left-[16.66%] right-[16.66%] top-[2.25rem] hidden h-px bg-gradient-to-r from-transparent via-border to-transparent md:block"

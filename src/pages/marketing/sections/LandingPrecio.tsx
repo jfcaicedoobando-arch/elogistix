@@ -1,34 +1,50 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Sparkles } from "lucide-react";
 import { PRECIO } from "../landingCopy";
 
 export function LandingPrecio() {
   return (
-    <section id="precio" className="bg-muted/40 py-20 sm:py-24">
+    <section
+      id="precio"
+      aria-labelledby="precio-title"
+      className="bg-muted/40 py-24 sm:py-32"
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">
             Precio
           </p>
-          <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Una sola tarifa: cero
+          <h2
+            id="precio-title"
+            className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl"
+          >
+            {PRECIO.title}
           </h2>
+          <p className="mt-4 text-lg text-muted-foreground">{PRECIO.subtitle}</p>
         </div>
 
-        <div className="mx-auto mt-10 max-w-xl">
-          <div className="overflow-hidden rounded-2xl border border-accent/30 bg-card shadow-[var(--shadow-overlay)]">
-            <div className="bg-primary px-8 py-3 text-center">
-              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
+        <div className="relative mx-auto mt-12 max-w-xl">
+          {/* Halo sutil */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl bg-accent/10 opacity-60 blur-2xl"
+          />
+          <div className="overflow-hidden rounded-2xl border border-accent/40 bg-card shadow-[var(--shadow-overlay)]">
+            <div className="flex items-center justify-center gap-2 bg-primary px-8 py-3 text-center">
+              <Sparkles className="h-4 w-4 text-accent" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                 {PRECIO.badge}
               </span>
             </div>
             <div className="p-8 sm:p-10">
               <div className="text-center">
-                <p className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
-                  {PRECIO.price}
+                <p className="flex items-baseline justify-center gap-2">
+                  <span className="text-6xl font-bold tracking-tight text-foreground sm:text-7xl">
+                    {PRECIO.price}
+                  </span>
+                  <span className="text-sm font-medium text-muted-foreground">{PRECIO.unit}</span>
                 </p>
-                <p className="mt-2 text-sm text-muted-foreground">{PRECIO.unit}</p>
               </div>
 
               <ul className="mt-8 space-y-3">
