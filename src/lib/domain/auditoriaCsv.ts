@@ -3,7 +3,7 @@
  * Sin dependencias de React. Power of 10 §5/§4: extrae lógica de presentación.
  */
 import { exportToCsv } from "@/generators/exportCsv";
-import { reglaShortLabel } from "@/components/shared/utils/auditoriaConfig";
+import { reglaShortLabel } from "@/lib/domain/auditoriaReglaLabels";
 import type { HallazgoAuditoria } from "@/types/auditoria";
 
 const COLUMNS = [
