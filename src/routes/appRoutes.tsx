@@ -29,7 +29,7 @@ export const appRoutes = (
       </ProtectedRoute>
     }
   >
-    <Route path="/" element={<Dashboard />} />
+    <Route path="/inicio" element={<Dashboard />} />
     <Route path="/operaciones" element={<Operaciones />} />
     <Route path="/embarques" element={<Embarques />} />
     <Route path="/embarques/nuevo" element={<NuevoEmbarque />} />

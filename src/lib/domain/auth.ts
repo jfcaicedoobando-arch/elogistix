@@ -10,5 +10,5 @@ export type PostLoginRole = "super_admin" | "cliente" | "operador" | "admin" | "
 export function resolveLandingRoute(role: PostLoginRole): string {
   if (role === "super_admin") return "/admin";
   if (role === "cliente") return "/portal";
-  return "/";
+  return "/inicio";
 }
