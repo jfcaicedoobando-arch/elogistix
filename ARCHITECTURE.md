@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v11.59.1 — 2026-05-27**. Post Bloque A de auditoría: **0** hooks, contexts, components o pages importan `@/integrations/supabase/client` directamente (sólo `services/` y `integrations/supabase`). 18 suites en `services/`, 109 archivos / 716 tests totales.
+> Documento vivo. Fuente espejo de las reglas: `mem://technical/architecture-and-standards`. Para conteos actuales de tests/suites correr `bunx vitest run`.
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 > Documentación de dominio complementaria: [`docs/auditoria.md`](./docs/auditoria.md) (desglose de componentes y flujo de datos del módulo Auditoría), [`docs/tables.md`](./docs/tables.md) (estandarización de tablas y densidades).
 

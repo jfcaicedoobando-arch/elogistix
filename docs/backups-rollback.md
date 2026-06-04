@@ -2,7 +2,7 @@
 
 Resumen ejecutivo para super_admin. Para detalle exhaustivo de cada procedimiento, ver **[docs/operations.md](./operations.md)** (runbook completo) y **[docs/security-checklist.md](./security-checklist.md)**.
 
-Última revisión: 2026-05-17 (v8.178.0).
+Documento vivo. Para detalle exhaustivo ver `docs/operations.md`.
 
 ---
 
