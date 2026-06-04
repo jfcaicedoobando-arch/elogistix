@@ -6,8 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.52.5] - 2026-06-04
+- **feat(marketing/qa) — vista previa de logo en estados y fondos**: nueva ruta pública `/logo-preview` (`src/pages/marketing/LogoPreview.tsx`) que renderiza el lockup `librecarga-logo.png` + wordmark sobre 5 superficies (blanco, gris suave, navy del landing, accent `#2563EB` y degradado con imagen) en 3 estados (default, hover con ring acento, active/pressed) y 3 tamaños (sm/md/lg). Permite validar legibilidad y contraste antes de propagar cambios al nav/footer del landing. Ruta registrada en `src/routes/publicRoutes.tsx`. No enlazada desde menús públicos. Bump 12.52.5.
+
 ## [12.52.4] - 2026-06-04
 - **fix(marketing/landing) — logo unificado con el de login**: el ícono `librecarga-icon-light.svg` parecía documento con flecha de subida, no carga. Se reemplaza en `LandingNav` y `LandingFooter` por el mismo isotipo `librecarga-logo.png` que usa la pantalla de Login (`BrandLockup`), montado en un contenedor blanco redondeado (`rounded-xl bg-white ring-1 ring-border/40 shadow-sm`) para mantener contraste sobre el navy del landing. Bump 12.52.4.
+
 
 ## [12.52.3] - 2026-06-04
 
