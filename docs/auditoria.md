@@ -104,7 +104,7 @@ tab y la aplicación del filtro en la tabla operativa.
 
 ## 4. Configuración compartida de reglas
 
-`src/lib/ui/auditoriaConfig.ts` es la **fuente única** para:
+`src/components/shared/utils/auditoriaConfig.ts` es la **fuente única** para:
 
 - `REGLA_INFO[regla]` → `{ shortLabel, label, description, icon }`.
 - `REGLAS_ORDEN` → orden canónico de presentación (mayor severidad operativa
@@ -196,7 +196,7 @@ Pendiente registrado en `mem://audit/pendings` bajo "Mejora continua".
 | Tipos | `src/types/auditoria.ts` |
 | Services | `src/services/auditoria/` |
 | Hooks | `src/hooks/auditoria/` (barrel en `index.ts`) |
-| Config visual de reglas | `src/lib/ui/auditoriaConfig.ts` |
+| Config visual de reglas | `src/components/shared/utils/auditoriaConfig.ts` |
 | Compositor ejecutivo | `src/components/auditoria/AuditoriaEjecutivoTab.tsx` |
 | Tarjetas ejecutivas | `src/components/auditoria/ejecutivo/` |
 | Tabla operativa | `src/components/auditoria/HallazgosTablaPaginada.tsx` |

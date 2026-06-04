@@ -265,7 +265,7 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 ## 13. Error handling y feedback
 
 - **Catálogo de errores**: `src/lib/domain/errorCatalog.ts` mapea códigos Supabase / Postgrest / RPC a mensajes en es-MX. El toast genérico es mala UX; usar el catálogo.
-- **`appFeedback`** (`src/lib/ui/appFeedback.ts`): wrappers `notifyOk` / `notifyError` / `notifyInfo` que estandarizan duración, ícono y tono. Los hooks de mutación llaman `appFeedback`, nunca `toast()` directo.
+- **`appFeedback`** (`src/components/shared/utils/appFeedback.ts`): wrappers `notifyOk` / `notifyError` / `notifyInfo` que estandarizan duración, ícono y tono. Los hooks de mutación llaman `appFeedback`, nunca `toast()` directo.
 - **Validación de formularios**: Zod (`src/lib/domain/*Schemas.ts`) + React Hook Form. Mensajes en español. `setValue(..., { shouldValidate: true, shouldDirty: true })` + `trigger()` para updates programáticos (Core memory).
 - **Recuperación de chunks**: `RouteLoadingFallback` + auto-reload ante "Failed to fetch dynamically imported module" (`mem://technical/chunk-load-recovery`).
 - **Logs**: `console.error` en services/edge functions con contexto suficiente; nada de `console.log` ruidoso en código de producción.
