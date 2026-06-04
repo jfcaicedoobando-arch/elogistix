@@ -2,7 +2,7 @@
  * Landing pública. Compone las secciones de marketing.
  * SEO via index.html (defaults) + Helmet (canonical/og:url self-referente + FAQPage JSON-LD).
  */
-import { Helmet } from "react-helmet-async";
+import { Seo } from "@/components/seo/Seo";
 import { LandingNav } from "./sections/LandingNav";
 import { LandingHero } from "./sections/LandingHero";
 import { LandingDemo } from "./sections/LandingDemo";
@@ -31,11 +31,7 @@ const FAQ_JSONLD = {
 export default function Landing() {
   return (
     <div className="landing-scope min-h-screen bg-background text-foreground">
-      <Helmet>
-        <link rel="canonical" href="https://librecarga.com/" />
-        <meta property="og:url" content="https://librecarga.com/" />
-        <script type="application/ld+json">{JSON.stringify(FAQ_JSONLD)}</script>
-      </Helmet>
+      <Seo canonical="https://librecarga.com/" ogUrl="https://librecarga.com/" jsonLd={FAQ_JSONLD} />
       <LandingNav />
       <main>
         <LandingHero />
