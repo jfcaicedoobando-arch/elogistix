@@ -15,7 +15,7 @@ import {
 import {
   isDynamicImportError,
   tryReloadForChunkError,
-} from "./lib/ui/dynamicImportError";
+} from "./lib/errors/dynamicImportError";
 import { queryClient } from "./lib/queryClient";
 
 const previousVersion = getStoredAppVersion();

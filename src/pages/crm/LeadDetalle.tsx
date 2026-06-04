@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { crmToast } from "@/lib/crm/crmToast";
 import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";

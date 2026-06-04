@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
 import { useNavieras } from "@/hooks/catalogos/useNavieras";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface Props {
   modo: string;

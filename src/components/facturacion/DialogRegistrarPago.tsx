@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { dialogSize } from "@/lib/ui/dialogTokens";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/hooks/catalogos";
 import { useRegistrarPagoFactura, usePagosFactura } from "@/hooks/facturacion";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";

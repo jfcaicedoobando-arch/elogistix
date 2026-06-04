@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, FileText, ArrowLeft, ArrowRight } from "lucide-react";

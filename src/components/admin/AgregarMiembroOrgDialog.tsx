@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { dialogSize } from "@/lib/ui/dialogTokens";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/hooks/admin";
 import type { AppRole } from "@/types/appRole";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface Props {
   open: boolean;

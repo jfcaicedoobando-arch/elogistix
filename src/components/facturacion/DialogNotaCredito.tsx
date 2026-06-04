@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-import { dialogSize } from "@/lib/ui/dialogTokens";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { useToast } from "@/hooks/shared";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
@@ -19,7 +19,7 @@ import {
   useNotasCredito, useCrearNotaCredito, useCambiarEstadoNotaCredito,
   type EstadoNotaCredito,
 } from "@/hooks/facturacion";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 import { HistorialNotasCredito } from "./HistorialNotasCredito";

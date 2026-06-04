@@ -17,7 +17,7 @@ import { CrmSubheader } from "@/components/crm/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useDebounce } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/components/crm/OportunidadKanban";
 import OportunidadesFiltersBar from "@/components/crm/OportunidadesFiltersBar";

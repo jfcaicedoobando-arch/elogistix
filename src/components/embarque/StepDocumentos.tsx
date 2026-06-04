@@ -8,7 +8,7 @@ import {
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {

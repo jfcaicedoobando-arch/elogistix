@@ -14,7 +14,7 @@ import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
 import { useCreateDocumentoEmbarque } from "@/hooks/embarque";
 import { getDocsForMode } from "@/constants/embarqueConstants";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";

@@ -7,13 +7,13 @@
  * variant }` que internamente delega en `sonner`.
  *
  * Para código nuevo, prefiere los helpers `notifyError / notifySuccess /
- * notifyWarning` de `@/lib/ui/appFeedback` o `import { toast } from "sonner"`
+ * notifyWarning` de `@/components/shared/utils/appFeedback` o `import { toast } from "sonner"`
  * directamente.
  */
 import { toast as sonnerToast } from "sonner";
 import type { ReactNode } from "react";
-import { openErrorReport } from "@/lib/ui/errorDetailsStore";
-import type { ErrorReport } from "@/lib/ui/errorReport";
+import { openErrorReport } from "@/components/shared/utils/errorDetailsStore";
+import type { ErrorReport } from "@/components/shared/utils/errorReport";
 
 type Variant = "default" | "destructive" | "warning" | "success";
 

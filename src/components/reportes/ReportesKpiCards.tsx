@@ -1,7 +1,7 @@
 import { Users, DollarSign, TrendingUp, Percent } from "lucide-react";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import type { KpiTone } from "@/lib/ui/kpiTones";
+import type { KpiTone } from "@/components/shared/utils/kpiTones";
 
 interface Kpis {
   totalClientes: number;

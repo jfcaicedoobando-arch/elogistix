@@ -5,7 +5,7 @@ import { useCreateCliente } from "@/hooks/cliente/useClientes";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { parseCsf } from "@/services/csf";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export const EMPTY_CLIENTE = {

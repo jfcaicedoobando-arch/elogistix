@@ -7,7 +7,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/hooks/crm";
 
 const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" | "destructive"> = {

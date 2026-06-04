@@ -2,7 +2,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/shared";
 import { createDocumentoSignedUrl } from "@/services/search";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 /**
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).

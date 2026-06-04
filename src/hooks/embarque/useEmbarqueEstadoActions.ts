@@ -9,7 +9,7 @@ import {
   calcularEstadoEmbarque,
   type EmbarqueRow,
 } from "@/hooks/embarque/useEmbarques";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useEffect } from "react";
 
 export function getSiguienteEstado(estadoActual: string) {

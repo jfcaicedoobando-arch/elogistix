@@ -12,7 +12,7 @@ import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import {
   eventoTrackingSchema,
   type EventoTrackingFormValues,

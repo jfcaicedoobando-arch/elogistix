@@ -9,7 +9,7 @@ import {
   useCrearEmbarqueBorrador,
   type CotizacionRow,
 } from "@/hooks/cotizacion/useCotizaciones";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/services/crm/vincularCotizacion";
 import type { ClienteFormData } from "@/types/clienteForm";
 

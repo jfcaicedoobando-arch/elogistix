@@ -7,7 +7,7 @@ import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacion";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
 

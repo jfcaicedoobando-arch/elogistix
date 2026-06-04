@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { crmToast } from "@/lib/crm/crmToast";
 import VendedorSelect from "@/components/crm/VendedorSelect";
 import {

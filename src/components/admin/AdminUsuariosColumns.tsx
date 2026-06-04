@@ -11,7 +11,7 @@ import {
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import type { GlobalUserRow } from "@/hooks/admin";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 
 const ROLE_BADGE: Record<string, string> = {
   super_admin: "bg-primary text-primary-foreground",

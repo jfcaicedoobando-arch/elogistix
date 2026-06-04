@@ -1,7 +1,7 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useAdminOrganizations, useCreateOrganization } from "@/hooks/admin/useAdminData";
 import { uniqueSorted } from "@/lib/utils/uniqueSorted";
 

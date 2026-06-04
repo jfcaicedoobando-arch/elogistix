@@ -9,7 +9,7 @@ import {
   deletePuerto,
   type Puerto,
 } from "@/services/catalogos";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { Puerto };
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isDynamicImportError, isDynamicImportErrorMessage } from "@/lib/ui/dynamicImportError";
+import { isDynamicImportError, isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 
 describe("isDynamicImportErrorMessage", () => {
   it("detecta firmas conocidas (case-insensitive)", () => {

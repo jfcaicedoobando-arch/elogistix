@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/types/auditoria";
 
+export { reglaShortLabel } from "@/lib/domain/auditoriaReglaLabels";
+
 export interface ReglaInfo {
   /** Etiqueta corta para tablas/badges. */
   shortLabel: string;
@@ -106,7 +108,4 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "fechas",
 ];
 
-export function reglaShortLabel(regla: ReglaAuditoria): string {
-  return REGLA_INFO[regla].shortLabel;
-}
 

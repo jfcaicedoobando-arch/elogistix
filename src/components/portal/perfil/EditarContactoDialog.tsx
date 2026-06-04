@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useActualizarContactoPortal } from "@/hooks/portal";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 interface Props {

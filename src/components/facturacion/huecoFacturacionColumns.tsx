@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { FilaHueco } from "@/services/facturas";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import { getDiasVencidosTone } from "@/lib/ui/uiMappings";
+import { getDiasVencidosTone } from "@/components/shared/utils/uiMappings";
 import { cn } from "@/lib/utils";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 

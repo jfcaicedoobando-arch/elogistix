@@ -10,7 +10,7 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 import type { UserRow } from "@/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate } from "@/lib/formatters";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 
 const roleBadge: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",

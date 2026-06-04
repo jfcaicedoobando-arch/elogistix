@@ -6,7 +6,7 @@ import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle } from "lucide-reac
 import { usePortalFactura } from "@/hooks/portal";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
 import { toast } from "@/hooks/shared";
 import PortalFacturaResumenCard from "@/components/portal/factura/PortalFacturaResumenCard";

@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 
 interface Props {
   search: string;
