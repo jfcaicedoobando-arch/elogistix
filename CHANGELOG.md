@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.13] - 2026-06-04
+- **refactor(tables) — `VirtualDataTable` adelgazado**: se extrae la maquinaria (instancia de TanStack + virtualizer + cálculo de `gridTemplate`) al hook headless `useVirtualTableState` (`src/components/shared/dataTable/useVirtualTableState.ts`) y el contenedor absoluto de filas a `VirtualRowsContainer` (`src/components/shared/VirtualRowsContainer.tsx`). `VirtualDataTable.tsx` queda como ensamblador delgado (<110 líneas). API pública y comportamiento sin cambios; `DataTable` y `useListPageState` no se tocan para preservar la fuente de verdad de URL state.
+
 ## [12.53.12] - 2026-06-04
 - **refactor(edge functions) — consolidación a `user-management`**: se unifican `create-user`, `delete-user`, `list-users`, `invite-client-user` y `list-client-users` en una sola edge function `user-management` con router por `action` (`list`, `create`, `delete`, `invite-client`, `list-clients`). CORS estricto, autenticación JWT y validación de payload centralizados en un único entry. Se actualizan `src/services/usuario`, `src/services/admin/members`, `src/services/cliente-usuarios` y comentarios de hooks. Se eliminan los 5 directorios viejos del repo y se borran las funciones desplegadas.
 

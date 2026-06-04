@@ -1,41 +1,26 @@
 /**
- * VirtualDataTable — Tabla virtualizada para listas largas (cientos/miles de filas).
+ * VirtualDataTable — tabla virtualizada para listas largas (cientos/miles
+ * de filas). Ensamblador delgado: la maquinaria (instancia + virtualizer +
+ * gridTemplate) vive en `useVirtualTableState`, y el contenedor de filas
+ * absolutas en `VirtualRowsContainer`. Header / skeleton / empty siguen
+ * en `VirtualTableParts`.
  *
- * Refactor 9.1.0:
- *  - El modelo de filas viene de `@tanstack/react-table` (`useTableInstance`)
- *    para que el orden y la visibilidad sean responsabilidad de TanStack,
- *    no de un `useMemo` paralelo.
- *  - La virtualización (`@tanstack/react-virtual`) se conecta a
- *    `table.getRowModel().rows`, no al array `data` crudo.
- *  - Sin ordenamiento client por default (las virtualizadas suelen venir
- *    pre-ordenadas del servidor); se puede activar pasando `sortMode="client"`
- *    en una próxima iteración.
- *
- * Úsala cuando el usuario puede paginar a 100+ filas y la altura por fila es
- * variable (payloads, notas largas). Para tablas comunes sigue usando `DataTable`.
+ * Úsala cuando el usuario puede paginar a 100+ filas y la altura por fila
+ * es variable. Para tablas comunes sigue usando `DataTable`.
  */
-import { useCallback, useMemo, useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { omitUndefined } from "@/lib/utils/omitUndefined";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { VirtualRow } from "@/components/shared/VirtualRow";
 import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
-import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
+import { VirtualRowsContainer } from "@/components/shared/VirtualRowsContainer";
+import { useVirtualTableState } from "@/components/shared/dataTable/useVirtualTableState";
 import {
   DENSITY_CELL,
   type DataTablePagination,
   type TableDensity,
 } from "@/components/shared/dataTable/types";
 import type { ColumnDef } from "@tanstack/react-table";
-
-
-const isFirefox =
-  typeof navigator !== "undefined" && navigator.userAgent.indexOf("Firefox") !== -1;
-
-function measureByBoundingRect(el: HTMLElement): number {
-  return el?.getBoundingClientRect().height ?? 0;
-}
 
 interface VirtualDataTableProps<T> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
@@ -71,8 +56,6 @@ const DEFAULTS = {
   overscan: 8,
 };
 
-/** Aplica defaults a las props del componente sin un bloque grande de
- *  destructuring (que disparaba `complexity > 15`). */
 function withDefaults<T>(props: VirtualDataTableProps<T>) {
   const cleaned = omitUndefined(props);
   return { ...DEFAULTS, ...cleaned } as VirtualDataTableProps<T> &
@@ -86,63 +69,20 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
     estimateRowHeight, maxHeight, overscan,
   } = withDefaults(props);
 
-  // getRowId estable: si `rowKey` cambia de identidad por render, TanStack
-  // no recrea filas porque el id resultante es el mismo. Pero estabilizamos
-  // la función para evitar trabajo extra en useReactTable.
-  const getRowId = useCallback(
-    (row: T, index: number) => rowKey(row) ?? String(index),
-    [rowKey],
-  );
-
-  const table = useTableInstance<T>({
-    data,
-    columns,
-    sortMode: "client",
-    enableSorting: false,
-    getRowId,
-  });
-
   const parentRef = useRef<HTMLDivElement | null>(null);
   const cellPad = DENSITY_CELL[density];
-  const rows = table.getRowModel().rows;
 
-  // gridTemplate sólo cambia si cambia el set de columnas o sus widths.
-  // Memoizar evita re-string concat por scroll y, sobre todo, mantiene la
-  // identidad de la prop para que `React.memo(VirtualRow)` ahorre re-renders.
-  // `widthsKey` resume cada width (o el sentinel default) en un string estable;
-  // calculamos gridTemplate directamente desde él para evitar capturar la
-  // referencia inestable de `leafColumns` dentro del memo.
-  const leafColumns = table.getAllLeafColumns();
-  const widthsKey = leafColumns
-    .map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)")
-    .join("\u0001");
-  const gridTemplate = useMemo(
-    () => widthsKey.split("\u0001").join(" "),
-    [widthsKey],
-  );
+  const { table, rows, virtualizer, virtualItems, gridTemplate } =
+    useVirtualTableState<T>({
+      data,
+      columns,
+      rowKey,
+      parentRef,
+      estimateRowHeight,
+      overscan,
+    });
 
-  // measureElement debe tener identidad estable: useVirtualizer la lee en
-  // cada opción y una función nueva por render dispara trabajo de re-medición
-  // (resize observer churn). Firefox tiene bug conocido con sub-pixel sizes,
-  // por eso se omite.
-  const measureElement = useMemo(
-    () => (isFirefox ? undefined : measureByBoundingRect),
-    [],
-  );
-
-  const estimateSize = useCallback(() => estimateRowHeight, [estimateRowHeight]);
-
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize,
-    overscan,
-    measureElement,
-  });
-
-  const virtualItems = virtualizer.getVirtualItems();
   const showBody = !isLoading && rows.length > 0;
-
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -157,23 +97,17 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
         )}
         {!isLoading && rows.length === 0 && <EmptyState message={emptyMessage} />}
         {showBody && (
-          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
-            {virtualItems.map((vi) => (
-              <VirtualRow
-                key={rows[vi.index].id}
-                row={rows[vi.index]}
-                index={vi.index}
-                start={vi.start}
-                cellPad={cellPad}
-                gridTemplate={gridTemplate}
-                striped={striped}
-                hoverable={hoverable}
-                onRowClick={onRowClick}
-                rowClassName={rowClassName}
-                measureRef={virtualizer.measureElement}
-              />
-            ))}
-          </div>
+          <VirtualRowsContainer
+            virtualizer={virtualizer}
+            virtualItems={virtualItems}
+            rows={rows}
+            gridTemplate={gridTemplate}
+            cellPad={cellPad}
+            striped={striped}
+            hoverable={hoverable}
+            onRowClick={onRowClick}
+            rowClassName={rowClassName}
+          />
         )}
       </div>
 
