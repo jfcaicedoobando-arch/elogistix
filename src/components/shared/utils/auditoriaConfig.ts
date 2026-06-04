@@ -13,9 +13,9 @@ import {
   Receipt,
   type LucideIcon,
 } from "lucide-react";
-import type { ReglaAuditoria } from "@/types/auditoria";
+import type { ReglaAuditoria } from "@/features/auditoria/types";
 
-export { reglaShortLabel } from "@/lib/domain/auditoriaReglaLabels";
+export { reglaShortLabel } from "@/features/auditoria/domain/reglaLabels";
 
 export interface ReglaInfo {
   /** Etiqueta corta para tablas/badges. */

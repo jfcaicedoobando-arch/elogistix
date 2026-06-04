@@ -1,0 +1,32 @@
+import { useQuery } from "@tanstack/react-query";
+import type { User } from "@supabase/supabase-js";
+import { fetchAuditoriaRevisiones } from "@/features/auditoria/services";
+import { getCurrentUser } from "@/services/auth";
+import type { AuditoriaRevision } from "@/features/auditoria/types";
+import { AUDITORIA_REVISIONES_KEY } from "./hash";
+
+/**
+ * Resuelve el usuario autenticado tolerando ventanas de carrera en el
+ * hidratado del AuthContext: si `ctxUser` aún no llegó del React state,
+ * cae a `getCurrentUser()` (fuente de verdad). Sólo si ambos fallan
+ * lanza "Sesión no válida".
+ */
+export async function resolveAuthUser(ctxUser: User | null): Promise<User> {
+  if (ctxUser) return ctxUser;
+  return getCurrentUser();
+}
+
+export function useAuditoriaRevisiones() {
+  return useQuery({
+    queryKey: AUDITORIA_REVISIONES_KEY,
+    queryFn: async (): Promise<Map<string, AuditoriaRevision>> => {
+      const list = await fetchAuditoriaRevisiones();
+      const map = new Map<string, AuditoriaRevision>();
+      for (const r of list) {
+        map.set(`${r.embarque_id}|${r.regla}|${r.detalle_hash}`, r);
+      }
+      return map;
+    },
+    staleTime: 60_000,
+  });
+}

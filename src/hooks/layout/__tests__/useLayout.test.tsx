@@ -4,7 +4,7 @@ import { renderHook } from '@testing-library/react';
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
-vi.mock('@/hooks/auditoria', () => ({
+vi.mock('@/features/auditoria/hooks', () => ({
   useAuditoriaCount: () => ({ data: 5 }),
 }));
 vi.mock('@/hooks/admin', () => ({
