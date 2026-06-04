@@ -57,8 +57,9 @@ export function LandingNav() {
       </div>
 
       {open && (
-        <div className="border-t border-border bg-background md:hidden">
+        <div className="border-t border-border bg-background lg:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3" aria-label="Móvil">
+
             {links.map((l) => (
               <a
                 key={l.href}
