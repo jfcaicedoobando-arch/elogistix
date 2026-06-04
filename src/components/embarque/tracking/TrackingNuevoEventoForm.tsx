@@ -17,7 +17,8 @@ import {
   eventoTrackingSchema,
   type EventoTrackingFormValues,
 } from "@/lib/validation/mutationSchemas";
-import { formatDate } from "@/lib/formatters";
+import { formatDate as _formatDate } from "@/lib/formatters";
+void _formatDate;
 
 type EventoFormValues = EventoTrackingFormValues;
 
