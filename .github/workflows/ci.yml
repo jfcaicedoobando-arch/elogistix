@@ -47,6 +47,27 @@ jobs:
       - name: Tests
         run: bun run test
 
+      - name: Coverage (umbrales mínimos en vitest.config.ts)
+        run: bun run test:coverage
+
+      - name: Coverage report (markdown)
+        if: always()
+        run: bun run coverage:report || true
+
+      - name: PR summary (coverage)
+        if: always() && github.event_name == 'pull_request'
+        run: test -f reports/coverage-report.md && cat reports/coverage-report.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            coverage/
+            reports/coverage-report.md
+          retention-days: 30
+
       - name: Architecture & cast report
         if: always()
         run: bun run audit:report
