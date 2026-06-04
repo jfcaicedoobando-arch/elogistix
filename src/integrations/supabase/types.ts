@@ -2023,6 +2023,93 @@ export type Database = {
           },
         ]
       }
+      email_send_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          template_name?: string
+        }
+        Relationships: []
+      }
+      email_send_state: {
+        Row: {
+          auth_email_ttl_minutes: number
+          batch_size: number
+          id: number
+          retry_after_until: string | null
+          send_delay_ms: number
+          transactional_email_ttl_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          auth_email_ttl_minutes?: number
+          batch_size?: number
+          id?: number
+          retry_after_until?: string | null
+          send_delay_ms?: number
+          transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_unsubscribe_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       embarque_contenedores: {
         Row: {
           bl_house: string
@@ -3738,6 +3825,30 @@ export type Database = {
         }
         Relationships: []
       }
+      suppressed_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          metadata: Json | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string
+        }
+        Relationships: []
+      }
       tipos_contenedor: {
         Row: {
           activo: boolean
@@ -4326,6 +4437,10 @@ export type Database = {
       dashboard_details: { Args: never; Returns: Json }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
+      delete_email: {
+        Args: { message_id: number; queue_name: string }
+        Returns: boolean
+      }
       detectar_alertas_app_logs: { Args: never; Returns: number }
       duplicar_embarque_completo: {
         Args: {
@@ -4395,6 +4510,10 @@ export type Database = {
           tipo_contenedor: string
           total_count: number
         }[]
+      }
+      enqueue_email: {
+        Args: { payload: Json; queue_name: string }
+        Returns: number
       }
       facturas_listado: {
         Args: {
@@ -4507,6 +4626,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      move_to_dlq: {
+        Args: {
+          dlq_name: string
+          message_id: number
+          payload: Json
+          source_queue: string
+        }
+        Returns: number
+      }
       notificacion_cliente_marcar_leida: {
         Args: { p_id: string }
         Returns: undefined
@@ -4592,6 +4720,14 @@ export type Database = {
       purge_record: {
         Args: { _id: string; _table: string }
         Returns: undefined
+      }
+      read_email_batch: {
+        Args: { batch_size: number; queue_name: string; vt: number }
+        Returns: {
+          message: Json
+          msg_id: number
+          read_ct: number
+        }[]
       }
       reportes_resumen: {
         Args: {
