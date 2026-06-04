@@ -1,68 +1,97 @@
-## 1. Diagnóstico del logo
+## Diagnóstico visual (lo que vi)
 
-El ícono `/librecarga-icon.svg` usa relleno `#1B2B4B` (navy) sobre el fondo oscuro del nav (también navy), por lo que el cuerpo del contenedor desaparece y sólo se ve la flecha y el contorno azul. Mismo problema en `LandingFooter` (fondo oscuro) y en cualquier surface dark.
+Capturé el landing en `/` a 1440×900 y a página completa. Encontré **un problema crítico que no es del logo**:
 
-**Fix propuesto (concreto, lo implemento ya):**
+- **El hero y casi todo el landing se ven en azul eléctrico**, no en el navy profundo de "Navy Trust".
+- Causa raíz: el landing usa tokens semánticos (`bg-primary`, `text-primary-foreground`, `bg-background`, etc.) que en `index.css` cambian con el tema:
+  - Light: `--primary: 216 47% 20%` (navy correcto).
+  - Dark: `--primary: 217 91% 60%` (azul brillante — el que se está viendo).
+- El navegador/usuario está en modo oscuro, así que el landing "marketing" hereda los tokens de la app interna y pierde su identidad.
+- **El logo en sí está bien** (variante `librecarga-icon-light.svg` con buen contraste sobre fondo oscuro). El problema es que el fondo no es el navy que diseñamos, así que el conjunto se ve plano y "demasiado azul", lo que da la impresión de que el logo está mal.
 
-- Crear `public/librecarga-icon-light.svg` y `public/librecarga-logo-light.svg`: misma geometría pero con relleno blanco/`#F8FAFC` y trazos en `#60A5FA` (accent claro) para contraste AA sobre navy.
-- En `LandingNav.tsx` y `LandingFooter.tsx` usar la variante light.
-- Subir el tamaño del lockup en el nav: `h-9 w-9` y `text-lg`, con `tracking-tight` y un ligero gap (`gap-2.5`) para mejor balance óptico.
-- Mantener el ícono original (navy) para fondos claros (login, app interna). No tocar `BrandLockup` interno.
+También detecté oportunidades de pulido (jerarquía, ritmo, mockup) ahora que el fondo se va a ver como debe.
 
-## 2. Auditoría UX/UI de la landing (recomendaciones priorizadas)
+---
 
-### Prioridad alta (impacto directo en conversión / claridad)
+## Plan
 
-1. **Hero más vendedor**
-  - El mockup del dashboard es un placeholder genérico de cajas con texto. Reemplazar por un screenshot real (o ilustración fiel) del módulo de Embarques con BL, contenedores y timeline — es el wow factor real del producto.
-  - Añadir un sub-bullet de prueba social arriba del H1 ("+X embarques operados este mes" o "Hecho por forwarders, para forwarders").
-  - El gradiente azul plano del hero pesa visualmente; agregar un sutil radial-gradient o grid pattern para profundidad sin ruido.
-2. **Jerarquía y ritmo vertical**
-  - Las 13 secciones se sienten parejas (mismo padding, mismo ancho). Alternar fondos (navy 950 → navy 900 → un breakpoint blanco/cream para "Hecho para México" o "Portal del Cliente") para crear ritmo y evitar fatiga.
-  - Algunas secciones (Cómo funciona, Seguridad) son muy delgadas; subir padding vertical a `py-24 md:py-32` en secciones clave.
-3. **Prueba social real**
-  - La línea "Pensado para forwarders en CDMX, Manzanillo…" se lee como aspiracional, no como prueba. Si aún no hay logos de clientes, sustituir por una banda de **logos de navieras / puertos / sistemas integrados** (Maersk, MSC, Hapag, APM Terminals, SAT, CFDI 4.0), que sí podemos mostrar legítimamente y refuerza el "hecho para México".
-4. **CTA secundario "Ver demo" más fuerte**
-  - Hoy es un outline pequeño. Etiquetarlo "Ver demo en 60 segundos" con ícono play, y/o abrir un modal con un loom/screencast en vez de mandar a `/login`. El demo guiado fue la decisión de producto, hay que hacerlo evidente.
-5. **Tarjetas de módulos**
-  - 6 cards iguales aplanan la jerarquía. Convertir en bento: Embarques + Portal del Cliente ocupando 2 col cada uno con mini-mockup, los otros 4 como cards chicas con sólo ícono + título + 1 línea. Reduce densidad de texto y destaca los diferenciadores reales.
+### 1. Bloquear el landing en paleta Navy Trust (independiente del tema de la app)
 
-### Prioridad media (pulido visual)
+Objetivo: el landing público siempre se ve igual aunque el usuario tenga la app interna en dark mode.
 
-6. **Tipografía**
-  - El H1 del hero a `text-5xl md:text-7xl` con `leading-[1.05]` y `tracking-tight` (hoy se ve modesto vs. estándar SaaS).
-  - Eyebrows ("TODO EN UNO", "CÓMO FUNCIONA", "PRECIO") están en mayúsculas con `tracking-widest` pero color muy tenue; subir contraste a `text-accent` para que funcionen como anclas visuales.
-  - "Una sola tarifa: cero" → cambiar a "Gratis. Para siempre." como H2 + sub "Sin tarjeta, sin límites, sin letra chica."
-7. **Card de precio "Gratis"**
-  - El glow azul detrás de la card es bonito pero satura. Bajar la opacidad y usar un border `border-accent/40` con halo sutil. Añadir un badge "Lanzamiento" arriba para reforzar urgencia honesta.
-8. **"Hecho para México"**
-  - El grid 3x2 de features es plano. Añadir íconos (banderita, calendario, candado, mapa, etc.) y separar con dividers sutiles. Hoy se lee como una tabla.
-9. **Sección Portal del Cliente**
-  - El mockup vacío con sólo 3 filas se ve incompleto. Añadir un mini gráfico (barras stacked) reutilizando el patrón del portal real, y un toggle visual de pestañas ("Embarques · Facturas · Saldos") para mostrar densidad.
-10. **Footer**
-  - Muy escueto. Añadir columna "Recursos" (blog/guías futuras), enlace a `librecarga.com`, y badges de "Hecho en México 🇲🇽" + "Powered by Lovable Cloud" si quieres señal de stack.
+- En `src/pages/marketing/Landing.tsx`, envolver todo en un contenedor con scope propio (`<div className="landing-scope">...`) y forzar `color-scheme: light`.
+- En `src/index.css`, agregar un bloque con tokens fijos solo dentro de `.landing-scope`, sin tocar light/dark globales:
+  ```css
+  .landing-scope {
+    color-scheme: light;
+    --background: 210 30% 99%;
+    --foreground: 216 47% 12%;
+    --primary: 216 47% 14%;          /* navy más profundo, "Navy Trust" */
+    --primary-foreground: 210 40% 98%;
+    --accent: 217 91% 60%;            /* azul eléctrico solo como acento */
+    --accent-foreground: 0 0% 100%;
+    --muted: 216 30% 18%;
+    --muted-foreground: 215 20% 70%;
+    --border: 216 30% 22%;
+    --card: 216 47% 16%;
+    --card-foreground: 210 40% 98%;
+  }
+  ```
+- Resultado: secciones con `bg-primary`/`bg-background` se ven navy/crema correctas, los CTAs en `bg-accent` mantienen el azul eléctrico como acento (no como fondo dominante).
 
-### Prioridad baja (nice to have)
+### 2. Mejoras de UX/UI prioritarias (alcance acotado, solo CSS/JSX)
 
-11. **Microinteracciones**: hover lift en cards de módulos, scroll-reveal suave en sections (intersection observer + fade-up 12px). Sin abuso de motion.
-12. **Accesibilidad**: revisar contraste de `text-muted-foreground` sobre el hero azul; varios passages pueden quedar bajo AA. Añadir `aria-labelledby` a cada section.
-13. **SEO/meta**: añadir og:image dedicada (1200x630) con lockup + claim, hoy no hay; mejora preview en WhatsApp/LinkedIn (canal real de adquisición B2B en MX).
-14. **Sticky CTA mobile**: barra inferior fija con "Crear cuenta gratis" cuando se hace scroll >50% — práctica estándar SaaS móvil.
+Como experto de diseño, estas son las mejoras que aplicaría ahora que el navy se respeta:
 
-## 3. Qué implemento ahora vs. qué espero confirmación
+**Hero (`LandingHero.tsx`)**
+- Reducir saturación de los blobs (`bg-accent/35` → `/20`) para que el fondo no compita con el H1.
+- Añadir un sutil gradiente vertical (`from-primary via-primary to-[hsl(216_50%_10%)]`) para profundidad.
+- Subir el contraste del eyebrow chip (borde y fondo un poco más opacos).
+- Mockup del embarque: pasar el badge "En tránsito" a `bg-accent/20 text-accent` para introducir el azul como acento real, no como decoración fría.
 
-**Implemento sin más preguntas (alcance de este turno):**
+**Ritmo de secciones (alternancia)**
+- `LandingModulos` y `LandingPortal` quedan sobre `bg-primary` (navy).
+- `LandingComoFunciona` y `LandingMexico` pasan a `bg-background` (cream claro) con texto `text-foreground` para crear respiración y romper la "pared azul".
+- `LandingSeguridad` regresa a navy, `LandingPrecio` a cream con el card de precio en navy — invierte para destacar.
 
-- Fix del logo en nav y footer (sección 1).
-- Bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
+**Jerarquía tipográfica**
+- H2 de secciones a `text-4xl md:text-5xl`, `leading-[1.1]`, `tracking-tight`.
+- Eyebrows uniformes: `text-xs font-semibold uppercase tracking-[0.18em] text-accent` en secciones oscuras, `text-primary` en claras.
 
-**Espero tu selección antes de tocar:**
+**Tarjeta de precio (`LandingPrecio.tsx`)**
+- Reducir el halo (`blur-3xl opacity` ↓).
+- Badge "Lanzamiento" más sólido (`bg-accent text-accent-foreground`).
+- "Gratis. Para siempre." como H2 con `text-5xl` y `$0 MXN/mes` como dato secundario más pequeño.
 
-- ¿Cuáles de las 14 mejoras UX/UI quieres que implemente? Sugiero arrancar con un paquete "alto impacto": 1, 2, 3, 5, 6 (hero + ritmo + prueba social real + bento de módulos + tipografía). Puedo hacerlo en un siguiente turno como cambios sólo de presentación, sin tocar lógica.
-  Implementa todas las mejoras del plan
+**Footer (`LandingFooter.tsx`)**
+- Confirmar variante light del logo + agregar línea fina divisora navy/blanca al 8% para separar del CTA final.
 
-### Detalles técnicos
+**Microinteracciones (sin librerías nuevas)**
+- `hover:-translate-y-0.5 transition` en cards de módulos.
+- `transition-colors` en links de nav.
 
-- Archivos nuevos: `public/librecarga-icon-light.svg`, `public/librecarga-logo-light.svg`.
-- Archivos editados: `src/pages/marketing/sections/LandingNav.tsx`, `src/pages/marketing/sections/LandingFooter.tsx`, `src/constants/appVersion.ts` (→ `12.52.1`), `CHANGELOG.md`.
-- Sin cambios de rutas, lógica, RLS, ni tablas.
+### 3. Versionado y registro
+- Bump `APP_VERSION` → `12.52.2`.
+- Entrada en `CHANGELOG.md` raíz: "Landing: paleta Navy Trust bloqueada (independiente del tema), ritmo de secciones alternado, pulido tipográfico y de mockup."
+
+---
+
+## Detalles técnicos
+
+- **Sin cambios** en lógica, rutas, RLS, tablas, ni en la app interna.
+- **Sin cambios** en `BrandLockup` ni en tokens light/dark globales.
+- Archivos a editar:
+  - `src/index.css` (agregar bloque `.landing-scope`)
+  - `src/pages/marketing/Landing.tsx` (wrapper `landing-scope`)
+  - `src/pages/marketing/sections/LandingHero.tsx`
+  - `src/pages/marketing/sections/LandingModulos.tsx`
+  - `src/pages/marketing/sections/LandingComoFunciona.tsx`
+  - `src/pages/marketing/sections/LandingMexico.tsx`
+  - `src/pages/marketing/sections/LandingPortal.tsx`
+  - `src/pages/marketing/sections/LandingSeguridad.tsx`
+  - `src/pages/marketing/sections/LandingPrecio.tsx`
+  - `src/pages/marketing/sections/LandingFooter.tsx`
+  - `src/constants/appVersion.ts`, `CHANGELOG.md`
+- Verificación: tras implementar, tomar screenshot a 1440×900 y a 390×844 para confirmar paleta y ritmo.
+
+¿Lo aplico tal cual, o quieres ajustar prioridades (por ejemplo, dejar el ritmo de fondos todo en navy o todo en cream)?
