@@ -1,97 +1,90 @@
-## Diagnóstico visual (lo que vi)
+# Plan — Completar la landing pública
 
-Capturé el landing en `/` a 1440×900 y a página completa. Encontré **un problema crítico que no es del logo**:
+Resultado de auditoría: hay 3 bloques sin terminar (signup, demo, footer) más algunos CTAs incoherentes. Este plan los cierra sin tocar lógica de negocio del backend.
 
-- **El hero y casi todo el landing se ven en azul eléctrico**, no en el navy profundo de "Navy Trust".
-- Causa raíz: el landing usa tokens semánticos (`bg-primary`, `text-primary-foreground`, `bg-background`, etc.) que en `index.css` cambian con el tema:
-  - Light: `--primary: 216 47% 20%` (navy correcto).
-  - Dark: `--primary: 217 91% 60%` (azul brillante — el que se está viendo).
-- El navegador/usuario está en modo oscuro, así que el landing "marketing" hereda los tokens de la app interna y pierde su identidad.
-- **El logo en sí está bien** (variante `librecarga-icon-light.svg` con buen contraste sobre fondo oscuro). El problema es que el fondo no es el navy que diseñamos, así que el conjunto se ve plano y "demasiado azul", lo que da la impresión de que el logo está mal.
+## 1. Signup real ("Crear cuenta gratis")
 
-También detecté oportunidades de pulido (jerarquía, ritmo, mockup) ahora que el fondo se va a ver como debe.
+Hoy todos los CTAs caen a `/login`, que solo es login. Opciones:
 
----
+- **A (recomendada, ligera):** agregar pestaña "Crear cuenta" dentro de `src/pages/auth/Login.tsx` (Tabs Login / Signup) usando `supabase.auth.signUp` con email + password + nombre. Mantiene una sola ruta y respeta el "Unified Login" guardado en memoria.
+- **B:** crear ruta separada `/signup` con su propia página. Más boilerplate, divide el flujo.
 
-## Plan
+Voy con **A**. Cambios:
+- `src/pages/auth/Login.tsx`: envolver formulario en `Tabs` (Iniciar sesión / Crear cuenta). El tab Crear cuenta pide nombre, email, contraseña, confirmación, checkbox de Términos. Llama `supabase.auth.signUp({ email, password, options: { data: { full_name }, emailRedirectTo: window.location.origin + '/inicio' } })`. Muestra mensaje "Revisa tu correo para confirmar" (no auto-confirm, según reglas Supabase del proyecto).
+- Soportar `?tab=signup` en el query string para que los CTAs del landing aterricen directo en el tab correcto.
+- Actualizar destinos en landing para usar `/login?tab=signup`:
+  - `LandingHero.tsx`, `LandingPrecio.tsx`, `LandingCtaFinal.tsx`, `LandingNav.tsx` ("Crear cuenta gratis"), `MobileStickyCta.tsx`, `LandingFooter.tsx` ("Crear cuenta gratis").
+- "Iniciar sesión" y "Portal del cliente" siguen apuntando a `/login` (tab login por default).
 
-### 1. Bloquear el landing en paleta Navy Trust (independiente del tema de la app)
+## 2. Demo de 60 segundos
 
-Objetivo: el landing público siempre se ve igual aunque el usuario tenga la app interna en dark mode.
+Hoy es texto sin acción. Plan:
+- Nueva sección **`LandingDemo.tsx`** insertada entre Hero y Módulos en `Landing.tsx`, con `id="demo"`.
+- Contenido: encabezado "Mira Libre Carga en 60 segundos", subtítulo, y un reproductor placeholder (16:9, `aspect-video`, fondo navy con play button y badge "0:60"). Sin video real todavía — usar `<video>` con `poster` y `controls` apuntando a `/demo-libre-carga.mp4` con fallback a un mensaje "Próximamente" si el archivo no existe (manejado con estado `onError`). Esto deja el slot listo y elimina el CTA roto.
+- Alternativa visible al usuario: mientras no haya video, el botón "Agendar demo guiada" abre `mailto:` a `FOOTER.contact` con asunto pre-rellenado.
+- Reemplazar todos los CTAs "Ver demo en 60 segundos" para que hagan scroll a `#demo` en vez de ir a `/login`:
+  - `LandingHero.tsx:58`, `LandingCtaFinal.tsx:34`.
 
-- En `src/pages/marketing/Landing.tsx`, envolver todo en un contenedor con scope propio (`<div className="landing-scope">...`) y forzar `color-scheme: light`.
-- En `src/index.css`, agregar un bloque con tokens fijos solo dentro de `.landing-scope`, sin tocar light/dark globales:
-  ```css
-  .landing-scope {
-    color-scheme: light;
-    --background: 210 30% 99%;
-    --foreground: 216 47% 12%;
-    --primary: 216 47% 14%;          /* navy más profundo, "Navy Trust" */
-    --primary-foreground: 210 40% 98%;
-    --accent: 217 91% 60%;            /* azul eléctrico solo como acento */
-    --accent-foreground: 0 0% 100%;
-    --muted: 216 30% 18%;
-    --muted-foreground: 215 20% 70%;
-    --border: 216 30% 22%;
-    --card: 216 47% 16%;
-    --card-foreground: 210 40% 98%;
-  }
-  ```
-- Resultado: secciones con `bg-primary`/`bg-background` se ven navy/crema correctas, los CTAs en `bg-accent` mantienen el azul eléctrico como acento (no como fondo dominante).
+## 3. Footer — arreglar links rotos
 
-### 2. Mejoras de UX/UI prioritarias (alcance acotado, solo CSS/JSX)
+Cambios en `LandingFooter.tsx` + nuevas rutas:
 
-Como experto de diseño, estas son las mejoras que aplicaría ahora que el navy se respeta:
+| Link | Acción |
+|---|---|
+| Guías (próximamente) | Quitar del footer hasta tener contenido (evita `href="#"`). |
+| Blog (próximamente) | Quitar del footer. |
+| Aviso de privacidad | Apuntar a `/legal/privacidad` (nueva ruta y página). |
+| Términos y condiciones | Apuntar a `/legal/terminos` (nueva ruta y página). |
+| Portal del cliente | Mantener a `/login` (el `Unified Login` ya enruta a portal según rol). |
+| Crear cuenta gratis | `/login?tab=signup`. |
 
-**Hero (`LandingHero.tsx`)**
-- Reducir saturación de los blobs (`bg-accent/35` → `/20`) para que el fondo no compita con el H1.
-- Añadir un sutil gradiente vertical (`from-primary via-primary to-[hsl(216_50%_10%)]`) para profundidad.
-- Subir el contraste del eyebrow chip (borde y fondo un poco más opacos).
-- Mockup del embarque: pasar el badge "En tránsito" a `bg-accent/20 text-accent` para introducir el azul como acento real, no como decoración fría.
+Nuevas páginas:
+- `src/pages/legal/Privacidad.tsx` y `src/pages/legal/Terminos.tsx` — páginas estáticas en español MX con header simple (logo + volver), contenido placeholder revisable por legal, footer reutilizado. Incluyen `<title>` y meta description vía `react-helmet`-style (o tags directos), con un H1 único.
+- Registrar en `src/routes/publicRoutes.tsx`: `/legal/privacidad` y `/legal/terminos`.
 
-**Ritmo de secciones (alternancia)**
-- `LandingModulos` y `LandingPortal` quedan sobre `bg-primary` (navy).
-- `LandingComoFunciona` y `LandingMexico` pasan a `bg-background` (cream claro) con texto `text-foreground` para crear respiración y romper la "pared azul".
-- `LandingSeguridad` regresa a navy, `LandingPrecio` a cream con el card de precio en navy — invierte para destacar.
+## 4. Coherencia general de CTAs
 
-**Jerarquía tipográfica**
-- H2 de secciones a `text-4xl md:text-5xl`, `leading-[1.1]`, `tracking-tight`.
-- Eyebrows uniformes: `text-xs font-semibold uppercase tracking-[0.18em] text-accent` en secciones oscuras, `text-primary` en claras.
+- Auditar en una sola pasada que los 5 CTAs primarios ("Crear cuenta gratis") usen `/login?tab=signup` y los secundarios ("Ver demo") usen `#demo`.
+- `LandingPortal.tsx`: el CTA "Conocer portal del cliente" debe ir al ancla correspondiente o a `/login` (no a `#`).
+- Smoke visual: hacer click mental sobre Hero, Módulos, Portal, Precio, FAQ, CTA Final, Footer — todo debe resolver.
 
-**Tarjeta de precio (`LandingPrecio.tsx`)**
-- Reducir el halo (`blur-3xl opacity` ↓).
-- Badge "Lanzamiento" más sólido (`bg-accent text-accent-foreground`).
-- "Gratis. Para siempre." como H2 con `text-5xl` y `$0 MXN/mes` como dato secundario más pequeño.
+## 5. Versionado y changelog
 
-**Footer (`LandingFooter.tsx`)**
-- Confirmar variante light del logo + agregar línea fina divisora navy/blanca al 8% para separar del CTA final.
-
-**Microinteracciones (sin librerías nuevas)**
-- `hover:-translate-y-0.5 transition` en cards de módulos.
-- `transition-colors` en links de nav.
-
-### 3. Versionado y registro
-- Bump `APP_VERSION` → `12.52.2`.
-- Entrada en `CHANGELOG.md` raíz: "Landing: paleta Navy Trust bloqueada (independiente del tema), ritmo de secciones alternado, pulido tipográfico y de mockup."
-
----
+- Bump `APP_VERSION` a `12.53.0` (cambio menor con features visibles).
+- Entrada en `CHANGELOG.md` describiendo: signup en Login con tabs, sección demo con slot de video, páginas legales, footer saneado.
 
 ## Detalles técnicos
 
-- **Sin cambios** en lógica, rutas, RLS, tablas, ni en la app interna.
-- **Sin cambios** en `BrandLockup` ni en tokens light/dark globales.
-- Archivos a editar:
-  - `src/index.css` (agregar bloque `.landing-scope`)
-  - `src/pages/marketing/Landing.tsx` (wrapper `landing-scope`)
-  - `src/pages/marketing/sections/LandingHero.tsx`
-  - `src/pages/marketing/sections/LandingModulos.tsx`
-  - `src/pages/marketing/sections/LandingComoFunciona.tsx`
-  - `src/pages/marketing/sections/LandingMexico.tsx`
-  - `src/pages/marketing/sections/LandingPortal.tsx`
-  - `src/pages/marketing/sections/LandingSeguridad.tsx`
-  - `src/pages/marketing/sections/LandingPrecio.tsx`
-  - `src/pages/marketing/sections/LandingFooter.tsx`
-  - `src/constants/appVersion.ts`, `CHANGELOG.md`
-- Verificación: tras implementar, tomar screenshot a 1440×900 y a 390×844 para confirmar paleta y ritmo.
+- Signup: respetar reglas del proyecto — **no** habilitar auto-confirm de email; mostrar mensaje de verificación. Usar Tabs de shadcn (`@/components/ui/tabs`).
+- Demo video: el archivo `public/demo-libre-carga.mp4` no se incluye en este cambio (queda en el slot con fallback "Próximamente"). El usuario podrá subirlo después arrastrando el archivo al proyecto.
+- Páginas legales: contenido placeholder claramente marcado como "Borrador — pendiente de revisión legal" para que el usuario lo sustituya.
+- Sin migraciones ni cambios de schema. Sin secrets nuevos.
+- Conservar Power of 10: componentes ≤200 líneas, sin `any`, cleanup en effects.
 
-¿Lo aplico tal cual, o quieres ajustar prioridades (por ejemplo, dejar el ritmo de fondos todo en navy o todo en cream)?
+## Archivos tocados
+
+Editar:
+- `src/pages/auth/Login.tsx`
+- `src/pages/marketing/Landing.tsx`
+- `src/pages/marketing/sections/LandingHero.tsx`
+- `src/pages/marketing/sections/LandingCtaFinal.tsx`
+- `src/pages/marketing/sections/LandingNav.tsx`
+- `src/pages/marketing/sections/LandingFooter.tsx`
+- `src/pages/marketing/sections/LandingPrecio.tsx`
+- `src/pages/marketing/sections/LandingPortal.tsx`
+- `src/pages/marketing/sections/MobileStickyCta.tsx`
+- `src/pages/marketing/landingCopy.ts` (textos del demo y footer)
+- `src/routes/publicRoutes.tsx`
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
+
+Crear:
+- `src/pages/marketing/sections/LandingDemo.tsx`
+- `src/pages/legal/Privacidad.tsx`
+- `src/pages/legal/Terminos.tsx`
+
+## Fuera de alcance
+
+- Grabar/editar el video real de 60s (solo se deja el slot).
+- Redactar el texto legal definitivo (placeholder).
+- Cambios en el dashboard o flujos post-login.
