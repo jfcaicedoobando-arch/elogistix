@@ -1,0 +1,23 @@
+/**
+ * Etiquetas cortas de reglas de auditoría — datos puros sin dependencias de UI.
+ * Fuente única consumida tanto por exportadores en `src/lib/` como por la
+ * configuración visual en `src/components/shared/utils/auditoriaConfig.ts`.
+ */
+import type { ReglaAuditoria } from "@/types/auditoria";
+
+export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
+  docs_faltantes: "Documentos faltantes",
+  docs_pendientes_avanzado: "Documentos pendientes en avanzados",
+  fechas: "Inconsistencias de fechas",
+  ventas_sin_facturar: "Ventas sin facturar",
+  margen_negativo: "Margen negativo",
+  margen_bajo: "Margen bajo",
+  venta_sin_costo: "Venta sin costo",
+  costo_sin_venta: "Costo sin venta",
+  proforma_vencida: "Proforma vencida",
+  embarque_huerfano: "Embarque huérfano",
+};
+
+export function reglaShortLabel(regla: ReglaAuditoria): string {
+  return REGLA_SHORT_LABELS[regla];
+}
