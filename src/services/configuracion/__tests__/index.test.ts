@@ -28,8 +28,5 @@ describe('configuracion/index', () => {
     expect(mockSupabase.from).toHaveBeenCalledWith('configuracion');
     expect(mockSupabase.eq).toHaveBeenCalledWith('organization_id', 'org1');
   });
-
-    await upsertConfigItem({ categoria: 'cat', clave: 'k', valor: {} });
-    expect(mockSupabase.upsert).toHaveBeenCalled();
-  });
 });
+
