@@ -6,6 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { getCurrentUser } from "@/services/auth";
 
 export type NotaCredito = Tables<"factura_notas_credito">;
 export type EstadoNotaCredito = NotaCredito["estado"];
@@ -33,10 +34,10 @@ export async function listarNotasCreditoPorFactura(facturaId: string): Promise<N
 }
 
 export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<NotaCredito> {
-  const { data: userData } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const payload: TablesInsert<"factura_notas_credito"> = {
     ...input,
-    created_by: userData.user?.id ?? null,
+    created_by: user.id,
     estado: "Borrador",
   };
   const { data, error } = await supabase
@@ -66,10 +67,10 @@ export async function cambiarEstadoNotaCredito(
   estadoNuevo: EstadoNotaCredito,
 ): Promise<void> {
   asegurarTransicion(estadoActual, estadoNuevo);
-  const { data: userData } = await supabase.auth.getUser();
   const patch: Partial<NotaCredito> = { estado: estadoNuevo };
   if (estadoNuevo === "Aprobada") {
-    patch.aprobada_por = userData.user?.id ?? null;
+    const user = await getCurrentUser();
+    patch.aprobada_por = user.id;
     patch.aprobada_at = new Date().toISOString();
   }
   const { error } = await supabase.from("factura_notas_credito").update(patch).eq("id", id);
@@ -77,10 +78,10 @@ export async function cambiarEstadoNotaCredito(
 }
 
 export async function eliminarNotaCredito(id: string): Promise<void> {
-  const { data: userData } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const { error } = await supabase
     .from("factura_notas_credito")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userData.user?.id ?? null })
+    .update({ deleted_at: new Date().toISOString(), deleted_by: user.id })
     .eq("id", id)
     .eq("estado", "Borrador"); // sólo borradores se eliminan
   if (error) throw error;

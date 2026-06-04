@@ -5,30 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { TrackingConfirmFechaLlegadaDialog } from "./TrackingConfirmFechaLlegadaDialog";
 import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/hooks/embarque";
+import { useActualizarFechaLlegadaReal } from "@/hooks/embarque/mutations/useActualizarFechaLlegadaReal";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query";
 import {
   eventoTrackingSchema,
   type EventoTrackingFormValues,
 } from "@/lib/validation/mutationSchemas";
-import { formatDate } from "@/lib/formatters";
 
 type EventoFormValues = EventoTrackingFormValues;
 
@@ -68,7 +56,7 @@ interface Props {
 
 export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegadaRealActual, onClose }: Props) {
   const crearEvento = useCreateEventoEmbarque();
-  const queryClient = useQueryClient();
+  const actualizarFechaLlegada = useActualizarFechaLlegadaReal();
   const { user } = useAuth();
   const { toast } = useToast();
   const [confirmLlegada, setConfirmLlegada] = useState<string | null>(null);
@@ -83,17 +71,6 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
     resolver: zodResolver(eventoTrackingSchema),
     defaultValues: defaultEventoValues(estadoActual),
   });
-
-  const actualizarFechaLlegadaReal = async (fechaIso: string) => {
-    const { error } = await supabase
-      .from("embarques")
-      .update({ fecha_llegada_real: fechaIso })
-      .eq("id", embarqueId);
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(embarqueId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
-  };
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -133,7 +110,7 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
   const handleConfirmLlegada = async () => {
     if (!confirmLlegada) return;
     try {
-      await actualizarFechaLlegadaReal(confirmLlegada);
+      await actualizarFechaLlegada.mutateAsync({ embarqueId, fechaIso: confirmLlegada });
       notifySuccess(toast, { title: "Fecha de llegada real actualizada" });
     } catch (err: unknown) {
       notifyError(toast, {
@@ -198,24 +175,11 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!confirmLlegada} onOpenChange={(open) => !open && setConfirmLlegada(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Actualizar fecha de llegada real?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Quieres registrar{" "}
-              <strong>{confirmLlegada ? formatDate(confirmLlegada, "dd/MM/yyyy") : ""}</strong> como
-              la fecha de llegada real del embarque? Esto actualiza la ETA real visible para todos.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setConfirmLlegada(null); onClose(); }}>
-              No, sólo el evento
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmLlegada}>Sí, actualizar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <TrackingConfirmFechaLlegadaDialog
+        fechaIso={confirmLlegada}
+        onConfirm={handleConfirmLlegada}
+        onCancel={() => { setConfirmLlegada(null); onClose(); }}
+      />
     </>
   );
 }

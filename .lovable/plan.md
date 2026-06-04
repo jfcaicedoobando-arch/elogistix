@@ -1,60 +1,46 @@
-# Fix: triángulo de "docs pendientes" cuenta documentos eliminados
 
-## Causa raíz
+# Plan: Arreglar hallazgos HIGH de la auditoría de calidad
 
-El RPC `public.embarques_list_extras(p_ids)` calcula `docs_pendientes` con:
+Cinco arreglos puntuales, sin cambios de comportamiento visible para el usuario. Cada uno toca pocos archivos y respeta Power of 10 (≤200 líneas) y los wrappers existentes.
 
-```sql
-count(*) FILTER (WHERE d.archivo IS NULL AND d.estado <> 'No aplica')
-FROM documentos_embarque d
-WHERE d.embarque_id = ANY(p_ids)
-```
+## 1. God component en `TrackingNuevoEventoForm`
+**Problema:** el componente importa `supabase` directamente y hace `update` a `embarques` (regla: hooks/services hacen acceso a datos, no componentes).
 
-**No filtra `d.deleted_at IS NULL`.** En `ELIMP00216` existe un `Certificado de Origen` soft-eliminado (`deleted_at = 2026-05-18 23:52`, `estado = 'Pendiente'`, `archivo NULL`) que se sigue contando, mientras que la vista real del embarque ya lo oculta. Resultado: tooltip "1 doc pendiente" sin documento visible.
+**Cambios:**
+- Nuevo hook `src/hooks/embarque/useActualizarFechaLlegadaReal.ts` que usa `useMutation` + servicio.
+- Nuevo servicio `src/services/embarque/mutations/actualizarFechaLlegadaReal.ts` con el `update` y la invalidación de queries.
+- `TrackingNuevoEventoForm.tsx` queda solo con UI + `mutateAsync`. Quita `import { supabase }` y `useQueryClient`.
 
-El mismo bloque tiene el problema en el subquery de `conceptos_costo` (no filtra `deleted_at`), aunque ese impacto es menor porque hoy no se soft-deletean costos con frecuencia.
+## 2. `supabase.auth.getUser()` repetido en `notasCredito.ts`
+**Problema:** tres funciones llaman `auth.getUser()` por separado (latencia + acoplamiento).
 
-## Cambios
+**Cambio:** extraer helper local `getCurrentUserId()` o aprovechar `getCurrentUser()` de `@/services/auth` (ya usado en el proyecto). Cada función lo invoca una sola vez. Mantiene la API pública intacta.
 
-### 1. Migración SQL — `embarques_list_extras`
+## 3. Formato MXN duplicado en `AuditoriaRiesgoFinancieroCard`
+**Problema:** `new Intl.NumberFormat("es-MX", { currency: "MXN" })` local en vez del utilitario central.
 
-Reemplazar la función agregando `AND d.deleted_at IS NULL` y `AND c.deleted_at IS NULL` (si la columna existe en `conceptos_costo`; verificar antes de incluir).
+**Cambio:** reemplazar `fmt.format(...)` por `formatCurrency(..., "MXN", { maximumFractionDigits: 0 })` de `src/lib/formatters/numbers.ts` (verificaré la firma exacta). Borrar la constante `fmt`.
 
-```sql
-CREATE OR REPLACE FUNCTION public.embarques_list_extras(p_ids uuid[])
-RETURNS TABLE(embarque_id uuid, costos_total bigint, costos_pagados bigint, docs_total bigint, docs_pendientes bigint)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT e.id,
-    COALESCE(cc.total, 0), COALESCE(cc.pagados, 0),
-    COALESCE(dd.total, 0), COALESCE(dd.pendientes, 0)
-  FROM unnest(p_ids) AS e(id)
-  LEFT JOIN (
-    SELECT c.embarque_id,
-      count(*) AS total,
-      count(*) FILTER (WHERE c.estado_liquidacion = 'Pagado') AS pagados
-    FROM conceptos_costo c
-    WHERE c.embarque_id = ANY(p_ids)
-      AND c.deleted_at IS NULL  -- solo si la columna existe
-    GROUP BY c.embarque_id
-  ) cc ON cc.embarque_id = e.id
-  LEFT JOIN (
-    SELECT d.embarque_id,
-      count(*) AS total,
-      count(*) FILTER (WHERE d.archivo IS NULL AND d.estado <> 'No aplica') AS pendientes
-    FROM documentos_embarque d
-    WHERE d.embarque_id = ANY(p_ids)
-      AND d.deleted_at IS NULL
-    GROUP BY d.embarque_id
-  ) dd ON dd.embarque_id = e.id;
-$$;
-```
+## 4. URL hardcoded `https://wa.me/` en `PlantillaSelector`
+**Problema:** URL externa pegada en el componente.
 
-### 2. `CHANGELOG.md` + `src/constants/appVersion.ts`
+**Cambio:** añadir constantes a `src/constants/externalUrls.ts` (crear si no existe) con `WHATSAPP_SEND_BASE = "https://wa.me/"` y `buildWhatsappUrl(tel, text)`. `PlantillaSelector.tsx` usa la utilidad.
 
-Bump a `12.51.13` con bullet: "Embarques: el contador de documentos pendientes (triángulo amarillo) ya no incluye documentos eliminados."
+## 5. `deriveErrorCode` señalado como complejo
+**Hallazgo revisado:** el archivo `src/lib/ui/errorDetailsExtract.ts:163` ya está refactorizado con helpers (`fromPostgrestCode`, `fromHttpStatus`). La complejidad real es baja. **Acción:** no refactor; añadir un comentario JSDoc breve aclarando el orden de precedencia. (Si prefieres saltarlo del todo, dilo.)
+
+## Versionado y changelog
+
+- `src/constants/appVersion.ts` → bump a `12.51.15`.
+- `CHANGELOG.md` → entrada `## [12.51.15] - 2026-06-04` con un bullet por hallazgo.
 
 ## Fuera de alcance
 
-- No se tocan componentes frontend; el cálculo ya consume el valor del RPC.
-- Duplicados de documentos (p.ej. dos BL Master activos en ELIMP00216) no son bug del contador — son datos reales y se atenderían por separado si el usuario lo solicita.
+- Findings OK del reporte (naming kebab/Pascal, CSV import en `Clientes`/`Proveedores`, ternario en `TesoreriaFlujo`, magic numbers de `staleTime`, literales de roles). Se atacan en otra ronda si lo pides.
+- Sin cambios de UI, esquema, RLS, ni migraciones.
+
+## Validación
+
+- Build pasa (`tsc` automático).
+- Tests existentes siguen verdes (no se tocan rutas con tests).
+- Smoke manual: registrar evento de tracking que dispare confirm de "fecha llegada real", crear/aprobar nota de crédito, abrir plantilla WhatsApp.
