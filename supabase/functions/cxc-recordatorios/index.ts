@@ -4,8 +4,12 @@
 // de cobranza (-3d antes del vencimiento, +7d y +15d después). El envío real
 // (correo / WhatsApp) se implementará en un sprint posterior cuando se
 // integre Resend / WhatsApp Business.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+//
+// 12.51.14 — endurecido: requiere JWT y rol admin/operador. Para no-globalAdmin,
+// la consulta se fuerza a la organización del caller para evitar fugas
+// cross-tenant.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 
 interface Body { organization_id?: string }
 
@@ -32,12 +36,37 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const body = (await req.json().catch(() => ({}))) as Body;
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(url, key);
+    // 1. Autenticación obligatoria — no se permite acceso anónimo.
+    let userId: string;
+    let adminClient;
+    try {
+      const auth = await authenticate(req);
+      userId = auth.userId;
+      adminClient = auth.adminClient;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const status = msg.startsWith("401:") ? 401 : 500;
+      return new Response(
+        JSON.stringify({ ok: false, error: "No autorizado" }),
+        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
-    let query = supabase
+    // 2. Autorización: sólo admin global o admin/operador de la org.
+    const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(adminClient, userId);
+    if (!isGlobalAdmin && !callerOrgId) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Permisos insuficientes" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const body = (await req.json().catch(() => ({}))) as Body;
+
+    // 3. Tenancy: si NO es admin global, forzar org del caller; ignorar lo que mande el cliente.
+    const effectiveOrgId = isGlobalAdmin ? body.organization_id : callerOrgId;
+
+    let query = adminClient
       .from("facturas")
       .select(`
         id, numero, cliente_id, cliente_nombre, total, moneda, fecha_vencimiento,
@@ -48,7 +77,7 @@ Deno.serve(async (req) => {
       .is("deleted_at", null)
       .limit(5000);
 
-    if (body.organization_id) query = query.eq("organization_id", body.organization_id);
+    if (effectiveOrgId) query = query.eq("organization_id", effectiveOrgId);
 
     const { data, error } = await query;
     if (error) throw error;

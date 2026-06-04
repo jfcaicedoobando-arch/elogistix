@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.51.14] - 2026-06-04
+- **security(rpcs/multi-tenant)**: Endurecimiento de RPCs SECURITY DEFINER. Las RPCs `crear_embarque_completo`, `actualizar_embarque_completo`, `avanzar_estado_embarque`, `actualizar_cotizacion_costos`, `duplicar_embarque_completo`, `consolidar_proformas` y `marcar_proforma_facturada` ahora exigen rol admin/operador (o super_admin); usuarios con rol viewer/cliente ya no pueden disparar escrituras vía RPC. `consolidar_proformas` ignora el `p_organization_id` del cliente y usa el del caller para impedir consolidaciones cross-tenant. Ambas variantes de `auditoria_embarques_org` validan rol interno y organización del caller. Se restringió `configuracion_global` a personal interno (admin/operador/viewer/super_admin) — el rol `cliente` ya no la lee. Se agregaron políticas de lectura sólo super_admin a las tablas de respaldo `_backup_merge_*_20260602`. Se endureció la edge function `cxc-recordatorios`: requiere JWT, exige rol admin global o admin de organización, y fuerza el `organization_id` del caller (ignorando el del body) salvo para admin global. Bump 12.51.14.
+
 ## [12.51.13] - 2026-06-03
 - **fix(embarques/listado/docs-pendientes)**: El triángulo amarillo "doc(s) pendientes" en la lista de embarques ya no cuenta documentos eliminados. Se agregó `AND deleted_at IS NULL` al RPC `embarques_list_extras` para los subqueries de `documentos_embarque` y `conceptos_costo`. Caso reportado: `ELIMP00216` mostraba "1 doc pendiente" por un Certificado de Origen soft-deleted. Bump 12.51.13.
 
