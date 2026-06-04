@@ -6,7 +6,7 @@ import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadB
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import type { useFacturas } from "@/hooks/facturacion";
 import type { useFacturacionPageController } from "@/hooks/facturacion";
 

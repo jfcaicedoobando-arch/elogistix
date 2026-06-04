@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalFacturas, usePortalClientUsers } from "@/hooks/portal";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { Search, Receipt, Filter, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";

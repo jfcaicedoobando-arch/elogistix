@@ -9,12 +9,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { dialogSize } from "@/lib/ui/dialogTokens";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { useInviteClientUser } from "@/hooks/cliente";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 interface Props {

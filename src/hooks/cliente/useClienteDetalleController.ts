@@ -11,7 +11,7 @@ import {
   useEmbarquesCliente,
   useCotizacionesCliente,
 } from "@/hooks/cliente/useClientes";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useClienteFinancials } from "@/hooks/cliente/useClienteFinancials";
 import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared/usePermissions";

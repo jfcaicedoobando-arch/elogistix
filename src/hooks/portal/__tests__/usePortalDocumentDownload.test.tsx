@@ -7,7 +7,7 @@ vi.mock("@/hooks/shared", () => ({
 vi.mock("@/services/search", () => ({
   createDocumentoSignedUrl: vi.fn(),
 }));
-vi.mock("@/lib/ui/appFeedback", () => ({
+vi.mock("@/components/shared/utils/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 vi.mock("@/lib/domain/errorCatalog", () => ({
@@ -15,7 +15,7 @@ vi.mock("@/lib/domain/errorCatalog", () => ({
 }));
 
 import { createDocumentoSignedUrl } from "@/services/search";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { usePortalDocumentDownload } from "../usePortalDocumentDownload";
 
 const mockCreateUrl = vi.mocked(createDocumentoSignedUrl);

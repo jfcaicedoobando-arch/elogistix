@@ -10,7 +10,7 @@
  * `code` por issue.
  */
 import { APP_VERSION } from "@/constants/appVersion";
-import { getAuthSnapshot } from "@/lib/ui/authSnapshot";
+import { getAuthSnapshot } from "@/components/shared/utils/authSnapshot";
 import { extractErrorDetails, deriveErrorCode, type ValidationIssue } from "./errorDetailsExtract";
 import { ERROR_CODES, type AppErrorCode } from "@/lib/domain/errorCatalog";
 import {

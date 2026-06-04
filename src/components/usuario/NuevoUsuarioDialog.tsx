@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { dialogSize } from "@/lib/ui/dialogTokens";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateUser } from "@/hooks/usuario";
 import { useOrganizationsList } from "@/hooks/admin";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {

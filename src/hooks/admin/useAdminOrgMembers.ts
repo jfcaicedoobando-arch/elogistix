@@ -10,7 +10,7 @@ import {
   updateOrgMemberRole,
   type OrgMemberRow,
 } from "@/services/admin";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import type { AppRole } from "@/types/appRole";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";

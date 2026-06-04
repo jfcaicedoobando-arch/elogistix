@@ -7,7 +7,7 @@ import { logClientError } from "@/services/observability";
 import {
   isDynamicImportError,
   tryReloadForChunkError,
-} from "@/lib/ui/dynamicImportError";
+} from "@/lib/errors/dynamicImportError";
 
 interface Props {
   children: React.ReactNode;

@@ -11,9 +11,9 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/shared";
 import type { NotaEmbarqueRow } from "@/hooks/embarque";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
-import { getNotaTipoColorClass } from "@/lib/ui/uiMappings";
+import { getNotaTipoColorClass } from "@/components/shared/utils/uiMappings";
 
 interface Props {
   notas: NotaEmbarqueRow[];

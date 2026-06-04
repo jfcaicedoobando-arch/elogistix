@@ -15,7 +15,7 @@ import {
   fetchEmbarqueParaPdf,
   type ProformaRow,
 } from "@/services/proforma";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 interface ProformaInput {
   id: string;

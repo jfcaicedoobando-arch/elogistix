@@ -12,7 +12,7 @@ import {
 } from "@/services/cotizacion/wizard/paso1Crm";
 import { vincularOCrearOportunidadParaCotizacion } from "@/services/crm/vincularCotizacion";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 
 interface ToastFn {

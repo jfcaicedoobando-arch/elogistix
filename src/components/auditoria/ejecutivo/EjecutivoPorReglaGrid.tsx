@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { reglaShortLabel } from "@/lib/ui/auditoriaConfig";
+import { reglaShortLabel } from "@/components/shared/utils/auditoriaConfig";
 import type { ReglaAuditoria } from "@/types/auditoria";
 
 interface Props {

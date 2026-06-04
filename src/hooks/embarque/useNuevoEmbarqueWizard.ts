@@ -23,7 +23,7 @@ import { useEmbarqueSubmitOrchestrator } from "@/hooks/embarque/useEmbarqueSubmi
 import { useCotizacionesAceptadas } from "@/hooks/cotizacion/useCotizaciones";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/lib/domain/embarqueWizardStepValidator";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 

@@ -3,7 +3,7 @@ import { Upload, Download, Loader2, Trash2, Ban, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
-import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
+import { getDocEstadoColorClass } from "@/components/shared/utils/uiMappings";
 
 /**
  * Nombres de documentos considerados SIEMPRE obligatorios.

@@ -10,8 +10,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { BrandLockup } from "@/components/layout/BrandLockup";
-import { BRAND } from "@/lib/ui/brand";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { BRAND } from "@/components/shared/utils/brand";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Seo } from "@/components/seo/Seo";
 
 type TabKey = "login" | "signup";

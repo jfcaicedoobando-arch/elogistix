@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import type { ProformaConFactura } from "@/services/proforma";
 
 interface Factura {

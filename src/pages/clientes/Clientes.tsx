@@ -24,7 +24,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { createCliente } from "@/services/cliente";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useRegistrarActividad } from "@/hooks/shared";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };

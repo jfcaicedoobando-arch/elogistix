@@ -10,7 +10,7 @@ import {
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
 } from "@/hooks/embarque/useEmbarques";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 /**
  * Hook focalizado en la gestión de documentos del embarque (upload/download/delete).

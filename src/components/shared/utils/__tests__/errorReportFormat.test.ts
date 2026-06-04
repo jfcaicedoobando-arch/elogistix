@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   fmtHeader, fmtErrorBlock, fmtContextBlock, fmtStackBlock,
-} from "@/lib/ui/errorReportFormat";
-import type { ErrorReport } from "@/lib/ui/errorReport";
+} from "@/components/shared/utils/errorReportFormat";
+import type { ErrorReport } from "@/components/shared/utils/errorReport";
 
 function baseReport(over: Partial<ErrorReport> = {}): ErrorReport {
   return {

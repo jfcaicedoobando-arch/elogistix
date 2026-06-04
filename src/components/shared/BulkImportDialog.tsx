@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 import { downloadCsvTemplate } from "@/lib/csv/downloadCsvTemplate";
 import type { ImportPreview } from "@/lib/csv/importSchemas";

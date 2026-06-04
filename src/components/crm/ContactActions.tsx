@@ -4,7 +4,7 @@
 import { Copy, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess } from "@/components/shared/utils/appFeedback";
 import PlantillaSelector from "@/components/crm/PlantillaSelector";
 
 interface PlantillaCtx {

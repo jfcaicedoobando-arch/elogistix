@@ -9,7 +9,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";

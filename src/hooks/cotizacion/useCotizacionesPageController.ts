@@ -8,7 +8,7 @@ import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",

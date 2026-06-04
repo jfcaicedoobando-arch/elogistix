@@ -12,7 +12,7 @@
  */
 import * as Sentry from "@sentry/react";
 import { APP_VERSION } from "@/constants/appVersion";
-import { isDynamicImportErrorMessage } from "@/lib/ui/dynamicImportError";
+import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 
 /** Detecta si un error proviene de React Refresh / HMR de Vite.
  *  Ocurre cuando un bundle stale intenta re-renderizar y referencia

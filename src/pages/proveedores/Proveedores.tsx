@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/shared";
 import { usePermissions, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
 import type { Tables, Enums } from "@/types/db";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
 import { insertProveedor } from "@/services/proveedor";

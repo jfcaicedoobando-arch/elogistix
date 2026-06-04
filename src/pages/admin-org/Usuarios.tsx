@@ -10,8 +10,8 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { PageHeader } from "@/components/shared/PageHeader";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
 
