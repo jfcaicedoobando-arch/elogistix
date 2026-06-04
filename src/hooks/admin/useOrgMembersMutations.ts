@@ -3,7 +3,7 @@ import { queryKeys } from "@/lib/query";
 import { addOrgMember, fetchAvailableUsers } from "@/services/admin";
 
 /**
- * Lista todos los usuarios disponibles vía edge function `list-users`.
+ * Lista todos los usuarios disponibles vía edge function `user-management` (action `list`).
  */
 export function useAvailableUsers(enabled = true) {
   return useQuery({
