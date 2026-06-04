@@ -14,6 +14,19 @@ export default defineConfig({
     // sin esconder tests que se cuelgan.
     testTimeout: 15_000,
     hookTimeout: 15_000,
+    // Pool por procesos (forks) con heap ampliado en cada worker para evitar el
+    // OOM observado (~6GB) al correr los ~289 archivos en una sola invocación.
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: false,
+        maxForks: 2,
+        minForks: 1,
+        execArgv: ["--max-old-space-size=8192"],
+      },
+    },
+    isolate: true,
+    sequence: { shuffle: false },
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "json", "json-summary", "lcov", "html"],

@@ -11,7 +11,7 @@
     "lint:unused": "knip --no-progress",
     "lint:unused:strict": "knip --no-progress --include files,dependencies,unlisted,duplicates,exports,types",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "NODE_OPTIONS=\"--max-old-space-size=6144\" vitest run",
     "test:watch": "vitest",
     "test:coverage": "NODE_OPTIONS=\"--max-old-space-size=6144\" vitest run --coverage --pool=forks --poolOptions.forks.singleFork=true",
     "coverage:report": "tsx scripts/coverage-report.ts",
