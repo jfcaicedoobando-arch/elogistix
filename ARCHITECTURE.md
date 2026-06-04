@@ -37,7 +37,7 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 src/
 ├── pages/          → Composición de UI por ruta. NO tocan Supabase ni lógica de dominio.
 ├── components/     → Componentes reutilizables y específicos de feature.
-│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs.
+│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs, y utils de presentación (appFeedback, dialogTokens, kpiTones, uiMappings, auditoriaConfig).
 │   ├── ui/             → shadcn read-only (no editar).
 │   └── <dominio>/      → Componentes por feature (embarque, cotizacion, cliente, …).
 ├── hooks/          → React Query + estado local + side effects (toasts, navegación).
@@ -64,9 +64,9 @@ src/
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
 │   ├── financial/      → Cálculos monetarios + IVA dinámico.
 │   ├── formatters/     → Money/date/number en es-MX.
-│   ├── ui/             → appFeedback, dialogTokens, kpiTones, uiMappings.
+│   ├── errors/         → Utilidades puras de errores (dynamicImportError).
 │   ├── query/          → Query keys centralizados.
-│   └── *.ts            → utils, errors, storage, contacto.
+│   └── *.ts            → utils, storage, contacto, sentry.
 ├── content/        → Contenido editorial (changelog, copy de marketing).
 ├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard, appVersion).
 ├── types/          → Tipos compartidos entre módulos.
@@ -265,7 +265,7 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 ## 13. Error handling y feedback
 
 - **Catálogo de errores**: `src/lib/domain/errorCatalog.ts` mapea códigos Supabase / Postgrest / RPC a mensajes en es-MX. El toast genérico es mala UX; usar el catálogo.
-- **`appFeedback`** (`src/lib/ui/appFeedback.ts`): wrappers `notifyOk` / `notifyError` / `notifyInfo` que estandarizan duración, ícono y tono. Los hooks de mutación llaman `appFeedback`, nunca `toast()` directo.
+- **`appFeedback`** (`src/components/shared/utils/appFeedback.ts`): wrappers `notifyOk` / `notifyError` / `notifyInfo` que estandarizan duración, ícono y tono. Los hooks de mutación llaman `appFeedback`, nunca `toast()` directo.
 - **Validación de formularios**: Zod (`src/lib/domain/*Schemas.ts`) + React Hook Form. Mensajes en español. `setValue(..., { shouldValidate: true, shouldDirty: true })` + `trigger()` para updates programáticos (Core memory).
 - **Recuperación de chunks**: `RouteLoadingFallback` + auto-reload ante "Failed to fetch dynamically imported module" (`mem://technical/chunk-load-recovery`).
 - **Logs**: `console.error` en services/edge functions con contexto suficiente; nada de `console.log` ruidoso en código de producción.
@@ -282,7 +282,8 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 - **Stack**: Vitest + Testing Library. 369 tests vigentes (v8.206.0).
 - **Qué se testea**:
-  - `src/lib/` (financial, domain, storage, ui, mappers complejos, parsers): puro, alta cobertura. Incluye `*.edge.test.ts` para casos borde (montos cero/negativos, fechas nulas, conversiones round-trip).
+  - `src/lib/` (financial, domain, storage, errors, mappers complejos, parsers): puro, alta cobertura. Incluye `*.edge.test.ts` para casos borde (montos cero/negativos, fechas nulas, conversiones round-trip).
+  - `src/components/shared/utils/` (appFeedback, uiMappings, estadoConfig, auditoriaConfig, kpiTones): presentación pura, alta cobertura.
   - `src/services/` puros con lógica no trivial (csfService, trackingService).
   - Hooks con orquestación compleja (`useEmbarquesListData`, `useConfiguracionState`, `useAdminOrgDetalle`, `usePermissions`, y la suite completa de `hooks/auditoria/__tests__/` — controller, ejecutivo, revisiones, tabla).
   - Funciones derivadas en constantes (`getDocsForMode`).
@@ -327,6 +328,7 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
 - **Generators sin Supabase** (v8.205.0). `src/generators/**` es capa pura de presentación: reciben DTOs hidratados y devuelven Blob/string. Toda lectura vive en `services/<dominio>/exports.ts` (p. ej. `services/facturas/exports.ts` con `fetchLayoutContableData` y `fetchEstadoCuentaFacturas`). No reintroducir `supabase.*` runtime en `generators/`.
 - **`src/utils/` eliminado** (v8.206.0). No recrear esa carpeta. Utilidades puras → `src/lib/`; utilidades con I/O (Supabase, descargas) → `src/services/<dominio>/`. `exportOrganizationZip` vive en `services/admin/exportOrg.ts`.
 - **Auditoría arquitectónica P0–P3** (v8.196.0–v8.206.0). Plan vivo en `.lovable/plan.md`. Cierre actual: 0 warnings ESLint, 0 violaciones de barrel, 0 llamadas Supabase en `components/`, `pages/` o `generators/`. Mappers complejos partidos (`partesMercancia` → base + medidas).
+- **UI presentation utilities movidas a `src/components/shared/utils/`** (v12.53.10). `appFeedback`, `dialogTokens`, `kpiTones`, `uiMappings`, `estadoConfig`, `auditoriaConfig`, `brand`, `errorReport`, `errorDetailsExtract`, `authSnapshot` y sus tests migraron desde `src/lib/ui/`. La capa `lib/` debe permanecer pura (sin React, sin tokens visuales). `src/lib/errors/` conserva utilidades de error puro (`dynamicImportError`). Importar presentación desde `@/components/shared/utils/*`; nunca desde `@/lib/ui/*` (eliminada).
 
 ## 17. Decisiones de no hacer
 

@@ -6,8 +6,8 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [12.53.10] - 2026-06-04
-- **refactor(arquitectura) — `src/lib/ui/` reubicado a la capa de vista**: los 13 módulos de presentación (mapeos visuales, tonos KPI, configuración de estados, tokens de diálogo, brand, snapshots y reportes de error, feedback de app, configuración de auditoría) se movieron a `src/components/shared/utils/`. La utilidad pura `dynamicImportError.ts` se reubicó en `src/lib/errors/`. `auditoriaCsv` se desacopló de la UI mediante un nuevo dato compartido `src/lib/domain/auditoriaReglaLabels.ts`. Tests de arquitectura siguen en verde.
+## [12.53.11] - 2026-06-04
+- **docs(arquitectura) — documentación actualizada tras reubicación de UI utilities**: `ARCHITECTURE.md`, `docs/auditoria.md` y `docs/architecture-map.md` reflejan ahora que las utilidades de presentación (`appFeedback`, `auditoriaConfig`, `uiMappings`, `kpiTones`, `dialogTokens`, etc.) viven en `src/components/shared/utils/`. Se añadió decisión arquitectónica explícita en §16 de `ARCHITECTURE.md` (v12.53.10). La sección de testing separa claramente `src/lib/` (puro) vs `src/components/shared/utils/` (presentación).
 
 ## [12.53.9] - 2026-06-04
 - **docs(cleanup) — limpieza de documentación obsoleta**: eliminados 15 archivos `.md`/`.json` (referencias JSONCargo, checklists del RC/GA 12.0, snapshots de auditoría v11.69.0/12.15.0, reportes autogenerados y plan de landing ya implementado) y refrescados encabezados de `README.md`, `ARCHITECTURE.md`, `docs/architecture-map.md`, `docs/auditoria.md`, `docs/strict-mode-roadmap.md` y `docs/backups-rollback.md` para quitar fechas/versiones congeladas.
