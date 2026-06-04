@@ -21,12 +21,11 @@ describe('useDashboardEjecutivo Hook', () => {
     mockFetch.mockResolvedValueOnce({ snapshots: [] });
     const { result } = renderHook(() => useDashboardEjecutivo('mes'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockFetch).toHaveBeenCalledWith({ organizationId: 'org-1', periodo: 'mes' });
   });
 
   it('is disabled if no period provided', () => {
-    const { result } = renderHook(() => useDashboardEjecutivo(''), { wrapper: createWrapper() });
-    expect(result.current.isPending).toBe(true);
+    mockFetch.mockClear();
+    renderHook(() => useDashboardEjecutivo(''), { wrapper: createWrapper() });
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });

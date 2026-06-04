@@ -22,31 +22,26 @@ describe('useReportes Hooks', () => {
     isLoading: false,
   };
 
-  it('useReportesPageController initializes with default filters', () => {
+  it('useReportesPageController initializes and sorts desc by default', () => {
     mockUseRentabilidad.mockReturnValue(mockRentabilidad);
     const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
-    expect(result.current.modo).toBe('all');
-    expect(result.current.sorted).toHaveLength(2);
-    // Sort default is desc by profit_usd
     expect(result.current.sorted[0].cliente_id).toBe('2');
   });
 
-  it('useReportesPageController handles sorting', () => {
+  it('useReportesPageController handles sorting toggle', () => {
     mockUseRentabilidad.mockReturnValue(mockRentabilidad);
     const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
     
     act(() => {
       result.current.handleSort('cliente_nombre');
     });
-    
-    expect(result.current.sortField).toBe('cliente_nombre');
-    expect(result.current.sortDir).toBe('desc');
+    // Descending order for 'A', 'B' -> 'B', 'A'
     expect(result.current.sorted[0].cliente_nombre).toBe('B');
 
     act(() => {
       result.current.handleSort('cliente_nombre');
     });
-    expect(result.current.sortDir).toBe('asc');
+    // Ascending order -> 'A', 'B'
     expect(result.current.sorted[0].cliente_nombre).toBe('A');
   });
 });

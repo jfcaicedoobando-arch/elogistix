@@ -24,7 +24,7 @@ const mockEmbarque = {
 
 describe("ProformaHeader", () => {
   it("debe renderizar sin errores con props mínimas", () => {
-    const { getByTestId } = render(
+    const { getAllByTestId } = render(
       <ProformaHeader 
         proforma={mockProforma} 
         cliente={null as any} 
@@ -32,11 +32,11 @@ describe("ProformaHeader", () => {
         esConsolidada={false} 
       />
     );
-    expect(getByTestId("pdf-text")).toBeDefined();
+    expect(getAllByTestId("pdf-text").length).toBeGreaterThan(0);
   });
 
   it("debe renderizar versión consolidada", () => {
-    const { getByTestId } = render(
+    const { getAllByTestId } = render(
       <ProformaHeader 
         proforma={mockProforma} 
         cliente={null as any} 
@@ -44,6 +44,6 @@ describe("ProformaHeader", () => {
         esConsolidada={true} 
       />
     );
-    expect(getByTestId("pdf-text")).toBeDefined();
+    expect(getAllByTestId("pdf-text").length).toBeGreaterThan(0);
   });
 });

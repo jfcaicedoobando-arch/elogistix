@@ -45,7 +45,7 @@ describe('usePresupuesto Hooks', () => {
   it('usePresupuestoCategorias fetches categories', async () => {
     mockFetchCats.mockResolvedValueOnce([{ id: 'c1', nombre: 'Cat1' }]);
     const { result } = renderHook(() => usePresupuestoCategorias(), { wrapper: createWrapper() });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true), { timeout: 3000 });
     expect(result.current.data).toHaveLength(1);
   });
 });

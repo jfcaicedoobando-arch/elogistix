@@ -13,11 +13,11 @@ vi.mock('@/services/comisiones', () => ({
   fetchLiquidaciones: mockFetchLiquidaciones,
   generarLiquidacion: mockGenerar,
   registrarPagoLiquidacion: mockRegistrar,
-  fetchVendedoras: mockFetchVendedoras,
+  fetchVendedorasConfig: mockFetchVendedoras,
 }));
 
 import { useLiquidaciones, useGenerarLiquidacion, useRegistrarPagoLiquidacion } from '../useLiquidaciones';
-import { useVendedoras } from '../useVendedoras';
+import { useVendedorasConfig } from '../useVendedoras';
 
 describe('useComisiones Hooks', () => {
   it('useLiquidaciones fetches data', async () => {
@@ -41,9 +41,9 @@ describe('useComisiones Hooks', () => {
     expect(mockRegistrar).toHaveBeenCalled();
   });
 
-  it('useVendedoras fetches vendedoras', async () => {
-    mockFetchVendedoras.mockResolvedValueOnce([{ id: 'v1', nombre: 'Test' }]);
-    const { result } = renderHook(() => useVendedoras(), { wrapper: createWrapper() });
+  it('useVendedorasConfig fetches config', async () => {
+    mockFetchVendedoras.mockResolvedValueOnce([{ id: 'v1', usuario_id: 'u1' }]);
+    const { result } = renderHook(() => useVendedorasConfig(), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
   });
