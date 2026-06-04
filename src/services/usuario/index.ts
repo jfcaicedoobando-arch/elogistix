@@ -65,8 +65,8 @@ export async function updateUserRole(userId: string, newRole: AppRole): Promise<
 }
 
 export async function deleteUserViaEdgeFunction(userId: string): Promise<unknown> {
-  const { data, error } = await supabase.functions.invoke("delete-user", {
-    body: { user_id: userId },
+  const { data, error } = await supabase.functions.invoke("user-management", {
+    body: { action: "delete", user_id: userId },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
