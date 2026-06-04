@@ -1,6 +1,6 @@
 /**
- * Landing pública. Compone las secciones de marketing y aplica SEO via Helmet
- * cuando esté disponible; si no, depende del head estático de index.html.
+ * Landing pública. Compone las secciones de marketing.
+ * SEO via head estático de index.html.
  */
 import { LandingNav } from "./sections/LandingNav";
 import { LandingHero } from "./sections/LandingHero";
@@ -13,6 +13,7 @@ import { LandingPrecio } from "./sections/LandingPrecio";
 import { LandingFaq } from "./sections/LandingFaq";
 import { LandingCtaFinal } from "./sections/LandingCtaFinal";
 import { LandingFooter } from "./sections/LandingFooter";
+import { MobileStickyCta } from "./sections/MobileStickyCta";
 
 export default function Landing() {
   return (
@@ -30,6 +31,7 @@ export default function Landing() {
         <LandingCtaFinal />
       </main>
       <LandingFooter />
+      <MobileStickyCta />
     </div>
   );
 }

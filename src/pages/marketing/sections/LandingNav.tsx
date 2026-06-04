@@ -14,11 +14,11 @@ export function LandingNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2" aria-label="Libre Carga">
-          <img src="/librecarga-icon.svg" alt="" className="h-8 w-8" />
-          <span className="text-base font-semibold tracking-tight text-primary">
+        <Link to="/" className="flex items-center gap-2.5" aria-label="Libre Carga">
+          <img src="/librecarga-icon-light.svg" alt="" className="h-9 w-9" />
+          <span className="text-lg font-semibold tracking-tight text-foreground">
             Libre Carga
           </span>
         </Link>

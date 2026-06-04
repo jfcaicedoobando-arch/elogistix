@@ -4,14 +4,19 @@
  */
 export const HERO = {
   eyebrow: "Hecho en México 🇲🇽 · Gratis para siempre",
+  socialBullet: "Construido por forwarders mexicanos, para forwarders mexicanos.",
   h1: "El sistema operativo de tu agencia de carga",
   sub: "Cotiza, embarca, factura y cobra desde un solo lugar. Libre Carga reemplaza tus hojas de Excel, tus carpetas compartidas y tu pizarrón de embarques.",
   primaryCta: "Crear cuenta gratis",
-  secondaryCta: "Ver demo",
+  secondaryCta: "Ver demo en 60 segundos",
 } as const;
 
-export const PROOF =
-  "Pensado para forwarders en CDMX, Manzanillo, Veracruz, Monterrey, Guadalajara, Tijuana y todo el país.";
+// Logos / sistemas con los que opera el forwarder mexicano día a día.
+export const PROOF_TITLE = "Compatible con los actores con los que ya trabajas";
+export const PROOF_LOGOS = [
+  "Maersk", "MSC", "Hapag-Lloyd", "CMA CGM", "APM Terminals",
+  "SAT · CFDI 4.0", "UN/LOCODE", "Frankfurter FX",
+] as const;
 
 export const KPIS = [
   { value: "−70%", label: "tiempo en cotizar" },
@@ -21,40 +26,46 @@ export const KPIS = [
 
 export const MODULOS = [
   {
-    icon: "FileText",
-    title: "Cotizaciones",
-    desc: "Arma cotizaciones profesionales en minutos con conceptos predefinidos, márgenes claros y PDF listo para enviar.",
-    bullets: ["Multi-moneda MXN/USD", "Versiones y revisiones", "PDF con tu marca"],
-  },
-  {
     icon: "Ship",
     title: "Embarques",
-    desc: "Marítimo (FCL/LCL), aéreo y terrestre. Timeline automático con eventos, documentos y contenedores.",
+    desc: "Marítimo (FCL/LCL), aéreo y terrestre. Timeline automático con eventos, documentos, contenedores y bultos. BL Master / House.",
     bullets: ["7 estados de operación", "BL Master / House", "Contenedores y bultos"],
-  },
-  {
-    icon: "Receipt",
-    title: "Proformas y Facturación",
-    desc: "Genera proformas, consolídalas y emite tus facturas con IVA dinámico. Compatible con tu flujo de CFDI.",
-    bullets: ["IVA por concepto", "Consolidación multi-embarque", "Estatus de cobro en vivo"],
-  },
-  {
-    icon: "Wallet",
-    title: "CxC, CxP y Tesorería",
-    desc: "Controla lo que te deben y lo que debes. Conciliación bancaria, flujo proyectado y reportes ejecutivos.",
-    bullets: ["Pagos parciales", "Conciliación bancaria", "Flujo proyectado a 90 días"],
+    featured: true,
   },
   {
     icon: "Users",
     title: "Portal del Cliente",
-    desc: "Tus clientes ven sus embarques, descargan sus facturas y revisan sus saldos sin llamarte por WhatsApp.",
-    bullets: ["Tracking 24/7", "Facturas descargables", "Notificaciones en tiempo real"],
+    desc: "Tus clientes ven sus embarques, descargan facturas y revisan sus saldos sin llamarte por WhatsApp. Tracking 24/7.",
+    bullets: ["Tracking 24/7", "Facturas descargables", "Notificaciones en vivo"],
+    featured: true,
+  },
+  {
+    icon: "FileText",
+    title: "Cotizaciones",
+    desc: "Cotizaciones profesionales en minutos con conceptos predefinidos y PDF listo para enviar.",
+    bullets: [],
+    featured: false,
+  },
+  {
+    icon: "Receipt",
+    title: "Proformas y CFDI",
+    desc: "Genera proformas, consolida embarques y emite con IVA dinámico.",
+    bullets: [],
+    featured: false,
+  },
+  {
+    icon: "Wallet",
+    title: "CxC, CxP y Tesorería",
+    desc: "Conciliación bancaria, flujo proyectado y reportes ejecutivos.",
+    bullets: [],
+    featured: false,
   },
   {
     icon: "Target",
     title: "CRM y Comisiones",
-    desc: "Pipeline de ventas, leads, oportunidades y cálculo automático de comisiones a vendedoras.",
-    bullets: ["Pipeline visual", "Actividades y tareas", "Liquidación mensual"],
+    desc: "Pipeline de ventas y cálculo automático de comisiones a vendedoras.",
+    bullets: [],
+    featured: false,
   },
 ] as const;
 
@@ -65,12 +76,12 @@ export const PASOS = [
 ] as const;
 
 export const MEXICO = [
-  { title: "IVA dinámico", desc: "Tasa configurable por organización, nunca hardcoded. Tu contador lo amará." },
-  { title: "Tipo de cambio diario", desc: "MXN ↔ USD ↔ EUR actualizado todos los días desde Frankfurter.app." },
-  { title: "Puertos UN/LOCODE", desc: "Catálogo completo con prioridad a puertos mexicanos: MZLO, VRACR, ATM, MEX, etc." },
-  { title: "Fechas DD/MM/YYYY", desc: "Formato mexicano en toda la app. Sin sorpresas para tu equipo." },
-  { title: "Multi-tenant seguro", desc: "Cada agencia es un tenant aislado por organización. Tus datos nunca se mezclan." },
-  { title: "Español mexicano", desc: "Interfaz, mensajes de error y documentos en es-MX. Sin traducciones raras." },
+  { icon: "Percent", title: "IVA dinámico", desc: "Tasa configurable por organización, nunca hardcoded. Tu contador lo amará." },
+  { icon: "TrendingUp", title: "Tipo de cambio diario", desc: "MXN ↔ USD ↔ EUR actualizado todos los días desde Frankfurter.app." },
+  { icon: "Anchor", title: "Puertos UN/LOCODE", desc: "Catálogo con prioridad a puertos mexicanos: MZLO, VRACR, ATM, MEX, etc." },
+  { icon: "Calendar", title: "Fechas DD/MM/YYYY", desc: "Formato mexicano en toda la app. Sin sorpresas para tu equipo." },
+  { icon: "Lock", title: "Multi-tenant seguro", desc: "Cada agencia es un tenant aislado por organización. Tus datos nunca se mezclan." },
+  { icon: "Languages", title: "Español mexicano", desc: "Interfaz, mensajes de error y documentos en es-MX. Sin traducciones raras." },
 ] as const;
 
 export const PORTAL = {
@@ -93,9 +104,11 @@ export const SEGURIDAD = [
 ] as const;
 
 export const PRECIO = {
-  badge: "Lanzamiento en México",
-  price: "Gratis",
-  unit: "para siempre, sin tarjeta",
+  badge: "Lanzamiento",
+  title: "Gratis. Para siempre.",
+  subtitle: "Sin tarjeta, sin límites, sin letra chica.",
+  price: "$0",
+  unit: "MXN / mes",
   bullets: [
     "Usuarios ilimitados",
     "Embarques, cotizaciones y facturas sin límite",
@@ -108,30 +121,12 @@ export const PRECIO = {
 } as const;
 
 export const FAQ = [
-  {
-    q: "¿Es realmente gratis?",
-    a: "Sí. Durante el lanzamiento en México, Libre Carga es gratis sin límite de usuarios ni de embarques. No pedimos tarjeta de crédito para registrarte.",
-  },
-  {
-    q: "¿Mis datos están aislados de otras agencias?",
-    a: "Sí. Cada agencia es una organización (tenant) independiente. Usamos Row Level Security a nivel base de datos, lo que significa que tus datos jamás son visibles para otra agencia.",
-  },
-  {
-    q: "¿Puedo migrar mis embarques actuales?",
-    a: "Sí. Te ayudamos a importar tu catálogo de clientes, proveedores y embarques en curso desde Excel. Escríbenos para coordinar la migración.",
-  },
-  {
-    q: "¿Funciona en móvil?",
-    a: "Sí. La interfaz es responsive y funciona en celular, tablet y computadora. El Portal del Cliente también está optimizado para móvil.",
-  },
-  {
-    q: "¿Qué soporte ofrecen?",
-    a: "Atención por WhatsApp y correo de lunes a viernes. Si tienes alguna duda durante la implementación, te acompañamos sin costo.",
-  },
-  {
-    q: "¿Es compatible con CFDI 4.0?",
-    a: "Generamos los datos fiscales necesarios para que tu PAC emita el CFDI 4.0. El flujo actual cubre proformas y captura de folios fiscales emitidos.",
-  },
+  { q: "¿Es realmente gratis?", a: "Sí. Durante el lanzamiento en México, Libre Carga es gratis sin límite de usuarios ni de embarques. No pedimos tarjeta de crédito para registrarte." },
+  { q: "¿Mis datos están aislados de otras agencias?", a: "Sí. Cada agencia es una organización (tenant) independiente. Usamos Row Level Security a nivel base de datos, lo que significa que tus datos jamás son visibles para otra agencia." },
+  { q: "¿Puedo migrar mis embarques actuales?", a: "Sí. Te ayudamos a importar tu catálogo de clientes, proveedores y embarques en curso desde Excel. Escríbenos para coordinar la migración." },
+  { q: "¿Funciona en móvil?", a: "Sí. La interfaz es responsive y funciona en celular, tablet y computadora. El Portal del Cliente también está optimizado para móvil." },
+  { q: "¿Qué soporte ofrecen?", a: "Atención por WhatsApp y correo de lunes a viernes. Si tienes alguna duda durante la implementación, te acompañamos sin costo." },
+  { q: "¿Es compatible con CFDI 4.0?", a: "Generamos los datos fiscales necesarios para que tu PAC emita el CFDI 4.0. El flujo actual cubre proformas y captura de folios fiscales emitidos." },
 ] as const;
 
 export const CTA_FINAL = {
@@ -143,4 +138,5 @@ export const FOOTER = {
   tagline: "El sistema operativo de las agencias de carga mexicanas.",
   copyright: `© ${new Date().getFullYear()} Libre Carga. Todos los derechos reservados.`,
   contact: "contacto@librecarga.com",
+  site: "librecarga.com",
 };
