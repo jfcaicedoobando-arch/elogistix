@@ -17,11 +17,14 @@ export function LandingNav() {
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Libre Carga">
-          <img src="/librecarga-icon-light.svg" alt="" className="h-9 w-9 shrink-0" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-border/40 shadow-sm">
+            <img src="/librecarga-logo.png" alt="" className="h-full w-full object-contain" />
+          </span>
           <span className="whitespace-nowrap text-lg font-semibold tracking-tight text-foreground">
             Libre Carga
           </span>
         </Link>
+
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Principal">
           {links.map((l) => (
