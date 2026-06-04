@@ -8,12 +8,12 @@ describe("resolveLandingRoute", () => {
   it("cliente → /portal", () => {
     expect(resolveLandingRoute("cliente")).toBe("/portal");
   });
-  it("operador/admin/viewer → /", () => {
-    expect(resolveLandingRoute("operador")).toBe("/");
-    expect(resolveLandingRoute("admin")).toBe("/");
-    expect(resolveLandingRoute("viewer")).toBe("/");
+  it("operador/admin/viewer → /inicio", () => {
+    expect(resolveLandingRoute("operador")).toBe("/inicio");
+    expect(resolveLandingRoute("admin")).toBe("/inicio");
+    expect(resolveLandingRoute("viewer")).toBe("/inicio");
   });
-  it("null → /", () => {
-    expect(resolveLandingRoute(null)).toBe("/");
+  it("null → /inicio", () => {
+    expect(resolveLandingRoute(null)).toBe("/inicio");
   });
 });
