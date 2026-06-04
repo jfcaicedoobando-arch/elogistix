@@ -18,4 +18,11 @@ describe("useRentabilidadClientes", () => {
     expect(result.current.clientes).toHaveLength(1);
     expect(result.current.kpis.profit).toBe(500);
   });
+
+  it("returns empty arrays when data is missing", async () => {
+    vi.mocked(adminService.fetchReportesResumen).mockResolvedValueOnce({ clientes: [], kpis: null } as any);
+    const { result } = renderHook(() => useRentabilidadClientes({}), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.clientes).toEqual([]);
+  });
 });

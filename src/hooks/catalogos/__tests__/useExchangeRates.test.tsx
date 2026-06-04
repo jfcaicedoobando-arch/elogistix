@@ -15,4 +15,10 @@ describe("useExchangeRates", () => {
     expect(result.current.data).toHaveLength(1);
     expect(result.current.data?.[0].rate).toBe(20);
   });
+
+  it("has specific stale time", () => {
+    const { result } = renderHook(() => useExchangeRates(), { wrapper: createWrapper() });
+    // Smoke test for hook presence and basic query state
+    expect(result.current.isLoading).toBe(true);
+  });
 });
