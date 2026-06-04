@@ -24,10 +24,8 @@ export const SORT_KEY_TO_COLUMN: Record<string, SortableEmbarqueColumn> = {
   created_at: "created_at",
 };
 
-export interface EmbarqueListExtras {
-  liquidacion: Record<string, { total: number; pagados: number }>;
-  docs: Record<string, { total: number; pendientes: number }>;
-}
+export type { EmbarqueListExtras } from "@/features/embarques/domain/embarquesPageHelpers";
+import type { EmbarqueListExtras } from "@/features/embarques/domain/embarquesPageHelpers";
 
 export interface EmbarquesPaginadosFilters {
   organizationId: string | null;

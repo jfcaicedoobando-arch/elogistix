@@ -10,7 +10,7 @@ import SearchInput from "@/components/selects/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrency } from "@/lib/formatters";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor } from "@/hooks/cxp";
 import { buildCxPColumns } from "@/components/cxp/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/components/cxp/DialogNuevaFacturaProveedor";
@@ -19,7 +19,7 @@ import { DialogDetallePagosProveedor } from "@/components/cxp/DialogDetallePagos
 import { useCobranza } from "@/hooks/facturacion";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
-import type { FacturaCxP, EstatusCxP } from "@/services/cxp/proveedorFacturas";
+import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
 
 const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
 

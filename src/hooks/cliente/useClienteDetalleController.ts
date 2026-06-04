@@ -14,8 +14,8 @@ import {
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useClienteFinancials } from "@/hooks/cliente/useClienteFinancials";
 import { useToast } from "@/hooks/shared";
-import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { usePermissions } from "@/hooks/shared";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables, Enums } from "@/integrations/supabase/types";

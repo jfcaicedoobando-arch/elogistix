@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import { useDashboardData, ESTADOS_FILTRO } from "@/hooks/dashboard";
 import { DashboardStatusCards } from "@/components/dashboard/DashboardStatusCards";
 import { AlertasDemoraCard } from "@/components/dashboard/AlertasDemoraCard";

@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import type { TopItem } from "@/services/tesoreria/resumen";
+import type { TopItem } from "@/services/tesoreria";
 
 interface Props {
   title: string;

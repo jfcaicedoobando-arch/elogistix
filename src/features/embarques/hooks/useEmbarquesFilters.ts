@@ -9,8 +9,8 @@ import {
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs";
-import { useDebounce } from "@/hooks/shared/useDebounce";
-import { DEFAULT_PAGE_SIZE } from "@/hooks/shared/useListPageState";
+import { useDebounce } from "@/hooks/shared";
+import { DEFAULT_PAGE_SIZE } from "@/hooks/shared";
 
 
 const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");

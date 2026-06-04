@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import type { ResumenCuenta } from "@/services/tesoreria/resumen";
+import type { ResumenCuenta } from "@/services/tesoreria";
 
 interface Props {
   cuentas: ResumenCuenta[];

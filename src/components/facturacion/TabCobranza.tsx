@@ -8,7 +8,7 @@ import {
 import SearchInput from "@/components/selects/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import { useCobranza } from "@/hooks/facturacion";
 import { useFacturasCxP } from "@/hooks/cxp";
 import { buildCobranzaColumns } from "./cobranzaColumns";
@@ -17,7 +17,7 @@ import { DialogNotaCredito } from "./DialogNotaCredito";
 import { DialogHistorialPagos } from "./DialogHistorialPagos";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
-import type { FacturaCobranza, EstatusCobranza } from "@/services/facturas/cobranza";
+import type { FacturaCobranza, EstatusCobranza } from "@/services/facturas";
 
 const ESTATUS: Array<EstatusCobranza | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
 

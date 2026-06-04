@@ -3,10 +3,10 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-vi.mock("@/hooks/shared/useOrgFilter", () => ({
+vi.mock("@/hooks/shared", () => ({
   useOrgFilter: () => ({ organizationId: "org-1" }),
 }));
-vi.mock("@/services/facturas/huecoFacturacion", () => ({
+vi.mock("@/services/facturas", () => ({
   fetchHuecoFacturacion: vi.fn(),
 }));
 vi.mock("@/generators/exportCsv", () => ({
@@ -21,7 +21,7 @@ vi.mock("@/lib/query", () => ({
   queryKeys: { facturacion: { hueco: (id: string) => ["facturacion", "hueco", id] } },
 }));
 
-import { fetchHuecoFacturacion } from "@/services/facturas/huecoFacturacion";
+import { fetchHuecoFacturacion } from "@/services/facturas";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useHuecoFacturacion } from "../useHuecoFacturacion";
 

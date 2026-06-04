@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchFlujoProyectado } from "@/services/tesoreria/flujoProyectado";
+import { fetchFlujoProyectado } from "@/services/tesoreria";
 
 export function useFlujoProyectado(dias = 90) {
   return useQuery({

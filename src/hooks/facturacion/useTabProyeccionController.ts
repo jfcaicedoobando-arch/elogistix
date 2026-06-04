@@ -6,8 +6,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
-import { fetchProyeccionMes } from "@/services/facturas/proyeccion";
+import { useOrgFilter } from "@/hooks/shared";
+import { fetchProyeccionMes } from "@/services/facturas";
 import {
   agruparPorExpediente,
   calcularKpisProyeccion,

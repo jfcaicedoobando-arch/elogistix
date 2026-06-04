@@ -1,11 +1,11 @@
 import { useMemo, useCallback } from "react";
-import { useListPageState } from "@/hooks/shared/useListPageState";
+import { useListPageState } from "@/hooks/shared";
 import { exportToCsv } from "@/generators/exportCsv";
 import { exportarLayoutContable } from "@/generators/layoutContable";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/facturacion/useFacturas";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 

@@ -9,7 +9,7 @@ import {
   calcularKPIsComisiones,
   type FetchComisionesFiltros,
   type EstadoComision,
-} from "@/services/comisiones/devengadas";
+} from "@/services/comisiones";
 
 export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
   const key = useMemo(() => filtros, [

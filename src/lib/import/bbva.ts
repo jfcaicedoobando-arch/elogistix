@@ -52,7 +52,7 @@ function parseFecha(raw: unknown): string | null {
   }
   const s = String(raw).trim();
   if (!s) return null;
-  const m1 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const m1 = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (m1) {
     const [, d, mo, y] = m1;
     const yyyy = y.length === 2 ? `20${y}` : y;
@@ -63,7 +63,7 @@ function parseFecha(raw: unknown): string | null {
     ENE: "01", FEB: "02", MAR: "03", ABR: "04", MAY: "05", JUN: "06",
     JUL: "07", AGO: "08", SEP: "09", OCT: "10", NOV: "11", DIC: "12",
   };
-  const m2 = s.match(/^(\d{1,2})[\/\-]?([A-Za-z]{3})[\/\-]?(\d{2,4})$/);
+  const m2 = s.match(/^(\d{1,2})[/-]?([A-Za-z]{3})[/-]?(\d{2,4})$/);
   if (m2) {
     const [, d, monStr, y] = m2;
     const mo = meses[norm(monStr).slice(0, 3)];

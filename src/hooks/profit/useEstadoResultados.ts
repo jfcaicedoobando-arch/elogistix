@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { fetchEstadoResultadosMes, fetchEstadoResultadosDevengado } from "@/services/profit";
 import { generarMesesDisponibles, mesActualKey } from "@/lib/domain/proyeccionFacturacion";

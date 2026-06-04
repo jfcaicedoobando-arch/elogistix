@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DimensionLCL, DimensionAerea } from "@/hooks/cotizacion/useCotizaciones";
+import type { DimensionLCL, DimensionAerea } from "@/hooks/cotizacion";
 import { MercanciaInfoGrid } from "./seccionMercancia/MercanciaInfoGrid";
 import { DimensionesLCLTable } from "./seccionMercancia/DimensionesLCLTable";
 import { DimensionesAereasTable } from "./seccionMercancia/DimensionesAereasTable";

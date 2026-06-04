@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from "lucide-react";
 import { KpiCard } from "./KpiCard";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import type { KPIsEjecutivos } from "@/services/dashboard-ejecutivo/types";
+import type { KPIsEjecutivos } from "@/services/dashboard-ejecutivo";
 
 interface Props {
   kpis: KPIsEjecutivos;

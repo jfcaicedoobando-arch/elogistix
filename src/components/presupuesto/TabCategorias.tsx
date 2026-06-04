@@ -15,8 +15,8 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   usePresupuestoCategorias, useEliminarCategoriaPresupuesto,
 } from "@/hooks/presupuesto";
-import { seedCategoriasDefault } from "@/services/presupuesto/categorias";
-import type { CategoriaPresupuesto } from "@/services/presupuesto/categorias";
+import { seedCategoriasDefault } from "@/services/presupuesto";
+import type { CategoriaPresupuesto } from "@/services/presupuesto";
 import { DialogCategoria } from "./DialogCategoria";
 
 export function TabCategorias() {

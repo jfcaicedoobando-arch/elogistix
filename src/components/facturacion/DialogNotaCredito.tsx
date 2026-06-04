@@ -14,7 +14,7 @@ import {
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { useToast } from "@/hooks/shared";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import {
   useNotasCredito, useCrearNotaCredito, useCambiarEstadoNotaCredito,
   type EstadoNotaCredito,

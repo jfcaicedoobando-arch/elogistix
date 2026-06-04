@@ -4,7 +4,7 @@ import { exportToCsv } from "@/generators/exportCsv";
 import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/features/embarques/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
@@ -13,7 +13,7 @@ import { useContenedoresInfoMap } from "@/features/embarques/hooks/useContenedor
 import { buildEmbarqueColumns } from "@/features/embarques/components/embarqueColumns";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { fetchEmbarquesParaExport } from "@/features/embarques/services";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**

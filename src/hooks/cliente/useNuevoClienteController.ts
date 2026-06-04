@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/shared";
 import { useCreateCliente } from "@/hooks/cliente/useClientes";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { parseCsf } from "@/services/csf";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";

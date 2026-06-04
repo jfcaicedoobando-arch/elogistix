@@ -7,7 +7,7 @@ import { Trash2 } from "lucide-react";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/hooks/cxp";
 import { formatCurrency } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { FacturaCxP } from "@/services/cxp/proveedorFacturas";
+import type { FacturaCxP } from "@/services/cxp";
 
 interface Props {
   open: boolean;

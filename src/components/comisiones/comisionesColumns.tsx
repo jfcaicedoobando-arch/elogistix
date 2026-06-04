@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import type { ComisionDevengada, EstadoComision } from "@/services/comisiones/devengadas";
+import type { ComisionDevengada, EstadoComision } from "@/services/comisiones";
 
 const ESTADO_COLOR: Record<EstadoComision, string> = {
   Devengada: "bg-warning/10 text-warning border-warning/20",

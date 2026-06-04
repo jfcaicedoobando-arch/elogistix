@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifyWarning, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import {
   useCreateEmbarque,
   type ExpedienteCliente,
@@ -21,7 +21,7 @@ import {
 import {
   useUpdateEstadoCotizacion,
   type CotizacionRow,
-} from "@/hooks/cotizacion/useCotizaciones";
+} from "@/hooks/cotizacion";
 import {
   resolverExpediente,
   subirDocumentosEmbarque,

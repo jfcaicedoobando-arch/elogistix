@@ -9,7 +9,7 @@ vi.mock("@/features/embarques/hooks/useProformas", () => ({
 vi.mock("@/features/embarques/hooks/useDescargarProformaPdf", () => ({
   useDescargarProformaPdf: () => ({ descargar: vi.fn(), downloadingId: null }),
 }));
-vi.mock("@/hooks/shared/useOrgFilter", () => ({
+vi.mock("@/hooks/shared", () => ({
   useOrgFilter: () => ({ organizationId: "org-1" }),
 }));
 vi.mock("@/hooks/shared", () => ({
@@ -19,7 +19,7 @@ vi.mock("@/hooks/shared", () => ({
 vi.mock("@/lib/query", () => ({
   queryKeys: { proformas: { all: ["proformas"] } },
 }));
-vi.mock("@/hooks/shared/useListPageState", () => ({
+vi.mock("@/hooks/shared", () => ({
   DEFAULT_PAGE_SIZE: 10,
 }));
 

@@ -92,3 +92,4 @@ export async function updateConfiguracionGlobalItems(
 ): Promise<void> {
   return updateConfigItems("configuracion_global", items);
 }
+export * from "./emisor";

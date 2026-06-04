@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCurrency } from "@/lib/formatters";
 import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos";
-import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
+import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 
 interface Props {
   moneda: "USD" | "MXN";

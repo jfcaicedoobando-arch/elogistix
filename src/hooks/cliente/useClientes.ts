@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/query";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 import {
   fetchClientesPaginados,
   fetchClientesForSelect,

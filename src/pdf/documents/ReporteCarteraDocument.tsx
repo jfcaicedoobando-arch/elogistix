@@ -3,8 +3,8 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
-import type { FacturaCobranza } from "@/services/facturas/cobranza";
-import type { FacturaCxP } from "@/services/cxp/proveedorFacturas";
+import type { FacturaCobranza } from "@/services/facturas";
+import type { FacturaCxP } from "@/services/cxp";
 
 interface Props {
   fechaCorte: string; // YYYY-MM-DD

@@ -14,7 +14,7 @@ import {
   useSinTrackingOperador,
   type DocsFaltantesItem,
   type SinTrackingItem,
-} from "@/hooks/dashboard/useDashboardOperador";
+} from "@/hooks/dashboard";
 import { WidgetCard, Row } from "./MiOperacionWidgets";
 import { buildPendientes } from "./miOperacionUtils";
 

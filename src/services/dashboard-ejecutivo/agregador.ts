@@ -3,9 +3,9 @@
  * en paralelo y construye un único snapshot consumible por la UI.
  */
 import { fetchEstadoResultadosDevengado } from "@/services/profit/estadoResultadosDevengado";
-import { fetchResumenTesoreria } from "@/services/tesoreria/resumen";
-import { fetchFlujoProyectado } from "@/services/tesoreria/flujoProyectado";
-import { fetchPresupuestoVsReal } from "@/services/presupuesto/vsReal";
+import { fetchResumenTesoreria } from "@/services/tesoreria";
+import { fetchFlujoProyectado } from "@/services/tesoreria";
+import { fetchPresupuestoVsReal } from "@/services/presupuesto";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
 

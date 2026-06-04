@@ -11,7 +11,7 @@ import { useComisionesDevengadas, useUsuariosVendedores } from "@/hooks/comision
 import { buildComisionesColumns } from "@/components/comisiones/comisionesColumns";
 import { TabLiquidaciones } from "@/components/comisiones/TabLiquidaciones";
 import { TabVendedorasConfig } from "@/components/comisiones/TabVendedorasConfig";
-import type { EstadoComision } from "@/services/comisiones/devengadas";
+import type { EstadoComision } from "@/services/comisiones";
 
 function KPICard({ label, value }: { label: string; value: string }) {
   return (

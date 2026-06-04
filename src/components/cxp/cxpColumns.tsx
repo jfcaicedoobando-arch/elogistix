@@ -4,7 +4,7 @@ import { DollarSign, Eye, Trash2 } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import type { FacturaCxP, EstatusCxP } from "@/services/cxp/proveedorFacturas";
+import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
 
 const ESTATUS_COLOR: Record<EstatusCxP, string> = {
   Vigente: "bg-success/10 text-success border-success/20",

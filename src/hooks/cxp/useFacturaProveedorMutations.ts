@@ -5,7 +5,7 @@ import {
   crearFacturaProveedor,
   actualizarFacturaProveedor,
   softDeleteFacturaProveedor,
-} from "@/services/cxp/proveedorFacturas";
+} from "@/services/cxp";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export function useCrearFacturaProveedor() {

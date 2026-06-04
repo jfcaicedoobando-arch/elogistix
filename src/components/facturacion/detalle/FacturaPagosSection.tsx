@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/hooks/facturacion";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
