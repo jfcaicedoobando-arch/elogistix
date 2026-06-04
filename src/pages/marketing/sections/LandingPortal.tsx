@@ -38,7 +38,7 @@ export function LandingPortal() {
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Portal · Cliente
               </p>
-              <h4 className="text-lg font-semibold text-foreground">Mis embarques</h4>
+              <h3 className="text-lg font-semibold text-foreground">Mis embarques</h3>
             </div>
             <span className="rounded-full bg-[hsl(160_84%_39%/0.12)] px-3 py-1 text-xs font-semibold text-[hsl(160_84%_30%)]">
               3 activos

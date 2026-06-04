@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Compass, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/observability/logger";
+import { Seo } from "@/components/seo/Seo";
 
 const NotFound = () => {
   const location = useLocation();
@@ -13,6 +14,12 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
+      <Seo
+        title="Página no encontrada · Libre Carga"
+        description="La ruta solicitada no existe en Libre Carga. Vuelve al inicio para continuar."
+        ogTitle="Página no encontrada · Libre Carga"
+        ogDescription="La ruta solicitada no existe en Libre Carga."
+      />
       <div className="text-center max-w-md space-y-5">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Compass className="h-8 w-8" />

@@ -11,6 +11,7 @@ import { TrackingPublicoErrorCard } from "@/components/tracking/TrackingPublicoE
 import { TrackingPublicoLoading } from "@/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/components/tracking/TrackingPublicoTimeline";
 import { queryKeys } from "@/lib/query";
+import { Seo } from "@/components/seo/Seo";
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.naviera || e.aerolinea || e.transportista || "—";
@@ -34,6 +35,12 @@ export default function TrackingPublico() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Seguimiento de embarque · Libre Carga"
+        description="Consulta el estatus en tiempo real de tu embarque internacional con Libre Carga."
+        ogTitle="Seguimiento de embarque · Libre Carga"
+        ogDescription="Estatus en tiempo real de tu embarque con Libre Carga."
+      />
       <header className="border-b bg-card">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
           <Ship className="h-6 w-6 text-accent" />

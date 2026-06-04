@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/shared";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/lib/ui/brand";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { Seo } from "@/components/seo/Seo";
 
 type TabKey = "login" | "signup";
 
@@ -93,6 +94,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
+      <Seo
+        title="Iniciar sesión · Libre Carga"
+        description="Accede a tu cuenta de Libre Carga: opera embarques, cotizaciones y clientes desde un solo lugar."
+        canonical="https://librecarga.com/login"
+        ogTitle="Iniciar sesión · Libre Carga"
+        ogDescription="Accede a tu cuenta de Libre Carga para gestionar tus embarques."
+        ogUrl="https://librecarga.com/login"
+      />
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
