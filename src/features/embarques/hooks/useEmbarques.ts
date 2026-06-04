@@ -28,6 +28,7 @@ export {
   useUpdateEmbarque,
   useDuplicarEmbarque,
   useAvanzarEstadoEmbarque,
+  useReabrirEmbarque,
   useSyncEstadoEmbarque,
   useUploadDocumentoEmbarque,
   useDeleteDocumentoEmbarque,

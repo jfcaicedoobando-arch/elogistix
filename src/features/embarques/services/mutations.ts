@@ -85,6 +85,29 @@ export async function avanzarEstadoEmbarqueRpc(input: AvanzarEstadoEmbarqueInput
   if (error) throw error;
 }
 
+export interface ReabrirEmbarqueInput {
+  embarqueId: string;
+  usuarioEmail: string;
+  requestId?: string;
+}
+
+/**
+ * Reabre un embarque cerrado (estado Cerrado → Entregado). Solo admin/super_admin
+ * pueden ejecutarla; el backend valida rol y estado actual.
+ */
+export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<void> {
+  // SAFE-CAST: la RPC nueva aún no aparece en el types.ts regenerado; suprimimos el cast.
+  const { error } = await (supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: unknown }>)('reabrir_embarque', {
+    p_embarque_id: input.embarqueId,
+    p_usuario_email: input.usuarioEmail,
+    p_request_id: input.requestId,
+  });
+  if (error) throw error as Error;
+}
+
 export async function duplicarEmbarqueRpc(
   embarqueOrigenId: string,
   copias: Array<{
