@@ -15,11 +15,16 @@ vi.mock("@/services/storage/index", () => ({
 }));
 vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
   useAvanzarEstadoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
+  useReabrirEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }),
   useSyncEstadoEmbarque: () => ({ mutate: vi.fn() }),
   calcularEstadoEmbarque: vi.fn().mockReturnValue("Confirmado"),
   useUploadDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
   useDeleteDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
   useSetDocumentoNoAplica: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
+}));
+
+vi.mock("@/features/embarques/hooks/useEmbarqueQueries", () => ({
+  useEmbarqueConceptosVenta: () => ({ data: [] }),
 }));
 
 import { useEmbarqueDetalleActions, getSiguienteEstado } from "../useEmbarqueDetalleActions";
