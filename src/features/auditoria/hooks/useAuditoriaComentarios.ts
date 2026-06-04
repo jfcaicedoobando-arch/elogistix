@@ -8,8 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchComentariosByRevision,
   insertComentario,
-} from "@/services/auditoria";
-import type { AuditoriaComentario } from "@/types/auditoria";
+} from "@/features/auditoria/services";
+import type { AuditoriaComentario } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 
 const baseKey = (revisionId: string) =>

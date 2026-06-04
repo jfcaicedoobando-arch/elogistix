@@ -3,7 +3,7 @@
  * Fuente única consumida tanto por exportadores en `src/lib/` como por la
  * configuración visual en `src/components/shared/utils/auditoriaConfig.ts`.
  */
-import type { ReglaAuditoria } from "@/types/auditoria";
+import type { ReglaAuditoria } from "@/features/auditoria/types";
 
 export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   docs_faltantes: "Documentos faltantes",

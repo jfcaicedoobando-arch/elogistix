@@ -23,10 +23,10 @@ import {
 import {
   SIN_RESPONSABLE,
   useAsignarResponsableController,
-} from "@/hooks/auditoria";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
-import { AsignacionExistenteInfo } from "@/components/auditoria/asignarResponsable/AsignacionExistenteInfo";
-import { FechaLimitePicker } from "@/components/auditoria/asignarResponsable/FechaLimitePicker";
+} from "@/features/auditoria/hooks";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
+import { AsignacionExistenteInfo } from "@/features/auditoria/components/asignarResponsable/AsignacionExistenteInfo";
+import { FechaLimitePicker } from "@/features/auditoria/components/asignarResponsable/FechaLimitePicker";
 
 interface Props {
   hallazgo: HallazgoAuditoria | null;

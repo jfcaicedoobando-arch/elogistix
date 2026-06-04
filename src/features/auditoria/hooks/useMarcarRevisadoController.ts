@@ -6,20 +6,20 @@ import { useEffect, useMemo, useState } from "react";
 import {
   useDesmarcarRevisado,
   useMarcarRevisado,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 import {
   useAuditoriaComentarios,
   useAgregarComentarioAuditoria,
-} from "@/hooks/auditoria/useAuditoriaComentarios";
+} from "@/features/auditoria/hooks/useAuditoriaComentarios";
 import {
   useQuitarSnooze,
   useSnoozeHallazgo,
-} from "@/hooks/auditoria/useSnoozeHallazgo";
+} from "@/features/auditoria/hooks/useSnoozeHallazgo";
 import {
   isSnoozeActivo,
   minSnoozeDate as computeMinSnoozeDate,
-} from "@/lib/domain/auditoria";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+} from "@/features/auditoria/domain/core";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 interface Args {
   hallazgo: HallazgoAuditoria | null;

@@ -1,7 +1,7 @@
 /**
  * Constantes de UI para la tabla de hallazgos de auditoría.
  */
-import type { ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
+import type { ReglaAuditoria, SeveridadAuditoria } from "@/features/auditoria/types";
 
 export const reglaLabel: Record<ReglaAuditoria, string> = {
   docs_faltantes: "Docs faltantes",

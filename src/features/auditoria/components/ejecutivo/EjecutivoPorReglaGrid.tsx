@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { reglaShortLabel } from "@/components/shared/utils/auditoriaConfig";
-import type { ReglaAuditoria } from "@/types/auditoria";
+import type { ReglaAuditoria } from "@/features/auditoria/types";
 
 interface Props {
   porRegla: Record<ReglaAuditoria, number>;

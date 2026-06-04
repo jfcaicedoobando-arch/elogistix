@@ -8,17 +8,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   AUDITORIA_QUERY_KEY,
   useAuditoria,
-} from "@/hooks/auditoria/useAuditoria";
+} from "@/features/auditoria/hooks/useAuditoria";
 import {
   useAuditoriaRevisiones,
   revisionKey,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
-import type { SeveridadAuditoria } from "@/types/auditoria";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import type { SeveridadAuditoria } from "@/features/auditoria/types";
 import {
   agruparPorRegla,
   contarPorSeveridad,
   filtrarHallazgos,
-} from "@/lib/domain/auditoria";
+} from "@/features/auditoria/domain/core";
 
 export function useAuditoriaPageController() {
   const { data, isLoading, isFetching } = useAuditoria();

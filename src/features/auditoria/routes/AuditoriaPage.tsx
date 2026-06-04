@@ -3,14 +3,14 @@ import { ShieldAlert, RefreshCw, Download } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AuditoriaEjecutivoTab } from "@/components/auditoria/AuditoriaEjecutivoTab";
-import { AuditoriaHallazgosTab } from "@/components/auditoria/AuditoriaHallazgosTab";
-import { AuditoriaPorReglaTab } from "@/components/auditoria/AuditoriaPorReglaTab";
-import { useAuditoriaPageController } from "@/hooks/auditoria";
-import { useAuditoriaEjecutivo } from "@/hooks/auditoria";
+import { AuditoriaEjecutivoTab } from "@/features/auditoria/components/AuditoriaEjecutivoTab";
+import { AuditoriaHallazgosTab } from "@/features/auditoria/components/AuditoriaHallazgosTab";
+import { AuditoriaPorReglaTab } from "@/features/auditoria/components/AuditoriaPorReglaTab";
+import { useAuditoriaPageController } from "@/features/auditoria/hooks";
+import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks";
 import { usePermissions } from "@/hooks/shared";
-import type { UseHallazgosTablaStateOptions } from "@/hooks/auditoria";
-import { exportHallazgosCsv } from "@/lib/domain/auditoriaCsv";
+import type { UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
+import { exportHallazgosCsv } from "@/features/auditoria/domain/csv";
 
 type TabId = "ejecutivo" | "tabla" | "por_regla";
 

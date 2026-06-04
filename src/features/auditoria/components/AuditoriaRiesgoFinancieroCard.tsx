@@ -4,7 +4,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingDown } from "lucide-react";
-import type { ReglaAuditoria } from "@/types/auditoria";
+import type { ReglaAuditoria } from "@/features/auditoria/types";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
 interface Props {

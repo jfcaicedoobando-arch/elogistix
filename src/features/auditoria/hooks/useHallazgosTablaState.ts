@@ -4,13 +4,13 @@
  * puros viven en `hallazgosTablaFilters.ts`.
  */
 import { useMemo, useState } from "react";
-import { useAuditoriaRevisiones } from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { useAuditoriaRevisiones } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 import {
   matchHallazgo,
   type FiltroResponsable,

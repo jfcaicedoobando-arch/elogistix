@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 interface Props {
   hallazgo: HallazgoAuditoria;

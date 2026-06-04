@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { upsertAuditoriaRevision } from "@/services/auditoria";
+import { upsertAuditoriaRevision } from "@/features/auditoria/services";
 import { insertBitacora } from "@/services/bitacora";
-import type { HallazgoAuditoria } from "@/types/auditoria";
+import type { HallazgoAuditoria } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";

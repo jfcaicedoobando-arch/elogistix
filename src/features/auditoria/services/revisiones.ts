@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 export async function fetchAuditoriaRevisiones(): Promise<AuditoriaRevision[]> {
   const { data, error } = await supabase

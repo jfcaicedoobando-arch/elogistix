@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Timer } from "lucide-react";
-import type { OperadorRanking } from "@/hooks/auditoria";
+import type { OperadorRanking } from "@/features/auditoria/hooks";
 
 interface Props {
   mttrHoras: number | null;

@@ -8,15 +8,15 @@ import type {
   AuditoriaRevision,
   HallazgoAuditoria,
   ReporteAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 
-vi.mock("@/hooks/auditoria/useAuditoria", () => ({
+vi.mock("@/features/auditoria/hooks/useAuditoria", () => ({
   useAuditoria: vi.fn(),
   AUDITORIA_QUERY_KEY: ["auditoria", "embarques"],
 }));
-vi.mock("@/hooks/auditoria/useAuditoriaRevisiones", async () => {
-  const actual = await vi.importActual<typeof import("@/hooks/auditoria/useAuditoriaRevisiones")>(
-    "@/hooks/auditoria/useAuditoriaRevisiones",
+vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {
+  const actual = await vi.importActual<typeof import("@/features/auditoria/hooks/useAuditoriaRevisiones")>(
+    "@/features/auditoria/hooks/useAuditoriaRevisiones",
   );
   return { ...actual, useAuditoriaRevisiones: vi.fn() };
 });
@@ -30,12 +30,12 @@ vi.mock("@tanstack/react-query", async () => {
   };
 });
 
-import { useAuditoria } from "@/hooks/auditoria/useAuditoria";
+import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import {
   useAuditoriaRevisiones,
   revisionKey,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
-import { useAuditoriaPageController } from "@/hooks/auditoria/useAuditoriaPageController";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useAuditoriaPageController } from "@/features/auditoria/hooks/useAuditoriaPageController";
 
 const mockUseAuditoria = vi.mocked(useAuditoria);
 const mockUseRevisiones = vi.mocked(useAuditoriaRevisiones);

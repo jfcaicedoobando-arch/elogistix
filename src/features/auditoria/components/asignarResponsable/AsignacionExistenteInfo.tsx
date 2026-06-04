@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import type { AuditoriaRevision } from "@/types/auditoria";
+import type { AuditoriaRevision } from "@/features/auditoria/types";
 
 interface Props {
   revisionExistente: AuditoriaRevision;

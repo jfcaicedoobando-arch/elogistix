@@ -7,8 +7,8 @@ import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
-} from "@/types/auditoria";
-import { SCORE_THRESHOLDS } from "@/constants/auditoria";
+} from "@/features/auditoria/types";
+import { SCORE_THRESHOLDS } from "@/features/auditoria/constants";
 
 export interface OperadorRanking {
   email: string;

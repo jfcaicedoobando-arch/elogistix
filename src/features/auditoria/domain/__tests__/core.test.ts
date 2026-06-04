@@ -7,12 +7,12 @@ import {
   isSnoozeActivo,
   isoDate,
   minSnoozeDate,
-} from "@/lib/domain/auditoria";
+} from "@/features/auditoria/domain/core";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 
 const h = (over: Partial<HallazgoAuditoria> = {}): HallazgoAuditoria => ({
   embarque_id: "e1",

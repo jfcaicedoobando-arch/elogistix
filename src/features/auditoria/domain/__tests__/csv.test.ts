@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { exportHallazgosCsv } from "@/lib/domain/auditoriaCsv";
+import { exportHallazgosCsv } from "@/features/auditoria/domain/csv";
 import * as exportCsvMod from "@/generators/exportCsv";
-import type { HallazgoAuditoria } from "@/types/auditoria";
+import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
 describe("exportHallazgosCsv", () => {
   beforeEach(() => vi.restoreAllMocks());

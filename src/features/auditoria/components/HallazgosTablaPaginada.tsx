@@ -5,14 +5,14 @@
  */
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { revisionKey } from "@/hooks/auditoria";
-import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/hooks/auditoria";
-import { MarcarRevisadoDialog } from "@/components/auditoria/MarcarRevisadoDialog";
-import { AsignarResponsableDialog } from "@/components/auditoria/AsignarResponsableDialog";
+import { revisionKey } from "@/features/auditoria/hooks";
+import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
+import { MarcarRevisadoDialog } from "@/features/auditoria/components/MarcarRevisadoDialog";
+import { AsignarResponsableDialog } from "@/features/auditoria/components/AsignarResponsableDialog";
 import { HallazgosFiltros } from "./HallazgosFiltros";
 import { HallazgosTabla } from "./HallazgosTabla";
 import { HallazgosPagination } from "./HallazgosPagination";
-import type { HallazgoAuditoria } from "@/types/auditoria";
+import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
 interface Props {
   hallazgos: HallazgoAuditoria[];

@@ -13,12 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMarcarRevisadoController } from "@/hooks/auditoria";
-import { HallazgoSummary } from "@/components/auditoria/marcarRevisado/HallazgoSummary";
-import { AccionTab, AccionButton } from "@/components/auditoria/marcarRevisado/AccionTab";
-import { ComentariosTab } from "@/components/auditoria/marcarRevisado/ComentariosTab";
-import { SnoozeTab } from "@/components/auditoria/marcarRevisado/SnoozeTab";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import { useMarcarRevisadoController } from "@/features/auditoria/hooks";
+import { HallazgoSummary } from "@/features/auditoria/components/marcarRevisado/HallazgoSummary";
+import { AccionTab, AccionButton } from "@/features/auditoria/components/marcarRevisado/AccionTab";
+import { ComentariosTab } from "@/features/auditoria/components/marcarRevisado/ComentariosTab";
+import { SnoozeTab } from "@/features/auditoria/components/marcarRevisado/SnoozeTab";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 interface Props {
   hallazgo: HallazgoAuditoria | null;

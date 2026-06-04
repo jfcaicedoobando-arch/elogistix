@@ -8,7 +8,7 @@ import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 
 export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "docs_faltantes",

@@ -4,21 +4,21 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import type { HallazgoAuditoria, ReporteAuditoria } from "@/types/auditoria";
+import type { HallazgoAuditoria, ReporteAuditoria } from "@/features/auditoria/types";
 
-vi.mock("@/hooks/auditoria/useAuditoria", () => ({
+vi.mock("@/features/auditoria/hooks/useAuditoria", () => ({
   useAuditoria: vi.fn(),
 }));
-vi.mock("@/hooks/auditoria/useAuditoriaRevisiones", async () => {
-  const actual = await vi.importActual<typeof import("@/hooks/auditoria/useAuditoriaRevisiones")>(
-    "@/hooks/auditoria/useAuditoriaRevisiones",
+vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {
+  const actual = await vi.importActual<typeof import("@/features/auditoria/hooks/useAuditoriaRevisiones")>(
+    "@/features/auditoria/hooks/useAuditoriaRevisiones",
   );
   return { ...actual, useAuditoriaRevisiones: vi.fn() };
 });
 
-import { useAuditoria } from "@/hooks/auditoria/useAuditoria";
-import { useAuditoriaRevisiones } from "@/hooks/auditoria/useAuditoriaRevisiones";
-import { useAuditoriaEjecutivo } from "@/hooks/auditoria/useAuditoriaEjecutivo";
+import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
+import { useAuditoriaRevisiones } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks/useAuditoriaEjecutivo";
 
 const mockUseAud = vi.mocked(useAuditoria);
 const mockUseRev = vi.mocked(useAuditoriaRevisiones);

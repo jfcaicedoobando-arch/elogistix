@@ -2,7 +2,7 @@
  * Hash determinista (djb2) — debe coincidir embarque_id+regla+detalle entre
  * cliente y backend para detectar duplicados consistentemente.
  */
-import type { HallazgoAuditoria } from "@/types/auditoria";
+import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
 export function hallazgoHash(
   h: Pick<HallazgoAuditoria, "embarque_id" | "regla" | "detalle">,

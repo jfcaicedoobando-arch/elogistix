@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
+import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/features/auditoria/types";
 import { cn } from "@/lib/utils";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {

@@ -21,9 +21,9 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import type { ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
+import type { ReglaAuditoria, SeveridadAuditoria } from "@/features/auditoria/types";
 import { reglaLabel } from "./hallazgosTablaConfig";
-import type { FiltroRevision, FiltroResponsable } from "@/hooks/auditoria";
+import type { FiltroRevision, FiltroResponsable } from "@/features/auditoria/hooks";
 import {
   filtroResponsableSchema, filtroRevisionSchema,
   reglaAuditoriaFiltroSchema, severidadFiltroSchema,

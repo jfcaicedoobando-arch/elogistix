@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { deleteAuditoriaRevision } from "@/services/auditoria";
+import { deleteAuditoriaRevision } from "@/features/auditoria/services";
 import { insertBitacora } from "@/services/bitacora";
 import { logger } from "@/lib/observability/logger";
 import { AUDITORIA_REVISIONES_KEY } from "./hash";

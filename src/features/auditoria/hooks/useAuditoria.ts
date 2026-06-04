@@ -6,12 +6,12 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   fetchAuditoriaRevisiones,
   fetchReporteAuditoria,
-} from "@/services/auditoria";
+} from "@/features/auditoria/services";
 import {
   AUDITORIA_REVISIONES_KEY,
   hallazgoHash,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
-import type { AuditoriaRevision, ReporteAuditoria } from "@/types/auditoria";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import type { AuditoriaRevision, ReporteAuditoria } from "@/features/auditoria/types";
 
 const QUERY_KEY = ["auditoria", "embarques"] as const;
 

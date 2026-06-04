@@ -9,11 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { pluralS } from "@/lib/formatters";
-import { AuditoriaKpis } from "@/components/auditoria/AuditoriaKpis";
-import { HallazgosTablaPaginada } from "@/components/auditoria/HallazgosTablaPaginada";
-import type { useAuditoriaPageController } from "@/hooks/auditoria";
-import type { UseHallazgosTablaStateOptions } from "@/hooks/auditoria";
-import type { SeveridadAuditoria } from "@/types/auditoria";
+import { AuditoriaKpis } from "@/features/auditoria/components/AuditoriaKpis";
+import { HallazgosTablaPaginada } from "@/features/auditoria/components/HallazgosTablaPaginada";
+import type { useAuditoriaPageController } from "@/features/auditoria/hooks";
+import type { UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
+import type { SeveridadAuditoria } from "@/features/auditoria/types";
 
 interface Props {
   c: ReturnType<typeof useAuditoriaPageController>;

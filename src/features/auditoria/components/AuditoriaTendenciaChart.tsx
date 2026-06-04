@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp } from "lucide-react";
-import { useAuditoriaSnapshots } from "@/hooks/auditoria";
+import { useAuditoriaSnapshots } from "@/features/auditoria/hooks";
 
 export function AuditoriaTendenciaChart() {
   const { data, isLoading } = useAuditoriaSnapshots(30);

@@ -8,8 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   useAsignarResponsable,
   useOrgMembersAsignables,
-} from "@/hooks/auditoria";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+} from "@/features/auditoria/hooks";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 export const SIN_RESPONSABLE = "__sin__";
 

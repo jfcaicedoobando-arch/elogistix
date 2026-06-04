@@ -3,8 +3,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { TabsContent } from "@/components/ui/tabs";
-import type { useMarcarRevisadoController } from "@/hooks/auditoria";
-import type { AuditoriaRevision } from "@/types/auditoria";
+import type { useMarcarRevisadoController } from "@/features/auditoria/hooks";
+import type { AuditoriaRevision } from "@/features/auditoria/types";
 
 interface Props {
   ctrl: ReturnType<typeof useMarcarRevisadoController>;

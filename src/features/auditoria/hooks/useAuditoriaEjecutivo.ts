@@ -7,16 +7,16 @@
  * 11.14.0: agregados puros extraídos a `lib/auditoria/ejecutivoAgregados`.
  */
 import { useMemo } from "react";
-import { useAuditoria } from "@/hooks/auditoria/useAuditoria";
+import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import {
   revisionKey,
   useAuditoriaRevisiones,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 import {
   agregarPendientes,
   calcularScore,
@@ -25,7 +25,7 @@ import {
   calcularRanking,
   type OperadorRanking,
   type ScoreEstado,
-} from "@/lib/auditoria/ejecutivoAgregados";
+} from "@/features/auditoria/domain/ejecutivoAgregados";
 
 export interface AuditoriaEjecutivoData {
   isLoading: boolean;

@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
-import { fetchAuditoriaRevisiones } from "@/services/auditoria";
+import { fetchAuditoriaRevisiones } from "@/features/auditoria/services";
 import { getCurrentUser } from "@/services/auth";
-import type { AuditoriaRevision } from "@/types/auditoria";
+import type { AuditoriaRevision } from "@/features/auditoria/types";
 import { AUDITORIA_REVISIONES_KEY } from "./hash";
 
 /**

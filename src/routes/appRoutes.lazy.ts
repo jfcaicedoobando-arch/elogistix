@@ -12,7 +12,7 @@ export const Ayuda = lazy(() => import("@/pages/dashboard/Ayuda"));
 
 export const Papelera = lazy(() => import("@/pages/admin/Papelera"));
 export const Idempotencia = lazy(() => import("@/pages/admin/Idempotencia"));
-export const Auditoria = lazy(() => import("@/pages/Auditoria"));
+export const Auditoria = lazy(() => import("@/features/auditoria/routes/AuditoriaPage"));
 export const SentryDiagnostico = lazy(() => import("@/pages/admin/SentryDiagnostico"));
 
 export const Embarques = lazy(() => import("@/features/embarques/routes/Embarques"));

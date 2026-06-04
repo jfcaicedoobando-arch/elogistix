@@ -9,10 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   clearSnoozeRevision,
   snoozeRevision,
-} from "@/services/auditoria";
+} from "@/features/auditoria/services";
 import { insertBitacora } from "@/services/bitacora";
-import { hallazgoHash } from "@/hooks/auditoria/useAuditoriaRevisiones";
-import type { HallazgoAuditoria } from "@/types/auditoria";
+import { hallazgoHash } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import type { HallazgoAuditoria } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 

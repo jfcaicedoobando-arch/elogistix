@@ -6,7 +6,7 @@ import {
   calcularVencimientos,
   calcularRanking,
 } from "../ejecutivoAgregados";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 const h = (over: Partial<HallazgoAuditoria>): HallazgoAuditoria =>
   ({

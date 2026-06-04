@@ -3,12 +3,12 @@
  * Extraídos de useHallazgosTablaState para mantener archivos ≤200 LOC y
  * permitir tests aislados.
  */
-import { revisionKey } from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { revisionKey } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 
 export type FiltroRevision = "todos" | "pendientes" | "revisados" | "en_progreso";
 export type FiltroResponsable = "todos" | "mios" | "sin_asignar" | "vencidos";

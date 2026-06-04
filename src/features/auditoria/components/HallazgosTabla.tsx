@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { cn } from "@/lib/utils";
-import { revisionKey } from "@/hooks/auditoria";
-import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import { revisionKey } from "@/features/auditoria/hooks";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 import {
   formatEta,
   reglaLabel,

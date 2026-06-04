@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuditoriaCount } from "@/hooks/auditoria";
+import { useAuditoriaCount } from "@/features/auditoria/hooks";
 import { useAlertasPendingCount } from "@/hooks/admin";
 import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
 import {

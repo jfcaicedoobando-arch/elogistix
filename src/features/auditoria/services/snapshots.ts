@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { AuditoriaSnapshot } from "@/types/auditoria";
+import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 
 export async function fetchAuditoriaSnapshots(
   dias = 30,

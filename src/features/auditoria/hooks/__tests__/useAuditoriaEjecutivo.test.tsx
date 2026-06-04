@@ -11,14 +11,14 @@ import type {
   AuditoriaRevision,
   HallazgoAuditoria,
   ReporteAuditoria,
-} from "@/types/auditoria";
+} from "@/features/auditoria/types";
 
-vi.mock("@/hooks/auditoria/useAuditoria", () => ({
+vi.mock("@/features/auditoria/hooks/useAuditoria", () => ({
   useAuditoria: vi.fn(),
 }));
-vi.mock("@/hooks/auditoria/useAuditoriaRevisiones", async () => {
-  const actual = await vi.importActual<typeof import("@/hooks/auditoria/useAuditoriaRevisiones")>(
-    "@/hooks/auditoria/useAuditoriaRevisiones",
+vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {
+  const actual = await vi.importActual<typeof import("@/features/auditoria/hooks/useAuditoriaRevisiones")>(
+    "@/features/auditoria/hooks/useAuditoriaRevisiones",
   );
   return {
     ...actual,
@@ -26,12 +26,12 @@ vi.mock("@/hooks/auditoria/useAuditoriaRevisiones", async () => {
   };
 });
 
-import { useAuditoria } from "@/hooks/auditoria/useAuditoria";
+import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import {
   useAuditoriaRevisiones,
   revisionKey,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
-import { useAuditoriaEjecutivo } from "@/hooks/auditoria/useAuditoriaEjecutivo";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useAuditoriaEjecutivo } from "@/features/auditoria/hooks/useAuditoriaEjecutivo";
 
 const mockUseAuditoria = vi.mocked(useAuditoria);
 const mockUseRevisiones = vi.mocked(useAuditoriaRevisiones);

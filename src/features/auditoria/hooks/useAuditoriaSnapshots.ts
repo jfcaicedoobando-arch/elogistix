@@ -7,8 +7,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   capturarSnapshotAuditoria,
   fetchAuditoriaSnapshots,
-} from "@/services/auditoria";
-import type { AuditoriaSnapshot } from "@/types/auditoria";
+} from "@/features/auditoria/services";
+import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 

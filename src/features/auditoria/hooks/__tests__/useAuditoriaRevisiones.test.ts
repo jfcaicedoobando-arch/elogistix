@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 import {
   hallazgoHash,
   revisionKey,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
+} from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 
 describe("hallazgoHash", () => {
   it("es determinista para los mismos inputs", () => {

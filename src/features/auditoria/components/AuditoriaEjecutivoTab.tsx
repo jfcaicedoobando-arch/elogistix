@@ -9,8 +9,8 @@
 import { lazy, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import type { AuditoriaEjecutivoData } from "@/hooks/auditoria";
-import { useAutoCapturarSnapshot } from "@/hooks/auditoria";
+import type { AuditoriaEjecutivoData } from "@/features/auditoria/hooks";
+import { useAutoCapturarSnapshot } from "@/features/auditoria/hooks";
 import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
 import { AuditoriaRiesgoFinancieroCard } from "./AuditoriaRiesgoFinancieroCard";
 import { EjecutivoScoreCard } from "./ejecutivo/EjecutivoScoreCard";

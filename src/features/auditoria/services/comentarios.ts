@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { AuditoriaComentario } from "@/types/auditoria";
+import type { AuditoriaComentario } from "@/features/auditoria/types";
 
 export async function fetchComentariosByRevision(
   revisionId: string,
