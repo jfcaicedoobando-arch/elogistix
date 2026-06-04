@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.1] - 2026-06-04
+- **fix(security/rls) — política de cotizaciones del portal restringida a `authenticated`**: la policy `Cliente read own cotizaciones` en `public.cotizaciones` estaba scopeada al rol `{public}`; se recrea para aplicar solo a `{authenticated}` manteniendo intacta la condición USING. Cero impacto funcional: los anónimos ya eran rechazados por `auth.uid() IS NULL`. Se actualiza `@security-memory` documentando como riesgos aceptados (a) `current_user_org_id()` devuelve solo la primera org (usuarios regulares pertenecen a una sola org por diseño; super_admin no depende de esta función) y (b) `ratelimit_buckets` con RLS sin policies (acceso exclusivo vía SECURITY DEFINER `public.check_ratelimit`). Bump 12.53.1.
+
 ## [12.53.0] - 2026-06-04
 - **feat(marketing/landing) — signup real, demo y páginas legales**: cierra los huecos de la landing pública.
   - (1) **Signup**: `src/pages/auth/Login.tsx` envuelve el formulario en `Tabs` (Iniciar sesión / Crear cuenta). El tab Crear cuenta pide nombre, email, contraseña, confirmación y aceptación de Términos; llama `supabase.auth.signUp({ emailRedirectTo: origin + '/inicio', data: { full_name } })` y muestra confirmación "Revisa tu correo" (sin auto-confirm). Soporta `?tab=signup` para aterrizajes directos desde el landing.
