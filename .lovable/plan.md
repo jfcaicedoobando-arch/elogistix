@@ -1,88 +1,130 @@
-# Plan: Expansión de cobertura de tests (Fase 2)
-
-## Diagnóstico actual
-
-- **1,094 archivos fuente** vs **161 tests** (~14.7% file-coverage). Vitest + v8 verde.
-- **Buena cobertura**: `lib/financial` (4/5), `lib/parsers` (5/4), `lib/mappers` (9/8), `lib/domain` (19/13), `features/embarques/{domain,services}` (32/20).
-- **Huecos críticos** (0 tests):
-  - `src/services/`: 22 subcarpetas (auditoria, cxp, tesoreria, presupuesto, profit, comisiones, proveedor, catalogos, configuracion, csf, dashboard, notificaciones, operaciones, organization, planes, reportes, search, storage, tracking, usuario, bitacora, cliente-usuarios).
-  - `src/hooks/`: 16 subcarpetas (admin 15 src, cliente 7, catalogos 7, proveedor 5, cxp 4, comisiones 4, operaciones 4, presupuesto 4, profit 2, tesoreria 2, dashboard 3, dashboard-ejecutivo 2, reportes 2, sentry 2, usuario 3, layout 2).
-  - `src/features/embarques/hooks/`: 31 archivos top-level con 0 tests.
-  - `src/contexts/`: 7 archivos con 0 tests (Auth, Organization, Theme, Breadcrumb, sub-hooks).
-  - `src/pdf/`: 26 archivos con 0 tests (documents, components, theme).
-  - `src/generators/`: 5 archivos sin tests (cotizacion/*, estadoCuentaPdf, layoutContable, rentabilidadPdf).
+# Plan: Migrar Auditoría a `src/features/auditoria/`
 
 ## Objetivo
+Consolidar todo el stack vertical del dominio **Auditoría operativa** en una sola carpeta auto-contenida, replicando el patrón ya usado en `src/features/embarques/`. Mantener URLs y comportamiento intactos — sólo reorganización + reescritura de imports.
 
-Llegar a **~32% de file-coverage** (~350 tests) añadiendo **~130 archivos nuevos** en 7 lotes que se ejecutan en paralelo por subagentes independientes.
-
-## Lotes paralelizables
-
-| Lote | Dominio | Archivos a testear | Tests objetivo | Modelo |
-|------|---------|--------------------|----------------|--------|
-| **L1** | `src/services/` financiero | tesoreria (5), cxp (3), comisiones (4), presupuesto (4), profit (3) | ~19 | fast |
-| **L2** | `src/services/` operativo+admin | auditoria (6), operaciones, tracking, dashboard, reportes, search, notificaciones, organization, planes, storage (2), usuario, cliente-usuarios, bitacora, csf, configuracion (2), catalogos, proveedor | ~25 | fast |
-| **L3** | `src/features/embarques/hooks/` | 31 hooks top-level (queries, financials, wizards, controllers, proformas, tracking) | ~22 | capable |
-| **L4** | `src/hooks/` admin+catálogos+cliente+proveedor | admin (15), cliente (7), catalogos (7), proveedor (5) | ~22 | fast |
-| **L5** | `src/hooks/` operativo+financiero+misc | cxp (4), comisiones (4), operaciones (4), presupuesto (4), profit (2), tesoreria (2), dashboard (3), dashboard-ejecutivo (2), reportes (2), sentry (2), usuario (3), layout (2) | ~22 | fast |
-| **L6** | `src/contexts/` + `src/generators/` restantes | AuthContext, OrganizationContext, ThemeContext, BreadcrumbContext, useAuthProfile/Session/LoginAudit, cotizacion/conceptosTables, cotizacion/datosGenerales, estadoCuentaPdf, layoutContable, rentabilidadPdf | ~12 | capable |
-| **L7** | `src/pdf/` documents + helpers puros | proformaShared (ya), emisor, theme/tokens, theme/styles*, render/descargarPdf, documents/*Document (smoke render: no crash + estructura JSX) | ~14 | fast |
-
-**Total estimado**: ~136 archivos nuevos de test.
-
-## Convenciones obligatorias para todos los subagentes
-
-1. **Patrón mocking**: usar `vi.hoisted(() => vi.fn())` para mocks de Supabase. Reutilizar `src/test/utils/_supabaseChainMock.ts` cuando exista cadena `.from().select()....`
-2. **Hooks con React Query**: envolver con `createWrapper()` de `src/test/utils/queryWrapper.tsx`.
-3. **Hooks con `useAuth`**: mockear `@/contexts/AuthContext` con `useAuth: () => ({ user: { id: "user-1" } })`.
-4. **Archivos prohibidos de tocar**: `src/integrations/supabase/{client,types}.ts`, `.env`, `supabase/config.toml`, `vitest.config.ts` (no subir thresholds).
-5. **Naming**: `__tests__/<archivo>.test.ts(x)` co-ubicado.
-6. **Reglas Power of 10**: cada test ≤200 líneas, sin `any`, sin `style={{...}}` estático.
-7. **Cobertura mínima por archivo**: 1 happy path + 1 error/edge path (mínimo 2 `it()` por `describe`).
-8. **PDF tests (L7)**: solo smoke (`expect(() => render(<Doc {...props}/>)).not.toThrow()`); NO comparar PNG. Para tokens/theme: validar shape de objetos.
-9. **Contextos (L6)**: probar provider + hook consumidor + caso "sin provider lanza error".
-10. **No regresiones**: NO refactorizar código de producción. Si un archivo requiere refactor >30 líneas para ser testeable, reportar como "skipped" con razón.
-
-## Orquestación
+## Inventario actual (qué se mueve)
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│  Agente maestro (yo)                                     │
-└────────┬─────────────────────────────────────────────────┘
-         │ spawn paralelo
-         ▼
-   ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐
-   │ L1  │ L2  │ L3  │ L4  │ L5  │ L6  │ L7  │
-   └──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┘
-      └─────┴─────┴─────┴─────┴─────┴─────┘
-                       │ resultados (lista de archivos + nº tests)
-                       ▼
-        Consolidación: bump APP_VERSION → 12.56.0
-        + entrada única en CHANGELOG.md
-        + verificación: `bun run test` (smoke) + `bun run audit:tests`
+src/pages/Auditoria.tsx
+src/hooks/auditoria/**                  (16 archivos + revisiones/ + __tests__/)
+src/services/auditoria/**               (5 servicios + index + __tests__)
+src/lib/auditoria/ejecutivoAgregados.ts (+ test)
+src/lib/domain/auditoria.ts             (+ test)
+src/lib/domain/auditoriaCsv.ts          (+ test)
+src/lib/domain/auditoriaReglaLabels.ts
+src/constants/auditoria.ts
+src/types/auditoria.ts
+src/components/auditoria/**             (15 componentes + asignarResponsable/, ejecutivo/, marcarRevisado/, __tests__)
 ```
 
-## Detalles técnicos por lote
+Tablas de hooks / routing afectadas:
+- `src/routes/appRoutes.tsx` (línea 12, 147)
+- `src/routes/appRoutes.lazy.ts` (línea 15)
+- `src/components/shared/utils/auditoriaConfig.ts`
+- `src/hooks/layout/useAppSidebarSections.ts`
 
-- **L1/L2 (services)**: tests de I/O. Verifican que `supabase.from(X).select(...).eq(...).range(...)` se llama con los argumentos esperados y que errores se propagan (`throw error`).
-- **L3 (embarques/hooks)**: tests de hooks con `renderHook`. Mockear servicios de `@/features/embarques/services` y verificar invalidaciones de `queryKey`.
-- **L4/L5 (hooks)**: mismo patrón que L3 pero sobre `src/services/<dominio>`. Para `useListPageState`-style, mockear `nuqs`.
-- **L6 (contexts)**: mockear `supabase.auth.onAuthStateChange` y `getSession`. Validar cleanup de subscription. Para generators no-PDF: tests funcionales puros sobre arrays/strings producidos.
-- **L7 (pdf)**: usar `@react-pdf/renderer` mock ligero o `renderToString`. Solo verificar que con props mínimos válidos no lanza. Tokens/styles: validar keys obligatorias.
+## Estructura destino
 
-## Fuera de alcance
+```text
+src/features/auditoria/
+├── components/
+│   ├── HallazgoTabla.tsx
+│   ├── HallazgosTabla.tsx
+│   ├── HallazgosTablaPaginada.tsx
+│   ├── HallazgosFiltros.tsx
+│   ├── MarcarRevisadoDialog.tsx
+│   ├── AsignarResponsableDialog.tsx
+│   ├── AuditoriaHallazgosTab.tsx
+│   ├── AuditoriaEjecutivoTab.tsx
+│   ├── AuditoriaPorReglaTab.tsx
+│   ├── AuditoriaOperadoresCard.tsx
+│   ├── AuditoriaRiesgoFinancieroCard.tsx
+│   ├── AuditoriaTendenciaChart.tsx
+│   ├── hallazgosTablaConfig.ts
+│   ├── asignarResponsable/
+│   ├── ejecutivo/
+│   ├── marcarRevisado/
+│   └── __tests__/
+├── constants/
+│   └── index.ts            ← desde src/constants/auditoria.ts
+├── domain/
+│   ├── reglaLabels.ts      ← desde lib/domain/auditoriaReglaLabels.ts
+│   ├── csv.ts              ← desde lib/domain/auditoriaCsv.ts
+│   ├── core.ts             ← desde lib/domain/auditoria.ts
+│   ├── ejecutivoAgregados.ts ← desde lib/auditoria/
+│   └── __tests__/
+├── hooks/
+│   ├── index.ts
+│   ├── useAuditoria.ts
+│   ├── useAuditoriaPageController.ts
+│   ├── useAuditoriaEjecutivo.ts
+│   ├── useAuditoriaSnapshots.ts
+│   ├── useAuditoriaComentarios.ts
+│   ├── useAuditoriaRevisiones.ts
+│   ├── useAsignarResponsableController.ts
+│   ├── useMarcarRevisadoController.ts
+│   ├── useHallazgosTablaState.ts
+│   ├── useOrgMembersAsignables.ts
+│   ├── useSnoozeHallazgo.ts
+│   ├── hallazgosTablaFilters.ts
+│   ├── revisiones/ (query, marcar, desmarcar, asignar, hash)
+│   └── __tests__/
+├── routes/
+│   └── AuditoriaPage.tsx    ← desde src/pages/Auditoria.tsx
+├── services/
+│   ├── index.ts
+│   ├── comentarios.ts
+│   ├── reporte.ts
+│   ├── revisiones.ts
+│   ├── snapshots.ts
+│   ├── snooze.ts
+│   └── __tests__/
+├── types/
+│   └── index.ts            ← desde src/types/auditoria.ts
+└── index.ts                ← barrel público (página + hooks/servicios usados afuera)
+```
 
-- E2E Playwright (carpeta `e2e/`).
-- Tests visuales/snapshot de PDFs (solo smoke).
-- Tests Deno de `supabase/functions/` (ya existen `_test.ts`).
-- Tests de páginas en `src/pages/` (UI compleja, ROI bajo vs hooks).
-- Subir thresholds en `vitest.config.ts` (lo haremos en una iteración posterior cuando midamos coverage real con `vitest run --coverage`).
+## Reescritura de imports (mapa)
 
-## Entregables
+| Antes | Después |
+|---|---|
+| `@/pages/Auditoria` | `@/features/auditoria/routes/AuditoriaPage` |
+| `@/hooks/auditoria/*` | `@/features/auditoria/hooks/*` |
+| `@/services/auditoria/*` | `@/features/auditoria/services/*` |
+| `@/lib/auditoria/ejecutivoAgregados` | `@/features/auditoria/domain/ejecutivoAgregados` |
+| `@/lib/domain/auditoria` | `@/features/auditoria/domain/core` |
+| `@/lib/domain/auditoriaCsv` | `@/features/auditoria/domain/csv` |
+| `@/lib/domain/auditoriaReglaLabels` | `@/features/auditoria/domain/reglaLabels` |
+| `@/constants/auditoria` | `@/features/auditoria/constants` |
+| `@/types/auditoria` | `@/features/auditoria/types` |
+| `@/components/auditoria/*` | `@/features/auditoria/components/*` |
 
-1. ~136 archivos `*.test.ts(x)` nuevos.
-2. Bump `APP_VERSION` → `12.56.0`.
-3. Entrada `## [12.56.0] - 2026-06-04` en `CHANGELOG.md` con desglose por lote y total de tests añadidos.
-4. Reporte de archivos "skipped" (si los hay) con razón.
+Archivos a tocar fuera del feature:
+- `src/routes/appRoutes.lazy.ts` → `lazy(() => import("@/features/auditoria/routes/AuditoriaPage"))`
+- `src/routes/appRoutes.tsx` → sin cambios (sigue usando símbolo `Auditoria`)
+- `src/components/shared/utils/auditoriaConfig.ts` → reapuntar imports de `@/lib/domain/auditoria*`
+- `src/hooks/layout/useAppSidebarSections.ts` → reapuntar si referencia constants/types
 
-Al aprobar este plan, lanzo los 7 subagentes en paralelo y consolido la versión cuando todos reporten.
+## Pasos de ejecución (paralelizables por subagentes)
+
+1. **S1 – Move físico**: `git mv` (vía `mv`) de los 6 grupos (pages, hooks, services, lib, constants, types, components) a `src/features/auditoria/` respetando subcarpetas y tests. Renombrar `Auditoria.tsx` → `routes/AuditoriaPage.tsx`. Renombrar archivos de `lib/domain/auditoria*` a `domain/{core,csv,reglaLabels}.ts`.
+2. **S2 – Imports internos**: dentro de `src/features/auditoria/**` corregir rutas relativas/alias entre componentes, hooks, services, domain, types.
+3. **S3 – Imports externos**: aplicar el mapa de reescritura en los ~6 archivos consumidores fuera del feature (`appRoutes.lazy.ts`, `auditoriaConfig.ts`, `useAppSidebarSections.ts`, tests en `hooks/layout/__tests__`).
+4. **S4 – Barrel `index.ts`** con la superficie pública mínima.
+5. **S5 – Verificación**: `bun run typecheck`, `bun run test`, scan `rg "hooks/auditoria|services/auditoria|lib/(auditoria|domain/auditoria)|pages/Auditoria|components/auditoria|constants/auditoria|types/auditoria" src` debe regresar 0 hits.
+6. **S6 – CHANGELOG + APP_VERSION** → `12.58.0` con entrada describiendo el vertical slice.
+
+## Detalles técnicos
+- No se cambian URLs, lazy boundaries, query keys, ni firmas públicas.
+- Los `__tests__` se mueven junto con el código probado (mantienen colocación).
+- Mocks `vi.mock("@/services/auditoria/...")` en tests se reapuntan al nuevo path.
+- `src/lib/domain/auditoria*` se elimina; se valida que ningún otro dominio los importe (grep confirmó: solo Auditoría los usa).
+- Respeta Power of 10 (sin tocar tamaños de componentes; solo move + imports).
+
+## Riesgos
+- Casing: macOS/Linux. Usar `git mv` (vía `mv`) explícito para preservar historia.
+- Pueden quedar imports rotos en tests si un mock path está hardcodeado — el grep final de S5 lo detecta.
+
+## Entregable
+PR con ~60-70 archivos movidos, ~10 archivos editados fuera del feature, build + tests verdes, `APP_VERSION = 12.58.0`, entrada en `CHANGELOG.md`.
