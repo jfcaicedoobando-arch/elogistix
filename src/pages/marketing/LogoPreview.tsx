@@ -6,6 +6,8 @@
  * Ruta: /logo-preview (pública, no indexable).
  */
 import { Link } from "react-router-dom";
+import { Seo } from "@/components/seo/Seo";
+import { useEffect } from "react";
 
 type Tone = "light" | "muted" | "navy" | "accent" | "image";
 
@@ -86,8 +88,32 @@ function Lockup({
 }
 
 export default function LogoPreview() {
+  // Página interna de QA — bloquear indexación
+  useEffect(() => {
+    let el = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const created = !el;
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute("name", "robots");
+      document.head.appendChild(el);
+    }
+    const prev = el.getAttribute("content");
+    el.setAttribute("content", "noindex, nofollow");
+    return () => {
+      if (created && el?.parentNode) el.parentNode.removeChild(el);
+      else if (el && prev !== null) el.setAttribute("content", prev);
+    };
+  }, []);
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Seo
+        title="QA logo · Libre Carga"
+        description="Vista interna de QA del lockup del logo de Libre Carga sobre distintos fondos y estados."
+        canonical="https://librecarga.com/logo-preview"
+        ogTitle="QA logo · Libre Carga"
+        ogDescription="Vista interna de QA del logo de Libre Carga."
+        ogUrl="https://librecarga.com/logo-preview"
+      />
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <div className="mb-8 flex items-center justify-between">
           <div>
