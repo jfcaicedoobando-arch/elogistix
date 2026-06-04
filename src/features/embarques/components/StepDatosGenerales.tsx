@@ -1,9 +1,9 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
-import type { EmbarqueFormValues } from "@/hooks/embarque";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { CotizacionRow } from "@/hooks/cotizacion";
-import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/embarque";
+import { useExpedientesCliente, type ExpedienteCliente } from "@/features/embarques/hooks";
 import { BloqueClienteContactos } from "./secciones/BloqueClienteContactos";
 import { BloqueMercancia } from "./secciones/BloqueMercancia";
 import { BloqueVinculacion } from "./secciones/BloqueVinculacion";
@@ -20,8 +20,8 @@ interface Cliente {
   nombre: string;
 }
 
-export type { EmbarqueValidationErrors } from "@/types/embarque";
-import type { EmbarqueValidationErrors } from "@/types/embarque";
+export type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
+import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
 
 interface Props {
   clientes: Cliente[];

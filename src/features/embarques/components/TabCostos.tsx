@@ -7,8 +7,8 @@ import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { useContenedoresEmbarque } from "@/hooks/embarque";
-import type { ConceptoVentaRow, ConceptoCostoRow } from "@/hooks/embarque";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
 
 interface Props {
   conceptosVenta: ConceptoVentaRow[];

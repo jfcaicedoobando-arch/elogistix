@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { sugerirETA, type StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
+import { sugerirETA, type StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
-import type { EmbarqueFormValues } from "@/hooks/embarque";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import { StepDatosRutaMaritimo } from "./stepDatosRuta/StepDatosRutaMaritimo";
 import { StepDatosRutaAereo } from "./stepDatosRuta/StepDatosRutaAereo";
 import { StepDatosRutaTerrestre } from "./stepDatosRuta/StepDatosRutaTerrestre";

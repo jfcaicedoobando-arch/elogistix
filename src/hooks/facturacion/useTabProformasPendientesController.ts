@@ -9,7 +9,7 @@ import {
   useAprobarProformas,
   useConsolidarProformas,
   type ProformaPendienteConEmbarque,
-} from "@/hooks/embarque/useProformas";
+} from "@/features/embarques/hooks/useProformas";
 
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import { useStableRequestId } from "@/lib/idempotency";

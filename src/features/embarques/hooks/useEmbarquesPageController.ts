@@ -1,18 +1,18 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "@/generators/exportCsv";
-import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/embarque/useEmbarques";
+import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/features/embarques/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
-import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
-import { useContenedoresInfoMap } from "@/hooks/embarque/useContenedoresInfoMap";
-import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
+import { useEmbarquesPageState } from "@/features/embarques/hooks/useEmbarquesPageState";
+import { useContenedoresInfoMap } from "@/features/embarques/hooks/useContenedoresInfoMap";
+import { buildEmbarqueColumns } from "@/features/embarques/components/embarqueColumns";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import { fetchEmbarquesParaExport } from "@/services/embarque";
+import { fetchEmbarquesParaExport } from "@/features/embarques/services";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";

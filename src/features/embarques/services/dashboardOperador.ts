@@ -13,7 +13,7 @@
  * no `tracking_externo` (legacy reservada para integraciones automáticas).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { ESTADOS_ACTIVOS } from "@/constants/embarqueConstants";
+import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
 
 export interface OperadorEmbarqueLite {
   id: string;

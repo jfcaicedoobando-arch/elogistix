@@ -9,7 +9,7 @@
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useContenedoresEmbarque } from "@/hooks/embarque";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 
 const GENERAL_VALUE = 'generales';
 

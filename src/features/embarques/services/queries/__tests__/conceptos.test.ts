@@ -12,7 +12,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import {
   fetchEmbarqueConceptosVenta,
   fetchEmbarqueConceptosCosto,
-} from "@/services/embarque/queries/conceptos";
+} from "@/features/embarques/services/queries/conceptos";
 
 const EMBARQUE_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 

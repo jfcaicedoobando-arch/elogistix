@@ -3,7 +3,7 @@ import {
   tipoEventoParaEstado,
   descripcionEventoCambioEstado,
   ESTADO_A_EVENTO_TRACKING,
-} from "@/lib/domain/embarque";
+} from "@/features/embarques/domain/embarque";
 
 describe("tipoEventoParaEstado", () => {
   it("mapea estados conocidos al tipo de evento correcto", () => {

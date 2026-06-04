@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { NumericInput } from "@/components/shared/NumericInput";
-import type { ContenedorBorrador } from "@/types/embarque/contenedor";
+import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import type { TipoContenedor } from "@/hooks/catalogos";
 
 interface Props {

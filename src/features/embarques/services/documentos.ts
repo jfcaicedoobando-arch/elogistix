@@ -9,8 +9,8 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import {
   idempotencyClaimSchema,
   isCachedClaim,
-} from '@/services/embarque/idempotencyClaimSchema';
-import { sha256Hex, hexToUuid } from '@/services/embarque/documentos/idempotencyHash';
+} from '@/features/embarques/services/idempotencyClaimSchema';
+import { sha256Hex, hexToUuid } from '@/features/embarques/services/documentos/idempotencyHash';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 

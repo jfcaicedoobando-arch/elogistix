@@ -3,11 +3,11 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useEditarEmbarqueWizard } from "@/hooks/embarque";
-import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
-import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
-import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
-import { StepCostosPrecios } from "@/components/embarque/StepCostosPrecios";
+import { useEditarEmbarqueWizard } from "@/features/embarques/hooks";
+import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
+import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
+import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
+import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
 
 const steps = [
   { title: 'Datos Generales', num: 1 },

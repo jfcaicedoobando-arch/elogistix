@@ -7,15 +7,15 @@ import {
   useEmbarqueConceptosCosto,
   useProveedoresForSelect,
   useUpdateEmbarque,
-} from "@/hooks/embarque/useEmbarques";
-import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
-import { rowAContenedorBorrador } from "@/types/embarque/contenedor";
+} from "@/features/embarques/hooks/useEmbarques";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
+import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
-import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
+import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
 import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { resolverValorContactoDesdeTexto } from "@/lib/contacto";

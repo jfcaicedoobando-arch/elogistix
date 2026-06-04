@@ -6,7 +6,7 @@ import type {
   ContenedorBorrador,
   EmbarqueContenedor,
   EmbarqueContenedorInsert,
-} from "@/types/embarque/contenedor";
+} from "@/features/embarques/types/contenedor";
 
 export async function listarPorEmbarque(
   embarqueId: string,

@@ -2,8 +2,8 @@
  * Helpers puros para la página de listado de embarques.
  * Extraídos de `useEmbarquesPageState` (11.14.0).
  */
-import type { EmbarqueRow } from "@/types/embarque";
-import type { EmbarqueListExtras } from "@/services/embarque/queries";
+import type { EmbarqueRow } from "@/features/embarques/types/embarque";
+import type { EmbarqueListExtras } from "@/features/embarques/services/queries";
 
 export type SortDir = "asc" | "desc";
 

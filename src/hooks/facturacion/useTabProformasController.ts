@@ -6,8 +6,8 @@
  * respetar la separación lógica/presentación (no JSX en hooks).
  */
 import { useState } from "react";
-import { useProformas, type ProformaRow } from "@/hooks/embarque/useProformas";
-import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
+import { useProformas, type ProformaRow } from "@/features/embarques/hooks/useProformas";
+import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
 
 export type { FiltroEstadoProforma };

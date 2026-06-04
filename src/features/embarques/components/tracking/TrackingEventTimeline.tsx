@@ -1,9 +1,9 @@
 import { Clock, MapPin, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { ICONO_EVENTO } from "@/constants/embarqueConstants";
+import { ICONO_EVENTO } from "@/features/embarques/constants/embarqueConstants";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
-import type { EventoEmbarque } from "@/hooks/embarque";
+import type { EventoEmbarque } from "@/features/embarques/hooks";
 
 interface Props {
   eventos: EventoEmbarque[];

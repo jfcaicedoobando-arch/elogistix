@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toTitleCase } from "@/lib/formatters";
-import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
-import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
-import { useEmbarquesRelacionados } from "@/hooks/embarque";
-import type { EmbarqueRow } from "@/hooks/embarque";
+import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
+import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
+import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
 import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCard";

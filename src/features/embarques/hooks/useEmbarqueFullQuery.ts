@@ -10,10 +10,10 @@
  * lugares que invalidan/mutan una sola sub-entidad.
  */
 import { useQuery } from "@tanstack/react-query";
-import { fetchEmbarqueFull, type EmbarqueFullData } from "@/services/embarque";
+import { fetchEmbarqueFull, type EmbarqueFullData } from "@/features/embarques/services";
 import { queryKeys } from "@/lib/query";
 
-export type { EmbarqueFullData } from "@/services/embarque";
+export type { EmbarqueFullData } from "@/features/embarques/services";
 
 export function useEmbarqueFull(id: string | undefined) {
   return useQuery({

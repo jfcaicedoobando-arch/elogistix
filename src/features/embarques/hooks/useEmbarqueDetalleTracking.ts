@@ -1,4 +1,4 @@
-import { useCreateTrackingLink } from "@/hooks/embarque/useTrackingLinks";
+import { useCreateTrackingLink } from "@/features/embarques/hooks/useTrackingLinks";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 

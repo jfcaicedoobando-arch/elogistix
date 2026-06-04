@@ -17,7 +17,7 @@ import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import {
   useCreateEmbarque,
   type ExpedienteCliente,
-} from "@/hooks/embarque/useEmbarques";
+} from "@/features/embarques/hooks/useEmbarques";
 import {
   useUpdateEstadoCotizacion,
   type CotizacionRow,
@@ -25,18 +25,18 @@ import {
 import {
   resolverExpediente,
   subirDocumentosEmbarque,
-} from "@/services/embarque";
+} from "@/features/embarques/services";
 import {
   resolveExpedienteForSubmit,
   buildBitacoraDetalles,
-} from "@/lib/domain/embarqueWizard";
+} from "@/features/embarques/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
 import { useStableRequestId } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
-import type { ContenedorBorrador } from "@/types/embarque/contenedor";
-import type { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
+import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
+import type { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 type ProveedorRow = { id: string; nombre: string };

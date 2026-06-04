@@ -13,7 +13,7 @@ import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
-import type { EmbarqueRow } from "@/hooks/embarque";
+import type { EmbarqueRow } from "@/features/embarques/hooks";
 
 interface Props {
   embarque: EmbarqueRow;

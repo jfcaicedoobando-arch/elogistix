@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
+import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { NumericInput } from "@/components/shared/NumericInput";
-import { SelectContenedorConcepto } from "@/components/embarque/conceptos/SelectContenedorConcepto";
-import { useContenedoresEmbarque } from "@/hooks/embarque";
-import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
-import type { EmbarqueFormValues } from "@/hooks/embarque";
+import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
 
 interface Proveedor {

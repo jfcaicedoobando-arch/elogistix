@@ -15,7 +15,7 @@ import {
   fetchEmbarquesPaginados,
   fetchEmbarquesRelacionados,
   fetchEmbarquesListExtras,
-} from "@/services/embarque/queries/listado";
+} from "@/features/embarques/services/queries/listado";
 
 const BASE_FILTERS = {
   organizationId: "org-1",

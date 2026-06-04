@@ -3,7 +3,7 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
-import { eliminarEmbarqueRpc } from '@/services/embarque';
+import { eliminarEmbarqueRpc } from '@/features/embarques/services';
 
 export function useEliminarEmbarque() {
   const queryClient = useQueryClient();

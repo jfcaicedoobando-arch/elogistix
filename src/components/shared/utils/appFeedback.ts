@@ -12,7 +12,7 @@
  *   - success   → sonner.success
  */
 import { toast as sonnerToast } from "sonner";
-import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
+import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "@/components/shared/utils/errorReport";
 import { openErrorReport } from "@/components/shared/utils/errorDetailsStore";
 

@@ -10,9 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
-import { useCreateDocumentoEmbarque } from "@/hooks/embarque";
-import { getDocsForMode } from "@/constants/embarqueConstants";
+import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
+import { useCreateDocumentoEmbarque } from "@/features/embarques/hooks";
+import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";

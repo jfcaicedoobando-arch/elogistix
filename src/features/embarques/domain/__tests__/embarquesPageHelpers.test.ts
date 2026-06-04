@@ -7,7 +7,7 @@ import {
   dedupePorExpediente,
   contenedoresPorExpediente,
 } from "../embarquesPageHelpers";
-import type { EmbarqueRow } from "@/types/embarque";
+import type { EmbarqueRow } from "@/features/embarques/types/embarque";
 
 const row = (over: Partial<EmbarqueRow>): EmbarqueRow =>
   ({

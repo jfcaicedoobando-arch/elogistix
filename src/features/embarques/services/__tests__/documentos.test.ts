@@ -16,7 +16,7 @@ vi.mock("@/services/storage/index", () => ({
   deleteFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { resolverExpediente } from "@/services/embarque/documentos";
+import { resolverExpediente } from "@/features/embarques/services/documentos";
 
 describe("resolverExpediente", () => {
   it("calls resolver_expediente_por_bl RPC when blMaster is provided", async () => {

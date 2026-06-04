@@ -11,7 +11,7 @@ import {
   fetchContenedoresInfoMap,
   type ContenedoresInfo,
   type ContenedoresInfoMap,
-} from "@/services/embarque/contenedores/fetchInfoMap";
+} from "@/features/embarques/services/contenedores/fetchInfoMap";
 
 export type { ContenedoresInfo, ContenedoresInfoMap };
 

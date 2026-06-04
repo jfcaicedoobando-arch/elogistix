@@ -3,7 +3,7 @@ import { formatDate, toTitleCase, nombreDesdeEmail, formatNumber } from "@/lib/f
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { DetailRow } from "../DetailRow";
 import { FechaConOriginal } from "./FechaConOriginal";
-import type { EmbarqueRow } from "@/hooks/embarque";
+import type { EmbarqueRow } from "@/features/embarques/hooks";
 
 function RutaMaritimo({ e }: { e: EmbarqueRow }) {
   return (

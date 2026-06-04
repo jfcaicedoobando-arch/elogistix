@@ -1,5 +1,5 @@
 // Barrel re-export — single entry point for all embarque types, queries & mutations.
-// Los aliases de fila viven en `@/types/embarque`. Aquí se re-exportan por
+// Los aliases de fila viven en `@/features/embarques/types/embarque`. Aquí se re-exportan por
 // compatibilidad con los consumidores existentes (componentes y hooks).
 export type {
   EmbarqueRow,
@@ -7,9 +7,9 @@ export type {
   ConceptoCostoRow,
   DocumentoEmbarqueRow,
   NotaEmbarqueRow,
-} from "@/types/embarque";
+} from "@/features/embarques/types/embarque";
 
-export { calcularEstadoEmbarque } from '@/lib/domain/embarque';
+export { calcularEstadoEmbarque } from '@/features/embarques/domain/embarque';
 
 export {
   useEmbarquesPaginados,

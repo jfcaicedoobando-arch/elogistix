@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateStepCostos } from "@/lib/domain/embarqueWizardCostos";
+import { validateStepCostos } from "@/features/embarques/domain/embarqueWizardCostos";
 
 const ventaOk = { id: 1, concepto: "Flete", cantidad: 1, precioUnitario: 100, moneda: "USD" };
 const costoOk = { id: 1, proveedorId: "p1", concepto: "Flete", monto: 50, moneda: "USD" };

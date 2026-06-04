@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
-import { calcularFasesEmbarque, type EmbarqueFasesInput, type FaseEmbarque } from "@/lib/domain/embarqueFases";
+import { calcularFasesEmbarque, type EmbarqueFasesInput, type FaseEmbarque } from "@/features/embarques/domain/embarqueFases";
 import { cn } from "@/lib/utils";
 
 interface Props {

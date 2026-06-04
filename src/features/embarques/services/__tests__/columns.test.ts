@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EMBARQUE_LIST_COLUMNS, EMBARQUE_DETAIL_COLUMNS } from "@/services/embarque/columns";
+import { EMBARQUE_LIST_COLUMNS, EMBARQUE_DETAIL_COLUMNS } from "@/features/embarques/services/columns";
 
 function parse(s: string): string[] {
   return s.split(",").map((c) => c.trim()).filter(Boolean);

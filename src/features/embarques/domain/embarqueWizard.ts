@@ -7,7 +7,7 @@
  * - Hidratación de conceptos venta/costo a partir de una cotización.
  */
 import type { CotizacionRow } from "@/types/cotizacion";
-import type { EmbarqueValidationErrors } from "@/types/embarque";
+import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
 import { parseConceptos } from "@/lib/parsers/cotizacionDetalle";
 
 export interface ConceptoVentaWizard {

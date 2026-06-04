@@ -6,11 +6,11 @@ import { Loader2, Send } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
-import { useCreateNotaEmbarque } from "@/hooks/embarque";
+import { useCreateNotaEmbarque } from "@/features/embarques/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/shared";
-import type { NotaEmbarqueRow } from "@/hooks/embarque";
+import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { getNotaTipoColorClass } from "@/components/shared/utils/uiMappings";

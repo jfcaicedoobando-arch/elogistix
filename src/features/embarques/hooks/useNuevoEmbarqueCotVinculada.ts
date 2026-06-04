@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
-import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
+import { useCotizacionHydration } from "@/features/embarques/hooks/useCotizacionHydration";
 import { type CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
 import {
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
-} from "@/lib/domain/embarqueWizard";
+} from "@/features/embarques/domain/embarqueWizard";
 
 interface Params {
   form: {

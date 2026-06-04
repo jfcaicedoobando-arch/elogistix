@@ -12,14 +12,14 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
-import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
-import type { SortableEmbarqueColumn } from "@/services/embarque/queries";
-import { SORT_KEY_TO_COLUMN } from "@/services/embarque/queries";
-import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
+import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/features/embarques/hooks/useEmbarques";
+import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
+import type { SortableEmbarqueColumn } from "@/features/embarques/services/queries";
+import { SORT_KEY_TO_COLUMN } from "@/features/embarques/services/queries";
+import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/features/embarques/services";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
-import { useEmbarquesFilters } from "@/hooks/embarque/useEmbarquesFilters";
+import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
 import {
   compareBy,
   computeCounts,
@@ -28,7 +28,7 @@ import {
   dedupePorExpediente,
   contenedoresPorExpediente as computeContenedoresPorExpediente,
   type SortDir,
-} from "@/lib/embarque/embarquesPageHelpers";
+} from "@/features/embarques/domain/embarquesPageHelpers";
 
 export type { SortDir };
 

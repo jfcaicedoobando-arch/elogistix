@@ -5,7 +5,7 @@ import {
   usePortalEventos,
   usePortalDocumentos,
 } from "@/hooks/portal/usePortalData";
-import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 
 export interface ProgressStep {
   key: string;

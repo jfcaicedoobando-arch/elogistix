@@ -12,17 +12,17 @@ import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/shared";
 import {
   useProveedoresForSelect,
-} from "@/hooks/embarque/useEmbarques";
+} from "@/features/embarques/hooks/useEmbarques";
 import {
   useClientesForSelect,
   useContactosCliente,
 } from "@/hooks/cliente/useClientes";
 import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
-import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
-import { useEmbarqueSubmitOrchestrator } from "@/hooks/embarque/useEmbarqueSubmitOrchestrator";
+import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
+import { useEmbarqueSubmitOrchestrator } from "@/features/embarques/hooks/useEmbarqueSubmitOrchestrator";
 import { useCotizacionesAceptadas } from "@/hooks/cotizacion/useCotizaciones";
-import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
-import { validateWizardStep } from "@/lib/domain/embarqueWizardStepValidator";
+import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
+import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";

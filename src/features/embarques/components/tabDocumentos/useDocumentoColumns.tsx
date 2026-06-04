@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Upload, Download, Loader2, Trash2, Ban, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
+import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { getDocEstadoColorClass } from "@/components/shared/utils/uiMappings";
 
 /**

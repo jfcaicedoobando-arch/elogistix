@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import React from "react";
 
-vi.mock("@/services/embarque", () => ({
+vi.mock("@/features/embarques/services", () => ({
   crearEmbarqueRpc: vi.fn().mockResolvedValue({ id: "emb-new" }),
   duplicarEmbarqueRpc: vi.fn().mockResolvedValue([{ id: "emb-dup", expediente: "EXP-9" }]),
   actualizarEmbarqueRpc: vi.fn().mockResolvedValue(undefined),
@@ -21,14 +21,14 @@ vi.mock("@/services/embarque", () => ({
   eliminarEmbarqueRpc: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@/services/embarque/contenedores", () => ({
+vi.mock("@/features/embarques/services/contenedores", () => ({
   crearMuchos: vi.fn().mockResolvedValue([]),
   sincronizarContenedores: vi.fn().mockResolvedValue([]),
 }));
 
-import { crearEmbarqueRpc } from "@/services/embarque";
-import { crearMuchos, sincronizarContenedores } from "@/services/embarque/contenedores";
-import { eliminarEmbarqueRpc } from "@/services/embarque";
+import { crearEmbarqueRpc } from "@/features/embarques/services";
+import { crearMuchos, sincronizarContenedores } from "@/features/embarques/services/contenedores";
+import { eliminarEmbarqueRpc } from "@/features/embarques/services";
 import { useCreateEmbarque } from "../useCreateEmbarque";
 import { useUpdateEmbarque } from "../useUpdateEmbarque";
 import { useEliminarEmbarque } from "../useDeleteEmbarque";

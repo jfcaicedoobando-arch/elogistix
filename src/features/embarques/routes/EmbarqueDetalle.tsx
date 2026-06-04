@@ -15,17 +15,17 @@ import {
   useEmbarqueFinancials,
   useEmbarqueDetalleActions,
   useEmbarqueDetalleTracking,
-} from "@/hooks/embarque";
-import { TabResumen } from "@/components/embarque/TabResumen";
-import { TabDocumentos } from "@/components/embarque/TabDocumentos";
-import { TabCostos } from "@/components/embarque/TabCostos";
-import { TabFacturacion } from "@/components/embarque/TabFacturacion";
-import { TabNotas } from "@/components/embarque/TabNotas";
-import { TabTracking } from "@/components/embarque/TabTracking";
+} from "@/features/embarques/hooks";
+import { TabResumen } from "@/features/embarques/components/TabResumen";
+import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
+import { TabCostos } from "@/features/embarques/components/TabCostos";
+import { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
+import { TabNotas } from "@/features/embarques/components/TabNotas";
+import { TabTracking } from "@/features/embarques/components/TabTracking";
 
-import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
-import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
-import { EmbarqueDetalleHeader } from "@/components/embarque/EmbarqueDetalleHeader";
+import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
+import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
+import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueDetalleHeader";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 

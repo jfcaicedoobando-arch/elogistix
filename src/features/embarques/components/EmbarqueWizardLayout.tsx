@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StepIndicator } from "@/components/embarque/StepIndicator";
+import { StepIndicator } from "@/features/embarques/components/StepIndicator";
 
 interface Step {
   title: string;

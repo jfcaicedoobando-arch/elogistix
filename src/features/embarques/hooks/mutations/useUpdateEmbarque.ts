@@ -14,14 +14,14 @@ import {
   deleteDocumentoEmbarque,
   createDocumentoEmbarqueRow,
   setDocumentoEstadoNoAplica,
-} from '@/services/embarque';
-import { sincronizarContenedores } from '@/services/embarque/contenedores';
-import type { ContenedorBorrador } from '@/types/embarque/contenedor';
-import { CONTENEDORES_QUERY_KEY } from '@/hooks/embarque/useContenedoresEmbarque';
+} from '@/features/embarques/services';
+import { sincronizarContenedores } from '@/features/embarques/services/contenedores';
+import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
+import { CONTENEDORES_QUERY_KEY } from '@/features/embarques/hooks/useContenedoresEmbarque';
 import {
   tipoEventoParaEstado,
   descripcionEventoCambioEstado,
-} from '@/lib/domain/embarque';
+} from '@/features/embarques/domain/embarque';
 import { newRequestId } from '@/lib/idempotency';
 
 type EmbarqueRow = Tables<'embarques'>;

@@ -7,7 +7,7 @@ import { useTiposContenedor } from "@/hooks/catalogos";
 import {
   crearContenedorVacio,
   type ContenedorBorrador,
-} from "@/types/embarque/contenedor";
+} from "@/features/embarques/types/contenedor";
 import { FilaContenedor } from "./FilaContenedor";
 
 const SOFT_CAP = 50;

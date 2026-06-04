@@ -9,7 +9,7 @@ import {
   useSetDocumentoNoAplica,
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
-} from "@/hooks/embarque/useEmbarques";
+} from "@/features/embarques/hooks/useEmbarques";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 /**

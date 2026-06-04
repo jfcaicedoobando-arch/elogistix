@@ -7,7 +7,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTable } from "@/components/shared/DataTable";
-import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
+import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { AgregarDocumentoDialog } from "./tabDocumentos/AgregarDocumentoDialog";
 import { useDocumentoColumns } from "./tabDocumentos/useDocumentoColumns";
 

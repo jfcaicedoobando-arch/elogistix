@@ -5,7 +5,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { actualizarFechaLlegadaRealEmbarque } from "@/services/embarque";
+import { actualizarFechaLlegadaRealEmbarque } from "@/features/embarques/services";
 
 interface Input {
   embarqueId: string;

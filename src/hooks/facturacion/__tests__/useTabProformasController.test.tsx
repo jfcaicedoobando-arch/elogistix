@@ -3,10 +3,10 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-vi.mock("@/hooks/embarque/useProformas", () => ({
+vi.mock("@/features/embarques/hooks/useProformas", () => ({
   useProformas: vi.fn(),
 }));
-vi.mock("@/hooks/embarque/useDescargarProformaPdf", () => ({
+vi.mock("@/features/embarques/hooks/useDescargarProformaPdf", () => ({
   useDescargarProformaPdf: () => ({ descargar: vi.fn(), downloadingId: null }),
 }));
 vi.mock("@/hooks/shared/useOrgFilter", () => ({
@@ -23,7 +23,7 @@ vi.mock("@/hooks/shared/useListPageState", () => ({
   DEFAULT_PAGE_SIZE: 10,
 }));
 
-import { useProformas } from "@/hooks/embarque/useProformas";
+import { useProformas } from "@/features/embarques/hooks/useProformas";
 import { useTabProformasController } from "../useTabProformasController";
 
 const mockUseProformas = vi.mocked(useProformas);

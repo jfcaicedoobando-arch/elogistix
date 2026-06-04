@@ -8,12 +8,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { calcularIVA } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
-import { useCrearProforma } from "@/hooks/embarque/useProformas";
+import { useCrearProforma } from "@/features/embarques/hooks/useProformas";
 import {
   useDiasCreditoCliente,
   useFetchClienteParaPdf,
-} from "@/hooks/embarque/useProformaDialog";
-import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
+} from "@/features/embarques/hooks/useProformaDialog";
+import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import {
   filtrarPorContenedor,
   type FiltroContenedor,

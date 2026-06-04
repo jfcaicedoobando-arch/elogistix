@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
+import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 
 interface Props {
   currentStepIndex: number;

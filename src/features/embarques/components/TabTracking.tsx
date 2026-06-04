@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Clock, AlertTriangle } from "lucide-react";
-import { useEventosEmbarque } from "@/hooks/embarque";
+import { useEventosEmbarque } from "@/features/embarques/hooks";
 import { usePermissions } from "@/hooks/shared";
 
 import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
@@ -13,7 +13,7 @@ import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
-import type { NotaEmbarqueRow } from "@/hooks/embarque";
+import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
 
 type EmbarqueTrackingProps = Pick<
   Tables<"embarques">,

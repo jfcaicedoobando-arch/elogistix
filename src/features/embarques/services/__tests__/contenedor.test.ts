@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { actualizarContenedorEmbarque } from "@/services/embarque/contenedor";
+import { actualizarContenedorEmbarque } from "@/features/embarques/services/contenedor";
 
 describe("actualizarContenedorEmbarque", () => {
   it("ejecuta update().eq sobre embarques sin lanzar cuando no hay error", async () => {

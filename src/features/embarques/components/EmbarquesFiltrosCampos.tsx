@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/constants/embarqueConstants";
+import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
 import SearchInput from "@/components/selects/SearchInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 

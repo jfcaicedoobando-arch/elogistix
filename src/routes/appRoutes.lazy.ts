@@ -15,10 +15,10 @@ export const Idempotencia = lazy(() => import("@/pages/admin/Idempotencia"));
 export const Auditoria = lazy(() => import("@/pages/Auditoria"));
 export const SentryDiagnostico = lazy(() => import("@/pages/admin/SentryDiagnostico"));
 
-export const Embarques = lazy(() => import("@/pages/embarques/Embarques"));
-export const EmbarqueDetalle = lazy(() => import("@/pages/embarques/EmbarqueDetalle"));
-export const NuevoEmbarque = lazy(() => import("@/pages/embarques/NuevoEmbarque"));
-export const EditarEmbarque = lazy(() => import("@/pages/embarques/EditarEmbarque"));
+export const Embarques = lazy(() => import("@/features/embarques/routes/Embarques"));
+export const EmbarqueDetalle = lazy(() => import("@/features/embarques/routes/EmbarqueDetalle"));
+export const NuevoEmbarque = lazy(() => import("@/features/embarques/routes/NuevoEmbarque"));
+export const EditarEmbarque = lazy(() => import("@/features/embarques/routes/EditarEmbarque"));
 
 export const Cotizaciones = lazy(() => import("@/pages/cotizaciones/Cotizaciones"));
 export const NuevaCotizacion = lazy(() => import("@/pages/cotizaciones/NuevaCotizacion"));

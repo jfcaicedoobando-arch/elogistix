@@ -1,11 +1,11 @@
 import { FormProvider } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
-import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
-import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
-import { StepDocumentos } from "@/components/embarque/StepDocumentos";
-import { StepCostosPrecios } from "@/components/embarque/StepCostosPrecios";
-import { useNuevoEmbarqueWizard } from "@/hooks/embarque";
+import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
+import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
+import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
+import { StepDocumentos } from "@/features/embarques/components/StepDocumentos";
+import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
+import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 
 const steps = [
   { title: "Datos Generales", num: 1 },

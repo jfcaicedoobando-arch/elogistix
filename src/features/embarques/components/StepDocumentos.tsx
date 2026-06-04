@@ -6,7 +6,7 @@ import {
   validateArchivo,
   MAX_FILE_SIZE_MB,
   type StepValidationErrors,
-} from "@/lib/domain/embarqueWizardSchemas";
+} from "@/features/embarques/domain/embarqueWizardSchemas";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 

@@ -4,10 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PortSelect from "@/components/selects/PortSelect";
 import NavieraSelect from "@/components/selects/NavieraSelect";
-import { ListaContenedoresEditable } from "@/components/embarque/contenedores/ListaContenedoresEditable";
-import { crearContenedorVacio } from "@/types/embarque/contenedor";
-import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
-import type { EmbarqueFormValues } from "@/hooks/embarque";
+import { ListaContenedoresEditable } from "@/features/embarques/components/contenedores/ListaContenedoresEditable";
+import { crearContenedorVacio } from "@/features/embarques/types/contenedor";
+import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
 const errClass = "text-xs text-destructive mt-1";
 

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/shared";
 import { uploadFile } from "@/services/storage/index";
 import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
-import { getDocsForMode } from "@/constants/embarqueConstants";
+import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
   DEFAULT_EMBARQUE_VALUES,

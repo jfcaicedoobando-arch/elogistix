@@ -2,9 +2,9 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { EmbarqueFormValues } from "@/hooks/embarque";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import { MODOS, TIPOS, INCOTERMS } from "@/constants/wizardConstants";
-import type { EmbarqueValidationErrors } from "@/types/embarque";
+import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
 
 interface Contacto {
   id: string;

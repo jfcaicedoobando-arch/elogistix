@@ -7,14 +7,14 @@
 import type { Tables } from "@/integrations/supabase/types";
 import type { calcularTotalesProforma } from "@/lib/domain/proforma";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
-import type { EmbarqueContenedor } from "@/types/embarque/contenedor";
-import type { useFetchClienteParaPdf } from "@/hooks/embarque/useProformaDialog";
+import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
+import type { useFetchClienteParaPdf } from "@/features/embarques/hooks/useProformaDialog";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 type EmbarqueRow = Tables<"embarques">;
 type TotalesProforma = ReturnType<typeof calcularTotalesProforma>;
 type CrearProformaArgs = Parameters<
-  ReturnType<typeof import("@/hooks/embarque/useProformas").useCrearProforma>["mutateAsync"]
+  ReturnType<typeof import("@/features/embarques/hooks/useProformas").useCrearProforma>["mutateAsync"]
 >[0];
 
 export interface SubmitProformaParams {

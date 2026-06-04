@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { validateArchivo, validateStepDocumentos } from "@/lib/domain/embarqueWizardDocumentos";
-import { MAX_FILE_SIZE_BYTES } from "@/lib/domain/embarqueWizardConstants";
+import { validateArchivo, validateStepDocumentos } from "@/features/embarques/domain/embarqueWizardDocumentos";
+import { MAX_FILE_SIZE_BYTES } from "@/features/embarques/domain/embarqueWizardConstants";
 
 describe("validateArchivo", () => {
   it("retorna null para archivo válido", () => {

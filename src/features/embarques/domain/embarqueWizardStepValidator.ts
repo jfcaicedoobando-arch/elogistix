@@ -15,7 +15,7 @@ import {
   type StepValidationErrors,
   type ConceptoVentaValidacion,
   type ConceptoCostoValidacion,
-} from "@/lib/domain/embarqueWizardSchemas";
+} from "@/features/embarques/domain/embarqueWizardSchemas";
 
 export interface ValidateStepInput {
   step: number;

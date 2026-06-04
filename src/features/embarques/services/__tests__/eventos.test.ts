@@ -9,7 +9,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchEventosEmbarque, insertEventoEmbarque } from "@/services/embarque/eventos";
+import { fetchEventosEmbarque, insertEventoEmbarque } from "@/features/embarques/services/eventos";
 
 const EMBARQUE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 

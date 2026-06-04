@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
-import type { ExpedienteCliente } from "@/hooks/embarque/useEmbarques";
+import type { ExpedienteCliente } from "@/features/embarques/hooks/useEmbarques";
 
 type ModoExpediente = "nuevo" | "existente";
 

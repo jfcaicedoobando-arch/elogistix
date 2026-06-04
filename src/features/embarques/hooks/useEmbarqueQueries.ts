@@ -8,7 +8,7 @@ import {
   fetchEmbarqueConceptosCosto,
   fetchExpedientesCliente,
   fetchProveedoresForSelect,
-} from '@/services/embarque';
+} from '@/features/embarques/services';
 
 
 interface UseEmbarquesPaginadosParams {
@@ -22,7 +22,7 @@ interface UseEmbarquesPaginadosParams {
   pageSize: number;
   fechaDesde?: string;
   fechaHasta?: string;
-  sortBy?: import('@/services/embarque/queries').SortableEmbarqueColumn;
+  sortBy?: import('@/features/embarques/services/queries').SortableEmbarqueColumn;
   sortDir?: 'asc' | 'desc';
 }
 
@@ -92,7 +92,7 @@ export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
 }
 
 
-export type { ExpedienteCliente } from '@/services/embarque';
+export type { ExpedienteCliente } from '@/features/embarques/services';
 
 export function useExpedientesCliente(clienteId: string | undefined) {
   const { organizationId } = useOrgFilter();

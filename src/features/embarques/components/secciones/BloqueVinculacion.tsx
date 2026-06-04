@@ -8,7 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import type { CotizacionRow } from "@/hooks/cotizacion";
-import type { ExpedienteCliente } from "@/hooks/embarque";
+import type { ExpedienteCliente } from "@/features/embarques/hooks";
 
 interface Props {
   cotizacionesAceptadas: CotizacionRow[];

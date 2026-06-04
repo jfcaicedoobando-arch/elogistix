@@ -2,13 +2,13 @@ import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
-import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
+import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 import {
   useAvanzarEstadoEmbarque,
   useSyncEstadoEmbarque,
   calcularEstadoEmbarque,
   type EmbarqueRow,
-} from "@/hooks/embarque/useEmbarques";
+} from "@/features/embarques/hooks/useEmbarques";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useEffect } from "react";
 

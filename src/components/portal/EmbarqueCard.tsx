@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/components/shared/utils/uiMappings";
-import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { MapPin, CalendarClock } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";

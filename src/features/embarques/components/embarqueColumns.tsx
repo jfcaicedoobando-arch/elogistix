@@ -5,8 +5,8 @@ import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
 } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { calcularEstadoEmbarque } from "@/hooks/embarque";
-import type { EmbarqueRow } from "@/hooks/embarque";
+import { calcularEstadoEmbarque } from "@/features/embarques/hooks";
+import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";

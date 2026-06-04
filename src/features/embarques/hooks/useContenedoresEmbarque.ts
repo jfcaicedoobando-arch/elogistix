@@ -2,8 +2,8 @@
  * Hook React Query para listar contenedores de un embarque.
  */
 import { useQuery } from "@tanstack/react-query";
-import { listarPorEmbarque } from "@/services/embarque/contenedores";
-import type { EmbarqueContenedor } from "@/types/embarque/contenedor";
+import { listarPorEmbarque } from "@/features/embarques/services/contenedores";
+import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 
 export const CONTENEDORES_QUERY_KEY = "embarque-contenedores" as const;
 

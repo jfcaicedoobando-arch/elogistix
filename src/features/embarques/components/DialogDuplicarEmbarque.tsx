@@ -18,7 +18,7 @@ import { useTiposContenedor } from "@/hooks/catalogos";
 import { CopiaContenedorRow } from "./duplicarEmbarque/CopiaContenedorRow";
 import { useDuplicarEmbarqueDialog } from "./duplicarEmbarque/useDuplicarEmbarqueDialog";
 import { MAX_COPIAS } from "./duplicarEmbarque/types";
-import type { EmbarqueRow } from "@/hooks/embarque";
+import type { EmbarqueRow } from "@/features/embarques/hooks";
 
 interface Props {
   embarque: EmbarqueRow;

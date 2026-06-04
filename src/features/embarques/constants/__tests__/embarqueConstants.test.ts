@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getDocsForMode } from "@/constants/embarqueConstants";
+import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 
 describe("getDocsForMode", () => {
   it("Marítimo incluye BL Master", () => {

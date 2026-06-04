@@ -10,7 +10,7 @@ import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
 import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
-import type { EmbarqueContenedor } from "@/types/embarque/contenedor";
+import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 

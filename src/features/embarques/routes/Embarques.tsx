@@ -4,11 +4,11 @@ import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
-import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
-import { EmbarquesEmptyState } from "@/components/embarque/EmbarquesEmptyState";
-import { EmbarquesSortIndicator } from "@/components/embarque/EmbarquesSortIndicator";
-import { EmbarquesHeaderActions } from "@/components/embarque/EmbarquesHeaderActions";
-import { useEmbarquesPageController } from "@/hooks/embarque";
+import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
+import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEmptyState";
+import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
+import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
+import { useEmbarquesPageController } from "@/features/embarques/hooks";
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;

@@ -7,7 +7,7 @@ import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 // Exenta de no-restricted-imports vía eslint.config.js allowlist: render row custom para sub-tabla de embarques relacionados.
 import { TableRow, TableCell } from "@/components/ui/table";
-import { useEmbarquesRelacionados } from "@/hooks/embarque";
+import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
 
 type RelacionadoRow = ReturnType<typeof useEmbarquesRelacionados>["data"] extends (infer U)[] | undefined ? U : never;
 

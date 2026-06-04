@@ -13,12 +13,12 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   useContenedoresEmbarque,
   CONTENEDORES_QUERY_KEY,
-} from "@/hooks/embarque";
-import { reemplazarTodos } from "@/services/embarque";
+} from "@/features/embarques/hooks";
+import { reemplazarTodos } from "@/features/embarques/services";
 import {
   rowAContenedorBorrador,
   type ContenedorBorrador,
-} from "@/types/embarque/contenedor";
+} from "@/features/embarques/types/contenedor";
 import { ListaContenedoresEditable } from "./ListaContenedoresEditable";
 
 interface Props {

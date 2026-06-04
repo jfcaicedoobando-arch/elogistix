@@ -6,7 +6,7 @@ import {
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useToast } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
-import { useEliminarEmbarque, type EmbarqueRow } from "@/hooks/embarque";
+import { useEliminarEmbarque, type EmbarqueRow } from "@/features/embarques/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 

@@ -1,8 +1,8 @@
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
-import type { EmbarqueFormValues } from "@/hooks/embarque";
+import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
+import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
 const errClass = "text-xs text-destructive mt-1";
 

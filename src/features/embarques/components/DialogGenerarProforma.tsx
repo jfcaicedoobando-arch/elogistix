@@ -4,7 +4,7 @@ import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTo
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, FileText, ArrowLeft, ArrowRight } from "lucide-react";
-import { useDialogGenerarProformaController } from "@/hooks/embarque";
+import { useDialogGenerarProformaController } from "@/features/embarques/hooks";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
 import type { Tables } from "@/types/db";
