@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
@@ -7,16 +7,19 @@ import { BrandLockup } from "@/components/layout/BrandLockup";
  * Aviso de privacidad. Contenido placeholder — pendiente de revisión legal.
  */
 export default function Privacidad() {
-  useEffect(() => {
-    document.title = "Aviso de privacidad · Libre Carga";
-    const meta = document.querySelector('meta[name="description"]');
-    const prev = meta?.getAttribute("content") ?? null;
-    meta?.setAttribute("content", "Aviso de privacidad de Libre Carga: cómo recopilamos, usamos y protegemos los datos de nuestros clientes en México.");
-    return () => { if (prev !== null) meta?.setAttribute("content", prev); };
-  }, []);
-
+  const url = "https://librecarga.com/legal/privacidad";
+  const title = "Aviso de privacidad · Libre Carga";
+  const desc = "Aviso de privacidad de Libre Carga: cómo recopilamos, usamos y protegemos los datos de nuestros clientes en México.";
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={desc} />
+        <link rel="canonical" href={url} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={desc} />
+        <meta property="og:url" content={url} />
+      </Helmet>
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link to="/" aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>

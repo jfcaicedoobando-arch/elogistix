@@ -1,7 +1,8 @@
 /**
  * Landing pública. Compone las secciones de marketing.
- * SEO via head estático de index.html.
+ * SEO via index.html (defaults) + Helmet (canonical/og:url self-referente + FAQPage JSON-LD).
  */
+import { Helmet } from "react-helmet-async";
 import { LandingNav } from "./sections/LandingNav";
 import { LandingHero } from "./sections/LandingHero";
 import { LandingDemo } from "./sections/LandingDemo";
@@ -15,10 +16,26 @@ import { LandingFaq } from "./sections/LandingFaq";
 import { LandingCtaFinal } from "./sections/LandingCtaFinal";
 import { LandingFooter } from "./sections/LandingFooter";
 import { MobileStickyCta } from "./sections/MobileStickyCta";
+import { FAQ } from "./landingCopy";
+
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 
 export default function Landing() {
   return (
     <div className="landing-scope min-h-screen bg-background text-foreground">
+      <Helmet>
+        <link rel="canonical" href="https://librecarga.com/" />
+        <meta property="og:url" content="https://librecarga.com/" />
+        <script type="application/ld+json">{JSON.stringify(FAQ_JSONLD)}</script>
+      </Helmet>
       <LandingNav />
       <main>
         <LandingHero />

@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.53.2] - 2026-06-04
+- **fix(seo) — sitemap, llms.txt, canonicals self-referentes y FAQ JSON-LD**: cierra 5 hallazgos del SEO review.
+  - (1) `public/sitemap.xml` con las 4 rutas públicas indexables (`/`, `/login`, `/legal/privacidad`, `/legal/terminos`) y `public/robots.txt` declara `Sitemap: https://librecarga.com/sitemap.xml`.
+  - (2) `public/llms.txt` formato llmstxt.org (H1 + summary + Pages/Optional) — excluye admin, portal, dashboard y rutas auth-gated.
+  - (3) Se instala `react-helmet-async` y se envuelve la app en `<HelmetProvider>` (`src/main.tsx`). Se quita el `<link rel="canonical">` de `index.html` y cada ruta pública lo declara vía `Helmet`: landing → `https://librecarga.com/`, `/legal/privacidad`, `/legal/terminos` se auto-referencian con `canonical` + `og:url` + `og:title` + `og:description` propios.
+  - (4) `LandingFaq` ahora emite `FAQPage` JSON-LD generado desde `FAQ` en `landingCopy.ts` (6 preguntas) vía Helmet en `Landing.tsx`.
+  - (5) Las páginas legales reemplazan el `useEffect` manual sobre `document.title`/meta por `Helmet`. Bump 12.53.2.
+
 ## [12.53.1] - 2026-06-04
 - **fix(security/rls) — política de cotizaciones del portal restringida a `authenticated`**: la policy `Cliente read own cotizaciones` en `public.cotizaciones` estaba scopeada al rol `{public}`; se recrea para aplicar solo a `{authenticated}` manteniendo intacta la condición USING. Cero impacto funcional: los anónimos ya eran rechazados por `auth.uid() IS NULL`. Se actualiza `@security-memory` documentando como riesgos aceptados (a) `current_user_org_id()` devuelve solo la primera org (usuarios regulares pertenecen a una sola org por diseño; super_admin no depende de esta función) y (b) `ratelimit_buckets` con RLS sin policies (acceso exclusivo vía SECURITY DEFINER `public.check_ratelimit`). Bump 12.53.1.
 
