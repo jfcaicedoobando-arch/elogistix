@@ -1,6 +1,6 @@
 /**
  * Servicio para vendedoras: config de % y catálogo de usuarios con rol vendedor.
- * Nombres/emails vía edge function `list-users` (no hay tabla profiles).
+ * Nombres/emails vía edge function `user-management` action `list` (no hay tabla profiles).
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
