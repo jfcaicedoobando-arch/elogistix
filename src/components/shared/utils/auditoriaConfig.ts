@@ -108,7 +108,4 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "fechas",
 ];
 
-// `reglaShortLabel` re-exportado desde `@/lib/domain/auditoriaReglaLabels`.
-void REGLA_SHORT_LABELS;
-
 
