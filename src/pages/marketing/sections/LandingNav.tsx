@@ -16,14 +16,14 @@ export function LandingNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2.5" aria-label="Libre Carga">
-          <img src="/librecarga-icon-light.svg" alt="" className="h-9 w-9" />
-          <span className="text-lg font-semibold tracking-tight text-foreground">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Libre Carga">
+          <img src="/librecarga-icon-light.svg" alt="" className="h-9 w-9 shrink-0" />
+          <span className="whitespace-nowrap text-lg font-semibold tracking-tight text-foreground">
             Libre Carga
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Principal">
+        <nav className="hidden items-center gap-8 lg:flex" aria-label="Principal">
           {links.map((l) => (
             <a
               key={l.href}
@@ -35,7 +35,7 @@ export function LandingNav() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <Button asChild variant="ghost" size="sm">
             <Link to="/login">Iniciar sesión</Link>
           </Button>
@@ -46,18 +46,20 @@ export function LandingNav() {
 
         <button
           type="button"
-          className="rounded-md p-2 text-foreground md:hidden"
+          className="rounded-md p-2 text-foreground lg:hidden"
           aria-label="Abrir menú"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
+
       </div>
 
       {open && (
-        <div className="border-t border-border bg-background md:hidden">
+        <div className="border-t border-border bg-background lg:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3" aria-label="Móvil">
+
             {links.map((l) => (
               <a
                 key={l.href}
