@@ -1,48 +1,49 @@
+## Contexto
+
+La suite principal de pruebas excluye intencionalmente los archivos `*.perf.test.tsx` y `*.perf.ts` del `vitest.config.ts` (configurado en el campo `test.exclude`). Estos tests de benchmark consumen mucha memoria y enmascaran timeouts, por lo que solo deben ejecutarse bajo demanda.
+
 ## Objetivo
 
-Mitigar fugas de memoria y timeouts al ejecutar la suite agregando dos cambios puntuales a `vitest.config.ts`:
+Agregar un script `test:perf` en `package.json` que ejecute de manera explícita solo los archivos de benchmark, usando una configuración de Vitest dedicada que no los excluya.
 
-1. Excluir los tests de performance del run regular.
-2. Garantizar limpieza total de JSDOM entre archivos vía aislamiento por fork.
+## Cambios propuestos
 
-## Cambios en `vitest.config.ts`
+### 1. Crear `vitest.perf.config.ts`
 
-Dentro del objeto `test`:
-
-**A. Agregar `exclude` con los patrones perf** (no existe hoy, solo `include`):
+Archivo de configuración dedicado que hereda la base de `vitest.config.ts` pero anula `include`/`exclude` para apuntar únicamente a tests de rendimiento.
 
 ```ts
-exclude: [
-  "node_modules/**",
-  "dist/**",
-  "src/**/*.perf.test.tsx",
-  "src/**/*.perf.ts",
-],
+import { defineConfig, mergeConfig } from "vitest/config";
+import baseConfig from "./vitest.config";
+
+export default mergeConfig(
+  baseConfig,
+  defineConfig({
+    test: {
+      // Solo archivos de performance
+      include: ["src/**/*.perf.test.tsx", "src/**/*.perf.ts"],
+      // Excluir defaults de Vitest, pero NO excluir los perf
+      exclude: ["node_modules/**", "dist/**"],
+    },
+  })
+);
 ```
 
-Se incluyen `node_modules/**` y `dist/**` para conservar los defaults de Vitest que se pierden al declarar `exclude` explícitamente.
+### 2. Modificar `package.json`
 
-**B. Añadir `isolate: true` dentro de `poolOptions.forks`** (ya existe `isolate: true` a nivel `test`, pero el usuario pide reforzarlo a nivel pool para asegurar que cada archivo corra en un fork limpio):
+Agregar el script `test:perf` bajo la sección `scripts`:
 
-```ts
-poolOptions: {
-  forks: {
-    singleFork: false,
-    maxForks: 2,
-    minForks: 1,
-    isolate: true,
-    execArgv: ["--max-old-space-size=8192"],
-  },
-},
+```json
+"test:perf": "vitest run --config vitest.perf.config.ts"
 ```
 
-`pool: "forks"` ya está configurado, no se toca.
+### 3. Actualizar version y changelog
 
-## Verificación post-implementación
+- Bump `APP_VERSION` a `12.60.7`
+- Registrar entrada en `CHANGELOG.md` (root) describiendo el nuevo script y la config dedicada
 
-- Ejecutar `bunx vitest run --shard=3/4` y confirmar que ya no aparece OOM.
-- Confirmar que ningún archivo `*.perf.test.tsx` / `*.perf.ts` se ejecuta en la corrida normal (el conteo de test files debe bajar si existen).
+## Notas técnicas
 
-## Changelog
-
-Bump `APP_VERSION` a `12.60.6` y entrada nueva en `CHANGELOG.md` describiendo el exclude de perf tests y el `isolate` por fork.
+- `mergeConfig` de Vitest (re-exportado de Vite) combina la configuración base (plugins, alias, pool forks, etc.) con los overrides de inclusión/exclusión de archivos.
+- El pool `forks` con `isolate: true` y `--max-old-space-size=8192` se mantiene, garantizando aislamiento completo entre archivos de benchmark.
+- Este cambio NO afecta la suite principal (`npm test`, `test:coverage`, etc.).

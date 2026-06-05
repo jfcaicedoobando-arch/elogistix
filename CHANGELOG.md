@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.7] - 2026-06-05
+- **chore(tests) — script `test:perf` dedicado para benchmarks**: nuevo `vitest.perf.config.ts` que extiende la base con `mergeConfig` y sobreescribe `include`/`exclude` para correr únicamente `src/**/*.perf.test.tsx` y `src/**/*.perf.ts`. Añadido script `test:perf` en `package.json` (`NODE_OPTIONS=--max-old-space-size=8192 vitest run --config vitest.perf.config.ts`) para ejecutar bajo demanda los tests de performance que el run regular excluye.
+
 ## [12.60.6] - 2026-06-05
 - **chore(tests) — mitigación de fugas y timeouts en vitest**: `vitest.config.ts` ahora declara `exclude` con `node_modules/**`, `dist/**`, `src/**/*.perf.test.tsx` y `src/**/*.perf.ts` para sacar los tests de performance del run regular (consumen memoria y enmascaran timeouts; deben correrse bajo demanda). Adicionalmente se añade `isolate: true` dentro de `poolOptions.forks` para forzar que cada archivo arranque en un fork limpio (JSDOM, módulos y caches resetean), reforzando el `isolate` global y atacando la fuga acumulativa del shard 3/4.
 
