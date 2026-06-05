@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.5] - 2026-06-05
+- **test(pdf) — regresión de fuga de memoria en render repetido**: nuevo `src/pdf/render/__tests__/pdfRenderLeak.test.tsx` que renderiza `RentabilidadDocument` 200 veces (con warm-up de 10 + `unmount` por iteración) y verifica que `process.memoryUsage().heapUsed` no crezca > 50 MB. Mockea `@react-pdf/renderer` con primitives ligeros para no cargar fontkit/canvas. Ejecuta `global.gc()` cuando está expuesto (`--expose-gc`). Resultado local: **+13.17 MB** tras 200 renders en 3.66s. Sirve como canario contra fugas catastróficas (cientos de MB) en futuros cambios de `@react-pdf/renderer` o del Document.
+
 ## [12.60.4] - 2026-06-04
 - **fix(tests) — useProformas mocks + mitigación OOM vitest**: (1) `src/features/embarques/hooks/__tests__/useProformas.test.tsx` mockeaba la ruta equivocada (`@/features/embarques/services/proforma`) y no proveía `useOrgFilter`, por lo que las queries quedaban `enabled:false` y `data` salía `undefined`. Reescrito para mockear `@/services/proforma` (ruta real) + `@/hooks/shared` con `organizationId: "org-1"`, y aserciones más robustas (`refetch` / `mutate` definidos). (2) `vitest.config.ts`: `pool: "forks"`, `maxForks: 2`, `execArgv: ["--max-old-space-size=8192"]`, `isolate: true`, `sequence.shuffle: false`. (3) `package.json` script `test`: sharded en 2 corridas (`--shard=1/2 && --shard=2/2`) con `NODE_OPTIONS=--max-old-space-size=8192`. **Pendiente**: shard 2 sigue muriendo por OOM al final → leak real en algún test (sospechosos react-pdf / persisters de React Query / canales realtime sin cleanup); requiere bisectar con `--shard=N/4`. Shard 1 además reporta 17 tests fallidos no relacionados — se atenderán por separado.
 
