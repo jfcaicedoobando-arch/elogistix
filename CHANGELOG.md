@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.6] - 2026-06-05
+- **chore(tests) — mitigación de fugas y timeouts en vitest**: `vitest.config.ts` ahora declara `exclude` con `node_modules/**`, `dist/**`, `src/**/*.perf.test.tsx` y `src/**/*.perf.ts` para sacar los tests de performance del run regular (consumen memoria y enmascaran timeouts; deben correrse bajo demanda). Adicionalmente se añade `isolate: true` dentro de `poolOptions.forks` para forzar que cada archivo arranque en un fork limpio (JSDOM, módulos y caches resetean), reforzando el `isolate` global y atacando la fuga acumulativa del shard 3/4.
+
 ## [12.60.5] - 2026-06-05
 - **test(pdf) — regresión de fuga de memoria en render repetido**: nuevo `src/pdf/render/__tests__/pdfRenderLeak.test.tsx` que renderiza `RentabilidadDocument` 200 veces (con warm-up de 10 + `unmount` por iteración) y verifica que `process.memoryUsage().heapUsed` no crezca > 50 MB. Mockea `@react-pdf/renderer` con primitives ligeros para no cargar fontkit/canvas. Ejecuta `global.gc()` cuando está expuesto (`--expose-gc`). Resultado local: **+13.17 MB** tras 200 renders en 3.66s. Sirve como canario contra fugas catastróficas (cientos de MB) en futuros cambios de `@react-pdf/renderer` o del Document.
 
