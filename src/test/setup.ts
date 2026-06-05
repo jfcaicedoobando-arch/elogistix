@@ -21,7 +21,12 @@ Object.defineProperty(window, "matchMedia", {
  * detectada en shard 3/4 (OOM al procesar 73 archivos en el mismo worker).
  *
  * - cleanup(): desmonta árboles de React Testing Library (libera DOM + refs).
- * - vi.clearAllMocks(): resetea contadores de mocks sin borrar la implementación.
+ * - vi.clearAllMocks(): resetea contadores/llamadas de mocks.
+ * - vi.resetAllMocks(): restaura implementaciones de spies/mocks a su estado
+ *   original para evitar acumulación de stubs entre archivos.
+ * - vi.useRealTimers(): fuerza el retorno a timers reales si algún test usó
+ *   `vi.useFakeTimers()`; previene timers simulados colgados que mantienen
+ *   referencias a componentes ya desmontados.
  * - QueryClient global: cada createWrapper() crea uno nuevo; aquí limpiamos
  *   cualquier caché residual que se haya colgado en globalThis.
  * - @react-pdf/renderer: cachea Font._fontkit y otros recursos a nivel módulo;
@@ -30,6 +35,8 @@ Object.defineProperty(window, "matchMedia", {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.resetAllMocks();
+  vi.useRealTimers();
 
   // Limpia QueryClient global si algún test lo expuso en globalThis.
   const g = globalThis as unknown as { __TEST_QUERY_CLIENT__?: { clear: () => void } };

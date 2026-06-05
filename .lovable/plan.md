@@ -1,49 +1,20 @@
-## Contexto
-
-La suite principal de pruebas excluye intencionalmente los archivos `*.perf.test.tsx` y `*.perf.ts` del `vitest.config.ts` (configurado en el campo `test.exclude`). Estos tests de benchmark consumen mucha memoria y enmascaran timeouts, por lo que solo deben ejecutarse bajo demanda.
-
 ## Objetivo
+Robustecer la limpieza global entre tests en `src/test/setup.ts` para evitar fugas de memoria de mocks y timers simulados.
 
-Agregar un script `test:perf` en `package.json` que ejecute de manera explícita solo los archivos de benchmark, usando una configuración de Vitest dedicada que no los excluya.
+## Cambios
 
-## Cambios propuestos
+### 1. `src/test/setup.ts`
+En el bloque `afterEach` global (líneas 30–54), insertar justo después de `vi.clearAllMocks()`:
+- `vi.resetAllMocks()` — restaura implementaciones spy/mocks a su valor original, evitando acumulación de estado entre archivos.
+- `vi.useRealTimers()` — fuerza el retorno a timers reales si algún test usó `vi.useFakeTimers()`, previene timers colgados que mantienen referencias a componentes desmontados.
 
-### 1. Crear `vitest.perf.config.ts`
+Actualizar también el JSDoc del bloque para documentar estas dos nuevas llamadas.
 
-Archivo de configuración dedicado que hereda la base de `vitest.config.ts` pero anula `include`/`exclude` para apuntar únicamente a tests de rendimiento.
+### 2. Versionado
+- `src/constants/appVersion.ts`: bump `12.60.7` → `12.60.8`
+- `CHANGELOG.md`: entrada `[12.60.8]` describiendo la adición de `vi.resetAllMocks()` y `vi.useRealTimers()` en el `afterEach` global.
 
-```ts
-import { defineConfig, mergeConfig } from "vitest/config";
-import baseConfig from "./vitest.config";
-
-export default mergeConfig(
-  baseConfig,
-  defineConfig({
-    test: {
-      // Solo archivos de performance
-      include: ["src/**/*.perf.test.tsx", "src/**/*.perf.ts"],
-      // Excluir defaults de Vitest, pero NO excluir los perf
-      exclude: ["node_modules/**", "dist/**"],
-    },
-  })
-);
-```
-
-### 2. Modificar `package.json`
-
-Agregar el script `test:perf` bajo la sección `scripts`:
-
-```json
-"test:perf": "vitest run --config vitest.perf.config.ts"
-```
-
-### 3. Actualizar version y changelog
-
-- Bump `APP_VERSION` a `12.60.7`
-- Registrar entrada en `CHANGELOG.md` (root) describiendo el nuevo script y la config dedicada
-
-## Notas técnicas
-
-- `mergeConfig` de Vitest (re-exportado de Vite) combina la configuración base (plugins, alias, pool forks, etc.) con los overrides de inclusión/exclusión de archivos.
-- El pool `forks` con `isolate: true` y `--max-old-space-size=8192` se mantiene, garantizando aislamiento completo entre archivos de benchmark.
-- Este cambio NO afecta la suite principal (`npm test`, `test:coverage`, etc.).
+## Archivos a modificar
+- `src/test/setup.ts`
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
