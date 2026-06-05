@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.8] - 2026-06-05
+- **chore(tests) — afterEach global más robusto en `src/test/setup.ts`**: tras `cleanup()` se añaden `vi.resetAllMocks()` (restaura implementaciones de spies/mocks, evita acumulación de stubs entre archivos) y `vi.useRealTimers()` (revierte cualquier `vi.useFakeTimers()` colgado que mantuviera referencias a componentes desmontados). Complementa `vi.clearAllMocks()` ya existente y refuerza la mitigación de fugas de memoria en la suite.
+
 ## [12.60.7] - 2026-06-05
 - **chore(tests) — script `test:perf` dedicado para benchmarks**: nuevo `vitest.perf.config.ts` que extiende la base con `mergeConfig` y sobreescribe `include`/`exclude` para correr únicamente `src/**/*.perf.test.tsx` y `src/**/*.perf.ts`. Añadido script `test:perf` en `package.json` (`NODE_OPTIONS=--max-old-space-size=8192 vitest run --config vitest.perf.config.ts`) para ejecutar bajo demanda los tests de performance que el run regular excluye.
 
