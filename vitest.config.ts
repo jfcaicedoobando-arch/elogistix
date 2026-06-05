@@ -9,6 +9,14 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Excluimos defaults de Vitest + tests de performance que sólo deben
+    // correr bajo demanda (consumen mucha memoria y enmascaran timeouts).
+    exclude: [
+      "node_modules/**",
+      "dist/**",
+      "src/**/*.perf.test.tsx",
+      "src/**/*.perf.ts",
+    ],
     // Suite completa medida en ~189s (sandbox Lovable). Archivo más lento: 5.1s,
     // resto <1s. 15s por test/hook deja ~3x de margen sobre el peor caso real
     // sin esconder tests que se cuelgan.
@@ -16,12 +24,15 @@ export default defineConfig({
     hookTimeout: 15_000,
     // Pool por procesos (forks) con heap ampliado en cada worker para evitar el
     // OOM observado (~6GB) al correr los ~289 archivos en una sola invocación.
+    // `isolate: true` a nivel pool garantiza que cada archivo corra en un fork
+    // limpio (JSDOM, módulos, caches), reforzando el aislamiento global.
     pool: "forks",
     poolOptions: {
       forks: {
         singleFork: false,
         maxForks: 2,
         minForks: 1,
+        isolate: true,
         execArgv: ["--max-old-space-size=8192"],
       },
     },

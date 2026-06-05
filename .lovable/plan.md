@@ -1,12 +1,48 @@
 ## Objetivo
-Medir cuánto tarda la suite completa de Vitest y ajustar `testTimeout`/`hookTimeout` en `vitest.config.ts` con un margen razonable.
 
-## Pasos
-1. Ejecutar `time bunx vitest run --reporter=default` (con `timeout: 600` en el sandbox) y capturar el tiempo total + tiempo del archivo/test más lento del output.
-2. Si la corrida completa excede 600s del sandbox, fallback: correr por bloques (`src/features`, `src/hooks`, `src/pages`, `src/pdf`, `src/generators`, `src/contexts`, `src/__tests__`, `supabase`) sumando tiempos.
-3. Calcular timeout por test = (max test individual observado) × 2, redondeado al alza (mínimo 10s, máximo 60s). Calcular hookTimeout igual.
-4. Actualizar `vitest.config.ts` con los valores calculados (reemplazando los 60_000 actuales).
-5. Bump `APP_VERSION` a `12.60.3` y agregar entrada en `CHANGELOG.md` con los números medidos.
+Mitigar fugas de memoria y timeouts al ejecutar la suite agregando dos cambios puntuales a `vitest.config.ts`:
 
-## Entregable
-Reporte breve en el chat con: tiempo total, test más lento, valores elegidos y por qué.
+1. Excluir los tests de performance del run regular.
+2. Garantizar limpieza total de JSDOM entre archivos vía aislamiento por fork.
+
+## Cambios en `vitest.config.ts`
+
+Dentro del objeto `test`:
+
+**A. Agregar `exclude` con los patrones perf** (no existe hoy, solo `include`):
+
+```ts
+exclude: [
+  "node_modules/**",
+  "dist/**",
+  "src/**/*.perf.test.tsx",
+  "src/**/*.perf.ts",
+],
+```
+
+Se incluyen `node_modules/**` y `dist/**` para conservar los defaults de Vitest que se pierden al declarar `exclude` explícitamente.
+
+**B. Añadir `isolate: true` dentro de `poolOptions.forks`** (ya existe `isolate: true` a nivel `test`, pero el usuario pide reforzarlo a nivel pool para asegurar que cada archivo corra en un fork limpio):
+
+```ts
+poolOptions: {
+  forks: {
+    singleFork: false,
+    maxForks: 2,
+    minForks: 1,
+    isolate: true,
+    execArgv: ["--max-old-space-size=8192"],
+  },
+},
+```
+
+`pool: "forks"` ya está configurado, no se toca.
+
+## Verificación post-implementación
+
+- Ejecutar `bunx vitest run --shard=3/4` y confirmar que ya no aparece OOM.
+- Confirmar que ningún archivo `*.perf.test.tsx` / `*.perf.ts` se ejecuta en la corrida normal (el conteo de test files debe bajar si existen).
+
+## Changelog
+
+Bump `APP_VERSION` a `12.60.6` y entrada nueva en `CHANGELOG.md` describiendo el exclude de perf tests y el `isolate` por fork.
