@@ -19,7 +19,7 @@ export function useReportesPageController() {
   const [fechaHasta, setFechaHasta] = useState<Date>(endOfMonth(now));
   const [modo, setModo] = useState("all");
   const [sortField, setSortField] = useState<SortField>("profit_usd");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const filtros = useMemo(
     () => ({

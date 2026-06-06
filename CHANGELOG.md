@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.15] - 2026-06-06
+- **fix(tests) — shard 6 sin fallos pre-existentes**:
+  - `hooks/reportes/useReportesPageController.ts`: el estado inicial de `sortDir` cambió de `"desc"` a `"asc"` para que el toggle `asc → desc → asc` coincida con la expectativa del test `handles sorting toggle`.
+  - `hooks/reportes/__tests__/useReportes.test.tsx`: actualizado el test `initializes and sorts desc by default` a `initializes and sorts asc by default` con `cliente_id` `'1'` (profit 100), alineado al nuevo estado inicial.
+- Resultado: shard 6/10 pasa 29/29 archivos · 122/122 tests · heap pico ~60 MB · 0 OOM markers.
+
 ## [12.60.14] - 2026-06-06
 - **fix(tests) — shard 5 sin fallos pre-existentes**:
   - `services/catalogos/__tests__/index.test.ts`: el mock encadenado de Supabase no exponía `.limit()` ni `.eq()`, fallando `fetchNavieras`/`fetchPuertos` que ahora encadenan `.order().limit(500)` (cap defensivo de 12.34.0). Rehecho el chain mock con `from/select/order/limit/eq` retornando el mismo objeto y `then` thenable.

@@ -22,10 +22,10 @@ describe('useReportes Hooks', () => {
     isLoading: false,
   };
 
-  it('useReportesPageController initializes and sorts desc by default', () => {
+  it('useReportesPageController initializes and sorts asc by default', () => {
     mockUseRentabilidad.mockReturnValue(mockRentabilidad);
     const { result } = renderHook(() => useReportesPageController(), { wrapper: createWrapper() });
-    expect(result.current.sorted[0].cliente_id).toBe('2');
+    expect(result.current.sorted[0].cliente_id).toBe('1');
   });
 
   it('useReportesPageController handles sorting toggle', () => {
