@@ -12,23 +12,38 @@ import { buildFromOportunidad, buildEmptyForNueva } from "@/lib/crm/oportunidadF
 const mockBuildFromOportunidad = vi.mocked(buildFromOportunidad);
 const mockBuildEmptyForNueva = vi.mocked(buildEmptyForNueva);
 
+// Referencias estables para los argumentos del hook. Sin esto, cada render
+// crea un nuevo `[]` / `null` literal en la fábrica del renderHook, lo que
+// dispara el useEffect interno indefinidamente y provoca un bucle de renders
+// que termina en OOM (~8GB) durante la suite de Vitest (shard 9/10).
+const STABLE_ETAPAS: never[] = [];
+const STABLE_USER = null;
+
 describe("useOportunidadForm", () => {
   it("cuando hay oportunidad, usa buildFromOportunidad", () => {
     const op = { id: "o1", nombre: "Proyecto X" } as never;
-    const { result } = renderHook(() => useOportunidadForm(true, op, [], null));
+    const { result } = renderHook(() =>
+      useOportunidadForm(true, op, STABLE_ETAPAS, STABLE_USER),
+    );
     expect(mockBuildFromOportunidad).toHaveBeenCalledWith(op);
     expect(result.current.form).toMatchObject({ nombre: "Proyecto X" });
   });
 
   it("cuando open=true y oportunidad=null, usa buildEmptyForNueva", () => {
-    const { result } = renderHook(() => useOportunidadForm(true, null, [], null));
+    const { result } = renderHook(() =>
+      useOportunidadForm(true, null, STABLE_ETAPAS, STABLE_USER),
+    );
     expect(mockBuildEmptyForNueva).toHaveBeenCalled();
     expect(result.current.form).toMatchObject({ nombre: "" });
   });
 
   it("set() actualiza campo específico", () => {
-    const { result } = renderHook(() => useOportunidadForm(true, null, [], null));
-    act(() => { result.current.set("nombre", "Nuevo Proyecto"); });
+    const { result } = renderHook(() =>
+      useOportunidadForm(true, null, STABLE_ETAPAS, STABLE_USER),
+    );
+    act(() => {
+      result.current.set("nombre", "Nuevo Proyecto");
+    });
     expect(result.current.form.nombre).toBe("Nuevo Proyecto");
   });
 });
