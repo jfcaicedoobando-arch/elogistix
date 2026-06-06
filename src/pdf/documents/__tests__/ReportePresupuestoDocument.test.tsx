@@ -22,7 +22,7 @@ const mockResumen = {
 } as any;
 
 describe("ReportePresupuestoDocument", () => {
-  it("debe renderizar sin errores con resumen mínimo", () => {
+  it("ReportePresupuestoDocument renderiza con resumen mínimo", () => {
     const { getByTestId } = render(<ReportePresupuestoDocument resumen={mockResumen} />);
     expect(getByTestId("pdf-doc")).toBeDefined();
   });
