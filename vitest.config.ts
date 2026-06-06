@@ -22,20 +22,23 @@ export default defineConfig({
     // sin esconder tests que se cuelgan.
     testTimeout: 15_000,
     hookTimeout: 15_000,
-    // Pool por procesos (forks) con heap ampliado en cada worker para evitar el
-    // OOM observado (~6GB) al correr los ~289 archivos en una sola invocación.
-    // `isolate: true` a nivel pool garantiza que cada archivo corra en un fork
-    // limpio (JSDOM, módulos, caches), reforzando el aislamiento global.
+    // Pool por procesos (forks) con heap ampliado y SERIALIZACIÓN de archivos
+    // (`singleFork: true` + `fileParallelism: false`) para evitar el OOM
+    // intermitente (`heap limit` / `ERR_IPC_CHANNEL_CLOSED`) cuando dos
+    // archivos pesados (PDFs, leak regression) compiten por memoria en el
+    // mismo proceso. `isolate: true` sigue garantizando módulos/JSDOM limpios
+    // entre archivos.
     pool: "forks",
     poolOptions: {
       forks: {
-        singleFork: false,
-        maxForks: 2,
+        singleFork: true,
+        maxForks: 1,
         minForks: 1,
         isolate: true,
         execArgv: ["--max-old-space-size=8192"],
       },
     },
+    fileParallelism: false,
     isolate: true,
     sequence: { shuffle: false },
     coverage: {

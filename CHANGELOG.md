@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.9] - 2026-06-06
+- **fix(tests) — mock Supabase en `snooze.test.ts` soporta `update().eq()`**: el mock previo no resolvía la cadena del segundo caso (`clearSnoozeRevision`), causando `Cannot read properties of undefined (reading 'update')`. Reescrito como cadena thenable que cubre `upsert().select().single()` y `update().eq()` con respuesta configurable por test.
+- **chore(tests) — serialización de archivos en `vitest.config.ts`**: `poolOptions.forks` ahora usa `singleFork: true` + `maxForks: 1` y se añade `fileParallelism: false` a nivel `test`. Elimina el OOM intermitente (`heap limit` / `ERR_IPC_CHANNEL_CLOSED`) al evitar que dos archivos pesados compitan por memoria en el mismo proceso.
+
 ## [12.60.8] - 2026-06-05
 - **chore(tests) — afterEach global más robusto en `src/test/setup.ts`**: tras `cleanup()` se añaden `vi.resetAllMocks()` (restaura implementaciones de spies/mocks, evita acumulación de stubs entre archivos) y `vi.useRealTimers()` (revierte cualquier `vi.useFakeTimers()` colgado que mantuviera referencias a componentes desmontados). Complementa `vi.clearAllMocks()` ya existente y refuerza la mitigación de fugas de memoria en la suite.
 
