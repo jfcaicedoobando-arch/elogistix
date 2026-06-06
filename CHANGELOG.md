@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.14] - 2026-06-06
+- **fix(tests) — shard 5 sin fallos pre-existentes**:
+  - `services/catalogos/__tests__/index.test.ts`: el mock encadenado de Supabase no exponía `.limit()` ni `.eq()`, fallando `fetchNavieras`/`fetchPuertos` que ahora encadenan `.order().limit(500)` (cap defensivo de 12.34.0). Rehecho el chain mock con `from/select/order/limit/eq` retornando el mismo objeto y `then` thenable.
+  - `contexts/auth/__tests__/useAuthSession.test.ts`: las variables `mockSubscribe`/`mockGetSession` se declaraban a nivel módulo y eran referenciadas dentro de un `vi.mock()` hoisted, causando `ReferenceError: Cannot access 'mockSubscribe' before initialization`. Movidas dentro de `vi.hoisted(() => ({...}))` para que existan antes del mock.
+- Resultado: shard 5/10 pasa 29/29 archivos · 122/122 tests · heap pico ~78 MB · 0 OOM markers.
+
 ## [12.60.13] - 2026-06-06
 - **fix(tests) — shard 4 sin fallos pre-existentes (6 fallos resueltos)**:
   - `audit-report.test.ts`: ahora honra las allowlists `PAGES_COMPONENTS_BASELINE` (Forgot/ResetPassword) y `OVERSIZED_BASELINE` (`Login.tsx`, `genericPayloadMapper.ts`) sincronizadas con `architecture-baseline.test.ts`.
