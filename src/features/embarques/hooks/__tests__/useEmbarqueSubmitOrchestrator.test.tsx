@@ -4,12 +4,18 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEmbarqueSubmitOrchestrator } from "../useEmbarqueSubmitOrchestrator";
 import { MemoryRouter } from "react-router-dom";
 
+const { createEmbarqueMock, resolverExpedienteMock, subirDocsMock } = vi.hoisted(() => ({
+  createEmbarqueMock: vi.fn().mockResolvedValue({ id: "1" }),
+  resolverExpedienteMock: vi.fn().mockResolvedValue("EXP-001"),
+  subirDocsMock: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { email: "test@example.com" } }),
 }));
 
-vi.mock("../useEmbarques", () => ({
-  useCreateEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({ id: "1" }), isPending: false }),
+vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
+  useCreateEmbarque: () => ({ mutateAsync: createEmbarqueMock, isPending: false }),
 }));
 
 vi.mock("@/hooks/cotizacion", () => ({
@@ -21,9 +27,9 @@ vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: () => ({ mutate: vi.fn() }),
 }));
 
-vi.mock("../services", () => ({
-  resolverExpediente: vi.fn().mockResolvedValue("EXP-001"),
-  subirDocumentosEmbarque: vi.fn().mockResolvedValue([]),
+vi.mock("@/features/embarques/services", () => ({
+  resolverExpediente: resolverExpedienteMock,
+  subirDocumentosEmbarque: subirDocsMock,
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
@@ -62,6 +68,9 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     };
 
     const success = await result.current.submit(mockParams as any);
+    expect(resolverExpedienteMock).toHaveBeenCalledWith("BL123", "FCL");
+    expect(subirDocsMock).toHaveBeenCalled();
+    expect(createEmbarqueMock).toHaveBeenCalled();
     expect(success).toBe(true);
   });
 });
