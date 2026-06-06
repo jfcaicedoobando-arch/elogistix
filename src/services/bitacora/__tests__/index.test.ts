@@ -28,8 +28,8 @@ beforeEach(() => {
   // Resetea historial pero conserva las implementaciones del chain.
   for (const key of Object.keys(mockSupabase)) {
     const v = (mockSupabase as Record<string, unknown>)[key];
-    if (typeof v === 'function' && 'mockClear' in (v as object)) {
-      (v as { mockClear: () => void }).mockClear();
+    if (typeof v === 'function' && 'mockClear' in (v as unknown as object)) {
+      (v as unknown as { mockClear: () => void }).mockClear();
     }
   }
 });
