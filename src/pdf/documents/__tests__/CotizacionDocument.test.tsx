@@ -25,7 +25,7 @@ const mockCotizacion = {
 } as any;
 
 describe("CotizacionDocument", () => {
-  it("debe renderizar sin errores con props mínimas", () => {
+  it("CotizacionDocument renderiza con props mínimas", () => {
     const { getByTestId } = render(<CotizacionDocument cotizacion={mockCotizacion} />);
     expect(getByTestId("pdf-doc")).toBeDefined();
   });

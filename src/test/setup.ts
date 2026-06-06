@@ -44,6 +44,7 @@ afterEach(() => {
   vi.useRealTimers();
 
   // Limpia QueryClient global si algún test lo expuso en globalThis.
+  // SAFE-CAST: acceso a propiedad opcional de globalThis sólo en tests.
   const g = globalThis as unknown as { __TEST_QUERY_CLIENT__?: { clear: () => void } };
   if (g.__TEST_QUERY_CLIENT__ && typeof g.__TEST_QUERY_CLIENT__.clear === "function") {
     g.__TEST_QUERY_CLIENT__.clear();

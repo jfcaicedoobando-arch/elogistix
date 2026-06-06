@@ -5,7 +5,7 @@ import { useListPageState, DEFAULT_PAGE_SIZE } from "@/hooks/shared";
 
 const wrapper = withNuqsTestingAdapter({ hasMemory: true });
 
-describe("useListPageState", () => {
+describe("useListPageState (nuqs adapter)", () => {
   it("inicializa con defaults", () => {
     const { result } = renderHook(
       () => useListPageState({ estado: "todos", cliente: "todos" }),

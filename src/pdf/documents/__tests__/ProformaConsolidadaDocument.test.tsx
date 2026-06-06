@@ -23,7 +23,7 @@ const mockEmbarque = {
 } as any;
 
 describe("ProformaConsolidadaDocument", () => {
-  it("debe renderizar sin errores con props mínimas", () => {
+  it("ProformaConsolidadaDocument renderiza con props mínimas", () => {
     const { getByTestId } = render(
       <ProformaConsolidadaDocument 
         proforma={mockProforma} 

@@ -28,7 +28,7 @@ const mockEmbarque = {
 } as any;
 
 describe("ProformaDocument", () => {
-  it("debe renderizar sin errores con props mínimas", () => {
+  it("ProformaDocument renderiza con props mínimas", () => {
     const { getByTestId } = render(
       <ProformaDocument proforma={mockProforma} embarque={mockEmbarque} conceptos={[]} />
     );
