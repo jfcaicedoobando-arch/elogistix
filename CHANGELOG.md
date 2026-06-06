@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.16] - 2026-06-06
+- **fix(tests) — OOM shard 9 resuelto (bucle infinito en useOportunidadForm.test.tsx)**: el test pasaba `[]` y `null` como literales en la fábrica de `renderHook`, generando nuevas referencias en cada render que disparaban el `useEffect` interno → `setForm` → re-render infinito → heap a 8 GB y `ERR_IPC_CHANNEL_CLOSED`. Se extrajeron `STABLE_ETAPAS` y `STABLE_USER` a nivel módulo. Shard 9 ahora corre en ~38 s con heap normal (~70 MB pico).
+
 ## [12.60.15] - 2026-06-06
 - **fix(tests) — shard 6 sin fallos pre-existentes**:
   - `hooks/reportes/useReportesPageController.ts`: el estado inicial de `sortDir` cambió de `"desc"` a `"asc"` para que el toggle `asc → desc → asc` coincida con la expectativa del test `handles sorting toggle`.
