@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.18] - 2026-06-06
+- **fix(tests) — shard 10/10 verde**: corregida la expectativa en `csf/index.test.ts` (`parseCsf lanza error si no hay sesion`) para coincidir con el nuevo mensaje de sesión requerida (`Debes iniciar sesión para procesar la Constancia de Situación Fiscal`).
+
 ## [12.60.17] - 2026-06-06
 - **fix(tests) — shard 9 verde end-to-end**: corregidos los 2 fallos preexistentes: (1) `bitacora/index.test.ts` — el mock de Supabase no exponía `neq/eq/gte/lte/in`; ahora el chain incluye todos los operadores que usa `fetchBitacora` con un `then` que resuelve `{data,count,error}`; (2) `useAuthProfile.test.ts` — `mockFetchUserContext` se referenciaba antes de hoisting; migrado a `vi.hoisted` + `act()` en el reset. Resultado del shard 9: **29/29 archivos · 115/115 tests · 0 fallos · ~70 MB pico**.
 
