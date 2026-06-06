@@ -22,7 +22,7 @@ vi.mock("../useContenedoresEmbarque", () => ({
 
 const mockEmbarque = { id: "emb-1", cliente_id: "cli-1" } as any;
 const mockConceptos = [
-  { id: "c1", descripcion: "C1", cantidad: 1, precio_unitario: 100, moneda: "USD" },
+  { id: "c1", descripcion: "C1", cantidad: 1, precio_unitario: 100, moneda: "USD", aplica_iva: true },
   { id: "c2", descripcion: "C2", cantidad: 1, precio_unitario: 200, moneda: "MXN" },
 ] as any;
 
