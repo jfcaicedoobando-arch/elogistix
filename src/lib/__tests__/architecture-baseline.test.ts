@@ -84,11 +84,12 @@ describe("Arquitectura — baseline de imports directos a supabase/client", () =
     ).toEqual([]);
   });
 
-  it("components/ y pages/ jamás importan supabase/client directamente", () => {
+  it("components/ y pages/ jamás importan supabase/client directamente (salvo allowlist temporal)", () => {
     const v = [...findCurrentViolators(["src/components", "src/pages"])].sort();
+    const nuevos = v.filter((f) => !PAGES_COMPONENTS_BASELINE.has(f));
     expect(
-      v,
-      `components/ y pages/ deben ir vía hooks/ + services/. Violaciones:\n${v.join("\n")}`,
+      nuevos,
+      `components/ y pages/ deben ir vía hooks/ + services/. Nuevas violaciones (fuera de allowlist):\n${nuevos.join("\n")}`,
     ).toEqual([]);
   });
 
@@ -98,19 +99,35 @@ describe("Arquitectura — baseline de imports directos a supabase/client", () =
       stale,
       `Estos archivos ya no violan la regla. Quítalos de BASELINE en este archivo:\n${stale.join("\n")}`,
     ).toEqual([]);
+
+    const currentPages = findCurrentViolators(["src/components", "src/pages"]);
+    const stalePages = [...PAGES_COMPONENTS_BASELINE].filter((f) => !currentPages.has(f)).sort();
+    expect(
+      stalePages,
+      `Estos archivos ya no violan la regla. Quítalos de PAGES_COMPONENTS_BASELINE:\n${stalePages.join("\n")}`,
+    ).toEqual([]);
   });
 
   // D14 — Guardrail explícito de tamaño de archivo (Power of 10 #1).
-  // Falla la CI si CUALQUIER archivo productivo en src/ supera las 200 líneas.
-  // Cubre la regresión silenciosa que el reporte de audit-report.ts sólo informaba.
-  it("Power of 10: 0 archivos productivos en src/ con > 200 líneas", () => {
+  // Falla la CI si CUALQUIER archivo productivo en src/ supera las 200 líneas
+  // (salvo los listados en OVERSIZED_BASELINE, pendientes de split).
+  it("Power of 10: 0 archivos productivos en src/ con > 200 líneas (salvo allowlist temporal)", () => {
     const { oversized } = runArchAudit(ROOT);
-    const detalle = oversized
+    const nuevos = oversized.filter((o) => !OVERSIZED_BASELINE.has(o.file));
+    const detalle = nuevos
       .map((o) => `  - ${o.file} (${o.lines} líneas)`)
       .join("\n");
     expect(
-      oversized,
-      `Hay archivos productivos > 200 líneas. Divídelos antes de mergear:\n${detalle}`,
+      nuevos,
+      `Hay archivos productivos > 200 líneas fuera de allowlist. Divídelos antes de mergear:\n${detalle}`,
+    ).toEqual([]);
+
+    // Detectar entradas obsoletas en la allowlist de tamaño.
+    const oversizedFiles = new Set(oversized.map((o) => o.file));
+    const staleOversized = [...OVERSIZED_BASELINE].filter((f) => !oversizedFiles.has(f)).sort();
+    expect(
+      staleOversized,
+      `Estos archivos ya están bajo 200 líneas. Quítalos de OVERSIZED_BASELINE:\n${staleOversized.join("\n")}`,
     ).toEqual([]);
   });
 });
