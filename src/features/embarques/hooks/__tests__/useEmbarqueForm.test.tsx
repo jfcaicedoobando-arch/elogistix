@@ -25,15 +25,18 @@ describe("useEmbarqueForm", () => {
   it("gestiona archivos de documentos", () => {
     const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
     const file = new File([""], "test.pdf", { type: "application/pdf" });
-    
+    // "Factura Comercial" es el nombre exacto del documento para el modo Marítimo
+    // según getDocsForMode("Marítimo") en embarqueConstants.
+    const docNombre = "Factura Comercial";
+
     act(() => {
-      result.current.setDocumentoArchivo("Factura", file);
+      result.current.setDocumentoArchivo(docNombre, file);
     });
-    
-    expect(result.current.documentosArchivos["Factura"]).toBe(file);
-    
+
+    expect(result.current.documentosArchivos[docNombre]).toBe(file);
+
     const checklist = result.current.getDocumentosChecklist("Marítimo");
-    const facturaEntry = checklist.find(d => d.nombre === "Factura");
+    const facturaEntry = checklist.find(d => d.nombre === docNombre);
     expect(facturaEntry?.adjuntado).toBe(true);
   });
 
