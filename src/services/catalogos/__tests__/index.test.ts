@@ -1,18 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fetchNavieras, fetchPuertos } from '../index';
 
-const { mockSupabase } = vi.hoisted(() => ({
-  mockSupabase: {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    then: vi.fn().mockImplementation(function(this: any, resolve: any) {
-      resolve({ data: this._data, error: this._error });
-    }),
-    _data: null as any,
-    _error: null as any,
-  },
-}));
+const { mockSupabase } = vi.hoisted(() => {
+  const chain: any = {};
+  chain.from = vi.fn(() => chain);
+  chain.select = vi.fn(() => chain);
+  chain.order = vi.fn(() => chain);
+  chain.limit = vi.fn(() => chain);
+  chain.eq = vi.fn(() => chain);
+  chain.then = vi.fn(function (this: any, resolve: any) {
+    resolve({ data: chain._data, error: chain._error });
+  });
+  chain._data = null;
+  chain._error = null;
+  return { mockSupabase: chain };
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: mockSupabase,

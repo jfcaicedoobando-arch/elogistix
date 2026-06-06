@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 
-const mockUnsubscribe = vi.fn();
-const mockSubscribe = vi.fn(() => ({ unsubscribe: mockUnsubscribe }));
-const mockGetSession = vi.fn();
+const { mockUnsubscribe, mockSubscribe, mockGetSession } = vi.hoisted(() => {
+  const unsub = vi.fn();
+  return {
+    mockUnsubscribe: unsub,
+    mockSubscribe: vi.fn(() => ({ unsubscribe: unsub })),
+    mockGetSession: vi.fn(),
+  };
+});
 
 vi.mock("@/services/auth", () => ({
   subscribeToAuthChanges: mockSubscribe,
