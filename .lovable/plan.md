@@ -1,35 +1,50 @@
-# Plan: estabilizar suite de pruebas (snooze mock + concurrencia)
+# Plan: bisección de la suite Vitest en 10 shards (modo background)
 
-## Objetivo
-Resolver los dos hallazgos del último `vitest run`:
-1. `clearSnoozeRevision` falla porque el mock encadenado de Supabase no soporta el patrón `.update(...).eq(...)` (segundo caso del test).
-2. Un worker fork supera el límite de heap (8 GB) y rompe el IPC. Necesitamos forzar serialización para que cada archivo libere memoria antes del siguiente.
+## Contexto
 
-## Cambios
+El script `scripts/bisect-tests.sh` ya existe. Ejecutarlo en foreground excede el timeout de 600s (10 shards × hasta 5 min c/u = posibles ~50 min). Necesitamos lanzarlo en background y verificar progreso por polling.
 
-### 1. `src/features/auditoria/services/__tests__/snooze.test.ts`
-Reescribir el mock para que cada llamada a `supabase.from(...)` devuelva una cadena fresca y soporte ambos flujos:
-- `from().upsert().select().single()` → resuelve con `{ data, error }`.
-- `from().update().eq()` → resuelve con `{ error }` (thenable).
+## Pasos
 
-Estrategia: helper `createChain(resolved)` que devuelve un objeto cuyos métodos (`upsert`, `update`, `select`, `eq`, `single`) retornan el mismo objeto y que además es thenable (implementa `then`) resolviendo a la respuesta configurada. Reasignar `mockSupabase.from` por test con `vi.fn(() => createChain(...))`. Mantener las aserciones existentes (`upsert` llamado, `update` con payload correcto, `eq('id','1')`).
+### 1. Lanzar bisección en background
 
-### 2. `vitest.config.ts`
-Reducir paralelismo del pool de forks para evitar acumulación de heap entre archivos pesados (PDFs, leak regression, etc.):
-- `poolOptions.forks.singleFork: true` (un solo fork reutilizable) **o** `maxForks: 1, minForks: 1`.
-- Añadir `fileParallelism: false` a nivel `test` para serializar archivos.
-- Mantener `isolate: true` y `--max-old-space-size=8192`.
+```
+nohup bash scripts/bisect-tests.sh > /tmp/vitest-bisect.out 2>&1 &
+echo $! > /tmp/vitest-bisect.pid
+```
 
-Esto sacrifica algo de velocidad pero garantiza que cada archivo arranque con heap limpio (gracias a `isolate`) y que nunca haya dos archivos pesados compitiendo por memoria en el mismo proceso padre.
+### 2. Polling (cada llamada ~30-60s)
 
-### 3. Versionado y changelog
-- `src/constants/appVersion.ts` → bump a `12.60.9`.
-- `CHANGELOG.md` → entrada `[12.60.9] - 2026-06-06`:
-  - Fix: mock de Supabase en `snooze.test.ts` soporta cadena `update().eq()`.
-  - Chore: `vitest.config.ts` serializa ejecución de archivos (`singleFork`, `fileParallelism: false`) para eliminar OOM intermitente en CI/local.
+Repetir hasta que el proceso termine:
 
-## Validación
-Tras los cambios, ejecutar `npx vitest run` y confirmar:
-- `snooze.test.ts` pasa los dos casos.
-- No aparece `FATAL ERROR: ... heap limit` ni `ERR_IPC_CHANNEL_CLOSED`.
-- Suite completa termina (tiempo esperado: algo mayor a ~190s previos por la serialización).
+```
+ps -p $(cat /tmp/vitest-bisect.pid) > /dev/null && echo RUNNING || echo DONE
+ls -la /tmp/vitest-shard-*.exit 2>/dev/null
+tail -5 /tmp/vitest-bisect-summary.txt
+```
+
+### 3. Analizar resultados al terminar
+
+Para cada shard con `exit ≠ 0` o `oom_markers > 0`:
+
+- Extraer secuencia de `heap used: N MB` por archivo (`grep -E "heap used|RUN " /tmp/vitest-shard-<i>.log`).
+- Identificar el archivo donde el heap salta sin retornar.
+
+### 4. Pasada fina (si el shard culpable tiene varios sospechosos)
+
+```
+npx vitest run <archivo> --logHeapUsage --reporter=verbose
+```
+
+### 5. Reporte y versionado
+
+- Escribir `/mnt/documents/test-leak-report.md` con tabla shard × exit × peak_heap × OOM y archivo(s) culpable(s).
+- Bump `APP_VERSION` → `12.60.11`.
+- Entrada en `CHANGELOG.md` describiendo el script de bisección y el hallazgo.
+
+## Notas
+
+- No se modifica `vitest.config.ts`; sharding es solo diagnóstico.
+- Si después de 60 min sigue corriendo, matar el proceso y reportar el último shard activo como el culpable (probable hang por OOM).
+
+YOU NEED TO RUN 1/10 of the tests at a time and report back after each 1/10 is done.
