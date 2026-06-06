@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.12] - 2026-06-06
+- **fix(tests) — shard 3 sin fallos pre-existentes**: (1) `usePresupuesto.test.tsx` mockaba `fetchPresupuestoCategorias` pero el hook `usePresupuestoCategorias` importa `fetchCategorias` desde `@/services/presupuesto/categorias`; corregido el nombre de la export mockeada. (2) `services/reportes/index.test.ts` esperaba `{ stats: {} }` pero `fetchReportesResumen` retorna `{ clientes, kpis }`; alineado el mock y el `expect`. Permite que shard 3 pase 100% y no enmascare posibles fugas de memoria.
+
 ## [12.60.11] - 2026-06-06
 - **fix(tests) — `src/test/setup.ts` ya no llama `vi.resetAllMocks()`**: ese reset destruía implementaciones declaradas a nivel módulo (`.mockReturnThis()`, `.mockResolvedValue(...)` dentro de `vi.hoisted`/`vi.mock`), rompiendo 6 tests dependientes de mocks encadenados de Supabase (`revisiones`, `planes`, `emisor`, `flujoProyectado`, `useNuevoClienteController`, `useProfit`). Ahora sólo se llama `vi.clearAllMocks()` que limpia historia pero preserva implementaciones.
 - **fix(tests) — `useEmbarqueForm.test.tsx` usa el nombre correcto de documento**: cambiado `"Factura"` por `"Factura Comercial"` (nombre exacto en `getDocsForMode("Marítimo")`).
