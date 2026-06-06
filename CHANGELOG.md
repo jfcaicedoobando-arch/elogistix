@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.17] - 2026-06-06
+- **fix(tests) — shard 9 verde end-to-end**: corregidos los 2 fallos preexistentes: (1) `bitacora/index.test.ts` — el mock de Supabase no exponía `neq/eq/gte/lte/in`; ahora el chain incluye todos los operadores que usa `fetchBitacora` con un `then` que resuelve `{data,count,error}`; (2) `useAuthProfile.test.ts` — `mockFetchUserContext` se referenciaba antes de hoisting; migrado a `vi.hoisted` + `act()` en el reset. Resultado del shard 9: **29/29 archivos · 115/115 tests · 0 fallos · ~70 MB pico**.
+
 ## [12.60.16] - 2026-06-06
 - **fix(tests) — OOM shard 9 resuelto (bucle infinito en useOportunidadForm.test.tsx)**: el test pasaba `[]` y `null` como literales en la fábrica de `renderHook`, generando nuevas referencias en cada render que disparaban el `useEffect` interno → `setForm` → re-render infinito → heap a 8 GB y `ERR_IPC_CHANNEL_CLOSED`. Se extrajeron `STABLE_ETAPAS` y `STABLE_USER` a nivel módulo. Shard 9 ahora corre en ~38 s con heap normal (~70 MB pico).
 
