@@ -34,8 +34,13 @@ Object.defineProperty(window, "matchMedia", {
  */
 afterEach(() => {
   cleanup();
+  // clearAllMocks: limpia historia de llamadas pero CONSERVA las
+  // implementaciones declaradas a nivel módulo (p.ej. `vi.fn().mockReturnThis()`
+  // o `vi.fn().mockResolvedValue(...)` dentro de `vi.hoisted` o `vi.mock`).
+  // No usamos `vi.resetAllMocks()` porque destruye esas implementaciones y
+  // rompe múltiples tests de mocks encadenados de Supabase (revisiones,
+  // planes, emisor, flujoProyectado, useNuevoClienteController, etc.).
   vi.clearAllMocks();
-  vi.resetAllMocks();
   vi.useRealTimers();
 
   // Limpia QueryClient global si algún test lo expuso en globalThis.
