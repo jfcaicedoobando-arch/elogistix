@@ -22,9 +22,9 @@ describe('reportes/index', () => {
   });
 
   it('fetchReportesResumen llama al RPC reportes_resumen', async () => {
-    mockSupabase.rpc.mockResolvedValue({ data: { stats: {} }, error: null });
+    mockSupabase.rpc.mockResolvedValue({ data: { clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } }, error: null });
     const result = await fetchReportesResumen({});
-    expect(mockSupabase.rpc).toHaveBeenCalled();
-    expect(result).toEqual({ stats: {} });
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('reportes_resumen', expect.any(Object));
+    expect(result).toEqual({ clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } });
   });
 });

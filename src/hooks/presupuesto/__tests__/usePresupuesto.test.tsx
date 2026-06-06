@@ -13,7 +13,7 @@ vi.mock('@/services/presupuesto', () => ({
   fetchPresupuestoMensualAnio: mockFetchMensual,
   upsertCeldaPresupuesto: mockUpsert,
   fetchPresupuestoVsReal: mockFetchVsReal,
-  fetchPresupuestoCategorias: mockFetchCats,
+  fetchCategorias: mockFetchCats,
 }));
 
 import { usePresupuestoMensualAnio, useUpsertCeldaPresupuesto } from '../usePresupuestoMensual';
