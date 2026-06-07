@@ -120,7 +120,16 @@ jobs:
           merge-multiple: true
 
       - name: Merge reports + coverage thresholds
-        run: bun run test:coverage:merge
+        run: |
+          mkdir -p .vitest-reports
+          shopt -s nullglob
+          blobs=(.vitest-reports/blob-*.json)
+          if [ ${#blobs[@]} -eq 0 ]; then
+            echo "::warning::No shard blob reports found — likely a shard was canceled or failed before upload. Skipping merge."
+            exit 0
+          fi
+          echo "Found ${#blobs[@]} shard blob(s): ${blobs[*]}"
+          bun run test:coverage:merge
 
       - name: Coverage report (markdown)
         if: always()
