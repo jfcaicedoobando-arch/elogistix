@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { ProformaConsolidadaDocument } from "../ProformaConsolidadaDocument";
 import { render } from "@testing-library/react";
 
