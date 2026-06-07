@@ -1,49 +1,66 @@
-# Plan: arreglar los hallazgos de la auditoría del shard 9/16
 
-Foco: eliminar todos los `as any`, accesos inseguros y stubs débiles encontrados en los 19 tests. **No** se toca el setup global (`src/test/setup.ts` ya hace `vi.useRealTimers()` y `cleanup()` en `afterEach`, así que la hipótesis de timer-leak queda descartada). Las degradaciones MEDIUM se documentan pero **no** se aplican en este pase para mantener el cambio acotado.
+## Re-auditoría profunda del shard 9/16 (segunda pasada)
 
-## Archivos a editar (7)
+Re-leí los 19 archivos buscando lo que la primera pasada no priorizó: **leaks de QueryClient, mocks sin `mockReset`, casts residuales y patrones que sostienen memoria entre tests**. El stub de `@react-pdf/renderer` ya está aliaseado en `vitest.config.ts`, así que la hipótesis "React-PDF carga fontkit" queda descartada — el verdadero leak está en otro lado.
 
-### 1. `src/contexts/auth/__tests__/useLoginAudit.test.ts`
-- Quitar `as any` en `mockSession.getItem.mockReturnValue("1" as any)` → cambiar el mock para que `getItem` esté tipado como `(k: string) => string | null` desde el `vi.hoisted`.
-- Añadir `afterEach(() => vi.useRealTimers())` explícito (redundante con el global, pero hace al archivo auto-contenido).
+### Hallazgos nuevos (ordenados por impacto en el hang)
 
-### 2. `src/services/profit/__tests__/estadoResultados.test.ts`
-- Reemplazar `(res as any).emb` por aserción tipada: usar `expect(res).toMatchObject({ emb: [] })` que no requiere cast.
+**CRITICAL — leak transversal de QueryClient**
+- `src/test/utils/queryWrapper.tsx` crea un `QueryClient` por test pero **nunca lo desmonta ni lo limpia**. El `afterEach` global en `src/test/setup.ts` sólo limpia `globalThis.__TEST_QUERY_CLIENT__`, que `createWrapper` jamás asigna. Cada test que usa `createWrapper` deja vivos: suscripciones, queries pendientes, refs internas de React Query, y el `QueryClientProvider` montado.
+- Afectados en shard 9: `useEmbarqueDocumentosActions.test.tsx`, `useAlertasSistema.test.tsx`, `useReportes.test.tsx` (3 archivos, 8 renders acumulados sin liberar).
 
-### 3. `src/services/tesoreria/__tests__/conciliacion.test.ts`
-- Eliminar `as any` en `sugerirCandidatos({ cargo: 0, abono: 0 } as any)`: importar el tipo del parámetro desde `../conciliacion` y construir un stub válido (o usar `Parameters<typeof sugerirCandidatos>[0]` y completar campos requeridos).
+**HIGH — mocks hoisted sin reset entre tests**
+1. `useLoginAudit.test.ts`: `mockSession.getItem` recibe `mockReturnValue("1")` en el test 2 y persiste hasta el test 3 porque `vi.clearAllMocks()` sólo limpia historial, no implementaciones. El test 3 funciona por casualidad (no consulta getItem).
+2. `useReportes.test.tsx`: `mockUseRentabilidad.mockReturnValue(...)` se sobreescribe en cada test, pero si en el futuro se agrega un test que no llama `mockReturnValue`, hereda el valor anterior.
+3. `logClientError.test.ts`: `invoke.mockImplementationOnce(() => { throw ... })` puede sobrevivir si el test 3 corre antes del 2 (orden aleatorio de vitest).
 
-### 4. `src/services/observability/__tests__/logClientError.test.ts`
-- Reemplazar `invoke.mock.calls[0][1].body` por desestructuración segura con assertion `!` después de verificar `toHaveBeenCalled()`, y tipar el body para evitar `any` implícito.
+**HIGH — `vi.importActual` innecesario**
+- `useAuditoriaEjecutivo.test.tsx` hace `await vi.importActual(...)` dentro del factory de `vi.mock` sólo para spread `...actual` y luego sobreescribir `useAuditoriaRevisiones`. Esto carga el módulo real (que importa `supabase` cliente), inflando el grafo de imports del archivo.
 
-### 5. `src/features/embarques/hooks/__tests__/useEmbarqueDocumentosActions.test.tsx`
-- Eliminar `as Parameters<typeof useEmbarqueDocumentosActions>[0]` usando un factory `makeEmbarqueStub()` que devuelva un objeto con tipo `Embarque` (importado del módulo de tipos del feature).
+**MEDIUM — casts residuales (Power of 10)**
+- `conciliacion.test.ts` línea 39: `} as MovimientoBBVA;` al final del helper `makeMov` (cast tipado pero innecesario si el objeto ya satisface la interfaz).
+- `ReporteEjecutivoDocument.test.tsx` línea 41: `{ nombre, saldo, moneda: "USD" } as SnapshotEjecutivo["topDeudores"][number]`.
+- `useEmbarqueDocumentosActions.test.tsx` línea 23: `embarqueStub = { id, expediente } as Parameters<...>[0]` — se podría reemplazar con un helper `makeEmbarqueStub()` tipado.
 
-### 6. `src/services/comisiones/__tests__/vendedoras.test.ts`
-- Quitar `as any` en `upsertVendedoraConfig({ ... } as any)` usando `TablesInsert<"vendedora_config">`.
+**MEDIUM — toast mock recreado en cada render**
+- `useEmbarqueDocumentosActions.test.tsx`: `useToast: () => ({ toast: vi.fn() })` crea un `vi.fn()` nuevo en cada llamada al hook. No causa fallos pero acumula spies que `vi.clearAllMocks()` no alcanza (no están registrados centralmente).
 
-### 7. `src/pdf/documents/__tests__/ReporteEjecutivoDocument.test.tsx`
-- Quitar `as any` del `mockSnapshot` importando el tipo del snapshot desde el módulo del documento PDF.
-- Añadir `afterEach(() => cleanup())` explícito y, si el tipo expone props opcionales, no inventar campos.
+**OK (limpios en segunda pasada)**
+- `embarqueConstants.test.ts`, `embarqueFases.test.ts`, `conceptos.test.ts`, `update.test.ts`, `styles.test.ts`, `estadoResultados.test.ts`, `vendedoras.test.ts`, `configuracion/index.test.ts`, `useAuditoriaEjecutivo.test.tsx` (salvo el importActual).
 
-## Archivos no tocados (pero documentados como deuda futura)
+### Plan de remediación (orden recomendado)
 
-- `src/lib/financial/__tests__/financialUtils.edge.test.ts` — limpieza de líneas blancas residuales (cosmético).
-- `src/features/auditoria/hooks/__tests__/useAuditoriaEjecutivo.test.tsx` — migrar `new Date()` a `vi.setSystemTime()` (flakiness teórica).
-- `src/hooks/admin/__tests__/useAlertasSistema.test.tsx`, `src/hooks/reportes/__tests__/useReportes.test.tsx`, `src/features/embarques/hooks/__tests__/useEmbarqueDocumentosActions.test.tsx` — el cleanup global ya cubre QueryClient/RTL, no se duplica.
-- `src/features/embarques/constants/__tests__/embarqueConstants.test.ts` — cobertura insuficiente (sólo 4 casos), pendiente de ampliar.
+**Fase 1 — Cortar el leak de QueryClient (máxima prioridad)**
+- Modificar `src/test/utils/queryWrapper.tsx` para registrar el client en `globalThis.__TEST_QUERY_CLIENT__` (el `afterEach` global ya sabe cómo limpiarlo con `cancelQueries → clear → unmount`).
+- Cero cambios en los tests consumidores.
 
-## No cambios en código de producción
+**Fase 2 — Mocks deterministas**
+- `useLoginAudit.test.ts`: agregar `mockSession.getItem.mockReset()` en `beforeEach` (o cambiar a `mockSession.getItem.mockReturnValue(null)` explícito al inicio de cada test).
+- `logClientError.test.ts`: cambiar `invoke.mockClear()` por `invoke.mockReset()` + reasignar implementación default `mockResolvedValue({ data: null, error: null })` en `beforeEach`.
 
-Ninguno de los fixes toca `src/`fuera de carpetas `__tests__`. Sólo se modifican tests.
+**Fase 3 — Simplificar `useAuditoriaEjecutivo`**
+- Reemplazar el factory `async` con `vi.importActual` por un mock plano: `vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", () => ({ useAuditoriaRevisiones: vi.fn(), revisionKey: (h) => \`${h.embarque_id}|${h.regla}|${h.detalle}\` }))`. Verificar primero la firma real de `revisionKey` para replicarla.
 
-## Versionado
+**Fase 4 — Limpieza de casts residuales**
+- `conciliacion.test.ts`: quitar el `as MovimientoBBVA` final del helper (devolver el objeto tipado directamente).
+- `ReporteEjecutivoDocument.test.tsx`: construir el item de `topDeudores` con la forma completa (sin cast).
+- `useEmbarqueDocumentosActions.test.tsx`: extraer `makeEmbarqueStub()` con `satisfies` en lugar del cast `as Parameters<...>[0]`.
 
-- Bump `APP_VERSION` a `12.60.37`.
-- Entrada en `CHANGELOG.md`:
-  > **test(shard-9) — limpieza Power of 10 en 7 archivos de test**: eliminados todos los `as any` y accesos sin guards en `useLoginAudit`, `estadoResultados`, `conciliacion`, `logClientError`, `useEmbarqueDocumentosActions`, `vendedoras` y `ReporteEjecutivoDocument`. No toca código de producción ni resuelve el hang del shard (el global setup ya restablece timers/RTL en `afterEach`, así que el culpable está en otra parte — probablemente teardown de React-PDF o coverage flush).
+**Fase 5 — Toast mock estable**
+- `useEmbarqueDocumentosActions.test.tsx`: mover `const toast = vi.fn()` fuera del factory para que `useToast` devuelva siempre el mismo objeto.
 
-## Aclaración importante
+**Fuera de alcance (no tocar)**
+- `src/test/setup.ts` (ya correcto).
+- Código de producción.
+- Los 13 archivos marcados OK.
 
-Este plan **no** garantiza resolver el `HARD TIMEOUT` del shard 9. El cleanup global ya hace `vi.useRealTimers()` y `cleanup()`, por lo que mi hipótesis previa sobre timer-leak fue incorrecta. Para diagnosticar el hang real recomiendo (en una siguiente iteración separada) instrumentar `[file-start]/[file-end]` en `src/test/setup.ts` como ya propuse en 12.60.36-prep. Esto es higiene de calidad.
+### Changelog y versión
+- Bump `APP_VERSION` a `12.60.38`.
+- Entrada `[12.60.38]` en `CHANGELOG.md` listando: fix leak QueryClient en `createWrapper`, reset determinista de mocks hoisted, eliminación de `vi.importActual` innecesario, limpieza de casts residuales.
+
+### Riesgos
+- Cambiar `createWrapper` para escribir en globalThis es un cambio sólo en tests; si dos tests corren en paralelo en el mismo proceso (no aplica: `fileParallelism=false`), sobreescribirían el slot. El setup ya asume serialización.
+- `mockReset` en `useLoginAudit` puede revelar tests que dependían implícitamente de implementaciones residuales — si ocurre, se ajusta cada test para fijar su propia implementación.
+
+### Lo que esta auditoría NO promete
+- No garantiza que el `HARD TIMEOUT` desaparezca, pero el leak de QueryClient es el sospechoso más fuerte que queda tras los fixes de 12.60.37. Si tras la Fase 1 el shard sigue colgando, el siguiente paso obligatorio es instrumentar `[file-start]/[file-end]` en `setup.ts` para identificar el archivo exacto.

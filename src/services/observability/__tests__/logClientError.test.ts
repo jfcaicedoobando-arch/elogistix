@@ -10,7 +10,10 @@ import { APP_VERSION } from "@/constants/appVersion";
 
 const invoke = supabase.functions.invoke as ReturnType<typeof vi.fn>;
 
-beforeEach(() => { invoke.mockClear(); });
+beforeEach(() => {
+  invoke.mockReset();
+  invoke.mockResolvedValue({ data: null, error: null });
+});
 
 describe("logClientError", () => {
   it("invoca client-error-log con payload completo y app_version", () => {

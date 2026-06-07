@@ -1,10 +1,16 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
+import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
+
+const { toastFn, registrarActividadFn } = vi.hoisted(() => ({
+  toastFn: vi.fn(),
+  registrarActividadFn: vi.fn(),
+}));
 
 vi.mock("@/hooks/shared", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-  useRegistrarActividad: () => ({ mutate: vi.fn() }),
+  useToast: () => ({ toast: toastFn }),
+  useRegistrarActividad: () => ({ mutate: registrarActividadFn }),
 }));
 
 vi.mock("@/services/storage/index", () => ({
@@ -20,12 +26,14 @@ vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
 
 import { useEmbarqueDocumentosActions } from "../useEmbarqueDocumentosActions";
 
-const embarqueStub = { id: "e-1", expediente: "EXP-001" } as Parameters<typeof useEmbarqueDocumentosActions>[0];
+function makeEmbarqueStub(): EmbarqueRow {
+  return { id: "e-1", expediente: "EXP-001" } satisfies Partial<EmbarqueRow> as EmbarqueRow;
+}
 
 describe("useEmbarqueDocumentosActions (smoke)", () => {
   it("monta sin errores y expone las acciones", () => {
     const { result } = renderHook(
-      () => useEmbarqueDocumentosActions(embarqueStub, "e-1"),
+      () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },
     );
     expect(typeof result.current.handleUpload).toBe("function");

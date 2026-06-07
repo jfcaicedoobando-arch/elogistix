@@ -13,18 +13,28 @@ import type {
   ReporteAuditoria,
 } from "@/features/auditoria/types";
 
+// Hash djb2 inline (replicado de src/features/auditoria/hooks/revisiones/hash.ts)
+// para evitar cargar el módulo real vía `vi.importActual` — que arrastraba el
+// cliente de Supabase al grafo de imports del archivo de test.
+function hallazgoHashStub(h: { embarque_id: string; regla: string; detalle: string }): string {
+  const input = `${h.embarque_id}|${h.regla}|${h.detalle}`;
+  let hash = 5381;
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) + hash + input.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(36);
+}
+
 vi.mock("@/features/auditoria/hooks/useAuditoria", () => ({
   useAuditoria: vi.fn(),
 }));
-vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {
-  const actual = await vi.importActual<typeof import("@/features/auditoria/hooks/useAuditoriaRevisiones")>(
-    "@/features/auditoria/hooks/useAuditoriaRevisiones",
-  );
-  return {
-    ...actual,
-    useAuditoriaRevisiones: vi.fn(),
-  };
-});
+vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", () => ({
+  useAuditoriaRevisiones: vi.fn(),
+  revisionKey: (h: { embarque_id: string; regla: string; detalle: string }) =>
+    `${h.embarque_id}|${h.regla}|${hallazgoHashStub(h)}`,
+  hallazgoHash: hallazgoHashStub,
+  AUDITORIA_REVISIONES_KEY: ["auditoria", "revisiones"],
+}));
 
 import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import {

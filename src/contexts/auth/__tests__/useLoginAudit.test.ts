@@ -23,7 +23,12 @@ const FAKE_USER = { id: "u1", email: "test@test.com" } as User;
 
 import { afterEach } from "vitest";
 
-beforeEach(() => { vi.clearAllMocks(); vi.useFakeTimers(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockSession.getItem.mockReset();
+  mockSession.getItem.mockReturnValue(null);
+  vi.useFakeTimers();
+});
 afterEach(() => { vi.useRealTimers(); });
 
 describe("useLoginAudit", () => {

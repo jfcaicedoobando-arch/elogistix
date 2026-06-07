@@ -36,9 +36,14 @@ describe("ReporteEjecutivoDocument", () => {
   });
 
   it("debe renderizar con datos en tablas", () => {
+    const deudor: SnapshotEjecutivo["topDeudores"][number] = {
+      nombre: "D1",
+      saldo: 100,
+      moneda: "USD",
+    };
     const snapshot: SnapshotEjecutivo = {
       ...mockSnapshot,
-      topDeudores: [{ nombre: "D1", saldo: 100, moneda: "USD" } as SnapshotEjecutivo["topDeudores"][number]],
+      topDeudores: [deudor],
     };
     const { getByTestId } = render(<ReporteEjecutivoDocument snapshot={snapshot} />);
     expect(getByTestId("pdf-doc")).toBeDefined();

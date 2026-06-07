@@ -14,7 +14,7 @@ import {
 } from "../conciliacion";
 
 function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
-  return {
+  const base: MovimientoBBVA = {
     id: "m1",
     cuenta_bancaria_id: "c1",
     fecha: "2024-01-01",
@@ -24,19 +24,17 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
     abono: 0,
     saldo: 0,
     hash_dedupe: "h",
-    estado: "Pendiente",
+    estado_conciliacion: "Pendiente",
     pago_proveedor_id: null,
-    pago_cliente_id: null,
-    cliente_id: null,
-    proveedor_id: null,
-    monto_conciliado: null,
+    pago_factura_id: null,
+    conciliado_at: null,
+    conciliado_por: null,
+    motivo_ignorar: "",
+    importado_en: "2024-01-01T00:00:00Z",
     importado_por: null,
     organization_id: "o1",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    ignorado_motivo: null,
-    ...partial,
-  } as MovimientoBBVA;
+  };
+  return { ...base, ...partial };
 }
 
 
