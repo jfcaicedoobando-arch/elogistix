@@ -165,16 +165,7 @@ export async function crearFacturaProveedor(payload: TablesInsert<"proveedor_fac
   return data;
 }
 
-export async function actualizarFacturaProveedor(id: string, patch: TablesUpdate<"proveedor_facturas">) {
-  const { data, error } = await supabase
-    .from("proveedor_facturas")
-    .update(patch)
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
+
 
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
   const { error } = await supabase
