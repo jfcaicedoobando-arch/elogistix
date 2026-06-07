@@ -1,34 +1,37 @@
-# Aislar el shard 2/2 que se cuelga dividiendo en más shards
+# Subdividir shard 3/4 — subir matriz a 8 shards
 
-## Contexto
-- CI actual usa `matrix.shard: [1, 2]` con `--shard=N/2`.
-- Shard 1/2 termina verde; shard 2/2 se queda hanging (probablemente un test específico, no OOM, porque ya bajamos a singleFork @ 8 GB).
-- Vitest acepta cualquier número entero de shards `N/M` (no hay límite duro; GitHub Actions cobra por minutos, no por shards). Lo práctico es 4-8.
+## Por qué disectar y no borrar
 
-## Estrategia
-Subir la matriz de 2 → 4 shards. Esto:
-1. Reparte los archivos en 4 grupos más pequeños — el shard que contiene el archivo problemático será visible (timeout/hang aislado a 1/4 de la suite en vez de 1/2).
-2. Permite identificar el archivo culpable mirando qué shard (1/4, 2/4, 3/4 o 4/4) se cuelga.
-3. Reduce el tiempo de cada job (~50% del actual shard 2/2).
+- **Borrar todos los tests del shard 3/4** = perder ~25% de la cobertura sin saber qué archivo es el culpable. El leak/hang seguirá ahí cuando alguien re-agregue tests, y perdemos los tests sanos que comparten shard.
+- **Disectar más** es no-destructivo, barato (CI Actions es por minutos, no por shards) y deja al culpable aislado en ~12% de la suite. Si aún no aparece, subimos a 16.
 
-### Cambios
+## Cambio propuesto
 
-**`.github/workflows/ci.yml`** — job `tests`:
-- `matrix.shard: [1, 2, 3, 4]`
-- `matrix.total: [4]`
-- (lo demás del job queda igual; el merge job ya descarga todos los blobs con `pattern: vitest-blob-*`)
+`**.github/workflows/ci.yml**` — job `tests`:
 
-**`package.json`** — script `test` local:
-- Cambiar la cadena `--shard=1/2 && ... --shard=2/2` a 4 shards secuenciales, para que el dev local pueda reproducir la misma partición.
+- `matrix.shard: [1,2,3,4,5,6,7,8]`
+- `matrix.total: [8]`
 
-### Diagnóstico adicional sugerido (sin tocar config)
-Para identificar el archivo exacto que cuelga, agregar al job de tests el flag `--reporter=verbose` solo cuando el shard fall — Vitest imprimirá el nombre del último archivo en ejecución antes del timeout del runner. Esto es opcional, pero útil. Si lo quieres lo añado.
+`**package.json**` — script `test` local actualizado a 8 shards secuenciales (para reproducir localmente la misma partición que CI).
 
-## Próximos pasos sugeridos (no parte de este plan, para confirmar después)
-- Si shard 4/4 sigue colgando, el siguiente paso es subir a 6-8 shards o agregar `--reporter=verbose` para ver el nombre del archivo justo antes del hang.
-- Una vez identificado el archivo, lo podemos excluir temporalmente o investigar el leak/promesa sin resolver.
+El resto del workflow no cambia: `--reporter=verbose` ya está, el job `coverage` ya descarga todos los blobs con `pattern: vitest-blob-*`.
+
+## Qué esperar después de mergear
+
+1. Vitest reparte los archivos por hash sobre el path — los archivos que estaban en shard 3/4 se redistribuyen entre los nuevos shards 5/8 y 6/8 (aproximadamente, depende del hash).
+2. **Uno** de los 8 shards va a colgar. Ese shard contendrá ~12% de la suite (en lugar de 25%).
+3. El log con `--reporter=verbose` mostrará la última línea `RUN ...` antes del hang → ese es el archivo culpable, o el siguiente en orden alfabético dentro del shard.
+
+## Siguiente paso si 8 shards no basta
+
+Subir a 16 shards. En 16, cada shard tiene ~6% de la suite (típicamente 5–10 archivos), suficiente para identificar el culpable por inspección manual aunque verbose no muestre el nombre exacto.
+
+&nbsp;
+
+SUBE A 16 shards en este run
 
 ## Archivos modificados
+
 - `.github/workflows/ci.yml`
 - `package.json`
 - `CHANGELOG.md` + `src/constants/appVersion.ts` (bump)
