@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.25] - 2026-06-07
+- **fix(tests) — singleFork + `--expose-gc` para eliminar OOM definitivo**: `vitest.config.ts` cambia a `singleFork: true`, `maxForks: 1`, `fileParallelism: false` y añade `--expose-gc` al `execArgv`. Se serializa la suite en un único proceso (más lento pero estable) tras confirmar que con 2 forks @ 12 GB el worker `vitest 2` seguía acumulando heap entre suites y disparando `Ineffective mark-compacts near heap limit` / `ERR_IPC_CHANNEL_CLOSED`. El `afterEach` global ya invoca `global.gc()` cuando está expuesto, por lo que ahora puede recuperar heap entre archivos dentro del fork único.
+
 ## [12.60.24] - 2026-06-07
 - **fix(tests) — heap por fork a 12 GB + mock `.order()` en `configuracion`**: `vitest.config.ts` sube `--max-old-space-size` de 8192 → 12288 por fork (2 forks × 12 GB = 24 GB, cabe en sandbox de 32 GB) para eliminar el OOM `Ineffective mark-compacts near heap limit` que reaparecía en el worker `vitest 2` al acumular suites. Además, `src/services/configuracion/__tests__/index.test.ts` añade `order: vi.fn().mockReturnThis()` al mock thenable de Supabase (la función real encadena `.eq().order().order()`), corrigiendo el fallo `supabase.from(...).select(...).eq(...).order is not a function`.
 
