@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.29] - 2026-06-07
+- **chore(ci) — bump GitHub Actions a Node.js 24**: `.github/workflows/ci.yml` actualiza `actions/checkout@v4 → v6`, `actions/upload-artifact@v4 → v7` y `actions/download-artifact@v4 → v7` en los jobs `quality`, `tests` y `coverage`. Estas versiones corren nativamente sobre Node.js 24, eliminando los warnings de deprecación antes del corte del 16-jun-2026 (cuando GitHub fuerza Node.js 24) y el 16-sep-2026 (remoción de Node.js 20 del runner). Sin breaking changes para los pasos actuales.
+
 ## [12.60.28] - 2026-06-07
 - **chore(quality) — limpieza de código muerto detectada por knip**: `knip.json` agrega a `ignore` los falsos positivos (`src/test/**` para mocks/helpers usados vía aliases, barrels `src/features/auditoria/index.ts` y `src/features/embarques/index.ts` como API pública de feature) y `react-helmet-async` a `ignoreDependencies` (usado por `src/components/seo/Seo.tsx`). Borrados: `src/constants/filters.ts` (0 usos), `src/hooks/facturacion/useFacturaSeries.ts` (6 hooks sin consumidor) y línea barrel en `src/hooks/facturacion/index.ts`. Eliminados exports muertos: `useActualizarFacturaProveedor` (cxp), `useEliminarNotaCredito` (facturacion), `useActualizarCuenta` (tesoreria) y el `export` del tipo `CeldaPresupuesto` (presupuesto, interfaz solo intra-archivo). Desbloquea el job `quality` de CI: 0 archivos / 0 deps muertos.
 
