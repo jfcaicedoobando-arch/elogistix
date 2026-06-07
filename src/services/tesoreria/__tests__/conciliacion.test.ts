@@ -80,13 +80,13 @@ describe("conciliacion service", () => {
 
   describe("sugerirCandidatos", () => {
     it("retorna vacio si monto <= 0", async () => {
-      const res = await sugerirCandidatos({ cargo: 0, abono: 0 } as any);
+      const res = await sugerirCandidatos(makeMov({ cargo: 0, abono: 0 }));
       expect(res).toEqual([]);
     });
 
     it("busca en pagos_proveedor para cargos", async () => {
       mock.setTableResult("pagos_proveedor", { data: [], error: null });
-      await sugerirCandidatos({ cargo: 100, abono: 0, fecha: "2024-01-01" } as any);
+      await sugerirCandidatos(makeMov({ cargo: 100, abono: 0, fecha: "2024-01-01" }));
       expect(mock.tableCalls.some(c => c.table === "pagos_proveedor")).toBe(true);
     });
   });
