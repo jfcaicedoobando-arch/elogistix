@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 
-const mockInsert = vi.fn();
-const mockSession = { getItem: vi.fn(() => null), setItem: vi.fn(), removeItem: vi.fn() };
+const { mockInsert, mockSession } = vi.hoisted(() => ({
+  mockInsert: vi.fn(),
+  mockSession: { getItem: vi.fn(() => null), setItem: vi.fn(), removeItem: vi.fn() },
+}));
 
 vi.mock("@/services/auth", () => ({ insertLoginAudit: mockInsert }));
 vi.mock("@/lib/browserStorage", () => ({
