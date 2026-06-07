@@ -27,9 +27,11 @@ describe("logClientError", () => {
 
   it("normaliza stack/componentStack ausentes a null", () => {
     logClientError({ message: "x" });
-    const body = invoke.mock.calls[0][1].body;
-    expect(body.stack).toBeNull();
-    expect(body.component_stack).toBeNull();
+    expect(invoke).toHaveBeenCalled();
+    const call = invoke.mock.calls[0];
+    const opts = call?.[1] as { body: { stack: unknown; component_stack: unknown } } | undefined;
+    expect(opts?.body.stack).toBeNull();
+    expect(opts?.body.component_stack).toBeNull();
   });
 
   it("no propaga errores aunque invoke lance síncronamente", () => {
