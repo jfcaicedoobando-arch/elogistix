@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.26] - 2026-06-07
+- **ci(tests) — sharding paralelo en GitHub Actions con merge de coverage**: `.github/workflows/ci.yml` se divide en tres jobs: `quality` (lint, knip, audit, build), `tests` (matrix `shard: [1, 2]` corriendo `vitest run --coverage --reporter=blob --shard=N/2` en paralelo en runners limpios) y `coverage` (descarga los blobs y ejecuta `vitest run --merge-reports=.vitest-reports --coverage` para consolidar umbrales y reportes). Cada shard arranca en un proceso fresco, evitando la acumulación de heap entre suites que disparaba el OOM con singleFork local. `package.json` añade `test:shard`, `test:coverage:shard` y `test:coverage:merge`; `vitest.config.ts` baja el heap por fork de 20480 → 8192 (cada shard carga la mitad de la suite). El script local `bun run test` sigue funcionando igual (sharding secuencial en el mismo equipo).
+
 ## [12.60.25] - 2026-06-07
 - **fix(tests) — singleFork + `--expose-gc` para eliminar OOM definitivo**: `vitest.config.ts` cambia a `singleFork: true`, `maxForks: 1`, `fileParallelism: false` y añade `--expose-gc` al `execArgv`. Se serializa la suite en un único proceso (más lento pero estable) tras confirmar que con 2 forks @ 12 GB el worker `vitest 2` seguía acumulando heap entre suites y disparando `Ineffective mark-compacts near heap limit` / `ERR_IPC_CHANNEL_CLOSED`. El `afterEach` global ya invoca `global.gc()` cuando está expuesto, por lo que ahora puede recuperar heap entre archivos dentro del fork único.
 
