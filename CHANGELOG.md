@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.32] - 2026-06-07
+- **fix(tests) — `vi.mock` hoisting bug en `useLoginAudit.test.ts`**: el archivo declaraba `const mockInsert` y `const mockSession` top-level y los referenciaba dentro de `vi.mock(...)`, que Vitest hoistea al tope del archivo (antes de las `const`), disparando `ReferenceError: Cannot access 'mockSession' before initialization` y abortando shard 3/4 del CI. Migrado a `vi.hoisted(() => ({ mockInsert, mockSession }))` — patrón oficial de Vitest para esta situación. Aislado gracias a la matriz de 16 shards (shard 9/16 reportó el fallo en 10s vs hang previo).
+
 ## [12.60.31] - 2026-06-07
 - **ci(tests) — subir a 16 shards para aislar archivo que cuelga en shard 3/4**: `.github/workflows/ci.yml` sube la matriz de tests de 4 → 16 shards (`matrix.shard: [1..16]`, `total: [16]`). Con 16 shards cada uno contiene ~6% de la suite (5-10 archivos), suficiente para identificar el archivo culpable por inspección manual del último `RUN ...` que imprime `--reporter=verbose` antes del hang. `package.json` actualiza `test` local a un loop bash con 16 shards secuenciales.
 

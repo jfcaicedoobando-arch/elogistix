@@ -1,37 +1,36 @@
-# Subdividir shard 3/4 — subir matriz a 8 shards
+# Fix: `vi.mock` hoisting bug en `useLoginAudit.test.ts`
 
-## Por qué disectar y no borrar
+## Diagnóstico
+Encontramos el archivo culpable: `src/contexts/auth/__tests__/useLoginAudit.test.ts`.
 
-- **Borrar todos los tests del shard 3/4** = perder ~25% de la cobertura sin saber qué archivo es el culpable. El leak/hang seguirá ahí cuando alguien re-agregue tests, y perdemos los tests sanos que comparten shard.
-- **Disectar más** es no-destructivo, barato (CI Actions es por minutos, no por shards) y deja al culpable aislado en ~12% de la suite. Si aún no aparece, subimos a 16.
+El error real es:
+```
+ReferenceError: Cannot access 'mockSession' before initialization
+```
 
-## Cambio propuesto
+Vitest **hoistea** las llamadas `vi.mock(...)` al tope del archivo (antes de cualquier otra declaración). Las variables `mockInsert` (línea 4) y `mockSession` (línea 5) están declaradas con `const`, pero los `vi.mock(...)` de las líneas 7-11 las referencian. Al hoistear, los `vi.mock` ejecutan antes de las `const`, disparando el TDZ.
 
-`**.github/workflows/ci.yml**` — job `tests`:
+## Solución
+Usar `vi.hoisted(() => ...)` para que las variables se inicialicen **junto con** los `vi.mock` (también hoisteados). Este es el patrón oficial de Vitest documentado para este caso.
 
-- `matrix.shard: [1,2,3,4,5,6,7,8]`
-- `matrix.total: [8]`
+### Cambio en `src/contexts/auth/__tests__/useLoginAudit.test.ts`
 
-`**package.json**` — script `test` local actualizado a 8 shards secuenciales (para reproducir localmente la misma partición que CI).
+Reemplazar las declaraciones top-level por:
+```ts
+const { mockInsert, mockSession } = vi.hoisted(() => ({
+  mockInsert: vi.fn(),
+  mockSession: { getItem: vi.fn(() => null), setItem: vi.fn(), removeItem: vi.fn() },
+}));
+```
 
-El resto del workflow no cambia: `--reporter=verbose` ya está, el job `coverage` ya descarga todos los blobs con `pattern: vitest-blob-*`.
+El resto del archivo (los `vi.mock`, `describe`, `it`) queda igual — siguen referenciando `mockInsert` y `mockSession` con el mismo nombre.
 
-## Qué esperar después de mergear
-
-1. Vitest reparte los archivos por hash sobre el path — los archivos que estaban en shard 3/4 se redistribuyen entre los nuevos shards 5/8 y 6/8 (aproximadamente, depende del hash).
-2. **Uno** de los 8 shards va a colgar. Ese shard contendrá ~12% de la suite (en lugar de 25%).
-3. El log con `--reporter=verbose` mostrará la última línea `RUN ...` antes del hang → ese es el archivo culpable, o el siguiente en orden alfabético dentro del shard.
-
-## Siguiente paso si 8 shards no basta
-
-Subir a 16 shards. En 16, cada shard tiene ~6% de la suite (típicamente 5–10 archivos), suficiente para identificar el culpable por inspección manual aunque verbose no muestre el nombre exacto.
-
-&nbsp;
-
-SUBE A 16 shards en este run
+## Por qué no se vio antes con 4 shards
+Probablemente en shard 3/4 este archivo compartía partición con tests que tenían fake-timers globales o algún teardown que causaba que el error propagara como hang en lugar de fallo limpio (el `setTimeout` interno de Vitest reportando el error podría haberse quedado en `vi.useFakeTimers()`). Con 16 shards quedó aislado y reportó el fallo real en 10s.
 
 ## Archivos modificados
-
-- `.github/workflows/ci.yml`
-- `package.json`
+- `src/contexts/auth/__tests__/useLoginAudit.test.ts`
 - `CHANGELOG.md` + `src/constants/appVersion.ts` (bump)
+
+## No tocar (por ahora)
+La matriz de 16 shards se queda — fue útil para encontrar este bug y no daña nada. Si quieres después la podemos bajar a 4 una vez que CI vuelva a verde sostenido.
