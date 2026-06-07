@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.28] - 2026-06-07
+- **chore(quality) — limpieza de código muerto detectada por knip**: `knip.json` agrega a `ignore` los falsos positivos (`src/test/**` para mocks/helpers usados vía aliases, barrels `src/features/auditoria/index.ts` y `src/features/embarques/index.ts` como API pública de feature) y `react-helmet-async` a `ignoreDependencies` (usado por `src/components/seo/Seo.tsx`). Borrados: `src/constants/filters.ts` (0 usos), `src/hooks/facturacion/useFacturaSeries.ts` (6 hooks sin consumidor) y línea barrel en `src/hooks/facturacion/index.ts`. Eliminados exports muertos: `useActualizarFacturaProveedor` (cxp), `useEliminarNotaCredito` (facturacion), `useActualizarCuenta` (tesoreria) y el `export` del tipo `CeldaPresupuesto` (presupuesto, interfaz solo intra-archivo). Desbloquea el job `quality` de CI: 0 archivos / 0 deps muertos.
+
 ## [12.60.27] - 2026-06-07
 - **fix(ci) — exenciones ESLint para helpers de test y edge functions Deno**: `eslint.config.js` amplía el override de tests a `src/test/**` (cubre `_supabaseChainMock.ts`, `setup.ts`, `reactPdfStub.tsx` y demás utilidades que usan `any` legítimamente en fixtures), y agrega un override para `supabase/functions/**/*.{ts,tsx}` que desactiva `@typescript-eslint/ban-ts-comment` y `react-refresh/only-export-components` (estos archivos corren en runtime Deno con `npm:` imports y requieren `@ts-nocheck`). Desbloquea el job `quality` de CI tras el endurecimiento de Power of 10; pasa de 3 errores a 0 sin tocar código de producción.
 

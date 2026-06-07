@@ -2,13 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  listarCuentas, crearCuenta, actualizarCuenta, eliminarCuenta,
+  listarCuentas, crearCuenta, eliminarCuenta,
   listarMovimientos, importarMovimientos, conciliarConPago, desconciliarMovimiento,
   ignorarMovimiento, sugerirCandidatos,
   fetchResumenTesoreria,
   type FiltrosMovimientos, type MovimientoBBVA,
 } from "@/services/tesoreria";
-import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/lib/import/bbva";
 
 export function useCuentasBancarias(activas = true) {
@@ -27,14 +27,6 @@ export function useCrearCuenta() {
   });
 }
 
-export function useActualizarCuenta() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"cuentas_bancarias"> }) =>
-      actualizarCuenta(id, patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all }),
-  });
-}
 
 export function useEliminarCuenta() {
   const qc = useQueryClient();

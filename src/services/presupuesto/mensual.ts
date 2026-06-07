@@ -6,7 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type PresupuestoMensualRow = Tables<"presupuesto_mensual">;
 
-export interface CeldaPresupuesto {
+interface CeldaPresupuesto {
   categoria_id: string;
   periodo: string; // YYYY-MM
   monto_mxn: number;

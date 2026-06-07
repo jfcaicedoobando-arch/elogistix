@@ -3,24 +3,14 @@ import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   crearFacturaProveedor,
-  actualizarFacturaProveedor,
   softDeleteFacturaProveedor,
 } from "@/services/cxp";
-import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 export function useCrearFacturaProveedor() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: TablesInsert<"proveedor_facturas">) => crearFacturaProveedor(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cxp.all }),
-  });
-}
-
-export function useActualizarFacturaProveedor() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: TablesUpdate<"proveedor_facturas"> }) =>
-      actualizarFacturaProveedor(id, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.cxp.all }),
   });
 }
