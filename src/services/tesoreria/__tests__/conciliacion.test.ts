@@ -24,17 +24,15 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
     abono: 0,
     saldo: 0,
     hash_dedupe: "h",
-    estado: "Pendiente",
+    estado_conciliacion: "Pendiente",
     pago_proveedor_id: null,
-    pago_cliente_id: null,
-    cliente_id: null,
-    proveedor_id: null,
-    monto_conciliado: null,
+    pago_factura_id: null,
+    conciliado_at: null,
+    conciliado_por: null,
+    motivo_ignorar: "",
+    importado_en: "2024-01-01T00:00:00Z",
     importado_por: null,
     organization_id: "o1",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    ignorado_motivo: null,
   };
   return { ...base, ...partial };
 }
