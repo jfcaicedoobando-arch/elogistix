@@ -32,14 +32,14 @@ export default defineConfig({
     pool: "forks",
     poolOptions: {
       forks: {
-        singleFork: false,
-        maxForks: 2,
+        singleFork: true,
+        maxForks: 1,
         minForks: 1,
         isolate: true,
-        execArgv: ["--max-old-space-size=12288"],
+        execArgv: ["--max-old-space-size=20480", "--expose-gc"],
       },
     },
-    fileParallelism: true,
+    fileParallelism: false,
     isolate: true,
     sequence: { shuffle: false },
     coverage: {
