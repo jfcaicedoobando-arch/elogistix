@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.36] - 2026-06-07
+- **test(configuracion) — reescrito `index.test.ts` con el helper canónico**: migrado a `createSupabaseMock` (alineado con `mem://technical/testing-mock-patterns`), eliminando el thenable manual síncrono, el estado mutable sin reset y los `as any`. Ahora cubre 4 casos (filtro por org, propagación de error, data null y update por item) en lugar de 1. No cambia código de producción ni resuelve el hang de shard 9/16 (ese sigue apuntando al teardown del worker o a `ReporteEjecutivoDocument.test.tsx`).
+
 ## [12.60.35] - 2026-06-07
 - **ci(coverage) — merge tolera shards cancelados sin enmascarar el error real**: el step "Merge reports + coverage thresholds" en `.github/workflows/ci.yml` ahora hace `mkdir -p .vitest-reports`, lista `blob-*.json` con `shopt -s nullglob` y, si no hay ninguno (porque un shard fue killed por GitHub antes de subir su artifact), imprime `::warning::` explícito y sale con 0 — en lugar de reventar con `ENOENT: scandir '.vitest-reports'` que escondía el cuelgue del shard tras un crash del job de coverage. El job `tests` ya falla rojo por su cuenta, no necesitamos doble fallo opaco.
 
