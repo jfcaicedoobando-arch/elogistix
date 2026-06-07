@@ -36,7 +36,7 @@ export default defineConfig({
         maxForks: 1,
         minForks: 1,
         isolate: true,
-        execArgv: ["--max-old-space-size=20480", "--expose-gc"],
+        execArgv: ["--max-old-space-size=8192", "--expose-gc"],
       },
     },
     fileParallelism: false,
