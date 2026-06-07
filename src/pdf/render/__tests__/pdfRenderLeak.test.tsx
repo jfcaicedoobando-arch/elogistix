@@ -15,9 +15,8 @@
  *    El objetivo es detectar fugas catastróficas (> cientos de MB), no
  *    micro-fluctuaciones del runtime.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import type { ReactNode } from "react";
 
 import { RentabilidadDocument } from "@/pdf/documents/RentabilidadDocument";
 
