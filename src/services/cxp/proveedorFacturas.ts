@@ -5,7 +5,7 @@
  * KPIs (por pagar / vencido / por vencer 7d) y CRUD básico.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type ProveedorFacturaRow = Tables<"proveedor_facturas">;
 export type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
@@ -165,16 +165,7 @@ export async function crearFacturaProveedor(payload: TablesInsert<"proveedor_fac
   return data;
 }
 
-export async function actualizarFacturaProveedor(id: string, patch: TablesUpdate<"proveedor_facturas">) {
-  const { data, error } = await supabase
-    .from("proveedor_facturas")
-    .update(patch)
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
+
 
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
   const { error } = await supabase

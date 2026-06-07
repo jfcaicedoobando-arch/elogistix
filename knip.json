@@ -21,11 +21,15 @@
     "src/integrations/supabase/client.ts",
     "src/components/ui/**",
     "supabase/**",
-    "docs/**"
+    "docs/**",
+    "src/test/**",
+    "src/features/auditoria/index.ts",
+    "src/features/embarques/index.ts"
   ],
   "ignoreDependencies": [
     "tailwindcss-animate",
-    "@tailwindcss/typography"
+    "@tailwindcss/typography",
+    "react-helmet-async"
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {

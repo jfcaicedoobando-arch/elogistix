@@ -76,13 +76,3 @@ export async function cambiarEstadoNotaCredito(
   const { error } = await supabase.from("factura_notas_credito").update(patch).eq("id", id);
   if (error) throw error;
 }
-
-export async function eliminarNotaCredito(id: string): Promise<void> {
-  const user = await getCurrentUser();
-  const { error } = await supabase
-    .from("factura_notas_credito")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: user.id })
-    .eq("id", id)
-    .eq("estado", "Borrador"); // sólo borradores se eliminan
-  if (error) throw error;
-}

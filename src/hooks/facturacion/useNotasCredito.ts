@@ -4,7 +4,6 @@ import {
   listarNotasCreditoPorFactura,
   crearNotaCredito,
   cambiarEstadoNotaCredito,
-  eliminarNotaCredito,
   type CrearNotaCreditoInput,
   type EstadoNotaCredito,
   type NotaCredito,
@@ -41,14 +40,6 @@ export function useCambiarEstadoNotaCredito() {
       estadoActual: EstadoNotaCredito;
       estadoNuevo: EstadoNotaCredito;
     }) => cambiarEstadoNotaCredito(params.id, params.estadoActual, params.estadoNuevo),
-    onSuccess: (_d, vars) => invalidar(qc, vars.facturaId),
-  });
-}
-
-export function useEliminarNotaCredito() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (params: { id: string; facturaId: string }) => eliminarNotaCredito(params.id),
     onSuccess: (_d, vars) => invalidar(qc, vars.facturaId),
   });
 }
