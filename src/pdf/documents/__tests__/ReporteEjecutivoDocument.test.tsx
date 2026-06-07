@@ -1,16 +1,33 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
+import { cleanup, render } from "@testing-library/react";
 import { ReporteEjecutivoDocument } from "../ReporteEjecutivoDocument";
-import { render } from "@testing-library/react";
+import type { SnapshotEjecutivo } from "@/services/dashboard-ejecutivo";
 
 const mockSnapshot = {
   periodo: "2023-01",
   generadoEn: "2023-01-01T10:00:00Z",
-  kpis: { ingresos_mxn: 0, utilidad_mxn: 0, margen_pct: 0, saldo_bancos_mxn: 0 },
-  tesoreria: { cuentas: [] },
+  kpis: {
+    ingresos_mxn: 0,
+    ingresos_delta_pct: 0,
+    utilidad_mxn: 0,
+    margen_pct: 0,
+    saldo_bancos_mxn: 0,
+    cartera_vencida_mxn: 0,
+    cartera_vencida_count: 0,
+    cxp_7dias_mxn: 0,
+    cumplimiento_presupuesto_pct: 0,
+  },
+  eerrPeriodo: {} as SnapshotEjecutivo["eerrPeriodo"],
+  eerr12m: [],
+  tesoreria: { cuentas: [] } as unknown as SnapshotEjecutivo["tesoreria"],
+  flujo: {} as SnapshotEjecutivo["flujo"],
+  presupuesto: {} as SnapshotEjecutivo["presupuesto"],
   topDeudores: [],
   topAcreedores: [],
   alertas: [],
-} as any;
+} satisfies SnapshotEjecutivo;
+
+afterEach(() => { cleanup(); });
 
 describe("ReporteEjecutivoDocument", () => {
   it("debe renderizar sin errores con snapshot mínimo", () => {
@@ -19,9 +36,9 @@ describe("ReporteEjecutivoDocument", () => {
   });
 
   it("debe renderizar con datos en tablas", () => {
-    const snapshot = {
+    const snapshot: SnapshotEjecutivo = {
       ...mockSnapshot,
-      topDeudores: [{ nombre: "D1", saldo: 100, moneda: "USD" }]
+      topDeudores: [{ nombre: "D1", saldo: 100, moneda: "USD" } as SnapshotEjecutivo["topDeudores"][number]],
     };
     const { getByTestId } = render(<ReporteEjecutivoDocument snapshot={snapshot} />);
     expect(getByTestId("pdf-doc")).toBeDefined();

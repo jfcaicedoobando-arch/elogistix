@@ -10,7 +10,34 @@ import {
   listarMovimientos,
   sugerirCandidatos,
   conciliarConPago,
+  type MovimientoBBVA,
 } from "../conciliacion";
+
+function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
+  return {
+    id: "m1",
+    cuenta_bancaria_id: "c1",
+    fecha: "2024-01-01",
+    concepto: "C",
+    referencia: "R",
+    cargo: 0,
+    abono: 0,
+    saldo: 0,
+    hash_dedupe: "h",
+    estado: "Pendiente",
+    pago_proveedor_id: null,
+    pago_cliente_id: null,
+    cliente_id: null,
+    proveedor_id: null,
+    monto_conciliado: null,
+    importado_por: null,
+    organization_id: "o1",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    ignorado_motivo: null,
+    ...partial,
+  } as MovimientoBBVA;
+}
 
 
 describe("conciliacion service", () => {
@@ -53,13 +80,13 @@ describe("conciliacion service", () => {
 
   describe("sugerirCandidatos", () => {
     it("retorna vacio si monto <= 0", async () => {
-      const res = await sugerirCandidatos({ cargo: 0, abono: 0 } as any);
+      const res = await sugerirCandidatos(makeMov({ cargo: 0, abono: 0 }));
       expect(res).toEqual([]);
     });
 
     it("busca en pagos_proveedor para cargos", async () => {
       mock.setTableResult("pagos_proveedor", { data: [], error: null });
-      await sugerirCandidatos({ cargo: 100, abono: 0, fecha: "2024-01-01" } as any);
+      await sugerirCandidatos(makeMov({ cargo: 100, abono: 0, fecha: "2024-01-01" }));
       expect(mock.tableCalls.some(c => c.table === "pagos_proveedor")).toBe(true);
     });
   });

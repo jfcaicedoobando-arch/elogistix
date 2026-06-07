@@ -1,79 +1,49 @@
-# Plan: arreglar `src/services/configuracion/__tests__/index.test.ts`
+# Plan: arreglar los hallazgos de la auditoría del shard 9/16
 
-## Problemas actuales
+Foco: eliminar todos los `as any`, accesos inseguros y stubs débiles encontrados en los 19 tests. **No** se toca el setup global (`src/test/setup.ts` ya hace `vi.useRealTimers()` y `cleanup()` en `afterEach`, así que la hipótesis de timer-leak queda descartada). Las degradaciones MEDIUM se documentan pero **no** se aplican en este pase para mantener el cambio acotado.
 
-1. Reimplementa a mano una cadena thenable en vez de usar `createSupabaseMock` (viola `mem://technical/testing-mock-patterns`).
-2. El `then` mock es síncrono, no acepta `reject`, no devuelve Promise — frágil y propenso a leaks de microtask.
-3. Estado mutable (`_data`, `_error`) sin reset entre tests.
-4. Usa `as any` (viola Power of 10).
-5. Cobertura muy pobre: 1 solo caso para todo el módulo (no cubre `fetchConfiguracion`, ni `updateConfiguracionByCategoriaClave`, ni propagación de errores).
+## Archivos a editar (7)
 
-## Cambios
+### 1. `src/contexts/auth/__tests__/useLoginAudit.test.ts`
+- Quitar `as any` en `mockSession.getItem.mockReturnValue("1" as any)` → cambiar el mock para que `getItem` esté tipado como `(k: string) => string | null` desde el `vi.hoisted`.
+- Añadir `afterEach(() => vi.useRealTimers())` explícito (redundante con el global, pero hace al archivo auto-contenido).
 
-### `src/services/configuracion/__tests__/index.test.ts` (reescribir)
+### 2. `src/services/profit/__tests__/estadoResultados.test.ts`
+- Reemplazar `(res as any).emb` por aserción tipada: usar `expect(res).toMatchObject({ emb: [] })` que no requiere cast.
 
-Migrar al patrón estándar del proyecto:
+### 3. `src/services/tesoreria/__tests__/conciliacion.test.ts`
+- Eliminar `as any` en `sugerirCandidatos({ cargo: 0, abono: 0 } as any)`: importar el tipo del parámetro desde `../conciliacion` y construir un stub válido (o usar `Parameters<typeof sugerirCandidatos>[0]` y completar campos requeridos).
 
-```ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
+### 4. `src/services/observability/__tests__/logClientError.test.ts`
+- Reemplazar `invoke.mock.calls[0][1].body` por desestructuración segura con assertion `!` después de verificar `toHaveBeenCalled()`, y tipar el body para evitar `any` implícito.
 
-const mock = await vi.hoisted(async () => {
-  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
-});
-vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+### 5. `src/features/embarques/hooks/__tests__/useEmbarqueDocumentosActions.test.tsx`
+- Eliminar `as Parameters<typeof useEmbarqueDocumentosActions>[0]` usando un factory `makeEmbarqueStub()` que devuelva un objeto con tipo `Embarque` (importado del módulo de tipos del feature).
 
-import {
-  fetchConfiguracionByOrg,
-  fetchConfiguracion,
-  updateConfiguracionByCategoriaClave,
-} from "../index";
+### 6. `src/services/comisiones/__tests__/vendedoras.test.ts`
+- Quitar `as any` en `upsertVendedoraConfig({ ... } as any)` usando `TablesInsert<"vendedora_config">`.
 
-describe("configuracion service", () => {
-  beforeEach(() => {
-    mock.tableCalls.length = 0;
-    vi.clearAllMocks();
-  });
+### 7. `src/pdf/documents/__tests__/ReporteEjecutivoDocument.test.tsx`
+- Quitar `as any` del `mockSnapshot` importando el tipo del snapshot desde el módulo del documento PDF.
+- Añadir `afterEach(() => cleanup())` explícito y, si el tipo expone props opcionales, no inventar campos.
 
-  it("fetchConfiguracionByOrg filtra por organization_id", async () => {
-    mock.setTableResult("configuracion", { data: [], error: null });
-    await fetchConfiguracionByOrg("org1");
-    const call = mock.tableCalls.find(c => c.table === "configuracion");
-    expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq", "order", "order"]));
-  });
+## Archivos no tocados (pero documentados como deuda futura)
 
-  it("fetchConfiguracionByOrg propaga error de Supabase", async () => {
-    mock.setTableResult("configuracion", { data: null, error: { message: "boom" } });
-    await expect(fetchConfiguracionByOrg("org1")).rejects.toBeDefined();
-  });
+- `src/lib/financial/__tests__/financialUtils.edge.test.ts` — limpieza de líneas blancas residuales (cosmético).
+- `src/features/auditoria/hooks/__tests__/useAuditoriaEjecutivo.test.tsx` — migrar `new Date()` a `vi.setSystemTime()` (flakiness teórica).
+- `src/hooks/admin/__tests__/useAlertasSistema.test.tsx`, `src/hooks/reportes/__tests__/useReportes.test.tsx`, `src/features/embarques/hooks/__tests__/useEmbarqueDocumentosActions.test.tsx` — el cleanup global ya cubre QueryClient/RTL, no se duplica.
+- `src/features/embarques/constants/__tests__/embarqueConstants.test.ts` — cobertura insuficiente (sólo 4 casos), pendiente de ampliar.
 
-  it("fetchConfiguracion devuelve [] cuando data es null", async () => {
-    mock.setTableResult("configuracion", { data: null, error: null });
-    const res = await fetchConfiguracion();
-    expect(res).toEqual([]);
-  });
+## No cambios en código de producción
 
-  it("updateConfiguracionByCategoriaClave hace update por item", async () => {
-    mock.setTableResult("configuracion", { data: null, error: null });
-    await updateConfiguracionByCategoriaClave([
-      { categoria: "empresa", clave: "nombre", valor: "X" },
-      { categoria: "empresa", clave: "rfc", valor: "Y" },
-    ]);
-    const calls = mock.tableCalls.filter(c => c.table === "configuracion");
-    expect(calls.length).toBe(2);
-    expect(calls[0].ops).toContain("update");
-  });
-});
-```
+Ninguno de los fixes toca `src/`fuera de carpetas `__tests__`. Sólo se modifican tests.
 
-## Notas
+## Versionado
 
-- Quita por completo el thenable manual y el `as any`.
-- Añade `beforeEach` con reset explícito (`tableCalls.length = 0` + `vi.clearAllMocks()`).
-- Pasa de 1 a 4 casos cubriendo happy path, error path y mutación.
-- **No** se modifica `src/services/configuracion/index.ts` (el código de producción ya es correcto).
-- **No** se toca versión ni CHANGELOG porque es cambio interno de tests sin impacto al usuario (a confirmar contigo si prefieres bump de patch).
+- Bump `APP_VERSION` a `12.60.37`.
+- Entrada en `CHANGELOG.md`:
+  > **test(shard-9) — limpieza Power of 10 en 7 archivos de test**: eliminados todos los `as any` y accesos sin guards en `useLoginAudit`, `estadoResultados`, `conciliacion`, `logClientError`, `useEmbarqueDocumentosActions`, `vendedoras` y `ReporteEjecutivoDocument`. No toca código de producción ni resuelve el hang del shard (el global setup ya restablece timers/RTL en `afterEach`, así que el culpable está en otra parte — probablemente teardown de React-PDF o coverage flush).
 
 ## Aclaración importante
 
-Este cambio **no resolverá el hang del shard 9/16**. Como ya identifiqué, este test es trivial y no abre handles; el timeout se origina en teardown del worker o en la carga de `ReporteEjecutivoDocument.test.tsx`. Esta refactorización es higiene de calidad, no un fix del CI.
+Este plan **no** garantiza resolver el `HARD TIMEOUT` del shard 9. El cleanup global ya hace `vi.useRealTimers()` y `cleanup()`, por lo que mi hipótesis previa sobre timer-leak fue incorrecta. Para diagnosticar el hang real recomiendo (en una siguiente iteración separada) instrumentar `[file-start]/[file-end]` en `src/test/setup.ts` como ya propuse en 12.60.36-prep. Esto es higiene de calidad.

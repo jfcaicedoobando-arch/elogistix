@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.37] - 2026-06-07
+- **test(shard-9) — limpieza Power of 10 en 7 archivos**: eliminados todos los `as any` y accesos sin guards en `useLoginAudit`, `vendedoras` (fix bonus: `porc_comision` era un campo inexistente enmascarado por el cast — ahora usa el real `porcentaje_default`), `estadoResultados`, `conciliacion` (con factory `makeMov`), `logClientError`, y `ReporteEjecutivoDocument` (con `satisfies SnapshotEjecutivo` y `afterEach(cleanup)` explícito). Añadido `afterEach(vi.useRealTimers)` en `useLoginAudit` por defensa. No toca código de producción ni resuelve el hang del shard.
+
 ## [12.60.36] - 2026-06-07
 - **test(configuracion) — reescrito `index.test.ts` con el helper canónico**: migrado a `createSupabaseMock` (alineado con `mem://technical/testing-mock-patterns`), eliminando el thenable manual síncrono, el estado mutable sin reset y los `as any`. Ahora cubre 4 casos (filtro por org, propagación de error, data null y update por item) en lugar de 1. No cambia código de producción ni resuelve el hang de shard 9/16 (ese sigue apuntando al teardown del worker o a `ReporteEjecutivoDocument.test.tsx`).
 

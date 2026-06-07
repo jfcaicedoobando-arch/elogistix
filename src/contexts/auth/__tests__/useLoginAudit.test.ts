@@ -3,7 +3,11 @@ import { renderHook } from "@testing-library/react";
 
 const { mockInsert, mockSession } = vi.hoisted(() => ({
   mockInsert: vi.fn(),
-  mockSession: { getItem: vi.fn(() => null), setItem: vi.fn(), removeItem: vi.fn() },
+  mockSession: {
+    getItem: vi.fn<(k: string) => string | null>(() => null),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+  },
 }));
 
 vi.mock("@/services/auth", () => ({ insertLoginAudit: mockInsert }));
@@ -17,7 +21,10 @@ import type { User } from "@supabase/supabase-js";
 
 const FAKE_USER = { id: "u1", email: "test@test.com" } as User;
 
+import { afterEach } from "vitest";
+
 beforeEach(() => { vi.clearAllMocks(); vi.useFakeTimers(); });
+afterEach(() => { vi.useRealTimers(); });
 
 describe("useLoginAudit", () => {
   it("registra login al recibir evento SIGNED_IN", () => {
@@ -28,7 +35,7 @@ describe("useLoginAudit", () => {
   });
 
   it("no registra login si ya existe entrada en sessionStorage", () => {
-    mockSession.getItem.mockReturnValue("1" as any);
+    mockSession.getItem.mockReturnValue("1");
     renderHook(() => useLoginAudit(FAKE_USER, "SIGNED_IN"));
     vi.advanceTimersByTime(200);
     expect(mockInsert).not.toHaveBeenCalled();

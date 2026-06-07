@@ -10,6 +10,7 @@ vi.mock("@/services/admin/members", () => ({
 }));
 
 import { fetchVendedorasConfig, upsertVendedoraConfig, fetchUsuariosVendedores } from "../vendedoras";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 describe("vendedoras service", () => {
   beforeEach(() => {
@@ -17,14 +18,15 @@ describe("vendedoras service", () => {
   });
 
   it("fetchVendedorasConfig mezcla con emails de usuarios", async () => {
-    mock.setTableResult("vendedora_config", { data: [{ user_id: "u1", porc_comision: 5 }], error: null });
+    mock.setTableResult("vendedora_config", { data: [{ user_id: "u1", porcentaje_default: 5 }], error: null });
     const res = await fetchVendedorasConfig();
     expect(res[0].email).toBe("u1@test.com");
   });
 
   it("upsertVendedoraConfig hace upsert", async () => {
     mock.setTableResult("vendedora_config", { data: [], error: null });
-    await upsertVendedoraConfig({ organization_id: "o1", user_id: "u1", porc_comision: 5 } as any);
+    const config: TablesInsert<"vendedora_config"> = { organization_id: "o1", user_id: "u1", porcentaje_default: 5 };
+    await upsertVendedoraConfig(config);
     const call = mock.tableCalls.find(c => c.table === "vendedora_config");
     expect(call?.ops).toContain("upsert");
   });
