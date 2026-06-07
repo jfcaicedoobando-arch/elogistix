@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.20] - 2026-06-07
+- **chore(tests) — teardown global reforzado en `src/test/setup.ts`**: agregado hard reset de DOM (`document.body`/`head` style+link), cancelación de `requestAnimationFrame` pendientes, reset de `window.onerror`/`onunhandledrejection`, `vi.unstubAllGlobals()` + `vi.unstubAllEnvs()`, `cancelQueries()`/`unmount()` defensivos sobre `__TEST_QUERY_CLIENT__`, limpieza de `__REACT_PDF_FONT__._fontkit`, helper `maybeGc()` (no-op sin `--expose-gc`) y `afterAll` con `vi.restoreAllMocks()`. Se conserva `vi.clearAllMocks()` (sin reset/restore en `afterEach`) para no romper mocks hoisted. Objetivo: eliminar el OOM acumulativo cuando la suite corre en un solo `vitest run`.
+
 ## [12.60.19] - 2026-06-07
 - **refactor(auth) — mensajes de sesión centralizados**: nuevo módulo `src/constants/authMessages.ts` con `AUTH_ERROR_MESSAGES` (`csfSessionRequired`, `invalidSession`, `notAuthenticated`, `sessionRequired(accion)`). Migrados `services/csf/index.ts`, `services/auth/index.ts` (`getCurrentUser`) y `services/portal/perfil.ts` para usar las constantes. El test `csf/index.test.ts` ahora referencia `AUTH_ERROR_MESSAGES.csfSessionRequired` en lugar del literal, eliminando la dependencia del texto suelto.
 
