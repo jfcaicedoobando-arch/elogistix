@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 
 export interface PortalPerfilData {
   email: string;
@@ -18,7 +19,7 @@ export interface PortalPerfilData {
 
 export async function fetchPortalPerfil(): Promise<PortalPerfilData> {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("No autenticado");
+  if (!user) throw new Error(AUTH_ERROR_MESSAGES.notAuthenticated);
 
   const { data, error } = await supabase
     .from("client_users")

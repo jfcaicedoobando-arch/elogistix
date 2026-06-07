@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 import type { PostLoginRole } from "@/lib/domain/auth";
 
 export { resolveLandingRoute } from "@/lib/domain/auth";
@@ -13,7 +14,7 @@ export * from "./loginAudit";
  */
 export async function getCurrentUser(): Promise<User> {
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("Sesión no válida");
+  if (error || !data.user) throw new Error(AUTH_ERROR_MESSAGES.invalidSession);
   return data.user;
 }
 
