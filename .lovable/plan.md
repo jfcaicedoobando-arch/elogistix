@@ -1,66 +1,41 @@
 
-## Re-auditoría profunda del shard 9/16 (segunda pasada)
+## Restaurar `ci.yml` a best practices (suite verde, fin del modo debug)
 
-Re-leí los 19 archivos buscando lo que la primera pasada no priorizó: **leaks de QueryClient, mocks sin `mockReset`, casts residuales y patrones que sostienen memoria entre tests**. El stub de `@react-pdf/renderer` ya está aliaseado en `vitest.config.ts`, así que la hipótesis "React-PDF carga fontkit" queda descartada — el verdadero leak está en otro lado.
+Con shard 9 ya estable, eliminamos toda la instrumentación temporal que metimos para cazar el hang (watchdog externo, reporter verbose, override de outputFile, defensa contra blobs ausentes) y volvemos al patrón oficial de Vitest para sharding + coverage merge.
 
-### Hallazgos nuevos (ordenados por impacto en el hang)
+### Cambios
 
-**CRITICAL — leak transversal de QueryClient**
-- `src/test/utils/queryWrapper.tsx` crea un `QueryClient` por test pero **nunca lo desmonta ni lo limpia**. El `afterEach` global en `src/test/setup.ts` sólo limpia `globalThis.__TEST_QUERY_CLIENT__`, que `createWrapper` jamás asigna. Cada test que usa `createWrapper` deja vivos: suscripciones, queries pendientes, refs internas de React Query, y el `QueryClientProvider` montado.
-- Afectados en shard 9: `useEmbarqueDocumentosActions.test.tsx`, `useAlertasSistema.test.tsx`, `useReportes.test.tsx` (3 archivos, 8 renders acumulados sin liberar).
+**1. `.github/workflows/ci.yml`** — paso `tests`
+- Reemplazar `test:coverage:shard:guarded` por el script default `test:coverage:shard`.
+- Quitar `--reporter=verbose` (el blob reporter ya emite los datos necesarios; `verbose` infla logs y solo servía para diagnosticar).
+- Quitar `--outputFile=.vitest-reports/blob-${shard}.json` — Vitest ya escribe blobs únicos por shard en `.vitest-reports/` automáticamente. Mantenemos `--shard=N/16`.
+- Línea final del step:
+  ```yaml
+  run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }}
+  ```
 
-**HIGH — mocks hoisted sin reset entre tests**
-1. `useLoginAudit.test.ts`: `mockSession.getItem` recibe `mockReturnValue("1")` en el test 2 y persiste hasta el test 3 porque `vi.clearAllMocks()` sólo limpia historial, no implementaciones. El test 3 funciona por casualidad (no consulta getItem).
-2. `useReportes.test.tsx`: `mockUseRentabilidad.mockReturnValue(...)` se sobreescribe en cada test, pero si en el futuro se agrega un test que no llama `mockReturnValue`, hereda el valor anterior.
-3. `logClientError.test.ts`: `invoke.mockImplementationOnce(() => { throw ... })` puede sobrevivir si el test 3 corre antes del 2 (orden aleatorio de vitest).
+**2. `.github/workflows/ci.yml`** — paso `coverage` → "Merge reports + coverage thresholds"
+- Quitar el bloque defensivo (`mkdir -p`, `shopt -s nullglob`, conteo de blobs, `::warning::`). Era una muleta para no fallar cuando un shard moría sin subir artifact; ya no aplica.
+- Volver a un único comando:
+  ```yaml
+  run: bun run test:coverage:merge
+  ```
 
-**HIGH — `vi.importActual` innecesario**
-- `useAuditoriaEjecutivo.test.tsx` hace `await vi.importActual(...)` dentro del factory de `vi.mock` sólo para spread `...actual` y luego sobreescribir `useAuditoriaRevisiones`. Esto carga el módulo real (que importa `supabase` cliente), inflando el grafo de imports del archivo.
+**3. `package.json`**
+- Eliminar el script `test:coverage:shard:guarded` (ya no se invoca desde ningún lado).
 
-**MEDIUM — casts residuales (Power of 10)**
-- `conciliacion.test.ts` línea 39: `} as MovimientoBBVA;` al final del helper `makeMov` (cast tipado pero innecesario si el objeto ya satisface la interfaz).
-- `ReporteEjecutivoDocument.test.tsx` línea 41: `{ nombre, saldo, moneda: "USD" } as SnapshotEjecutivo["topDeudores"][number]`.
-- `useEmbarqueDocumentosActions.test.tsx` línea 23: `embarqueStub = { id, expediente } as Parameters<...>[0]` — se podría reemplazar con un helper `makeEmbarqueStub()` tipado.
+**4. Borrar archivo**
+- `scripts/run-shard-guarded.ts` — watchdog externo, ya no se usa.
 
-**MEDIUM — toast mock recreado en cada render**
-- `useEmbarqueDocumentosActions.test.tsx`: `useToast: () => ({ toast: vi.fn() })` crea un `vi.fn()` nuevo en cada llamada al hook. No causa fallos pero acumula spies que `vi.clearAllMocks()` no alcanza (no están registrados centralmente).
+### Lo que NO se toca
+- `vitest.config.ts`: la configuración actual (forks aislados, heap 8 GB, fileParallelism=false, teardownTimeout=15s) **no es debug-instrumentation** sino la solución verificada al OOM/leak — se queda.
+- `src/test/setup.ts`: cleanup global productivo, se queda.
+- `test:coverage:shard` en package.json: es el script default oficial, se queda.
+- `timeout-minutes: 20` del job tests: red de seguridad razonable, se queda.
 
-**OK (limpios en segunda pasada)**
-- `embarqueConstants.test.ts`, `embarqueFases.test.ts`, `conceptos.test.ts`, `update.test.ts`, `styles.test.ts`, `estadoResultados.test.ts`, `vendedoras.test.ts`, `configuracion/index.test.ts`, `useAuditoriaEjecutivo.test.tsx` (salvo el importActual).
+### Verificación
+- Correr localmente `bun run test:coverage:shard -- --shard=9/16` para confirmar que el shard 9 sigue verde con el flujo default.
 
-### Plan de remediación (orden recomendado)
-
-**Fase 1 — Cortar el leak de QueryClient (máxima prioridad)**
-- Modificar `src/test/utils/queryWrapper.tsx` para registrar el client en `globalThis.__TEST_QUERY_CLIENT__` (el `afterEach` global ya sabe cómo limpiarlo con `cancelQueries → clear → unmount`).
-- Cero cambios en los tests consumidores.
-
-**Fase 2 — Mocks deterministas**
-- `useLoginAudit.test.ts`: agregar `mockSession.getItem.mockReset()` en `beforeEach` (o cambiar a `mockSession.getItem.mockReturnValue(null)` explícito al inicio de cada test).
-- `logClientError.test.ts`: cambiar `invoke.mockClear()` por `invoke.mockReset()` + reasignar implementación default `mockResolvedValue({ data: null, error: null })` en `beforeEach`.
-
-**Fase 3 — Simplificar `useAuditoriaEjecutivo`**
-- Reemplazar el factory `async` con `vi.importActual` por un mock plano: `vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", () => ({ useAuditoriaRevisiones: vi.fn(), revisionKey: (h) => \`${h.embarque_id}|${h.regla}|${h.detalle}\` }))`. Verificar primero la firma real de `revisionKey` para replicarla.
-
-**Fase 4 — Limpieza de casts residuales**
-- `conciliacion.test.ts`: quitar el `as MovimientoBBVA` final del helper (devolver el objeto tipado directamente).
-- `ReporteEjecutivoDocument.test.tsx`: construir el item de `topDeudores` con la forma completa (sin cast).
-- `useEmbarqueDocumentosActions.test.tsx`: extraer `makeEmbarqueStub()` con `satisfies` en lugar del cast `as Parameters<...>[0]`.
-
-**Fase 5 — Toast mock estable**
-- `useEmbarqueDocumentosActions.test.tsx`: mover `const toast = vi.fn()` fuera del factory para que `useToast` devuelva siempre el mismo objeto.
-
-**Fuera de alcance (no tocar)**
-- `src/test/setup.ts` (ya correcto).
-- Código de producción.
-- Los 13 archivos marcados OK.
-
-### Changelog y versión
-- Bump `APP_VERSION` a `12.60.38`.
-- Entrada `[12.60.38]` en `CHANGELOG.md` listando: fix leak QueryClient en `createWrapper`, reset determinista de mocks hoisted, eliminación de `vi.importActual` innecesario, limpieza de casts residuales.
-
-### Riesgos
-- Cambiar `createWrapper` para escribir en globalThis es un cambio sólo en tests; si dos tests corren en paralelo en el mismo proceso (no aplica: `fileParallelism=false`), sobreescribirían el slot. El setup ya asume serialización.
-- `mockReset` en `useLoginAudit` puede revelar tests que dependían implícitamente de implementaciones residuales — si ocurre, se ajusta cada test para fijar su propia implementación.
-
-### Lo que esta auditoría NO promete
-- No garantiza que el `HARD TIMEOUT` desaparezca, pero el leak de QueryClient es el sospechoso más fuerte que queda tras los fixes de 12.60.37. Si tras la Fase 1 el shard sigue colgando, el siguiente paso obligatorio es instrumentar `[file-start]/[file-end]` en `setup.ts` para identificar el archivo exacto.
+### Changelog
+- Bump `APP_VERSION` a `12.60.39`.
+- Entrada `[12.60.39]`: restauración de CI a flujo Vitest default tras estabilizar shard 9 (eliminada toda instrumentación temporal: watchdog, verbose reporter, outputFile override, bash defensivo).
