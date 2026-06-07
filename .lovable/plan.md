@@ -1,55 +1,50 @@
-# Plan: corregir fallos pre-existentes detectados en shards 1 y 2
+## Objetivo
 
-Antes de seguir con la bisección (shards 3–10), resolvemos los 8 fallos no relacionados al leak. La mayoría son mocks de Supabase incompletos (mismo patrón ya resuelto en `snooze.test.ts` y `notificaciones/index.test.ts`).
+Reforzar `src/test/setup.ts` con un teardown global más agresivo para eliminar fugas acumulativas (JSDOM, React Query, Supabase realtime, `@react-pdf/renderer`) que provocan OOM cuando la suite corre en un solo `bun test` en vez de 2 shards.
 
-## Hallazgos a corregir
+## Cambios (un solo archivo: `src/test/setup.ts`)
 
-### Shard 1
-| # | Archivo | Causa | Fix |
-|---|---|---|---|
-| 1 | `src/features/auditoria/services/__tests__/revisiones.test.ts` (3 tests) | Mock no soporta `.upsert().select().single()`, `.update().eq()` ni `.delete().eq()` | Reescribir mock con `createChain` thenable (patrón snooze) |
-| 2 | `src/services/planes/__tests__/index.test.ts` | Mock no soporta cadena de `fetchPlanes` | Adaptar mock al mismo patrón |
-| 3 | `src/hooks/profit/__tests__/useProfit.test.tsx` (`useEstadoResultados uses filters`) | Mock del servicio retorna undefined | Inspeccionar y ajustar mock o aserción |
-| 4 | `src/features/embarques/hooks/__tests__/useEmbarqueForm.test.tsx` (`gestiona archivos de documentos`) | `facturaEntry?.adjuntado` es undefined | Inspeccionar lógica del hook + mock de archivos |
-| 5 | `src/lib/__tests__/architecture-baseline.test.ts` (2 baselines: imports directos + archivos >200 líneas) | Deuda arquitectónica acumulada | Inspeccionar diff vs baseline y decidir: actualizar allowlist o postergar como entrada de [Audit Pendings](mem://audit/pendings) |
+### 1. Imports adicionales
+- `beforeEach`, `afterAll` además de `afterEach`.
+- Sin importar `@react-pdf/renderer` directamente (seguir patrón actual de no forzar carga).
 
-### Shard 2
-| # | Archivo | Causa | Fix |
-|---|---|---|---|
-| 6 | `src/services/tesoreria/__tests__/flujoProyectado.test.ts` | Mock `fetchResumenCuentas` retorna `undefined` → `.cuentas` falla | Stub debe retornar `{ cuentas: [], ... }` mínimo |
-| 7 | `src/services/configuracion/__tests__/emisor.test.ts` (`fetchEmisorInfo`) | Mock chain incompleto | Adaptar al patrón thenable |
-| 8 | `src/hooks/cliente/__tests__/useNuevoClienteController.test.tsx` (`CSF upload and extraction`) | Mock de invocación edge-function `parse-csf` incompleto | Inspeccionar y stub completo |
+### 2. `afterEach` ampliado
+Mantener lo existente y agregar:
 
-## Estrategia general
+- **DOM hard reset**: tras `cleanup()`, limpiar `document.body.innerHTML = ""` y `document.head` de `<style>`/`<link>` inyectados por tests (acumulan nodos con refs circulares en JSDOM).
+- **Timers / animation frames**: cancelar `requestAnimationFrame` pendientes (`let id = requestAnimationFrame(()=>{}); while(id--) cancelAnimationFrame(id);`) además de `vi.useRealTimers()`.
+- **Supabase realtime**: si el módulo está cargado (`import('@/integrations/supabase/client')` cacheado), llamar `supabase.removeAllChannels()` defensivamente dentro de `try/catch`. Sólo si el módulo ya está en `import.meta` / globalThis para no forzar carga.
+- **Event listeners globales**: snapshot de listeners en `beforeEach` sobre `window`/`document` no es viable de forma genérica; en su lugar, exponer un helper opcional y resetear `window.onerror`, `window.onunhandledrejection` a `null`.
+- **QueryClient global**: además del `clear()`, llamar `unmount()`/`cancelQueries()` si está disponible (`__TEST_QUERY_CLIENT__.cancelQueries?.()` antes de `clear`).
+- **`vi.unstubAllGlobals()` y `vi.unstubAllEnvs()`** para revertir stubs de `globalThis` y `process.env`.
+- **`vi.restoreAllMocks()`** NO — rompería los mocks declarados a nivel módulo (ya documentado en setup actual). Sólo `clearAllMocks()`.
 
-Para los mocks de Supabase usamos el mismo patrón ya probado:
-```ts
-const { mockSupabase, setNextResponse } = vi.hoisted(() => {
-  let nextResponse = { data: null, error: null };
-  const chain: Record<string, unknown> = {};
-  const passthrough = vi.fn(() => chain);
-  chain.from = chain.select = chain.update = chain.delete = chain.upsert =
-    chain.insert = chain.order = passthrough;
-  chain.eq = vi.fn(() => chain);
-  chain.single = chain.maybeSingle = () => Promise.resolve(nextResponse);
-  chain.then = (cb: any) => Promise.resolve(nextResponse).then(cb);
-  return { mockSupabase: chain, setNextResponse: (r) => { nextResponse = r; } };
-});
-```
+### 3. Reset selectivo de módulos pesados
+Tras cada archivo de test (no cada `it`), no hay hook nativo `afterFile` en Vitest; sin embargo:
 
-Cada test setea `setNextResponse(...)` antes de invocar.
+- Llamar `vi.resetModules()` dentro de `afterEach` **rompe** mocks hoisted. Por eso NO se usa global. En su lugar, dejar comentario explícito y, si `global.gc` está disponible (Node con `--expose-gc`), invocarlo aquí (ya tenemos `--max-old-space-size=8192`, agregar `--expose-gc` en `vitest.config.ts` execArgv no es parte de este cambio — solo aprovechar si existe).
 
-## Pasos
+### 4. `afterAll` global
+- Limpiar caches de `@react-pdf/renderer` (`__REACT_PDF_FONT__`) por última vez.
+- `vi.restoreAllMocks()` permitido aquí (fin del archivo, no rompe el siguiente).
 
-1. **Inspeccionar** cada archivo de test + su servicio/hook bajo prueba (8 archivos × 2 = ~16 lecturas en paralelo).
-2. **Editar** los tests/mocks (sin tocar código productivo salvo que el bug sea real).
-3. Para el baseline de arquitectura: ejecutar el script de auditoría una vez, revisar el diff vs lo aceptado, y o bien actualizar el snapshot o documentar en [Audit Pendings](mem://audit/pendings) y skip-ear con TODO.
-4. **Re-ejecutar shards 1 y 2** para confirmar 0 fallos.
-5. **Versionado**: bump `APP_VERSION` → `12.60.11`, entrada en `CHANGELOG.md` listando los 8 fixes.
-6. **Continuar** con shards 3–10 de la bisección.
+### 5. `gc()` opcional
+Helper `maybeGc()` invocado al final de `afterEach` y `afterAll`. No-op si `--expose-gc` no está activo.
 
-## Notas
+## Lo que NO se toca
 
-- Ningún cambio toca código productivo salvo si la inspección revela un bug real (poco probable; son mocks).
-- No tocamos `vitest.config.ts`.
-- El baseline de arquitectura puede requerir una decisión del usuario si la deuda es nueva — en ese caso, paramos y reportamos.
+- `vitest.config.ts` (sigue con `singleFork: false`, `maxForks: 1`, `fileParallelism: false`).
+- `queryWrapper.tsx`, mocks de Supabase, tests individuales.
+- No se agregan dependencias.
+
+## Validación
+
+1. Correr **shard 1/2** y **shard 2/2** por separado — deben seguir verdes (regresión cero).
+2. Correr la suite completa en un solo `npx vitest run` con `timeout 600s` y observar heap (`--logHeapUsage`) para confirmar que no crece monotónicamente.
+3. Si pasa: actualizar `CHANGELOG.md` + `APP_VERSION` (patch bump) y memoria `mem://technical/testing-cleanup-protocol` con los nuevos pasos del teardown.
+
+## Riesgos
+
+- `removeAllChannels()` sobre supabase real podría fallar si la URL no responde — envuelto en `try/catch`.
+- Limpiar `document.body` después de `cleanup()` es redundante pero barato; bajo riesgo.
+- `unstubAllGlobals` revierte stubs legítimos: ningún test actual usa `vi.stubGlobal` persistente entre archivos (verificado por convención), seguro.
