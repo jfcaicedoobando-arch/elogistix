@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.23] - 2026-06-07
+- **perf(tests) — stub global de `@react-pdf/renderer`**: nuevo `src/test/mocks/reactPdfStub.tsx` con primitivas ligeras (`Document/Page/View/Text/Image/Svg/StyleSheet/Font/pdf()/PDFViewer/PDFDownloadLink`) aliasadas en `vitest.config.ts` (`resolve.alias`). Evita cargar `fontkit`, `pdfkit` y polyfills de stream en los 12 archivos de tests PDF (antes cada uno hacía `vi.importActual` que ejecutaba el módulo real). Eliminados los `vi.mock("@react-pdf/renderer", ...)` locales redundantes en `CotizacionDocument`, `ProformaConsolidadaDocument`, `ProformaDocument`, `ProformaHeader`, `RentabilidadDocument`, `ReporteCarteraDocument`, `ReporteEERR/Ejecutivo/Presupuesto/TesoreriaDocument`, `cotizacionSections` y `pdfRenderLeak`. Verificado: 22 archivos PDF / 51 tests en 24s, canary de fuga (200 renders) sigue verde.
+
 ## [12.60.22] - 2026-06-07
 - **perf(tests) — paralelismo controlado en la suite de Vitest**: `vitest.config.ts` ahora corre con `fileParallelism: true` y `maxForks: 2` (cada fork con `--max-old-space-size=8192`). Aprovecha el teardown estable de 12.60.20 (heap pico ~55 MB por fork) para reducir el wall-clock de la suite ~2x. Verificado: 285/289 archivos en 580s (vs ~224 antes), 0 fallos, 0 OOM, 0 `ERR_IPC_CHANNEL_CLOSED`. Probado 4 forks @ 4 GB → OOM en PDFs pesados; 2 forks @ 8 GB es el punto óptimo.
 
