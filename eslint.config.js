@@ -82,12 +82,24 @@ export default tseslint.config(
   {
     // Tests-only: console.log para perf benchmarks, regex de control para
     // validar sanitización de paths, y `as any` para fixtures parciales son
-    // patrones legítimos en specs.
-    files: ["**/*.test.ts", "**/*.test.tsx"],
+    // patrones legítimos en specs. Incluye helpers/mocks/setup bajo
+    // `src/test/**` (mismas convenciones que los .test.*).
+    files: ["**/*.test.ts", "**/*.test.tsx", "src/test/**"],
     rules: {
       "no-console": "off",
       "no-control-regex": "off",
       "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
+    // Edge Functions Deno: corren en runtime Deno con imports `npm:` y
+    // tipos no resueltos por el tsconfig web. `@ts-nocheck` es la salida
+    // limpia documentada. El warning de Fast Refresh tampoco aplica
+    // (estos archivos no se cargan en el bundle de React).
+    files: ["supabase/functions/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+      "react-refresh/only-export-components": "off",
     },
   },
   {
