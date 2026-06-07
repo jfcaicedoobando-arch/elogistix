@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.21] - 2026-06-07
+- **chore(audit) — clasificador de casts reconoce infraestructura de test**: `isTestFile` en `scripts/lib/casts.ts` ahora degrada también los archivos bajo `src/test/` (no sólo `__tests__/` y `*.test.tsx?`). Los 4 casts dobles introducidos en `src/test/setup.ts` por el teardown de 12.60.20 dejan de contarse como HIGH y bajan a MEDIUM, devolviendo el baseline a `0 HIGH / 0 CRITICAL`. Regenerado `docs/cast-audit.md` (1124 casts) y verde el test `audit-report > casts baseline`.
+
 ## [12.60.20] - 2026-06-07
 - **chore(tests) — teardown global reforzado en `src/test/setup.ts`**: agregado hard reset de DOM (`document.body`/`head` style+link), cancelación de `requestAnimationFrame` pendientes, reset de `window.onerror`/`onunhandledrejection`, `vi.unstubAllGlobals()` + `vi.unstubAllEnvs()`, `cancelQueries()`/`unmount()` defensivos sobre `__TEST_QUERY_CLIENT__`, limpieza de `__REACT_PDF_FONT__._fontkit`, helper `maybeGc()` (no-op sin `--expose-gc`) y `afterAll` con `vi.restoreAllMocks()`. Se conserva `vi.clearAllMocks()` (sin reset/restore en `afterEach`) para no romper mocks hoisted. Objetivo: eliminar el OOM acumulativo cuando la suite corre en un solo `vitest run`.
 

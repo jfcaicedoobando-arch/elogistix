@@ -57,9 +57,13 @@ export function classify(line: string, target: string): Severity {
   );
 }
 
-/** Regla 1: test files degradan HIGH/CRITICAL → MEDIUM. */
+/** Regla 1: test files e infraestructura de test degradan HIGH/CRITICAL → MEDIUM. */
 export function isTestFile(rel: string): boolean {
-  return /(^|\/)__tests__\//.test(rel) || /\.(test|spec)\.tsx?$/.test(rel);
+  return (
+    /(^|\/)__tests__\//.test(rel) ||
+    /\.(test|spec)\.tsx?$/.test(rel) ||
+    /(^|\/)src\/test\//.test(rel)
+  );
 }
 
 /** Regla 2: `// SAFE-CAST:` en la propia línea o hasta 6 líneas arriba degrada HIGH → LOW. */
