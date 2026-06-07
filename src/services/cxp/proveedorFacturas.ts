@@ -5,7 +5,7 @@
  * KPIs (por pagar / vencido / por vencer 7d) y CRUD básico.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type ProveedorFacturaRow = Tables<"proveedor_facturas">;
 export type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
