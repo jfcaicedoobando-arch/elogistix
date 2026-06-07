@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.19] - 2026-06-07
+- **refactor(auth) — mensajes de sesión centralizados**: nuevo módulo `src/constants/authMessages.ts` con `AUTH_ERROR_MESSAGES` (`csfSessionRequired`, `invalidSession`, `notAuthenticated`, `sessionRequired(accion)`). Migrados `services/csf/index.ts`, `services/auth/index.ts` (`getCurrentUser`) y `services/portal/perfil.ts` para usar las constantes. El test `csf/index.test.ts` ahora referencia `AUTH_ERROR_MESSAGES.csfSessionRequired` en lugar del literal, eliminando la dependencia del texto suelto.
+
 ## [12.60.18] - 2026-06-06
 - **fix(tests) — shard 10/10 verde**: corregida la expectativa en `csf/index.test.ts` (`parseCsf lanza error si no hay sesion`) para coincidir con el nuevo mensaje de sesión requerida (`Debes iniciar sesión para procesar la Constancia de Situación Fiscal`).
 
