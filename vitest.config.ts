@@ -22,23 +22,23 @@ export default defineConfig({
     // sin esconder tests que se cuelgan.
     testTimeout: 15_000,
     hookTimeout: 15_000,
-    // Pool por procesos (forks). Para evitar el OOM intermitente
-    // (`heap limit` / `ERR_IPC_CHANNEL_CLOSED`) cuando se acumulan archivos
-    // pesados (PDFs, leak regression) en el mismo proceso, ejecutamos cada
-    // archivo en un fork NUEVO (`singleFork: false` + `maxForks: 1` +
-    // `fileParallelism: false`). Así cada archivo libera memoria al terminar,
-    // a cambio de un pequeño overhead de spawn por archivo.
+    // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
+    // liberar memoria al terminar (PDFs / leak regression). Con el teardown
+    // global de 12.60.20 + mocks-cleanup, el heap pico estable es ~55 MB,
+    // por lo que es seguro paralelizar hasta 4 forks en sandboxes con
+    // ≥16 GB RAM (este corre con 32 GB). Esto reduce el wall-clock de la
+    // suite ~3-4x sin riesgo de OOM (4 × ~60 MB ≪ 8 GB heap por fork).
     pool: "forks",
     poolOptions: {
       forks: {
         singleFork: false,
-        maxForks: 1,
+        maxForks: 4,
         minForks: 1,
         isolate: true,
-        execArgv: ["--max-old-space-size=8192"],
+        execArgv: ["--max-old-space-size=4096"],
       },
     },
-    fileParallelism: false,
+    fileParallelism: true,
     isolate: true,
     sequence: { shuffle: false },
     coverage: {
