@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.40] - 2026-06-07
+- **ci(tests) — restaurar `--outputFile` explícito por shard**: el cambio de 12.60.39 dejó al blob reporter sin destino y los 16 shards no escribieron nada en `.vitest-reports/`, reventando el merge con `ENOENT scandir .vitest-reports`. La doc oficial de Vitest indica que `--outputFile` es la forma canónica de fijar destino determinista por shard ("can be overridden with `--outputFile` or `--outputFile.blob` flags"). Restauramos `--outputFile=.vitest-reports/blob-${shard}.json` en el step de tests de `.github/workflows/ci.yml`. Se mantienen fuera el `--reporter=verbose` (sí era debug) y el watchdog/bash defensivo del merge.
+
 ## [12.60.39] - 2026-06-07
 - **ci(tests) — restaurar flujo Vitest default tras estabilizar shard 9**: con la suite verde, eliminamos toda la instrumentación temporal de debug en `.github/workflows/ci.yml`. El step de tests vuelve a `bun run test:coverage:shard -- --shard=N/16` (sin `--reporter=verbose`, sin `--outputFile=...`; Vitest ya escribe blobs únicos por shard en `.vitest-reports/`). El step de merge vuelve a un único `bun run test:coverage:merge` (quitado el bloque defensivo `shopt -s nullglob`/`mkdir -p`/conteo de blobs que enmascaraba shards muertos). Borrado `scripts/run-shard-guarded.ts` (watchdog externo ya innecesario) y removido el script `test:coverage:shard:guarded` de `package.json`. Se mantienen los hardenings probados (forks aislados, heap 8 GB, `fileParallelism=false`, `teardownTimeout=15s` en `vitest.config.ts`; cleanup global en `src/test/setup.ts`; `timeout-minutes: 20` como red de seguridad).
 

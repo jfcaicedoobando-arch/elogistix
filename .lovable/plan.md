@@ -1,41 +1,23 @@
 
-## Restaurar `ci.yml` a best practices (suite verde, fin del modo debug)
+## Fix: blob output path explícito por shard (CI verde)
 
-Con shard 9 ya estable, eliminamos toda la instrumentación temporal que metimos para cazar el hang (watchdog externo, reporter verbose, override de outputFile, defensa contra blobs ausentes) y volvemos al patrón oficial de Vitest para sharding + coverage merge.
+### Problema
+Tras restaurar CI a default, los 16 shards reportan `No files were found with the provided path: .vitest-reports/` y el merge falla con `ENOENT scandir .vitest-reports`. La doc de Vitest dice que con `--reporter=blob --shard=N/M` el archivo se escribe en `.vitest-reports/blob-N-M.json` por defecto, pero combinado con `--coverage` + invocación `bun run script -- args` en GitHub Actions, eso no ocurre y el directorio queda vacío.
+
+### Solución
+Volver a fijar **`--outputFile=.vitest-reports/blob-${{ matrix.shard }}.json`** explícitamente en el step de tests. La doc oficial lista esto como la forma canónica y determinista para sharded CI ("can be overridden with `--outputFile` or `--outputFile.blob` flags"). No es debug instrumentation — es best practice explícita.
+
+Lo que **NO** vuelve: `--reporter=verbose` (eso sí era ruido de debug), el watchdog, ni el bash defensivo del merge.
 
 ### Cambios
 
-**1. `.github/workflows/ci.yml`** — paso `tests`
-- Reemplazar `test:coverage:shard:guarded` por el script default `test:coverage:shard`.
-- Quitar `--reporter=verbose` (el blob reporter ya emite los datos necesarios; `verbose` infla logs y solo servía para diagnosticar).
-- Quitar `--outputFile=.vitest-reports/blob-${shard}.json` — Vitest ya escribe blobs únicos por shard en `.vitest-reports/` automáticamente. Mantenemos `--shard=N/16`.
-- Línea final del step:
-  ```yaml
-  run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }}
-  ```
+**`.github/workflows/ci.yml`** — paso `tests`:
+```yaml
+run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
+```
 
-**2. `.github/workflows/ci.yml`** — paso `coverage` → "Merge reports + coverage thresholds"
-- Quitar el bloque defensivo (`mkdir -p`, `shopt -s nullglob`, conteo de blobs, `::warning::`). Era una muleta para no fallar cuando un shard moría sin subir artifact; ya no aplica.
-- Volver a un único comando:
-  ```yaml
-  run: bun run test:coverage:merge
-  ```
-
-**3. `package.json`**
-- Eliminar el script `test:coverage:shard:guarded` (ya no se invoca desde ningún lado).
-
-**4. Borrar archivo**
-- `scripts/run-shard-guarded.ts` — watchdog externo, ya no se usa.
-
-### Lo que NO se toca
-- `vitest.config.ts`: la configuración actual (forks aislados, heap 8 GB, fileParallelism=false, teardownTimeout=15s) **no es debug-instrumentation** sino la solución verificada al OOM/leak — se queda.
-- `src/test/setup.ts`: cleanup global productivo, se queda.
-- `test:coverage:shard` en package.json: es el script default oficial, se queda.
-- `timeout-minutes: 20` del job tests: red de seguridad razonable, se queda.
-
-### Verificación
-- Correr localmente `bun run test:coverage:shard -- --shard=9/16` para confirmar que el shard 9 sigue verde con el flujo default.
+No se tocan: merge step, package.json, vitest.config.ts, setup.ts, scripts/.
 
 ### Changelog
-- Bump `APP_VERSION` a `12.60.39`.
-- Entrada `[12.60.39]`: restauración de CI a flujo Vitest default tras estabilizar shard 9 (eliminada toda instrumentación temporal: watchdog, verbose reporter, outputFile override, bash defensivo).
+- Bump `APP_VERSION` a `12.60.40`.
+- Entrada `[12.60.40]`: re-añadido `--outputFile` explícito por shard tras detectar que sin él Vitest no escribe los blobs combinado con `--coverage` en GH Actions (verbose y watchdog se quedan fuera).
