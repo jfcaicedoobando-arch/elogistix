@@ -1,45 +1,79 @@
-# Hacer robusto el job de merge cuando un shard se cae
+# Plan: arreglar `src/services/configuracion/__tests__/index.test.ts`
+
+## Problemas actuales
+
+1. Reimplementa a mano una cadena thenable en vez de usar `createSupabaseMock` (viola `mem://technical/testing-mock-patterns`).
+2. El `then` mock es síncrono, no acepta `reject`, no devuelve Promise — frágil y propenso a leaks de microtask.
+3. Estado mutable (`_data`, `_error`) sin reset entre tests.
+4. Usa `as any` (viola Power of 10).
+5. Cobertura muy pobre: 1 solo caso para todo el módulo (no cubre `fetchConfiguracion`, ni `updateConfiguracionByCategoriaClave`, ni propagación de errores).
 
 ## Cambios
 
-### 1) Endurecer step "Merge reports" en `.github/workflows/ci.yml`
+### `src/services/configuracion/__tests__/index.test.ts` (reescribir)
 
-Reemplazar:
+Migrar al patrón estándar del proyecto:
 
-```yaml
-- name: Merge reports + coverage thresholds
-  run: bun run test:coverage:merge
+```ts
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+
+import {
+  fetchConfiguracionByOrg,
+  fetchConfiguracion,
+  updateConfiguracionByCategoriaClave,
+} from "../index";
+
+describe("configuracion service", () => {
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+    vi.clearAllMocks();
+  });
+
+  it("fetchConfiguracionByOrg filtra por organization_id", async () => {
+    mock.setTableResult("configuracion", { data: [], error: null });
+    await fetchConfiguracionByOrg("org1");
+    const call = mock.tableCalls.find(c => c.table === "configuracion");
+    expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq", "order", "order"]));
+  });
+
+  it("fetchConfiguracionByOrg propaga error de Supabase", async () => {
+    mock.setTableResult("configuracion", { data: null, error: { message: "boom" } });
+    await expect(fetchConfiguracionByOrg("org1")).rejects.toBeDefined();
+  });
+
+  it("fetchConfiguracion devuelve [] cuando data es null", async () => {
+    mock.setTableResult("configuracion", { data: null, error: null });
+    const res = await fetchConfiguracion();
+    expect(res).toEqual([]);
+  });
+
+  it("updateConfiguracionByCategoriaClave hace update por item", async () => {
+    mock.setTableResult("configuracion", { data: null, error: null });
+    await updateConfiguracionByCategoriaClave([
+      { categoria: "empresa", clave: "nombre", valor: "X" },
+      { categoria: "empresa", clave: "rfc", valor: "Y" },
+    ]);
+    const calls = mock.tableCalls.filter(c => c.table === "configuracion");
+    expect(calls.length).toBe(2);
+    expect(calls[0].ops).toContain("update");
+  });
+});
 ```
 
-Por:
+## Notas
 
-```yaml
-- name: Merge reports + coverage thresholds
-  run: |
-    mkdir -p .vitest-reports
-    shopt -s nullglob
-    blobs=(.vitest-reports/blob-*.json)
-    if [ ${#blobs[@]} -eq 0 ]; then
-      echo "::warning::No shard blob reports found — likely a shard was canceled or failed before upload. Skipping merge."
-      exit 0
-    fi
-    echo "Found ${#blobs[@]} shard blob(s): ${blobs[*]}"
-    bun run test:coverage:merge
-```
+- Quita por completo el thenable manual y el `as any`.
+- Añade `beforeEach` con reset explícito (`tableCalls.length = 0` + `vi.clearAllMocks()`).
+- Pasa de 1 a 4 casos cubriendo happy path, error path y mutación.
+- **No** se modifica `src/services/configuracion/index.ts` (el código de producción ya es correcto).
+- **No** se toca versión ni CHANGELOG porque es cambio interno de tests sin impacto al usuario (a confirmar contigo si prefieres bump de patch).
 
-Convierte el `ENOENT scandir` críptico en un warning explícito.
+## Aclaración importante
 
-### 2) Bump versión
-
-- `CHANGELOG.md`: entrada `[12.60.35]`.
-- `src/constants/appVersion.ts`: `12.60.35`.
-
-## Archivos a modificar
-
-- `.github/workflows/ci.yml`
-- `CHANGELOG.md`
-- `src/constants/appVersion.ts`
-
-## Nota
-
-El log de shard 9 que pegaste usa `test:coverage:shard` (no `:guarded`) — es de antes de que `12.60.34` aterrizara. Cuando el PR esté rebaseado sobre `main`, el wrapper guarded correrá y mostrará el `⏱️ HARD TIMEOUT` con el archivo culpable.
+Este cambio **no resolverá el hang del shard 9/16**. Como ya identifiqué, este test es trivial y no abre handles; el timeout se origina en teardown del worker o en la carga de `ReporteEjecutivoDocument.test.tsx`. Esta refactorización es higiene de calidad, no un fix del CI.
