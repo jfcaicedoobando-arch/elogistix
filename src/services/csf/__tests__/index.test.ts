@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { parseCsf } from '../index';
+import { AUTH_ERROR_MESSAGES } from '@/constants/authMessages';
 
 const { mockSupabase } = vi.hoisted(() => ({
   mockSupabase: {
@@ -17,7 +18,7 @@ describe('csf/index', () => {
   it('parseCsf lanza error si no hay sesion', async () => {
     mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: null } });
     const file = new File([''], 'csf.pdf');
-    await expect(parseCsf(file)).rejects.toThrow('Debes iniciar sesión para procesar la Constancia de Situación Fiscal');
+    await expect(parseCsf(file)).rejects.toThrow(AUTH_ERROR_MESSAGES.csfSessionRequired);
   });
 
   it('parseCsf llama a fetch con FormData', async () => {

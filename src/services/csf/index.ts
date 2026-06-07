@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 
 export interface CsfParsedData {
   nombre?: string;
@@ -18,7 +19,7 @@ export async function parseCsf(file: File): Promise<CsfParsedData> {
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
-    throw new Error("Debes iniciar sesión para procesar la Constancia de Situación Fiscal");
+    throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
   }
 
   const res = await fetch(
