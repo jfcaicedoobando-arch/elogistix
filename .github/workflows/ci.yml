@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, unused code & tests
+    name: Lint, unused code & build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -31,9 +31,6 @@ jobs:
         run: bun run lint
 
       - name: Unused code check (knip)
-        # Falla en archivos huérfanos, dependencias sin uso, dependencias no listadas
-        # y exports duplicados. Exports/types sin uso se reportan como warning.
-        # Para gating estricto (incluyendo exports/types) usar `lint:unused:strict`.
         run: bun run lint:unused
 
       - name: Strict unused exports & types (informational)
@@ -43,30 +40,6 @@ jobs:
 
       - name: Test hygiene (no skip/only/todo, no duplicate titles)
         run: bun run audit:tests
-
-      - name: Tests
-        run: bun run test
-
-      - name: Coverage (umbrales mínimos en vitest.config.ts)
-        run: bun run test:coverage
-
-      - name: Coverage report (markdown)
-        if: always()
-        run: bun run coverage:report || true
-
-      - name: PR summary (coverage)
-        if: always() && github.event_name == 'pull_request'
-        run: test -f reports/coverage-report.md && cat reports/coverage-report.md >> "$GITHUB_STEP_SUMMARY" || true
-
-      - name: Upload coverage artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: |
-            coverage/
-            reports/coverage-report.md
-          retention-days: 30
 
       - name: Architecture & cast report
         if: always()
@@ -88,3 +61,81 @@ jobs:
 
       - name: Build
         run: bun run build
+
+  tests:
+    name: Tests (shard ${{ matrix.shard }}/${{ matrix.total }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+        total: [2]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
+        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
+
+      - name: Upload shard blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-blob-${{ matrix.shard }}
+          path: .vitest-reports/
+          retention-days: 1
+
+  coverage:
+    name: Coverage merge & report
+    needs: tests
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download shard blobs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: vitest-blob-*
+          path: .vitest-reports/
+          merge-multiple: true
+
+      - name: Merge reports + coverage thresholds
+        run: bun run test:coverage:merge
+
+      - name: Coverage report (markdown)
+        if: always()
+        run: bun run coverage:report || true
+
+      - name: PR summary (coverage)
+        if: always() && github.event_name == 'pull_request'
+        run: test -f reports/coverage-report.md && cat reports/coverage-report.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            coverage/
+            reports/coverage-report.md
+          retention-days: 30
