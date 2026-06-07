@@ -14,7 +14,7 @@ import {
 } from "../conciliacion";
 
 function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
-  return {
+  const base: MovimientoBBVA = {
     id: "m1",
     cuenta_bancaria_id: "c1",
     fecha: "2024-01-01",
@@ -35,8 +35,8 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ignorado_motivo: null,
-    ...partial,
-  } as MovimientoBBVA;
+  };
+  return { ...base, ...partial };
 }
 
 
