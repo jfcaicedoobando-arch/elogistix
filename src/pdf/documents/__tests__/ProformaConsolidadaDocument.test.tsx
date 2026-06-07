@@ -1,17 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { ProformaConsolidadaDocument } from "../ProformaConsolidadaDocument";
 import { render } from "@testing-library/react";
-
-vi.mock("@react-pdf/renderer", async () => {
-  const actual = await vi.importActual("@react-pdf/renderer");
-  return {
-    ...actual as any,
-    Document: ({ children }: any) => <div data-testid="pdf-doc">{children}</div>,
-    Page: ({ children }: any) => <div data-testid="pdf-page">{children}</div>,
-    View: ({ children }: any) => <div data-testid="pdf-view">{children}</div>,
-    Text: ({ children }: any) => <div data-testid="pdf-text">{children}</div>,
-  };
-});
 
 const mockProforma = {
   numero: "PROF-CON-001",

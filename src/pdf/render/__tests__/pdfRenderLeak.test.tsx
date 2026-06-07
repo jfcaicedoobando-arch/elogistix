@@ -15,31 +15,8 @@
  *    El objetivo es detectar fugas catastróficas (> cientos de MB), no
  *    micro-fluctuaciones del runtime.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import type { ReactNode } from "react";
-
-vi.mock("@react-pdf/renderer", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>("@react-pdf/renderer");
-  return {
-    ...actual,
-    Document: ({ children }: { children?: ReactNode }) => (
-      <div data-testid="pdf-doc">{children}</div>
-    ),
-    Page: ({ children }: { children?: ReactNode }) => (
-      <div data-testid="pdf-page">{children}</div>
-    ),
-    View: ({ children }: { children?: ReactNode }) => (
-      <div data-testid="pdf-view">{children}</div>
-    ),
-    Text: ({ children }: { children?: ReactNode }) => (
-      <div data-testid="pdf-text">{children}</div>
-    ),
-    Image: () => <div data-testid="pdf-image" />,
-    StyleSheet: { create: <T,>(s: T) => s },
-    Font: { register: () => {}, registerHyphenationCallback: () => {} },
-  };
-});
 
 import { RentabilidadDocument } from "@/pdf/documents/RentabilidadDocument";
 
