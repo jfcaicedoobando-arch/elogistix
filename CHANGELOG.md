@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.34] - 2026-06-07
+- **ci(tests) — watchdog externo por archivo para detectar el culpable cuando un shard se cuelga**: nuevo `scripts/run-shard-guarded.ts` envuelve a Vitest, hace tail de stdout/stderr y mantiene dos timers — `--file-timeout=90s` (tiempo máx en un mismo archivo) y `--idle-timeout=60s` (sin output). Al dispararse, imprime un banner `⏱️ HARD TIMEOUT` con el archivo culpable, su tiempo en archivo, el último stdout y mata Vitest con SIGTERM (SIGKILL tras 5s). Sale con código 124 estilo `timeout(1)`. CI (`.github/workflows/ci.yml`) ahora usa `test:coverage:shard:guarded` en lugar de `test:coverage:shard`, manteniendo `timeout-minutes: 20` como red de seguridad. `vitest.config.ts` agrega `teardownTimeout: 15_000` por simetría con `testTimeout`/`hookTimeout` (cubre `afterAll` colgados). Resuelve el problema de shard 9/16 cortando el log a los 20 min sin indicar qué archivo causó el cuelgue.
+
 ## [12.60.33] - 2026-06-07
 - **fix(tests) — loop infinito en `useLeadEditForm.test.tsx` colgaba shard 8/16**: los 2 primeros tests llamaban `renderHook(() => useLeadEditForm(lead()))`, donde el factory `lead()` se invocaba **dentro** del closure de render. Cada re-render producía un nuevo objeto `lead` con referencia distinta → el `useEffect([lead])` del hook disparaba `setForm` cada render → setForm con objeto nuevo → re-render infinito (no atrapado por "Maximum update depth" porque React 18 + RTL agendan updates vía microtasks, saturando el event loop). Aislado comparando `vitest list --shard=8/16` contra el log de CI. Fix: invocar `lead()` una sola vez por test y pasar la referencia estable al hook.
 

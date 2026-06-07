@@ -22,6 +22,7 @@ export default defineConfig({
     // sin esconder tests que se cuelgan.
     testTimeout: 15_000,
     hookTimeout: 15_000,
+    teardownTimeout: 15_000,
     // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
     // liberar memoria al terminar (PDFs / leak regression). Con el teardown
     // global de 12.60.20 + mocks-cleanup, el heap pico estable es ~55 MB,
