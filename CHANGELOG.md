@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.30] - 2026-06-07
+- **ci(tests) — 4 shards + reporter verbose para aislar archivo que cuelga**: `.github/workflows/ci.yml` sube la matriz de tests de 2 → 4 shards (`matrix.shard: [1,2,3,4]`, `total: [4]`) y agrega `--reporter=verbose` al comando de Vitest, así el log de CI imprime el nombre de cada archivo justo antes de ejecutarlo y el shard que cuelgue revela el archivo culpable en su última línea. `package.json` actualiza el script `test` local a 4 shards secuenciales para reproducir la misma partición en dev. El job `coverage` no cambia: `actions/download-artifact@v7` ya descarga todos los blobs con `pattern: vitest-blob-*`.
+
 ## [12.60.29] - 2026-06-07
 - **chore(ci) — bump GitHub Actions a Node.js 24**: `.github/workflows/ci.yml` actualiza `actions/checkout@v4 → v6`, `actions/upload-artifact@v4 → v7` y `actions/download-artifact@v4 → v7` en los jobs `quality`, `tests` y `coverage`. Estas versiones corren nativamente sobre Node.js 24, eliminando los warnings de deprecación antes del corte del 16-jun-2026 (cuando GitHub fuerza Node.js 24) y el 16-sep-2026 (remoción de Node.js 20 del runner). Sin breaking changes para los pasos actuales.
 

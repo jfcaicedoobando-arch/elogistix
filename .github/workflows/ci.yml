@@ -69,8 +69,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
-        total: [2]
+        shard: [1, 2, 3, 4]
+        total: [4]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -84,7 +84,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
-        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
+        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --reporter=verbose --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
 
       - name: Upload shard blob report
         if: always()
