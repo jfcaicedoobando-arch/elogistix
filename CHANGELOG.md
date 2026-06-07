@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.22] - 2026-06-07
+- **perf(tests) — paralelismo controlado en la suite de Vitest**: `vitest.config.ts` ahora corre con `fileParallelism: true` y `maxForks: 2` (cada fork con `--max-old-space-size=8192`). Aprovecha el teardown estable de 12.60.20 (heap pico ~55 MB por fork) para reducir el wall-clock de la suite ~2x. Verificado: 285/289 archivos en 580s (vs ~224 antes), 0 fallos, 0 OOM, 0 `ERR_IPC_CHANNEL_CLOSED`. Probado 4 forks @ 4 GB → OOM en PDFs pesados; 2 forks @ 8 GB es el punto óptimo.
+
 ## [12.60.21] - 2026-06-07
 - **chore(audit) — clasificador de casts reconoce infraestructura de test**: `isTestFile` en `scripts/lib/casts.ts` ahora degrada también los archivos bajo `src/test/` (no sólo `__tests__/` y `*.test.tsx?`). Los 4 casts dobles introducidos en `src/test/setup.ts` por el teardown de 12.60.20 dejan de contarse como HIGH y bajan a MEDIUM, devolviendo el baseline a `0 HIGH / 0 CRITICAL`. Regenerado `docs/cast-audit.md` (1124 casts) y verde el test `audit-report > casts baseline`.
 
