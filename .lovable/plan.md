@@ -1,30 +1,34 @@
-# Actualizar GitHub Actions a versiones con Node.js 24
+# Aislar el shard 2/2 que se cuelga dividiendo en más shards
 
-## Problema
-El workflow de CI emite warnings de deprecación porque `actions/checkout@v4` y `actions/upload-artifact@v4` ejecutan Node.js 20, que será removido de los runners el 16 de septiembre de 2026. A partir del 16 de junio de 2026, las acciones serán forzadas a Node.js 24 por defecto.
+## Contexto
+- CI actual usa `matrix.shard: [1, 2]` con `--shard=N/2`.
+- Shard 1/2 termina verde; shard 2/2 se queda hanging (probablemente un test específico, no OOM, porque ya bajamos a singleFork @ 8 GB).
+- Vitest acepta cualquier número entero de shards `N/M` (no hay límite duro; GitHub Actions cobra por minutos, no por shards). Lo práctico es 4-8.
 
-## Solución
-Actualizar las acciones de GitHub a las últimas versiones mayores que ya corren nativamente sobre Node.js 24:
+## Estrategia
+Subir la matriz de 2 → 4 shards. Esto:
+1. Reparte los archivos en 4 grupos más pequeños — el shard que contiene el archivo problemático será visible (timeout/hang aislado a 1/4 de la suite en vez de 1/2).
+2. Permite identificar el archivo culpable mirando qué shard (1/4, 2/4, 3/4 o 4/4) se cuelga.
+3. Reduce el tiempo de cada job (~50% del actual shard 2/2).
 
-### Cambios en `.github/workflows/ci.yml`
+### Cambios
 
-| Acción | Versión actual | Versión nueva |
-|--------|---------------|---------------|
-| `actions/checkout` | v4 | v6 |
-| `actions/upload-artifact` | v4 | v7 |
-| `actions/download-artifact` | v4 | v7 |
+**`.github/workflows/ci.yml`** — job `tests`:
+- `matrix.shard: [1, 2, 3, 4]`
+- `matrix.total: [4]`
+- (lo demás del job queda igual; el merge job ya descarga todos los blobs con `pattern: vitest-blob-*`)
 
-### Ubicaciones a modificar
-- `actions/checkout@v4` → `actions/checkout@v6` en los 3 jobs (`quality`, `tests`, `coverage`)
-- `actions/upload-artifact@v4` → `actions/upload-artifact@v7` en los pasos de upload de `quality` y `tests`
-- `actions/download-artifact@v4` → `actions/download-artifact@v7` en el job `coverage`
+**`package.json`** — script `test` local:
+- Cambiar la cadena `--shard=1/2 && ... --shard=2/2` a 4 shards secuenciales, para que el dev local pueda reproducir la misma partición.
 
-## Consideraciones
-- `actions/checkout@v6` fue lanzada específicamente para migrar a Node.js 24.
-- `actions/upload-artifact@v7` (y su par `download-artifact`) también corren sobre Node.js 24.
-- No hay breaking changes relevantes para este workflow (los artifacts siguen funcionando igual para reportes y coverage).
+### Diagnóstico adicional sugerido (sin tocar config)
+Para identificar el archivo exacto que cuelga, agregar al job de tests el flag `--reporter=verbose` solo cuando el shard fall — Vitest imprimirá el nombre del último archivo en ejecución antes del timeout del runner. Esto es opcional, pero útil. Si lo quieres lo añado.
 
-## Archivos involucrados
+## Próximos pasos sugeridos (no parte de este plan, para confirmar después)
+- Si shard 4/4 sigue colgando, el siguiente paso es subir a 6-8 shards o agregar `--reporter=verbose` para ver el nombre del archivo justo antes del hang.
+- Una vez identificado el archivo, lo podemos excluir temporalmente o investigar el leak/promesa sin resolver.
+
+## Archivos modificados
 - `.github/workflows/ci.yml`
-- `CHANGELOG.md` (registro de cambios)
-- `src/constants/appVersion.ts` (bump de versión)
+- `package.json`
+- `CHANGELOG.md` + `src/constants/appVersion.ts` (bump)
