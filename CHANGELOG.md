@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.31] - 2026-06-07
+- **ci(tests) — subir a 16 shards para aislar archivo que cuelga en shard 3/4**: `.github/workflows/ci.yml` sube la matriz de tests de 4 → 16 shards (`matrix.shard: [1..16]`, `total: [16]`). Con 16 shards cada uno contiene ~6% de la suite (5-10 archivos), suficiente para identificar el archivo culpable por inspección manual del último `RUN ...` que imprime `--reporter=verbose` antes del hang. `package.json` actualiza `test` local a un loop bash con 16 shards secuenciales.
+
 ## [12.60.30] - 2026-06-07
 - **ci(tests) — 4 shards + reporter verbose para aislar archivo que cuelga**: `.github/workflows/ci.yml` sube la matriz de tests de 2 → 4 shards (`matrix.shard: [1,2,3,4]`, `total: [4]`) y agrega `--reporter=verbose` al comando de Vitest, así el log de CI imprime el nombre de cada archivo justo antes de ejecutarlo y el shard que cuelgue revela el archivo culpable en su última línea. `package.json` actualiza el script `test` local a 4 shards secuenciales para reproducir la misma partición en dev. El job `coverage` no cambia: `actions/download-artifact@v7` ya descarga todos los blobs con `pattern: vitest-blob-*`.
 
