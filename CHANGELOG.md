@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.24] - 2026-06-07
+- **fix(tests) — heap por fork a 12 GB + mock `.order()` en `configuracion`**: `vitest.config.ts` sube `--max-old-space-size` de 8192 → 12288 por fork (2 forks × 12 GB = 24 GB, cabe en sandbox de 32 GB) para eliminar el OOM `Ineffective mark-compacts near heap limit` que reaparecía en el worker `vitest 2` al acumular suites. Además, `src/services/configuracion/__tests__/index.test.ts` añade `order: vi.fn().mockReturnThis()` al mock thenable de Supabase (la función real encadena `.eq().order().order()`), corrigiendo el fallo `supabase.from(...).select(...).eq(...).order is not a function`.
+
 ## [12.60.23] - 2026-06-07
 - **perf(tests) — stub global de `@react-pdf/renderer`**: nuevo `src/test/mocks/reactPdfStub.tsx` con primitivas ligeras (`Document/Page/View/Text/Image/Svg/StyleSheet/Font/pdf()/PDFViewer/PDFDownloadLink`) aliasadas en `vitest.config.ts` (`resolve.alias`). Evita cargar `fontkit`, `pdfkit` y polyfills de stream en los 12 archivos de tests PDF (antes cada uno hacía `vi.importActual` que ejecutaba el módulo real). Eliminados los `vi.mock("@react-pdf/renderer", ...)` locales redundantes en `CotizacionDocument`, `ProformaConsolidadaDocument`, `ProformaDocument`, `ProformaHeader`, `RentabilidadDocument`, `ReporteCarteraDocument`, `ReporteEERR/Ejecutivo/Presupuesto/TesoreriaDocument`, `cotizacionSections` y `pdfRenderLeak`. Verificado: 22 archivos PDF / 51 tests en 24s, canary de fuga (200 renders) sigue verde.
 
