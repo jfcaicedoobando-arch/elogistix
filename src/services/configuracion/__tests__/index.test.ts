@@ -2,17 +2,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { fetchConfiguracionByOrg } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => {
-  const chain = {
+  const chain: any = {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
     upsert: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnThis(),
-    then: vi.fn().mockImplementation(function(this: any, resolve: any) {
+    then: vi.fn().mockImplementation(function (this: any, resolve: any) {
       resolve({ data: this._data, error: this._error });
     }),
-    _data: null as any,
-    _error: null as any,
+    _data: null,
+    _error: null,
   };
   return { mockSupabase: chain };
 });
