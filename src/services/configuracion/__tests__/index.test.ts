@@ -1,33 +1,54 @@
-import { describe, it, expect, vi } from 'vitest';
-import { fetchConfiguracionByOrg } from '../index';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockSupabase } = vi.hoisted(() => {
-  const chain: any = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
-    then: vi.fn().mockImplementation(function (this: any, resolve: any) {
-      resolve({ data: this._data, error: this._error });
-    }),
-    _data: null,
-    _error: null,
-  };
-  return { mockSupabase: chain };
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
 });
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
-}));
+import {
+  fetchConfiguracionByOrg,
+  fetchConfiguracion,
+  updateConfiguracionByCategoriaClave,
+} from "../index";
 
-describe('configuracion/index', () => {
-  it('fetchConfiguracionByOrg filtra por organizacion', async () => {
-    (mockSupabase as any)._data = [];
-    await fetchConfiguracionByOrg('org1');
-    expect(mockSupabase.from).toHaveBeenCalledWith('configuracion');
-    expect(mockSupabase.eq).toHaveBeenCalledWith('organization_id', 'org1');
+describe("configuracion service", () => {
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+    vi.clearAllMocks();
+  });
+
+  it("fetchConfiguracionByOrg filtra por organization_id", async () => {
+    mock.setTableResult("configuracion", { data: [], error: null });
+    await fetchConfiguracionByOrg("org1");
+    const call = mock.tableCalls.find((c) => c.table === "configuracion");
+    expect(call?.ops).toEqual(
+      expect.arrayContaining(["select", "eq", "order", "order"]),
+    );
+  });
+
+  it("fetchConfiguracionByOrg propaga error de Supabase", async () => {
+    mock.setTableResult("configuracion", {
+      data: null,
+      error: { message: "boom" },
+    });
+    await expect(fetchConfiguracionByOrg("org1")).rejects.toBeDefined();
+  });
+
+  it("fetchConfiguracion devuelve [] cuando data es null", async () => {
+    mock.setTableResult("configuracion", { data: null, error: null });
+    const res = await fetchConfiguracion();
+    expect(res).toEqual([]);
+  });
+
+  it("updateConfiguracionByCategoriaClave hace update por item", async () => {
+    mock.setTableResult("configuracion", { data: null, error: null });
+    await updateConfiguracionByCategoriaClave([
+      { categoria: "empresa", clave: "nombre", valor: "X" },
+      { categoria: "empresa", clave: "rfc", valor: "Y" },
+    ]);
+    const calls = mock.tableCalls.filter((c) => c.table === "configuracion");
+    expect(calls.length).toBe(2);
+    expect(calls[0].ops).toContain("update");
   });
 });
-
