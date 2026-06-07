@@ -6,12 +6,6 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type PresupuestoMensualRow = Tables<"presupuesto_mensual">;
 
-interface CeldaPresupuesto {
-  categoria_id: string;
-  periodo: string; // YYYY-MM
-  monto_mxn: number;
-  id?: string;
-}
 
 export async function fetchPresupuestoMensualAnio(anio: number): Promise<PresupuestoMensualRow[]> {
   const desde = `${anio}-01`;
