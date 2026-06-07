@@ -10,12 +10,12 @@ Total de `as` casts detectados: **1124**
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 427     | 38.0% |
-| LOW       | 1 | 19      | 1.7% |
-| MEDIUM    | 2 | 674   | 60.0% |
-| HIGH      | 3 | 4     | 0.4% |
+| LOW       | 1 | 17      | 1.5% |
+| MEDIUM    | 2 | 680   | 60.5% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 4 (~0.4%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -30,7 +30,7 @@ Total de `as` casts detectados: **1124**
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
 | 1 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
-| 2 | `src/test/setup.ts` | 8 | 18 | 0 | 2 | 2 | 4 | 0 |
+| 2 | `src/test/setup.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
 | 3 | `src/features/auditoria/services/__tests__/revisiones.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
 | 4 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
 | 5 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
@@ -47,30 +47,7 @@ Total de `as` casts detectados: **1124**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/test/setup.ts:25`
-
-```ts
-const g = globalThis as unknown as { gc?: () => void };
-```
-
-### 2. [HIGH] `src/test/setup.ts:67`
-
-```ts
-(window as unknown as { onerror: null; onunhandledrejection: null }).onerror = null;
-```
-
-### 3. [HIGH] `src/test/setup.ts:68`
-
-```ts
-(window as unknown as { onerror: null; onunhandledrejection: null }).onunhandledrejection = null;
-```
-
-### 4. [HIGH] `src/test/setup.ts:79`
-
-```ts
-const g = globalThis as unknown as {
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
