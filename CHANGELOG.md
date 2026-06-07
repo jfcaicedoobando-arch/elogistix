@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.35] - 2026-06-07
+- **ci(coverage) — merge tolera shards cancelados sin enmascarar el error real**: el step "Merge reports + coverage thresholds" en `.github/workflows/ci.yml` ahora hace `mkdir -p .vitest-reports`, lista `blob-*.json` con `shopt -s nullglob` y, si no hay ninguno (porque un shard fue killed por GitHub antes de subir su artifact), imprime `::warning::` explícito y sale con 0 — en lugar de reventar con `ENOENT: scandir '.vitest-reports'` que escondía el cuelgue del shard tras un crash del job de coverage. El job `tests` ya falla rojo por su cuenta, no necesitamos doble fallo opaco.
+
 ## [12.60.34] - 2026-06-07
 - **ci(tests) — watchdog externo por archivo para detectar el culpable cuando un shard se cuelga**: nuevo `scripts/run-shard-guarded.ts` envuelve a Vitest, hace tail de stdout/stderr y mantiene dos timers — `--file-timeout=90s` (tiempo máx en un mismo archivo) y `--idle-timeout=60s` (sin output). Al dispararse, imprime un banner `⏱️ HARD TIMEOUT` con el archivo culpable, su tiempo en archivo, el último stdout y mata Vitest con SIGTERM (SIGKILL tras 5s). Sale con código 124 estilo `timeout(1)`. CI (`.github/workflows/ci.yml`) ahora usa `test:coverage:shard:guarded` en lugar de `test:coverage:shard`, manteniendo `timeout-minutes: 20` como red de seguridad. `vitest.config.ts` agrega `teardownTimeout: 15_000` por simetría con `testTimeout`/`hookTimeout` (cubre `afterAll` colgados). Resuelve el problema de shard 9/16 cortando el log a los 20 min sin indicar qué archivo causó el cuelgue.
 
