@@ -156,7 +156,7 @@ function main(): void {
       setTimeout(() => {
         if (child.exitCode === null) child.kill("SIGKILL");
         process.exit(124);
-      }, KILL_GRACE_MS).unref();
+      }, KILL_GRACE_MS);
     }
   }, 1_000);
 
