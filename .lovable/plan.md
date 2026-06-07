@@ -1,36 +1,49 @@
-# Fix: `vi.mock` hoisting bug en `useLoginAudit.test.ts`
+# Fix: loop infinito en `useLeadEditForm.test.tsx`
 
 ## Diagnóstico
-Encontramos el archivo culpable: `src/contexts/auth/__tests__/useLoginAudit.test.ts`.
+Comparé los archivos del shard 8/16 (`vitest list --shard=8/16`) contra los que el CI alcanzó a completar. Quedaron 4 archivos sin imprimir:
 
-El error real es:
-```
-ReferenceError: Cannot access 'mockSession' before initialization
+- `useLeadEditForm.test.tsx` ← **culpable**
+- `useDashboardEjecutivo.test.tsx`
+- `errorCatalog.test.ts`
+- `embarquePayloadSchemas.test.ts`
+
+## Causa raíz
+El test invoca el factory `lead()` **dentro** del closure de `renderHook`:
+
+```ts
+const lead = () => ({ empresa: "ACME S.A.", ... });
+renderHook(() => useLeadEditForm(lead()));   // ⚠ lead() nuevo en cada render
 ```
 
-Vitest **hoistea** las llamadas `vi.mock(...)` al tope del archivo (antes de cualquier otra declaración). Las variables `mockInsert` (línea 4) y `mockSession` (línea 5) están declaradas con `const`, pero los `vi.mock(...)` de las líneas 7-11 las referencian. Al hoistear, los `vi.mock` ejecutan antes de las `const`, disparando el TDZ.
+Cada render produce un objeto `lead` **con nueva referencia**. Dentro de `useLeadEditForm`:
+
+```ts
+useEffect(() => {
+  setForm({ empresa: lead.empresa ?? "", ... });   // siempre objeto nuevo
+}, [lead]);   // dispara cada render porque lead cambia de referencia
+```
+
+→ `setForm` con objeto nuevo → re-render → `lead()` nuevo → effect dispara → `setForm` otra vez → **loop infinito**.
+
+No falla con "Maximum update depth" porque React 18 + RTL ejecutan los updates vía microtasks, saturando el event loop sin tirar el límite síncrono → el proceso del fork se queda spinning hasta que GitHub mata el job por timeout.
 
 ## Solución
-Usar `vi.hoisted(() => ...)` para que las variables se inicialicen **junto con** los `vi.mock` (también hoisteados). Este es el patrón oficial de Vitest documentado para este caso.
+Estabilizar la referencia del lead en los 3 tests del archivo. Pasar la referencia una sola vez:
 
-### Cambio en `src/contexts/auth/__tests__/useLoginAudit.test.ts`
-
-Reemplazar las declaraciones top-level por:
 ```ts
-const { mockInsert, mockSession } = vi.hoisted(() => ({
-  mockInsert: vi.fn(),
-  mockSession: { getItem: vi.fn(() => null), setItem: vi.fn(), removeItem: vi.fn() },
-}));
+it("inicializa form con valores del lead", () => {
+  const inicial = lead();
+  const { result } = renderHook(() => useLeadEditForm(inicial));
+  // ...
+});
 ```
 
-El resto del archivo (los `vi.mock`, `describe`, `it`) queda igual — siguen referenciando `mockInsert` y `mockSession` con el mismo nombre.
+Mismo patrón en los otros 2 tests. El factory `lead()` se invoca una sola vez por test, y la referencia se mantiene estable entre re-renders.
 
-## Por qué no se vio antes con 4 shards
-Probablemente en shard 3/4 este archivo compartía partición con tests que tenían fake-timers globales o algún teardown que causaba que el error propagara como hang en lugar de fallo limpio (el `setTimeout` interno de Vitest reportando el error podría haberse quedado en `vi.useFakeTimers()`). Con 16 shards quedó aislado y reportó el fallo real en 10s.
+## Bonus: evitar que vuelva a pasar
+El hook tiene una susceptibilidad real (recordable solo a desarrolladores). En el código de producción `lead` llega de React Query y mantiene referencia estable mientras no haya refetch, así que no se ha disparado en runtime. No tocamos el hook — solo el test, que es donde se rompía la invariante.
 
 ## Archivos modificados
-- `src/contexts/auth/__tests__/useLoginAudit.test.ts`
+- `src/hooks/crm/__tests__/useLeadEditForm.test.tsx`
 - `CHANGELOG.md` + `src/constants/appVersion.ts` (bump)
-
-## No tocar (por ahora)
-La matriz de 16 shards se queda — fue útil para encontrar este bug y no daña nada. Si quieres después la podemos bajar a 4 una vez que CI vuelva a verde sostenido.

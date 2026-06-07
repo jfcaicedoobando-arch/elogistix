@@ -10,14 +10,16 @@ const lead = () => ({
 
 describe("useLeadEditForm", () => {
   it("inicializa form con valores del lead", () => {
-    const { result } = renderHook(() => useLeadEditForm(lead()));
+    const inicial = lead();
+    const { result } = renderHook(() => useLeadEditForm(inicial));
     expect(result.current.form.empresa).toBe("ACME S.A.");
     expect(result.current.form.score).toBe(4);
     expect(result.current.dirty).toBe(false);
   });
 
   it("set() actualiza campo y dirty refleja cambio", () => {
-    const { result } = renderHook(() => useLeadEditForm(lead()));
+    const inicial = lead();
+    const { result } = renderHook(() => useLeadEditForm(inicial));
     act(() => { result.current.set("empresa", "BETA S.A."); });
     expect(result.current.form.empresa).toBe("BETA S.A.");
     expect(result.current.dirty).toBe(true);

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.33] - 2026-06-07
+- **fix(tests) — loop infinito en `useLeadEditForm.test.tsx` colgaba shard 8/16**: los 2 primeros tests llamaban `renderHook(() => useLeadEditForm(lead()))`, donde el factory `lead()` se invocaba **dentro** del closure de render. Cada re-render producía un nuevo objeto `lead` con referencia distinta → el `useEffect([lead])` del hook disparaba `setForm` cada render → setForm con objeto nuevo → re-render infinito (no atrapado por "Maximum update depth" porque React 18 + RTL agendan updates vía microtasks, saturando el event loop). Aislado comparando `vitest list --shard=8/16` contra el log de CI. Fix: invocar `lead()` una sola vez por test y pasar la referencia estable al hook.
+
 ## [12.60.32] - 2026-06-07
 - **fix(tests) — `vi.mock` hoisting bug en `useLoginAudit.test.ts`**: el archivo declaraba `const mockInsert` y `const mockSession` top-level y los referenciaba dentro de `vi.mock(...)`, que Vitest hoistea al tope del archivo (antes de las `const`), disparando `ReferenceError: Cannot access 'mockSession' before initialization` y abortando shard 3/4 del CI. Migrado a `vi.hoisted(() => ({ mockInsert, mockSession }))` — patrón oficial de Vitest para esta situación. Aislado gracias a la matriz de 16 shards (shard 9/16 reportó el fallo en 10s vs hang previo).
 
