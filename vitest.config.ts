@@ -25,17 +25,18 @@ export default defineConfig({
     // Pool por procesos (forks). Cada archivo corre en un fork nuevo para
     // liberar memoria al terminar (PDFs / leak regression). Con el teardown
     // global de 12.60.20 + mocks-cleanup, el heap pico estable es ~55 MB,
-    // por lo que es seguro paralelizar hasta 4 forks en sandboxes con
-    // ≥16 GB RAM (este corre con 32 GB). Esto reduce el wall-clock de la
-    // suite ~3-4x sin riesgo de OOM (4 × ~60 MB ≪ 8 GB heap por fork).
+    // por lo que es seguro paralelizar 2 forks (2 × 8 GB heap = 16 GB ≪ 32 GB
+    // RAM del sandbox). Esto reduce el wall-clock de la suite ~2x sin riesgo
+    // de OOM. Subir a 3-4 forks requirió heap ≤4 GB y disparó OOM en archivos
+    // PDF pesados; 2 forks @ 8 GB es el punto óptimo verificado.
     pool: "forks",
     poolOptions: {
       forks: {
         singleFork: false,
-        maxForks: 4,
+        maxForks: 2,
         minForks: 1,
         isolate: true,
-        execArgv: ["--max-old-space-size=4096"],
+        execArgv: ["--max-old-space-size=8192"],
       },
     },
     fileParallelism: true,
