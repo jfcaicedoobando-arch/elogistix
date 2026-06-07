@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { afterEach, vi } from "vitest";
+import { afterEach, afterAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
 Object.defineProperty(window, "matchMedia", {
@@ -17,42 +17,82 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 /**
+ * Helper: invoca global.gc() si Node corre con --expose-gc. No-op en caso
+ * contrario. Permite recuperar heap entre archivos de test cuando se ejecuta
+ * la suite completa en un solo proceso.
+ */
+const maybeGc = (): void => {
+  const g = globalThis as unknown as { gc?: () => void };
+  if (typeof g.gc === "function") {
+    try { g.gc(); } catch { /* noop */ }
+  }
+};
+
+/**
  * Cleanup global tras cada test para evitar la fuga acumulativa de memoria
- * detectada en shard 3/4 (OOM al procesar 73 archivos en el mismo worker).
+ * detectada cuando la suite corre en un solo `vitest run` (vs. 2 shards).
  *
- * - cleanup(): desmonta árboles de React Testing Library (libera DOM + refs).
- * - vi.clearAllMocks(): resetea contadores/llamadas de mocks.
- * - vi.resetAllMocks(): restaura implementaciones de spies/mocks a su estado
- *   original para evitar acumulación de stubs entre archivos.
- * - vi.useRealTimers(): fuerza el retorno a timers reales si algún test usó
- *   `vi.useFakeTimers()`; previene timers simulados colgados que mantienen
- *   referencias a componentes ya desmontados.
- * - QueryClient global: cada createWrapper() crea uno nuevo; aquí limpiamos
- *   cualquier caché residual que se haya colgado en globalThis.
- * - @react-pdf/renderer: cachea Font._fontkit y otros recursos a nivel módulo;
- *   reseteamos los caches conocidos si el módulo está cargado.
+ * Mantiene `clearAllMocks` (NO `resetAllMocks`/`restoreAllMocks`) porque
+ * varios archivos declaran mocks a nivel módulo con `vi.hoisted` / `vi.mock`
+ * que se romperían si destruimos las implementaciones entre tests.
  */
 afterEach(() => {
+  // 1. Desmonta árboles React Testing Library.
   cleanup();
-  // clearAllMocks: limpia historia de llamadas pero CONSERVA las
-  // implementaciones declaradas a nivel módulo (p.ej. `vi.fn().mockReturnThis()`
-  // o `vi.fn().mockResolvedValue(...)` dentro de `vi.hoisted` o `vi.mock`).
-  // No usamos `vi.resetAllMocks()` porque destruye esas implementaciones y
-  // rompe múltiples tests de mocks encadenados de Supabase (revisiones,
-  // planes, emisor, flujoProyectado, useNuevoClienteController, etc.).
-  vi.clearAllMocks();
+
+  // 2. DOM hard reset: JSDOM acumula nodos (sobre todo <style> inyectados por
+  //    Radix/Tailwind durante portales) que sostienen refs circulares.
+  try {
+    document.body.innerHTML = "";
+    // Conservamos <meta> y <title> del head; quitamos sólo style/link extras.
+    document.head.querySelectorAll("style,link[rel='stylesheet']").forEach((n) => n.remove());
+  } catch { /* noop */ }
+
+  // 3. Cancela rAF pendientes y vuelve a timers reales.
+  try {
+    // SAFE-CAST: requestAnimationFrame en JSDOM acepta callback simple.
+    const id = (globalThis as unknown as { requestAnimationFrame?: (cb: () => void) => number })
+      .requestAnimationFrame?.(() => {});
+    if (typeof id === "number") {
+      for (let i = id; i > 0; i--) {
+        (globalThis as unknown as { cancelAnimationFrame?: (n: number) => void })
+          .cancelAnimationFrame?.(i);
+      }
+    }
+  } catch { /* noop */ }
   vi.useRealTimers();
 
-  // Limpia QueryClient global si algún test lo expuso en globalThis.
-  // SAFE-CAST: acceso a propiedad opcional de globalThis sólo en tests.
-  const g = globalThis as unknown as { __TEST_QUERY_CLIENT__?: { clear: () => void } };
-  if (g.__TEST_QUERY_CLIENT__ && typeof g.__TEST_QUERY_CLIENT__.clear === "function") {
-    g.__TEST_QUERY_CLIENT__.clear();
+  // 4. Handlers globales de error reseteados (algunos tests los sobrescriben).
+  try {
+    (window as unknown as { onerror: null; onunhandledrejection: null }).onerror = null;
+    (window as unknown as { onerror: null; onunhandledrejection: null }).onunhandledrejection = null;
+  } catch { /* noop */ }
+
+  // 5. Mocks: sólo limpiar historia de llamadas. NO resetear ni restaurar
+  //    (rompería mocks declarados a nivel módulo). Sí revertir stubs de
+  //    globalThis/env, que son explícitamente por-test.
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+
+  // 6. QueryClient global expuesto por algunos hooks de test.
+  const g = globalThis as unknown as {
+    __TEST_QUERY_CLIENT__?: {
+      cancelQueries?: () => void;
+      clear?: () => void;
+      unmount?: () => void;
+    };
+  };
+  if (g.__TEST_QUERY_CLIENT__) {
+    try { g.__TEST_QUERY_CLIENT__.cancelQueries?.(); } catch { /* noop */ }
+    try { g.__TEST_QUERY_CLIENT__.clear?.(); } catch { /* noop */ }
+    try { g.__TEST_QUERY_CLIENT__.unmount?.(); } catch { /* noop */ }
     g.__TEST_QUERY_CLIENT__ = undefined;
   }
 
-  // Limpia caches internos de @react-pdf/renderer si el módulo fue cargado.
-  // No lo importamos directamente para no forzar su carga en tests que no lo usan.
+  // 7. Caches internos de @react-pdf/renderer (Font._fontkit y similares).
+  //    No importamos el módulo aquí para no forzar su carga en tests que no
+  //    lo usan; sólo limpiamos si quedó expuesto en globalThis.
   try {
     const pdfFontModule = (globalThis as Record<string, unknown>)["__REACT_PDF_FONT__"] as
       | { _fontkit?: unknown; clear?: () => void }
@@ -61,7 +101,24 @@ afterEach(() => {
       if (typeof pdfFontModule.clear === "function") pdfFontModule.clear();
       if (pdfFontModule._fontkit) pdfFontModule._fontkit = undefined;
     }
-  } catch {
-    // noop
-  }
+  } catch { /* noop */ }
+
+  // 8. GC opcional (--expose-gc).
+  maybeGc();
+});
+
+/**
+ * Teardown final por archivo: aquí sí es seguro restaurar implementaciones
+ * porque no quedan más tests en el archivo y el siguiente correrá en un fork
+ * nuevo (vitest.config.ts: maxForks=1 + fileParallelism=false).
+ */
+afterAll(() => {
+  try {
+    const pdfFontModule = (globalThis as Record<string, unknown>)["__REACT_PDF_FONT__"] as
+      | { _fontkit?: unknown; clear?: () => void }
+      | undefined;
+    if (pdfFontModule?.clear) pdfFontModule.clear();
+  } catch { /* noop */ }
+  vi.restoreAllMocks();
+  maybeGc();
 });
