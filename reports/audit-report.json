@@ -1,0 +1,102 @@
+{
+  "version": "12.61.17",
+  "generatedAt": "2026-06-08T13:08:42.904Z",
+  "arch": {
+    "hooksContextsDirectImports": [],
+    "componentsPagesDirectImports": [
+      "src/pages/auth/ForgotPasswordDialog.tsx",
+      "src/pages/auth/ResetPassword.tsx"
+    ],
+    "oversized": [
+      {
+        "file": "src/features/embarques/components/StepCostosPrecios.tsx",
+        "lines": 275
+      },
+      {
+        "file": "src/pages/auth/Login.tsx",
+        "lines": 246
+      },
+      {
+        "file": "src/lib/mappers/genericPayloadMapper.ts",
+        "lines": 227
+      },
+      {
+        "file": "src/services/facturas/cobranza.ts",
+        "lines": 225
+      },
+      {
+        "file": "src/features/embarques/components/DialogEliminarEmbarque.tsx",
+        "lines": 209
+      },
+      {
+        "file": "src/lib/csv/parseCsv.ts",
+        "lines": 207
+      }
+    ]
+  },
+  "casts": {
+    "total": 1145,
+    "bySeverity": {
+      "SAFE": 432,
+      "LOW": 16,
+      "MEDIUM": 693,
+      "HIGH": 4,
+      "CRITICAL": 0
+    },
+    "topFiles": [
+      {
+        "file": "src/lib/mappers/genericPayloadMapper.ts",
+        "total": 11,
+        "weight": 19
+      },
+      {
+        "file": "src/hooks/profit/__tests__/useProfit.test.tsx",
+        "total": 8,
+        "weight": 16
+      },
+      {
+        "file": "src/test/setup.ts",
+        "total": 8,
+        "weight": 16
+      },
+      {
+        "file": "src/generators/cotizacion/__tests__/datosGenerales.test.ts",
+        "total": 6,
+        "weight": 12
+      },
+      {
+        "file": "src/lib/__tests__/downloadBlob.test.ts",
+        "total": 6,
+        "weight": 12
+      },
+      {
+        "file": "src/lib/audit/diffFields.ts",
+        "total": 12,
+        "weight": 12
+      },
+      {
+        "file": "src/lib/domain/estadoResultados.ts",
+        "total": 7,
+        "weight": 12
+      },
+      {
+        "file": "src/services/cotizacion/conversiones/__tests__/embarquesHelpers.test.ts",
+        "total": 6,
+        "weight": 12
+      },
+      {
+        "file": "src/services/bitacora/__tests__/index.test.ts",
+        "total": 10,
+        "weight": 11
+      },
+      {
+        "file": "src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx",
+        "total": 5,
+        "weight": 10
+      }
+    ]
+  },
+  "tests": {
+    "violations": []
+  }
+}
