@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.5] - 2026-06-08
+- **fix(csv) — sanitización estricta de encabezados en `parseCsv`**: `normalizeHeader` ahora elimina zero-width (`\u200B-\u200D`, `\u2060`, `\uFEFF` intermedio), convierte NBSP (`\u00A0`) a espacio para que colapse con `\s+`, y borra controles ASCII (`\x00-\x1F`, `\x7F`) — los caracteres ocultos típicos que Excel/Sheets meten al copiar/pegar. `parseCsv` descarta defensivamente columnas con encabezado vacío (comas sobrantes al inicio/final), deduplica headers colisionados con sufijo `_2`/`_3` en vez de pisar valores silenciosamente, y acepta un parámetro opcional `options.headerAliases` para traducir variaciones menores (ej. `correo→email`, `tel→telefono`) sin tocar cada importador. Ambos casos atípicos emiten `console.warn` para diagnóstico. Tests nuevos cubren BOM intermedio, zero-width, NBSP, controles, columnas vacías, duplicados y alias. Firma `parseCsv(input)` retrocompatible.
+
 ## [12.61.4] - 2026-06-08
 - **fix(auditoria) — normalización UTC en reglas temporales de `domain/core.ts`**: `minSnoozeDate` ya no usa `Date#setDate`/`getDate` (locales); ahora construye el día siguiente con `Date.UTC(getUTCFullYear, getUTCMonth, getUTCDate+1)`, eliminando el drift entre navegador en CDMX (UTC-6) y runners de CI en UTC. Se corrige el JSDoc de `isoDate` (era "horario local", siempre fue UTC) y se añade `todayUtcIso()` como punto único para futuras reglas (proforma_vencida, demurrage, ETA buffer). Contrato del módulo documentado: prohibido `getDate`/`setDate` locales. Tests nuevos cubren `isoDate` al borde de día (23:59:59Z), `minSnoozeDate` en hora temprana (T02:00Z) que con cálculo local daba el día equivocado, y rollover de año UTC.
 
