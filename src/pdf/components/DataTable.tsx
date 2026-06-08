@@ -22,7 +22,17 @@ interface Props<T> {
 /**
  * Tabla genérica para @react-pdf/renderer. Construida con <View> en Flexbox
  * (no <table> HTML). Aplica zebra striping real en filas pares para mejorar
- * la legibilidad. Cada fila no se rompe entre páginas.
+ * la legibilidad.
+ *
+ * Tipografía defensiva (12.61.9):
+ * - Cada `<View>` de fila usa `wrap` para permitir que descripciones largas
+ *   (incoterms complejos, listas de contenedores, descripciones de mercancía)
+ *   se distribuyan en múltiples líneas y, si caen al borde de la página,
+ *   salten naturalmente sin cortar el contenido a la mitad.
+ * - Las columnas numéricas (`cellNum`, `cellNumWide`, `cellQty`) usan
+ *   `flexGrow: 0` + `flexShrink: 0` en `styles.ts` → ancho INVIOLABLE: nunca
+ *   serán empujadas ni comprimidas por una celda `cellDesc` con texto largo.
+ * - `cellDesc` usa `minWidth: 0` para garantizar wrap real en flex.
  */
 export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
   return (
@@ -39,16 +49,16 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
         const rowStyle = i % 2 === 1 ? styles.tableRowZebra : styles.tableRow;
         return (
           <Fragment key={i}>
-            <View style={rowStyle} wrap={false}>
+            <View style={rowStyle} wrap>
               {columns.map((col) => (
-                <Text key={col.key} style={[styles.td, ...flat(col.cellStyle)]}>
+                <Text key={col.key} style={[styles.td, ...flat(col.cellStyle)]} wrap>
                   {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
                 </Text>
               ))}
             </View>
             {subrow ? (
-              <View style={rowStyle} wrap={false}>
-                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: "#64748B" }]}>
+              <View style={rowStyle} wrap>
+                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: "#64748B" }]} wrap>
                   ↳ {subrow}
                 </Text>
               </View>

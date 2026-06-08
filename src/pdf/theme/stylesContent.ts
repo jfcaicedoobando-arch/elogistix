@@ -60,12 +60,13 @@ export const contentStyles = {
   value: { fontSize: 10, fontFamily: FONTS.bold, color: COLORS.ink },
   // Tabla
   table: { marginTop: 4 },
-  tableHeader: { flexDirection: "row" as const, backgroundColor: COLORS.primary },
+  tableHeader: { flexDirection: "row" as const, backgroundColor: COLORS.primary, alignItems: "stretch" as const },
   tableRow: {
     flexDirection: "row" as const,
     borderBottomWidth: 0.25,
     borderBottomColor: COLORS.border,
     minHeight: 18,
+    alignItems: "stretch" as const,
   },
   tableRowZebra: {
     flexDirection: "row" as const,
@@ -73,6 +74,7 @@ export const contentStyles = {
     borderBottomColor: COLORS.border,
     minHeight: 18,
     backgroundColor: COLORS.zebra,
+    alignItems: "stretch" as const,
   },
   th: {
     paddingVertical: 6,
@@ -82,12 +84,19 @@ export const contentStyles = {
     color: COLORS.primaryFg,
     letterSpacing: 0.3,
     textTransform: "uppercase" as const,
+    overflow: "hidden" as const,
   },
-  td: { paddingVertical: 5, paddingHorizontal: 7, fontSize: 9 },
-  cellDesc: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
-  cellNum: { width: 65, textAlign: "right" as const },
-  cellNumWide: { width: 80, textAlign: "right" as const },
-  cellQty: { width: 38, textAlign: "right" as const },
+  // Tipografía defensiva (12.61.9): `overflow: hidden` + `flexShrink: 1` evita
+  // que un texto largo en una celda desplace/recorte las celdas vecinas.
+  td: { paddingVertical: 5, paddingHorizontal: 7, fontSize: 9, overflow: "hidden" as const, flexShrink: 1 },
+  // `minWidth: 0` es clave en flex para que el wrap real funcione cuando hay
+  // strings sin espacios (URLs, IDs de contenedores concatenados, etc.).
+  cellDesc: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
+  // Columnas numéricas: ancho fijo INVIOLABLE — `flexGrow:0` + `flexShrink:0`
+  // bloquea que una descripción larga pueda comprimirlas o empujarlas.
+  cellNum: { width: 65, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
+  cellNumWide: { width: 80, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
+  cellQty: { width: 38, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
   subtotalBlock: { marginTop: 6, alignItems: "flex-end" as const },
   subtotalLine: { fontSize: 10, marginVertical: 1, color: COLORS.muted },
   subtotalEmphasis: {
