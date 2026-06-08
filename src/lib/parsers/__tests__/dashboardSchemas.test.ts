@@ -55,11 +55,13 @@ describe("dashboardSchemas", () => {
     expect(result.success).toBe(false);
   });
 
-  it("cargaPorClienteSchema rechaza si falta el total (campo requerido)", () => {
-    const result = cargaPorClienteSchema.safeParse({
-      cliente_id: "abc",
-      cliente_nombre: "Acme",
+  it("cargaPorClienteSchema acepta camelCase y rellena desglose con ceros por defecto", () => {
+    const r = cargaPorClienteSchema.parse({
+      clienteId: "xyz",
+      clienteNombre: "Bravo",
+      total: 3,
     });
-    expect(result.success).toBe(false);
+    expect(r.total).toBe(3);
+    expect(r.desglose.Confirmado).toBe(0);
   });
 });
