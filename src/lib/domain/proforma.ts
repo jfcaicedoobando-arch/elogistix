@@ -6,7 +6,7 @@
  * `proformaAgrupacion.ts`; aquí mantenemos sólo el cálculo de totales y los tipos
  * compartidos del dominio.
  */
-import { calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 
 export type Moneda = "USD" | "MXN";
 
@@ -16,6 +16,7 @@ export interface ConceptoVentaLite {
   precio_unitario: number | string;
   moneda: string;
   aplica_iva?: boolean | null;
+  tasa_iva_aplicada?: number | null;
 }
 
 export interface TotalesProforma {
@@ -47,14 +48,18 @@ export function calcularTotalesProforma(
   const iva_usd = usd.reduce((s, c) => {
     const sub = Number(c.cantidad) * Number(c.precio_unitario);
     const aplica = c.id in ivaOverridesUSD ? ivaOverridesUSD[c.id] : !!c.aplica_iva;
-    return aplica ? s + calcularIVA(sub, tasaIva) : s;
+    if (!aplica) return s;
+    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
   }, 0);
 
   const subtotal_mxn = mxn.reduce(
     (s, c) => s + Number(c.cantidad) * Number(c.precio_unitario),
     0,
   );
-  const iva_mxn = calcularIVA(subtotal_mxn, tasaIva);
+  const iva_mxn = mxn.reduce(
+    (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
+    0,
+  );
 
   return {
     subtotal_usd,

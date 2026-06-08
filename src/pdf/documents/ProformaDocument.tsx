@@ -1,6 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { Tables } from "@/integrations/supabase/types";
-import { calcularIVA, TASA_IVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, TASA_IVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
@@ -47,7 +47,7 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVenta>
     ...base,
     { key: "iva", title: "IVA", cellStyle: styles.cellNum,
       render: (r) => r.aplica_iva
-        ? formatCurrency(calcularIVA(Number(r.cantidad) * Number(r.precio_unitario), tasaIva), "USD")
+        ? formatCurrency(calcularIVA(Number(r.cantidad) * Number(r.precio_unitario), resolverTasaConcepto(r, tasaIva)), "USD")
         : "—" },
   ];
 }
