@@ -37,12 +37,27 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
     },
     {
       id: "proveedor", header: "Proveedor",
-      meta: { width: "min-w-[160px]", className: "max-w-[220px] truncate" },
-      cell: ({ row }) => (
-        <span title={toTitleCase(row.original.proveedor_nombre)}>
-          {toTitleCase(row.original.proveedor_nombre)}
-        </span>
-      ),
+      meta: { width: "min-w-[160px]", className: "max-w-[220px]" },
+      cell: ({ row }) => {
+        const origen = row.original.proveedor_origen;
+        const badgeCls = origen === "Nacional"
+          ? "bg-primary/10 text-primary border-primary/20"
+          : origen === "Extranjero"
+            ? "bg-warning/10 text-warning border-warning/20"
+            : "";
+        return (
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="truncate" title={toTitleCase(row.original.proveedor_nombre)}>
+              {toTitleCase(row.original.proveedor_nombre)}
+            </span>
+            {origen && (
+              <Badge variant="outline" className={`${badgeCls} text-[10px] px-1.5 py-0 h-4 w-fit font-normal`}>
+                {origen}
+              </Badge>
+            )}
+          </div>
+        );
+      },
     },
     {
       id: "emision", header: "Emisión",
