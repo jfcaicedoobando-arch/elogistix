@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { parseCsf } from '../index';
 import { AUTH_ERROR_MESSAGES } from '@/constants/authMessages';
 
@@ -15,6 +15,11 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('csf/index', () => {
+  beforeEach(() => {
+    mockSupabase.auth.getSession.mockClear();
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: 'tk' } } });
+  });
+
   it('parseCsf lanza error si no hay sesion', async () => {
     mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: null } });
     const file = new File([''], 'csf.pdf');
