@@ -31,4 +31,14 @@ describe('reportes/index', () => {
     expect(mockSupabase.rpc).toHaveBeenCalledWith('reportes_resumen', expect.any(Object));
     expect(result).toEqual({ clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } });
   });
+
+  it('fetchSidebarAlertCounts propaga error de RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    await expect(fetchSidebarAlertCounts()).rejects.toThrow('RPC fail');
+  });
+
+  it('fetchReportesResumen propaga error de RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    await expect(fetchReportesResumen({})).rejects.toThrow('RPC fail');
+  });
 });
