@@ -95,6 +95,17 @@ export async function fetchProveedoresLite(): Promise<ProveedorLite[]> {
   return (data ?? []) as ProveedorLite[];
 }
 
+export async function findProveedorByRfc(rfc: string): Promise<{ id: string; nombre: string } | null> {
+  if (!rfc) return null;
+  const { data, error } = await supabase
+    .from("proveedores")
+    .select("id, nombre")
+    .eq("rfc", rfc.trim().toUpperCase())
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function fetchProveedor(id: string): Promise<Proveedor | null> {
   const { data, error } = await supabase
     .from("proveedores")
