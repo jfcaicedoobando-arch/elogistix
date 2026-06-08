@@ -135,10 +135,11 @@ export default function CotizacionWizardLayout({
         <CotizacionWizardFooter
           currentStep={w.currentStep}
           isPending={w.isPending}
+          isProcessing={isProcessing}
           saveLabel={saveLabel}
-          onBack={w.handleBack}
-          onNext={w.handleSiguiente}
-          onSave={w.handleGuardar}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSave={handleSave}
         />
       </div>
     </FormProvider>
