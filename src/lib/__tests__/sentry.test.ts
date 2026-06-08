@@ -1,27 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { isReactRefreshHmrError, isReactRefreshStackTrace } from "@/lib/sentry";
 
-// Replicamos las funciones auxiliares para poder testearlas sin exportarlas.
-// Esto mantiene la API pública de sentry.ts limpia (solo initSentry / isSentryReady).
-
-function isReactRefreshHmrError(error: Error): boolean {
-  if (!error.message?.includes("is not defined")) return false;
-  const stack = error.stack ?? "";
-  return /react-refresh|performReactRefresh|scheduleRefresh/i.test(stack);
-}
-
-function isReactRefreshStackTrace(
-  stacktrace: unknown
-): boolean {
-  if (!stacktrace || typeof stacktrace !== "object") return false;
-  const frames = (stacktrace as { frames?: Array<{ abs_path?: string; function?: string }> }).frames;
-  if (!Array.isArray(frames)) return false;
-  return frames.some(
-    (f) =>
-      f.abs_path?.includes("@react-refresh") ||
-      f.function?.includes("performReactRefresh") ||
-      f.function?.includes("scheduleRefresh")
-  );
-}
 
 describe("isReactRefreshHmrError", () => {
   it("detecta ReferenceError con stack de react-refresh", () => {
