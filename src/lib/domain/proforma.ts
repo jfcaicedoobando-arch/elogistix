@@ -6,7 +6,7 @@
  * `proformaAgrupacion.ts`; aquí mantenemos sólo el cálculo de totales y los tipos
  * compartidos del dominio.
  */
-import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularIVA } from "@/lib/financial/financialUtils";
 
 export type Moneda = "USD" | "MXN";
 
@@ -49,17 +49,27 @@ export function calcularTotalesProforma(
     const sub = Number(c.cantidad) * Number(c.precio_unitario);
     const aplica = c.id in ivaOverridesUSD ? ivaOverridesUSD[c.id] : !!c.aplica_iva;
     if (!aplica) return s;
-    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
+    // Cuando el override fuerza aplicar IVA, respetamos `tasa_iva_aplicada`
+    // de la fila o caemos al `tasaIva` global (ignorando `aplica_iva` original).
+    const tasa = c.tasa_iva_aplicada != null && Number.isFinite(c.tasa_iva_aplicada)
+      ? Number(c.tasa_iva_aplicada)
+      : tasaIva;
+    return s + calcularIVA(sub, tasa);
   }, 0);
 
   const subtotal_mxn = mxn.reduce(
     (s, c) => s + Number(c.cantidad) * Number(c.precio_unitario),
     0,
   );
-  const iva_mxn = mxn.reduce(
-    (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
-    0,
-  );
+  // MXN siempre lleva IVA: si la fila trae `tasa_iva_aplicada`, se respeta;
+  // de lo contrario se aplica la tasa global (ignorando `aplica_iva`).
+  const iva_mxn = mxn.reduce((s, c) => {
+    const sub = Number(c.cantidad) * Number(c.precio_unitario);
+    const tasa = c.tasa_iva_aplicada != null && Number.isFinite(c.tasa_iva_aplicada)
+      ? Number(c.tasa_iva_aplicada)
+      : tasaIva;
+    return s + calcularIVA(sub, tasa);
+  }, 0);
 
   return {
     subtotal_usd,

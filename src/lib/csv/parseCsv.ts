@@ -192,15 +192,5 @@ export function parseCsv(input: string, options: ParseCsvOptions = {}): ParsedCs
   return { headers: unique, rows, delimiter };
 }
 
-/** Construye un CSV simple a partir de filas (útil para exportar plantillas). */
-export function toCsv(headers: string[], rows: string[][], delimiter: "," | ";" = ","): string {
-  const escape = (v: string): string => {
-    if (v.includes('"') || v.includes(delimiter) || v.includes("\n")) {
-      return `"${v.replace(/"/g, '""')}"`;
-    }
-    return v;
-  };
-  const lines = [headers.map(escape).join(delimiter)];
-  for (const r of rows) lines.push(r.map(escape).join(delimiter));
-  return lines.join("\n");
-}
+// Re-export para mantener API estable. La implementación vive en `serializeCsv.ts`.
+export { toCsv } from "./serializeCsv";

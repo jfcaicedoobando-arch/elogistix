@@ -1,29 +1,20 @@
-import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
-import { AlertTriangle, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { aUSD, sumarEnMoneda } from "@/lib/financial/costosUSD";
+import { aUSD } from "@/lib/financial/costosUSD";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
-import { NumericInput } from "@/components/shared/NumericInput";
-import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
+import { FilaCostoPrecio } from "@/features/embarques/components/conceptos/FilaCostoPrecio";
+import { FilaVentaPrecio } from "@/features/embarques/components/conceptos/FilaVentaPrecio";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
 
-/** Moneda objetivo (bucket) del wizard de embarques: todos los totales viven en USD. */
-const TARGET_MONEDA = 'USD' as const;
-
-interface Proveedor {
-  id: string;
-  nombre: string;
-}
+interface Proveedor { id: string; nombre: string }
 
 interface Props {
   conceptosVenta: ConceptoVentaRow[];
@@ -54,49 +45,17 @@ export function StepCostosPrecios(props: Props) {
   } = props;
 
   const { watch, register } = useFormContext<EmbarqueFormValues>();
-  const tipoCambioUSD = watch('tipoCambioUSD');
-  const tipoCambioEUR = watch('tipoCambioEUR');
-
-  const tcUSD = parseFloat(tipoCambioUSD) || 1;
-  const tcEUR = parseFloat(tipoCambioEUR) || 1;
-
+  const tcUSD = parseFloat(watch('tipoCambioUSD')) || 1;
+  const tcEUR = parseFloat(watch('tipoCambioEUR')) || 1;
   const toUSD = (monto: number, moneda: string) => aUSD(monto, moneda, tcUSD, tcEUR);
 
-  // Suma estricta con detección de filas en moneda distinta al target USD.
-  // Si falta TC con filas mixtas, sumarEnMoneda lanza — capturamos y caemos a
-  // un cálculo laxo para no romper el render, y mostramos un alert.
-  const costoCalc = useMemo(() => {
-    const items = conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda }));
-    try {
-      return { ...sumarEnMoneda(items, TARGET_MONEDA, tcUSD, tcEUR), tcMissing: false };
-    } catch {
-      return { total: 0, filasMixtas: items.map((it, index) => ({ index, moneda: it.moneda })).filter(f => f.moneda !== TARGET_MONEDA), homogenea: false, tcMissing: true };
-    }
-  }, [conceptosCosto, tcUSD, tcEUR]);
-
-  const ventaCalc = useMemo(() => {
-    const items = conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda }));
-    try {
-      return { ...sumarEnMoneda(items, TARGET_MONEDA, tcUSD, tcEUR), tcMissing: false };
-    } catch {
-      return { total: 0, filasMixtas: items.map((it, index) => ({ index, moneda: it.moneda })).filter(f => f.moneda !== TARGET_MONEDA), homogenea: false, tcMissing: true };
-    }
-  }, [conceptosVenta, tcUSD, tcEUR]);
+  const { costoCalc, ventaCalc, costoMixtoIdx, ventaMixtoIdx } =
+    useCostosPreciosCalc(conceptosCosto, conceptosVenta, tcUSD, tcEUR);
 
   const totalCostoUSD = costoCalc.total;
   const totalVentaUSD = ventaCalc.total;
   const tcFaltante = costoCalc.tcMissing || ventaCalc.tcMissing;
   const filasMixtasTotales = costoCalc.filasMixtas.length + ventaCalc.filasMixtas.length;
-
-  const costoMixtoIdx = useMemo(
-    () => new Set(costoCalc.filasMixtas.map(f => f.index)),
-    [costoCalc.filasMixtas],
-  );
-  const ventaMixtoIdx = useMemo(
-    () => new Set(ventaCalc.filasMixtas.map(f => f.index)),
-    [ventaCalc.filasMixtas],
-  );
-
   const hasErrors = Object.keys(errors).length > 0;
 
   // Sólo en edición: si el embarque tiene ≥2 contenedores, mostramos columna extra.
@@ -109,6 +68,7 @@ export function StepCostosPrecios(props: Props) {
   const ventaCols = showContenedorCol
     ? "grid-cols-[1fr_80px_120px_90px_140px_110px_40px]"
     : "grid-cols-[1fr_80px_120px_90px_110px_40px]";
+
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -129,56 +89,23 @@ export function StepCostosPrecios(props: Props) {
               {showContenedorCol && <span>Contenedor</span>}
               <span>Total USD</span><span></span>
             </div>
-            {conceptosCosto.map((costo, idx) => {
-              const totalUSD = toUSD(costo.monto, costo.moneda);
-              const esMixta = costoMixtoIdx.has(idx);
-              return (
-                <div key={costo.id} className={`grid ${costoCols} gap-2 items-center`}>
-                  <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
-                    <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Select value={costo.concepto} onValueChange={v => updateConceptoCosto(costo.id, 'concepto', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <NumericInput decimals value={costo.monto} onChange={n => updateConceptoCosto(costo.id, 'monto', n)} className="text-sm h-10" aria-label="Subtotal costo" />
-                  <Select value={costo.moneda} onValueChange={v => updateConceptoCosto(costo.id, 'moneda', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
-                  </Select>
-                  {showContenedorCol && (
-                    <SelectContenedorConcepto
-                      embarqueId={embarqueId!}
-                      value={costo.contenedorId ?? null}
-                      onChange={v => updateConceptoCosto(costo.id, 'contenedorId', v)}
-                      className="text-sm"
-                    />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Input
-                      readOnly
-                      value={formatCurrency(totalUSD, 'USD')}
-                      className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
-                      data-testid={esMixta ? 'fila-mixta-costo' : undefined}
-                    />
-                    {esMixta && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Conv. {costo.moneda}→USD @ TC {costo.moneda === 'EUR' ? tcEUR : tcUSD}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1} aria-label="Eliminar concepto de costo">
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              );
-            })}
+            {conceptosCosto.map((costo, idx) => (
+              <FilaCostoPrecio
+                key={costo.id}
+                costo={costo}
+                totalUSD={toUSD(costo.monto, costo.moneda)}
+                esMixta={costoMixtoIdx.has(idx)}
+                proveedoresDb={proveedoresDb}
+                cols={costoCols}
+                showContenedorCol={showContenedorCol}
+                embarqueId={embarqueId}
+                tcUSD={tcUSD}
+                tcEUR={tcEUR}
+                disableRemove={conceptosCosto.length <= 1}
+                update={updateConceptoCosto}
+                remove={removeConceptoCosto}
+              />
+            ))}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
               <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalCostoUSD, 'USD')}</span></div>
@@ -200,53 +127,22 @@ export function StepCostosPrecios(props: Props) {
               {showContenedorCol && <span>Contenedor</span>}
               <span>Total USD</span><span></span>
             </div>
-            {conceptosVenta.map((venta, idx) => {
-              const totalUSD = toUSD(venta.precioUnitario, venta.moneda);
-              const esMixta = ventaMixtoIdx.has(idx);
-              return (
-                <div key={venta.id} className={`grid ${ventaCols} gap-2 items-center`}>
-                  <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <NumericInput value={venta.cantidad} onChange={n => updateConceptoVenta(venta.id, 'cantidad', n)} className="text-sm h-10" aria-label="Cantidad venta" />
-                  <NumericInput decimals value={venta.precioUnitario} onChange={n => updateConceptoVenta(venta.id, 'precioUnitario', n)} className="text-sm h-10" aria-label="Subtotal venta" />
-                  <Select value={venta.moneda} onValueChange={v => updateConceptoVenta(venta.id, 'moneda', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
-                  </Select>
-                  {showContenedorCol && (
-                    <SelectContenedorConcepto
-                      embarqueId={embarqueId!}
-                      value={venta.contenedorId ?? null}
-                      onChange={v => updateConceptoVenta(venta.id, 'contenedorId', v)}
-                      className="text-sm"
-                    />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Input
-                      readOnly
-                      value={formatCurrency(totalUSD, 'USD')}
-                      className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
-                      data-testid={esMixta ? 'fila-mixta-venta' : undefined}
-                    />
-                    {esMixta && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Conv. {venta.moneda}→USD @ TC {venta.moneda === 'EUR' ? tcEUR : tcUSD}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1} aria-label="Eliminar concepto de venta">
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              );
-            })}
+            {conceptosVenta.map((venta, idx) => (
+              <FilaVentaPrecio
+                key={venta.id}
+                venta={venta}
+                totalUSD={toUSD(venta.precioUnitario, venta.moneda)}
+                esMixta={ventaMixtoIdx.has(idx)}
+                cols={ventaCols}
+                showContenedorCol={showContenedorCol}
+                embarqueId={embarqueId}
+                tcUSD={tcUSD}
+                tcEUR={tcEUR}
+                disableRemove={conceptosVenta.length <= 1}
+                update={updateConceptoVenta}
+                remove={removeConceptoVenta}
+              />
+            ))}
             <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
               <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalVentaUSD, 'USD')}</span></div>
