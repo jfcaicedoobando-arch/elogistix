@@ -162,7 +162,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
                 <Select value={metodo} onValueChange={setMetodo}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {METODOS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                    {metodosDisponibles.map((m: string) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
