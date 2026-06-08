@@ -13,6 +13,8 @@ describe("dashboardProfit helpers", () => {
       expect(numOr0("3.2")).toBe(3.2);
       expect(numOr0(null)).toBe(0);
       expect(numOr0(undefined)).toBe(0);
+    });
+
     it("rechaza NaN/Infinity y los degrada a 0 (evita envenenar totales)", () => {
       expect(numOr0("NaN")).toBe(0);
       expect(numOr0("not-a-number")).toBe(0);
@@ -20,7 +22,6 @@ describe("dashboardProfit helpers", () => {
       expect(numOr0(Number.NEGATIVE_INFINITY)).toBe(0);
       expect(numOr0("Infinity")).toBe(0);
     });
-  });
   });
 
   describe("numOrCompute", () => {
