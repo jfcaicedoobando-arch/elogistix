@@ -15,6 +15,12 @@ export interface ConceptoVentaCotizacion {
   moneda: string;
   total: number;
   aplica_iva: boolean;
+  /**
+   * Tasa de IVA explícita de la fila (0 / 0.08 / 0.16). Cuando está presente
+   * tiene prioridad sobre el flag `aplica_iva` al calcular totales y payloads.
+   * Opcional para soportar cotizaciones legacy persistidas en jsonb.
+   */
+  tasa_iva_aplicada?: number;
   notas?: string;
 }
 

@@ -3,7 +3,7 @@
  * Extracted from useCotizacionDetalleState to keep the hook focused on orchestration.
  */
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
-import { calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 
 export interface ConceptosTotales {
   conceptosVentaUSD: ConceptoVentaCotizacion[];
