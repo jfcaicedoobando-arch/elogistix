@@ -164,53 +164,22 @@ export function StepCostosPrecios(props: Props) {
               {showContenedorCol && <span>Contenedor</span>}
               <span>Total USD</span><span></span>
             </div>
-            {conceptosVenta.map((venta, idx) => {
-              const totalUSD = toUSD(venta.precioUnitario, venta.moneda);
-              const esMixta = ventaMixtoIdx.has(idx);
-              return (
-                <div key={venta.id} className={`grid ${ventaCols} gap-2 items-center`}>
-                  <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <NumericInput value={venta.cantidad} onChange={n => updateConceptoVenta(venta.id, 'cantidad', n)} className="text-sm h-10" aria-label="Cantidad venta" />
-                  <NumericInput decimals value={venta.precioUnitario} onChange={n => updateConceptoVenta(venta.id, 'precioUnitario', n)} className="text-sm h-10" aria-label="Subtotal venta" />
-                  <Select value={venta.moneda} onValueChange={v => updateConceptoVenta(venta.id, 'moneda', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
-                  </Select>
-                  {showContenedorCol && (
-                    <SelectContenedorConcepto
-                      embarqueId={embarqueId!}
-                      value={venta.contenedorId ?? null}
-                      onChange={v => updateConceptoVenta(venta.id, 'contenedorId', v)}
-                      className="text-sm"
-                    />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Input
-                      readOnly
-                      value={formatCurrency(totalUSD, 'USD')}
-                      className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
-                      data-testid={esMixta ? 'fila-mixta-venta' : undefined}
-                    />
-                    {esMixta && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Conv. {venta.moneda}→USD @ TC {venta.moneda === 'EUR' ? tcEUR : tcUSD}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1} aria-label="Eliminar concepto de venta">
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              );
-            })}
+            {conceptosVenta.map((venta, idx) => (
+              <FilaVentaPrecio
+                key={venta.id}
+                venta={venta}
+                totalUSD={toUSD(venta.precioUnitario, venta.moneda)}
+                esMixta={ventaMixtoIdx.has(idx)}
+                cols={ventaCols}
+                showContenedorCol={showContenedorCol}
+                embarqueId={embarqueId}
+                tcUSD={tcUSD}
+                tcEUR={tcEUR}
+                disableRemove={conceptosVenta.length <= 1}
+                update={updateConceptoVenta}
+                remove={removeConceptoVenta}
+              />
+            ))}
             <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
               <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalVentaUSD, 'USD')}</span></div>
