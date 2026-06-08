@@ -24,10 +24,13 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
       (s, c) => s + calcularSubtotal(c.cantidad, c.precio_unitario),
       0,
     );
-    const ivaMXN = conceptosMXN.reduce(
-      (s, c) => s + calcularIVA(calcularSubtotal(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
-      0,
-    );
+    const ivaMXN = conceptosMXN.reduce((s, c) => {
+      const sub = calcularSubtotal(c.cantidad, c.precio_unitario);
+      const tasa = c.tasa_iva_aplicada != null && Number.isFinite(c.tasa_iva_aplicada)
+        ? Number(c.tasa_iva_aplicada)
+        : tasaIva; // MXN siempre aplica IVA (ignora flag aplica_iva)
+      return s + calcularIVA(sub, tasa);
+    }, 0);
     const totalMXN = subtotalMXN + ivaMXN;
 
     return { conceptosUSD, conceptosMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
