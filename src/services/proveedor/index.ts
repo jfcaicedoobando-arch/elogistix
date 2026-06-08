@@ -48,7 +48,6 @@ export async function fetchProveedoresPaginados(
   const { tipo, search, page, pageSize, organizationId, origen } = params;
   // Bloque 2.4 — RPC `proveedores_listado` con agregados (operaciones, pendiente).
   const offset = page * pageSize;
-  // SAFE-CAST: el cliente tipado aún no conoce p_origen tras la regeneración pendiente.
   const { data, error } = await supabase.rpc("proveedores_listado", {
     p_organization_id: organizationId ?? undefined,
     p_tipo: tipo,
@@ -56,6 +55,7 @@ export async function fetchProveedoresPaginados(
     p_offset: offset,
     p_limit: pageSize,
     p_origen: origen && origen !== "todos" ? origen : undefined,
+    // SAFE-CAST: el cliente tipado aún no conoce p_origen tras la regeneración pendiente.
   } as unknown as Parameters<typeof supabase.rpc<"proveedores_listado">>[1]);
   if (error) throw error;
 
