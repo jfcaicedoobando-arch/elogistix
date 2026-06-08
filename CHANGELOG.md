@@ -15,7 +15,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - **Servicio `fetchFacturasCxP`**: acepta `fecha_desde` / `fecha_hasta` (filtra `fecha_emision`); `proveedor_id === "todos"` ahora se ignora correctamente. `useFacturasCxP` invalida la query cuando cambian esos campos.
   - Bump `APP_VERSION` a 12.62.0.
 
-
+## [12.61.25] - 2026-06-08
 - **feat(ux) — barra compacta de filtros en listado de Embarques**: Se rediseñó el área superior de la tabla de `/embarques`. Antes: 6 selects + 2 fechas inline que se amontonaban en viewports medianos. Ahora: barra de una sola fila con `Search + Estado + Cliente + botón "Filtros (N)"`; los filtros secundarios (Modo, Operador, ETD desde, ETA hasta) viven en un `Sheet` lateral. Debajo aparecen **chips** por cada filtro activo con `X` individual y un botón "Limpiar todo" (`EmbarquesFiltrosChips.tsx` nuevo). En móvil la barra colapsa a `Search + Filtros (N)` y el sheet expone todos. `EmbarquesFiltrosCampos.tsx` ahora soporta layouts `inline | stacked-all | stacked-secondary`. Bump `APP_VERSION` a 12.61.25.
 
 ## [12.61.24] - 2026-06-08
