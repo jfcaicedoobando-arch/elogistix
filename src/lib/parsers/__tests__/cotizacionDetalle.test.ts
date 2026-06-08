@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   parseConceptos,
   calcularTotalesConceptos,
   getNombreDestinatario,
+  EMPTY_TOTALES,
 } from "@/lib/parsers/cotizacionDetalle";
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
 
@@ -37,6 +38,28 @@ describe("cotizacionDetalleHelpers", () => {
     it("retorna el array tal cual si ya es array", () => {
       const arr = [concepto({}), concepto({ moneda: "MXN" })];
       expect(parseConceptos(arr)).toEqual(arr);
+    });
+
+    it("retorna [] y loggea ante JSON string inválido", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect(parseConceptos("{not json")).toEqual([]);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("descarta filas con schema inválido (moneda desconocida o campos faltantes)", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const mixed = [
+        concepto({ moneda: "USD" }),
+        { moneda: "EUR", cantidad: 1, precio_unitario: 10 },
+        { moneda: "USD", precio_unitario: 10 },
+        { foo: "bar" },
+        null,
+      ];
+      const r = parseConceptos(mixed);
+      expect(r).toHaveLength(1);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
     });
   });
 
@@ -83,7 +106,15 @@ describe("cotizacionDetalleHelpers", () => {
       expect(r.totalUSD).toBe(0);
       expect(r.totalMXN).toBe(0);
     });
+
+    it("retorna la MISMA referencia (EMPTY_TOTALES) para arrays vacíos → memos estables", () => {
+      const a = calcularTotalesConceptos([], 0.16);
+      const b = calcularTotalesConceptos([], 0.08);
+      expect(a).toBe(EMPTY_TOTALES);
+      expect(b).toBe(EMPTY_TOTALES);
+    });
   });
+
 
   describe("getNombreDestinatario", () => {
     it("retorna string vacío si no hay cotización", () => {
