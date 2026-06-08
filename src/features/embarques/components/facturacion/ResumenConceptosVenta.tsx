@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
 import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
@@ -51,19 +51,19 @@ export function ResumenConceptosVenta({
   }, [conceptos, contenedoresActivos, multiContenedor]);
 
   const totales = useMemo(() => {
+    const getter = (c: ConceptoVenta) => ({ cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario) });
     const sumByCurrency = (items: ConceptoVenta[]) => {
       const usd = items.filter(c => c.moneda === "USD");
       const mxn = items.filter(c => c.moneda === "MXN");
-      const subUsd = usd.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
-      const ivaUsd = usd.reduce((s, c) => {
-        const sub = Number(c.cantidad) * Number(c.precio_unitario);
-        if (!c.aplica_iva) return s;
-        return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
-      }, 0);
-      const subMxn = mxn.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
-      const ivaMxn = mxn.reduce(
-        (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
-        0,
+      const subUsd = sumarSubtotales(usd, getter);
+      const ivaUsd = sumarMontos(
+        usd.map((c) => (c.aplica_iva
+          ? calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))
+          : 0)),
+      );
+      const subMxn = sumarSubtotales(mxn, getter);
+      const ivaMxn = sumarMontos(
+        mxn.map((c) => calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
       );
       return { totalUsd: subUsd + ivaUsd, totalMxn: subMxn + ivaMxn };
     };

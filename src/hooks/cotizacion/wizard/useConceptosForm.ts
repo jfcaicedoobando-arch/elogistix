@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { calcularUtilidad } from '@/lib/financial/financialUtils';
+import { calcularUtilidad, sumarSubtotales, sumarMontos } from '@/lib/financial/financialUtils';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
 interface UseConceptosFormOptions {
@@ -48,11 +48,11 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   };
 
   const subtotalVenta = useMemo(
-    () => conceptosVenta.reduce((acc, c) => acc + c.cantidad * c.precioUnitario, 0),
+    () => sumarSubtotales(conceptosVenta, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precioUnitario })),
     [conceptosVenta]
   );
   const totalCosto = useMemo(
-    () => conceptosCosto.reduce((acc, c) => acc + c.monto, 0),
+    () => sumarMontos(conceptosCosto.map((c) => c.monto)),
     [conceptosCosto]
   );
   const utilidadEstimada = useMemo(

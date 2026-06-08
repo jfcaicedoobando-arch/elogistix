@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/hooks/catalogos";
+import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";
 
 interface Props {
@@ -30,7 +31,7 @@ export default function SeccionConceptosVentaCotizacion({
 }: Props) {
   const tasaIva = useTasaIVA();
   const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
-  const subtotalSinIvaUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const subtotalSinIvaUSD = sumarSubtotales(conceptosUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
 
   return (

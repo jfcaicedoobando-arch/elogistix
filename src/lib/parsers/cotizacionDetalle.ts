@@ -3,7 +3,7 @@
  * Extracted from useCotizacionDetalleState to keep the hook focused on orchestration.
  */
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
-import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 
 export interface ConceptosTotales {
   conceptosVentaUSD: ConceptoVentaCotizacion[];
@@ -28,12 +28,11 @@ export function calcularTotalesConceptos(
 ): ConceptosTotales {
   const conceptosVentaUSD = conceptos.filter(c => c.moneda === "USD");
   const conceptosVentaMXN = conceptos.filter(c => c.moneda === "MXN");
-  const totalUSD = conceptosVentaUSD.reduce((s, c) => s + c.total, 0);
-  const subtotalMXN = conceptosVentaMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaMXN = conceptosVentaMXN.reduce((s, c) => {
-    const sub = c.cantidad * c.precio_unitario;
-    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
-  }, 0);
+  const totalUSD = sumarMontos(conceptosVentaUSD.map((c) => c.total));
+  const subtotalMXN = sumarSubtotales(conceptosVentaMXN, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
+  const ivaMXN = sumarMontos(
+    conceptosVentaMXN.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIva))),
+  );
   const totalMXN = subtotalMXN + ivaMXN;
   return { conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
 }
