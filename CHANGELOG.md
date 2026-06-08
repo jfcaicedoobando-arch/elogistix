@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.24] - 2026-06-08
+- **chore(ux) — reacomodo de acciones en detalle de embarque**: En `EmbarqueDetalleHeader.tsx` se eliminó el menú dropdown "…" y todas las acciones se exponen ahora como botones planos en una sola fila. Orden: **Avanzar a {estado}** (primaria) → **Editar** → **Compartir** → **Duplicar** → **Reabrir** (admin, solo si está cerrado) → separador vertical → **Eliminar** (ghost destructiva). En móvil hace wrap; en desktop queda en una sola línea. Se quitaron imports de `DropdownMenu*` y `MoreHorizontal`. Bump `APP_VERSION` a 12.61.24.
+
 ## [12.61.23] - 2026-06-08
 - **chore(ux) — eliminar acción "Imprimir" del detalle de embarque**: En `EmbarqueDetalleHeader.tsx` se removió el `DropdownMenuItem` de Imprimir (y el ícono `Printer` del import de `lucide-react`). La acción `window.print()` no se usaba en el flujo operativo. Bump `APP_VERSION` a 12.61.23.
 
