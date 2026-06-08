@@ -115,37 +115,35 @@ export function EmbarqueDetalleHeader({
           <Share2 className="h-4 w-4 mr-1" /> Compartir
         </Button>
 
-        {/* Menú "…" con secundarias agrupadas */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" aria-label={`Más acciones del embarque ${embarque.expediente}`}>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {canEdit && siguienteEstado && (
-              <DropdownMenuItem onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
-                <Edit className="h-4 w-4 mr-2" /> Editar
-              </DropdownMenuItem>
-            )}
-            {canEdit && (
-              <DropdownMenuItem onClick={onAbrirDuplicar}>
-                <Copy className="h-4 w-4 mr-2" /> Duplicar embarque
-              </DropdownMenuItem>
-            )}
-            {canEdit && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={onAbrirEliminar}
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Editar (cuando "Avanzar" toma la primaria) */}
+        {canEdit && siguienteEstado && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
+          >
+            <Edit className="h-4 w-4 mr-1" /> Editar
+          </Button>
+        )}
+
+        {/* Duplicar */}
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={onAbrirDuplicar}>
+            <Copy className="h-4 w-4 mr-1" /> Duplicar
+          </Button>
+        )}
+
+        {/* Eliminar (destructiva, separada visualmente) */}
+        {canEdit && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onAbrirEliminar}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+          </Button>
+        )}
       </div>
 
       {/* Soft warning: cerrar con conceptos de venta aún sin proforma */}
