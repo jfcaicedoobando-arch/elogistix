@@ -5,7 +5,7 @@ import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
 
 const {
   toastFn, registrarActividadFn, getSignedUrlMock,
-  uploadMutateAsync, deleteMutateAsync, descargarBlobMock,
+  uploadMutateAsync, deleteMutateAsync, descargarBlobMock, sonnerSuccess, sonnerError,
 } = vi.hoisted(() => ({
   toastFn: vi.fn(),
   registrarActividadFn: vi.fn(),
@@ -13,6 +13,12 @@ const {
   uploadMutateAsync: vi.fn().mockResolvedValue({}),
   deleteMutateAsync: vi.fn().mockResolvedValue({}),
   descargarBlobMock: vi.fn(),
+  sonnerSuccess: vi.fn(),
+  sonnerError: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: sonnerSuccess, error: sonnerError, warning: vi.fn(), info: vi.fn(), message: vi.fn() },
 }));
 
 vi.mock("@/hooks/shared", () => ({
