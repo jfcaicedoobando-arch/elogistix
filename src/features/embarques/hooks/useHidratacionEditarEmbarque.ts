@@ -76,21 +76,21 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
     const consigResuelto = resolverValorContactoDesdeTexto(
       p.embarque.consignatario, p.contactos, p.selectedClienteNombre, { permitirCliente: true },
     );
-    p.methods.setValue("shipper", shipperResuelto.value, { shouldDirty: false });
-    p.methods.setValue("shipperManual", shipperResuelto.manual, { shouldDirty: false });
-    p.methods.setValue("consignatario", consigResuelto.value, { shouldDirty: false });
-    p.methods.setValue("consignatarioManual", consigResuelto.manual, { shouldDirty: false });
+    // SAFE-CAST: setValue espera Path<TForm>; el hook recibe forms heterogéneos.
+    const setVal = p.methods.setValue as unknown as (n: string, v: unknown, o?: { shouldDirty?: boolean }) => void;
+    setVal("shipper", shipperResuelto.value, { shouldDirty: false });
+    setVal("shipperManual", shipperResuelto.manual, { shouldDirty: false });
+    setVal("consignatario", consigResuelto.value, { shouldDirty: false });
+    setVal("consignatarioManual", consigResuelto.manual, { shouldDirty: false });
     p.setHidratoContactos(true);
   }, [p]);
 
   // Contenedores
   useEffect(() => {
     if (!p.initialized || p.hidratoContenedores || p.cargandoContenedores) return;
-    p.methods.setValue(
-      "contenedores",
-      p.contenedoresDb.map(rowAContenedorBorrador),
-      { shouldDirty: false },
-    );
+    // SAFE-CAST: setValue genérico.
+    const setVal = p.methods.setValue as unknown as (n: string, v: unknown, o?: { shouldDirty?: boolean }) => void;
+    setVal("contenedores", p.contenedoresDb.map(rowAContenedorBorrador), { shouldDirty: false });
     p.setHidratoContenedores(true);
   }, [p]);
 }
