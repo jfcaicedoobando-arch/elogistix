@@ -25,7 +25,7 @@ export function isReactRefreshHmrError(error: Error): boolean {
 }
 
 /** Detecta stacktrace de React Refresh en frames de Sentry. */
-function isReactRefreshStackTrace(
+export function isReactRefreshStackTrace(
   stacktrace: unknown
 ): boolean {
   if (!stacktrace || typeof stacktrace !== "object") return false;
