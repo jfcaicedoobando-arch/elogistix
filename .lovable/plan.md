@@ -1,57 +1,53 @@
+## Objetivo
 
-# Segmentación Nacional / Extranjero en Proveedores y CxP
+Hacer pasar `bun run test:coverage:shard --shard=1/16`. El test `architecture-baseline` reporta 2 fallas (1 import directo a Supabase y 6 archivos > 200 líneas), todas introducidas en los últimos cambios del módulo CxP.
 
-El campo `origen_proveedor` ya existe en la tabla `proveedores` (valores `Nacional` / `Extranjero`) y se captura en el wizard de alta. Hoy no se ve en listados ni se usa para sugerir el método de pago en CxP. Este plan lo expone en UI y lo aprovecha en conciliación.
+## Cambios
 
-## 1. Listado de proveedores (`/proveedores`)
+### 1. Eliminar import directo a `supabase/client` en `DialogNuevaFacturaProveedor.tsx`
 
-- Agregar **filtro segmentado** Nacional / Extranjero / Todos en la barra superior (junto al search y al tab de tipo).
-- Nueva columna **"Origen"** en `proveedorTableColumns.tsx` con badge:
-  - `Nacional` → badge azul (`bg-primary/10`)
-  - `Extranjero` → badge ámbar
-- Extender `fetchProveedoresPaginados` y la RPC `proveedores_listado` para aceptar `p_origen` opcional (filtra por `origen_proveedor`).
-- Exponer `origen_proveedor` en `ProveedorListItem`.
+Mover storage + update a `src/services/cxp/proveedorFacturas.ts`:
 
-## 2. Detalle de proveedor
+- Nueva función `subirArchivosCfdiFactura({ facturaId, organizationId, xmlFile, pdfFile })` que sube XML/PDF a `facturas/cfdi/{org}/{facturaId}/` y actualiza `archivo_xml_url` y `archivo_pdf_url` en `proveedor_facturas`.
+- Exportar desde `src/services/cxp/index.ts`.
+- Nuevo hook `useSubirArchivosCfdi` en `src/hooks/cxp/useFacturasCxP.ts` (o helper directo) — usar mutación que invalida `cxp` queries.
+- En `DialogNuevaFacturaProveedor.tsx` reemplazar las 3 llamadas a `supabase` por la nueva función y borrar el import de `@/integrations/supabase/client`.
 
-- Mostrar el origen como badge en el header del detalle.
-- En el wizard de edición permitir cambiarlo (hoy solo se captura al crear).
+### 2. Splits para bajar de 200 líneas
 
-## 3. CxP — Facturas y pagos
+**`DialogNuevaFacturaProveedor.tsx` (302 → ~150)**
+- Extraer hook `useNuevaFacturaProveedorForm` en `src/hooks/cxp/useNuevaFacturaProveedorForm.ts` con estado del formulario, `handleChange`, `handleProveedor`, `handleCfdiParsed`, `validate`, `reset`, `total`, `pendingCfdi`, `askCrearProv`, `submit`. Devuelve API consumida por el dialog (componente queda casi puro de render).
+- Mover helpers `addDays`, `today`, `initialValues`, type `PendingCfdi` al mismo archivo de hook.
 
-- Nueva columna **"Origen"** en `cxpColumns.tsx` (Nacional / Extranjero), derivada del proveedor vinculado.
-- Filtro segmentado en `CxpFiltros` y chip en `CxpFiltrosChips` para filtrar por origen.
-- En **`DialogRegistrarPagoProveedor`**:
-  - Campo "Método de pago" con valores:
-    - `SPEI` (default cuando el proveedor es Nacional)
-    - `Transferencia internacional` / `SWIFT` (default cuando es Extranjero)
-    - `Efectivo`, `Cheque`, `Otro`
-  - Mostrar campos de referencia distintos según el método: clave SPEI (18 dígitos) vs MT103/SWIFT reference.
-- Persistir el método en `pagos_proveedor.metodo_pago` (columna nueva, texto).
+**`DialogRegistrarPagoProveedor.tsx` (272 → <200)**
+- Extraer constantes y helpers (`METODOS_NACIONAL`, `METODOS_EXTRANJERO`, `metodosFor`, `defaultMetodo`, `referenciaHint`) a `src/components/cxp/pagoProveedorHelpers.ts`.
+- Extraer hook `useRegistrarPagoProveedorForm` (estado + `submit`) en `src/hooks/cxp/useRegistrarPagoProveedorForm.ts`.
+- Mover `Section` (es duplicado del usado en form fields) a `src/components/cxp/SectionTitle.tsx` reutilizable.
 
-## 4. Carga XML CFDI
+**`CxpFiltros.tsx` (245 → <200)**
+- Extraer subcomponente `<CxpFiltrosSheetFields>` y barra mobile/desktop a `src/components/cxp/CxpFiltrosBar.tsx` y `src/components/cxp/CxpFiltrosSheetFields.tsx`. `CxpFiltros` queda como composición.
 
-- Forzar `origen_proveedor = 'Nacional'` al crear proveedor desde XML CFDI (siempre es mexicano).
-- En el flujo de "Capturar factura" manual, si el proveedor seleccionado es Extranjero, ocultar el toggle "Cargar XML CFDI" (no aplica).
+**`Cxp.tsx` (238 → <200)**
+- Extraer `<KPICard>` y la grid de KPIs a `src/components/cxp/CxpKpiCards.tsx`.
+- Extraer hook `useCxpFiltros` (estado de filtros + `hayFiltros`) o más simple: extraer la generación de PDF (`useReportePdfCartera`) y los `useState` de filtros a un sólo objeto `useCxpFiltros`.
 
-## 5. Cambios técnicos
+**`FacturaProveedorFormFields.tsx` (202 → <200)**
+- Mover helpers `Section`, `FieldError` y type `FacturaFormValues` a `src/components/cxp/facturaFormPrimitives.tsx` (reutilizado por hook nuevo).
+- Bastará para bajar ~10 líneas.
 
-- **Migración**:
-  - `ALTER TABLE pagos_proveedor ADD COLUMN metodo_pago text;`
-  - Actualizar RPC `proveedores_listado` para aceptar `p_origen text DEFAULT NULL`.
-- **Tipos**: regenerar `types.ts` tras migración.
-- **Archivos a editar**:
-  - `src/services/proveedor/index.ts` (param `origen`, expone campo)
-  - `src/pages/proveedores/ProveedorTable.tsx` + `proveedorTableColumns.tsx`
-  - `src/pages/proveedores/ProveedoresPage.tsx` (filtro nuevo)
-  - `src/components/cxp/CxpFiltros.tsx`, `CxpFiltrosChips.tsx`, `cxpColumns.tsx`
-  - `src/components/cxp/DialogRegistrarPagoProveedor.tsx`
-  - `src/components/cxp/CrearProveedorDesdeCfdiDialog.tsx` (forzar Nacional)
-  - `src/hooks/cxp/useFacturasCxP.ts` (incluir origen en query)
-- **Constantes nuevas**: `METODOS_PAGO_PROVEEDOR` en `proveedorConstants.ts`.
-- **Versión**: `APP_VERSION` → `12.64.0` + entrada en `CHANGELOG.md`.
+**`useEditarEmbarqueWizard.ts` (210 → <200)**
+- Extraer los 4 `useEffect` de hidratación (embarque/venta/costo/contactos/contenedores) a un hook `useHidratacionEmbarque(...)` en el mismo dominio (`src/features/embarques/hooks/`).
+
+### 3. Verificación
+
+- Ejecutar `bunx vitest run src/lib/__tests__/architecture-baseline.test.ts` hasta verde.
+- Ejecutar la shard 1/16 completa para confirmar.
+
+### 4. Versionado
+
+- Bump `APP_VERSION` a `12.64.1` y entrada en `CHANGELOG.md`: "Refactor CxP — splits <200 líneas y eliminación de import directo a `@/integrations/supabase/client` en `DialogNuevaFacturaProveedor`."
 
 ## Fuera de alcance
 
-- Reglas de conciliación automática SPEI vs SWIFT (sólo se almacena el método; la conciliación se queda como flujo manual existente).
-- Validación del formato exacto de clave SPEI / SWIFT (sólo input libre con hint).
+- Resolver los warnings restantes de complexity / max-lines-per-function (no bloquean CI).
+- Refactor del módulo `embarques` más allá del split mínimo de `useEditarEmbarqueWizard`.
