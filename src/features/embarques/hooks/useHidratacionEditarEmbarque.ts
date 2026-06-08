@@ -29,7 +29,7 @@ interface Params {
   setHidratoContactos: (v: boolean) => void;
   setHidratoContenedores: (v: boolean) => void;
   embarque: { shipper: string | null; consignatario: string | null } | undefined | null;
-  contactos: Array<{ id: string; nombre: string; tipo?: string; pais?: string | null }>;
+  contactos: Parameters<typeof resolverValorContactoDesdeTexto>[1];
   selectedClienteNombre?: string;
   contenedoresDb: Parameters<typeof rowAContenedorBorrador>[0][];
   cargandoContenedores: boolean;
