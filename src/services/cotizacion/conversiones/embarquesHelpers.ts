@@ -87,6 +87,11 @@ export function parsearVentasJsonb(
         precio_unitario: Number(v.precio_unitario ?? 0),
         moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
         aplica_iva: Boolean(v.aplica_iva ?? false),
+        // Tasa por fila: si viene definida la respetamos (incluye 0 exento);
+        // si no, derivamos 0.16 cuando aplica_iva=true ó 0 cuando no.
+        tasa_iva_aplicada: typeof v.tasa_iva_aplicada === "number"
+          ? Number(v.tasa_iva_aplicada)
+          : (v.aplica_iva ? 0.16 : 0),
         total: Number(v.total ?? 0),
       };
     })
