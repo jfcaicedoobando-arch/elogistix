@@ -17,6 +17,11 @@ const SIGNATURES = [
   "dynamically imported module",
   "loading chunk",
   "chunkloaderror",
+  // React.lazy resuelve con módulo "vacío" cuando el chunk servido es de un
+  // deploy anterior y no contiene el `default` export esperado. La firma
+  // exacta es `Cannot read properties of undefined (reading 'default')`.
+  "reading 'default'",
+  "reading \"default\"",
 ];
 
 export function isDynamicImportErrorMessage(message: string | undefined | null): boolean {
