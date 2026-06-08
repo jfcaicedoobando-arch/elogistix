@@ -28,4 +28,9 @@ describe('search/index', () => {
     expect(result).toEqual([]);
     expect(mockSupabase.rpc).not.toHaveBeenCalled();
   });
+
+  it('buscarGlobal propaga error de RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    await expect(buscarGlobal('query')).rejects.toThrow('RPC fail');
+  });
 });
