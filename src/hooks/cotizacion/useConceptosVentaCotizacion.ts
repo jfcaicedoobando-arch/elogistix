@@ -64,10 +64,13 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
     });
   }, []);
 
-  const totalUSD = useMemo(() => conceptosUSD.reduce((s, c) => s + c.total, 0), [conceptosUSD]);
-  const subtotalMXN = useMemo(() => conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosMXN]);
+  const totalUSD = useMemo(() => sumarMontos(conceptosUSD.map((c) => c.total)), [conceptosUSD]);
+  const subtotalMXN = useMemo(
+    () => sumarSubtotales(conceptosMXN, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario })),
+    [conceptosMXN],
+  );
   const ivaMXN = useMemo(
-    () => conceptosMXN.reduce((s, c) => s + calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIva)), 0),
+    () => sumarMontos(conceptosMXN.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIva)))),
     [conceptosMXN, tasaIva],
   );
   const totalMXN = useMemo(() => subtotalMXN + ivaMXN, [subtotalMXN, ivaMXN]);
