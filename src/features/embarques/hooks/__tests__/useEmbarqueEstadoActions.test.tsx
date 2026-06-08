@@ -72,7 +72,7 @@ describe("useEmbarqueEstadoActions", () => {
     expect(registrarActividadFn).toHaveBeenCalledWith(
       expect.objectContaining({ accion: "cambiar_estado", entidad_id: "e-1" }),
     );
-    expect(toastFn).toHaveBeenCalled();
+    expect(sonnerSuccess).toHaveBeenCalled();
   });
 
   it("handleReabrir invoca mutateAsync de reabrir y notifica", async () => {
@@ -90,7 +90,7 @@ describe("useEmbarqueEstadoActions", () => {
     expect(reabrirMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({ embarqueId: "e-1", usuarioEmail: "u@x.com" }),
     );
-    expect(toastFn).toHaveBeenCalled();
+    expect(sonnerSuccess).toHaveBeenCalled();
   });
 
   it("handleAvanzarEstado notifica error cuando mutateAsync falla", async () => {
@@ -103,8 +103,8 @@ describe("useEmbarqueEstadoActions", () => {
     await act(async () => {
       await result.current.handleAvanzarEstado();
     });
-    await waitFor(() => expect(toastFn).toHaveBeenCalled());
-    const lastArg = toastFn.mock.calls.at(-1)?.[0] as { title?: string } | undefined;
-    expect(lastArg?.title ?? "").toMatch(/Error al cambiar estado/i);
+    await waitFor(() => expect(sonnerError).toHaveBeenCalled());
+    const lastTitle = sonnerError.mock.calls.at(-1)?.[0] as string | undefined;
+    expect(lastTitle ?? "").toMatch(/Error al cambiar estado/i);
   });
 });
