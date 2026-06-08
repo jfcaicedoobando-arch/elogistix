@@ -65,61 +65,25 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     setInitialized(true);
   }, [embarque, initialized, inicializarDesdeEmbarque]);
 
-  useEffect(() => {
-    if (!initialized || conceptosVentaDb.length === 0) return;
-    inicializarVenta(conceptosVentaDb.map((v, i) => ({
-      id: i + 1,
-      concepto: v.descripcion,
-      cantidad: v.cantidad,
-      precioUnitario: Number(v.precio_unitario),
-      moneda: v.moneda,
-      contenedorId: v.contenedor_id ?? null,
-    })));
-  }, [conceptosVentaDb, initialized, inicializarVenta]);
+  useHidratacionEditarEmbarque({
+    initialized,
+    hidratoContactos,
+    hidratoContenedores,
+    setHidratoContactos,
+    setHidratoContenedores,
+    embarque,
+    contactos,
+    selectedClienteNombre: clientes.find((c) => c.id === clienteId)?.nombre,
+    contenedoresDb,
+    cargandoContenedores,
+    conceptosVentaDb,
+    conceptosCostoDb,
+    inicializarVenta,
+    inicializarCosto,
+    methods,
+  });
 
-  useEffect(() => {
-    if (!initialized || conceptosCostoDb.length === 0) return;
-    inicializarCosto(conceptosCostoDb.map((c, i) => ({
-      id: i + 1,
-      proveedorId: c.proveedor_id ?? '',
-      concepto: c.concepto,
-      monto: Number(c.monto),
-      moneda: c.moneda,
-      contenedorId: c.contenedor_id ?? null,
-    })));
-  }, [conceptosCostoDb, initialized, inicializarCosto]);
-
-  const selectedCliente = clientes.find(c => c.id === clienteId);
-
-  // Resolución inversa de shipper/consignatario: en BD se guardan como string
-  // ("Nombre — Tipo (País)" o el nombre del cliente), pero los <Select> del
-  // wizard esperan contacto.id, '__cliente__' o '__otro__'. Corre una sola vez
-  // tras inicializar el form y tener disponibles los contactos del cliente.
-  useEffect(() => {
-    if (!initialized || hidratoContactos || !embarque) return;
-    const shipperResuelto = resolverValorContactoDesdeTexto(
-      embarque.shipper, contactos, selectedCliente?.nombre,
-    );
-    const consigResuelto = resolverValorContactoDesdeTexto(
-      embarque.consignatario, contactos, selectedCliente?.nombre, { permitirCliente: true },
-    );
-    methods.setValue('shipper', shipperResuelto.value, { shouldDirty: false });
-    methods.setValue('shipperManual', shipperResuelto.manual, { shouldDirty: false });
-    methods.setValue('consignatario', consigResuelto.value, { shouldDirty: false });
-    methods.setValue('consignatarioManual', consigResuelto.manual, { shouldDirty: false });
-    setHidratoContactos(true);
-  }, [initialized, hidratoContactos, embarque, contactos, selectedCliente, methods]);
-
-  // Hidratación de contenedores hijos (Fase 2 v12.11.0). Una vez tras initialized.
-  useEffect(() => {
-    if (!initialized || hidratoContenedores || cargandoContenedores) return;
-    methods.setValue(
-      'contenedores',
-      contenedoresDb.map(rowAContenedorBorrador),
-      { shouldDirty: false },
-    );
-    setHidratoContenedores(true);
-  }, [initialized, hidratoContenedores, cargandoContenedores, contenedoresDb, methods]);
+  const selectedCliente = clientes.find((c) => c.id === clienteId);
 
   const handleSave = async () => {
     if (!id || !embarque) return;
