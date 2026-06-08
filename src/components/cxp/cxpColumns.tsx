@@ -1,6 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, Trash2 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { DollarSign, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -49,6 +53,8 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
     },
     {
       id: "vencimiento", header: "Vencimiento",
+      accessorFn: (f) => f.fecha_vencimiento ?? "", enableSorting: true,
+      sortingFn: sortByDate<FacturaCxP>((f) => f.fecha_vencimiento ?? ""),
       meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
       cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
     },
@@ -100,7 +106,7 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
     },
     {
       id: "acciones", header: "Acciones",
-      meta: { width: "w-[170px]" },
+      meta: { width: "w-[150px]" },
       cell: ({ row }) => {
         const f = row.original;
         const pagable = canEdit && f.saldo > 0 && f.estado !== "Borrador";
@@ -111,14 +117,29 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
                 <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => onVerDetalle(f)} title="Ver detalle">
-              <Eye className="h-4 w-4" />
-            </Button>
-            {canEdit && (
-              <Button variant="ghost" size="icon" onClick={() => onEliminar(f)} title="Eliminar">
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" title="Más acciones">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={() => onVerDetalle(f)}>
+                  <Eye className="h-4 w-4 mr-2" /> Ver detalle de pagos
+                </DropdownMenuItem>
+                {canEdit && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onEliminar(f)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Eliminar factura
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         );
       },
