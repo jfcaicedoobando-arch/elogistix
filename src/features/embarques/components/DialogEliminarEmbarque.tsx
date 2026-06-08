@@ -10,20 +10,16 @@ import {
   useEliminarEmbarque,
   useEmbarqueDependenciasFinancieras,
   type EmbarqueRow,
-  type FacturaLigada,
 } from "@/features/embarques/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { AlertTriangle, Ban, Loader2 } from "lucide-react";
+import { Ban, Loader2 } from "lucide-react";
+import DialogEliminarEmbarqueBloqueado from "./DialogEliminarEmbarqueBloqueado";
 
 interface Props {
   embarque: EmbarqueRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-function formatoFolio(f: FacturaLigada): string {
-  return f.folio ?? f.id.slice(0, 8);
 }
 
 export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }: Props) {
@@ -68,8 +64,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
     }
   };
 
-  // Diálogo de bloqueo cuando hay dependencias financieras
-  if (open && bloqueado && !paso2) {
+  if (open && bloqueado && !paso2 && deps) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent>
@@ -79,62 +74,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
               No se puede eliminar el embarque
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm">
-                <p>
-                  El embarque <strong>{embarque.expediente}</strong> tiene documentos financieros asociados.
-                  Cancela primero los siguientes documentos antes de eliminarlo:
-                </p>
-
-                {deps && deps.cxc.count > 0 && (
-                  <div className="rounded-md border border-border bg-muted/40 p-3">
-                    <p className="font-semibold text-foreground">
-                      Facturas a clientes (CxC): {deps.cxc.count}
-                    </p>
-                    <ul className="mt-1 list-disc pl-5 text-muted-foreground">
-                      {deps.cxc.facturas.map((f) => (
-                        <li key={f.id}>
-                          {formatoFolio(f)}{f.estado ? ` — ${f.estado}` : ''}
-                        </li>
-                      ))}
-                      {deps.cxc.count > deps.cxc.facturas.length && (
-                        <li>… y {deps.cxc.count - deps.cxc.facturas.length} más</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {deps && deps.cxp.count > 0 && (
-                  <div className="rounded-md border border-border bg-muted/40 p-3">
-                    <p className="font-semibold text-foreground">
-                      Facturas de proveedores (CxP): {deps.cxp.count}
-                    </p>
-                    <ul className="mt-1 list-disc pl-5 text-muted-foreground">
-                      {deps.cxp.facturas.map((f) => (
-                        <li key={f.id}>
-                          {formatoFolio(f)}{f.estado ? ` — ${f.estado}` : ''}
-                        </li>
-                      ))}
-                      {deps.cxp.count > deps.cxp.facturas.length && (
-                        <li>… y {deps.cxp.count - deps.cxp.facturas.length} más</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {deps && (deps.notasCredito > 0 || deps.pagos > 0) && (
-                  <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-foreground">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
-                    <div>
-                      {deps.notasCredito > 0 && <p>Notas de crédito ligadas: <strong>{deps.notasCredito}</strong></p>}
-                      {deps.pagos > 0 && <p>Pagos registrados: <strong>{deps.pagos}</strong></p>}
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-xs text-muted-foreground">
-                  Una vez que canceles o desliges estos documentos del embarque, podrás intentar la eliminación nuevamente.
-                </p>
-              </div>
+              <DialogEliminarEmbarqueBloqueado expediente={embarque.expediente} deps={deps} />
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -144,6 +84,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
       </AlertDialog>
     );
   }
+
 
   return (
     <>
