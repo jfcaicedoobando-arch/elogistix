@@ -32,8 +32,10 @@ describe("exportToCsv", () => {
     expect(descargarBlobSpy).toHaveBeenCalledTimes(1);
     const [blob] = descargarBlobSpy.mock.calls[0];
     expect(blob.size).toBeGreaterThan(0);
+    // Verificamos BOM a nivel de bytes (FileReader.readAsText lo absorbe).
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    expect([buf[0], buf[1], buf[2]]).toEqual([0xef, 0xbb, 0xbf]);
     const csv = await readBlobText(blob);
-    expect(csv.startsWith("\uFEFF")).toBe(true);
     expect(csv).toContain("Nombre,Monto");
     expect(csv).toContain("ACME,100");
   });
