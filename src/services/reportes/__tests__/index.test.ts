@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchSidebarAlertCounts, fetchReportesResumen } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -12,6 +12,10 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('reportes/index', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('fetchSidebarAlertCounts mapea datos correctamente', async () => {
     mockSupabase.rpc.mockResolvedValue({ 
       data: [{ embarques_demora: 5, facturas_vencidas: 2 }], 
