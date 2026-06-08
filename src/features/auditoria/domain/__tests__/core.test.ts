@@ -30,8 +30,11 @@ const h = (over: Partial<HallazgoAuditoria> = {}): HallazgoAuditoria => ({
 
 describe("lib/domain/auditoria", () => {
   describe("isoDate", () => {
-    it("formatea YYYY-MM-DD", () => {
+    it("formatea YYYY-MM-DD en UTC", () => {
       expect(isoDate(new Date("2026-05-14T10:00:00Z"))).toBe("2026-05-14");
+    });
+    it("respeta UTC en el borde del día (23:59 UTC sigue siendo el mismo día)", () => {
+      expect(isoDate(new Date("2026-05-14T23:59:59Z"))).toBe("2026-05-14");
     });
   });
 
@@ -41,6 +44,13 @@ describe("lib/domain/auditoria", () => {
     });
     it("avanza correctamente fin de mes", () => {
       expect(minSnoozeDate(new Date("2026-01-31T10:00:00Z"))).toBe("2026-02-01");
+    });
+    it("usa UTC incluso en horas tempranas que en CDMX caerían el día anterior", () => {
+      // T02:00Z = 13 May 20:00 en CDMX. Con setDate local daría "2026-05-14"; en UTC: "2026-05-15".
+      expect(minSnoozeDate(new Date("2026-05-14T02:00:00Z"))).toBe("2026-05-15");
+    });
+    it("rollover de año en UTC", () => {
+      expect(minSnoozeDate(new Date("2026-12-31T23:00:00Z"))).toBe("2027-01-01");
     });
   });
 

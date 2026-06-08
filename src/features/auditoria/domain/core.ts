@@ -3,6 +3,12 @@
  *
  * Funciones sin dependencias de React/Supabase para que puedan ser testeadas
  * aisladamente y reutilizadas tanto en hooks/controllers como en jobs/CLI.
+ *
+ * **Contrato temporal**: TODAS las funciones de fecha de este módulo operan
+ * en UTC. Esto garantiza que los umbrales de snooze, ETA y proforma vencida
+ * sean idénticos sin importar la zona horaria del navegador o del runner de
+ * CI (CDMX UTC-6 vs CI en UTC). No usar `Date#getDate`/`setDate` (locales);
+ * usar siempre los equivalentes `getUTC*`/`setUTC*` o `Date.UTC(...)`.
  */
 import type {
   HallazgoAuditoria,
@@ -23,32 +29,42 @@ export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "embarque_huerfano",
 ];
 
-/** YYYY-MM-DD del día indicado (default: hoy) en horario local del navegador. */
+/** YYYY-MM-DD del día indicado (default: hoy) **en UTC**. */
 export function isoDate(date: Date = new Date()): string {
   return date.toISOString().slice(0, 10);
 }
 
-/**
- * Mínima fecha permitida para snooze: día siguiente al `from` (default: hoy).
- * Devuelve formato YYYY-MM-DD.
- */
-export function minSnoozeDate(from: Date = new Date()): string {
-  const t = new Date(from);
-  t.setDate(t.getDate() + 1);
-  return isoDate(t);
+/** Atajo: día actual en UTC (formato YYYY-MM-DD). Punto único para reglas temporales. */
+export function todayUtcIso(): string {
+  return isoDate(new Date());
 }
 
 /**
- * Determina si un snooze está vigente comparando contra `today` (default: hoy).
+ * Mínima fecha permitida para snooze: día siguiente al `from` (default: hoy),
+ * calculado **en UTC** para evitar drift por zona horaria del runtime.
+ * Devuelve formato YYYY-MM-DD.
+ */
+export function minSnoozeDate(from: Date = new Date()): string {
+  const next = new Date(
+    Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate() + 1),
+  );
+  return isoDate(next);
+}
+
+/**
+ * Determina si un snooze está vigente comparando contra `today` (default: hoy en UTC).
+ * Ambos argumentos DEBEN venir en UTC (producidos por `isoDate`/`todayUtcIso`)
+ * para que la comparación lexicográfica sea correcta.
  * Acepta `null`/`undefined` para casos donde la revisión no tiene snooze.
  */
 export function isSnoozeActivo(
   snoozedUntil: string | null | undefined,
-  today: string = isoDate(),
+  today: string = todayUtcIso(),
 ): boolean {
   if (!snoozedUntil) return false;
   return snoozedUntil >= today;
 }
+
 
 /** Conteo de hallazgos por severidad. Siempre devuelve las 3 llaves. */
 export function contarPorSeveridad(

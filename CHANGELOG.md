@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.4] - 2026-06-08
+- **fix(auditoria) — normalización UTC en reglas temporales de `domain/core.ts`**: `minSnoozeDate` ya no usa `Date#setDate`/`getDate` (locales); ahora construye el día siguiente con `Date.UTC(getUTCFullYear, getUTCMonth, getUTCDate+1)`, eliminando el drift entre navegador en CDMX (UTC-6) y runners de CI en UTC. Se corrige el JSDoc de `isoDate` (era "horario local", siempre fue UTC) y se añade `todayUtcIso()` como punto único para futuras reglas (proforma_vencida, demurrage, ETA buffer). Contrato del módulo documentado: prohibido `getDate`/`setDate` locales. Tests nuevos cubren `isoDate` al borde de día (23:59:59Z), `minSnoozeDate` en hora temprana (T02:00Z) que con cálculo local daba el día equivocado, y rollover de año UTC.
+
 ## [12.61.3] - 2026-06-08
 - **fix(cotizaciones) — parseo defensivo de `conceptos_venta` y `useMemo` estable**: `lib/parsers/cotizacionDetalle.ts` ahora valida el schema fila a fila (`moneda ∈ {USD,MXN}`, `cantidad`/`precio_unitario` finitos), tolera strings JSON malformados con `try/catch` y loggea `console.warn` listando filas descartadas en lugar de propagar excepciones. Se exporta `EMPTY_TOTALES` (objeto congelado) que `calcularTotalesConceptos` retorna por referencia cuando el array es vacío, evitando que componentes descendentes invaliden memos en cada render. `useCotizacionDetalleState.ts` ahora envuelve el cálculo en `try/catch` con fallback a `EMPTY_TOTALES`, depende granularmente de `cotizacion?.conceptos_venta` (no del objeto completo) y `nombreDestinatario` depende sólo de los tres campos relevantes, eliminando recálculos por refetches que no cambian datos. Tests nuevos cubren JSON inválido, filas con schema corrupto e identidad referencial del fallback.
 
