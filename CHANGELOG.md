@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.25] - 2026-06-08
+- **feat(ux) — barra compacta de filtros en listado de Embarques**: Se rediseñó el área superior de la tabla de `/embarques`. Antes: 6 selects + 2 fechas inline que se amontonaban en viewports medianos. Ahora: barra de una sola fila con `Search + Estado + Cliente + botón "Filtros (N)"`; los filtros secundarios (Modo, Operador, ETD desde, ETA hasta) viven en un `Sheet` lateral. Debajo aparecen **chips** por cada filtro activo con `X` individual y un botón "Limpiar todo" (`EmbarquesFiltrosChips.tsx` nuevo). En móvil la barra colapsa a `Search + Filtros (N)` y el sheet expone todos. `EmbarquesFiltrosCampos.tsx` ahora soporta layouts `inline | stacked-all | stacked-secondary`. Bump `APP_VERSION` a 12.61.25.
+
 ## [12.61.24] - 2026-06-08
 - **chore(ux) — reacomodo de acciones en detalle de embarque**: En `EmbarqueDetalleHeader.tsx` se eliminó el menú dropdown "…" y todas las acciones se exponen ahora como botones planos en una sola fila. Orden: **Avanzar a {estado}** (primaria) → **Editar** → **Compartir** → **Duplicar** → **Reabrir** (admin, solo si está cerrado) → separador vertical → **Eliminar** (ghost destructiva). En móvil hace wrap; en desktop queda en una sola línea. Se quitaron imports de `DropdownMenu*` y `MoreHorizontal`. Bump `APP_VERSION` a 12.61.24.
 

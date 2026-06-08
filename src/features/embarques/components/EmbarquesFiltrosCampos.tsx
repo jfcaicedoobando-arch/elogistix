@@ -1,10 +1,9 @@
 /**
  * Campos de filtros para listado de Embarques.
- * Componente puramente presentacional reutilizado en desktop (inline) y
- * mobile (dentro de un Sheet). Toda la lógica vive en el padre.
- *
- * Extraído de `EmbarquesFiltros.tsx` (v8.100.1) — antes 254 LOC con responsabilidades
- * mezcladas (campos + sheet + conteo).
+ * Componente puramente presentacional reutilizado en:
+ *   - desktop inline  → solo search + Estado + Cliente (filtros primarios)
+ *   - desktop sheet   → Modo + Operador + ETD desde + ETA hasta (secundarios)
+ *   - mobile sheet    → todos
  */
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -36,8 +35,12 @@ export interface EmbarquesFiltrosCamposProps {
   onFechaHastaChange: (v: string) => void;
   clientes: ClienteOption[];
   operadores: string[];
-  /** Si true, renderiza inline (desktop). Si false, en columnas con labels (mobile/sheet). */
-  layout: "inline" | "stacked";
+  /**
+   * `inline`           → barra desktop: search + Estado + Cliente.
+   * `stacked-all`      → sheet mobile: todos los filtros con labels.
+   * `stacked-secondary`→ sheet desktop: solo Modo, Operador, ETD desde, ETA hasta.
+   */
+  layout: "inline" | "stacked-all" | "stacked-secondary";
 }
 
 export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
@@ -51,10 +54,9 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
     clientes, operadores, layout,
   } = props;
 
-
   const ModoSelect = (
     <Select value={filterModo} onValueChange={onFilterModoChange}>
-      <SelectTrigger className="w-full md:w-[160px] md:min-w-[160px]" title="Filtrar por modo de transporte" aria-label="Modo de transporte">
+      <SelectTrigger className="w-full" title="Filtrar por modo de transporte" aria-label="Modo de transporte">
         <SelectValue placeholder="Modo" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -72,7 +74,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const EstadoSelect = (
     <Select value={filterEstado} onValueChange={onFilterEstadoChange}>
-      <SelectTrigger className="w-full md:w-[180px] md:min-w-[180px]" title="Filtrar por estado del embarque" aria-label="Estado del embarque">
+      <SelectTrigger className="w-full md:w-[170px]" title="Filtrar por estado del embarque" aria-label="Estado del embarque">
         <SelectValue placeholder="Estado" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -84,7 +86,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const ClienteSelect = (
     <Select value={filterCliente} onValueChange={onFilterClienteChange}>
-      <SelectTrigger className="w-full md:w-[220px] md:min-w-[200px]" title="Filtrar por cliente" aria-label="Cliente">
+      <SelectTrigger className="w-full md:w-[210px]" title="Filtrar por cliente" aria-label="Cliente">
         <SelectValue placeholder="Cliente" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -100,7 +102,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const OperadorSelect = (
     <Select value={filterOperador} onValueChange={onFilterOperadorChange}>
-      <SelectTrigger className="w-full md:w-[210px] md:min-w-[200px]" title="Filtrar por operador" aria-label="Operador">
+      <SelectTrigger className="w-full" title="Filtrar por operador" aria-label="Operador">
         <SelectValue placeholder="Operador" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -110,13 +112,11 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
     </Select>
   );
 
-
-
   const FechaDesde = (
     <DatePickerMx
       value={fechaDesde}
       onChange={onFechaDesdeChange}
-      className="w-full md:w-[160px]"
+      className="w-full"
       placeholder="Desde (ETD)"
       title="ETD desde"
     />
@@ -126,7 +126,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
     <DatePickerMx
       value={fechaHasta}
       onChange={onFechaHastaChange}
-      className="w-full md:w-[160px]"
+      className="w-full"
       placeholder="Hasta (ETA)"
       title="ETA hasta"
     />
@@ -134,32 +134,37 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   if (layout === "inline") {
     return (
-      <div className="hidden md:flex md:flex-wrap gap-4">
+      <>
         <SearchInput
           value={search}
           onChange={onSearchChange}
           placeholder="Buscar por expediente, cliente o mercancía..."
           className="flex-1 min-w-[200px]"
         />
-        {ModoSelect}
         {EstadoSelect}
         {ClienteSelect}
-        {OperadorSelect}
-        {FechaDesde}
+      </>
+    );
+  }
 
-        {FechaHasta}
+  if (layout === "stacked-secondary") {
+    return (
+      <div className="space-y-4">
+        <FieldGroup label="Modo de transporte">{ModoSelect}</FieldGroup>
+        <FieldGroup label="Operador">{OperadorSelect}</FieldGroup>
+        <FieldGroup label="ETD desde">{FechaDesde}</FieldGroup>
+        <FieldGroup label="ETA hasta">{FechaHasta}</FieldGroup>
       </div>
     );
   }
 
-  // stacked (sheet/mobile): no rendereamos el SearchInput aquí; ya está en la barra superior.
+  // stacked-all (mobile sheet): todos los filtros con labels.
   return (
     <div className="space-y-4">
-      <FieldGroup label="Modo de transporte">{ModoSelect}</FieldGroup>
       <FieldGroup label="Estado">{EstadoSelect}</FieldGroup>
       <FieldGroup label="Cliente">{ClienteSelect}</FieldGroup>
+      <FieldGroup label="Modo de transporte">{ModoSelect}</FieldGroup>
       <FieldGroup label="Operador">{OperadorSelect}</FieldGroup>
-
       <FieldGroup label="ETD desde">{FechaDesde}</FieldGroup>
       <FieldGroup label="ETA hasta">{FechaHasta}</FieldGroup>
     </div>
