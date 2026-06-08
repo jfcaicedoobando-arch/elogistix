@@ -11,17 +11,27 @@ const mockResumen = {
 } as any;
 
 describe("ReportePresupuestoDocument", () => {
-  it("ReportePresupuestoDocument renderiza con resumen mínimo", () => {
-    const { getByTestId } = render(<ReportePresupuestoDocument resumen={mockResumen} />);
-    expect(getByTestId("pdf-doc")).toBeDefined();
+  it("muestra título, período y aviso de sin categorías", () => {
+    const { container } = render(<ReportePresupuestoDocument resumen={mockResumen} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Presupuesto vs Real");
+    expect(text).toContain("2023-01");
+    expect(text).toContain("Sin categorías configuradas");
+    expect(text).toContain("Detalle por categoría");
   });
 
-  it("debe renderizar con filas de categorías", () => {
+  it("renderiza categorías cuando hay filas", () => {
     const resumen = {
       ...mockResumen,
-      filas: [{ categoria_nombre: "C1", presupuesto_mxn: 100, real_mxn: 90, variacion_mxn: 10, cumplimiento_pct: 90 }]
+      filas: [{
+        categoria_nombre: "Fletes Marítimos",
+        presupuesto_mxn: 100, real_mxn: 90,
+        variacion_mxn: 10, cumplimiento_pct: 90,
+      }],
     };
-    const { getByTestId } = render(<ReportePresupuestoDocument resumen={resumen} />);
-    expect(getByTestId("pdf-doc")).toBeDefined();
+    const { container } = render(<ReportePresupuestoDocument resumen={resumen} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Fletes Marítimos");
+    expect(text).not.toContain("Sin categorías configuradas");
   });
 });
