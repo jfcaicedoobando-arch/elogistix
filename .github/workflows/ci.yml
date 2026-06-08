@@ -83,8 +83,15 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Prepare blob output directory
+        run: mkdir -p .vitest-reports
+
       - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
-        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
+        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}-${{ matrix.total }}.json
+
+      - name: List blob outputs (debug)
+        if: always()
+        run: ls -la .vitest-reports/ || echo "empty"
 
       - name: Upload shard blob report
         if: always()
@@ -92,6 +99,7 @@ jobs:
         with:
           name: vitest-blob-${{ matrix.shard }}
           path: .vitest-reports/
+          if-no-files-found: error
           retention-days: 1
 
   coverage:

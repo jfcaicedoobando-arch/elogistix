@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.41] - 2026-06-08
+- **ci(tests) — hardening del shard blob output**: aseguramos que `.vitest-reports/` exista antes de correr los tests (`mkdir -p .vitest-reports`) para que el blob reporter pueda escribir aun si Vitest no crea el directorio en algún edge case. Fijamos el nombre canónico documentado `blob-${shard}-${total}.json` y agregamos `if-no-files-found: error` en el upload de artifacts para que el shard falle ruidosamente si no se generó blob (en vez de morir silencioso en el merge). Añadido `ls -la .vitest-reports/` como debug visible en el step output. Scripts en `package.json` ya incluyen `--reporter=blob` y el merge lee de `.vitest-reports/` por default — no requieren cambios. `vitest.config.ts` mantiene `coverage.reportsDirectory: ./coverage` (separado de blobs, correcto).
+
 ## [12.60.40] - 2026-06-07
 - **ci(tests) — restaurar `--outputFile` explícito por shard**: el cambio de 12.60.39 dejó al blob reporter sin destino y los 16 shards no escribieron nada en `.vitest-reports/`, reventando el merge con `ENOENT scandir .vitest-reports`. La doc oficial de Vitest indica que `--outputFile` es la forma canónica de fijar destino determinista por shard ("can be overridden with `--outputFile` or `--outputFile.blob` flags"). Restauramos `--outputFile=.vitest-reports/blob-${shard}.json` en el step de tests de `.github/workflows/ci.yml`. Se mantienen fuera el `--reporter=verbose` (sí era debug) y el watchdog/bash defensivo del merge.
 
