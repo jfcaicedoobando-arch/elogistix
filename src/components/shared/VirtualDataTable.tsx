@@ -7,6 +7,18 @@
  *
  * Úsala cuando el usuario puede paginar a 100+ filas y la altura por fila
  * es variable. Para tablas comunes sigue usando `DataTable`.
+ *
+ * Contrato de inmutabilidad y renderizado defensivo:
+ *   1. `data` DEBE venir ya filtrada/ordenada e inmutable desde el caller
+ *      (page-state controllers, `useListPageState`, etc). Este componente
+ *      NUNCA dispara mutaciones sobre el estado de filtros globales desde
+ *      callbacks de scroll — el scroll es puramente visual.
+ *   2. Bajo scroll rápido + cambio simultáneo de `data` (p. ej. el usuario
+ *      escribe en el buscador mientras hay inercia de scroll),
+ *      `VirtualRowsContainer` filtra defensivamente los `virtualItems` con
+ *      índice fuera de rango y el virtualizer usa `getItemKey` por id para
+ *      no reciclar mediciones de filas equivocadas. Resultado: las filas
+ *      visibles siempre corresponden al snapshot actual de `data`.
  */
 import { useRef } from "react";
 import { cn } from "@/lib/utils";

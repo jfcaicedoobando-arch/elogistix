@@ -1,39 +1,45 @@
 ## Objetivo
-Reforzar `src/services/facturas/cobranza.ts` para garantizar que los saldos pendientes NUNCA se sumen entre monedas, exponiendo subtotales explícitos por divisa y usando los helpers de precisión de `financialUtils` (consistente con `mem://technical/financial-calculations-standards`).
+Endurecer la cadena `VirtualDataTable → useVirtualTableState → VirtualRowsContainer` para garantizar consistencia de filas visibles bajo scroll rápido + cambios de `data` (filtros), sin mutar ningún estado externo. Documentar el contrato de inmutabilidad.
 
 ## Diagnóstico
-- `calcularKPIs` ya separa `total_mxn`/`total_usd` pero acumula con `+=` plano (drift de punto flotante en cartera grande) y no rechaza explícitamente divisas distintas a `MXN`/`USD` — caen al `else` y se mezclan en el bucket MXN silenciosamente.
-- No existe un helper público que devuelva `{ saldoPendienteMXN, saldoPendienteUSD }` para consumidores que sólo necesitan los saldos agrupados (dashboards, exports, alertas).
+- `VirtualDataTable.tsx` ya es un ensamblador delgado: NO toca estado de filtros (los filtros se aplican aguas arriba y el componente recibe `data` ya filtrada). El riesgo real está en la condición de carrera entre `virtualizer.getVirtualItems()` (calculado con el `count` anterior) y un re-render donde `rows.length` se redujo: `rows[vi.index]` puede ser `undefined` → React crash (`Cannot read properties of undefined (reading 'id')` en `VirtualRowsContainer`).
+- `useVirtualizer` no recibe `getItemKey`; cuando `rows` reordena (cambio de sort/filtro), las keys absolutas dependen de `rows[vi.index].id`, y si el `vi.index` queda fuera de rango se cae.
+- No hay JSDoc explícito que prohíba mutar `data`/filtros desde callbacks de scroll.
 
 ## Cambios
 
-### 1. `src/services/facturas/cobranza.ts`
-- **Nuevo helper exportado** `agruparSaldosPorMoneda(filas)`:
-  - Firma: `(filas: FacturaCobranza[]) => { saldoPendienteMXN: number; saldoPendienteUSD: number; porMoneda: Record<string, number>; descartadas: number }`.
-  - Itera una sola vez; para cada `f` con `saldo > 0`:
-    - Empuja a un array por bucket según `f.moneda`.
-    - Si `f.moneda` no es `"MXN"` ni `"USD"`, registra en `porMoneda` y `descartadas++` sin contaminar los buckets canónicos.
-  - Reduce los buckets con `sumarMontos` (currency.js, precisión 2) desde `@/lib/financial/financialUtils`.
-  - Si `descartadas > 0`, `console.warn` listando las monedas atípicas detectadas.
-- **Refactor de `calcularKPIs`** para usar la misma estrategia:
-  - Reemplazar los `+=` planos por arrays-por-bucket (`total`, `vencido`, `por_vencer_7d` × `MXN`/`USD`) y un `sumarMontos` final por cada uno.
-  - Guard explícito: `if (f.moneda !== "MXN" && f.moneda !== "USD") continue;` (con `console.warn` agregado al final si hubo alguna).
-  - `total_mxn`/`total_usd` ahora se calculan vía `agruparSaldosPorMoneda` reutilizando el helper (single source of truth) — luego se enriquecen con `vencido_*` y `por_vencer_7d_*`.
-- Sin cambios a `fetchCobranza`, `FacturaCobranza`, `KPIsCobranza` (firmas estables).
+### 1. `src/components/shared/VirtualRowsContainer.tsx`
+- Memoizar la lista de items renderizables con `useMemo`:
+  - Filtrar `virtualItems` quedándose sólo con los que tienen `rows[vi.index]` definido.
+  - Dependencias: `[virtualItems, rows]`.
+- Si la lista queda vacía después del filtro, retornar el wrapper con `height: virtualizer.getTotalSize()` y `null` adentro (preserva el espacio del scroll, evita parpadeo).
+- Comentario explicativo: el guard cubre la ventana entre `virtualizer.getVirtualItems()` (snapshot stale) y el render cuando `data` se redujo por un filtro aplicado durante un scroll rápido.
 
-### 2. Test nuevo — `src/services/facturas/__tests__/cobranza.test.ts`
-Cubrir lógica pura sin tocar Supabase:
-- `agruparSaldosPorMoneda` separa MXN y USD sin mezclar.
-- Filas con `saldo <= 0` se ignoran.
-- Filas con `moneda` ajena (ej. `"EUR"`) NO contaminan los buckets canónicos; quedan en `porMoneda.EUR` y `descartadas === 1`.
-- Precisión: `[0.1, 0.1, 0.1]` MXN → `saldoPendienteMXN === 0.3` (vs `0.30000000000000004` con `+=`).
-- `calcularKPIs`: `total_mxn`/`total_usd` coinciden con `agruparSaldosPorMoneda`; `vencido_*` y `por_vencer_7d_*` se separan correctamente por moneda.
+### 2. `src/components/shared/dataTable/useVirtualTableState.ts`
+- Añadir `getItemKey` estable al `useVirtualizer`:
+  ```ts
+  getItemKey: useCallback((index: number) => rows[index]?.id ?? index, [rows])
+  ```
+  Esto hace que la identidad del virtual item sobreviva a reordenamientos (sort cliente) y que el virtualizer no recicle alturas de filas equivocadas durante el scroll rápido.
+- Mantener el resto idéntico (no cambia el shape público).
 
-### 3. Versionado
-- `src/constants/appVersion.ts` → `12.61.6`.
-- `CHANGELOG.md`: entrada `## [12.61.6] - 2026-06-08` describiendo el helper y la precisión.
+### 3. `src/components/shared/VirtualDataTable.tsx`
+- Ampliar el JSDoc del módulo con dos garantías explícitas:
+  1. `data` DEBE venir ya filtrada e inmutable — el componente nunca dispara mutaciones de filtros desde callbacks de scroll.
+  2. Bajo scroll rápido + cambio simultáneo de `data`, el contenedor filtra defensivamente los índices fuera de rango para no romper el árbol.
+- Sin cambios de comportamiento ni de props.
+
+### 4. Test nuevo — `src/components/shared/__tests__/VirtualRowsContainer.test.tsx`
+- Render con `virtualItems` que contiene índices fuera de rango (simulando race) y verificar:
+  - No lanza.
+  - Renderiza solo las filas existentes.
+- Mockear `Virtualizer` mínimo (`getTotalSize`, `measureElement`).
+
+### 5. Versionado
+- `src/constants/appVersion.ts` → `12.61.7`.
+- `CHANGELOG.md`: entrada `## [12.61.7] - 2026-06-08`.
 
 ## Notas técnicas
-- Sin migraciones; sólo lógica de servicio.
-- Sin cambios al hook `useCobranza` (los KPIs mantienen su shape).
-- Alineado con `mem://technical/financial-calculations-standards` (acumuladores monetarios vía `sumarMontos`/`currency.js`).
+- Sin cambios al estado de filtros ni al hook `useListPageState` (URL-synced con nuqs sigue siendo la única fuente).
+- `getItemKey` reduce el churn de medición/identidad cuando cambia el orden/filtrado.
+- El guard `rows[vi.index]` previene crashes intermitentes reportados al filtrar mientras se hace scroll inercial.
