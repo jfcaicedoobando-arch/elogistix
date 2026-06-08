@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.1] - 2026-06-08
+- **chore(arquitectura) — refactor CxP para cumplir Power of 10**: splits de archivos sobre 200 líneas y eliminación del único import directo a `@/integrations/supabase/client` desde `components/`.
+  - Nuevo servicio `src/services/cxp/cfdiStorage.ts` (`subirArchivosCfdiFactura`) — el dialog ya no toca `supabase.storage` ni `supabase.from(...).update` directamente.
+  - Nuevo hook controlador `src/hooks/cxp/useNuevaFacturaProveedorForm.ts` — `DialogNuevaFacturaProveedor` pasa de 302 → 93 líneas.
+  - Extraídos `src/components/cxp/pagoProveedorHelpers.ts`, `PagoProveedorBits.tsx`, `facturaFormPrimitives.tsx`, `CxpKpiCards.tsx`, `CxpFiltrosSheetFields.tsx`.
+  - Hidratación de `EditarEmbarque` movida a `useHidratacionEditarEmbarque` (controller bajó a <200 líneas).
+  - Verde: `architecture-baseline` (Power of 10 #1 y `components/` sin supabase directo).
+
 ## [12.64.0] - 2026-06-08
 - **feat(proveedores/cxp) — segmentación Nacional / Extranjero y método de pago contextual**: A petición de contabilidad para distinguir SPEI (proveedores mexicanos) de transferencia internacional / SWIFT (proveedores extranjeros) y simplificar la conciliación bancaria.
   - **`/proveedores`**: nuevo selector segmentado **Todos / Nacional / Extranjero** junto al buscador; nueva columna **Origen** en la tabla con badge color-coded (azul Nacional, ámbar Extranjero). El campo `rfc` ahora se etiqueta como "RFC / Tax ID" en el header. La RPC `proveedores_listado` acepta `p_origen` y devuelve `origen_proveedor`.
