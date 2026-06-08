@@ -20,6 +20,8 @@ import { useAuthSession } from "../useAuthSession";
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue(null);
+  // Restaurar impl por defecto del subscribe (sin disparar eventos).
+  mockSubscribe.mockImplementation(() => ({ unsubscribe: mockUnsubscribe }));
 });
 
 describe("useAuthSession", () => {
