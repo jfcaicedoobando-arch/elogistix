@@ -32,9 +32,9 @@ describe("exportToCsv", () => {
     expect(descargarBlobSpy).toHaveBeenCalledTimes(1);
     const [blob] = descargarBlobSpy.mock.calls[0];
     expect(blob.size).toBeGreaterThan(0);
-    // Verificamos BOM a nivel de bytes (FileReader.readAsText lo absorbe).
-    const buf = new Uint8Array(await new Response(blob).arrayBuffer());
-    expect([buf[0], buf[1], buf[2]]).toEqual([0xef, 0xbb, 0xbf]);
+    // Verificamos BOM vía `Blob.text()` (jsdom no implementa arrayBuffer fielmente).
+    const raw = await blob.text();
+    expect(raw.charCodeAt(0)).toBe(0xfeff);
     const csv = await readBlobText(blob);
     expect(csv).toContain("Nombre,Monto");
     expect(csv).toContain("ACME,100");
