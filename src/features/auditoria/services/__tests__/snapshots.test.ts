@@ -1,40 +1,52 @@
-import { describe, it, expect, vi } from 'vitest';
-import { fetchAuditoriaSnapshots, capturarSnapshotAuditoria } from '../snapshots';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createSupabaseChainMock } from '@/test/utils/_supabaseChainMock';
 
-const { mockSupabase } = vi.hoisted(() => {
-  const chain = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    rpc: vi.fn(),
-    then: vi.fn().mockImplementation(function(this: any, resolve: any) {
-      resolve({ data: this._data, error: this._error });
-    }),
-    _data: null as any,
-    _error: null as any,
-  };
-  return { mockSupabase: chain };
-});
+const { mockSupabase } = vi.hoisted(() => ({ mockSupabase: { current: null as any } }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  get supabase() {
+    return mockSupabase.current;
+  },
 }));
 
+import { fetchAuditoriaSnapshots, capturarSnapshotAuditoria } from '../snapshots';
+
+function withRpc(data: any[] = [], error: any = null, rpcImpl?: any) {
+  const chain = createSupabaseChainMock(data, error);
+  chain.rpc = rpcImpl ?? vi.fn().mockResolvedValue({ error: null });
+  return chain;
+}
+
 describe('auditoria/snapshots', () => {
-  it('fetchAuditoriaSnapshots obtiene snapshots con rango de fecha', async () => {
-    const mockData = [{ fecha: '2023-01-01' }];
-    (mockSupabase as any)._data = mockData;
+  beforeEach(() => vi.clearAllMocks());
+
+  it('fetchAuditoriaSnapshots filtra por rango de días y cap en 2000', async () => {
+    const rows = [{ fecha: '2023-01-01' }];
+    mockSupabase.current = withRpc(rows);
     const result = await fetchAuditoriaSnapshots(30);
-    expect(mockSupabase.from).toHaveBeenCalledWith('auditoria_snapshots');
-    expect(mockSupabase.gte).toHaveBeenCalled();
-    expect(result).toEqual(mockData);
+    expect(mockSupabase.current.from).toHaveBeenCalledWith('auditoria_snapshots');
+    expect(mockSupabase.current.gte).toHaveBeenCalledWith('fecha', expect.any(String));
+    // Validar formato YYYY-MM-DD del parámetro fecha
+    const [, fechaArg] = mockSupabase.current.gte.mock.calls[0];
+    expect(fechaArg).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(mockSupabase.current.order).toHaveBeenCalledWith('fecha', { ascending: true });
+    expect(mockSupabase.current.limit).toHaveBeenCalledWith(2000);
+    expect(result).toEqual(rows);
   });
 
-  it('capturarSnapshotAuditoria llama al RPC', async () => {
-    mockSupabase.rpc.mockResolvedValue({ error: null });
+  it('fetchAuditoriaSnapshots lanza ante error de Supabase', async () => {
+    mockSupabase.current = withRpc(null as any, { message: 'rls' });
+    await expect(fetchAuditoriaSnapshots(7)).rejects.toMatchObject({ message: 'rls' });
+  });
+
+  it('capturarSnapshotAuditoria invoca el RPC sin argumentos', async () => {
+    mockSupabase.current = withRpc();
     await capturarSnapshotAuditoria();
-    expect(mockSupabase.rpc).toHaveBeenCalledWith('auditoria_capturar_snapshot');
+    expect(mockSupabase.current.rpc).toHaveBeenCalledWith('auditoria_capturar_snapshot');
+  });
+
+  it('capturarSnapshotAuditoria propaga errores del RPC', async () => {
+    mockSupabase.current = withRpc([], null, vi.fn().mockResolvedValue({ error: { message: 'fail' } }));
+    await expect(capturarSnapshotAuditoria()).rejects.toMatchObject({ message: 'fail' });
   });
 });
