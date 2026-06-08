@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchPlanes } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -19,6 +19,12 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('planes/index', () => {
+  beforeEach(() => {
+    (mockSupabase as any)._data = null;
+    (mockSupabase as any)._error = null;
+    (mockSupabase.from as any).mockClear();
+  });
+
   it('fetchPlanes obtiene lista de planes', async () => {
     (mockSupabase as any)._data = [{ id: '1', nombre: 'Pro' }];
     const result = await fetchPlanes();
