@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
-import { Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { aUSD, sumarEnUSD } from "@/lib/financial/costosUSD";
+import { aUSD, sumarEnMoneda } from "@/lib/financial/costosUSD";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { NumericInput } from "@/components/shared/NumericInput";
@@ -15,6 +16,9 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
+
+/** Moneda objetivo (bucket) del wizard de embarques: todos los totales viven en USD. */
+const TARGET_MONEDA = 'USD' as const;
 
 interface Proveedor {
   id: string;
@@ -58,13 +62,39 @@ export function StepCostosPrecios(props: Props) {
 
   const toUSD = (monto: number, moneda: string) => aUSD(monto, moneda, tcUSD, tcEUR);
 
-  const totalCostoUSD = useMemo(
-    () => sumarEnUSD(conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda })), tcUSD, tcEUR),
-    [conceptosCosto, tcUSD, tcEUR]
+  // Suma estricta con detección de filas en moneda distinta al target USD.
+  // Si falta TC con filas mixtas, sumarEnMoneda lanza — capturamos y caemos a
+  // un cálculo laxo para no romper el render, y mostramos un alert.
+  const costoCalc = useMemo(() => {
+    const items = conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda }));
+    try {
+      return { ...sumarEnMoneda(items, TARGET_MONEDA, tcUSD, tcEUR), tcMissing: false };
+    } catch {
+      return { total: 0, filasMixtas: items.map((it, index) => ({ index, moneda: it.moneda })).filter(f => f.moneda !== TARGET_MONEDA), homogenea: false, tcMissing: true };
+    }
+  }, [conceptosCosto, tcUSD, tcEUR]);
+
+  const ventaCalc = useMemo(() => {
+    const items = conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda }));
+    try {
+      return { ...sumarEnMoneda(items, TARGET_MONEDA, tcUSD, tcEUR), tcMissing: false };
+    } catch {
+      return { total: 0, filasMixtas: items.map((it, index) => ({ index, moneda: it.moneda })).filter(f => f.moneda !== TARGET_MONEDA), homogenea: false, tcMissing: true };
+    }
+  }, [conceptosVenta, tcUSD, tcEUR]);
+
+  const totalCostoUSD = costoCalc.total;
+  const totalVentaUSD = ventaCalc.total;
+  const tcFaltante = costoCalc.tcMissing || ventaCalc.tcMissing;
+  const filasMixtasTotales = costoCalc.filasMixtas.length + ventaCalc.filasMixtas.length;
+
+  const costoMixtoIdx = useMemo(
+    () => new Set(costoCalc.filasMixtas.map(f => f.index)),
+    [costoCalc.filasMixtas],
   );
-  const totalVentaUSD = useMemo(
-    () => sumarEnUSD(conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda })), tcUSD, tcEUR),
-    [conceptosVenta, tcUSD, tcEUR]
+  const ventaMixtoIdx = useMemo(
+    () => new Set(ventaCalc.filasMixtas.map(f => f.index)),
+    [ventaCalc.filasMixtas],
   );
 
   const hasErrors = Object.keys(errors).length > 0;
