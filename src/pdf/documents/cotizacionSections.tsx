@@ -85,9 +85,9 @@ export function SeccionDatosYMercancia({ c }: Props) {
       <Text style={styles.h3}>Mercancía</Text>
       <KeyValueGrid items={buildMercancia(c)} columns={4} />
       {c.descripcion_adicional ? (
-        <View style={{ marginTop: 6 }}>
+        <View style={{ marginTop: 6 }} wrap>
           <Text style={styles.label}>Descripción Adicional</Text>
-          <Text>{c.descripcion_adicional}</Text>
+          <Text style={{ ...styles.paragraph, fontSize: 9 }} wrap>{c.descripcion_adicional}</Text>
         </View>
       ) : null}
       <SeccionDimensiones c={c} />
