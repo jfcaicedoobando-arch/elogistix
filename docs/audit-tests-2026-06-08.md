@@ -39,33 +39,26 @@
 
 ---
 
-## Top hallazgos CRITICAL (8) — acción inmediata
+## Top hallazgos CRITICAL (8) — ✅ TODOS RESUELTOS en Sprint 1 (12.61.16)
 
-### C-1 — Tests que copian código en lugar de importarlo (3 archivos)
-Los tests **redefinen localmente** la lógica bajo prueba en vez de importarla. Si la implementación real cambia, el test sigue verde.
+### ✅ C-1 — Tests que copiaban código en lugar de importarlo — RESUELTO
+- ✅ `src/lib/__tests__/sentry.test.ts` — importa `isReactRefreshHmrError`/`isReactRefreshStackTrace` desde `@/lib/sentry` (exportados como API pública).
+- ✅ `src/hooks/__tests__/useAdminOrgDetalle.test.ts` — importa `MemberRow` real y `agruparConfigPorCategoria` desde `@/lib/domain/configuracion`.
+- ✅ `supabase/functions/parse-csf/validate_test.ts` — `validateFile` extraído a `parse-csf/validate.ts` (aislado de `index.ts` para evitar arrastrar imports HTTP) y re-exportado desde `index.ts`. **4/4 Deno tests verdes.**
 
-- `src/lib/__tests__/sentry.test.ts:6-24` — replica `isReactRefreshHmrError` / `isReactRefreshStackTrace`.
-- `src/hooks/__tests__/useAdminOrgDetalle.test.ts:1-122` — no importa el hook; redefine `groupConfigByCategoria` y `MemberRow`.
-- `supabase/functions/parse-csf/validate_test.ts:6-11` — replica `validateFile` con comentario «copia local del helper».
+### ✅ C-2 — Tests sin aserción real — RESUELTO
+- ✅ `descargarPdf.test.ts` — mock de `@react-pdf/renderer`, valida llamada a `pdf().toBlob()`, delegación a `descargarBlob` con `.pdf` y propagación de errores. **3 tests verdes.**
+- ✅ `BreadcrumbContext.test.tsx` — reemplazado `expect(true).toBe(true)` por validación de cleanup tras `unmount` e inputs vacíos ignorados. **3 tests verdes.**
 
-**Fix:** exportar las funciones desde el módulo real e importarlas. Eliminar la copia.
+### ✅ C-3 — Mocks ad-hoc de Supabase en `features/auditoria/services` — RESUELTO
+Migrados a `createSupabaseChainMock` central + `vi.clearAllMocks()` + cobertura de error-path.
+- ✅ `comentarios.test.ts` (4 tests), `revisiones.test.ts` (7 tests), `snapshots.test.ts` (4 tests), `snooze.test.ts` (4 tests). Validan `onConflict`, payload de upsert, `estado_revision` default vs explícito, formato YYYY-MM-DD, error-paths RLS/RPC.
 
-### C-2 — Tests sin aserción real de comportamiento
-- `src/pdf/render/__tests__/descargarPdf.test.ts:22-28` — `expect(async () => { /* vacío */ }).not.toThrow()` siempre pasa. El cuerpo ni siquiera llama a `descargarPdf`.
-- `src/contexts/__tests__/BreadcrumbContext.test.tsx:27` — termina con `expect(true).toBe(true)` después de renderizar el hook sin validar estado.
+### ✅ C-4 — Edge case `aUSD(tcUSD=0)` — RESUELTO
+- ✅ `aUSD()` en `src/lib/financial/costosUSD.ts` ahora valida `Number.isFinite(tcUSD) && tcUSD > 0` y `tcEUR > 0` cuando aplica, lanzando con mensaje explícito. Antes propagaba `Infinity` silenciosamente a totales financieros.
+- ✅ 5 nuevos casos en `costosUSD.test.ts`: USD con tcUSD=0 (no requiere conversión), MXN con TC=0/NaN/negativo, EUR con tcEUR=0.
 
-### C-3 — Mocks ad-hoc de Supabase rotos (4 archivos en `features/auditoria/services`)
-Construyen una cadena thenable manual con `this._data` en lugar de usar el utilitario `createSupabaseMock` central. Si el SUT agrega un operador (`.range()`, `.match()`, `.throwOnError()`), el mock falla silenciosamente y permite tests verdes contra escenarios irreales.
-
-- `src/features/auditoria/services/__tests__/comentarios.test.ts:4-20`
-- `src/features/auditoria/services/__tests__/revisiones.test.ts:4-20`
-- `src/features/auditoria/services/__tests__/snapshots.test.ts:4-18`
-- `src/features/auditoria/services/__tests__/snooze.test.ts:12-37`
-
-**Fix:** migrar a `createSupabaseMock()` (ver `src/test/utils/_supabaseChainMock.ts` y `mem://technical/testing-mock-patterns`).
-
-### C-4 — Edge case crítico de dominio financiero sin cubrir
-- `src/lib/financial/__tests__/costosUSD.test.ts` — `aUSD(monto, "MXN", 0, _)` produce `Infinity` y no hay test que lo detecte. Función pura de cálculo de costos en USD; un `tcUSD = 0` por mala carga del tipo de cambio se propagaría a totales.
+**Sprint 1 — Resultado:** **61/61 tests vitest verdes + 4/4 Deno tests verdes**. 0 hallazgos CRITICAL pendientes.
 
 ---
 
