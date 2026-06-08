@@ -11,6 +11,7 @@ import {
   type DocumentoEmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { descargarBlob } from "@/lib/downloadBlob";
 
 /**
  * Hook focalizado en la gestión de documentos del embarque (upload/download/delete).

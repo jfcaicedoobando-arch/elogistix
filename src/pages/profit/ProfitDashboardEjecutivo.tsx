@@ -18,6 +18,7 @@ import { AlertasPanel } from "@/components/dashboard-ejecutivo/AlertasPanel";
 import { ReporteEjecutivoDocument } from "@/pdf/documents/ReporteEjecutivoDocument";
 import { safeSessionStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { toast } from "sonner";
+import { descargarBlob } from "@/lib/downloadBlob";
 
 function periodoInicial(): string {
   const guardado = safeSessionStorage.getItem(STORAGE_KEYS.dashboardEjecutivoPeriodo);
