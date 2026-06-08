@@ -23,7 +23,7 @@ describe('useDashboard Hooks', () => {
     
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.totalActivos).toBe(5);
-    expect(result.current.alertasDemora).toBeDefined();
+    expect(Array.isArray(result.current.alertasDemora)).toBe(true);
   });
 
   it('useDashboardData handles partial data', async () => {

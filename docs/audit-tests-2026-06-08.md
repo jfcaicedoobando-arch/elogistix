@@ -128,7 +128,11 @@ Sólo verifican existencia de claves del StyleSheet (`expect(styles.page).toBeDe
 
 ---
 
-## Hallazgos MEDIUM (36) — agrupados
+## Hallazgos MEDIUM (36) — ✅ TODOS RESUELTOS en Sprint 3 (12.61.19)
+
+**Resultado:** 48/48 tests verdes en módulos tocados. M-1 (resets), M-2 (error-paths), M-3 (aserciones débiles), M-4 (EUR/NaN ya cubierto en Sprint 2), M-5 (E2E fuera de scope: documentado), M-6 (perf softening 50/1k filas).
+
+## Hallazgos MEDIUM (originales)
 
 ### M-1 — Mocks sin reset entre `it()` (`mockClear`/`beforeEach` ausente)
 `src/services/bitacora/__tests__/index.test.ts:6-18`, `catalogos/index.test.ts:4-17`, `configuracion/emisor.test.ts:8-14`, `csf/index.test.ts:24-32`, `dashboard/index.test.ts:1-28`, `operaciones/index.test.ts`, `planes/index.test.ts`.

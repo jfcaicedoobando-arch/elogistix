@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchSidebarAlertCounts, fetchReportesResumen } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -12,6 +12,10 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('reportes/index', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('fetchSidebarAlertCounts mapea datos correctamente', async () => {
     mockSupabase.rpc.mockResolvedValue({ 
       data: [{ embarques_demora: 5, facturas_vencidas: 2 }], 
@@ -26,5 +30,15 @@ describe('reportes/index', () => {
     const result = await fetchReportesResumen({});
     expect(mockSupabase.rpc).toHaveBeenCalledWith('reportes_resumen', expect.any(Object));
     expect(result).toEqual({ clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } });
+  });
+
+  it('fetchSidebarAlertCounts propaga error de RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    await expect(fetchSidebarAlertCounts()).rejects.toThrow('RPC fail');
+  });
+
+  it('fetchReportesResumen propaga error de RPC', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    await expect(fetchReportesResumen({})).rejects.toThrow('RPC fail');
   });
 });

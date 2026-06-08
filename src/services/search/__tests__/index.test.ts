@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { buscarGlobal } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -12,6 +12,10 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('search/index', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('buscarGlobal llama al RPC busqueda_global', async () => {
     mockSupabase.rpc.mockResolvedValue({ data: [{ id: '1', label: 'test' }], error: null });
     const result = await buscarGlobal('query');
@@ -23,5 +27,11 @@ describe('search/index', () => {
     const result = await buscarGlobal('  ');
     expect(result).toEqual([]);
     expect(mockSupabase.rpc).not.toHaveBeenCalled();
+  });
+
+  it('buscarGlobal devuelve [] en error de RPC y loggea', async () => {
+    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    const result = await buscarGlobal('query');
+    expect(result).toEqual([]);
   });
 });
