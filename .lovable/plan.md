@@ -1,53 +1,58 @@
-## Contexto
+# Bloqueo de eliminación de embarques con dependencias financieras
 
-Antes de planear, audité el estado real. Hallazgos:
+## Objetivo
+Antes de eliminar un embarque desde `DialogEliminarEmbarque.tsx`, verificar si existen facturas (CxC/CxP), notas de crédito o pagos asociados. Si los hay, bloquear el borrado y mostrar al usuario qué documentos debe cancelar primero.
 
-1. **Las políticas de `embarques` y `cotizaciones` ya son multitenant**, vía `organization_id = current_user_org_id()` (SECURITY DEFINER que resuelve la org del usuario logueado). El patrón correcto del proyecto NO es `current_setting('app.current_org_id')` — eso requeriría setear un GUC por request que el cliente Supabase no envía. Mantenemos `current_user_org_id()`.
-2. **La columna se llama `organization_id`**, no `org_id`. No se renombra (rompería ~50 tablas, todos los hooks y el RPC `get_embarque_full`).
-3. **Las 67 tablas de `public` tienen RLS habilitado.** De las 53 tablas con `organization_id`, todas tienen al menos una política con filtro por org o por rol. Las 14 sin `organization_id` son catálogos públicos (`puertos`, `navieras`, `planes`, `tipos_contenedor`), tablas de servicio (`email_send_*`, `ratelimit_buckets`, `suppressed_emails`, `tracking_webhook_log`) o globales (`organizations`, `user_roles`, `configuracion_global`) — todas correctas.
+## Tablas involucradas (verificado en DB)
+- `facturas` (CxC) — tiene `embarque_id`
+- `proveedor_facturas` (CxP) — tiene `embarque_id`
+- `factura_notas_credito` — ligada vía `factura_id` → `facturas`
+- `proveedor_notas_credito` — ligada vía `factura_id` → `proveedor_facturas`
+- `pagos_factura` — ligada vía `factura_id` → `facturas`
+- `pagos_proveedor` — ligada vía `factura_id` → `proveedor_facturas`
 
-## Anomalías a corregir (defense in depth)
+## Cambios
 
-Dos tablas tienen `organization_id` en la columna pero sus SELECT solo filtran por `auth.uid()` sobre el dueño directo. Si por un bug de aplicación se insertara una notificación con `usuario_id` correcto pero `organization_id` de otra org, podría leerse. Añadimos filtro redundante por org:
+### 1. Nuevo hook `useEmbarqueDependenciasFinancieras(embarqueId, enabled)`
+`src/features/embarques/hooks/queries/useEmbarqueDependenciasFinancieras.ts`
 
-| Tabla | Política actual SELECT | Política propuesta SELECT |
-|---|---|---|
-| `notificaciones_internas` | `usuario_id = auth.uid()` | `usuario_id = auth.uid() AND organization_id = current_user_org_id()` |
-| `crm_notificaciones` | `user_id = auth.uid()` | `user_id = auth.uid() AND organization_id = current_user_org_id()` |
+- Ejecuta en paralelo (Promise.all) consultas con `head: true, count: 'exact'`:
+  - `facturas` where `embarque_id = X` → devuelve `{ count, folios[] }` (select `folio, serie, estatus` limit 20)
+  - `proveedor_facturas` where `embarque_id = X` → `{ count, folios[] }`
+  - Para las facturas encontradas, contar `factura_notas_credito`, `proveedor_notas_credito`, `pagos_factura`, `pagos_proveedor` por `factura_id IN (...)`.
+- Retorna estructura:
+  ```ts
+  {
+    tieneDependencias: boolean,
+    cxc: { count, folios: string[] },
+    cxp: { count, folios: string[] },
+    notasCredito: number,
+    pagos: number,
+  }
+  ```
+- Usa `useQuery` con `enabled` (solo dispara cuando se abre el diálogo).
 
-UPDATE policies reciben el mismo refuerzo. Las INSERT existentes (que ya validan `organization_id = current_user_org_id()` vía WITH CHECK del trigger general) no se tocan.
+### 2. Refactor `DialogEliminarEmbarque.tsx`
+- Llamar al hook con `enabled = open`.
+- **Estados del diálogo Paso 1:**
+  - `isLoading`: mostrar "Verificando dependencias..." y deshabilitar el botón "Sí, eliminar".
+  - `tieneDependencias === true`: reemplazar el contenido por una alerta informativa (icono ⛔) que liste folios de facturas CxC/CxP, conteo de NC y pagos, con texto: *"No es posible eliminar este embarque porque tiene documentos financieros asociados. Cancela primero las siguientes facturas:"*. Footer solo con botón "Entendido" (cierra el diálogo). No permitir avanzar a Paso 2.
+  - `tieneDependencias === false`: flujo actual de doble confirmación.
+- Mantener `handleEliminar` igual; el bloqueo es preventivo en UI.
 
-## No se cambia
+### 3. Defensa extra (opcional, recomendado)
+En `handleEliminar`, antes de `mutateAsync`, re-validar `tieneDependencias` por si el estado cambió entre carga y click. Si ahora existe, abortar con `notifyError`.
 
-- Políticas de `embarques`, `cotizaciones`, `clientes`, `facturas`, `conceptos_*`, etc. — ya están correctas.
-- Políticas del portal cliente (`Cliente read own ...`): filtran por `cliente_id IN current_user_client_ids()`. NO se les añade `organization_id = current_user_org_id()` porque los contactos-usuario del portal no están en `user_organization_members` y devolvería NULL, rompiendo el portal. El aislamiento por `cliente_id` ya es suficiente: un cliente solo pertenece a una organización.
-- Políticas de `service_role` en tablas de email — correctas para edge functions.
-
-## Entregables
-
-1. **Migración** que reemplaza las 4 políticas de `notificaciones_internas` y `crm_notificaciones` (DROP + CREATE de los 4 policies SELECT/UPDATE, con el filtro redundante de org).
-2. **Nuevo documento** `docs/rls-multitenant-audit.md` con la matriz auditada (tabla / tiene `organization_id` / # políticas / patrón usado) — sirve para futuras auditorías trimestrales referenciadas en `docs/security-checklist.md`.
-3. **Extender** `supabase/tests/rls/test_rls_isolation.sql` con 2 casos: usuario de Org A NO ve `notificaciones_internas` ni `crm_notificaciones` de Org B aunque tuvieran su `usuario_id` (simulando bug).
-4. **CHANGELOG.md** + bump `APP_VERSION` a `12.61.11` con bullet:  
-   `Endurece RLS de notificaciones (internas y CRM) con filtro redundante por organization_id; resto de tablas auditadas y conformes.`
+### 4. Changelog y versión
+- `CHANGELOG.md`: nueva entrada `[12.61.13]` describiendo el bloqueo preventivo.
+- `src/constants/appVersion.ts`: bump a `12.61.13`.
 
 ## Detalles técnicos
+- Usar `supabase.from('facturas').select('folio, serie, estatus', { count: 'exact' }).eq('embarque_id', id).limit(20)` para obtener tanto conteo como folios en una sola query.
+- Filtrar NC y pagos solo si hay facturas (evitar `.in('factura_id', [])` vacío).
+- Respetar `power-of-10`: cleanup no aplica (es react-query), manejar `error` de cada query, sin `any`.
+- Sin cambios en lógica de backend ni en el RPC `eliminarEmbarqueRpc`.
 
-SQL de la migración (resumen):
-
-```sql
-DROP POLICY "Users read own notifications" ON public.notificaciones_internas;
-CREATE POLICY "Users read own notifications" ON public.notificaciones_internas
-  FOR SELECT TO authenticated
-  USING (usuario_id = auth.uid() AND organization_id = current_user_org_id());
-
-DROP POLICY "Users update own notifications" ON public.notificaciones_internas;
-CREATE POLICY "Users update own notifications" ON public.notificaciones_internas
-  FOR UPDATE TO authenticated
-  USING (usuario_id = auth.uid() AND organization_id = current_user_org_id())
-  WITH CHECK (usuario_id = auth.uid() AND organization_id = current_user_org_id());
-
--- mismo patrón para crm_notificaciones (user_id en lugar de usuario_id)
-```
-
-Sin GRANT nuevos (las tablas ya los tienen). Sin cambios de schema. Cero impacto en código TypeScript (los hooks ya filtran por `organization_id` en sus queries; el RLS extra solo es defensa).
+## Fuera de alcance
+- Modificar el RPC de eliminación en Postgres (la guardia es en UI/UX; el RPC sigue siendo la última defensa vía FKs).
+- Permitir "cancelar todo en cascada" desde el diálogo.
