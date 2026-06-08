@@ -5,9 +5,10 @@
 import { fromDb } from "@/lib/supabase/cast";
 import type { EmbarqueConProfit } from "./dashboardTypes";
 
-/** Number(value ?? 0). */
+/** Number(value ?? 0), pero rechaza NaN/±Infinity para no envenenar totales financieros. */
 export function numOr0(v: unknown): number {
-  return Number(v ?? 0);
+  const n = Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
 }
 
 /** Si el campo viene definido en el payload úsalo; si no, calcula con `fallback()`. */
