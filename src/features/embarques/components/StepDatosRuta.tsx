@@ -8,6 +8,8 @@ import { StepDatosRutaMaritimo } from "./stepDatosRuta/StepDatosRutaMaritimo";
 import { StepDatosRutaAereo } from "./stepDatosRuta/StepDatosRutaAereo";
 import { StepDatosRutaTerrestre } from "./stepDatosRuta/StepDatosRutaTerrestre";
 import { StepDatosRutaFechas } from "./stepDatosRuta/StepDatosRutaFechas";
+import { ListaContenedoresEditable } from "./contenedores/ListaContenedoresEditable";
+import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 
 interface Props {
   errors?: StepValidationErrors;
@@ -20,6 +22,7 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
   const modo = watch('modo');
   const etd = watch('etd');
   const eta = watch('eta');
+  const contenedores = (watch('contenedores') ?? []) as ContenedorBorrador[];
 
   // Sugerir ETA cuando se ingresa ETD y hay días de tránsito de cotización
   useEffect(() => {
@@ -32,20 +35,46 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
   const hasErrors = Object.keys(errors).length > 0;
   const esMaritimo = modo === 'Marítimo' || !modo;
 
+  const handleContenedoresChange = (next: ContenedorBorrador[]) => {
+    setValue('contenedores', next, { shouldDirty: true });
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold">Datos de Ruta {modo && `— ${modo}`}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {hasErrors && <ValidationAlert severity="error" errors={errors} />}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {esMaritimo && <StepDatosRutaMaritimo errors={errors} />}
-          {modo === 'Aéreo' && <StepDatosRutaAereo errors={errors} />}
-          {modo === 'Terrestre' && <StepDatosRutaTerrestre errors={errors} />}
-          <StepDatosRutaFechas errors={errors} diasTransitoSugerencia={diasTransitoSugerencia} />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold">Datos de Ruta {modo && `— ${modo}`}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {hasErrors && <ValidationAlert severity="error" errors={errors} />}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {esMaritimo && <StepDatosRutaMaritimo errors={errors} />}
+            {modo === 'Aéreo' && <StepDatosRutaAereo errors={errors} />}
+            {modo === 'Terrestre' && <StepDatosRutaTerrestre errors={errors} />}
+            <StepDatosRutaFechas errors={errors} diasTransitoSugerencia={diasTransitoSugerencia} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {modo === 'Marítimo' && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">
+              Contenedores ({contenedores.length})
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Un embarque marítimo puede tener uno o varios contenedores. Cada uno requiere número y tipo.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ListaContenedoresEditable
+              value={contenedores}
+              onChange={handleContenedoresChange}
+              minRows={0}
+            />
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

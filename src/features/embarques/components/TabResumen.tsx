@@ -7,7 +7,7 @@ import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
 import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCard";
-import { SeccionContenedores } from "./contenedores/SeccionContenedores";
+import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -38,7 +38,7 @@ export function TabResumen({ embarque }: Props) {
         </Card>
       </div>
 
-      {embarque.modo === "Marítimo" && <SeccionContenedores embarqueId={embarque.id} />}
+      {embarque.modo === "Marítimo" && <SeccionContenedoresReadonly embarqueId={embarque.id} />}
 
       {relacionados.length > 1 && (
         <EmbarquesRelacionadosCard
