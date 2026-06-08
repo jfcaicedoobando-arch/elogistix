@@ -1,58 +1,74 @@
-# Bloqueo de eliminación de embarques con dependencias financieras
+# Auditoría de Tests — Plan
 
 ## Objetivo
-Antes de eliminar un embarque desde `DialogEliminarEmbarque.tsx`, verificar si existen facturas (CxC/CxP), notas de crédito o pagos asociados. Si los hay, bloquear el borrado y mostrar al usuario qué documentos debe cancelar primero.
+Auditar los **308 archivos de test** del proyecto (unit, integration, edge functions y E2E) en busca de problemas reales de calidad, no de estilo. Entregar un reporte preciso, accionable y priorizado en `docs/audit-tests-2026-06-08.md`.
 
-## Tablas involucradas (verificado en DB)
-- `facturas` (CxC) — tiene `embarque_id`
-- `proveedor_facturas` (CxP) — tiene `embarque_id`
-- `factura_notas_credito` — ligada vía `factura_id` → `facturas`
-- `proveedor_notas_credito` — ligada vía `factura_id` → `proveedor_facturas`
-- `pagos_factura` — ligada vía `factura_id` → `facturas`
-- `pagos_proveedor` — ligada vía `factura_id` → `proveedor_facturas`
+## Inventario
+| Área | Archivos |
+|---|---|
+| `src/services/**` | 68 |
+| `src/features/**` | 62 |
+| `src/hooks/**` | 61 |
+| `src/lib/**` | 59 |
+| `src/pdf/**` | 18 |
+| `src/components/**` | 11 |
+| `supabase/functions/**` (Deno) | 9 |
+| `src/contexts/**` | 7 |
+| `src/generators/**` | 6 |
+| `e2e/specs/**` (Playwright) | 5 |
+| `src/__tests__/**` | 2 |
+| **Total** | **308** |
 
-## Cambios
+## Reglas de auditoría (qué busca cada subagente)
+Cada hallazgo debe citar `archivo:línea` y clasificarse por severidad (`CRITICAL` / `HIGH` / `MEDIUM` / `LOW`).
 
-### 1. Nuevo hook `useEmbarqueDependenciasFinancieras(embarqueId, enabled)`
-`src/features/embarques/hooks/queries/useEmbarqueDependenciasFinancieras.ts`
+1. **Falsos positivos** — tests que pasan sin probar nada útil: aserciones tautológicas (`expect(true).toBe(true)`), `expect(mockFn).toBeDefined()`, snapshots vacíos, ausencia total de `expect`.
+2. **Tests acoplados a la implementación** — assertions sobre internals que rompen al refactorizar (orden de llamadas a mocks sin razón, conteos exactos de re-renders, strings de error literales).
+3. **Mocks incorrectos** — mock del SUT, mocks que no respetan la cadena thenable de Supabase (ver `mem://technical/testing-mock-patterns`), mocks sin reset entre `it()`, `vi.fn()` sin verificar llamadas.
+4. **Cobertura de happy-path únicamente** — falta de casos de error, edge cases (null/undefined/array vacío), branches no cubiertas, RLS / multi-tenant no validado en services.
+5. **`skip`/`only`/`todo` sin issue asociado** — ya cubierto por `scripts/audit-tests.ts`; verificar que no haya regresiones y reportar los que existan hoy.
+6. **Títulos duplicados entre archivos** — mismo `it("…")` en >1 archivo sin razón clara (DUPLICATE_ALLOWLIST).
+7. **Higiene React / async** — falta `waitFor`, queries no-accesibles (`getByTestId` en lugar de `getByRole`), ausencia de `cleanup` cuando el test crea suscripciones/timers (ver `mem://technical/testing-cleanup-protocol`), `act()` warnings ignorados.
+8. **Tests lentos o frágiles** — `setTimeout` reales en lugar de `vi.useFakeTimers()`, llamadas de red reales, dependencia del orden de ejecución entre `it()`.
+9. **Tests muertos** — archivos cuyo SUT ya no existe o cambió de firma, imports rotos comentados.
+10. **Edge Functions (Deno)** — uso correcto de `Deno.test`, mocks de `fetch`, validación de inputs y respuestas CORS.
+11. **E2E (Playwright)** — selectores frágiles, `waitForTimeout` arbitrarios, ausencia de fixtures aisladas.
+12. **PDF / Leak Canary** — verificar que la red de seguridad de `mem://features/testing-regression-canary` siga activa.
 
-- Ejecuta en paralelo (Promise.all) consultas con `head: true, count: 'exact'`:
-  - `facturas` where `embarque_id = X` → devuelve `{ count, folios[] }` (select `folio, serie, estatus` limit 20)
-  - `proveedor_facturas` where `embarque_id = X` → `{ count, folios[] }`
-  - Para las facturas encontradas, contar `factura_notas_credito`, `proveedor_notas_credito`, `pagos_factura`, `pagos_proveedor` por `factura_id IN (...)`.
-- Retorna estructura:
-  ```ts
-  {
-    tieneDependencias: boolean,
-    cxc: { count, folios: string[] },
-    cxp: { count, folios: string[] },
-    notasCredito: number,
-    pagos: number,
-  }
-  ```
-- Usa `useQuery` con `enabled` (solo dispara cuando se abre el diálogo).
+## Distribución del trabajo (subagentes en paralelo)
+Cada subagente recibe: lista de archivos asignados, reglas 1-12 arriba, formato de salida estricto y la instrucción de citar `archivo:línea`.
 
-### 2. Refactor `DialogEliminarEmbarque.tsx`
-- Llamar al hook con `enabled = open`.
-- **Estados del diálogo Paso 1:**
-  - `isLoading`: mostrar "Verificando dependencias..." y deshabilitar el botón "Sí, eliminar".
-  - `tieneDependencias === true`: reemplazar el contenido por una alerta informativa (icono ⛔) que liste folios de facturas CxC/CxP, conteo de NC y pagos, con texto: *"No es posible eliminar este embarque porque tiene documentos financieros asociados. Cancela primero las siguientes facturas:"*. Footer solo con botón "Entendido" (cierra el diálogo). No permitir avanzar a Paso 2.
-  - `tieneDependencias === false`: flujo actual de doble confirmación.
-- Mantener `handleEliminar` igual; el bloqueo es preventivo en UI.
+| Subagente | Alcance | Archivos |
+|---|---|---|
+| **A1** | `src/services/**` parte 1 (cotizacion, embarques, clientes, facturacion, cxp) | ~34 |
+| **A2** | `src/services/**` parte 2 (resto: profit, presupuesto, tesoreria, comisiones, organization, auditoria, etc.) | ~34 |
+| **A3** | `src/features/**` | 62 |
+| **A4** | `src/hooks/**` + `src/contexts/**` | 68 |
+| **A5** | `src/lib/**` | 59 |
+| **A6** | `src/pdf/**` + `src/generators/**` + `src/components/**` + `src/__tests__/**` | 37 |
+| **A7** | `supabase/functions/**` (Deno) + `e2e/specs/**` (Playwright) | 14 |
 
-### 3. Defensa extra (opcional, recomendado)
-En `handleEliminar`, antes de `mutateAsync`, re-validar `tieneDependencias` por si el estado cambió entre carga y click. Si ahora existe, abortar con `notifyError`.
+Todos se lanzan a la vez con `acp_subagent--spawn_agent` (modelo `capable` por la profundidad analítica). Mientras corren, yo en paralelo ejecuto:
+- `bun run audit:tests` para capturar violaciones de higiene actuales.
+- `rg` para detectar patrones globales: `expect(true)`, `toBeDefined\(\)\s*$`, `\.skip\(`, `\.only\(`, `waitForTimeout\(`, etc.
+- Conteo de `expect()` por archivo para detectar tests sin aserciones reales.
 
-### 4. Changelog y versión
-- `CHANGELOG.md`: nueva entrada `[12.61.13]` describiendo el bloqueo preventivo.
-- `src/constants/appVersion.ts`: bump a `12.61.13`.
+## Consolidación
+Cuando lleguen los 7 reportes:
+1. Deduplicar hallazgos solapados.
+2. Agrupar por severidad y por área.
+3. Generar `docs/audit-tests-2026-06-08.md` con:
+   - Resumen ejecutivo (totales por severidad).
+   - Top 20 hallazgos `CRITICAL` / `HIGH` con cita exacta.
+   - Tabla completa por área.
+   - Recomendaciones de remediación priorizadas.
+   - Lista de tests candidatos a eliminar (muertos / tautológicos).
+4. Actualizar `CHANGELOG.md` y `APP_VERSION` (bump patch) según `mem://instructions/changelog-updates`.
 
-## Detalles técnicos
-- Usar `supabase.from('facturas').select('folio, serie, estatus', { count: 'exact' }).eq('embarque_id', id).limit(20)` para obtener tanto conteo como folios en una sola query.
-- Filtrar NC y pagos solo si hay facturas (evitar `.in('factura_id', [])` vacío).
-- Respetar `power-of-10`: cleanup no aplica (es react-query), manejar `error` de cada query, sin `any`.
-- Sin cambios en lógica de backend ni en el RPC `eliminarEmbarqueRpc`.
+## Lo que NO incluye este plan
+- **No** se modifican tests ni código de producción — es solo auditoría/reporte.
+- **No** se ejecuta la suite completa de tests (eso es trabajo del CI).
+- Si quieres remediar después, hacemos un plan separado priorizando los `CRITICAL`/`HIGH`.
 
-## Fuera de alcance
-- Modificar el RPC de eliminación en Postgres (la guardia es en UI/UX; el RPC sigue siendo la última defensa vía FKs).
-- Permitir "cancelar todo en cascada" desde el diálogo.
+## Entregable
+Un único archivo: `docs/audit-tests-2026-06-08.md`, más el bump de versión y entrada en el changelog.

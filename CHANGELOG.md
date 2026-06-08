@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.15] - 2026-06-08
+- **chore(tests) — auditoría completa de la suite (308 archivos)**: ejecutada con 7 subagentes paralelos sobre `src/**`, `supabase/functions/**` y `e2e/specs/**`. Resultado: **93 hallazgos** (8 CRITICAL, 30 HIGH, 36 MEDIUM, 19 LOW) distribuidos en 57 archivos. Reporte completo en `docs/audit-tests-2026-06-08.md` con priorización por sprints. Hallazgos top: 3 tests que **copian código en lugar de importarlo** (`sentry.test.ts`, `useAdminOrgDetalle.test.ts`, `parse-csf/validate_test.ts`); 2 tests sin aserción real (`descargarPdf.test.ts`, `BreadcrumbContext.test.tsx:27` con `expect(true).toBe(true)`); 4 mocks ad-hoc de Supabase en `features/auditoria/services` que deben migrarse a `createSupabaseMock`; `aUSD(_, "MXN", 0, _)` produce `Infinity` sin test que lo detecte; 10 tests de Documents PDF que sólo verifican que el stub se monta sin validar contenido; 6 barrel-tests con sólo `toBeDefined()`. La higiene automática (`bun run audit:tests`) sigue limpia: 0 `.only`/`.skip` huérfanos, 1 título duplicado conocido. No se modificaron tests; sólo se generó el reporte.
+
 ## [12.61.14] - 2026-06-08
 - **ux(cotizaciones) — estado global isProcessing en wizard**: `CotizacionWizardLayout` envuelve `handleSiguiente`/`handleGuardar` en un estado local `isProcessing` que, combinado con `w.isPending`, deshabilita visualmente el botón "Siguiente/Guardar", el botón "Anterior/Cancelar" y el botón "Volver" del header mientras se valida y persiste cada paso. Evita doble envío durante uploads (MSDS), validaciones y mutaciones. El label del botón principal muestra "Procesando..." en pasos 1-3 y "Guardando..." en el paso final.
 
