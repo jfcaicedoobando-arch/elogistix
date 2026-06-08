@@ -27,7 +27,7 @@ describe("validateWizardStep", () => {
     expect(errors).toEqual({});
   });
 
-  it("step 3: valida tamaño/tipo de archivos", () => {
+  it("step 3: archivo válido (PDF pequeño) no genera errores", () => {
     const errors = validateWizardStep({
       step: 3,
       values: {},
@@ -37,12 +37,20 @@ describe("validateWizardStep", () => {
       conceptosVenta: [],
       conceptosCosto: [],
     });
-    // Sin cumplir todos los documentos requeridos, el validador devuelve un
-    // objeto plano (no null/array) con al menos una clave de error.
-    expect(errors).not.toBeNull();
-    expect(Array.isArray(errors)).toBe(false);
-    expect(typeof errors).toBe("object");
-    expect(Object.keys(errors).length).toBeGreaterThan(0);
+    expect(errors).toEqual({});
+  });
+
+  it("step 3: archivo con MIME no permitido genera error puntual", () => {
+    const malo = new File(["x"], "f.exe", { type: "application/x-msdownload" });
+    const errors = validateWizardStep({
+      step: 3,
+      values: {},
+      documentosArchivos: { factura: malo },
+      conceptosVenta: [],
+      conceptosCosto: [],
+    });
+    expect(Object.keys(errors)).toEqual(["factura"]);
+    expect(typeof errors.factura).toBe("string");
   });
 
   it("step desconocido retorna vacío", () => {
