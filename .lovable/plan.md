@@ -1,45 +1,50 @@
-## Objetivo
-Endurecer la cadena `VirtualDataTable → useVirtualTableState → VirtualRowsContainer` para garantizar consistencia de filas visibles bajo scroll rápido + cambios de `data` (filtros), sin mutar ningún estado externo. Documentar el contrato de inmutabilidad.
+## Contexto
+Tras inspeccionar la base de código se encontró que `src/pdf/render/descargarPdf.ts` ya implementa el patrón defensivo (`try/finally` + `setTimeout(..., 4000)` para `URL.revokeObjectURL`). Sin embargo, existen 5 sitios adicionales que crean un blob URL para descarga directa y revocan la URL de forma inmediata o sin bloque `finally`, lo que puede provocar fugas de memoria si el navegador no alcanza a iniciar la descarga antes de la revocación.
 
-## Diagnóstico
-- `VirtualDataTable.tsx` ya es un ensamblador delgado: NO toca estado de filtros (los filtros se aplican aguas arriba y el componente recibe `data` ya filtrada). El riesgo real está en la condición de carrera entre `virtualizer.getVirtualItems()` (calculado con el `count` anterior) y un re-render donde `rows.length` se redujo: `rows[vi.index]` puede ser `undefined` → React crash (`Cannot read properties of undefined (reading 'id')` en `VirtualRowsContainer`).
-- `useVirtualizer` no recibe `getItemKey`; cuando `rows` reordena (cambio de sort/filtro), las keys absolutas dependen de `rows[vi.index].id`, y si el `vi.index` queda fuera de rango se cae.
-- No hay JSDoc explícito que prohíba mutar `data`/filtros desde callbacks de scroll.
+## Alcance
+1. Extraer una función helper reutilizable `descargarBlob` con el patrón defensivo existente.
+2. Refactorizar los 5 sitios identificados para usar esta helper en lugar de duplicar la lógica de anclaje + revocación.
+3. Agregar tests unitarios para la nueva helper.
+4. Actualizar `CHANGELOG.md` y `APP_VERSION`.
 
-## Cambios
+## Archivos a modificar
 
-### 1. `src/components/shared/VirtualRowsContainer.tsx`
-- Memoizar la lista de items renderizables con `useMemo`:
-  - Filtrar `virtualItems` quedándose sólo con los que tienen `rows[vi.index]` definido.
-  - Dependencias: `[virtualItems, rows]`.
-- Si la lista queda vacía después del filtro, retornar el wrapper con `height: virtualizer.getTotalSize()` y `null` adentro (preserva el espacio del scroll, evita parpadeo).
-- Comentario explicativo: el guard cubre la ventana entre `virtualizer.getVirtualItems()` (snapshot stale) y el render cuando `data` se redujo por un filtro aplicado durante un scroll rápido.
+### Nueva helper
+- `src/lib/downloadBlob.ts` — Función helper que encapsula: creación del `<a>`, `.click()`, remoción del nodo y `URL.revokeObjectURL(url)` dentro de un `finally` con `setTimeout` de 4 s.
 
-### 2. `src/components/shared/dataTable/useVirtualTableState.ts`
-- Añadir `getItemKey` estable al `useVirtualizer`:
-  ```ts
-  getItemKey: useCallback((index: number) => rows[index]?.id ?? index, [rows])
-  ```
-  Esto hace que la identidad del virtual item sobreviva a reordenamientos (sort cliente) y que el virtualizer no recicle alturas de filas equivocadas durante el scroll rápido.
-- Mantener el resto idéntico (no cambia el shape público).
+### Refactors
+- `src/hooks/portal/usePortalDocumentDownload.ts` — Usa `descargarBlob(blob, filename)` en lugar del flujo manual actual.
+- `src/lib/csv/downloadCsvTemplate.ts` — Usa `descargarBlob(blob, fileName)` en lugar del flujo manual.
+- `src/generators/exportCsv.ts` — Usa `descargarBlob(blob, filename)`.
+- `src/pages/profit/ProfitDashboardEjecutivo.tsx` — Usa `descargarBlob(blob, nombreArchivo)`.
+- `src/features/embarques/hooks/useEmbarqueDocumentosActions.ts` — Usa `descargarBlob(blob, fileName)`.
 
-### 3. `src/components/shared/VirtualDataTable.tsx`
-- Ampliar el JSDoc del módulo con dos garantías explícitas:
-  1. `data` DEBE venir ya filtrada e inmutable — el componente nunca dispara mutaciones de filtros desde callbacks de scroll.
-  2. Bajo scroll rápido + cambio simultáneo de `data`, el contenedor filtra defensivamente los índices fuera de rango para no romper el árbol.
-- Sin cambios de comportamiento ni de props.
+### Tests
+- `src/lib/__tests__/downloadBlob.test.ts` — Verifica que se crea el `<a>`, se invoca `.click()`, se programa la revocación con delay y se ejecuta `URL.revokeObjectURL`.
 
-### 4. Test nuevo — `src/components/shared/__tests__/VirtualRowsContainer.test.tsx`
-- Render con `virtualItems` que contiene índices fuera de rango (simulando race) y verificar:
-  - No lanza.
-  - Renderiza solo las filas existentes.
-- Mockear `Virtualizer` mínimo (`getTotalSize`, `measureElement`).
+### Versionado
+- `src/constants/appVersion.ts` — Bump a `12.61.8`.
+- `CHANGELOG.md` — Entrada `[12.61.8]` con descripción del cambio.
 
-### 5. Versionado
-- `src/constants/appVersion.ts` → `12.61.7`.
-- `CHANGELOG.md`: entrada `## [12.61.7] - 2026-06-08`.
+## Detalle técnico
 
-## Notas técnicas
-- Sin cambios al estado de filtros ni al hook `useListPageState` (URL-synced con nuqs sigue siendo la única fuente).
-- `getItemKey` reduce el churn de medición/identidad cuando cambia el orden/filtrado.
-- El guard `rows[vi.index]` previene crashes intermitentes reportados al filtrar mientras se hace scroll inercial.
+```text
+Patrón actual en descargarPdf.ts (ya correcto):
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+Patrón incorrecto en los 5 sitios (ejemplo):
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);   // revocación inmediata, sin finally
+```
+
+La helper `descargarBlob(blob: Blob, nombreArchivo: string)` unificará el patrón correcto y eliminará la duplicación.
