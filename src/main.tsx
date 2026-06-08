@@ -39,6 +39,16 @@ window.addEventListener("unhandledrejection", (event) => {
   tryReloadForChunkError();
 });
 
+// React.lazy con un chunk stale lanza síncronamente dentro del reconciler
+// (`Cannot read properties of undefined (reading 'default')`). Ese error no
+// pasa por `unhandledrejection` ni por `vite:preloadError`, así que lo
+// capturamos por `window.onerror` y disparamos el reload de recuperación.
+window.addEventListener("error", (event) => {
+  if (!isDynamicImportError(event.error ?? event.message)) return;
+  event.preventDefault();
+  tryReloadForChunkError();
+});
+
 window.addEventListener("load", () => {
   clearChunkReloadFlag();
 });
