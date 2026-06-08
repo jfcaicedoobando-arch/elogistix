@@ -125,6 +125,21 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const handleSave = async () => {
     if (!id || !embarque) return;
     try {
+      const contenedoresActuales = methods.getValues('contenedores') ?? [];
+      // Validación: cuando es Marítimo, cada contenedor requiere número y tipo.
+      const modoActual = methods.getValues('modo');
+      if (modoActual === 'Marítimo' && contenedoresActuales.some(
+        (c) => !c.numero_contenedor.trim() || !c.tipo_contenedor.trim(),
+      )) {
+        notifyError(toast, {
+          title: "Faltan datos de contenedores",
+          description: "Cada contenedor requiere número y tipo. Revisa el paso 2.",
+          method: "HANDLE_SAVE",
+        });
+        setCurrentStep(2);
+        return;
+      }
+
       const nuevoEmbarquePayload = buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '');
       const nuevosVenta = buildConceptosVentaPayload(conceptosVenta);
       const nuevosCosto = buildConceptosCostoPayload(conceptosCosto, proveedoresDb);
@@ -138,7 +153,6 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
       const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
 
-      const contenedoresActuales = methods.getValues('contenedores') ?? [];
       await updateEmbarque.mutateAsync({
         id,
         embarque: nuevoEmbarquePayload,
