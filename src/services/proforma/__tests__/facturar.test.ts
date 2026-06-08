@@ -44,7 +44,7 @@ describe("marcarProformaFacturada", () => {
     const first = Array.isArray(payload) ? payload[0] : payload!;
     expect(first.fecha_emision).toBe("2026-01-31");
     expect(first.fecha_vencimiento).toBe("2026-03-02");
-    expect(first.folio_externo).toBe("A-100");
+    expect(first.numero).toBe("A-100");
   });
 
   it("crea factura USD y MXN cuando ambos totales > 0", async () => {
