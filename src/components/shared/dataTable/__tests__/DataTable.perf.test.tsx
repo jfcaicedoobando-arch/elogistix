@@ -98,8 +98,8 @@ describe("Perf — DataTable (paginado, ~50 filas por vista)", () => {
     const { median } = measureMedian("DataTable mount 50", () => {
       render(<DataTable columns={cols} data={data} rowKey={(r) => r.id} />);
     });
-    // Ceiling generoso (~2× del observado local). Catch regresión catastrófica.
-    expect(median).toBeLessThan(250);
+    // Ceiling generoso ajustado para runners de 1 núcleo (CI shards).
+    expect(median).toBeLessThan(500);
   });
 
   it("rerender con MISMA referencia de data es sustancialmente más barato que el mount", () => {
