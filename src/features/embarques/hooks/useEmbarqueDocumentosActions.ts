@@ -11,6 +11,7 @@ import {
   type DocumentoEmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { descargarBlob } from "@/lib/downloadBlob";
 
 /**
  * Hook focalizado en la gestión de documentos del embarque (upload/download/delete).
@@ -88,15 +89,8 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       const response = await fetch(url);
       if (!response.ok) throw new Error("Error al descargar el archivo");
       const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
       const fileName = rutaArchivo.split("/").pop() ?? "documento";
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
+      descargarBlob(blob, fileName);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al descargar", description: getErrorMessage(err), error: err, method: "HANDLE_DOWNLOAD" });
     } finally {
