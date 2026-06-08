@@ -93,7 +93,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
                     <ul className="mt-1 list-disc pl-5 text-muted-foreground">
                       {deps.cxc.facturas.map((f) => (
                         <li key={f.id}>
-                          {formatoFolio(f)}{f.estatus ? ` — ${f.estatus}` : ''}
+                          {formatoFolio(f)}{f.estado ? ` — ${f.estado}` : ''}
                         </li>
                       ))}
                       {deps.cxc.count > deps.cxc.facturas.length && (
@@ -111,7 +111,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
                     <ul className="mt-1 list-disc pl-5 text-muted-foreground">
                       {deps.cxp.facturas.map((f) => (
                         <li key={f.id}>
-                          {formatoFolio(f)}{f.estatus ? ` — ${f.estatus}` : ''}
+                          {formatoFolio(f)}{f.estado ? ` — ${f.estado}` : ''}
                         </li>
                       ))}
                       {deps.cxp.count > deps.cxp.facturas.length && (
