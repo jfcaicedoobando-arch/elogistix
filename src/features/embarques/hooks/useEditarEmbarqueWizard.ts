@@ -9,7 +9,6 @@ import {
   useUpdateEmbarque,
 } from "@/features/embarques/hooks/useEmbarques";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
-import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +17,7 @@ import { useConceptosForm } from "@/hooks/cotizacion";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
 import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
-import { resolverValorContactoDesdeTexto } from "@/lib/contacto";
+import { useHidratacionEditarEmbarque } from "./useHidratacionEditarEmbarque";
 
 /**
  * Controller hook para la página EditarEmbarque.
