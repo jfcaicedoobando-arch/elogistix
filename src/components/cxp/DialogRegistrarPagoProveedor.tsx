@@ -1,9 +1,6 @@
 /**
- * Registrar pago a proveedor — versión reescrita.
- * - Dialog scrollable (lg) con footer sticky.
- * - Secciones: Fecha/Método, Monto/Moneda/TC, Diferencia cambiaria (cuando aplica),
- *   Referencia/Notas.
- * - Resumen "Saldo restante" en vivo.
+ * Registrar pago a proveedor.
+ * Helpers de método (SPEI/SWIFT) extraídos a pagoProveedorHelpers.ts.
  */
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +21,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { useRegistrarPagoProveedor } from "@/hooks/cxp";
 import type { FacturaCxP } from "@/services/cxp";
 import type { Database } from "@/integrations/supabase/types";
+import { metodosFor, defaultMetodo, referenciaHint } from "./pagoProveedorHelpers";
+import { FormSection } from "./facturaFormPrimitives";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -31,38 +30,6 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   factura: FacturaCxP | null;
-}
-
-const METODOS_NACIONAL = ["SPEI", "Transferencia", "Cheque", "Efectivo", "Tarjeta", "Otro"] as const;
-const METODOS_EXTRANJERO = ["Transferencia internacional", "Transferencia", "Cheque", "Otro"] as const;
-
-function metodosFor(origen: "Nacional" | "Extranjero" | null): readonly string[] {
-  if (origen === "Extranjero") return METODOS_EXTRANJERO;
-  return METODOS_NACIONAL;
-}
-
-function defaultMetodo(origen: "Nacional" | "Extranjero" | null): string {
-  if (origen === "Extranjero") return "Transferencia internacional";
-  if (origen === "Nacional") return "SPEI";
-  return "Transferencia";
-}
-
-function referenciaHint(metodo: string): string {
-  if (metodo === "SPEI") return "Clave de rastreo SPEI (18 dígitos)";
-  if (metodo === "Transferencia internacional") return "Referencia SWIFT / MT103";
-  if (metodo === "Cheque") return "Número de cheque";
-  return "Folio bancario, número de cheque…";
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
 }
 
 export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Props) {
@@ -134,9 +101,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Registrar pago a proveedor</DialogTitle>
           <DialogDescription>
-            {factura
-              ? `Factura ${factura.folio_proveedor} — ${factura.proveedor_nombre}`
-              : ""}
+            {factura ? `Factura ${factura.folio_proveedor} — ${factura.proveedor_nombre}` : ""}
           </DialogDescription>
           {factura && (
             <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
@@ -151,7 +116,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-          <Section title="Fecha y método">
+          <FormSection title="Fecha y método">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Fecha de pago</Label>
@@ -167,19 +132,14 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
                 </Select>
               </div>
             </div>
-          </Section>
+          </FormSection>
 
-          <Section title="Monto">
-            <div className={cn(
-              "grid grid-cols-1 gap-3",
-              showTc ? "sm:grid-cols-3" : "sm:grid-cols-2",
-            )}>
+          <FormSection title="Monto">
+            <div className={cn("grid grid-cols-1 gap-3", showTc ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
               <div className="space-y-1">
                 <Label>Monto</Label>
-                <Input
-                  type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                  value={monto} onChange={(e) => setMonto(e.target.value)}
-                />
+                <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+                  value={monto} onChange={(e) => setMonto(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label>Moneda pago</Label>
@@ -195,18 +155,14 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
               {showTc && (
                 <div className="space-y-1">
                   <Label>Tipo de cambio</Label>
-                  <Input
-                    type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                    value={tc} onChange={(e) => setTc(e.target.value)}
-                  />
+                  <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+                    value={tc} onChange={(e) => setTc(e.target.value)} />
                 </div>
               )}
             </div>
 
             <div className="rounded-lg border bg-muted/40 px-4 py-3 flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">
-                Saldo restante tras el pago
-              </span>
+              <span className="text-sm font-medium text-muted-foreground">Saldo restante tras el pago</span>
               <span className={cn(
                 "text-lg font-semibold tabular-nums",
                 excede ? "text-destructive" : saldoRestante === 0 ? "text-success" : "text-foreground",
@@ -214,47 +170,35 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
                 {factura ? formatCurrency(saldoRestante, factura.moneda) : "—"}
               </span>
             </div>
-            {excede && (
-              <p className="text-xs text-destructive">
-                El monto excede el saldo pendiente.
-              </p>
-            )}
-          </Section>
+            {excede && <p className="text-xs text-destructive">El monto excede el saldo pendiente.</p>}
+          </FormSection>
 
           {esUsdPagadoEnMxn && (
-            <Section title="Diferencia cambiaria">
+            <FormSection title="Diferencia cambiaria">
               <div className="space-y-1">
                 <Label>Diferencia cambiaria MXN (opcional)</Label>
-                <Input
-                  type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                  value={diffMxn}
-                  onChange={(e) => setDiffMxn(e.target.value)}
-                />
+                <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+                  value={diffMxn} onChange={(e) => setDiffMxn(e.target.value)} />
                 <p className="text-xs text-muted-foreground">
                   Captura la diferencia cambiaria entre el TC de la factura y el TC del pago.
                 </p>
               </div>
-            </Section>
+            </FormSection>
           )}
 
-          <Section title="Referencia y notas">
+          <FormSection title="Referencia y notas">
             <div className="space-y-1">
               <Label>Referencia</Label>
-              <Input
-                value={referencia}
-                onChange={(e) => setReferencia(e.target.value)}
-                placeholder={referenciaHint(metodo)}
-              />
+              <Input value={referencia} onChange={(e) => setReferencia(e.target.value)}
+                placeholder={referenciaHint(metodo)} />
               <p className="text-[11px] text-muted-foreground">{referenciaHint(metodo)}</p>
             </div>
             <div className="space-y-1">
               <Label>Notas</Label>
-              <Textarea
-                value={notas} onChange={(e) => setNotas(e.target.value)} rows={2}
-                placeholder="Observaciones internas…"
-              />
+              <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2}
+                placeholder="Observaciones internas…" />
             </div>
-          </Section>
+          </FormSection>
         </div>
 
         <div className="px-6 py-4 border-t flex justify-end gap-2 bg-background">

@@ -6,8 +6,6 @@ import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { formatCurrency } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor } from "@/hooks/cxp";
 import { buildCxPColumns } from "@/components/cxp/cxpColumns";
@@ -15,35 +13,11 @@ import { DialogNuevaFacturaProveedor } from "@/components/cxp/DialogNuevaFactura
 import { DialogRegistrarPagoProveedor } from "@/components/cxp/DialogRegistrarPagoProveedor";
 import { DialogDetallePagosProveedor } from "@/components/cxp/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/components/cxp/CxpFiltros";
+import { CxpKpiCards } from "@/components/cxp/CxpKpiCards";
 import { useCobranza } from "@/hooks/facturacion";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
-
-function KPICard({
-  label, value, count, tone = "default",
-}: {
-  label: string; value: string; count?: number;
-  tone?: "default" | "warn" | "danger";
-}) {
-  const toneCls = tone === "danger" ? "text-destructive"
-    : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <span>{label}</span>
-          {count != null && (
-            <span className="text-[10px] text-muted-foreground/70">
-              · {count} {count === 1 ? "factura" : "facturas"}
-            </span>
-          )}
-        </p>
-        <p className={cn("text-lg font-semibold tabular-nums", toneCls)}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function Cxp() {
   const { canEdit, isAdmin } = usePermissions();
@@ -65,19 +39,6 @@ export default function Cxp() {
     fecha_hasta: fechaHasta || undefined,
   });
   const { data: cxc = [] } = useCobranza({});
-
-  // Conteos por categoría para enriquecer KPIs.
-  const counts = useMemo(() => {
-    let porPagarMxn = 0, porPagarUsd = 0;
-    let vencidasN = 0, porVencer7d = 0;
-    for (const f of data) {
-      if (f.saldo <= 0) continue;
-      if (f.moneda === "USD") porPagarUsd++; else porPagarMxn++;
-      if (f.estatus === "Vencida") vencidasN++;
-      if (f.estatus === "Por vencer") porVencer7d++;
-    }
-    return { porPagarMxn, porPagarUsd, vencidasN, porVencer7d };
-  }, [data]);
 
   const handlePdf = async () => {
     await descargarPdf(
@@ -134,30 +95,7 @@ export default function Cxp() {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <KPICard
-          label="Por pagar MXN"
-          value={formatCurrency(kpis.por_pagar_mxn, "MXN")}
-          count={counts.porPagarMxn}
-        />
-        <KPICard
-          label="Por pagar USD"
-          value={formatCurrency(kpis.por_pagar_usd, "USD")}
-          count={counts.porPagarUsd}
-        />
-        <KPICard
-          label="Vencido"
-          value={`${formatCurrency(kpis.vencido_mxn, "MXN")} · ${formatCurrency(kpis.vencido_usd, "USD")}`}
-          count={counts.vencidasN}
-          tone="danger"
-        />
-        <KPICard
-          label="Por vencer 7 días"
-          value={`${formatCurrency(kpis.por_vencer_7d_mxn, "MXN")} · ${formatCurrency(kpis.por_vencer_7d_usd, "USD")}`}
-          count={counts.porVencer7d}
-          tone="warn"
-        />
-      </div>
+      <CxpKpiCards kpis={kpis} data={data} />
 
       <Card>
         <CardContent className="p-4">
