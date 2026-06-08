@@ -23,6 +23,7 @@ import type { FacturaCxP } from "@/services/cxp";
 import type { Database } from "@/integrations/supabase/types";
 import { metodosFor, defaultMetodo, referenciaHint } from "./pagoProveedorHelpers";
 import { FormSection } from "./facturaFormPrimitives";
+import { PagoFacturaHeaderInfo, PagoSaldoRestante } from "./PagoProveedorBits";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -103,16 +104,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
           <DialogDescription>
             {factura ? `Factura ${factura.folio_proveedor} — ${factura.proveedor_nombre}` : ""}
           </DialogDescription>
-          {factura && (
-            <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-              <span>Saldo: <strong className="text-foreground tabular-nums">
-                {formatCurrency(factura.saldo, factura.moneda)}
-              </strong></span>
-              <span>Total: <strong className="text-foreground tabular-nums">
-                {formatCurrency(factura.total, factura.moneda)}
-              </strong></span>
-            </div>
-          )}
+          {factura && <PagoFacturaHeaderInfo factura={factura} />}
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
@@ -161,16 +153,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
               )}
             </div>
 
-            <div className="rounded-lg border bg-muted/40 px-4 py-3 flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Saldo restante tras el pago</span>
-              <span className={cn(
-                "text-lg font-semibold tabular-nums",
-                excede ? "text-destructive" : saldoRestante === 0 ? "text-success" : "text-foreground",
-              )}>
-                {factura ? formatCurrency(saldoRestante, factura.moneda) : "—"}
-              </span>
-            </div>
-            {excede && <p className="text-xs text-destructive">El monto excede el saldo pendiente.</p>}
+            <PagoSaldoRestante factura={factura} saldoRestante={saldoRestante} excede={excede} />
           </FormSection>
 
           {esUsdPagadoEnMxn && (
