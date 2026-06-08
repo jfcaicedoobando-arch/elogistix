@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info } from "lucide-react";
@@ -35,6 +35,19 @@ export default function CotizacionWizardLayout({
 }: CotizacionWizardLayoutProps) {
   const { form } = w;
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const isBusy = isProcessing || w.isPending;
+
+  const runProcessing = useCallback(async (fn: () => unknown | Promise<unknown>) => {
+    if (isBusy) return;
+    setIsProcessing(true);
+    try { await fn(); } finally { setIsProcessing(false); }
+  }, [isBusy]);
+
+  const handleNext = useCallback(() => { void runProcessing(w.handleSiguiente); }, [runProcessing, w.handleSiguiente]);
+  const handleSave = useCallback(() => { void runProcessing(w.handleGuardar); }, [runProcessing, w.handleGuardar]);
+  const handleBack = useCallback(() => { if (!isBusy) w.handleBack(); }, [isBusy, w.handleBack]);
+  const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,7 +64,7 @@ export default function CotizacionWizardLayout({
       <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
         <div className="flex-none border-b bg-background p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver">
+            <Button variant="ghost" size="icon" onClick={handleTopBack} aria-label="Volver" disabled={isBusy}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -122,10 +135,11 @@ export default function CotizacionWizardLayout({
         <CotizacionWizardFooter
           currentStep={w.currentStep}
           isPending={w.isPending}
+          isProcessing={isProcessing}
           saveLabel={saveLabel}
-          onBack={w.handleBack}
-          onNext={w.handleSiguiente}
-          onSave={w.handleGuardar}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSave={handleSave}
         />
       </div>
     </FormProvider>
