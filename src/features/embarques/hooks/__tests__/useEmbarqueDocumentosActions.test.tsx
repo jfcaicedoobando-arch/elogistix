@@ -67,7 +67,7 @@ describe("useEmbarqueDocumentosActions", () => {
     expect(registrarActividadFn).toHaveBeenCalledWith(
       expect.objectContaining({ accion: "subir_documento", entidad_id: "e-1" }),
     );
-    expect(toastFn).toHaveBeenCalled();
+    expect(sonnerSuccess).toHaveBeenCalled();
   });
 
   it("handleDownload obtiene signed URL, descarga blob y resetea downloadingDocId", async () => {
@@ -99,7 +99,7 @@ describe("useEmbarqueDocumentosActions", () => {
     await act(async () => {
       await result.current.handleDownload("embarques/e-1/factura.pdf", "doc-factura");
     });
-    await waitFor(() => expect(toastFn).toHaveBeenCalled());
+    await waitFor(() => expect(sonnerError).toHaveBeenCalled());
     expect(result.current.downloadingDocId).toBeNull();
   });
 
