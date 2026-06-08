@@ -56,10 +56,15 @@ export function calcularTotalesProforma(
     (s, c) => s + Number(c.cantidad) * Number(c.precio_unitario),
     0,
   );
-  const iva_mxn = mxn.reduce(
-    (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
-    0,
-  );
+  // MXN siempre lleva IVA: si la fila trae `tasa_iva_aplicada`, se respeta;
+  // de lo contrario se aplica la tasa global (ignorando `aplica_iva`).
+  const iva_mxn = mxn.reduce((s, c) => {
+    const sub = Number(c.cantidad) * Number(c.precio_unitario);
+    const tasa = c.tasa_iva_aplicada != null && Number.isFinite(c.tasa_iva_aplicada)
+      ? Number(c.tasa_iva_aplicada)
+      : tasaIva;
+    return s + calcularIVA(sub, tasa);
+  }, 0);
 
   return {
     subtotal_usd,

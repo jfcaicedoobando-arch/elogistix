@@ -1,88 +1,78 @@
-# Plan de Remediación — Tests 🔴 CRITICAL + 🟠 HIGH
+# Sprint 2.1 — Estabilización de Tests CI
 
-Basado en `docs/audit-tests-2026-06-08.md` (93 hallazgos, 57 archivos).
-Alcance: **8 CRITICAL + 30 HIGH = 38 hallazgos** distribuidos en 6 módulos.
-Total estimado: **~6.5 días-dev** repartidos en 2 sprints.
+Resolver los 10 fallos detectados en las shards 1/5/6/11/13 sin abrir nuevo scope. Todas las fallas son regresiones introducidas durante Sprint 2 más deuda nueva del feature de eliminación de embarques.
 
-## Resumen de impacto por módulo
+## Diagnóstico por grupo
 
-| Módulo | Archivos | 🔴 | 🟠 | Esfuerzo | Riesgo si NO se arregla | Responsable sugerido |
-|---|---:|---:|---:|---:|---|---|
-| `features/auditoria/services` | 5 | 4 | 1 | 1.0 d | Servicios de auditoría con mocks rotos → regresiones silenciosas en RLS/multi-tenant | Backend / Auditoría |
-| `pdf/documents` + `pdf/theme` + `pdf/render` | 14 | 1 | 13 | 2.0 d | Documentos PDF (cotización, proforma, EERR, rentabilidad) sin validar contenido → folios/totales pueden corromperse sin que el CI lo detecte | PDF / Reportes |
-| `services/*` (barrels + organization + notificaciones) | 8 | 0 | 7 | 1.0 d | Mocks compartidos con estado mutable → tests verdes con orden distinto; barrels que sólo duplican typecheck | Backend / Services |
-| `hooks` + `contexts` | 5 | 2 | 4 | 1.0 d | Hooks críticos (proformas, tracking, profit, admin org) sólo verifican `defined` → regresiones funcionales invisibles | Frontend / Hooks |
-| `lib/financial` + `lib/parsers` + `lib/mappers` | 4 | 1 | 3 | 1.0 d | `aUSD` con `tcUSD=0 → Infinity` propaga a totales financieros; títulos duplicados; NaN no cubierto | Financiero |
-| `supabase/functions/parse-csf` | 1 | 1 | 0 | 0.5 d | Validador de CSF replicado localmente → divergencia con producción | Edge Functions |
-| **TOTAL** | **37** | **8** | **30** | **~6.5 d** | | |
+### G1 · Regresión IVA en MXN (2 tests)
+**Archivos productivos:**
+- `src/lib/domain/proforma.ts` (línea 56)
+- `src/hooks/cotizacion/usePortalCotizacionDetalle.ts` (línea 28)
 
----
+**Causa:** ambos usan `resolverTasaConcepto(c, tasaIva)` para MXN. Esa helper devuelve `0` cuando `aplica_iva` es `false`/`undefined` y `tasa_iva_aplicada` no está seteada. El contrato de dominio dice "MXN siempre lleva IVA".
 
-## Sprint 1 — CRITICAL (1.5 días, P0)
+**Fix:** para conceptos MXN ignorar el flag y usar `tasaIva` global directo:
+```ts
+const tasa = c.tasa_iva_aplicada ?? tasaIva; // MXN siempre aplica
+```
+USD mantiene `resolverTasaConcepto` + overrides.
 
-### T1 · Eliminar copias locales de funciones bajo prueba (C-1) — 3 h · Backend
-- `src/lib/__tests__/sentry.test.ts` → exportar e importar `isReactRefreshHmrError` / `isReactRefreshStackTrace`.
-- `src/hooks/__tests__/useAdminOrgDetalle.test.ts` → importar hook real; eliminar `groupConfigByCategoria`/`MemberRow` redefinidos.
-- `supabase/functions/parse-csf/validate_test.ts` → importar `validateFile` desde el módulo real.
+### G2 · Mock roto en exportCsv (4 tests)
+**Archivo test:** `src/generators/__tests__/exportCsv.test.ts`
 
-### T2 · Reparar tests sin aserción real (C-2) — 1 h · QA
-- `src/pdf/render/__tests__/descargarPdf.test.ts` → llamar a `descargarPdf` y validar el resultado (Blob/llamada a `saveAs`).
-- `src/contexts/__tests__/BreadcrumbContext.test.tsx` → reemplazar `expect(true).toBe(true)` por aserción sobre `result.current.crumbs`.
+**Causa:** el spy de `document.createElement('a')` devuelve un objeto plano. Tras centralizar `descargarBlob` (12.61.8) ahora se llama `document.body.appendChild(a)` que requiere un Node real.
 
-### T3 · Migrar mocks ad-hoc de `auditoria/services` a `createSupabaseMock` (C-3) — 4 h · Backend
-- `comentarios.test.ts`, `revisiones.test.ts`, `snapshots.test.ts`, `snooze.test.ts` → usar `src/test/utils/_supabaseChainMock.ts` (ver `mem://technical/testing-mock-patterns`).
+**Fix:** sustituir el mock por uno que extienda un `<a>` real:
+```ts
+const a = document.createElement.call(document, 'a') as HTMLAnchorElement;
+const origClick = a.click; a.click = () => { lastClicked = { href: a.href, download: a.download }; };
+return a;
+```
+O mockear `descargarBlob` directamente y assertir parámetros (filename + Blob). Preferimos lo segundo: aísla mejor y elimina dependencia del DOM.
 
-### T4 · Cubrir edge case `aUSD(tcUSD=0)` (C-4) — 1 h · Financiero
-- `src/lib/financial/__tests__/costosUSD.test.ts` → agregar test `aUSD(100, "MXN", 0, _)` esperando comportamiento controlado (throw / 0 / `null`) según política a definir con dominio.
+### G3 · Hook con import directo a Supabase (1 test arch)
+**Archivo nuevo:** `src/features/embarques/hooks/useEmbarqueDependenciasFinancieras.ts`
 
----
+**Fix:** mover el fetch a `src/services/embarques/dependenciasFinancieras.ts` exportando `fetchEmbarqueDependenciasFinancieras(embarqueId)`. El hook queda como wrapper de `useQuery` consumiendo el service. Esto también elimina los dos casts HIGH (líneas 44-45) porque el service tipa el `select` correctamente.
 
-## Sprint 2 — HIGH (5 días, P1)
+### G4 · Casts HIGH residuales (2 hits)
+**Archivo:** `src/lib/parsers/cotizacionDetalle.ts:22-23`
+```ts
+conceptosVentaUSD: Object.freeze([]) as unknown as ConceptoVentaCotizacion[],
+```
+**Fix:** marcar con `// SAFE-CAST: array vacío congelado, sin riesgo runtime` o tipar el helper genérico:
+```ts
+const EMPTY_CV = Object.freeze<ConceptoVentaCotizacion[]>([]);
+```
+Preferimos la 2ª: elimina el cast.
 
-### T5 · Eliminar/reemplazar 6 barrel-tests (H-1) — 2 h · Backend
-- Borrar `index.test.ts` en `services/comisiones`, `cxp`, `presupuesto`, `profit`, `tesoreria` y `features/auditoria/services`.
+### G5 · Archivos > 200 líneas (2 tests)
+| Archivo | Líneas | Acción |
+|---|---|---|
+| `src/features/embarques/components/StepCostosPrecios.tsx` | 274 | Split: extraer `CostosPreciosTabla.tsx` (render filas) y `useStepCostosPrecios.ts` (estado/handlers) |
+| `src/services/facturas/cobranza.ts` | 224 | Split: separar `cobranzaQueries.ts` (reads) y `cobranzaMutations.ts` (writes) |
+| `src/features/embarques/components/DialogEliminarEmbarque.tsx` | 208 | Split: extraer `DialogEliminarEmbarqueBody.tsx` (contenido) del shell del Dialog |
+| `src/lib/csv/parseCsv.ts` | 206 | Split: mover `toCsv` y helpers de escape a `src/lib/csv/serializeCsv.ts` |
 
-### T6 · Reescribir 10 tests de Documents PDF (H-2) — 8 h · PDF
-- `Cotizacion`, `ProformaConsolidada`, `Proforma` (eliminar `it` duplicado), `ProformaHeader`, `Rentabilidad`, `ReporteCartera`, `ReporteEERR`, `ReporteEjecutivo`, `ReportePresupuesto`, `ReporteTesoreria`.
-- Patrón: `expect(screen.getByText("COT-001")).toBeInTheDocument()` para folio, cliente y totales clave.
+Cada split debe preservar API pública (re-export desde el archivo original si hay imports externos). Vetados los aumentos a `OVERSIZED_BASELINE` — la política Power-of-10 lo prohíbe.
 
-### T7 · Validar valores en theme PDF (H-3) — 2 h · PDF
-- `styles.test.ts`, `stylesContent.test.ts`, `stylesLayout.test.ts` → afirmar `fontSize`, `padding`, `backgroundColor` críticos.
+## Orden de ejecución
 
-### T8 · Reset de mocks en services con estado mutable (H-4) — 2 h · Backend
-- `services/organization/__tests__/index.test.ts` y `services/notificaciones/__tests__/index.test.ts` → `beforeEach(vi.resetAllMocks)` + reescribir terminal dual (`range`+`then`) con `createSupabaseMock`.
+1. **G1** (2 ediciones, 2 tests verdes) — más urgente, afecta totales financieros.
+2. **G3** (mueve hook→service) — destraba G4 parcialmente y test arch.
+3. **G4** (parsers) — limpia casts HIGH residuales.
+4. **G2** (refactor test de exportCsv).
+5. **G5** (4 splits, mecánicos).
+6. Bump `APP_VERSION → 12.61.18`, actualizar `CHANGELOG.md` y `docs/audit-tests-2026-06-08.md`.
+7. Correr `bunx vitest run` completo + `bun run scripts/audit-report.ts` para confirmar 0 fallos / 0 HIGH / 0 oversized.
 
-### T9 · Consolidar triple `vi.mock` (H-5) — 0.5 h · Frontend
-- `src/hooks/facturacion/__tests__/useTabProformasController.test.tsx` → fusionar los 3 `vi.mock("@/hooks/shared", …)` en uno solo con todos los exports.
+## Resultado esperado
 
-### T10 · Convertir hooks "smoke-only" en tests funcionales (H-6) — 4 h · Frontend
-- `useProformas.test.tsx`, `useTrackingLinks.test.tsx`, `useProfit.test.tsx` → ejercitar `mutate`/`refetch` con datos y validar estado resultante.
+- 385 → ~395 tests verdes (los 4 nuevos del service de dependencias).
+- `audit-report`: `HIGH=0`, `CRITICAL=0`, `oversized=0`.
+- `architecture.test.ts` y `architecture-baseline.test.ts` en verde sin tocar allowlists.
 
-### T11 · Cerrar HIGH restantes (H-7) — 4 h · Mixto
-- `embarqueWizardStepValidator.test.ts:42` → cambiar `typeof errors === "object"` por `expect(errors).toEqual({...})`.
-- `useCotizacionHydration.test.tsx:29` → envolver en `waitFor`.
-- Renombrar título `"retorna 0 con lista vacía"` triplicado en `costosUSD.test.ts` / `financialUtils.test.ts`.
-- `dashboardSchemas.test.ts` → agregar caso Zod inválido para `arribosEsteMesSchema` y `cargaPorClienteSchema`.
-- `lib/mappers/_helpers.test.ts` → cubrir `num("NaN")` y `num("Infinity")`.
+## Riesgos
 
----
-
-## Entregables
-
-1. PRs separados por módulo (6 PRs) para review focalizado.
-2. CI verde en cada PR (`bun run audit:tests` + suite afectada).
-3. Bump `APP_VERSION` y entrada en `CHANGELOG.md` por sprint.
-4. Actualización de `docs/audit-tests-2026-06-08.md` marcando hallazgos resueltos.
-
-## Métricas de éxito
-
-- 🔴 CRITICAL: **8 → 0**.
-- 🟠 HIGH: **30 → ≤5** (sólo los que requieran decisión de producto).
-- Cobertura efectiva PDF: aserciones de contenido en 10/10 Documents.
-- 0 tests con `expect(true).toBe(true)` o cuerpo vacío.
-
-## Fuera de alcance
-
-- MEDIUM (36) y LOW (19) → Sprint 3 posterior.
-- Refactor de SUT (sólo se tocan tests y exports necesarios para importar lógica).
-- Ejecución completa de la suite en CI (queda a cargo del pipeline normal).
+- **Split de `StepCostosPrecios`**: tocar render puede romper snapshots; mitigar revisando los tests `useTabProformasController` y wizard tests existentes antes de mergear.
+- **Refactor cobranza**: el service es consumido por `useFacturasCxC`; mantener re-export para no romper imports.
