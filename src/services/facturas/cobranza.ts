@@ -13,7 +13,14 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { sumarMontos } from "@/lib/financial/financialUtils";
+
+// Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
+export {
+  agruparSaldosPorMoneda,
+  calcularKPIs,
+  type KPIsCobranza,
+  type SaldosPorMoneda,
+} from "./cobranzaAggregates";
 
 type FacturaRow = Tables<"facturas">;
 
