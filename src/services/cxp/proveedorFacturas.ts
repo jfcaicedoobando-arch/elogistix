@@ -76,8 +76,10 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
     .limit(2000);
 
-  if (filtros.proveedor_id) q = q.eq("proveedor_id", filtros.proveedor_id);
+  if (filtros.proveedor_id && filtros.proveedor_id !== "todos") q = q.eq("proveedor_id", filtros.proveedor_id);
   if (filtros.moneda && filtros.moneda !== "todas") q = q.eq("moneda", filtros.moneda);
+  if (filtros.fecha_desde) q = q.gte("fecha_emision", filtros.fecha_desde);
+  if (filtros.fecha_hasta) q = q.lte("fecha_emision", filtros.fecha_hasta);
   if (filtros.search) {
     q = q.or(`folio_proveedor.ilike.%${filtros.search}%,proveedor_nombre.ilike.%${filtros.search}%`);
   }
