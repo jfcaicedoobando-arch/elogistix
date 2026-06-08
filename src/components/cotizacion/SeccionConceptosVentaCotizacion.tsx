@@ -34,6 +34,11 @@ export default function SeccionConceptosVentaCotizacion({
   const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
   const subtotalSinIvaUSD = sumarSubtotales(conceptosUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
+  // Asersión de paridad fila ↔ bucket: cada bucket impone una moneda objetivo.
+  // Una fila con `moneda` distinta indica datos inconsistentes (los buckets
+  // suman natively, no aplican FX automático). Mostramos un indicador visible.
+  const mixtasUSD = detectarFilasMixtas(conceptosUSD, 'USD');
+  const mixtasMXN = detectarFilasMixtas(conceptosMXN, 'MXN');
 
   return (
     <div className="space-y-6">
