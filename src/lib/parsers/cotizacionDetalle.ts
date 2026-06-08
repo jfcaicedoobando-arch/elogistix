@@ -18,9 +18,11 @@ export interface ConceptosTotales {
  * Fallback canónico congelado. Misma referencia en cada acceso → memos descendentes
  * permanecen estables cuando el payload está vacío o corrupto.
  */
+const EMPTY_CONCEPTOS: ConceptoVentaCotizacion[] = Object.freeze<ConceptoVentaCotizacion[]>([]) as ConceptoVentaCotizacion[];
+
 export const EMPTY_TOTALES: ConceptosTotales = Object.freeze({
-  conceptosVentaUSD: Object.freeze([]) as unknown as ConceptoVentaCotizacion[],
-  conceptosVentaMXN: Object.freeze([]) as unknown as ConceptoVentaCotizacion[],
+  conceptosVentaUSD: EMPTY_CONCEPTOS,
+  conceptosVentaMXN: EMPTY_CONCEPTOS,
   totalUSD: 0,
   subtotalMXN: 0,
   ivaMXN: 0,
