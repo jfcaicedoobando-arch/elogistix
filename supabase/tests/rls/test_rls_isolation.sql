@@ -167,6 +167,39 @@ BEGIN
       NULL; -- esperado
   END;
 
+  -- --------------------------------------------------------------------------
+  -- Test 9 (12.61.11): notificaciones_internas — bug-simulado con organization_id
+  -- de otra org NO debe ser visible aunque usuario_id coincida.
+  -- --------------------------------------------------------------------------
+  RESET ROLE;
+  PERFORM set_config('request.jwt.claims', NULL, true);
+  INSERT INTO public.notificaciones_internas(usuario_id, organization_id, tipo, titulo, mensaje)
+    VALUES
+      (user_a, org_a, 'info', 'noti-A', 'msg-A'),
+      (user_a, org_b, 'info', 'noti-CROSS', 'msg-CROSS'); -- bug: org cruzada
+
+  PERFORM pg_temp.as_user(user_a);
+  SELECT COUNT(*) INTO visible_count FROM public.notificaciones_internas
+    WHERE usuario_id = user_a;
+  PERFORM pg_temp.assert(visible_count = 1,
+    format('User A vio %s notificaciones internas, esperaba 1 (la cruzada debe bloquearse)', visible_count));
+
+  -- --------------------------------------------------------------------------
+  -- Test 10 (12.61.11): crm_notificaciones — mismo refuerzo
+  -- --------------------------------------------------------------------------
+  RESET ROLE;
+  PERFORM set_config('request.jwt.claims', NULL, true);
+  INSERT INTO public.crm_notificaciones(user_id, organization_id, tipo, titulo, mensaje)
+    VALUES
+      (user_a, org_a, 'info', 'crm-A', 'msg-A'),
+      (user_a, org_b, 'info', 'crm-CROSS', 'msg-CROSS');
+
+  PERFORM pg_temp.as_user(user_a);
+  SELECT COUNT(*) INTO visible_count FROM public.crm_notificaciones
+    WHERE user_id = user_a;
+  PERFORM pg_temp.assert(visible_count = 1,
+    format('User A vio %s crm_notificaciones, esperaba 1 (la cruzada debe bloquearse)', visible_count));
+
   -- Limpieza
   RESET ROLE;
   PERFORM set_config('request.jwt.claims', NULL, true);
