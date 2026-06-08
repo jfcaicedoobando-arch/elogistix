@@ -6,7 +6,7 @@
  * `proformaAgrupacion.ts`; aquí mantenemos sólo el cálculo de totales y los tipos
  * compartidos del dominio.
  */
-import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularIVA } from "@/lib/financial/financialUtils";
 
 export type Moneda = "USD" | "MXN";
 
