@@ -57,7 +57,7 @@ describe("useEmbarqueEstadoActions", () => {
   it("handleAvanzarEstado invoca mutateAsync con id y notifica éxito", async () => {
     avanzarMutateAsync.mockClear();
     registrarActividadFn.mockClear();
-    toastFn.mockClear();
+    sonnerSuccess.mockClear(); sonnerError.mockClear();
     const { result } = renderHook(
       () => useEmbarqueEstadoActions(embarque as Parameters<typeof useEmbarqueEstadoActions>[0], "e-1"),
       { wrapper: createWrapper() },
@@ -78,7 +78,7 @@ describe("useEmbarqueEstadoActions", () => {
   it("handleReabrir invoca mutateAsync de reabrir y notifica", async () => {
     reabrirMutateAsync.mockClear();
     registrarActividadFn.mockClear();
-    toastFn.mockClear();
+    sonnerSuccess.mockClear(); sonnerError.mockClear();
     const { result } = renderHook(
       () => useEmbarqueEstadoActions({ ...embarque, estado: "Cerrado" } as Parameters<typeof useEmbarqueEstadoActions>[0], "e-1"),
       { wrapper: createWrapper() },

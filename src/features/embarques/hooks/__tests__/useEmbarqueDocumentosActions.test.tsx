@@ -45,7 +45,7 @@ describe("useEmbarqueDocumentosActions", () => {
   it("handleUpload llama mutateAsync con args y notifica éxito", async () => {
     uploadMutateAsync.mockClear();
     registrarActividadFn.mockClear();
-    toastFn.mockClear();
+    sonnerSuccess.mockClear(); sonnerError.mockClear();
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },
@@ -84,7 +84,7 @@ describe("useEmbarqueDocumentosActions", () => {
   });
 
   it("handleDownload notifica error cuando fetch falla", async () => {
-    toastFn.mockClear();
+    sonnerSuccess.mockClear(); sonnerError.mockClear();
     global.fetch = vi.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
