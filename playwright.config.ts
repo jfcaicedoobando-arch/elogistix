@@ -25,6 +25,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
+  // Sprint 4 (12.61.20): hace login una vez y persiste storageState para evitar
+  // 3-5s por spec. Si las creds no están, el setup es no-op y los specs caen
+  // al login interactivo de `loginAs`.
+  globalSetup: "./e2e/globalSetup.ts",
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: BASE_URL,
