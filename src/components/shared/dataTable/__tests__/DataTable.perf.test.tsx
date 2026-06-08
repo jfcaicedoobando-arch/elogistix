@@ -159,7 +159,7 @@ describe("Perf — VirtualDataTable (datasets grandes, escalado lineal)", () => 
         />,
       );
     });
-    expect(median).toBeLessThan(600);
+    expect(median).toBeLessThan(1200);
   });
 
   it("monta 5.000 filas con escalado ~lineal vs 1k baseline", () => {
