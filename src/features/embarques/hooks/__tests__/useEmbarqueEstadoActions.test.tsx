@@ -2,11 +2,17 @@ import { describe, it, expect, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-const { toastFn, registrarActividadFn, avanzarMutateAsync, reabrirMutateAsync } = vi.hoisted(() => ({
+const { toastFn, registrarActividadFn, avanzarMutateAsync, reabrirMutateAsync, sonnerSuccess, sonnerError } = vi.hoisted(() => ({
   toastFn: vi.fn(),
   registrarActividadFn: vi.fn(),
   avanzarMutateAsync: vi.fn().mockResolvedValue({}),
   reabrirMutateAsync: vi.fn().mockResolvedValue({}),
+  sonnerSuccess: vi.fn(),
+  sonnerError: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { success: sonnerSuccess, error: sonnerError, warning: vi.fn(), info: vi.fn(), message: vi.fn() },
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
