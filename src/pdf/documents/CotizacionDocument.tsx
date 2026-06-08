@@ -63,7 +63,7 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
 }
 
 export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: Props) {
-  const totales = calcularTotales(cotizacion.conceptos_venta);
+  const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
   const tasaPct = Math.round(tasaIva * 100);
