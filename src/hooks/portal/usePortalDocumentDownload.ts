@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/shared";
 import { createDocumentoSignedUrl } from "@/services/search";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { descargarBlob } from "@/lib/downloadBlob";
 
 /**
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).
@@ -20,14 +21,7 @@ export function usePortalDocumentDownload() {
         const response = await fetch(signedUrl);
         if (!response.ok) throw new Error("Download failed");
         const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
+        descargarBlob(blob, filename);
       } catch {
         window.open(signedUrl, "_blank");
       }

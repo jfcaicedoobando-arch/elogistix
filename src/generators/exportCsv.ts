@@ -4,6 +4,8 @@
  * `headers` es `readonly` para aceptar arreglos `as const` sin necesidad
  * de casts en el call-site (ver D16 — 11.64.0).
  */
+import { descargarBlob } from "@/lib/downloadBlob";
+
 export interface CsvHeader {
   readonly key: string;
   readonly label: string;
@@ -28,10 +30,5 @@ export function exportToCsv(
 
   const csv = [headerLine, ...dataLines].join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
+  descargarBlob(blob, filename);
 }
