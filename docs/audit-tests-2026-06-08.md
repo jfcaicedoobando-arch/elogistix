@@ -166,7 +166,12 @@ Faltan tests de error path:
 
 ---
 
-## Hallazgos LOW (19) — backlog
+## Hallazgos LOW (19) — ✅ TODOS RESUELTOS en Sprints 3+4 (12.61.19/20)
+
+**Sprint 3 (12.61.19):** idempotency `rejects.toMatchObject`, `_shared/auth_test.ts` userId="".
+**Sprint 4 (12.61.20):** `_supabaseChainMock` extendido con `opArgs` + helper `getMutationPayload`. `pagosProveedor.test.ts` valida payload de `insert`. `facturar.test.ts` valida `fecha_vencimiento` calculada. `e2e/globalSetup.ts` + `storageState` (login una sola vez). `keys-shape.test.ts` con diff simétrico explícito. `parse-csf/validate_test.ts` con boundary 5MB. Edge functions cubren validation helpers que mapean a 4xx/5xx.
+
+## Hallazgos LOW originales (backlog)
 
 Aserciones `toHaveBeenCalled()` sin `toHaveBeenCalledWith`, `rejects.toBeTruthy()`, casos edge cosméticos. Ver reportes por área para detalle.
 
