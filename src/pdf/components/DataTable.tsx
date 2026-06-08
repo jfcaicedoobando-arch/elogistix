@@ -37,6 +37,12 @@ interface Props<T> {
 export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
   return (
     <View style={styles.table}>
+      {/*
+        EXCEPCIÓN documentada al contrato de `fixed` de Page:
+        `tableHeader fixed` indica a react-pdf que repita el encabezado de la
+        tabla en cada página cuando las filas saltan. NO es un fixed de Page
+        ni decorativo — es el patrón estándar de tablas multi-página.
+      */}
       <View style={styles.tableHeader} fixed>
         {columns.map((col) => (
           <Text key={col.key} style={[styles.th, ...flat(col.cellStyle)]}>

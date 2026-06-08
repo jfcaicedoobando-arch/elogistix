@@ -76,7 +76,10 @@ function SeccionMoneda({
         const hayIva = items.some((i) => i.aplica_iva);
         const sub = items.reduce((s, i) => s + Number(i.total), 0);
         return (
-          <View key={`${g.contenedor}-${moneda}`} wrap={false}>
+          // wrap (default) permite que tablas largas (20+ conceptos) salten de
+          // página manteniendo el `tableHeader fixed` de DataTable repetido y
+          // el `paddingTop: 40` del page style como resguardo superior uniforme.
+          <View key={`${g.contenedor}-${moneda}`}>
             <Text style={styles.containerBlock}>
               Contenedor: {g.contenedor}{g.tipo ? `  ·  ${g.tipo}` : ""}
             </Text>
@@ -91,6 +94,16 @@ function SeccionMoneda({
   );
 }
 
+/**
+ * Documento PDF: Proforma Consolidada.
+ *
+ * Contrato de maquetación multi-página (12.61.10):
+ * - Únicos elementos `fixed` permitidos: `topBand` (vía `BrandHeader` dentro de
+ *   `ProformaHeader`) y `Footer`. Ambos viven a nivel raíz de `<Page>`.
+ * - Sub-bloques NUNCA usan `fixed` — confunde el motor de cálculo de alturas.
+ * - `DataTable.tableHeader fixed` es la excepción documentada: react-pdf usa
+ *   este `fixed` para repetir el header de la tabla cuando salta de página.
+ */
 export function ProformaConsolidadaDocument({
   proforma,
   embarque,
