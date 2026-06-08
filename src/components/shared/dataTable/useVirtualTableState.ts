@@ -93,12 +93,22 @@ export function useVirtualTableState<T>({
 
   const estimateSize = useCallback(() => estimateRowHeight, [estimateRowHeight]);
 
+  // `getItemKey` estable basado en el id de la fila: el virtualizer preserva
+  // la identidad del item bajo reordenamientos/filtrados, evitando reciclar
+  // alturas medidas de filas equivocadas durante scroll rápido. Cae a
+  // `index` defensivamente si `rows[index]` aún no está poblado.
+  const getItemKey = useCallback(
+    (index: number) => rows[index]?.id ?? index,
+    [rows],
+  );
+
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize,
     overscan,
     measureElement,
+    getItemKey,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
