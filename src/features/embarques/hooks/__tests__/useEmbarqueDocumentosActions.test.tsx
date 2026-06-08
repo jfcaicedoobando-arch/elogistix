@@ -1,11 +1,18 @@
 import { describe, it, expect, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
 
-const { toastFn, registrarActividadFn } = vi.hoisted(() => ({
+const {
+  toastFn, registrarActividadFn, getSignedUrlMock,
+  uploadMutateAsync, deleteMutateAsync, descargarBlobMock,
+} = vi.hoisted(() => ({
   toastFn: vi.fn(),
   registrarActividadFn: vi.fn(),
+  getSignedUrlMock: vi.fn().mockResolvedValue("https://example.com/doc.pdf"),
+  uploadMutateAsync: vi.fn().mockResolvedValue({}),
+  deleteMutateAsync: vi.fn().mockResolvedValue({}),
+  descargarBlobMock: vi.fn(),
 }));
 
 vi.mock("@/hooks/shared", () => ({
@@ -14,13 +21,17 @@ vi.mock("@/hooks/shared", () => ({
 }));
 
 vi.mock("@/services/storage/index", () => ({
-  getSignedUrl: vi.fn().mockResolvedValue("https://example.com/doc.pdf"),
+  getSignedUrl: getSignedUrlMock,
   uploadFile: vi.fn().mockResolvedValue({}),
 }));
 
+vi.mock("@/lib/downloadBlob", () => ({
+  descargarBlob: descargarBlobMock,
+}));
+
 vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
-  useUploadDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
-  useDeleteDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
+  useUploadDocumentoEmbarque: () => ({ mutateAsync: uploadMutateAsync }),
+  useDeleteDocumentoEmbarque: () => ({ mutateAsync: deleteMutateAsync }),
   useSetDocumentoNoAplica: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
 }));
 
@@ -30,23 +41,71 @@ function makeEmbarqueStub(): EmbarqueRow {
   return { id: "e-1", expediente: "EXP-001" } satisfies Partial<EmbarqueRow> as EmbarqueRow;
 }
 
-describe("useEmbarqueDocumentosActions (smoke)", () => {
-  it("monta sin errores y expone las acciones", () => {
+describe("useEmbarqueDocumentosActions", () => {
+  it("handleUpload llama mutateAsync con args y notifica éxito", async () => {
+    uploadMutateAsync.mockClear();
+    registrarActividadFn.mockClear();
+    toastFn.mockClear();
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },
     );
-    expect(typeof result.current.handleUpload).toBe("function");
-    expect(typeof result.current.handleDeleteDoc).toBe("function");
-    expect(typeof result.current.handleDownload).toBe("function");
+    const file = new File(["x"], "factura.pdf", { type: "application/pdf" });
+    await act(async () => {
+      await result.current.handleUpload("doc-factura", file);
+    });
+    await waitFor(() => expect(uploadMutateAsync).toHaveBeenCalledTimes(1));
+    expect(uploadMutateAsync).toHaveBeenCalledWith({
+      embarqueId: "e-1", docId: "doc-factura", file,
+    });
+    expect(registrarActividadFn).toHaveBeenCalledWith(
+      expect.objectContaining({ accion: "subir_documento", entidad_id: "e-1" }),
+    );
+    expect(toastFn).toHaveBeenCalled();
+  });
+
+  it("handleDownload obtiene signed URL, descarga blob y resetea downloadingDocId", async () => {
+    getSignedUrlMock.mockClear();
+    descargarBlobMock.mockClear();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(["pdf-data"])),
+    }) as unknown as typeof fetch;
+    const { result } = renderHook(
+      () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
+      { wrapper: createWrapper() },
+    );
+    await act(async () => {
+      await result.current.handleDownload("embarques/e-1/factura.pdf", "doc-factura");
+    });
+    expect(getSignedUrlMock).toHaveBeenCalledWith("embarques/e-1/factura.pdf");
+    expect(descargarBlobMock).toHaveBeenCalledWith(expect.any(Blob), "factura.pdf");
     expect(result.current.downloadingDocId).toBeNull();
   });
 
-  it("monta sin errores cuando embarque es undefined", () => {
+  it("handleDownload notifica error cuando fetch falla", async () => {
+    toastFn.mockClear();
+    global.fetch = vi.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
+    const { result } = renderHook(
+      () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
+      { wrapper: createWrapper() },
+    );
+    await act(async () => {
+      await result.current.handleDownload("embarques/e-1/factura.pdf", "doc-factura");
+    });
+    await waitFor(() => expect(toastFn).toHaveBeenCalled());
+    expect(result.current.downloadingDocId).toBeNull();
+  });
+
+  it("monta sin errores cuando embarque es undefined y no dispara mutaciones", async () => {
+    uploadMutateAsync.mockClear();
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(undefined, undefined),
       { wrapper: createWrapper() },
     );
-    expect(result.current.downloadingDocId).toBeNull();
+    await act(async () => {
+      await result.current.handleUpload("doc-x", new File(["x"], "x.pdf"));
+    });
+    expect(uploadMutateAsync).not.toHaveBeenCalled();
   });
 });
