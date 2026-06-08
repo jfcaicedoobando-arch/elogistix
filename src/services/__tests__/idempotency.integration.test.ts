@@ -177,8 +177,8 @@ describe("Idempotencia A.3 — reintento tras error de red", () => {
     const { result } = renderHook(() => useStableRequestId());
     const reqId = result.current.get();
 
-    await expect(consolidarProformas({ ...baseProformas, requestId: reqId })).rejects.toBeTruthy();
-    await expect(consolidarProformas({ ...baseProformas, requestId: reqId })).rejects.toBeTruthy();
+    await expect(consolidarProformas({ ...baseProformas, requestId: reqId })).rejects.toMatchObject({ message: expect.any(String) });
+    await expect(consolidarProformas({ ...baseProformas, requestId: reqId })).rejects.toMatchObject({ message: expect.any(String) });
     const ok = await consolidarProformas({ ...baseProformas, requestId: reqId });
 
     expect(ok.id).toBe(UUID_A);
