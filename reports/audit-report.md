@@ -1,6 +1,6 @@
-# Audit Report — 12.61.17
+# Audit Report — 12.61.18
 
-Generado: 2026-06-08T13:08:42.904Z
+Generado: 2026-06-08T13:23:11.880Z
 
 ## Resumen
 
@@ -8,8 +8,8 @@ Generado: 2026-06-08T13:08:42.904Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ❌ | 2 archivos |
-| Power-of-10 (>200 líneas) | ❌ | 6 archivos |
-| Casts HIGH + CRITICAL | ⚠️ | 4 / 1145 |
+| Power-of-10 (>200 líneas) | ❌ | 2 archivos |
+| Casts HIGH + CRITICAL | ✅ | 0 / 1141 |
 | Higiene de tests | ✅ | 0 violaciones |
 
 ## Arquitectura
@@ -22,23 +22,19 @@ Generado: 2026-06-08T13:08:42.904Z
 - `src/pages/auth/ResetPassword.tsx`
 
 ### Archivos productivos > 200 líneas
--  275  `src/features/embarques/components/StepCostosPrecios.tsx`
 -  246  `src/pages/auth/Login.tsx`
 -  227  `src/lib/mappers/genericPayloadMapper.ts`
--  225  `src/services/facturas/cobranza.ts`
--  209  `src/features/embarques/components/DialogEliminarEmbarque.tsx`
--  207  `src/lib/csv/parseCsv.ts`
 
 ## Casts
 
-Total: **1145** — HIGH: **4**, CRITICAL: **0**
+Total: **1141** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 432 |
 | LOW | 16 |
 | MEDIUM | 693 |
-| HIGH | 4 |
+| HIGH | 0 |
 | CRITICAL | 0 |
 
 ### Top-10 archivos por peso de riesgo

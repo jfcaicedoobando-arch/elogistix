@@ -1,6 +1,6 @@
 {
-  "version": "12.61.17",
-  "generatedAt": "2026-06-08T13:08:42.904Z",
+  "version": "12.61.18",
+  "generatedAt": "2026-06-08T13:23:11.880Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [
@@ -9,38 +9,22 @@
     ],
     "oversized": [
       {
-        "file": "src/features/embarques/components/StepCostosPrecios.tsx",
-        "lines": 275
-      },
-      {
         "file": "src/pages/auth/Login.tsx",
         "lines": 246
       },
       {
         "file": "src/lib/mappers/genericPayloadMapper.ts",
         "lines": 227
-      },
-      {
-        "file": "src/services/facturas/cobranza.ts",
-        "lines": 225
-      },
-      {
-        "file": "src/features/embarques/components/DialogEliminarEmbarque.tsx",
-        "lines": 209
-      },
-      {
-        "file": "src/lib/csv/parseCsv.ts",
-        "lines": 207
       }
     ]
   },
   "casts": {
-    "total": 1145,
+    "total": 1141,
     "bySeverity": {
       "SAFE": 432,
       "LOW": 16,
       "MEDIUM": 693,
-      "HIGH": 4,
+      "HIGH": 0,
       "CRITICAL": 0
     },
     "topFiles": [
