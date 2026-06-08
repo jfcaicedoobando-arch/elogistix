@@ -1,80 +1,95 @@
 ## Objetivo
 
-Eliminar drift de punto flotante en los totales del wizard de embarques para que coincidan exactamente con los registros de pago (`DialogRegistrarPago.tsx`). Toda multiplicación `cantidad × precio_unitario` (o `monto` convertido) se envolverá en `currency.js` y se redondeará a 2 decimales **antes** de sumarse al acumulador padre, siguiendo el patrón ya probado en `profitUtils.ts`.
-
-## Aclaración importante
-
-`src/features/embarques/domain/embarqueWizardCostos.ts` hoy es **sólo validación** (no contiene aritmética de totales). Las sumas que alimentan el resumen del paso 4 del wizard viven en:
-
-- `src/lib/financial/embarqueKpis.ts` — `totalEnMxn` (acumulador con `+` plano)
-- `src/lib/financial/costosUSD.ts` — `sumarEnUSD` (ya usa `currency.js`, OK)
-- `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx` — `subUsd`/`subMxn` con `reduce` plano
-- `src/features/embarques/hooks/useDialogGenerarProformaController.ts` — `subtotal_usd`/`subtotal_mxn` con `reduce` plano
-
-Por consistencia incluyo también los acumuladores equivalentes fuera del wizard que comparten el mismo defecto, ya que los mismos conceptos terminan en factura/proforma/cotización:
-
-- `src/generators/cotizacion/conceptosTables.ts`
-- `src/hooks/cotizacion/useConceptosVentaCotizacion.ts`
-- `src/hooks/cotizacion/wizard/useConceptosForm.ts`
-- `src/lib/parsers/cotizacionDetalle.ts`
-- `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
-
-Si prefieres limitar el alcance estrictamente al wizard de embarques, dímelo y los dejo fuera.
+Forzar paridad explícita entre la `moneda` de cada fila y la moneda objetivo del contenedor padre (bucket USD vs bucket MXN, o el "Total USD" de `StepCostosPrecios`). Cuando una fila no coincida, garantizar dos cosas: (a) la suma SIEMPRE pasa por conversión FX con el tipo de cambio vigente — nunca aritmética nativa silenciosa — y (b) la UI muestra un indicador visible para que el usuario sepa que se aplicó conversión.
 
 ## Cambios propuestos
 
-### 1. `src/lib/financial/financialUtils.ts`
-Agregar helpers reutilizables (basados en `currency.js`, precision 2):
+### 1. `src/lib/financial/costosUSD.ts` — helpers de aserción
 
-- `subtotalLinea(cantidad, precioUnitario): number` — equivalente a `calcularSubtotal` pero **garantizando** redondeo a 2 decimales por fila.
-- `sumarSubtotales<T>(items: T[], get: (i: T) => { cantidad: number; precioUnitario: number }): number` — acumulador que aplica `subtotalLinea` por fila antes de sumar.
-- `sumarMontos(montos: number[]): number` — acumulador genérico con `currency.js` (para casos donde la fila ya trae el monto convertido).
+Agregar (sin romper firmas existentes):
 
-`calcularSubtotal` existente se reescribe internamente para delegar en `subtotalLinea` (mantiene firma).
-
-### 2. `src/lib/financial/embarqueKpis.ts`
-`totalEnMxn` pasa de `items.reduce((sum, item) => sum + convertirAMXN(...), 0)` a un acumulador `currency(0, { precision: 2 })` que suma cada `convertirAMXN(...)` redondeado.
-
-### 3. Acumuladores de subtotales (mismo patrón en cada sitio)
-Reemplazar:
 ```ts
-arr.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0)
-```
-por:
-```ts
-sumarSubtotales(arr, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }))
-```
-en:
-- `src/generators/cotizacion/conceptosTables.ts` (subtotalUSD, subtotalMXN, e IVA por fila usando `currency.js`).
-- `src/hooks/cotizacion/useConceptosVentaCotizacion.ts` (subtotalMXN + acumulador de IVA).
-- `src/hooks/cotizacion/wizard/useConceptosForm.ts`.
-- `src/lib/parsers/cotizacionDetalle.ts`.
-- `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx` (subtotalSinIvaUSD y análogos).
-- `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx` (subUsd/subMxn).
-- `src/features/embarques/hooks/useDialogGenerarProformaController.ts` (subtotal_usd/subtotal_mxn antes del payload de proforma).
+export interface SumaMixtaResult {
+  total: number;
+  /** Filas cuya moneda ≠ target (se les aplicó FX). */
+  filasMixtas: { index: number; moneda: string }[];
+  /** true si todas las filas eran de la moneda target. */
+  homogenea: boolean;
+}
 
-Los acumuladores de IVA (`reduce(... calcularIVA(sub, tasa))`) usan también `sumarMontos` para evitar drift en la suma final.
+/** Suma estricta a una moneda objetivo. Convierte vía TC las filas que difieran
+ *  y reporta cuáles fueron mixtas. La conversión nunca se omite. */
+export function sumarEnMoneda(
+  items: { monto: number; moneda: string }[],
+  target: Moneda,
+  tcUSD: number,
+  tcEUR: number,
+): SumaMixtaResult;
 
-### 4. `src/features/embarques/domain/embarqueWizardCostos.ts`
-Sin cambios aritméticos (es validación). Agrego un comentario JSDoc apuntando a `embarqueKpis.ts` / `sumarSubtotales` como fuente única de verdad para totales, para evitar que se reintroduzcan sumas planas aquí.
+/** Devuelve los índices de filas cuya moneda no coincide con target. Útil para
+ *  marcar visualmente celdas en la UI sin recalcular totales. */
+export function detectarFilasMixtas(
+  items: { moneda: string }[],
+  target: Moneda,
+): number[];
+```
+
+`sumarEnUSD` existente se mantiene como wrapper de `sumarEnMoneda(..., "USD", ...).total` (firma intacta, sin breaking change).
+
+Internamente `sumarEnMoneda`:
+
+- Convierte cada `monto` a `target` con `convertirAMXN`/`convertirAUSD` ya existentes (precisión vía `currency.js`).
+- Si `tcUSD <= 0` o `tcEUR <= 0` y hay filas mixtas → lanza `Error("TC requerido para conversión")` en lugar de aplicar `1` silencioso (defecto actual en `convertirAMXN`).
+
+### 2. `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
+
+Los buckets ya están separados (USD y MXN). Usar `detectarFilasMixtas` para:
+
+- Si alguna fila del bucket USD tiene `moneda !== "USD"` → renderizar `<Badge variant="warning">` "Moneda mixta — fila #N convertida con TC".
+- Idem para bucket MXN.
+- Añadir un `data-testid="bucket-mixed-warning"` para tests.
+
+No se usan FX aquí porque el wizard de cotización trabaja en moneda nativa por bucket; la advertencia avisa al usuario para que corrija manualmente.
+
+### 3. `src/features/embarques/components/StepCostosPrecios.tsx`
+
+Target implícito es USD (es la columna "Total USD" y los totales de resumen).
+
+- Sustituir `sumarEnUSD(...)` por `sumarEnMoneda(..., "USD", tcUSD, tcEUR)` y leer `result.filasMixtas`.
+- En cada fila cuyo `moneda !== "USD"`, mostrar un pequeño badge inline junto al `Total USD` ("Conv. {moneda}→USD @{tc}") y aplicar clase `text-amber-600` al input readOnly para indicar visualmente la conversión.
+- Si `tcUSD <= 0` o `tcEUR <= 0` y existen filas mixtas, mostrar `ValidationAlert severity="warning"` arriba del card: "Falta tipo de cambio para convertir N filas en moneda extranjera".
+
+### 4. `src/features/embarques/components/conceptos/ConceptoRowUSD.tsx` / `ConceptoRowMXN.tsx`
+
+Recibir prop opcional `targetMoneda: Moneda` y, si `concepto.moneda !== targetMoneda`, renderizar un ícono `<AlertTriangle className="h-3 w-3 text-amber-500">` con `<Tooltip>` "Moneda distinta al grupo — se aplicará conversión con el TC del embarque".
 
 ### 5. Tests
-- `src/lib/financial/__tests__/financialUtils.test.ts` — añadir casos para `subtotalLinea`, `sumarSubtotales` y un caso de regresión de drift (ej. 3 filas con `0.1 × 1` que con `+` da `0.30000000000000004` y con currency.js da `0.3`).
-- `src/generators/cotizacion/__tests__/conceptosTables.test.ts` — añadir caso de drift con cantidades fraccionarias.
-- Revisar que tests existentes sigan pasando (los valores enteros no cambian).
+
+- `src/lib/financial/__tests__/costosUSD.test.ts` — agregar bloque `describe("sumarEnMoneda")` cubriendo:
+  - Homogeneidad: todas USD → `homogenea: true`, `filasMixtas: []`.
+  - Mixta: USD + MXN → `homogenea: false`, índices correctos.
+  - Target MXN: convierte USD→MXN con `tcUSD`.
+  - Lanza si `tcUSD === 0` y hay fila mixta.
+  - `detectarFilasMixtas` retorna índices correctos para EUR en bucket USD.
+- `SeccionConceptosVentaCotizacion` — test ligero (RTL) que verifica el badge cuando una fila USD entra en el bucket MXN.
 
 ### 6. Versión y changelog
-- Bump `APP_VERSION` (parche, ej. `12.61.1`).
-- Entrada en `CHANGELOG.md` raíz: "Acumuladores de totales en wizard de embarques y módulos financieros migrados a `currency.js` con redondeo por fila para coincidir exactamente con `DialogRegistrarPago`."
+
+- Bump `APP_VERSION` a `12.61.2`.
+- Entrada en `CHANGELOG.md`: "Asserción de paridad de moneda fila ↔ bucket en `costosUSD.ts` + indicador visible (`AlertTriangle` por fila, badge de TC en columna Total USD) en `StepCostosPrecios` y `SeccionConceptosVentaCotizacion`. Conversión FX ahora es obligatoria cuando hay mezcla — falla ruidosamente si falta TC."
 
 ### 7. Memoria
-Actualizar `mem://technical/financial-calculations-standards` añadiendo regla: "Toda suma de líneas monetarias debe usar `sumarSubtotales`/`sumarMontos` (currency.js, precision 2); prohibido `reduce((s, x) => s + ..., 0)` sobre montos."
+
+Actualizar `mem://technical/financial-calculations-standards`:
+
+- Toda suma multi-fila con moneda objetivo debe usar `sumarEnMoneda` (no `sumarEnUSD` directo) cuando exista bucket UI con moneda implícita.
+- Una fila cuya `moneda` difiera de su bucket UI debe mostrar siempre un indicador visible y forzar conversión con TC vigente; nunca sumar nativamente.
 
 ## Riesgos
 
-- Diferencias mínimas (céntimos) respecto a totales históricos calculados con float; aceptable porque ahora coinciden con los pagos en facturación.
-- Ningún cambio de esquema DB; ningún cambio de UI visible salvo precisión en el último dígito.
+- `sumarEnMoneda` puede lanzar si TC = 0 con filas mixtas (antes pasaba en silencio); mitigamos en `StepCostosPrecios` mostrando `ValidationAlert` antes de invocar.
+- Badges nuevos pueden generar ruido visual; uso `Tooltip` para mantener UI limpia y reservar el badge sólo cuando hay mismatch real.
 
 ## Pregunta antes de implementar
 
-¿Limito el alcance estrictamente al wizard de embarques (puntos 1, 2, partes de 3 y 4) o aplico también a los acumuladores de cotización/proforma listados (recomendado, asegura paridad end-to-end con `DialogRegistrarPago`)?
+¿OK incluir la regla "lanzar Error cuando TC = 0 con filas mixtas" en `sumarEnMoneda`, o prefieres que sólo retorne el resultado con FX usando `tc=1` y deje la responsabilidad de la validación a la UI? Lanzar es más estricto (Power-of-10), pero requiere `try/catch` o gating previo en cada consumidor. lanzar error

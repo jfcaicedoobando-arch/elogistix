@@ -1,34 +1,121 @@
 /**
- * Helpers para totalizar listas de conceptos en USD.
- * Conversión y suma se delegan a currency.js (vía convertirAUSD) para
- * evitar errores de punto flotante. Sin React, sin formato.
+ * Helpers para totalizar listas de conceptos en una moneda objetivo.
+ * Conversión y suma se delegan a currency.js (vía convertirAUSD/convertirAMXN)
+ * para evitar errores de punto flotante. Sin React, sin formato.
+ *
+ * `sumarEnMoneda` es la API estricta: detecta filas cuya `moneda` no coincide
+ * con el `target` del bucket padre y SIEMPRE las convierte vía FX (nunca suma
+ * nativamente valores heterogéneos). Lanza si falta TC con filas mixtas.
  */
 
 import currency from "currency.js";
-import { convertirAUSD, type Moneda } from "@/lib/financial/financialUtils";
+import {
+  convertirAUSD,
+  convertirAMXN,
+  type Moneda,
+} from "@/lib/financial/financialUtils";
 
 interface MontoEnMoneda {
   monto: number;
   moneda: string;
 }
 
+export interface FilaMixta {
+  index: number;
+  moneda: string;
+}
+
+export interface SumaMonedaResult {
+  /** Total acumulado expresado en `target`, con precisión 2. */
+  total: number;
+  /** Filas cuya moneda ≠ target (se les aplicó FX). */
+  filasMixtas: FilaMixta[];
+  /** true si todas las filas eran de la moneda target. */
+  homogenea: boolean;
+}
+
+const MONEDAS_VALIDAS: ReadonlyArray<Moneda> = ['USD', 'MXN', 'EUR'];
+
+function esMoneda(m: string): m is Moneda {
+  return (MONEDAS_VALIDAS as readonly string[]).includes(m);
+}
+
+/**
+ * Devuelve los índices de filas cuya moneda no coincide con `target`.
+ * Útil para marcar visualmente celdas en la UI sin recalcular totales.
+ */
+export function detectarFilasMixtas(
+  items: ReadonlyArray<{ moneda: string }>,
+  target: Moneda,
+): FilaMixta[] {
+  const out: FilaMixta[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const m = items[i].moneda;
+    if (m !== target) out.push({ index: i, moneda: m });
+  }
+  return out;
+}
+
+/**
+ * Suma estricta a una moneda objetivo. Convierte vía TC las filas cuya
+ * `moneda` difiera del `target` y reporta cuáles fueron mixtas. La conversión
+ * nunca se omite: si hay filas mixtas y `tcUSD <= 0` (o `tcEUR <= 0` cuando
+ * aparece EUR) lanza `Error` en lugar de colapsar silenciosamente a TC=1.
+ */
+export function sumarEnMoneda(
+  items: ReadonlyArray<MontoEnMoneda>,
+  target: Moneda,
+  tcUSD: number,
+  tcEUR: number,
+): SumaMonedaResult {
+  const filasMixtas = detectarFilasMixtas(items, target);
+  const homogenea = filasMixtas.length === 0;
+
+  if (!homogenea) {
+    const necesitaUSD = filasMixtas.some(f => f.moneda === 'USD' || f.moneda === 'MXN' || f.moneda === 'EUR');
+    const necesitaEUR = filasMixtas.some(f => f.moneda === 'EUR');
+    if (necesitaUSD && (!Number.isFinite(tcUSD) || tcUSD <= 0)) {
+      throw new Error('TC requerido para conversión: tipoCambioUSD inválido con filas en moneda distinta al target');
+    }
+    if (necesitaEUR && (!Number.isFinite(tcEUR) || tcEUR <= 0)) {
+      throw new Error('TC requerido para conversión: tipoCambioEUR inválido con filas EUR');
+    }
+  }
+
+  const total = items
+    .reduce((acc, item) => {
+      const moneda = esMoneda(item.moneda) ? item.moneda : target;
+      const convertido = target === 'USD'
+        ? convertirAUSD(item.monto, moneda, tcUSD, tcEUR)
+        : target === 'MXN'
+          ? convertirAMXN(item.monto, moneda, tcUSD, tcEUR)
+          // Target EUR: pasar primero a MXN y luego dividir por tcEUR.
+          : currency(convertirAMXN(item.monto, moneda, tcUSD, tcEUR), { precision: 2 })
+              .divide(tcEUR).value;
+      return acc.add(convertido);
+    }, currency(0, { precision: 2 }))
+    .value;
+
+  return { total, filasMixtas, homogenea };
+}
+
 /**
  * Suma una lista de montos convirtiéndolos a USD.
- * @param items - lista con campo `monto` y `moneda`
- * @param tcUSD - tipo de cambio MXN→USD
- * @param tcEUR - tipo de cambio MXN→EUR
+ * Wrapper de `sumarEnMoneda(..., 'USD', ...).total` para compatibilidad.
  */
 export function sumarEnUSD(
   items: MontoEnMoneda[],
   tcUSD: number,
   tcEUR: number,
 ): number {
-  return items
-    .reduce(
-      (acc, item) => acc.add(convertirAUSD(item.monto, item.moneda as Moneda, tcUSD, tcEUR)),
-      currency(0, { precision: 2 }),
-    )
-    .value;
+  // Wrapper laxo: si no hay TC todavía (formularios recién montados), evitamos
+  // lanzar y usamos 1 — el indicador visible vive en la UI vía sumarEnMoneda.
+  if (!Number.isFinite(tcUSD) || tcUSD <= 0) {
+    return items
+      .reduce((acc, item) => acc.add(convertirAUSD(item.monto, item.moneda as Moneda, 1, tcEUR || 1)), currency(0, { precision: 2 }))
+      .value;
+  }
+  return sumarEnMoneda(items, 'USD', tcUSD, tcEUR).total;
 }
 
 /** Convierte un monto único a USD (wrapper conveniente). */

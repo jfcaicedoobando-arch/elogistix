@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
-import { Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { aUSD, sumarEnUSD } from "@/lib/financial/costosUSD";
+import { aUSD, sumarEnMoneda } from "@/lib/financial/costosUSD";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { NumericInput } from "@/components/shared/NumericInput";
@@ -15,6 +16,9 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
+
+/** Moneda objetivo (bucket) del wizard de embarques: todos los totales viven en USD. */
+const TARGET_MONEDA = 'USD' as const;
 
 interface Proveedor {
   id: string;
@@ -58,13 +62,39 @@ export function StepCostosPrecios(props: Props) {
 
   const toUSD = (monto: number, moneda: string) => aUSD(monto, moneda, tcUSD, tcEUR);
 
-  const totalCostoUSD = useMemo(
-    () => sumarEnUSD(conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda })), tcUSD, tcEUR),
-    [conceptosCosto, tcUSD, tcEUR]
+  // Suma estricta con detección de filas en moneda distinta al target USD.
+  // Si falta TC con filas mixtas, sumarEnMoneda lanza — capturamos y caemos a
+  // un cálculo laxo para no romper el render, y mostramos un alert.
+  const costoCalc = useMemo(() => {
+    const items = conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda }));
+    try {
+      return { ...sumarEnMoneda(items, TARGET_MONEDA, tcUSD, tcEUR), tcMissing: false };
+    } catch {
+      return { total: 0, filasMixtas: items.map((it, index) => ({ index, moneda: it.moneda })).filter(f => f.moneda !== TARGET_MONEDA), homogenea: false, tcMissing: true };
+    }
+  }, [conceptosCosto, tcUSD, tcEUR]);
+
+  const ventaCalc = useMemo(() => {
+    const items = conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda }));
+    try {
+      return { ...sumarEnMoneda(items, TARGET_MONEDA, tcUSD, tcEUR), tcMissing: false };
+    } catch {
+      return { total: 0, filasMixtas: items.map((it, index) => ({ index, moneda: it.moneda })).filter(f => f.moneda !== TARGET_MONEDA), homogenea: false, tcMissing: true };
+    }
+  }, [conceptosVenta, tcUSD, tcEUR]);
+
+  const totalCostoUSD = costoCalc.total;
+  const totalVentaUSD = ventaCalc.total;
+  const tcFaltante = costoCalc.tcMissing || ventaCalc.tcMissing;
+  const filasMixtasTotales = costoCalc.filasMixtas.length + ventaCalc.filasMixtas.length;
+
+  const costoMixtoIdx = useMemo(
+    () => new Set(costoCalc.filasMixtas.map(f => f.index)),
+    [costoCalc.filasMixtas],
   );
-  const totalVentaUSD = useMemo(
-    () => sumarEnUSD(conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda })), tcUSD, tcEUR),
-    [conceptosVenta, tcUSD, tcEUR]
+  const ventaMixtoIdx = useMemo(
+    () => new Set(ventaCalc.filasMixtas.map(f => f.index)),
+    [ventaCalc.filasMixtas],
   );
 
   const hasErrors = Object.keys(errors).length > 0;
@@ -81,8 +111,15 @@ export function StepCostosPrecios(props: Props) {
     : "grid-cols-[1fr_80px_120px_90px_110px_40px]";
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="space-y-6">
       {hasErrors && <ValidationAlert severity="error" errors={errors} />}
+      {tcFaltante && filasMixtasTotales > 0 && (
+        <ValidationAlert
+          severity="warning"
+          errors={{ tipoCambio: `Falta tipo de cambio para convertir ${filasMixtasTotales} fila(s) en moneda extranjera. Captura el TC USD/EUR antes de continuar.` }}
+        />
+      )}
       <Card>
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
@@ -92,8 +129,9 @@ export function StepCostosPrecios(props: Props) {
               {showContenedorCol && <span>Contenedor</span>}
               <span>Total USD</span><span></span>
             </div>
-            {conceptosCosto.map(costo => {
+            {conceptosCosto.map((costo, idx) => {
               const totalUSD = toUSD(costo.monto, costo.moneda);
+              const esMixta = costoMixtoIdx.has(idx);
               return (
                 <div key={costo.id} className={`grid ${costoCols} gap-2 items-center`}>
                   <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
@@ -117,7 +155,24 @@ export function StepCostosPrecios(props: Props) {
                       className="text-sm"
                     />
                   )}
-                  <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
+                  <div className="flex items-center gap-1">
+                    <Input
+                      readOnly
+                      value={formatCurrency(totalUSD, 'USD')}
+                      className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
+                      data-testid={esMixta ? 'fila-mixta-costo' : undefined}
+                    />
+                    {esMixta && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Conv. {costo.moneda}→USD @ TC {costo.moneda === 'EUR' ? tcEUR : tcUSD}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1} aria-label="Eliminar concepto de costo">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -127,6 +182,11 @@ export function StepCostosPrecios(props: Props) {
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
               <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalCostoUSD, 'USD')}</span></div>
+              {costoCalc.filasMixtas.length > 0 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  {costoCalc.filasMixtas.length} fila(s) convertida(s) a USD con TC vigente.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -140,8 +200,9 @@ export function StepCostosPrecios(props: Props) {
               {showContenedorCol && <span>Contenedor</span>}
               <span>Total USD</span><span></span>
             </div>
-            {conceptosVenta.map(venta => {
+            {conceptosVenta.map((venta, idx) => {
               const totalUSD = toUSD(venta.precioUnitario, venta.moneda);
+              const esMixta = ventaMixtoIdx.has(idx);
               return (
                 <div key={venta.id} className={`grid ${ventaCols} gap-2 items-center`}>
                   <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
@@ -162,7 +223,24 @@ export function StepCostosPrecios(props: Props) {
                       className="text-sm"
                     />
                   )}
-                  <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
+                  <div className="flex items-center gap-1">
+                    <Input
+                      readOnly
+                      value={formatCurrency(totalUSD, 'USD')}
+                      className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
+                      data-testid={esMixta ? 'fila-mixta-venta' : undefined}
+                    />
+                    {esMixta && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Conv. {venta.moneda}→USD @ TC {venta.moneda === 'EUR' ? tcEUR : tcUSD}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1} aria-label="Eliminar concepto de venta">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -172,6 +250,11 @@ export function StepCostosPrecios(props: Props) {
             <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
               <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalVentaUSD, 'USD')}</span></div>
+              {ventaCalc.filasMixtas.length > 0 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  {ventaCalc.filasMixtas.length} fila(s) convertida(s) a USD con TC vigente.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -186,5 +269,6 @@ export function StepCostosPrecios(props: Props) {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }

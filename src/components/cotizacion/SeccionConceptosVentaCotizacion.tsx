@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { AlertTriangle, Plus } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/hooks/catalogos";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
+import { detectarFilasMixtas } from "@/lib/financial/costosUSD";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";
 
 interface Props {
@@ -33,6 +34,11 @@ export default function SeccionConceptosVentaCotizacion({
   const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
   const subtotalSinIvaUSD = sumarSubtotales(conceptosUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
+  // Asersión de paridad fila ↔ bucket: cada bucket impone una moneda objetivo.
+  // Una fila con `moneda` distinta indica datos inconsistentes (los buckets
+  // suman natively, no aplican FX automático). Mostramos un indicador visible.
+  const mixtasUSD = detectarFilasMixtas(conceptosUSD, 'USD');
+  const mixtasMXN = detectarFilasMixtas(conceptosMXN, 'MXN');
 
   return (
     <div className="space-y-6">
@@ -46,6 +52,18 @@ export default function SeccionConceptosVentaCotizacion({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {mixtasUSD.length > 0 && (
+            <div
+              data-testid="bucket-mixed-warning-usd"
+              className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+            >
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                Hay {mixtasUSD.length} fila(s) con moneda distinta a USD ({mixtasUSD.map(f => `#${f.index + 1}: ${f.moneda}`).join(', ')}).
+                Este bucket suma en moneda nativa: ajusta la moneda de la fila o muévela al bucket MXN.
+              </span>
+            </div>
+          )}
           {conceptosUSD.map((c, i) => (
             <ConceptoRowUSD
               key={i}
@@ -80,6 +98,18 @@ export default function SeccionConceptosVentaCotizacion({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {mixtasMXN.length > 0 && (
+            <div
+              data-testid="bucket-mixed-warning-mxn"
+              className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+            >
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                Hay {mixtasMXN.length} fila(s) con moneda distinta a MXN ({mixtasMXN.map(f => `#${f.index + 1}: ${f.moneda}`).join(', ')}).
+                Ajusta la moneda o mueve la fila al bucket USD para evitar mezcla.
+              </span>
+            </div>
+          )}
           {conceptosMXN.map((c, i) => (
             <ConceptoRowMXN
               key={i}
