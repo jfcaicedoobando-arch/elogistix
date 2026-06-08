@@ -8,6 +8,9 @@ import {
   convertirAMXN,
   convertirAUSD,
   resolverTasaConcepto,
+  subtotalLinea,
+  sumarSubtotales,
+  sumarMontos,
 } from "@/lib/financial/financialUtils";
 
 describe("calcularIVA", () => {
