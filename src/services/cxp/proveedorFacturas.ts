@@ -35,6 +35,8 @@ export interface FetchCxPFiltros {
   proveedor_id?: string;
   moneda?: ProveedorFacturaRow["moneda"] | "todas";
   estatus?: EstatusCxP | "todos";
+  fecha_desde?: string;
+  fecha_hasta?: string;
 }
 
 function diasVencido(fechaVenc: string | null): number {
