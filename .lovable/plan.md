@@ -1,52 +1,53 @@
-## Hallazgos
+## Contexto
 
-Inventario de `fixed` en `src/pdf/`:
-- `Footer` → `fixed` (raíz de Page vía componente). ✅
-- `BrandHeader.topBand` → `fixed` (raíz de Page vía fragment). ✅
-- `DataTable.tableHeader` → `fixed` (anidado dentro de `View` de tabla — patrón estándar de react-pdf para repetir el header de tabla al cruzar página). ✅ No tocar.
+Antes de planear, audité el estado real. Hallazgos:
 
-Problemas detectados en los 2 documentos objetivo:
+1. **Las políticas de `embarques` y `cotizaciones` ya son multitenant**, vía `organization_id = current_user_org_id()` (SECURITY DEFINER que resuelve la org del usuario logueado). El patrón correcto del proyecto NO es `current_setting('app.current_org_id')` — eso requeriría setear un GUC por request que el cliente Supabase no envía. Mantenemos `current_user_org_id()`.
+2. **La columna se llama `organization_id`**, no `org_id`. No se renombra (rompería ~50 tablas, todos los hooks y el RPC `get_embarque_full`).
+3. **Las 67 tablas de `public` tienen RLS habilitado.** De las 53 tablas con `organization_id`, todas tienen al menos una política con filtro por org o por rol. Las 14 sin `organization_id` son catálogos públicos (`puertos`, `navieras`, `planes`, `tipos_contenedor`), tablas de servicio (`email_send_*`, `ratelimit_buckets`, `suppressed_emails`, `tracking_webhook_log`) o globales (`organizations`, `user_roles`, `configuracion_global`) — todas correctas.
 
-1. **`ProformaConsolidadaDocument.tsx`** — Dentro de `SeccionMoneda`, cada grupo de contenedor se envuelve en `<View key={...} wrap={false}>`. Cuando un contenedor tiene 20+ conceptos su tabla excede una página y `wrap={false}` impide el salto natural → el bloque desborda y rompe la maquetación de páginas secundarias. Además, `ProformaHeader` (con `BrandHeader` → topBand fixed) se inserta como fragment al inicio: correcto, pero conviene explicitarlo en JSDoc.
+## Anomalías a corregir (defense in depth)
 
-2. **`ReporteEjecutivoDocument.tsx`** — NO usa `BrandHeader` ni renderiza `topBand fixed`. Resultado: en páginas secundarias del reporte (cuando hay muchos deudores/alertas) no hay banda corporativa superior, rompiendo la uniformidad con el resto de PDFs y dejando el contenido pegado al borde superior salvo por `paddingTop: 40` del page style. El `<View style={styles.header}>` actual NO es fixed (correcto, sólo página 1).
+Dos tablas tienen `organization_id` en la columna pero sus SELECT solo filtran por `auth.uid()` sobre el dueño directo. Si por un bug de aplicación se insertara una notificación con `usuario_id` correcto pero `organization_id` de otra org, podría leerse. Añadimos filtro redundante por org:
 
-## Alcance (sólo maquetación / estilos PDF)
+| Tabla | Política actual SELECT | Política propuesta SELECT |
+|---|---|---|
+| `notificaciones_internas` | `usuario_id = auth.uid()` | `usuario_id = auth.uid() AND organization_id = current_user_org_id()` |
+| `crm_notificaciones` | `user_id = auth.uid()` | `user_id = auth.uid() AND organization_id = current_user_org_id()` |
 
-### `src/pdf/documents/ProformaConsolidadaDocument.tsx`
-- En `SeccionMoneda`, quitar `wrap={false}` del `<View>` que envuelve `containerBlock + DataTable + subtotal`. Esto permite que tablas largas salten de página manteniendo el `tableHeader fixed` repetido por `DataTable` y el `paddingTop: 40` del `page` como resguardo superior.
-- Conservar el `wrap={false}` implícito a nivel de fila individual (ya viene de `DataTable`).
-- Añadir JSDoc al componente declarando el contrato: "Los únicos elementos `fixed` viven a nivel raíz de `<Page>` — `topBand` (vía `BrandHeader`) y `Footer`. Sub-bloques NUNCA usan `fixed`."
+UPDATE policies reciben el mismo refuerzo. Las INSERT existentes (que ya validan `organization_id = current_user_org_id()` vía WITH CHECK del trigger general) no se tocan.
 
-### `src/pdf/documents/ReporteEjecutivoDocument.tsx`
-- Añadir `<View style={styles.topBand} fixed />` como PRIMER hijo directo de `<Page>` para uniformar el resguardo superior corporativo en TODAS las páginas (la banda de 4pt en color primary aparece bajo `paddingTop: 40`).
-- Confirmar que `<View style={styles.header}>` NO es `fixed` (sólo página 1 — comportamiento correcto del header con título + periodo).
-- Confirmar `<Footer fixed />` ya presente (renderiza paginación correctamente).
-- Añadir JSDoc declarando el mismo contrato: "fixed sólo en `topBand` y `Footer` a nivel raíz de Page".
+## No se cambia
 
-### `src/pdf/components/DataTable.tsx`
-- Añadir comentario en la línea del `tableHeader fixed` explicando que es la EXCEPCIÓN documentada del contrato: react-pdf usa `fixed` en headers de tabla para repetirlos en cada página cuando la tabla salta — no es un `fixed` decorativo ni de página, sino de tabla.
+- Políticas de `embarques`, `cotizaciones`, `clientes`, `facturas`, `conceptos_*`, etc. — ya están correctas.
+- Políticas del portal cliente (`Cliente read own ...`): filtran por `cliente_id IN current_user_client_ids()`. NO se les añade `organization_id = current_user_org_id()` porque los contactos-usuario del portal no están en `user_organization_members` y devolvería NULL, rompiendo el portal. El aislamiento por `cliente_id` ya es suficiente: un cliente solo pertenece a una organización.
+- Políticas de `service_role` en tablas de email — correctas para edge functions.
 
-### Tests
-- Nuevo `src/pdf/documents/__tests__/pageContract.test.tsx` que renderiza ambos documentos con datos mínimos via el stub y verifica:
-  1. Se monta `pdf-doc` + `pdf-page`.
-  2. No lanza excepciones de árbol inválido.
-  3. (Inspección textual del JSX a través del stub) los documentos no añaden elementos `fixed` adicionales fuera del contrato.
+## Entregables
 
-### Versionado
-- `src/constants/appVersion.ts` → `12.61.10`.
-- `CHANGELOG.md` → entrada `[12.61.10]` describiendo el contrato de `fixed` y el wrap natural de secciones largas en proforma consolidada.
+1. **Migración** que reemplaza las 4 políticas de `notificaciones_internas` y `crm_notificaciones` (DROP + CREATE de los 4 policies SELECT/UPDATE, con el filtro redundante de org).
+2. **Nuevo documento** `docs/rls-multitenant-audit.md` con la matriz auditada (tabla / tiene `organization_id` / # políticas / patrón usado) — sirve para futuras auditorías trimestrales referenciadas en `docs/security-checklist.md`.
+3. **Extender** `supabase/tests/rls/test_rls_isolation.sql` con 2 casos: usuario de Org A NO ve `notificaciones_internas` ni `crm_notificaciones` de Org B aunque tuvieran su `usuario_id` (simulando bug).
+4. **CHANGELOG.md** + bump `APP_VERSION` a `12.61.11` con bullet:  
+   `Endurece RLS de notificaciones (internas y CRM) con filtro redundante por organization_id; resto de tablas auditadas y conformes.`
 
-## Contrato resultante (documentado en JSDoc)
+## Detalles técnicos
 
-```text
-<Page>
-  <View topBand fixed />          ← banda corporativa repetida en cada página
-  <BrandHeader/HeaderInline />    ← sólo página 1 (no fixed)
-  ... contenido fluido ...        ← saltos naturales; tablas grandes
-                                    re-renderizan tableHeader fixed
-  <Footer fixed />                ← paginación repetida en cada página
-</Page>
+SQL de la migración (resumen):
+
+```sql
+DROP POLICY "Users read own notifications" ON public.notificaciones_internas;
+CREATE POLICY "Users read own notifications" ON public.notificaciones_internas
+  FOR SELECT TO authenticated
+  USING (usuario_id = auth.uid() AND organization_id = current_user_org_id());
+
+DROP POLICY "Users update own notifications" ON public.notificaciones_internas;
+CREATE POLICY "Users update own notifications" ON public.notificaciones_internas
+  FOR UPDATE TO authenticated
+  USING (usuario_id = auth.uid() AND organization_id = current_user_org_id())
+  WITH CHECK (usuario_id = auth.uid() AND organization_id = current_user_org_id());
+
+-- mismo patrón para crm_notificaciones (user_id en lugar de usuario_id)
 ```
 
-Cualquier `fixed` en sub-bloques distintos al `tableHeader` de `DataTable` se considera regresión.
+Sin GRANT nuevos (las tablas ya los tienen). Sin cambios de schema. Cero impacto en código TypeScript (los hooks ya filtran por `organization_id` en sus queries; el RLS extra solo es defensa).
