@@ -33,7 +33,26 @@ interface Props {
   factura: FacturaCxP | null;
 }
 
-const METODOS = ["Transferencia", "Cheque", "Efectivo", "Tarjeta", "Otro"] as const;
+const METODOS_NACIONAL = ["SPEI", "Transferencia", "Cheque", "Efectivo", "Tarjeta", "Otro"] as const;
+const METODOS_EXTRANJERO = ["Transferencia internacional", "Transferencia", "Cheque", "Otro"] as const;
+
+function metodosFor(origen: "Nacional" | "Extranjero" | null): readonly string[] {
+  if (origen === "Extranjero") return METODOS_EXTRANJERO;
+  return METODOS_NACIONAL;
+}
+
+function defaultMetodo(origen: "Nacional" | "Extranjero" | null): string {
+  if (origen === "Extranjero") return "Transferencia internacional";
+  if (origen === "Nacional") return "SPEI";
+  return "Transferencia";
+}
+
+function referenciaHint(metodo: string): string {
+  if (metodo === "SPEI") return "Clave de rastreo SPEI (18 dígitos)";
+  if (metodo === "Transferencia internacional") return "Referencia SWIFT / MT103";
+  if (metodo === "Cheque") return "Número de cheque";
+  return "Folio bancario, número de cheque…";
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -65,11 +84,16 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
     setMonto(factura.saldo.toFixed(2));
     setMoneda(factura.moneda);
     setTc(factura.tipo_cambio_usd ? String(factura.tipo_cambio_usd) : "");
-    setMetodo("Transferencia");
+    setMetodo(defaultMetodo(factura.proveedor_origen));
     setReferencia("");
     setNotas("");
     setDiffMxn("");
   }, [factura, open, today]);
+
+  const metodosDisponibles = useMemo(
+    () => metodosFor(factura?.proveedor_origen ?? null),
+    [factura?.proveedor_origen],
+  );
 
   const montoNum = Number(monto) || 0;
   const saldoRestante = useMemo(
