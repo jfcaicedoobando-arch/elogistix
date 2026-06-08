@@ -12,22 +12,24 @@ type TipoProveedor = Enums<'tipo_proveedor'>;
 interface Props {
   tipo: TipoProveedor;
   search: string;
+  origen?: "Nacional" | "Extranjero" | "todos";
   onSelect: (id: string) => void;
 }
 
-export function ProveedorTable({ tipo, search, onSelect }: Props) {
+export function ProveedorTable({ tipo, search, origen, onSelect }: Props) {
   const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({});
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     resetPage();
-  }, [debouncedSearch, resetPage]);
+  }, [debouncedSearch, origen, resetPage]);
 
   const { data: resultado, isLoading } = useProveedoresPaginados({
     tipo,
     search: debouncedSearch,
     page,
     pageSize,
+    origen,
   });
 
   const proveedores = resultado?.data ?? [];
