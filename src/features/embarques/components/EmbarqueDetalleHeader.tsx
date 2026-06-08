@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, Printer, ChevronRight, Trash2, Share2, MoreHorizontal, Copy, Unlock } from "lucide-react";
+import { Edit, ChevronRight, Trash2, Share2, MoreHorizontal, Copy, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
