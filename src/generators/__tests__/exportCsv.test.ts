@@ -1,39 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// Mock centralizado: aislamos el test del DOM y del helper de descarga real.
+const descargarBlobSpy = vi.fn<(blob: Blob, name: string) => void>();
+vi.mock("@/lib/downloadBlob", () => ({
+  descargarBlob: (blob: Blob, name: string) => descargarBlobSpy(blob, name),
+}));
+
 import { exportToCsv } from "@/generators/exportCsv";
 
-const blobs: Blob[] = [];
-let lastClicked: { href: string; download: string } | null = null;
-
 beforeEach(() => {
-  blobs.length = 0;
-  lastClicked = null;
-  globalThis.URL.createObjectURL = vi.fn((b: Blob) => {
-    blobs.push(b);
-    return `blob:${blobs.length}`;
-  }) as unknown as typeof URL.createObjectURL;
-  globalThis.URL.revokeObjectURL = vi.fn();
-
-  vi.spyOn(document, "createElement").mockImplementation(((tag: string) => {
-    if (tag === "a") {
-      const a = {
-        href: "",
-        download: "",
-        click() {
-          lastClicked = { href: a.href, download: a.download };
-        },
-      };
-      return a as unknown as HTMLElement;
-    }
-    return document.createElement.call(document, tag);
-  }) as never);
+  descargarBlobSpy.mockReset();
 });
 
-function readCsv(): Promise<string> {
+function readBlobText(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result as string);
     r.onerror = () => reject(r.error);
-    r.readAsText(blobs[0], "utf-8");
+    r.readAsText(blob, "utf-8");
   });
 }
 
@@ -45,18 +29,23 @@ describe("exportToCsv", () => {
 
   it("genera header + filas (con BOM UTF-8 en el blob)", async () => {
     exportToCsv("test.csv", headers, [{ nombre: "ACME", monto: 100 }]);
-    // El primer "part" del Blob debe ser el BOM (\uFEFF + CSV).
-    expect(blobs[0].size).toBeGreaterThan(0);
-    const csv = await readCsv();
+    expect(descargarBlobSpy).toHaveBeenCalledTimes(1);
+    const [blob] = descargarBlobSpy.mock.calls[0];
+    expect(blob.size).toBeGreaterThan(0);
+    const csv = await readBlobText(blob);
+    expect(csv.startsWith("\uFEFF")).toBe(true);
     expect(csv).toContain("Nombre,Monto");
     expect(csv).toContain("ACME,100");
   });
 
   it("escapa comas, comillas y saltos de línea", async () => {
     exportToCsv("t.csv", [{ key: "v", label: "V" }], [
-      { v: "a,b" }, { v: 'con "quote"' }, { v: "linea\n2" },
+      { v: "a,b" },
+      { v: 'con "quote"' },
+      { v: "linea\n2" },
     ]);
-    const csv = await readCsv();
+    const [blob] = descargarBlobSpy.mock.calls[0];
+    const csv = await readBlobText(blob);
     expect(csv).toContain('"a,b"');
     expect(csv).toContain('"con ""quote"""');
     expect(csv).toContain('"linea\n2"');
@@ -64,12 +53,13 @@ describe("exportToCsv", () => {
 
   it("trata null/undefined como string vacío", async () => {
     exportToCsv("t.csv", headers, [{ nombre: null, monto: undefined }]);
-    const csv = await readCsv();
+    const [blob] = descargarBlobSpy.mock.calls[0];
+    const csv = await readBlobText(blob);
     expect(csv.split("\n")[1]).toBe(",");
   });
 
-  it("dispara click con el filename correcto", () => {
+  it("dispara descarga con el filename correcto", () => {
     exportToCsv("reporte-2026.csv", headers, []);
-    expect(lastClicked?.download).toBe("reporte-2026.csv");
+    expect(descargarBlobSpy).toHaveBeenCalledWith(expect.any(Blob), "reporte-2026.csv");
   });
 });
