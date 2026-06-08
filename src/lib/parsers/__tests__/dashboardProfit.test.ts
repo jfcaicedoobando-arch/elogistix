@@ -41,6 +41,14 @@ describe("dashboardProfit helpers", () => {
       expect(safeMargen(25, 100)).toBe(25);
       expect(safeMargen(-50, 200)).toBe(-25);
     });
+    it("retorna 0 cuando ambos son negativos y venta no es positiva", () => {
+      // Contrato: sólo aplica división cuando venta > 0.
+      expect(safeMargen(-100, -200)).toBe(0);
+      expect(safeMargen(-100, 0)).toBe(0);
+    });
+    it("retorna 0 cuando profit=0 y venta=0", () => {
+      expect(safeMargen(0, 0)).toBe(0);
+    });
   });
 
   describe("parseEmbarqueConProfitRaw", () => {
