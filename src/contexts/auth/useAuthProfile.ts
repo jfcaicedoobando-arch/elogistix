@@ -46,6 +46,10 @@ export function useAuthProfile(userId: string | null) {
         setProfile(payload);
         lastFetchedFor.current = uid;
         lastFetchedAt.current = Date.now();
+      } catch (err) {
+        // No envenenar el perfil. El listener de auth puede reintentar.
+        // eslint-disable-next-line no-console
+        console.error("[useAuthProfile] fetchUserContext failed", err);
       } finally {
         inflight.current = null;
       }
