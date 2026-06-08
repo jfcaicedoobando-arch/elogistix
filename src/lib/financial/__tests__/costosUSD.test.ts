@@ -5,18 +5,34 @@ describe("aUSD", () => {
   it("retorna el mismo monto si ya es USD", () => {
     expect(aUSD(100, "USD", 17.5, 19.0)).toBe(100);
   });
+  it("retorna el mismo monto USD incluso si tcUSD=0 (no requiere conversión)", () => {
+    expect(aUSD(100, "USD", 0, 19.0)).toBe(100);
+  });
   it("convierte MXN a USD", () => {
     expect(aUSD(1750, "MXN", 17.5, 19.0)).toBeCloseTo(100);
   });
   it("convierte EUR a USD (vía MXN)", () => {
     expect(aUSD(100, "EUR", 17.5, 19.0)).toBeCloseTo((100 * 19) / 17.5);
   });
+  it("lanza si tcUSD=0 al convertir MXN a USD (evita Infinity)", () => {
+    expect(() => aUSD(100, "MXN", 0, 19)).toThrow(/tipoCambioUSD/);
+  });
+  it("lanza si tcUSD=NaN al convertir MXN a USD", () => {
+    expect(() => aUSD(100, "MXN", Number.NaN, 19)).toThrow(/tipoCambioUSD/);
+  });
+  it("lanza si tcUSD<0 al convertir MXN a USD", () => {
+    expect(() => aUSD(100, "MXN", -17.5, 19)).toThrow(/tipoCambioUSD/);
+  });
+  it("lanza si tcEUR=0 al convertir EUR a USD", () => {
+    expect(() => aUSD(100, "EUR", 17.5, 0)).toThrow(/tipoCambioEUR/);
+  });
 });
 
 describe("sumarEnUSD", () => {
-  it("retorna 0 con lista vacía", () => {
+  it("sumarEnUSD retorna 0 con lista vacía", () => {
     expect(sumarEnUSD([], 17.5, 19)).toBe(0);
   });
+
   it("suma montos mixtos sin errores de punto flotante", () => {
     const total = sumarEnUSD(
       [

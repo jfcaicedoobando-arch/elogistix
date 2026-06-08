@@ -16,15 +16,11 @@ import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { validateFile } from "./validate.ts";
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+export { validateFile };
 
-export function validateFile(file: File | null): string | null {
-  if (!file) return "No se envió archivo PDF";
-  if (file.type !== "application/pdf") return "Solo se aceptan archivos PDF";
-  if (file.size > MAX_BYTES) return "El archivo excede el límite de 5 MB";
-  return null;
-}
+
 
 function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: HeadersInit, detail?: string) {
   if (status === 429) {

@@ -118,7 +118,22 @@ export function sumarEnUSD(
   return sumarEnMoneda(items, 'USD', tcUSD, tcEUR).total;
 }
 
-/** Convierte un monto único a USD (wrapper conveniente). */
+/**
+ * Convierte un monto único a USD (wrapper conveniente).
+ *
+ * Si `moneda` ≠ 'USD' valida que `tcUSD` (y `tcEUR` para EUR) sean finitos y > 0.
+ * Antes devolvía silenciosamente `Infinity`/`NaN` cuando el TC venía en 0, lo
+ * cual se propagaba a totales financieros. Ahora lanza explícitamente — la UI
+ * debe esperar a tener TC vigente antes de llamar este helper.
+ */
 export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number): number {
+  if (moneda === 'USD') return monto;
+  if (!Number.isFinite(tcUSD) || tcUSD <= 0) {
+    throw new Error('TC requerido para conversión: tipoCambioUSD inválido (0/NaN) al convertir a USD');
+  }
+  if (moneda === 'EUR' && (!Number.isFinite(tcEUR) || tcEUR <= 0)) {
+    throw new Error('TC requerido para conversión: tipoCambioEUR inválido (0/NaN) al convertir EUR a USD');
+  }
   return convertirAUSD(monto, moneda as Moneda, tcUSD, tcEUR);
 }
+
