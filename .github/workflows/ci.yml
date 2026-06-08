@@ -87,7 +87,7 @@ jobs:
         run: mkdir -p .vitest-reports
 
       - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
-        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}-${{ matrix.total }}.json
+        run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
 
       - name: List blob outputs (debug)
         if: always()
@@ -98,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: vitest-blob-${{ matrix.shard }}
-          path: .vitest-reports/
+          path: .vitest-reports/blob-${{ matrix.shard }}.json
           if-no-files-found: error
           retention-days: 1
 
