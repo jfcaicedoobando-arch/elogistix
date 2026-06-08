@@ -95,19 +95,12 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     let provNombre = c.emisor.nombre;
     try {
       const found = await findProveedorByRfc(c.emisor.rfc);
-      if (found) {
-        provId = found.id;
-        provNombre = found.nombre;
-      } else {
-        setAskCrearProv({ rfc: c.emisor.rfc, nombre: c.emisor.nombre });
-      }
-    } catch {
-      // lookup opcional
-    }
+      if (found) { provId = found.id; provNombre = found.nombre; }
+      else setAskCrearProv({ rfc: c.emisor.rfc, nombre: c.emisor.nombre });
+    } catch { /* lookup opcional */ }
 
     setValues({
-      provId,
-      provNombre,
+      provId, provNombre,
       folio: [c.serie, c.folio].filter(Boolean).join("-") || c.uuid.slice(0, 8),
       emision: c.fecha || today(),
       diasCredito: 30,
@@ -121,12 +114,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
       notas: data.ai.notas || "",
     });
     setErrors({});
-    setPendingCfdi({
-      uuid: c.uuid,
-      rfcEmisor: c.emisor.rfc,
-      xmlFile: files.xml,
-      pdfFile: files.pdf,
-    });
+    setPendingCfdi({ uuid: c.uuid, rfcEmisor: c.emisor.rfc, xmlFile: files.xml, pdfFile: files.pdf });
   };
 
   const validate = (): boolean => {
