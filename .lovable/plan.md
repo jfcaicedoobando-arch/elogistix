@@ -1,43 +1,39 @@
 ## Objetivo
-Endurecer `src/lib/csv/parseCsv.ts` para que la importación tolere encabezados con caracteres ocultos (BOM intermedio, zero-width, NBSP, controles), columnas vacías por comas sobrantes, duplicados, y permita traducir alias menores de forma segura sin romper consumidores.
+Reforzar `src/services/facturas/cobranza.ts` para garantizar que los saldos pendientes NUNCA se sumen entre monedas, exponiendo subtotales explícitos por divisa y usando los helpers de precisión de `financialUtils` (consistente con `mem://technical/financial-calculations-standards`).
 
 ## Diagnóstico
-- `normalizeHeader` ya hace NFD + trim + lowercase, pero NO elimina:
-  - Zero-width: `\u200B`, `\u200C`, `\u200D`, `\u2060`, `\uFEFF` interno.
-  - NBSP `\u00A0` (queda como caracter no `\s` en algunas runtimes legacy → mejor sustituirlo a espacio antes del `\s+` collapse).
-  - Caracteres de control `\u0000-\u001F`, `\u007F`.
-- `parseCsv` ya hace `if (!h) return` para encabezados vacíos, pero **no deduplica** colisiones (dos columnas que normalizan al mismo header se pisan silenciosamente).
-- No existe forma de mapear variaciones menores ("e-mail" vs "correo", "tel" vs "telefono") sin tocar cada importador.
+- `calcularKPIs` ya separa `total_mxn`/`total_usd` pero acumula con `+=` plano (drift de punto flotante en cartera grande) y no rechaza explícitamente divisas distintas a `MXN`/`USD` — caen al `else` y se mezclan en el bucket MXN silenciosamente.
+- No existe un helper público que devuelva `{ saldoPendienteMXN, saldoPendienteUSD }` para consumidores que sólo necesitan los saldos agrupados (dashboards, exports, alertas).
 
 ## Cambios
 
-### 1. `src/lib/csv/parseCsv.ts`
-- **`normalizeHeader(raw)`**:
-  - Antes del `trim()`: `replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")` para zero-width.
-  - `replace(/\u00A0/g, " ")` para que NBSP colapse junto a `\s+`.
-  - `replace(/[\x00-\x1F\x7F]/g, "")` para controles.
-  - Mantener el resto del pipeline (NFD, lowercase, `_`, alfanumérico).
-- **`parseCsv(input, options?)`**: agregar parámetro opcional `options?: { headerAliases?: Record<string, string> }`.
-  - El alias se aplica DESPUÉS de `normalizeHeader` y antes de armar el objeto fila.
-  - Las claves del mapa también se normalizan al cargar (defensivo).
-- **Deduplicación defensiva** de headers: si tras normalizar/aliasear hay duplicados, suffijar `_2`, `_3`, … en orden de aparición, y emitir `console.warn` listando los duplicados (no falla la importación).
-- **Columnas vacías**: cuando `h === ""` después de la sanitización, continuar saltándola (ya implementado) y registrar `console.warn` UNA vez con el conteo de columnas vacías detectadas.
-- Mantener firma `parseCsv(input)` retrocompatible (options opcional).
+### 1. `src/services/facturas/cobranza.ts`
+- **Nuevo helper exportado** `agruparSaldosPorMoneda(filas)`:
+  - Firma: `(filas: FacturaCobranza[]) => { saldoPendienteMXN: number; saldoPendienteUSD: number; porMoneda: Record<string, number>; descartadas: number }`.
+  - Itera una sola vez; para cada `f` con `saldo > 0`:
+    - Empuja a un array por bucket según `f.moneda`.
+    - Si `f.moneda` no es `"MXN"` ni `"USD"`, registra en `porMoneda` y `descartadas++` sin contaminar los buckets canónicos.
+  - Reduce los buckets con `sumarMontos` (currency.js, precisión 2) desde `@/lib/financial/financialUtils`.
+  - Si `descartadas > 0`, `console.warn` listando las monedas atípicas detectadas.
+- **Refactor de `calcularKPIs`** para usar la misma estrategia:
+  - Reemplazar los `+=` planos por arrays-por-bucket (`total`, `vencido`, `por_vencer_7d` × `MXN`/`USD`) y un `sumarMontos` final por cada uno.
+  - Guard explícito: `if (f.moneda !== "MXN" && f.moneda !== "USD") continue;` (con `console.warn` agregado al final si hubo alguna).
+  - `total_mxn`/`total_usd` ahora se calculan vía `agruparSaldosPorMoneda` reutilizando el helper (single source of truth) — luego se enriquecen con `vencido_*` y `por_vencer_7d_*`.
+- Sin cambios a `fetchCobranza`, `FacturaCobranza`, `KPIsCobranza` (firmas estables).
 
-### 2. Tests — `src/lib/csv/__tests__/parseCsv.test.ts`
-Añadir:
-- `normalizeHeader` con BOM intermedio (`"Razón\uFEFF Social"` → `"razon_social"`).
-- `normalizeHeader` con zero-width (`"nombre\u200B"` → `"nombre"`).
-- `normalizeHeader` con NBSP (`"Días\u00A0Crédito"` → `"dias_credito"`).
-- `normalizeHeader` con tab/control (`"rfc\t"` → `"rfc"`).
-- `parseCsv` con encabezado que tiene una coma extra al inicio/final (`",nombre,rfc,"`) → no rompe, headers válidos = `["nombre","rfc"]`, filas mapean correctamente.
-- `parseCsv` con headers duplicados (`"nombre,Nombre"`) → segundo se vuelve `nombre_2`.
-- `parseCsv` con `headerAliases`: `{ correo: "email", tel: "telefono" }` reescribe los headers en el resultado.
+### 2. Test nuevo — `src/services/facturas/__tests__/cobranza.test.ts`
+Cubrir lógica pura sin tocar Supabase:
+- `agruparSaldosPorMoneda` separa MXN y USD sin mezclar.
+- Filas con `saldo <= 0` se ignoran.
+- Filas con `moneda` ajena (ej. `"EUR"`) NO contaminan los buckets canónicos; quedan en `porMoneda.EUR` y `descartadas === 1`.
+- Precisión: `[0.1, 0.1, 0.1]` MXN → `saldoPendienteMXN === 0.3` (vs `0.30000000000000004` con `+=`).
+- `calcularKPIs`: `total_mxn`/`total_usd` coinciden con `agruparSaldosPorMoneda`; `vencido_*` y `por_vencer_7d_*` se separan correctamente por moneda.
 
 ### 3. Versionado
-- `src/constants/appVersion.ts` → `12.61.5`.
-- `CHANGELOG.md`: entrada `## [12.61.5] - 2026-06-08`.
+- `src/constants/appVersion.ts` → `12.61.6`.
+- `CHANGELOG.md`: entrada `## [12.61.6] - 2026-06-08` describiendo el helper y la precisión.
 
 ## Notas técnicas
-- Sin cambios a la firma pública obligatoria; `options` es opcional, los importadores existentes (`importSchemaCliente`, `importSchemaProveedor`, `leadsCsv`) siguen funcionando sin tocarlos.
-- Los `console.warn` ayudan a diagnosticar archivos sucios sin bloquear al usuario operativo.
+- Sin migraciones; sólo lógica de servicio.
+- Sin cambios al hook `useCobranza` (los KPIs mantienen su shape).
+- Alineado con `mem://technical/financial-calculations-standards` (acumuladores monetarios vía `sumarMontos`/`currency.js`).
