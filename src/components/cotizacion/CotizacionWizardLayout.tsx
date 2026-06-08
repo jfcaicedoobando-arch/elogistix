@@ -35,6 +35,19 @@ export default function CotizacionWizardLayout({
 }: CotizacionWizardLayoutProps) {
   const { form } = w;
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const isBusy = isProcessing || w.isPending;
+
+  const runProcessing = useCallback(async (fn: () => unknown | Promise<unknown>) => {
+    if (isBusy) return;
+    setIsProcessing(true);
+    try { await fn(); } finally { setIsProcessing(false); }
+  }, [isBusy]);
+
+  const handleNext = useCallback(() => { void runProcessing(w.handleSiguiente); }, [runProcessing, w.handleSiguiente]);
+  const handleSave = useCallback(() => { void runProcessing(w.handleGuardar); }, [runProcessing, w.handleGuardar]);
+  const handleBack = useCallback(() => { if (!isBusy) w.handleBack(); }, [isBusy, w.handleBack]);
+  const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
