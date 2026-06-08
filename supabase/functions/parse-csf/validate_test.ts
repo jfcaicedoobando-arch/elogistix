@@ -18,3 +18,18 @@ Deno.test("validateFile: >5MB → rechazado", () => {
 Deno.test("validateFile: PDF válido → null", () => {
   assertEquals(validateFile(makeFile(1024)), null);
 });
+
+// Sprint 4 D-18: cobertura 4xx-equivalente en boundary del límite de tamaño.
+Deno.test("validateFile: exactamente 5 MB → aceptado (boundary inferior)", () => {
+  assertEquals(validateFile(makeFile(5 * 1024 * 1024)), null);
+});
+Deno.test("validateFile: 5 MB + 1 byte → rechazado (boundary superior)", () => {
+  assertEquals(
+    validateFile(makeFile(5 * 1024 * 1024 + 1)),
+    "El archivo excede el límite de 5 MB",
+  );
+});
+Deno.test("validateFile: PDF 0 bytes → aceptado (no validamos contenido aquí)", () => {
+  assertEquals(validateFile(makeFile(0)), null);
+});
+
