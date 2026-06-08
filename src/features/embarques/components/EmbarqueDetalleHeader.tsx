@@ -58,7 +58,7 @@ export function EmbarqueDetalleHeader({
         </div>
         <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
       </div>
-      <div className="flex gap-2 flex-wrap lg:justify-end items-center">
+      <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
         {/* Acción primaria: avanzar estado (workflow). Si no aplica, Editar pasa a primaria. */}
         {canEdit && siguienteEstado ? (
           <AlertDialog>
@@ -87,12 +87,35 @@ export function EmbarqueDetalleHeader({
           </Button>
         ) : null}
 
+        {/* Editar (cuando "Avanzar" toma la primaria) */}
+        {canEdit && siguienteEstado && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
+          >
+            <Edit className="h-4 w-4 mr-1" /> Editar
+          </Button>
+        )}
+
+        {/* Compartir (frecuente, no destructiva) */}
+        <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
+          <Share2 className="h-4 w-4 mr-1" /> Compartir
+        </Button>
+
+        {/* Duplicar */}
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={onAbrirDuplicar}>
+            <Copy className="h-4 w-4 mr-1" /> Duplicar
+          </Button>
+        )}
+
         {/* Reabrir embarque cerrado (solo admin / super_admin) */}
         {puedeReabrir && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm" disabled={reabriendoEstado}>
-                <Unlock className="h-4 w-4 mr-1" /> Reabrir embarque
+                <Unlock className="h-4 w-4 mr-1" /> Reabrir
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -110,39 +133,19 @@ export function EmbarqueDetalleHeader({
           </AlertDialog>
         )}
 
-        {/* Acción secundaria visible: Compartir (frecuente, no destructiva) */}
-        <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
-          <Share2 className="h-4 w-4 mr-1" /> Compartir
-        </Button>
-
-        {/* Editar (cuando "Avanzar" toma la primaria) */}
-        {canEdit && siguienteEstado && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
-          >
-            <Edit className="h-4 w-4 mr-1" /> Editar
-          </Button>
-        )}
-
-        {/* Duplicar */}
+        {/* Separador visual antes de la acción destructiva */}
         {canEdit && (
-          <Button variant="outline" size="sm" onClick={onAbrirDuplicar}>
-            <Copy className="h-4 w-4 mr-1" /> Duplicar
-          </Button>
-        )}
-
-        {/* Eliminar (destructiva, separada visualmente) */}
-        {canEdit && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onAbrirEliminar}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-          </Button>
+          <>
+            <span aria-hidden="true" className="hidden sm:inline-block h-6 w-px bg-border mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onAbrirEliminar}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+            </Button>
+          </>
         )}
       </div>
 
