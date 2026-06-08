@@ -1,75 +1,85 @@
-## Refactor del módulo Cuentas por Pagar
 
-Objetivo: dejar CxP listo para uso real. Arreglar los modales (que se cortan), reorganizar la página y pulir tabla / detalle.
+# Carga de facturas mexicanas por XML CFDI en CxP
 
----
+## Objetivo
+Permitir subir un XML CFDI 4.0 (con PDF opcional) dentro del modal "Capturar factura". El sistema parsea el XML, usa Lovable AI para enriquecer campos ambiguos, prellena el formulario, ofrece crear el proveedor si no existe, y guarda XML+PDF en storage ligados a la factura.
 
-### 1. Modal "Capturar factura de proveedor" (prioridad alta)
+## Flujo UX
 
-Problema actual: `DialogContent` sin scroll, sin secciones, 11 inputs en grid plano, `0` literales en lugar de placeholders, total escondido entre campos.
+Modal **"Capturar factura de proveedor"** gana una zona superior con dos modos:
 
-Rediseño:
-- Aplicar `dialogSize.xl + scrollableDialog` (scroll interno, max 85vh).
-- Una sola columna con **secciones tituladas**:
-  1. **Proveedor y folio** — Combobox proveedor + Folio.
-  2. **Fechas y crédito** — Emisión, Días crédito, Vencimiento (readonly).
-  3. **Moneda** — Moneda + Tipo de cambio USD (TC se oculta si moneda = MXN).
-  4. **Importes** — Subtotal, IVA, Retenciones. Total destacado en un panel resumen (fondo `muted`, tabular-nums, color por moneda).
-  5. **Categorización** — Categoría presupuestal + Notas.
-- Inputs numéricos: `placeholder="0.00"` con value `""` mientras no se captura; convertir a number sólo al `submit`.
-- Validación inline: mensajes bajo el campo (no sólo toast).
-- Footer fijo (sticky) con Cancelar / Guardar.
-- Extraer el formulario a `FacturaProveedorFormFields.tsx` (≤180 LOC) — el dialog queda como contenedor.
+```text
+┌─────────────────────────────────────────────┐
+│  ○ Captura manual    ● Cargar XML CFDI      │
+├─────────────────────────────────────────────┤
+│  [ Arrastra el XML aquí o haz clic ]        │
+│  PDF (opcional): [ Adjuntar ]               │
+│  [ Procesar XML ]                           │
+└─────────────────────────────────────────────┘
+        ↓ (al procesar)
+┌─────────────────────────────────────────────┐
+│ ✓ CFDI leído — UUID, RFC, Folio, Total      │
+│ Proveedor: "ACME SA" (RFC ACM010101AAA)     │
+│   • No existe en tu catálogo                │
+│   [ Crear proveedor con datos del XML ]     │
+│ Categoría sugerida por AI: "Fletes locales" │
+└─────────────────────────────────────────────┘
+        ↓
+[ resto del formulario ya prellenado y editable ]
+```
 
-### 2. Modal "Registrar pago a proveedor"
+Reglas:
+- XML obligatorio en modo CFDI; PDF opcional.
+- Todos los campos quedan editables tras el parseo.
+- Si el RFC ya existe en `proveedores` → auto-vincula. Si no, botón "Crear proveedor" abre mini-form prellenado (nombre, RFC, país=México, moneda=MXN) sin salir del modal.
+- Validación: rechazar archivo no-XML, >2MB, o XML que no sea CFDI 4.0 válido.
+- Guardar el UUID del CFDI en la factura para evitar duplicados (bloqueo por UUID repetido).
 
-Igual tratamiento: `dialogSize.lg + scrollableDialog`, secciones (Fecha/Método, Monto/Moneda/TC, Diferencia cambiaria opcional, Referencia/Notas), resumen "Saldo restante después del pago" en vivo, footer sticky.
+## Arquitectura técnica
 
-### 3. Modal "Detalle de pagos"
+### 1. Edge function `parse-cfdi-xml` (nueva)
+- Recibe el XML como `multipart/form-data` (auth requerido).
+- **Parser determinista** (sin AI) extrae del XML CFDI 4.0:
+  - `UUID` (TimbreFiscalDigital), `Folio`, `Serie`, `Fecha`
+  - Emisor: `Rfc`, `Nombre`, `RegimenFiscal`
+  - Receptor: `Rfc`, `Nombre`
+  - `SubTotal`, `Total`, `Moneda`, `TipoCambio`
+  - Impuestos: suma `IVA` trasladado, `ISR`/`IVA` retenidos
+  - `Conceptos[]` (descripción, importe) — primeros 10 para contexto
+- **AI (Gemini Flash) sólo para campos ambiguos**:
+  - Sugerir `categoria_presupuesto_id` matcheando contra las categorías activas del tenant (se pasan en el prompt).
+  - Sugerir `notas` cortas resumiendo conceptos.
+- Retorna JSON `{ cfdi: {...campos parseados}, ai: { categoria_id, notas } }`.
 
-- `dialogSize.3xl + scrollableDialog`.
-- Cabecera con KPIs mini: Total factura · Pagado · Saldo · # pagos.
-- Reemplazar `<table>` ad-hoc por componente con zebra-striping del sistema.
-- Acción "Eliminar pago" con doble confirmación (tipear `ELIMINAR`) — sigue regla data-safety.
+### 2. Schema cambios (migración)
+Agregar a `proveedor_facturas`:
+- `uuid_cfdi text` (único por organization_id cuando no es null) — para deduplicación.
+- `xml_path text` — ruta en bucket `facturas`.
+- `tipo_documento text` default `'manual'` con valores `'manual' | 'cfdi' | 'invoice'`.
 
-### 4. Página `/cxp`
+Bucket `facturas` (ya privado) gana subcarpeta `cfdi/{org}/{uuid}.xml`.
 
-- **KPIs**: añadir conteo de facturas en cada tarjeta (ej. "Por pagar MXN · 12 facturas"). Mantener 4 tarjetas.
-- **Filtros**: adoptar patrón embarques — barra compacta `Search + Estatus + Moneda + Filtros (N)`. En el `Sheet` lateral: filtro por **Proveedor** (nuevo) y rango de fechas de emisión. Chips de filtros activos debajo (`CxpFiltrosChips`).
-- **Acciones header**: dejar sólo Reporte PDF + Capturar factura (sin cambios mayores).
-- **Tabla**:
-  - Densidad `compact` por defecto (consistente con embarques).
-  - Fila clicable → abre "Detalle de pagos" (con `e.stopPropagation` en acciones, ya está).
-  - Ordenamiento por defecto: días vencido desc, luego vencimiento asc.
-  - Columna acciones: dejar `Pagar` siempre visible cuando aplique, mover ojo/borrar a un `DropdownMenu` (`MoreHorizontal`) para reducir ruido visual.
-- **Empty state**: ilustración + texto + CTA "Capturar primera factura" (si admin).
+### 3. Frontend
+- Nuevo componente `CargaCfdiSection.tsx` dentro de `FacturaProveedorFormFields` (toggle modo).
+- Hook `useParseCfdi()` que llama la edge function vía `supabase.functions.invoke`.
+- Extensión a `useCrearFacturaProveedor` para subir XML/PDF a storage tras crear el registro.
+- Si RFC no matchea: usar `useProveedorMutations.addProveedor` desde un mini-dialog "Crear proveedor del XML".
 
-### 5. Misc
+### 4. Visibilidad en la tabla de CxP
+- Badge "CFDI" en la columna Folio cuando `tipo_documento='cfdi'`.
+- En "Detalle de pagos": botón "Descargar XML" si existe.
 
-- Filtro por proveedor llega al servicio `fetchFacturasCxP` (extiende `FetchCxPFiltros`).
-- Actualizar `CHANGELOG.md` y bump `APP_VERSION` (12.62.0).
+## Out of scope
+- Validación con SAT (verifica.facturaelectronica.sat.gob.mx).
+- Carga masiva de XMLs (zip).
+- Conciliación contra complementos de pago.
+- Soporte CFDI 3.3 (sólo 4.0).
 
----
+## Entregables
+- Migración: columnas + índice único parcial por `uuid_cfdi`.
+- Edge function `supabase/functions/parse-cfdi-xml/` con `index.ts`, `parser.ts` (puro, testeable), `parser_test.ts`.
+- Componentes: `CargaCfdiSection.tsx`, `CrearProveedorDesdeCfdiDialog.tsx`.
+- Hook: `useParseCfdi.ts`.
+- Edits: `FacturaProveedorFormFields.tsx`, `DialogNuevaFacturaProveedor.tsx`, `proveedorFacturas.ts` (insert XML path + uuid), `cxpColumns.tsx` (badge CFDI), `DialogDetallePagosProveedor.tsx` (descarga XML).
+- `APP_VERSION` → `12.63.0`, entrada en `CHANGELOG.md`.
 
-### Archivos afectados
-
-**Nuevos**
-- `src/components/cxp/FacturaProveedorFormFields.tsx`
-- `src/components/cxp/PagoProveedorFormFields.tsx`
-- `src/components/cxp/CxpFiltros.tsx`
-- `src/components/cxp/CxpFiltrosChips.tsx`
-
-**Editados**
-- `src/components/cxp/DialogNuevaFacturaProveedor.tsx` — adelgazar, usar form fields + scrollable.
-- `src/components/cxp/DialogRegistrarPagoProveedor.tsx` — secciones + saldo restante.
-- `src/components/cxp/DialogDetallePagosProveedor.tsx` — KPIs + tabla mejorada + doble confirm.
-- `src/components/cxp/cxpColumns.tsx` — dropdown acciones, defaults sort.
-- `src/pages/cxp/Cxp.tsx` — nuevos filtros, KPIs con count, empty state, click en fila.
-- `src/services/cxp/*` — extender filtros (proveedor_id, fecha rango). _Solo capa de lectura, sin cambios de schema._
-- `src/constants/appVersion.ts` y `CHANGELOG.md`.
-
-### Fuera de alcance
-- Cambios al schema de BD (`proveedor_facturas`, `proveedor_pagos`).
-- Conciliación con tesorería / pagos masivos.
-- Importación CSV de facturas.
-- Edición de facturas existentes (sólo se mantiene crear + eliminar).
