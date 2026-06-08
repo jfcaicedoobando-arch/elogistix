@@ -188,37 +188,3 @@ export async function softDeleteFacturaProveedor(id: string, userId: string | nu
   if (error) throw error;
 }
 
-/**
- * Sube XML (obligatorio) y PDF (opcional) de un CFDI a `facturas/cfdi/{org}/{facturaId}/`
- * y actualiza las URLs en `proveedor_facturas`.
- */
-export async function subirArchivosCfdiFactura(params: {
-  facturaId: string;
-  organizationId: string | null | undefined;
-  xmlFile: File;
-  pdfFile: File | null;
-}): Promise<void> {
-  const { sanitizeFileName } = await import("@/lib/storage");
-  const base = `cfdi/${params.organizationId ?? "org"}/${params.facturaId}`;
-  const xmlPath = `${base}/${sanitizeFileName(params.xmlFile.name)}`;
-  const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
-    contentType: "application/xml", upsert: true,
-  });
-  if (xmlUp.error) throw xmlUp.error;
-
-  let pdfPath: string | null = null;
-  if (params.pdfFile) {
-    pdfPath = `${base}/${sanitizeFileName(params.pdfFile.name)}`;
-    const pdfUp = await supabase.storage.from("facturas").upload(pdfPath, params.pdfFile, {
-      contentType: "application/pdf", upsert: true,
-    });
-    if (pdfUp.error) throw pdfUp.error;
-  }
-
-  const { error } = await supabase.from("proveedor_facturas").update({
-    archivo_xml_url: xmlPath,
-    archivo_pdf_url: pdfPath,
-  }).eq("id", params.facturaId);
-  if (error) throw error;
-}
-
