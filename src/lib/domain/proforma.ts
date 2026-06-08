@@ -49,7 +49,12 @@ export function calcularTotalesProforma(
     const sub = Number(c.cantidad) * Number(c.precio_unitario);
     const aplica = c.id in ivaOverridesUSD ? ivaOverridesUSD[c.id] : !!c.aplica_iva;
     if (!aplica) return s;
-    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
+    // Cuando el override fuerza aplicar IVA, respetamos `tasa_iva_aplicada`
+    // de la fila o caemos al `tasaIva` global (ignorando `aplica_iva` original).
+    const tasa = c.tasa_iva_aplicada != null && Number.isFinite(c.tasa_iva_aplicada)
+      ? Number(c.tasa_iva_aplicada)
+      : tasaIva;
+    return s + calcularIVA(sub, tasa);
   }, 0);
 
   const subtotal_mxn = mxn.reduce(
