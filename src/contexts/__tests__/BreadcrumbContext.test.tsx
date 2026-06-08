@@ -1,8 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
-import { BreadcrumbProvider, useBreadcrumbLabels, useRegisterBreadcrumbLabel } from "../BreadcrumbContext";
+import { renderHook, act } from "@testing-library/react";
+import type { ReactNode } from "react";
+import {
+  BreadcrumbProvider,
+  useBreadcrumbLabels,
+  useRegisterBreadcrumbLabel,
+} from "../BreadcrumbContext";
 
-const wrapper = ({ children }: { children: React.ReactNode }) => <BreadcrumbProvider>{children}</BreadcrumbProvider>;
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <BreadcrumbProvider>{children}</BreadcrumbProvider>
+);
 
 describe("BreadcrumbContext", () => {
   it("useBreadcrumbLabels retorna {} fuera del provider (no lanza)", () => {
@@ -10,26 +17,35 @@ describe("BreadcrumbContext", () => {
     expect(result.current).toEqual({});
   });
 
-  it("setLabel registra y clearLabel elimina etiquetas", () => {
-    renderHook(
+  it("useRegisterBreadcrumbLabel registra y limpia la etiqueta", () => {
+    const { result, unmount } = renderHook(
       () => {
-        const labels = useBreadcrumbLabels();
-        return labels;
+        useRegisterBreadcrumbLabel("uuid-123", "Cliente Acme");
+        return useBreadcrumbLabels();
       },
       { wrapper },
     );
-    // Usar hook interno mediante segundo hook
-    const { result: reg } = renderHook(
-      () => useRegisterBreadcrumbLabel("uuid-123", "Cliente Acme"),
-      { wrapper },
-    );
-    void reg; // solo verificar que no lanza
-    expect(true).toBe(true);
+
+    expect(result.current).toEqual({ "uuid-123": "Cliente Acme" });
+
+    act(() => {
+      unmount();
+    });
+    // Tras unmount, el cleanup borra la etiqueta. Validamos con un nuevo render dentro del mismo provider:
+    const { result: after } = renderHook(() => useBreadcrumbLabels(), { wrapper });
+    expect(after.current).toEqual({});
   });
 
-  it("useRegisterBreadcrumbLabel ignora segment/label vacíos", () => {
-    expect(() =>
-      renderHook(() => useRegisterBreadcrumbLabel(undefined, null), { wrapper }),
-    ).not.toThrow();
+  it("ignora segment o label vacíos (no modifica el mapa)", () => {
+    const { result } = renderHook(
+      () => {
+        useRegisterBreadcrumbLabel(undefined, null);
+        useRegisterBreadcrumbLabel("", "x");
+        useRegisterBreadcrumbLabel("seg", "");
+        return useBreadcrumbLabels();
+      },
+      { wrapper },
+    );
+    expect(result.current).toEqual({});
   });
 });
