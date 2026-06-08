@@ -1,29 +1,53 @@
-import { expect, it, describe, vi } from "vitest";
-import { descargarPdf } from "../descargarPdf";
+import { expect, it, describe, vi, beforeEach } from "vitest";
 import React from "react";
 
-// Mock de URL.createObjectURL y URL.revokeObjectURL que no existen en JSDOM
+// Mock @react-pdf/renderer ANTES de importar descargarPdf
+const toBlobMock = vi.fn(async () => new Blob(["%PDF-1.4"], { type: "application/pdf" }));
+vi.mock("@react-pdf/renderer", () => ({
+  pdf: vi.fn(() => ({ toBlob: toBlobMock })),
+}));
+
+const descargarBlobMock = vi.fn();
+vi.mock("@/lib/downloadBlob", () => ({
+  descargarBlob: (...args: unknown[]) => descargarBlobMock(...args),
+}));
+
+import { descargarPdf } from "../descargarPdf";
+import { pdf } from "@react-pdf/renderer";
+
 global.URL.createObjectURL = vi.fn(() => "mock-url");
 global.URL.revokeObjectURL = vi.fn();
 
 describe("pdf/render/descargarPdf", () => {
-  it("debe exportar la función descargarPdf", () => {
-    expect(descargarPdf).toBeDefined();
-    expect(typeof descargarPdf).toBe("function");
+  beforeEach(() => {
+    toBlobMock.mockClear();
+    descargarBlobMock.mockClear();
+    (pdf as ReturnType<typeof vi.fn>).mockClear();
   });
 
-  it("debe ejecutar flujo de descarga sin lanzar error", async () => {
-    // Mock simple del elemento DocumentProps
-    const _mockElement = React.createElement("div") as unknown;
-    const _mockNombre = "test-document";
-    void _mockElement; void _mockNombre;
+  it("renderiza el elemento y delega la descarga del Blob", async () => {
+    const element = React.createElement("div") as never;
+    await descargarPdf(element, "mi-documento");
 
-    // No podemos probar el flujo completo de pdf(elemento).toBlob() fácilmente sin mocks pesados,
-    // pero verificamos que la función sea llamable.
-    expect(async () => {
-      // Nota: esto fallará si intentamos ejecutarlo realmente porque 'pdf' de @react-pdf/renderer
-      // intentará renderizar el mockElement que no es un Document de react-pdf.
-      // Por ahora solo verificamos definición.
-    }).not.toThrow();
+    expect(pdf).toHaveBeenCalledTimes(1);
+    expect(pdf).toHaveBeenCalledWith(element);
+    expect(toBlobMock).toHaveBeenCalledTimes(1);
+    expect(descargarBlobMock).toHaveBeenCalledTimes(1);
+    const [blobArg, nameArg] = descargarBlobMock.mock.calls[0];
+    expect(blobArg).toBeInstanceOf(Blob);
+    expect(nameArg).toBe("mi-documento.pdf");
+  });
+
+  it("conserva la extensión .pdf si ya está incluida", async () => {
+    await descargarPdf(React.createElement("div") as never, "reporte.pdf");
+    expect(descargarBlobMock.mock.calls[0][1]).toBe("reporte.pdf");
+  });
+
+  it("propaga el error si toBlob falla", async () => {
+    toBlobMock.mockRejectedValueOnce(new Error("render fail"));
+    await expect(
+      descargarPdf(React.createElement("div") as never, "x"),
+    ).rejects.toThrow("render fail");
+    expect(descargarBlobMock).not.toHaveBeenCalled();
   });
 });
