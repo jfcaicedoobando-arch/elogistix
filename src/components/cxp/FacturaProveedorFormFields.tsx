@@ -12,50 +12,22 @@ import {
 import { ProveedorCombobox } from "./ProveedorCombobox";
 import { formatCurrency } from "@/lib/formatters";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  FormSection, FieldError,
+  type FacturaFormValues, type CategoriaPresupuestoLite,
+} from "./facturaFormPrimitives";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
-export interface FacturaFormValues {
-  provId: string;
-  provNombre: string;
-  folio: string;
-  emision: string;
-  diasCredito: number;
-  vencimiento: string;
-  moneda: Moneda;
-  tc: string;
-  subtotal: string;
-  iva: string;
-  retenciones: string;
-  categoriaId: string;
-  notas: string;
-}
-
-interface Categoria { id: string; nombre: string }
+export type { FacturaFormValues };
 
 interface Props {
   values: FacturaFormValues;
   onChange: <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => void;
   onProveedor: (id: string, nombre: string) => void;
-  categorias: Categoria[];
+  categorias: CategoriaPresupuestoLite[];
   total: number;
   errors?: Partial<Record<keyof FacturaFormValues, string>>;
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return <p className="text-xs text-destructive mt-1">{msg}</p>;
 }
 
 export function FacturaProveedorFormFields({
@@ -65,7 +37,7 @@ export function FacturaProveedorFormFields({
 
   return (
     <div className="space-y-6">
-      <Section title="Proveedor y folio">
+      <FormSection title="Proveedor y folio">
         <div className="space-y-1">
           <Label>Proveedor *</Label>
           <ProveedorCombobox value={values.provId} onChange={onProveedor} className="w-full" />
@@ -73,40 +45,30 @@ export function FacturaProveedorFormFields({
         </div>
         <div className="space-y-1">
           <Label>Folio del proveedor *</Label>
-          <Input
-            value={values.folio}
-            onChange={(e) => onChange("folio", e.target.value)}
-            placeholder="A-12345"
-          />
+          <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
           <FieldError msg={errors.folio} />
         </div>
-      </Section>
+      </FormSection>
 
-      <Section title="Fechas y crédito">
+      <FormSection title="Fechas y crédito">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label>Emisión</Label>
-            <Input
-              type="date" value={values.emision}
-              onChange={(e) => onChange("emision", e.target.value)}
-            />
+            <Input type="date" value={values.emision} onChange={(e) => onChange("emision", e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label>Días crédito</Label>
-            <Input
-              type="number" min={0}
-              value={values.diasCredito}
-              onChange={(e) => onChange("diasCredito", Number(e.target.value))}
-            />
+            <Input type="number" min={0} value={values.diasCredito}
+              onChange={(e) => onChange("diasCredito", Number(e.target.value))} />
           </div>
           <div className="space-y-1">
             <Label>Vencimiento</Label>
             <Input type="date" value={values.vencimiento} readOnly className="bg-muted" />
           </div>
         </div>
-      </Section>
+      </FormSection>
 
-      <Section title="Moneda">
+      <FormSection title="Moneda">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Moneda</Label>
@@ -122,56 +84,40 @@ export function FacturaProveedorFormFields({
           {showTc && (
             <div className="space-y-1">
               <Label>Tipo de cambio a MXN</Label>
-              <Input
-                type="number" step="0.01" inputMode="decimal"
-                placeholder="0.00"
-                value={values.tc}
-                onChange={(e) => onChange("tc", e.target.value)}
-              />
+              <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+                value={values.tc} onChange={(e) => onChange("tc", e.target.value)} />
               <FieldError msg={errors.tc} />
             </div>
           )}
         </div>
-      </Section>
+      </FormSection>
 
-      <Section title="Importes">
+      <FormSection title="Importes">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label>Subtotal</Label>
-            <Input
-              type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={values.subtotal}
-              onChange={(e) => onChange("subtotal", e.target.value)}
-            />
+            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+              value={values.subtotal} onChange={(e) => onChange("subtotal", e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label>IVA</Label>
-            <Input
-              type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={values.iva}
-              onChange={(e) => onChange("iva", e.target.value)}
-            />
+            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+              value={values.iva} onChange={(e) => onChange("iva", e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label>Retenciones</Label>
-            <Input
-              type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={values.retenciones}
-              onChange={(e) => onChange("retenciones", e.target.value)}
-            />
+            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+              value={values.retenciones} onChange={(e) => onChange("retenciones", e.target.value)} />
           </div>
         </div>
-
         <div className="mt-3 rounded-lg border bg-muted/40 px-4 py-3 flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Total a pagar</span>
-          <span className="text-xl font-semibold tabular-nums">
-            {formatCurrency(total, values.moneda)}
-          </span>
+          <span className="text-xl font-semibold tabular-nums">{formatCurrency(total, values.moneda)}</span>
         </div>
         <FieldError msg={errors.subtotal} />
-      </Section>
+      </FormSection>
 
-      <Section title="Categorización (opcional)">
+      <FormSection title="Categorización (opcional)">
         <div className="space-y-1">
           <Label>Categoría presupuestal</Label>
           <Select
@@ -189,14 +135,10 @@ export function FacturaProveedorFormFields({
         </div>
         <div className="space-y-1">
           <Label>Notas</Label>
-          <Textarea
-            value={values.notas}
-            onChange={(e) => onChange("notas", e.target.value)}
-            rows={2}
-            placeholder="Observaciones internas…"
-          />
+          <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2}
+            placeholder="Observaciones internas…" />
         </div>
-      </Section>
+      </FormSection>
     </div>
   );
 }

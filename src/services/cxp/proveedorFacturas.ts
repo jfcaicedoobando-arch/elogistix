@@ -187,3 +187,4 @@ export async function softDeleteFacturaProveedor(id: string, userId: string | nu
     .eq("id", id);
   if (error) throw error;
 }
+

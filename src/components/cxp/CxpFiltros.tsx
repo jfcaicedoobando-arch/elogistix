@@ -1,9 +1,5 @@
 /**
  * Filtros de CxP — barra compacta + chips de filtros activos.
- *
- * Desktop (md+): [ Search ][ Estatus ][ Moneda ][ Filtros (N) ]
- *   Sheet lateral con: Proveedor, Emisión desde, Emisión hasta.
- * Mobile: [ Search ][ Filtros (N) ] (sheet con todo).
  */
 import { useMemo, useState } from "react";
 import { Filter, X } from "lucide-react";
@@ -12,8 +8,6 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -21,8 +15,7 @@ import SearchInput from "@/components/selects/SearchInput";
 import { useProveedoresLite } from "@/hooks/proveedor";
 import type { EstatusCxP } from "@/services/cxp";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
-
-const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
+import { CxpFiltrosSheetFields, ESTATUS } from "./CxpFiltrosSheetFields";
 
 interface Props {
   search: string;
@@ -52,8 +45,7 @@ export function CxpFiltros(props: Props) {
 
   const secondaryActive =
     (props.proveedorId && props.proveedorId !== "todos" ? 1 : 0) +
-    (props.fechaDesde ? 1 : 0) +
-    (props.fechaHasta ? 1 : 0);
+    (props.fechaDesde ? 1 : 0) + (props.fechaHasta ? 1 : 0);
 
   const totalActive =
     secondaryActive +
@@ -76,104 +68,30 @@ export function CxpFiltros(props: Props) {
         <Filter className="h-4 w-4" />
         <span>Filtros</span>
         {count > 0 && (
-          <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[11px]">
-            {count}
-          </Badge>
+          <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[11px]">{count}</Badge>
         )}
       </Button>
     </SheetTrigger>
   );
 
-  const SheetFields = ({ includePrimary }: { includePrimary: boolean }) => (
-    <div className="space-y-4">
-      {includePrimary && (
-        <>
-          <div className="space-y-1">
-            <Label>Estatus</Label>
-            <Select value={props.estatus} onValueChange={(v) => props.onEstatusChange(v as EstatusCxP | "todos")}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ESTATUS.map((e) => (
-                  <SelectItem key={e} value={e}>
-                    {e === "todos" ? "Todos los estatus" : e}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>Moneda</Label>
-            <Select value={props.moneda} onValueChange={(v) => props.onMonedaChange(v as typeof props.moneda)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                <SelectItem value="MXN">MXN</SelectItem>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="EUR">EUR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </>
-      )}
-      <div className="space-y-1">
-        <Label>Proveedor</Label>
-        <Select value={props.proveedorId || "todos"} onValueChange={props.onProveedorChange}>
-          <SelectTrigger><SelectValue placeholder="Todos los proveedores" /></SelectTrigger>
-          <SelectContent className="max-h-72">
-            <SelectItem value="todos">Todos los proveedores</SelectItem>
-            {proveedoresOpts.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label>Emisión desde</Label>
-          <Input
-            type="date" value={props.fechaDesde}
-            onChange={(e) => props.onFechaDesdeChange(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>Emisión hasta</Label>
-          <Input
-            type="date" value={props.fechaHasta}
-            onChange={(e) => props.onFechaHastaChange(e.target.value)}
-          />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-0">
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        {/* Mobile */}
         <div className="flex gap-2 md:hidden">
-          <SearchInput
-            value={props.search} onChange={props.onSearchChange}
-            placeholder="Buscar folio o proveedor..." className="flex-1 min-w-0"
-          />
+          <SearchInput value={props.search} onChange={props.onSearchChange}
+            placeholder="Buscar folio o proveedor..." className="flex-1 min-w-0" />
           <FilterButton count={totalActive} />
         </div>
 
-        {/* Desktop */}
         <div className="hidden md:flex md:items-center md:gap-2 md:flex-wrap">
-          <SearchInput
-            value={props.search} onChange={props.onSearchChange}
-            placeholder="Buscar folio o proveedor..." className="flex-1 min-w-[220px]"
-          />
+          <SearchInput value={props.search} onChange={props.onSearchChange}
+            placeholder="Buscar folio o proveedor..." className="flex-1 min-w-[220px]" />
           <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
             {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
-              <Button
-                key={opt}
-                type="button"
+              <Button key={opt} type="button"
                 variant={props.origen === opt ? "default" : "ghost"}
-                size="sm"
-                className="h-8 px-3 text-xs"
-                onClick={() => props.onOrigenChange(opt)}
-              >
+                size="sm" className="h-8 px-3 text-xs"
+                onClick={() => props.onOrigenChange(opt)}>
                 {opt === 'todos' ? 'Todos' : opt}
               </Button>
             ))}
@@ -206,17 +124,14 @@ export function CxpFiltros(props: Props) {
           </SheetHeader>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="md:hidden">
-              <SheetFields includePrimary />
+              <CxpFiltrosSheetFields includePrimary {...props} proveedoresOpts={proveedoresOpts} />
             </div>
             <div className="hidden md:block">
-              <SheetFields includePrimary={false} />
+              <CxpFiltrosSheetFields includePrimary={false} {...props} proveedoresOpts={proveedoresOpts} />
             </div>
           </div>
           <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
-            <Button
-              variant="ghost" onClick={clearAll}
-              disabled={totalActive === 0} className="gap-2"
-            >
+            <Button variant="ghost" onClick={clearAll} disabled={totalActive === 0} className="gap-2">
               <X className="h-4 w-4" /> Limpiar
             </Button>
             <Button onClick={() => setSheetOpen(false)}>Aplicar</Button>

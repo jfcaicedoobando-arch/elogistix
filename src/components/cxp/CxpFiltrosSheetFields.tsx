@@ -1,0 +1,95 @@
+/**
+ * Campos secundarios del sheet de filtros CxP. Reutilizado por mobile (con primarios)
+ * y desktop (sólo secundarios).
+ */
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import type { EstatusCxP } from "@/services/cxp";
+
+const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
+
+interface ProveedorOpt { id: string; nombre: string }
+
+interface Props {
+  includePrimary: boolean;
+  estatus: EstatusCxP | "todos";
+  onEstatusChange: (v: EstatusCxP | "todos") => void;
+  moneda: "todas" | "MXN" | "USD" | "EUR";
+  onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
+  proveedorId: string;
+  onProveedorChange: (v: string) => void;
+  fechaDesde: string;
+  onFechaDesdeChange: (v: string) => void;
+  fechaHasta: string;
+  onFechaHastaChange: (v: string) => void;
+  proveedoresOpts: ProveedorOpt[];
+}
+
+export function CxpFiltrosSheetFields(props: Props) {
+  return (
+    <div className="space-y-4">
+      {props.includePrimary && (
+        <>
+          <div className="space-y-1">
+            <Label>Estatus</Label>
+            <Select value={props.estatus} onValueChange={(v) => props.onEstatusChange(v as EstatusCxP | "todos")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ESTATUS.map((e) => (
+                  <SelectItem key={e} value={e}>
+                    {e === "todos" ? "Todos los estatus" : e}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Moneda</Label>
+            <Select value={props.moneda} onValueChange={(v) => props.onMonedaChange(v as Props["moneda"])}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="MXN">MXN</SelectItem>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
+      <div className="space-y-1">
+        <Label>Proveedor</Label>
+        <Select value={props.proveedorId || "todos"} onValueChange={props.onProveedorChange}>
+          <SelectTrigger><SelectValue placeholder="Todos los proveedores" /></SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="todos">Todos los proveedores</SelectItem>
+            {props.proveedoresOpts.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>Emisión desde</Label>
+          <Input
+            type="date" value={props.fechaDesde}
+            onChange={(e) => props.onFechaDesdeChange(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>Emisión hasta</Label>
+          <Input
+            type="date" value={props.fechaHasta}
+            onChange={(e) => props.onFechaHastaChange(e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export { ESTATUS };
