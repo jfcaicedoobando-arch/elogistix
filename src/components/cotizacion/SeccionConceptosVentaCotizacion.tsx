@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { AlertTriangle, Plus } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/hooks/catalogos";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
+import { detectarFilasMixtas } from "@/lib/financial/costosUSD";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";
 
 interface Props {
