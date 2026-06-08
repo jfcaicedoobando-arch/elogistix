@@ -5,24 +5,30 @@ import { render } from "@testing-library/react";
 const mockData = {
   ingresos: [],
   costos: [],
-  totalIngresos: { total: 0, porModo: {} },
-  totalCostos: { total: 0, porModo: {} },
-  utilidad: { total: 0, porModo: {} },
-  margen: { total: 0, porModo: {} },
+  totalIngresos: { total: 100000, porModo: {} },
+  totalCostos: { total: 70000, porModo: {} },
+  utilidad: { total: 30000, porModo: {} },
+  margen: { total: 30, porModo: {} },
 } as any;
 
 describe("ReporteEERRDocument", () => {
-  it("debe renderizar sin errores con datos mínimos", () => {
-    const { getByTestId } = render(
-      <ReporteEERRDocument periodo="2023-01" fuente="embarques" data={mockData} />
+  it("muestra título, período y leyenda 'Operativa' para fuente=embarques", () => {
+    const { container } = render(
+      <ReporteEERRDocument periodo="2023-01" fuente="embarques" data={mockData} />,
     );
-    expect(getByTestId("pdf-doc")).toBeDefined();
+    const text = container.textContent ?? "";
+    expect(text).toContain("Estado de Resultados");
+    expect(text).toContain("2023-01");
+    expect(text).toContain("Operativa");
+    expect(text).toContain("Ingresos");
+    expect(text).toContain("Costos");
+    expect(text).toContain("30.0%");
   });
 
-  it("debe renderizar con fuente facturas", () => {
-    const { getByTestId } = render(
-      <ReporteEERRDocument periodo="2023-01" fuente="facturas" data={mockData} />
+  it("muestra leyenda 'Devengada' para fuente=facturas", () => {
+    const { container } = render(
+      <ReporteEERRDocument periodo="2023-01" fuente="facturas" data={mockData} />,
     );
-    expect(getByTestId("pdf-doc")).toBeDefined();
+    expect(container.textContent ?? "").toContain("Devengada");
   });
 });

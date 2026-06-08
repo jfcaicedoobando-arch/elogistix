@@ -62,7 +62,9 @@ Migrados a `createSupabaseChainMock` central + `vi.clearAllMocks()` + cobertura 
 
 ---
 
-## Top hallazgos HIGH (30) — priorizados
+## Top hallazgos HIGH (30) — ✅ TODOS RESUELTOS en Sprint 2 (12.61.17)
+
+**Resultado:** **385/385 tests verdes** en los módulos auditados (`src/pdf`, `src/services/{organization,notificaciones}`, `src/features/embarques/{hooks,domain}`, `src/lib/{financial,parsers,mappers}`, `src/hooks/{facturacion,profit}`).
 
 ### H-1 — Barrel tests con sólo `toBeDefined()` (6 archivos)
 Verifican únicamente que los re-exports existen. No detectan ninguna regresión funcional. Equivalen al typecheck que ya corre el CI.

@@ -10,30 +10,39 @@ const mockKpis = {
 };
 
 describe("RentabilidadDocument", () => {
-  it("debe renderizar sin errores con lista de clientes vacía", () => {
-    const { getByTestId } = render(
-      <RentabilidadDocument 
-        fechaDesde="2023-01-01" 
-        fechaHasta="2023-01-31" 
-        kpis={mockKpis} 
-        clientes={[]} 
-      />
+  it("renderiza título, período y mensaje cuando no hay clientes", () => {
+    const { container } = render(
+      <RentabilidadDocument
+        fechaDesde="2023-01-01"
+        fechaHasta="2023-01-31"
+        kpis={mockKpis}
+        clientes={[]}
+      />,
     );
-    expect(getByTestId("pdf-doc")).toBeDefined();
+    const text = container.textContent ?? "";
+    expect(text).toContain("Rentabilidad por cliente");
+    expect(text).toContain("2023-01-01");
+    expect(text).toContain("2023-01-31");
+    expect(text).toContain("No hay datos");
+    expect(text).toContain("20.0%");
   });
 
-  it("debe renderizar con datos de clientes", () => {
+  it("renderiza filas de clientes con sus métricas", () => {
     const clientes = [
-      { cliente_nombre: "Test", total_embarques: 1, venta_usd: 100, costo_usd: 80, profit_usd: 20, margen: 20 }
+      { cliente_nombre: "Acme MX", total_embarques: 3, venta_usd: 5000, costo_usd: 3500, profit_usd: 1500, margen: 30 },
+      { cliente_nombre: "Beta SA", total_embarques: 1, venta_usd: 800, costo_usd: 700, profit_usd: 100, margen: 12.5 },
     ];
-    const { getByTestId } = render(
-      <RentabilidadDocument 
-        fechaDesde="2023-01-01" 
-        fechaHasta="2023-01-31" 
-        kpis={mockKpis} 
-        clientes={clientes} 
-      />
+    const { container } = render(
+      <RentabilidadDocument
+        fechaDesde="2023-01-01"
+        fechaHasta="2023-01-31"
+        kpis={mockKpis}
+        clientes={clientes}
+      />,
     );
-    expect(getByTestId("pdf-doc")).toBeDefined();
+    const text = container.textContent ?? "";
+    expect(text).toContain("Acme MX");
+    expect(text).toContain("Beta SA");
+    expect(text).not.toContain("No hay datos");
   });
 });

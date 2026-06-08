@@ -3,28 +3,54 @@ import { SeccionProspecto, SeccionDatosYMercancia, SeccionDimensiones } from "..
 import { render } from "@testing-library/react";
 
 vi.mock("@/generators/cotizacion/datosGenerales", () => ({
-  buildDatosGenerales: () => [],
-  buildMercancia: () => [],
+  buildDatosGenerales: () => [["Modo", "Marítimo"]],
+  buildMercancia: () => [["Tipo", "FCL"]],
 }));
 
-const mockCotizacion = {
-  es_prospecto: false,
-} as any;
+const mockCotizacion = { es_prospecto: false } as any;
 
 describe("cotizacionSections", () => {
-  it("SeccionProspecto no debe renderizar si no es prospecto", () => {
-    const { queryByTestId } = render(<SeccionProspecto c={mockCotizacion} />);
-    expect(queryByTestId("pdf-text")).toBeNull();
+  it("SeccionProspecto retorna null cuando es_prospecto=false", () => {
+    const { container } = render(<SeccionProspecto c={mockCotizacion} />);
+    expect(container.textContent).toBe("");
   });
 
-  it("SeccionDimensiones debe renderizar para Marítimo LCL", () => {
-    const cot = { ...mockCotizacion, modo: "Marítimo", tipo_embarque: "LCL", dimensiones_lcl: [{ piezas: 1, alto_cm: 10, largo_cm: 10, ancho_cm: 10, volumen_m3: 0.001 }] };
-    const { getAllByTestId } = render(<SeccionDimensiones c={cot} />);
-    expect(getAllByTestId("pdf-text").length).toBeGreaterThan(0);
+  it("SeccionProspecto muestra datos de empresa cuando es_prospecto=true", () => {
+    const c = {
+      es_prospecto: true,
+      prospecto_empresa: "Empresa Prospecto",
+      prospecto_contacto: "Juan Pérez",
+      prospecto_email: "juan@p.com",
+      prospecto_telefono: "555-1234",
+    } as any;
+    const { container } = render(<SeccionProspecto c={c} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Datos del Prospecto");
+    expect(text).toContain("Empresa Prospecto");
+    expect(text).toContain("Juan Pérez");
+    expect(text).toContain("juan@p.com");
   });
 
-  it("SeccionDatosYMercancia debe renderizar sin errores", () => {
-    const { getAllByTestId } = render(<SeccionDatosYMercancia c={mockCotizacion} />);
-    expect(getAllByTestId("pdf-text").length).toBeGreaterThan(0);
+  it("SeccionDimensiones para LCL renderiza Dimensiones y total de piezas/volumen", () => {
+    const c = {
+      ...mockCotizacion,
+      modo: "Marítimo",
+      tipo_embarque: "LCL",
+      piezas: 2,
+      volumen_m3: 0.002,
+      dimensiones_lcl: [{ piezas: 1, alto_cm: 10, largo_cm: 10, ancho_cm: 10, volumen_m3: 0.001 }],
+    };
+    const { container } = render(<SeccionDimensiones c={c} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Dimensiones");
+    expect(text).toContain("Total piezas");
+    expect(text).toContain("Volumen total");
+  });
+
+  it("SeccionDatosYMercancia muestra encabezados de Datos Generales y Mercancía", () => {
+    const { container } = render(<SeccionDatosYMercancia c={mockCotizacion} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Datos Generales");
+    expect(text).toContain("Mercancía");
   });
 });

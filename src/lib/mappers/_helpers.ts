@@ -6,8 +6,16 @@
 export const str = (v: unknown, def = ""): string =>
   v === null || v === undefined ? def : String(v);
 
-export const num = (v: unknown, def = 0): number =>
-  v === null || v === undefined || v === "" ? def : Number(v);
+/**
+ * Coerce a number. Si el valor es null/undefined/"" devuelve `def`.
+ * Si Number(v) resulta en NaN o ±Infinity también devuelve `def` para evitar
+ * propagar valores tóxicos a sumas/totales financieros (ej. CSV con "NaN").
+ */
+export const num = (v: unknown, def = 0): number => {
+  if (v === null || v === undefined || v === "") return def;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : def;
+};
 
 export const numStr = (v: unknown, def = ""): string =>
   v === null || v === undefined ? def : String(v);

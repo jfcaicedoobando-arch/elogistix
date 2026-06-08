@@ -85,7 +85,7 @@ describe("cotizacionDetalleHelpers", () => {
 
     it("calcula subtotal MXN desde cantidad × precio", () => {
       const r = calcularTotalesConceptos(
-        [concepto({ moneda: "MXN", cantidad: 3, precio_unitario: 100 })],
+        [concepto({ moneda: "MXN", cantidad: 3, precio_unitario: 100, aplica_iva: true })],
         0.16,
       );
       expect(r.subtotalMXN).toBe(300);
@@ -95,7 +95,7 @@ describe("cotizacionDetalleHelpers", () => {
 
     it("usa la tasa de IVA proporcionada", () => {
       const r = calcularTotalesConceptos(
-        [concepto({ moneda: "MXN", cantidad: 1, precio_unitario: 1000 })],
+        [concepto({ moneda: "MXN", cantidad: 1, precio_unitario: 1000, aplica_iva: true })],
         0.08,
       );
       expect(r.ivaMXN).toBeCloseTo(80, 2);
