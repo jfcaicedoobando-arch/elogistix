@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/formatters";
+import { useRegistrarPagoProveedor } from "@/hooks/cxp";
 import { useRegistrarPagoProveedor } from "@/hooks/cxp";
 import type { FacturaCxP } from "@/services/cxp";
 import type { Database } from "@/integrations/supabase/types";
