@@ -3,7 +3,7 @@
  * para mantener el controller bajo el límite Power of 10 (<200 líneas).
  */
 import { useEffect } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { UseFormReturn, FieldValues } from "react-hook-form";
 import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/lib/contacto";
 
