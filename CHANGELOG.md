@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.2] - 2026-06-08
+- **fix(auditoría)**: reposicionado el marcador `// SAFE-CAST:` en `src/services/proveedor/index.ts` dentro del objeto RPC (estaba 8 líneas arriba; el scanner sólo revisa 6). Restaura `audit-report` en verde (0 HIGH / 0 CRITICAL) y permite que los 16 shards de coverage pasen. Cobertura combinada: lines 29.0%, funcs 46.8%, branches 67.7%.
+
 ## [12.64.1] - 2026-06-08
 - **chore(arquitectura) — refactor CxP para cumplir Power of 10**: splits de archivos sobre 200 líneas y eliminación del único import directo a `@/integrations/supabase/client` desde `components/`.
   - Nuevo servicio `src/services/cxp/cfdiStorage.ts` (`subirArchivosCfdiFactura`) — el dialog ya no toca `supabase.storage` ni `supabase.from(...).update` directamente.
