@@ -108,3 +108,49 @@ describe("calcularUtilidad", () => {
     expect(calcularUtilidad(1000, 700)).toBe(300);
   });
 });
+
+describe("subtotalLinea", () => {
+  it("multiplica cantidad por precio unitario", () => {
+    expect(subtotalLinea(3, 99.99)).toBeCloseTo(299.97, 2);
+  });
+  it("redondea a 2 decimales por fila (sin drift)", () => {
+    // 0.1 * 3 en float plano = 0.30000000000000004
+    expect(subtotalLinea(3, 0.1)).toBe(0.3);
+  });
+  it("calcularSubtotal delega en subtotalLinea", () => {
+    expect(calcularSubtotal(3, 0.1)).toBe(subtotalLinea(3, 0.1));
+  });
+});
+
+describe("sumarSubtotales", () => {
+  it("acumula sin drift con cantidades fraccionarias", () => {
+    // Reducir con `+` plano daría 0.30000000000000004
+    const items = [
+      { cant: 1, pu: 0.1 },
+      { cant: 1, pu: 0.1 },
+      { cant: 1, pu: 0.1 },
+    ];
+    const total = sumarSubtotales(items, (i) => ({ cantidad: i.cant, precioUnitario: i.pu }));
+    expect(total).toBe(0.3);
+  });
+  it("retorna 0 con lista vacía", () => {
+    expect(sumarSubtotales([], () => ({ cantidad: 0, precioUnitario: 0 }))).toBe(0);
+  });
+  it("coincide con DialogRegistrarPago: 3 × 33.33 = 99.99", () => {
+    const items = [{ q: 3, p: 33.33 }];
+    expect(sumarSubtotales(items, (i) => ({ cantidad: i.q, precioUnitario: i.p }))).toBe(99.99);
+  });
+});
+
+describe("sumarMontos", () => {
+  it("elimina drift de punto flotante en suma de montos", () => {
+    expect(sumarMontos([0.1, 0.2, 0.3, 0.4])).toBe(1.0);
+  });
+  it("retorna 0 con lista vacía", () => {
+    expect(sumarMontos([])).toBe(0);
+  });
+  it("acumula montos pre-calculados (ej. IVA por fila)", () => {
+    expect(sumarMontos([160, 80, 0])).toBe(240);
+  });
+});
+
