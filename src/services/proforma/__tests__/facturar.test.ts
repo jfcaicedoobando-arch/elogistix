@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 describe("marcarProformaFacturada", () => {
-  it("calcula fecha de vencimiento sumando dias_credito (UTC-safe)", async () => {
+  it("calcula fecha_vencimiento = fechaFacturacion + dias_credito (UTC-safe)", async () => {
     mock.setTableResult("proformas", { data: proformaRow({ dias_credito: 30 }), error: null });
     mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });
     await marcarProformaFacturada({
@@ -35,9 +35,16 @@ describe("marcarProformaFacturada", () => {
       folioFacturaExterna: "A-100",
       fechaFacturacion: "2026-01-31",
     });
-    // 2026-01-31 + 30 días = 2026-03-02
-    const facturasInsert = mock.tableCalls.find((c) => c.table === "facturas");
-    expect(facturasInsert).toBeTruthy();
+    // 2026-01-31 + 30 días = 2026-03-02 (UTC, addDays sin DST).
+    const payload = mock.getMutationPayload("facturas", "insert") as
+      | Record<string, unknown>
+      | Array<Record<string, unknown>>
+      | null;
+    expect(payload).toBeTruthy();
+    const first = Array.isArray(payload) ? payload[0] : payload!;
+    expect(first.fecha_emision).toBe("2026-01-31");
+    expect(first.fecha_vencimiento).toBe("2026-03-02");
+    expect(first.folio_externo).toBe("A-100");
   });
 
   it("crea factura USD y MXN cuando ambos totales > 0", async () => {
