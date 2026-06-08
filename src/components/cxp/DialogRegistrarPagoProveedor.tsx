@@ -243,8 +243,9 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
               <Input
                 value={referencia}
                 onChange={(e) => setReferencia(e.target.value)}
-                placeholder="Folio bancario, número de cheque…"
+                placeholder={referenciaHint(metodo)}
               />
+              <p className="text-[11px] text-muted-foreground">{referenciaHint(metodo)}</p>
             </div>
             <div className="space-y-1">
               <Label>Notas</Label>
