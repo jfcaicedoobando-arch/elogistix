@@ -35,5 +35,17 @@ describe('tracking/index', () => {
     const result = await fetchTrackingPublico('token123');
     expect(global.fetch).toHaveBeenCalled();
     expect(result).toEqual({ embarque: {} });
+
+  it('fetchTrackingPublico lanza error si el fetch retorna !ok', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({ error: 'Token inválido' }),
+    });
+    await expect(fetchTrackingPublico('bad-token')).rejects.toThrow('Token inválido');
+  });
+
+  it('createTrackingLink propaga error de insert', async () => {
+    mockSupabase.single.mockResolvedValue({ data: null, error: new Error('insert fail') });
+    await expect(createTrackingLink({ embarqueId: 'emb1' })).rejects.toThrow('insert fail');
   });
 });
