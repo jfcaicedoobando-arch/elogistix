@@ -18,7 +18,7 @@ import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
  *  Ocurre cuando un bundle stale intenta re-renderizar y referencia
  *  variables (hooks, estado) que ya no existen tras hot reload.
  *  Ejemplo: "ReferenceError: pendienteOpen is not defined". */
-function isReactRefreshHmrError(error: Error): boolean {
+export function isReactRefreshHmrError(error: Error): boolean {
   if (!error.message?.includes("is not defined")) return false;
   const stack = error.stack ?? "";
   return /react-refresh|performReactRefresh|scheduleRefresh/i.test(stack);
