@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.14] - 2026-06-08
+- **ux(cotizaciones) — estado global isProcessing en wizard**: `CotizacionWizardLayout` envuelve `handleSiguiente`/`handleGuardar` en un estado local `isProcessing` que, combinado con `w.isPending`, deshabilita visualmente el botón "Siguiente/Guardar", el botón "Anterior/Cancelar" y el botón "Volver" del header mientras se valida y persiste cada paso. Evita doble envío durante uploads (MSDS), validaciones y mutaciones. El label del botón principal muestra "Procesando..." en pasos 1-3 y "Guardando..." en el paso final.
+
 ## [12.61.13] - 2026-06-08
 - **feature(embarques) — bloqueo de eliminación con dependencias financieras**: `DialogEliminarEmbarque` ahora consulta antes del borrado si el embarque tiene facturas CxC (`facturas`), CxP (`proveedor_facturas`), notas de crédito (`factura_notas_credito`, `proveedor_notas_credito`) o pagos (`pagos_factura`, `pagos_proveedor`) asociados. Si existen, se muestra un diálogo informativo con los folios/series de las facturas a cancelar y conteos de NC y pagos; el botón de eliminar queda bloqueado. Nuevo hook `useEmbarqueDependenciasFinancieras`. Mientras se verifica, el botón "Sí, eliminar" se deshabilita.
 
