@@ -22,7 +22,7 @@ interface ConceptoCostoDb {
   contenedor_id: string | null;
 }
 
-interface Params {
+interface Params<TForm extends FieldValues> {
   initialized: boolean;
   hidratoContactos: boolean;
   hidratoContenedores: boolean;
@@ -37,10 +37,10 @@ interface Params {
   conceptosCostoDb: ConceptoCostoDb[];
   inicializarVenta: (rows: Array<{ id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null }>) => void;
   inicializarCosto: (rows: Array<{ id: number; proveedorId: string; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
-  methods: UseFormReturn<Record<string, unknown>>;
+  methods: UseFormReturn<TForm>;
 }
 
-export function useHidratacionEditarEmbarque(p: Params) {
+export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Params<TForm>) {
   // Conceptos venta
   useEffect(() => {
     if (!p.initialized || p.conceptosVentaDb.length === 0) return;
