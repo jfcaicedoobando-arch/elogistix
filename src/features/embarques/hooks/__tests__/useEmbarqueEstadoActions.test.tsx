@@ -95,7 +95,7 @@ describe("useEmbarqueEstadoActions", () => {
 
   it("handleAvanzarEstado notifica error cuando mutateAsync falla", async () => {
     avanzarMutateAsync.mockRejectedValueOnce(new Error("boom"));
-    toastFn.mockClear();
+    sonnerError.mockClear();
     const { result } = renderHook(
       () => useEmbarqueEstadoActions(embarque as Parameters<typeof useEmbarqueEstadoActions>[0], "e-1"),
       { wrapper: createWrapper() },
