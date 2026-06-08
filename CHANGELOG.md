@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.63.0] - 2026-06-08
+- **feat(cxp) — carga de XML CFDI 4.0 mexicano con AI en Cuentas por Pagar**: El modal "Capturar factura de proveedor" gana un toggle superior **Captura manual / Cargar XML CFDI** (`CargaCfdiSection.tsx`). En modo CFDI: drop-zone para XML (obligatorio, ≤2 MB) + adjunto opcional de PDF. Al procesar:
+  - Nueva edge function `parse-cfdi-xml` valida JWT, rechaza no-XML, DOCTYPE (XXE) y versiones distintas de 4.0; parsea con regex pura (`parser.ts`, sin DOM) y extrae UUID, serie/folio, fecha, emisor (RFC/nombre/régimen), receptor, subtotal, total, moneda, tipo de cambio, IVA trasladado, retenciones y los 10 primeros conceptos. Tests Deno (`parser_test.ts`) cubren happy path, versión inválida, sin timbre y DOCTYPE.
+  - Lovable AI (Gemini 2.5 Flash Lite) sugiere `categoria_presupuesto_id` cruzando los conceptos contra las categorías activas del tenant y genera una `notas` breve. Si AI falla o no hay match claro, se cae a heurística simple.
+  - Todos los campos del formulario quedan prellenados y editables. Lookup automático de proveedor por RFC del emisor (`findProveedorByRfc`); si no existe, abre `CrearProveedorDesdeCfdiDialog` para crearlo prellenado (tipo "Agente de Carga", país México, moneda MXN) sin salir del flujo.
+  - Tras guardar la factura: XML y PDF se suben al bucket privado `facturas` bajo `cfdi/{org}/{facturaId}/` y se persisten en `archivo_xml_url` / `archivo_pdf_url`. Se guarda `uuid_fiscal` y `rfc_proveedor`.
+  - Migración: índice único parcial `ux_proveedor_facturas_uuid_fiscal_org` para bloquear CFDI duplicado por organización. El error `23505` se traduce a un toast en español.
+  - Bump `APP_VERSION` a 12.63.0.
+
 ## [12.62.0] - 2026-06-08
 - **feat(ux) — refactor completo del módulo Cuentas por Pagar**: Rediseño para dejarlo listo para uso real.
   - **Modal "Capturar factura de proveedor"**: ya no se corta. Ahora es `dialogSize.xl` con `max-h 90vh` + cuerpo scrollable + footer sticky. Formulario reorganizado en 5 secciones (`Proveedor y folio`, `Fechas y crédito`, `Moneda`, `Importes`, `Categorización`). Los inputs numéricos usan placeholder `0.00` en vez de `0` literal. Panel destacado de **Total a pagar** con la moneda. Validación inline (mensajes bajo el campo). Lógica extraída a `FacturaProveedorFormFields.tsx` (≤180 LOC).
