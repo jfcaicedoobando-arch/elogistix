@@ -67,11 +67,7 @@ describe("descargarBlob", () => {
   });
 
   it("revoca la URL aún si .click() lanza (finally garantiza la limpieza)", () => {
-    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
-      const el = document.createElement.wasCalled
-        ? document.createElement(tag)
-        : ({} as HTMLAnchorElement);
-      void el;
+    vi.spyOn(document, "createElement").mockImplementation(() => {
       const a = {
         href: "",
         download: "",
