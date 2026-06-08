@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useProveedorMutations } from "@/hooks/proveedor/useProveedores";
+import { useProveedorMutations } from "@/hooks/proveedor";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 interface Props {
