@@ -58,3 +58,13 @@ Deno.test("checkAdminAccess: operador sin rol admin → orgId=null", async () =>
   assertEquals(r.isGlobalAdmin, false);
   assertEquals(r.orgId, null);
 });
+
+Deno.test("checkAdminAccess: userId vacío → no es admin", async () => {
+  const client = makeClient({
+    user_roles: { data: null, error: null },
+    organization_members: { data: null, error: null },
+  });
+  const r = await checkAdminAccess(client as never, "");
+  assertEquals(r.isGlobalAdmin, false);
+  assertEquals(r.orgId, null);
+});
