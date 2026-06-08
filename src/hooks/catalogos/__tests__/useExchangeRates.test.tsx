@@ -16,9 +16,9 @@ describe("useExchangeRates", () => {
     expect((result.current.data as any)?.[0].rate).toBe(20);
   });
 
-  it("has specific stale time", () => {
-    const { result } = renderHook(() => useExchangeRates(), { wrapper: createWrapper() });
-    // Smoke test for hook presence and basic query state
-    expect(result.current.isLoading).toBe(true);
+  it("invoca al servicio fetchExchangeRates", async () => {
+    const { fetchExchangeRates } = await import("@/services/catalogos");
+    renderHook(() => useExchangeRates(), { wrapper: createWrapper() });
+    await waitFor(() => expect(fetchExchangeRates).toHaveBeenCalled());
   });
 });
