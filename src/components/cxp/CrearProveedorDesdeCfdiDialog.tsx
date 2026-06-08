@@ -43,6 +43,7 @@ export function CrearProveedorDesdeCfdiDialog({
         tipo: "Agente de Carga",
         pais: "México",
         moneda_preferida: "MXN",
+        origen_proveedor: "Nacional",
         organization_id: organizationId ?? undefined,
       };
       const created = await addProveedor(payload);

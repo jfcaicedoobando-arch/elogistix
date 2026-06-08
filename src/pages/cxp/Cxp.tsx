@@ -50,6 +50,7 @@ export default function Cxp() {
   const [search, setSearch] = useState("");
   const [estatus, setEstatus] = useState<EstatusCxP | "todos">("todos");
   const [moneda, setMoneda] = useState<"todas" | "MXN" | "USD" | "EUR">("todas");
+  const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
   const [proveedorId, setProveedorId] = useState<string>("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
@@ -58,6 +59,7 @@ export default function Cxp() {
     search: search || undefined,
     estatus,
     moneda,
+    origen,
     proveedor_id: proveedorId === "todos" ? undefined : proveedorId,
     fecha_desde: fechaDesde || undefined,
     fecha_hasta: fechaHasta || undefined,
@@ -110,7 +112,7 @@ export default function Cxp() {
   );
 
   const hayFiltros =
-    search !== "" || estatus !== "todos" || moneda !== "todas" ||
+    search !== "" || estatus !== "todos" || moneda !== "todas" || origen !== "todos" ||
     proveedorId !== "todos" || fechaDesde !== "" || fechaHasta !== "";
 
   return (
@@ -163,6 +165,7 @@ export default function Cxp() {
             search={search} onSearchChange={setSearch}
             estatus={estatus} onEstatusChange={setEstatus}
             moneda={moneda} onMonedaChange={setMoneda}
+            origen={origen} onOrigenChange={setOrigen}
             proveedorId={proveedorId} onProveedorChange={setProveedorId}
             fechaDesde={fechaDesde} onFechaDesdeChange={setFechaDesde}
             fechaHasta={fechaHasta} onFechaHastaChange={setFechaHasta}

@@ -14,3 +14,23 @@ export const PAISES_PROVEEDOR = [
   'Francia', 'Italia', 'Japón', 'Corea del Sur', 'Brasil', 'Colombia',
   'Chile', 'Argentina', 'Perú', 'Reino Unido', 'India', 'Otro',
 ];
+
+/**
+ * Métodos de pago a proveedor. SPEI sólo aplica a proveedores nacionales
+ * (transferencia interbancaria mexicana). Transferencia internacional /
+ * SWIFT aplica a proveedores extranjeros.
+ */
+export const METODOS_PAGO_PROVEEDOR = [
+  'SPEI',
+  'Transferencia internacional',
+  'Transferencia',
+  'Cheque',
+  'Efectivo',
+  'Tarjeta',
+  'Otro',
+] as const;
+
+export type MetodoPagoProveedor = typeof METODOS_PAGO_PROVEEDOR[number];
+
+export const ORIGENES_PROVEEDOR = ['Nacional', 'Extranjero'] as const;
+export type OrigenProveedor = typeof ORIGENES_PROVEEDOR[number];

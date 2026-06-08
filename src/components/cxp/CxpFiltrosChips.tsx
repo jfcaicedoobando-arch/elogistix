@@ -14,6 +14,8 @@ export interface CxpFiltrosChipsProps {
   onEstatusChange: (v: string) => void;
   moneda: string;
   onMonedaChange: (v: string) => void;
+  origen: string;
+  onOrigenChange: (v: string) => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
   fechaDesde: string;
@@ -39,6 +41,12 @@ export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
     chips.push({
       key: "moneda", label: "Moneda", value: p.moneda,
       onRemove: () => p.onMonedaChange("todas"),
+    });
+  }
+  if (p.origen && p.origen !== "todos") {
+    chips.push({
+      key: "origen", label: "Origen", value: p.origen,
+      onRemove: () => p.onOrigenChange("todos"),
     });
   }
   if (p.proveedorId && p.proveedorId !== "todos") {

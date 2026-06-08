@@ -17,6 +17,7 @@ export type ProveedorListItem = Pick<
   Proveedor,
   "id" | "nombre" | "tipo" | "rfc" | "contacto" | "moneda_preferida"
 > & {
+  origen_proveedor: "Nacional" | "Extranjero" | null;
   total_operaciones: number;
   monto_pendiente: number;
 };
@@ -38,21 +39,24 @@ export interface FetchProveedoresParams {
   page: number;
   pageSize: number;
   organizationId: string | null;
+  origen?: "Nacional" | "Extranjero" | "todos";
 }
 
 export async function fetchProveedoresPaginados(
   params: FetchProveedoresParams,
 ): Promise<{ data: ProveedorListItem[]; count: number }> {
-  const { tipo, search, page, pageSize, organizationId } = params;
+  const { tipo, search, page, pageSize, organizationId, origen } = params;
   // Bloque 2.4 — RPC `proveedores_listado` con agregados (operaciones, pendiente).
   const offset = page * pageSize;
+  // SAFE-CAST: el cliente tipado aún no conoce p_origen tras la regeneración pendiente.
   const { data, error } = await supabase.rpc("proveedores_listado", {
     p_organization_id: organizationId ?? undefined,
     p_tipo: tipo,
     p_search: search || undefined,
     p_offset: offset,
     p_limit: pageSize,
-  });
+    p_origen: origen && origen !== "todos" ? origen : undefined,
+  } as unknown as Parameters<typeof supabase.rpc<"proveedores_listado">>[1]);
   if (error) throw error;
 
   const rows = (data ?? []) as Array<{
@@ -63,6 +67,7 @@ export async function fetchProveedoresPaginados(
     contacto: string | null;
     moneda_preferida: Proveedor["moneda_preferida"];
     pais: string | null;
+    origen_proveedor: "Nacional" | "Extranjero" | null;
     total_operaciones: number | string;
     monto_pendiente: number | string;
     total_count: number | string;
@@ -76,6 +81,7 @@ export async function fetchProveedoresPaginados(
     rfc: r.rfc ?? "",
     contacto: r.contacto ?? "",
     moneda_preferida: r.moneda_preferida,
+    origen_proveedor: r.origen_proveedor ?? null,
     total_operaciones: Number(r.total_operaciones),
     monto_pendiente: Number(r.monto_pendiente),
   }));

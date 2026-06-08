@@ -11,7 +11,7 @@ import {
 export function useFacturasCxP(filtros: FetchCxPFiltros = {}) {
   const key = useMemo(() => filtros, [
     filtros.search, filtros.proveedor_id, filtros.moneda, filtros.estatus,
-    filtros.fecha_desde, filtros.fecha_hasta,
+    filtros.origen, filtros.fecha_desde, filtros.fecha_hasta,
   ]);
   const q = useQuery({
     queryKey: queryKeys.cxp.facturas(key),

@@ -25,6 +25,7 @@ interface UseProveedoresPaginadosParams {
   search: string;
   page: number;
   pageSize: number;
+  origen?: "Nacional" | "Extranjero" | "todos";
 }
 
 export function useProveedoresPaginados({
@@ -32,14 +33,15 @@ export function useProveedoresPaginados({
   search,
   page,
   pageSize,
+  origen,
 }: UseProveedoresPaginadosParams) {
   const { organizationId } = useOrgFilter();
-  const filters = { tipo, search, page, pageSize, organizationId };
+  const filters = { tipo, search, page, pageSize, organizationId, origen };
 
   return useQuery({
     queryKey: queryKeys.proveedores.list(filters),
     queryFn: () =>
-      fetchProveedoresPaginados({ tipo, search, page, pageSize, organizationId }),
+      fetchProveedoresPaginados({ tipo, search, page, pageSize, organizationId, origen }),
     placeholderData: (prev) => prev,
   });
 }

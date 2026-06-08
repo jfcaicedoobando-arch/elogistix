@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.0] - 2026-06-08
+- **feat(proveedores/cxp) — segmentación Nacional / Extranjero y método de pago contextual**: A petición de contabilidad para distinguir SPEI (proveedores mexicanos) de transferencia internacional / SWIFT (proveedores extranjeros) y simplificar la conciliación bancaria.
+  - **`/proveedores`**: nuevo selector segmentado **Todos / Nacional / Extranjero** junto al buscador; nueva columna **Origen** en la tabla con badge color-coded (azul Nacional, ámbar Extranjero). El campo `rfc` ahora se etiqueta como "RFC / Tax ID" en el header. La RPC `proveedores_listado` acepta `p_origen` y devuelve `origen_proveedor`.
+  - **`/cxp`**: selector segmentado **Todos / Nacional / Extranjero** en la barra de filtros desktop + chip activo en `CxpFiltrosChips`. La columna "Proveedor" ahora muestra un mini-badge de origen debajo del nombre. `FacturaCxP` agrega `proveedor_origen` (embed `proveedores(origen_proveedor)`).
+  - **Modal Registrar pago**: el método de pago se sugiere automáticamente según el origen del proveedor — `SPEI` para nacionales, `Transferencia internacional` para extranjeros. Lista de métodos filtrada (nacional ve SPEI, extranjero ve SWIFT). El placeholder y el hint de "Referencia" cambian según el método ("Clave de rastreo SPEI (18 dígitos)" vs "Referencia SWIFT / MT103" vs "Número de cheque"). Nueva constante `METODOS_PAGO_PROVEEDOR`.
+  - **Carga XML CFDI**: al crear proveedor desde CFDI se fuerza `origen_proveedor = 'Nacional'` (todo CFDI 4.0 es mexicano).
+  - Bump `APP_VERSION` a 12.64.0.
+
 ## [12.63.0] - 2026-06-08
 - **feat(cxp) — carga de XML CFDI 4.0 mexicano con AI en Cuentas por Pagar**: El modal "Capturar factura de proveedor" gana un toggle superior **Captura manual / Cargar XML CFDI** (`CargaCfdiSection.tsx`). En modo CFDI: drop-zone para XML (obligatorio, ≤2 MB) + adjunto opcional de PDF. Al procesar:
   - Nueva edge function `parse-cfdi-xml` valida JWT, rechaza no-XML, DOCTYPE (XXE) y versiones distintas de 4.0; parsea con regex pura (`parser.ts`, sin DOM) y extrae UUID, serie/folio, fecha, emisor (RFC/nombre/régimen), receptor, subtotal, total, moneda, tipo de cambio, IVA trasladado, retenciones y los 10 primeros conceptos. Tests Deno (`parser_test.ts`) cubren happy path, versión inválida, sin timbre y DOCTYPE.

@@ -15,6 +15,7 @@ export interface FacturaCxP {
   id: string;
   proveedor_id: string;
   proveedor_nombre: string;
+  proveedor_origen: "Nacional" | "Extranjero" | null;
   embarque_id: string | null;
   folio_proveedor: string;
   fecha_emision: string;
@@ -35,6 +36,7 @@ export interface FetchCxPFiltros {
   proveedor_id?: string;
   moneda?: ProveedorFacturaRow["moneda"] | "todas";
   estatus?: EstatusCxP | "todos";
+  origen?: "Nacional" | "Extranjero" | "todos";
   fecha_desde?: string;
   fecha_hasta?: string;
 }
@@ -61,6 +63,7 @@ type Joined = Pick<
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
+  proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
 };
 
 export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
@@ -70,7 +73,8 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
       id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
       fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
       pagos_proveedor(monto, deleted_at),
-      proveedor_notas_credito(monto, estado, deleted_at)
+      proveedor_notas_credito(monto, estado, deleted_at),
+      proveedores(origen_proveedor)
     `)
     .neq("estado", "Cancelada")
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
@@ -102,6 +106,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
       id: f.id,
       proveedor_id: f.proveedor_id,
       proveedor_nombre: f.proveedor_nombre,
+      proveedor_origen: f.proveedores?.origen_proveedor ?? null,
       embarque_id: f.embarque_id,
       folio_proveedor: f.folio_proveedor,
       fecha_emision: f.fecha_emision,
@@ -118,10 +123,14 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
     };
   });
 
+  let filtradas = rows;
   if (filtros.estatus && filtros.estatus !== "todos") {
-    return rows.filter(r => r.estatus === filtros.estatus);
+    filtradas = filtradas.filter(r => r.estatus === filtros.estatus);
   }
-  return rows;
+  if (filtros.origen && filtros.origen !== "todos") {
+    filtradas = filtradas.filter(r => r.proveedor_origen === filtros.origen);
+  }
+  return filtradas;
 }
 
 export interface KPIsCxP {

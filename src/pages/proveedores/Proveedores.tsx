@@ -39,6 +39,7 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
 
 export default function Proveedores() {
   const [search, setSearch] = useState("");
+  const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [activeTipo, setActiveTipo] = useState<TipoProveedor>("Naviera");
@@ -86,8 +87,22 @@ export default function Proveedores() {
       />
 
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col md:flex-row gap-3 md:items-center">
           <SearchInput value={search} onChange={setSearch} placeholder="Buscar proveedor..." />
+          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
+            {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
+              <Button
+                key={opt}
+                type="button"
+                variant={origen === opt ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-3 text-xs"
+                onClick={() => setOrigen(opt)}
+              >
+                {opt === 'todos' ? 'Todos' : opt}
+              </Button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
@@ -101,7 +116,7 @@ export default function Proveedores() {
         </div>
         {TABS.map(tabConfig => (
           <TabsContent key={tabConfig.tipo} value={tabConfig.tipo}>
-            <ProveedorTable tipo={tabConfig.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} />
+            <ProveedorTable tipo={tabConfig.tipo} search={search} origen={origen} onSelect={(id) => navigate(`/proveedores/${id}`)} />
           </TabsContent>
         ))}
       </Tabs>

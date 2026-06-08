@@ -31,6 +31,8 @@ interface Props {
   onEstatusChange: (v: EstatusCxP | "todos") => void;
   moneda: "todas" | "MXN" | "USD" | "EUR";
   onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
+  origen: "Nacional" | "Extranjero" | "todos";
+  onOrigenChange: (v: "Nacional" | "Extranjero" | "todos") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
   fechaDesde: string;
@@ -56,11 +58,13 @@ export function CxpFiltros(props: Props) {
   const totalActive =
     secondaryActive +
     (props.estatus !== "todos" ? 1 : 0) +
-    (props.moneda !== "todas" ? 1 : 0);
+    (props.moneda !== "todas" ? 1 : 0) +
+    (props.origen !== "todos" ? 1 : 0);
 
   const clearAll = () => {
     props.onEstatusChange("todos");
     props.onMonedaChange("todas");
+    props.onOrigenChange("todos");
     props.onProveedorChange("todos");
     props.onFechaDesdeChange("");
     props.onFechaHastaChange("");
@@ -155,11 +159,25 @@ export function CxpFiltros(props: Props) {
         </div>
 
         {/* Desktop */}
-        <div className="hidden md:flex md:items-center md:gap-2">
+        <div className="hidden md:flex md:items-center md:gap-2 md:flex-wrap">
           <SearchInput
             value={props.search} onChange={props.onSearchChange}
             placeholder="Buscar folio o proveedor..." className="flex-1 min-w-[220px]"
           />
+          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
+            {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
+              <Button
+                key={opt}
+                type="button"
+                variant={props.origen === opt ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-3 text-xs"
+                onClick={() => props.onOrigenChange(opt)}
+              >
+                {opt === 'todos' ? 'Todos' : opt}
+              </Button>
+            ))}
+          </div>
           <Select value={props.estatus} onValueChange={(v) => props.onEstatusChange(v as EstatusCxP | "todos")}>
             <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -211,6 +229,8 @@ export function CxpFiltros(props: Props) {
         onEstatusChange={(v) => props.onEstatusChange(v as EstatusCxP | "todos")}
         moneda={props.moneda}
         onMonedaChange={(v) => props.onMonedaChange(v as typeof props.moneda)}
+        origen={props.origen}
+        onOrigenChange={(v) => props.onOrigenChange(v as "Nacional" | "Extranjero" | "todos")}
         proveedorId={props.proveedorId}
         onProveedorChange={props.onProveedorChange}
         fechaDesde={props.fechaDesde}

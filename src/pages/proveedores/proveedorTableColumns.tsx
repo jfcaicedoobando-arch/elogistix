@@ -1,11 +1,26 @@
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
+import { Badge } from "@/components/ui/badge";
 import type { ProveedorListItem } from "@/hooks/proveedor";
 import { toTitleCase } from "@/lib/formatters";
 
+function OrigenBadge({ origen }: { origen: ProveedorListItem["origen_proveedor"] }) {
+  if (!origen) return <span className="text-muted-foreground text-xs">—</span>;
+  const cls =
+    origen === "Nacional"
+      ? "bg-primary/10 text-primary border-primary/20"
+      : "bg-warning/10 text-warning border-warning/20";
+  return (
+    <Badge variant="outline" className={cls}>
+      {origen}
+    </Badge>
+  );
+}
+
 export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineColumns<ProveedorListItem>([
   { id: "nombre", header: "Nombre", accessorFn: (p) => p.nombre, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.nombre), meta: { width: "min-w-[180px]", className: "font-medium" }, cell: ({ row }) => <span title={row.original.nombre}>{toTitleCase(row.original.nombre)}</span> },
-  { id: "rfc", header: "RFC", accessorFn: (p) => p.rfc, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.rfc), meta: { width: "w-[130px]", className: "text-xs font-mono" }, cell: ({ row }) => row.original.rfc },
+  { id: "origen", header: "Origen", meta: { width: "w-[110px]" }, cell: ({ row }) => <OrigenBadge origen={row.original.origen_proveedor} /> },
+  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => p.rfc, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.rfc), meta: { width: "w-[140px]", className: "text-xs font-mono" }, cell: ({ row }) => row.original.rfc },
   { id: "contacto", header: "Contacto", meta: { width: "w-[140px]", className: "text-xs" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
   { id: "moneda", header: "Moneda", meta: { width: "w-[80px]", className: "text-xs" }, cell: ({ row }) => row.original.moneda_preferida },
 ]);
