@@ -19,10 +19,13 @@ const EXPECTED_DOMAINS = [
 ] as const;
 
 describe("queryKeys shape", () => {
-  it("expone todos los dominios esperados", () => {
-    const actual = Object.keys(queryKeys).sort();
-    const expected = [...EXPECTED_DOMAINS].sort();
-    expect(actual).toEqual(expected);
+  it("expone todos los dominios esperados (diff simétrico explícito)", () => {
+    const actual = new Set(Object.keys(queryKeys));
+    const expected = new Set<string>(EXPECTED_DOMAINS);
+    const missing = [...expected].filter((d) => !actual.has(d));
+    const extra = [...actual].filter((d) => !expected.has(d));
+    expect(missing, `Dominios esperados que NO están en queryKeys: ${missing.join(", ") || "ninguno"}`).toEqual([]);
+    expect(extra, `Dominios en queryKeys NO declarados en EXPECTED_DOMAINS: ${extra.join(", ") || "ninguno"}`).toEqual([]);
   });
 
   it("dominios tipo factory (funciones) se invocan sin reventar", () => {
