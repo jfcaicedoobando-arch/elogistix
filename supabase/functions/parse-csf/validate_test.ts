@@ -1,14 +1,6 @@
 // @ts-nocheck — Deno runtime
-// Copia local del helper para evitar type-check transitivo en index.ts.
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-
-const MAX_BYTES = 5 * 1024 * 1024;
-function validateFile(file: File | null): string | null {
-  if (!file) return "No se envió archivo PDF";
-  if (file.type !== "application/pdf") return "Solo se aceptan archivos PDF";
-  if (file.size > MAX_BYTES) return "El archivo excede el límite de 5 MB";
-  return null;
-}
+import { validateFile } from "./validate.ts";
 
 function makeFile(size: number, type = "application/pdf"): File {
   return new File([new Uint8Array(size)], "csf.pdf", { type });
