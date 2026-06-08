@@ -12,9 +12,13 @@ describe("useTasaIVA", () => {
     expect(result.current).toBe(0.16);
   });
 
-  it("uses fallback if config is not available", () => {
-    // This is tested implicitly by the mock returning 16
+  it("aplica fallback cuando la configuración no expone tasa_iva", async () => {
+    const { useConfigValue } = await import("@/hooks/configuracion/useConfiguracion");
+    (useConfigValue as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_mod: unknown, _key: unknown, def: unknown) => def,
+    );
     const { result } = renderHook(() => useTasaIVA());
+    // Default contractual: 16% → 0.16
     expect(result.current).toBe(0.16);
   });
 });
