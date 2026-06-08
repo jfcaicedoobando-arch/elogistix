@@ -13,6 +13,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { sumarMontos } from "@/lib/financial/financialUtils";
 
 type FacturaRow = Tables<"facturas">;
 
@@ -139,24 +140,85 @@ export interface KPIsCobranza {
   facturas_vencidas: number;
 }
 
-export function calcularKPIs(filas: FacturaCobranza[]): KPIsCobranza {
-  const kpis: KPIsCobranza = {
-    total_mxn: 0, total_usd: 0,
-    vencido_mxn: 0, vencido_usd: 0,
-    por_vencer_7d_mxn: 0, por_vencer_7d_usd: 0,
-    facturas_vencidas: 0,
-  };
+export interface SaldosPorMoneda {
+  saldoPendienteMXN: number;
+  saldoPendienteUSD: number;
+  /** Saldos por código de moneda no canónica (EUR, etc.) que NO se mezclan con los buckets oficiales. */
+  porMoneda: Record<string, number>;
+  /** Cantidad de filas con moneda fuera de {MXN,USD} que fueron descartadas de los buckets canónicos. */
+  descartadas: number;
+}
+
+/**
+ * Agrupa saldos pendientes por moneda SIN mezclar divisas.
+ * Filas con `saldo <= 0` se ignoran. Filas con moneda ajena a {MXN,USD} se
+ * registran aparte en `porMoneda` y NUNCA contaminan los buckets canónicos.
+ * Usa `sumarMontos` (currency.js, precisión 2) para evitar drift de float.
+ */
+export function agruparSaldosPorMoneda(filas: FacturaCobranza[]): SaldosPorMoneda {
+  const bucketMXN: number[] = [];
+  const bucketUSD: number[] = [];
+  const otros: Record<string, number[]> = {};
+  let descartadas = 0;
+
   for (const f of filas) {
     if (f.saldo <= 0) continue;
-    const esUsd = f.moneda === "USD";
-    if (esUsd) kpis.total_usd += f.saldo; else kpis.total_mxn += f.saldo;
-    if (f.estatus_cobranza === "Vencida") {
-      kpis.facturas_vencidas++;
-      if (esUsd) kpis.vencido_usd += f.saldo; else kpis.vencido_mxn += f.saldo;
-    }
-    if (f.dias_vencido <= 0 && f.dias_vencido >= -7) {
-      if (esUsd) kpis.por_vencer_7d_usd += f.saldo; else kpis.por_vencer_7d_mxn += f.saldo;
+    if (f.moneda === "MXN") bucketMXN.push(f.saldo);
+    else if (f.moneda === "USD") bucketUSD.push(f.saldo);
+    else {
+      const key = String(f.moneda ?? "DESCONOCIDA");
+      (otros[key] ??= []).push(f.saldo);
+      descartadas++;
     }
   }
-  return kpis;
+
+  const porMoneda: Record<string, number> = {};
+  for (const [k, arr] of Object.entries(otros)) porMoneda[k] = sumarMontos(arr);
+
+  if (descartadas > 0) {
+    console.warn(
+      `[cobranza] ${descartadas} factura(s) con moneda no canónica descartada(s) de los buckets MXN/USD:`,
+      Object.keys(otros),
+    );
+  }
+
+  return {
+    saldoPendienteMXN: sumarMontos(bucketMXN),
+    saldoPendienteUSD: sumarMontos(bucketUSD),
+    porMoneda,
+    descartadas,
+  };
+}
+
+export function calcularKPIs(filas: FacturaCobranza[]): KPIsCobranza {
+  const vencidoMXN: number[] = [];
+  const vencidoUSD: number[] = [];
+  const porVencerMXN: number[] = [];
+  const porVencerUSD: number[] = [];
+  let facturas_vencidas = 0;
+
+  for (const f of filas) {
+    if (f.saldo <= 0) continue;
+    if (f.moneda !== "MXN" && f.moneda !== "USD") continue; // guard estricto
+    const esUsd = f.moneda === "USD";
+    if (f.estatus_cobranza === "Vencida") {
+      facturas_vencidas++;
+      (esUsd ? vencidoUSD : vencidoMXN).push(f.saldo);
+    }
+    if (f.dias_vencido <= 0 && f.dias_vencido >= -7) {
+      (esUsd ? porVencerUSD : porVencerMXN).push(f.saldo);
+    }
+  }
+
+  const { saldoPendienteMXN, saldoPendienteUSD } = agruparSaldosPorMoneda(filas);
+
+  return {
+    total_mxn: saldoPendienteMXN,
+    total_usd: saldoPendienteUSD,
+    vencido_mxn: sumarMontos(vencidoMXN),
+    vencido_usd: sumarMontos(vencidoUSD),
+    por_vencer_7d_mxn: sumarMontos(porVencerMXN),
+    por_vencer_7d_usd: sumarMontos(porVencerUSD),
+    facturas_vencidas,
+  };
 }
