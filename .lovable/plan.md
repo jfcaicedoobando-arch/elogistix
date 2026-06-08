@@ -1,85 +1,57 @@
 
-# Carga de facturas mexicanas por XML CFDI en CxP
+# Segmentación Nacional / Extranjero en Proveedores y CxP
 
-## Objetivo
-Permitir subir un XML CFDI 4.0 (con PDF opcional) dentro del modal "Capturar factura". El sistema parsea el XML, usa Lovable AI para enriquecer campos ambiguos, prellena el formulario, ofrece crear el proveedor si no existe, y guarda XML+PDF en storage ligados a la factura.
+El campo `origen_proveedor` ya existe en la tabla `proveedores` (valores `Nacional` / `Extranjero`) y se captura en el wizard de alta. Hoy no se ve en listados ni se usa para sugerir el método de pago en CxP. Este plan lo expone en UI y lo aprovecha en conciliación.
 
-## Flujo UX
+## 1. Listado de proveedores (`/proveedores`)
 
-Modal **"Capturar factura de proveedor"** gana una zona superior con dos modos:
+- Agregar **filtro segmentado** Nacional / Extranjero / Todos en la barra superior (junto al search y al tab de tipo).
+- Nueva columna **"Origen"** en `proveedorTableColumns.tsx` con badge:
+  - `Nacional` → badge azul (`bg-primary/10`)
+  - `Extranjero` → badge ámbar
+- Extender `fetchProveedoresPaginados` y la RPC `proveedores_listado` para aceptar `p_origen` opcional (filtra por `origen_proveedor`).
+- Exponer `origen_proveedor` en `ProveedorListItem`.
 
-```text
-┌─────────────────────────────────────────────┐
-│  ○ Captura manual    ● Cargar XML CFDI      │
-├─────────────────────────────────────────────┤
-│  [ Arrastra el XML aquí o haz clic ]        │
-│  PDF (opcional): [ Adjuntar ]               │
-│  [ Procesar XML ]                           │
-└─────────────────────────────────────────────┘
-        ↓ (al procesar)
-┌─────────────────────────────────────────────┐
-│ ✓ CFDI leído — UUID, RFC, Folio, Total      │
-│ Proveedor: "ACME SA" (RFC ACM010101AAA)     │
-│   • No existe en tu catálogo                │
-│   [ Crear proveedor con datos del XML ]     │
-│ Categoría sugerida por AI: "Fletes locales" │
-└─────────────────────────────────────────────┘
-        ↓
-[ resto del formulario ya prellenado y editable ]
-```
+## 2. Detalle de proveedor
 
-Reglas:
-- XML obligatorio en modo CFDI; PDF opcional.
-- Todos los campos quedan editables tras el parseo.
-- Si el RFC ya existe en `proveedores` → auto-vincula. Si no, botón "Crear proveedor" abre mini-form prellenado (nombre, RFC, país=México, moneda=MXN) sin salir del modal.
-- Validación: rechazar archivo no-XML, >2MB, o XML que no sea CFDI 4.0 válido.
-- Guardar el UUID del CFDI en la factura para evitar duplicados (bloqueo por UUID repetido).
+- Mostrar el origen como badge en el header del detalle.
+- En el wizard de edición permitir cambiarlo (hoy solo se captura al crear).
 
-## Arquitectura técnica
+## 3. CxP — Facturas y pagos
 
-### 1. Edge function `parse-cfdi-xml` (nueva)
-- Recibe el XML como `multipart/form-data` (auth requerido).
-- **Parser determinista** (sin AI) extrae del XML CFDI 4.0:
-  - `UUID` (TimbreFiscalDigital), `Folio`, `Serie`, `Fecha`
-  - Emisor: `Rfc`, `Nombre`, `RegimenFiscal`
-  - Receptor: `Rfc`, `Nombre`
-  - `SubTotal`, `Total`, `Moneda`, `TipoCambio`
-  - Impuestos: suma `IVA` trasladado, `ISR`/`IVA` retenidos
-  - `Conceptos[]` (descripción, importe) — primeros 10 para contexto
-- **AI (Gemini Flash) sólo para campos ambiguos**:
-  - Sugerir `categoria_presupuesto_id` matcheando contra las categorías activas del tenant (se pasan en el prompt).
-  - Sugerir `notas` cortas resumiendo conceptos.
-- Retorna JSON `{ cfdi: {...campos parseados}, ai: { categoria_id, notas } }`.
+- Nueva columna **"Origen"** en `cxpColumns.tsx` (Nacional / Extranjero), derivada del proveedor vinculado.
+- Filtro segmentado en `CxpFiltros` y chip en `CxpFiltrosChips` para filtrar por origen.
+- En **`DialogRegistrarPagoProveedor`**:
+  - Campo "Método de pago" con valores:
+    - `SPEI` (default cuando el proveedor es Nacional)
+    - `Transferencia internacional` / `SWIFT` (default cuando es Extranjero)
+    - `Efectivo`, `Cheque`, `Otro`
+  - Mostrar campos de referencia distintos según el método: clave SPEI (18 dígitos) vs MT103/SWIFT reference.
+- Persistir el método en `pagos_proveedor.metodo_pago` (columna nueva, texto).
 
-### 2. Schema cambios (migración)
-Agregar a `proveedor_facturas`:
-- `uuid_cfdi text` (único por organization_id cuando no es null) — para deduplicación.
-- `xml_path text` — ruta en bucket `facturas`.
-- `tipo_documento text` default `'manual'` con valores `'manual' | 'cfdi' | 'invoice'`.
+## 4. Carga XML CFDI
 
-Bucket `facturas` (ya privado) gana subcarpeta `cfdi/{org}/{uuid}.xml`.
+- Forzar `origen_proveedor = 'Nacional'` al crear proveedor desde XML CFDI (siempre es mexicano).
+- En el flujo de "Capturar factura" manual, si el proveedor seleccionado es Extranjero, ocultar el toggle "Cargar XML CFDI" (no aplica).
 
-### 3. Frontend
-- Nuevo componente `CargaCfdiSection.tsx` dentro de `FacturaProveedorFormFields` (toggle modo).
-- Hook `useParseCfdi()` que llama la edge function vía `supabase.functions.invoke`.
-- Extensión a `useCrearFacturaProveedor` para subir XML/PDF a storage tras crear el registro.
-- Si RFC no matchea: usar `useProveedorMutations.addProveedor` desde un mini-dialog "Crear proveedor del XML".
+## 5. Cambios técnicos
 
-### 4. Visibilidad en la tabla de CxP
-- Badge "CFDI" en la columna Folio cuando `tipo_documento='cfdi'`.
-- En "Detalle de pagos": botón "Descargar XML" si existe.
+- **Migración**:
+  - `ALTER TABLE pagos_proveedor ADD COLUMN metodo_pago text;`
+  - Actualizar RPC `proveedores_listado` para aceptar `p_origen text DEFAULT NULL`.
+- **Tipos**: regenerar `types.ts` tras migración.
+- **Archivos a editar**:
+  - `src/services/proveedor/index.ts` (param `origen`, expone campo)
+  - `src/pages/proveedores/ProveedorTable.tsx` + `proveedorTableColumns.tsx`
+  - `src/pages/proveedores/ProveedoresPage.tsx` (filtro nuevo)
+  - `src/components/cxp/CxpFiltros.tsx`, `CxpFiltrosChips.tsx`, `cxpColumns.tsx`
+  - `src/components/cxp/DialogRegistrarPagoProveedor.tsx`
+  - `src/components/cxp/CrearProveedorDesdeCfdiDialog.tsx` (forzar Nacional)
+  - `src/hooks/cxp/useFacturasCxP.ts` (incluir origen en query)
+- **Constantes nuevas**: `METODOS_PAGO_PROVEEDOR` en `proveedorConstants.ts`.
+- **Versión**: `APP_VERSION` → `12.64.0` + entrada en `CHANGELOG.md`.
 
-## Out of scope
-- Validación con SAT (verifica.facturaelectronica.sat.gob.mx).
-- Carga masiva de XMLs (zip).
-- Conciliación contra complementos de pago.
-- Soporte CFDI 3.3 (sólo 4.0).
+## Fuera de alcance
 
-## Entregables
-- Migración: columnas + índice único parcial por `uuid_cfdi`.
-- Edge function `supabase/functions/parse-cfdi-xml/` con `index.ts`, `parser.ts` (puro, testeable), `parser_test.ts`.
-- Componentes: `CargaCfdiSection.tsx`, `CrearProveedorDesdeCfdiDialog.tsx`.
-- Hook: `useParseCfdi.ts`.
-- Edits: `FacturaProveedorFormFields.tsx`, `DialogNuevaFacturaProveedor.tsx`, `proveedorFacturas.ts` (insert XML path + uuid), `cxpColumns.tsx` (badge CFDI), `DialogDetallePagosProveedor.tsx` (descarga XML).
-- `APP_VERSION` → `12.63.0`, entrada en `CHANGELOG.md`.
-
+- Reglas de conciliación automática SPEI vs SWIFT (sólo se almacena el método; la conciliación se queda como flujo manual existente).
+- Validación del formato exacto de clave SPEI / SWIFT (sólo input libre con hint).
