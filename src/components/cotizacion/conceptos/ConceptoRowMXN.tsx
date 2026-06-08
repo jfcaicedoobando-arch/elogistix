@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial/financialUtils";
 import { CONCEPTOS_COSTO_MXN } from "@/constants/cotizacionConstants";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import type { ConceptoRowProps } from "./ConceptoRowUSD";
@@ -19,7 +19,8 @@ function getConceptoSelectValue(descripcion: string, catalogo: readonly string[]
 
 export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, eliminar, tasaIva }: ConceptoRowProps & { tasaIva: number }) {
   const subtotal = c.cantidad * c.precio_unitario;
-  const iva = calcularIVA(subtotal, tasaIva);
+  const tasaFila = resolverTasaConcepto(c, tasaIva);
+  const iva = calcularIVA(subtotal, tasaFila);
   return (
     <div className="grid grid-cols-12 gap-2 items-end">
       <div className="col-span-2">
@@ -83,12 +84,28 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
           placeholder="0.00"
         />
       </div>
-      <div className="col-span-2">
+      <div className="col-span-1">
         {i === 0 && <Label className="text-xs">Subtotal</Label>}
         <Input value={formatCurrency(subtotal, 'MXN')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-2">
-        {i === 0 && <Label className="text-xs">IVA (16%)</Label>}
+        {i === 0 && <Label className="text-xs">Tasa IVA</Label>}
+        <Select
+          value={String(tasaFila)}
+          onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
+        >
+          <SelectTrigger className="h-10">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TASAS_IVA_MX.map(opt => (
+              <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-1">
+        {i === 0 && <Label className="text-xs">IVA</Label>}
         <Input value={formatCurrency(iva, 'MXN')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-1">
