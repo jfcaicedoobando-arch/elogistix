@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.13] - 2026-06-08
+- **feature(embarques) — bloqueo de eliminación con dependencias financieras**: `DialogEliminarEmbarque` ahora consulta antes del borrado si el embarque tiene facturas CxC (`facturas`), CxP (`proveedor_facturas`), notas de crédito (`factura_notas_credito`, `proveedor_notas_credito`) o pagos (`pagos_factura`, `pagos_proveedor`) asociados. Si existen, se muestra un diálogo informativo con los folios/series de las facturas a cancelar y conteos de NC y pagos; el botón de eliminar queda bloqueado. Nuevo hook `useEmbarqueDependenciasFinancieras`. Mientras se verifica, el botón "Sí, eliminar" se deshabilita.
+
 ## [12.61.12] - 2026-06-08
 - **security(audit) — auditoría de secretos en frontend**: Revisado todo el repositorio (`src/`, `supabase/functions/`, configuración) con patrones de búsqueda exhaustivos (JWT, `sk_live_`, `AKIA...`, `ghp_...`, `xox...`, `AIza...`, hex 40+, `?token=`, `?api_key=`, `?access_token=`, `api_key`, `secret`, `bearer`, `authorization:`, `client_secret`, `private_key`). **Resultado: 0 credenciales hardcodeadas.** Los secretos (`LOVABLE_API_KEY`, `RESEND_API_KEY`, `CRON_SECRET`) se consumen únicamente en edge functions vía `Deno.env.get()`. El único "secreto" en el bundle es `VITE_SUPABASE_PUBLISHABLE_KEY` (clave pública/anon por diseño de Supabase); el control de acceso real lo dan las políticas RLS. El deeplink `wa.me` no contiene token. Documentada la metodología y conclusiones en nueva sección 7 de `docs/security-checklist.md`.
 

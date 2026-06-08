@@ -39,8 +39,8 @@ async function fetchDependencias(embarqueId: string): Promise<EmbarqueDependenci
   if (cxcRes.error) throw cxcRes.error;
   if (cxpRes.error) throw cxpRes.error;
 
-  const cxcFacturas = (cxcRes.data ?? []) as FacturaLigada[];
-  const cxpFacturas = (cxpRes.data ?? []) as FacturaLigada[];
+  const cxcFacturas = (cxcRes.data ?? []) as unknown as FacturaLigada[];
+  const cxpFacturas = (cxpRes.data ?? []) as unknown as FacturaLigada[];
   const cxcCount = cxcRes.count ?? cxcFacturas.length;
   const cxpCount = cxpRes.count ?? cxpFacturas.length;
 
