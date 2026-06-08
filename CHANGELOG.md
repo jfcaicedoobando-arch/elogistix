@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.62.0] - 2026-06-08
+- **feat(ux) — refactor completo del módulo Cuentas por Pagar**: Rediseño para dejarlo listo para uso real.
+  - **Modal "Capturar factura de proveedor"**: ya no se corta. Ahora es `dialogSize.xl` con `max-h 90vh` + cuerpo scrollable + footer sticky. Formulario reorganizado en 5 secciones (`Proveedor y folio`, `Fechas y crédito`, `Moneda`, `Importes`, `Categorización`). Los inputs numéricos usan placeholder `0.00` en vez de `0` literal. Panel destacado de **Total a pagar** con la moneda. Validación inline (mensajes bajo el campo). Lógica extraída a `FacturaProveedorFormFields.tsx` (≤180 LOC).
+  - **Modal "Registrar pago"**: misma plantilla scrollable. Secciones `Fecha/Método`, `Monto/Moneda/TC`, `Diferencia cambiaria` (solo cuando factura es USD y se paga en MXN), `Referencia/Notas`. Panel **Saldo restante tras el pago** en vivo (verde si queda saldado, rojo si excede). Botón de guardar deshabilitado si excede o monto es 0.
+  - **Modal "Detalle de pagos"**: `dialogSize.3xl` scrollable. Header con KPIs mini (Total, Pagado, Saldo, # pagos). Tabla con zebra-striping. Eliminación de pago migrada a `DoubleConfirmDeleteDialog` (tipear `ELIMINAR`).
+  - **Página `/cxp`**: nuevos componentes `CxpFiltros` + `CxpFiltrosChips` con barra compacta `Search + Estatus + Moneda + Filtros (N)` y chips de activos (patrón consistente con Embarques). Sheet lateral con filtro por **Proveedor** (nuevo, vía `useProveedoresLite`) y rango de **Emisión desde/hasta**. KPIs ahora muestran conteo de facturas (`· N facturas`). Tabla en densidad `compact`, fila clicable abre detalle de pagos. Columna acciones: `Pagar` directo + dropdown `MoreHorizontal` para Ver detalle / Eliminar. Empty state con ilustración y CTA "Capturar primera factura". Eliminación de factura ahora con `DoubleConfirmDeleteDialog` en lugar de `window.confirm`.
+  - **Servicio `fetchFacturasCxP`**: acepta `fecha_desde` / `fecha_hasta` (filtra `fecha_emision`); `proveedor_id === "todos"` ahora se ignora correctamente. `useFacturasCxP` invalida la query cuando cambian esos campos.
+  - Bump `APP_VERSION` a 12.62.0.
+
 ## [12.61.25] - 2026-06-08
 - **feat(ux) — barra compacta de filtros en listado de Embarques**: Se rediseñó el área superior de la tabla de `/embarques`. Antes: 6 selects + 2 fechas inline que se amontonaban en viewports medianos. Ahora: barra de una sola fila con `Search + Estado + Cliente + botón "Filtros (N)"`; los filtros secundarios (Modo, Operador, ETD desde, ETA hasta) viven en un `Sheet` lateral. Debajo aparecen **chips** por cada filtro activo con `X` individual y un botón "Limpiar todo" (`EmbarquesFiltrosChips.tsx` nuevo). En móvil la barra colapsa a `Search + Filtros (N)` y el sheet expone todos. `EmbarquesFiltrosCampos.tsx` ahora soporta layouts `inline | stacked-all | stacked-secondary`. Bump `APP_VERSION` a 12.61.25.
 

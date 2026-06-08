@@ -1,22 +1,24 @@
-import { useState } from "react";
+/**
+ * Captura de factura de proveedor — versión reescrita.
+ * - Dialog scrollable (xl + max-h 85vh) con footer sticky.
+ * - Formulario delegado a FacturaProveedorFormFields (secciones tituladas).
+ * - Validación inline + toast.
+ */
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { ProveedorCombobox } from "./ProveedorCombobox";
 import { useCrearFacturaProveedor } from "@/hooks/cxp";
 import { usePresupuestoCategorias } from "@/hooks/presupuesto";
-import type { Database } from "@/integrations/supabase/types";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
+import {
+  FacturaProveedorFormFields, type FacturaFormValues,
+} from "./FacturaProveedorFormFields";
 
 interface Props {
   open: boolean;
@@ -29,55 +31,88 @@ function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+const today = () => new Date().toISOString().slice(0, 10);
+
+function initialValues(): FacturaFormValues {
+  const t = today();
+  return {
+    provId: "", provNombre: "", folio: "",
+    emision: t, diasCredito: 30, vencimiento: addDays(t, 30),
+    moneda: "MXN", tc: "",
+    subtotal: "", iva: "", retenciones: "",
+    categoriaId: "", notas: "",
+  };
+}
+
 export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
   const { user } = useAuth();
   const crear = useCrearFacturaProveedor();
   const cats = usePresupuestoCategorias(true);
-  const today = new Date().toISOString().slice(0, 10);
+  const [values, setValues] = useState<FacturaFormValues>(initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof FacturaFormValues, string>>>({});
 
-  const [provId, setProvId] = useState("");
-  const [provNombre, setProvNombre] = useState("");
-  const [folio, setFolio] = useState("");
-  const [emision, setEmision] = useState(today);
-  const [diasCredito, setDiasCredito] = useState(30);
-  const [moneda, setMoneda] = useState<Moneda>("MXN");
-  const [tc, setTc] = useState(0);
-  const [subtotal, setSubtotal] = useState(0);
-  const [iva, setIva] = useState(0);
-  const [retenciones, setRetenciones] = useState(0);
-  const [notas, setNotas] = useState("");
-  const [categoriaId, setCategoriaId] = useState<string>("");
+  const total = useMemo(() => {
+    const s = Number(values.subtotal) || 0;
+    const i = Number(values.iva) || 0;
+    const r = Number(values.retenciones) || 0;
+    return s + i - r;
+  }, [values.subtotal, values.iva, values.retenciones]);
 
-  const total = Number(subtotal) + Number(iva) - Number(retenciones);
-  const venc = addDays(emision, Number(diasCredito) || 0);
+  const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {
+    setValues((prev) => {
+      const next = { ...prev, [k]: v };
+      if (k === "emision" || k === "diasCredito") {
+        next.vencimiento = addDays(next.emision, Number(next.diasCredito) || 0);
+      }
+      return next;
+    });
+    if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
+  };
+
+  const handleProveedor = (id: string, nombre: string) => {
+    setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
+    if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
+  };
 
   const reset = () => {
-    setProvId(""); setProvNombre(""); setFolio(""); setEmision(today);
-    setDiasCredito(30); setMoneda("MXN"); setTc(0);
-    setSubtotal(0); setIva(0); setRetenciones(0); setNotas(""); setCategoriaId("");
+    setValues(initialValues());
+    setErrors({});
+  };
+
+  const validate = () => {
+    const next: Partial<Record<keyof FacturaFormValues, string>> = {};
+    if (!values.provId) next.provId = "Selecciona un proveedor";
+    if (!values.folio.trim()) next.folio = "Captura el folio del proveedor";
+    if (total <= 0) next.subtotal = "El total debe ser mayor a 0";
+    if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
+      next.tc = "Captura el tipo de cambio";
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const submit = async () => {
-    if (!provId) return toast.error("Selecciona un proveedor");
-    if (!folio.trim()) return toast.error("Captura el folio del proveedor");
-    if (total <= 0) return toast.error("El total debe ser mayor a 0");
+    if (!validate()) {
+      toast.error("Revisa los campos marcados");
+      return;
+    }
     try {
       await crear.mutateAsync({
-        proveedor_id: provId,
-        proveedor_nombre: provNombre,
-        folio_proveedor: folio.trim(),
-        fecha_emision: emision,
-        fecha_vencimiento: venc,
-        dias_credito: Number(diasCredito) || 0,
-        moneda,
-        tipo_cambio_usd: Number(tc) || 0,
-        subtotal: Number(subtotal) || 0,
-        iva: Number(iva) || 0,
-        retenciones: Number(retenciones) || 0,
+        proveedor_id: values.provId,
+        proveedor_nombre: values.provNombre,
+        folio_proveedor: values.folio.trim(),
+        fecha_emision: values.emision,
+        fecha_vencimiento: values.vencimiento,
+        dias_credito: Number(values.diasCredito) || 0,
+        moneda: values.moneda,
+        tipo_cambio_usd: Number(values.tc) || 0,
+        subtotal: Number(values.subtotal) || 0,
+        iva: Number(values.iva) || 0,
+        retenciones: Number(values.retenciones) || 0,
         total,
         estado: "Vigente",
-        notas,
-        categoria_presupuesto_id: categoriaId || null,
+        notas: values.notas,
+        categoria_presupuesto_id: values.categoriaId || null,
         created_by: user?.id,
       });
       toast.success("Factura de proveedor capturada");
@@ -90,89 +125,46 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) reset();
+        onOpenChange(o);
+      }}
+    >
+      <DialogContent
+        className={cn(
+          dialogSize.xl,
+          "max-h-[90vh] flex flex-col gap-0 p-0",
+        )}
+      >
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Capturar factura de proveedor</DialogTitle>
-          <DialogDescription>Registra la factura recibida para abrir su saldo en CxP.</DialogDescription>
+          <DialogDescription>
+            Registra la factura recibida para abrir su saldo en Cuentas por Pagar.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <Label>Proveedor *</Label>
-            <ProveedorCombobox value={provId} onChange={(id, n) => { setProvId(id); setProvNombre(n); }} className="w-full" />
-          </div>
-          <div>
-            <Label>Folio del proveedor *</Label>
-            <Input value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="A-12345" />
-          </div>
-          <div>
-            <Label>Fecha emisión</Label>
-            <Input type="date" value={emision} onChange={(e) => setEmision(e.target.value)} />
-          </div>
-          <div>
-            <Label>Días crédito</Label>
-            <Input type="number" min={0} value={diasCredito} onChange={(e) => setDiasCredito(Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>Vencimiento</Label>
-            <Input type="date" value={venc} readOnly className="bg-muted" />
-          </div>
-          <div>
-            <Label>Moneda</Label>
-            <Select value={moneda} onValueChange={(v) => setMoneda(v as Moneda)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MXN">MXN</SelectItem>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="EUR">EUR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Tipo de cambio USD</Label>
-            <Input type="number" step="0.01" value={tc} onChange={(e) => setTc(Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>Subtotal</Label>
-            <Input type="number" step="0.01" value={subtotal} onChange={(e) => setSubtotal(Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>IVA</Label>
-            <Input type="number" step="0.01" value={iva} onChange={(e) => setIva(Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>Retenciones</Label>
-            <Input type="number" step="0.01" value={retenciones} onChange={(e) => setRetenciones(Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>Total</Label>
-            <Input value={total.toFixed(2)} readOnly className="bg-muted font-semibold tabular-nums" />
-          </div>
-          <div className="col-span-2">
-            <Label>Categoría presupuestal (opcional)</Label>
-            <Select value={categoriaId || "ninguna"} onValueChange={(v) => setCategoriaId(v === "ninguna" ? "" : v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ninguna">Sin categoría</SelectItem>
-                {(cats.data ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="col-span-2">
-            <Label>Notas</Label>
-            <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
-          </div>
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <FacturaProveedorFormFields
+            values={values}
+            onChange={handleChange}
+            onProveedor={handleProveedor}
+            categorias={cats.data ?? []}
+            total={total}
+            errors={errors}
+          />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={submit} disabled={crear.isPending}>
-            {crear.isPending ? "Guardando..." : "Guardar"}
+        <div className="px-6 py-4 border-t flex justify-end gap-2 bg-background">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>
+            Cancelar
           </Button>
-        </DialogFooter>
+          <Button onClick={submit} disabled={crear.isPending}>
+            {crear.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {crear.isPending ? "Guardando…" : "Guardar factura"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

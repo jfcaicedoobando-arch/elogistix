@@ -1,56 +1,75 @@
-## Objetivo
-Limpiar el área de filtros de `/embarques`. Hoy hay 6 controles inline (Modo, Estado, Cliente, Operador, Desde, Hasta) que en viewports medianos se amontonan. La nueva versión expone solo lo esencial y mueve el resto a un panel lateral, con chips visibles para los filtros activos.
+## Refactor del módulo Cuentas por Pagar
 
-## Diseño propuesto
+Objetivo: dejar CxP listo para uso real. Arreglar los modales (que se cortan), reorganizar la página y pulir tabla / detalle.
 
-### Fila 1 — Barra compacta (desktop y móvil)
-```text
-[ 🔍 Buscar expediente, cliente o mercancía…    ] [ Estado ▾ ] [ Cliente ▾ ] [ ⚙ Filtros (N) ]
-```
-- **Search** ocupa el espacio flexible.
-- **Estado** y **Cliente** quedan inline (son los más usados).
-- **Filtros (N)** abre un `Sheet` lateral con: Modo, Operador, ETD desde, ETA hasta. El badge `(N)` muestra cuántos secundarios están activos.
-- En móvil (<md) sigue siendo: search + botón "Filtros (N)" que abre el sheet con TODOS los filtros (incluidos Estado/Cliente).
+---
 
-### Fila 2 — Chips de filtros activos
-Debajo de la barra, solo si hay al menos un filtro distinto del search:
-```text
-Activos: [Estado: En Tránsito ×] [Cliente: ACME ×] [Modo: Marítimo ×] [ETD ≥ 01/05/2026 ×]   Limpiar todo
-```
-- Cada chip muestra etiqueta + valor + X para quitarlo individualmente.
-- "Limpiar todo" a la derecha resetea todos los filtros (no el search).
+### 1. Modal "Capturar factura de proveedor" (prioridad alta)
 
-## Archivos a tocar
+Problema actual: `DialogContent` sin scroll, sin secciones, 11 inputs en grid plano, `0` literales en lugar de placeholders, total escondido entre campos.
 
-- **`src/features/embarques/components/EmbarquesFiltrosCampos.tsx`**
-  - Layout inline: dejar solo `Search + Estado + Cliente`. Eliminar Modo, Operador, FechaDesde, FechaHasta del modo inline.
-  - Conservar el layout `stacked` (sheet) sin cambios; ahí siguen apareciendo todos.
+Rediseño:
+- Aplicar `dialogSize.xl + scrollableDialog` (scroll interno, max 85vh).
+- Una sola columna con **secciones tituladas**:
+  1. **Proveedor y folio** — Combobox proveedor + Folio.
+  2. **Fechas y crédito** — Emisión, Días crédito, Vencimiento (readonly).
+  3. **Moneda** — Moneda + Tipo de cambio USD (TC se oculta si moneda = MXN).
+  4. **Importes** — Subtotal, IVA, Retenciones. Total destacado en un panel resumen (fondo `muted`, tabular-nums, color por moneda).
+  5. **Categorización** — Categoría presupuestal + Notas.
+- Inputs numéricos: `placeholder="0.00"` con value `""` mientras no se captura; convertir a number sólo al `submit`.
+- Validación inline: mensajes bajo el campo (no sólo toast).
+- Footer fijo (sticky) con Cancelar / Guardar.
+- Extraer el formulario a `FacturaProveedorFormFields.tsx` (≤180 LOC) — el dialog queda como contenedor.
 
-- **`src/features/embarques/components/EmbarquesFiltros.tsx`**
-  - Renderizar la nueva barra unificada (desktop y móvil) con `Sheet` siempre disponible para los secundarios.
-  - En desktop, el `Sheet` solo muestra los 4 secundarios (Modo, Operador, ETD desde, ETA hasta). En móvil sigue mostrando todos.
-  - Insertar el render de `<EmbarquesFiltrosChips />` debajo de la barra cuando `activeFilterCount > 0`.
+### 2. Modal "Registrar pago a proveedor"
 
-- **`src/features/embarques/components/EmbarquesFiltrosChips.tsx`** *(nuevo, ~80 LOC)*
-  - Componente presentacional. Recibe los valores + setters + lista de clientes (para resolver nombre desde id).
-  - Renderiza un `Badge` con `X` por cada filtro activo y un botón "Limpiar todo".
-  - Formatea fechas como DD/MM/YYYY (es-MX).
+Igual tratamiento: `dialogSize.lg + scrollableDialog`, secciones (Fecha/Método, Monto/Moneda/TC, Diferencia cambiaria opcional, Referencia/Notas), resumen "Saldo restante después del pago" en vivo, footer sticky.
 
-- **`src/features/embarques/components/embarquesFiltrosUtils.ts`**
-  - Reutilizar `countActiveEmbarqueFilters`. Añadir helper opcional `getActiveFilterChips(...)` que devuelva un array `{ key, label, onRemove }` para el componente de chips (mantiene la lógica fuera del JSX).
+### 3. Modal "Detalle de pagos"
 
-- **`src/constants/appVersion.ts`** — bump.
-- **`CHANGELOG.md`** — entrada nueva describiendo el rediseño.
+- `dialogSize.3xl + scrollableDialog`.
+- Cabecera con KPIs mini: Total factura · Pagado · Saldo · # pagos.
+- Reemplazar `<table>` ad-hoc por componente con zebra-striping del sistema.
+- Acción "Eliminar pago" con doble confirmación (tipear `ELIMINAR`) — sigue regla data-safety.
 
-## Detalles técnicos
+### 4. Página `/cxp`
 
-- No se cambia el contrato de `useEmbarquesPageController` ni del padre `Embarques.tsx`: los mismos props bajan al componente de filtros.
-- Los setters individuales del chip llaman a `onFilterXxxChange("todos")` o `onFechaXxxChange("")` según el caso.
-- El `Sheet` mantiene los botones "Limpiar" y "Aplicar" actuales.
-- Accesibilidad: cada chip incluye `aria-label="Quitar filtro <nombre>"` en su botón X.
-- Se conserva el comportamiento responsive existente: la barra hace wrap si el viewport lo requiere.
+- **KPIs**: añadir conteo de facturas en cada tarjeta (ej. "Por pagar MXN · 12 facturas"). Mantener 4 tarjetas.
+- **Filtros**: adoptar patrón embarques — barra compacta `Search + Estatus + Moneda + Filtros (N)`. En el `Sheet` lateral: filtro por **Proveedor** (nuevo) y rango de fechas de emisión. Chips de filtros activos debajo (`CxpFiltrosChips`).
+- **Acciones header**: dejar sólo Reporte PDF + Capturar factura (sin cambios mayores).
+- **Tabla**:
+  - Densidad `compact` por defecto (consistente con embarques).
+  - Fila clicable → abre "Detalle de pagos" (con `e.stopPropagation` en acciones, ya está).
+  - Ordenamiento por defecto: días vencido desc, luego vencimiento asc.
+  - Columna acciones: dejar `Pagar` siempre visible cuando aplique, mover ojo/borrar a un `DropdownMenu` (`MoreHorizontal`) para reducir ruido visual.
+- **Empty state**: ilustración + texto + CTA "Capturar primera factura" (si admin).
 
-## Fuera de alcance
-- No se tocan columnas de la tabla, paginación, ni la lógica de fetch/filtrado.
-- No se cambia el `PageHeader` ni las acciones de export/nuevo embarque.
-- No se modifica el portal de cliente.
+### 5. Misc
+
+- Filtro por proveedor llega al servicio `fetchFacturasCxP` (extiende `FetchCxPFiltros`).
+- Actualizar `CHANGELOG.md` y bump `APP_VERSION` (12.62.0).
+
+---
+
+### Archivos afectados
+
+**Nuevos**
+- `src/components/cxp/FacturaProveedorFormFields.tsx`
+- `src/components/cxp/PagoProveedorFormFields.tsx`
+- `src/components/cxp/CxpFiltros.tsx`
+- `src/components/cxp/CxpFiltrosChips.tsx`
+
+**Editados**
+- `src/components/cxp/DialogNuevaFacturaProveedor.tsx` — adelgazar, usar form fields + scrollable.
+- `src/components/cxp/DialogRegistrarPagoProveedor.tsx` — secciones + saldo restante.
+- `src/components/cxp/DialogDetallePagosProveedor.tsx` — KPIs + tabla mejorada + doble confirm.
+- `src/components/cxp/cxpColumns.tsx` — dropdown acciones, defaults sort.
+- `src/pages/cxp/Cxp.tsx` — nuevos filtros, KPIs con count, empty state, click en fila.
+- `src/services/cxp/*` — extender filtros (proveedor_id, fecha rango). _Solo capa de lectura, sin cambios de schema._
+- `src/constants/appVersion.ts` y `CHANGELOG.md`.
+
+### Fuera de alcance
+- Cambios al schema de BD (`proveedor_facturas`, `proveedor_pagos`).
+- Conciliación con tesorería / pagos masivos.
+- Importación CSV de facturas.
+- Edición de facturas existentes (sólo se mantiene crear + eliminar).
