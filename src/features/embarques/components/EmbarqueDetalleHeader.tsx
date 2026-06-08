@@ -131,9 +131,6 @@ export function EmbarqueDetalleHeader({
                 <Edit className="h-4 w-4 mr-2" /> Editar
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-2" /> Imprimir
-            </DropdownMenuItem>
             {canEdit && (
               <DropdownMenuItem onClick={onAbrirDuplicar}>
                 <Copy className="h-4 w-4 mr-2" /> Duplicar embarque

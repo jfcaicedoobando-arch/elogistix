@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.61.23] - 2026-06-08
+- **chore(ux) — eliminar acción "Imprimir" del detalle de embarque**: En `EmbarqueDetalleHeader.tsx` se removió el `DropdownMenuItem` de Imprimir (y el ícono `Printer` del import de `lucide-react`). La acción `window.print()` no se usaba en el flujo operativo. Bump `APP_VERSION` a 12.61.23.
+
 ## [12.61.22] - 2026-06-08
 - **fix(ux) — un solo flujo de edición de contenedores**: En `/embarques/:id` la tarjeta "Contenedores" mostraba un editor inline con su propio botón "Guardar cambios", lo cual contradecía la capacitación (toda edición debía hacerse desde el botón **Editar**). Ahora el detalle usa `SeccionContenedoresReadonly`: tabla solo-lectura (número, tipo, BL house, peso, volumen, piezas) con un botón "Editar contenedores" que abre `/embarques/:id/editar?step=2`. La edición se trasladó al **Paso 2 — Datos de Ruta** del wizard (`StepDatosRuta.tsx`), visible solo cuando `modo === "Marítimo"`, reutilizando `ListaContenedoresEditable`. El guardado ya estaba conectado en `useEditarEmbarqueWizard` (efecto `hidratoContenedores` + `updateEmbarque.mutateAsync({ contenedores })`); se añadió validación previa al submit: si algún contenedor carece de número o tipo, se notifica y se devuelve al usuario al paso 2. Se eliminó `SeccionContenedores.tsx`. Bump `APP_VERSION` a 12.61.22.
 
