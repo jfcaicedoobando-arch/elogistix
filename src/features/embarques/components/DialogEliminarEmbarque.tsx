@@ -23,9 +23,7 @@ interface Props {
 }
 
 function formatoFolio(f: FacturaLigada): string {
-  const serie = f.serie ?? '';
-  const folio = f.folio ?? f.id.slice(0, 8);
-  return serie ? `${serie}-${folio}` : folio;
+  return f.folio ?? f.id.slice(0, 8);
 }
 
 export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }: Props) {

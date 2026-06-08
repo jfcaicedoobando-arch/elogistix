@@ -8,8 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface FacturaLigada {
   id: string;
   folio: string | null;
-  serie: string | null;
-  estatus: string | null;
+  estado: string | null;
 }
 
 export interface EmbarqueDependenciasFinancieras {
@@ -26,12 +25,12 @@ async function fetchDependencias(embarqueId: string): Promise<EmbarqueDependenci
   const [cxcRes, cxpRes] = await Promise.all([
     supabase
       .from('facturas')
-      .select('id, folio, serie, estatus', { count: 'exact' })
+      .select('id, numero, estado', { count: 'exact' })
       .eq('embarque_id', embarqueId)
       .limit(MAX_FOLIOS),
     supabase
       .from('proveedor_facturas')
-      .select('id, folio, serie, estatus', { count: 'exact' })
+      .select('id, folio_proveedor, estado', { count: 'exact' })
       .eq('embarque_id', embarqueId)
       .limit(MAX_FOLIOS),
   ]);
@@ -39,8 +38,19 @@ async function fetchDependencias(embarqueId: string): Promise<EmbarqueDependenci
   if (cxcRes.error) throw cxcRes.error;
   if (cxpRes.error) throw cxpRes.error;
 
-  const cxcFacturas = (cxcRes.data ?? []) as unknown as FacturaLigada[];
-  const cxpFacturas = (cxpRes.data ?? []) as unknown as FacturaLigada[];
+  type CxcRow = { id: string; numero: string | null; estado: string | null };
+  type CxpRow = { id: string; folio_proveedor: string | null; estado: string | null };
+
+  const cxcRows = (cxcRes.data ?? []) as unknown as CxcRow[];
+  const cxpRows = (cxpRes.data ?? []) as unknown as CxpRow[];
+
+  const cxcFacturas: FacturaLigada[] = cxcRows.map((r) => ({
+    id: r.id, folio: r.numero, estado: r.estado,
+  }));
+  const cxpFacturas: FacturaLigada[] = cxpRows.map((r) => ({
+    id: r.id, folio: r.folio_proveedor, estado: r.estado,
+  }));
+
   const cxcCount = cxcRes.count ?? cxcFacturas.length;
   const cxpCount = cxpRes.count ?? cxpFacturas.length;
 
