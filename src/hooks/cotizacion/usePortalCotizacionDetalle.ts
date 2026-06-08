@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
-import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
 import { fromDb } from "@/lib/supabase/cast";
 
 interface CotizacionLike {
