@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchOperacionesStats } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -12,6 +12,10 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('operaciones/index', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('fetchOperacionesStats llama al RPC operaciones_stats', async () => {
     mockSupabase.rpc.mockResolvedValue({ data: { global: {} }, error: null });
     const result = await fetchOperacionesStats();
