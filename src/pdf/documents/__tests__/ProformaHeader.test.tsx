@@ -4,36 +4,51 @@ import { render } from "@testing-library/react";
 
 const mockProforma = {
   numero: "P1",
-  fecha_emision: "2023-01-01",
-  expediente: "E1",
+  fecha_emision: "2023-01-15",
+  expediente: "EXP-77",
+  cliente_nombre: "Cliente Demo",
+  dias_credito: 30,
 } as any;
 
 const mockEmbarque = {
   modo: "Marítimo",
+  tipo: "FCL",
+  incoterm: "FOB",
+  puerto_origen: "Shanghai",
+  puerto_destino: "Manzanillo",
 } as any;
 
 describe("ProformaHeader", () => {
-  it("ProformaHeader renderiza con props mínimas", () => {
-    const { getAllByTestId } = render(
-      <ProformaHeader 
-        proforma={mockProforma} 
-        cliente={null as any} 
-        embarque={mockEmbarque} 
-        esConsolidada={false} 
-      />
+  it("muestra número, expediente, cliente, modo/incoterm y vigencia", () => {
+    const { container } = render(
+      <ProformaHeader
+        proforma={mockProforma}
+        cliente={null as any}
+        embarque={mockEmbarque}
+        esConsolidada={false}
+      />,
     );
-    expect(getAllByTestId("pdf-text").length).toBeGreaterThan(0);
+    const text = container.textContent ?? "";
+    expect(text).toContain("P1");
+    expect(text).toContain("EXP-77");
+    expect(text).toContain("Cliente Demo");
+    expect(text).toContain("Marítimo");
+    expect(text).toContain("FOB");
+    expect(text).toContain("Shanghai");
+    expect(text).toMatch(/sin validez fiscal/i);
   });
 
-  it("debe renderizar versión consolidada", () => {
-    const { getAllByTestId } = render(
-      <ProformaHeader 
-        proforma={mockProforma} 
-        cliente={null as any} 
-        embarque={mockEmbarque} 
-        esConsolidada={true} 
-      />
+  it("versión consolidada incluye datos clave", () => {
+    const { container } = render(
+      <ProformaHeader
+        proforma={mockProforma}
+        cliente={null as any}
+        embarque={mockEmbarque}
+        esConsolidada={true}
+      />,
     );
-    expect(getAllByTestId("pdf-text").length).toBeGreaterThan(0);
+    const text = container.textContent ?? "";
+    expect(text).toContain("P1");
+    expect(text).toContain("EXP-77");
   });
 });

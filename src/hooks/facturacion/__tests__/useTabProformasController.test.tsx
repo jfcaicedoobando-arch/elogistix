@@ -11,16 +11,12 @@ vi.mock("@/features/embarques/hooks/useDescargarProformaPdf", () => ({
 }));
 vi.mock("@/hooks/shared", () => ({
   useOrgFilter: () => ({ organizationId: "org-1" }),
-}));
-vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
   toast: vi.fn(),
+  DEFAULT_PAGE_SIZE: 10,
 }));
 vi.mock("@/lib/query", () => ({
   queryKeys: { proformas: { all: ["proformas"] } },
-}));
-vi.mock("@/hooks/shared", () => ({
-  DEFAULT_PAGE_SIZE: 10,
 }));
 
 import { useProformas } from "@/features/embarques/hooks/useProformas";

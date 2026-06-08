@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
 vi.mock("@/hooks/shared", async () => {
@@ -11,11 +11,15 @@ vi.mock("@/hooks/shared", async () => {
   };
 });
 
+const aprobadas = [{ id: "p1", numero: "P-001", estado_proforma: "aprobada" }];
+const fetchProformasAprobadas = vi.fn().mockResolvedValue(aprobadas);
+const crearProforma = vi.fn().mockResolvedValue({ id: "prof-1", numero: "P-1", embarque_id: "e-1" });
+
 vi.mock("@/services/proforma", () => ({
   fetchProformasEmbarque: vi.fn().mockResolvedValue([]),
-  fetchProformasAprobadas: vi.fn().mockResolvedValue([]),
+  fetchProformasAprobadas: (...args: unknown[]) => fetchProformasAprobadas(...args),
   fetchProformasPendientes: vi.fn().mockResolvedValue([]),
-  crearProforma: vi.fn().mockResolvedValue({ id: "prof-1", numero: "P-1", embarque_id: "e-1" }),
+  crearProforma: (...args: unknown[]) => crearProforma(...args),
   aprobarProformas: vi.fn().mockResolvedValue(undefined),
   consolidarProformas: vi.fn().mockResolvedValue({ id: "prof-2", numero: "P-2", embarque_id: "e-1" }),
   eliminarProforma: vi.fn().mockResolvedValue(undefined),
@@ -24,17 +28,25 @@ vi.mock("@/services/proforma", () => ({
 
 import { useProformas, useCrearProforma } from "../useProformas";
 
-const wrapper = createWrapper();
-
 describe("useProformas", () => {
-  it("useProformas retorna el query", () => {
+  it("ejecuta el query y devuelve la lista de proformas aprobadas para la org", async () => {
+    const wrapper = createWrapper();
     const { result } = renderHook(() => useProformas(), { wrapper });
-    expect(result.current).toBeDefined();
-    expect(typeof result.current.refetch).toBe("function");
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(fetchProformasAprobadas).toHaveBeenCalledWith("org-1");
+    expect(result.current.data).toEqual(aprobadas);
   });
 
-  it("useCrearProforma retorna la mutación", () => {
+  it("useCrearProforma inyecta organizationId y invoca el servicio al mutar", async () => {
+    const wrapper = createWrapper();
     const { result } = renderHook(() => useCrearProforma(), { wrapper });
-    expect(result.current.mutate).toBeDefined();
+
+    await act(async () => {
+      await result.current.mutateAsync({ embarqueId: "e-1" } as never);
+    });
+    expect(crearProforma).toHaveBeenCalledTimes(1);
+    expect(crearProforma.mock.calls[0][0]).toMatchObject({ embarqueId: "e-1", organizationId: "org-1" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 });

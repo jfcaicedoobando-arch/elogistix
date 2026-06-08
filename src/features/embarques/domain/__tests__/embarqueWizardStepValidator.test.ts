@@ -37,8 +37,12 @@ describe("validateWizardStep", () => {
       conceptosVenta: [],
       conceptosCosto: [],
     });
-    // No marcamos todos los docs requeridos; sólo aceptamos que se ejecute sin lanzar.
+    // Sin cumplir todos los documentos requeridos, el validador devuelve un
+    // objeto plano (no null/array) con al menos una clave de error.
+    expect(errors).not.toBeNull();
+    expect(Array.isArray(errors)).toBe(false);
     expect(typeof errors).toBe("object");
+    expect(Object.keys(errors).length).toBeGreaterThan(0);
   });
 
   it("step desconocido retorna vacío", () => {

@@ -21,6 +21,18 @@ describe("mappers/_helpers", () => {
       expect(num("")).toBe(0);
       expect(num(null, 9)).toBe(9);
     });
+
+    it("rechaza NaN y devuelve default", () => {
+      expect(num("NaN")).toBe(0);
+      expect(num("not-a-number")).toBe(0);
+      expect(num(Number.NaN, 7)).toBe(7);
+    });
+
+    it("rechaza ±Infinity y devuelve default", () => {
+      expect(num("Infinity")).toBe(0);
+      expect(num(Number.POSITIVE_INFINITY)).toBe(0);
+      expect(num(Number.NEGATIVE_INFINITY, 5)).toBe(5);
+    });
   });
 
   describe("numStr", () => {

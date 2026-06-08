@@ -133,7 +133,7 @@ describe("sumarSubtotales", () => {
     const total = sumarSubtotales(items, (i) => ({ cantidad: i.cant, precioUnitario: i.pu }));
     expect(total).toBe(0.3);
   });
-  it("retorna 0 con lista vacía", () => {
+  it("sumarSubtotales retorna 0 con lista vacía", () => {
     expect(sumarSubtotales([], () => ({ cantidad: 0, precioUnitario: 0 }))).toBe(0);
   });
   it("coincide con DialogRegistrarPago: 3 × 33.33 = 99.99", () => {
@@ -146,7 +146,7 @@ describe("sumarMontos", () => {
   it("elimina drift de punto flotante en suma de montos", () => {
     expect(sumarMontos([0.1, 0.2, 0.3, 0.4])).toBe(1.0);
   });
-  it("retorna 0 con lista vacía", () => {
+  it("sumarMontos retorna 0 con lista vacía", () => {
     expect(sumarMontos([])).toBe(0);
   });
   it("acumula montos pre-calculados (ej. IVA por fila)", () => {

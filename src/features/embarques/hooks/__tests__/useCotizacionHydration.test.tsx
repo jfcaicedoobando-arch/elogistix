@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useCotizacionHydration } from "../useCotizacionHydration";
 import { MemoryRouter } from "react-router-dom";
@@ -22,11 +22,14 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe("useCotizacionHydration", () => {
-  it("llama a onPrevincular cuando detecta id en state", () => {
+  it("llama a onPrevincular cuando detecta id en state", async () => {
     const onPrevincular = vi.fn();
     renderHook(() => useCotizacionHydration({ onPrevincular }), { wrapper });
-    
-    expect(onPrevincular).toHaveBeenCalledWith(mockCot);
+
+    await waitFor(() => {
+      expect(onPrevincular).toHaveBeenCalledWith(mockCot);
+    });
+    expect(onPrevincular).toHaveBeenCalledTimes(1);
   });
 
   it("no hace nada si no hay id en el state", () => {

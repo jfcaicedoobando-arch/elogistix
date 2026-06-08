@@ -41,4 +41,25 @@ describe("dashboardSchemas", () => {
     expect(r.cliente_id).toBe("abc");
     expect(r.desglose.Confirmado).toBe(0);
   });
+
+  it("arribosEsteMesSchema rechaza payload no parseable a número", () => {
+    const result = arribosEsteMesSchema.safeParse({
+      total: "no-numero",
+      yaLlegaron: 0,
+      enCamino: 0,
+      profitUSD: 0,
+      ventaMXN: 0,
+      costoMXN: 0,
+      profitMXN: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("cargaPorClienteSchema rechaza si falta cliente_id", () => {
+    const result = cargaPorClienteSchema.safeParse({
+      cliente_nombre: "Acme",
+      total: 1,
+    });
+    expect(result.success).toBe(false);
+  });
 });
