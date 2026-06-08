@@ -9,6 +9,7 @@ export * from './useEditarEmbarqueWizard';
 export * from './useEmbarqueDetalleActions';
 export * from './useEmbarqueDetalleData';
 export * from './useEmbarqueDetalleTracking';
+export * from './useEmbarqueDependenciasFinancieras';
 export * from './useEmbarqueDocumentosActions';
 export * from './useEmbarqueEstadoActions';
 export * from './useEmbarqueFinancials';
