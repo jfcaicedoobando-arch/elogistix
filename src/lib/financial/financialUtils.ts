@@ -21,9 +21,46 @@ export const TASAS_IVA_MX = [
 const money = (n: number) => currency(n, { precision: 2 });
 const ratio = (n: number) => currency(n, { precision: 4 });
 
+/**
+ * Subtotal de una línea (cantidad × precio_unitario) redondeado a 2 decimales
+ * con `currency.js`. Usar SIEMPRE en lugar de la multiplicación directa antes
+ * de acumular a un total padre, para evitar drift de punto flotante.
+ */
+export function subtotalLinea(cantidad: number, precioUnitario: number): number {
+  return money(precioUnitario).multiply(cantidad).value;
+}
+
 /** Calcula el subtotal (cantidad × precio unitario) */
 export function calcularSubtotal(cantidad: number, precioUnitario: number): number {
-  return money(precioUnitario).multiply(cantidad).value;
+  return subtotalLinea(cantidad, precioUnitario);
+}
+
+/**
+ * Suma una lista de items aplicando `subtotalLinea` por fila antes de
+ * acumular. Reemplaza el patrón `arr.reduce((s, c) => s + c.cant * c.pu, 0)`
+ * para garantizar coincidencia exacta con los registros de pago en
+ * `DialogRegistrarPago`.
+ */
+export function sumarSubtotales<T>(
+  items: T[],
+  get: (item: T) => { cantidad: number; precioUnitario: number },
+): number {
+  return items
+    .reduce((acc, item) => {
+      const { cantidad, precioUnitario } = get(item);
+      return acc.add(money(precioUnitario).multiply(cantidad));
+    }, currency(0, { precision: 2 }))
+    .value;
+}
+
+/**
+ * Acumulador genérico de montos ya calculados. Cada monto se redondea a 2
+ * decimales antes de sumarse para evitar drift de punto flotante.
+ */
+export function sumarMontos(montos: number[]): number {
+  return montos
+    .reduce((acc, m) => acc.add(money(m)), currency(0, { precision: 2 }))
+    .value;
 }
 
 /** Calcula el IVA sobre un monto. La tasa es obligatoria. */

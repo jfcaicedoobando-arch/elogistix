@@ -1,107 +1,80 @@
 ## Objetivo
 
-Cada fila de concepto (venta y costo) lleva su propia **tasa de IVA** (`0`, `0.08`, `0.16`, o cualquier numérico ≥0). Toda la suite financiera respeta esa tasa al construir payloads, totales y PDFs. El fallback `0.16` deja de aplicarse automáticamente al sumar; sólo se usa como **default de UI** al crear una fila nueva (tomado de `useTasaIVA`).
+Eliminar drift de punto flotante en los totales del wizard de embarques para que coincidan exactamente con los registros de pago (`DialogRegistrarPago.tsx`). Toda multiplicación `cantidad × precio_unitario` (o `monto` convertido) se envolverá en `currency.js` y se redondeará a 2 decimales **antes** de sumarse al acumulador padre, siguiendo el patrón ya probado en `profitUtils.ts`.
 
-## 1. Migración de BD
+## Aclaración importante
 
-Agregar columna `tasa_iva_aplicada NUMERIC(5,4) NOT NULL DEFAULT 0.16` a:
+`src/features/embarques/domain/embarqueWizardCostos.ts` hoy es **sólo validación** (no contiene aritmética de totales). Las sumas que alimentan el resumen del paso 4 del wizard viven en:
 
-- `public.conceptos_venta`
-- `public.conceptos_costo`
+- `src/lib/financial/embarqueKpis.ts` — `totalEnMxn` (acumulador con `+` plano)
+- `src/lib/financial/costosUSD.ts` — `sumarEnUSD` (ya usa `currency.js`, OK)
+- `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx` — `subUsd`/`subMxn` con `reduce` plano
+- `src/features/embarques/hooks/useDialogGenerarProformaController.ts` — `subtotal_usd`/`subtotal_mxn` con `reduce` plano
 
-Backfill: `UPDATE … SET tasa_iva_aplicada = CASE WHEN aplica_iva THEN 0.16 ELSE 0 END`.
-
-Constraint: `CHECK (tasa_iva_aplicada >= 0 AND tasa_iva_aplicada <= 1)`.
-
-> El JSON `cotizaciones.conceptos_venta` no requiere migración de schema (es jsonb) — los nuevos registros incluirán `tasa_iva_aplicada`; los viejos se leen con fallback derivado de `aplica_iva`.
-
-## 2. Refactor de `src/lib/financial/financialUtils.ts`
-
-- Eliminar el default `= TASA_IVA` en `calcularIVA` y `calcularTotalConIVA`. La tasa pasa a ser **obligatoria**.
-- Conservar `TASA_IVA = 0.16` sólo como **semilla** para defaults de UI, marcado `@deprecated for math`.
-- Añadir helper puro `resolverTasaConcepto(concepto, fallback)` que devuelve:
-  1. `concepto.tasa_iva_aplicada` si está definida (incluye 0).
-  2. `fallback * Number(concepto.aplica_iva)` si no.
-
-## 3. Tipos
-
-- `ConceptoVentaCotizacion` (`src/types/cotizacion.ts`): agregar `tasa_iva_aplicada: number`.
-- `ConceptoVentaLocal` / `ConceptoCostoLocal` (`src/types/concepto.ts`): agregar `tasaIvaAplicada: number`.
-- Regenerar tipos Supabase (automático tras migración).
-
-## 4. UI — selector de tasa por fila
-
-Reemplazar el checkbox `aplica_iva` por un `<Select>` con opciones:
-
-```text
-0%    — Exento (flete marítimo internacional)
-8%    — Frontera
-16%   — General
-```
-
-Archivos afectados:
-
-- `src/components/cotizacion/conceptos/ConceptoRows.tsx` (USD y MXN)
-- `src/features/embarques/components/facturacion/GrupoConceptosContenedor.tsx`
-- `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx`
-- Wizards de embarque/cotización donde se editan conceptos.
-
-`aplica_iva` se deriva como `tasa_iva_aplicada > 0` (mantener columna en BD para compatibilidad con RPCs existentes, pero ya no se edita directamente).
-
-## 5. Cálculos: usar tasa por fila
-
-Reemplazar `calcularIVA(sub, tasaIva)` por `calcularIVA(sub, resolverTasaConcepto(c, tasaIvaGlobal))` en:
+Por consistencia incluyo también los acumuladores equivalentes fuera del wizard que comparten el mismo defecto, ya que los mismos conceptos terminan en factura/proforma/cotización:
 
 - `src/generators/cotizacion/conceptosTables.ts`
+- `src/hooks/cotizacion/useConceptosVentaCotizacion.ts`
+- `src/hooks/cotizacion/wizard/useConceptosForm.ts`
 - `src/lib/parsers/cotizacionDetalle.ts`
-- `src/lib/domain/proforma.ts`
-- `src/lib/domain/cotizacion.ts`
-- `src/features/embarques/hooks/useDialogGenerarProformaController.ts`
-- `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx`
-- `src/hooks/cotizacion/usePortalCotizacionDetalle.ts`
-- `src/pdf/documents/CotizacionDocument.tsx`
-- `src/pdf/documents/ProformaDocument.tsx` y `ProformaConsolidadaDocument.tsx`
+- `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
 
-Para MXN: el subtotal ya no aplica `tasaIvaGlobal` ciegamente; cada concepto MXN puede ahora tener su propia tasa (default 16%).
+Si prefieres limitar el alcance estrictamente al wizard de embarques, dímelo y los dejo fuera.
 
-## 6. Payloads de inserción
+## Cambios propuestos
 
-- `src/services/cotizacion/conversiones/embarquesHelpers.ts` → propagar `tasa_iva_aplicada` al insertar `conceptos_venta`.
-- `src/features/embarques/hooks/submitProformaDialog.ts` → enviar tasa por fila a la RPC; ajustar `p_tasa_iva` (proforma) para que sea el **promedio ponderado** o se elimine en favor de la columna por concepto (verificar RPC `crear_proforma_atomica`).
-- `src/services/cotizacion/mutations/{crear,update}.ts` → incluir `tasa_iva_aplicada` en cada concepto del JSON.
+### 1. `src/lib/financial/financialUtils.ts`
+Agregar helpers reutilizables (basados en `currency.js`, precision 2):
 
-## 7. RPC / Edge functions
+- `subtotalLinea(cantidad, precioUnitario): number` — equivalente a `calcularSubtotal` pero **garantizando** redondeo a 2 decimales por fila.
+- `sumarSubtotales<T>(items: T[], get: (i: T) => { cantidad: number; precioUnitario: number }): number` — acumulador que aplica `subtotalLinea` por fila antes de sumar.
+- `sumarMontos(montos: number[]): number` — acumulador genérico con `currency.js` (para casos donde la fila ya trae el monto convertido).
 
-Auditar funciones SQL que reciben `p_tasa_iva` y aplican una sola tasa al total: cambiar a `SUM(subtotal * tasa_iva_aplicada)` por fila. Lista probable: `crear_proforma_atomica`, `consolidar_proformas`. Plan: migración adicional que ajuste la lógica.
+`calcularSubtotal` existente se reescribe internamente para delegar en `subtotalLinea` (mantiene firma).
 
-## 8. Tests
+### 2. `src/lib/financial/embarqueKpis.ts`
+`totalEnMxn` pasa de `items.reduce((sum, item) => sum + convertirAMXN(...), 0)` a un acumulador `currency(0, { precision: 2 })` que suma cada `convertirAMXN(...)` redondeado.
 
-Actualizar y agregar casos:
+### 3. Acumuladores de subtotales (mismo patrón en cada sitio)
+Reemplazar:
+```ts
+arr.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0)
+```
+por:
+```ts
+sumarSubtotales(arr, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }))
+```
+en:
+- `src/generators/cotizacion/conceptosTables.ts` (subtotalUSD, subtotalMXN, e IVA por fila usando `currency.js`).
+- `src/hooks/cotizacion/useConceptosVentaCotizacion.ts` (subtotalMXN + acumulador de IVA).
+- `src/hooks/cotizacion/wizard/useConceptosForm.ts`.
+- `src/lib/parsers/cotizacionDetalle.ts`.
+- `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx` (subtotalSinIvaUSD y análogos).
+- `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx` (subUsd/subMxn).
+- `src/features/embarques/hooks/useDialogGenerarProformaController.ts` (subtotal_usd/subtotal_mxn antes del payload de proforma).
 
-- `src/lib/financial/__tests__/financialUtils.test.ts` — quitar pruebas que asumen default 0.16; agregar `resolverTasaConcepto`.
-- `src/generators/cotizacion/__tests__/conceptosTables.test.ts` — concepto con `tasa_iva_aplicada=0.08` produce IVA correcto; concepto exento (0) produce 0.
-- `src/lib/parsers/__tests__/cotizacionDetalle.test.ts` — mezcla de tasas.
-- `src/lib/domain/__tests__/proforma.test.ts` — fila exenta no suma IVA aunque global=0.16.
-- `src/features/embarques/hooks/__tests__/submitProformaDialog.test.ts` — payload incluye `tasa_iva_aplicada` por fila.
-- `src/pdf/documents/__tests__/CotizacionDocument.test.tsx` — render etiqueta `+IVA 8%` cuando aplica.
+Los acumuladores de IVA (`reduce(... calcularIVA(sub, tasa))`) usan también `sumarMontos` para evitar drift en la suma final.
 
-## 9. Memoria y changelog
+### 4. `src/features/embarques/domain/embarqueWizardCostos.ts`
+Sin cambios aritméticos (es validación). Agrego un comentario JSDoc apuntando a `embarqueKpis.ts` / `sumarSubtotales` como fuente única de verdad para totales, para evitar que se reintroduzcan sumas planas aquí.
 
-- Actualizar `mem://technical/financial-calculations-standards`: la tasa global ya **no se aplica ciegamente**; siempre se prefiere `concepto.tasa_iva_aplicada`.
-- Bump `APP_VERSION` y entrada nueva en `CHANGELOG.md` (root).
+### 5. Tests
+- `src/lib/financial/__tests__/financialUtils.test.ts` — añadir casos para `subtotalLinea`, `sumarSubtotales` y un caso de regresión de drift (ej. 3 filas con `0.1 × 1` que con `+` da `0.30000000000000004` y con currency.js da `0.3`).
+- `src/generators/cotizacion/__tests__/conceptosTables.test.ts` — añadir caso de drift con cantidades fraccionarias.
+- Revisar que tests existentes sigan pasando (los valores enteros no cambian).
 
-## 10. Orden de ejecución
+### 6. Versión y changelog
+- Bump `APP_VERSION` (parche, ej. `12.61.1`).
+- Entrada en `CHANGELOG.md` raíz: "Acumuladores de totales en wizard de embarques y módulos financieros migrados a `currency.js` con redondeo por fila para coincidir exactamente con `DialogRegistrarPago`."
 
-1. Migración SQL (paso 1) → esperar aprobación.
-2. Refactor `financialUtils` + tipos.
-3. UI selector + propagación en wizards.
-4. Cálculos en hooks/domain/PDFs.
-5. Payloads e inserción.
-6. RPCs (segunda migración si requiere SQL).
-7. Tests.
-8. Memoria + changelog + bump versión.
+### 7. Memoria
+Actualizar `mem://technical/financial-calculations-standards` añadiendo regla: "Toda suma de líneas monetarias debe usar `sumarSubtotales`/`sumarMontos` (currency.js, precision 2); prohibido `reduce((s, x) => s + ..., 0)` sobre montos."
 
 ## Riesgos
 
-- Cotizaciones antiguas en jsonb sin `tasa_iva_aplicada`: el parser hace fallback a `aplica_iva ? 0.16 : 0`, así que el cálculo no cambia para datos existentes.
-- RPCs `p_tasa_iva` pueden requerir versión transicional que acepte ambos modelos.
+- Diferencias mínimas (céntimos) respecto a totales históricos calculados con float; aceptable porque ahora coinciden con los pagos en facturación.
+- Ningún cambio de esquema DB; ningún cambio de UI visible salvo precisión en el último dígito.
+
+## Pregunta antes de implementar
+
+¿Limito el alcance estrictamente al wizard de embarques (puntos 1, 2, partes de 3 y 4) o aplico también a los acumuladores de cotización/proforma listados (recomendado, asegura paridad end-to-end con `DialogRegistrarPago`)?

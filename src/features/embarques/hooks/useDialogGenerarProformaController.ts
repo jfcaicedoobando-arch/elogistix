@@ -6,7 +6,7 @@
  * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
 import { useState, useMemo, useEffect } from "react";
-import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import { useCrearProforma } from "@/features/embarques/hooks/useProformas";
 import {
@@ -127,19 +127,19 @@ export function useDialogGenerarProformaController(
   const totales = useMemo(() => {
     const usd = conceptosSeleccionados.filter((c) => c.moneda === "USD");
     const mxn = conceptosSeleccionados.filter((c) => c.moneda === "MXN");
+    const getter = (c: ConceptoVenta) => ({ cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario) });
 
-    const subtotal_usd = usd.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
-    const iva_usd = usd.reduce((s, c) => {
-      const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      if (!ivaPorConcepto[c.id]) return s;
-      return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
-    }, 0);
+    const subtotal_usd = sumarSubtotales(usd, getter);
+    const iva_usd = sumarMontos(
+      usd.map((c) => (ivaPorConcepto[c.id]
+        ? calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))
+        : 0)),
+    );
     const total_usd = subtotal_usd + iva_usd;
 
-    const subtotal_mxn = mxn.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
-    const iva_mxn = mxn.reduce(
-      (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
-      0,
+    const subtotal_mxn = sumarSubtotales(mxn, getter);
+    const iva_mxn = sumarMontos(
+      mxn.map((c) => calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
     );
     const total_mxn = subtotal_mxn + iva_mxn;
 

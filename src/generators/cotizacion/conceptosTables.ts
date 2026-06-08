@@ -1,5 +1,5 @@
 import type { ConceptoVentaCotizacion } from '@/types/cotizacion';
-import { calcularIVA, resolverTasaConcepto } from '@/lib/financial/financialUtils';
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from '@/lib/financial/financialUtils';
 
 export interface ConceptosTotales {
   subtotalUSD: number;
@@ -19,22 +19,25 @@ export function splitConceptos(conceptos: ConceptoVentaCotizacion[]) {
 /**
  * Calcula totales agregados respetando la tasa por fila (`tasa_iva_aplicada`).
  * El `tasaIvaGlobal` se usa sólo como fallback para filas legacy sin tasa.
+ *
+ * Todas las multiplicaciones `cantidad × precio_unitario` se redondean a 2
+ * decimales con `currency.js` antes de acumularse al subtotal padre, para
+ * garantizar coincidencia exacta con los registros de pago en facturación.
  */
 export function calcularTotales(
   conceptos: ConceptoVentaCotizacion[],
   tasaIvaGlobal: number,
 ): ConceptosTotales {
   const { usd, mxn } = splitConceptos(conceptos);
-  const subtotalUSD = usd.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaUSD = usd.reduce((s, c) => {
-    const sub = c.cantidad * c.precio_unitario;
-    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIvaGlobal));
-  }, 0);
-  const subtotalMXN = mxn.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaMXN = mxn.reduce((s, c) => {
-    const sub = c.cantidad * c.precio_unitario;
-    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIvaGlobal));
-  }, 0);
+  const getter = (c: ConceptoVentaCotizacion) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario });
+  const subtotalUSD = sumarSubtotales(usd, getter);
+  const ivaUSD = sumarMontos(
+    usd.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIvaGlobal))),
+  );
+  const subtotalMXN = sumarSubtotales(mxn, getter);
+  const ivaMXN = sumarMontos(
+    mxn.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIvaGlobal))),
+  );
   return {
     subtotalUSD,
     ivaUSD,

@@ -2,7 +2,7 @@
  * Cálculos puros de KPIs financieros de un embarque (totales, utilidad, margen).
  * Extraído de useEmbarqueFinancials para hacerlo testeable sin React.
  */
-import { convertirAMXN, calcularUtilidad, calcularMargen, type Moneda } from "@/lib/financial/financialUtils";
+import { convertirAMXN, calcularUtilidad, calcularMargen, sumarMontos, type Moneda } from "@/lib/financial/financialUtils";
 
 export interface ConceptoVentaKpi {
   total: number;
@@ -22,10 +22,14 @@ export interface EmbarqueKpis {
 }
 
 function totalEnMxn<T>(items: T[], get: (i: T) => { monto: number; moneda: Moneda }, tcUsd: number, tcEur: number): number {
-  return items.reduce((sum, item) => {
-    const { monto, moneda } = get(item);
-    return sum + convertirAMXN(Number(monto), moneda, tcUsd, tcEur);
-  }, 0);
+  // Cada conversión se redondea a 2 decimales antes de acumular vía
+  // `sumarMontos` (currency.js) para evitar drift de punto flotante.
+  return sumarMontos(
+    items.map((item) => {
+      const { monto, moneda } = get(item);
+      return convertirAMXN(Number(monto), moneda, tcUsd, tcEur);
+    }),
+  );
 }
 
 export function computeEmbarqueKpis(

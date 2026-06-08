@@ -1,3 +1,14 @@
+/**
+ * Validación pura del paso 4 del wizard (costos/precios).
+ *
+ * NOTA: este módulo NO calcula totales. Toda aritmética monetaria
+ * (subtotales, IVA, KPIs) debe usar `sumarSubtotales`/`sumarMontos` de
+ * `@/lib/financial/financialUtils` y `computeEmbarqueKpis` de
+ * `@/lib/financial/embarqueKpis` — ambos envuelven `currency.js` con
+ * redondeo a 2 decimales por fila para coincidir exactamente con los
+ * registros de pago en `DialogRegistrarPago`. No reintroducir aquí sumas
+ * planas tipo `reduce((s, c) => s + c.cantidad * c.precioUnitario, 0)`.
+ */
 import { msg, getMessage } from "@/lib/domain/errorCatalog";
 import type { StepValidationErrors } from "./embarqueWizardSchemas";
 
