@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, Printer, ChevronRight, Trash2, Share2, MoreHorizontal, Copy, Unlock } from "lucide-react";
+import { Edit, ChevronRight, Trash2, Share2, MoreHorizontal, Copy, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -131,9 +131,6 @@ export function EmbarqueDetalleHeader({
                 <Edit className="h-4 w-4 mr-2" /> Editar
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-2" /> Imprimir
-            </DropdownMenuItem>
             {canEdit && (
               <DropdownMenuItem onClick={onAbrirDuplicar}>
                 <Copy className="h-4 w-4 mr-2" /> Duplicar embarque
