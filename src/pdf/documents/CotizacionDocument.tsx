@@ -1,6 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/types/cotizacion";
-import { TASA_IVA, calcularIVA } from "@/lib/financial/financialUtils";
+import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   calcularTotales,
@@ -26,7 +26,10 @@ interface Props {
 function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
   const base: PdfColumn<ConceptoVentaCotizacion>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
-      render: (r) => r.aplica_iva ? `${r.descripcion}  (+IVA ${(tasaIva * 100).toFixed(0)}%)` : r.descripcion },
+      render: (r) => {
+        const tasa = resolverTasaConcepto(r, tasaIva);
+        return tasa > 0 ? `${r.descripcion}  (+IVA ${(tasa * 100).toFixed(0)}%)` : r.descripcion;
+      } },
     { key: "unidad", title: "Unidad", cellStyle: { width: 55, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
@@ -37,11 +40,14 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
   return [
     ...base,
     { key: "iva", title: `IVA`, cellStyle: styles.cellNum,
-      render: (r) => r.aplica_iva ? formatCurrency(calcularIVA(r.cantidad * r.precio_unitario, tasaIva), "USD") : "—" },
+      render: (r) => {
+        const tasa = resolverTasaConcepto(r, tasaIva);
+        return tasa > 0 ? formatCurrency(calcularIVA(r.cantidad * r.precio_unitario, tasa), "USD") : "—";
+      } },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
       render: (r) => {
         const sub = r.cantidad * r.precio_unitario;
-        const iva = r.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
+        const iva = calcularIVA(sub, resolverTasaConcepto(r, tasaIva));
         return formatCurrency(sub + iva, "USD");
       } },
   ];
@@ -55,15 +61,21 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.precio_unitario, "MXN") },
     { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.cantidad * r.precio_unitario, "MXN") },
-    { key: "iva", title: `IVA ${(tasaIva * 100).toFixed(0)}%`, cellStyle: styles.cellNum,
-      render: (r) => formatCurrency(calcularIVA(r.cantidad * r.precio_unitario, tasaIva), "MXN") },
+    { key: "iva", title: `IVA`, cellStyle: styles.cellNum,
+      render: (r) => {
+        const tasa = resolverTasaConcepto(r, tasaIva);
+        return formatCurrency(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN");
+      } },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
-      render: (r) => formatCurrency(r.cantidad * r.precio_unitario * (1 + tasaIva), "MXN") },
+      render: (r) => {
+        const tasa = resolverTasaConcepto(r, tasaIva);
+        return formatCurrency(r.cantidad * r.precio_unitario * (1 + tasa), "MXN");
+      } },
   ];
 }
 
 export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: Props) {
-  const totales = calcularTotales(cotizacion.conceptos_venta);
+  const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
   const tasaPct = Math.round(tasaIva * 100);

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 
@@ -46,8 +46,8 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
             <TableBody>
               {conceptos.map((concepto, indice) => {
                 const lineSubtotal = calcularSubtotal(concepto.cantidad, concepto.precio_unitario);
-                const aplicaIva = esMXN || !!(concepto as ConceptoVentaCotizacion & { aplica_iva?: boolean }).aplica_iva;
-                const lineIva = aplicaIva ? calcularIVA(lineSubtotal, tasaIva) : 0;
+                const tasaFila = resolverTasaConcepto(concepto, tasaIva);
+                const lineIva = calcularIVA(lineSubtotal, tasaFila);
 
                 return (
                   <TableRow key={concepto.descripcion ?? indice}>

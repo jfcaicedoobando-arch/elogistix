@@ -6,7 +6,7 @@
  * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
 import { useState, useMemo, useEffect } from "react";
-import { calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import { useCrearProforma } from "@/features/embarques/hooks/useProformas";
 import {
@@ -131,12 +131,16 @@ export function useDialogGenerarProformaController(
     const subtotal_usd = usd.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
     const iva_usd = usd.reduce((s, c) => {
       const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      return ivaPorConcepto[c.id] ? s + calcularIVA(sub, tasaIva) : s;
+      if (!ivaPorConcepto[c.id]) return s;
+      return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
     }, 0);
     const total_usd = subtotal_usd + iva_usd;
 
     const subtotal_mxn = mxn.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
-    const iva_mxn = calcularIVA(subtotal_mxn, tasaIva);
+    const iva_mxn = mxn.reduce(
+      (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
+      0,
+    );
     const total_mxn = subtotal_mxn + iva_mxn;
 
     return { subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn };

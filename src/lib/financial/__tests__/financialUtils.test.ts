@@ -7,29 +7,51 @@ import {
   calcularUtilidad,
   convertirAMXN,
   convertirAUSD,
+  resolverTasaConcepto,
 } from "@/lib/financial/financialUtils";
 
 describe("calcularIVA", () => {
-  it("aplica 16% por defecto", () => {
-    expect(calcularIVA(1000)).toBeCloseTo(160);
+  it("aplica la tasa indicada explícitamente", () => {
+    expect(calcularIVA(1000, 0.16)).toBeCloseTo(160);
   });
-  it("acepta tasa personalizada", () => {
+  it("acepta tasa personalizada (8%)", () => {
     expect(calcularIVA(1000, 0.08)).toBeCloseTo(80);
   });
+  it("respeta tasa 0% (exento)", () => {
+    expect(calcularIVA(1000, 0)).toBe(0);
+  });
   it("retorna 0 para monto 0", () => {
-    expect(calcularIVA(0)).toBe(0);
+    expect(calcularIVA(0, 0.16)).toBe(0);
   });
 });
 
 describe("calcularTotalConIVA", () => {
-  it("suma IVA 16% por defecto", () => {
-    expect(calcularTotalConIVA(1000)).toBeCloseTo(1160);
+  it("suma IVA con la tasa indicada", () => {
+    expect(calcularTotalConIVA(1000, 0.16)).toBeCloseTo(1160);
   });
   it("acepta tasa personalizada", () => {
     expect(calcularTotalConIVA(500, 0.10)).toBeCloseTo(550);
   });
+  it("respeta tasa 0%", () => {
+    expect(calcularTotalConIVA(1000, 0)).toBe(1000);
+  });
   it("retorna 0 para monto 0", () => {
-    expect(calcularTotalConIVA(0)).toBe(0);
+    expect(calcularTotalConIVA(0, 0.16)).toBe(0);
+  });
+});
+
+describe("resolverTasaConcepto", () => {
+  it("prioriza tasa_iva_aplicada cuando está definida", () => {
+    expect(resolverTasaConcepto({ tasa_iva_aplicada: 0.08, aplica_iva: true }, 0.16)).toBe(0.08);
+  });
+  it("respeta tasa 0 explícita (no la toma como ausente)", () => {
+    expect(resolverTasaConcepto({ tasa_iva_aplicada: 0, aplica_iva: true }, 0.16)).toBe(0);
+  });
+  it("usa el fallback global cuando sólo está aplica_iva=true", () => {
+    expect(resolverTasaConcepto({ aplica_iva: true }, 0.16)).toBe(0.16);
+  });
+  it("retorna 0 cuando no hay tasa ni aplica_iva", () => {
+    expect(resolverTasaConcepto({ aplica_iva: false }, 0.16)).toBe(0);
   });
 });
 

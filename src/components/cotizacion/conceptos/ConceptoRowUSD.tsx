@@ -2,11 +2,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 import { formatCurrency } from "@/lib/formatters";
+import { TASAS_IVA_MX, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
@@ -21,8 +21,10 @@ export interface ConceptoRowProps {
 
 export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar }: ConceptoRowProps) {
   const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
+  const tasaFila = resolverTasaConcepto(c, 0);
+  const aplicaIva = tasaFila > 0;
   return (
-    <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-warning/5' : ''}`}>
+    <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${aplicaIva ? 'bg-warning/5' : ''}`}>
       <div className="col-span-3">
         {i === 0 && <Label className="text-xs">Concepto</Label>}
         <ConceptoDescripcionSelector descripcion={c.descripcion} index={i} actualizar={actualizar} />
@@ -62,15 +64,19 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
       <div className="col-span-1">
         {i === 0 && <Label className="text-xs">IVA</Label>}
         {puedeIva ? (
-          <div className="flex items-center gap-1">
-            <Switch
-              checked={c.aplica_iva}
-              onCheckedChange={checked => actualizar(i, 'aplica_iva', checked)}
-            />
-            <span className={`text-xs font-medium ${c.aplica_iva ? 'text-amber-600' : 'text-muted-foreground'}`}>
-              {c.aplica_iva ? '16%' : 'No'}
-            </span>
-          </div>
+          <Select
+            value={String(tasaFila)}
+            onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TASAS_IVA_MX.map(opt => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
           <span className="text-xs text-muted-foreground flex items-center h-10">—</span>
         )}

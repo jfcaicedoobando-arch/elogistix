@@ -3,7 +3,7 @@
  * Extracted from useCotizacionDetalleState to keep the hook focused on orchestration.
  */
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
-import { calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 
 export interface ConceptosTotales {
   conceptosVentaUSD: ConceptoVentaCotizacion[];
@@ -30,7 +30,10 @@ export function calcularTotalesConceptos(
   const conceptosVentaMXN = conceptos.filter(c => c.moneda === "MXN");
   const totalUSD = conceptosVentaUSD.reduce((s, c) => s + c.total, 0);
   const subtotalMXN = conceptosVentaMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaMXN = calcularIVA(subtotalMXN, tasaIva);
+  const ivaMXN = conceptosVentaMXN.reduce((s, c) => {
+    const sub = c.cantidad * c.precio_unitario;
+    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
+  }, 0);
   const totalMXN = subtotalMXN + ivaMXN;
   return { conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
 }

@@ -1,5 +1,5 @@
 import type { ConceptoVentaCotizacion } from '@/types/cotizacion';
-import { calcularIVA } from '@/lib/financial/financialUtils';
+import { calcularIVA, resolverTasaConcepto } from '@/lib/financial/financialUtils';
 
 export interface ConceptosTotales {
   subtotalUSD: number;
@@ -16,12 +16,25 @@ export function splitConceptos(conceptos: ConceptoVentaCotizacion[]) {
   return { usd, mxn };
 }
 
-export function calcularTotales(conceptos: ConceptoVentaCotizacion[]): ConceptosTotales {
+/**
+ * Calcula totales agregados respetando la tasa por fila (`tasa_iva_aplicada`).
+ * El `tasaIvaGlobal` se usa sólo como fallback para filas legacy sin tasa.
+ */
+export function calcularTotales(
+  conceptos: ConceptoVentaCotizacion[],
+  tasaIvaGlobal: number,
+): ConceptosTotales {
   const { usd, mxn } = splitConceptos(conceptos);
   const subtotalUSD = usd.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaUSD = usd.reduce((s, c) => (c.aplica_iva ? s + calcularIVA(c.cantidad * c.precio_unitario) : s), 0);
+  const ivaUSD = usd.reduce((s, c) => {
+    const sub = c.cantidad * c.precio_unitario;
+    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIvaGlobal));
+  }, 0);
   const subtotalMXN = mxn.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaMXN = calcularIVA(subtotalMXN);
+  const ivaMXN = mxn.reduce((s, c) => {
+    const sub = c.cantidad * c.precio_unitario;
+    return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIvaGlobal));
+  }, 0);
   return {
     subtotalUSD,
     ivaUSD,

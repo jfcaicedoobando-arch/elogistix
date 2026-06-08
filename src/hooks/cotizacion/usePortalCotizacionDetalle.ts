@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
-import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularSubtotal, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { fromDb } from "@/lib/supabase/cast";
 
 interface CotizacionLike {
@@ -25,7 +25,7 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
       0,
     );
     const ivaMXN = conceptosMXN.reduce(
-      (s, c) => s + calcularIVA(calcularSubtotal(c.cantidad, c.precio_unitario), tasaIva),
+      (s, c) => s + calcularIVA(calcularSubtotal(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
       0,
     );
     const totalMXN = subtotalMXN + ivaMXN;

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
 import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
@@ -57,10 +57,14 @@ export function ResumenConceptosVenta({
       const subUsd = usd.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
       const ivaUsd = usd.reduce((s, c) => {
         const sub = Number(c.cantidad) * Number(c.precio_unitario);
-        return c.aplica_iva ? s + calcularIVA(sub, tasaIva) : s;
+        if (!c.aplica_iva) return s;
+        return s + calcularIVA(sub, resolverTasaConcepto(c, tasaIva));
       }, 0);
       const subMxn = mxn.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
-      const ivaMxn = calcularIVA(subMxn, tasaIva);
+      const ivaMxn = mxn.reduce(
+        (s, c) => s + calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva)),
+        0,
+      );
       return { totalUsd: subUsd + ivaUsd, totalMxn: subMxn + ivaMxn };
     };
     return {

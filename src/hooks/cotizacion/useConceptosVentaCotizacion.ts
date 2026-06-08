@@ -1,15 +1,15 @@
 import { useState, useMemo, useCallback } from "react";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
-import { calcularIVA, calcularTotalConIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, calcularTotalConIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 
 // ── Factories ──
 const emptyUSD = (): ConceptoVentaCotizacion => ({
-  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "USD", total: 0, aplica_iva: false, notas: "",
+  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "USD", total: 0, aplica_iva: false, tasa_iva_aplicada: 0, notas: "",
 });
-const emptyMXN = (): ConceptoVentaCotizacion => ({
-  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "MXN", total: 0, aplica_iva: true, notas: "",
+const emptyMXN = (tasaDefault: number): ConceptoVentaCotizacion => ({
+  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "MXN", total: 0, aplica_iva: true, tasa_iva_aplicada: tasaDefault, notas: "",
 });
 
 interface Options {
@@ -24,7 +24,7 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
     options.initialUSD && options.initialUSD.length > 0 ? options.initialUSD : [emptyUSD()]
   );
   const [conceptosMXN, setConceptosMXN] = useState<ConceptoVentaCotizacion[]>(
-    options.initialMXN && options.initialMXN.length > 0 ? options.initialMXN : [emptyMXN()]
+    options.initialMXN && options.initialMXN.length > 0 ? options.initialMXN : [emptyMXN(tasaIva)]
   );
 
   const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: string | number | boolean) => {
@@ -35,18 +35,26 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
       copia[index] = { ...copia[index], [campo]: valor };
       if (moneda === "USD" && campo === "descripcion" && typeof valor === "string" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
         copia[index].aplica_iva = false;
+        copia[index].tasa_iva_aplicada = 0;
+      }
+      // Mantener consistencia entre tasa y flag booleano.
+      if (campo === "tasa_iva_aplicada" && typeof valor === "number") {
+        copia[index].aplica_iva = valor > 0;
+      }
+      if (campo === "aplica_iva" && typeof valor === "boolean") {
+        copia[index].tasa_iva_aplicada = valor ? tasaIva : 0;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub, tasaIva) : (copia[index].aplica_iva ? calcularTotalConIVA(sub, tasaIva) : sub);
+      const tasaFila = resolverTasaConcepto(copia[index], tasaIva);
+      copia[index].total = calcularTotalConIVA(sub, tasaFila);
       return copia;
     });
   }, [tasaIva]);
 
   const agregarConcepto = useCallback((moneda: "USD" | "MXN") => {
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
-    const factory = moneda === "USD" ? emptyUSD : emptyMXN;
-    setter(prev => [...prev, factory()]);
-  }, []);
+    setter(prev => [...prev, moneda === "USD" ? emptyUSD() : emptyMXN(tasaIva)]);
+  }, [tasaIva]);
 
   const eliminarConcepto = useCallback((moneda: "USD" | "MXN", index: number) => {
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
@@ -58,8 +66,11 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
 
   const totalUSD = useMemo(() => conceptosUSD.reduce((s, c) => s + c.total, 0), [conceptosUSD]);
   const subtotalMXN = useMemo(() => conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosMXN]);
-  const ivaMXN = useMemo(() => calcularIVA(subtotalMXN, tasaIva), [subtotalMXN, tasaIva]);
-  const totalMXN = useMemo(() => calcularTotalConIVA(subtotalMXN, tasaIva), [subtotalMXN, tasaIva]);
+  const ivaMXN = useMemo(
+    () => conceptosMXN.reduce((s, c) => s + calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIva)), 0),
+    [conceptosMXN, tasaIva],
+  );
+  const totalMXN = useMemo(() => subtotalMXN + ivaMXN, [subtotalMXN, ivaMXN]);
 
   return {
     conceptosUSD, conceptosMXN,

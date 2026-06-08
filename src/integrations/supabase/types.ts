@@ -790,6 +790,7 @@ export type Database = {
           proveedor_id: string | null
           proveedor_nombre: string
           referencia_pago: string | null
+          tasa_iva_aplicada: number
         }
         Insert: {
           concepto: string
@@ -808,6 +809,7 @@ export type Database = {
           proveedor_id?: string | null
           proveedor_nombre?: string
           referencia_pago?: string | null
+          tasa_iva_aplicada?: number
         }
         Update: {
           concepto?: string
@@ -826,6 +828,7 @@ export type Database = {
           proveedor_id?: string | null
           proveedor_nombre?: string
           referencia_pago?: string | null
+          tasa_iva_aplicada?: number
         }
         Relationships: [
           {
@@ -931,6 +934,7 @@ export type Database = {
           organization_id: string
           precio_unitario: number
           proforma_id: string | null
+          tasa_iva_aplicada: number
           total: number
         }
         Insert: {
@@ -948,6 +952,7 @@ export type Database = {
           organization_id?: string
           precio_unitario?: number
           proforma_id?: string | null
+          tasa_iva_aplicada?: number
           total?: number
         }
         Update: {
@@ -965,6 +970,7 @@ export type Database = {
           organization_id?: string
           precio_unitario?: number
           proforma_id?: string | null
+          tasa_iva_aplicada?: number
           total?: number
         }
         Relationships: [
