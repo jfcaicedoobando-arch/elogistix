@@ -1,58 +1,89 @@
-import { describe, it, expect, vi } from 'vitest';
-import { fetchAuditoriaRevisiones, upsertAuditoriaRevision, asignarResponsableHallazgo, deleteAuditoriaRevision } from '../revisiones';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createSupabaseChainMock } from '@/test/utils/_supabaseChainMock';
 
-const { mockSupabase } = vi.hoisted(() => {
-  const chain = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    then: vi.fn().mockImplementation(function(this: any, resolve: any) {
-      resolve({ data: this._data, error: this._error });
-    }),
-    _data: null as any,
-    _error: null as any,
-  };
-  return { mockSupabase: chain };
-});
+const { mockSupabase } = vi.hoisted(() => ({ mockSupabase: { current: null as any } }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  get supabase() {
+    return mockSupabase.current;
+  },
 }));
 
+import {
+  fetchAuditoriaRevisiones,
+  upsertAuditoriaRevision,
+  asignarResponsableHallazgo,
+  deleteAuditoriaRevision,
+} from '../revisiones';
+
 describe('auditoria/revisiones', () => {
-  it('fetchAuditoriaRevisiones obtiene revisiones ordenadas', async () => {
-    const mockData = [{ id: '1' }];
-    (mockSupabase as any)._data = mockData;
+  beforeEach(() => vi.clearAllMocks());
+
+  it('fetchAuditoriaRevisiones lista ordenado por created_at desc', async () => {
+    const rows = [{ id: '1' }];
+    mockSupabase.current = createSupabaseChainMock(rows);
     const result = await fetchAuditoriaRevisiones();
-    expect(mockSupabase.from).toHaveBeenCalledWith('auditoria_revisiones');
-    expect(mockSupabase.order).toHaveBeenCalledWith('created_at', { ascending: false });
-    expect(result).toEqual(mockData);
+    expect(mockSupabase.current.from).toHaveBeenCalledWith('auditoria_revisiones');
+    expect(mockSupabase.current.order).toHaveBeenCalledWith('created_at', { ascending: false });
+    expect(result).toEqual(rows);
   });
 
-  it('upsertAuditoriaRevision crea o actualiza revisión', async () => {
-    const input = { embarque_id: '1', regla: 'regla1', detalle_hash: 'hash', detalle: 'det', accion_tomada: 'acc', revisado_por: 'user', revisado_por_email: 'email' };
-    const mockData = { id: '1', ...input };
-    mockSupabase.single.mockResolvedValue({ data: mockData, error: null });
-    const result = await upsertAuditoriaRevision(input as any);
-    expect(mockSupabase.upsert).toHaveBeenCalled();
-    expect(result).toEqual(mockData);
+  it('fetchAuditoriaRevisiones lanza ante error de Supabase', async () => {
+    mockSupabase.current = createSupabaseChainMock(null, { message: 'boom' });
+    await expect(fetchAuditoriaRevisiones()).rejects.toMatchObject({ message: 'boom' });
   });
 
-  it('asignarResponsableHallazgo asigna responsable', async () => {
-    const input = { embarque_id: '1', regla: 'regla1', detalle_hash: 'hash', detalle: 'det', responsable_id: 'res', responsable_email: 'res@email', asignado_por: 'user', asignado_por_email: 'u@e', fecha_limite: null };
-    mockSupabase.single.mockResolvedValue({ data: input, error: null });
-    await asignarResponsableHallazgo(input as any);
-    expect(mockSupabase.upsert).toHaveBeenCalled();
+  it('upsertAuditoriaRevision usa onConflict correcto y marca estado=revisado', async () => {
+    const input = {
+      embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h',
+      detalle: 'd', accion_tomada: 'a', revisado_por: 'u', revisado_por_email: 'u@e',
+    } as any;
+    const created = { id: '1', ...input };
+    mockSupabase.current = createSupabaseChainMock(created);
+    const result = await upsertAuditoriaRevision(input);
+    expect(mockSupabase.current.upsert).toHaveBeenCalledTimes(1);
+    const [payload, opts] = mockSupabase.current.upsert.mock.calls[0];
+    expect(payload).toMatchObject({ ...input, estado_revision: 'revisado' });
+    expect(payload.updated_at).toEqual(expect.any(String));
+    expect(opts).toEqual({ onConflict: 'organization_id,embarque_id,regla,detalle_hash' });
+    expect(result).toEqual(created);
   });
 
-  it('deleteAuditoriaRevision elimina revisión', async () => {
-    (mockSupabase as any)._error = null;
+  it('asignarResponsableHallazgo construye payload con estado_revision default=pendiente', async () => {
+    const input = {
+      embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
+      responsable_id: 'r1', responsable_email: 'r@e', asignado_por: 'u',
+      asignado_por_email: 'u@e', fecha_limite: null,
+    } as any;
+    mockSupabase.current = createSupabaseChainMock({ id: '1', ...input });
+    await asignarResponsableHallazgo(input);
+    const [payload] = mockSupabase.current.upsert.mock.calls[0];
+    expect(payload.estado_revision).toBe('pendiente');
+    expect(payload.responsable_id).toBe('r1');
+    expect(payload.asignado_at).toEqual(expect.any(String));
+  });
+
+  it('asignarResponsableHallazgo respeta estado_revision explícito', async () => {
+    const input = {
+      embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
+      responsable_id: 'r1', responsable_email: 'r@e', asignado_por: 'u',
+      asignado_por_email: 'u@e', fecha_limite: null,
+      estado_revision: 'en_progreso' as const,
+    } as any;
+    mockSupabase.current = createSupabaseChainMock({ id: '1' });
+    await asignarResponsableHallazgo(input);
+    expect(mockSupabase.current.upsert.mock.calls[0][0].estado_revision).toBe('en_progreso');
+  });
+
+  it('deleteAuditoriaRevision borra por id', async () => {
+    mockSupabase.current = createSupabaseChainMock(null);
     await deleteAuditoriaRevision('1');
-    expect(mockSupabase.delete).toHaveBeenCalled();
-    expect(mockSupabase.eq).toHaveBeenCalledWith('id', '1');
+    expect(mockSupabase.current.delete).toHaveBeenCalled();
+    expect(mockSupabase.current.eq).toHaveBeenCalledWith('id', '1');
+  });
+
+  it('deleteAuditoriaRevision lanza ante error', async () => {
+    mockSupabase.current = createSupabaseChainMock(null, { message: 'fk' });
+    await expect(deleteAuditoriaRevision('1')).rejects.toMatchObject({ message: 'fk' });
   });
 });
