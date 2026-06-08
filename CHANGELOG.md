@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.60.42] - 2026-06-08
+- **ci(tests) — upload-artifact apunta al archivo blob explícito**: `actions/upload-artifact@v7` fallaba al resolver la ruta cuando se pasaba el directorio `.vitest-reports/`. Ahora el step "Upload shard blob report" apunta al archivo concreto `.vitest-reports/blob-${{ matrix.shard }}.json`, y el step de tests genera ese mismo nombre simplificado (sin el sufijo `-${total}`) para que ambos coincidan. El job `coverage` sigue descargando con `pattern: vitest-blob-*` + `merge-multiple: true` hacia `.vitest-reports/`, que es exactamente lo que el merge espera.
+
 ## [12.60.41] - 2026-06-08
 - **ci(tests) — hardening del shard blob output**: aseguramos que `.vitest-reports/` exista antes de correr los tests (`mkdir -p .vitest-reports`) para que el blob reporter pueda escribir aun si Vitest no crea el directorio en algún edge case. Fijamos el nombre canónico documentado `blob-${shard}-${total}.json` y agregamos `if-no-files-found: error` en el upload de artifacts para que el shard falle ruidosamente si no se generó blob (en vez de morir silencioso en el merge). Añadido `ls -la .vitest-reports/` como debug visible en el step output. Scripts en `package.json` ya incluyen `--reporter=blob` y el merge lee de `.vitest-reports/` por default — no requieren cambios. `vitest.config.ts` mantiene `coverage.reportsDirectory: ./coverage` (separado de blobs, correcto).
 
