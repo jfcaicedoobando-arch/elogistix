@@ -10,13 +10,15 @@ test.describe("Flujo 04 — Conciliación / Proformas pendientes", () => {
     await expect(tab).toBeVisible({ timeout: 15_000 });
     await tab.click();
 
-    // Tras click, debe aparecer la lista (filas) o un estado vacío.
-    const anyContent = page
-      .locator("table tbody tr, [role='row'], [data-empty='true']")
-      .first();
+    // Locators separados: filas reales del tbody vs estado vacío explícito.
+    // Antes el locator triple (`tbody tr, [role=row], [data-empty=true]`)
+    // resolvía a headers (rows) y daba falsos positivos.
+    const dataRow = page.locator("table tbody tr").first();
+    const emptyMarker = page.locator("[data-empty='true']").first();
     const emptyText = page.getByText(/sin resultados|no hay/i).first();
     await Promise.race([
-      anyContent.waitFor({ state: "visible", timeout: 20_000 }),
+      dataRow.waitFor({ state: "visible", timeout: 20_000 }),
+      emptyMarker.waitFor({ state: "visible", timeout: 20_000 }),
       emptyText.waitFor({ state: "visible", timeout: 20_000 }),
     ]);
 

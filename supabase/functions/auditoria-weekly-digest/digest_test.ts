@@ -59,13 +59,20 @@ Deno.test("buildHtml: shows severity counts", () => {
   assertStringIncludes(html, "10");
 });
 
-Deno.test("buildHtml: dry-run path — no API key means no network call (pure function check)", () => {
-  // processOrg returns dryRun:true when keys are absent.
-  // We verify the shape a dry-run result would have.
-  const dryRunResult = { org: "Org A", destinatarios: 2, enviado: false, dryRun: true };
-  assertEquals(dryRunResult.enviado, false);
-  assertEquals(dryRunResult.dryRun, true);
-  assertEquals(dryRunResult.destinatarios, 2);
+Deno.test("buildHtml: ordena top-5 financieras por monto_mxn descendente", () => {
+  const html = buildHtml("Mi Org", {
+    hallazgos: [
+      { severidad: "alto", monto_mxn: 1000, cliente_nombre: "C1", expediente: "E1", detalle: "d" },
+      { severidad: "alto", monto_mxn: 9000, cliente_nombre: "C2", expediente: "E2", detalle: "d" },
+      { severidad: "alto", monto_mxn: 5000, cliente_nombre: "C3", expediente: "E3", detalle: "d" },
+    ],
+  });
+  // El primero listado debe ser el de mayor monto (C2).
+  const idxC2 = html.indexOf("C2");
+  const idxC3 = html.indexOf("C3");
+  const idxC1 = html.indexOf("C1");
+  assertEquals(idxC2 > -1 && idxC3 > -1 && idxC1 > -1, true);
+  assertEquals(idxC2 < idxC3 && idxC3 < idxC1, true);
 });
 
 Deno.test("buildHtml: top-5 financieras shown when monto_mxn present", () => {

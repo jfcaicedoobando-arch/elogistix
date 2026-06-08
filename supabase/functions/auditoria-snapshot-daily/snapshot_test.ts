@@ -24,30 +24,21 @@ Deno.test("checkCronSecret: matching secret → true", () => {
   assertEquals(checkCronSecret("super-secret-123", "super-secret-123"), true);
 });
 
-// ── Idempotency contract (UNIQUE constraint guard) ───────────
+// ── checkCronSecret edge cases (reemplazan tests tautológicos previos) ────
 
-Deno.test("idempotency: same call twice would be rejected by UNIQUE constraint", () => {
-  // The idempotency guarantee is enforced by the DB UNIQUE(organization_id, fecha).
-  // Here we verify that the function reports distinct orgs correctly without dedup
-  // by constructing two result entries for the same org with ok:true (the DB unique
-  // constraint would reject the second insert, returning an error in production).
-  const resultados = [
-    { org: "Org A", ok: true },
-    { org: "Org A", ok: false, error: "duplicate key value violates unique constraint" },
-  ];
-  const fallos = resultados.filter((r) => !r.ok).length;
-  assertEquals(fallos, 1);
-  assertEquals(resultados[1].error?.includes("unique"), true);
+Deno.test("checkCronSecret: whitespace-only secret no se confunde con vacío", () => {
+  assertEquals(checkCronSecret("   ", "   "), true);
+  assertEquals(checkCronSecret("   ", ""), false);
 });
 
-Deno.test("idempotency: snapshot result counts total and fallos correctly", () => {
-  const resultados = [
-    { org: "Org A", ok: true },
-    { org: "Org B", ok: false, error: "some error" },
-    { org: "Org C", ok: true },
-  ];
-  const total = resultados.length;
-  const fallos = resultados.filter((r) => !r.ok).length;
-  assertEquals(total, 3);
-  assertEquals(fallos, 1);
+Deno.test("checkCronSecret: comparación case-sensitive", () => {
+  assertEquals(checkCronSecret("Secret", "secret"), false);
+  assertEquals(checkCronSecret("Secret", "Secret"), true);
 });
+
+Deno.test("checkCronSecret: secret con caracteres especiales", () => {
+  const s = "k3y!@#-_$%^&*()=+/";
+  assertEquals(checkCronSecret(s, s), true);
+  assertEquals(checkCronSecret(s, s + "x"), false);
+});
+

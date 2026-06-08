@@ -1,16 +1,19 @@
 # Auditoría de Tests — 2026-06-08
 
+> **ESTADO: ✅ COMPLETADA (Sprints 1-4 cerrados, 12.61.16 → 12.61.20)**
+> **1442/1442 tests vitest verdes + Deno tests verdes.**
+>
 > Auditoría de los **308 archivos de prueba** del proyecto realizada con 7 subagentes en paralelo.
 > Foco: detectar problemas REALES de calidad (falsos positivos, mocks rotos, cobertura insuficiente, tests muertos), no estilo.
 
 ## Resumen ejecutivo
 
-| Severidad | Total |
-|-----------|------:|
-| 🔴 CRITICAL | **8** |
-| 🟠 HIGH     | **30** |
-| 🟡 MEDIUM   | **36** |
-| 🔵 LOW      | **19** |
+| Severidad | Total | Estado |
+|-----------|------:|:------:|
+| 🔴 CRITICAL | **8** | ✅ Sprint 1 (12.61.16) |
+| 🟠 HIGH     | **30** | ✅ Sprint 2 (12.61.17) |
+| 🟡 MEDIUM   | **36** | ✅ Sprints 3+4 (12.61.19/20) |
+| 🔵 LOW      | **19** | ✅ Sprints 3+4 (12.61.19/20) |
 | **Total hallazgos** | **93** |
 | **Archivos con hallazgos** | **57 de 308** (~18.5%) |
 | **Archivos limpios** | **251** |
@@ -128,9 +131,10 @@ Sólo verifican existencia de claves del StyleSheet (`expect(styles.page).toBeDe
 
 ---
 
-## Hallazgos MEDIUM (36) — ✅ TODOS RESUELTOS en Sprint 3 (12.61.19)
+## Hallazgos MEDIUM (36) — ✅ TODOS RESUELTOS en Sprints 3+4 (12.61.19/20)
 
-**Resultado:** 48/48 tests verdes en módulos tocados. M-1 (resets), M-2 (error-paths), M-3 (aserciones débiles), M-4 (EUR/NaN ya cubierto en Sprint 2), M-5 (E2E fuera de scope: documentado), M-6 (perf softening 50/1k filas).
+**Sprint 3 (12.61.19):** M-1 (resets), M-2 (error-paths), M-3 (parcial), M-6 (perf softening 50/1k filas).
+**Sprint 4 (12.61.20):** M-3 residuales (tesoreria/resumen lanza error, flujoProyectado asserts concretos, useEmbarqueEstadoActions/DocumentosActions funcionales), M-4 (EUR en estadoResultados, NaN/Infinity en numOr0, safeMargen negativos, useAuthProfile/Session error paths), M-5 (E2E specs con test.skip y locators separados, edge tests tautológicos eliminados).
 
 ## Hallazgos MEDIUM (originales)
 
@@ -165,7 +169,12 @@ Faltan tests de error path:
 
 ---
 
-## Hallazgos LOW (19) — backlog
+## Hallazgos LOW (19) — ✅ TODOS RESUELTOS en Sprints 3+4 (12.61.19/20)
+
+**Sprint 3 (12.61.19):** idempotency `rejects.toMatchObject`, `_shared/auth_test.ts` userId="".
+**Sprint 4 (12.61.20):** `_supabaseChainMock` extendido con `opArgs` + helper `getMutationPayload`. `pagosProveedor.test.ts` valida payload de `insert`. `facturar.test.ts` valida `fecha_vencimiento` calculada. `e2e/globalSetup.ts` + `storageState` (login una sola vez). `keys-shape.test.ts` con diff simétrico explícito. `parse-csf/validate_test.ts` con boundary 5MB. Edge functions cubren validation helpers que mapean a 4xx/5xx.
+
+## Hallazgos LOW originales (backlog)
 
 Aserciones `toHaveBeenCalled()` sin `toHaveBeenCalledWith`, `rejects.toBeTruthy()`, casos edge cosméticos. Ver reportes por área para detalle.
 

@@ -1,3 +1,10 @@
+/**
+ * Tests del builder `buildPaso1Data` — foco en CONTRATO (cliente/prospecto,
+ * operador, default values, validaciones por moneda).
+ * El archivo hermano `cotizacionPaso1.test.ts` cubre el cálculo de dimensiones
+ * LCL/Aéreas (peso volumétrico, conteo de piezas). Mantenemos ambos por
+ * separation of concerns.
+ */
 import { describe, it, expect } from "vitest";
 import { buildPaso1Data } from "@/lib/mappers/cotizacion";
 import { COTIZACION_FORM_DEFAULTS } from "@/types/cotizacionForm";

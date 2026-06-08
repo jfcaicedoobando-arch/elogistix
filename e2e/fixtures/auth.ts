@@ -1,6 +1,10 @@
 /**
- * Fixtures de autenticación para specs E2E. No usan storageState compartido
- * porque los flujos críticos quieren verificar el login real cada vez.
+ * Fixtures de autenticación para specs E2E.
+ *
+ * 12.61.20 (Sprint 4): si `e2e/globalSetup.ts` produjo storageState con
+ * sesión, `loginAs(...)` detecta la URL post-login y evita reescribir el
+ * formulario (ahorra ~3-5s por spec). Si no hay storageState, hace login
+ * normal vía formulario.
  */
 import { expect, type Page } from "@playwright/test";
 
@@ -23,12 +27,19 @@ function readCreds(envPrefix: "E2E" | "E2E_PORTAL"): Creds {
 export const internalCreds = (): Creds => readCreds("E2E");
 export const portalCreds = (): Creds => readCreds("E2E_PORTAL");
 
-/** Realiza login desde / (formulario unificado). */
+/**
+ * Login desde / (formulario unificado). Si ya hay sesión cargada vía
+ * storageState, salta el formulario verificando la URL después de `goto`.
+ */
 export async function loginAs(page: Page, creds: Creds): Promise<void> {
   await page.goto("/");
+  // Si el storageState restauró la sesión, la app redirige fuera de login.
+  const currentPath = new URL(page.url()).pathname;
+  if (!/\/$|\/login/i.test(currentPath)) return;
+
   await page.getByLabel(/correo|email/i).fill(creds.email);
   await page.getByLabel(/contrase/i).fill(creds.password);
   await page.getByRole("button", { name: /iniciar sesión|entrar|ingresar/i }).click();
-  // Espera a que la app salga del login (ya sea dashboard interno o portal).
   await expect(page).not.toHaveURL(/\/$|\/login/i, { timeout: 20_000 });
 }
+

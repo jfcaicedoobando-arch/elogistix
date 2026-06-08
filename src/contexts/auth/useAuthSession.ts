@@ -52,11 +52,19 @@ export function useAuthSession(): AuthSession {
     // Red de seguridad: si INITIAL_SESSION no llegara, hidratamos manualmente.
     if (!initialized.current) {
       initialized.current = true;
-      getCurrentSession().then((existing) => {
-        setSession((prev) => prev ?? existing);
-        setUser((prev) => prev ?? existing?.user ?? null);
-        setLoading(false);
-      });
+      getCurrentSession()
+        .then((existing) => {
+          setSession((prev) => prev ?? existing);
+          setUser((prev) => prev ?? existing?.user ?? null);
+          setLoading(false);
+        })
+        .catch((err) => {
+          // Si Supabase falla aquí no debe romper la UI: dejamos user/session
+          // en null y `loading=false`. El listener subscribirá los siguientes.
+          // eslint-disable-next-line no-console
+          console.error("[useAuthSession] getCurrentSession failed", err);
+          setLoading(false);
+        });
     }
 
     return () => subscription.unsubscribe();

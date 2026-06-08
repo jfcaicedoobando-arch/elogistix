@@ -24,14 +24,8 @@ describe("resumen tesoreria service", () => {
     expect(res.cuentas[0].saldo).toBe(1100);
   });
 
-  it("maneja errores de supabase en cuentas", async () => {
-    // Para que el primer query falle
+  it("propaga error de supabase al leer cuentas_bancarias", async () => {
     mock.setTableResult("cuentas_bancarias", { data: null, error: new Error("db error") });
-    // No lanzará error porque el map de cuentas será null y el for no corre, pero data es null.
-    // En realidad el service asume data: cuentas asume data.
-    // Vamos a ver el código: const { data: cuentas } = await ...; for (const c of cuentas ?? []) ...
-    // Así que si falla, cuentas es null, el loop no corre, y devuelve resumen con cuentas vacías.
-    const res = await fetchResumenTesoreria();
-    expect(res.cuentas).toEqual([]);
+    await expect(fetchResumenTesoreria()).rejects.toThrow("db error");
   });
 });

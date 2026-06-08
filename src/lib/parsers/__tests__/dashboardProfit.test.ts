@@ -14,6 +14,14 @@ describe("dashboardProfit helpers", () => {
       expect(numOr0(null)).toBe(0);
       expect(numOr0(undefined)).toBe(0);
     });
+
+    it("rechaza NaN/Infinity y los degrada a 0 (evita envenenar totales)", () => {
+      expect(numOr0("NaN")).toBe(0);
+      expect(numOr0("not-a-number")).toBe(0);
+      expect(numOr0(Number.POSITIVE_INFINITY)).toBe(0);
+      expect(numOr0(Number.NEGATIVE_INFINITY)).toBe(0);
+      expect(numOr0("Infinity")).toBe(0);
+    });
   });
 
   describe("numOrCompute", () => {
@@ -33,6 +41,14 @@ describe("dashboardProfit helpers", () => {
     it("calcula porcentaje cuando venta > 0", () => {
       expect(safeMargen(25, 100)).toBe(25);
       expect(safeMargen(-50, 200)).toBe(-25);
+    });
+    it("retorna 0 cuando ambos son negativos y venta no es positiva", () => {
+      // Contrato: sólo aplica división cuando venta > 0.
+      expect(safeMargen(-100, -200)).toBe(0);
+      expect(safeMargen(-100, 0)).toBe(0);
+    });
+    it("retorna 0 cuando profit=0 y venta=0", () => {
+      expect(safeMargen(0, 0)).toBe(0);
     });
   });
 

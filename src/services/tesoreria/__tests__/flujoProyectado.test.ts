@@ -17,17 +17,23 @@ describe("flujoProyectado service", () => {
     mock.tableCalls.length = 0;
   });
 
-  it("fetchFlujoProyectado retorna estructura base", async () => {
+  it("fetchFlujoProyectado retorna estructura base con semanas dentro de la ventana", async () => {
     mock.setTableResult("liquidaciones_comision", { data: [], error: null });
     const res = await fetchFlujoProyectado(30);
-    expect(res).toHaveProperty("saldo_inicial_mxn");
-    expect(res.semanas.length).toBeGreaterThan(0);
+    expect(typeof res.saldo_inicial_mxn).toBe("number");
+    expect(res.semanas.length).toBeGreaterThanOrEqual(4);
+    expect(res.semanas.length).toBeLessThanOrEqual(6);
+    // Sin entradas/salidas mockeadas, todos los acumulados son 0.
+    expect(res.total_entradas_mxn).toBe(0);
+    expect(res.total_salidas_mxn).toBe(0);
+    expect(res.alertas_negativas).toBe(0);
   });
 
-  it("maneja error de liquidaciones retornando lista vacia por catch interno", async () => {
+  it("error en liquidaciones_comision NO contamina total_salidas_mxn (se traga silenciosamente)", async () => {
     mock.setTableResult("liquidaciones_comision", { data: null, error: new Error("db error") });
     const res = await fetchFlujoProyectado(30);
-    expect(res).toBeDefined();
+    // El .then((r) => r.data ?? []) del service implementa fallback silencioso.
     expect(res.total_salidas_mxn).toBe(0);
+    expect(res.semanas.every((s) => s.salidas_mxn === 0)).toBe(true);
   });
 });

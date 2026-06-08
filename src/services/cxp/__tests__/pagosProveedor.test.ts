@@ -19,23 +19,33 @@ describe("pagosProveedor service", () => {
     expect(call?.ops).toContain("eq");
   });
 
-  it("registrarPagoProveedor inserta y recalcula factura", async () => {
+  it("registrarPagoProveedor inserta payload con monto/fecha/factura y recalcula factura", async () => {
     mock.setTableResult("pagos_proveedor", { data: { id: "p1" }, error: null });
     mock.setTableResult("v_proveedor_facturas_saldo", { data: { saldo: 0 }, error: null });
     mock.setTableResult("proveedor_facturas", { data: { estado: "Vigente" }, error: null });
-    
+
     const input = {
       proveedor_factura_id: "f1",
       fecha_pago: "2024-01-01",
       monto: 100,
       moneda: "MXN",
       tipo_cambio_usd: 1,
-      metodo_pago: "Transferencia"
-    } as any;
-    
+      metodo_pago: "Transferencia",
+    } as Parameters<typeof registrarPagoProveedor>[0];
+
     const res = await registrarPagoProveedor(input, "u1");
     expect(res.id).toBe("p1");
-    expect(mock.tableCalls.some(c => c.table === "pagos_proveedor")).toBe(true);
+
+    // Verificar payload escrito (Sprint 4 D-14: servicio crítico de pagos).
+    const payload = mock.getMutationPayload("pagos_proveedor", "insert") as Record<string, unknown> | null;
+    expect(payload).toBeTruthy();
+    expect(payload).toMatchObject({
+      proveedor_factura_id: "f1",
+      fecha_pago: "2024-01-01",
+      monto: 100,
+      moneda: "MXN",
+      metodo_pago: "Transferencia",
+    });
     expect(mock.tableCalls.some(c => c.table === "v_proveedor_facturas_saldo")).toBe(true);
   });
 

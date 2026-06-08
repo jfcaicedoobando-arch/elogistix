@@ -49,11 +49,13 @@ async function calcularSaldoCuenta(cuentaId: string, saldoInicial: number): Prom
 }
 
 export async function fetchResumenTesoreria(): Promise<ResumenTesoreria> {
-  const { data: cuentas } = await supabase
+  const { data: cuentas, error: errCuentas } = await supabase
     .from("cuentas_bancarias")
     .select("id, alias, banco, moneda, saldo_inicial")
     .eq("activa", true)
     .order("alias");
+  if (errCuentas) throw errCuentas;
+
 
   const cuentasRes: ResumenCuenta[] = [];
   for (const c of cuentas ?? []) {

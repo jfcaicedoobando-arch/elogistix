@@ -50,4 +50,31 @@ describe("useAuthProfile", () => {
     });
     await waitFor(() => expect(result.current.profile.role).toBeNull());
   });
+
+  it("preserva el perfil previo cuando fetchUserContext retorna null", async () => {
+    mockFetchUserContext.mockResolvedValueOnce({
+      role: "admin",
+      orgRole: "admin",
+      organizationId: "org1",
+      organization: null,
+    });
+    const { result, rerender } = renderHook(({ uid }: { uid: string | null }) => useAuthProfile(uid), {
+      initialProps: { uid: "u-1" as string | null },
+    });
+    await waitFor(() => expect(result.current.profile.role).toBe("admin"));
+    mockFetchUserContext.mockResolvedValueOnce(null);
+    rerender({ uid: "u-2" });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(result.current.profile.role).toBe("admin");
+  });
+
+  it("ante error de fetchUserContext no actualiza el perfil (queda vacío)", async () => {
+    mockFetchUserContext.mockRejectedValueOnce(new Error("network"));
+    const { result } = renderHook(() => useAuthProfile("user-err"));
+    await new Promise((r) => setTimeout(r, 30));
+    expect(result.current.profile.role).toBeNull();
+    expect(result.current.profile.organizationId).toBeNull();
+    expect(mockFetchUserContext).toHaveBeenCalled();
+  });
 });
+

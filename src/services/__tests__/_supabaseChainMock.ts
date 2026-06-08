@@ -5,6 +5,10 @@
  * respuestas por tabla con `setTableResult(table, { data, error })`.
  *
  * Para mockear RPCs usar `setRpcResult(fnName, { data, error })`.
+ *
+ * 12.61.20 (Sprint 4): cada `TableCall` ahora expone `opArgs[i]` con los
+ * argumentos pasados a la operación, y `getMutationPayload(table, op)` para
+ * extraer el payload de `insert`/`update`/`upsert`.
  */
 import { vi } from "vitest";
 
@@ -12,20 +16,28 @@ export interface QueryResult<T = unknown> { data: T; error: unknown }
 
 type Resp = QueryResult<unknown>;
 
+export interface TableCall {
+  table: string;
+  ops: string[];
+  /** Argumentos por operación. `opArgs[i]` corresponde a `ops[i]`. */
+  opArgs: unknown[][];
+}
+
 export function createSupabaseMock() {
   const tableResults = new Map<string, Resp>();
   const rpcResults = new Map<string, Resp>();
-  const tableCalls: Array<{ table: string; ops: string[] }> = [];
+  const tableCalls: TableCall[] = [];
   const rpcCalls: Array<{ fn: string; args: unknown }> = [];
 
   function setTableResult(table: string, res: Resp) { tableResults.set(table, res); }
   function setRpcResult(fn: string, res: Resp) { rpcResults.set(fn, res); }
 
-  function makeChain(table: string, ops: string[]) {
+  function makeChain(table: string, ops: string[], opArgs: unknown[][]) {
     const res = tableResults.get(table) ?? { data: [], error: null };
     const chain: Record<string, unknown> = {};
-    const passthrough = (label: string) => (..._args: unknown[]) => {
+    const passthrough = (label: string) => (...args: unknown[]) => {
       ops.push(label);
+      opArgs.push(args);
       return chain;
     };
     chain.select = passthrough("select");
@@ -54,8 +66,9 @@ export function createSupabaseMock() {
   const supabase = {
     from: vi.fn((table: string) => {
       const ops: string[] = [];
-      tableCalls.push({ table, ops });
-      return makeChain(table, ops);
+      const opArgs: unknown[][] = [];
+      tableCalls.push({ table, ops, opArgs });
+      return makeChain(table, ops, opArgs);
     }),
     rpc: vi.fn((fn: string, args?: unknown) => {
       rpcCalls.push({ fn, args });
@@ -69,5 +82,21 @@ export function createSupabaseMock() {
     },
   };
 
-  return { supabase, setTableResult, setRpcResult, tableCalls, rpcCalls };
+  /**
+   * Extrae el primer payload de `insert`/`update`/`upsert` para una tabla.
+   * Devuelve `null` si no se encontró.
+   */
+  function getMutationPayload(
+    table: string,
+    op: "insert" | "update" | "upsert" = "insert",
+  ): unknown {
+    for (const call of tableCalls) {
+      if (call.table !== table) continue;
+      const idx = call.ops.indexOf(op);
+      if (idx >= 0) return call.opArgs[idx]?.[0] ?? null;
+    }
+    return null;
+  }
+
+  return { supabase, setTableResult, setRpcResult, tableCalls, rpcCalls, getMutationPayload };
 }
