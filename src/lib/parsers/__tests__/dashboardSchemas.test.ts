@@ -55,10 +55,10 @@ describe("dashboardSchemas", () => {
     expect(result.success).toBe(false);
   });
 
-  it("cargaPorClienteSchema rechaza si falta cliente_id", () => {
+  it("cargaPorClienteSchema rechaza si falta el total (campo requerido)", () => {
     const result = cargaPorClienteSchema.safeParse({
+      cliente_id: "abc",
       cliente_nombre: "Acme",
-      total: 1,
     });
     expect(result.success).toBe(false);
   });
