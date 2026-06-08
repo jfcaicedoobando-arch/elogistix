@@ -18,7 +18,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useRegistrarPagoProveedor } from "@/hooks/cxp";
-import { useRegistrarPagoProveedor } from "@/hooks/cxp";
 import type { FacturaCxP } from "@/services/cxp";
 import type { Database } from "@/integrations/supabase/types";
 import { metodosFor, defaultMetodo, referenciaHint } from "./pagoProveedorHelpers";
