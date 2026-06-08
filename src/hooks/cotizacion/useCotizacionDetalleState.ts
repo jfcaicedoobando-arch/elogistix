@@ -7,12 +7,16 @@ import {
   parseConceptos,
   calcularTotalesConceptos,
   getNombreDestinatario,
+  EMPTY_TOTALES,
 } from "@/lib/parsers/cotizacionDetalle";
 import { useCotizacionDetalleHandlers } from "@/hooks/cotizacion/useCotizacionDetalleHandlers";
 
 /**
  * Orquestador del detalle de cotización: combina queries (cotización + embarques vinculados),
  * totales calculados (lib puro) y handlers/mutations (hook dedicado).
+ *
+ * Defensivo: ante schema corrupto o errores de parseo, degrada a EMPTY_TOTALES (referencia
+ * estable) y registra el incidente en consola sin romper el árbol de componentes.
  */
 export function useCotizacionDetalleState(id: string | undefined) {
   const navigate = useNavigate();
@@ -21,14 +25,37 @@ export function useCotizacionDetalleState(id: string | undefined) {
   const tasaIva = useTasaIVA();
   const { data: embarquesVinculados = [] } = useEmbarquesVinculados(cotizacion?.id);
 
+  // Dep granular: sólo recalcular cuando cambia el JSON de conceptos o la tasa IVA,
+  // evitando recálculos cuando otros campos de `cotizacion` mutan por refetch.
+  const conceptosRaw = cotizacion?.conceptos_venta;
   const totales = useMemo(() => {
-    const conceptos = parseConceptos(cotizacion?.conceptos_venta);
-    return calcularTotalesConceptos(conceptos, tasaIva);
-  }, [cotizacion, tasaIva]);
+    try {
+      const conceptos = parseConceptos(conceptosRaw);
+      return calcularTotalesConceptos(conceptos, tasaIva);
+    } catch (err) {
+      console.error("[useCotizacionDetalleState] error calculando totales", err);
+      return EMPTY_TOTALES;
+    }
+  }, [conceptosRaw, tasaIva]);
 
   const handlers = useCotizacionDetalleHandlers(cotizacion);
 
-  const nombreDestinatario = useMemo(() => getNombreDestinatario(cotizacion), [cotizacion]);
+  const esProspecto = cotizacion?.es_prospecto;
+  const prospectoEmpresa = cotizacion?.prospecto_empresa;
+  const clienteNombre = cotizacion?.cliente_nombre;
+  const nombreDestinatario = useMemo(
+    () =>
+      getNombreDestinatario(
+        cotizacion
+          ? {
+              es_prospecto: !!esProspecto,
+              prospecto_empresa: prospectoEmpresa ?? "",
+              cliente_nombre: clienteNombre ?? "",
+            }
+          : undefined,
+      ),
+    [cotizacion, esProspecto, prospectoEmpresa, clienteNombre],
+  );
 
   return {
     cotizacion,
