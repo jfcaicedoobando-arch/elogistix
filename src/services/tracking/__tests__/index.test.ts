@@ -35,6 +35,8 @@ describe('tracking/index', () => {
     const result = await fetchTrackingPublico('token123');
     expect(global.fetch).toHaveBeenCalled();
     expect(result).toEqual({ embarque: {} });
+  });
+
 
   it('fetchTrackingPublico lanza error si el fetch retorna !ok', async () => {
     global.fetch = vi.fn().mockResolvedValue({
