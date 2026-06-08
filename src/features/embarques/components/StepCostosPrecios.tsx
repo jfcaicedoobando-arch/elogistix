@@ -126,56 +126,23 @@ export function StepCostosPrecios(props: Props) {
               {showContenedorCol && <span>Contenedor</span>}
               <span>Total USD</span><span></span>
             </div>
-            {conceptosCosto.map((costo, idx) => {
-              const totalUSD = toUSD(costo.monto, costo.moneda);
-              const esMixta = costoMixtoIdx.has(idx);
-              return (
-                <div key={costo.id} className={`grid ${costoCols} gap-2 items-center`}>
-                  <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
-                    <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <Select value={costo.concepto} onValueChange={v => updateConceptoCosto(costo.id, 'concepto', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <NumericInput decimals value={costo.monto} onChange={n => updateConceptoCosto(costo.id, 'monto', n)} className="text-sm h-10" aria-label="Subtotal costo" />
-                  <Select value={costo.moneda} onValueChange={v => updateConceptoCosto(costo.id, 'moneda', v)}>
-                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
-                  </Select>
-                  {showContenedorCol && (
-                    <SelectContenedorConcepto
-                      embarqueId={embarqueId!}
-                      value={costo.contenedorId ?? null}
-                      onChange={v => updateConceptoCosto(costo.id, 'contenedorId', v)}
-                      className="text-sm"
-                    />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Input
-                      readOnly
-                      value={formatCurrency(totalUSD, 'USD')}
-                      className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
-                      data-testid={esMixta ? 'fila-mixta-costo' : undefined}
-                    />
-                    {esMixta && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Conv. {costo.moneda}→USD @ TC {costo.moneda === 'EUR' ? tcEUR : tcUSD}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1} aria-label="Eliminar concepto de costo">
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              );
-            })}
+            {conceptosCosto.map((costo, idx) => (
+              <FilaCostoPrecio
+                key={costo.id}
+                costo={costo}
+                totalUSD={toUSD(costo.monto, costo.moneda)}
+                esMixta={costoMixtoIdx.has(idx)}
+                proveedoresDb={proveedoresDb}
+                cols={costoCols}
+                showContenedorCol={showContenedorCol}
+                embarqueId={embarqueId}
+                tcUSD={tcUSD}
+                tcEUR={tcEUR}
+                disableRemove={conceptosCosto.length <= 1}
+                update={updateConceptoCosto}
+                remove={removeConceptoCosto}
+              />
+            ))}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
               <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalCostoUSD, 'USD')}</span></div>
