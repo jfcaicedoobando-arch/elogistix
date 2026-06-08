@@ -1,31 +1,43 @@
 ## Objetivo
-Normalizar a UTC todas las operaciones de fecha en `src/features/auditoria/domain/core.ts` para que las reglas de snooze y los umbrales temporales sean idénticos sin importar el offset local del navegador/servidor (CDMX, demo en otra zona, runners de CI en UTC).
+Endurecer `src/lib/csv/parseCsv.ts` para que la importación tolere encabezados con caracteres ocultos (BOM intermedio, zero-width, NBSP, controles), columnas vacías por comas sobrantes, duplicados, y permita traducir alias menores de forma segura sin romper consumidores.
 
 ## Diagnóstico
-- `isoDate()` ya usa `toISOString().slice(0,10)` → **UTC**, pero el JSDoc miente diciendo "horario local". 
-- `minSnoozeDate()` usa `new Date(from).setDate(getDate()+1)` → **local**. Esto causa inconsistencia: en zonas con offset negativo (ej. `America/Mexico_City`, UTC-6), un `from` con hora UTC `2026-05-14T02:00:00Z` se interpreta local como `2026-05-13 20:00`, `+1` día local da `2026-05-14 20:00` → `toISOString()` arroja `2026-05-15`… o `2026-05-14` dependiendo de la hora exacta. Los tests pasan por casualidad porque usan `T10:00:00Z` (suficientemente lejos del límite).
+- `normalizeHeader` ya hace NFD + trim + lowercase, pero NO elimina:
+  - Zero-width: `\u200B`, `\u200C`, `\u200D`, `\u2060`, `\uFEFF` interno.
+  - NBSP `\u00A0` (queda como caracter no `\s` en algunas runtimes legacy → mejor sustituirlo a espacio antes del `\s+` collapse).
+  - Caracteres de control `\u0000-\u001F`, `\u007F`.
+- `parseCsv` ya hace `if (!h) return` para encabezados vacíos, pero **no deduplica** colisiones (dos columnas que normalizan al mismo header se pisan silenciosamente).
+- No existe forma de mapear variaciones menores ("e-mail" vs "correo", "tel" vs "telefono") sin tocar cada importador.
 
 ## Cambios
 
-### 1. `src/features/auditoria/domain/core.ts`
-- **`isoDate(date)`**: mantener `toISOString().slice(0,10)` pero corregir JSDoc → "YYYY-MM-DD en UTC".
-- **`minSnoozeDate(from)`**: reemplazar `setDate(getDate()+1)` por aritmética UTC pura — usar `Date.UTC(getUTCFullYear, getUTCMonth, getUTCDate+1)` para construir el día siguiente sin tocar el offset local. Garantiza rollover de mes/año correcto.
-- **`isSnoozeActivo(snoozedUntil, today)`**: sin cambio funcional (comparación lexicográfica de YYYY-MM-DD), pero documentar explícitamente que ambos argumentos deben estar en UTC (producidos por `isoDate`).
-- Añadir helper interno `todayUtcIso()` que centralice `isoDate(new Date())` para que futuros umbrales (proforma_vencida, demurrage, etc.) tengan un punto único.
-- JSDoc al inicio del módulo: nota explícita "Todas las funciones temporales operan en UTC para evitar drift por zona horaria del runtime".
+### 1. `src/lib/csv/parseCsv.ts`
+- **`normalizeHeader(raw)`**:
+  - Antes del `trim()`: `replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")` para zero-width.
+  - `replace(/\u00A0/g, " ")` para que NBSP colapse junto a `\s+`.
+  - `replace(/[\x00-\x1F\x7F]/g, "")` para controles.
+  - Mantener el resto del pipeline (NFD, lowercase, `_`, alfanumérico).
+- **`parseCsv(input, options?)`**: agregar parámetro opcional `options?: { headerAliases?: Record<string, string> }`.
+  - El alias se aplica DESPUÉS de `normalizeHeader` y antes de armar el objeto fila.
+  - Las claves del mapa también se normalizan al cargar (defensivo).
+- **Deduplicación defensiva** de headers: si tras normalizar/aliasear hay duplicados, suffijar `_2`, `_3`, … en orden de aparición, y emitir `console.warn` listando los duplicados (no falla la importación).
+- **Columnas vacías**: cuando `h === ""` después de la sanitización, continuar saltándola (ya implementado) y registrar `console.warn` UNA vez con el conteo de columnas vacías detectadas.
+- Mantener firma `parseCsv(input)` retrocompatible (options opcional).
 
-### 2. Tests — `src/features/auditoria/domain/__tests__/core.test.ts`
-Añadir casos de **borde de zona horaria** que hoy producirían resultados distintos según el offset local:
-- `minSnoozeDate(new Date("2026-05-14T23:30:00Z"))` → `"2026-05-15"` (en CDMX local serían 17:30 del 14 → +1 día local daría 15 también; usar `T02:30:00Z` para forzar discrepancia: en CDMX local serían las 20:30 del día 13).
-- `minSnoozeDate(new Date("2026-05-14T02:00:00Z"))` → `"2026-05-15"` (caso que con `setDate` local en UTC-6 devolvería `"2026-05-14"`).
-- `minSnoozeDate(new Date("2026-12-31T23:00:00Z"))` → `"2027-01-01"` (rollover año en UTC).
-- `isoDate(new Date("2026-05-14T23:59:59Z"))` → `"2026-05-14"` (verifica UTC, no local).
+### 2. Tests — `src/lib/csv/__tests__/parseCsv.test.ts`
+Añadir:
+- `normalizeHeader` con BOM intermedio (`"Razón\uFEFF Social"` → `"razon_social"`).
+- `normalizeHeader` con zero-width (`"nombre\u200B"` → `"nombre"`).
+- `normalizeHeader` con NBSP (`"Días\u00A0Crédito"` → `"dias_credito"`).
+- `normalizeHeader` con tab/control (`"rfc\t"` → `"rfc"`).
+- `parseCsv` con encabezado que tiene una coma extra al inicio/final (`",nombre,rfc,"`) → no rompe, headers válidos = `["nombre","rfc"]`, filas mapean correctamente.
+- `parseCsv` con headers duplicados (`"nombre,Nombre"`) → segundo se vuelve `nombre_2`.
+- `parseCsv` con `headerAliases`: `{ correo: "email", tel: "telefono" }` reescribe los headers en el resultado.
 
 ### 3. Versionado
-- `src/constants/appVersion.ts` → `12.61.4`.
-- `CHANGELOG.md`: entrada `## [12.61.4] - 2026-06-08` describiendo la normalización UTC y los casos cubiertos.
+- `src/constants/appVersion.ts` → `12.61.5`.
+- `CHANGELOG.md`: entrada `## [12.61.5] - 2026-06-08`.
 
 ## Notas técnicas
-- No se modifican firmas públicas ni el shape de retorno.
-- Las operaciones de comparación string YYYY-MM-DD son seguras porque ambos lados se producen por `isoDate` (UTC).
-- Se deja explícito en JSDoc para que futuras reglas (proforma_vencida, ETA buffer) reutilicen el mismo contrato y no introduzcan `Date#setDate` ni `getDate` locales.
+- Sin cambios a la firma pública obligatoria; `options` es opcional, los importadores existentes (`importSchemaCliente`, `importSchemaProveedor`, `leadsCsv`) siguen funcionando sin tocarlos.
+- Los `console.warn` ayudan a diagnosticar archivos sucios sin bloquear al usuario operativo.

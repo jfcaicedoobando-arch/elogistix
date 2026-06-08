@@ -7,6 +7,18 @@ describe("normalizeHeader", () => {
     expect(normalizeHeader("  Días Crédito  ")).toBe("dias_credito");
     expect(normalizeHeader("RFC")).toBe("rfc");
   });
+  it("elimina BOM intermedio y zero-width", () => {
+    expect(normalizeHeader("Razón\uFEFF Social")).toBe("razon_social");
+    expect(normalizeHeader("nombre\u200B")).toBe("nombre");
+    expect(normalizeHeader("e\u200Cmail")).toBe("email");
+  });
+  it("colapsa NBSP como espacio", () => {
+    expect(normalizeHeader("Días\u00A0Crédito")).toBe("dias_credito");
+  });
+  it("elimina caracteres de control", () => {
+    expect(normalizeHeader("rfc\t")).toBe("rfc");
+    expect(normalizeHeader("\u0001nombre\u007F")).toBe("nombre");
+  });
 });
 
 describe("parseCsv", () => {
@@ -53,6 +65,26 @@ describe("parseCsv", () => {
   it("maneja archivo vacío", () => {
     expect(parseCsv("").rows).toEqual([]);
     expect(parseCsv("   \n  ").rows).toEqual([]);
+  });
+
+  it("ignora columnas con encabezado vacío (comas sobrantes)", () => {
+    const r = parseCsv(",nombre,rfc,\n,Acme,X1,\n");
+    expect(r.headers).toEqual(["nombre", "rfc"]);
+    expect(r.rows[0]).toEqual({ nombre: "Acme", rfc: "X1" });
+  });
+
+  it("deduplica headers duplicados con sufijo _N", () => {
+    const r = parseCsv("nombre,Nombre\nA,B\n");
+    expect(r.headers).toEqual(["nombre", "nombre_2"]);
+    expect(r.rows[0]).toEqual({ nombre: "A", nombre_2: "B" });
+  });
+
+  it("aplica headerAliases para variaciones menores", () => {
+    const r = parseCsv("correo,tel\nx@y.com,55\n", {
+      headerAliases: { correo: "email", tel: "telefono" },
+    });
+    expect(r.headers).toEqual(["email", "telefono"]);
+    expect(r.rows[0]).toEqual({ email: "x@y.com", telefono: "55" });
   });
 });
 
