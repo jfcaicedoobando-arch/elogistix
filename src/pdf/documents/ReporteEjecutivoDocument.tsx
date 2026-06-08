@@ -1,5 +1,13 @@
 /**
  * Reporte PDF: Dashboard Ejecutivo Financiero (Sprint 6).
+ *
+ * Contrato de maquetación multi-página (12.61.10):
+ * - Únicos elementos `fixed` a nivel raíz de `<Page>`: `topBand` y `Footer`.
+ * - El header inline (título + periodo) NO es `fixed` — sólo página 1.
+ * - `DataTable.tableHeader fixed` se repite automáticamente cuando una tabla
+ *   (top deudores/acreedores/alertas) cruza páginas.
+ * - El `paddingTop: 40` de `styles.page` garantiza resguardo superior uniforme
+ *   en TODAS las páginas (secundarias incluidas) bajo la banda corporativa.
  */
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/formatters/numbers";
@@ -31,6 +39,8 @@ export function ReporteEjecutivoDocument({ snapshot }: Props) {
   return (
     <Document title={`Dashboard Ejecutivo ${snapshot.periodo}`} author="Libre Carga">
       <Page size="LETTER" style={styles.page}>
+        {/* Banda corporativa repetida en TODAS las páginas (raíz de Page). */}
+        <View style={styles.topBand} fixed />
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Dashboard Ejecutivo</Text>
