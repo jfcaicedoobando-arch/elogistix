@@ -128,9 +128,10 @@ Sólo verifican existencia de claves del StyleSheet (`expect(styles.page).toBeDe
 
 ---
 
-## Hallazgos MEDIUM (36) — ✅ TODOS RESUELTOS en Sprint 3 (12.61.19)
+## Hallazgos MEDIUM (36) — ✅ TODOS RESUELTOS en Sprints 3+4 (12.61.19/20)
 
-**Resultado:** 48/48 tests verdes en módulos tocados. M-1 (resets), M-2 (error-paths), M-3 (aserciones débiles), M-4 (EUR/NaN ya cubierto en Sprint 2), M-5 (E2E fuera de scope: documentado), M-6 (perf softening 50/1k filas).
+**Sprint 3 (12.61.19):** M-1 (resets), M-2 (error-paths), M-3 (parcial), M-6 (perf softening 50/1k filas).
+**Sprint 4 (12.61.20):** M-3 residuales (tesoreria/resumen lanza error, flujoProyectado asserts concretos, useEmbarqueEstadoActions/DocumentosActions funcionales), M-4 (EUR en estadoResultados, NaN/Infinity en numOr0, safeMargen negativos, useAuthProfile/Session error paths), M-5 (E2E specs con test.skip y locators separados, edge tests tautológicos eliminados).
 
 ## Hallazgos MEDIUM (originales)
 
