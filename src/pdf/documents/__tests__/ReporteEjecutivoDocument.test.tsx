@@ -7,11 +7,11 @@ const mockSnapshot = {
   periodo: "2023-01",
   generadoEn: "2023-01-01T10:00:00Z",
   kpis: {
-    ingresos_mxn: 0,
+    ingresos_mxn: 1_000_000,
     ingresos_delta_pct: 0,
-    utilidad_mxn: 0,
-    margen_pct: 0,
-    saldo_bancos_mxn: 0,
+    utilidad_mxn: 250_000,
+    margen_pct: 25,
+    saldo_bancos_mxn: 500_000,
     cartera_vencida_mxn: 0,
     cartera_vencida_count: 0,
     cxp_7dias_mxn: 0,
@@ -30,22 +30,26 @@ const mockSnapshot = {
 afterEach(() => { cleanup(); });
 
 describe("ReporteEjecutivoDocument", () => {
-  it("debe renderizar sin errores con snapshot mínimo", () => {
-    const { getByTestId } = render(<ReporteEjecutivoDocument snapshot={mockSnapshot} />);
-    expect(getByTestId("pdf-doc")).toBeDefined();
+  it("muestra título, período, KPIs y mensajes de listas vacías", () => {
+    const { container } = render(<ReporteEjecutivoDocument snapshot={mockSnapshot} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Dashboard Ejecutivo");
+    expect(text).toContain("2023-01");
+    expect(text).toContain("Top deudores");
+    expect(text).toContain("Top acreedores");
+    expect(text).toContain("Sin cuentas activas");
+    expect(text).toContain("Sin cartera vencida");
+    expect(text).toContain("25.0%");
   });
 
-  it("debe renderizar con datos en tablas", () => {
-    const deudor: SnapshotEjecutivo["topDeudores"][number] = {
-      nombre: "D1",
-      saldo: 100,
-      moneda: "USD",
-    };
+  it("renderiza nombre de deudor cuando hay topDeudores", () => {
     const snapshot: SnapshotEjecutivo = {
       ...mockSnapshot,
-      topDeudores: [deudor],
+      topDeudores: [{ nombre: "Deudor Importante", saldo: 1234, moneda: "USD" } as any],
     };
-    const { getByTestId } = render(<ReporteEjecutivoDocument snapshot={snapshot} />);
-    expect(getByTestId("pdf-doc")).toBeDefined();
+    const { container } = render(<ReporteEjecutivoDocument snapshot={snapshot} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Deudor Importante");
+    expect(text).not.toContain("Sin cartera vencida");
   });
 });
