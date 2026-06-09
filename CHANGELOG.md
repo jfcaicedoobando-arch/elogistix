@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.68.2] - 2026-06-09
+- **fix(edge/user-management)**: `handleList` ahora acepta los roles modernos (`admin_org`, `coordinador_logistico`, `ejecutivo_pricing`, `gerente_operaciones`) además de los legacy. Resuelve el 403 "Solo admins/operadores pueden listar usuarios" para `admin_org`.
+
 ## [12.68.1] - 2026-06-09
 - **fix(seguridad)**: `ProtectedRoute` ahora respeta el agrupador funcional de roles. Las rutas protegidas con `allowedRoles={["admin"]}` (Usuarios, Configuración, Idempotencia, etc.) vuelven a admitir a usuarios con rol moderno `admin_org` y `super_admin` sin necesidad de listar cada rol equivalente. Nuevo helper `roleSatisfies` en `src/lib/auth/roleHierarchy.ts` con cobertura unitaria.
 - **fix(storage)**: `can_manage_document_object` ahora usa `has_role()` en lugar de comparar contra los roles legacy `admin`/`operador` directamente. Restaura permisos de subida/edición/borrado de documentos de embarques a `coordinador_logistico`, `ejecutivo_pricing`, `gerente_operaciones` y `admin_org`.
