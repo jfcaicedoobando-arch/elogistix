@@ -51,17 +51,9 @@ export const getModoLucideIcon = (modo: string): LucideIcon => {
   }
 };
 
-/** Etiquetas legibles para roles internos del sistema. */
-export const roleLabels: Record<string, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  operador: "Operador",
-  vendedor: "Vendedor",
-  viewer: "Visor",
-  cliente: "Cliente",
-};
-
-export const getRoleLabel = (role: string): string => roleLabels[role] ?? role;
+/** Etiquetas legibles para roles internos del sistema.
+ *  @deprecated Importar `ROLE_LABELS` / `getRoleLabel` desde `@/lib/roles/roleCatalog`. */
+export { ROLE_LABELS as roleLabels, getRoleLabel } from "@/lib/roles/roleCatalog";
 
 /** Color del bullet de timeline para una nota según su tipo. */
 export const getNotaTipoColorClass = (tipo: string): string => {
