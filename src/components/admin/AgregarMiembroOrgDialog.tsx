@@ -22,7 +22,7 @@ interface Props {
 
 export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizationId, existingUserIds, onAdded }: Props) {
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [role, setRole] = useState<AppRole>("viewer");
+  const [role, setRole] = useState<AppRole>("coordinador_logistico");
   const { toast } = useToast();
 
   const { data: allUsers = [], isLoading: loadingUsers } = useAvailableUsers(open);
