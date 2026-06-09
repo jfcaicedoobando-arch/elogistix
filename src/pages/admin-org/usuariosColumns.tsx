@@ -64,9 +64,9 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           >
             <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="operador">Operador</SelectItem>
-              <SelectItem value="viewer">Visor</SelectItem>
+              {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
+                <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         );
