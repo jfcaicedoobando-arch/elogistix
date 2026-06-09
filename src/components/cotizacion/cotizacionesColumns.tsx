@@ -40,6 +40,19 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       },
     },
     {
+      id: "tipo_doc",
+      header: "Tipo",
+      meta: { width: "w-[100px]", className: "text-xs" },
+      cell: ({ row }) => {
+        const esInfo = row.original.tipo_documento === "informativa";
+        return (
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${esInfo ? "bg-info/15 text-info" : "bg-muted text-muted-foreground"}`}>
+            {esInfo ? "Tarifario" : "Transaccional"}
+          </span>
+        );
+      },
+    },
+    {
       id: "modo",
       header: "Modo",
       meta: { width: "w-[80px]", className: "text-xs whitespace-nowrap" },

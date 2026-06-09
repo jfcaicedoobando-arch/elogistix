@@ -85,6 +85,11 @@ export default function Cotizaciones() {
                 <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
               </Button>
             )}
+            {c.canEdit && (
+              <Button variant="outline" onClick={() => (window.location.href = "/cotizaciones/nueva/tarifario")} className="hidden sm:inline-flex">
+                <Plus className="h-4 w-4 mr-2" /> Nuevo Tarifario
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="sm:hidden" aria-label="Más acciones">

@@ -1273,10 +1273,12 @@ export type Database = {
           sector_economico: string
           seguro: boolean
           subtotal: number
+          tarifas_informativas: Json
           tiempo_transito_dias: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga: string
           tipo_contenedor: string | null
+          tipo_documento: string
           tipo_embarque: string
           tipo_movimiento: string
           tipo_peso: string
@@ -1284,7 +1286,9 @@ export type Database = {
           updated_at: string
           validez_propuesta: string | null
           valor_seguro_usd: number
+          vigencia_desde: string | null
           vigencia_dias: number
+          vigencia_hasta: string | null
           volumen_m3: number
         }
         Insert: {
@@ -1334,10 +1338,12 @@ export type Database = {
           sector_economico?: string
           seguro?: boolean
           subtotal?: number
+          tarifas_informativas?: Json
           tiempo_transito_dias?: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga?: string
           tipo_contenedor?: string | null
+          tipo_documento?: string
           tipo_embarque?: string
           tipo_movimiento?: string
           tipo_peso?: string
@@ -1345,7 +1351,9 @@ export type Database = {
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
+          vigencia_desde?: string | null
           vigencia_dias?: number
+          vigencia_hasta?: string | null
           volumen_m3?: number
         }
         Update: {
@@ -1395,10 +1403,12 @@ export type Database = {
           sector_economico?: string
           seguro?: boolean
           subtotal?: number
+          tarifas_informativas?: Json
           tiempo_transito_dias?: number | null
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga?: string
           tipo_contenedor?: string | null
+          tipo_documento?: string
           tipo_embarque?: string
           tipo_movimiento?: string
           tipo_peso?: string
@@ -1406,7 +1416,9 @@ export type Database = {
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
+          vigencia_desde?: string | null
           vigencia_dias?: number
+          vigencia_hasta?: string | null
           volumen_m3?: number
         }
         Relationships: [

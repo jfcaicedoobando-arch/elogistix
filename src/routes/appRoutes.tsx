@@ -11,7 +11,7 @@ import {
   Dashboard, Operaciones, Reportes, Bitacora, Ayuda,
   Papelera, Idempotencia, Auditoria, SentryDiagnostico,
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
-  Cotizaciones, NuevaCotizacion, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
+  Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
   Facturacion, FacturaDetalle,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
@@ -106,6 +106,7 @@ export const appRoutes = (
     <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
     <Route path="/cotizaciones" element={<Cotizaciones />} />
     <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
+    <Route path="/cotizaciones/nueva/tarifario" element={<NuevaCotizacionInformativa />} />
     <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
     <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
     <Route path="/dev/pdf-preview/cotizacion/:id" element={<PdfPreviewCotizacion />} />

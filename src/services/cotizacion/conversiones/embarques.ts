@@ -44,6 +44,9 @@ async function insertarVentasEmbarque(
 export async function convertirCotizacionAEmbarques(
   cotizacion: CotizacionRow,
 ): Promise<Tables<"embarques">[]> {
+  if (cotizacion.tipo_documento === "informativa") {
+    throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
+  }
   const { data: costos, error: errorCostos } = await supabase
     .from("cotizacion_costos")
     .select("*")
@@ -125,6 +128,15 @@ export async function convertirCotizacionAEmbarques(
  * existente si la cotización ya tiene uno vinculado).
  */
 export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string): Promise<string> {
+  const { data: cot, error: errCot } = await supabase
+    .from("cotizaciones")
+    .select("tipo_documento")
+    .eq("id", cotizacionId)
+    .maybeSingle();
+  if (errCot) throw errCot;
+  if (cot?.tipo_documento === "informativa") {
+    throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
+  }
   const { data, error } = await supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
     p_cotizacion_id: cotizacionId,
   });

@@ -1,52 +1,91 @@
-# Iteración 1 — Wizard de cotización terrestre
+# Iteración 2 — Cotización informativa (tarifario)
 
-Objetivo: hacer que el wizard de cotización se adapte cuando `modo = "Terrestre"`, sin tocar todavía multi-ruta ni PDF. Multi-ruta y tabla comparativa quedan para la iteración 2.
+## Concepto
 
-## Cambios de comportamiento
+Se añade un segundo tipo de cotización: **informativa** (tarifario). Sirve sólo como referencia comercial: lista N rutas/servicios con sus tarifas vigentes durante un período. **No se convierte en embarque**. La cotización tradicional ("transaccional") sigue funcionando idéntica.
 
-1. **Tipo de operación** (`SeccionDatosGeneralesCotizacion`)
-   - Si `modo = Terrestre`, las únicas opciones son `Nacional` y `Cross Trade`. Si el valor actual no encaja, auto-corregir a `Nacional`.
-2. **Incoterm**
-   - Ocultar el campo cuando `modo = Terrestre`. Persistir `incoterm = "N/A"` para no romper la BD (el enum ya lo soporta).
-3. **Modalidad de equipo** (campo nuevo, solo terrestre)
-   - Select obligatorio con: `Caja Seca`, `Porta Contenedor`, `Plataforma`, `Torton`, `Camión Full`, `Camión Sencillo`.
-   - Se guarda en un campo nuevo `modalidad_equipo` (texto libre validado por catálogo en el front, sin enum nuevo en BD para mantener la migración mínima).
-4. **Ruta**
-   - `Tipo de movimiento` se oculta cuando `modo = Terrestre` (es marítimo). Persistir `tipo_movimiento = ""`.
-   - Origen/Destino se quedan como `Input` libre (ya lo son cuando no es marítimo/multimodal).
-   - Cuando `modalidad_equipo = Porta Contenedor`, mostrar un tercer campo **Punto de carga/descarga** entre Origen y Destino. Se guarda en un campo nuevo `punto_intermedio`.
-   - Ocultar campos marítimos irrelevantes que hoy ya están condicionados a `esMaritimo` (no requiere cambios).
-5. **Mercancía**
-   - El wrapper de mercancía ya conmuta por modo; revisar que para Terrestre muestre la sección general (peso/volumen/piezas), sin LCL/FCL/aéreo.
+Esto **reemplaza** la multi-ruta terrestre pendiente: la necesidad de comparar varias rutas se cubre con la informativa.
 
-## Cambios técnicos
+## Modelo de datos
 
-- **BD (migración pequeña)**: agregar a `public.cotizaciones`:
-  - `modalidad_equipo text null`
-  - `punto_intermedio text null`
-  
-  Sin enum, sin backfill. Las RLS existentes cubren los nuevos campos.
-- **Tipos del formulario** (`src/types/cotizacionForm.ts`, `src/types/cotizacion.ts`): agregar `modalidadEquipo: string` y `puntoIntermedio: string` con defaults `""`.
-- **Mappers** (`src/lib/mappers/cotizacionForm.ts`, `src/services/cotizacion/mutations/payloadBuilders.ts`): leer/escribir los dos nuevos campos.
-- **Constantes nuevas** (`src/constants/cotizacionTerrestre.ts`):
-  - `MODALIDADES_EQUIPO_TERRESTRE` y helper `requiereTresPuntos(modalidad)`.
-  - `TIPOS_OPERACION_TERRESTRE = ["Nacional", "Cross Trade"]`.
+Migración a `public.cotizaciones`:
+
+- `tipo_documento text not null default 'transaccional'` — valores: `'transaccional' | 'informativa'`.
+- `vigencia_desde date null` — sólo informativa.
+- `vigencia_hasta date null` — sólo informativa.
+- `tarifas_informativas jsonb not null default '[]'` — array de filas tarifa:
+  ```
+  {
+    id, modo, modalidad_equipo, origen, punto_intermedio, destino,
+    tipo_contenedor, unidad_medida, precio, moneda, notas
+  }
+  ```
+- Índice parcial en `(organization_id, tipo_documento)` para listados.
+- Constraint suave vía trigger: si `tipo_documento='informativa'` ⇒ requiere `vigencia_desde`, `vigencia_hasta`, al menos 1 fila en `tarifas_informativas`; bloquea conversión a embarque.
+
+No se toca `cotizacion_costos` ni `conceptos_venta` (siguen siendo de la transaccional).
+
+## Flujo UI
+
+**Punto de entrada** (`/cotizaciones/nueva`): primer paso pide elegir tipo:
+- **Transaccional** → wizard actual sin cambios.
+- **Informativa** → wizard reducido nuevo (3 pasos).
+
+**Wizard informativa:**
+1. **Datos generales**: cliente/prospecto, operador, vigencia desde/hasta, notas.
+2. **Tarifas**: tabla editable de N filas (agregar/eliminar/reordenar). Por fila: modo, modalidad de equipo (si terrestre), origen, punto intermedio (si Porta Contenedor), destino, tipo de contenedor (si marítimo FCL), unidad de medida, precio, moneda. Permite mezclar modos en una misma informativa.
+3. **Resumen + guardar** (sin sección de costos/utilidad, sin conceptos_venta, sin IVA detallado por concepto — sólo precios listados).
+
+**Listado de cotizaciones**: columna y filtro por **Tipo** (Transaccional / Informativa). Badge visual distinto.
+
+**Detalle informativa**:
+- Sin botones "Convertir a embarque" ni "Crear borrador".
+- Botón principal: **Descargar PDF tarifario**.
+- Acción secundaria: **"Generar cotización transaccional"** que abre el wizard normal precargado con una fila elegida (queda para iteración futura si lo prefieres; en esta iteración sólo se documenta como no implementado).
+
+## PDF tarifario
+
+Nuevo documento `TarifarioDocument`:
+- Encabezado con marca, vigencia (DD/MM/YYYY – DD/MM/YYYY), cliente.
+- Tabla comparativa de tarifas (una fila por servicio).
+- Bloque de notas y condiciones generales.
+- Reutiliza `BrandHeader`, `DataTable`, `Footer`.
+
+## Validaciones y reglas
+
+- `validatePaso1` y demás validadores actuales sólo aplican a transaccional.
+- Validador nuevo `validateInformativa`: cliente o prospecto, vigencia_desde ≤ vigencia_hasta, ≥1 fila válida (origen, destino, precio > 0, moneda).
+- Conversión a embarque (`crearEmbarqueBorradorDesdeCotizacion`, `convertirCotizacionAEmbarques`) bloqueada server-side cuando `tipo_documento='informativa'`.
+- Permisos: misma matriz que cotización transaccional (rol comercial/operador puede crearlas).
+
+## Detalles técnicos
+
+- **Migración** `supabase/migrations/...`: agrega columnas + trigger validador + backfill (`update cotizaciones set tipo_documento='transaccional' where tipo_documento is null`). Sin GRANT nuevos (la tabla ya tiene RLS+grants).
+- **Tipos**:
+  - `src/types/cotizacion.ts`: agregar `tipo_documento`, `vigencia_desde`, `vigencia_hasta`, `tarifas_informativas: TarifaInformativa[]` a `CotizacionRow` y `CreateCotizacionInput`.
+  - Nuevo `src/types/cotizacionInformativa.ts` con `TarifaInformativa` y defaults.
+  - `CotizacionFormValues` extendida con bloque opcional informativa.
+- **Mappers**: `cotizacionForm.ts` y `cotizacion.ts` mapean nuevos campos; cuando `tipo_documento='informativa'` forzar `incoterm='N/A'`, `tipo_movimiento=''`, `tipo_carga` libre, sin costos.
+- **Payload builders** (`payloadBuilders.ts`): nuevo `buildCotizacionInformativaInsertPayload` separado para mantener funciones cortas (Power of 10).
+- **Servicios**:
+  - `src/services/cotizacion/mutations/crearInformativa.ts` (nuevo).
+  - Bloqueos en `conversiones/embarques.ts` si tipo_documento != 'transaccional'.
 - **UI**:
-  - `SeccionDatosGeneralesCotizacion.tsx`: filtrar opciones de Tipo según modo; ocultar Incoterm en terrestre; agregar select de Modalidad cuando terrestre. Auto-set `incoterm="N/A"` al cambiar a Terrestre.
-  - `SeccionRutaCotizacion.tsx`: ocultar Tipo de movimiento en terrestre; mostrar Punto intermedio cuando modalidad lo requiera; etiqueta de Origen/Destino sin cambiar a "puerto".
-- **Validación**: en el resolver/zod del wizard, exigir `modalidadEquipo` cuando `modo = Terrestre`, y `puntoIntermedio` cuando modalidad lo requiera.
-- **Edición**: `EditarCotizacion` hereda automáticamente vía mappers.
-- **Changelog + APP_VERSION**: nueva entrada `[12.67.0]` describiendo la adaptación del wizard terrestre. Bump en `src/constants/appVersion.ts`.
+  - `src/pages/cotizaciones/NuevaCotizacion.tsx`: selector de tipo de documento al inicio (modal o paso 0).
+  - Nuevo `src/components/cotizacion/informativa/WizardInformativa.tsx` (≤200 líneas) + subcomponentes `SeccionTarifasInformativas.tsx`, `FilaTarifaEditor.tsx`.
+  - Listado `Cotizaciones.tsx`: añadir columna y filtro tipo_documento.
+  - `EditarCotizacion.tsx`: rutear al wizard correcto según tipo.
+- **PDF**: `src/pdf/documents/TarifarioDocument.tsx` + test snapshot mínimo.
+- **Hooks**:
+  - `useCotizacionWizardForm` queda como está (transaccional).
+  - Nuevo `useCotizacionInformativaForm` paralelo.
+- **Constantes** `src/constants/cotizacionInformativa.ts`: monedas, unidades de medida sugeridas.
+- **Memoria** `mem://features/cotizacion-informativa`: nueva entrada en índice describiendo el flag y bloqueos.
+- **Versionado**: `APP_VERSION` → `12.68.0`, entrada en `CHANGELOG.md`.
 
-## Qué NO se toca en esta iteración
+## Fuera de alcance (siguiente iteración)
 
-- Multi-ruta y tabla comparativa (queda para iteración 2 — implica modelo `cotizacion_rutas` y cambios al PDF / portal de aceptación).
-- PDF de cotización (sigue mostrando un solo origen/destino; cuando hay punto intermedio se mostrará como parte de la ruta textual existente).
-- Embarques: el flujo de conversión cotización→embarque se revisará cuando entremos a multi-ruta.
-
-## Verificación
-
-- Crear cotización terrestre Nacional con Caja Seca: Incoterm y Tipo de movimiento no aparecen, modalidad obligatoria, ruta de 2 puntos.
-- Cambiar modalidad a Porta Contenedor: aparece campo de punto intermedio; al guardar persiste.
-- Editar la cotización guardada: campos recuperan valores correctamente.
-- Cotización marítima/aérea sigue funcionando igual (campo modalidad oculto, incoterm visible).
+- "Generar cotización transaccional desde fila de tarifario".
+- Vigencia/override por fila (hoy es vigencia global de cabecera).
+- Renovación automática o versionado histórico de tarifarios.
+- Publicación al portal del cliente (se evalúa después).
