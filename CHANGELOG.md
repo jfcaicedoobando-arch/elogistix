@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.4] - 2026-06-09
+- **fix(dashboard ejecutivo / CxP) — relación faltante `proveedor_facturas → proveedores`**: el embed `proveedores(origen_proveedor)` introducido en 12.64.0 fallaba con `Could not find a relationship between 'proveedor_facturas' and 'proveedores' in the schema cache` porque la tabla nunca tuvo la FK declarada. Se agrega `proveedor_facturas_proveedor_id_fkey` (`ON DELETE RESTRICT`, consistente con Data Integrity) y `NOTIFY pgrst, 'reload schema'`. Validado previamente: 0 facturas con `proveedor_id` huérfano. Esto restaura la carga de `/profit/dashboard` (cadena `fetchDashboardEjecutivo → fetchResumenTesoreria → fetchFacturasCxP`) y de `/cxp`.
+
 ## [12.64.3] - 2026-06-09
 - **test(ci) — smoke test post-deploy para `user-management`**: Nuevo `supabase/functions/user-management/smoke_test.ts` (Deno) que se autentica como demo readonly contra el Supabase de producción, llama al endpoint con `action: "list"` y valida contrato (status <500, JSON, sin `user_id` UUID sin `email` adyacente — regresión exacta del bug "salen UIDs en vez de emails"). Nuevo workflow `.github/workflows/post-deploy-smoke.yml` (cron diario 07:00 CDMX + `workflow_dispatch`). Requiere los secrets `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD` en GitHub Actions; si faltan, el test se marca como `ignore`. No agrega dependencias npm.
 
