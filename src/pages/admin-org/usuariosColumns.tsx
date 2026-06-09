@@ -10,16 +10,9 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 import type { UserRow } from "@/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate } from "@/lib/formatters";
-import { getRoleLabel } from "@/components/shared/utils/uiMappings";
+import { ROLE_BADGE_CLASSES, ROLE_LABELS, ASSIGNABLE_ROLES_ADMIN_ORG, getRoleLabel } from "@/lib/roles/roleCatalog";
 
-const roleBadge: Record<AppRole, string> = {
-  super_admin: "bg-primary text-primary-foreground",
-  admin: "bg-destructive text-destructive-foreground",
-  operador: "bg-info text-info-foreground",
-  vendedor: "bg-success text-success-foreground",
-  viewer: "bg-muted text-muted-foreground",
-  cliente: "bg-accent text-accent-foreground",
-};
+const roleBadge = ROLE_BADGE_CLASSES;
 
 interface Options {
   currentUserId: string | undefined;
@@ -71,9 +64,9 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           >
             <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="operador">Operador</SelectItem>
-              <SelectItem value="viewer">Visor</SelectItem>
+              {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
+                <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         );

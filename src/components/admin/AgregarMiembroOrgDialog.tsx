@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/hooks/admin";
 import type { AppRole } from "@/types/appRole";
+import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_LABELS } from "@/lib/roles/roleCatalog";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
 
 export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizationId, existingUserIds, onAdded }: Props) {
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [role, setRole] = useState<AppRole>("viewer");
+  const [role, setRole] = useState<AppRole>("coordinador_logistico");
   const { toast } = useToast();
 
   const { data: allUsers = [], isLoading: loadingUsers } = useAvailableUsers(open);
@@ -79,9 +80,9 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
             <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="operador">Operador</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
+                {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
+                  <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

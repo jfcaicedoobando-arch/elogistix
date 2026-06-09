@@ -44,9 +44,21 @@ export function useAppSidebarSections(): SidebarSection[] {
     ];
   }
 
-  // El rol "operador" se enfoca en operación diaria: dashboards, cotizaciones/embarques/pre-facturación,
-  // directorio y ayuda. Oculta finanzas (CxP, Tesorería, Comisiones), Profit, CRM, Reportes y Sistema técnico.
-  if (effectiveRole === "operador") {
+  // Atención a clientes (antes "viewer"): solo lectura operativa.
+  if (effectiveRole === "customer_service" || effectiveRole === "viewer") {
+    const gestionCS = SIDEBAR_GESTION_ITEMS.filter((it) =>
+      ["/cotizaciones", "/embarques"].includes(it.url),
+    );
+    return [
+      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+      { label: "Gestión", items: gestionCS },
+      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
+      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
+    ];
+  }
+
+  // Coordinador logístico (antes "operador"): operación diaria sin finanzas.
+  if (effectiveRole === "operador" || effectiveRole === "coordinador_logistico") {
     const gestionOperador = SIDEBAR_GESTION_ITEMS.filter((it) =>
       ["/cotizaciones", "/embarques", "/facturacion"].includes(it.url),
     );
@@ -58,6 +70,49 @@ export function useAppSidebarSections(): SidebarSection[] {
     ];
   }
 
+  // Ejecutivo de pricing: cotizaciones, embarques (lectura), reportes y directorio.
+  if (effectiveRole === "ejecutivo_pricing") {
+    const gestionPricing = SIDEBAR_GESTION_ITEMS.filter((it) =>
+      ["/cotizaciones", "/embarques"].includes(it.url),
+    );
+    return [
+      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+      { label: "Gestión", items: gestionPricing },
+      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
+    ];
+  }
+
+  // Contador / Tesorero: foco financiero. Sin CRM ni edición operativa.
+  if (effectiveRole === "contador" || effectiveRole === "tesorero") {
+    const gestionFin = SIDEBAR_GESTION_ITEMS.filter((it) =>
+      effectiveRole === "tesorero"
+        ? ["/cxp", "/tesoreria", "/comisiones"].includes(it.url)
+        : ["/facturacion", "/cxp", "/tesoreria", "/comisiones"].includes(it.url),
+    );
+    return [
+      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+      { label: "Gestión", items: gestionFin },
+      { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+      { label: "Sistema", items: sistemaItems.filter((it) => ["/ayuda", "/bitacora"].includes(it.url)) },
+    ];
+  }
+
+  // Gerente de operaciones: todo lectura + edición operativa, sin admin.
+  if (effectiveRole === "gerente_operaciones") {
+    return [
+      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+      { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+      { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+      { label: "CRM", items: crmItems },
+      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+      { label: "Sistema", items: sistemaItems },
+    ];
+  }
 
   const sections: SidebarSection[] = [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
@@ -68,7 +123,7 @@ export function useAppSidebarSections(): SidebarSection[] {
     { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
     { label: "Sistema", items: sistemaItems },
   ];
-  if (effectiveRole === "admin" || role === "super_admin") {
+  if (effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin") {
     sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   }
   if (role === "super_admin") {
