@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.65.1] - 2026-06-09
+- **refactor(proveedores)**: se extrae el bloque de filtros de `Proveedores.tsx` a `ProveedoresFiltros.tsx` para cumplir la regla Power of 10 (≤200 líneas por archivo). Sin cambios de comportamiento.
+
 ## [12.65.0] - 2026-06-09
 - **feat(proveedores) — rediseño del directorio + apertura a gastos operativos**:
   - **BD**: nuevos enums `categoria_proveedor` (`Logistico` / `GastoOperativo`) y `subtipo_gasto_operativo` (Renta, Servicios, Papelería, Software, Honorarios, Mantenimiento, Marketing, Viáticos, Otros). Columnas `categoria` (default `Logistico`) y `subtipo_gasto` en `proveedores`, con `CHECK` que exige `tipo` en logísticos y `subtipo_gasto` en gastos operativos. `tipo` ahora es nullable para soportar gastos.
