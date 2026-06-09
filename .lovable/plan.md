@@ -1,52 +1,46 @@
-# Smoke test post-deploy: `user-management` emails en producción
+# Fix: Dashboard Ejecutivo — relationship proveedor_facturas ↔ proveedores
 
-## Objetivo
-Validar después de cada deploy que el edge function `user-management` en producción responde correctamente y entrega `email` (no solo `user_id`). Falla si:
-- El endpoint devuelve 5xx o HTML (función caída).
-- La respuesta no incluye el campo `email` en el contrato.
+## Causa raíz
+Regresión introducida en **v12.64.0** ("segmentación Nacional/Extranjero"). El servicio `fetchFacturasCxP` (`src/services/cxp/proveedorFacturas.ts:77`) embebe `proveedores(origen_proveedor)`, pero la tabla `public.proveedor_facturas` **no tiene FK** a `public.proveedores`. PostgREST rechaza el embed con:
 
-No valida render del DOM (eso sería Playwright); valida el contrato end-to-end del cual depende `/usuarios`.
+> `Could not find a relationship between 'proveedor_facturas' and 'proveedores' in the schema cache`
 
-## Stack
-- **Deno test** (ya está soportado por `supabase--test_edge_functions` y el ecosistema actual del repo).
-- Sin nuevas dependencias npm.
-- Credenciales: cuenta **demo readonly** (rol `cliente`).
+El Dashboard Ejecutivo cae porque su cadena es:
+`useDashboardEjecutivo → fetchDashboardEjecutivo → fetchResumenTesoreria → fetchFacturasCxP → embed roto`.
 
-## Archivos a crear
+Es probable que `/cxp` también esté fallando al cargar (mismo embed); el usuario lo notó primero en el dashboard porque ahí se consolida todo en una sola pantalla.
 
-### 1. `supabase/functions/user-management/smoke_test.ts`
-- Carga `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` vía `dotenv/load.ts`.
-- Lee `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` desde `Deno.env`. Si faltan → `Deno.test({ ignore: true })`.
-- Hace `signInWithPassword` contra el Supabase de producción.
-- POST a `/functions/v1/user-management` con `{ action: "list", scope: "global" }` y el JWT.
-- Asserts:
-  - `response.status` ∈ {200, 403}. Nunca 5xx, nunca HTML.
-  - `Content-Type` empieza con `application/json`.
-  - Body parsea como JSON con shape esperado:
-    - Si 200: `Array.isArray(body.users) && body.users.every(u => 'email' in u)`.
-    - Si 403: `body.error` es string (forbidden esperado para demo).
-  - Cualquier `user_id` UUID sin `email` adyacente → fail (regresión exacta del bug original).
-- `await response.text()` siempre (evita leaks de Deno).
+## Validación previa
+- `pg_constraint` sobre `proveedor_facturas`: solo PK, UNIQUE y FK a `presupuesto_categorias`. **No hay FK a `proveedores`.**
+- `SELECT COUNT(*)` de filas con `proveedor_id` huérfano: **0** → es seguro crear la FK.
 
-### 2. `.github/workflows/post-deploy-smoke.yml`
-- Triggers: `schedule: cron '0 13 * * *'` (07:00 CDMX) + `workflow_dispatch`.
-- Job ubuntu-latest:
-  - `denoland/setup-deno@v1`.
-  - `deno test --allow-net --allow-env --allow-read supabase/functions/user-management/smoke_test.ts`.
-  - Env: `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` desde GH Secrets; URL/anon hardcoded (son públicos).
-- Si falla, marca el workflow rojo (notificaciones nativas de GH).
+## Fix (1 migration + 1 cambio menor de código)
 
-### 3. `CHANGELOG.md` + bump `APP_VERSION` (12.64.3 patch).
+### 1. Migration: agregar FK + refrescar schema cache
+```sql
+ALTER TABLE public.proveedor_facturas
+  ADD CONSTRAINT proveedor_facturas_proveedor_id_fkey
+  FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id)
+  ON DELETE RESTRICT;
 
-## Secrets necesarios en GitHub
-- `DEMO_USER_EMAIL`
-- `DEMO_USER_PASSWORD`
+NOTIFY pgrst, 'reload schema';
+```
+- `ON DELETE RESTRICT` se alinea con la regla "Data Integrity" (no permitir borrar proveedores con facturas).
+- `NOTIFY pgrst` fuerza a PostgREST a recargar el schema cache inmediatamente.
 
-Te indicaré dónde pegarlos al terminar (Settings → Secrets and variables → Actions). No se almacenan en Lovable Cloud porque solo los consume CI.
+### 2. Regenerar `src/integrations/supabase/types.ts`
+Lo hace Lovable automáticamente al aplicar la migration; no se edita a mano.
 
-## Validación local
-Después de crear los archivos, corro `supabase--test_edge_functions` con `functions: ["user-management"]` para comprobar que el smoke se ejecuta y que el `ignore` funciona cuando faltan los secrets.
+### 3. No tocar `proveedorFacturas.ts`
+El embed actual ya es correcto una vez que existe la FK. Mantengo el `SAFE-CAST` y el shape `Joined`.
 
-## Limitaciones aceptadas
-- No prueba el render React de `/usuarios` (requiere Playwright + login UI). Si en el futuro quieren cobertura visual, se agrega como segundo paso.
-- La cuenta demo no es admin global → el assert principal valida que la respuesta es **estructurada** (no 5xx) y mantiene el contrato; no valida el listado completo. Eso basta para detectar la regresión exacta de "salen UIDs en vez de emails" porque ese bug se manifestaba como respuesta degradada del endpoint, no como 403.
+### 4. Bump APP_VERSION → `12.64.4` + entrada en `CHANGELOG.md` describiendo el fix de relación.
+
+## Validación post-fix
+- Refresco `/profit/dashboard` en preview (con el usuario logueado) y confirmo que carga sin el toast de error.
+- Verifico que `/cxp` también lista facturas con la columna Origen.
+- Corro los tests existentes de CxP/tesorería con `bunx vitest run src/services/cxp src/services/tesoreria src/services/dashboard-ejecutivo` para asegurar que el cambio de schema no rompió mocks.
+
+## Notas
+- No requiere republish del frontend — el fix es 100% backend (DB schema cache).
+- Producción actual (`librecarga.com`) recibirá el fix inmediatamente al aplicar la migration; el bundle del frontend ya pide el embed correcto.
