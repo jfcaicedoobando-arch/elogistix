@@ -30,6 +30,12 @@ export function validatePaso1(v: CotizacionFormValues): string | null {
       return "Ingresa el nombre del contacto del prospecto";
     }
   }
+  if (v.modo === "Terrestre") {
+    if (!v.modalidadEquipo?.trim()) return "Selecciona la modalidad de equipo";
+    if (v.modalidadEquipo === "Porta Contenedor" && !v.puntoIntermedio?.trim()) {
+      return "Captura el punto de carga/descarga";
+    }
+  }
   return null;
 }
 
