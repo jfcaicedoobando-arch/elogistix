@@ -170,7 +170,7 @@ export async function handleList(ctx: HandlerCtx, admin: AdminAccess): Promise<R
 
   const { data: rolesData } = await adminClient.from("user_roles").select("role").eq("user_id", callerId);
   const { data: orgRoles } = await adminClient.from("organization_members").select("role").eq("user_id", callerId);
-  const ALLOWED = new Set(["admin", "operador", "super_admin"]);
+  const ALLOWED = new Set(["admin", "admin_org", "operador", "coordinador_logistico", "ejecutivo_pricing", "gerente_operaciones", "super_admin"]);
   const allowed = [
     ...((rolesData ?? []) as Array<{ role: string }>).map((r) => r.role),
     ...((orgRoles ?? []) as Array<{ role: string }>).map((r) => r.role),
