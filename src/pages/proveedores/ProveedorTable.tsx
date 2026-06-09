@@ -6,26 +6,32 @@ import { useDebounce, useListPageState } from "@/hooks/shared";
 import type { Enums } from "@/types/db";
 import { proveedorColumns } from "./proveedorTableColumns";
 
-type TipoProveedor = Enums<'tipo_proveedor'>;
-
+type TipoProveedor = Enums<"tipo_proveedor">;
+type CategoriaProveedor = Enums<"categoria_proveedor">;
+type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 
 interface Props {
-  tipo: TipoProveedor;
+  categoria?: CategoriaProveedor | "todos";
+  tipo?: TipoProveedor | null;
+  subtipoGasto?: SubtipoGasto | null;
   search: string;
   origen?: "Nacional" | "Extranjero" | "todos";
   onSelect: (id: string) => void;
+  onTotalChange?: (total: number) => void;
 }
 
-export function ProveedorTable({ tipo, search, origen, onSelect }: Props) {
+export function ProveedorTable({ categoria, tipo, subtipoGasto, search, origen, onSelect, onTotalChange }: Props) {
   const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({});
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     resetPage();
-  }, [debouncedSearch, origen, resetPage]);
+  }, [debouncedSearch, origen, categoria, tipo, subtipoGasto, resetPage]);
 
   const { data: resultado, isLoading } = useProveedoresPaginados({
+    categoria,
     tipo,
+    subtipoGasto,
     search: debouncedSearch,
     page,
     pageSize,
@@ -35,6 +41,10 @@ export function ProveedorTable({ tipo, search, origen, onSelect }: Props) {
   const proveedores = resultado?.data ?? [];
   const totalCount = resultado?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  useEffect(() => {
+    onTotalChange?.(totalCount);
+  }, [totalCount, onTotalChange]);
 
   return (
     <Card>

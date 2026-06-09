@@ -8,9 +8,11 @@ import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/s
 import { fromDb } from "@/lib/supabase/cast";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
+type CategoriaProveedor = Enums<"categoria_proveedor">;
+type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 
 const PROVEEDOR_DETAIL_COLUMNS =
-  "id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, organization_id, created_at, updated_at" as const;
+  "id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, categoria, subtipo_gasto, organization_id, created_at, updated_at" as const;
 
 export type Proveedor = Tables<"proveedores">;
 export type ProveedorListItem = Pick<
@@ -18,6 +20,8 @@ export type ProveedorListItem = Pick<
   "id" | "nombre" | "tipo" | "rfc" | "contacto" | "moneda_preferida"
 > & {
   origen_proveedor: "Nacional" | "Extranjero" | null;
+  categoria: CategoriaProveedor;
+  subtipo_gasto: SubtipoGasto | null;
   total_operaciones: number;
   monto_pendiente: number;
 };
@@ -34,40 +38,45 @@ export interface ProveedorOperacion {
 }
 
 export interface FetchProveedoresParams {
-  tipo: TipoProveedor;
+  tipo?: TipoProveedor | null;
   search: string;
   page: number;
   pageSize: number;
   organizationId: string | null;
   origen?: "Nacional" | "Extranjero" | "todos";
+  categoria?: CategoriaProveedor | "todos";
+  subtipoGasto?: SubtipoGasto | null;
 }
 
 export async function fetchProveedoresPaginados(
   params: FetchProveedoresParams,
 ): Promise<{ data: ProveedorListItem[]; count: number }> {
-  const { tipo, search, page, pageSize, organizationId, origen } = params;
-  // Bloque 2.4 — RPC `proveedores_listado` con agregados (operaciones, pendiente).
+  const { tipo, search, page, pageSize, organizationId, origen, categoria, subtipoGasto } = params;
   const offset = page * pageSize;
   const { data, error } = await supabase.rpc("proveedores_listado", {
     p_organization_id: organizationId ?? undefined,
-    p_tipo: tipo,
+    p_tipo: tipo || undefined,
     p_search: search || undefined,
     p_offset: offset,
     p_limit: pageSize,
     p_origen: origen && origen !== "todos" ? origen : undefined,
-    // SAFE-CAST: el cliente tipado aún no conoce p_origen tras la regeneración pendiente.
+    p_categoria: categoria && categoria !== "todos" ? categoria : undefined,
+    p_subtipo_gasto: subtipoGasto || undefined,
+    // SAFE-CAST: la firma del RPC tipado en Supabase aún no recoge los nuevos parámetros.
   } as unknown as Parameters<typeof supabase.rpc<"proveedores_listado">>[1]);
   if (error) throw error;
 
   const rows = (data ?? []) as Array<{
     id: string;
     nombre: string;
-    tipo: TipoProveedor;
+    tipo: TipoProveedor | null;
     rfc: string | null;
     contacto: string | null;
     moneda_preferida: Proveedor["moneda_preferida"];
     pais: string | null;
     origen_proveedor: "Nacional" | "Extranjero" | null;
+    categoria: CategoriaProveedor;
+    subtipo_gasto: SubtipoGasto | null;
     total_operaciones: number | string;
     monto_pendiente: number | string;
     total_count: number | string;
@@ -82,6 +91,8 @@ export async function fetchProveedoresPaginados(
     contacto: r.contacto ?? "",
     moneda_preferida: r.moneda_preferida,
     origen_proveedor: r.origen_proveedor ?? null,
+    categoria: r.categoria,
+    subtipo_gasto: r.subtipo_gasto ?? null,
     total_operaciones: Number(r.total_operaciones),
     monto_pendiente: Number(r.monto_pendiente),
   }));
