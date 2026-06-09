@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.9] - 2026-06-09
+- **chore(tests) — endurecer higiene y umbrales tras auditoría (puntos 1, 2, 4 y 8)**:
+  (1) `scripts/lib/tests.ts` ahora detecta también `missing-assertions`: cada `it`/`test` no-skipped debe contener al menos un `expect(...)` / `assert*` dentro de su bloque. Parser con stripping de strings y comentarios para no confundirse con `{}` en títulos. `scripts/audit-tests.ts` documenta la regla nueva.
+  (2) `vitest.config.ts`: thresholds globales subieron de `10/10/10/50` → `25/25/40/55` (lines/statements/functions/branches) — la app está en ~29% / ~47% / ~67% reales, deja ~4 puntos de margen.
+  (4) `src/contexts/auth/__tests__/useAuthProfile.test.ts` y `useAuthSession.test.ts`: 4 `await new Promise((r) => setTimeout(r, X))` reemplazados por `await waitFor(() => expect(...))`. Elimina races dependientes del scheduler.
+  (8) `src/pdf/render/__tests__/pdfRenderLeak.test.tsx`: el test de 210 renders ahora declara explícitamente `60_000ms` de timeout (antes heredaba 15s globales y rozaba el límite en sandbox lento).
+  Validado: `bun run audit:tests` → 0 violations; 10/10 auth tests verdes.
+
 ## [12.64.8] - 2026-06-09
 - **chore(ci) — pinear GitHub Actions a versiones exactas**: en `.github/workflows/ci.yml` se reemplazaron los tags mayores flotantes por versiones específicas verificadas hoy (`actions/checkout@v6.0.3`, `actions/upload-artifact@v7.0.1`, `actions/download-artifact@v7.0.1`). Elimina el riesgo de roturas por minor/patch publicado upstream y resuelve el hallazgo de la auditoría de tests sobre "actions inestables". Sin cambios de lógica de CI ni de sharding.
 
