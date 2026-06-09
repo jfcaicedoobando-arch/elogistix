@@ -1,12 +1,14 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Truck, Plus, Upload } from "lucide-react";
+import { Truck, Plus, Upload, X } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import SearchInput from "@/components/selects/SearchInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProveedorMutations } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -19,30 +21,36 @@ import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSc
 import { insertProveedor } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import {
+  TIPOS_PROVEEDOR,
+  SUBTIPOS_GASTO_OPERATIVO,
+  labelSubtipoGasto,
+} from "@/constants/proveedorConstants";
 import { ProveedorTable } from "./ProveedorTable";
 
-type TipoProveedor = Enums<'tipo_proveedor'>;
-type Proveedor = Tables<'proveedores'>;
+type TipoProveedor = Enums<"tipo_proveedor">;
+type CategoriaProveedor = Enums<"categoria_proveedor">;
+type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
+type Proveedor = Tables<"proveedores">;
+type CategoriaTab = "todos" | CategoriaProveedor;
+type OrigenFiltro = "todos" | "Nacional" | "Extranjero";
+type TipoFiltro = "todos" | TipoProveedor;
+type SubtipoFiltro = "todos" | SubtipoGasto;
 
-const TABS: { label: string; tipo: TipoProveedor }[] = [
-  { label: 'Navieras', tipo: 'Naviera' },
-  { label: 'Aerolíneas', tipo: 'Aerolínea' },
-  { label: 'Transportistas', tipo: 'Transportista' },
-  { label: 'Agentes Aduanales', tipo: 'Agente Aduanal' },
-  { label: 'Agentes de Carga', tipo: 'Agente de Carga' },
-  { label: 'Aseguradoras', tipo: 'Aseguradora' },
-  { label: 'Custodia', tipo: 'Custodia' },
-  { label: 'Almacenes', tipo: 'Almacenes' },
-  { label: 'Acondicionamiento', tipo: 'Acondicionamiento de Carga' },
-  { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
+const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
+  { value: "todos", label: "Todos" },
+  { value: "Logistico", label: "Logísticos" },
+  { value: "GastoOperativo", label: "Gastos operativos" },
 ];
 
 export default function Proveedores() {
   const [search, setSearch] = useState("");
-  const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
+  const [categoriaTab, setCategoriaTab] = useState<CategoriaTab>("todos");
+  const [origen, setOrigen] = useState<OrigenFiltro>("todos");
+  const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
+  const [subtipoFiltro, setSubtipoFiltro] = useState<SubtipoFiltro>("todos");
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [activeTipo, setActiveTipo] = useState<TipoProveedor>("Naviera");
   const navigate = useNavigate();
   const { addProveedor } = useProveedorMutations();
   const { canEdit } = usePermissions();
@@ -51,12 +59,12 @@ export default function Proveedores() {
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
 
-  const handleAdd = async (data: Omit<Proveedor, 'id'>) => {
+  const handleAdd = async (data: Omit<Proveedor, "id">) => {
     try {
       const proveedorCreado = await addProveedor(data);
       registrarActividad.mutate({
-        accion: 'crear',
-        modulo: 'proveedores',
+        accion: "crear",
+        modulo: "proveedores",
         entidad_id: proveedorCreado.id,
         entidad_nombre: data.nombre,
       });
@@ -66,12 +74,43 @@ export default function Proveedores() {
     }
   };
 
+  const limpiarFiltros = () => {
+    setOrigen("todos");
+    setTipoFiltro("todos");
+    setSubtipoFiltro("todos");
+  };
+
+  // Cuando se cambia de tab limpiamos filtros incompatibles
+  const handleCategoriaChange = (next: CategoriaTab) => {
+    setCategoriaTab(next);
+    if (next !== "Logistico") setTipoFiltro("todos");
+    if (next !== "GastoOperativo") setSubtipoFiltro("todos");
+  };
+
+  const filtrosActivos: { label: string; onClear: () => void }[] = [];
+  if (origen !== "todos") filtrosActivos.push({ label: `Origen: ${origen}`, onClear: () => setOrigen("todos") });
+  if (tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo") {
+    filtrosActivos.push({ label: `Tipo: ${tipoFiltro}`, onClear: () => setTipoFiltro("todos") });
+  }
+  if (subtipoFiltro !== "todos" && categoriaTab !== "Logistico") {
+    filtrosActivos.push({ label: `Gasto: ${labelSubtipoGasto(subtipoFiltro)}`, onClear: () => setSubtipoFiltro("todos") });
+  }
+
+  const tableProps = {
+    categoria: categoriaTab,
+    tipo: tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo" ? tipoFiltro : null,
+    subtipoGasto: subtipoFiltro !== "todos" && categoriaTab !== "Logistico" ? subtipoFiltro : null,
+    search,
+    origen,
+    onSelect: (id: string) => navigate(`/proveedores/${id}`),
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         icon={<Truck className="h-6 w-6 text-accent" />}
         title="Proveedores"
-        description="Gestión de proveedores por categoría"
+        description="Directorio de proveedores logísticos y de gastos operativos"
         actions={
           canEdit ? (
             <div className="hidden sm:flex gap-2">
@@ -87,36 +126,80 @@ export default function Proveedores() {
       />
 
       <Card>
-        <CardContent className="p-4 flex flex-col md:flex-row gap-3 md:items-center">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar proveedor..." />
-          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
-            {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
-              <Button
-                key={opt}
-                type="button"
-                variant={origen === opt ? "default" : "ghost"}
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setOrigen(opt)}
-              >
-                {opt === 'todos' ? 'Todos' : opt}
+        <CardContent className="p-4 space-y-3">
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre, RFC, contacto o email..." />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={origen} onValueChange={(v) => setOrigen(v as OrigenFiltro)}>
+              <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Origen: todos</SelectItem>
+                <SelectItem value="Nacional">Nacional</SelectItem>
+                <SelectItem value="Extranjero">Extranjero</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {categoriaTab !== "GastoOperativo" && (
+              <Select value={tipoFiltro} onValueChange={(v) => setTipoFiltro(v as TipoFiltro)}>
+                <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Tipo logístico: todos</SelectItem>
+                  {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+
+            {categoriaTab !== "Logistico" && (
+              <Select value={subtipoFiltro} onValueChange={(v) => setSubtipoFiltro(v as SubtipoFiltro)}>
+                <SelectTrigger className="h-9 w-[220px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Tipo de gasto: todos</SelectItem>
+                  {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {filtrosActivos.length > 0 && (
+              <Button variant="ghost" size="sm" className="h-9" onClick={limpiarFiltros}>
+                Limpiar filtros
               </Button>
-            ))}
+            )}
           </div>
+
+          {filtrosActivos.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {filtrosActivos.map((f) => (
+                <Badge key={f.label} variant="outline" className="gap-1">
+                  {f.label}
+                  <button
+                    type="button"
+                    onClick={f.onClear}
+                    className="rounded-sm hover:bg-muted/60 transition-colors"
+                    aria-label={`Quitar filtro ${f.label}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Tabs value={activeTipo} onValueChange={(v) => setActiveTipo(v as TipoProveedor)}>
-        <div className="w-full overflow-x-auto">
-          <TabsList className="inline-flex w-max min-w-full h-auto flex-wrap gap-1 lg:flex-nowrap">
-            {TABS.map(tabConfig => (
-              <TabsTrigger key={tabConfig.tipo} value={tabConfig.tipo} className="text-xs whitespace-nowrap">{tabConfig.label}</TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-        {TABS.map(tabConfig => (
-          <TabsContent key={tabConfig.tipo} value={tabConfig.tipo}>
-            <ProveedorTable tipo={tabConfig.tipo} search={search} origen={origen} onSelect={(id) => navigate(`/proveedores/${id}`)} />
+      <Tabs value={categoriaTab} onValueChange={(v) => handleCategoriaChange(v as CategoriaTab)}>
+        <TabsList className="h-auto">
+          {CATEGORIA_TABS.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value} className="text-sm">
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {CATEGORIA_TABS.map((tab) => (
+          <TabsContent key={tab.value} value={tab.value} className="mt-4">
+            {categoriaTab === tab.value && <ProveedorTable {...tableProps} />}
           </TabsContent>
         ))}
       </Tabs>
@@ -126,12 +209,14 @@ export default function Proveedores() {
       <BulkImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        title={`Importar proveedores (${activeTipo}) desde CSV`}
-        description="Carga un CSV con proveedores. Si omites la columna 'tipo', se asignará el tipo de la pestaña activa."
+        title="Importar proveedores desde CSV"
+        description="Carga un CSV con proveedores. Incluye la columna 'categoria' (Logistico o GastoOperativo) y, según el caso, 'tipo' o 'subtipo_gasto'."
         templateHeaders={PROVEEDOR_TEMPLATE_HEADERS}
         templateExampleRow={[
           "Maersk Line",
-          activeTipo,
+          "Logistico",
+          "Naviera",
+          "",
           "MLI010101AAA",
           "Sandra López",
           "55 1111 2222",
@@ -139,8 +224,8 @@ export default function Proveedores() {
           "USD",
           "Dinamarca",
         ]}
-        templateFileName={`plantilla-proveedores-${activeTipo.toLowerCase().replace(/\s+/g, "-")}.csv`}
-        mapRows={(rows) => mapProveedorRows(rows, organizationId, activeTipo)}
+        templateFileName="plantilla-proveedores.csv"
+        mapRows={(rows) => mapProveedorRows(rows, organizationId)}
         onCommit={async (payloads) => {
           for (const p of payloads) {
             await insertProveedor(p);
@@ -148,7 +233,7 @@ export default function Proveedores() {
           registrarActividad.mutate({
             accion: "crear",
             modulo: "proveedores",
-            entidad_nombre: `Importación CSV ${activeTipo} (${payloads.length})`,
+            entidad_nombre: `Importación CSV (${payloads.length})`,
           });
         }}
         onSuccess={(n) => {
