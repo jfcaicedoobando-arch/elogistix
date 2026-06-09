@@ -52,9 +52,9 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!tipo) return;
     const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd ?? null, eta ?? null, estado);
     if (estadoCalculado !== estado) {
-      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado });
+      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail: user?.email ?? '' });
     }
-  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate]);
+  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email]);
 
   // Cantidad de conceptos de venta aún no incluidos en una proforma.
   // Se usa para mostrar advertencia soft al cerrar el embarque.
