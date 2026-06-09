@@ -30,6 +30,7 @@ type EmbarqueTrackingProps = Pick<
   | "aerolinea"
   | "bl_master"
   | "mawb"
+  | "expediente"
 >;
 
 interface Props {
