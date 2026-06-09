@@ -1,41 +1,32 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Truck, Plus, Upload, X } from "lucide-react";
+import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import SearchInput from "@/components/selects/SearchInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProveedorMutations } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/shared";
 import { usePermissions, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
-import type { Tables, Enums } from "@/types/db";
+import type { Tables } from "@/types/db";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
 import { insertProveedor } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import {
-  TIPOS_PROVEEDOR,
-  SUBTIPOS_GASTO_OPERATIVO,
-  labelSubtipoGasto,
-} from "@/constants/proveedorConstants";
 import { ProveedorTable } from "./ProveedorTable";
+import {
+  ProveedoresFiltros,
+  type CategoriaTab,
+  type OrigenFiltro,
+  type TipoFiltro,
+  type SubtipoFiltro,
+} from "./ProveedoresFiltros";
 
-type TipoProveedor = Enums<"tipo_proveedor">;
-type CategoriaProveedor = Enums<"categoria_proveedor">;
-type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 type Proveedor = Tables<"proveedores">;
-type CategoriaTab = "todos" | CategoriaProveedor;
-type OrigenFiltro = "todos" | "Nacional" | "Extranjero";
-type TipoFiltro = "todos" | TipoProveedor;
-type SubtipoFiltro = "todos" | SubtipoGasto;
 
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -87,15 +78,6 @@ export default function Proveedores() {
     if (next !== "GastoOperativo") setSubtipoFiltro("todos");
   };
 
-  const filtrosActivos: { label: string; onClear: () => void }[] = [];
-  if (origen !== "todos") filtrosActivos.push({ label: `Origen: ${origen}`, onClear: () => setOrigen("todos") });
-  if (tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo") {
-    filtrosActivos.push({ label: `Tipo: ${tipoFiltro}`, onClear: () => setTipoFiltro("todos") });
-  }
-  if (subtipoFiltro !== "todos" && categoriaTab !== "Logistico") {
-    filtrosActivos.push({ label: `Gasto: ${labelSubtipoGasto(subtipoFiltro)}`, onClear: () => setSubtipoFiltro("todos") });
-  }
-
   const tableProps = {
     categoria: categoriaTab,
     tipo: tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo" ? tipoFiltro : null,
@@ -125,68 +107,18 @@ export default function Proveedores() {
         }
       />
 
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre, RFC, contacto o email..." />
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={origen} onValueChange={(v) => setOrigen(v as OrigenFiltro)}>
-              <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Origen: todos</SelectItem>
-                <SelectItem value="Nacional">Nacional</SelectItem>
-                <SelectItem value="Extranjero">Extranjero</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {categoriaTab !== "GastoOperativo" && (
-              <Select value={tipoFiltro} onValueChange={(v) => setTipoFiltro(v as TipoFiltro)}>
-                <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Tipo logístico: todos</SelectItem>
-                  {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            )}
-
-            {categoriaTab !== "Logistico" && (
-              <Select value={subtipoFiltro} onValueChange={(v) => setSubtipoFiltro(v as SubtipoFiltro)}>
-                <SelectTrigger className="h-9 w-[220px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Tipo de gasto: todos</SelectItem>
-                  {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {filtrosActivos.length > 0 && (
-              <Button variant="ghost" size="sm" className="h-9" onClick={limpiarFiltros}>
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
-
-          {filtrosActivos.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {filtrosActivos.map((f) => (
-                <Badge key={f.label} variant="outline" className="gap-1">
-                  {f.label}
-                  <button
-                    type="button"
-                    onClick={f.onClear}
-                    className="rounded-sm hover:bg-muted/60 transition-colors"
-                    aria-label={`Quitar filtro ${f.label}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ProveedoresFiltros
+        search={search}
+        onSearchChange={setSearch}
+        origen={origen}
+        onOrigenChange={setOrigen}
+        tipoFiltro={tipoFiltro}
+        onTipoChange={setTipoFiltro}
+        subtipoFiltro={subtipoFiltro}
+        onSubtipoChange={setSubtipoFiltro}
+        categoriaTab={categoriaTab}
+        onLimpiar={limpiarFiltros}
+      />
 
       <Tabs value={categoriaTab} onValueChange={(v) => handleCategoriaChange(v as CategoriaTab)}>
         <TabsList className="h-auto">
@@ -203,6 +135,7 @@ export default function Proveedores() {
           </TabsContent>
         ))}
       </Tabs>
+
 
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
 
