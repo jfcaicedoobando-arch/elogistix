@@ -1,43 +1,30 @@
-# Fix: `/usuarios` muestra UUIDs en `librecarga.com`
+## Objetivo
+Mejorar la pantalla `/usuarios` para que, cuando la edge function `user-management` falle y no se puedan resolver los emails de los usuarios:
+1. No se muestren UUIDs crudos en la columna Email.
+2. Se emita un toast de advertencia/aviso al usuario.
 
-## Causa raíz
-El dominio custom de producción es **`https://librecarga.com`** y **`https://www.librecarga.com`**, pero el whitelist de CORS en `supabase/functions/_shared/cors.ts` sólo acepta:
-- sufijos `.lovable.app` y `.lovableproject.com`
-- `http://localhost:8080|5173|3000`
+## Cambios
 
-Resultado en producción:
-1. `fetchUsuariosOrganizacion` invoca `user-management` con `action: "list"`.
-2. La función responde **200** con los usuarios (verificado en `function_edge_logs`).
-3. La respuesta lleva `Access-Control-Allow-Origin: "null"` porque el origen `librecarga.com` no pasa `isAllowedOrigin`.
-4. El navegador bloquea la respuesta; `supabase.functions.invoke` retorna error.
-5. El `catch` en `src/services/usuario/index.ts:47` deja `emailMap` vacío y la línea 53 cae al fallback `m.user_id` → la tabla pinta UUIDs.
+### 1. Servicio de usuarios — fallback limpio
+**Archivo:** `src/services/usuario/index.ts`
+- En `fetchUsuariosOrganizacion`, cuando la edge function (`user-management`) falle, el fallback del campo `email` cambia de `m.user_id` (UUID crudo) a `"No disponible"`.
+- Se mantiene la estructura de datos; no se lanza error global para no bloquear la tabla.
 
-El mismo bug afecta a **toda** edge function autenticada que use `buildCors` cuando se llama desde el custom domain (parse-csf, auditoria-*, invitaciones de cliente, etc.). Solo se ha notado en `/usuarios` porque ahí el degradado es visible en pantalla.
+### 2. Componente de usuarios — toast de advertencia
+**Archivo:** `src/pages/admin-org/Usuarios.tsx`
+- Agregar un `useEffect` que observe el array de usuarios cargado (`users`).
+- Si detecta algún usuario con `email === "No disponible"`, emitir un toast de tipo `warning` (vía `notifyWarning`) con un mensaje del tipo: "No se pudieron resolver los correos de X usuario(s). Verifica la conexión con el servidor de autenticación."
+- El efecto debe limpiarse / deduplicarse para no repetir el toast en cada render.
 
-## Fix
+### 3. Columnas de la tabla — estilo visual para dato faltante
+**Archivo:** `src/pages/admin-org/usuariosColumns.tsx`
+- En la celda de la columna `email`, cuando el valor sea `"No disponible"`, renderizarlo con estilo `text-muted-foreground italic` (o similar) para diferenciarlo visualmente de un email real.
 
-### 1. Whitelist explícita del dominio custom
-Editar `supabase/functions/_shared/cors.ts`:
+### 4. Versionado
+- Bump de `APP_VERSION` a `12.64.6`.
+- Entrada en `CHANGELOG.md`.
 
-- Agregar a `ALLOWED_EXACT` (o equivalente):
-  - `https://librecarga.com`
-  - `https://www.librecarga.com`
-
-Mantener la lista por sufijos para `*.lovable.app` y `*.lovableproject.com`. Sigue siendo whitelist estricto, no se relaja la seguridad — sólo se incorporan los dos hosts reales del producto.
-
-### 2. Sin cambios de código en cliente
-`fetchUsuariosOrganizacion` ya está correcto. El fallback a UUID se queda como red de seguridad, pero ya no se disparará en flujo normal.
-
-### 3. Versión + changelog
-- `APP_VERSION` → `12.64.5`.
-- Entrada en `CHANGELOG.md` describiendo el fix de CORS y enumerando que arregla `/usuarios`, parse-csf, auditoría, invitaciones de cliente, etc.
-
-### 4. Validación post-deploy
-- El smoke test creado en 12.64.3 (`supabase/functions/user-management/smoke_test.ts`) ya valida el contrato JSON. No requiere cambios.
-- Manual: refrescar `https://librecarga.com/usuarios` y verificar que las filas muestren emails reales.
-- Opcional: agregar un test unitario en `supabase/functions/_shared/cors_test.ts` que valide `isAllowedOrigin("https://librecarga.com") === true` para prevenir regresión si alguien refactoriza el whitelist.
-
-## Notas
-- Es un cambio sólo de edge function — se despliega automáticamente al confirmar; no requiere republish del frontend.
-- No toca RLS, ni base de datos, ni roles.
-- Si en el futuro se agregan más dominios custom (`forwarderx.com`, etc.), se agregan en el mismo set.
+## Reglas de diseño
+- Usar `notifyWarning` de `@/components/shared/utils/appFeedback` para consistencia con el resto de la app.
+- No modificar el tipo `UserRow` para mantener compatibilidad con otros consumidores.
+- El toast debe ser no-bloqueante (warning) porque la tabla sigue siendo funcional.

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/shared";
 import { ShieldCheck, UserPlus } from "lucide-react";
@@ -10,8 +10,9 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { PageHeader } from "@/components/shared/PageHeader";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
 import { getRoleLabel } from "@/components/shared/utils/uiMappings";
+import { UNRESOLVED_EMAIL } from "@/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
 
@@ -24,6 +25,20 @@ export default function Usuarios() {
   const { data: users = [], isLoading } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
+  const warnedRef = useRef(false);
+
+  useEffect(() => {
+    if (isLoading || warnedRef.current) return;
+    const unresolved = users.filter((u) => u.email === UNRESOLVED_EMAIL).length;
+    if (unresolved > 0) {
+      warnedRef.current = true;
+      notifyWarning(toast, {
+        title: "Correos no disponibles",
+        description: `No se pudieron resolver los correos de ${unresolved} usuario(s). Verifica la conexión con el servidor de autenticación.`,
+      });
+    }
+  }, [users, isLoading, toast]);
+
 
   const confirmRoleChange = async () => {
     if (!pendingRole) return;
