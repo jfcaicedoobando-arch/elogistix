@@ -1,41 +1,32 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Truck, Plus, Upload, X } from "lucide-react";
+import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import SearchInput from "@/components/selects/SearchInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProveedorMutations } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/shared";
 import { usePermissions, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
-import type { Tables, Enums } from "@/types/db";
+import type { Tables } from "@/types/db";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
 import { insertProveedor } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import {
-  TIPOS_PROVEEDOR,
-  SUBTIPOS_GASTO_OPERATIVO,
-  labelSubtipoGasto,
-} from "@/constants/proveedorConstants";
 import { ProveedorTable } from "./ProveedorTable";
+import {
+  ProveedoresFiltros,
+  type CategoriaTab,
+  type OrigenFiltro,
+  type TipoFiltro,
+  type SubtipoFiltro,
+} from "./ProveedoresFiltros";
 
-type TipoProveedor = Enums<"tipo_proveedor">;
-type CategoriaProveedor = Enums<"categoria_proveedor">;
-type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 type Proveedor = Tables<"proveedores">;
-type CategoriaTab = "todos" | CategoriaProveedor;
-type OrigenFiltro = "todos" | "Nacional" | "Extranjero";
-type TipoFiltro = "todos" | TipoProveedor;
-type SubtipoFiltro = "todos" | SubtipoGasto;
 
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
   { value: "todos", label: "Todos" },
