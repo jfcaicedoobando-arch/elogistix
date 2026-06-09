@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.6] - 2026-06-09
+- **fix(/usuarios) — fallback UX cuando la edge function `user-management` falla**: en `src/services/usuario/index.ts` el fallback del email pasa de mostrar el UUID crudo a `"No disponible"` (constante exportada `UNRESOLVED_EMAIL`). En `src/pages/admin-org/Usuarios.tsx` se agrega un `useEffect` (deduplicado vía `useRef`) que emite un `notifyWarning` cuando hay usuarios sin email resuelto. La celda de email en `usuariosColumns.tsx` renderiza el placeholder con `text-muted-foreground italic` para diferenciarlo visualmente. Evita la regresión visual de UUIDs expuestos cuando CORS u otra falla rompe la resolución de emails.
+
 ## [12.64.5] - 2026-06-09
 - **fix(edge functions / CORS) — whitelist del dominio custom `librecarga.com`**: el whitelist estricto en `supabase/functions/_shared/cors.ts` sólo aceptaba `.lovable.app` y `.lovableproject.com`. Desde `https://librecarga.com` y `https://www.librecarga.com`, todas las edge functions autenticadas (`user-management`, `parse-csf`, `auditoria-*`, `invite-client-user`, etc.) respondían con `Access-Control-Allow-Origin: "null"` y el navegador descartaba la respuesta; `supabase.functions.invoke` retornaba error y `/usuarios` caía al fallback de UUID en vez de email (visible en la captura del usuario). Se agregan ambos hosts al `ALLOWED_EXACT`. Validado vía `function_edge_logs` (status 200 server-side, bloqueado client-side).
 
