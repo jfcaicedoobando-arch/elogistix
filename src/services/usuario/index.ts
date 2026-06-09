@@ -50,11 +50,14 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
 
   return members.map((m) => ({
     user_id: m.user_id,
-    email: emailMap[m.user_id]?.email || m.user_id,
+    email: emailMap[m.user_id]?.email || UNRESOLVED_EMAIL,
     role: m.role as AppRole,
     created_at: emailMap[m.user_id]?.created_at || m.created_at || "",
   }));
 }
+
+/** Placeholder cuando la edge function `user-management` no resolvió el email. */
+export const UNRESOLVED_EMAIL = "No disponible";
 
 export async function updateUserRole(userId: string, newRole: AppRole): Promise<void> {
   const { error } = await supabase
