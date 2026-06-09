@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.68.0] - 2026-06-09
+- **feat(cotizaciones)**: nuevo tipo de documento **Tarifario informativo** (cotización informativa). Permite registrar una lista de tarifas vigentes durante un período (multi-ruta, multi-modo) que sirve sólo como referencia comercial; **no se convierte en embarque**. Incluye nueva ruta `/cotizaciones/nueva/tarifario`, wizard simplificado con tabla editable de tarifas, vista de detalle dedicada y descarga de PDF (`TarifarioDocument`). El listado de cotizaciones muestra una columna "Tipo" (Transaccional / Tarifario).
+- **feat(bd)**: agregadas columnas `tipo_documento`, `vigencia_desde`, `vigencia_hasta`, `tarifas_informativas` en `cotizaciones` + trigger validador `validate_cotizacion_informativa` que exige vigencia y al menos una tarifa cuando `tipo_documento='informativa'`. Las cotizaciones existentes quedan marcadas como `transaccional`.
+- **fix(conversiones)**: `convertirCotizacionAEmbarques` y `crearEmbarqueBorradorDesdeCotizacion` bloquean explícitamente cotizaciones informativas con un mensaje claro.
+
 ## [12.67.0] - 2026-06-09
 - **feat(cotizaciones)**: el wizard de cotización se adapta cuando el modo es Terrestre. Tipo de Operación queda restringido a `Nacional` y `Cross Trade`; el campo Incoterm se oculta (se persiste `N/A`) y el Tipo de Movimiento también (es marítimo). Se agrega el campo obligatorio **Modalidad de equipo** (Caja Seca, Porta Contenedor, Plataforma, Torton, Camión Full, Camión Sencillo). Cuando la modalidad es **Porta Contenedor**, la ruta se vuelve de 3 puntos: Origen → Punto de carga/descarga → Destino.
 - **feat(bd)**: nuevas columnas opcionales `modalidad_equipo` y `punto_intermedio` en `cotizaciones`.
