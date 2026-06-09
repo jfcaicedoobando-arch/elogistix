@@ -6,7 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.69.0] - 2026-06-09
+- **feat(embarques)**: el campo **operador** ahora es inmutable y siempre refleja al **creador** original del embarque. Nuevo trigger `embarques_protect_creator` en BD que bloquea sobrescrituras de `operador`, `created_by_email` y `created_by`. El cliente además limpia esos campos del payload de edición como defensa en profundidad.
+- **fix(embarques)**: backfill histórico — `created_by_email` y `operador` reasignados desde la bitácora para todos los embarques antiguos. `notas_embarque.usuario` y `eventos_embarque.usuario` rellenados cuando estaban vacíos o como `'sistema'`.
+- **feat(embarques/notas)**: la pestaña **Notas y Actividad** ahora es un feed unificado que combina notas manuales, eventos de tracking y entradas de bitácora (creación, edición con diff de campos, cambios de estado, reapertura, etc.) mostrando siempre el **usuario** que realizó cada acción.
+- **ui(embarques/resumen)**: etiqueta "Operador" renombrada a **"Creador / Responsable"** en la tarjeta de Datos Generales.
+- **chore(embarques/sync)**: `useSyncEstadoEmbarque` ahora propaga el email del usuario en vez de la cadena literal `'sistema'` cuando se auto-sincroniza un cambio de estado calculado.
+
 ## [12.68.2] - 2026-06-09
+
 - **fix(edge/user-management)**: `handleList` ahora acepta los roles modernos (`admin_org`, `coordinador_logistico`, `ejecutivo_pricing`, `gerente_operaciones`) además de los legacy. Resuelve el 403 "Solo admins/operadores pueden listar usuarios" para `admin_org`.
 
 ## [12.68.1] - 2026-06-09
