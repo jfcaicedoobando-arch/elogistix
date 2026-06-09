@@ -25,6 +25,20 @@ export default function Usuarios() {
   const { data: users = [], isLoading } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
+  const warnedRef = useRef(false);
+
+  useEffect(() => {
+    if (isLoading || warnedRef.current) return;
+    const unresolved = users.filter((u) => u.email === UNRESOLVED_EMAIL).length;
+    if (unresolved > 0) {
+      warnedRef.current = true;
+      notifyWarning(toast, {
+        title: "Correos no disponibles",
+        description: `No se pudieron resolver los correos de ${unresolved} usuario(s). Verifica la conexión con el servidor de autenticación.`,
+      });
+    }
+  }, [users, isLoading, toast]);
+
 
   const confirmRoleChange = async () => {
     if (!pendingRole) return;
