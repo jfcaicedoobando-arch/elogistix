@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.5] - 2026-06-09
+- **fix(edge functions / CORS) — whitelist del dominio custom `librecarga.com`**: el whitelist estricto en `supabase/functions/_shared/cors.ts` sólo aceptaba `.lovable.app` y `.lovableproject.com`. Desde `https://librecarga.com` y `https://www.librecarga.com`, todas las edge functions autenticadas (`user-management`, `parse-csf`, `auditoria-*`, `invite-client-user`, etc.) respondían con `Access-Control-Allow-Origin: "null"` y el navegador descartaba la respuesta; `supabase.functions.invoke` retornaba error y `/usuarios` caía al fallback de UUID en vez de email (visible en la captura del usuario). Se agregan ambos hosts al `ALLOWED_EXACT`. Validado vía `function_edge_logs` (status 200 server-side, bloqueado client-side).
+
 ## [12.64.4] - 2026-06-09
 - **fix(dashboard ejecutivo / CxP) — relación faltante `proveedor_facturas → proveedores`**: el embed `proveedores(origen_proveedor)` introducido en 12.64.0 fallaba con `Could not find a relationship between 'proveedor_facturas' and 'proveedores' in the schema cache` porque la tabla nunca tuvo la FK declarada. Se agrega `proveedor_facturas_proveedor_id_fkey` (`ON DELETE RESTRICT`, consistente con Data Integrity) y `NOTIFY pgrst, 'reload schema'`. Validado previamente: 0 facturas con `proveedor_id` huérfano. Esto restaura la carga de `/profit/dashboard` (cadena `fetchDashboardEjecutivo → fetchResumenTesoreria → fetchFacturasCxP`) y de `/cxp`.
 
