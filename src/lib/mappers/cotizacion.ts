@@ -75,6 +75,7 @@ function partesMercancia(v: CotizacionFormValues) {
 }
 
 function partesRuta(v: CotizacionFormValues) {
+  const esTerrestre = v.modo === "Terrestre";
   return {
     origen: v.origen,
     destino: v.destino,
@@ -82,9 +83,11 @@ function partesRuta(v: CotizacionFormValues) {
     frecuencia: v.frecuencia,
     ruta_texto: v.rutaTexto,
     validez_propuesta: v.validezPropuesta ? v.validezPropuesta.toISOString().split('T')[0] : null,
-    tipo_movimiento: v.tipoMovimiento,
+    tipo_movimiento: esTerrestre ? "" : v.tipoMovimiento,
     seguro: v.seguro,
     valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,
+    modalidad_equipo: esTerrestre ? (v.modalidadEquipo || null) : null,
+    punto_intermedio: esTerrestre ? (v.puntoIntermedio || null) : null,
   };
 }
 
