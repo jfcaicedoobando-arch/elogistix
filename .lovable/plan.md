@@ -1,60 +1,70 @@
-# Fix — Hector ve menos de lo que debería tras el backfill de roles
+# Fix — `admin_org` y demás roles modernos no pasan las pólizas RLS
 
 ## Causa raíz
 
-Hector tiene **dos filas** en `public.user_roles`: `admin_org` y `customer_service`. Es residuo histórico de cuando tenía `admin` + `viewer` (ambos se migraron en la 12.66.0).
-
-La función SQL `public.get_user_context` (la que alimenta `useAuthProfile` en el frontend) hace:
+El backfill 12.66.0 cambió las **filas** en `user_roles` (admin → admin_org, operador → coordinador_logistico, viewer → customer_service) pero las **políticas RLS** y la función `_assert_internal_reader` (usada por todas las RPCs de auditoría/dashboards) siguen literalmente escritas como:
 
 ```sql
-SELECT role::text FROM public.user_roles WHERE user_id = auth.uid() LIMIT 1
+has_role(uid,'admin') OR has_role(uid,'operador') OR has_role(uid,'super_admin')
 ```
 
-Sin `ORDER BY`. Postgres es libre de devolver cualquier fila — en este caso le toca `customer_service`, que es el rol más restrictivo del catálogo y por eso se le ocultan Usuarios, Cotizaciones y Embarques (Edición).
+Verificado en `clientes`, `cotizaciones`, `embarques` y `_assert_internal_reader`. Por eso Hector (`admin_org`) ve listas vacías y recibe 403 en `auditoria_embarques_org`. El mismo bug afecta a **cualquier usuario con rol moderno** (gerente_operaciones, coordinador_logistico, contador, tesorero, ejecutivo_pricing, vendedor, customer_service) en ~50 tablas y decenas de RPCs.
 
-Solo Hector tiene este duplicado (revisé toda la tabla), así que el daño está acotado, pero el bug latente está en la función y debemos cerrarlo para que no vuelva a pasar con otro usuario.
+Reescribir las ~100+ políticas y todas las RPCs una por una es alto riesgo de regresión. Hay un camino mínimamente invasivo y equivalente.
+
+## Solución: redefinir `has_role` y `is_org_admin` como agrupadores
+
+Hago que los nombres legacy se comporten como "categorías funcionales" que abarcan a sus equivalentes modernos. Una sola migración corrige todo el ERP de golpe sin tocar políticas ni RPCs.
+
+### `has_role(uid, _role)` — nueva semántica
+
+| `_role` pedido | Devuelve TRUE si el usuario tiene cualquiera de... |
+|---|---|
+| `super_admin` | `super_admin` |
+| `admin` | `admin`, `admin_org`, `super_admin` |
+| `operador` | `operador`, `coordinador_logistico`, `ejecutivo_pricing`, `gerente_operaciones`, `admin`, `admin_org`, `super_admin` |
+| `viewer` | `viewer`, `customer_service`, `vendedor`, `contador`, `tesorero`, `ejecutivo_pricing`, `gerente_operaciones`, `admin`, `admin_org`, `super_admin` |
+| `vendedor` | `vendedor`, `admin_org`, `super_admin` |
+| `cliente` | `cliente` (sin cambios) |
+| otro (admin_org, contador, …) | igual que ahora: exact match con la fila en `user_roles` |
+
+Eso preserva la intención original de cada política:
+- Donde se exigía `admin` → ahora pasan también admin_org y super_admin.
+- Donde se exigía `operador` (CRUD operativo) → ahora pasan coordinador_logistico, ejecutivo_pricing y gerente_operaciones.
+- Donde se exigía `viewer` (lectura) → ahora pasan customer_service, contador, tesorero, vendedor, etc.
+
+Los chequeos directos por rol moderno (que ya empezamos a meter en `usePermissions`) siguen funcionando porque para nombres "no legacy" la función mantiene match exacto.
+
+### `is_org_admin(uid, org)` — incluir `admin_org`
+
+Ahora literalmente exige `role = 'admin'` en `organization_members`. Lo extiendo a `('admin','admin_org')` y a `super_admin`.
+
+### Cambio adicional: backfill faltante en `is_org_admin`
+
+Verificar también que las filas de `organization_members` no quedaron con `role = 'admin'` literal (ya las migré en 12.66.0, pero el helper igual debe aceptar ambos por defensa).
 
 ## Cambios
 
-### 1. Migración SQL (un solo archivo)
-
-**a) Deduplicar `user_roles` por prioridad.** Conservar la fila con el rol más privilegiado por usuario y borrar las demás. Orden de prioridad (mayor → menor):
-
-```
-super_admin > admin_org > admin > gerente_operaciones > contador > tesorero >
-ejecutivo_pricing > coordinador_logistico > operador > vendedor >
-customer_service > viewer > cliente
-```
-
-**b) Agregar restricción única** `UNIQUE (user_id)` en `public.user_roles` para que nunca más se inserten dos roles para el mismo usuario. (Si en el futuro se quiere multi-rol, se hace explícito con otra estructura.)
-
-**c) Reescribir `public.get_user_context`** con `ORDER BY` por prioridad usando un `CASE` (defensa en profundidad por si en el futuro se relaja el UNIQUE):
-
-```sql
-ORDER BY CASE role
-  WHEN 'super_admin' THEN 1
-  WHEN 'admin_org' THEN 2
-  WHEN 'admin' THEN 3
-  ...
-END
-LIMIT 1
-```
-
-Mismo `ORDER BY` se aplica a `orgRole` desde `organization_members` por simetría.
-
-### 2. Sin cambios en el frontend
-
-`usePermissions`, sidebar y `roleCatalog` ya manejan correctamente `admin_org`. Una vez que el RPC devuelva el rol correcto, Hector recuperará el acceso al instante (el TTL del `useAuthProfile` es 60s — puede refrescar o cerrar/abrir sesión).
-
-### 3. Versionado y changelog
-
-- `APP_VERSION` → `12.66.1` (patch).
-- Entrada en `CHANGELOG.md`: "fix(seguridad) — `user_roles` ahora único por usuario; `get_user_context` ordena por prioridad de rol".
+1. **Una migración SQL** que `CREATE OR REPLACE FUNCTION` de:
+   - `public.has_role(uuid, app_role)` con un `CASE` por rol pedido.
+   - `public.is_org_admin(uuid, uuid)` ampliada.
+2. **Sin cambios en código frontend** — `usePermissions` y `roleCatalog` ya están alineados.
+3. **Versionado**: `APP_VERSION` → `12.66.2`, entrada de changelog explicando el fix.
 
 ## Verificación
 
-1. `SELECT user_id, count(*) FROM user_roles GROUP BY 1 HAVING count(*) > 1` → vacío.
-2. `SELECT get_user_context()` impersonando a Hector → `role: 'admin_org'`.
-3. Pedirle a Hector que recargue (Ctrl-F5) y confirme que vuelve a ver Usuarios / Cotizaciones / Embarques con edición.
+1. `SELECT has_role('<hector-uid>','admin'::app_role)` → `true`.
+2. `SELECT has_role('<hector-uid>','operador'::app_role)` → `true`.
+3. Hector recarga y debe poder:
+   - Ver listado de cotizaciones (no vacío).
+   - Ver listado de embarques (no vacío).
+   - Entrar a /usuarios sin error.
+   - El RPC `auditoria_embarques_org` deja de devolver 403.
+4. Confirmar que un `customer_service` puro sigue **sin** poder editar (sólo SELECT) cotizaciones/embarques: las pólizas `Tenant CRUD …` exigen `has_role('operador')` que NO incluye a customer_service.
+
+## Riesgos y mitigación
+
+- **Riesgo**: alguna RPC histórica que diferenciara "solo admin vs operador" (ej. "borrar definitivo"). Mitigación: el cambio sólo *amplía* `has_role('admin')` a `{admin, admin_org, super_admin}` — todos eran ya considerados administradores, así que la semántica se mantiene.
+- **Riesgo**: contador/tesorero ahora pueden hacer SELECT en cotizaciones/embarques vía la póliza `Tenant viewer …`. Está alineado con la matriz de roles (lectura financiera/operativa); no introduce escritura.
 
 ¿Procedo?
