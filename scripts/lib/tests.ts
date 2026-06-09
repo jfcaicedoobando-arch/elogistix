@@ -16,13 +16,40 @@ export const DUPLICATE_ALLOWLIST = new Set<string>([
 export interface TestViolation {
   file: string;
   line: number;
-  rule: "skip-without-issue" | "duplicate-title";
+  rule: "skip-without-issue" | "duplicate-title" | "missing-assertions";
   detail: string;
 }
 
 const SKIP_REGEX = /\b(it|test|describe)\.(skip|only|todo)\(|\bxdescribe\(|\bxit\(/;
 const ISSUE_REGEX = /\/\/\s*(TODO|FIXME)\(#\d+\)/i;
 const TITLE_REGEX = /^\s*(describe|it|test)\(/;
+// Detecta el inicio de un caso de test (no `describe`, no `.skip/.only/.todo`).
+const TEST_START_REGEX = /^\s*(it|test)\(\s*(['"`])([^'"`]+)\2/;
+// Heurística de aserción: expect(...), assert*, expectTypeOf, toThrow vía cualquier matcher.
+const ASSERTION_REGEX = /\b(expect|expectTypeOf|assert|assertEquals|assertExists|assertRejects|assertThrows)\s*[(.]/;
+
+/**
+ * Devuelve la posición (índice 0-based en `lines`) del `}` que cierra el bloque
+ * iniciado tras el primer `{` que aparece en/después de `startLine`. Si no se
+ * encuentra balance, retorna `lines.length - 1`.
+ */
+function findBlockEnd(lines: string[], startLine: number): number {
+  let depth = 0;
+  let started = false;
+  for (let i = startLine; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    for (const ch of line) {
+      if (ch === "{") {
+        depth++;
+        started = true;
+      } else if (ch === "}") {
+        depth--;
+        if (started && depth === 0) return i;
+      }
+    }
+  }
+  return lines.length - 1;
+}
 
 export function auditTests(root: string): TestViolation[] {
   const violations: TestViolation[] = [];
@@ -44,6 +71,29 @@ export function auditTests(root: string): TestViolation[] {
         const key = raw.trim();
         if (!titleIndex.has(key)) titleIndex.set(key, []);
         titleIndex.get(key)!.push(`${rel}:${idx + 1}`);
+      }
+
+      // Regla missing-assertions: cada `it`/`test` (no skip/only/todo) debe
+      // contener al menos una aserción dentro de su bloque. Evita "ghost tests"
+      // que pasan sin verificar nada (regresión silenciosa).
+      const m = TEST_START_REGEX.exec(raw);
+      if (m && !SKIP_REGEX.test(raw)) {
+        const end = findBlockEnd(lines, idx);
+        let hasAssertion = false;
+        for (let j = idx; j <= end; j++) {
+          if (ASSERTION_REGEX.test(lines[j] ?? "")) {
+            hasAssertion = true;
+            break;
+          }
+        }
+        if (!hasAssertion) {
+          violations.push({
+            file: rel,
+            line: idx + 1,
+            rule: "missing-assertions",
+            detail: `it/test sin expect/assert: ${m[3]}`,
+          });
+        }
       }
     });
   }

@@ -64,17 +64,18 @@ describe("useAuthProfile", () => {
     await waitFor(() => expect(result.current.profile.role).toBe("admin"));
     mockFetchUserContext.mockResolvedValueOnce(null);
     rerender({ uid: "u-2" });
-    await new Promise((r) => setTimeout(r, 30));
+    // Esperamos a que se dispare la segunda llamada y luego verificamos que el
+    // perfil no se haya pisado con null. waitFor evita el sleep arbitrario.
+    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalledTimes(2));
     expect(result.current.profile.role).toBe("admin");
   });
 
   it("ante error de fetchUserContext no actualiza el perfil (queda vacío)", async () => {
     mockFetchUserContext.mockRejectedValueOnce(new Error("network"));
     const { result } = renderHook(() => useAuthProfile("user-err"));
-    await new Promise((r) => setTimeout(r, 30));
+    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled());
     expect(result.current.profile.role).toBeNull();
     expect(result.current.profile.organizationId).toBeNull();
-    expect(mockFetchUserContext).toHaveBeenCalled();
   });
 });
 

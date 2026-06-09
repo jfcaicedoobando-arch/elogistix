@@ -46,48 +46,54 @@ const maybeGc = () => {
 };
 
 describe("PDF render — regresión de fuga de memoria", () => {
-  it(`renderiza ${ITERATIONS} veces sin acumular heap > 50 MB`, () => {
-    const clientes = buildClientes(50);
+  // Timeout explícito de 60s: 210 renders (10 warm-up + 200) en sandbox lento
+  // pueden rozar los 15s globales. 60s deja 3x margen sobre el peor caso.
+  it(
+    `renderiza ${ITERATIONS} veces sin acumular heap > 50 MB`,
+    () => {
+      const clientes = buildClientes(50);
 
-    // Warm-up: estabiliza módulos cargados antes de medir.
-    for (let i = 0; i < 10; i++) {
-      const { unmount } = render(
-        <RentabilidadDocument
-          fechaDesde="2024-01-01"
-          fechaHasta="2024-03-31"
-          kpis={KPIS}
-          clientes={clientes}
-        />,
+      // Warm-up: estabiliza módulos cargados antes de medir.
+      for (let i = 0; i < 10; i++) {
+        const { unmount } = render(
+          <RentabilidadDocument
+            fechaDesde="2024-01-01"
+            fechaHasta="2024-03-31"
+            kpis={KPIS}
+            clientes={clientes}
+          />,
+        );
+        unmount();
+      }
+      maybeGc();
+
+      const heapBefore = process.memoryUsage().heapUsed;
+
+      for (let i = 0; i < ITERATIONS; i++) {
+        const { unmount } = render(
+          <RentabilidadDocument
+            fechaDesde="2024-01-01"
+            fechaHasta="2024-03-31"
+            kpis={KPIS}
+            clientes={clientes}
+          />,
+        );
+        unmount();
+      }
+
+      maybeGc();
+      const heapAfter = process.memoryUsage().heapUsed;
+      const delta = heapAfter - heapBefore;
+
+      // Log informativo (visible en --reporter=verbose).
+      // eslint-disable-next-line no-console
+      console.info(
+        `[pdf-leak-regression] heap delta tras ${ITERATIONS} renders: ` +
+          `${(delta / 1024 / 1024).toFixed(2)} MB`,
       );
-      unmount();
-    }
-    maybeGc();
 
-    const heapBefore = process.memoryUsage().heapUsed;
-
-    for (let i = 0; i < ITERATIONS; i++) {
-      const { unmount } = render(
-        <RentabilidadDocument
-          fechaDesde="2024-01-01"
-          fechaHasta="2024-03-31"
-          kpis={KPIS}
-          clientes={clientes}
-        />,
-      );
-      unmount();
-    }
-
-    maybeGc();
-    const heapAfter = process.memoryUsage().heapUsed;
-    const delta = heapAfter - heapBefore;
-
-    // Log informativo (visible en --reporter=verbose).
-    // eslint-disable-next-line no-console
-    console.info(
-      `[pdf-leak-regression] heap delta tras ${ITERATIONS} renders: ` +
-        `${(delta / 1024 / 1024).toFixed(2)} MB`,
-    );
-
-    expect(delta).toBeLessThan(HEAP_GROWTH_LIMIT_BYTES);
-  });
+      expect(delta).toBeLessThan(HEAP_GROWTH_LIMIT_BYTES);
+    },
+    60_000,
+  );
 });
