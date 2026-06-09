@@ -27,3 +27,4 @@ export * from './usePortalEmbarqueDetalleController';
 export * from './useProformaDialog';
 export * from './useProformas';
 export * from './useTrackingLinks';
+export * from './useActividadEmbarque';

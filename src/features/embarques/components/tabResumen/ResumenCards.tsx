@@ -54,7 +54,7 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
         <DetailRow label="Peso" value={formatNumber(Number(embarque.peso_kg), { suffix: "kg" })} />
         <DetailRow label="Volumen" value={formatNumber(Number(embarque.volumen_m3), { decimals: 2, suffix: "m³" })} />
         <DetailRow label="Piezas" value={formatNumber(embarque.piezas)} />
-        <DetailRow label="Operador" value={nombreDesdeEmail(embarque.operador)} />
+        <DetailRow label="Creador / Responsable" value={nombreDesdeEmail(embarque.operador)} />
       </CardContent>
     </Card>
   );

@@ -94,9 +94,9 @@ export function useAvanzarEstadoEmbarque() {
 export function useSyncEstadoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, nuevoEstado }: { embarqueId: string; nuevoEstado: string }) => {
+    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail?: string }) => {
       await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
-      await insertarEventoTracking(embarqueId, nuevoEstado, 'sistema');
+      await insertarEventoTracking(embarqueId, nuevoEstado, usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema');
     },
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
