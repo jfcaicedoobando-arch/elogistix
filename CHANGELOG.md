@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.65.2] - 2026-06-09
+- **fix(ci)**: `actions/download-artifact` bumpeado a `v8.0.1` (la `v7.0.1` no existe; el repo se versiona por separado de `upload-artifact`).
+
 ## [12.65.1] - 2026-06-09
 - **refactor(proveedores)**: se extrae el bloque de filtros de `Proveedores.tsx` a `ProveedoresFiltros.tsx` para cumplir la regla Power of 10 (≤200 líneas por archivo). Sin cambios de comportamiento.
 
