@@ -1,0 +1,39 @@
+name: post-deploy-smoke
+
+# Smoke test diario que verifica que los edge functions críticos en producción
+# (https://elogistix.lovable.app + https://librecarga.com) respondan con el
+# contrato esperado. Ver supabase/functions/user-management/smoke_test.ts.
+
+on:
+  schedule:
+    # 13:00 UTC = 07:00 CDMX (UTC-6)
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+jobs:
+  user-management-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Run user-management smoke
+        env:
+          DEMO_USER_EMAIL: ${{ secrets.DEMO_USER_EMAIL }}
+          DEMO_USER_PASSWORD: ${{ secrets.DEMO_USER_PASSWORD }}
+          # URL y anon key son públicos (rol anon) — no son secretos.
+          VITE_SUPABASE_URL: https://eorqadkulqtneqjbsblk.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcnFhZGt1bHF0bmVxamJzYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzM5MzEsImV4cCI6MjA4NzgwOTkzMX0.bNeS84nv01bheza5wL5l8N-2A2OONn0fKKkZQ8ADZRc
+        run: |
+          if [ -z "$DEMO_USER_EMAIL" ] || [ -z "$DEMO_USER_PASSWORD" ]; then
+            echo "::warning::Faltan secrets DEMO_USER_EMAIL / DEMO_USER_PASSWORD — el test se ignora."
+          fi
+          deno test \
+            --allow-net \
+            --allow-env \
+            --allow-read \
+            supabase/functions/user-management/smoke_test.ts
