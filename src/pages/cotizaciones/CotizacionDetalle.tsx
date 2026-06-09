@@ -43,6 +43,11 @@ export default function CotizacionDetalle() {
     return <div className="text-center py-12 text-muted-foreground">Cotización no encontrada</div>;
   }
 
+  if (cotizacion.tipo_documento === "informativa") {
+    const CotizacionInformativaDetalle = require("@/pages/cotizaciones/CotizacionInformativaDetalle").default;
+    return <CotizacionInformativaDetalle cotizacion={cotizacion} onBack={() => navigate("/cotizaciones")} />;
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <CotizacionDetalleHeader
