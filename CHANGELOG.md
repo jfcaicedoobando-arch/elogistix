@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.66.1] - 2026-06-09
+- **fix(seguridad)**: `user_roles` queda con un único rol por usuario (`UNIQUE (user_id)`). Se deduplican registros existentes conservando el rol de mayor privilegio. Soluciona el caso en que un usuario con dos roles (por ejemplo `admin_org` + `customer_service` heredados del backfill) recibía el más restrictivo al azar y perdía acceso a Usuarios, Cotizaciones y Embarques.
+- **fix(seguridad)**: `get_user_context` ahora ordena por prioridad de rol al elegir el rol del usuario y de la organización, como defensa en profundidad ante futuras duplicaciones.
+
 ## [12.66.0] - 2026-06-09
 - **feat(seguridad)**: matriz de 10 roles con separación de funciones. Se agregan `admin_org`, `gerente_operaciones`, `coordinador_logistico`, `ejecutivo_pricing`, `contador`, `tesorero` y `customer_service` al enum `app_role`. Backfill automático: `admin → admin_org`, `operador → coordinador_logistico`, `viewer → customer_service`. Se conservan los valores legacy.
 - **feat(seguridad)**: nuevas funciones `SECURITY DEFINER` `can_admin_tenant`, `is_finance`, `is_operations`, `is_sales`, `can_view_financials` para que las políticas RLS chequeen por área en lugar de listar todos los roles.
