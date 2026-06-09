@@ -41,8 +41,8 @@ export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
   const map = await buildEmailMap(configs.map((c) => c.user_id));
   return configs.map((c) => ({
     ...c,
-    nombre: map[c.user_id] ?? null,
-    email: map[c.user_id] ?? null,
+    nombre: map[c.user_id] ?? UNRESOLVED_EMAIL,
+    email: map[c.user_id] ?? UNRESOLVED_EMAIL,
   }));
 }
 
@@ -75,8 +75,8 @@ export async function fetchUsuariosVendedores(): Promise<UsuarioVendedor[]> {
   const map = await buildEmailMap(ids);
   return ids.map((id) => ({
     id,
-    nombre: map[id] ?? id,
-    email: map[id] ?? "",
+    nombre: map[id] ?? UNRESOLVED_EMAIL,
+    email: map[id] ?? UNRESOLVED_EMAIL,
   })).sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 
