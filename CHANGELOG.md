@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.64.3] - 2026-06-09
+- **test(ci) — smoke test post-deploy para `user-management`**: Nuevo `supabase/functions/user-management/smoke_test.ts` (Deno) que se autentica como demo readonly contra el Supabase de producción, llama al endpoint con `action: "list"` y valida contrato (status <500, JSON, sin `user_id` UUID sin `email` adyacente — regresión exacta del bug "salen UIDs en vez de emails"). Nuevo workflow `.github/workflows/post-deploy-smoke.yml` (cron diario 07:00 CDMX + `workflow_dispatch`). Requiere los secrets `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD` en GitHub Actions; si faltan, el test se marca como `ignore`. No agrega dependencias npm.
+
 ## [12.64.2] - 2026-06-08
 - **fix(auditoría)**: reposicionado el marcador `// SAFE-CAST:` en `src/services/proveedor/index.ts` dentro del objeto RPC (estaba 8 líneas arriba; el scanner sólo revisa 6). Restaura `audit-report` en verde (0 HIGH / 0 CRITICAL) y permite que los 16 shards de coverage pasen. Cobertura combinada: lines 29.0%, funcs 46.8%, branches 67.7%.
 
