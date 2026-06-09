@@ -136,6 +136,8 @@ export interface CotizacionInitialData {
   num_contenedores: number;
   conceptos_venta: ConceptoVentaCotizacion[];
   msds_archivo: string | null;
+  modalidad_equipo: string | null;
+  punto_intermedio: string | null;
 }
 
 export interface CotizacionInitialCosto {
