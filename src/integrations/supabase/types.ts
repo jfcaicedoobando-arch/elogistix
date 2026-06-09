@@ -3596,6 +3596,13 @@ export type Database = {
             referencedRelation: "presupuesto_categorias"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proveedor_facturas_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       proveedor_facturas_conceptos: {
