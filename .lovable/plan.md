@@ -1,53 +1,43 @@
-## Diagnóstico
+# Pinear GitHub Actions a versiones exactas
 
-- En publicado (`librecarga.com`) el síntoma apunta a `user-management` bloqueado antes del `POST`: los logs recientes muestran múltiples `OPTIONS 200` hacia `user-management`, pero no aparece el `POST` correspondiente.
-- Eso explica que `/usuarios` y `/comisiones` caigan a datos de `organization_members` / `vendedora_config`, donde sólo existe `user_id`.
-- `/usuarios` ya tuvo un fallback visual parcial (`No disponible`), pero `comisiones` sigue usando `fetchAvailableUsers()` y cuando falla muestra UID en:
-  - selector de vendedoras
-  - configuración de porcentajes
-  - embarques sin vendedora asignada
-- El cambio de CORS anterior en `_shared/cors.ts` está en código, pero falta hacerlo más robusto y verificable para producción: permitir explícitamente el dominio custom publicado, devolver métodos/headers correctos en preflight y agregar pruebas para `librecarga.com`.
+## Contexto
 
-## Plan de implementación
+La auditoría flageó `actions/checkout@v6` y `actions/upload-artifact@v7` como "inestables" porque apuntar a un tag mayor flotante (v6, v7) puede romper el build si GitHub publica una v6.x.y con un cambio de comportamiento. Las releases más recientes verificadas hoy son:
 
-1. **Endurecer CORS de edge functions autenticadas**
-   - Ajustar `supabase/functions/_shared/cors.ts` para que el preflight estricto incluya explícitamente:
-     - `Access-Control-Allow-Methods: POST, OPTIONS`
-     - `Access-Control-Max-Age`
-     - dominios exactos `https://librecarga.com`, `https://www.librecarga.com`, `https://elogistix.lovable.app`
-   - Mantener soporte a previews `.lovable.app` y `.lovableproject.com`.
-   - Agregar pruebas en `supabase/functions/_shared/cors_test.ts` para validar ambos dominios de Libre Carga y que el preflight contiene métodos.
+- `actions/checkout` → **v6.0.3** (2 jun 2026, firmada GPG)
+- `actions/upload-artifact` → **v7.0.1** (10 abr 2026, firmada GPG)
+- `actions/download-artifact` → última estable de la familia v7 (misma org/cadencia que upload)
 
-2. **Hacer visible el error real de `user-management` en frontend**
-   - Cambiar `fetchUsuariosOrganizacion()` para no tragarse silenciosamente el error de `supabase.functions.invoke("user-management")`.
-   - Mantener la tabla funcional, pero registrar/propagar una bandera interna de resolución incompleta para que el toast de `/usuarios` sea correcto.
-   - Corregir el comentario obsoleto que aún dice “mostramos el user_id como fallback”.
+## Cambios
 
-3. **Unificar el fallback de emails para evitar UIDs en comisiones**
-   - Reutilizar `UNRESOLVED_EMAIL = "No disponible"` en `src/services/comisiones/vendedoras.ts`.
-   - Cambiar estos fallbacks:
-     - `nombre: map[id] ?? id` → `"No disponible"`
-     - `email: map[id] ?? ""` → `"No disponible"`
-     - `nombre/email` en `fetchVendedorasConfig()` → `"No disponible"` cuando no se resuelva.
-   - Así, si `user-management` vuelve a fallar, comisiones ya no expondrá UIDs.
+### `.github/workflows/ci.yml`
 
-4. **Agregar aviso en módulo de comisiones**
-   - En `src/pages/comisiones/Comisiones.tsx`, detectar vendedoras con email/nombre `No disponible`.
-   - Mostrar un `notifyWarning` deduplicado tipo: “No se pudieron resolver los correos de X vendedora(s). Verifica la conexión con el servidor de autenticación.”
-   - Evitar repetir el toast en cada render.
+Reemplazar los tags flotantes por versiones exactas en los 3 jobs (`quality`, `tests`, `coverage`):
 
-5. **Ajustar UI donde aún puede aparecer UID**
-   - En `TabVendedorasConfig`, si una vendedora configurada no se resuelve, mostrar `No disponible` con estilo muted/italic, no `c.user_id`.
-   - En selects de comisiones, mostrar `No disponible` como texto legible.
+| Antes | Después |
+|---|---|
+| `actions/checkout@v6` | `actions/checkout@v6.0.3` |
+| `actions/upload-artifact@v7` | `actions/upload-artifact@v7.0.1` |
+| `actions/download-artifact@v7` | `actions/download-artifact@v7.0.1` |
 
-6. **Tests y versionado**
-   - Actualizar tests Deno de CORS.
-   - Agregar/ajustar tests de hooks/servicios si aplica para cubrir que no se muestra UID como fallback.
-   - Bump `APP_VERSION` a `12.64.7`.
-   - Agregar entrada en `CHANGELOG.md` explicando el fix de producción para `user-management` + comisiones.
+`oven-sh/setup-bun@v2` con `bun-version: latest` se deja igual (es la recomendación oficial del action).
 
-## Validación esperada
+### `.github/workflows/post-deploy-smoke.yml`
 
-- En backend: preflight desde `https://librecarga.com` devuelve `Access-Control-Allow-Origin: https://librecarga.com` y permite `POST`.
-- En publicado: `user-management` debe registrar `POST` después del `OPTIONS`.
-- En frontend: si la función falla por cualquier razón, `/usuarios` y `/comisiones` muestran `No disponible` + toast, nunca UIDs crudos.
+Revisar y aplicar el mismo pin si usa `checkout`/`upload-artifact`/`download-artifact` con tag flotante.
+
+## Detalles técnicos
+
+- Pinear a `vX.Y.Z` (no a SHA) es el equilibrio entre seguridad y mantenibilidad que ya usamos en el resto del proyecto.
+- No se cambia lógica de CI, ni sharding, ni umbrales — sólo las versiones.
+- Bump de `APP_VERSION` (patch) + entrada breve en `CHANGELOG.md` siguiendo la regla de proyecto.
+
+## Validación
+
+- `bun run lint` y `bun run audit:tests` localmente (no tocan YAML pero confirman que nada se rompió).
+- La validación real ocurre en el primer PR: los 3 jobs deben resolverse a los tags exactos sin warning de "unstable".
+
+## Fuera de alcance
+
+- Migrar a SHA pinning de toda la org (mayor superficie).
+- Reducir shards de 16 → 8 (punto separado del audit, decisión aparte).
