@@ -20,6 +20,9 @@ const ALLOWED_EXACT = new Set([
   "http://localhost:8080",
   "http://localhost:5173",
   "http://localhost:3000",
+  // Dominios custom de producción (Libre Carga)
+  "https://librecarga.com",
+  "https://www.librecarga.com",
 ]);
 
 function isAllowedOrigin(origin: string): boolean {
