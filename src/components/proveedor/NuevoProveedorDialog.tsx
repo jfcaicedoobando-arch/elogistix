@@ -11,6 +11,8 @@ import {
   TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
+  CATEGORIAS_PROVEEDOR,
+  SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import { useNuevoProveedorController } from "@/hooks/proveedor";
@@ -35,6 +37,23 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
         {c.step === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label>Categoría *</Label>
+              <Select value={c.form.categoria} onValueChange={c.handleCategoriaChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIAS_PROVEEDOR.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {c.isLogistico
+                  ? "Proveedor logístico: naviera, transportista, agente, etc."
+                  : "Gasto operativo: renta, internet, papelería, SaaS, honorarios, etc."}
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label>Origen *</Label>
               <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>
                 <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
@@ -44,19 +63,38 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label>Nombre *</Label>
               <Input value={c.form.nombre} onChange={(e) => c.setField("nombre", e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={c.form.tipo} onValueChange={c.handleTipoChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+
+            {c.isLogistico && (
+              <div className="space-y-2">
+                <Label>Tipo *</Label>
+                <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
+                  <SelectContent>
+                    {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {c.isGasto && (
+              <div className="space-y-2">
+                <Label>Subtipo de gasto *</Label>
+                <Select value={c.form.subtipo_gasto ?? ""} onValueChange={c.handleSubtipoGastoChange}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona subtipo" /></SelectTrigger>
+                  <SelectContent>
+                    {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {c.isAgenteCarga && (
               <div className="space-y-2">
                 <Label>País *</Label>
@@ -68,6 +106,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
                 </Select>
               </div>
             )}
+
             {(!c.isAgenteCarga || c.form.pais) && (
               <div className="space-y-2">
                 <Label>{c.rfcLabel} *</Label>
