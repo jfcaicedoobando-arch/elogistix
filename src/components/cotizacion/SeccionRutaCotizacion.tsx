@@ -119,17 +119,19 @@ export default function SeccionRutaCotizacion() {
           </Popover>
         </FormField>
 
-        <FormField label="Tipo de movimiento">
-          <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CY-CY">CY-CY</SelectItem>
-              <SelectItem value="CY-DR">CY-DR</SelectItem>
-              <SelectItem value="DR-DR">DR-DR</SelectItem>
-              <SelectItem value="DR-CY">DR-CY</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
+        {!esTerrestre && (
+          <FormField label="Tipo de movimiento">
+            <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CY-CY">CY-CY</SelectItem>
+                <SelectItem value="CY-DR">CY-DR</SelectItem>
+                <SelectItem value="DR-DR">DR-DR</SelectItem>
+                <SelectItem value="DR-CY">DR-CY</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormField>
+        )}
 
         <div className="flex items-center gap-3 pt-6">
           <Label className="text-sm font-medium">Seguro</Label>
