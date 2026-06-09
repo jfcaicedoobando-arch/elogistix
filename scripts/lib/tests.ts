@@ -29,6 +29,39 @@ const TEST_START_REGEX = /^\s*(it|test)\(\s*(['"`])([^'"`]+)\2/;
 const ASSERTION_REGEX = /\b(expect|expectTypeOf|assert|assertEquals|assertExists|assertRejects|assertThrows)\s*[(.]/;
 
 /**
+ * Quita el contenido de strings (', ", `) y comentarios `//` de una línea,
+ * para que el conteo de llaves no se confunda con `{}` dentro de títulos
+ * o mensajes (ej. `it("retorna {} ...", ...)`).
+ */
+function stripStringsAndComments(line: string): string {
+  let out = "";
+  let i = 0;
+  while (i < line.length) {
+    const ch = line[i]!;
+    if (ch === "/" && line[i + 1] === "/") break; // resto es comentario
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      i++;
+      while (i < line.length) {
+        if (line[i] === "\\") {
+          i += 2;
+          continue;
+        }
+        if (line[i] === quote) {
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+
+/**
  * Devuelve la posición (índice 0-based en `lines`) del `}` que cierra el bloque
  * iniciado tras el primer `{` que aparece en/después de `startLine`. Si no se
  * encuentra balance, retorna `lines.length - 1`.
@@ -37,8 +70,8 @@ function findBlockEnd(lines: string[], startLine: number): number {
   let depth = 0;
   let started = false;
   for (let i = startLine; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    for (const ch of line) {
+    const cleaned = stripStringsAndComments(lines[i] ?? "");
+    for (const ch of cleaned) {
       if (ch === "{") {
         depth++;
         started = true;
