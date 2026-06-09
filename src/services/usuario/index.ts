@@ -39,13 +39,16 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
     const { data: usersData, error: fnError } = await supabase.functions.invoke("user-management", {
       body: { action: "list" },
     });
-    if (!fnError && Array.isArray(usersData)) {
+    if (fnError) {
+      console.warn("[fetchUsuariosOrganizacion] user-management invoke error:", fnError);
+    } else if (Array.isArray(usersData)) {
       (usersData as ListUsersRow[]).forEach((u) => {
         emailMap[u.id] = { email: u.email, created_at: u.created_at };
       });
     }
-  } catch {
-    // Si la edge function falla, mostramos el user_id como fallback.
+  } catch (err) {
+    // Mantenemos la tabla funcional con placeholder UNRESOLVED_EMAIL; logueamos para debug en prod.
+    console.warn("[fetchUsuariosOrganizacion] user-management threw:", err);
   }
 
   return members.map((m) => ({
