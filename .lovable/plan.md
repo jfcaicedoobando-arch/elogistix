@@ -1,119 +1,103 @@
-# Plan: Rediseño del Directorio de Proveedores
+# Estudio de roles — Libre Carga ERP
 
-## 1. Hallazgos de la auditoría
+## 1. Situación actual
 
-### 1.1 UX confusa por exceso de filtros simultáneos
-- Hoy conviven **tres ejes de filtrado** en una sola pantalla: 10 pestañas por `tipo` + segmentado `Nacional/Extranjero/Todos` + búsqueda. Esto obliga al usuario a "adivinar" en qué pestaña está el proveedor que busca.
-- Las 10 pestañas (Navieras, Aerolíneas, Transportistas, Agentes Aduanales, Agentes de Carga, Aseguradoras, Custodia, Almacenes, Acondicionamiento, Mat. Peligrosos) son **excluyentes**: si el proveedor no encaja en una de esas 10 categorías logísticas, no tiene dónde vivir.
-- La búsqueda solo aplica **dentro de la pestaña activa** (`tipo` se manda al RPC). Un usuario que busca "Maersk" estando en la pestaña "Transportistas" ve "0 resultados" aunque exista en "Navieras". Esta es la causa real de la queja "los filtros no funcionan".
+**Enum `public.app_role`** (6 valores): `super_admin`, `admin`, `operador`, `vendedor`, `viewer`, `cliente`.
 
-### 1.2 El combo Naviera/Todos sí mezcla — la percepción nace de otro bug
-- Verificación en BD: tab Navieras con `origen=todos` devuelve 7 Nacional + 8 Extranjero = 15 (correcto en el RPC `fetch_proveedores_paginados`).
-- La confusión proviene de:
-  - **No hay `resetPage` cuando cambia el `tipo`** en `ProveedorTable.tsx`. Al cambiar de pestaña conservando page > 0, se ven "menos" registros o vacío.
-  - El segmentado `Nacional/Extranjero/Todos` está **fuera** de las pestañas, así que al cambiar de tab parece "que no aplicó" porque su estado no se reinicia visualmente.
-  - No hay contadores por pestaña ni chip de filtros activos, así que el usuario no sabe por qué la lista se vacía.
+**Distribución real en `user_roles`:** operador 6 · cliente 3 · admin 2 · viewer 2 · super_admin 1 · vendedor 0.
 
-### 1.3 Catálogo cerrado a operación logística
-- `tipo_proveedor` es un enum PostgreSQL con solo 10 valores logísticos. **No existe** forma de registrar: arrendador, papelería, internet/telefonía, software/SaaS, mantenimiento, honorarios, servicios públicos, marketing, viáticos, etc.
-- Esto bloquea el objetivo declarado: "llevar todos los gastos de la empresa al ERP". Hoy CxP, facturas de proveedor y pagos solo pueden ligarse a proveedores logísticos.
+**Helpers en `usePermissions`:**
+- `canEdit` = admin / operador / super_admin
+- `canViewFinancials` = todos menos operador
+- `canEditCrm` = canEdit o vendedor
 
-### 1.4 Otros puntos menores
-- Plantilla CSV de importación está atada al `tipo` de la pestaña activa (confuso al importar mezclado).
-- `ProveedorOperacionesTable.tsx` existe pero no se usa desde `Proveedores.tsx` (código muerto a revisar).
+**Módulos cubiertos hoy:** Dashboards · Cotizaciones · Embarques · Pre-Facturación · CxP · Tesorería · Comisiones · Profit (Ejecutivo / Proyección / EERR / Presupuesto) · CRM · Reportes · Clientes · Proveedores · Auditoría · Bitácora · Sentry · Usuarios · Papelera · Idempotencia · Configuración · Panel Super Admin · Portal Cliente.
 
-## 2. Diseño propuesto
+## 2. Problemas detectados
 
-### 2.1 Mejor práctica: clasificación en dos dimensiones
-Separar conceptualmente lo que hoy está mezclado en un solo enum:
+1. **`admin` es un "súper usuario funcional"**: edita CRM, factura, autoriza pagos, configura tasas, da de alta usuarios. No hay separación de funciones — auditoría externa lo va a marcar.
+2. **`operador` es un cajón único**: traffic, pricing, documentación, supervisores — todos heredan los mismos permisos sin matiz.
+3. **No existe rol financiero/contable**. Solo admin toca CxP, Tesorería, Comisiones, EERR.
+4. **No hay rol de gerencia "lectura+aprobación"** sin permisos destructivos.
+5. **`vendedor` solo ve CRM**: en un forwarder el KAM necesita ver embarques y cobranza de sus clientes.
+6. **`viewer` ve todo, incluso financiero**: cualquier invitado expone P&L y márgenes.
+7. **`cliente` ya existe pero no está documentado** junto al resto (vive en otro flujo: portal).
+8. **No hay rol "tracking-only"** para soporte/CS que necesita consultar estatus sin tocar nada.
 
-```text
-Proveedor
-├── categoria  (¿para qué se usa el gasto?)   ← NUEVO
-│   ├── Operación logística
-│   │   └── subtipo: Naviera | Aerolínea | Transportista | …
-│   └── Gasto operativo / Administrativo
-│       └── subtipo: Renta | Servicios (luz/agua/internet) |
-│                    Papelería | Software/SaaS | Honorarios |
-│                    Mantenimiento | Marketing | Viáticos | Otros
-└── origen     (Nacional | Extranjero)        ← ya existe
-```
+## 3. Roles propuestos (10)
 
-Ventajas: la pestaña principal es la **categoría** (2-3 tabs), el subtipo pasa a ser un select dentro de la lista, y el módulo queda preparado para todos los gastos del ERP sin tocar el resto del sistema (CxP, facturas, pagos siguen apuntando a `proveedores.id`).
+| # | Rol | Propósito | Edita | Ve finanzas | Admin |
+|---|-----|-----------|-------|-------------|-------|
+| 1 | `super_admin` | Plataforma (cross-tenant) | Todo | Sí | Sí + impersonar |
+| 2 | `admin_org` | Dueño / Gerente general del tenant | Todo en su org | Sí | Sí (usuarios, config) |
+| 3 | `gerente_operaciones` | Supervisa operación, aprueba | Operación + lee finanzas | Sí | No |
+| 4 | `coordinador_logistico` *(antes `operador`)* | Embarques, tracking, docs | Cotiza/embarca/factura | **No** (sin profit/costos) | No |
+| 5 | `ejecutivo_pricing` | Arma cotizaciones y P&L preliminar | Cotizaciones + costos | Sí (en su cotización) | No |
+| 6 | `contador` | Facturación, CxC, CxP, EERR, conciliación | Facturas, pagos, NC | Sí (completo) | No |
+| 7 | `tesorero` | Pagos a proveedores, conciliación bancaria, comisiones | CxP/Tesorería/Comisiones | Sí (flujo) | No |
+| 8 | `vendedor` *(ampliado a KAM)* | CRM + visibilidad de sus clientes | CRM + lectura embarques/cobranza de sus cuentas | Sólo de sus cuentas | No |
+| 9 | `customer_service` *(nuevo, antes `viewer`)* | Atención al cliente, tracking, soporte | **Solo lectura** operativa, sin finanzas | No | No |
+| 10 | `cliente` | Portal externo | Sus propios datos | Sus facturas | No |
 
-### 2.2 Nueva pantalla `/proveedores`
+## 4. Matriz de permisos por módulo
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ Proveedores                          [Importar CSV] [+ Nuevo]│
-├──────────────────────────────────────────────────────────────┤
-│ [ Todos ] [ Logísticos ] [ Gastos operativos ]   ← 3 tabs    │
-├──────────────────────────────────────────────────────────────┤
-│ 🔎 Buscar (nombre, RFC, contacto)…  Búsqueda GLOBAL          │
-│                                                              │
-│ Filtros: [Subtipo ▾]  [Origen ▾]  [Moneda ▾]   [Limpiar]    │
-│ Chips activos: Subtipo: Naviera ✕  Origen: Nacional ✕        │
-├──────────────────────────────────────────────────────────────┤
-│ Tabla con columnas: Nombre · Subtipo · RFC/Tax ID · Origen · │
-│ Moneda · Operaciones · Pendiente · Acciones                  │
-└──────────────────────────────────────────────────────────────┘
+Módulo             super  admin  ger_op coord  pricing cont   tes    vend   cs    cliente
+Dashboard Princ.    RW     RW     RW     RW     RW      RW     RW     R*    R     —
+Operaciones         RW     RW     RW     RW     R       R      R      R*    R     —
+Cotizaciones        RW     RW     RW     RW     RW      R      —      R*    R     —
+Embarques           RW     RW     RW     RW     R       R      —      R*    R     —
+Pre-Facturación     RW     RW     RW     R      —       RW     R      —     —     —
+CxP                 RW     RW     R      —      —       RW     RW     —     —     —
+Tesorería           RW     RW     R      —      —       R      RW     —     —     —
+Comisiones          RW     RW     R      —      —       R      RW     R*    —     —
+Profit / EERR       RW     RW     R      —      R       RW     R      —     —     —
+CRM                 RW     RW     RW     —      —       —      —      RW    R     —
+Reportes            RW     RW     R      R(op)  R       R      R      R*    —     —
+Clientes            RW     RW     RW     RW     R       R      R      RW*   R     R(self)
+Proveedores         RW     RW     RW     RW(log) —      RW(all) R     —     —     —
+Auditoría/Bitácora  RW     R      R      —      —       R      R      —     —     —
+Usuarios/Config     RW     RW     —      —      —       —      —      —     —     —
+Papelera/Idempot.   RW     RW     —      —      —       —      —      —     —     —
+Panel Super Admin   RW     —      —      —      —       —      —      —     —     —
+Portal              —      —      —      —      —       —      —      —     —     RW(self)
 ```
+Leyenda: `RW`=lee/edita · `R`=lee · `R*`=sólo sus cuentas asignadas · `—`=sin acceso · `RW(log)`=solo subcategoría Logístico · `RW(all)`=incluye gastos operativos.
 
-Reglas:
-- La **búsqueda es global** (ya no se filtra por subtipo automáticamente). Esto elimina la queja principal.
-- Los selects (`Subtipo`, `Origen`, `Moneda`) son **opcionales** y se muestran como chips removibles.
-- La tabla agrega la columna `Subtipo` para que el usuario entienda de un vistazo a qué categoría pertenece cada registro.
-- Contadores por tab: `Logísticos (24)`, `Gastos operativos (8)`.
+## 5. Cambios necesarios
 
-### 2.3 Eliminaciones / consolidaciones
-- Se eliminan las 10 pestañas por subtipo (se reemplazan por un select).
-- Se elimina el segmentado Nacional/Extranjero/Todos como control independiente (pasa al área de filtros).
-- Se quita el código muerto `ProveedorOperacionesTable.tsx` si confirmamos que no se usa.
+**BD (1 migración):**
+- `ALTER TYPE public.app_role ADD VALUE` para: `admin_org`, `gerente_operaciones`, `coordinador_logistico`, `ejecutivo_pricing`, `contador`, `tesorero`, `customer_service`.
+- Backfill: `admin` → `admin_org`; `operador` → `coordinador_logistico`; `viewer` → `customer_service`. `super_admin`, `vendedor`, `cliente` se conservan.
+- Conservar los valores viejos del enum (Postgres no permite borrarlos) y dejarlos como deprecated en código.
+- Nuevas funciones SECURITY DEFINER de utilería: `is_finance(_uid)`, `is_operations(_uid)`, `is_sales(_uid)`, `can_view_financials(_uid)`. Las políticas RLS pasan a usarlas para no listar 7 roles en cada policy.
 
-### 2.4 Diálogo Nuevo/Editar Proveedor
-- Primer paso obligatorio: `Categoría` (Logístico | Gasto operativo).
-- Segundo paso: `Subtipo` según categoría (enum dinámico por categoría).
-- El bloque de país / Tax ID solo aparece para Logísticos (los gastos operativos casi siempre son Nacionales con RFC mexicano; conserva la posibilidad de marcar Extranjero para SaaS internacional como AWS, GitHub, etc.).
+**Código:**
+- `src/types/appRole.ts` ya deriva del enum — se actualiza solo tras la migración.
+- `src/hooks/shared/usePermissions.ts`: reemplazar booleans hardcoded por matriz declarativa (`PERMISSIONS[role][module] → 'rw'|'r'|'none'`). API pública conserva `canEdit`, `canViewFinancials`, `canEditCrm` para no romper 36 consumidores; se agregan `canEditFinance`, `canApprove`, `canAdminTenant`.
+- `src/hooks/layout/useAppSidebarSections.ts`: nueva tabla rol→secciones visibles (hoy son `if/else` por rol; pasar a config).
+- `src/pages/admin-org/Usuarios.tsx` y wizard de alta: nuevos labels en español ("Coordinador logístico", "Contador", etc.) + tooltips con la matriz.
 
-## 3. Detalles técnicos
+**RLS (revisión, no destructiva):**
+- Las 526 llamadas a `has_role()` siguen funcionando.
+- Se agregan policies adicionales para `contador`/`tesorero` donde hoy sólo `admin` puede escribir (facturas, pagos_factura, pagos_proveedor, factura_notas_credito, comisiones_devengadas).
+- Restringir `customer_service` quitándole acceso de lectura a tablas financieras (`cotizacion_costos`, `conceptos_costo`, `comisiones_devengadas`, `pagos_*`, `proveedor_facturas`, `presupuesto_*`, `factura_notas_credito`).
 
-### 3.1 Migración de BD (en orden)
-1. Crear nuevo enum `categoria_proveedor` con valores `Logistico`, `GastoOperativo`.
-2. Crear nuevo enum `subtipo_gasto_operativo` (Renta, Servicios, Papelería, SaaS, Honorarios, Mantenimiento, Marketing, Viáticos, Otros).
-3. `ALTER TABLE proveedores ADD COLUMN categoria categoria_proveedor NOT NULL DEFAULT 'Logistico'`.
-4. `ALTER TABLE proveedores ADD COLUMN subtipo_gasto subtipo_gasto_operativo NULL` (solo poblado cuando `categoria='GastoOperativo'`).
-5. Hacer `tipo` nullable cuando `categoria='GastoOperativo'`, o conservar requerido solo para Logísticos vía CHECK constraint.
-6. Backfill: todos los registros existentes → `categoria='Logistico'` (ya es el default).
-7. Actualizar RPC `fetch_proveedores_paginados` para aceptar `p_categoria`, `p_subtipo_gasto`, y que `p_search` sea global (sin requerir tipo).
-8. RLS: las políticas actuales (`organization_id`) ya cubren las nuevas filas; no se modifican.
+**UI nueva:**
+- Pantalla `/configuracion/roles` (sólo `admin_org` y `super_admin`): muestra la matriz como referencia + lista de usuarios por rol.
 
-### 3.2 Cambios de código
-- `src/pages/proveedores/Proveedores.tsx` — reescribir según wireframe 2.2.
-- `src/pages/proveedores/ProveedorTable.tsx` — añadir columna Subtipo; agregar `resetPage` cuando cambia cualquier filtro (no solo search/origen).
-- `src/pages/proveedores/proveedorTableColumns.tsx` — agregar columna Subtipo y formateo.
-- `src/services/proveedor/index.ts` — extender `fetchProveedoresPaginados` con `categoria`, `subtipo_gasto`.
-- `src/hooks/proveedor/useProveedores.ts` — pasar nuevos filtros y reconstruir queryKey.
-- `src/hooks/proveedor/useNuevoProveedorController.ts` y `useEditarProveedorController.ts` — agregar lógica de categoría/subtipo, ajustar validaciones (Tax ID, país solo si Logístico+Extranjero).
-- `src/components/proveedor/NuevoProveedorDialog.tsx` y `EditarProveedorDialog.tsx` — UI de dos pasos.
-- `src/lib/csv/importSchemas.ts` — agregar columnas `categoria` y `subtipo_gasto` a la plantilla.
-- Borrar `ProveedorOperacionesTable.tsx` si no tiene consumidores.
-- Aplicar las 10 reglas Power of 10 (componentes ≤200 líneas, sin `any`, manejar `error` de Supabase).
+## 6. Versionado y changelog
 
-### 3.3 Compatibilidad con CxP / facturas / pagos
-Cero cambios en `cxp`, `facturas`, `pagos_proveedor`, `comisiones_devengadas`: siguen apuntando a `proveedores.id`. Solo se amplía el universo de proveedores posibles, lo que abre la puerta a registrar facturas de renta, internet, SaaS, etc., sin tocar esos módulos.
+- `APP_VERSION` → `12.66.0`.
+- Entrada en `CHANGELOG.md`: "feat(seguridad) — matriz de 10 roles con separación de funciones; backfill admin→admin_org, operador→coordinador_logistico, viewer→customer_service".
 
-### 3.4 Versionado y bitácora
-- `APP_VERSION` → bump menor (p.ej. `12.65.0`) por ser cambio funcional.
-- Entrada en `CHANGELOG.md` (root) describiendo: rediseño de filtros, búsqueda global, nuevas categorías Logístico/Gasto operativo, migración de BD.
+## 7. Fuera de alcance (siguiente iteración)
 
-## 4. Entregables por fase
+- Permisos a nivel registro (ej. vendedor sólo ve sus oportunidades) — ya hay scaffolding parcial con `crm_oportunidades.vendedor_id`.
+- Roles compuestos / multi-rol por usuario (hoy un usuario = un rol por organización).
+- Auditoría de cambios de rol con motivo obligatorio.
+- Aprobaciones formales (workflow): hoy `gerente_operaciones` "aprueba" implícitamente al cambiar estado, sin firma.
 
-1. **Fase 1 – BD + tipos**: migración con enums, columnas, RPC actualizado, GRANTs verificados.
-2. **Fase 2 – Backend client**: services, hooks, validaciones.
-3. **Fase 3 – UI**: nueva pantalla, diálogo de 2 pasos, importación CSV ampliada.
-4. **Fase 4 – Limpieza**: eliminar código muerto, tests de hooks `useNuevoProveedorController` / `useEditarProveedorController`, ajustar audit.
+---
 
-## 5. Fuera de alcance
-- Migrar facturas históricas a las nuevas categorías de gasto (los usuarios lo harán manualmente conforme registren gastos nuevos).
-- Reportes de gasto por categoría (será un segundo proyecto cuando el catálogo ya tenga datos).
-- Integración con CFDI 4.0 para clasificación automática de gastos.
+**Decisión solicitada:** ¿procedo a implementar los 10 roles tal como están en la matriz, o querés ajustar algún rol (fusionar `contador`+`tesorero`, partir `coordinador_logistico` en `traffic` vs `documentacion`, etc.) antes de tocar BD?

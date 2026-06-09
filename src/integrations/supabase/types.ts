@@ -4887,6 +4887,13 @@ export type Database = {
         | "super_admin"
         | "cliente"
         | "vendedor"
+        | "admin_org"
+        | "gerente_operaciones"
+        | "coordinador_logistico"
+        | "ejecutivo_pricing"
+        | "contador"
+        | "tesorero"
+        | "customer_service"
       categoria_proveedor: "Logistico" | "GastoOperativo"
       crm_actividad_tipo: "llamada" | "email" | "reunion" | "tarea" | "nota"
       crm_entidad_tipo: "lead" | "oportunidad" | "cliente" | "contacto"
@@ -5148,6 +5155,13 @@ export const Constants = {
         "super_admin",
         "cliente",
         "vendedor",
+        "admin_org",
+        "gerente_operaciones",
+        "coordinador_logistico",
+        "ejecutivo_pricing",
+        "contador",
+        "tesorero",
+        "customer_service",
       ],
       categoria_proveedor: ["Logistico", "GastoOperativo"],
       crm_actividad_tipo: ["llamada", "email", "reunion", "tarea", "nota"],
