@@ -34,7 +34,13 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
       accessorFn: (u) => u.email, enableSorting: true,
       sortingFn: sortByString<UserRow>((u) => u.email),
       meta: { width: "min-w-[200px]", className: "font-medium" },
-      cell: ({ row }) => row.original.email,
+      cell: ({ row }) => {
+        const email = row.original.email;
+        if (email === "No disponible") {
+          return <span className="text-muted-foreground italic font-normal">{email}</span>;
+        }
+        return email;
+      },
     },
     {
       id: "created_at", header: "Fecha de registro",
