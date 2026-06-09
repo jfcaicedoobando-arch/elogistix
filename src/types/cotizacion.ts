@@ -90,4 +90,6 @@ export interface CreateCotizacionInput {
   valor_seguro_usd?: number;
   carta_garantia?: boolean;
   num_contenedores?: number;
+  modalidad_equipo?: string | null;
+  punto_intermedio?: string | null;
 }

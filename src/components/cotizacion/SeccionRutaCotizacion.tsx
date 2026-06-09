@@ -21,13 +21,16 @@ export default function SeccionRutaCotizacion() {
   const tipoEmbarque = watch("tipoEmbarque");
   const seguro = watch("seguro");
   const validezPropuesta = watch("validezPropuesta");
+  const modalidadEquipo = watch("modalidadEquipo");
 
   const esMaritimo = modo === 'Marítimo';
+  const esTerrestre = modo === 'Terrestre';
   const usarPortSelect = esMaritimo || modo === 'Multimodal';
+  const conPuntoIntermedio = esTerrestre && modalidadEquipo === 'Porta Contenedor';
 
   return (
     <WizardSection title="Ruta">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 gap-4 ${conPuntoIntermedio ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         {usarPortSelect ? (
           <>
             <FormField label="Origen">
@@ -40,14 +43,24 @@ export default function SeccionRutaCotizacion() {
         ) : (
           <>
             <FormField label="Origen">
-              <Input value={watch("origen")} onChange={e => setValue("origen", e.target.value)} placeholder="Ej. Shanghai, China" />
+              <Input value={watch("origen")} onChange={e => setValue("origen", e.target.value)} placeholder={esTerrestre ? "Ej. CDMX" : "Ej. Shanghai, China"} />
             </FormField>
+            {conPuntoIntermedio && (
+              <FormField label="Punto de carga/descarga">
+                <Input
+                  value={watch("puntoIntermedio")}
+                  onChange={e => setValue("puntoIntermedio", e.target.value, { shouldValidate: true, shouldDirty: true })}
+                  placeholder="Ej. Terminal Pantaco"
+                />
+              </FormField>
+            )}
             <FormField label="Destino">
-              <Input value={watch("destino")} onChange={e => setValue("destino", e.target.value)} placeholder="Ej. Manzanillo, México" />
+              <Input value={watch("destino")} onChange={e => setValue("destino", e.target.value)} placeholder={esTerrestre ? "Ej. Monterrey" : "Ej. Manzanillo, México"} />
             </FormField>
           </>
         )}
       </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
         <FormField label="Tiempo de tránsito (días)">
@@ -106,17 +119,19 @@ export default function SeccionRutaCotizacion() {
           </Popover>
         </FormField>
 
-        <FormField label="Tipo de movimiento">
-          <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CY-CY">CY-CY</SelectItem>
-              <SelectItem value="CY-DR">CY-DR</SelectItem>
-              <SelectItem value="DR-DR">DR-DR</SelectItem>
-              <SelectItem value="DR-CY">DR-CY</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
+        {!esTerrestre && (
+          <FormField label="Tipo de movimiento">
+            <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CY-CY">CY-CY</SelectItem>
+                <SelectItem value="CY-DR">CY-DR</SelectItem>
+                <SelectItem value="DR-DR">DR-DR</SelectItem>
+                <SelectItem value="DR-CY">DR-CY</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormField>
+        )}
 
         <div className="flex items-center gap-3 pt-6">
           <Label className="text-sm font-medium">Seguro</Label>

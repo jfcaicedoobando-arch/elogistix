@@ -89,6 +89,8 @@ function partesExtras(d: CotizacionInitialData) {
     cartaGarantia: d.carta_garantia ?? false,
     notas: d.notas ?? "",
     numContenedores: d.num_contenedores ?? 1,
+    modalidadEquipo: d.modalidad_equipo ?? "",
+    puntoIntermedio: d.punto_intermedio ?? "",
   };
 }
 

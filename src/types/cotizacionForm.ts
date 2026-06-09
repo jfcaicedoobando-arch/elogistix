@@ -46,6 +46,10 @@ export interface CotizacionFormValues {
   cartaGarantia: boolean;
   notas: string;
   numContenedores: number;
+  /** Modalidad de equipo terrestre (Caja Seca, Porta Contenedor, ...). */
+  modalidadEquipo: string;
+  /** Punto intermedio de carga/descarga (terrestre Porta Contenedor). */
+  puntoIntermedio: string;
 }
 
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
@@ -87,6 +91,8 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   cartaGarantia: false,
   notas: "",
   numContenedores: 1,
+  modalidadEquipo: "",
+  puntoIntermedio: "",
 };
 
 export interface CotizacionInitialData {
@@ -130,6 +136,8 @@ export interface CotizacionInitialData {
   num_contenedores: number;
   conceptos_venta: ConceptoVentaCotizacion[];
   msds_archivo: string | null;
+  modalidad_equipo?: string | null;
+  punto_intermedio?: string | null;
 }
 
 export interface CotizacionInitialCosto {

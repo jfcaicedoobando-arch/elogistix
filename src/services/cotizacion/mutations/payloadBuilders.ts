@@ -41,6 +41,8 @@ function partesMercanciaInsert(input: CreateCotizacionInput) {
     dimensiones_lcl: toDbJson(input.dimensiones_lcl || []),
     dimensiones_aereas: toDbJson(input.dimensiones_aereas || []),
     num_contenedores: input.num_contenedores ?? 1,
+    modalidad_equipo: input.modalidad_equipo ?? null,
+    punto_intermedio: input.punto_intermedio ?? null,
   };
 }
 
