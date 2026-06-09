@@ -80,9 +80,9 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
             <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="operador">Operador</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
+                {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
+                  <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
