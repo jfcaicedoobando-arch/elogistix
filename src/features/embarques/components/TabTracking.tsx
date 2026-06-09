@@ -148,7 +148,7 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
         </CardContent>
       </Card>
 
-      <TabNotas notas={notas} embarqueId={embarqueId} />
+      <TabNotas notas={notas} embarqueId={embarqueId} expediente={embarque?.expediente ?? null} />
     </div>
   );
 }
