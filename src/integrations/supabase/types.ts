@@ -4257,10 +4257,12 @@ export type Database = {
         Args: { p_pago_factura_id: string }
         Returns: undefined
       }
+      can_admin_tenant: { Args: { _user_id: string }; Returns: boolean }
       can_manage_document_object: {
         Args: { _object_name: string }
         Returns: boolean
       }
+      can_view_financials: { Args: { _user_id: string }; Returns: boolean }
       check_ratelimit: {
         Args: { p_key: string; p_max?: number; p_window_seconds?: number }
         Returns: Json
@@ -4601,10 +4603,13 @@ export type Database = {
         Args: { _key: string; _response: Json }
         Returns: undefined
       }
+      is_finance: { Args: { _user_id: string }; Returns: boolean }
+      is_operations: { Args: { _user_id: string }; Returns: boolean }
       is_org_admin: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_sales: { Args: { _user_id: string }; Returns: boolean }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
       list_idempotency_log: {
         Args: { _limit?: number; _offset?: number }
