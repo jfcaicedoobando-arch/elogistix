@@ -9,6 +9,8 @@ import {
   TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
+  CATEGORIAS_PROVEEDOR,
+  SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import { useEditarProveedorController } from "@/hooks/proveedor";
 
@@ -38,6 +40,18 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
+            <Label>Categoría *</Label>
+            <Select value={c.form.categoria} onValueChange={c.handleCategoriaChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CATEGORIAS_PROVEEDOR.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>Origen *</Label>
             <Select
               value={c.form.origen_proveedor || ""}
@@ -51,6 +65,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
             </Select>
             <FieldError message={c.fieldErrorMessage("origen_proveedor")} />
           </div>
+
           <div className="space-y-2">
             <Label>Nombre *</Label>
             <Input
@@ -60,15 +75,34 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
             />
             <FieldError message={c.fieldErrorMessage("nombre")} />
           </div>
-          <div className="space-y-2">
-            <Label>Tipo</Label>
-            <Select value={c.form.tipo} onValueChange={c.handleTipoChange}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+
+          {c.isLogistico && (
+            <div className="space-y-2">
+              <Label>Tipo *</Label>
+              <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
+                <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
+                <SelectContent>
+                  {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FieldError message={c.fieldErrorMessage("tipo")} />
+            </div>
+          )}
+
+          {c.isGasto && (
+            <div className="space-y-2">
+              <Label>Subtipo de gasto *</Label>
+              <Select value={c.form.subtipo_gasto ?? ""} onValueChange={c.handleSubtipoGastoChange}>
+                <SelectTrigger><SelectValue placeholder="Selecciona subtipo" /></SelectTrigger>
+                <SelectContent>
+                  {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError message={c.fieldErrorMessage("subtipo_gasto")} />
+            </div>
+          )}
 
           {c.isAgenteCarga && (
             <div className="space-y-2">

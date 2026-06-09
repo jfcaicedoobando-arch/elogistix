@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.65.0] - 2026-06-09
+- **feat(proveedores) — rediseño del directorio + apertura a gastos operativos**:
+  - **BD**: nuevos enums `categoria_proveedor` (`Logistico` / `GastoOperativo`) y `subtipo_gasto_operativo` (Renta, Servicios, Papelería, Software, Honorarios, Mantenimiento, Marketing, Viáticos, Otros). Columnas `categoria` (default `Logistico`) y `subtipo_gasto` en `proveedores`, con `CHECK` que exige `tipo` en logísticos y `subtipo_gasto` en gastos operativos. `tipo` ahora es nullable para soportar gastos.
+  - **RPC**: `proveedores_listado` acepta `p_categoria` y `p_subtipo_gasto`, y la búsqueda global cubre `nombre`, `rfc`, `contacto` y `email` (antes solo nombre/RFC dentro del tipo activo — causa real de "los filtros no funcionan").
+  - **UI**: pantalla `/proveedores` reescrita: 3 pestañas (Todos / Logísticos / Gastos operativos), búsqueda global, filtros como selects + chips removibles ("Limpiar filtros") y nueva columna `Clasificación` que muestra categoría + tipo/subtipo. Se eliminan las 10 pestañas por tipo y el segmentado Nacional/Extranjero independiente.
+  - **Bug fix**: `ProveedorTable` ahora resetea la página al cambiar cualquier filtro (incluyendo categoría/tipo), no solo `search`/`origen`.
+  - **Diálogos**: Nuevo y Editar Proveedor incluyen selector de Categoría como primer campo y muestran condicionalmente `Tipo` (logísticos) o `Subtipo de gasto` (operativos).
+  - **CSV**: plantilla amplía a `categoria` y `subtipo_gasto`; validación cruzada en `importSchemaProveedor`.
+  - **Compatibilidad**: cero cambios en CxP, facturas de proveedor, pagos o comisiones — todo sigue apuntando a `proveedores.id`. La migración abre el catálogo para registrar rentas, internet, SaaS, papelería, etc., como primer paso para llevar todos los gastos al ERP.
+
 ## [12.64.9] - 2026-06-09
 - **chore(tests) — endurecer higiene y umbrales tras auditoría (puntos 1, 2, 4 y 8)**:
   (1) `scripts/lib/tests.ts` ahora detecta también `missing-assertions`: cada `it`/`test` no-skipped debe contener al menos un `expect(...)` / `assert*` dentro de su bloque. Parser con stripping de strings y comentarios para no confundirse con `{}` en títulos. `scripts/audit-tests.ts` documenta la regla nueva.

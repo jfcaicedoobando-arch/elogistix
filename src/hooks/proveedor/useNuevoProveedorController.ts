@@ -4,6 +4,8 @@ import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type Moneda = Enums<"moneda">;
+type CategoriaProveedor = Enums<"categoria_proveedor">;
+type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 
 export const DOCS_NACIONAL = [
   "CIF",
@@ -26,7 +28,9 @@ export const DOCS_EXTRANJERO = [
 
 export const EMPTY_PROVEEDOR_FORM = {
   nombre: "",
-  tipo: "Naviera" as TipoProveedor,
+  categoria: "Logistico" as CategoriaProveedor,
+  tipo: "Naviera" as TipoProveedor | null,
+  subtipo_gasto: null as SubtipoGasto | null,
   pais: "",
   rfc: "",
   contacto: "",
@@ -40,7 +44,7 @@ export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
 
 /**
  * Controller del diálogo de alta de proveedores (wizard 2 pasos).
- * Encapsula estado, validación, derivados y handlers; el componente queda presentacional.
+ * Soporta dos categorías: Logístico (con tipo) y Gasto Operativo (con subtipo_gasto).
  */
 export function useNuevoProveedorController(
   onSave: (data: TablesInsert<"proveedores">) => void,
@@ -50,23 +54,36 @@ export function useNuevoProveedorController(
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
 
-  const isAgenteCarga = form.tipo === "Agente de Carga";
+  const isLogistico = form.categoria === "Logistico";
+  const isGasto = form.categoria === "GastoOperativo";
+  const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
   const isStep1Valid = (): boolean => {
     if (!form.nombre.trim()) return false;
     if (!form.origen_proveedor) return false;
-    if (isAgenteCarga) {
-      if (!form.pais) return false;
-      if (!form.rfc.trim()) return false;
-    } else if (!form.rfc.trim()) {
-      return false;
+    if (isLogistico) {
+      if (!form.tipo) return false;
+      if (isAgenteCarga && !form.pais) return false;
     }
+    if (isGasto && !form.subtipo_gasto) return false;
+    if (!form.rfc.trim()) return false;
     return true;
   };
 
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleCategoriaChange = (valor: string) => {
+    const next = valor as CategoriaProveedor;
+    setForm((prev) => ({
+      ...prev,
+      categoria: next,
+      tipo: next === "Logistico" ? (prev.tipo ?? "Naviera") : null,
+      subtipo_gasto: next === "GastoOperativo" ? (prev.subtipo_gasto ?? "Otros") : null,
+      pais: next === "Logistico" ? prev.pais : "",
+    }));
+  };
 
   const handleTipoChange = (valorSeleccionado: string) => {
     setForm((prev) => ({
@@ -74,6 +91,10 @@ export function useNuevoProveedorController(
       tipo: valorSeleccionado as TipoProveedor,
       pais: valorSeleccionado === "Agente de Carga" ? prev.pais : "",
     }));
+  };
+
+  const handleSubtipoGastoChange = (valor: string) => {
+    setForm((prev) => ({ ...prev, subtipo_gasto: valor as SubtipoGasto }));
   };
 
   const handleNext = () => {
@@ -103,7 +124,7 @@ export function useNuevoProveedorController(
   };
 
   const handleSave = () => {
-    onSave(form);
+    onSave(form as TablesInsert<"proveedores">);
     resetAndClose();
   };
 
@@ -111,12 +132,16 @@ export function useNuevoProveedorController(
     form,
     step,
     documentos,
+    isLogistico,
+    isGasto,
     isAgenteCarga,
     rfcLabel,
     isStep1Valid: isStep1Valid(),
     setField,
     setStep,
+    handleCategoriaChange,
     handleTipoChange,
+    handleSubtipoGastoChange,
     handleNext,
     handleFileChange,
     handleSave,
