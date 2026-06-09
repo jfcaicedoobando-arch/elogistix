@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.66.0] - 2026-06-09
+- **feat(seguridad)**: matriz de 10 roles con separación de funciones. Se agregan `admin_org`, `gerente_operaciones`, `coordinador_logistico`, `ejecutivo_pricing`, `contador`, `tesorero` y `customer_service` al enum `app_role`. Backfill automático: `admin → admin_org`, `operador → coordinador_logistico`, `viewer → customer_service`. Se conservan los valores legacy.
+- **feat(seguridad)**: nuevas funciones `SECURITY DEFINER` `can_admin_tenant`, `is_finance`, `is_operations`, `is_sales`, `can_view_financials` para que las políticas RLS chequeen por área en lugar de listar todos los roles.
+- **feat(ui)**: catálogo único de roles en `src/lib/roles/roleCatalog.ts` (labels, descripciones, badges, lista asignable). Diálogo de alta y dropdown de cambio de rol ahora ofrecen los 8 roles modernos del tenant.
+- **feat(layout)**: sidebar adaptado por rol — vendedor (CRM+clientes), customer_service (lectura operativa), coordinador_logistico (operación), ejecutivo_pricing (cotizaciones+reportes), contador/tesorero (finanzas), gerente_operaciones (todo lectura+edición operativa), admin_org (todo + administración).
+- **chore(permissions)**: `usePermissions` declara `canEditOperations`, `canEditFinance`, `canEditSales`, `canAdminTenant` además de la API legacy (`canEdit`, `canViewFinancials`, `canEditCrm`, `isAdmin`, `isOperador`).
+
 ## [12.65.2] - 2026-06-09
 - **fix(ci)**: `actions/download-artifact` bumpeado a `v8.0.1` (la `v7.0.1` no existe; el repo se versiona por separado de `upload-artifact`).
 
