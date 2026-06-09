@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.68.1] - 2026-06-09
+- **fix(seguridad)**: `ProtectedRoute` ahora respeta el agrupador funcional de roles. Las rutas protegidas con `allowedRoles={["admin"]}` (Usuarios, Configuración, Idempotencia, etc.) vuelven a admitir a usuarios con rol moderno `admin_org` y `super_admin` sin necesidad de listar cada rol equivalente. Nuevo helper `roleSatisfies` en `src/lib/auth/roleHierarchy.ts` con cobertura unitaria.
+- **fix(storage)**: `can_manage_document_object` ahora usa `has_role()` en lugar de comparar contra los roles legacy `admin`/`operador` directamente. Restaura permisos de subida/edición/borrado de documentos de embarques a `coordinador_logistico`, `ejecutivo_pricing`, `gerente_operaciones` y `admin_org`.
+
 ## [12.68.0] - 2026-06-09
 - **feat(cotizaciones)**: nuevo tipo de documento **Tarifario informativo** (cotización informativa). Permite registrar una lista de tarifas vigentes durante un período (multi-ruta, multi-modo) que sirve sólo como referencia comercial; **no se convierte en embarque**. Incluye nueva ruta `/cotizaciones/nueva/tarifario`, wizard simplificado con tabla editable de tarifas, vista de detalle dedicada y descarga de PDF (`TarifarioDocument`). El listado de cotizaciones muestra una columna "Tipo" (Transaccional / Tarifario).
 - **feat(bd)**: agregadas columnas `tipo_documento`, `vigencia_desde`, `vigencia_hasta`, `tarifas_informativas` en `cotizaciones` + trigger validador `validate_cotizacion_informativa` que exige vigencia y al menos una tarifa cuando `tipo_documento='informativa'`. Las cotizaciones existentes quedan marcadas como `transaccional`.

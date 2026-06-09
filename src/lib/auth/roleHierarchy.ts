@@ -1,0 +1,63 @@
+import type { AppRole } from "@/types/appRole";
+
+/**
+ * Replica del agrupador funcional implementado en `public.has_role()` (BD).
+ * Permite que los guardas de frontend (ProtectedRoute, etc.) acepten cualquier rol
+ * moderno equivalente al rol "lógico" solicitado, evitando que regrese una pantalla
+ * de "sin acceso" para usuarios con roles modernos (admin_org, coordinador_logistico,
+ * ejecutivo_pricing, gerente_operaciones, etc.).
+ *
+ * Si el agrupador de BD cambia, ESTE archivo debe actualizarse en paralelo.
+ */
+const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
+  super_admin: ["super_admin"],
+  admin: ["admin", "admin_org", "super_admin"],
+  admin_org: ["admin_org", "super_admin"],
+  operador: [
+    "operador",
+    "coordinador_logistico",
+    "ejecutivo_pricing",
+    "gerente_operaciones",
+    "admin",
+    "admin_org",
+    "super_admin",
+  ],
+  viewer: [
+    "viewer",
+    "customer_service",
+    "vendedor",
+    "contador",
+    "tesorero",
+    "ejecutivo_pricing",
+    "gerente_operaciones",
+    "coordinador_logistico",
+    "operador",
+    "admin",
+    "admin_org",
+    "super_admin",
+  ],
+  vendedor: ["vendedor", "admin_org", "super_admin"],
+  // Roles sin agrupación: coincidencia exacta.
+  coordinador_logistico: ["coordinador_logistico"],
+  ejecutivo_pricing: ["ejecutivo_pricing"],
+  gerente_operaciones: ["gerente_operaciones"],
+  customer_service: ["customer_service"],
+  contador: ["contador"],
+  tesorero: ["tesorero"],
+  cliente: ["cliente"],
+} as const;
+
+/**
+ * ¿El rol efectivo del usuario satisface el rol requerido por la ruta?
+ * Refleja el agrupador de `public.has_role()`.
+ */
+export function roleSatisfies(required: AppRole, actual: AppRole): boolean {
+  const group = ROLE_EQUIVALENTS[required];
+  if (!group) return required === actual;
+  return group.includes(actual);
+}
+
+/** Versión multi-required: el usuario pasa si satisface al menos uno. */
+export function anyRoleSatisfies(allowed: readonly AppRole[], actual: AppRole): boolean {
+  return allowed.some((r) => roleSatisfies(r, actual));
+}
