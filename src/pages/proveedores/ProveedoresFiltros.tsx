@@ -1,0 +1,115 @@
+import { X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import SearchInput from "@/components/selects/SearchInput";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Enums } from "@/types/db";
+import {
+  TIPOS_PROVEEDOR,
+  SUBTIPOS_GASTO_OPERATIVO,
+  labelSubtipoGasto,
+} from "@/constants/proveedorConstants";
+
+type TipoProveedor = Enums<"tipo_proveedor">;
+type CategoriaProveedor = Enums<"categoria_proveedor">;
+type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
+export type CategoriaTab = "todos" | CategoriaProveedor;
+export type OrigenFiltro = "todos" | "Nacional" | "Extranjero";
+export type TipoFiltro = "todos" | TipoProveedor;
+export type SubtipoFiltro = "todos" | SubtipoGasto;
+
+interface Props {
+  search: string;
+  onSearchChange: (v: string) => void;
+  origen: OrigenFiltro;
+  onOrigenChange: (v: OrigenFiltro) => void;
+  tipoFiltro: TipoFiltro;
+  onTipoChange: (v: TipoFiltro) => void;
+  subtipoFiltro: SubtipoFiltro;
+  onSubtipoChange: (v: SubtipoFiltro) => void;
+  categoriaTab: CategoriaTab;
+  onLimpiar: () => void;
+}
+
+export function ProveedoresFiltros(props: Props) {
+  const {
+    search, onSearchChange, origen, onOrigenChange,
+    tipoFiltro, onTipoChange, subtipoFiltro, onSubtipoChange,
+    categoriaTab, onLimpiar,
+  } = props;
+
+  const filtrosActivos: { label: string; onClear: () => void }[] = [];
+  if (origen !== "todos") filtrosActivos.push({ label: `Origen: ${origen}`, onClear: () => onOrigenChange("todos") });
+  if (tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo") {
+    filtrosActivos.push({ label: `Tipo: ${tipoFiltro}`, onClear: () => onTipoChange("todos") });
+  }
+  if (subtipoFiltro !== "todos" && categoriaTab !== "Logistico") {
+    filtrosActivos.push({ label: `Gasto: ${labelSubtipoGasto(subtipoFiltro)}`, onClear: () => onSubtipoChange("todos") });
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-3">
+        <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar por nombre, RFC, contacto o email..." />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={origen} onValueChange={(v) => onOrigenChange(v as OrigenFiltro)}>
+            <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Origen: todos</SelectItem>
+              <SelectItem value="Nacional">Nacional</SelectItem>
+              <SelectItem value="Extranjero">Extranjero</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {categoriaTab !== "GastoOperativo" && (
+            <Select value={tipoFiltro} onValueChange={(v) => onTipoChange(v as TipoFiltro)}>
+              <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Tipo logístico: todos</SelectItem>
+                {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+
+          {categoriaTab !== "Logistico" && (
+            <Select value={subtipoFiltro} onValueChange={(v) => onSubtipoChange(v as SubtipoFiltro)}>
+              <SelectTrigger className="h-9 w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Tipo de gasto: todos</SelectItem>
+                {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {filtrosActivos.length > 0 && (
+            <Button variant="ghost" size="sm" className="h-9" onClick={onLimpiar}>
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+
+        {filtrosActivos.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {filtrosActivos.map((f) => (
+              <Badge key={f.label} variant="outline" className="gap-1">
+                {f.label}
+                <button
+                  type="button"
+                  onClick={f.onClear}
+                  className="rounded-sm hover:bg-muted/60 transition-colors"
+                  aria-label={`Quitar filtro ${f.label}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
