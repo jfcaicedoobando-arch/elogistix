@@ -1252,6 +1252,7 @@ export type Database = {
           frecuencia: string
           id: string
           incoterm: Database["public"]["Enums"]["incoterm"]
+          modalidad_equipo: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda: Database["public"]["Enums"]["moneda"]
           msds_archivo: string | null
@@ -1267,6 +1268,7 @@ export type Database = {
           prospecto_email: string
           prospecto_empresa: string
           prospecto_telefono: string
+          punto_intermedio: string | null
           ruta_texto: string
           sector_economico: string
           seguro: boolean
@@ -1311,6 +1313,7 @@ export type Database = {
           frecuencia?: string
           id?: string
           incoterm?: Database["public"]["Enums"]["incoterm"]
+          modalidad_equipo?: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
           msds_archivo?: string | null
@@ -1326,6 +1329,7 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          punto_intermedio?: string | null
           ruta_texto?: string
           sector_economico?: string
           seguro?: boolean
@@ -1370,6 +1374,7 @@ export type Database = {
           frecuencia?: string
           id?: string
           incoterm?: Database["public"]["Enums"]["incoterm"]
+          modalidad_equipo?: string | null
           modo?: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
           msds_archivo?: string | null
@@ -1385,6 +1390,7 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          punto_intermedio?: string | null
           ruta_texto?: string
           sector_economico?: string
           seguro?: boolean
