@@ -22,6 +22,7 @@ export const EditarEmbarque = lazy(() => import("@/features/embarques/routes/Edi
 
 export const Cotizaciones = lazy(() => import("@/pages/cotizaciones/Cotizaciones"));
 export const NuevaCotizacion = lazy(() => import("@/pages/cotizaciones/NuevaCotizacion"));
+export const NuevaCotizacionInformativa = lazy(() => import("@/pages/cotizaciones/NuevaCotizacionInformativa"));
 export const CotizacionDetalle = lazy(() => import("@/pages/cotizaciones/CotizacionDetalle"));
 export const EditarCotizacion = lazy(() => import("@/pages/cotizaciones/EditarCotizacion"));
 export const PdfPreviewCotizacion = lazy(() => import("@/pages/dev/PdfPreviewCotizacion"));
