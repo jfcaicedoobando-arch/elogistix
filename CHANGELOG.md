@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.67.0] - 2026-06-09
+- **feat(cotizaciones)**: el wizard de cotización se adapta cuando el modo es Terrestre. Tipo de Operación queda restringido a `Nacional` y `Cross Trade`; el campo Incoterm se oculta (se persiste `N/A`) y el Tipo de Movimiento también (es marítimo). Se agrega el campo obligatorio **Modalidad de equipo** (Caja Seca, Porta Contenedor, Plataforma, Torton, Camión Full, Camión Sencillo). Cuando la modalidad es **Porta Contenedor**, la ruta se vuelve de 3 puntos: Origen → Punto de carga/descarga → Destino.
+- **feat(bd)**: nuevas columnas opcionales `modalidad_equipo` y `punto_intermedio` en `cotizaciones`.
+
 ## [12.66.2] - 2026-06-09
 - **fix(seguridad)**: `has_role` redefinida como agrupador funcional — un usuario con rol moderno satisface también los chequeos legacy (`admin_org`/`super_admin` ⇒ `admin`; `coordinador_logistico`/`ejecutivo_pricing`/`gerente_operaciones`/admins ⇒ `operador`; `customer_service`/`vendedor`/`contador`/`tesorero`/operativos/admins ⇒ `viewer`). Restablece el acceso de los usuarios migrados a Usuarios, Cotizaciones, Embarques, Clientes y a las RPCs de auditoría/dashboard sin reescribir las ~100 políticas RLS.
 - **fix(seguridad)**: `is_org_admin` acepta tanto `admin` como `admin_org` en `organization_members`, además de `super_admin`.
