@@ -74,7 +74,9 @@ export default function ProveedorDetalle() {
           <Truck className="h-6 w-6 text-accent" />
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold" title={proveedor.nombre}>{nombreFmt}</h1>
-            <Badge variant="secondary">{proveedor.tipo}</Badge>
+            <Badge variant="secondary">
+              {proveedor.categoria === "GastoOperativo" ? (proveedor.subtipo_gasto ?? "Gasto operativo") : (proveedor.tipo ?? "—")}
+            </Badge>
           </div>
         </div>
         {canEdit && (
