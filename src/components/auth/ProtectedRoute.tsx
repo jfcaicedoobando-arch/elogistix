@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import type { AppRole } from "@/types/appRole";
+import { anyRoleSatisfies } from "@/lib/auth/roleHierarchy";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -35,7 +36,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/admin" replace />;
   }
 
-  if (allowedRoles && effectiveRole && !allowedRoles.includes(effectiveRole as AppRole)) {
+  if (allowedRoles && effectiveRole && !anyRoleSatisfies(allowedRoles, effectiveRole as AppRole)) {
     return <Navigate to="/" replace />;
   }
 
