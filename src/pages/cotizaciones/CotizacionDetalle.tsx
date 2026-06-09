@@ -12,6 +12,7 @@ import { CotizacionDetalleHeader } from "@/components/cotizacion/detalle/Cotizac
 import { DialogGenerarEmbarques } from "@/components/cotizacion/detalle/DialogGenerarEmbarques";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import CotizacionInformativaDetalle from "@/pages/cotizaciones/CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
@@ -44,7 +45,6 @@ export default function CotizacionDetalle() {
   }
 
   if (cotizacion.tipo_documento === "informativa") {
-    const CotizacionInformativaDetalle = require("@/pages/cotizaciones/CotizacionInformativaDetalle").default;
     return <CotizacionInformativaDetalle cotizacion={cotizacion} onBack={() => navigate("/cotizaciones")} />;
   }
 
