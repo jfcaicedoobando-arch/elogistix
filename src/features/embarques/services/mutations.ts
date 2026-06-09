@@ -54,9 +54,14 @@ export interface ActualizarEmbarqueRpcInput {
 }
 
 export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): Promise<void> {
+  // Defensa en profundidad: el operador y el correo del creador son inmutables
+  // una vez establecidos (también hay trigger en BD). Los removemos del payload
+  // para que ediciones posteriores nunca intenten sobrescribirlos.
+  const { operador: _op, created_by_email: _cbe, created_by: _cb, ...embarqueSinCreador } = input.embarque;
+  void _op; void _cbe; void _cb;
   const { error } = await supabase.rpc('actualizar_embarque_completo', {
     p_embarque_id: input.id,
-    p_embarque: toDbJson(input.embarque),
+    p_embarque: toDbJson(embarqueSinCreador),
     p_conceptos_venta: toDbJson(input.conceptosVenta),
     p_conceptos_costo: toDbJson(input.conceptosCosto),
     p_request_id: input.requestId,
