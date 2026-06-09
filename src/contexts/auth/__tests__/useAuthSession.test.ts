@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 
 const { mockUnsubscribe, mockSubscribe, mockGetSession } = vi.hoisted(() => {
   const unsub = vi.fn();
@@ -55,15 +55,14 @@ describe("useAuthSession", () => {
     const fakeSession = { user: fakeUser, access_token: "tok" };
     mockGetSession.mockResolvedValueOnce(fakeSession);
     const { result } = renderHook(() => useAuthSession());
-    await new Promise((r) => setTimeout(r, 20));
-    expect(result.current.user?.id).toBe("u-hyd");
+    await waitFor(() => expect(result.current.user?.id).toBe("u-hyd"));
     expect(result.current.session?.access_token).toBe("tok");
   });
 
   it("ante error en getCurrentSession no rompe y mantiene user=null", async () => {
     mockGetSession.mockRejectedValueOnce(new Error("network"));
     const { result } = renderHook(() => useAuthSession());
-    await new Promise((r) => setTimeout(r, 20));
+    await waitFor(() => expect(mockGetSession).toHaveBeenCalled());
     expect(result.current.user).toBeNull();
     expect(result.current.session).toBeNull();
   });

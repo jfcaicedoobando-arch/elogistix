@@ -33,7 +33,9 @@ function main() {
       "  • skip-without-issue: añade un comentario `// TODO(#123): razón` arriba del .skip/.only/.todo,\n" +
       "    o elimina el test si ya no aplica.\n" +
       "  • duplicate-title: renombra el título para reflejar el contexto,\n" +
-      "    o agrégalo a DUPLICATE_ALLOWLIST en scripts/lib/tests.ts si es intencional.\n",
+      "    o agrégalo a DUPLICATE_ALLOWLIST en scripts/lib/tests.ts si es intencional.\n" +
+      "  • missing-assertions: añade al menos un `expect(...)` o `assert*` dentro del bloque del test.\n" +
+      "    Si es un smoke de 'no-throw', usa `expect(() => fn()).not.toThrow()`.\n",
   );
   process.exit(1);
 }

@@ -62,14 +62,14 @@ export default defineConfig({
         "src/vite-env.d.ts",
         "src/integrations/supabase/**",
       ],
-      // Umbrales mínimos globales. Subir gradualmente conforme avance la cobertura.
-      // Actualmente la app tiene ~14-27% de file-coverage; arrancamos en 10% para
-      // que CI no falle y vamos elevando en cada milestone.
+      // Umbrales mínimos globales. Subimos de 10 → 25 tras la auditoría de
+      // tests (la app está en ~29% lines / 47% functions / 67% branches).
+      // Deja margen de ~4 puntos sobre el real para absorber fluctuaciones.
       thresholds: {
-        lines: 10,
-        statements: 10,
-        functions: 10,
-        branches: 50,
+        lines: 25,
+        statements: 25,
+        functions: 40,
+        branches: 55,
       },
     },
   },
