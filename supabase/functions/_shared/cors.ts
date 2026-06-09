@@ -7,13 +7,16 @@
  *   caso contrario devuelve `"null"`. Úsalo en TODA edge function que
  *   requiera JWT (user-management, parse-csf, auditoria-*).
  *
- * Whitelist: dominios `*.lovable.app` (preview + published) + dominio custom
- * `elogistix.lovable.app` + `localhost:8080` para dev.
+ * Whitelist: dominios `*.lovable.app` / `*.lovableproject.com` (preview +
+ * published) + dominios custom de producción (Libre Carga) + localhost dev.
  *
  * Headers `x-supabase-client-*` requeridos por SDK v2.95+.
  */
 const ALLOW_HEADERS =
   "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version";
+
+const ALLOW_METHODS = "GET, POST, OPTIONS";
+const MAX_AGE = "86400";
 
 const ALLOWED_HOST_SUFFIXES = [".lovable.app", ".lovableproject.com"];
 const ALLOWED_EXACT = new Set([
@@ -23,6 +26,7 @@ const ALLOWED_EXACT = new Set([
   // Dominios custom de producción (Libre Carga)
   "https://librecarga.com",
   "https://www.librecarga.com",
+  "https://elogistix.lovable.app",
 ]);
 
 function isAllowedOrigin(origin: string): boolean {
@@ -41,6 +45,7 @@ function isAllowedOrigin(origin: string): boolean {
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": ALLOW_HEADERS,
+  "Access-Control-Allow-Methods": ALLOW_METHODS,
 };
 
 /** CORS con whitelist — usar en endpoints autenticados. */
@@ -50,6 +55,8 @@ export function buildCors(req: Request): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Headers": ALLOW_HEADERS,
+    "Access-Control-Allow-Methods": ALLOW_METHODS,
+    "Access-Control-Max-Age": MAX_AGE,
     "Vary": "Origin",
   };
 }

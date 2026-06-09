@@ -100,7 +100,9 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
               return (
                 <div key={c.id} className="flex items-center gap-3 border rounded p-2">
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{v?.nombre ?? c.user_id}</p>
+                    <p className={`text-sm font-medium ${v?.nombre ? "" : "text-muted-foreground italic"}`}>
+                      {v?.nombre ?? "No disponible"}
+                    </p>
                     <p className="text-xs text-muted-foreground">Alta: {formatDate(c.fecha_alta.slice(0, 10))}</p>
                   </div>
                   <Input

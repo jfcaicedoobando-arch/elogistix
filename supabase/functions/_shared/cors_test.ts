@@ -65,3 +65,24 @@ Deno.test("handlePreflight (wildcard): responde con * en OPTIONS", () => {
 Deno.test("corsHeaders: incluye Allow-Headers con tokens supabase", () => {
   assert(corsHeaders["Access-Control-Allow-Headers"].includes("x-supabase-client-platform"));
 });
+
+Deno.test("buildCors: acepta dominio custom librecarga.com", () => {
+  const c = buildCors(req("https://librecarga.com"));
+  assertEquals(c["Access-Control-Allow-Origin"], "https://librecarga.com");
+});
+
+Deno.test("buildCors: acepta dominio custom www.librecarga.com", () => {
+  const c = buildCors(req("https://www.librecarga.com"));
+  assertEquals(c["Access-Control-Allow-Origin"], "https://www.librecarga.com");
+});
+
+Deno.test("buildCors: incluye Allow-Methods POST y OPTIONS", () => {
+  const c = buildCors(req("https://librecarga.com"));
+  assert(c["Access-Control-Allow-Methods"].includes("POST"));
+  assert(c["Access-Control-Allow-Methods"].includes("OPTIONS"));
+});
+
+Deno.test("buildCors: incluye Max-Age", () => {
+  const c = buildCors(req("https://librecarga.com"));
+  assertEquals(c["Access-Control-Max-Age"], "86400");
+});
