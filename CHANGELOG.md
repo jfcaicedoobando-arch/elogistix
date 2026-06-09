@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.66.2] - 2026-06-09
+- **fix(seguridad)**: `has_role` redefinida como agrupador funcional — un usuario con rol moderno satisface también los chequeos legacy (`admin_org`/`super_admin` ⇒ `admin`; `coordinador_logistico`/`ejecutivo_pricing`/`gerente_operaciones`/admins ⇒ `operador`; `customer_service`/`vendedor`/`contador`/`tesorero`/operativos/admins ⇒ `viewer`). Restablece el acceso de los usuarios migrados a Usuarios, Cotizaciones, Embarques, Clientes y a las RPCs de auditoría/dashboard sin reescribir las ~100 políticas RLS.
+- **fix(seguridad)**: `is_org_admin` acepta tanto `admin` como `admin_org` en `organization_members`, además de `super_admin`.
+
 ## [12.66.1] - 2026-06-09
 - **fix(seguridad)**: `user_roles` queda con un único rol por usuario (`UNIQUE (user_id)`). Se deduplican registros existentes conservando el rol de mayor privilegio. Soluciona el caso en que un usuario con dos roles (por ejemplo `admin_org` + `customer_service` heredados del backfill) recibía el más restrictivo al azar y perdía acceso a Usuarios, Cotizaciones y Embarques.
 - **fix(seguridad)**: `get_user_context` ahora ordena por prioridad de rol al elegir el rol del usuario y de la organización, como defensa en profundidad ante futuras duplicaciones.
