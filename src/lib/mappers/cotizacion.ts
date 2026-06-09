@@ -50,12 +50,13 @@ function partesCliente(v: CotizacionFormValues, clientes: { id: string; nombre: 
 function partesMercancia(v: CotizacionFormValues) {
   const esMaritimo = v.modo === "Marítimo";
   const esAereo = v.modo === "Aéreo";
+  const esTerrestre = v.modo === "Terrestre";
   const esFcl = esMaritimo && v.tipoEmbarque === "FCL";
   const esLcl = esMaritimo && v.tipoEmbarque === "LCL";
   return {
     modo: v.modo,
     tipo: v.tipo,
-    incoterm: v.incoterm,
+    incoterm: esTerrestre ? "N/A" : v.incoterm,
     tipo_carga: v.tipoCarga,
     msds_archivo: null as string | null,
     tipo_embarque: esMaritimo ? v.tipoEmbarque : "FCL",
