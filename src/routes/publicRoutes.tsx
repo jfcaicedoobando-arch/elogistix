@@ -14,6 +14,7 @@ const LogoPreview = lazy(() => import("@/pages/marketing/LogoPreview"));
 const Privacidad = lazy(() => import("@/pages/legal/Privacidad"));
 const Terminos = lazy(() => import("@/pages/legal/Terminos"));
 const GuiaCartaPorte = lazy(() => import("@/pages/marketing/GuiaCartaPorte"));
+const GuiaIncoterms2020 = lazy(() => import("@/pages/marketing/GuiaIncoterms2020"));
 
 export const publicRoutes = (
   <>
@@ -26,6 +27,7 @@ export const publicRoutes = (
     <Route path="/legal/privacidad" element={<Privacidad />} />
     <Route path="/legal/terminos" element={<Terminos />} />
     <Route path="/recursos/guia-carta-porte-3" element={<GuiaCartaPorte />} />
+    <Route path="/recursos/guia-incoterms-2020" element={<GuiaIncoterms2020 />} />
     <Route path="*" element={<NotFound />} />
 
   </>
