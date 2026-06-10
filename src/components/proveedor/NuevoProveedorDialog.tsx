@@ -15,7 +15,7 @@ import {
   SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
-import DocumentChecklist from "@/components/shared/DocumentChecklist";
+import { BANCOS_MEXICO } from "@/constants/bancosMexico";
 import { useNuevoProveedorController } from "@/hooks/proveedor";
 import type { Enums } from "@/types/db";
 import { useRef } from "react";
