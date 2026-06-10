@@ -15,6 +15,7 @@ import {
   useCondicionNavieraMutations,
   useProveedoresNaviera,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
+import type { ProveedorOpcion } from "@/features/costeo/services/agentes";
 import type {
   CosteoNavieraCondicion,
   NavieraCondicionInput,
@@ -89,7 +90,7 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
                 Sin proveedores tipo "Naviera". Créalos en Directorio → Proveedores.
               </SelectItem>
             )}
-            {proveedores.map((p) => (
+            {(proveedores as ProveedorOpcion[]).map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
             ))}
           </SelectContent>
