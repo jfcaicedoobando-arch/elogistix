@@ -29,19 +29,13 @@ const BASELINE: ReadonlySet<string> = new Set<string>([
   // hooks/ o contexts/ falle la CI de inmediato.
 ]);
 
-// Allowlist temporal para imports directos a supabase desde pages/ (flujos de
-// auth que aún no migran a services/auth). Ver mem://audit/pendings.
-const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/pages/auth/ForgotPasswordDialog.tsx",
-  "src/pages/auth/ResetPassword.tsx",
-]);
+// Allowlist temporal para imports directos a supabase desde pages/components.
+// 12.76.3 — vacío: todos los flujos de auth migrados a `@/services/auth`.
+const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 // Allowlist temporal para archivos > 200 líneas pendientes de split.
-// Ver mem://audit/pendings; quitar al refactorizar.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/pages/auth/Login.tsx",
-  "src/lib/mappers/genericPayloadMapper.ts",
-]);
+// 12.76.3 — vacío: Login.tsx y genericPayloadMapper.ts divididos.
+const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 
 function walk(dir: string, out: string[] = []): string[] {
