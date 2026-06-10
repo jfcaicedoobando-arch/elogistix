@@ -41,13 +41,17 @@ export const EMPTY_PROVEEDOR_FORM = {
   telefono: "",
   moneda_preferida: "MXN" as Moneda,
   origen_proveedor: null as "Nacional" | "Extranjero" | null,
-  // Datos fiscales (CSF) — necesarios para timbrar CFDI 4.0.
+  // Datos fiscales (CSF) — opcionales, solo para registro interno.
   cp: "",
   direccion: "",
   ciudad: "",
   estado: "",
   regimen_fiscal: "",
+  // Datos bancarios — opcionales (paso 2).
+  banco: "",
+  clabe: "",
 };
+
 
 export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
 
