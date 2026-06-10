@@ -5,7 +5,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
 import { ShieldCheck, ShieldOff } from "lucide-react";
