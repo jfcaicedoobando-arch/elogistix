@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import {
-  findProveedorByRfc,
+  findProveedorByRfcEnOrg,
 } from "@/services/proveedor";
 import {
   subirArchivosCfdiFactura,
