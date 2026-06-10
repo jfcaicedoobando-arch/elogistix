@@ -25,16 +25,16 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Supabase emite PASSWORD_RECOVERY cuando el usuario abre el enlace de recovery.
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    const sub = subscribeToAuthChanges((event) => {
       if (event === "PASSWORD_RECOVERY") setValidSession(true);
     });
     // Si ya hay sesión activa (el link puso el token), también permitimos.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setValidSession(true);
+    getCurrentSession().then((session) => {
+      if (session) setValidSession(true);
       setReady(true);
     });
     return () => {
-      sub.subscription.unsubscribe();
+      sub.unsubscribe();
     };
   }, []);
 
