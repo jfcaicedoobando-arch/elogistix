@@ -1,53 +1,47 @@
-## Causa raíz
+## Problema
 
-La edge function `user-management` aún tenía hardcodeada la lista de roles legacy:
+1. **Permisos parse-csf**: La edge function `parse-csf` exige admin global o admin de organización (`checkAdminAccess`). Roles como `contador` (e Isela) reciben **403 "Solo administradores y operadores pueden usar este servicio"** al subir CSF, aunque pueden crear proveedores.
 
-```ts
-const VALID_ROLES = ["admin", "operador", "viewer"] as const;
-const selectedRole = VALID_ROLES.includes(role) ? role : "viewer";
-```
+2. **CSF en proveedores logísticos nacionales**: El botón "Subir CSF" sólo aparece cuando la categoría es **Gasto Operativo** (`c.isGasto`). En **Logístico + Nacional** (que sí tiene RFC mexicano) no se ofrece la carga automática.
 
-Cuando el modal envió `role = "contador"` (rol moderno), no estaba en la lista, así que **silenciosamente degradó a `viewer`** y guardó:
+## Cambios
 
-- `auth.users` → creado ✅
-- `user_roles.role = viewer`
-- `organization_members.role = viewer`
+### 1. Relajar permisos en `parse-csf` (`supabase/functions/parse-csf/index.ts`)
 
-Por eso la pantalla de Usuarios muestra "Viewer" y en la app no tiene permisos de Contador.
+Reemplazar el gate `checkAdminAccess` por una verificación más laxa: **basta con que el usuario esté autenticado y pertenezca a una organización** (cualquier rol). Esto es consistente con quién puede crear proveedores (contador, coordinador_logistico, admin_org, etc.). Implementación:
 
-## Plan
+- Quitar la llamada a `checkAdminAccess`.
+- Consultar `organization_members` por `user_id`; si no hay membresía → 403.
+- Mantener el JWT obligatorio (no anónimo) para evitar drenaje de créditos Gemini.
+- Loggear `user_id` y `organization_id` resuelto.
 
-### 1. Reparar el usuario existente (Isela)
+No se amplían roles "admin"; se cambia la política a "miembro autenticado de org", que es la audiencia correcta de la herramienta.
 
-Actualizar sus dos registros a `contador` (con `insert` tool, son UPDATEs sobre datos):
+### 2. Habilitar CSF en proveedores Logísticos Nacionales
 
-- `public.user_roles` → `role = 'contador'` para `user_id = 922e1e94-bd18-43b3-9dfb-3e06738976ac`
-- `public.organization_members` → mismo cambio
+**`src/components/proveedor/NuevoProveedorDialog.tsx`**:
+- Cambiar la condición del bloque de carga CSF de `c.isGasto` a `c.isGasto || (c.isLogistico && c.form.origen_proveedor === "Nacional")`.
+- Mover el bloque para que aparezca **después** de seleccionar Origen (ya que para logístico depende de "Nacional"), pero antes del campo Nombre.
+- Texto: "Opcional. Extraemos automáticamente nombre y RFC desde la CSF del SAT."
 
-### 2. Sincronizar `VALID_ROLES` con el catálogo moderno
+No requiere cambios en `useNuevoProveedorController.handleCsfUpload` — ya rellena `nombre` y `rfc` y aplica a cualquier categoría.
 
-En `supabase/functions/user-management/handlers.ts`:
+### 3. Versionado y changelog
 
-- Reemplazar `VALID_ROLES` por la lista completa: `admin_org, gerente_operaciones, gerente_visor, coordinador_logistico, ejecutivo_pricing, contador, tesorero, vendedor, customer_service` + legacy (`admin, operador, viewer`) para retro-compatibilidad.
-- Si el `role` recibido **no está** en la lista → devolver **400 con mensaje claro** ("Rol no soportado: X"), en vez de degradar silenciosamente a viewer. Así nunca volverá a pasar este bug.
-
-### 3. Asegurar persistencia del rol moderno
-
-El bloque actual sólo actualiza `user_roles` cuando `selectedRole !== "viewer"`. Con la nueva lista no hay drama, pero lo dejo más explícito: siempre persistir el rol seleccionado tanto en `user_roles` como en `organization_members`.
-
-### 4. Versionado y changelog
-
-- `APP_VERSION` → **`12.76.10`**
-- Entrada en `CHANGELOG.md` documentando el fix y la reparación del usuario.
+- `APP_VERSION` → `12.76.11`
+- `CHANGELOG.md` (root): entrada `## [12.76.11] - 2026-06-10` con bullets:
+  - Fix: `parse-csf` ahora permite a cualquier miembro de organización (contador, coordinador, etc.) usar la extracción de CSF.
+  - Mejora: el alta de proveedores logísticos nacionales ofrece carga de CSF para autollenar nombre y RFC.
 
 ## Archivos a tocar
 
-- `supabase/functions/user-management/handlers.ts` — expandir `VALID_ROLES` + validación estricta.
-- `src/constants/appVersion.ts` + `CHANGELOG.md` — bump.
-- Una operación de datos (no migración) sobre `user_roles` y `organization_members` para reparar a Isela.
+- `supabase/functions/parse-csf/index.ts` (lógica de auth)
+- `src/components/proveedor/NuevoProveedorDialog.tsx` (UI condicional)
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
 
-## Lo que NO toco
+## Fuera de alcance
 
-- Esquema de BD, enum `app_role`, función `has_role`, RLS — todo eso ya está correcto desde la versión `12.76.7`.
-- Componente del modal (ya manda el rol correcto).
-- `checkAdminAccess` — fix anterior (`12.76.9`) ya funciona.
+- No cambia el enum `app_role` ni RLS.
+- No toca `checkAdminAccess` (otras funciones siguen usándolo).
+- No modifica el flujo de gasto operativo existente.
