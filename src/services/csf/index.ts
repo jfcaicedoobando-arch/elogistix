@@ -8,6 +8,7 @@ export interface CsfParsedData {
   direccion?: string;
   ciudad?: string;
   estado?: string;
+  regimen_fiscal?: string;
 }
 
 /**
