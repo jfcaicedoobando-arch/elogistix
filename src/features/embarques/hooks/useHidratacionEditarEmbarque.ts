@@ -26,8 +26,12 @@ interface Params<TForm extends FieldValues> {
   initialized: boolean;
   hidratoContactos: boolean;
   hidratoContenedores: boolean;
+  hidratoVenta: boolean;
+  hidratoCosto: boolean;
   setHidratoContactos: (v: boolean) => void;
   setHidratoContenedores: (v: boolean) => void;
+  setHidratoVenta: (v: boolean) => void;
+  setHidratoCosto: (v: boolean) => void;
   embarque: { shipper: string | null; consignatario: string | null } | undefined | null;
   contactos: Parameters<typeof resolverValorContactoDesdeTexto>[1];
   selectedClienteNombre?: string;
@@ -41,9 +45,9 @@ interface Params<TForm extends FieldValues> {
 }
 
 export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Params<TForm>) {
-  // Conceptos venta
+  // Conceptos venta — hidratar UNA sola vez; después el estado local manda.
   useEffect(() => {
-    if (!p.initialized || p.conceptosVentaDb.length === 0) return;
+    if (!p.initialized || p.hidratoVenta || p.conceptosVentaDb.length === 0) return;
     p.inicializarVenta(p.conceptosVentaDb.map((v, i) => ({
       id: i + 1,
       concepto: v.descripcion,
@@ -52,11 +56,13 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       moneda: v.moneda,
       contenedorId: v.contenedor_id ?? null,
     })));
-  }, [p.conceptosVentaDb, p.initialized, p.inicializarVenta, p]);
+    p.setHidratoVenta(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);
 
-  // Conceptos costo
+  // Conceptos costo — hidratar UNA sola vez.
   useEffect(() => {
-    if (!p.initialized || p.conceptosCostoDb.length === 0) return;
+    if (!p.initialized || p.hidratoCosto || p.conceptosCostoDb.length === 0) return;
     p.inicializarCosto(p.conceptosCostoDb.map((c, i) => ({
       id: i + 1,
       proveedorId: c.proveedor_id ?? "",
@@ -65,7 +71,9 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       moneda: c.moneda,
       contenedorId: c.contenedor_id ?? null,
     })));
-  }, [p.conceptosCostoDb, p.initialized, p.inicializarCosto, p]);
+    p.setHidratoCosto(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.initialized, p.hidratoCosto, p.conceptosCostoDb]);
 
   // Contactos shipper/consignatario
   useEffect(() => {
