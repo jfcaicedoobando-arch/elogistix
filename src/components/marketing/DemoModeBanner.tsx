@@ -16,7 +16,7 @@ export function DemoModeBanner() {
     >
       <Sparkles className="h-4 w-4" aria-hidden="true" />
       <span>
-        Estás en <strong>modo demo</strong> · datos de ejemplo, se reinician en cada acceso.
+        Estás en <strong>modo demo</strong> como administrador · datos de ejemplo, se reinician en cada acceso.
       </span>
     </div>
   );
