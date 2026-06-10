@@ -55,11 +55,13 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {c.isLogistico
-                  ? "Proveedor logístico: naviera, transportista, agente, etc."
-                  : "Gasto operativo: renta, internet, papelería, SaaS, honorarios, etc."}
-              </p>
+              {c.form.categoria && (
+                <p className="text-xs text-muted-foreground">
+                  {c.isLogistico
+                    ? "Proveedor logístico: naviera, transportista, agente, etc."
+                    : "Gasto operativo: renta, internet, papelería, SaaS, honorarios, etc."}
+                </p>
+              )}
             </div>
 
             {!c.isGasto && (
