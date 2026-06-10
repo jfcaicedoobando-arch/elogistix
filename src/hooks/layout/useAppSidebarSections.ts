@@ -12,6 +12,7 @@ import {
   SIDEBAR_SISTEMA_ITEMS,
   SIDEBAR_ADMIN_ITEMS,
   SIDEBAR_SUPER_ADMIN_ITEMS,
+  SIDEBAR_COSTEO_ITEMS,
 } from "@/components/layout/sidebarItems";
 
 export interface SidebarSection {
@@ -117,6 +118,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const sections: SidebarSection[] = [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+    { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
     { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
     { label: "CRM", items: crmItems },
     { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },

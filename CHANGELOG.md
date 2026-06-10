@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.71.0] - 2026-06-10
+- **feat(costeo)**: nuevo módulo **Costeo** (Fase 1) para tarifas marítimas China → México. Backend: 4 tablas (`costeo_agentes`, `costeo_rutas`, `costeo_tarifas`, `costeo_tarifa_recargos`), vista `costeo_tarifas_vigentes_v` que calcula total comparable (flete base + recargos incluidos) y RPC `obtener_top_tarifas(ruta, contenedor, fecha, limit)` que ranquea por precio → días de crédito → días libres de demoras → vigencia. RLS multi-tenant en todas. Frontend: sección **Costeo** en sidebar con páginas `/costeo/agentes` (CRUD de proveedores chinos con días de crédito) y `/costeo/rutas` (alta CN→MX restringida por país). `/costeo/tarifas` queda como placeholder para Fase 2 (matriz + recargos embebidos + integración con wizard de Cotización).
+
 ## [12.70.1] - 2026-06-10
 - **feat(marketing/seo)**: nueva página `/recursos/guia-incoterms-2020` — guía de las 11 reglas Incoterms 2020 aplicadas al comercio exterior mexicano (EXW/FCA/FOB/CIF/DAP/DDP/etc.), con cambios vs 2010, criterios de selección, 8 FAQs y JSON-LD `Article` + `FAQPage` + `BreadcrumbList`. Añadida a `sitemap.xml`. Target: keyword "incoterms 2020" (~2,400/mo, KDI 21).
 - **chore(seo)**: dominio `librecarga.com` verificado en Google Search Console (META) y `sitemap.xml` enviado.

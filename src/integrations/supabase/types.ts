@@ -1144,6 +1144,241 @@ export type Database = {
           },
         ]
       }
+      costeo_agentes: {
+        Row: {
+          activo: boolean
+          contacto_tarifario: string | null
+          created_at: string
+          dias_credito: number
+          email: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          organization_id: string
+          pais: string
+          proveedor_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          contacto_tarifario?: string | null
+          created_at?: string
+          dias_credito?: number
+          email?: string | null
+          id?: string
+          nombre: string
+          notas?: string | null
+          organization_id: string
+          pais?: string
+          proveedor_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          contacto_tarifario?: string | null
+          created_at?: string
+          dias_credito?: number
+          email?: string | null
+          id?: string
+          nombre?: string
+          notas?: string | null
+          organization_id?: string
+          pais?: string
+          proveedor_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_agentes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_rutas: {
+        Row: {
+          activa: boolean
+          created_at: string
+          id: string
+          organization_id: string
+          puerto_destino_id: string
+          puerto_origen_id: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          created_at?: string
+          id?: string
+          organization_id: string
+          puerto_destino_id: string
+          puerto_origen_id: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          created_at?: string
+          id?: string
+          organization_id?: string
+          puerto_destino_id?: string
+          puerto_origen_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_rutas_puerto_destino_id_fkey"
+            columns: ["puerto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_rutas_puerto_origen_id_fkey"
+            columns: ["puerto_origen_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_tarifa_recargos: {
+        Row: {
+          concepto: string
+          created_at: string
+          id: string
+          incluido_en_total: boolean
+          lado: string
+          moneda: string
+          monto: number
+          tarifa_id: string
+        }
+        Insert: {
+          concepto: string
+          created_at?: string
+          id?: string
+          incluido_en_total?: boolean
+          lado: string
+          moneda?: string
+          monto?: number
+          tarifa_id: string
+        }
+        Update: {
+          concepto?: string
+          created_at?: string
+          id?: string
+          incluido_en_total?: boolean
+          lado?: string
+          moneda?: string
+          monto?: number
+          tarifa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_tarifa_recargos_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifa_recargos_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_tarifas: {
+        Row: {
+          agente_id: string
+          creado_por: string | null
+          created_at: string
+          dias_libres_demoras: number
+          estado: string
+          flete_base: number
+          id: string
+          moneda: string
+          naviera_id: string
+          notas: string | null
+          organization_id: string
+          ruta_id: string
+          tipo_contenedor_id: string
+          transit_time_dias: number | null
+          updated_at: string
+          vigente_desde: string
+          vigente_hasta: string
+        }
+        Insert: {
+          agente_id: string
+          creado_por?: string | null
+          created_at?: string
+          dias_libres_demoras?: number
+          estado?: string
+          flete_base: number
+          id?: string
+          moneda?: string
+          naviera_id: string
+          notas?: string | null
+          organization_id: string
+          ruta_id: string
+          tipo_contenedor_id: string
+          transit_time_dias?: number | null
+          updated_at?: string
+          vigente_desde: string
+          vigente_hasta: string
+        }
+        Update: {
+          agente_id?: string
+          creado_por?: string | null
+          created_at?: string
+          dias_libres_demoras?: number
+          estado?: string
+          flete_base?: number
+          id?: string
+          moneda?: string
+          naviera_id?: string
+          notas?: string | null
+          organization_id?: string
+          ruta_id?: string
+          tipo_contenedor_id?: string
+          transit_time_dias?: number | null
+          updated_at?: string
+          vigente_desde?: string
+          vigente_hasta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_tarifas_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_rutas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_tipo_contenedor_id_fkey"
+            columns: ["tipo_contenedor_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_contenedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizacion_costos: {
         Row: {
           cantidad: number
@@ -4171,6 +4406,77 @@ export type Database = {
       }
     }
     Views: {
+      costeo_tarifas_vigentes_v: {
+        Row: {
+          agente_id: string | null
+          agente_nombre: string | null
+          dias_credito: number | null
+          dias_libres_demoras: number | null
+          estado: string | null
+          flete_base: number | null
+          id: string | null
+          moneda: string | null
+          naviera_id: string | null
+          naviera_nombre: string | null
+          organization_id: string | null
+          puerto_destino_id: string | null
+          puerto_destino_nombre: string | null
+          puerto_origen_id: string | null
+          puerto_origen_nombre: string | null
+          recargos_total: number | null
+          ruta_id: string | null
+          tipo_contenedor_id: string | null
+          tipo_contenedor_nombre: string | null
+          total_comparable: number | null
+          transit_time_dias: number | null
+          vigente_desde: string | null
+          vigente_hasta: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_rutas_puerto_destino_id_fkey"
+            columns: ["puerto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_rutas_puerto_origen_id_fkey"
+            columns: ["puerto_origen_id"]
+            isOneToOne: false
+            referencedRelation: "puertos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_rutas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_tarifas_tipo_contenedor_id_fkey"
+            columns: ["tipo_contenedor_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_contenedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_proveedor_facturas_saldo: {
         Row: {
           notas_credito_aplicadas: number | null
@@ -4690,6 +4996,29 @@ export type Database = {
       notificaciones_cliente_marcar_todas_leidas: {
         Args: never
         Returns: number
+      }
+      obtener_top_tarifas: {
+        Args: {
+          p_fecha?: string
+          p_limit?: number
+          p_ruta_id: string
+          p_tipo_contenedor_id: string
+        }
+        Returns: {
+          agente_nombre: string
+          dias_credito: number
+          dias_libres_demoras: number
+          flete_base: number
+          moneda: string
+          naviera_nombre: string
+          puerto_destino_nombre: string
+          puerto_origen_nombre: string
+          recargos_total: number
+          tarifa_id: string
+          total_comparable: number
+          transit_time_dias: number
+          vigente_hasta: string
+        }[]
       }
       operaciones_stats: { Args: never; Returns: Json }
       operadores_distintos: {
