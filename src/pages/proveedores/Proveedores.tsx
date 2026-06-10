@@ -63,17 +63,12 @@ export default function Proveedores() {
     } catch (err) {
       if (err instanceof ProveedorDuplicadoError) {
         const existente = err.existente;
-        toast({
-          title: "Proveedor duplicado",
+        sonnerToast.error("Proveedor duplicado", {
           description: existente
             ? `Ya existe "${existente.nombre}" con este RFC en tu organización.`
             : "Ya existe un proveedor con este RFC en tu organización.",
-          variant: "destructive",
           action: existente
-            ? {
-                label: "Ver",
-                onClick: () => navigate(`/proveedores/${existente.id}`),
-              }
+            ? { label: "Ver", onClick: () => navigate(`/proveedores/${existente.id}`) }
             : undefined,
         });
         throw err; // mantiene el diálogo abierto
