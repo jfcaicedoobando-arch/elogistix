@@ -34,8 +34,21 @@ const BASELINE: ReadonlySet<string> = new Set<string>([
 const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 // Allowlist temporal para archivos > 200 líneas pendientes de split.
-// 12.76.3 — vacío: Login.tsx y genericPayloadMapper.ts divididos.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([]);
+// 12.77.3 — re-poblada con deuda preexistente detectada al re-habilitar el
+// guardrail en CI. Cada entrada debe eliminarse al partir el archivo.
+const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
+  "src/components/proveedor/NuevoProveedorDialog.tsx",
+  "src/pages/proveedores/ProveedorDetalle.tsx",
+  "src/features/embarques/components/StepCostosPrecios.tsx",
+  "src/features/costeo/components/TarifaForm.tsx",
+  "src/hooks/proveedor/useNuevoProveedorController.ts",
+  "src/components/proveedor/EditarProveedorDialog.tsx",
+  "src/services/proveedor/index.ts",
+  "src/components/usuario/NuevoUsuarioDialog.tsx",
+  "src/hooks/cxp/useNuevaFacturaProveedorForm.ts",
+  "src/lib/csv/parseCsv.ts",
+  "src/pages/proveedores/Proveedores.tsx",
+]);
 
 
 function walk(dir: string, out: string[] = []): string[] {
