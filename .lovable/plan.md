@@ -1,39 +1,45 @@
-# Mejorar modal "Nuevo Proveedor" para Gasto Operativo
+## Modernizar modal "Nuevo Usuario"
 
-## Cambios funcionales
+El modal actual (`src/components/usuario/NuevoUsuarioDialog.tsx`) sólo ofrece los 4 roles legacy (`admin`, `operador`, `vendedor`, `viewer`) y no muestra qué hace cada uno. Lo voy a actualizar para usar el catálogo de roles vigente — incluido el recién creado `gerente_visor`.
 
-Cuando la categoría es **Gasto Operativo**:
+### Cambios funcionales
 
-1. **Origen fijo en Nacional**: ocultar el select de Origen y forzar `origen_proveedor = "Nacional"` automáticamente al elegir la categoría.
-2. **Carga vía CSF**: agregar bloque "Cargar Constancia de Situación Fiscal (PDF)" arriba del nombre. Al subir el PDF se llama al edge function `parse-csf` (vía `parseCsf()` en `src/services/csf/index.ts`, que ya existe) y se auto-rellenan `nombre` y `rfc`. Mientras procesa: spinner + inputs deshabilitados. Si falla: toast de error y permite captura manual.
-3. **Ocultar Moneda Preferida**: el campo desaparece de la UI y se fuerza `moneda_preferida = "MXN"`.
+- **Selector de Rol alimentado desde `ASSIGNABLE_ROLES_ADMIN_ORG`** (`src/lib/roles/roleCatalog.ts`), así siempre estará sincronizado con el catálogo:
+  - Administrador
+  - Gerente de Operaciones
+  - Gerente Visor (solo lectura) ← nuevo
+  - Coordinador Logístico
+  - Ejecutivo de Pricing
+  - Contador
+  - Tesorero
+  - Vendedor / KAM
+  - Atención a Clientes
+- Cada opción mostrará **nombre + descripción corta** (de `ROLE_DESCRIPTIONS`) debajo, para que el admin entienda qué está asignando.
+- Rol por defecto: **`customer_service`** (en vez de `viewer` legacy).
+- Debajo del select, un **texto de ayuda dinámico** con la descripción completa del rol seleccionado.
 
-Para **Logístico** todo queda igual (origen seleccionable, sin CSF, moneda visible).
+### Cambios visuales / UX
 
-## Archivos a tocar
+- Encabezado con icono `UserPlus` y subtítulo más claro.
+- Inputs agrupados en secciones: **Credenciales** (email + contraseña) y **Acceso** (organización si aplica + rol).
+- Campo de contraseña con botón ojo (show/hide) y hint "Mínimo 6 caracteres".
+- Validación inline: email mal formado y password < 6 chars muestran error bajo el campo (sin perder los toasts actuales).
+- Botón primario "Crear usuario" con spinner; botón secundario "Cancelar".
+- Mantiene el modo `showOrgSelector` para Super Admin (alta global con selector de organización).
 
-- `src/hooks/proveedor/useNuevoProveedorController.ts`
-  - En `handleCategoriaChange`, cuando pasa a `GastoOperativo` setear `origen_proveedor: "Nacional"` y `moneda_preferida: "MXN"`.
-  - Nuevo estado `csfLoading` + handler `handleCsfUpload(file)` que llama `parseCsf`, popula `nombre` y `rfc`, y muestra toast de éxito/error.
-- `src/components/proveedor/NuevoProveedorDialog.tsx`
-  - Condicionar render del select de Origen y del select de Moneda con `!c.isGasto`.
-  - Agregar bloque CSF (input file + botón + estado) visible solo si `c.isGasto`. Reusar estilos de `CrearProveedorDesdeCfdiDialog` como referencia.
-- `src/hooks/proveedor/__tests__/useNuevoProveedorController.test.tsx`
-  - Caso: al cambiar a GastoOperativo se fija Nacional + MXN.
-  - Caso: `handleCsfUpload` con `parseCsf` mockeado rellena nombre y rfc.
+### Lo que NO cambia
 
-## Validaciones
+- Hook `useCreateUser`, servicio `createUserViaEdgeFunction`, edge function `user-management`, ni la tabla `organization_members`.
+- Comportamiento del callback `onCreated` ni la firma del componente.
+- Modo "Nuevo Usuario Global" (Super Admin) sigue funcionando igual, sólo hereda el nuevo selector de roles.
 
-- `isStep1Valid` ya cubre el caso (Nacional forzado satisface el require de origen). No requiere cambios.
-- Cancel/reset del diálogo: el reset existente vuelve a `Logistico` + valores limpios, sin cambios.
+### Archivos a tocar
 
-## Versionado
+- `src/components/usuario/NuevoUsuarioDialog.tsx` — refactor completo del componente (≤200 líneas).
+- `CHANGELOG.md` + `src/constants/appVersion.ts` → bump a **`12.76.8`** con entrada describiendo el rediseño.
 
-- `APP_VERSION` → `12.76.6`.
-- Entrada en `CHANGELOG.md` describiendo los 3 cambios UX.
+### Notas técnicas
 
-## Fuera de alcance
-
-- No se modifica el endpoint `parse-csf` ni el servicio `parseCsf` (ya funcional, usado en alta de clientes).
-- No se toca la firma de la tabla `proveedores` ni la RPC `proveedores_listado`.
-- No se persiste el PDF de la CSF en storage — solo se extraen datos. Si más adelante se quiere guardar el archivo, queda como mejora futura.
+- Reutilizo `ROLE_LABELS`, `ROLE_DESCRIPTIONS` y `ASSIGNABLE_ROLES_ADMIN_ORG` ya existentes — no se duplica el catálogo.
+- El tipo del estado `role` pasa de `string` a `AppRole` para mantener seguridad de tipos.
+- Sin cambios de base de datos ni de permisos.

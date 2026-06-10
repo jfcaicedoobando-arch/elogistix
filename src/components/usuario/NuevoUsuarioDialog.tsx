@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus, Eye, EyeOff, Mail, Lock, Building2, ShieldCheck } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateUser } from "@/hooks/usuario";
 import { useOrganizationsList } from "@/hooks/admin";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles/roleCatalog";
+import type { AppRole } from "@/types/appRole";
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,25 +22,50 @@ interface Props {
   showOrgSelector?: boolean;
 }
 
+const DEFAULT_ROLE: AppRole = "customer_service";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, showOrgSelector = false }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("viewer");
+  const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState<AppRole>(DEFAULT_ROLE);
   const [orgId, setOrgId] = useState("");
+  const [touched, setTouched] = useState({ email: false, password: false });
   const { toast } = useToast();
   const createUser = useCreateUser();
 
   const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
 
+  const emailError = useMemo(
+    () => (touched.email && email && !EMAIL_REGEX.test(email) ? "Email no válido" : null),
+    [email, touched.email],
+  );
+  const passwordError = useMemo(
+    () => (touched.password && password && password.length < 6 ? "Mínimo 6 caracteres" : null),
+    [password, touched.password],
+  );
+
+  const reset = () => {
+    setEmail("");
+    setPassword("");
+    setShowPassword(false);
+    setRole(DEFAULT_ROLE);
+    setOrgId("");
+    setTouched({ email: false, password: false });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ email: true, password: true });
     if (!email || !password) return;
-    if (showOrgSelector && !orgId) {
-      notifyError(toast, { title: "Error", description: "Selecciona una organización", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
-      return;
-    }
+    if (!EMAIL_REGEX.test(email)) return;
     if (password.length < 6) {
       notifyError(toast, { title: "Error", description: "La contraseña debe tener al menos 6 caracteres", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      return;
+    }
+    if (showOrgSelector && !orgId) {
+      notifyError(toast, { title: "Error", description: "Selecciona una organización", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
 
@@ -46,74 +73,126 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
       { email, password, role, orgId: showOrgSelector ? orgId : undefined },
       {
         onSuccess: () => {
-          notifySuccess(toast, { title: "Usuario creado", description: `Se registró ${email} como ${role}` });
-          setEmail("");
-          setPassword("");
-          setRole("viewer");
-          setOrgId("");
+          notifySuccess(toast, { title: "Usuario creado", description: `Se registró ${email} como ${ROLE_LABELS[role]}` });
+          reset();
           onOpenChange(false);
           onCreated();
         },
         onError: (err: unknown) => {
           notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
         },
-      }
+      },
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent className={dialogSize.md}>
         <DialogHeader>
-          <DialogTitle>{showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-primary" />
+            {showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}
+          </DialogTitle>
           <DialogDescription>
             {showOrgSelector
-              ? "Registra un nuevo usuario y asígnalo a una organización."
-              : "Registra un nuevo usuario en el sistema."}
+              ? "Registra un usuario y asígnalo a una organización."
+              : "Registra un usuario para tu organización y asígnale un rol."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nu-email">Email</Label>
-            <Input id="nu-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="usuario@empresa.com" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nu-password">Contraseña</Label>
-            <Input id="nu-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" />
-          </div>
-          {showOrgSelector && (
-            <div className="space-y-2">
-              <Label>Organización</Label>
-              <Select value={orgId} onValueChange={setOrgId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona organización" />
-                </SelectTrigger>
-                <SelectContent>
-                  {orgs.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Sección: Credenciales */}
+          <section className="space-y-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Credenciales</h4>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="nu-email" className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Email</Label>
+              <Input
+                id="nu-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                required
+                placeholder="usuario@empresa.com"
+                aria-invalid={!!emailError}
+              />
+              {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="nu-password" className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Contraseña</Label>
+              <div className="relative">
+                <Input
+                  id="nu-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                  required
+                  minLength={6}
+                  placeholder="Mínimo 6 caracteres"
+                  className="pr-10"
+                  aria-invalid={!!passwordError}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {passwordError
+                ? <p className="text-xs text-destructive">{passwordError}</p>
+                : <p className="text-xs text-muted-foreground">Mínimo 6 caracteres. El usuario podrá cambiarla después.</p>}
+            </div>
+          </section>
+
+          {/* Sección: Acceso */}
+          <section className="space-y-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Acceso</h4>
+
+            {showOrgSelector && (
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> Organización</Label>
+                <Select value={orgId} onValueChange={setOrgId}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona organización" /></SelectTrigger>
+                  <SelectContent>
+                    {orgs.map((o) => (
+                      <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Rol</Label>
+              <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="max-h-80">
+                  {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      <div className="flex flex-col py-0.5">
+                        <span className="font-medium">{ROLE_LABELS[r]}</span>
+                        <span className="text-xs text-muted-foreground line-clamp-1">{ROLE_DESCRIPTIONS[r]}</span>
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                {ROLE_DESCRIPTIONS[role]}
+              </p>
             </div>
-          )}
-          <div className="space-y-2">
-            <Label>Rol</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="operador">Operador</SelectItem>
-                <SelectItem value="vendedor">Vendedor</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </section>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createUser.isPending}>Cancelar</Button>
             <Button type="submit" disabled={createUser.isPending}>
-              {createUser.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {createUser.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
               Crear usuario
             </Button>
           </DialogFooter>
