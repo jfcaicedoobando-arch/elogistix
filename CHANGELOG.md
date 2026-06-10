@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.10] - 2026-06-10
+- **fix(usuarios)**: la edge function `user-management` ahora reconoce los 9 roles modernos (`admin_org`, `gerente_operaciones`, `gerente_visor`, `coordinador_logistico`, `ejecutivo_pricing`, `contador`, `tesorero`, `vendedor`, `customer_service`) además de los legacy. Antes degradaba silenciosamente a `viewer` cualquier rol no listado, lo que provocaba que usuarios creados con `contador`, `tesorero`, etc. quedaran sin permisos. Si el rol enviado no está en el catálogo ahora devuelve 400 explícito en vez de degradar silenciosamente. Se reparó el rol del usuario afectado.
+
 ## [12.76.9] - 2026-06-10
 - **fix(usuarios)**: la edge function `user-management` ya reconoce a los administradores de organización con el rol moderno `admin_org` (antes sólo aceptaba `admin` legacy), evitando el 403 "Solo administradores pueden crear usuarios" al dar de alta usuarios.
 
