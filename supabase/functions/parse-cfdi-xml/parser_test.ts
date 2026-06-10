@@ -43,3 +43,53 @@ Deno.test("parseCfdi rechaza DOCTYPE (XXE)", () => {
   const x = `<!DOCTYPE foo>\n${SAMPLE}`;
   assertThrows(() => parseCfdi(x), Error, "DOCTYPE");
 });
+
+Deno.test("parseCfdi ignora <Impuestos> de concepto y toma el del Comprobante", () => {
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="9" Fecha="2025-03-14T10:00:00" SubTotal="1000.00" Total="1160.00" Moneda="MXN">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto Descripcion="Flete" Importe="1000.00">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="1000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="160.00"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="160.00" TotalImpuestosRetenidos="0.00"/>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.iva_trasladado, 160);
+  assertEquals(r.retenciones, 0);
+});
+
+Deno.test("parseCfdi suma Traslado/Retencion cuando no hay totales en raíz", () => {
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="10" Fecha="2025-03-14T10:00:00" SubTotal="1000.00" Total="1060.00" Moneda="MXN">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto Descripcion="Honorarios" Importe="1000.00">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="1000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="160.00"/>
+        </cfdi:Traslados>
+        <cfdi:Retenciones>
+          <cfdi:Retencion Base="1000" Impuesto="001" TipoFactor="Tasa" TasaOCuota="0.100000" Importe="100.00"/>
+        </cfdi:Retenciones>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.iva_trasladado, 160);
+  assertEquals(r.retenciones, 100);
+});
