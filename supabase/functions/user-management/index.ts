@@ -15,6 +15,8 @@
  *  - "delete"        → elimina un usuario (bloquea self-delete y privesc)
  *  - "invite-client" → invita/vincula un usuario al portal de un cliente
  *  - "list-clients"  → lista los usuarios portal de un cliente
+ *
+ * v12.76.9: acepta `admin_org` como administrador de organización (era sólo `admin`).
  */
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
