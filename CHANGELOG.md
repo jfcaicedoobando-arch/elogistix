@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.17] - 2026-06-10
+- **fix(nuevo-proveedor)**: el modal de Nuevo Proveedor ya no pre-carga "Logístico" en el dropdown de Categoría. Ahora se abre vacío con placeholder "Selecciona categoría" y el usuario debe elegir explícitamente antes de continuar. Los campos dependientes (Origen, Tipo, Subtipo) se ocultan hasta seleccionar categoría.
+
 ## [12.76.16] - 2026-06-10
 - **fix(parse-csf)**: corregido error `Maximum call stack size exceeded` al cargar CSFs grandes (>100 KB). La conversión de PDF a base64 ahora se hace por chunks de 32 KB en el edge function en lugar de spread completo del `Uint8Array`. El contador puede subir CSFs reales del SAT sin fallar.
 
