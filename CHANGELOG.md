@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.12] - 2026-06-10
+- **fix(proveedores)**: el modal "Editar Proveedor" ahora tiene scroll interno (`max-h-[85vh] overflow-y-auto`) para que no se corte en pantallas de laptop pequeñas (1366×768), igual que el modal de nuevo proveedor.
+
 ## [12.76.11] - 2026-06-10
 - **fix(parse-csf)**: la edge function ahora permite a cualquier miembro autenticado de una organización (contador, coordinador, tesorero, etc.) subir la CSF, en vez de exigir rol admin. Mantiene el JWT obligatorio para evitar drenaje de créditos AI.
 - **feat(proveedores)**: el alta de proveedores logísticos **nacionales** ahora ofrece carga de CSF para autollenar nombre y RFC, igual que en gasto operativo.
