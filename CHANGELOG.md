@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.70.0] - 2026-06-10
+- **feat(marketing/seo)**: nueva página pública `/recursos/guia-carta-porte-3` — Guía Carta Porte 3.0 orientada a México con índice navegable, 8 secciones (qué es, obligados, tipos de CFDI, modos, campos, errores, multas, checklist), 8 FAQs y JSON-LD `Article` + `FAQPage` + `BreadcrumbList`. Incluida en `sitemap.xml` con prioridad 0.8.
+
 ## [12.69.0] - 2026-06-09
 - **feat(embarques)**: el campo **operador** ahora es inmutable y siempre refleja al **creador** original del embarque. Nuevo trigger `embarques_protect_creator` en BD que bloquea sobrescrituras de `operador`, `created_by_email` y `created_by`. El cliente además limpia esos campos del payload de edición como defensa en profundidad.
 - **fix(embarques)**: backfill histórico — `created_by_email` y `operador` reasignados desde la bitácora para todos los embarques antiguos. `notas_embarque.usuario` y `eventos_embarque.usuario` rellenados cuando estaban vacíos o como `'sistema'`.
