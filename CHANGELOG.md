@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.8] - 2026-06-10
+- **feat(usuarios)**: rediseño del modal "Nuevo Usuario". Ahora ofrece los 9 roles modernos del catálogo (incluido `gerente_visor`) con etiqueta + descripción, secciones de Credenciales y Acceso, toggle de mostrar contraseña, validación inline de email/contraseña y descripción dinámica del rol seleccionado. Rol por defecto: Atención a Clientes.
+
 ## [12.76.7] - 2026-06-10
 - **feat(roles)**: nuevo rol `gerente_visor` (Gerente Visor — solo lectura). Hereda la visibilidad de finanzas/márgenes de `gerente_operaciones` pero no puede crear, editar ni aprobar. Disponible en el alta de usuarios. Se añadió al enum `app_role`, a `has_role` (grupo viewer), a `usePermissions` (FINANCE_VIEWERS) y al catálogo de roles.
 
