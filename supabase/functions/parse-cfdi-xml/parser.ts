@@ -71,13 +71,28 @@ export function parseCfdi(xml: string): CfdiParsed {
   const emisor = findTag(xml, "Emisor") ?? "";
   const receptor = findTag(xml, "Receptor") ?? "";
 
-  // Suma IVA trasladado a nivel Comprobante.
+  // El primer <Impuestos> suele ser el de un Concepto. El bloque raíz
+  // (hijo del Comprobante) es el único que trae TotalImpuestosTrasladados /
+  // TotalImpuestosRetenidos. Buscar el match correcto, y si no existe,
+  // caer a la suma de <Traslado Impuesto="002"> y <Retencion>.
   let iva = 0;
-  const totImp = findTag(xml, "Impuestos");
-  if (totImp) {
-    iva = num(attr(totImp, "TotalImpuestosTrasladados"));
+  let totRet = 0;
+  const allImp = findAllTags(xml, "Impuestos");
+  const rootImp = allImp.find(
+    (t) => /TotalImpuestosTrasladados|TotalImpuestosRetenidos/i.test(t),
+  );
+  if (rootImp) {
+    iva = num(attr(rootImp, "TotalImpuestosTrasladados"));
+    totRet = num(attr(rootImp, "TotalImpuestosRetenidos"));
+  } else {
+    // Fallback: sumar traslados de IVA (clave SAT 002) y todas las retenciones.
+    for (const t of findAllTags(xml, "Traslado")) {
+      if (/\bImpuesto\s*=\s*"002"/i.test(t)) iva += num(attr(t, "Importe"));
+    }
+    for (const r of findAllTags(xml, "Retencion")) {
+      totRet += num(attr(r, "Importe"));
+    }
   }
-  const totRet = totImp ? num(attr(totImp, "TotalImpuestosRetenidos")) : 0;
 
   const conceptos: CfdiConcepto[] = findAllTags(xml, "Concepto").slice(0, 10).map((c) => ({
     descripcion: attr(c, "Descripcion"),
