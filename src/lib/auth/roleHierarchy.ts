@@ -42,6 +42,7 @@ const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
   coordinador_logistico: ["coordinador_logistico"],
   ejecutivo_pricing: ["ejecutivo_pricing"],
   gerente_operaciones: ["gerente_operaciones"],
+  gerente_visor: ["gerente_visor"],
   customer_service: ["customer_service"],
   contador: ["contador"],
   tesorero: ["tesorero"],
