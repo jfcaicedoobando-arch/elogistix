@@ -4298,8 +4298,10 @@ export type Database = {
       }
       proveedores: {
         Row: {
+          banco: string | null
           categoria: Database["public"]["Enums"]["categoria_proveedor"]
           ciudad: string | null
+          clabe: string | null
           contacto: string
           cp: string | null
           created_at: string
@@ -4324,8 +4326,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          banco?: string | null
           categoria?: Database["public"]["Enums"]["categoria_proveedor"]
           ciudad?: string | null
+          clabe?: string | null
           contacto?: string
           cp?: string | null
           created_at?: string
@@ -4350,8 +4354,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          banco?: string | null
           categoria?: Database["public"]["Enums"]["categoria_proveedor"]
           ciudad?: string | null
+          clabe?: string | null
           contacto?: string
           cp?: string | null
           created_at?: string
