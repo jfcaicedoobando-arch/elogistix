@@ -4299,9 +4299,13 @@ export type Database = {
       proveedores: {
         Row: {
           categoria: Database["public"]["Enums"]["categoria_proveedor"]
+          ciudad: string | null
           contacto: string
+          cp: string | null
           created_at: string
+          direccion: string | null
           email: string
+          estado: string | null
           id: string
           moneda_preferida: Database["public"]["Enums"]["moneda"]
           nombre: string
@@ -4310,6 +4314,7 @@ export type Database = {
             | Database["public"]["Enums"]["origen_proveedor"]
             | null
           pais: string | null
+          regimen_fiscal: string | null
           rfc: string
           subtipo_gasto:
             | Database["public"]["Enums"]["subtipo_gasto_operativo"]
@@ -4320,9 +4325,13 @@ export type Database = {
         }
         Insert: {
           categoria?: Database["public"]["Enums"]["categoria_proveedor"]
+          ciudad?: string | null
           contacto?: string
+          cp?: string | null
           created_at?: string
+          direccion?: string | null
           email?: string
+          estado?: string | null
           id?: string
           moneda_preferida?: Database["public"]["Enums"]["moneda"]
           nombre: string
@@ -4331,6 +4340,7 @@ export type Database = {
             | Database["public"]["Enums"]["origen_proveedor"]
             | null
           pais?: string | null
+          regimen_fiscal?: string | null
           rfc?: string
           subtipo_gasto?:
             | Database["public"]["Enums"]["subtipo_gasto_operativo"]
@@ -4341,9 +4351,13 @@ export type Database = {
         }
         Update: {
           categoria?: Database["public"]["Enums"]["categoria_proveedor"]
+          ciudad?: string | null
           contacto?: string
+          cp?: string | null
           created_at?: string
+          direccion?: string | null
           email?: string
+          estado?: string | null
           id?: string
           moneda_preferida?: Database["public"]["Enums"]["moneda"]
           nombre?: string
@@ -4352,6 +4366,7 @@ export type Database = {
             | Database["public"]["Enums"]["origen_proveedor"]
             | null
           pais?: string | null
+          regimen_fiscal?: string | null
           rfc?: string
           subtipo_gasto?:
             | Database["public"]["Enums"]["subtipo_gasto_operativo"]

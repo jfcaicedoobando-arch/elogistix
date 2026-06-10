@@ -41,6 +41,12 @@ export const EMPTY_PROVEEDOR_FORM = {
   telefono: "",
   moneda_preferida: "MXN" as Moneda,
   origen_proveedor: null as "Nacional" | "Extranjero" | null,
+  // Datos fiscales (CSF) — necesarios para timbrar CFDI 4.0.
+  cp: "",
+  direccion: "",
+  ciudad: "",
+  estado: "",
+  regimen_fiscal: "",
 };
 
 export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
@@ -73,6 +79,12 @@ export function useNuevoProveedorController(
     }
     if (isGasto && !form.subtipo_gasto) return false;
     if (!form.rfc.trim()) return false;
+    // Gasto operativo siempre es nacional y debe poder timbrar CFDI 4.0:
+    // CP y régimen fiscal son obligatorios.
+    if (isGasto) {
+      if (!form.cp.trim()) return false;
+      if (!form.regimen_fiscal.trim()) return false;
+    }
     return true;
   };
 
@@ -150,6 +162,11 @@ export function useNuevoProveedorController(
         ...prev,
         nombre: data.nombre?.trim() || prev.nombre,
         rfc: data.rfc?.trim() || prev.rfc,
+        cp: data.cp?.trim() || prev.cp,
+        direccion: data.direccion?.trim() || prev.direccion,
+        ciudad: data.ciudad?.trim() || prev.ciudad,
+        estado: data.estado?.trim() || prev.estado,
+        regimen_fiscal: data.regimen_fiscal?.trim() || prev.regimen_fiscal,
       }));
       toast.success("CSF procesada. Verifica los datos extraídos.");
     } catch (err) {

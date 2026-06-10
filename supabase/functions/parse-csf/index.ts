@@ -44,6 +44,7 @@ Extrae los siguientes campos y devuélvelos en el tool call:
 - direccion: Dirección completa (concatena: Tipo Vialidad + Nombre Vialidad + Número Exterior + Número Interior + Colonia)
 - ciudad: Nombre del Municipio o Demarcación Territorial
 - estado: Nombre de la Entidad Federativa
+- regimen_fiscal: Régimen fiscal vigente del contribuyente. Devuelve SOLO la clave numérica de 3 dígitos (ej. "601", "612", "626"). Si la CSF lista varios regímenes, elige el vigente o el primero listado. Si no hay régimen, devuelve cadena vacía.
 
 Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
 
@@ -61,12 +62,14 @@ const TOOL_SCHEMA = {
         direccion: { type: "string", description: "Dirección completa" },
         ciudad: { type: "string", description: "Municipio o Demarcación" },
         estado: { type: "string", description: "Entidad Federativa" },
+        regimen_fiscal: { type: "string", description: "Clave numérica del régimen fiscal SAT (3 dígitos)" },
       },
-      required: ["nombre", "rfc", "cp", "direccion", "ciudad", "estado"],
+      required: ["nombre", "rfc", "cp", "direccion", "ciudad", "estado", "regimen_fiscal"],
       additionalProperties: false,
     },
   },
 };
+
 
 async function callAiGateway(apiKey: string, fileName: string, base64: string) {
   return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
