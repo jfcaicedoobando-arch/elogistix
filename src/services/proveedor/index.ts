@@ -104,12 +104,12 @@ export interface ProveedorLite { id: string; nombre: string }
 export async function fetchProveedoresLite(organizationId?: string | null): Promise<ProveedorLite[]> {
   let query = supabase
     .from("proveedores")
-    .select("id, nombre")
-    .order("nombre", { ascending: true })
-    .limit(500);
+    .select("id, nombre");
   if (organizationId) query = query.eq("organization_id", organizationId);
 
-  const { data, error } = await query;
+  const { data, error } = await query
+    .order("nombre", { ascending: true })
+    .limit(500);
   if (error) throw error;
   return (data ?? []) as ProveedorLite[];
 }
