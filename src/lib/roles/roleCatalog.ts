@@ -33,6 +33,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   super_admin: "Acceso total a la plataforma e impersonación cross-tenant.",
   admin_org: "Dueño o gerente general de la organización. Administra usuarios, configuración y todos los módulos.",
   gerente_operaciones: "Supervisa la operación diaria. Lee finanzas y aprueba, sin tocar configuración ni usuarios.",
+  gerente_visor: "Gerente en modo solo lectura. Ve toda la operación y finanzas, sin crear, editar ni aprobar.",
   coordinador_logistico: "Opera cotizaciones, embarques y documentación. No ve márgenes ni costos internos.",
   ejecutivo_pricing: "Arma cotizaciones con costos y P&L preliminar. Visibilidad financiera limitada a sus cotizaciones.",
   contador: "Maneja pre-facturación, CxC, CxP, EERR y notas de crédito. Acceso financiero completo.",
