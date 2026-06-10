@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.15] - 2026-06-10
+- **feat(proveedores-csf)**: el alta de proveedores de gasto operativo ahora propaga del CSF al modal todos los datos fiscales: nombre, RFC, **CP, régimen fiscal (clave SAT), dirección, ciudad y estado**. Antes solo se pre-llenaban nombre y RFC.
+- **feat(proveedores-cfdi)**: agregadas las columnas `cp`, `direccion`, `ciudad`, `estado`, `regimen_fiscal` a `public.proveedores`. CP y régimen fiscal son obligatorios para proveedores de gasto operativo, ya que son los mínimos requeridos por CFDI 4.0 para timbrar facturas de proveedor.
+- **feat(parse-csf)**: la edge function ahora extrae también el régimen fiscal (clave numérica SAT de 3 dígitos) y lo devuelve en la respuesta. Redesplegada.
+- **feat(catalogo-sat)**: nuevo catálogo `REGIMENES_FISCALES_SAT` con los 19 regímenes vigentes de CFDI 4.0 (601, 603, 605, 606, 612, 621, 626, etc.) reutilizable en clientes y proveedores.
+- **feat(editar-proveedor)**: el modal de edición de proveedor de gasto operativo expone los nuevos campos fiscales para completar proveedores antiguos sin volver a subir CSF.
+
 ## [12.76.14] - 2026-06-10
 - **fix(parse-csf)**: redesplegada la edge function `parse-csf` para sincronizar con el código del repo. La versión desplegada anterior aún restringía a admin/operadores y rechazaba al rol `contador` con "Solo administradores y operadores pueden usar este servicio". Ahora cualquier miembro autenticado de una organización (contador, coordinador, admin_org, etc.) puede subir CSF de clientes y proveedores.
 
