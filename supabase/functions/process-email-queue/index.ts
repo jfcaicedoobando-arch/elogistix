@@ -8,14 +8,17 @@ import { processMessage } from './messageProcessor.ts'
 const jsonResp = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 
-async function processQueue(
-  supabase: Awaited<ReturnType<typeof authenticateRequest>> extends { supabase: infer S } ? S : never,
-  queue: string,
-  batchSize: number,
-  sendDelayMs: number,
-  ttlMinutes: number,
-  apiKey: string,
-): Promise<{ processed: number; stop?: 'rate_limited' | 'forbidden' }> {
+interface ProcessQueueArgs {
+  supabase: Awaited<ReturnType<typeof authenticateRequest>> extends { supabase: infer S } ? S : never
+  queue: string
+  batchSize: number
+  sendDelayMs: number
+  ttlMinutes: number
+  apiKey: string
+}
+
+async function processQueue(args: ProcessQueueArgs): Promise<{ processed: number; stop?: 'rate_limited' | 'forbidden' }> {
+  const { supabase, queue, batchSize, sendDelayMs, ttlMinutes, apiKey } = args
   const { data: messages, error: readError } = await supabase.rpc('read_email_batch', {
     queue_name: queue, batch_size: batchSize, vt: 30,
   })
