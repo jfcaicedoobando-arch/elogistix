@@ -47,8 +47,8 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Categoría *</Label>
-              <Select value={c.form.categoria} onValueChange={c.handleCategoriaChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={c.form.categoria || ""} onValueChange={c.handleCategoriaChange}>
+                <SelectTrigger><SelectValue placeholder="Selecciona categoría" /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIAS_PROVEEDOR.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
