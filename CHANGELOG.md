@@ -6,6 +6,21 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.13] - 2026-06-10
+- **fix(ui-fhd)**: barrido de optimización para laptops Full HD (1920×1080). Aplicado `scrollableDialog` (`max-h-[85vh] overflow-y-auto`) a 16 modales que se cortaban en pantallas ≤937px de alto:
+  - Clientes: `DialogEditarCliente`, `DialogContacto`, `PortalInviteDialog`, `DialogConvertirProspecto`.
+  - Embarques: `DialogDuplicarEmbarque`, `AgregarDocumentoDialog`.
+  - Usuarios/Admin: `NuevoUsuarioDialog`, `AgregarMiembroOrgDialog`, `NuevaOrganizacionDialog`.
+  - Facturación: `DialogRegistrarPago`, `DialogHistorialPagos`, `DialogNotaCredito`.
+  - Tesorería: modal "Ignorar movimiento" en `PanelConciliacionMovimiento`.
+  - Portal cliente: `EditarContactoDialog`, `CambiarPasswordDialog`, `PortalCotizacionConfirmDialog`.
+  - Auth: `ForgotPasswordDialog`.
+- **fix(costeo)**: `TarifaForm` ahora usa el token estándar `scrollableDialog` en vez de `max-h-[90vh] overflow-y-auto` manual.
+- **fix(configuracion)**: tablas de Puertos, Navieras y Tipos de Contenedor usan `max-h-[calc(100vh-20rem)]` (antes `max-h-[500px]` fijo) para aprovechar el alto en FHD sin doble scroll.
+- **fix(cotizaciones)**: `TablaCostosLocal` añade `overflow-x-auto` en el contenedor para que las filas con muchos campos no se desborden.
+- **fix(facturacion)**: tabla de conceptos en detalle de factura envuelve en `overflow-x-auto`.
+- **fix(auth)**: card de login pasa de `max-w-sm` a `max-w-md` para mejor balance visual en pantallas grandes.
+
 ## [12.76.12] - 2026-06-10
 - **fix(proveedores)**: el modal "Editar Proveedor" ahora tiene scroll interno (`max-h-[85vh] overflow-y-auto`) para que no se corte en pantallas de laptop pequeñas (1366×768), igual que el modal de nuevo proveedor.
 
