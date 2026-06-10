@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.72.0] - 2026-06-10
+- **feat(costeo)**: **Fase 2** del módulo Costeo — **Condiciones por naviera**. Backend: nuevas tablas `costeo_navieras_condiciones` (vínculo obligatorio a proveedor tipo "Naviera", flag de carta garantía con folio/fecha de expiración, días libres estándar, moneda) y `costeo_naviera_demoras_tarifa` (tabulador escalonado desde-hasta día con monto/día por tipo de contenedor). Nueva RPC `calcular_costo_demoras(condicion, contenedor, dias)` que suma por tramos y devuelve desglose JSON. La vista `costeo_tarifas_vigentes_v` ahora incluye `naviera_tiene_carta_garantia`, `naviera_carta_garantia_activa`, `naviera_dias_libres_default` y `naviera_demora_dia_6`. RLS multi-tenant vía `organization_members` y `security_invoker = on` en la vista.
+- **feat(costeo)**: nueva página `/costeo/navieras` — lista todas las navieras del catálogo con badge de estatus de carta garantía (Vigente / Por vencer ≤30d / Vencida / Sin carta) y diálogo de configuración con dos pestañas: **Condiciones** (carta garantía + días libres + proveedor) y **Tabulador de demoras** (editor por tipo de contenedor: 20'DRY, 40'DRY, 40'HC, 20'RF, 40'HCRF).
+- **feat(costeo/agentes)**: vínculo a Proveedores ahora **obligatorio** (`proveedor_id NOT NULL`). El alta de agente requiere seleccionar un proveedor tipo "Agente de Carga" del directorio; autocompleta nombre y país.
+
 ## [12.71.0] - 2026-06-10
 - **feat(costeo)**: nuevo módulo **Costeo** (Fase 1) para tarifas marítimas China → México. Backend: 4 tablas (`costeo_agentes`, `costeo_rutas`, `costeo_tarifas`, `costeo_tarifa_recargos`), vista `costeo_tarifas_vigentes_v` que calcula total comparable (flete base + recargos incluidos) y RPC `obtener_top_tarifas(ruta, contenedor, fecha, limit)` que ranquea por precio → días de crédito → días libres de demoras → vigencia. RLS multi-tenant en todas. Frontend: sección **Costeo** en sidebar con páginas `/costeo/agentes` (CRUD de proveedores chinos con días de crédito) y `/costeo/rutas` (alta CN→MX restringida por país). `/costeo/tarifas` queda como placeholder para Fase 2 (matriz + recargos embebidos + integración con wizard de Cotización).
 

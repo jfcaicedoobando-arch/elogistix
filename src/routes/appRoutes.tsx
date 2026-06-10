@@ -16,7 +16,7 @@ import {
   Facturacion, FacturaDetalle,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
-  CosteoTarifas, CosteoRutas, CosteoAgentes,
+  CosteoTarifas, CosteoRutas, CosteoAgentes, CosteoNavieras,
   Usuarios, Configuracion,
   CrmLayout, CrmDashboard, CrmMiDia, Leads, LeadDetalle,
   Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion,
@@ -86,6 +86,7 @@ export const appRoutes = (
     <Route path="/costeo/tarifas" element={<CosteoTarifas />} />
     <Route path="/costeo/rutas" element={<CosteoRutas />} />
     <Route path="/costeo/agentes" element={<CosteoAgentes />} />
+    <Route path="/costeo/navieras" element={<CosteoNavieras />} />
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
     <Route
       path="/profit/dashboard"

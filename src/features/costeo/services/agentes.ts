@@ -1,5 +1,5 @@
 /**
- * Servicio: CRUD de agentes de costeo (proveedores chinos).
+ * Servicio: CRUD de agentes de costeo (proveedores chinos vinculados).
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoAgente } from "@/features/costeo/types";
@@ -16,6 +16,7 @@ export async function fetchCosteoAgentes(organizationId: string): Promise<Costeo
 
 export interface CosteoAgenteInput {
   nombre: string;
+  proveedor_id: string;
   pais?: string;
   dias_credito: number;
   contacto_tarifario?: string | null;
@@ -30,7 +31,17 @@ export async function insertCosteoAgente(
 ): Promise<CosteoAgente> {
   const { data, error } = await supabase
     .from("costeo_agentes")
-    .insert({ ...input, pais: input.pais ?? "CN", organization_id: organizationId })
+    .insert({
+      nombre: input.nombre,
+      proveedor_id: input.proveedor_id,
+      pais: input.pais ?? "CN",
+      dias_credito: input.dias_credito,
+      contacto_tarifario: input.contacto_tarifario ?? null,
+      email: input.email ?? null,
+      activo: input.activo ?? true,
+      notas: input.notas ?? null,
+      organization_id: organizationId,
+    })
     .select("*")
     .single();
   if (error) throw error;
@@ -54,4 +65,25 @@ export async function updateCosteoAgente(
 export async function deleteCosteoAgente(id: string): Promise<void> {
   const { error } = await supabase.from("costeo_agentes").delete().eq("id", id);
   if (error) throw error;
+}
+
+/** Lite fetcher de proveedores por tipo, usado en selects del módulo Costeo. */
+export interface ProveedorOpcion {
+  id: string;
+  nombre: string;
+  pais: string | null;
+}
+
+export async function fetchProveedoresPorTipo(
+  tipo: "Agente de Carga" | "Naviera",
+): Promise<ProveedorOpcion[]> {
+  const { data, error } = await supabase
+    .from("proveedores")
+    .select("id, nombre, pais")
+    .eq("tipo", tipo)
+    .is("deleted_at", null)
+    .order("nombre", { ascending: true })
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as ProveedorOpcion[];
 }
