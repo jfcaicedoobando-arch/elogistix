@@ -101,13 +101,15 @@ export async function fetchProveedoresPaginados(
 
 export interface ProveedorLite { id: string; nombre: string }
 
-export async function fetchProveedoresLite(): Promise<ProveedorLite[]> {
-  const { data, error } = await supabase
+export async function fetchProveedoresLite(organizationId?: string | null): Promise<ProveedorLite[]> {
+  let query = supabase
     .from("proveedores")
     .select("id, nombre")
-    .is("deleted_at", null)
     .order("nombre", { ascending: true })
     .limit(500);
+  if (organizationId) query = query.eq("organization_id", organizationId);
+
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as ProveedorLite[];
 }

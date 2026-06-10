@@ -99,9 +99,10 @@ export function useProveedorOperaciones(proveedorId: string | undefined) {
 }
 
 export function useProveedoresLite() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.proveedores.lite(),
-    queryFn: fetchProveedoresLite,
+    queryKey: queryKeys.proveedores.lite(organizationId),
+    queryFn: () => fetchProveedoresLite(organizationId),
     staleTime: 5 * 60_000,
   });
 }
