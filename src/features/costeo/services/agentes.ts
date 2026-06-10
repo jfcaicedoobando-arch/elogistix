@@ -1,0 +1,57 @@
+/**
+ * Servicio: CRUD de agentes de costeo (proveedores chinos).
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { CosteoAgente } from "@/features/costeo/types";
+
+export async function fetchCosteoAgentes(organizationId: string): Promise<CosteoAgente[]> {
+  const { data, error } = await supabase
+    .from("costeo_agentes")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as CosteoAgente[];
+}
+
+export interface CosteoAgenteInput {
+  nombre: string;
+  pais?: string;
+  dias_credito: number;
+  contacto_tarifario?: string | null;
+  email?: string | null;
+  activo?: boolean;
+  notas?: string | null;
+}
+
+export async function insertCosteoAgente(
+  organizationId: string,
+  input: CosteoAgenteInput,
+): Promise<CosteoAgente> {
+  const { data, error } = await supabase
+    .from("costeo_agentes")
+    .insert({ ...input, pais: input.pais ?? "CN", organization_id: organizationId })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as CosteoAgente;
+}
+
+export async function updateCosteoAgente(
+  id: string,
+  patch: Partial<CosteoAgenteInput>,
+): Promise<CosteoAgente> {
+  const { data, error } = await supabase
+    .from("costeo_agentes")
+    .update(patch)
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as CosteoAgente;
+}
+
+export async function deleteCosteoAgente(id: string): Promise<void> {
+  const { error } = await supabase.from("costeo_agentes").delete().eq("id", id);
+  if (error) throw error;
+}
