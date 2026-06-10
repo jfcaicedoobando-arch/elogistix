@@ -14,7 +14,7 @@ import type { Tables } from "@/types/db";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { insertProveedor } from "@/services/proveedor";
+import { insertProveedor, ProveedorDuplicadoError } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { ProveedorTable } from "./ProveedorTable";
