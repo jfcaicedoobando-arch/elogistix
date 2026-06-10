@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.28] - 2026-06-10
+- **fix(cxp/cfdi)**: al subir el XML CFDI, el proveedor no se seleccionaba aunque ya existiera en la BD. La búsqueda usaba coincidencia exacta sin filtrar por organización y fallaba cuando el RFC almacenado tenía espacios o distinto case. Ahora se usa `findProveedorByRfcEnOrg` (ILIKE + filtro por `organization_id`) y se normalizaron en BD los RFC de proveedores existentes (`UPPER(TRIM(rfc))`).
+
 ## [12.76.27] - 2026-06-10
 - **fix(cxp/permisos)**: el botón **Capturar factura** en Cuentas por Pagar (header y empty state) estaba envuelto con `isAdmin`, por lo que el rol **Contador** no lo veía a pesar de tener permisos financieros y poder registrar pagos en las filas. Se cambió la guarda a `canEdit`, alineándola con el resto de acciones de la página. Ahora contador, tesorero, admin y super_admin pueden capturar facturas de proveedor.
 
