@@ -165,7 +165,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Código Postal *</Label>
+                    <Label>Código Postal</Label>
                     <Input
                       value={c.form.cp}
                       maxLength={5}
