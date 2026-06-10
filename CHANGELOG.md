@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.27] - 2026-06-10
+- **fix(cxp/permisos)**: el botón **Capturar factura** en Cuentas por Pagar (header y empty state) estaba envuelto con `isAdmin`, por lo que el rol **Contador** no lo veía a pesar de tener permisos financieros y poder registrar pagos en las filas. Se cambió la guarda a `canEdit`, alineándola con el resto de acciones de la página. Ahora contador, tesorero, admin y super_admin pueden capturar facturas de proveedor.
+
 ## [12.76.26] - 2026-06-10
+
+
 - **fix(rutas/permisos)**: el rol **Contador** (y **Tesorero**) veía en el menú lateral los módulos **Cuentas por Pagar**, **Tesorería** (resumen, cuentas, conciliación, flujo) y **Profit** (dashboard, presupuesto), pero al hacer clic `ProtectedRoute` los bloqueaba porque las rutas sólo permitían `admin` y `super_admin`. Se ampliaron los `allowedRoles` de esas rutas para incluir `contador` y `tesorero`, alineando los permisos de ruta con el sidebar.
 
 ## [12.76.25] - 2026-06-10

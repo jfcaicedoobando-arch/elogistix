@@ -38,7 +38,7 @@ function useCxpFiltrosState() {
 }
 
 export default function Cxp() {
-  const { canEdit, isAdmin } = usePermissions();
+  const { canEdit } = usePermissions();
   const f = useCxpFiltrosState();
 
   const { data = [], isLoading, kpis } = useFacturasCxP({
@@ -94,11 +94,12 @@ export default function Cxp() {
             <Button variant="outline" onClick={handlePdf}>
               <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
-            {isAdmin && (
+            {canEdit && (
               <Button onClick={() => setOpenNueva(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Capturar factura
               </Button>
             )}
+
           </div>
         }
       />
@@ -129,11 +130,12 @@ export default function Cxp() {
                 Captura la primera factura recibida para abrir su saldo en Cuentas por Pagar
                 y empezar a registrar pagos.
               </p>
-              {isAdmin && (
+              {canEdit && (
                 <Button className="mt-4" onClick={() => setOpenNueva(true)}>
                   <Plus className="h-4 w-4 mr-2" /> Capturar primera factura
                 </Button>
               )}
+
             </div>
           ) : (
             <DataTable
