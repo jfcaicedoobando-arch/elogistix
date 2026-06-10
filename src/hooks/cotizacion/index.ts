@@ -5,6 +5,7 @@ export * from './useCotizacionCostos';
 export * from './useCotizacionDetalleHandlers';
 export * from './useCotizacionDetalleState';
 export * from './useCotizacionPL';
+export * from './useCotizacionInformativa';
 export * from './useCotizacionQueries';
 export * from './useCotizaciones';
 export * from './useCotizacionesPageController';
