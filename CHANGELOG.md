@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.19] - 2026-06-10
+- **fix(nuevo-proveedor)**: CP y Régimen Fiscal ya no son obligatorios para proveedores de gasto operativo. Como el proveedor nos factura a nosotros (y no al revés), no necesitamos sus datos para timbrar CFDI; los campos quedan opcionales para registro interno. La etiqueta del CP perdió el asterisco.
+
 ## [12.76.17] - 2026-06-10
 - **fix(nuevo-proveedor)**: el modal de Nuevo Proveedor ya no pre-carga "Logístico" en el dropdown de Categoría. Ahora se abre vacío con placeholder "Selecciona categoría" y el usuario debe elegir explícitamente antes de continuar. Los campos dependientes (Origen, Tipo, Subtipo) se ocultan hasta seleccionar categoría.
 
