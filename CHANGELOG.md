@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.29] - 2026-06-10
+- **fix(cxp/proveedores)**: el dropdown de proveedores en CxP fallaba porque el listado ligero consultaba la columna inexistente `deleted_at` en `proveedores`, dejando vacío el combobox aunque el XML encontrara el RFC. Se quitó ese filtro y se scopeó el listado por organización activa para que el proveedor detectado aparezca seleccionado.
+
 ## [12.76.28] - 2026-06-10
 - **fix(cxp/cfdi)**: al subir el XML CFDI, el proveedor no se seleccionaba aunque ya existiera en la BD. La búsqueda usaba coincidencia exacta sin filtrar por organización y fallaba cuando el RFC almacenado tenía espacios o distinto case. Ahora se usa `findProveedorByRfcEnOrg` (ILIKE + filtro por `organization_id`) y se normalizaron en BD los RFC de proveedores existentes (`UPPER(TRIM(rfc))`).
 

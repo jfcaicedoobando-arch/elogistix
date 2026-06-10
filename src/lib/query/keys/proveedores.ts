@@ -5,5 +5,5 @@ export const proveedores = {
   select: ['proveedores', 'select'] as const,
   selectByOrg: (organizationId?: string | null) => ['proveedores', 'select', organizationId] as const,
   operaciones: (id: string) => ['proveedores', 'operaciones', id] as const,
-  lite: () => ['proveedores', 'lite'] as const,
+  lite: (organizationId?: string | null) => ['proveedores', 'lite', organizationId] as const,
 } as const;
