@@ -64,7 +64,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               )}
             </div>
 
-            {!c.isGasto && (
+            {c.form.categoria && !c.isGasto && (
               <div className="space-y-2">
                 <Label>Origen *</Label>
                 <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>
