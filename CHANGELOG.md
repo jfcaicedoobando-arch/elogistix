@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.7] - 2026-06-10
+- **feat(roles)**: nuevo rol `gerente_visor` (Gerente Visor — solo lectura). Hereda la visibilidad de finanzas/márgenes de `gerente_operaciones` pero no puede crear, editar ni aprobar. Disponible en el alta de usuarios. Se añadió al enum `app_role`, a `has_role` (grupo viewer), a `usePermissions` (FINANCE_VIEWERS) y al catálogo de roles.
+
 ## [12.76.6] - 2026-06-10
 - **feat(proveedores)**: el modal "Nuevo Proveedor" se adapta cuando la categoría es Gasto Operativo: se oculta el select de Origen (forzado a Nacional), se oculta Moneda Preferida (forzada a MXN) y se agrega un botón "Subir CSF" que invoca `parse-csf` para auto-rellenar nombre y RFC desde la Constancia de Situación Fiscal.
 
