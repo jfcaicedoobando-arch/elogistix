@@ -80,12 +80,6 @@ export function useNuevoProveedorController(
     }
     if (isGasto && !form.subtipo_gasto) return false;
     if (!form.rfc.trim()) return false;
-    // Gasto operativo siempre es nacional y debe poder timbrar CFDI 4.0:
-    // CP y régimen fiscal son obligatorios.
-    if (isGasto) {
-      if (!form.cp.trim()) return false;
-      if (!form.regimen_fiscal.trim()) return false;
-    }
     return true;
   };
 
