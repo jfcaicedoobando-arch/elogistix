@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.25] - 2026-06-10
+- **feat(proveedores/detalle)**: en la página de cada proveedor se muestra ahora una tarjeta **Datos bancarios** con Banco y CLABE (enmascarada con toggle ojo para revelar). Junto al botón "Editar" se agregó **Actualizar con CSF** (solo para proveedores nacionales): sube un PDF de Constancia de Situación Fiscal y, antes de aplicar cambios, valida que el RFC extraído coincida con el del proveedor. Si la CSF pertenece a otra empresa, se rechaza con toast detallado y no se modifica nada. Si coincide, actualiza únicamente los campos presentes (nombre, CP, dirección, ciudad, estado, régimen fiscal). Se ampliaron las columnas leídas en el detalle para incluir banco, CLABE y datos fiscales.
+
 ## [12.76.24] - 2026-06-10
 - **feat(proveedores/duplicados)**: prevención de proveedores duplicados. Se añadió un índice único parcial `(organization_id, RFC normalizado)` en la base de datos que excluye los RFCs genéricos del SAT (`XEXX010101000`, `XAXX010101000`). El wizard de alta ahora avisa en tiempo real (debounced 300ms) si el RFC capturado ya pertenece a otro proveedor de la organización, mostrando un enlace al existente. Si pese al aviso se intenta guardar, la BD rechaza con `23505` y la UI muestra un toast con CTA "Ver" hacia el proveedor existente, manteniendo el diálogo abierto. El diálogo "Crear proveedor desde CFDI" detecta el mismo caso y vincula automáticamente la factura al proveedor existente. Se normalizaron 2 proveedores extranjeros que tenían el RFC inválido `X0X0X0X0X0X` al placeholder oficial del SAT.
 

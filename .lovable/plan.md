@@ -1,45 +1,44 @@
 ## Objetivo
-Evitar que se den de alta proveedores duplicados (mismo RFC/Tax ID dentro de la misma organización), con aviso temprano en el wizard y red de seguridad a nivel base de datos.
+Mostrar los datos bancarios en la página de detalle del proveedor y permitir actualizar sus datos fiscales subiendo una CSF, validando que la constancia pertenezca al proveedor antes de aplicar cambios.
 
 ## Cambios
 
-### 1. Base de datos (migración)
-- Añadir índice único `UNIQUE (organization_id, upper(trim(rfc)))` en `public.proveedores`.
-  - Normaliza para que `"raaa010101aaa"` y `"  RAAA010101AAA  "` cuenten como el mismo.
-  - Scope por organización: cada tenant tiene su propio catálogo.
-- Antes de crear el índice, detectar duplicados existentes y abortar la migración con mensaje claro si los hay (no auto-mergeamos: requiere decisión del usuario). Si no hay duplicados, crea el índice.
+### 1. Traer todas las columnas relevantes al detalle
+`src/services/proveedor/index.ts` — `PROVEEDOR_DETAIL_COLUMNS` actualmente omite `banco`, `clabe`, `cp`, `direccion`, `ciudad`, `estado`, `regimen_fiscal`. Agregarlos para que el detalle pueda leerlos.
 
-### 2. Servicio (`src/services/proveedor/index.ts`)
-- Nueva función `checkProveedorExistente(rfc, organizationId)`:
-  - `SELECT id, nombre, tipo FROM proveedores WHERE organization_id = ? AND upper(trim(rfc)) = upper(trim(?)) LIMIT 1`.
-- En `insertProveedor`: capturar error `23505` (unique_violation) y relanzar un error tipado `ProveedorDuplicadoError` con `{ id, nombre }` del existente, para que la UI pueda enlazar.
+### 2. Sección "Datos bancarios" en el detalle
+`src/pages/proveedores/ProveedorDetalle.tsx` — Añadir una nueva `Card` debajo del grid de totales:
+- **Banco:** nombre o "No capturado" en muted.
+- **CLABE interbancaria:** se muestra enmascarada (`••••••••••••XXXX` mostrando solo los últimos 4 dígitos) con un botón ojo (mostrar/ocultar). Si no hay CLABE, "No capturado".
+- Visible siempre (no solo para nacionales) — si no hay datos, sirve como CTA visual para capturarlos en Editar.
 
-### 3. Wizard de nuevo proveedor (aviso suave)
-- En `useNuevoProveedorController`: al `onBlur` del campo RFC/Tax ID del paso 1, si tiene formato válido, consultar `checkProveedorExistente`.
-- Si existe, mostrar un banner `Alert` (variant warning) bajo el campo:
-  > "Ya existe un proveedor con este RFC en tu organización: **{nombre}**. [Ver proveedor]"
-  - El link abre `/proveedores/{id}` en nueva pestaña.
-  - El usuario puede ignorar y seguir (no bloquea avance del wizard); el bloqueo real ocurre al guardar.
-- Debounce 300ms para no spammear queries.
+### 3. Botón "Actualizar con CSF" junto a "Editar"
+En el header de acciones del detalle, agregar un nuevo botón con icono `Upload` que abre un `<input type="file" accept="application/pdf">` oculto. Solo se muestra para proveedores **nacionales** (los extranjeros no tienen CSF).
 
-### 4. Manejo de error al guardar (bloqueo duro)
-- En el `submit` final del wizard y en `CrearProveedorDesdeCfdiDialog`: si `insertProveedor` lanza `ProveedorDuplicadoError`, mostrar `toast` de error con el mismo CTA "Ver proveedor" y dejar el wizard abierto.
+Flujo al seleccionar archivo:
+1. Spinner en el botón (estado `csfLoading`).
+2. Llamar `parseCsf(file)` (servicio existente).
+3. **Validación de pertenencia** (crítico):
+   - Normalizar el RFC extraído (`upper + trim`) y compararlo contra `proveedor.rfc` normalizado.
+   - Si **no coinciden** → toast destructivo: `"La CSF pertenece a {nombreExtraído} (RFC {rfcExtraído}) y no a este proveedor ({proveedor.rfc}). No se actualizó nada."` Abortar.
+   - Si **coinciden** → seguir con el update.
+4. Llamar `handleUpdate(proveedor.id, { cp, direccion, ciudad, estado, regimen_fiscal, nombre })` solo con los campos que vinieron en la CSF (no pisar con vacíos).
+5. Toast de éxito: `"Datos fiscales actualizados desde CSF"`.
 
-### 5. Versionado
-- Bump `APP_VERSION` → `12.76.24`.
-- Entrada en `CHANGELOG.md` raíz: "Prevención de proveedores duplicados (aviso en wizard + restricción única por RFC)."
+Errores de parsing (`parseCsf` lanza): toast con el mensaje del servicio.
+
+### 4. Versionado
+- `APP_VERSION` → `12.76.25`.
+- Entrada en `CHANGELOG.md`: "Datos bancarios visibles en detalle de proveedor + botón para actualizar con CSF validando RFC."
 
 ## Notas técnicas
-- El índice es funcional (`upper(trim(rfc))`), por lo que requiere `IMMUTABLE` — `upper` y `trim` lo son, OK.
-- La RLS existente sigue aplicando para el lookup del aviso suave (sólo ve proveedores de su org), así que el aviso no filtra datos cross-tenant.
-- Si `rfc` viene vacío (no debería, es obligatorio), no se ejecuta el check.
-- Se conserva la lógica actual de validación de formato; sólo agregamos la verificación de unicidad.
+- La validación de pertenencia se hace en el cliente comparando RFCs. Es suficiente porque la CSF del SAT incluye el RFC en el PDF y el edge function `parse-csf` ya lo extrae. Si en el futuro queremos endurecer, se puede hacer la verificación en el edge function mismo (que reciba el `proveedorId` y rechace antes de devolver datos), pero para esta iteración el chequeo cliente es válido — la BD queda intacta hasta que el usuario confirma el match.
+- Para CLABE enmascarada: helper local simple (no agregar al index de utils porque es uso único).
+- No se agregan nuevas columnas a BD; todo ya existe.
+- `EditarProveedorDialog` actualmente no incluye `banco/clabe` (se capturan al alta en el paso 2). Queda fuera de esta tarea (el usuario los puede recapturar dando de alta de nuevo, o pediremos extender el edit en una siguiente iteración si lo solicita).
 
 ## Archivos afectados
-- `supabase/migrations/<timestamp>_proveedores_unique_rfc.sql` (nuevo)
-- `src/services/proveedor/index.ts`
-- `src/hooks/proveedor/useNuevoProveedorController.ts`
-- `src/components/proveedor/NuevoProveedorDialog.tsx` (banner de aviso)
-- `src/components/cxp/CrearProveedorDesdeCfdiDialog.tsx` (manejo de error duplicado)
+- `src/services/proveedor/index.ts` (constante de columnas)
+- `src/pages/proveedores/ProveedorDetalle.tsx` (sección bancaria + botón CSF + handler)
 - `src/constants/appVersion.ts`
 - `CHANGELOG.md`
