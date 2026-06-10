@@ -1,5 +1,6 @@
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState } from "react";
+import { toast as sonnerToast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
@@ -14,7 +15,7 @@ import type { Tables } from "@/types/db";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { insertProveedor } from "@/services/proveedor";
+import { insertProveedor, ProveedorDuplicadoError } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { ProveedorTable } from "./ProveedorTable";
@@ -60,7 +61,19 @@ export default function Proveedores() {
         entidad_nombre: data.nombre,
       });
       notifySuccess(toast, { title: "Proveedor creado correctamente" });
-    } catch {
+    } catch (err) {
+      if (err instanceof ProveedorDuplicadoError) {
+        const existente = err.existente;
+        sonnerToast.error("Proveedor duplicado", {
+          description: existente
+            ? `Ya existe "${existente.nombre}" con este RFC en tu organización.`
+            : "Ya existe un proveedor con este RFC en tu organización.",
+          action: existente
+            ? { label: "Ver", onClick: () => navigate(`/proveedores/${existente.id}`) }
+            : undefined,
+        });
+        throw err; // mantiene el diálogo abierto
+      }
       notifyError(toast, { title: "Error al crear proveedor", method: "HANDLE_ADD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   };

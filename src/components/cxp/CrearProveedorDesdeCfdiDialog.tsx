@@ -51,7 +51,14 @@ export function CrearProveedorDesdeCfdiDialog({
       onCreated(created.id, created.nombre);
       onOpenChange(false);
     } catch (e) {
-      const err = e as { message?: string };
+      const err = e as { name?: string; message?: string; existente?: { id: string; nombre: string } | null };
+      if (err.name === "ProveedorDuplicadoError" && err.existente) {
+        // Vincular al proveedor existente directamente.
+        toast.success(`Vinculado al proveedor existente: ${err.existente.nombre}`);
+        onCreated(err.existente.id, err.existente.nombre);
+        onOpenChange(false);
+        return;
+      }
       toast.error(err.message ?? "Error al crear proveedor");
     }
   };

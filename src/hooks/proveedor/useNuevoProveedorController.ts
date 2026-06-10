@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { parseCsf } from "@/services/csf";
+import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/services/proveedor";
+import { useOrgFilter } from "@/hooks/shared";
 
 
 type TipoProveedor = Enums<"tipo_proveedor">;
@@ -60,10 +62,14 @@ export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
  * Soporta dos categorías: Logístico (con tipo) y Gasto Operativo (con subtipo_gasto).
  */
 export function useNuevoProveedorController(
-  onSave: (data: TablesInsert<"proveedores">) => void,
+  onSave: (data: TablesInsert<"proveedores">) => void | Promise<void>,
   onClose: () => void,
 ) {
+  const { organizationId } = useOrgFilter();
   const [form, setForm] = useState<NuevoProveedorForm>({ ...EMPTY_PROVEEDOR_FORM });
+  const [rfcDuplicado, setRfcDuplicado] = useState<{ id: string; nombre: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
   const [csfLoading, setCsfLoading] = useState(false);
@@ -143,14 +149,44 @@ export function useNuevoProveedorController(
     onClose();
   };
 
-  const handleSave = () => {
+  // Verifica suavemente si el RFC ya existe en la organización (debounced 300ms).
+  useEffect(() => {
+    const rfc = form.rfc.trim();
+    if (!rfc || !organizationId) {
+      setRfcDuplicado(null);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      findProveedorByRfcEnOrg(rfc, organizationId)
+        .then((existente) => setRfcDuplicado(existente))
+        .catch(() => setRfcDuplicado(null));
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [form.rfc, organizationId]);
+
+  const handleSave = async () => {
     const clabeTrim = form.clabe.trim();
     if (clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
       toast.error("La CLABE debe tener exactamente 18 dígitos numéricos.");
       return;
     }
-    onSave({ ...form, clabe: clabeTrim } as TablesInsert<"proveedores">);
-    resetAndClose();
+    setSaving(true);
+    try {
+      await onSave({ ...form, clabe: clabeTrim } as TablesInsert<"proveedores">);
+      reset();
+      onClose();
+    } catch (err) {
+      if (err instanceof ProveedorDuplicadoError) {
+        // El parent ya mostró el toast con CTA; mantener el diálogo abierto.
+        return;
+      }
+      // Otros errores: el parent decide UI; no cerramos.
+    } finally {
+      setSaving(false);
+    }
   };
 
 
@@ -190,6 +226,8 @@ export function useNuevoProveedorController(
     isGasto,
     isAgenteCarga,
     rfcLabel,
+    rfcDuplicado,
+    saving,
     isStep1Valid: isStep1Valid(),
     setField,
     setStep,

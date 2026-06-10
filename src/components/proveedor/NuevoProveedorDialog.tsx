@@ -159,6 +159,20 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
                       onChange={(e) => c.setField("rfc", e.target.value)}
                       placeholder={c.form.origen_proveedor === "Extranjero" ? "Ingresa el Tax ID" : "Ingresa el RFC"}
                     />
+                    {c.rfcDuplicado && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Ya existe un proveedor con este {c.rfcLabel}:{" "}
+                        <a
+                          href={`/proveedores/${c.rfcDuplicado.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium underline"
+                        >
+                          {c.rfcDuplicado.nombre}
+                        </a>
+                        . No podrás guardar un duplicado.
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -294,10 +308,13 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
           )}
           {c.step === 2 && (
             <>
-              <Button variant="outline" onClick={() => c.setStep(1)}>
+              <Button variant="outline" onClick={() => c.setStep(1)} disabled={c.saving}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
               </Button>
-              <Button onClick={c.handleSave}>Crear</Button>
+              <Button onClick={c.handleSave} disabled={c.saving}>
+                {c.saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {c.saving ? "Guardando…" : "Crear"}
+              </Button>
             </>
           )}
         </DialogFooter>
