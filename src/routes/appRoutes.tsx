@@ -84,6 +84,7 @@ export const appRoutes = (
     />
     <Route path="/costeo" element={<Navigate to="/costeo/tarifas" replace />} />
     <Route path="/costeo/tarifas" element={<CosteoTarifas />} />
+    <Route path="/costeo/buscar" element={<CosteoBuscar />} />
     <Route path="/costeo/rutas" element={<CosteoRutas />} />
     <Route path="/costeo/agentes" element={<CosteoAgentes />} />
     <Route path="/costeo/navieras" element={<CosteoNavieras />} />
