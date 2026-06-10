@@ -63,7 +63,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
         </div>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md">
+        <div className="border rounded-md overflow-x-auto">
           {filasMoneda.length === 0 && (
             <div className="text-center text-muted-foreground py-6 text-sm">
               Sin costos. Haz clic en "Agregar" para comenzar.

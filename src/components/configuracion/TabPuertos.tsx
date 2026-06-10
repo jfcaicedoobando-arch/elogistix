@@ -80,7 +80,7 @@ export default function TabPuertos() {
 
         <SearchInput value={puertoBusqueda} onChange={setPuertoBusqueda} placeholder="Buscar por código, nombre o país..." />
 
-        <div className="max-h-[500px] overflow-auto rounded-md border">
+        <div className="max-h-[calc(100vh-20rem)] min-h-[320px] overflow-auto rounded-md border">
           <DataTable
             columns={columns}
             data={puertosFiltrados}

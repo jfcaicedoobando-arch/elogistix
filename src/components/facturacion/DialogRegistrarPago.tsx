@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/hooks/catalogos";
 import { useRegistrarPagoFactura, usePagosFactura } from "@/hooks/facturacion";
@@ -111,7 +112,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.md}>
+      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Registrar pago — Factura {factura.numero}</DialogTitle>
           <DialogDescription>

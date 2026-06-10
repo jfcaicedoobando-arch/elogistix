@@ -9,7 +9,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { useInviteClientUser } from "@/hooks/cliente";
 import { useToast } from "@/hooks/shared";
@@ -62,7 +63,7 @@ export default function PortalInviteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.md}>
+      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Invitar Cliente al Portal</DialogTitle>
         </DialogHeader>

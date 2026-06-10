@@ -13,6 +13,8 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useCosteoRutas } from "@/features/costeo/hooks/useCosteoRutas";
 import { useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
@@ -202,7 +204,7 @@ export function TarifaForm({ open, onOpenChange, initial }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={cn("sm:max-w-2xl", scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Nueva tarifa marítima (USD)</DialogTitle>
         </DialogHeader>

@@ -130,7 +130,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
       </CardContent>
 
       <Dialog open={openIgnorar} onOpenChange={setOpenIgnorar}>
-        <DialogContent>
+        <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
           <DialogHeader><DialogTitle>Ignorar movimiento</DialogTitle></DialogHeader>
           <Label>Motivo</Label>
           <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno..." />

@@ -15,6 +15,8 @@ import { useActualizarContactoPortal } from "@/hooks/portal";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils";
+import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -67,7 +69,7 @@ export function EditarContactoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn("sm:max-w-md", scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Editar contacto</DialogTitle>
           <DialogDescription>Actualiza el nombre y teléfono del contacto principal.</DialogDescription>

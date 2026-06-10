@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
+import { cn } from "@/lib/utils";
+import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -48,7 +50,7 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "" }: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className={cn("max-w-sm", scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Recuperar contraseña</DialogTitle>
           <DialogDescription>

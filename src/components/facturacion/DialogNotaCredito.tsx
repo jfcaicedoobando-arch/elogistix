@@ -11,7 +11,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { useToast } from "@/hooks/shared";
 import { useRegistrarActividad } from "@/hooks/shared";
@@ -116,7 +117,7 @@ export function DialogNotaCredito({ open, onOpenChange, factura, canApprove }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.lg}>
+      <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Notas de crédito — Factura {factura.numero}</DialogTitle>
           <DialogDescription>

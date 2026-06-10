@@ -9,6 +9,8 @@
  * `duplicar_embarque_completo`.
  */
 import { Loader2, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -35,7 +37,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className={cn("max-w-3xl", scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Duplicar embarque {embarque.expediente}</DialogTitle>
           <DialogDescription>

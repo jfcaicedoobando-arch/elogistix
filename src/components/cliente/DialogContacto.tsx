@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +53,7 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.lg}>
+      <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>{contacto ? 'Editar Contacto' : 'Nuevo Contacto'}</DialogTitle>
           <DialogDescription>Proveedor, exportador o importador asociado a este cliente.</DialogDescription>

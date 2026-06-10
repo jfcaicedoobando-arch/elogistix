@@ -15,6 +15,8 @@ import { useCambiarPasswordPortal } from "@/hooks/portal";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import { cn } from "@/lib/utils";
+import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -59,7 +61,7 @@ export function CambiarPasswordDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn("sm:max-w-md", scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Cambiar contraseña</DialogTitle>
           <DialogDescription>Ingresa tu nueva contraseña (mínimo 8 caracteres).</DialogDescription>
