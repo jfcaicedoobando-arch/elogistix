@@ -1,126 +1,98 @@
+# Plan Fase 3 — Módulo Costeo
 
-# Fase 2 — Costeo: Condiciones de Naviera + Vínculo a Proveedores
+Entrega en orden: **(A) Editor matriz de tarifas → (B) Vista Top 3 → (C) Lookup desde wizard de cotización**. Todo en USD. Versión objetivo: **12.73.0**.
 
-Amplía el módulo Costeo existente para reflejar el modelo real: el **agente de carga** cobra el flete; la **naviera** cobra garantía de contenedor y demoras. Agrega "Carta Garantía" como flag global por naviera y un tabulador escalonado de demoras. Además, vincula agentes y navieras al catálogo de Proveedores de forma obligatoria.
+---
 
-## 1. Cambios en base de datos
+## A. Editor matriz de tarifas (`/costeo/tarifas`)
 
-### 1.1 `costeo_agentes` — vínculo obligatorio a Proveedores
-- `proveedor_id` pasa a **NOT NULL** y FK a `proveedores.id` (restrict on delete).
-- Migración: bloquear la migración si hay filas con `proveedor_id` null hasta que el usuario las reasocie (o seedear desde Proveedores tipo "Agente de Carga" país CN). En esta fase asumimos cero filas previas (módulo recién creado) y aplicamos NOT NULL directo.
-- En el alta de agente: el formulario obliga a elegir un proveedor existente (tipo "Agente de Carga", país CN); si no existe, link para "Crear proveedor" antes de continuar.
+Reemplazar el placeholder actual de `CosteoTarifas.tsx` por un editor real.
 
-### 1.2 Nueva tabla `costeo_navieras_condiciones`
-Una fila por **(organization_id × naviera_id)** — condiciones comerciales que negociamos con cada naviera.
+**UI**
+- Tabla con filtros: ruta (PortSelect origen/destino), agente, tipo contenedor, estado (vigente / vencida / reemplazada), rango de fechas.
+- Acciones por fila: editar, duplicar (precarga form con `vigente_desde = hoy`), marcar reemplazada, ver historial.
+- Botón "Nueva tarifa" → dialog con form.
 
-Campos de dominio:
-- `naviera_id` FK `navieras.id`
-- `proveedor_id` FK `proveedores.id` **NOT NULL** (tipo "Naviera") — vínculo obligatorio
-- `tiene_carta_garantia` boolean default false
-- `carta_garantia_vigente_hasta` date null
-- `carta_garantia_folio` text null
-- `carta_garantia_notas` text null
-- `dias_libres_demoras_default` int default 0 — días libres estándar antes de cobrar demoras
-- `moneda_demoras` text default 'USD'
-- `notas` text null
+**Form de tarifa** (campos)
+- Ruta (FK `costeo_rutas`), agente (FK `costeo_agentes`), naviera (FK `navieras`, informativa), tipo contenedor (FK `tipos_contenedor`).
+- Flete base USD, vigente_desde, vigente_hasta, notas.
+- **Sub-sección "Recargos"** → editor de filas dinámicas sobre `costeo_tarifa_recargos`: concepto (BAF / LSS / ISPS / THC Origen / Otro), monto USD, notas. Add/remove rows.
+- Total calculado (flete + recargos) visible en footer del form.
 
-Constraints:
-- UNIQUE (organization_id, naviera_id)
-- CHECK: si `tiene_carta_garantia = true` entonces `carta_garantia_vigente_hasta IS NOT NULL`
+**Reglas de vigencia (ambos mecanismos)**
+- Estado derivado: `vigente` si hoy ∈ [desde, hasta] y `reemplazada_por IS NULL`; `vencida` si hoy > hasta; `reemplazada` si `reemplazada_por IS NOT NULL`.
+- Al guardar nueva tarifa para misma `(ruta, agente, tipo_contenedor)` con `vigente_desde` posterior, la(s) tarifa(s) previa(s) vigentes se marcan `reemplazada_por = nueva.id` automáticamente (trigger o lógica en service).
+- Tarifas vencidas/reemplazadas quedan en histórico (no se eliminan); se ocultan por default y se ven con filtro.
 
-### 1.3 Nueva tabla `costeo_naviera_demoras_tarifa`
-Tabulador escalonado por naviera y tipo de contenedor.
+**Cambios DB**
+- `costeo_tarifas`: agregar `reemplazada_por uuid REFERENCES costeo_tarifas(id) ON DELETE SET NULL` (si no existe). Forzar `moneda = 'USD'` (CHECK).
+- `costeo_tarifa_recargos`: confirmar columnas (`concepto`, `monto_usd`, `notas`); CHECK moneda USD.
+- Trigger `costeo_tarifas_marcar_reemplazadas` BEFORE INSERT.
 
-Campos:
-- `naviera_condicion_id` FK `costeo_navieras_condiciones.id` ON DELETE CASCADE
-- `tipo_contenedor_id` FK `tipos_contenedor.id`
-- `desde_dia` int NOT NULL (inclusive, contado desde el primer día con cargo)
-- `hasta_dia` int null (null = "en adelante")
-- `monto_por_dia` numeric(12,2) NOT NULL
-- `moneda` text default 'USD'
+**Archivos**
+- `src/features/costeo/services/tarifas.ts`, `hooks/useCosteoTarifas.ts`, `hooks/useTarifaRecargos.ts`.
+- `routes/CosteoTarifas.tsx` (≤200 líneas, partir si crece).
+- `components/TarifaForm.tsx`, `components/TarifaRecargosEditor.tsx`, `components/TarifaEstadoBadge.tsx`.
 
-Constraints:
-- CHECK `desde_dia >= 1`
-- CHECK `hasta_dia IS NULL OR hasta_dia >= desde_dia`
-- UNIQUE (naviera_condicion_id, tipo_contenedor_id, desde_dia)
-- Validación a nivel app: rangos no se traslapan dentro del mismo (naviera_condicion, tipo_contenedor).
+---
 
-### 1.4 RLS y GRANTs
-- Ambas tablas: RLS por `organization_id` usando `organization_members` (mismo patrón que `costeo_tarifas`).
-- Lectura: cualquier miembro de la organización.
-- Escritura: roles `admin`, `ops_manager`, `coordinador`.
-- GRANTs a `authenticated` y `service_role` en la misma migración.
+## B. Vista Top 3 (`/costeo/buscar`)
 
-### 1.5 Función de cálculo `calcular_costo_demoras(naviera_condicion_id, tipo_contenedor_id, dias_excedidos)`
-- SECURITY DEFINER, STABLE.
-- Recorre los rangos del tabulador y suma `monto_por_dia × días en cada tramo`.
-- Devuelve `{ total: numeric, moneda: text, desglose: jsonb[] }`.
-- Útil para simulaciones en el detalle de embarque/cotización.
+Pantalla de consulta dedicada (independiente del wizard).
 
-### 1.6 Vista `costeo_top_tarifas_v` (extender la existente)
-- Hacer LEFT JOIN con `costeo_navieras_condiciones` por `(organization_id, naviera_id)`.
-- Exponer en cada fila del Top 3:
-  - `naviera_tiene_carta_garantia`
-  - `naviera_carta_garantia_vigente_hasta`
-  - `naviera_dias_libres_default`
-  - `naviera_demora_dia_6_usd` (lookup precalculado del tramo que cubre el día 6, como referencia visual)
+**UI**
+- Filtros: puerto origen, puerto destino, tipo contenedor, fecha de salida (default hoy).
+- Resultados: 3 cards ranqueadas con: agente + proveedor, naviera, flete USD, recargos desglosados, **total flete + recargos**, badge carta garantía (verde / ámbar vencida / rojo sin), costo demoras día 6 USD (de `calcular_costo_demoras`), días libres, días de crédito del agente.
+- Criterio de orden: `total_usd ASC`, desempate 1 = `dias_credito DESC`, desempate 2 = `dias_libres_demoras DESC`.
+- Banner ámbar si la naviera no tiene condiciones cargadas.
 
-## 2. Frontend
+**Cambios DB**
+- Extender vista `costeo_tarifas_vigentes_v` (ya existe) con `SUM(recargos)`, `total_usd`, `dias_credito` del agente. `security_invoker = on`.
+- Nueva función `get_top_tarifas(p_origen_id, p_destino_id, p_tipo_contenedor_id, p_fecha date)` SECURITY DEFINER que devuelve top 3 ordenado.
 
-### 2.1 Nuevos archivos
-```text
-src/features/costeo/
-  types/navieraCondicion.ts       # CosteoNavieraCondicion, DemorasTramo
-  services/navieraCondiciones.ts  # CRUD + tramos de demoras
-  hooks/useNavieraCondiciones.ts  # query + mutations
-  routes/CosteoNavieras.tsx       # listado por naviera (200 LOC máx)
-  components/NavieraCondicionForm.tsx     # form con carta garantía
-  components/DemorasTarifaEditor.tsx      # tabla editable de tramos
-  components/CartaGarantiaBadge.tsx       # chip "Carta Garantía vigente / Por vencer / Vencida"
-```
+**Archivos**
+- `routes/CosteoBuscar.tsx`, `components/TopTarifasResults.tsx`, `components/TarifaResultCard.tsx`.
+- `services/topTarifas.ts`, `hooks/useTopTarifas.ts`.
+- Sidebar: nuevo item "Buscar tarifa" bajo Costeo.
 
-### 2.2 Modificaciones
-- `CosteoAgentes.tsx`: agregar select obligatorio "Proveedor (Agente de Carga, China)" con link a "+ Nuevo proveedor" que abra el wizard existente prefiltrado.
-- Sidebar `sidebarItems.ts`: agregar "Navieras (Condiciones)" bajo el grupo Costeo.
-- `appRoutes.tsx`: nueva ruta `/costeo/navieras` lazy.
-- `CosteoTarifas.tsx` (placeholder de fase 2 ya existente): en la matriz/Top 3, mostrar columnas/chips de carta garantía y demoras (vienen de la vista).
+---
 
-### 2.3 UX de `CosteoNavieras.tsx`
-- DataTable de navieras del catálogo `navieras` con badge de estatus de carta garantía y "días libres".
-- Acción "Configurar" abre dialog con:
-  - Switch "Carta Garantía vigente" + fecha de expiración + folio + notas.
-  - Vínculo a proveedor (select obligatorio tipo Naviera).
-  - Sección "Tabulador de demoras" por tipo de contenedor (20'STD, 40'STD, 40'HC, 20'RF, 40'RF):
-    - Rows editables: Desde día — Hasta día — USD/día.
-    - Botón "Agregar tramo".
-    - Validación: rangos contiguos sin huecos ni traslapes.
+## C. Integración con wizard de cotización
 
-### 2.4 Alertas de vencimiento
-- En sidebar de Costeo, badge si hay cartas garantía con `vigente_hasta` ≤ 30 días.
-- Hook `useCartasGarantiaPorVencer()` consultable también en el dashboard de Operaciones.
+Acción de **solo consulta** (no escribe sin confirmación) en el step de costos del wizard.
 
-## 3. Integración con Cotizaciones/Embarques (preparar, no romper)
-- El "Top 3" en el wizard de cotización (fase 3) mostrará por opción: flete del agente + chip de garantía/sin garantía + costo estimado de demora a N días.
-- En esta fase 2 solo dejamos los datos disponibles; la UI del wizard se hará en fase 3.
+**UI**
+- Botón "Buscar tarifa Costeo" en `CotizacionWizard` step de costos (cuando incoterm/modo = marítimo FCL y hay puerto origen/destino + tipo contenedor).
+- Abre dialog con misma UI del Top 3 precargado con datos del wizard.
+- Al elegir una opción → inserta filas en `cotizacion_costos` (1 por concepto: flete base + cada recargo), referenciando `costeo_tarifa_id` y `costeo_tarifa_recargo_id`. Mantiene posibilidad de edición manual posterior.
 
-## 4. Reglas de negocio
-- Si una naviera **no** tiene condiciones registradas, la tarifa aparece con "Condiciones de naviera pendientes" en el Top 3 (badge ámbar).
-- Carta garantía vencida = se trata como "sin carta": en el embarque se asume que habrá depósito.
-- Eliminación de naviera bloqueada si existe `costeo_navieras_condiciones` (mensaje claro).
+**Cambios DB**
+- `cotizacion_costos`: agregar columnas opcionales `costeo_tarifa_id`, `costeo_tarifa_recargo_id` (trazabilidad). No rompe RLS existentes.
 
-## 5. Versionado y changelog
-- Bump `APP_VERSION` a **12.72.0**.
-- Entrada en `CHANGELOG.md` (root): "Costeo Fase 2 — condiciones de naviera, carta garantía, tabulador de demoras escalonado y vínculo obligatorio agente↔proveedor".
+**Archivos**
+- `src/features/cotizaciones/components/BuscarTarifaCosteoDialog.tsx`.
+- Edit puntual en `CotizacionWizard` step de costos para botón + handler.
 
-## 6. Detalles técnicos (Power of 10)
-- Componentes ≤ 200 LOC; partir `NavieraCondicionForm` en sub-componentes si crece.
-- Sin `any`. Tipos en `src/features/costeo/types/navieraCondicion.ts`.
-- Hooks con cleanup (no aplica realtime aquí).
-- Cálculos monetarios via `financialUtils` / `currency.js`.
-- Fechas vía utilidades UTC existentes.
-- Toda mutación de condiciones se registra en `bitacora_actividad`.
+---
 
-## 7. Fuera de alcance (fase 3)
-- UI del Top 3 dentro del wizard de cotización.
-- Cálculo automático de garantía/demoras en facturación a cliente.
-- Importación masiva de tabuladores desde Excel.
+## Detalles técnicos
+
+- **RLS**: todas las nuevas tablas/cambios usan `organization_id` + `organization_members` (patrón ya en uso).
+- **GRANT** completos en cada `CREATE TABLE` / función nueva.
+- **Multi-tenant**: filtrar por `organization_id` actual en todos los hooks.
+- **Power of 10**: componentes ≤200 líneas, sin `any`, manejar `{ data, error }` siempre, cleanup en effects, paginación en listas largas (filtros sirven como ventana).
+- **i18n**: es-MX, montos en USD con `Intl.NumberFormat('es-MX', { style: 'currency', currency: 'USD' })`.
+- **Memorias a actualizar**: `mem://features/costeo-tarifas-maritimas` (editor real + recargos) y añadir `mem://features/costeo-top3-lookup`.
+
+## Migraciones (orden)
+1. `costeo_tarifas`: add `reemplazada_por`, CHECK moneda USD, trigger auto-reemplazo.
+2. Vista `costeo_tarifas_vigentes_v` extendida + función `get_top_tarifas`.
+3. `cotizacion_costos`: add `costeo_tarifa_id`, `costeo_tarifa_recargo_id`.
+
+## Fuera de alcance
+- Import Excel masivo (Fase 4).
+- Auto-cálculo de garantías/demoras en facturación al cliente (Fase 4).
+- Tarifas aéreas / LCL / terrestre (futuro).
+
+## Changelog
+`## [12.73.0] - 2026-06-10` con bullets: editor matriz tarifas + recargos dinámicos, vista Top 3 con desempate por crédito, lookup desde wizard de cotización.

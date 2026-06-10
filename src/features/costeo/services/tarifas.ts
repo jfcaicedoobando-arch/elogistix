@@ -1,0 +1,144 @@
+/**
+ * Servicio: CRUD de tarifas marítimas + recargos hijos.
+ * Las tarifas se manejan siempre en USD (Fase 3).
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { CosteoTarifa, CosteoTarifaRecargo, CosteoTarifaRow } from "@/features/costeo/types";
+
+const SELECT = `
+  *,
+  costeo_agentes:agente_id(nombre),
+  navieras:naviera_id(name),
+  tipos_contenedor:tipo_contenedor_id(name),
+  costeo_rutas:ruta_id(
+    puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name),
+    puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name)
+  ),
+  recargos:costeo_tarifa_recargos(id, tarifa_id, concepto, lado, monto, moneda, incluido_en_total)
+`;
+
+interface RawRow extends CosteoTarifa {
+  costeo_agentes?: { nombre: string } | null;
+  navieras?: { name: string } | null;
+  tipos_contenedor?: { name: string } | null;
+  costeo_rutas?: {
+    puerto_origen?: { name: string } | null;
+    puerto_destino?: { name: string } | null;
+  } | null;
+  recargos?: CosteoTarifaRecargo[];
+}
+
+function mapRow(r: RawRow): CosteoTarifaRow {
+  const recargos = r.recargos ?? [];
+  const recargos_total = recargos
+    .filter((x) => x.incluido_en_total)
+    .reduce((acc, x) => acc + Number(x.monto || 0), 0);
+  return {
+    ...r,
+    agente_nombre: r.costeo_agentes?.nombre ?? "—",
+    naviera_nombre: r.navieras?.name ?? "—",
+    tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
+    puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
+    puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
+    recargos_total,
+    total_comparable: Number(r.flete_base || 0) + recargos_total,
+  };
+}
+
+export interface FetchTarifasFilters {
+  estado?: "vigente" | "vencida" | "reemplazada" | "todas";
+  agenteId?: string;
+  tipoContenedorId?: string;
+  rutaId?: string;
+}
+
+export async function fetchCosteoTarifas(
+  organizationId: string,
+  filters: FetchTarifasFilters = {},
+): Promise<CosteoTarifaRow[]> {
+  let q = supabase
+    .from("costeo_tarifas")
+    .select(SELECT)
+    .eq("organization_id", organizationId)
+    .order("vigente_desde", { ascending: false })
+    .limit(500);
+  if (filters.estado && filters.estado !== "todas") q = q.eq("estado", filters.estado);
+  if (filters.agenteId) q = q.eq("agente_id", filters.agenteId);
+  if (filters.tipoContenedorId) q = q.eq("tipo_contenedor_id", filters.tipoContenedorId);
+  if (filters.rutaId) q = q.eq("ruta_id", filters.rutaId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return ((data ?? []) as unknown as RawRow[]).map(mapRow);
+}
+
+export interface TarifaRecargoInput {
+  concepto: string;
+  lado?: "origen" | "destino";
+  monto: number;
+  moneda?: string;
+  incluido_en_total?: boolean;
+}
+
+export interface TarifaInput {
+  agente_id: string;
+  naviera_id: string;
+  ruta_id: string;
+  tipo_contenedor_id: string;
+  flete_base: number;
+  dias_libres_demoras: number;
+  vigente_desde: string;
+  vigente_hasta: string;
+  transit_time_dias?: number | null;
+  notas?: string | null;
+  recargos: TarifaRecargoInput[];
+}
+
+export async function insertTarifaConRecargos(
+  organizationId: string,
+  input: TarifaInput,
+): Promise<CosteoTarifa> {
+  const { recargos, ...tarifa } = input;
+  const { data, error } = await supabase
+    .from("costeo_tarifas")
+    .insert({
+      ...tarifa,
+      moneda: "USD",
+      estado: "vigente",
+      organization_id: organizationId,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+
+  if (recargos.length > 0) {
+    const rows = recargos
+      .filter((r) => r.concepto.trim() && Number(r.monto) > 0)
+      .map((r) => ({
+        tarifa_id: data.id,
+        concepto: r.concepto.trim(),
+        lado: r.lado ?? "origen",
+        monto: Number(r.monto) || 0,
+        moneda: "USD",
+        incluido_en_total: r.incluido_en_total ?? true,
+        organization_id: organizationId,
+      }));
+    if (rows.length > 0) {
+      const { error: errRec } = await supabase.from("costeo_tarifa_recargos").insert(rows);
+      if (errRec) throw errRec;
+    }
+  }
+  return data as CosteoTarifa;
+}
+
+export async function marcarTarifaReemplazada(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("costeo_tarifas")
+    .update({ estado: "reemplazada" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteTarifa(id: string): Promise<void> {
+  const { error } = await supabase.from("costeo_tarifas").delete().eq("id", id);
+  if (error) throw error;
+}

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_top_tarifas(uuid, uuid, uuid, date, uuid) FROM PUBLIC, anon;

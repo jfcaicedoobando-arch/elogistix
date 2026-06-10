@@ -28,23 +28,13 @@ export function useCosteoRutaMutations() {
 
   const crear = useMutation({
     mutationFn: (input: CosteoRutaInput) => insertCosteoRuta(organizationId!, input),
-    onSuccess: () => {
-      invalidate();
-      toast({ title: "Ruta agregada" });
-    },
-    onError: (e: Error) =>
-      toast({ title: "Error al agregar", description: e.message, variant: "destructive" }),
+    onSuccess: () => { invalidate(); toast({ title: "Ruta agregada" }); },
+    onError: (e: Error) => toast({ title: "Error al agregar", description: e.message, variant: "destructive" }),
   });
-
   const eliminar = useMutation({
     mutationFn: (id: string) => deleteCosteoRuta(id),
-    onSuccess: () => {
-      invalidate();
-      toast({ title: "Ruta eliminada" });
-    },
-    onError: (e: Error) =>
-      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
+    onSuccess: () => { invalidate(); toast({ title: "Ruta eliminada" }); },
+    onError: (e: Error) => toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
   });
-
   return { crear, eliminar };
 }
