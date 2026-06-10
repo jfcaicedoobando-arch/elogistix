@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.75.0] - 2026-06-10
+- **feat(marketing)**: nueva sección **"Recursos"** en la landing pública con tarjetas para "Guía Carta Porte 3.0" y "Guía Incoterms 2020" con links a `/recursos/guia-carta-porte-3` y `/recursos/guia-incoterms-2020`. El footer y la navegación móvil/desktop ahora incluyen el ancla `#recursos`.
+
 ## [12.74.1] - 2026-06-10
 - **fix(auditoría)**: suite de tests en verde. Se divide `GuiaCartaPorte.tsx` (364 líneas) en `guiaCartaPorte.data.ts` + `GuiaCartaPorteArticle.tsx` (≤200 líneas c/u) y `GuiaIncoterms2020.tsx` (267 líneas) en `guiaIncoterms2020.data.ts`. Se marcan dos casts HIGH con `// SAFE-CAST:` en `costeo/services/tarifas.ts` y `embarques/services/demorasEmbarque.ts`.
 

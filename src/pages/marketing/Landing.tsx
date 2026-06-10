@@ -11,6 +11,7 @@ import { LandingComoFunciona } from "./sections/LandingComoFunciona";
 import { LandingMexico } from "./sections/LandingMexico";
 import { LandingPortal } from "./sections/LandingPortal";
 import { LandingSeguridad } from "./sections/LandingSeguridad";
+import { LandingRecursos } from "./sections/LandingRecursos";
 import { LandingPrecio } from "./sections/LandingPrecio";
 import { LandingFaq } from "./sections/LandingFaq";
 import { LandingCtaFinal } from "./sections/LandingCtaFinal";
@@ -21,7 +22,7 @@ import { FAQ } from "./landingCopy";
 const FAQ_JSONLD = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: FAQ.map((f) => ({
+  mainEntity: FAQ.map((f: { q: string; a: string }) => ({
     "@type": "Question",
     name: f.q,
     acceptedAnswer: { "@type": "Answer", text: f.a },
@@ -41,6 +42,7 @@ export default function Landing() {
         <LandingMexico />
         <LandingPortal />
         <LandingSeguridad />
+        <LandingRecursos />
         <LandingPrecio />
         <LandingFaq />
         <LandingCtaFinal />
