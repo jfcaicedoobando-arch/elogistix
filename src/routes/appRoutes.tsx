@@ -82,6 +82,10 @@ export const appRoutes = (
       path="/comisiones"
       element={<Comisiones />}
     />
+    <Route path="/costeo" element={<Navigate to="/costeo/tarifas" replace />} />
+    <Route path="/costeo/tarifas" element={<CosteoTarifas />} />
+    <Route path="/costeo/rutas" element={<CosteoRutas />} />
+    <Route path="/costeo/agentes" element={<CosteoAgentes />} />
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
     <Route
       path="/profit/dashboard"
