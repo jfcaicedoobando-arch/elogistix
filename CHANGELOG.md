@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.23] - 2026-06-10
+- **fix(proveedores/permisos)**: la política RLS de `proveedores` no incluía al rol **Contador**, por lo que al intentar crear un proveedor desde una cuenta contadora se mostraba "Error al crear proveedor" sin más detalle. Se agregó `contador` a la política CRUD; ahora los contadores pueden dar de alta, editar y eliminar proveedores dentro de su organización (necesario para registrar facturas de gastos).
+
 ## [12.76.22] - 2026-06-10
 - **fix(costeo/agentes)**: el dropdown de proveedor en "Nuevo agente" filtraba por una columna inexistente (`deleted_at`), lo que dejaba la lista vacía y hacía imposible seleccionar proveedores tipo "Agente de Carga" (ej. Longsail Supply Chain). Se quitó el filtro; ahora se listan todos los proveedores del tipo correcto scoped por RLS.
 
