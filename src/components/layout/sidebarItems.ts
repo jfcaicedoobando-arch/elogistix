@@ -87,5 +87,6 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Tarifas marítimas", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas CN → MX", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
-  { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
+ { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
+ { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Calculator },
 ];

@@ -787,6 +787,7 @@ export type Database = {
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
           organization_id: string
+          origen: string
           proveedor_id: string | null
           proveedor_nombre: string
           referencia_pago: string | null
@@ -806,6 +807,7 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
           organization_id?: string
+          origen?: string
           proveedor_id?: string | null
           proveedor_nombre?: string
           referencia_pago?: string | null
@@ -825,6 +827,7 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
           organization_id?: string
+          origen?: string
           proveedor_id?: string | null
           proveedor_nombre?: string
           referencia_pago?: string | null
@@ -932,6 +935,7 @@ export type Database = {
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
           organization_id: string
+          origen: string
           precio_unitario: number
           proforma_id: string | null
           tasa_iva_aplicada: number
@@ -950,6 +954,7 @@ export type Database = {
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           organization_id?: string
+          origen?: string
           precio_unitario?: number
           proforma_id?: string | null
           tasa_iva_aplicada?: number
@@ -968,6 +973,7 @@ export type Database = {
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           organization_id?: string
+          origen?: string
           precio_unitario?: number
           proforma_id?: string | null
           tasa_iva_aplicada?: number
@@ -1197,6 +1203,63 @@ export type Database = {
           },
         ]
       }
+      costeo_demoras_venta_tarifa: {
+        Row: {
+          created_at: string
+          desde_dia: number
+          hasta_dia: number | null
+          id: string
+          monto_por_dia_usd: number
+          notas: string | null
+          organization_id: string
+          tipo_contenedor_id: string
+          updated_at: string
+          vigente_desde: string
+          vigente_hasta: string | null
+        }
+        Insert: {
+          created_at?: string
+          desde_dia: number
+          hasta_dia?: number | null
+          id?: string
+          monto_por_dia_usd: number
+          notas?: string | null
+          organization_id?: string
+          tipo_contenedor_id: string
+          updated_at?: string
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Update: {
+          created_at?: string
+          desde_dia?: number
+          hasta_dia?: number | null
+          id?: string
+          monto_por_dia_usd?: number
+          notas?: string | null
+          organization_id?: string
+          tipo_contenedor_id?: string
+          updated_at?: string
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_demoras_venta_tarifa_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_demoras_venta_tarifa_tipo_contenedor_id_fkey"
+            columns: ["tipo_contenedor_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_contenedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       costeo_naviera_demoras_tarifa: {
         Row: {
           created_at: string
@@ -1261,6 +1324,7 @@ export type Database = {
           carta_garantia_notas: string | null
           carta_garantia_vigente_hasta: string | null
           created_at: string
+          deposito_contenedor_usd: number
           dias_libres_demoras_default: number
           id: string
           moneda_demoras: string
@@ -1276,6 +1340,7 @@ export type Database = {
           carta_garantia_notas?: string | null
           carta_garantia_vigente_hasta?: string | null
           created_at?: string
+          deposito_contenedor_usd?: number
           dias_libres_demoras_default?: number
           id?: string
           moneda_demoras?: string
@@ -1291,6 +1356,7 @@ export type Database = {
           carta_garantia_notas?: string | null
           carta_garantia_vigente_hasta?: string | null
           created_at?: string
+          deposito_contenedor_usd?: number
           dias_libres_demoras_default?: number
           id?: string
           moneda_demoras?: string
@@ -2596,6 +2662,83 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embarque_garantias_contenedor: {
+        Row: {
+          created_at: string
+          embarque_contenedor_id: string
+          embarque_id: string
+          estado: string
+          fecha_deposito: string | null
+          fecha_liberacion: string | null
+          id: string
+          monto_deposito_usd: number
+          naviera_id: string | null
+          notas: string | null
+          organization_id: string
+          tiene_carta_garantia: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          embarque_contenedor_id: string
+          embarque_id: string
+          estado?: string
+          fecha_deposito?: string | null
+          fecha_liberacion?: string | null
+          id?: string
+          monto_deposito_usd?: number
+          naviera_id?: string | null
+          notas?: string | null
+          organization_id?: string
+          tiene_carta_garantia?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          embarque_contenedor_id?: string
+          embarque_id?: string
+          estado?: string
+          fecha_deposito?: string | null
+          fecha_liberacion?: string | null
+          id?: string
+          monto_deposito_usd?: number
+          naviera_id?: string | null
+          notas?: string | null
+          organization_id?: string
+          tiene_carta_garantia?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarque_garantias_contenedor_embarque_contenedor_id_fkey"
+            columns: ["embarque_contenedor_id"]
+            isOneToOne: true
+            referencedRelation: "embarque_contenedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -4770,6 +4913,10 @@ export type Database = {
           moneda: string
           total: number
         }[]
+      }
+      calcular_demoras_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: Json
       }
       can_admin_tenant: { Args: { _user_id: string }; Returns: boolean }
       can_manage_document_object: {

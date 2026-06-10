@@ -8,6 +8,7 @@ import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
 
 interface Props {
@@ -94,6 +95,8 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
           </Card>
         ))}
       </div>
+
+      {embarqueId && <SeccionDemorasAuto embarqueId={embarqueId} canEdit={!!canEdit} />}
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
