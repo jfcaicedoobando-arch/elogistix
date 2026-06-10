@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.1] - 2026-06-10
+- **fix(demo)**: el usuario `demo@librecarga.com` ahora entra como **administrador** de la organización demo (antes era operador, lo que ocultaba módulos de finanzas, configuración, usuarios y reportes). `ensure_demo_membership` fuerza rol `admin` tanto en `user_roles` como en `organization_members`. Banner demo actualizado para reflejar el rol. Los datos siguen reiniciándose en cada acceso, así que cualquier cambio del prospecto es efímero.
+
 ## [12.76.0] - 2026-06-10
 - **feat(demo)**: nuevo botón **"Probar demo"** en el Hero, la barra de navegación y el CTA final de la landing. Al hacer click, una nueva edge function `demo-access` provisiona (o reutiliza) el usuario `demo@librecarga.com`, lo registra como operador de la organización fija "Demo Libre Carga" y re-siembra datos de ejemplo (3 clientes, 3 proveedores, 4 embarques con eventos de tracking y 2 cotizaciones) llamando a `seed_demo_organization()`. El frontend hace signIn automático y redirige a `/inicio`. Banner persistente "Modo demo · datos de ejemplo, se reinician en cada acceso" en toda la app cuando la sesión pertenece a la org demo (helper `is_demo_user`).
 
