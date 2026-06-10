@@ -22,6 +22,9 @@ import {
   Receipt,
   Landmark,
   Percent,
+  Calculator,
+  Route,
+  Users,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
