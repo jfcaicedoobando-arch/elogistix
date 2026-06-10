@@ -16,8 +16,10 @@ const WIZARD_STEPS = [
   { num: 4, title: "Resumen" },
 ];
 
+type WizardForm = ReturnType<typeof import("@/hooks/cotizacion").useCotizacionWizardForm>;
+
 interface CotizacionWizardLayoutProps {
-  w: ReturnType<typeof import("@/hooks/cotizacion").useCotizacionWizardForm>;
+  w: WizardForm;
   clientes: { id: string; nombre: string }[];
   title: string;
   subtitle?: string;
@@ -33,10 +35,10 @@ export default function CotizacionWizardLayout({
   onBack,
   saveLabel,
 }: CotizacionWizardLayoutProps) {
-  const { form } = w;
+  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, currentStep, isPending } = w;
   const contentRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const isBusy = isProcessing || w.isPending;
+  const isBusy = isProcessing || isPending;
 
   const runProcessing = useCallback(async (fn: () => unknown | Promise<unknown>) => {
     if (isBusy) return;
@@ -44,9 +46,9 @@ export default function CotizacionWizardLayout({
     try { await fn(); } finally { setIsProcessing(false); }
   }, [isBusy]);
 
-  const handleNext = useCallback(() => { void runProcessing(w.handleSiguiente); }, [runProcessing, w.handleSiguiente]);
-  const handleSave = useCallback(() => { void runProcessing(w.handleGuardar); }, [runProcessing, w.handleGuardar]);
-  const handleBack = useCallback(() => { if (!isBusy) w.handleBack(); }, [isBusy, w.handleBack]);
+  const handleNext = useCallback(() => { void runProcessing(handleSiguiente); }, [runProcessing, handleSiguiente]);
+  const handleSave = useCallback(() => { void runProcessing(handleGuardar); }, [runProcessing, handleGuardar]);
+  const handleBack = useCallback(() => { if (!isBusy) wHandleBack(); }, [isBusy, wHandleBack]);
   const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export default function CotizacionWizardLayout({
       el?.focus();
     }, 100);
     return () => clearTimeout(timer);
-  }, [w.currentStep]);
+  }, [currentStep]);
 
   return (
     <FormProvider {...form}>

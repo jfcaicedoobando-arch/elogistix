@@ -61,7 +61,6 @@ export function useAuthSession(): AuthSession {
         .catch((err) => {
           // Si Supabase falla aquí no debe romper la UI: dejamos user/session
           // en null y `loading=false`. El listener subscribirá los siguientes.
-          // eslint-disable-next-line no-console
           console.error("[useAuthSession] getCurrentSession failed", err);
           setLoading(false);
         });

@@ -112,8 +112,69 @@ function buildEffectiveHeaders(
   return { effective, unique };
 }
 
+/**
+ * Tokeniza un CSV ya normalizado (sin BOM, \n unificado) en filas.
+ * State machine RFC 4180. Extraído de parseCsv para mantener su complejidad
+ * por debajo del umbral del linter.
+ */
+function tokenize(cleaned: string, delimiter: "," | ";"): string[][] {
+  const records: string[][] = [];
+  let field = "";
+  let row: string[] = [];
+  let inQuotes = false;
+
+  for (let i = 0; i < cleaned.length; i++) {
+    const c = cleaned[i];
+    if (inQuotes) {
+      if (c !== '"') { field += c; continue; }
+      if (cleaned[i + 1] === '"') { field += '"'; i++; continue; }
+      inQuotes = false;
+      continue;
+    }
+    if (c === '"') { inQuotes = true; continue; }
+    if (c === delimiter) { row.push(field); field = ""; continue; }
+    if (c === "\n") {
+      row.push(field);
+      records.push(row);
+      row = [];
+      field = "";
+      continue;
+    }
+    field += c;
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    records.push(row);
+  }
+  return records;
+}
+
+function buildAliasMap(raw?: Record<string, string>): Record<string, string> {
+  const aliases: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw ?? {})) {
+    const nk = normalizeHeader(k);
+    if (nk) aliases[nk] = normalizeHeader(v) || v;
+  }
+  return aliases;
+}
+
+function rowsFromRecords(records: string[][], effective: string[]): Record<string, string>[] {
+  const rows: Record<string, string>[] = [];
+  for (let r = 1; r < records.length; r++) {
+    const raw = records[r];
+    if (raw.every((c) => c.trim() === "")) continue;
+    const obj: Record<string, string> = {};
+    for (let idx = 0; idx < effective.length; idx++) {
+      const h = effective[idx];
+      if (!h) continue;
+      obj[h] = (raw[idx] ?? "").trim();
+    }
+    rows.push(obj);
+  }
+  return rows;
+}
+
 export function parseCsv(input: string, options: ParseCsvOptions = {}): ParsedCsv {
-  // Quita BOM y normaliza saltos de línea.
   const cleaned = input.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   if (!cleaned.trim()) {
     return { headers: [], rows: [], delimiter: "," };
@@ -123,74 +184,17 @@ export function parseCsv(input: string, options: ParseCsvOptions = {}): ParsedCs
   const firstLine = firstNewline === -1 ? cleaned : cleaned.slice(0, firstNewline);
   const delimiter = detectDelimiter(firstLine);
 
-  const records: string[][] = [];
-  let field = "";
-  let row: string[] = [];
-  let inQuotes = false;
-
-  for (let i = 0; i < cleaned.length; i++) {
-    const c = cleaned[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (cleaned[i + 1] === '"') {
-          field += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        field += c;
-      }
-    } else {
-      if (c === '"') {
-        inQuotes = true;
-      } else if (c === delimiter) {
-        row.push(field);
-        field = "";
-      } else if (c === "\n") {
-        row.push(field);
-        records.push(row);
-        row = [];
-        field = "";
-      } else {
-        field += c;
-      }
-    }
-  }
-  // Última celda/fila si el archivo no termina en \n.
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    records.push(row);
-  }
-
+  const records = tokenize(cleaned, delimiter);
   if (records.length === 0) {
     return { headers: [], rows: [], delimiter };
   }
 
-  // Normaliza claves de alias antes de matchear (defensivo).
-  const aliases: Record<string, string> = {};
-  for (const [k, v] of Object.entries(options.headerAliases ?? {})) {
-    const nk = normalizeHeader(k);
-    if (nk) aliases[nk] = normalizeHeader(v) || v;
-  }
-
+  const aliases = buildAliasMap(options.headerAliases);
   const { effective, unique } = buildEffectiveHeaders(records[0], aliases);
-
-  const rows: Record<string, string>[] = [];
-  for (let r = 1; r < records.length; r++) {
-    const raw = records[r];
-    if (raw.every((c) => c.trim() === "")) continue;
-    const obj: Record<string, string> = {};
-    for (let idx = 0; idx < effective.length; idx++) {
-      const h = effective[idx];
-      if (!h) continue; // columna sin header → ignorar defensivamente
-      obj[h] = (raw[idx] ?? "").trim();
-    }
-    rows.push(obj);
-  }
-
+  const rows = rowsFromRecords(records, effective);
   return { headers: unique, rows, delimiter };
 }
 
 // Re-export para mantener API estable. La implementación vive en `serializeCsv.ts`.
 export { toCsv } from "./serializeCsv";
+

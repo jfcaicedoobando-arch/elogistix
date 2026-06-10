@@ -8,9 +8,11 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useEstadoResultados } from "@/hooks/profit";
 import {
   EstadoResultadosTable,
+} from "@/components/profit/EstadoResultadosTable";
+import {
   ESTADO_RESULTADOS_CSV_HEADERS,
   buildEstadoResultadosCsvRows,
-} from "@/components/profit/EstadoResultadosTable";
+} from "@/components/profit/EstadoResultadosTable.helpers";
 import { exportToCsv } from "@/generators/exportCsv";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";

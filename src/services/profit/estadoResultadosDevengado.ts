@@ -50,103 +50,133 @@ async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, 
   return map;
 }
 
-export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoResultados> {
-  const { desde, hasta } = rangoMes(p.year, p.month);
+const fallbackTC = (tc: number | null) => (tc && tc > 0 ? tc : 1);
 
-  // 1) Facturas emitidas en el mes (ingresos)
-  let fq = supabase
+interface FacturaRow { id: string; expediente: string | null; total: number; moneda: string; fecha_emision: string; tipo_cambio: number | null }
+interface NotaCreditoRow { monto: number; moneda: string; factura_id: string; updated_at: string }
+interface ProveedorFacturaRow { id: string; embarque_id: string | null; total: number; moneda: string; fecha_emision: string; tipo_cambio_usd: number | null }
+
+async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
+  let q = supabase
     .from("facturas")
     .select("id, expediente, total, moneda, fecha_emision, tipo_cambio")
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .neq("estado", "Cancelada");
-  if (p.organizationId) fq = fq.eq("organization_id", p.organizationId);
-  const { data: facturas, error: fe } = await fq;
-  if (fe) throw fe;
+  if (orgId) q = q.eq("organization_id", orgId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as FacturaRow[];
+}
 
-  // 2) Notas de crédito aplicadas en el mes (restan ingresos)
-  let nq = supabase
+async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
+  let q = supabase
     .from("factura_notas_credito")
     .select("monto, moneda, factura_id, updated_at")
     .eq("estado", "Aplicada")
     .gte("updated_at", `${desde}T00:00:00`)
     .lte("updated_at", `${hasta}T23:59:59`)
     .is("deleted_at", null);
-  if (p.organizationId) nq = nq.eq("organization_id", p.organizationId);
-  const { data: ncs, error: ne } = await nq;
-  if (ne) throw ne;
+  if (orgId) q = q.eq("organization_id", orgId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as NotaCreditoRow[];
+}
 
-  // 3) Facturas proveedor del mes (costos)
-  let pq = supabase
+async function fetchProveedorFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<ProveedorFacturaRow[]> {
+  let q = supabase
     .from("proveedor_facturas")
     .select("id, embarque_id, total, moneda, fecha_emision, tipo_cambio_usd")
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .neq("estado", "Cancelada")
     .is("deleted_at", null);
-  if (p.organizationId) pq = pq.eq("organization_id", p.organizationId);
-  const { data: pfacts, error: pe } = await pq;
-  if (pe) throw pe;
+  if (orgId) q = q.eq("organization_id", orgId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as ProveedorFacturaRow[];
+}
 
-  // Resolución de embarque para asignar modo
-  const exps = Array.from(new Set((facturas ?? []).map(f => f.expediente).filter(Boolean) as string[]));
-  const embIds = Array.from(new Set((pfacts ?? []).map(f => f.embarque_id).filter(Boolean) as string[]));
-  const [embPorExp, embPorId] = await Promise.all([
-    loadEmbarquesPorExpedientes(exps),
-    loadEmbarquesPorIds(embIds),
-  ]);
-
-  // Construcción de virtual-embarques + virtual-conceptos para reutilizar buildEstadoResultados
-  const virtualEmbarques: EmbarqueER[] = [];
-  const ventas: ConceptoVentaER[] = [];
-  const costos: ConceptoCostoER[] = [];
-
-  const fallbackTC = (tc: number | null) => tc && tc > 0 ? tc : 1;
-
-  for (const f of facturas ?? []) {
+function ingresosDeFacturas(
+  facturas: FacturaRow[],
+  embPorExp: Map<string, EmbarqueER>,
+  out: { embarques: EmbarqueER[]; ventas: ConceptoVentaER[] },
+): void {
+  for (const f of facturas) {
     const emb = f.expediente ? embPorExp.get(f.expediente) : undefined;
     const id = `fact-${f.id}`;
-    virtualEmbarques.push({
+    out.embarques.push({
       id,
       modo: emb?.modo ?? "Marítimo",
       tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio)),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? 1,
     });
-    ventas.push({
-      embarque_id: id,
-      descripcion: "Facturación",
-      total: Number(f.total),
-      moneda: String(f.moneda),
-    });
+    out.ventas.push({ embarque_id: id, descripcion: "Facturación", total: Number(f.total), moneda: String(f.moneda) });
   }
+}
 
-  for (const nc of ncs ?? []) {
+function ingresosDeNotas(ncs: NotaCreditoRow[], out: { embarques: EmbarqueER[]; ventas: ConceptoVentaER[] }): void {
+  for (const nc of ncs) {
     const id = `nc-${nc.factura_id}`;
-    virtualEmbarques.push({ id, modo: "Marítimo", tipo_cambio_usd: 1, tipo_cambio_eur: 1 });
-    ventas.push({
+    out.embarques.push({ id, modo: "Marítimo", tipo_cambio_usd: 1, tipo_cambio_eur: 1 });
+    out.ventas.push({
       embarque_id: id,
       descripcion: "Notas de crédito",
       total: -Math.abs(Number(nc.monto)),
       moneda: String(nc.moneda),
     });
   }
+}
 
-  for (const pf of pfacts ?? []) {
-    const emb = pf.embarque_id ? embPorId.find(e => e.id === pf.embarque_id) : undefined;
+function costosDeProveedorFacturas(
+  pfacts: ProveedorFacturaRow[],
+  embPorId: EmbarqueER[],
+  out: { embarques: EmbarqueER[]; costos: ConceptoCostoER[] },
+): void {
+  for (const pf of pfacts) {
+    const emb = pf.embarque_id ? embPorId.find((e) => e.id === pf.embarque_id) : undefined;
     const id = `pf-${pf.id}`;
-    virtualEmbarques.push({
+    out.embarques.push({
       id,
       modo: emb?.modo ?? "Marítimo",
       tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd)),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? 1,
     });
-    costos.push({
+    out.costos.push({
       embarque_id: id,
       concepto: "Facturas de proveedor",
       monto: Number(pf.total),
       moneda: String(pf.moneda),
     });
   }
+}
 
-  return buildEstadoResultados(virtualEmbarques, ventas, costos);
+export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoResultados> {
+  const { desde, hasta } = rangoMes(p.year, p.month);
+
+  const [facturas, ncs, pfacts] = await Promise.all([
+    fetchFacturasMes(p.organizationId, desde, hasta),
+    fetchNotasCreditoMes(p.organizationId, desde, hasta),
+    fetchProveedorFacturasMes(p.organizationId, desde, hasta),
+  ]);
+
+  const exps = Array.from(new Set(facturas.map((f) => f.expediente).filter(Boolean) as string[]));
+  const embIds = Array.from(new Set(pfacts.map((f) => f.embarque_id).filter(Boolean) as string[]));
+  const [embPorExp, embPorId] = await Promise.all([
+    loadEmbarquesPorExpedientes(exps),
+    loadEmbarquesPorIds(embIds),
+  ]);
+
+  const ventasBucket = { embarques: [] as EmbarqueER[], ventas: [] as ConceptoVentaER[] };
+  ingresosDeFacturas(facturas, embPorExp, ventasBucket);
+  ingresosDeNotas(ncs, ventasBucket);
+
+  const costosBucket = { embarques: [] as EmbarqueER[], costos: [] as ConceptoCostoER[] };
+  costosDeProveedorFacturas(pfacts, embPorId, costosBucket);
+
+  return buildEstadoResultados(
+    [...ventasBucket.embarques, ...costosBucket.embarques],
+    ventasBucket.ventas,
+    costosBucket.costos,
+  );
 }

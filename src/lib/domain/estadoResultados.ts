@@ -96,50 +96,50 @@ function materializar(
   return out;
 }
 
-export function buildEstadoResultados(
-  embarques: EmbarqueER[],
+function pivotConceptosVenta(
+  embById: Map<string, EmbarqueER>,
   ventas: ConceptoVentaER[],
-  costos: ConceptoCostoER[],
-): EstadoResultados {
-  const embById = new Map<string, EmbarqueER>();
-  for (const e of embarques) embById.set(e.id, e);
-
-  const ingresosMap = new Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>();
-  const costosMap = new Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>();
-
+  out: Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>,
+): void {
   for (const v of ventas) {
     const emb = embById.get(v.embarque_id);
     if (!emb || !isModoColumna(emb.modo)) continue;
     const moneda = (v.moneda?.toUpperCase() ?? "MXN") as Moneda;
     const mxn = convertirAMXN(Number(v.total) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(ingresosMap, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
+    acumular(out, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
   }
+}
 
+function pivotConceptosCosto(
+  embById: Map<string, EmbarqueER>,
+  costos: ConceptoCostoER[],
+  out: Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>,
+): void {
   for (const c of costos) {
     const emb = embById.get(c.embarque_id);
     if (!emb || !isModoColumna(emb.modo)) continue;
     const moneda = (c.moneda?.toUpperCase() ?? "MXN") as Moneda;
     const mxn = convertirAMXN(Number(c.monto) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(costosMap, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
+    acumular(out, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
   }
+}
 
-  const ingresos = materializar(ingresosMap);
-  const cstos = materializar(costosMap);
+function sumarFilas(rows: FilaER[]): TotalER {
+  const porModo = emptyModos();
+  let total = 0;
+  for (const r of rows) {
+    porModo["Marítimo"] += r.porModo["Marítimo"];
+    porModo["Aéreo"] += r.porModo["Aéreo"];
+    porModo["Terrestre"] += r.porModo["Terrestre"];
+    total += r.total;
+  }
+  return { porModo, total };
+}
 
-  const sumar = (rows: FilaER[]): TotalER => {
-    const porModo = emptyModos();
-    let total = 0;
-    for (const r of rows) {
-      porModo["Marítimo"] += r.porModo["Marítimo"];
-      porModo["Aéreo"] += r.porModo["Aéreo"];
-      porModo["Terrestre"] += r.porModo["Terrestre"];
-      total += r.total;
-    }
-    return { porModo, total };
-  };
-
-  const totalIngresos = sumar(ingresos);
-  const totalCostos = sumar(cstos);
+function calcularUtilidadYMargen(
+  totalIngresos: TotalER,
+  totalCostos: TotalER,
+): { utilidad: TotalER; margen: TotalER } {
   const utilidad: TotalER = {
     porModo: {
       "Marítimo": totalIngresos.porModo["Marítimo"] - totalCostos.porModo["Marítimo"],
@@ -156,6 +156,28 @@ export function buildEstadoResultados(
     },
     total: calcularMargen(totalIngresos.total, totalCostos.total),
   };
+  return { utilidad, margen };
+}
+
+export function buildEstadoResultados(
+  embarques: EmbarqueER[],
+  ventas: ConceptoVentaER[],
+  costos: ConceptoCostoER[],
+): EstadoResultados {
+  const embById = new Map<string, EmbarqueER>();
+  for (const e of embarques) embById.set(e.id, e);
+
+  const ingresosMap = new Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>();
+  const costosMap = new Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>();
+
+  pivotConceptosVenta(embById, ventas, ingresosMap);
+  pivotConceptosCosto(embById, costos, costosMap);
+
+  const ingresos = materializar(ingresosMap);
+  const cstos = materializar(costosMap);
+  const totalIngresos = sumarFilas(ingresos);
+  const totalCostos = sumarFilas(cstos);
+  const { utilidad, margen } = calcularUtilidadYMargen(totalIngresos, totalCostos);
 
   return { ingresos, costos: cstos, totalIngresos, totalCostos, utilidad, margen };
 }

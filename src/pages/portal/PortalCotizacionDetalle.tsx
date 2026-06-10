@@ -11,7 +11,7 @@ import { usePortalCotizacionDetalleController } from "@/hooks/cotizacion";
 import PortalCotizacionHeader from "@/components/portal/cotizacion/PortalCotizacionHeader";
 import PortalCotizacionEstadoBanner from "@/components/portal/cotizacion/PortalCotizacionEstadoBanner";
 import PortalCotizacionConfirmDialog from "@/components/portal/cotizacion/PortalCotizacionConfirmDialog";
-import { formatDate } from "@/lib/formatters";
+import DatosGeneralesCard from "@/components/portal/cotizacion/DatosGeneralesCard";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
@@ -75,62 +75,8 @@ export default function PortalCotizacionDetalle() {
         fechaRechazo={(cot as { fecha_rechazo?: string | null }).fecha_rechazo ?? null}
       />
 
-      {/* Datos generales */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Datos Generales</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Modo</span>
-              <p className="font-medium">{cot.modo}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Tipo</span>
-              <p className="font-medium">{cot.tipo}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Incoterm</span>
-              <p className="font-medium">{cot.incoterm}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Moneda</span>
-              <p className="font-medium">{cot.moneda}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Origen</span>
-              <p className="font-medium">{cot.origen || "—"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Destino</span>
-              <p className="font-medium">{cot.destino || "—"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Vigencia</span>
-              <p className="font-medium">{cot.fecha_vigencia ? formatDate(cot.fecha_vigencia) : "—"}</p>
-            </div>
-            {cot.tiempo_transito_dias != null && (
-              <div>
-                <span className="text-muted-foreground">Tiempo de Tránsito</span>
-                <p className="font-medium">{cot.tiempo_transito_dias} días</p>
-              </div>
-            )}
-            {cot.ruta_texto && (
-              <div className="col-span-2">
-                <span className="text-muted-foreground">Ruta</span>
-                <p className="font-medium">{cot.ruta_texto}</p>
-              </div>
-            )}
-            {cot.frecuencia && (
-              <div>
-                <span className="text-muted-foreground">Frecuencia</span>
-                <p className="font-medium">{cot.frecuencia}</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <DatosGeneralesCard cot={cot} />
+
 
       <SeccionMercanciaCotizacionDetalle cotizacion={cot} />
 

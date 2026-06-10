@@ -25,6 +25,53 @@ interface Props {
   initial?: { puertoOrigenId?: string; puertoDestinoId?: string; tipoContenedorId?: string };
 }
 
+interface ResultadosBodyProps {
+  origen: string;
+  destino: string;
+  tipo: string;
+  isFetching: boolean;
+  tarifas: TopTarifaRow[];
+  onElegir?: (row: TopTarifaRow) => void;
+  onOpenChange: (v: boolean) => void;
+  selectLabel?: string;
+}
+
+function ResultadosBody({
+  origen, destino, tipo, isFetching, tarifas, onElegir, onOpenChange, selectLabel,
+}: ResultadosBodyProps) {
+  if (!origen || !destino || !tipo) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-8">
+        Selecciona ruta y tipo de contenedor para ver las tarifas vigentes.
+      </p>
+    );
+  }
+  if (isFetching) {
+    return <p className="text-sm text-muted-foreground text-center py-8">Buscando…</p>;
+  }
+  if (tarifas.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-8">
+        No hay tarifas vigentes para esta combinación. Captura una nueva en
+        "Tarifas marítimas".
+      </p>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {tarifas.map((t, i) => (
+        <TarifaResultCard
+          key={t.id}
+          row={t}
+          rank={i + 1}
+          onElegir={onElegir ? (row) => { onElegir(row); onOpenChange(false); } : undefined}
+          selectLabel={selectLabel}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function BuscarTarifaDialog({
   open, onOpenChange, onElegir, selectLabel, initial,
 }: Props) {
@@ -50,8 +97,12 @@ export function BuscarTarifaDialog({
     fecha,
   });
 
-  const puertosCN = puertos.filter((p) => p.country === "CN" || p.country === "China");
-  const puertosMX = puertos.filter((p) => p.country === "MX" || p.country === "Mexico" || p.country === "México");
+  const isCN = (c: string | null | undefined) => c === "CN" || c === "China";
+  const isMX = (c: string | null | undefined) => c === "MX" || c === "Mexico" || c === "México";
+  const puertosCN = puertos.filter((p) => isCN(p.country));
+  const puertosMX = puertos.filter((p) => isMX(p.country));
+  const puertosOrigenList = puertosCN.length ? puertosCN : puertos;
+  const puertosDestinoList = puertosMX.length ? puertosMX : puertos;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -66,7 +117,7 @@ export function BuscarTarifaDialog({
             <Select value={origen} onValueChange={setOrigen}>
               <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
               <SelectContent>
-                {(puertosCN.length ? puertosCN : puertos).map((p) => (
+                {puertosOrigenList.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
                 ))}
               </SelectContent>
@@ -77,7 +128,7 @@ export function BuscarTarifaDialog({
             <Select value={destino} onValueChange={setDestino}>
               <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
               <SelectContent>
-                {(puertosMX.length ? puertosMX : puertos).map((p) => (
+                {puertosDestinoList.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
                 ))}
               </SelectContent>
@@ -100,30 +151,12 @@ export function BuscarTarifaDialog({
           </div>
         </div>
 
-        {!origen || !destino || !tipo ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Selecciona ruta y tipo de contenedor para ver las tarifas vigentes.
-          </p>
-        ) : isFetching ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Buscando…</p>
-        ) : tarifas.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No hay tarifas vigentes para esta combinación. Captura una nueva en
-            "Tarifas marítimas".
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {tarifas.map((t, i) => (
-              <TarifaResultCard
-                key={t.id}
-                row={t}
-                rank={i + 1}
-                onElegir={onElegir ? (row) => { onElegir(row); onOpenChange(false); } : undefined}
-                selectLabel={selectLabel}
-              />
-            ))}
-          </div>
-        )}
+        <ResultadosBody
+          origen={origen} destino={destino} tipo={tipo}
+          isFetching={isFetching} tarifas={tarifas}
+          onElegir={onElegir} onOpenChange={onOpenChange}
+          selectLabel={selectLabel}
+        />
       </DialogContent>
     </Dialog>
   );

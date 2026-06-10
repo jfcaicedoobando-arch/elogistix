@@ -41,37 +41,77 @@ interface Props {
 
 const DAY_MS = 86_400_000;
 
+interface Freshness {
+  label: string;
+  critical: boolean;
+  etaProxima: boolean;
+  dias: number;
+}
+
+function computeFreshness(eventos: Array<{ fecha: string; tipo: string; ubicacion: string | null }>, eta: string | null | undefined): Freshness {
+  if (eventos.length === 0) {
+    return { label: "Sin eventos registrados", critical: true, etaProxima: false, dias: 0 };
+  }
+  const ultimo = eventos[0];
+  const dias = Math.floor((Date.now() - new Date(ultimo.fecha).getTime()) / DAY_MS);
+  const diasParaEta = eta != null ? Math.ceil((new Date(eta).getTime() - Date.now()) / DAY_MS) : null;
+  const etaProxima = diasParaEta != null && diasParaEta >= 0 && diasParaEta <= 2;
+  const ubicacion = ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : "";
+  const label = dias === 0
+    ? `Último evento hoy — ${ultimo.tipo}`
+    : `Último evento hace ${dias} día${dias === 1 ? "" : "s"} — ${ultimo.tipo}${ubicacion}`;
+  return { label, critical: dias >= 7 || etaProxima, etaProxima, dias };
+}
+
+function isEtaVencida(embarque?: EmbarqueTrackingProps | null): boolean {
+  if (!embarque?.eta) return false;
+  if (embarque.estado === "Entregado" || embarque.estado === "Cerrado") return false;
+  return new Date(embarque.eta).getTime() < Date.now();
+}
+
+function EtaVencidaBanner({ eta }: { eta: string }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+      <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+      <div className="text-sm">
+        <div className="font-medium text-destructive">ETA vencida</div>
+        <div className="text-muted-foreground">
+          La ETA era {formatDate(eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
+          actualiza el estado o la fecha de llegada real.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FreshnessHeader({
+  freshness, canEdit, onToggleForm,
+}: { freshness: Freshness; canEdit: boolean; onToggleForm: () => void }) {
+  const badgeLabel = freshness.etaProxima ? "Actualiza antes del arribo" : "Requiere actualización";
+  return (
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-2 text-sm">
+        <Clock className="h-4 w-4 text-muted-foreground" />
+        <span className="text-muted-foreground">{freshness.label}</span>
+        {freshness.critical && <Badge variant="warning">{badgeLabel}</Badge>}
+      </div>
+      {canEdit && (
+        <Button size="sm" onClick={onToggleForm}>
+          <Plus className="h-4 w-4 mr-1" /> Registrar Evento
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const { canEdit } = usePermissions();
   const [formAbierto, setFormAbierto] = useState(false);
 
-  const freshness = useMemo(() => {
-    if (eventos.length === 0) return { label: "Sin eventos registrados", critical: true };
-    const ultimo = eventos[0];
-    const dias = Math.floor((Date.now() - new Date(ultimo.fecha).getTime()) / DAY_MS);
-    const etaProxima =
-      embarque?.eta != null &&
-      Math.ceil((new Date(embarque.eta).getTime() - Date.now()) / DAY_MS) <= 2 &&
-      Math.ceil((new Date(embarque.eta).getTime() - Date.now()) / DAY_MS) >= 0;
-    return {
-      label:
-        dias === 0
-          ? `Último evento hoy — ${ultimo.tipo}`
-          : `Último evento hace ${dias} día${dias === 1 ? "" : "s"} — ${ultimo.tipo}${
-              ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : ""
-            }`,
-      critical: dias >= 7 || etaProxima,
-      etaProxima,
-      dias,
-    };
-  }, [eventos, embarque?.eta]);
-
-  const etaVencida =
-    embarque?.eta != null &&
-    new Date(embarque.eta).getTime() < Date.now() &&
-    embarque.estado !== "Entregado" &&
-    embarque.estado !== "Cerrado";
+  const freshness = useMemo(() => computeFreshness(eventos, embarque?.eta), [eventos, embarque?.eta]);
+  const etaVencida = isEtaVencida(embarque);
+  const showEtaBanner = etaVencida && embarque?.eta;
 
   return (
     <div className="space-y-6">
@@ -101,35 +141,13 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
         />
       )}
 
-      {etaVencida && embarque?.eta && (
-        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-          <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-          <div className="text-sm">
-            <div className="font-medium text-destructive">ETA vencida</div>
-            <div className="text-muted-foreground">
-              La ETA era {formatDate(embarque.eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
-              actualiza el estado o la fecha de llegada real.
-            </div>
-          </div>
-        </div>
-      )}
+      {showEtaBanner && <EtaVencidaBanner eta={embarque.eta!} />}
 
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">{freshness.label}</span>
-          {freshness.critical && (
-            <Badge variant="warning">
-              {freshness.etaProxima ? "Actualiza antes del arribo" : "Requiere actualización"}
-            </Badge>
-          )}
-        </div>
-        {canEdit && (
-          <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
-            <Plus className="h-4 w-4 mr-1" /> Registrar Evento
-          </Button>
-        )}
-      </div>
+      <FreshnessHeader
+        freshness={freshness}
+        canEdit={canEdit}
+        onToggleForm={() => setFormAbierto((v) => !v)}
+      />
 
       {formAbierto && (
         <TrackingNuevoEventoForm
@@ -153,3 +171,4 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
     </div>
   );
 }
+

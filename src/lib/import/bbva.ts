@@ -88,44 +88,53 @@ async function sha1(input: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]> {
-  // Buscar primera fila con encabezados conocidos
-  let headerIdx = -1;
+function findHeaderRow(rows: string[][]): number {
   for (let i = 0; i < Math.min(rows.length, 40); i++) {
     const ups = rows[i].map((c) => norm(String(c ?? "")));
-    if (ups.some((c) => HEADERS_FECHA.includes(c)) &&
-        ups.some((c) => HEADERS_CONCEPTO.includes(c)) &&
-        (ups.some((c) => HEADERS_CARGO.includes(c)) || ups.some((c) => HEADERS_ABONO.includes(c)))) {
-      headerIdx = i;
-      break;
-    }
+    const hasFecha = ups.some((c) => HEADERS_FECHA.includes(c));
+    const hasConcepto = ups.some((c) => HEADERS_CONCEPTO.includes(c));
+    const hasMonto = ups.some((c) => HEADERS_CARGO.includes(c)) || ups.some((c) => HEADERS_ABONO.includes(c));
+    if (hasFecha && hasConcepto && hasMonto) return i;
   }
+  return -1;
+}
+
+interface ColIdx { fecha: number; conc: number; ref: number; cargo: number; abono: number; saldo: number }
+
+async function rowToMovimiento(row: unknown[], idx: ColIdx): Promise<MovimientoParseado | null> {
+  if (!row || row.every((c) => c == null || String(c).trim() === "")) return null;
+  const fecha = parseFecha(row[idx.fecha]);
+  if (!fecha) return null;
+  const concepto = String(row[idx.conc] ?? "").trim();
+  const referencia = idx.ref >= 0 ? String(row[idx.ref] ?? "").trim() : "";
+  const cargo = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
+  const abono = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
+  const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
+  const saldo = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
+  if (cargo === 0 && abono === 0) return null;
+  const hash = await sha1([fecha, concepto, referencia, cargo, abono].join("|"));
+  return { fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe: hash };
+}
+
+async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]> {
+  const headerIdx = findHeaderRow(rows);
   if (headerIdx < 0) {
     throw new Error("No se encontraron encabezados FECHA / DESCRIPCION / CARGO en el archivo BBVA.");
   }
   const headers = rows[headerIdx].map((c) => String(c ?? ""));
-  const iFecha = findColIdx(headers, HEADERS_FECHA);
-  const iConc = findColIdx(headers, HEADERS_CONCEPTO);
-  const iRef = findColIdx(headers, HEADERS_REF);
-  const iCargo = findColIdx(headers, HEADERS_CARGO);
-  const iAbono = findColIdx(headers, HEADERS_ABONO);
-  const iSaldo = findColIdx(headers, HEADERS_SALDO);
+  const idx: ColIdx = {
+    fecha: findColIdx(headers, HEADERS_FECHA),
+    conc: findColIdx(headers, HEADERS_CONCEPTO),
+    ref: findColIdx(headers, HEADERS_REF),
+    cargo: findColIdx(headers, HEADERS_CARGO),
+    abono: findColIdx(headers, HEADERS_ABONO),
+    saldo: findColIdx(headers, HEADERS_SALDO),
+  };
 
   const movimientos: MovimientoParseado[] = [];
   for (let r = headerIdx + 1; r < rows.length; r++) {
-    const row = rows[r];
-    if (!row || row.every((c) => c == null || String(c).trim() === "")) continue;
-    const fecha = parseFecha(row[iFecha]);
-    if (!fecha) continue;
-    const concepto = String(row[iConc] ?? "").trim();
-    const referencia = iRef >= 0 ? String(row[iRef] ?? "").trim() : "";
-    const cargo = iCargo >= 0 ? parseMonto(row[iCargo]) : 0;
-    const abono = iAbono >= 0 ? parseMonto(row[iAbono]) : 0;
-    const saldoRaw = iSaldo >= 0 ? row[iSaldo] : null;
-    const saldo = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
-    if (cargo === 0 && abono === 0) continue;
-    const hash = await sha1([fecha, concepto, referencia, cargo, abono].join("|"));
-    movimientos.push({ fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe: hash });
+    const m = await rowToMovimiento(rows[r], idx);
+    if (m) movimientos.push(m);
   }
   return movimientos;
 }

@@ -19,8 +19,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
 
-export default function Cxp() {
-  const { canEdit, isAdmin } = usePermissions();
+function useCxpFiltrosState() {
   const [search, setSearch] = useState("");
   const [estatus, setEstatus] = useState<EstatusCxP | "todos">("todos");
   const [moneda, setMoneda] = useState<"todas" | "MXN" | "USD" | "EUR">("todas");
@@ -28,15 +27,28 @@ export default function Cxp() {
   const [proveedorId, setProveedorId] = useState<string>("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+  const hayFiltros =
+    search !== "" || estatus !== "todos" || moneda !== "todas" || origen !== "todos" ||
+    proveedorId !== "todos" || fechaDesde !== "" || fechaHasta !== "";
+  return {
+    search, setSearch, estatus, setEstatus, moneda, setMoneda, origen, setOrigen,
+    proveedorId, setProveedorId, fechaDesde, setFechaDesde, fechaHasta, setFechaHasta,
+    hayFiltros,
+  };
+}
+
+export default function Cxp() {
+  const { canEdit, isAdmin } = usePermissions();
+  const f = useCxpFiltrosState();
 
   const { data = [], isLoading, kpis } = useFacturasCxP({
-    search: search || undefined,
-    estatus,
-    moneda,
-    origen,
-    proveedor_id: proveedorId === "todos" ? undefined : proveedorId,
-    fecha_desde: fechaDesde || undefined,
-    fecha_hasta: fechaHasta || undefined,
+    search: f.search || undefined,
+    estatus: f.estatus,
+    moneda: f.moneda,
+    origen: f.origen,
+    proveedor_id: f.proveedorId === "todos" ? undefined : f.proveedorId,
+    fecha_desde: f.fechaDesde || undefined,
+    fecha_hasta: f.fechaHasta || undefined,
   });
   const { data: cxc = [] } = useCobranza({});
 
@@ -72,10 +84,6 @@ export default function Cxp() {
     [canEdit],
   );
 
-  const hayFiltros =
-    search !== "" || estatus !== "todos" || moneda !== "todas" || origen !== "todos" ||
-    proveedorId !== "todos" || fechaDesde !== "" || fechaHasta !== "";
-
   return (
     <div className="space-y-4">
       <PageHeader
@@ -100,20 +108,20 @@ export default function Cxp() {
       <Card>
         <CardContent className="p-4">
           <CxpFiltros
-            search={search} onSearchChange={setSearch}
-            estatus={estatus} onEstatusChange={setEstatus}
-            moneda={moneda} onMonedaChange={setMoneda}
-            origen={origen} onOrigenChange={setOrigen}
-            proveedorId={proveedorId} onProveedorChange={setProveedorId}
-            fechaDesde={fechaDesde} onFechaDesdeChange={setFechaDesde}
-            fechaHasta={fechaHasta} onFechaHastaChange={setFechaHasta}
+            search={f.search} onSearchChange={f.setSearch}
+            estatus={f.estatus} onEstatusChange={f.setEstatus}
+            moneda={f.moneda} onMonedaChange={f.setMoneda}
+            origen={f.origen} onOrigenChange={f.setOrigen}
+            proveedorId={f.proveedorId} onProveedorChange={f.setProveedorId}
+            fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
+            fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-0">
-          {!isLoading && data.length === 0 && !hayFiltros ? (
+          {!isLoading && data.length === 0 && !f.hayFiltros ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
               <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
               <h3 className="text-base font-semibold">Aún no hay facturas de proveedor</h3>

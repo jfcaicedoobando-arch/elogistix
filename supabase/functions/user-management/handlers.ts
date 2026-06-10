@@ -229,19 +229,82 @@ export function resolveRedirectTo(rawOrigin: string): string {
   return `${safeOrigin}/portal/login`;
 }
 
+function validateInviteInput(body: Record<string, unknown>): { email: string; cliente_id: string; organization_id: string } | string {
+  const email = typeof body.email === "string" ? body.email : "";
+  const cliente_id = typeof body.cliente_id === "string" ? body.cliente_id : "";
+  const organization_id = typeof body.organization_id === "string" ? body.organization_id : "";
+  if (!email || !cliente_id || !organization_id) {
+    return "Faltan campos requeridos: email, cliente_id, organization_id";
+  }
+  return { email, cliente_id, organization_id };
+}
+
+async function ensureClienteEnOrg(
+  adminClient: SupabaseClient,
+  cliente_id: string,
+  organization_id: string,
+): Promise<boolean> {
+  const { data: cliente } = await adminClient
+    .from("clientes")
+    .select("id, organization_id")
+    .eq("id", cliente_id)
+    .maybeSingle();
+  return !!cliente && (cliente as { organization_id: string }).organization_id === organization_id;
+}
+
+async function inviteOrLinkUser(
+  adminClient: SupabaseClient,
+  email: string,
+  redirectTo: string,
+): Promise<{ userId: string; isNew: boolean } | { error: string }> {
+  const { data: existing } = await adminClient
+    .schema("auth")
+    .from("users")
+    .select("id, email")
+    .ilike("email", email)
+    .maybeSingle();
+
+  if (existing) {
+    await adminClient.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } });
+    const anon = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    await anon.auth.resetPasswordForEmail(email, { redirectTo });
+    return { userId: (existing as { id: string }).id, isNew: false };
+  }
+
+  const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    redirectTo,
+    data: { role: "cliente" },
+  });
+  if (error || !data.user) {
+    return { error: error?.message ?? "Error desconocido al invitar" };
+  }
+  return { userId: data.user.id, isNew: true };
+}
+
+async function ensureClienteRole(adminClient: SupabaseClient, userId: string): Promise<void> {
+  const { data: existingRole } = await adminClient
+    .from("user_roles").select("id").eq("user_id", userId).maybeSingle();
+  if (!existingRole) {
+    await adminClient.from("user_roles").insert({ user_id: userId, role: "cliente" });
+  }
+}
+
 export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { req, cors, log, callerId, adminClient, body } = ctx;
   if (!admin.isGlobalAdmin && !admin.orgId) {
     log.finish(403, "not_admin", { user_id: callerId });
     return errorResponse("Solo administradores", 403, cors);
   }
-  const email = typeof body.email === "string" ? body.email : "";
-  const cliente_id = typeof body.cliente_id === "string" ? body.cliente_id : "";
-  const organization_id = typeof body.organization_id === "string" ? body.organization_id : "";
-  if (!email || !cliente_id || !organization_id) {
+
+  const inputOrErr = validateInviteInput(body);
+  if (typeof inputOrErr === "string") {
     log.finish(400, "missing_fields", { user_id: callerId });
-    return errorResponse("Faltan campos requeridos: email, cliente_id, organization_id", 400, cors);
+    return errorResponse(inputOrErr, 400, cors);
   }
+  const { email, cliente_id, organization_id } = inputOrErr;
 
   if (!admin.isGlobalAdmin && admin.orgId !== organization_id) {
     log.finish(403, "cross_org_invite_blocked", {
@@ -250,55 +313,21 @@ export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse("No autorizado para invitar usuarios a esa organización", 403, cors);
   }
 
-  const { data: cliente } = await adminClient
-    .from("clientes")
-    .select("id, organization_id")
-    .eq("id", cliente_id)
-    .maybeSingle();
-  if (!cliente || (cliente as { organization_id: string }).organization_id !== organization_id) {
+  const clienteOk = await ensureClienteEnOrg(adminClient, cliente_id, organization_id);
+  if (!clienteOk) {
     log.finish(400, "invalid_cliente", { user_id: callerId, organization_id, payload: { cliente_id } });
     return errorResponse("Cliente inválido para esa organización", 400, cors);
   }
 
   const redirectTo = resolveRedirectTo(req.headers.get("origin") ?? "");
-
-  const { data: existing } = await adminClient
-    .schema("auth")
-    .from("users")
-    .select("id, email")
-    .ilike("email", email)
-    .maybeSingle();
-
-  let userId: string;
-  let isNew: boolean;
-  if (existing) {
-    await adminClient.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } });
-    const anon = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-    );
-    await anon.auth.resetPasswordForEmail(email, { redirectTo });
-    userId = (existing as { id: string }).id;
-    isNew = false;
-  } else {
-    const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: { role: "cliente" },
-    });
-    if (error || !data.user) {
-      const msg = error?.message ?? "Error desconocido al invitar";
-      log.finish(500, "invite_email_failed", { organization_id, payload: { error: msg } });
-      return errorResponse(`Error al invitar usuario: ${msg}`, 500, cors);
-    }
-    userId = data.user.id;
-    isNew = true;
+  const inviteResult = await inviteOrLinkUser(adminClient, email, redirectTo);
+  if ("error" in inviteResult) {
+    log.finish(500, "invite_email_failed", { organization_id, payload: { error: inviteResult.error } });
+    return errorResponse(`Error al invitar usuario: ${inviteResult.error}`, 500, cors);
   }
+  const { userId, isNew } = inviteResult;
 
-  const { data: existingRole } = await adminClient
-    .from("user_roles").select("id").eq("user_id", userId).maybeSingle();
-  if (!existingRole) {
-    await adminClient.from("user_roles").insert({ user_id: userId, role: "cliente" });
-  }
+  await ensureClienteRole(adminClient, userId);
 
   const { error: linkError } = await adminClient
     .from("client_users")

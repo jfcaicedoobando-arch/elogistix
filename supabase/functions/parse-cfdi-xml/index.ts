@@ -18,30 +18,52 @@ const MAX_BYTES = 2 * 1024 * 1024;
 
 interface Categoria { id: string; nombre: string }
 
+const TOOL_DEF = {
+  type: "function",
+  function: {
+    name: "sugerir",
+    description: "Sugiere la categoría que mejor matchea los conceptos",
+    parameters: {
+      type: "object",
+      properties: {
+        categoria_id: { type: "string", description: "ID exacto de la categoría más adecuada, o vacío" },
+        notas: { type: "string", description: "Resumen breve (máx 200 chars) de los conceptos" },
+      },
+      required: ["categoria_id", "notas"],
+      additionalProperties: false,
+    },
+  },
+};
+
+function fallbackResult(conceptos: { descripcion: string }[]): { categoria_id: string | null; notas: string } {
+  return {
+    categoria_id: null,
+    notas: conceptos.map(c => c.descripcion).join("; ").slice(0, 240),
+  };
+}
+
+function parseToolCallResponse(j: unknown, categorias: Categoria[]): { categoria_id: string | null; notas: string } | null {
+  const args = (j as { choices?: Array<{ message?: { tool_calls?: Array<{ function?: { arguments?: string } }> } }> })
+    .choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+  if (!args) return null;
+  try {
+    const parsed = JSON.parse(args);
+    const id = String(parsed.categoria_id ?? "").trim();
+    const valid = categorias.some(c => c.id === id);
+    return { categoria_id: valid ? id : null, notas: String(parsed.notas ?? "").slice(0, 240) };
+  } catch {
+    return null;
+  }
+}
+
 async function sugerirCategoria(
   apiKey: string,
   conceptos: { descripcion: string }[],
   categorias: Categoria[],
 ): Promise<{ categoria_id: string | null; notas: string }> {
   if (categorias.length === 0 || conceptos.length === 0) {
-    return { categoria_id: null, notas: conceptos.map(c => c.descripcion).join("; ").slice(0, 240) };
+    return fallbackResult(conceptos);
   }
-  const TOOL = {
-    type: "function",
-    function: {
-      name: "sugerir",
-      description: "Sugiere la categoría que mejor matchea los conceptos",
-      parameters: {
-        type: "object",
-        properties: {
-          categoria_id: { type: "string", description: "ID exacto de la categoría más adecuada, o vacío" },
-          notas: { type: "string", description: "Resumen breve (máx 200 chars) de los conceptos" },
-        },
-        required: ["categoria_id", "notas"],
-        additionalProperties: false,
-      },
-    },
-  };
   const prompt = `Categorías disponibles (id | nombre):\n${categorias.map(c => `${c.id} | ${c.nombre}`).join("\n")}\n\nConceptos de la factura:\n${conceptos.map(c => `- ${c.descripcion}`).join("\n")}\n\nElige el id de la categoría que mejor matchea. Si nada matchea claramente, devuelve cadena vacía en categoria_id.`;
 
   try {
@@ -54,20 +76,15 @@ async function sugerirCategoria(
           { role: "system", content: "Eres un asistente contable mexicano. Responde sólo vía tool call." },
           { role: "user", content: prompt },
         ],
-        tools: [TOOL],
+        tools: [TOOL_DEF],
         tool_choice: { type: "function", function: { name: "sugerir" } },
       }),
     });
     if (!res.ok) {
       return { categoria_id: null, notas: conceptos[0]?.descripcion?.slice(0, 200) ?? "" };
     }
-    const j = await res.json();
-    const args = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) return { categoria_id: null, notas: "" };
-    const parsed = JSON.parse(args);
-    const id = String(parsed.categoria_id ?? "").trim();
-    const valid = categorias.some(c => c.id === id);
-    return { categoria_id: valid ? id : null, notas: String(parsed.notas ?? "").slice(0, 240) };
+    const parsed = parseToolCallResponse(await res.json(), categorias);
+    return parsed ?? { categoria_id: null, notas: "" };
   } catch {
     return { categoria_id: null, notas: "" };
   }

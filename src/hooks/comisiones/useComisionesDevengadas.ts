@@ -12,9 +12,12 @@ import {
 } from "@/services/comisiones";
 
 export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
-  const key = useMemo(() => filtros, [
-    filtros.vendedora_id, filtros.estado, filtros.periodo,
-  ]);
+  // SAFE: filtros se desestructura en primitivos antes del useMemo para evitar
+  // dependencias inestables y satisfacer react-hooks/exhaustive-deps.
+  const key = useMemo(
+    () => ({ vendedora_id: filtros.vendedora_id, estado: filtros.estado, periodo: filtros.periodo }),
+    [filtros.vendedora_id, filtros.estado, filtros.periodo],
+  );
   const q = useQuery({
     queryKey: queryKeys.comisiones.devengadas(key),
     queryFn: () => fetchComisionesDevengadas(filtros),
