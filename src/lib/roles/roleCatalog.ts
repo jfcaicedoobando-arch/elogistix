@@ -15,6 +15,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin_org: "Administrador",
   gerente_operaciones: "Gerente de Operaciones",
+  gerente_visor: "Gerente Visor (solo lectura)",
   coordinador_logistico: "Coordinador Logístico",
   ejecutivo_pricing: "Ejecutivo de Pricing",
   contador: "Contador",
