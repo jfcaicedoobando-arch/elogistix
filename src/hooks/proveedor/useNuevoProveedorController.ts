@@ -41,13 +41,17 @@ export const EMPTY_PROVEEDOR_FORM = {
   telefono: "",
   moneda_preferida: "MXN" as Moneda,
   origen_proveedor: null as "Nacional" | "Extranjero" | null,
-  // Datos fiscales (CSF) — necesarios para timbrar CFDI 4.0.
+  // Datos fiscales (CSF) — opcionales, solo para registro interno.
   cp: "",
   direccion: "",
   ciudad: "",
   estado: "",
   regimen_fiscal: "",
+  // Datos bancarios — opcionales (paso 2).
+  banco: "",
+  clabe: "",
 };
+
 
 export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
 
@@ -116,10 +120,9 @@ export function useNuevoProveedorController(
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
-    const docNames = form.origen_proveedor === "Nacional" ? DOCS_NACIONAL : DOCS_EXTRANJERO;
-    setDocumentos(docNames.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
   };
+
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos((prev) =>
@@ -141,9 +144,15 @@ export function useNuevoProveedorController(
   };
 
   const handleSave = () => {
-    onSave(form as TablesInsert<"proveedores">);
+    const clabeTrim = form.clabe.trim();
+    if (clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
+      toast.error("La CLABE debe tener exactamente 18 dígitos numéricos.");
+      return;
+    }
+    onSave({ ...form, clabe: clabeTrim } as TablesInsert<"proveedores">);
     resetAndClose();
   };
+
 
   /**
    * Sube un PDF de Constancia de Situación Fiscal y auto-rellena nombre y RFC.

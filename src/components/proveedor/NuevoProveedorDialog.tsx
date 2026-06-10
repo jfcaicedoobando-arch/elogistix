@@ -15,7 +15,7 @@ import {
   SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
-import DocumentChecklist from "@/components/shared/DocumentChecklist";
+import { BANCOS_MEXICO } from "@/constants/bancosMexico";
 import { useNuevoProveedorController } from "@/hooks/proveedor";
 import type { Enums } from "@/types/db";
 import { useRef } from "react";
@@ -247,12 +247,41 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
         )}
 
         {c.step === 2 && (
-          <DocumentChecklist
-            documentos={c.documentos}
-            onFileChange={c.handleFileChange}
-            descripcion={`Documentos requeridos para proveedor ${c.form.origen_proveedor}. Puedes adjuntarlos ahora o después.`}
-          />
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold">Datos bancarios</h3>
+              <p className="text-xs text-muted-foreground">Opcional. Puedes capturarlos después desde la edición del proveedor.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Banco</Label>
+              <Select
+                value={c.form.banco || undefined}
+                onValueChange={(v) => c.setField("banco", v)}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecciona un banco" /></SelectTrigger>
+                <SelectContent>
+                  {BANCOS_MEXICO.map((b) => (
+                    <SelectItem key={b} value={b}>{b}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>CLABE interbancaria</Label>
+              <Input
+                inputMode="numeric"
+                maxLength={18}
+                placeholder="18 dígitos"
+                value={c.form.clabe}
+                onChange={(e) => c.setField("clabe", e.target.value.replace(/\D/g, ""))}
+              />
+              {c.form.clabe.length > 0 && c.form.clabe.length !== 18 && (
+                <p className="text-xs text-destructive">La CLABE debe tener 18 dígitos ({c.form.clabe.length}/18).</p>
+              )}
+            </div>
+          </div>
         )}
+
 
         <DialogFooter>
           {c.step === 1 && (

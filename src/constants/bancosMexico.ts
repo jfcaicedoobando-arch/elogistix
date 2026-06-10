@@ -1,0 +1,49 @@
+/**
+ * Catálogo de bancos comerciales en México.
+ * Ordenado alfabéticamente. Lista usada en formularios de captura
+ * de datos bancarios (proveedores, cuentas bancarias, etc.).
+ */
+export const BANCOS_MEXICO: readonly string[] = [
+  "Actinver",
+  "Afirme",
+  "Albo",
+  "American Express",
+  "Banamex (Citibanamex)",
+  "BanBajío",
+  "Banca Mifel",
+  "Banco Azteca",
+  "Banco Base",
+  "Banco del Bajío",
+  "Banco Famsa",
+  "Banco Inmobiliario Mexicano",
+  "Banco Sabadell",
+  "Banco Ve por Más",
+  "BanCoppel",
+  "Bancrea",
+  "Banjército",
+  "Banorte",
+  "Banregio",
+  "Bansí",
+  "BBVA México",
+  "CIBanco",
+  "Compartamos Banco",
+  "Consubanco",
+  "Donde",
+  "Hey Banco",
+  "HSBC",
+  "Inbursa",
+  "Intercam Banco",
+  "Invex",
+  "Klar",
+  "Mifel",
+  "Monex",
+  "Multiva",
+  "Nu México",
+  "Santander",
+  "Scotiabank",
+  "Stori",
+  "Ualá",
+] as const;
+
+/** Valida que una CLABE interbancaria tenga exactamente 18 dígitos numéricos. */
+export const isClabeValida = (clabe: string): boolean => /^\d{18}$/.test(clabe);
