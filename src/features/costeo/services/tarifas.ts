@@ -121,7 +121,6 @@ export async function insertTarifaConRecargos(
         monto: Number(r.monto) || 0,
         moneda: "USD",
         incluido_en_total: r.incluido_en_total ?? true,
-        organization_id: organizationId,
       }));
     if (rows.length > 0) {
       const { error: errRec } = await supabase.from("costeo_tarifa_recargos").insert(rows);
