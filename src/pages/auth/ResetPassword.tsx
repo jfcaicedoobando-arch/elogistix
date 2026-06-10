@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { subscribeToAuthChanges, getCurrentSession, updateUserPassword } from "@/services/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,16 +25,16 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Supabase emite PASSWORD_RECOVERY cuando el usuario abre el enlace de recovery.
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    const sub = subscribeToAuthChanges((event) => {
       if (event === "PASSWORD_RECOVERY") setValidSession(true);
     });
     // Si ya hay sesión activa (el link puso el token), también permitimos.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setValidSession(true);
+    getCurrentSession().then((session) => {
+      if (session) setValidSession(true);
       setReady(true);
     });
     return () => {
-      sub.subscription.unsubscribe();
+      sub.unsubscribe();
     };
   }, []);
 
@@ -51,8 +51,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.updateUser({ password });
-      if (err) throw err;
+      await updateUserPassword(password);
       setDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 2500);
     } catch (err) {

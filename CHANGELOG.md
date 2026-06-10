@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.2] - 2026-06-10
+- **fix(auditoría)**: cero violaciones de arquitectura y Power-of-10. Se añaden `requestPasswordReset` y `updateUserPassword` al servicio `@/services/auth` para que `ForgotPasswordDialog.tsx` y `ResetPassword.tsx` dejen de importar `supabase` directo. `Login.tsx` (245 → 66 líneas) se divide en `components/LoginForm.tsx` y `components/SignupForm.tsx`. `genericPayloadMapper.ts` (226 → 165 líneas) extrae sus tipos a `genericPayloadMapper.types.ts`.
+
 ## [12.76.1] - 2026-06-10
 - **fix(demo)**: el usuario `demo@librecarga.com` ahora entra como **administrador** de la organización demo (antes era operador, lo que ocultaba módulos de finanzas, configuración, usuarios y reportes). `ensure_demo_membership` fuerza rol `admin` tanto en `user_roles` como en `organization_members`. Banner demo actualizado para reflejar el rol. Los datos siguen reiniciándose en cada acceso, así que cualquier cambio del prospecto es efímero.
 

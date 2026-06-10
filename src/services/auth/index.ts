@@ -66,3 +66,21 @@ export async function signUpWithEmail(input: SignUpInput): Promise<void> {
   });
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Envía el correo con el enlace para restablecer contraseña.
+ * El enlace redirige a `redirectTo` (usualmente `/reset-password`).
+ */
+export async function requestPasswordReset(email: string, redirectTo: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Actualiza la contraseña del usuario actual (requiere sesión activa, típicamente
+ * la sesión efímera generada por el enlace de recovery).
+ */
+export async function updateUserPassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { requestPasswordReset } from "@/services/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,10 +37,7 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "" }: 
     setError(null);
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (err) throw err;
+      await requestPasswordReset(email, `${window.location.origin}/reset-password`);
       setSent(true);
     } catch (err) {
       setError(translateAuthError(err instanceof Error ? err.message : null));
