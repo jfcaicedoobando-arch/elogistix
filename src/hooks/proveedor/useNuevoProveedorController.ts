@@ -56,6 +56,8 @@ export function useNuevoProveedorController(
   const [form, setForm] = useState<NuevoProveedorForm>({ ...EMPTY_PROVEEDOR_FORM });
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
+  const [csfLoading, setCsfLoading] = useState(false);
+
 
   const isLogistico = form.categoria === "Logistico";
   const isGasto = form.categoria === "GastoOperativo";
