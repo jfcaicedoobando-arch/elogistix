@@ -138,10 +138,33 @@ export function useNuevoProveedorController(
     resetAndClose();
   };
 
+  /**
+   * Sube un PDF de Constancia de Situación Fiscal y auto-rellena nombre y RFC.
+   * Solo aplica para proveedores de gasto operativo (nacionales).
+   */
+  const handleCsfUpload = async (file: File) => {
+    setCsfLoading(true);
+    try {
+      const data = await parseCsf(file);
+      setForm((prev) => ({
+        ...prev,
+        nombre: data.nombre?.trim() || prev.nombre,
+        rfc: data.rfc?.trim() || prev.rfc,
+      }));
+      toast.success("CSF procesada. Verifica los datos extraídos.");
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
+      toast.error(mensaje);
+    } finally {
+      setCsfLoading(false);
+    }
+  };
+
   return {
     form,
     step,
     documentos,
+    csfLoading,
     isLogistico,
     isGasto,
     isAgenteCarga,
@@ -154,6 +177,7 @@ export function useNuevoProveedorController(
     handleSubtipoGastoChange,
     handleNext,
     handleFileChange,
+    handleCsfUpload,
     handleSave,
     resetAndClose,
   };
