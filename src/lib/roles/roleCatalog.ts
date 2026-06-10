@@ -67,6 +67,7 @@ export const ROLE_BADGE_CLASSES: Record<AppRole, string> = {
 export const ASSIGNABLE_ROLES_ADMIN_ORG: readonly AppRole[] = [
   "admin_org",
   "gerente_operaciones",
+  "gerente_visor",
   "coordinador_logistico",
   "ejecutivo_pricing",
   "contador",
