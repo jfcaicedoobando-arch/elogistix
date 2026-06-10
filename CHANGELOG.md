@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.30] - 2026-06-10
+- **fix(cxp/cfdi)**: el desglose de IVA y retenciones llegaba en 0 al cargar el XML porque el parser tomaba el primer bloque `<cfdi:Impuestos>` (el del Concepto, sin totales) en lugar del bloque raíz del Comprobante. Ahora se localiza el bloque que trae `TotalImpuestosTrasladados/Retenidos` y, si el CFDI no lo declara, se suman los `<Traslado Impuesto="002">` y `<Retencion>` por concepto.
+
 ## [12.76.29] - 2026-06-10
 - **fix(cxp/proveedores)**: el dropdown de proveedores en CxP fallaba porque el listado ligero consultaba la columna inexistente `deleted_at` en `proveedores`, dejando vacío el combobox aunque el XML encontrara el RFC. Se quitó ese filtro y se scopeó el listado por organización activa para que el proveedor detectado aparezca seleccionado.
 
