@@ -5,7 +5,7 @@
 export interface CosteoAgente {
   id: string;
   organization_id: string;
-  proveedor_id: string | null;
+  proveedor_id: string;
   nombre: string;
   pais: string;
   dias_credito: number;
@@ -25,7 +25,6 @@ export interface CosteoRuta {
   activa: boolean;
   created_at: string;
   updated_at: string;
-  // joins opcionales
   puerto_origen_nombre?: string;
   puerto_destino_nombre?: string;
 }
@@ -76,3 +75,5 @@ export interface TopTarifa {
   transit_time_dias: number | null;
   vigente_hasta: string;
 }
+
+export * from "./navieraCondicion";
