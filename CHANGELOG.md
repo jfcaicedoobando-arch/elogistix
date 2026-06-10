@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.22] - 2026-06-10
+- **fix(costeo/agentes)**: el dropdown de proveedor en "Nuevo agente" filtraba por una columna inexistente (`deleted_at`), lo que dejaba la lista vacía y hacía imposible seleccionar proveedores tipo "Agente de Carga" (ej. Longsail Supply Chain). Se quitó el filtro; ahora se listan todos los proveedores del tipo correcto scoped por RLS.
+
 ## [12.76.21] - 2026-06-10
 - **feat(nuevo-proveedor)**: simplificado el paso 2 del wizard de alta. En lugar del checklist de documentos ahora solo pide **Datos bancarios** (opcionales): un dropdown con los bancos comerciales de México y un campo para la CLABE interbancaria. La CLABE se valida a 18 dígitos numéricos (acepta solo números, máximo 18 caracteres, muestra el contador y bloquea el guardado si está incompleta). Se agregaron las columnas `banco` y `clabe` a `proveedores`.
 
