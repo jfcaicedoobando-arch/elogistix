@@ -119,8 +119,18 @@ async function processCsf(req: Request, cors: HeadersInit, log: ReturnType<typeo
     return errorResponse(fileError, status, cors);
   }
 
-  const arrayBuffer = await file!.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  const bytes = new Uint8Array(await file!.arrayBuffer());
+  // Codificación por chunks para evitar "Maximum call stack size exceeded"
+  // cuando el PDF supera ~100KB (el spread pasa cada byte como argumento).
+  const CHUNK = 0x8000; // 32 KB
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(
+      null,
+      bytes.subarray(i, i + CHUNK) as unknown as number[],
+    );
+  }
+  const base64 = btoa(binary);
 
   const response = await callAiGateway(LOVABLE_API_KEY, file!.name, base64);
   if (!response.ok) {
