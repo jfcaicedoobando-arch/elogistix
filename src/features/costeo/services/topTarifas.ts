@@ -18,7 +18,7 @@ export async function fetchTopTarifas(p: TopTarifasParams): Promise<TopTarifaRow
     p_puerto_destino_id: p.puertoDestinoId,
     p_tipo_contenedor_id: p.tipoContenedorId,
     p_fecha: p.fecha ?? new Date().toISOString().slice(0, 10),
-    p_organization_id: p.organizationId ?? null,
+    p_organization_id: p.organizationId ?? undefined,
   });
   if (error) throw error;
   return (data ?? []) as TopTarifaRow[];
