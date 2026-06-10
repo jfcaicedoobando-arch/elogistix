@@ -73,7 +73,7 @@ export async function checkAdminAccess(
     .from("organization_members")
     .select("role, organization_id")
     .eq("user_id", userId)
-    .eq("role", "admin")
+    .in("role", ["admin", "admin_org"])
     .maybeSingle();
 
   if (!orgData) {
