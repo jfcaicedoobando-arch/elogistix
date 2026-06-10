@@ -40,6 +40,8 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const [initialized, setInitialized] = useState(false);
   const [hidratoContactos, setHidratoContactos] = useState(false);
   const [hidratoContenedores, setHidratoContenedores] = useState(false);
+  const [hidratoVenta, setHidratoVenta] = useState(false);
+  const [hidratoCosto, setHidratoCosto] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const {
@@ -69,8 +71,12 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     initialized,
     hidratoContactos,
     hidratoContenedores,
+    hidratoVenta,
+    hidratoCosto,
     setHidratoContactos,
     setHidratoContenedores,
+    setHidratoVenta,
+    setHidratoCosto,
     embarque,
     contactos,
     selectedClienteNombre: clientes.find((c) => c.id === clienteId)?.nombre,
