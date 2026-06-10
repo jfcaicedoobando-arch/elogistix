@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.31] - 2026-06-10
+- **fix(embarques/editar)**: en el paso 3 "Costos y Pricing", al dar clic en "+ Agregar costo" o "+ Agregar concepto" la fila aparecía y desaparecía. La hidratación inicial desde la BD se ejecutaba en cada render (dependencia `p` completa en `useEffect`), sobrescribiendo el estado local. Ahora se hidrata una sola vez con flags `hidratoVenta` / `hidratoCosto` y deps específicas.
+
 ## [12.76.30] - 2026-06-10
 - **fix(cxp/cfdi)**: el desglose de IVA y retenciones llegaba en 0 al cargar el XML porque el parser tomaba el primer bloque `<cfdi:Impuestos>` (el del Concepto, sin totales) en lugar del bloque raíz del Comprobante. Ahora se localiza el bloque que trae `TotalImpuestosTrasladados/Retenidos` y, si el CFDI no lo declara, se suman los `<Traslado Impuesto="002">` y `<Retencion>` por concepto.
 
