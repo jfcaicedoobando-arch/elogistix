@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.70.1] - 2026-06-10
+- **feat(marketing/seo)**: nueva página `/recursos/guia-incoterms-2020` — guía de las 11 reglas Incoterms 2020 aplicadas al comercio exterior mexicano (EXW/FCA/FOB/CIF/DAP/DDP/etc.), con cambios vs 2010, criterios de selección, 8 FAQs y JSON-LD `Article` + `FAQPage` + `BreadcrumbList`. Añadida a `sitemap.xml`. Target: keyword "incoterms 2020" (~2,400/mo, KDI 21).
+- **chore(seo)**: dominio `librecarga.com` verificado en Google Search Console (META) y `sitemap.xml` enviado.
+
 ## [12.70.0] - 2026-06-10
 - **feat(marketing/seo)**: nueva página pública `/recursos/guia-carta-porte-3` — Guía Carta Porte 3.0 orientada a México con índice navegable, 8 secciones (qué es, obligados, tipos de CFDI, modos, campos, errores, multas, checklist), 8 FAQs y JSON-LD `Article` + `FAQPage` + `BreadcrumbList`. Incluida en `sitemap.xml` con prioridad 0.8.
 
