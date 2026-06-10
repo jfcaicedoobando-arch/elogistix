@@ -42,6 +42,7 @@ export default function Landing() {
         <LandingMexico />
         <LandingPortal />
         <LandingSeguridad />
+        <LandingRecursos />
         <LandingPrecio />
         <LandingFaq />
         <LandingCtaFinal />
