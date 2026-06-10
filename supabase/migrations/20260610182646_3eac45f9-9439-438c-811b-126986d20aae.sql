@@ -1,0 +1,2 @@
+-- Add new read-only manager role
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'gerente_visor';
