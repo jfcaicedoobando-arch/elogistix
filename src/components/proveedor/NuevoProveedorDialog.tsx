@@ -74,11 +74,11 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               </div>
             )}
 
-            {c.isGasto && (
+            {(c.isGasto || (c.isLogistico && c.form.origen_proveedor === "Nacional")) && (
               <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/40 p-3">
                 <Label className="text-sm">Cargar Constancia de Situación Fiscal (PDF)</Label>
                 <p className="text-xs text-muted-foreground">
-                  Opcional. Extraemos automáticamente el nombre y el RFC del proveedor.
+                  Opcional. Extraemos automáticamente nombre y RFC desde la CSF del SAT.
                 </p>
                 <input
                   ref={csfInputRef}
