@@ -45,6 +45,7 @@ export const TesoreriaFlujo = lazy(() => import("@/pages/tesoreria/TesoreriaFluj
 export const Comisiones = lazy(() => import("@/pages/comisiones/Comisiones"));
 
 export const CosteoTarifas = lazy(() => import("@/features/costeo/routes/CosteoTarifas"));
+export const CosteoBuscar = lazy(() => import("@/features/costeo/routes/CosteoBuscar"));
 export const CosteoRutas = lazy(() => import("@/features/costeo/routes/CosteoRutas"));
 export const CosteoAgentes = lazy(() => import("@/features/costeo/routes/CosteoAgentes"));
 export const CosteoNavieras = lazy(() => import("@/features/costeo/routes/CosteoNavieras"));
