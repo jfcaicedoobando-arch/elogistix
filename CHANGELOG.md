@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.0] - 2026-06-10
+- **feat(costeo)**: simplificación del catálogo de tarifas marítimas. Se mantienen activos únicamente los 4 tipos FCL canónicos (20', 40', 45' High Cube, 53' High Cube). El resto (incluido LCL) se desactiva en `tipos_contenedor`: los registros históricos se preservan, pero ya no aparecen como opción al capturar nuevas tarifas, demoras o búsquedas Top 3. LCL queda fuera del módulo Costeo y tendrá su propio proceso.
+
 ## [12.76.31] - 2026-06-10
 - **fix(embarques/editar)**: en el paso 3 "Costos y Pricing", al dar clic en "+ Agregar costo" o "+ Agregar concepto" la fila aparecía y desaparecía. La hidratación inicial desde la BD se ejecutaba en cada render (dependencia `p` completa en `useEffect`), sobrescribiendo el estado local. Ahora se hidrata una sola vez con flags `hidratoVenta` / `hidratoCosto` y deps específicas.
 
