@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.1] - 2026-06-10
+- **fix(sidebar/costeo)**: los roles `coordinador_logistico`, `operador` y `ejecutivo_pricing` no veían la sección "Costeo" en el menú lateral aunque las rutas `/costeo/*` siempre estuvieron abiertas. Se agrega el grupo Costeo a esas ramas de `useAppSidebarSections` para que puedan acceder a Buscar tarifa, Tarifas marítimas, Rutas, Agentes, Navieras y Tarifa demoras.
+
 ## [12.77.0] - 2026-06-10
 - **feat(costeo)**: simplificación del catálogo de tarifas marítimas. Se mantienen activos únicamente los 4 tipos FCL canónicos (20', 40', 45' High Cube, 53' High Cube). El resto (incluido LCL) se desactiva en `tipos_contenedor`: los registros históricos se preservan, pero ya no aparecen como opción al capturar nuevas tarifas, demoras o búsquedas Top 3. LCL queda fuera del módulo Costeo y tendrá su propio proceso.
 
