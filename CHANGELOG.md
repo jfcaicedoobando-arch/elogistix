@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.14] - 2026-06-10
+- **fix(parse-csf)**: redesplegada la edge function `parse-csf` para sincronizar con el código del repo. La versión desplegada anterior aún restringía a admin/operadores y rechazaba al rol `contador` con "Solo administradores y operadores pueden usar este servicio". Ahora cualquier miembro autenticado de una organización (contador, coordinador, admin_org, etc.) puede subir CSF de clientes y proveedores.
+
 ## [12.76.13] - 2026-06-10
 - **fix(ui-fhd)**: barrido de optimización para laptops Full HD (1920×1080). Aplicado `scrollableDialog` (`max-h-[85vh] overflow-y-auto`) a 16 modales que se cortaban en pantallas ≤937px de alto:
   - Clientes: `DialogEditarCliente`, `DialogContacto`, `PortalInviteDialog`, `DialogConvertirProspecto`.
