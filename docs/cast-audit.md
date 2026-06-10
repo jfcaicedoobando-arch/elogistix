@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **1254**
+Total de `as` casts detectados: **1256**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 453     | 36.1% |
-| LOW       | 1 | 19      | 1.5% |
-| MEDIUM    | 2 | 780   | 62.2% |
-| HIGH      | 3 | 2     | 0.2% |
+| SAFE      | 0 | 454     | 36.1% |
+| LOW       | 1 | 21      | 1.7% |
+| MEDIUM    | 2 | 781   | 62.2% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.2%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,18 +47,7 @@ Total de `as` casts detectados: **1254**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/costeo/services/tarifas.ts:71`
-
-```ts
-return ((data ?? []) as unknown as RawRow[]).map(mapRow);
-```
-
-### 2. [HIGH] `src/features/embarques/services/demorasEmbarque.ts:7`
-
-```ts
-return data as unknown as DemoraDesglose;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
