@@ -50,6 +50,7 @@ export const ROLE_BADGE_CLASSES: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",
   admin_org: "bg-destructive text-destructive-foreground",
   gerente_operaciones: "bg-warning text-warning-foreground",
+  gerente_visor: "bg-warning/60 text-warning-foreground",
   coordinador_logistico: "bg-info text-info-foreground",
   ejecutivo_pricing: "bg-accent text-accent-foreground",
   contador: "bg-success text-success-foreground",
