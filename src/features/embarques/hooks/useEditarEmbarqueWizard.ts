@@ -40,6 +40,8 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const [initialized, setInitialized] = useState(false);
   const [hidratoContactos, setHidratoContactos] = useState(false);
   const [hidratoContenedores, setHidratoContenedores] = useState(false);
+  const [hidratoVenta, setHidratoVenta] = useState(false);
+  const [hidratoCosto, setHidratoCosto] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const {
