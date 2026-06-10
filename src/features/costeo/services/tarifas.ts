@@ -68,6 +68,7 @@ export async function fetchCosteoTarifas(
   if (filters.rutaId) q = q.eq("ruta_id", filters.rutaId);
   const { data, error } = await q;
   if (error) throw error;
+  // SAFE-CAST: la query usa select() con join anidado; el cliente generado infiere `never` por el alias de relación.
   return ((data ?? []) as unknown as RawRow[]).map(mapRow);
 }
 

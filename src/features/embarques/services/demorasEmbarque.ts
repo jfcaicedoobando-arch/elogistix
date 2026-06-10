@@ -4,6 +4,7 @@ import type { DemoraDesglose } from "../types/demoraDesglose";
 export async function calcularDemorasEmbarque(embarqueId: string): Promise<DemoraDesglose> {
   const { data, error } = await supabase.rpc("calcular_demoras_embarque", { p_embarque_id: embarqueId });
   if (error) throw error;
+  // SAFE-CAST: RPC nueva `calcular_demoras_embarque` aún no regenerada en supabase/types.ts; el shape lo garantiza la función Postgres.
   return data as unknown as DemoraDesglose;
 }
 
