@@ -9,9 +9,8 @@ import {
   replaceDemorasTramos,
   fetchTiposContenedorParaDemoras,
   fetchNavierasCatalogo,
-  fetchProveedoresPorTipo,
 } from "@/features/costeo/services/navieraCondiciones";
-import { fetchProveedoresPorTipo as fetchProvAgentes } from "@/features/costeo/services/agentes";
+import { fetchProveedoresPorTipo } from "@/features/costeo/services/agentes";
 import type { NavieraCondicionInput, DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 
 const KEY = ["costeo", "navieras_condiciones"] as const;
@@ -113,7 +112,7 @@ export function useProveedoresNaviera() {
 export function useProveedoresAgente() {
   return useQuery({
     queryKey: ["costeo", "proveedores", "Agente de Carga"],
-    queryFn: () => fetchProvAgentes("Agente de Carga"),
+    queryFn: () => fetchProveedoresPorTipo("Agente de Carga"),
     staleTime: 5 * 60 * 1000,
   });
 }
