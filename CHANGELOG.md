@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.24] - 2026-06-10
+- **feat(proveedores/duplicados)**: prevención de proveedores duplicados. Se añadió un índice único parcial `(organization_id, RFC normalizado)` en la base de datos que excluye los RFCs genéricos del SAT (`XEXX010101000`, `XAXX010101000`). El wizard de alta ahora avisa en tiempo real (debounced 300ms) si el RFC capturado ya pertenece a otro proveedor de la organización, mostrando un enlace al existente. Si pese al aviso se intenta guardar, la BD rechaza con `23505` y la UI muestra un toast con CTA "Ver" hacia el proveedor existente, manteniendo el diálogo abierto. El diálogo "Crear proveedor desde CFDI" detecta el mismo caso y vincula automáticamente la factura al proveedor existente. Se normalizaron 2 proveedores extranjeros que tenían el RFC inválido `X0X0X0X0X0X` al placeholder oficial del SAT.
+
 ## [12.76.23] - 2026-06-10
 - **fix(proveedores/permisos)**: la política RLS de `proveedores` no incluía al rol **Contador**, por lo que al intentar crear un proveedor desde una cuenta contadora se mostraba "Error al crear proveedor" sin más detalle. Se agregó `contador` a la política CRUD; ahora los contadores pueden dar de alta, editar y eliminar proveedores dentro de su organización (necesario para registrar facturas de gastos).
 
