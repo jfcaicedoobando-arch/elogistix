@@ -27,6 +27,13 @@ interface Props {
 
 export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
   const c = useNuevoProveedorController(onSave, () => onOpenChange(false));
+  const csfInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCsfFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void c.handleCsfUpload(file);
+    e.target.value = "";
+  };
 
   return (
     <Dialog open={open} onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}>
