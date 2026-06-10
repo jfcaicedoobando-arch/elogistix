@@ -1,26 +1,21 @@
 ## Problema
 
-El rol **contador** (y también **tesorero**) ve los módulos **Cuentas por Pagar** y **Tesorería** en el menú lateral, pero al hacer clic `ProtectedRoute` los bloquea porque en `src/routes/appRoutes.tsx` esas rutas sólo permiten `["admin", "super_admin"]`. Por eso "no puede dar clic" (la ruta lo redirige).
+En `src/pages/cxp/Cxp.tsx` el botón "Capturar factura" (y su gemelo en el empty state) están envueltos con `{isAdmin && (...)}`. `isAdmin` solo es true para roles admin del tenant, por lo que **contador** (Isela) no lo ve, aunque sí tiene permiso financiero (`canEdit = canEditOperations || canEditFinance` y contador está en `FINANCE`).
 
-Lo mismo aplica al grupo **Profit** que también aparece en el sidebar para contador/tesorero, pero `/profit/dashboard` y `/profit/presupuesto` están restringidas igual.
+Las columnas de la tabla ya usan correctamente `canEdit` para acciones de pago/edición, así que el contador puede registrar pagos pero no crear facturas — incongruente.
 
-## Cambios
+## Cambio
 
-1. **`src/routes/appRoutes.tsx`** — ampliar `allowedRoles` para alinearlo con el sidebar del rol financiero:
-   - `/cxp` → `["admin", "super_admin", "contador", "tesorero"]`
-   - `/tesoreria`, `/tesoreria/cuentas`, `/tesoreria/conciliacion`, `/tesoreria/flujo` → `["admin", "super_admin", "contador", "tesorero"]`
-   - `/profit/dashboard` y `/profit/presupuesto` → agregar `"contador"` y `"tesorero"` (el sidebar ya les muestra Profit).
+**`src/pages/cxp/Cxp.tsx`** — reemplazar las dos guardas `isAdmin && (...)` (líneas 97 y 132) por `canEdit && (...)`. Quitar `isAdmin` de la desestructuración de `usePermissions` ya que deja de usarse.
 
-   No se tocan otras rutas ni la lógica de `ProtectedRoute`. El sidebar ya filtra correctamente, así que ningún otro rol gana acceso nuevo.
+Esto habilita "Capturar factura" para contador, tesorero, admin y super_admin (todos los roles con `canEditFinance` u `canEditOperations`), consistente con el resto de la página.
 
-2. **Versionado / changelog** — `APP_VERSION` → `12.76.26` y entrada en `CHANGELOG.md` describiendo el desbloqueo de CxP, Tesorería y Profit para contador/tesorero.
+## Versionado
+
+Bump `APP_VERSION` → `12.76.27` + entrada en `CHANGELOG.md`.
 
 ## Archivos afectados
 
-- `src/routes/appRoutes.tsx`
+- `src/pages/cxp/Cxp.tsx`
 - `src/constants/appVersion.ts`
 - `CHANGELOG.md`
-
-## Fuera de alcance
-
-- No se modifican RLS ni servicios: las páginas ya consultan datos vía Supabase con políticas existentes; si alguna consulta financiera fallara por RLS para contador, se atendería en una iteración aparte con datos concretos del error.
