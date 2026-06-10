@@ -94,7 +94,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     let provId = "";
     let provNombre = c.emisor.nombre;
     try {
-      const found = await findProveedorByRfc(c.emisor.rfc);
+      const found = await findProveedorByRfcEnOrg(c.emisor.rfc, organizationId);
       if (found) { provId = found.id; provNombre = found.nombre; }
       else setAskCrearProv({ rfc: c.emisor.rfc, nombre: c.emisor.nombre });
     } catch { /* lookup opcional */ }
