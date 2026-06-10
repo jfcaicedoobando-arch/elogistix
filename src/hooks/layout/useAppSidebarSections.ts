@@ -66,6 +66,7 @@ export function useAppSidebarSections(): SidebarSection[] {
     return [
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
       { label: "Gestión", items: gestionOperador },
+      { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
       { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
     ];
@@ -79,6 +80,7 @@ export function useAppSidebarSections(): SidebarSection[] {
     return [
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
       { label: "Gestión", items: gestionPricing },
+      { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
       { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
       { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
