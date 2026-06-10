@@ -1,45 +1,53 @@
-## Modernizar modal "Nuevo Usuario"
+## Causa raíz
 
-El modal actual (`src/components/usuario/NuevoUsuarioDialog.tsx`) sólo ofrece los 4 roles legacy (`admin`, `operador`, `vendedor`, `viewer`) y no muestra qué hace cada uno. Lo voy a actualizar para usar el catálogo de roles vigente — incluido el recién creado `gerente_visor`.
+La edge function `user-management` aún tenía hardcodeada la lista de roles legacy:
 
-### Cambios funcionales
+```ts
+const VALID_ROLES = ["admin", "operador", "viewer"] as const;
+const selectedRole = VALID_ROLES.includes(role) ? role : "viewer";
+```
 
-- **Selector de Rol alimentado desde `ASSIGNABLE_ROLES_ADMIN_ORG`** (`src/lib/roles/roleCatalog.ts`), así siempre estará sincronizado con el catálogo:
-  - Administrador
-  - Gerente de Operaciones
-  - Gerente Visor (solo lectura) ← nuevo
-  - Coordinador Logístico
-  - Ejecutivo de Pricing
-  - Contador
-  - Tesorero
-  - Vendedor / KAM
-  - Atención a Clientes
-- Cada opción mostrará **nombre + descripción corta** (de `ROLE_DESCRIPTIONS`) debajo, para que el admin entienda qué está asignando.
-- Rol por defecto: **`customer_service`** (en vez de `viewer` legacy).
-- Debajo del select, un **texto de ayuda dinámico** con la descripción completa del rol seleccionado.
+Cuando el modal envió `role = "contador"` (rol moderno), no estaba en la lista, así que **silenciosamente degradó a `viewer`** y guardó:
 
-### Cambios visuales / UX
+- `auth.users` → creado ✅
+- `user_roles.role = viewer`
+- `organization_members.role = viewer`
 
-- Encabezado con icono `UserPlus` y subtítulo más claro.
-- Inputs agrupados en secciones: **Credenciales** (email + contraseña) y **Acceso** (organización si aplica + rol).
-- Campo de contraseña con botón ojo (show/hide) y hint "Mínimo 6 caracteres".
-- Validación inline: email mal formado y password < 6 chars muestran error bajo el campo (sin perder los toasts actuales).
-- Botón primario "Crear usuario" con spinner; botón secundario "Cancelar".
-- Mantiene el modo `showOrgSelector` para Super Admin (alta global con selector de organización).
+Por eso la pantalla de Usuarios muestra "Viewer" y en la app no tiene permisos de Contador.
 
-### Lo que NO cambia
+## Plan
 
-- Hook `useCreateUser`, servicio `createUserViaEdgeFunction`, edge function `user-management`, ni la tabla `organization_members`.
-- Comportamiento del callback `onCreated` ni la firma del componente.
-- Modo "Nuevo Usuario Global" (Super Admin) sigue funcionando igual, sólo hereda el nuevo selector de roles.
+### 1. Reparar el usuario existente (Isela)
 
-### Archivos a tocar
+Actualizar sus dos registros a `contador` (con `insert` tool, son UPDATEs sobre datos):
 
-- `src/components/usuario/NuevoUsuarioDialog.tsx` — refactor completo del componente (≤200 líneas).
-- `CHANGELOG.md` + `src/constants/appVersion.ts` → bump a **`12.76.8`** con entrada describiendo el rediseño.
+- `public.user_roles` → `role = 'contador'` para `user_id = 922e1e94-bd18-43b3-9dfb-3e06738976ac`
+- `public.organization_members` → mismo cambio
 
-### Notas técnicas
+### 2. Sincronizar `VALID_ROLES` con el catálogo moderno
 
-- Reutilizo `ROLE_LABELS`, `ROLE_DESCRIPTIONS` y `ASSIGNABLE_ROLES_ADMIN_ORG` ya existentes — no se duplica el catálogo.
-- El tipo del estado `role` pasa de `string` a `AppRole` para mantener seguridad de tipos.
-- Sin cambios de base de datos ni de permisos.
+En `supabase/functions/user-management/handlers.ts`:
+
+- Reemplazar `VALID_ROLES` por la lista completa: `admin_org, gerente_operaciones, gerente_visor, coordinador_logistico, ejecutivo_pricing, contador, tesorero, vendedor, customer_service` + legacy (`admin, operador, viewer`) para retro-compatibilidad.
+- Si el `role` recibido **no está** en la lista → devolver **400 con mensaje claro** ("Rol no soportado: X"), en vez de degradar silenciosamente a viewer. Así nunca volverá a pasar este bug.
+
+### 3. Asegurar persistencia del rol moderno
+
+El bloque actual sólo actualiza `user_roles` cuando `selectedRole !== "viewer"`. Con la nueva lista no hay drama, pero lo dejo más explícito: siempre persistir el rol seleccionado tanto en `user_roles` como en `organization_members`.
+
+### 4. Versionado y changelog
+
+- `APP_VERSION` → **`12.76.10`**
+- Entrada en `CHANGELOG.md` documentando el fix y la reparación del usuario.
+
+## Archivos a tocar
+
+- `supabase/functions/user-management/handlers.ts` — expandir `VALID_ROLES` + validación estricta.
+- `src/constants/appVersion.ts` + `CHANGELOG.md` — bump.
+- Una operación de datos (no migración) sobre `user_roles` y `organization_members` para reparar a Isela.
+
+## Lo que NO toco
+
+- Esquema de BD, enum `app_role`, función `has_role`, RLS — todo eso ya está correcto desde la versión `12.76.7`.
+- Componente del modal (ya manda el rol correcto).
+- `checkAdminAccess` — fix anterior (`12.76.9`) ya funciona.

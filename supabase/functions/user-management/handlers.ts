@@ -24,7 +24,25 @@ export interface AdminAccess {
 }
 
 // ───────────────────────────────────────────────────────────── create ──
-const VALID_ROLES = ["admin", "operador", "viewer"] as const;
+// Catálogo completo de roles asignables (modernos + legacy para retro-compat).
+// Mantener sincronizado con `ASSIGNABLE_ROLES_ADMIN_ORG` en src/lib/roles/roleCatalog.ts
+// y con el enum `public.app_role`.
+const VALID_ROLES = [
+  // Modernos
+  "admin_org",
+  "gerente_operaciones",
+  "gerente_visor",
+  "coordinador_logistico",
+  "ejecutivo_pricing",
+  "contador",
+  "tesorero",
+  "vendedor",
+  "customer_service",
+  // Legacy
+  "admin",
+  "operador",
+  "viewer",
+] as const;
 
 export function validateCreatePayload(body: { email?: string; password?: string }): string | null {
   if (!body.email || !body.password) return "Email y contraseña son requeridos";
