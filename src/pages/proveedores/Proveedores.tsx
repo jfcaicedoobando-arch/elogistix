@@ -60,7 +60,24 @@ export default function Proveedores() {
         entidad_nombre: data.nombre,
       });
       notifySuccess(toast, { title: "Proveedor creado correctamente" });
-    } catch {
+    } catch (err) {
+      if (err instanceof ProveedorDuplicadoError) {
+        const existente = err.existente;
+        toast({
+          title: "Proveedor duplicado",
+          description: existente
+            ? `Ya existe "${existente.nombre}" con este RFC en tu organización.`
+            : "Ya existe un proveedor con este RFC en tu organización.",
+          variant: "destructive",
+          action: existente
+            ? {
+                label: "Ver",
+                onClick: () => navigate(`/proveedores/${existente.id}`),
+              }
+            : undefined,
+        });
+        throw err; // mantiene el diálogo abierto
+      }
       notifyError(toast, { title: "Error al crear proveedor", method: "HANDLE_ADD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   };
