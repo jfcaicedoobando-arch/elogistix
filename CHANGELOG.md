@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.74.1] - 2026-06-10
+- **fix(auditoría)**: suite de tests en verde. Se divide `GuiaCartaPorte.tsx` (364 líneas) en `guiaCartaPorte.data.ts` + `GuiaCartaPorteArticle.tsx` (≤200 líneas c/u) y `GuiaIncoterms2020.tsx` (267 líneas) en `guiaIncoterms2020.data.ts`. Se marcan dos casts HIGH con `// SAFE-CAST:` en `costeo/services/tarifas.ts` y `embarques/services/demorasEmbarque.ts`.
+
 ## [12.74.0] - 2026-06-10
 - **feat(garantías)**: nueva pestaña **"Garantías"** en el detalle del embarque con control operativo de depósitos por contenedor (estados: pendiente / depositado / liberado / retenido). Tabla `embarque_garantias_contenedor` + trigger que crea el registro automáticamente al añadir un contenedor; si la naviera tiene carta de garantía vigente el monto es 0 y queda "liberado". No genera conceptos de costo ni venta — los depósitos no son gasto, regresan al devolver el vacío.
 - **feat(demoras)**: auto-cálculo de demoras por embarque. Nueva RPC `calcular_demoras_embarque(embarque_id)` lee los eventos "Descarga" y "Entrega" del timeline, calcula días excedidos sobre los días libres de la naviera y genera conceptos en USD con `origen='demoras_auto'` aplicando el tabulador de costo de la naviera y un tabulador independiente de venta al cliente. Trigger en `embarques` la dispara al cambiar el estado a "Entregado".
