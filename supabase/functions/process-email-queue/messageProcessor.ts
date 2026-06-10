@@ -197,7 +197,7 @@ export async function processMessage(
       await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
       return { kind: 'stop_forbidden' }
     }
-    await logFailure(supabase, queue, msg, errorMsg, ctx, failedAttempts)
+    await logFailure({ supabase, queue, msg, errorMsg, ctx, failedAttempts })
     return { kind: 'skipped' }
   }
 }
