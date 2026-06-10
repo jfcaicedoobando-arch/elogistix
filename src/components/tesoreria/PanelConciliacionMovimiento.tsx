@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDesconciliar } from "@/hooks/tesoreria";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/services/tesoreria";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   movimiento: MovimientoBBVA | null;
