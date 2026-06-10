@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -50,7 +51,7 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.md}>
+      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Agregar miembro</DialogTitle>
           <DialogDescription>Selecciona un usuario existente para agregarlo a esta organización.</DialogDescription>

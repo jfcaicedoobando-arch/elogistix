@@ -37,7 +37,7 @@ export default function Login() {
         ogDescription="Accede a tu cuenta de Libre Carga para gestionar tus embarques."
         ogUrl="https://librecarga.com/login"
       />
-      <Card className="w-full max-w-sm shadow-lg">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
           <h1 className="sr-only">Iniciar sesión en Libre Carga</h1>

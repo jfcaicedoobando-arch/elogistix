@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDesconciliar } from "@/hooks/tesoreria";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/services/tesoreria";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   movimiento: MovimientoBBVA | null;
@@ -130,7 +132,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
       </CardContent>
 
       <Dialog open={openIgnorar} onOpenChange={setOpenIgnorar}>
-        <DialogContent>
+        <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
           <DialogHeader><DialogTitle>Ignorar movimiento</DialogTitle></DialogHeader>
           <Label>Motivo</Label>
           <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno..." />

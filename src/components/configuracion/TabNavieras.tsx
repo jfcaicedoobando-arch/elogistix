@@ -74,7 +74,7 @@ export default function TabNavieras() {
 
         <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar por código o nombre..." />
 
-        <div className="max-h-[500px] overflow-auto rounded-md border">
+        <div className="max-h-[calc(100vh-20rem)] min-h-[320px] overflow-auto rounded-md border">
           <DataTable
             columns={columns}
             data={filtradas}

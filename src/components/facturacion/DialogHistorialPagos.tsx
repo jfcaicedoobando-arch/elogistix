@@ -8,7 +8,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/hooks/facturacion";
 import { useRegistrarActividad } from "@/hooks/shared";
@@ -65,7 +66,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={dialogSize.lg}>
+        <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
           <DialogHeader>
             <DialogTitle>Historial de pagos — {factura.numero}</DialogTitle>
             <DialogDescription>

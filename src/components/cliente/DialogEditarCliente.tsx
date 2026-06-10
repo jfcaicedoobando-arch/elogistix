@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.lg}>
+      <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Editar Cliente</DialogTitle>
           <DialogDescription>Modifica los datos generales del cliente.</DialogDescription>

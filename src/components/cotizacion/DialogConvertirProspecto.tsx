@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,7 +23,7 @@ export default function DialogConvertirProspecto({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.lg}>
+      <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Convertir Prospecto a Cliente</DialogTitle>
         </DialogHeader>

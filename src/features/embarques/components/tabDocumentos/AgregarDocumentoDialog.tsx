@@ -18,6 +18,8 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { getErrorMessage } from "@/lib/errors";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { cn } from "@/lib/utils";
+import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 const OTRO_VALUE = "__otro__";
 
 interface Props {
@@ -64,7 +66,7 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetForm(); }}>
-      <DialogContent>
+      <DialogContent className={cn(scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Agregar documento</DialogTitle>
           <DialogDescription>

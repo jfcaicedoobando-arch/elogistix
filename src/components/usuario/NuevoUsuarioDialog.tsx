@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,7 +88,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
-      <DialogContent className={dialogSize.md}>
+      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
