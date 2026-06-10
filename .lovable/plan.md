@@ -1,192 +1,126 @@
-# Módulo Costeo — Tarifas Marítimas China → México (v1)
 
-## Objetivo
+# Fase 2 — Costeo: Condiciones de Naviera + Vínculo a Proveedores
 
-Centralizar las tarifas que mandan los agentes de carga chinos para rutas marítimas China→México y permitir que cualquier usuario, al cotizar, vea las **3 mejores opciones vigentes** ranqueadas por precio total, con desempate por **días de crédito del agente** y luego **días libres de demoras**.
+Amplía el módulo Costeo existente para reflejar el modelo real: el **agente de carga** cobra el flete; la **naviera** cobra garantía de contenedor y demoras. Agrega "Carta Garantía" como flag global por naviera y un tabulador escalonado de demoras. Además, vincula agentes y navieras al catálogo de Proveedores de forma obligatoria.
 
-## Alcance v1 (explícito)
+## 1. Cambios en base de datos
 
-Incluye:
+### 1.1 `costeo_agentes` — vínculo obligatorio a Proveedores
+- `proveedor_id` pasa a **NOT NULL** y FK a `proveedores.id` (restrict on delete).
+- Migración: bloquear la migración si hay filas con `proveedor_id` null hasta que el usuario las reasocie (o seedear desde Proveedores tipo "Agente de Carga" país CN). En esta fase asumimos cero filas previas (módulo recién creado) y aplicamos NOT NULL directo.
+- En el alta de agente: el formulario obliga a elegir un proveedor existente (tipo "Agente de Carga", país CN); si no existe, link para "Crear proveedor" antes de continuar.
 
-- Solo flete marítimo FCL.
-- Solo rutas de puertos principales de China → puertos de México.
-- Solo contenedores 20' y 40' (con campo libre para otros tipos a futuro).
-- Captura manual tipo matriz.
-- Consulta (lookup) desde el wizard de Cotización; **no** autollena conceptos.
+### 1.2 Nueva tabla `costeo_navieras_condiciones`
+Una fila por **(organization_id × naviera_id)** — condiciones comerciales que negociamos con cada naviera.
 
-Fuera de alcance v1: aéreo, terrestre, LCL, exportación MX→China, importación de Excel, parseo IA, márgenes automáticos, alertas de vencimiento por correo.
+Campos de dominio:
+- `naviera_id` FK `navieras.id`
+- `proveedor_id` FK `proveedores.id` **NOT NULL** (tipo "Naviera") — vínculo obligatorio
+- `tiene_carta_garantia` boolean default false
+- `carta_garantia_vigente_hasta` date null
+- `carta_garantia_folio` text null
+- `carta_garantia_notas` text null
+- `dias_libres_demoras_default` int default 0 — días libres estándar antes de cobrar demoras
+- `moneda_demoras` text default 'USD'
+- `notas` text null
 
----
+Constraints:
+- UNIQUE (organization_id, naviera_id)
+- CHECK: si `tiene_carta_garantia = true` entonces `carta_garantia_vigente_hasta IS NOT NULL`
 
-## Modelo de datos
+### 1.3 Nueva tabla `costeo_naviera_demoras_tarifa`
+Tabulador escalonado por naviera y tipo de contenedor.
 
-Cuatro tablas nuevas en `public`, todas con `organization_id`, RLS por membresía y GRANT estándar.
+Campos:
+- `naviera_condicion_id` FK `costeo_navieras_condiciones.id` ON DELETE CASCADE
+- `tipo_contenedor_id` FK `tipos_contenedor.id`
+- `desde_dia` int NOT NULL (inclusive, contado desde el primer día con cargo)
+- `hasta_dia` int null (null = "en adelante")
+- `monto_por_dia` numeric(12,2) NOT NULL
+- `moneda` text default 'USD'
 
-### 1. `costeo_agentes_proveedores`
+Constraints:
+- CHECK `desde_dia >= 1`
+- CHECK `hasta_dia IS NULL OR hasta_dia >= desde_dia`
+- UNIQUE (naviera_condicion_id, tipo_contenedor_id, desde_dia)
+- Validación a nivel app: rangos no se traslapan dentro del mismo (naviera_condicion, tipo_contenedor).
 
-Extiende/enlaza a `proveedores` existente con campos específicos de costeo:
+### 1.4 RLS y GRANTs
+- Ambas tablas: RLS por `organization_id` usando `organization_members` (mismo patrón que `costeo_tarifas`).
+- Lectura: cualquier miembro de la organización.
+- Escritura: roles `admin`, `ops_manager`, `coordinador`.
+- GRANTs a `authenticated` y `service_role` en la misma migración.
 
-- `proveedor_id` (FK a `proveedores`, único)
-- `pais` (default 'CN')
-- `dias_credito` (int, **criterio de desempate principal**)
-- `contacto_tarifario` (texto)
-- `activo` (bool)
+### 1.5 Función de cálculo `calcular_costo_demoras(naviera_condicion_id, tipo_contenedor_id, dias_excedidos)`
+- SECURITY DEFINER, STABLE.
+- Recorre los rangos del tabulador y suma `monto_por_dia × días en cada tramo`.
+- Devuelve `{ total: numeric, moneda: text, desglose: jsonb[] }`.
+- Útil para simulaciones en el detalle de embarque/cotización.
 
-> Si un proveedor ya existe en `proveedores`, lo enriquecemos; si no, se crea desde aquí.
+### 1.6 Vista `costeo_top_tarifas_v` (extender la existente)
+- Hacer LEFT JOIN con `costeo_navieras_condiciones` por `(organization_id, naviera_id)`.
+- Exponer en cada fila del Top 3:
+  - `naviera_tiene_carta_garantia`
+  - `naviera_carta_garantia_vigente_hasta`
+  - `naviera_dias_libres_default`
+  - `naviera_demora_dia_6_usd` (lookup precalculado del tramo que cubre el día 6, como referencia visual)
 
-### 2. `costeo_rutas`
+## 2. Frontend
 
-Catálogo de pares de puertos cacheados para evitar combinaciones inválidas:
-
-- `puerto_origen_id` (FK `puertos`, restringido a country='CN')
-- `puerto_destino_id` (FK `puertos`, restringido a country='MX')
-- `activa` (bool)
-- UNIQUE(origen, destino)
-
-### 3. `costeo_tarifas` (tabla principal — la matriz)
-
-Una fila = una oferta de un agente para una ruta y naviera, vigente en un rango.
-
-- `agente_id` (FK `costeo_agentes_proveedores`)
-- `naviera_id` (FK `navieras`)
-- `ruta_id` (FK `costeo_rutas`)
-- `tipo_contenedor_id` (FK `tipos_contenedor`, típicamente 20'/40')
-- `moneda` (default 'USD')
-- `flete_base` (numeric)
-- `dias_libres_demoras` (int, **criterio de desempate secundario**)
-- `vigente_desde` (date)
-- `vigente_hasta` (date)
-- `transit_time_dias` (int, informativo)
-- `notas` (texto)
-- `estado` (`borrador` | `vigente` | `vencida` — calculada/actualizada)
-- `creado_por`, timestamps
-- UNIQUE(agente, naviera, ruta, tipo_contenedor, vigente_desde)
-
-### 4. `costeo_tarifa_recargos`
-
-Conceptos variables (BAF, LSS, ISPS, THC origen, THC destino MX, DTHC, handling…) ligados a cada tarifa:
-
-- `tarifa_id` (FK con cascade)
-- `concepto` (enum/texto controlado)
-- `lado` (`origen` | `destino`)
-- `monto` (numeric)
-- `moneda`
-- `incluido_en_total` (bool, default true)
-
-> Separar recargos permite ver el desglose, mantener el flete base limpio y sumar el "precio total comparable" en una vista.
-
-### Vista `costeo_tarifas_vigentes_v`
-
-Vista que calcula:
-
-- `total_comparable` = `flete_base + SUM(recargos.incluido_en_total)`
-- Filtra `vigente_desde <= :fecha AND vigente_hasta >= :fecha`
-- Trae `dias_credito` del agente para ranking
-- Une nombres de puerto/naviera/agente para la UI
-
----
-
-## Motor de ranking (Top 3)
-
-RPC `obtener_top_tarifas(p_ruta_id, p_tipo_contenedor_id, p_fecha)` que devuelve 3 filas ordenadas por:
-
-1. `total_comparable` ASC
-2. `dias_credito` DESC  *(desempate principal — más crédito gana)*
-3. `dias_libres_demoras` DESC  *(desempate secundario)*
-4. `vigente_hasta` DESC  *(prefiere la que dure más)*
-
-Si no hay vigentes, devuelve vacío y la UI muestra "Sin tarifas vigentes para esta ruta/contenedor".
-
----
-
-## UI / Navegación
-
-Nueva sección de sidebar **"Costeo"** (rol: ops y admin):
-
-- `/costeo/tarifas` — Lista paginada (DataTable) con filtros: ruta, naviera, agente, contenedor, estado (vigente/por vencer/vencida). Badge de color por estado. Botón "Nueva tarifa".
-- `/costeo/tarifas/nueva` y `/costeo/tarifas/:id/editar` — Formulario con:
-  - Selectores: Agente, Naviera, Puerto origen (CN), Puerto destino (MX), Tipo contenedor
-  - Flete base + moneda
-  - Fechas vigencia (desde/hasta)
-  - Días libres demoras, transit time
-  - Tabla embebida de Recargos (add/remove, concepto, lado, monto)
-  - Notas
-- `/costeo/agentes` — Gestión de agentes/proveedores con `dias_credito`.
-- `/costeo/rutas` — Alta rápida de pares CN→MX (selector restringido por país).
-
-### Integración con Cotizaciones (lookup)
-
-En el paso de Ruta del wizard de Cotización marítima FCL: cuando estén definidos origen, destino y tipo de contenedor, mostrar un panel lateral **"Sugerencias de Costeo"** con el Top 3:
-
+### 2.1 Nuevos archivos
 ```text
-┌──────────────────────────────────────────────┐
-│ Top tarifas vigentes  Shanghai → Manzanillo │
-├──────────────────────────────────────────────┤
-│ 1) USD 2,450 · MSC · Agente ABC             │
-│    Crédito 45 d · 14 d libres · Vence 30/06 │
-│ 2) USD 2,510 · COSCO · Agente XYZ           │
-│    Crédito 30 d · 21 d libres · Vence 15/07 │
-│ 3) USD 2,580 · ONE · Agente DEF             │
-│    Crédito 30 d · 14 d libres · Vence 20/06 │
-└──────────────────────────────────────────────┘
+src/features/costeo/
+  types/navieraCondicion.ts       # CosteoNavieraCondicion, DemorasTramo
+  services/navieraCondiciones.ts  # CRUD + tramos de demoras
+  hooks/useNavieraCondiciones.ts  # query + mutations
+  routes/CosteoNavieras.tsx       # listado por naviera (200 LOC máx)
+  components/NavieraCondicionForm.tsx     # form con carta garantía
+  components/DemorasTarifaEditor.tsx      # tabla editable de tramos
+  components/CartaGarantiaBadge.tsx       # chip "Carta Garantía vigente / Por vencer / Vencida"
 ```
 
-El usuario decide; nada se inserta automáticamente.
+### 2.2 Modificaciones
+- `CosteoAgentes.tsx`: agregar select obligatorio "Proveedor (Agente de Carga, China)" con link a "+ Nuevo proveedor" que abra el wizard existente prefiltrado.
+- Sidebar `sidebarItems.ts`: agregar "Navieras (Condiciones)" bajo el grupo Costeo.
+- `appRoutes.tsx`: nueva ruta `/costeo/navieras` lazy.
+- `CosteoTarifas.tsx` (placeholder de fase 2 ya existente): en la matriz/Top 3, mostrar columnas/chips de carta garantía y demoras (vienen de la vista).
 
----
+### 2.3 UX de `CosteoNavieras.tsx`
+- DataTable de navieras del catálogo `navieras` con badge de estatus de carta garantía y "días libres".
+- Acción "Configurar" abre dialog con:
+  - Switch "Carta Garantía vigente" + fecha de expiración + folio + notas.
+  - Vínculo a proveedor (select obligatorio tipo Naviera).
+  - Sección "Tabulador de demoras" por tipo de contenedor (20'STD, 40'STD, 40'HC, 20'RF, 40'RF):
+    - Rows editables: Desde día — Hasta día — USD/día.
+    - Botón "Agregar tramo".
+    - Validación: rangos contiguos sin huecos ni traslapes.
 
-## Reglas de negocio
+### 2.4 Alertas de vencimiento
+- En sidebar de Costeo, badge si hay cartas garantía con `vigente_hasta` ≤ 30 días.
+- Hook `useCartasGarantiaPorVencer()` consultable también en el dashboard de Operaciones.
 
-- Estado `vencida` se calcula en lectura (vista) — no requiere job nocturno en v1.
-- Edición de tarifa vigente queda registrada en `bitacora_actividad`.
-- Eliminar tarifa requiere doble confirmación (typable "ELIMINAR") siguiendo el estándar del proyecto.
-- Toda la captura está en MXN/USD; la comparación se hace en USD (moneda canónica del flete marítimo). Si llega en otra moneda, se convierte con `useExchangeRates`.
-- IVA no aplica en flete internacional China→MX → no tocar `useTasaIVA`.
+## 3. Integración con Cotizaciones/Embarques (preparar, no romper)
+- El "Top 3" en el wizard de cotización (fase 3) mostrará por opción: flete del agente + chip de garantía/sin garantía + costo estimado de demora a N días.
+- En esta fase 2 solo dejamos los datos disponibles; la UI del wizard se hará en fase 3.
 
----
+## 4. Reglas de negocio
+- Si una naviera **no** tiene condiciones registradas, la tarifa aparece con "Condiciones de naviera pendientes" en el Top 3 (badge ámbar).
+- Carta garantía vencida = se trata como "sin carta": en el embarque se asume que habrá depósito.
+- Eliminación de naviera bloqueada si existe `costeo_navieras_condiciones` (mensaje claro).
 
-## Seguridad (RLS)
+## 5. Versionado y changelog
+- Bump `APP_VERSION` a **12.72.0**.
+- Entrada en `CHANGELOG.md` (root): "Costeo Fase 2 — condiciones de naviera, carta garantía, tabulador de demoras escalonado y vínculo obligatorio agente↔proveedor".
 
-- Lectura: cualquier miembro de la organización.
-- Escritura (insert/update/delete): roles `admin`, `ops_manager`, `coordinador` (a confirmar con `roles-catalog`).
-- Multi-tenant: `organization_id` en todas las tablas; políticas usando `organization_members`.
+## 6. Detalles técnicos (Power of 10)
+- Componentes ≤ 200 LOC; partir `NavieraCondicionForm` en sub-componentes si crece.
+- Sin `any`. Tipos en `src/features/costeo/types/navieraCondicion.ts`.
+- Hooks con cleanup (no aplica realtime aquí).
+- Cálculos monetarios via `financialUtils` / `currency.js`.
+- Fechas vía utilidades UTC existentes.
+- Toda mutación de condiciones se registra en `bitacora_actividad`.
 
----
-
-## Detalles técnicos
-
-- Hooks: `useCosteoTarifas`, `useCosteoTarifa(id)`, `useUpsertCosteoTarifa`, `useTopTarifas(rutaId, contenedorId, fecha)`, `useCosteoAgentes`, `useCosteoRutas`.
-- Servicios: `src/services/costeo/{tarifas,agentes,rutas}.ts`.
-- Feature folder: `src/features/costeo/` con `components/`, `domain/`, `routes/`, `hooks/`, `types/`.
-- Cumple Power of 10: componentes ≤200 líneas, sin `any`, paginación server-side en lista.
-- `CHANGELOG.md` + bump `APP_VERSION` al cerrar la implementación.
-- Memory nueva: `mem://features/costeo-tarifas-maritimas` (modelo, reglas de ranking, criterios de desempate).
-
----
-
-## Entregables por fase
-
-**Fase 1 — Cimientos (1 migración + catálogos UI)**
-
-- Migración con 4 tablas, vista, RPC, RLS, GRANTs.
-- CRUD de Agentes y Rutas.
-
-**Fase 2 — Matriz de tarifas**
-
-- Lista, formulario nuevo/editar, recargos embebidos.
-- Filtros y badges de estado.
-
-**Fase 3 — Integración con Cotizaciones**
-
-- Panel "Top 3" en el wizard marítimo FCL.
-- Memory + changelog.
-
----
-
-## Preguntas abiertas (opcional aclarar antes de Fase 1)
-
-1. ¿La lista de puertos principales de China la cargo yo (Shanghai, Ningbo, Shenzhen/Yantian, Qingdao, Xiamen, Tianjin/Xingang, Guangzhou) o ya están todos en `puertos`? Tu
-2. ¿Quieres que el "lado destino MX" (THC, handling local) se capture en este módulo o vive en otro lado para no duplicar? Va a ser en el modulo de costeo, pero dentro de submodulos.
-3. ¿Algún umbral para marcar "por vencer" (ej. ≤ 7 días)?
-
-Si me confirmas estas tres puedo arrancar Fase 1 en cuanto pases a build mode.
+## 7. Fuera de alcance (fase 3)
+- UI del Top 3 dentro del wizard de cotización.
+- Cálculo automático de garantía/demoras en facturación a cliente.
+- Importación masiva de tabuladores desde Excel.

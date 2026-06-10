@@ -1,0 +1,118 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { useToast } from "@/hooks/shared";
+import {
+  fetchCondicionesNaviera,
+  upsertCondicionNaviera,
+  deleteCondicionNaviera,
+  fetchDemorasTramos,
+  replaceDemorasTramos,
+  fetchTiposContenedorParaDemoras,
+  fetchNavierasCatalogo,
+} from "@/features/costeo/services/navieraCondiciones";
+import { fetchProveedoresPorTipo } from "@/features/costeo/services/agentes";
+import type { NavieraCondicionInput, DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
+
+const KEY = ["costeo", "navieras_condiciones"] as const;
+
+export function useCondicionesNaviera() {
+  const { organizationId } = useOrganization();
+  return useQuery({
+    queryKey: [...KEY, organizationId],
+    queryFn: () => fetchCondicionesNaviera(organizationId!),
+    enabled: !!organizationId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCondicionNavieraMutations() {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrganization();
+  const { toast } = useToast();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: KEY });
+
+  const guardar = useMutation({
+    mutationFn: (params: { input: NavieraCondicionInput; id?: string }) =>
+      upsertCondicionNaviera(organizationId!, params.input, params.id),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Condiciones guardadas" });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Error al guardar", description: e.message, variant: "destructive" }),
+  });
+
+  const eliminar = useMutation({
+    mutationFn: (id: string) => deleteCondicionNaviera(id),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Condiciones eliminadas" });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
+  });
+
+  return { guardar, eliminar };
+}
+
+export function useDemorasTramos(navieraCondicionId: string | null) {
+  return useQuery({
+    queryKey: ["costeo", "demoras_tramos", navieraCondicionId],
+    queryFn: () => fetchDemorasTramos(navieraCondicionId!),
+    enabled: !!navieraCondicionId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useReemplazarTramos() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (params: {
+      navieraCondicionId: string;
+      tipoContenedorId: string;
+      tramos: DemorasTramoInput[];
+    }) =>
+      replaceDemorasTramos(params.navieraCondicionId, params.tipoContenedorId, params.tramos),
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["costeo", "demoras_tramos", vars.navieraCondicionId],
+      });
+      toast({ title: "Tabulador actualizado" });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Error al guardar tabulador", description: e.message, variant: "destructive" }),
+  });
+}
+
+export function useTiposContenedorDemoras() {
+  return useQuery({
+    queryKey: ["costeo", "tipos_contenedor_demoras"],
+    queryFn: fetchTiposContenedorParaDemoras,
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useNavierasCatalogo() {
+  return useQuery({
+    queryKey: ["costeo", "navieras_catalogo"],
+    queryFn: fetchNavierasCatalogo,
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useProveedoresNaviera() {
+  return useQuery({
+    queryKey: ["costeo", "proveedores", "Naviera"],
+    queryFn: () => fetchProveedoresPorTipo("Naviera"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useProveedoresAgente() {
+  return useQuery({
+    queryKey: ["costeo", "proveedores", "Agente de Carga"],
+    queryFn: () => fetchProveedoresPorTipo("Agente de Carga"),
+    staleTime: 5 * 60 * 1000,
+  });
+}

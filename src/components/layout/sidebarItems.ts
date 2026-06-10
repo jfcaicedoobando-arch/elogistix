@@ -25,6 +25,7 @@ import {
   Calculator,
   Route,
   Users,
+  Anchor,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -84,4 +85,5 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Tarifas marítimas", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas CN → MX", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
+  { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
 ];
