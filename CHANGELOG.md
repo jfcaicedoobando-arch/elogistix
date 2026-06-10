@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.3] - 2026-06-10
+- **chore(auditoría)**: se vacían `PAGES_COMPONENTS_BASELINE` y `OVERSIZED_BASELINE` en `architecture-baseline.test.ts` tras la remediación de 12.76.2. Suite de tests vuelve a verde.
+
 ## [12.76.2] - 2026-06-10
 - **fix(auditoría)**: cero violaciones de arquitectura y Power-of-10. Se añaden `requestPasswordReset` y `updateUserPassword` al servicio `@/services/auth` para que `ForgotPasswordDialog.tsx` y `ResetPassword.tsx` dejen de importar `supabase` directo. `Login.tsx` (245 → 66 líneas) se divide en `components/LoginForm.tsx` y `components/SignupForm.tsx`. `genericPayloadMapper.ts` (226 → 165 líneas) extrae sus tipos a `genericPayloadMapper.types.ts`.
 

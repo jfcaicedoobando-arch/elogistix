@@ -1,30 +1,25 @@
-## Objetivo
+## Contexto
 
-El usuario `demo@librecarga.com` entra hoy como `operador`, lo que oculta módulos de administración, configuración, finanzas y reportes. Para que un prospecto explore *todas* las bondades del producto, lo elevamos a `admin` de la organización demo. Como los datos se re-siembran en cada acceso, no hay riesgo de daño persistente.
+El reporte de auditoría `12.76.2` ya está **100% verde**: 0 violaciones de arquitectura, 0 archivos >200 líneas, 0 casts HIGH/CRITICAL.
+
+El blob de vitest tiene **solo 2 tests rojos**, ambos en `src/lib/__tests__/architecture-baseline.test.ts`. No son regresiones de producto: son tests centinela que exigen que, cuando un archivo deja de violar la regla, se quite de la allowlist.
+
+### Fallos
+
+1. **PAGES_COMPONENTS_BASELINE** todavía lista:
+   - `src/pages/auth/ForgotPasswordDialog.tsx`
+   - `src/pages/auth/ResetPassword.tsx`
+
+   (ya migrados a `@/services/auth` en 12.76.2)
+
+2. **OVERSIZED_BASELINE** todavía lista:
+   - `src/pages/auth/Login.tsx` (ahora 66 líneas)
+   - `src/lib/mappers/genericPayloadMapper.ts` (ahora 165 líneas)
 
 ## Cambios
 
-1. **DB — `ensure_demo_membership(_user_id)`**
-   - `user_roles`: forzar `role = 'admin'` (en lugar de `'operador'`) usando `ON CONFLICT (user_id) DO UPDATE`.
-   - `organization_members`: forzar `role = 'admin'` en la org demo (`de100000-…-0001`).
+1. `src/lib/__tests__/architecture-baseline.test.ts` — borrar las 4 entradas obsoletas (líneas 35, 36, 42, 43).
+2. `CHANGELOG.md` — agregar `[12.76.3]` documentando la limpieza.
+3. `src/constants/appVersion.ts` — bump a `12.76.3`.
 
-2. **Edge function `demo-access`**
-   - Sin cambios de lógica (sigue llamando `ensure_demo_membership` y `seed_demo_organization`), pero conviene re-desplegarla para que las sesiones existentes vuelvan a pasar por el flujo.
-
-3. **Banner demo (`DemoModeBanner`)**
-   - Añadir nota corta: *"Estás como administrador de una organización demo. Los cambios se borran en cada acceso."* para dejar claro el alcance.
-
-4. **Documentación**
-   - `CHANGELOG.md` + bump `APP_VERSION` (12.76.1).
-   - Actualizar memoria `mem://features/demo-trial-access` para reflejar rol `admin`.
-
-## Qué NO cambia
-
-- Sigue siendo una sola cuenta demo compartida.
-- El seed sigue limpiando/repoblando la org demo en cada login.
-- No tocamos RLS ni roles de usuarios reales.
-- No agregamos super_admin (eso daría acceso global a otras orgs, lo cual sería peligroso).
-
-## Riesgos
-
-- Un usuario demo podría intentar invitar a otros usuarios desde Usuarios; queda mitigado porque los registros se borran en cada re-siembra (cualquier alta queda fuera del flujo de seed y la próxima sesión la elimina si la añadimos a la rutina). Si quieres, en una iteración posterior puedo extender el seed para borrar también membresías extra creadas durante la sesión.
+No hay cambios de producto ni de UI. Solo se consolidan los hallazgos ya remediados en 12.76.2.
