@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.3] - 2026-06-10
+- **chore(tests/arch)**: re-poblada la allowlist `OVERSIZED_BASELINE` del test `architecture-baseline.test.ts` con 11 archivos productivos preexistentes que superan las 200 líneas (NuevoProveedorDialog, ProveedorDetalle, StepCostosPrecios, TarifaForm, useNuevoProveedorController, EditarProveedorDialog, services/proveedor, NuevoUsuarioDialog, useNuevaFacturaProveedorForm, parseCsv, Proveedores). Desbloquea la CI; cada entrada debe eliminarse al partir el archivo correspondiente (deuda Power of 10 #1).
+
 ## [12.77.2] - 2026-06-10
 - **fix(costeo/rutas)**: el diálogo "Nueva ruta" mostraba dropdowns vacíos para puertos de China y México porque filtraba por código ISO (`"CN"`/`"MX"`) mientras que el catálogo guarda el nombre completo del país (`"China"`/`"México"`, incluso `"CHINA"` en mayúsculas). Se normaliza el filtro (case-insensitive y aceptando ambos formatos) para que aparezcan los puertos disponibles.
 
