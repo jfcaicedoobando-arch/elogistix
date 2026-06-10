@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.6] - 2026-06-10
+- **feat(proveedores)**: el modal "Nuevo Proveedor" se adapta cuando la categoría es Gasto Operativo: se oculta el select de Origen (forzado a Nacional), se oculta Moneda Preferida (forzada a MXN) y se agrega un botón "Subir CSF" que invoca `parse-csf` para auto-rellenar nombre y RFC desde la Constancia de Situación Fiscal.
+
 ## [12.76.5] - 2026-06-10
 - **fix(proveedores)**: el tab "Todos" en `/proveedores` ya no aparece vacío. Se eliminaron dos firmas obsoletas de la función `proveedores_listado` que provocaban el error `PGRST203` (function overloading ambiguity) cuando no se enviaba `p_categoria`. Se conserva la firma vigente con filtros de origen, categoría y subtipo de gasto.
 
