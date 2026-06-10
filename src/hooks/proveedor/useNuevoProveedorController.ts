@@ -62,10 +62,14 @@ export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
  * Soporta dos categorías: Logístico (con tipo) y Gasto Operativo (con subtipo_gasto).
  */
 export function useNuevoProveedorController(
-  onSave: (data: TablesInsert<"proveedores">) => void,
+  onSave: (data: TablesInsert<"proveedores">) => void | Promise<void>,
   onClose: () => void,
 ) {
+  const { organizationId } = useOrgFilter();
   const [form, setForm] = useState<NuevoProveedorForm>({ ...EMPTY_PROVEEDOR_FORM });
+  const [rfcDuplicado, setRfcDuplicado] = useState<{ id: string; nombre: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
   const [csfLoading, setCsfLoading] = useState(false);
