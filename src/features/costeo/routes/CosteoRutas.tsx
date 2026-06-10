@@ -39,8 +39,14 @@ export default function CosteoRutas() {
   const [origenId, setOrigenId] = useState<string>("");
   const [destinoId, setDestinoId] = useState<string>("");
 
-  const puertosCN = useMemo(() => puertos.filter((p) => p.country === "CN"), [puertos]);
-  const puertosMX = useMemo(() => puertos.filter((p) => p.country === "MX"), [puertos]);
+  const puertosCN = useMemo(
+    () => puertos.filter((p) => ["china", "cn"].includes((p.country ?? "").trim().toLowerCase())),
+    [puertos],
+  );
+  const puertosMX = useMemo(
+    () => puertos.filter((p) => ["méxico", "mexico", "mx"].includes((p.country ?? "").trim().toLowerCase())),
+    [puertos],
+  );
 
   const handleGuardar = async () => {
     if (!origenId || !destinoId) return;

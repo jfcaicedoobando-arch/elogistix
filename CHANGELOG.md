@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.2] - 2026-06-10
+- **fix(costeo/rutas)**: el diálogo "Nueva ruta" mostraba dropdowns vacíos para puertos de China y México porque filtraba por código ISO (`"CN"`/`"MX"`) mientras que el catálogo guarda el nombre completo del país (`"China"`/`"México"`, incluso `"CHINA"` en mayúsculas). Se normaliza el filtro (case-insensitive y aceptando ambos formatos) para que aparezcan los puertos disponibles.
+
 ## [12.77.1] - 2026-06-10
 - **fix(sidebar/costeo)**: los roles `coordinador_logistico`, `operador` y `ejecutivo_pricing` no veían la sección "Costeo" en el menú lateral aunque las rutas `/costeo/*` siempre estuvieron abiertas. Se agrega el grupo Costeo a esas ramas de `useAppSidebarSections` para que puedan acceder a Buscar tarifa, Tarifas marítimas, Rutas, Agentes, Navieras y Tarifa demoras.
 
