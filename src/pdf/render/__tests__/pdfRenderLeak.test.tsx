@@ -86,7 +86,6 @@ describe("PDF render — regresión de fuga de memoria", () => {
       const delta = heapAfter - heapBefore;
 
       // Log informativo (visible en --reporter=verbose).
-      // eslint-disable-next-line no-console
       console.info(
         `[pdf-leak-regression] heap delta tras ${ITERATIONS} renders: ` +
           `${(delta / 1024 / 1024).toFixed(2)} MB`,

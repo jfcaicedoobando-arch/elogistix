@@ -32,43 +32,76 @@ function ventana(diasParaVencer: number): "T-3" | "T+7" | "T+15" | null {
   return null;
 }
 
+function buildBucketEntry(f: FacturaRow, saldo: number, dias: number) {
+  return {
+    factura_id: f.id,
+    numero: f.numero,
+    cliente_id: f.cliente_id,
+    cliente_nombre: f.cliente_nombre,
+    saldo,
+    moneda: f.moneda,
+    fecha_vencimiento: f.fecha_vencimiento,
+    dias,
+  };
+}
+
+function calcularSaldoFactura(f: FacturaRow): number {
+  const pagado = (f.pagos_factura ?? [])
+    .filter((p) => !p.deleted_at)
+    .reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
+  const nc = (f.factura_notas_credito ?? [])
+    .filter((n) => !n.deleted_at && n.estado === "Aplicada")
+    .reduce((s, n) => s + Number(n.monto), 0);
+  return Math.max(0, Number(f.total) - pagado - nc);
+}
+
+function diasParaVencer(fechaVenc: string, hoy: Date): number {
+  const venc = new Date(fechaVenc + "T00:00:00Z");
+  return Math.floor((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+
+
+
+async function authorize(req: Request, cors: Record<string, string>) {
+  try {
+    const auth = await authenticate(req);
+    const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(auth.adminClient, auth.userId);
+    if (!isGlobalAdmin && !callerOrgId) {
+      return {
+        error: new Response(
+          JSON.stringify({ ok: false, error: "Permisos insuficientes" }),
+          { status: 403, headers: { ...cors, "Content-Type": "application/json" } },
+        ),
+      };
+    }
+    return { auth, isGlobalAdmin, callerOrgId };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const status = msg.startsWith("401:") ? 401 : 500;
+    return {
+      error: new Response(
+        JSON.stringify({ ok: false, error: "No autorizado" }),
+        { status, headers: { ...cors, "Content-Type": "application/json" } },
+      ),
+    };
+  }
+}
+
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
 
   try {
-    // 1. Autenticación obligatoria — no se permite acceso anónimo.
-    let userId: string;
-    let adminClient;
-    try {
-      const auth = await authenticate(req);
-      userId = auth.userId;
-      adminClient = auth.adminClient;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      const status = msg.startsWith("401:") ? 401 : 500;
-      return new Response(
-        JSON.stringify({ ok: false, error: "No autorizado" }),
-        { status, headers: { ...cors, "Content-Type": "application/json" } },
-      );
-    }
-
-    // 2. Autorización: sólo admin global o admin/operador de la org.
-    const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(adminClient, userId);
-    if (!isGlobalAdmin && !callerOrgId) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "Permisos insuficientes" }),
-        { status: 403, headers: { ...cors, "Content-Type": "application/json" } },
-      );
-    }
+    const authResult = await authorize(req, cors);
+    if ("error" in authResult) return authResult.error;
+    const { auth, isGlobalAdmin, callerOrgId } = authResult;
 
     const body = (await req.json().catch(() => ({}))) as Body;
-
-    // 3. Tenancy: si NO es admin global, forzar org del caller; ignorar lo que mande el cliente.
     const effectiveOrgId = isGlobalAdmin ? body.organization_id : callerOrgId;
 
-    let query = adminClient
+    let query = auth.adminClient
       .from("facturas")
       .select(`
         id, numero, cliente_id, cliente_nombre, total, moneda, fecha_vencimiento,
@@ -90,24 +123,12 @@ Deno.serve(async (req) => {
     const buckets: Record<string, Array<Record<string, unknown>>> = { "T-3": [], "T+7": [], "T+15": [] };
 
     for (const f of (data ?? []) as FacturaRow[]) {
-      const pagado = (f.pagos_factura ?? [])
-        .filter((p) => !p.deleted_at)
-        .reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
-      const nc = (f.factura_notas_credito ?? [])
-        .filter((n) => !n.deleted_at && n.estado === "Aplicada")
-        .reduce((s, n) => s + Number(n.monto), 0);
-      const saldo = Math.max(0, Number(f.total) - pagado - nc);
+      const saldo = calcularSaldoFactura(f);
       if (saldo <= 0.01) continue;
-
-      const venc = new Date(f.fecha_vencimiento + "T00:00:00Z");
-      const dias = Math.floor((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+      const dias = diasParaVencer(f.fecha_vencimiento, hoy);
       const v = ventana(dias);
       if (!v) continue;
-      buckets[v].push({
-        factura_id: f.id, numero: f.numero,
-        cliente_id: f.cliente_id, cliente_nombre: f.cliente_nombre,
-        saldo, moneda: f.moneda, fecha_vencimiento: f.fecha_vencimiento, dias,
-      });
+      buckets[v].push(buildBucketEntry(f, saldo, dias));
     }
 
     return new Response(JSON.stringify({ ok: true, generado_en: new Date().toISOString(), buckets }), {

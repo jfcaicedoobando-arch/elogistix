@@ -14,9 +14,13 @@ export interface UseCobranzaFiltros {
 }
 
 export function useCobranza(filtros: UseCobranzaFiltros = {}) {
-  const key = useMemo(() => filtros, [
-    filtros.search, filtros.cliente_id, filtros.moneda, filtros.estatus,
-  ]);
+  const key = useMemo(
+    () => ({
+      search: filtros.search, cliente_id: filtros.cliente_id,
+      moneda: filtros.moneda, estatus: filtros.estatus,
+    }),
+    [filtros.search, filtros.cliente_id, filtros.moneda, filtros.estatus],
+  );
   const query = useQuery({
     queryKey: queryKeys.facturas.cobranza(key),
     queryFn: () => fetchCobranza(filtros),

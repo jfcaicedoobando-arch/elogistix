@@ -36,21 +36,15 @@ const maybeGc = (): void => {
  * varios archivos declaran mocks a nivel módulo con `vi.hoisted` / `vi.mock`
  * que se romperían si destruimos las implementaciones entre tests.
  */
-afterEach(() => {
-  // 1. Desmonta árboles React Testing Library.
-  cleanup();
-
-  // 2. DOM hard reset: JSDOM acumula nodos (sobre todo <style> inyectados por
-  //    Radix/Tailwind durante portales) que sostienen refs circulares.
+function resetDom(): void {
   try {
     document.body.innerHTML = "";
-    // Conservamos <meta> y <title> del head; quitamos sólo style/link extras.
     document.head.querySelectorAll("style,link[rel='stylesheet']").forEach((n) => n.remove());
   } catch { /* noop */ }
+}
 
-  // 3. Cancela rAF pendientes y vuelve a timers reales.
+function cancelPendingFrames(): void {
   try {
-    // SAFE-CAST: requestAnimationFrame en JSDOM acepta callback simple.
     const id = (globalThis as unknown as { requestAnimationFrame?: (cb: () => void) => number })
       .requestAnimationFrame?.(() => {});
     if (typeof id === "number") {
@@ -60,22 +54,16 @@ afterEach(() => {
       }
     }
   } catch { /* noop */ }
-  vi.useRealTimers();
+}
 
-  // 4. Handlers globales de error reseteados (algunos tests los sobrescriben).
+function resetGlobalErrorHandlers(): void {
   try {
     (window as unknown as { onerror: null; onunhandledrejection: null }).onerror = null;
     (window as unknown as { onerror: null; onunhandledrejection: null }).onunhandledrejection = null;
   } catch { /* noop */ }
+}
 
-  // 5. Mocks: sólo limpiar historia de llamadas. NO resetear ni restaurar
-  //    (rompería mocks declarados a nivel módulo). Sí revertir stubs de
-  //    globalThis/env, que son explícitamente por-test.
-  vi.clearAllMocks();
-  vi.unstubAllGlobals();
-  vi.unstubAllEnvs();
-
-  // 6. QueryClient global expuesto por algunos hooks de test.
+function cleanupGlobalQueryClient(): void {
   const g = globalThis as unknown as {
     __TEST_QUERY_CLIENT__?: {
       cancelQueries?: () => void;
@@ -83,27 +71,35 @@ afterEach(() => {
       unmount?: () => void;
     };
   };
-  if (g.__TEST_QUERY_CLIENT__) {
-    try { g.__TEST_QUERY_CLIENT__.cancelQueries?.(); } catch { /* noop */ }
-    try { g.__TEST_QUERY_CLIENT__.clear?.(); } catch { /* noop */ }
-    try { g.__TEST_QUERY_CLIENT__.unmount?.(); } catch { /* noop */ }
-    g.__TEST_QUERY_CLIENT__ = undefined;
-  }
+  if (!g.__TEST_QUERY_CLIENT__) return;
+  try { g.__TEST_QUERY_CLIENT__.cancelQueries?.(); } catch { /* noop */ }
+  try { g.__TEST_QUERY_CLIENT__.clear?.(); } catch { /* noop */ }
+  try { g.__TEST_QUERY_CLIENT__.unmount?.(); } catch { /* noop */ }
+  g.__TEST_QUERY_CLIENT__ = undefined;
+}
 
-  // 7. Caches internos de @react-pdf/renderer (Font._fontkit y similares).
-  //    No importamos el módulo aquí para no forzar su carga en tests que no
-  //    lo usan; sólo limpiamos si quedó expuesto en globalThis.
+function cleanupPdfFontCache(): void {
   try {
     const pdfFontModule = (globalThis as Record<string, unknown>)["__REACT_PDF_FONT__"] as
       | { _fontkit?: unknown; clear?: () => void }
       | undefined;
-    if (pdfFontModule) {
-      if (typeof pdfFontModule.clear === "function") pdfFontModule.clear();
-      if (pdfFontModule._fontkit) pdfFontModule._fontkit = undefined;
-    }
+    if (!pdfFontModule) return;
+    if (typeof pdfFontModule.clear === "function") pdfFontModule.clear();
+    if (pdfFontModule._fontkit) pdfFontModule._fontkit = undefined;
   } catch { /* noop */ }
+}
 
-  // 8. GC opcional (--expose-gc).
+afterEach(() => {
+  cleanup();
+  resetDom();
+  cancelPendingFrames();
+  vi.useRealTimers();
+  resetGlobalErrorHandlers();
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  cleanupGlobalQueryClient();
+  cleanupPdfFontCache();
   maybeGc();
 });
 

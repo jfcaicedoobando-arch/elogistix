@@ -129,55 +129,64 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     return Object.keys(next).length === 0;
   };
 
+  const buildPayload = () => ({
+    proveedor_id: values.provId,
+    proveedor_nombre: values.provNombre,
+    folio_proveedor: values.folio.trim(),
+    fecha_emision: values.emision,
+    fecha_vencimiento: values.vencimiento,
+    dias_credito: Number(values.diasCredito) || 0,
+    moneda: values.moneda,
+    tipo_cambio_usd: Number(values.tc) || 0,
+    subtotal: Number(values.subtotal) || 0,
+    iva: Number(values.iva) || 0,
+    retenciones: Number(values.retenciones) || 0,
+    total,
+    estado: "Vigente" as const,
+    notas: values.notas,
+    categoria_presupuesto_id: values.categoriaId || null,
+    created_by: user?.id,
+    uuid_fiscal: pendingCfdi?.uuid ?? null,
+    rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
+  });
+
+  const uploadCfdiSafe = async (createdId: string) => {
+    if (!pendingCfdi) return;
+    try {
+      await subirArchivosCfdiFactura({
+        facturaId: createdId,
+        organizationId,
+        xmlFile: pendingCfdi.xmlFile,
+        pdfFile: pendingCfdi.pdfFile,
+      });
+    } catch (uploadErr) {
+      const err = uploadErr as { message?: string };
+      toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
+    }
+  };
+
+  const handleSubmitError = (e: unknown) => {
+    const err = e as { message?: string; code?: string };
+    if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
+      toast.error("Ya existe una factura con este UUID fiscal (CFDI duplicado).");
+    } else {
+      toast.error(err.message ?? "Error al capturar");
+    }
+  };
+
   const submit = async () => {
     if (!validate()) {
       toast.error("Revisa los campos marcados");
       return;
     }
     try {
-      const created = await crear.mutateAsync({
-        proveedor_id: values.provId,
-        proveedor_nombre: values.provNombre,
-        folio_proveedor: values.folio.trim(),
-        fecha_emision: values.emision,
-        fecha_vencimiento: values.vencimiento,
-        dias_credito: Number(values.diasCredito) || 0,
-        moneda: values.moneda,
-        tipo_cambio_usd: Number(values.tc) || 0,
-        subtotal: Number(values.subtotal) || 0,
-        iva: Number(values.iva) || 0,
-        retenciones: Number(values.retenciones) || 0,
-        total,
-        estado: "Vigente",
-        notas: values.notas,
-        categoria_presupuesto_id: values.categoriaId || null,
-        created_by: user?.id,
-        uuid_fiscal: pendingCfdi?.uuid ?? null,
-        rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
-      });
-      if (pendingCfdi && created?.id) {
-        try {
-          await subirArchivosCfdiFactura({
-            facturaId: created.id,
-            organizationId,
-            xmlFile: pendingCfdi.xmlFile,
-            pdfFile: pendingCfdi.pdfFile,
-          });
-        } catch (uploadErr) {
-          const err = uploadErr as { message?: string };
-          toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
-        }
-      }
+      const created = await crear.mutateAsync(buildPayload());
+      if (created?.id) await uploadCfdiSafe(created.id);
       toast.success("Factura de proveedor capturada");
       reset();
       onDone();
     } catch (e) {
-      const err = e as { message?: string; code?: string };
-      if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
-        toast.error("Ya existe una factura con este UUID fiscal (CFDI duplicado).");
-      } else {
-        toast.error(err.message ?? "Error al capturar");
-      }
+      handleSubmitError(e);
     }
   };
 

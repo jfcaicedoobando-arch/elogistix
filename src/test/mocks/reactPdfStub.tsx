@@ -13,6 +13,7 @@
  * Si en el futuro algún test necesita el módulo real, hay que crear una
  * configuración de Vitest separada que omita este alias.
  */
+/* eslint-disable react-refresh/only-export-components -- Mock de test alias, no participa en HMR */
 import type { ReactNode, CSSProperties } from "react";
 
 type ChildrenProps = { children?: ReactNode; style?: CSSProperties; [k: string]: unknown };

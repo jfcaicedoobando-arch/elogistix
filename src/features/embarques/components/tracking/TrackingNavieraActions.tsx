@@ -21,19 +21,49 @@ interface Props {
  * - Botón para abrir la URL de tracking de la naviera (catálogo en tabla `navieras`).
  * - Botón para copiar el BL Master / MAWB al portapapeles.
  */
-export function TrackingNavieraActions({ modo, naviera, aerolinea, blMaster, mawb }: Props) {
+interface CarrierInfo {
+  esMaritimo: boolean;
+  carrier: string | null;
+  referencia: string | null;
+  refLabel: "BL Master" | "MAWB";
+}
+
+function getCarrierInfo(props: Props): CarrierInfo {
+  const esMaritimo = props.modo === "Marítimo";
+  return {
+    esMaritimo,
+    carrier: esMaritimo ? props.naviera : props.aerolinea,
+    referencia: esMaritimo ? props.blMaster : props.mawb,
+    refLabel: esMaritimo ? "BL Master" : "MAWB",
+  };
+}
+
+function getTrackingTooltip(referencia: string | null, esMaritimo: boolean, refLabel: string): string {
+  if (!referencia) return `Falta el ${refLabel}`;
+  if (!esMaritimo) return "El tracking aéreo se consulta directamente en la web de la aerolínea";
+  return "Esta naviera no tiene URL de tracking configurada — pídele al admin que la agregue en Configuración › Navieras";
+}
+
+function resolveTrackingUrl(
+  navieras: Array<{ name: string; code: string; tracking_url_template: string | null }>,
+  naviera: string | null,
+  referencia: string | null,
+  esMaritimo: boolean,
+): string | null {
+  if (!esMaritimo || !naviera || !referencia) return null;
+  const row = navieras.find((n) => n.name === naviera || n.code === naviera);
+  const template = row?.tracking_url_template ?? null;
+  if (!template) return null;
+  return template.replace("{BL}", encodeURIComponent(referencia.trim()));
+}
+
+export function TrackingNavieraActions(props: Props) {
   const { data: navieras = [] } = useNavieras();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  const esMaritimo = modo === "Marítimo";
-  const carrier = esMaritimo ? naviera : aerolinea;
-  const referencia = esMaritimo ? blMaster : mawb;
-  const refLabel = esMaritimo ? "BL Master" : "MAWB";
-
-  const navieraRow = esMaritimo && naviera ? navieras.find((n) => n.name === naviera || n.code === naviera) : null;
-  const template = navieraRow?.tracking_url_template ?? null;
-  const trackingUrl = template && referencia ? template.replace("{BL}", encodeURIComponent(referencia.trim())) : null;
+  const { esMaritimo, carrier, referencia, refLabel } = getCarrierInfo(props);
+  const trackingUrl = resolveTrackingUrl(navieras, props.naviera, referencia, esMaritimo);
 
   const handleCopy = async () => {
     if (!referencia) return;
@@ -49,25 +79,31 @@ export function TrackingNavieraActions({ modo, naviera, aerolinea, blMaster, maw
   };
 
   if (!carrier && !referencia) {
+    const captura = esMaritimo ? "naviera y el BL Master" : "aerolínea y el MAWB";
     return (
       <Alert variant="warning">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Captura la {esMaritimo ? "naviera y el BL Master" : "aerolínea y el MAWB"} en el tab Resumen
-          para habilitar las consultas de tracking.
+          Captura la {captura} en el tab Resumen para habilitar las consultas de tracking.
         </AlertDescription>
       </Alert>
     );
   }
+
+  const carrierLabel = carrier ?? "la naviera";
+  const carrierBtnLabel = carrier ?? "naviera";
+  const referenciaDisplay = referencia ?? "—";
+  const copyLabel = copied ? "Copiado" : `Copiar ${refLabel}`;
+  const CopyIcon = copied ? Check : Copy;
 
   return (
     <Card>
       <CardContent className="pt-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="text-sm">
-            <div className="font-medium">Consultar tracking en {carrier ?? "la naviera"}</div>
+            <div className="font-medium">Consultar tracking en {carrierLabel}</div>
             <div className="text-xs text-muted-foreground">
-              {refLabel}: <span className="font-mono">{referencia ?? "—"}</span>
+              {refLabel}: <span className="font-mono">{referenciaDisplay}</span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -76,8 +112,8 @@ export function TrackingNavieraActions({ modo, naviera, aerolinea, blMaster, maw
                 <TooltipTrigger asChild>
                   <span>
                     <Button size="sm" variant="outline" onClick={handleCopy} disabled={!referencia}>
-                      {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                      {copied ? "Copiado" : `Copiar ${refLabel}`}
+                      <CopyIcon className="h-4 w-4 mr-1" />
+                      {copyLabel}
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -90,17 +126,13 @@ export function TrackingNavieraActions({ modo, naviera, aerolinea, blMaster, maw
                   <span>
                     <Button size="sm" onClick={handleOpen} disabled={!trackingUrl}>
                       <ExternalLink className="h-4 w-4 mr-1" />
-                      Abrir tracking de {carrier ?? "naviera"}
+                      Abrir tracking de {carrierBtnLabel}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 {!trackingUrl && (
                   <TooltipContent>
-                    {!referencia
-                      ? `Falta el ${refLabel}`
-                      : !esMaritimo
-                      ? "El tracking aéreo se consulta directamente en la web de la aerolínea"
-                      : "Esta naviera no tiene URL de tracking configurada — pídele al admin que la agregue en Configuración › Navieras"}
+                    {getTrackingTooltip(referencia, esMaritimo, refLabel)}
                   </TooltipContent>
                 )}
               </Tooltip>
@@ -115,3 +147,4 @@ export function TrackingNavieraActions({ modo, naviera, aerolinea, blMaster, maw
     </Card>
   );
 }
+

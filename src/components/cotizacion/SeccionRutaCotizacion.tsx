@@ -13,9 +13,105 @@ import PortSelect from "@/components/selects/PortSelect";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
 import type { CotizacionFormValues } from "@/hooks/cotizacion";
+import type { UseFormReturn } from "react-hook-form";
+
+type Ctx = UseFormReturn<CotizacionFormValues>;
+
+function OrigenDestinoBlock({
+  ctx, usarPortSelect, esTerrestre, conPuntoIntermedio,
+}: { ctx: Ctx; usarPortSelect: boolean; esTerrestre: boolean; conPuntoIntermedio: boolean }) {
+  const { watch, setValue } = ctx;
+  if (usarPortSelect) {
+    return (
+      <>
+        <FormField label="Origen">
+          <PortSelect value={watch("origen")} onValueChange={v => setValue("origen", v)} placeholder="Buscar puerto de origen..." />
+        </FormField>
+        <FormField label="Destino">
+          <PortSelect value={watch("destino")} onValueChange={v => setValue("destino", v)} placeholder="Buscar puerto de destino..." />
+        </FormField>
+      </>
+    );
+  }
+  const placeholderOrigen = esTerrestre ? "Ej. CDMX" : "Ej. Shanghai, China";
+  const placeholderDestino = esTerrestre ? "Ej. Monterrey" : "Ej. Manzanillo, México";
+  return (
+    <>
+      <FormField label="Origen">
+        <Input value={watch("origen")} onChange={e => setValue("origen", e.target.value)} placeholder={placeholderOrigen} />
+      </FormField>
+      {conPuntoIntermedio && (
+        <FormField label="Punto de carga/descarga">
+          <Input
+            value={watch("puntoIntermedio")}
+            onChange={e => setValue("puntoIntermedio", e.target.value, { shouldValidate: true, shouldDirty: true })}
+            placeholder="Ej. Terminal Pantaco"
+          />
+        </FormField>
+      )}
+      <FormField label="Destino">
+        <Input value={watch("destino")} onChange={e => setValue("destino", e.target.value)} placeholder={placeholderDestino} />
+      </FormField>
+    </>
+  );
+}
+
+function MaritimoFclLclFields({ ctx, tipoEmbarque }: { ctx: Ctx; tipoEmbarque: string }) {
+  const { watch, setValue } = ctx;
+  if (tipoEmbarque === 'FCL') {
+    return (
+      <>
+        <FormField label="Días libres en destino">
+          <Input type="number" min={0} value={watch("diasLibresDestino")} onChange={e => setValue("diasLibresDestino", Number(e.target.value))} placeholder="Ej. 7" />
+        </FormField>
+        <FormField label="Carta garantía">
+          <Select value={watch("cartaGarantia") ? 'si' : 'no'} onValueChange={v => setValue("cartaGarantia", v === 'si')}>
+            <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="si">Sí</SelectItem>
+              <SelectItem value="no">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+      </>
+    );
+  }
+  if (tipoEmbarque === 'LCL') {
+    return (
+      <FormField label="Días libres de almacenaje">
+        <Input type="number" min={0} value={watch("diasAlmacenaje")} onChange={e => setValue("diasAlmacenaje", Number(e.target.value))} placeholder="Ej. 5" />
+      </FormField>
+    );
+  }
+  return null;
+}
+
+function SeguroBlock({ ctx, seguro }: { ctx: Ctx; seguro: boolean }) {
+  const { watch, setValue } = ctx;
+  return (
+    <>
+      <div className="flex items-center gap-3 pt-6">
+        <Label className="text-sm font-medium">Seguro</Label>
+        <Switch checked={seguro} onCheckedChange={v => setValue("seguro", v)} />
+        <span className="text-sm text-muted-foreground">{seguro ? 'Sí' : 'No'}</span>
+      </div>
+      {seguro && (
+        <FormField label="Valor de mercancía (USD)">
+          <Input
+            type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*"
+            value={watch("valorSeguroUsd") || ''}
+            onChange={e => { const v = e.target.value; if (/^\d*\.?\d*$/.test(v)) setValue("valorSeguroUsd", Number(v) || 0); }}
+            placeholder="0.00"
+          />
+        </FormField>
+      )}
+    </>
+  );
+}
 
 export default function SeccionRutaCotizacion() {
-  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const ctx = useFormContext<CotizacionFormValues>();
+  const { watch, setValue } = ctx;
 
   const modo = watch("modo");
   const tipoEmbarque = watch("tipoEmbarque");
@@ -31,64 +127,20 @@ export default function SeccionRutaCotizacion() {
   return (
     <WizardSection title="Ruta">
       <div className={`grid grid-cols-1 gap-4 ${conPuntoIntermedio ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-        {usarPortSelect ? (
-          <>
-            <FormField label="Origen">
-              <PortSelect value={watch("origen")} onValueChange={v => setValue("origen", v)} placeholder="Buscar puerto de origen..." />
-            </FormField>
-            <FormField label="Destino">
-              <PortSelect value={watch("destino")} onValueChange={v => setValue("destino", v)} placeholder="Buscar puerto de destino..." />
-            </FormField>
-          </>
-        ) : (
-          <>
-            <FormField label="Origen">
-              <Input value={watch("origen")} onChange={e => setValue("origen", e.target.value)} placeholder={esTerrestre ? "Ej. CDMX" : "Ej. Shanghai, China"} />
-            </FormField>
-            {conPuntoIntermedio && (
-              <FormField label="Punto de carga/descarga">
-                <Input
-                  value={watch("puntoIntermedio")}
-                  onChange={e => setValue("puntoIntermedio", e.target.value, { shouldValidate: true, shouldDirty: true })}
-                  placeholder="Ej. Terminal Pantaco"
-                />
-              </FormField>
-            )}
-            <FormField label="Destino">
-              <Input value={watch("destino")} onChange={e => setValue("destino", e.target.value)} placeholder={esTerrestre ? "Ej. Monterrey" : "Ej. Manzanillo, México"} />
-            </FormField>
-          </>
-        )}
+        <OrigenDestinoBlock
+          ctx={ctx}
+          usarPortSelect={usarPortSelect}
+          esTerrestre={esTerrestre}
+          conPuntoIntermedio={conPuntoIntermedio}
+        />
       </div>
-
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
         <FormField label="Tiempo de tránsito (días)">
           <Input type="number" min={0} value={watch("tiempoTransitoDias") ?? ''} onChange={e => setValue("tiempoTransitoDias", e.target.value ? Number(e.target.value) : undefined)} placeholder="Ej. 25" />
         </FormField>
 
-        {esMaritimo && tipoEmbarque === 'FCL' && (
-          <>
-            <FormField label="Días libres en destino">
-              <Input type="number" min={0} value={watch("diasLibresDestino")} onChange={e => setValue("diasLibresDestino", Number(e.target.value))} placeholder="Ej. 7" />
-            </FormField>
-            <FormField label="Carta garantía">
-              <Select value={watch("cartaGarantia") ? 'si' : 'no'} onValueChange={v => setValue("cartaGarantia", v === 'si')}>
-                <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="si">Sí</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormField>
-          </>
-        )}
-
-        {esMaritimo && tipoEmbarque === 'LCL' && (
-          <FormField label="Días libres de almacenaje">
-            <Input type="number" min={0} value={watch("diasAlmacenaje")} onChange={e => setValue("diasAlmacenaje", Number(e.target.value))} placeholder="Ej. 5" />
-          </FormField>
-        )}
+        {esMaritimo && <MaritimoFclLclFields ctx={ctx} tipoEmbarque={tipoEmbarque} />}
 
         <FormField label="Frecuencia">
           <Select value={watch("frecuencia")} onValueChange={v => setValue("frecuencia", v)}>
@@ -133,17 +185,7 @@ export default function SeccionRutaCotizacion() {
           </FormField>
         )}
 
-        <div className="flex items-center gap-3 pt-6">
-          <Label className="text-sm font-medium">Seguro</Label>
-          <Switch checked={seguro} onCheckedChange={v => setValue("seguro", v)} />
-          <span className="text-sm text-muted-foreground">{seguro ? 'Sí' : 'No'}</span>
-        </div>
-
-        {seguro && (
-          <FormField label="Valor de mercancía (USD)">
-            <Input type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={watch("valorSeguroUsd") || ''} onChange={e => { const v = e.target.value; if (/^\d*\.?\d*$/.test(v)) setValue("valorSeguroUsd", Number(v) || 0); }} placeholder="0.00" />
-          </FormField>
-        )}
+        <SeguroBlock ctx={ctx} seguro={seguro} />
       </div>
     </WizardSection>
   );

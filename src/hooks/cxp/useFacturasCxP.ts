@@ -9,10 +9,17 @@ import {
 } from "@/services/cxp";
 
 export function useFacturasCxP(filtros: FetchCxPFiltros = {}) {
-  const key = useMemo(() => filtros, [
-    filtros.search, filtros.proveedor_id, filtros.moneda, filtros.estatus,
-    filtros.origen, filtros.fecha_desde, filtros.fecha_hasta,
-  ]);
+  const key = useMemo(
+    () => ({
+      search: filtros.search, proveedor_id: filtros.proveedor_id, moneda: filtros.moneda,
+      estatus: filtros.estatus, origen: filtros.origen,
+      fecha_desde: filtros.fecha_desde, fecha_hasta: filtros.fecha_hasta,
+    }),
+    [
+      filtros.search, filtros.proveedor_id, filtros.moneda, filtros.estatus,
+      filtros.origen, filtros.fecha_desde, filtros.fecha_hasta,
+    ],
+  );
   const q = useQuery({
     queryKey: queryKeys.cxp.facturas(key),
     queryFn: () => fetchFacturasCxP(filtros),

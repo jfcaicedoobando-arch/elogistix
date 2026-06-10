@@ -28,9 +28,7 @@ interface CountResult {
   error: { message: string } | null;
 }
 
-export async function fetchEmbarqueDependenciasFinancieras(
-  embarqueId: string,
-): Promise<EmbarqueDependenciasFinancieras> {
+async function fetchFacturasLigadas(embarqueId: string): Promise<{ cxc: FacturaLigada[]; cxcCount: number; cxp: FacturaLigada[]; cxpCount: number }> {
   const [cxcRes, cxpRes] = await Promise.all([
     supabase
       .from('facturas')
@@ -47,23 +45,17 @@ export async function fetchEmbarqueDependenciasFinancieras(
   if (cxcRes.error) throw cxcRes.error;
   if (cxpRes.error) throw cxpRes.error;
 
-  const cxcFacturas: FacturaLigada[] = (cxcRes.data ?? []).map((r) => ({
-    id: r.id,
-    folio: r.numero,
-    estado: r.estado,
-  }));
-  const cxpFacturas: FacturaLigada[] = (cxpRes.data ?? []).map((r) => ({
-    id: r.id,
-    folio: r.folio_proveedor,
-    estado: r.estado,
-  }));
+  const cxc: FacturaLigada[] = (cxcRes.data ?? []).map((r) => ({ id: r.id, folio: r.numero, estado: r.estado }));
+  const cxp: FacturaLigada[] = (cxpRes.data ?? []).map((r) => ({ id: r.id, folio: r.folio_proveedor, estado: r.estado }));
+  return {
+    cxc,
+    cxcCount: cxcRes.count ?? cxc.length,
+    cxp,
+    cxpCount: cxpRes.count ?? cxp.length,
+  };
+}
 
-  const cxcCount = cxcRes.count ?? cxcFacturas.length;
-  const cxpCount = cxpRes.count ?? cxpFacturas.length;
-
-  const cxcIds = cxcFacturas.map((f) => f.id);
-  const cxpIds = cxpFacturas.map((f) => f.id);
-
+async function fetchNotasYPagos(cxcIds: string[], cxpIds: string[]): Promise<{ notasCredito: number; pagos: number }> {
   const empty: CountResult = { count: 0, error: null };
   const [ncCxcRes, ncCxpRes, pagosCxcRes, pagosCxpRes] = await Promise.all<CountResult>([
     cxcIds.length
@@ -85,14 +77,26 @@ export async function fetchEmbarqueDependenciasFinancieras(
   if (pagosCxcRes.error) throw pagosCxcRes.error;
   if (pagosCxpRes.error) throw pagosCxpRes.error;
 
-  const notasCredito = (ncCxcRes.count ?? 0) + (ncCxpRes.count ?? 0);
-  const pagos = (pagosCxcRes.count ?? 0) + (pagosCxpRes.count ?? 0);
+  return {
+    notasCredito: (ncCxcRes.count ?? 0) + (ncCxpRes.count ?? 0),
+    pagos: (pagosCxcRes.count ?? 0) + (pagosCxpRes.count ?? 0),
+  };
+}
+
+export async function fetchEmbarqueDependenciasFinancieras(
+  embarqueId: string,
+): Promise<EmbarqueDependenciasFinancieras> {
+  const { cxc, cxcCount, cxp, cxpCount } = await fetchFacturasLigadas(embarqueId);
+  const { notasCredito, pagos } = await fetchNotasYPagos(
+    cxc.map((f) => f.id),
+    cxp.map((f) => f.id),
+  );
   const tieneDependencias = cxcCount > 0 || cxpCount > 0 || notasCredito > 0 || pagos > 0;
 
   return {
     tieneDependencias,
-    cxc: { count: cxcCount, facturas: cxcFacturas },
-    cxp: { count: cxpCount, facturas: cxpFacturas },
+    cxc: { count: cxcCount, facturas: cxc },
+    cxp: { count: cxpCount, facturas: cxp },
     notasCredito,
     pagos,
   };

@@ -90,6 +90,26 @@ const proveedorRowSchema = z
     }
   });
 
+function buildProveedorPayload(
+  v: z.infer<typeof proveedorRowSchema>,
+  organizationId: string | null,
+): TablesInsert<"proveedores"> {
+  const categoria = v.categoria ?? "Logistico";
+  return {
+    nombre: v.nombre,
+    categoria,
+    tipo: categoria === "Logistico" ? (v.tipo ?? null) : null,
+    subtipo_gasto: categoria === "GastoOperativo" ? (v.subtipo_gasto ?? null) : null,
+    rfc: optional(v.rfc) ?? "",
+    contacto: optional(v.contacto) ?? "",
+    telefono: optional(v.telefono) ?? "",
+    email: optional(v.email ?? undefined) ?? "",
+    moneda_preferida: v.moneda_preferida ?? "MXN",
+    pais: optional(v.pais),
+    ...(organizationId ? { organization_id: organizationId } : {}),
+  };
+}
+
 export function mapProveedorRows(
   rows: Row[],
   organizationId: string | null,
@@ -110,22 +130,7 @@ export function mapProveedorRows(
       invalid.push({ rowNumber, message: firstZodMessage(parsed.error), raw });
       return;
     }
-    const v = parsed.data;
-    const categoria = v.categoria ?? "Logistico";
-    const payload: TablesInsert<"proveedores"> = {
-      nombre: v.nombre,
-      categoria,
-      tipo: categoria === "Logistico" ? (v.tipo ?? null) : null,
-      subtipo_gasto: categoria === "GastoOperativo" ? (v.subtipo_gasto ?? null) : null,
-      rfc: optional(v.rfc) ?? "",
-      contacto: optional(v.contacto) ?? "",
-      telefono: optional(v.telefono) ?? "",
-      email: optional(v.email ?? undefined) ?? "",
-      moneda_preferida: v.moneda_preferida ?? "MXN",
-      pais: optional(v.pais),
-      ...(organizationId ? { organization_id: organizationId } : {}),
-    };
-    valid.push({ rowNumber, payload });
+    valid.push({ rowNumber, payload: buildProveedorPayload(parsed.data, organizationId) });
   });
 
   return { valid, invalid };
