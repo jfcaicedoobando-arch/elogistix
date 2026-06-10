@@ -120,10 +120,9 @@ export function useNuevoProveedorController(
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
-    const docNames = form.origen_proveedor === "Nacional" ? DOCS_NACIONAL : DOCS_EXTRANJERO;
-    setDocumentos(docNames.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
   };
+
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos((prev) =>
