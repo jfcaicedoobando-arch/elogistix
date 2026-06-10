@@ -4914,6 +4914,10 @@ export type Database = {
           total: number
         }[]
       }
+      calcular_demoras_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: Json
+      }
       can_admin_tenant: { Args: { _user_id: string }; Returns: boolean }
       can_manage_document_object: {
         Args: { _object_name: string }
