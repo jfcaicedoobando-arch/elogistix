@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Upload } from "lucide-react";
 import type { TablesInsert } from "@/types/db";
 import {
   TIPOS_PROVEEDOR as TIPOS,
@@ -17,6 +17,7 @@ import {
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import { useNuevoProveedorController } from "@/hooks/proveedor";
 import type { Enums } from "@/types/db";
+import { useRef } from "react";
 
 interface Props {
   open: boolean;
@@ -26,6 +27,13 @@ interface Props {
 
 export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
   const c = useNuevoProveedorController(onSave, () => onOpenChange(false));
+  const csfInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCsfFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void c.handleCsfUpload(file);
+    e.target.value = "";
+  };
 
   return (
     <Dialog open={open} onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}>
@@ -53,21 +61,53 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label>Origen *</Label>
-              <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>
-                <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Nacional">Nacional</SelectItem>
-                  <SelectItem value="Extranjero">Extranjero</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {!c.isGasto && (
+              <div className="space-y-2">
+                <Label>Origen *</Label>
+                <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nacional">Nacional</SelectItem>
+                    <SelectItem value="Extranjero">Extranjero</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {c.isGasto && (
+              <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/40 p-3">
+                <Label className="text-sm">Cargar Constancia de Situación Fiscal (PDF)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Opcional. Extraemos automáticamente el nombre y el RFC del proveedor.
+                </p>
+                <input
+                  ref={csfInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleCsfFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={c.csfLoading}
+                  onClick={() => csfInputRef.current?.click()}
+                >
+                  {c.csfLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Procesando…</>
+                  ) : (
+                    <><Upload className="h-4 w-4 mr-2" /> Subir CSF</>
+                  )}
+                </Button>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Nombre *</Label>
               <Input value={c.form.nombre} onChange={(e) => c.setField("nombre", e.target.value)} />
             </div>
+
 
             {c.isLogistico && (
               <div className="space-y-2">
@@ -129,15 +169,17 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               <Label>Teléfono</Label>
               <Input value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label>Moneda Preferida</Label>
-              <Select value={c.form.moneda_preferida} onValueChange={(v) => c.setField("moneda_preferida", v as Enums<"moneda">)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MONEDAS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {!c.isGasto && (
+              <div className="space-y-2">
+                <Label>Moneda Preferida</Label>
+                <Select value={c.form.moneda_preferida} onValueChange={(v) => c.setField("moneda_preferida", v as Enums<"moneda">)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {MONEDAS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
 

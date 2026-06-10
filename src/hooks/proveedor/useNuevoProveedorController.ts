@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
+import { parseCsf } from "@/services/csf";
+
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type Moneda = Enums<"moneda">;
@@ -53,6 +56,8 @@ export function useNuevoProveedorController(
   const [form, setForm] = useState<NuevoProveedorForm>({ ...EMPTY_PROVEEDOR_FORM });
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
+  const [csfLoading, setCsfLoading] = useState(false);
+
 
   const isLogistico = form.categoria === "Logistico";
   const isGasto = form.categoria === "GastoOperativo";
@@ -76,14 +81,19 @@ export function useNuevoProveedorController(
 
   const handleCategoriaChange = (valor: string) => {
     const next = valor as CategoriaProveedor;
+    const esGasto = next === "GastoOperativo";
     setForm((prev) => ({
       ...prev,
       categoria: next,
       tipo: next === "Logistico" ? (prev.tipo ?? "Naviera") : null,
-      subtipo_gasto: next === "GastoOperativo" ? (prev.subtipo_gasto ?? "Otros") : null,
+      subtipo_gasto: esGasto ? (prev.subtipo_gasto ?? "Otros") : null,
       pais: next === "Logistico" ? prev.pais : "",
+      // Gasto operativo: siempre nacional y siempre MXN.
+      origen_proveedor: esGasto ? "Nacional" : prev.origen_proveedor,
+      moneda_preferida: esGasto ? "MXN" : prev.moneda_preferida,
     }));
   };
+
 
   const handleTipoChange = (valorSeleccionado: string) => {
     setForm((prev) => ({
@@ -128,10 +138,33 @@ export function useNuevoProveedorController(
     resetAndClose();
   };
 
+  /**
+   * Sube un PDF de Constancia de Situación Fiscal y auto-rellena nombre y RFC.
+   * Solo aplica para proveedores de gasto operativo (nacionales).
+   */
+  const handleCsfUpload = async (file: File) => {
+    setCsfLoading(true);
+    try {
+      const data = await parseCsf(file);
+      setForm((prev) => ({
+        ...prev,
+        nombre: data.nombre?.trim() || prev.nombre,
+        rfc: data.rfc?.trim() || prev.rfc,
+      }));
+      toast.success("CSF procesada. Verifica los datos extraídos.");
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
+      toast.error(mensaje);
+    } finally {
+      setCsfLoading(false);
+    }
+  };
+
   return {
     form,
     step,
     documentos,
+    csfLoading,
     isLogistico,
     isGasto,
     isAgenteCarga,
@@ -144,6 +177,7 @@ export function useNuevoProveedorController(
     handleSubtipoGastoChange,
     handleNext,
     handleFileChange,
+    handleCsfUpload,
     handleSave,
     resetAndClose,
   };
