@@ -1,29 +1,17 @@
 {
-  "version": "12.61.18",
-  "generatedAt": "2026-06-08T13:23:11.880Z",
+  "version": "12.76.3",
+  "generatedAt": "2026-06-10T06:01:08.647Z",
   "arch": {
     "hooksContextsDirectImports": [],
-    "componentsPagesDirectImports": [
-      "src/pages/auth/ForgotPasswordDialog.tsx",
-      "src/pages/auth/ResetPassword.tsx"
-    ],
-    "oversized": [
-      {
-        "file": "src/pages/auth/Login.tsx",
-        "lines": 246
-      },
-      {
-        "file": "src/lib/mappers/genericPayloadMapper.ts",
-        "lines": 227
-      }
-    ]
+    "componentsPagesDirectImports": [],
+    "oversized": []
   },
   "casts": {
-    "total": 1141,
+    "total": 1256,
     "bySeverity": {
-      "SAFE": 432,
-      "LOW": 16,
-      "MEDIUM": 693,
+      "SAFE": 454,
+      "LOW": 21,
+      "MEDIUM": 781,
       "HIGH": 0,
       "CRITICAL": 0
     },
@@ -39,9 +27,19 @@
         "weight": 16
       },
       {
+        "file": "src/hooks/proveedor/useNuevoProveedorController.ts",
+        "total": 8,
+        "weight": 16
+      },
+      {
         "file": "src/test/setup.ts",
         "total": 8,
         "weight": 16
+      },
+      {
+        "file": "src/services/planes/__tests__/index.test.ts",
+        "total": 7,
+        "weight": 14
       },
       {
         "file": "src/generators/cotizacion/__tests__/datosGenerales.test.ts",
@@ -64,19 +62,9 @@
         "weight": 12
       },
       {
-        "file": "src/services/cotizacion/conversiones/__tests__/embarquesHelpers.test.ts",
+        "file": "src/services/catalogos/__tests__/index.test.ts",
         "total": 6,
         "weight": 12
-      },
-      {
-        "file": "src/services/bitacora/__tests__/index.test.ts",
-        "total": 10,
-        "weight": 11
-      },
-      {
-        "file": "src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx",
-        "total": 5,
-        "weight": 10
       }
     ]
   },
