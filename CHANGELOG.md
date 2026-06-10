@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.26] - 2026-06-10
+- **fix(rutas/permisos)**: el rol **Contador** (y **Tesorero**) veía en el menú lateral los módulos **Cuentas por Pagar**, **Tesorería** (resumen, cuentas, conciliación, flujo) y **Profit** (dashboard, presupuesto), pero al hacer clic `ProtectedRoute` los bloqueaba porque las rutas sólo permitían `admin` y `super_admin`. Se ampliaron los `allowedRoles` de esas rutas para incluir `contador` y `tesorero`, alineando los permisos de ruta con el sidebar.
+
 ## [12.76.25] - 2026-06-10
+
 - **feat(proveedores/detalle)**: en la página de cada proveedor se muestra ahora una tarjeta **Datos bancarios** con Banco y CLABE (enmascarada con toggle ojo para revelar). Junto al botón "Editar" se agregó **Actualizar con CSF** (solo para proveedores nacionales): sube un PDF de Constancia de Situación Fiscal y, antes de aplicar cambios, valida que el RFC extraído coincida con el del proveedor. Si la CSF pertenece a otra empresa, se rechaza con toast detallado y no se modifica nada. Si coincide, actualiza únicamente los campos presentes (nombre, CP, dirección, ciudad, estado, régimen fiscal). Se ampliaron las columnas leídas en el detalle para incluir banco, CLABE y datos fiscales.
 
 ## [12.76.24] - 2026-06-10
