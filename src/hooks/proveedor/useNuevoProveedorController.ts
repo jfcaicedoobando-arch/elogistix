@@ -144,9 +144,15 @@ export function useNuevoProveedorController(
   };
 
   const handleSave = () => {
-    onSave(form as TablesInsert<"proveedores">);
+    const clabeTrim = form.clabe.trim();
+    if (clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
+      toast.error("La CLABE debe tener exactamente 18 dígitos numéricos.");
+      return;
+    }
+    onSave({ ...form, clabe: clabeTrim } as TablesInsert<"proveedores">);
     resetAndClose();
   };
+
 
   /**
    * Sube un PDF de Constancia de Situación Fiscal y auto-rellena nombre y RFC.
