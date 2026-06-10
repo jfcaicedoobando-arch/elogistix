@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, PlayCircle, Ship, Container, FileText, Clock } from "lucide-react";
+import { ArrowRight, CheckCircle2, Ship, Container, FileText, Clock } from "lucide-react";
 import { HERO, PROOF_TITLE, PROOF_LOGOS, KPIS } from "../landingCopy";
+import { ProbarDemoButton } from "@/components/marketing/ProbarDemoButton";
 
 export function LandingHero() {
   return (
@@ -49,16 +50,11 @@ export function LandingHero() {
                 {HERO.primaryCta} <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-            <Button
-              asChild
+            <ProbarDemoButton
               size="lg"
               variant="outline"
               className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-            >
-              <a href="#demo">
-                <PlayCircle className="mr-1 h-5 w-5" /> {HERO.secondaryCta}
-              </a>
-            </Button>
+            />
           </div>
 
           <p className="mt-5 flex items-center gap-2 text-sm text-primary-foreground/75">

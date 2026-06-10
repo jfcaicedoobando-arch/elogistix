@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { CTA_FINAL } from "../landingCopy";
+import { ProbarDemoButton } from "@/components/marketing/ProbarDemoButton";
+
+
 
 export function LandingCtaFinal() {
   return (
@@ -25,14 +28,11 @@ export function LandingCtaFinal() {
               Crear cuenta gratis <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
-          <Button
-            asChild
+          <ProbarDemoButton
             size="lg"
             variant="outline"
             className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-          >
-            <a href="#demo">Ver demo</a>
-          </Button>
+          />
         </div>
       </div>
     </section>
