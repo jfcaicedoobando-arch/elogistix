@@ -1,27 +1,33 @@
-# Estado: limpieza de warnings (parcial)
+# Fix: tab "Todos" en Proveedores no muestra nada
 
-## Avance
-- **39 → 6 warnings** ya eliminados en build mode.
-- 4 tandas aplicadas: directivas huérfanas, fast-refresh, hook deps, complejidad ciclomática.
+## Causa raíz
 
-## Pendientes finales (necesitan build mode)
-1. **`supabase/functions/user-management/handlers.ts`** (368 → ≤250 líneas)
-   - Mover `handleInviteClient`, `handleListClients`, `resolveRedirectTo` (+ helpers) a un nuevo archivo `clientHandlers.ts`.
-   - En `handlers.ts` dejar solo re-exports: `export { resolveRedirectTo, handleInviteClient, handleListClients } from "./clientHandlers.ts";`
-   - Tipos `HandlerCtx` y `AdminAccess` se importan desde `handlers.ts` en `clientHandlers.ts`.
+La función RPC `public.proveedores_listado` tiene **3 firmas distintas** conviviendo en la base de datos (residuo de migraciones incrementales). PostgREST no puede elegir cuál llamar cuando el cliente no envía los parámetros opcionales (caso del tab "Todos") y responde con error `PGRST203`. El componente `ProveedorTable` recibe `undefined` y renderiza "Sin proveedores registrados".
 
-2. **`supabase/functions/process-email-queue/index.ts`** (5 warnings: 294 líneas, función de 230 líneas, complejidad 56, anidamiento 5×2)
-   - Dividir en módulos hermanos:
-     - `queueAuth.ts` — `parseJwtClaims`, `isRateLimited`, `isForbidden`, `getRetryAfterSeconds`.
-     - `dlq.ts` — `moveToDlq`.
-     - `messageProcessor.ts` — el bucle interno de envío por mensaje (extraído del `for` de líneas 192–356).
-     - `index.ts` (orquestador ≤100 líneas) que sólo autentica, lee config, llama a `processQueue('auth_emails')` y `processQueue('transactional_emails')`.
-   - Convertir los 2 bloques anidados en 5 niveles (líneas 183 y 244) a funciones helper para bajar `max-depth` a 4.
+Las otras pestañas (Logístico / Gasto operativo) funcionan porque sí mandan `p_categoria` y eso desambigua hacia la firma más nueva.
 
-## Cierre tras los dos pasos
-- `bun run lint` debe arrojar **0/0**.
-- Bump `APP_VERSION` → `12.76.4`.
-- Entrada `[12.76.4]` en `CHANGELOG.md`:
-  - "Linter limpio (0 warnings): hooks deps estabilizados, complejidad ciclomática ≤16 en componentes/servicios/edge functions, archivos ≤250 líneas."
+## Solución
 
-¿Aplico estos dos cambios finales?
+Migración que elimina las 2 firmas viejas y conserva sólo la firma actual (la de 8 parámetros con `p_origen`, `p_categoria`, `p_subtipo_gasto`).
+
+```sql
+DROP FUNCTION IF EXISTS public.proveedores_listado(uuid, text, text, integer, integer);
+DROP FUNCTION IF EXISTS public.proveedores_listado(uuid, text, text, integer, integer, text);
+-- Se conserva: proveedores_listado(uuid, text, text, integer, integer, text, text, text)
+```
+
+Antes de ejecutar verifico con `pg_proc` las firmas exactas y los `DROP` quedan acotados a esas dos.
+
+## Validación post-migración
+
+1. Recargar `/proveedores` con tab "Todos" → debe listar los 20 proveedores que ya devuelve la firma nueva cuando se llama con `p_categoria='Logistico'`.
+2. Tabs "Logístico" y "Gasto operativo" deben seguir funcionando igual.
+3. Bump `APP_VERSION` a 12.76.5 + entrada en `CHANGELOG.md`.
+
+## Alcance
+
+- 1 migración SQL (sólo DROP, sin tocar la firma activa ni datos).
+- 1 edit en `src/constants/appVersion.ts`.
+- 1 edit en `CHANGELOG.md`.
+
+No se tocan componentes React ni hooks: el bug es 100% de base de datos.
