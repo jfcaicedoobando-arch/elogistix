@@ -1,9 +1,13 @@
 /**
  * Suscribe al estado auth y expone si el usuario actual está en la org demo.
+ * Toda interacción con supabase/client se hace vía services/demoMode.
  */
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { fetchIsDemoUser } from "@/services/demoMode";
+import {
+  fetchIsDemoUser,
+  getCurrentUserId,
+  subscribeAuthUserId,
+} from "@/services/demoMode";
 
 export function useIsDemoUser(): boolean {
   const [isDemo, setIsDemo] = useState(false);
@@ -20,15 +24,12 @@ export function useIsDemoUser(): boolean {
       if (!cancelled) setIsDemo(result);
     };
 
-    supabase.auth.getUser().then(({ data }) => check(data.user?.id));
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      check(session?.user?.id);
-    });
+    getCurrentUserId().then(check);
+    const unsubscribe = subscribeAuthUserId(check);
 
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 
