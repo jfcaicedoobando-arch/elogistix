@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { ProbarDemoButton } from "@/components/marketing/ProbarDemoButton";
 
 const links = [
   { href: "#demo", label: "Demo" },
@@ -44,6 +45,7 @@ export function LandingNav() {
           <Button asChild variant="ghost" size="sm">
             <Link to="/login">Iniciar sesión</Link>
           </Button>
+          <ProbarDemoButton size="sm" variant="outline" />
           <Button asChild size="sm">
             <Link to="/login?tab=signup">Crear cuenta gratis</Link>
           </Button>
@@ -82,6 +84,7 @@ export function LandingNav() {
               <Button asChild size="sm">
                 <Link to="/login?tab=signup">Crear cuenta</Link>
               </Button>
+              <ProbarDemoButton size="sm" variant="secondary" className="col-span-2" />
             </div>
           </nav>
         </div>

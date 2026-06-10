@@ -9,6 +9,7 @@ import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { queryClient } from "./lib/queryClient";
 import { AppRoutes } from "./routes";
+import { DemoModeBanner } from "@/components/marketing/DemoModeBanner";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -18,6 +19,7 @@ const App = () => (
       <BrowserRouter>
         <NuqsAdapter>
           <BreadcrumbProvider>
+            <DemoModeBanner />
             <Suspense fallback={<RouteLoadingFallback />}>
               <AppRoutes />
             </Suspense>
