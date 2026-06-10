@@ -79,3 +79,9 @@ export const SIDEBAR_ADMIN_ITEMS: SidebarItem[] = [
 export const SIDEBAR_SUPER_ADMIN_ITEMS: SidebarItem[] = [
   { title: "Panel Admin", url: "/admin", icon: Building2 },
 ];
+
+export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
+  { title: "Tarifas marítimas", url: "/costeo/tarifas", icon: Calculator },
+  { title: "Rutas CN → MX", url: "/costeo/rutas", icon: Route },
+  { title: "Agentes", url: "/costeo/agentes", icon: Users },
+];
