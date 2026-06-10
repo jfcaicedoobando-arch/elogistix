@@ -79,14 +79,19 @@ export function useNuevoProveedorController(
 
   const handleCategoriaChange = (valor: string) => {
     const next = valor as CategoriaProveedor;
+    const esGasto = next === "GastoOperativo";
     setForm((prev) => ({
       ...prev,
       categoria: next,
       tipo: next === "Logistico" ? (prev.tipo ?? "Naviera") : null,
-      subtipo_gasto: next === "GastoOperativo" ? (prev.subtipo_gasto ?? "Otros") : null,
+      subtipo_gasto: esGasto ? (prev.subtipo_gasto ?? "Otros") : null,
       pais: next === "Logistico" ? prev.pais : "",
+      // Gasto operativo: siempre nacional y siempre MXN.
+      origen_proveedor: esGasto ? "Nacional" : prev.origen_proveedor,
+      moneda_preferida: esGasto ? "MXN" : prev.moneda_preferida,
     }));
   };
+
 
   const handleTipoChange = (valorSeleccionado: string) => {
     setForm((prev) => ({
