@@ -144,4 +144,3 @@ export function TabGarantias({ embarqueId, canEdit }: Props) {
   );
 }
 
-export default TabGarantias;
