@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-06-08
+# Cast Audit — generado 2026-06-10
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **1145**
+Total de `as` casts detectados: **1254**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 432     | 37.7% |
-| LOW       | 1 | 16      | 1.4% |
-| MEDIUM    | 2 | 693   | 60.5% |
-| HIGH      | 3 | 4     | 0.3% |
+| SAFE      | 0 | 453     | 36.1% |
+| LOW       | 1 | 19      | 1.5% |
+| MEDIUM    | 2 | 780   | 62.2% |
+| HIGH      | 3 | 2     | 0.2% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 4 (~0.3%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.2%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -31,44 +31,32 @@ Total de `as` casts detectados: **1145**
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
 | 1 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
 | 2 | `src/hooks/profit/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 3 | `src/test/setup.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 4 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 5 | `src/lib/__tests__/downloadBlob.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 6 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
-| 7 | `src/lib/domain/estadoResultados.ts` | 7 | 12 | 1 | 0 | 6 | 0 | 0 |
-| 8 | `src/services/cotizacion/conversiones/__tests__/embarquesHelpers.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 9 | `src/services/bitacora/__tests__/index.test.ts` | 10 | 11 | 4 | 1 | 5 | 0 | 0 |
-| 10 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 11 | `src/features/embarques/hooks/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 12 | `src/features/embarques/index.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 13 | `src/hooks/facturacion/__tests__/usePagosFactura.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 14 | `src/lib/parsers/cotizacionDetalle.ts` | 4 | 10 | 0 | 0 | 2 | 2 | 0 |
-| 15 | `src/pdf/components/__tests__/DataTable.test.tsx` | 6 | 10 | 1 | 0 | 5 | 0 | 0 |
+| 3 | `src/hooks/proveedor/useNuevoProveedorController.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 4 | `src/test/setup.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 5 | `src/services/planes/__tests__/index.test.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
+| 6 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 7 | `src/lib/__tests__/downloadBlob.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 8 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
+| 9 | `src/lib/domain/estadoResultados.ts` | 7 | 12 | 1 | 0 | 6 | 0 | 0 |
+| 10 | `src/services/catalogos/__tests__/index.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 11 | `src/services/cotizacion/conversiones/__tests__/embarquesHelpers.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 12 | `src/services/bitacora/__tests__/index.test.ts` | 10 | 11 | 4 | 1 | 5 | 0 | 0 |
+| 13 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 14 | `src/features/costeo/services/navieraCondiciones.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 15 | `src/features/embarques/hooks/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/embarques/hooks/useEmbarqueDependenciasFinancieras.ts:44`
+### 1. [HIGH] `src/features/costeo/services/tarifas.ts:71`
 
 ```ts
-const cxcRows = (cxcRes.data ?? []) as unknown as CxcRow[];
+return ((data ?? []) as unknown as RawRow[]).map(mapRow);
 ```
 
-### 2. [HIGH] `src/features/embarques/hooks/useEmbarqueDependenciasFinancieras.ts:45`
+### 2. [HIGH] `src/features/embarques/services/demorasEmbarque.ts:7`
 
 ```ts
-const cxpRows = (cxpRes.data ?? []) as unknown as CxpRow[];
-```
-
-### 3. [HIGH] `src/lib/parsers/cotizacionDetalle.ts:22`
-
-```ts
-conceptosVentaUSD: Object.freeze([]) as unknown as ConceptoVentaCotizacion[],
-```
-
-### 4. [HIGH] `src/lib/parsers/cotizacionDetalle.ts:23`
-
-```ts
-conceptosVentaMXN: Object.freeze([]) as unknown as ConceptoVentaCotizacion[],
+return data as unknown as DemoraDesglose;
 ```
 
 
