@@ -41,7 +41,7 @@ export const appRoutes = (
     <Route
       path="/cxp"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <Cxp />
         </ProtectedRoute>
       }
@@ -49,7 +49,7 @@ export const appRoutes = (
     <Route
       path="/tesoreria"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <Tesoreria />
         </ProtectedRoute>
       }
@@ -57,7 +57,7 @@ export const appRoutes = (
     <Route
       path="/tesoreria/cuentas"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <TesoreriaCuentas />
         </ProtectedRoute>
       }
@@ -65,7 +65,7 @@ export const appRoutes = (
     <Route
       path="/tesoreria/conciliacion"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <TesoreriaConciliacion />
         </ProtectedRoute>
       }
@@ -73,11 +73,12 @@ export const appRoutes = (
     <Route
       path="/tesoreria/flujo"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <TesoreriaFlujo />
         </ProtectedRoute>
       }
     />
+
     <Route
       path="/comisiones"
       element={<Comisiones />}
@@ -93,7 +94,7 @@ export const appRoutes = (
     <Route
       path="/profit/dashboard"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <ProfitDashboardEjecutivo />
         </ProtectedRoute>
       }
@@ -103,11 +104,12 @@ export const appRoutes = (
     <Route
       path="/profit/presupuesto"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
           <ProfitPresupuesto />
         </ProtectedRoute>
       }
     />
+
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
     <Route path="/proveedores" element={<Proveedores />} />
