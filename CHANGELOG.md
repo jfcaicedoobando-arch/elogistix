@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.9] - 2026-06-10
+- **fix(usuarios)**: la edge function `user-management` ya reconoce a los administradores de organización con el rol moderno `admin_org` (antes sólo aceptaba `admin` legacy), evitando el 403 "Solo administradores pueden crear usuarios" al dar de alta usuarios.
+
 ## [12.76.8] - 2026-06-10
 - **feat(usuarios)**: rediseño del modal "Nuevo Usuario". Ahora ofrece los 9 roles modernos del catálogo (incluido `gerente_visor`) con etiqueta + descripción, secciones de Credenciales y Acceso, toggle de mostrar contraseña, validación inline de email/contraseña y descripción dinámica del rol seleccionado. Rol por defecto: Atención a Clientes.
 
