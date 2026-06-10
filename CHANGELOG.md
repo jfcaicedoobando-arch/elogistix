@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.5] - 2026-06-10
+- **fix(proveedores)**: el tab "Todos" en `/proveedores` ya no aparece vacío. Se eliminaron dos firmas obsoletas de la función `proveedores_listado` que provocaban el error `PGRST203` (function overloading ambiguity) cuando no se enviaba `p_categoria`. Se conserva la firma vigente con filtros de origen, categoría y subtipo de gasto.
+
 ## [12.76.4] - 2026-06-10
 - **chore(linter)**: 0 warnings. Se estabilizan dependencias de hooks (`exhaustive-deps`) desestructurando primitivas en `useComisionesDevengadas`, `useFacturasCxP`, `useCobranza` y `CotizacionWizardLayout`. Se baja complejidad ciclomática a ≤16 en componentes, servicios y edge functions mediante extracción de helpers (`EstadoResultadosTable.helpers.ts`, `clientHandlers.ts`, `DatosGeneralesCard.tsx`, `SeccionRutaCotizacion.tsx`, `BuscarTarifaDialog.tsx`, `TarifaForm.tsx`, `StepCostosPrecios.tsx`, `TabTracking.tsx`, `parseCsv.ts`, `bbva.ts`, `estadoResultados.ts`, `dependenciasFinancieras.ts`, `cxc-recordatorios/index.ts`). Edge functions fragmentadas: `user-management/handlers.ts` → `invite.ts` + `update.ts` + `delete.ts` + `clientHandlers.ts`; `process-email-queue/index.ts` → `queueAuth.ts` + `messageProcessor.ts`. Todos los archivos quedan ≤250 líneas.
 

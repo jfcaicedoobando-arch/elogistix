@@ -5457,78 +5457,33 @@ export type Database = {
           venta_usd: number
         }[]
       }
-      proveedores_listado:
-        | {
-            Args: {
-              p_limit?: number
-              p_offset?: number
-              p_organization_id?: string
-              p_search?: string
-              p_tipo?: string
-            }
-            Returns: {
-              contacto: string
-              id: string
-              moneda_preferida: Database["public"]["Enums"]["moneda"]
-              monto_pendiente: number
-              nombre: string
-              pais: string
-              rfc: string
-              tipo: Database["public"]["Enums"]["tipo_proveedor"]
-              total_count: number
-              total_operaciones: number
-            }[]
-          }
-        | {
-            Args: {
-              p_limit?: number
-              p_offset?: number
-              p_organization_id?: string
-              p_origen?: string
-              p_search?: string
-              p_tipo?: string
-            }
-            Returns: {
-              contacto: string
-              id: string
-              moneda_preferida: Database["public"]["Enums"]["moneda"]
-              monto_pendiente: number
-              nombre: string
-              origen_proveedor: string
-              pais: string
-              rfc: string
-              tipo: Database["public"]["Enums"]["tipo_proveedor"]
-              total_count: number
-              total_operaciones: number
-            }[]
-          }
-        | {
-            Args: {
-              p_categoria?: string
-              p_limit?: number
-              p_offset?: number
-              p_organization_id?: string
-              p_origen?: string
-              p_search?: string
-              p_subtipo_gasto?: string
-              p_tipo?: string
-            }
-            Returns: {
-              categoria: Database["public"]["Enums"]["categoria_proveedor"]
-              contacto: string
-              id: string
-              moneda_preferida: Database["public"]["Enums"]["moneda"]
-              monto_pendiente: number
-              nombre: string
-              origen_proveedor: string
-              pais: string
-              rfc: string
-              subtipo_gasto: Database["public"]["Enums"]["subtipo_gasto_operativo"]
-              tipo: Database["public"]["Enums"]["tipo_proveedor"]
-              total_count: number
-              total_operaciones: number
-            }[]
-          }
+      proveedores_listado: {
+        Args: {
+          p_categoria?: string
+          p_limit?: number
+          p_offset?: number
+          p_organization_id?: string
+          p_origen?: string
+          p_search?: string
+          p_subtipo_gasto?: string
+          p_tipo?: string
+        }
+        Returns: {
+          categoria: Database["public"]["Enums"]["categoria_proveedor"]
+          contacto: string
+          id: string
+          moneda_preferida: Database["public"]["Enums"]["moneda"]
+          monto_pendiente: number
+          nombre: string
+          origen_proveedor: string
+          pais: string
+          rfc: string
+          subtipo_gasto: Database["public"]["Enums"]["subtipo_gasto_operativo"]
+          tipo: Database["public"]["Enums"]["tipo_proveedor"]
+          total_count: number
+          total_operaciones: number
+        }[]
+      }
       purge_app_logs_old: { Args: never; Returns: number }
       purge_record: {
         Args: { _id: string; _table: string }
