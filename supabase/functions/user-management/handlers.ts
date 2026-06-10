@@ -62,9 +62,11 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
     return errorResponse(validationError, 400, cors);
   }
   const { email, password, role } = body as { email: string; password: string; role?: string };
-  const selectedRole = (VALID_ROLES as readonly string[]).includes(role ?? "")
-    ? (role as string)
-    : "viewer";
+  if (!role || !(VALID_ROLES as readonly string[]).includes(role)) {
+    log.finish(400, "invalid_role", { user_id: callerId, payload: { role } });
+    return errorResponse(`Rol no soportado: ${role ?? "(vacío)"}`, 400, cors);
+  }
+  const selectedRole = role;
 
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email, password, email_confirm: true,
@@ -78,9 +80,8 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
     return errorResponse(createError.message, 400, cors);
   }
 
-  if (selectedRole !== "viewer") {
-    await adminClient.from("user_roles").update({ role: selectedRole }).eq("user_id", newUser.user.id);
-  }
+  // Siempre persistir el rol seleccionado en user_roles (trigger crea uno default = viewer).
+  await adminClient.from("user_roles").update({ role: selectedRole }).eq("user_id", newUser.user.id);
   if (admin.orgId) {
     await adminClient.from("organization_members").insert({
       user_id: newUser.user.id,
