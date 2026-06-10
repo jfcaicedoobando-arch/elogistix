@@ -47,22 +47,24 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Categoría *</Label>
-              <Select value={c.form.categoria} onValueChange={c.handleCategoriaChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={c.form.categoria || ""} onValueChange={c.handleCategoriaChange}>
+                <SelectTrigger><SelectValue placeholder="Selecciona categoría" /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIAS_PROVEEDOR.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {c.isLogistico
-                  ? "Proveedor logístico: naviera, transportista, agente, etc."
-                  : "Gasto operativo: renta, internet, papelería, SaaS, honorarios, etc."}
-              </p>
+              {c.form.categoria && (
+                <p className="text-xs text-muted-foreground">
+                  {c.isLogistico
+                    ? "Proveedor logístico: naviera, transportista, agente, etc."
+                    : "Gasto operativo: renta, internet, papelería, SaaS, honorarios, etc."}
+                </p>
+              )}
             </div>
 
-            {!c.isGasto && (
+            {c.form.categoria && !c.isGasto && (
               <div className="space-y-2">
                 <Label>Origen *</Label>
                 <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>

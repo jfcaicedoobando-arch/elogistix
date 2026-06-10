@@ -9,6 +9,8 @@ describe("useNuevoProveedorController", () => {
     const { result } = renderHook(() => useNuevoProveedorController(onSave, onClose));
     
     act(() => {
+      result.current.setField("categoria", "Logistico");
+      result.current.setField("tipo", "Naviera");
       result.current.setField("nombre", "Prov A");
       result.current.setField("origen_proveedor", "Nacional");
       result.current.setField("rfc", "RFC123");

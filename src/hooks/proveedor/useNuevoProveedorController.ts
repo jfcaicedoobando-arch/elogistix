@@ -31,8 +31,8 @@ export const DOCS_EXTRANJERO = [
 
 export const EMPTY_PROVEEDOR_FORM = {
   nombre: "",
-  categoria: "Logistico" as CategoriaProveedor,
-  tipo: "Naviera" as TipoProveedor | null,
+  categoria: "" as CategoriaProveedor | "",
+  tipo: null as TipoProveedor | null,
   subtipo_gasto: null as SubtipoGasto | null,
   pais: "",
   rfc: "",
@@ -71,6 +71,7 @@ export function useNuevoProveedorController(
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
   const isStep1Valid = (): boolean => {
+    if (!form.categoria) return false;
     if (!form.nombre.trim()) return false;
     if (!form.origen_proveedor) return false;
     if (isLogistico) {
