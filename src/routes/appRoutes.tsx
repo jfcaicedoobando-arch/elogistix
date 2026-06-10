@@ -16,7 +16,7 @@ import {
   Facturacion, FacturaDetalle,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
-  CosteoTarifas, CosteoRutas, CosteoAgentes, CosteoNavieras,
+  CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras,
   Usuarios, Configuracion,
   CrmLayout, CrmDashboard, CrmMiDia, Leads, LeadDetalle,
   Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion,
