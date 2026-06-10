@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.16] - 2026-06-10
+- **fix(parse-csf)**: corregido error `Maximum call stack size exceeded` al cargar CSFs grandes (>100 KB). La conversión de PDF a base64 ahora se hace por chunks de 32 KB en el edge function en lugar de spread completo del `Uint8Array`. El contador puede subir CSFs reales del SAT sin fallar.
+
 ## [12.76.15] - 2026-06-10
 - **feat(proveedores-csf)**: el alta de proveedores de gasto operativo ahora propaga del CSF al modal todos los datos fiscales: nombre, RFC, **CP, régimen fiscal (clave SAT), dirección, ciudad y estado**. Antes solo se pre-llenaban nombre y RFC.
 - **feat(proveedores-cfdi)**: agregadas las columnas `cp`, `direccion`, `ciudad`, `estado`, `regimen_fiscal` a `public.proveedores`. CP y régimen fiscal son obligatorios para proveedores de gasto operativo, ya que son los mínimos requeridos por CFDI 4.0 para timbrar facturas de proveedor.
