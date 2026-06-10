@@ -226,6 +226,8 @@ export function useNuevoProveedorController(
     isGasto,
     isAgenteCarga,
     rfcLabel,
+    rfcDuplicado,
+    saving,
     isStep1Valid: isStep1Valid(),
     setField,
     setStep,
