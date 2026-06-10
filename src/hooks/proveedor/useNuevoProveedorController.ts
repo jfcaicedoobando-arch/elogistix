@@ -149,14 +149,44 @@ export function useNuevoProveedorController(
     onClose();
   };
 
-  const handleSave = () => {
+  // Verifica suavemente si el RFC ya existe en la organización (debounced 300ms).
+  useEffect(() => {
+    const rfc = form.rfc.trim();
+    if (!rfc || !organizationId) {
+      setRfcDuplicado(null);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      findProveedorByRfcEnOrg(rfc, organizationId)
+        .then((existente) => setRfcDuplicado(existente))
+        .catch(() => setRfcDuplicado(null));
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [form.rfc, organizationId]);
+
+  const handleSave = async () => {
     const clabeTrim = form.clabe.trim();
     if (clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
       toast.error("La CLABE debe tener exactamente 18 dígitos numéricos.");
       return;
     }
-    onSave({ ...form, clabe: clabeTrim } as TablesInsert<"proveedores">);
-    resetAndClose();
+    setSaving(true);
+    try {
+      await onSave({ ...form, clabe: clabeTrim } as TablesInsert<"proveedores">);
+      reset();
+      onClose();
+    } catch (err) {
+      if (err instanceof ProveedorDuplicadoError) {
+        // El parent ya mostró el toast con CTA; mantener el diálogo abierto.
+        return;
+      }
+      // Otros errores: el parent decide UI; no cerramos.
+    } finally {
+      setSaving(false);
+    }
   };
 
 
