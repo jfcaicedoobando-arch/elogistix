@@ -34,6 +34,7 @@ const FINANCE_VIEWERS: readonly AppRole[] = [
   "admin_org",
   "admin",
   "gerente_operaciones",
+  "gerente_visor",
   "contador",
   "tesorero",
   "ejecutivo_pricing",
