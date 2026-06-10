@@ -11,12 +11,7 @@ import { LandingComoFunciona } from "./sections/LandingComoFunciona";
 import { LandingMexico } from "./sections/LandingMexico";
 import { LandingPortal } from "./sections/LandingPortal";
 import { LandingSeguridad } from "./sections/LandingSeguridad";
-import { LandingPrecio } from "./sections/LandingPrecio";
-import { LandingFaq } from "./sections/LandingFaq";
-import { LandingCtaFinal } from "./sections/LandingCtaFinal";
-import { LandingFooter } from "./sections/LandingFooter";
-import { MobileStickyCta } from "./sections/MobileStickyCta";
-import { FAQ } from "./landingCopy";
+import { LandingRecursos } from "./sections/LandingRecursos";
 
 const FAQ_JSONLD = {
   "@context": "https://schema.org",
