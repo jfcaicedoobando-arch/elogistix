@@ -26,6 +26,7 @@ import {
   Route,
   Users,
   Anchor,
+  Search,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
