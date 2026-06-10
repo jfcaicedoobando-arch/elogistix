@@ -169,15 +169,17 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               <Label>Teléfono</Label>
               <Input value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label>Moneda Preferida</Label>
-              <Select value={c.form.moneda_preferida} onValueChange={(v) => c.setField("moneda_preferida", v as Enums<"moneda">)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MONEDAS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            {!c.isGasto && (
+              <div className="space-y-2">
+                <Label>Moneda Preferida</Label>
+                <Select value={c.form.moneda_preferida} onValueChange={(v) => c.setField("moneda_preferida", v as Enums<"moneda">)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {MONEDAS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
 
