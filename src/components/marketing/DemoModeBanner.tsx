@@ -2,42 +2,11 @@
  * Banner persistente para usuarios logueados en la cuenta demo.
  * Se monta globalmente; queda oculto si el usuario no pertenece a la org demo.
  */
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Sparkles } from "lucide-react";
+import { useIsDemoUser } from "@/hooks/useIsDemoUser";
 
 export function DemoModeBanner() {
-  const [isDemo, setIsDemo] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const check = async (userId: string | undefined) => {
-      if (!userId) {
-        if (!cancelled) setIsDemo(false);
-        return;
-      }
-      const { data, error } = await supabase.rpc("is_demo_user", { _user_id: userId });
-      if (cancelled) return;
-      if (error) {
-        setIsDemo(false);
-        return;
-      }
-      setIsDemo(Boolean(data));
-    };
-
-    supabase.auth.getUser().then(({ data }) => check(data.user?.id));
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      check(session?.user?.id);
-    });
-
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
+  const isDemo = useIsDemoUser();
   if (!isDemo) return null;
 
   return (
