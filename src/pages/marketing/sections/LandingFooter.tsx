@@ -39,6 +39,8 @@ export function LandingFooter() {
             { label: "Precio", href: "#precio" },
           ]} />
           <FooterCol title="Recursos" links={[
+            { label: "Guía Carta Porte 3.0", to: "/recursos/guia-carta-porte-3" },
+            { label: "Guía Incoterms 2020", to: "/recursos/guia-incoterms-2020" },
             { label: "Preguntas frecuentes", href: "#faq" },
             { label: "Contacto", href: `mailto:${FOOTER.contact}` },
           ]} />
