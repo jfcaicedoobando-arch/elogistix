@@ -61,21 +61,53 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label>Origen *</Label>
-              <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>
-                <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Nacional">Nacional</SelectItem>
-                  <SelectItem value="Extranjero">Extranjero</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {!c.isGasto && (
+              <div className="space-y-2">
+                <Label>Origen *</Label>
+                <Select value={c.form.origen_proveedor || ""} onValueChange={(v) => c.setField("origen_proveedor", v as "Nacional" | "Extranjero")}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nacional">Nacional</SelectItem>
+                    <SelectItem value="Extranjero">Extranjero</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {c.isGasto && (
+              <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/40 p-3">
+                <Label className="text-sm">Cargar Constancia de Situación Fiscal (PDF)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Opcional. Extraemos automáticamente el nombre y el RFC del proveedor.
+                </p>
+                <input
+                  ref={csfInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleCsfFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={c.csfLoading}
+                  onClick={() => csfInputRef.current?.click()}
+                >
+                  {c.csfLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Procesando…</>
+                  ) : (
+                    <><Upload className="h-4 w-4 mr-2" /> Subir CSF</>
+                  )}
+                </Button>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Nombre *</Label>
               <Input value={c.form.nombre} onChange={(e) => c.setField("nombre", e.target.value)} />
             </div>
+
 
             {c.isLogistico && (
               <div className="space-y-2">
