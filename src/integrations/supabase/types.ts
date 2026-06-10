@@ -1156,7 +1156,7 @@ export type Database = {
           notas: string | null
           organization_id: string
           pais: string
-          proveedor_id: string | null
+          proveedor_id: string
           updated_at: string
         }
         Insert: {
@@ -1170,7 +1170,7 @@ export type Database = {
           notas?: string | null
           organization_id: string
           pais?: string
-          proveedor_id?: string | null
+          proveedor_id: string
           updated_at?: string
         }
         Update: {
@@ -1184,12 +1184,140 @@ export type Database = {
           notas?: string | null
           organization_id?: string
           pais?: string
-          proveedor_id?: string | null
+          proveedor_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "costeo_agentes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_naviera_demoras_tarifa: {
+        Row: {
+          created_at: string
+          desde_dia: number
+          hasta_dia: number | null
+          id: string
+          moneda: string
+          monto_por_dia: number
+          naviera_condicion_id: string
+          tipo_contenedor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          desde_dia: number
+          hasta_dia?: number | null
+          id?: string
+          moneda?: string
+          monto_por_dia: number
+          naviera_condicion_id: string
+          tipo_contenedor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          desde_dia?: number
+          hasta_dia?: number | null
+          id?: string
+          moneda?: string
+          monto_por_dia?: number
+          naviera_condicion_id?: string
+          tipo_contenedor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_naviera_demoras_tarifa_naviera_condicion_id_fkey"
+            columns: ["naviera_condicion_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_navieras_condiciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_naviera_demoras_tarifa_naviera_condicion_id_fkey"
+            columns: ["naviera_condicion_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
+            referencedColumns: ["naviera_condicion_id"]
+          },
+          {
+            foreignKeyName: "costeo_naviera_demoras_tarifa_tipo_contenedor_id_fkey"
+            columns: ["tipo_contenedor_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_contenedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      costeo_navieras_condiciones: {
+        Row: {
+          carta_garantia_folio: string | null
+          carta_garantia_notas: string | null
+          carta_garantia_vigente_hasta: string | null
+          created_at: string
+          dias_libres_demoras_default: number
+          id: string
+          moneda_demoras: string
+          naviera_id: string
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          tiene_carta_garantia: boolean
+          updated_at: string
+        }
+        Insert: {
+          carta_garantia_folio?: string | null
+          carta_garantia_notas?: string | null
+          carta_garantia_vigente_hasta?: string | null
+          created_at?: string
+          dias_libres_demoras_default?: number
+          id?: string
+          moneda_demoras?: string
+          naviera_id: string
+          notas?: string | null
+          organization_id: string
+          proveedor_id: string
+          tiene_carta_garantia?: boolean
+          updated_at?: string
+        }
+        Update: {
+          carta_garantia_folio?: string | null
+          carta_garantia_notas?: string | null
+          carta_garantia_vigente_hasta?: string | null
+          created_at?: string
+          dias_libres_demoras_default?: number
+          id?: string
+          moneda_demoras?: string
+          naviera_id?: string
+          notas?: string | null
+          organization_id?: string
+          proveedor_id?: string
+          tiene_carta_garantia?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costeo_navieras_condiciones_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_navieras_condiciones_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costeo_navieras_condiciones_proveedor_id_fkey"
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
@@ -4416,8 +4544,14 @@ export type Database = {
           flete_base: number | null
           id: string | null
           moneda: string | null
+          naviera_carta_garantia_activa: boolean | null
+          naviera_carta_garantia_vigente_hasta: string | null
+          naviera_condicion_id: string | null
+          naviera_demora_dia_6: number | null
+          naviera_dias_libres_default: number | null
           naviera_id: string | null
           naviera_nombre: string | null
+          naviera_tiene_carta_garantia: boolean | null
           organization_id: string | null
           puerto_destino_id: string | null
           puerto_destino_nombre: string | null
@@ -4580,6 +4714,18 @@ export type Database = {
       calcular_comision_pago: {
         Args: { p_pago_factura_id: string }
         Returns: undefined
+      }
+      calcular_costo_demoras: {
+        Args: {
+          p_dias_excedidos: number
+          p_naviera_condicion_id: string
+          p_tipo_contenedor_id: string
+        }
+        Returns: {
+          desglose: Json
+          moneda: string
+          total: number
+        }[]
       }
       can_admin_tenant: { Args: { _user_id: string }; Returns: boolean }
       can_manage_document_object: {
