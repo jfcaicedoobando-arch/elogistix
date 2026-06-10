@@ -56,9 +56,10 @@ Deno.serve(async (req) => {
 
   let totalProcessed = 0
   for (const queue of ['auth_emails', 'transactional_emails']) {
-    const res = await processQueue(
-      supabase, queue, config.batchSize, config.sendDelayMs, config.ttlMinutes[queue], apiKey,
-    )
+    const res = await processQueue({
+      supabase, queue, batchSize: config.batchSize, sendDelayMs: config.sendDelayMs,
+      ttlMinutes: config.ttlMinutes[queue], apiKey,
+    })
     totalProcessed += res.processed
     if (res.stop) {
       return jsonResp({ processed: totalProcessed, stopped: res.stop })

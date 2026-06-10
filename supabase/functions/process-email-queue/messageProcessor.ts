@@ -118,8 +118,9 @@ async function handleRateLimit(
 }
 
 async function logFailure(
-  supabase: Supabase, queue: string, msg: QueueMessage, errorMsg: string, ctx: Ctx, failedAttempts: number,
+  args: { supabase: Supabase; queue: string; msg: QueueMessage; errorMsg: string; ctx: Ctx; failedAttempts: number },
 ): Promise<void> {
+  const { supabase, queue, msg, errorMsg, ctx, failedAttempts } = args
   const payload = msg.message
   await supabase.from('email_send_log').insert({
     message_id: payload.message_id,
