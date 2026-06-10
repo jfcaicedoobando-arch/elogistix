@@ -1,33 +1,39 @@
-# Fix: tab "Todos" en Proveedores no muestra nada
+# Mejorar modal "Nuevo Proveedor" para Gasto Operativo
 
-## Causa raíz
+## Cambios funcionales
 
-La función RPC `public.proveedores_listado` tiene **3 firmas distintas** conviviendo en la base de datos (residuo de migraciones incrementales). PostgREST no puede elegir cuál llamar cuando el cliente no envía los parámetros opcionales (caso del tab "Todos") y responde con error `PGRST203`. El componente `ProveedorTable` recibe `undefined` y renderiza "Sin proveedores registrados".
+Cuando la categoría es **Gasto Operativo**:
 
-Las otras pestañas (Logístico / Gasto operativo) funcionan porque sí mandan `p_categoria` y eso desambigua hacia la firma más nueva.
+1. **Origen fijo en Nacional**: ocultar el select de Origen y forzar `origen_proveedor = "Nacional"` automáticamente al elegir la categoría.
+2. **Carga vía CSF**: agregar bloque "Cargar Constancia de Situación Fiscal (PDF)" arriba del nombre. Al subir el PDF se llama al edge function `parse-csf` (vía `parseCsf()` en `src/services/csf/index.ts`, que ya existe) y se auto-rellenan `nombre` y `rfc`. Mientras procesa: spinner + inputs deshabilitados. Si falla: toast de error y permite captura manual.
+3. **Ocultar Moneda Preferida**: el campo desaparece de la UI y se fuerza `moneda_preferida = "MXN"`.
 
-## Solución
+Para **Logístico** todo queda igual (origen seleccionable, sin CSF, moneda visible).
 
-Migración que elimina las 2 firmas viejas y conserva sólo la firma actual (la de 8 parámetros con `p_origen`, `p_categoria`, `p_subtipo_gasto`).
+## Archivos a tocar
 
-```sql
-DROP FUNCTION IF EXISTS public.proveedores_listado(uuid, text, text, integer, integer);
-DROP FUNCTION IF EXISTS public.proveedores_listado(uuid, text, text, integer, integer, text);
--- Se conserva: proveedores_listado(uuid, text, text, integer, integer, text, text, text)
-```
+- `src/hooks/proveedor/useNuevoProveedorController.ts`
+  - En `handleCategoriaChange`, cuando pasa a `GastoOperativo` setear `origen_proveedor: "Nacional"` y `moneda_preferida: "MXN"`.
+  - Nuevo estado `csfLoading` + handler `handleCsfUpload(file)` que llama `parseCsf`, popula `nombre` y `rfc`, y muestra toast de éxito/error.
+- `src/components/proveedor/NuevoProveedorDialog.tsx`
+  - Condicionar render del select de Origen y del select de Moneda con `!c.isGasto`.
+  - Agregar bloque CSF (input file + botón + estado) visible solo si `c.isGasto`. Reusar estilos de `CrearProveedorDesdeCfdiDialog` como referencia.
+- `src/hooks/proveedor/__tests__/useNuevoProveedorController.test.tsx`
+  - Caso: al cambiar a GastoOperativo se fija Nacional + MXN.
+  - Caso: `handleCsfUpload` con `parseCsf` mockeado rellena nombre y rfc.
 
-Antes de ejecutar verifico con `pg_proc` las firmas exactas y los `DROP` quedan acotados a esas dos.
+## Validaciones
 
-## Validación post-migración
+- `isStep1Valid` ya cubre el caso (Nacional forzado satisface el require de origen). No requiere cambios.
+- Cancel/reset del diálogo: el reset existente vuelve a `Logistico` + valores limpios, sin cambios.
 
-1. Recargar `/proveedores` con tab "Todos" → debe listar los 20 proveedores que ya devuelve la firma nueva cuando se llama con `p_categoria='Logistico'`.
-2. Tabs "Logístico" y "Gasto operativo" deben seguir funcionando igual.
-3. Bump `APP_VERSION` a 12.76.5 + entrada en `CHANGELOG.md`.
+## Versionado
 
-## Alcance
+- `APP_VERSION` → `12.76.6`.
+- Entrada en `CHANGELOG.md` describiendo los 3 cambios UX.
 
-- 1 migración SQL (sólo DROP, sin tocar la firma activa ni datos).
-- 1 edit en `src/constants/appVersion.ts`.
-- 1 edit en `CHANGELOG.md`.
+## Fuera de alcance
 
-No se tocan componentes React ni hooks: el bug es 100% de base de datos.
+- No se modifica el endpoint `parse-csf` ni el servicio `parseCsf` (ya funcional, usado en alta de clientes).
+- No se toca la firma de la tabla `proveedores` ni la RPC `proveedores_listado`.
+- No se persiste el PDF de la CSF en storage — solo se extraen datos. Si más adelante se quiere guardar el archivo, queda como mejora futura.
