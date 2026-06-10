@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.76.4] - 2026-06-10
+- **chore(linter)**: 0 warnings. Se estabilizan dependencias de hooks (`exhaustive-deps`) desestructurando primitivas en `useComisionesDevengadas`, `useFacturasCxP`, `useCobranza` y `CotizacionWizardLayout`. Se baja complejidad ciclomática a ≤16 en componentes, servicios y edge functions mediante extracción de helpers (`EstadoResultadosTable.helpers.ts`, `clientHandlers.ts`, `DatosGeneralesCard.tsx`, `SeccionRutaCotizacion.tsx`, `BuscarTarifaDialog.tsx`, `TarifaForm.tsx`, `StepCostosPrecios.tsx`, `TabTracking.tsx`, `parseCsv.ts`, `bbva.ts`, `estadoResultados.ts`, `dependenciasFinancieras.ts`, `cxc-recordatorios/index.ts`). Edge functions fragmentadas: `user-management/handlers.ts` → `invite.ts` + `update.ts` + `delete.ts` + `clientHandlers.ts`; `process-email-queue/index.ts` → `queueAuth.ts` + `messageProcessor.ts`. Todos los archivos quedan ≤250 líneas.
+
 ## [12.76.3] - 2026-06-10
 - **chore(auditoría)**: se vacían `PAGES_COMPONENTS_BASELINE` y `OVERSIZED_BASELINE` en `architecture-baseline.test.ts` tras la remediación de 12.76.2. Suite de tests vuelve a verde.
 
