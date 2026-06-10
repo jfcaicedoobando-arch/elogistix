@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientesForSelect } from "@/hooks/cliente";
-import { useCreateCotizacionInformativa } from "@/hooks/cotizacion/useCotizacionInformativa";
+import { useCreateCotizacionInformativa } from "@/hooks/cotizacion";
 import SeccionTarifasInformativas from "./SeccionTarifasInformativas";
 import {
   nuevaTarifaInformativa,

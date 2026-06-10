@@ -10,7 +10,7 @@ import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { BillToBlock } from "../components/BillToBlock";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
-import { parseTarifasInformativas } from "@/services/cotizacion/informativa";
+import { parseTarifasInformativas } from "@/services/cotizacion";
 import type { TarifaInformativa } from "@/types/cotizacionInformativa";
 
 interface Props {

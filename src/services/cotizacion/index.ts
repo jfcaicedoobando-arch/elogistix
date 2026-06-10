@@ -45,6 +45,9 @@ export type { ProspectoAClienteInput } from "./conversiones";
 // Wizard (orquestadores de pasos)
 export { savePaso1, savePaso2, savePaso3, savePasoFinal } from "./wizard";
 
+// Informativa (tarifarios)
+export { crearCotizacionInformativa, parseTarifasInformativas } from "./informativa";
+
 // Lógica pura del dominio (re-exportada por compatibilidad; preferir importar desde lib/domain/cotizacion)
 export { buildConceptosFromCostos } from "@/lib/domain/cotizacion";
 export type { ConceptoVentaPrellenado } from "@/lib/domain/cotizacion";
