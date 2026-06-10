@@ -5203,6 +5203,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
       facturas_listado: {
         Args: {
           p_estado?: string
@@ -5310,6 +5311,7 @@ export type Database = {
         Args: { _key: string; _response: Json }
         Returns: undefined
       }
+      is_demo_user: { Args: { _user_id: string }; Returns: boolean }
       is_finance: { Args: { _user_id: string }; Returns: boolean }
       is_operations: { Args: { _user_id: string }; Returns: boolean }
       is_org_admin: {
@@ -5571,6 +5573,7 @@ export type Database = {
         Args: { _id: string; _table: string }
         Returns: undefined
       }
+      seed_demo_organization: { Args: never; Returns: undefined }
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
         Returns: undefined
