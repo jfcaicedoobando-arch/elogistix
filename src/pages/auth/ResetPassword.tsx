@@ -64,7 +64,11 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
-      <Seo title="Restablecer contraseña · Libre Carga" canonical="https://librecarga.com/reset-password" />
+      <Seo
+        title="Restablecer contraseña · Libre Carga"
+        description="Define una nueva contraseña para tu cuenta de Libre Carga, la plataforma de agentes de carga en México. Acceso seguro a embarques, cotizaciones y clientes."
+        canonical="https://librecarga.com/reset-password"
+      />
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
