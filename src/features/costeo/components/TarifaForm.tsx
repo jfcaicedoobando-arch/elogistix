@@ -193,6 +193,10 @@ export function TarifaForm({ open, onOpenChange, initial }: Props) {
 
   const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
 
+  useEffect(() => {
+    if (open) setForm(buildInitialForm(initial));
+  }, [open, initial]);
+
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
 
