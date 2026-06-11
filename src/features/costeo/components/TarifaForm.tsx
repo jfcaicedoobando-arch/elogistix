@@ -200,10 +200,11 @@ export function TarifaForm({ open, onOpenChange, initial }: Props) {
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
 
-  const guardar = async () => {
+  const guardar = () => {
     if (!valido) return;
-    await crear.mutateAsync(form);
-    onOpenChange(false);
+    crear.mutate(form, {
+      onSuccess: () => onOpenChange(false),
+    });
   };
 
   return (
