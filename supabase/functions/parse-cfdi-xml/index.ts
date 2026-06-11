@@ -56,15 +56,30 @@ function parseToolCallResponse(j: unknown, categorias: Categoria[]): { categoria
   }
 }
 
+type AiOutcome = "ok" | "http_error" | "timeout" | "network_error" | "parse_error" | "skipped";
+
+interface AiCallResult {
+  result: { categoria_id: string | null; notas: string };
+  outcome: AiOutcome;
+  latency_ms: number;
+  status_code: number | null;
+}
+
 async function sugerirCategoria(
   apiKey: string,
   conceptos: { descripcion: string }[],
   categorias: Categoria[],
-): Promise<{ categoria_id: string | null; notas: string }> {
+  log: ReturnType<typeof createLogger>,
+): Promise<AiCallResult> {
+  const t0 = performance.now();
   if (categorias.length === 0 || conceptos.length === 0) {
-    return fallbackResult(conceptos);
+    return { result: fallbackResult(conceptos), outcome: "skipped", latency_ms: 0, status_code: null };
   }
   const prompt = `Categorías disponibles (id | nombre):\n${categorias.map(c => `${c.id} | ${c.nombre}`).join("\n")}\n\nConceptos de la factura:\n${conceptos.map(c => `- ${c.descripcion}`).join("\n")}\n\nElige el id de la categoría que mejor matchea. Si nada matchea claramente, devuelve cadena vacía en categoria_id.`;
+
+  let status_code: number | null = null;
+  let outcome: AiOutcome = "ok";
+  let result: { categoria_id: string | null; notas: string };
 
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -80,14 +95,39 @@ async function sugerirCategoria(
         tool_choice: { type: "function", function: { name: "sugerir" } },
       }),
     });
+    status_code = res.status;
     if (!res.ok) {
-      return { categoria_id: null, notas: conceptos[0]?.descripcion?.slice(0, 200) ?? "" };
+      outcome = "http_error";
+      result = { categoria_id: null, notas: conceptos[0]?.descripcion?.slice(0, 200) ?? "" };
+    } else {
+      const parsed = parseToolCallResponse(await res.json(), categorias);
+      if (!parsed) {
+        outcome = "parse_error";
+        result = { categoria_id: null, notas: "" };
+      } else {
+        result = parsed;
+      }
     }
-    const parsed = parseToolCallResponse(await res.json(), categorias);
-    return parsed ?? { categoria_id: null, notas: "" };
-  } catch {
-    return { categoria_id: null, notas: "" };
+  } catch (e) {
+    const name = e instanceof Error ? e.name : "";
+    outcome = name === "AbortError" ? "timeout" : "network_error";
+    result = { categoria_id: null, notas: "" };
   }
+
+  const latency_ms = Math.round(performance.now() - t0);
+  const logFn = outcome === "ok" || outcome === "skipped" ? log.info : log.warn;
+  logFn("ai_gateway_call", {
+    status_code,
+    latency_ms,
+    payload: {
+      event: "ai_gateway_call",
+      model: "google/gemini-2.5-flash-lite",
+      outcome,
+      conceptos_count: conceptos.length,
+      categorias_count: categorias.length,
+    },
+  });
+  return { result, outcome, latency_ms, status_code };
 }
 
 async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>) {
@@ -125,12 +165,22 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
     } catch { /* ignore */ }
   }
 
-  const ai = LOVABLE_API_KEY
-    ? await sugerirCategoria(LOVABLE_API_KEY, cfdi.conceptos, categorias)
-    : { categoria_id: null, notas: cfdi.conceptos[0]?.descripcion?.slice(0, 200) ?? "" };
+  let aiResult: AiCallResult;
+  if (LOVABLE_API_KEY) {
+    aiResult = await sugerirCategoria(LOVABLE_API_KEY, cfdi.conceptos, categorias, log);
+  } else {
+    aiResult = {
+      result: { categoria_id: null, notas: cfdi.conceptos[0]?.descripcion?.slice(0, 200) ?? "" },
+      outcome: "skipped",
+      latency_ms: 0,
+      status_code: null,
+    };
+  }
 
-  log.finish(200, "cfdi parseado");
-  return jsonResponse({ cfdi, ai }, 200, cors);
+  log.finish(200, "cfdi parseado", {
+    payload: { ai_outcome: aiResult.outcome, ai_latency_ms: aiResult.latency_ms },
+  });
+  return jsonResponse({ cfdi, ai: aiResult.result }, 200, cors);
 }
 
 serve(async (req) => {
