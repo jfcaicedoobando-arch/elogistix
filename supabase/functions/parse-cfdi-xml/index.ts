@@ -12,7 +12,10 @@ import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
 import { parseCfdi } from "./parser.ts";
+
+initSentryEdge("parse-cfdi-xml");
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -202,6 +205,7 @@ serve(async (req) => {
     const [code, ...rest] = message.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
     log.error("parse-cfdi-xml falló", { status_code: status, payload: { error: message } });
+    if (status >= 500) await captureEdgeException(e, { fn: "parse-cfdi-xml", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
 });

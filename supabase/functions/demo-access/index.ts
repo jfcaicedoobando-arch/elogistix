@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
           ? err
           : JSON.stringify(err);
     console.error("demo-access error:", message, err);
+    await captureEdgeException(err, { fn: "demo-access", status_code: 500 });
     return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

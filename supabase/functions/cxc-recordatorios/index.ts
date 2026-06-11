@@ -136,6 +136,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
+    await captureEdgeException(e, { fn: "cxc-recordatorios", status_code: 500 });
     return new Response(JSON.stringify({ ok: false, error: msg }), {
       headers: { ...cors, "Content-Type": "application/json" }, status: 500,
     });

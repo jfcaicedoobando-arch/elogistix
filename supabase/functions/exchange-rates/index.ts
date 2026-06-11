@@ -1,6 +1,9 @@
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { initSentryEdge } from "../_shared/sentry.ts";
+
+initSentryEdge("exchange-rates");
 
 export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5 };
 const FETCH_TIMEOUT_MS = 5000;
