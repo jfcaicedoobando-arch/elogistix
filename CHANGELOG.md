@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.12] - 2026-06-11
+- **fix(cfdi)**: la subida de XML CFDI ya no se queda colgada en "Procesando…". Se añadió timeout de 8 s al `fetch` del AI Gateway en `parse-cfdi-xml` (con `AbortController`; si Gemini no responde, devuelve fallback con los conceptos como notas y `outcome: "timeout"` en logs) y timeout de 15 s en el cliente (`Promise.race`) con toast claro: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual." Causa raíz: en el último intento de Isela el gateway tardó 52 s en responder.
+
 ## [12.77.11] - 2026-06-11
 - **observability(cfdi)**: instrumentación Sentry + logs estructurados para la edge function `parse-cfdi-xml`. La llamada al AI Gateway ahora emite `ai_gateway_call` con `outcome` (`ok|http_error|timeout|network_error|parse_error|skipped`), `latency_ms` y `status_code`; el log final `cfdi parseado` incluye `ai_outcome` y `ai_latency_ms` para agregar por estado. En cliente, `parseCfdiXml` envuelve la invocación en `Sentry.startSpan` con breadcrumbs (`parse_cfdi_xml.start|ok|error`) y `captureException` con tag `feature:cfdi_upload` + contexto `{ xml_size, latency_ms }`. NO se envía contenido del CFDI (RFC, montos, conceptos) a Sentry.
 
