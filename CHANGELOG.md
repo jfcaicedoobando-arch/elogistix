@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.7] - 2026-06-11
+- **fix(costeo/tarifas)**: el botón Duplicar ahora precarga el formulario con los datos de la tarifa origen (incluyendo recargos). Se agregó `useEffect` en `TarifaForm` para resetear el estado al abrir el diálogo, y se incluyeron los `recargos` en `CosteoTarifaRow` para clonarlos.
+
 ## [12.77.6] - 2026-06-11
 - **chore(tests/arch)**: sincronizada la allowlist `OVERSIZED_BASELINE` en `src/__tests__/audit-report.test.ts` con los 11 archivos productivos preexistentes >200 líneas (ya estaban en `architecture-baseline.test.ts`). Desbloquea el shard 6/16 de CI.
 

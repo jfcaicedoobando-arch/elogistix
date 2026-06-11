@@ -55,7 +55,13 @@ export default function CosteoTarifas() {
       vigente_hasta: t.vigente_hasta,
       transit_time_dias: t.transit_time_dias,
       notas: t.notas,
-      recargos: [],
+      recargos: (t.recargos ?? []).map((r) => ({
+        concepto: r.concepto,
+        lado: r.lado ?? undefined,
+        monto: Number(r.monto),
+        moneda: r.moneda ?? "USD",
+        incluido_en_total: r.incluido_en_total ?? true,
+      })),
     });
     setOpen(true);
   };

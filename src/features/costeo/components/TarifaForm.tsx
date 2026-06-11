@@ -2,7 +2,7 @@
  * Formulario de alta de tarifa marítima con sub-editor de recargos.
  * Todas las tarifas se capturan en USD (Fase 3).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -192,6 +192,10 @@ export function TarifaForm({ open, onOpenChange, initial }: Props) {
   const { crear } = useCosteoTarifaMutations();
 
   const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
+
+  useEffect(() => {
+    if (open) setForm(buildInitialForm(initial));
+  }, [open, initial]);
 
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
