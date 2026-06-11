@@ -26,6 +26,7 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   initial?: Partial<TarifaInput>;
+  tarifaId?: string;
 }
 
 const usd = (n: number) =>
@@ -184,12 +185,12 @@ function VigenciaFields({ form, setForm }: NumerosProps) {
   );
 }
 
-export function TarifaForm({ open, onOpenChange, initial }: Props) {
+export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: rutas = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
   const { data: tipos = [] } = useTiposContenedor();
-  const { crear } = useCosteoTarifaMutations();
+  const { crear, actualizar } = useCosteoTarifaMutations();
 
   const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
 
@@ -199,19 +200,28 @@ export function TarifaForm({ open, onOpenChange, initial }: Props) {
 
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
+  const esEdicion = Boolean(tarifaId);
+  const pendiente = crear.isPending || actualizar.isPending;
 
   const guardar = () => {
     if (!valido) return;
-    crear.mutate(form, {
-      onSuccess: () => onOpenChange(false),
-    });
+    if (esEdicion && tarifaId) {
+      actualizar.mutate(
+        { id: tarifaId, input: form },
+        { onSuccess: () => onOpenChange(false) },
+      );
+    } else {
+      crear.mutate(form, { onSuccess: () => onOpenChange(false) });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("sm:max-w-2xl", scrollableDialog)}>
         <DialogHeader>
-          <DialogTitle>Nueva tarifa marítima (USD)</DialogTitle>
+          <DialogTitle>
+            {esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -240,8 +250,8 @@ export function TarifaForm({ open, onOpenChange, initial }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={guardar} disabled={!valido || crear.isPending}>
-            {crear.isPending ? "Guardando…" : "Guardar tarifa"}
+          <Button onClick={guardar} disabled={!valido || pendiente}>
+            {pendiente ? "Guardando…" : esEdicion ? "Guardar cambios" : "Guardar tarifa"}
           </Button>
         </DialogFooter>
       </DialogContent>

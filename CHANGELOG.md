@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.10] - 2026-06-11
+- **feat(costeo/tarifas)**: nuevo botón "Editar" (ícono lápiz) en cada fila de la matriz de tarifas marítimas. Abre el mismo formulario con todos los datos precargados (incluidos recargos) y guarda los cambios sobre la tarifa existente. Se agregó `updateTarifaConRecargos` en el servicio (update + delete/insert de recargos) y la mutación `actualizar` en `useCosteoTarifaMutations`.
+
 ## [12.77.9] - 2026-06-11
 - **fix(costeo/tarifas)**: el botón "Guardar tarifa" ya no genera `UnhandledRejection` en Sentry cuando la inserción falla (RLS, constraint, etc.). Se reemplazó `mutateAsync` + `await` por `mutate` con `onSuccess`, así el error se maneja vía el `onError` del hook (toast) sin propagarse al handler global.
 

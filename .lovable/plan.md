@@ -1,39 +1,42 @@
-## Diagnóstico
+# Plan: Agregar funcionalidad de editar tarifas marítimas
 
-Isela tiene rol `contador`. Las políticas RLS de **CXP** sólo permiten CRUD a `admin` / `super_admin`:
+## Contexto
+Actualmente en `/costeo/tarifas` solo se puede crear, duplicar (crea una nueva) y eliminar tarifas. No existe la opción de **editar una tarifa existente**.
 
-| Tabla | CRUD permitido a |
-|---|---|
-| `proveedor_facturas` | admin, super_admin |
-| `proveedor_facturas_conceptos` | admin, super_admin |
-| `proveedor_notas_credito` | admin, super_admin |
-| `pagos_proveedor` | admin, super_admin |
+## Alcance
+Agregar un botón de editar en cada fila de la tabla de tarifas que abra el formulario con los datos precargados y permita guardar los cambios en la misma tarifa (incluyendo sus recargos).
 
-Por eso al guardar la factura: `new row violates row-level security policy for table "proveedor_facturas"`.
+## Cambios propuestos
 
-El rol `contador` existe pero no aparece en ninguna política de CXP — fue olvidado cuando se creó el módulo. Es exactamente el rol que debe gestionar cuentas por pagar.
+### 1. Servicio de actualización (`src/features/costeo/services/tarifas.ts`)
+- Crear función `updateTarifaConRecargos(id: string, input: TarifaInput)` que:
+  - Haga `update` de la fila en `costeo_tarifas`
+  - Sincronice recargos: eliminar los existentes e insertar los nuevos (delete + insert para mantener consistencia)
+  - Todo dentro de la misma organization
 
-## Cambios
+### 2. Hook de mutaciones (`src/features/costeo/hooks/useCosteoTarifas.ts`)
+- Agregar mutación `actualizar` usando `useMutation` que llame a `updateTarifaConRecargos`
+- Invalidar el query de tarifas en `onSuccess`
+- Mostrar toast de confirmación/error
 
-### 1. Migración: ampliar políticas CRUD de CXP para incluir `contador`
+### 3. Formulario de tarifa (`src/features/costeo/components/TarifaForm.tsx`)
+- Aceptar prop opcional `tarifaId?: string` para modo edición
+- Cuando se recibe `tarifaId`, el título cambia a "Editar tarifa marítima"
+- Usar `actualizar.mutate` en lugar de `crear.mutate` cuando hay `tarifaId`
+- Precargar **todos** los campos de la tarifa existente (incluyendo `vigente_desde`, `vigente_hasta`, `flete_base`, etc.) — no solo los valores por default
+- El botón de guardar cambia a "Guardar cambios"
 
-Reemplazar la cláusula `(has_role(uid,'admin') OR has_role(uid,'super_admin'))` por `(has_role(uid,'admin') OR has_role(uid,'super_admin') OR has_role(uid,'contador'))` en las 4 tablas:
+### 4. Tabla de tarifas (`src/features/costeo/routes/CosteoTarifas.tsx`)
+- Agregar botón de editar (icono `Pencil`) junto a los existentes de duplicar y eliminar
+- Al hacer clic, precargar el formulario con **todos** los datos de la tarifa seleccionada (incluyendo recargos) y pasar el `id`
+- Mantener el botón de duplicar existente (que no pasa `id`, solo precarga datos para crear nueva)
 
-- `proveedor_facturas` — DROP + CREATE "Tenant CRUD proveedor_facturas"
-- `proveedor_facturas_conceptos` — DROP + CREATE "Tenant CRUD proveedor_facturas_conceptos"
-- `proveedor_notas_credito` — DROP + CREATE "Tenant CRUD proveedor_notas_credito"
-- `pagos_proveedor` — DROP + CREATE "Tenant CRUD pagos_proveedor"
+### 5. Changelog y versión
+- Actualizar `APP_VERSION` a `12.77.10`
+- Agregar entrada en `CHANGELOG.md` describiendo la nueva funcionalidad
 
-Se conservan: la política de soft-delete (`deleted_at IS NULL`), la de `viewer`, y la de `cliente` donde aplica. `tesorero` queda fuera de este cambio (no es el caso reportado); si se quiere agregar también lo discutimos aparte.
-
-### 2. Changelog / versión
-
-- `APP_VERSION` → `12.77.8` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md` raíz:
-  > **fix(rls/cxp)**: el rol `contador` ahora puede crear/editar facturas de proveedor, sus conceptos, notas de crédito y pagos. Antes las políticas de `proveedor_facturas`, `proveedor_facturas_conceptos`, `proveedor_notas_credito` y `pagos_proveedor` sólo permitían `admin`/`super_admin`, lo que rompía el flujo de "Capturar factura de proveedor" para contadores.
-
-## Fuera de alcance
-
-- No se tocan UI/forms de CXP — el flujo del wizard ya envía correctamente `organization_id` y datos válidos; el bloqueo es exclusivamente de RLS.
-- No se modifican las políticas de `viewer` ni de `cliente`.
-- No se agrega `tesorero` ni otros roles en esta pasada (puede ser un follow-up si se confirma).
+## Detalles técnicos
+- No se requiere migración de base de datos; las tablas ya soportan UPDATE a través de RLS
+- Los recargos se manejan como colección hija (tabla `costeo_tarifa_recargos` con FK a `costeo_tarifas`)
+- Se mantiene el patrón de duplicar intacto: duplicar sigue creando una nueva tarifa
+- El formulario sigue usando el mismo componente `TarifaForm` en modo dual (crear vs editar)
