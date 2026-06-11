@@ -1,97 +1,89 @@
-## Plan P0 — Ampliar cobertura de Sentry (cliente + edge functions)
+## Plan P1 — Source maps en builds + tunnel anti-adblock
 
-Objetivo: cerrar los 3 huecos más críticos de observabilidad detectados en el análisis previo, sin tocar lógica de negocio.
-
----
-
-### 1) Sentry en edge functions (Deno SDK)
-
-**Nuevo archivo:** `supabase/functions/_shared/sentry.ts`
-- Wrapper ligero que inicializa `Sentry` desde `https://deno.land/x/sentry/index.mjs` una sola vez por isolate.
-- DSN desde `Deno.env.get("SENTRY_DSN_EDGE")` (secret nuevo). Si no está, el wrapper es no-op (no rompe deploys).
-- Exporta:
-  - `initSentryEdge(fnName)` — `Sentry.init({ dsn, environment, release, tracesSampleRate: 0.1 })`.
-  - `withSentry(fnName, handler)` — envuelve `Deno.serve` handler en `Sentry.startSpan` + `captureException` automático en errores no controlados, agrega tags `fn`, `request_id` y (si está disponible) `user_id` / `organization_id`.
-  - `captureEdgeError(err, ctx)` — atajo para errores controlados que queremos visibles en Sentry sin romper la respuesta.
-- **No** envía payloads del request (sólo metadatos: status, latency, fn, request_id).
-
-**Integración progresiva** (sólo handler-level, no toca lógica):
-- `parse-cfdi-xml/index.ts` — primer candidato (es el que motivó esto).
-- `parse-csf/index.ts`
-- `user-management/index.ts`
-- `tracking-public/index.ts`
-- `cxc-recordatorios/index.ts`
-- `process-email-queue/index.ts`
-- `exchange-rates/index.ts`
-- `demo-access/index.ts`
-- `client-error-log/index.ts`
-- `auditoria-snapshot-daily/index.ts`
-
-Cada función: `import { withSentry } from "../_shared/sentry.ts"` y envolver el `Deno.serve(...)` existente. El `createLogger` actual sigue escribiendo a `app_logs` sin cambios.
-
-**Secret requerido:** `SENTRY_DSN_EDGE` (DSN de un proyecto Sentry separado para backend, o el mismo del frontend si se prefiere unificar — recomiendo separado para distinguir issues cliente vs edge).
+Siguiente fase de cobertura Sentry. Mejora drásticamente la legibilidad de stacks en producción y evita la pérdida de eventos por bloqueadores de anuncios.
 
 ---
 
-### 2) Tag global `organization_id` + `role` en cliente
+### 1) Source maps automáticos en build con `@sentry/vite-plugin`
 
-**Editar:** `src/lib/sentryUser.ts`
-- Ya setea `userId`. Agregar:
-  - `Sentry.setTag("organization_id", orgId)`
-  - `Sentry.setTag("role", effectiveRole)`
-  - `Sentry.setTag("is_impersonating", boolean)`
-- Llamarlo desde `OrganizationContext` cuando cambie la org activa o el rol efectivo (impersonación).
-- `clearSentryUser()` también limpia tags al logout.
+**Problema actual:** los stacks en Sentry vienen minificados (`a.b.c is not a function`), imposibles de mapear a archivos `.tsx` reales. Hoy `vite.config.ts` no sube sourcemaps.
 
-Resultado: todos los issues en Sentry filtrables por org y rol → triage instantáneo en multi-tenant.
+**Cambios:**
 
----
+**`vite.config.ts`** — agregar:
+- `build.sourcemap: true` (ya genera `.map` files locales).
+- Plugin `sentryVitePlugin({ org, project, authToken, release, sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] } })` — sólo se activa cuando `SENTRY_AUTH_TOKEN` está presente (en CI/build de producción).
+- `release` igual a `libre-carga@${APP_VERSION}` para empatar con `Sentry.init`.
 
-### 3) `logger.error` → Sentry (unificación)
+**Dependencia nueva:** `@sentry/vite-plugin` (devDependency).
 
-**Editar:** `src/lib/observability/logger.ts`
-- Hoy el método `error` sólo manda a `console.error` + `app_logs`.
-- Agregar import dinámico de `@sentry/react` (para no romper el code-split idle):
-  ```ts
-  import("@sentry/react").then(S => S.captureException(err, { tags: { scope } }))
-  ```
-- Sólo en producción y sólo si `isSentryReady()` (ya existe en `src/lib/sentry.ts`).
-- Si el primer arg no es `Error`, construir uno sintético con el `message` para conservar stack.
+**Secrets:** `SENTRY_AUTH_TOKEN` (token de usuario Sentry con permiso `project:releases`). El plugin lo lee de `process.env.SENTRY_AUTH_TOKEN`. Se necesita configurarlo como **Build Secret** (Workspace Settings → Build Secrets), no como Runtime Secret, porque corre en build time.
 
-Resultado: cualquier `logger.error(...)` distribuido en el código (PDFs, RPCs, servicios) llega automáticamente a Sentry sin tocar call sites.
+**`.gitignore`** — agregar `*.map` y `**/*.js.map` si no están (defensa en profundidad: nunca queremos sourcemaps servidos al cliente).
+
+**Resultado:** todos los issues en Sentry muestran archivo+línea exactos del código fuente original.
 
 ---
 
-### Versionado y changelog
+### 2) Edge function `sentry-tunnel` (anti-adblock)
 
-- `src/constants/appVersion.ts` → `12.77.13`.
-- `CHANGELOG.md` → entrada `[12.77.13]` con los 3 puntos (P0 Sentry).
+**Problema actual:** ~20% de los usuarios tienen uBlock/AdGuard que bloquean `*.ingest.sentry.io` → los errores nunca llegan. Hoy la app pierde eventos en silencio.
+
+**Nuevo archivo:** `supabase/functions/sentry-tunnel/index.ts`
+- Recibe POST con el envelope binario de Sentry desde el browser.
+- Extrae el `dsn` del primer header del envelope (es el estándar de tunneling).
+- Valida que el host del DSN sea uno de los permitidos (whitelist hardcoded: el host del DSN del frontend).
+- Reenvía el envelope a `https://{host}/api/{project_id}/envelope/` con el `X-Sentry-Auth` header reconstruido.
+- Devuelve la respuesta de Sentry tal cual.
+- `verify_jwt = false` (los reportes anónimos del frontend deben pasar antes del login).
+- Sin logging del payload (privacidad).
+
+**`supabase/config.toml`** — agregar:
+```toml
+[functions.sentry-tunnel]
+verify_jwt = false
+```
+
+**`src/lib/sentry.ts`** — agregar a `Sentry.init`:
+```ts
+tunnel: `${SUPABASE_URL}/functions/v1/sentry-tunnel`
+```
+
+**Resultado:** los reportes salen desde el dominio del proyecto, indistinguibles de cualquier otro request a Supabase. Sin pérdida por adblockers.
+
+---
+
+### 3) Versionado + changelog
+
+- `APP_VERSION` → `12.78.0` (minor bump, hay infra nueva).
+- `CHANGELOG.md` → entrada `[12.78.0]` con los 2 puntos.
 
 ---
 
 ### Detalles técnicos
 
-- **Sin migraciones SQL.** `app_logs` sigue siendo la fuente para `/admin/diagnostico`.
-- **Sin cambios en `tracesSampleRate`** (sigue 0.1 cliente y edge).
-- **Sin replay, profiling, tunnel, source maps** — esos son P1/P2.
-- **Tests:** los `*_test.ts` Deno existentes no requieren cambios; el wrapper Sentry es no-op cuando `SENTRY_DSN_EDGE` no está seteado (tests siguen pasando sin tocar).
-- **Cleanup:** `withSentry` hace `Sentry.flush(2000)` antes de retornar la respuesta para garantizar envío en entornos serverless.
+- **No** se sube nada de `node_modules`, secrets ni `.env` a Sentry — el plugin sube sólo `dist/**/*.js.map`.
+- **No** se cambia `tracesSampleRate` ni se agrega replay/profiling (eso es P2).
+- El edge function `sentry-tunnel` cuenta para los límites de invocación de Edge Functions, pero el volumen esperado es bajo (sólo errores reales).
+- Tests existentes no se tocan.
 
 ---
 
-### Fuera de alcance (P1/P2 para después)
+### Fuera de alcance (P2 posterior)
 
-- `sentryVitePlugin` + source maps en CI.
-- Edge function `sentry-tunnel` para sortear adblockers.
-- `replayIntegration` (rrweb on crash).
-- `profilesSampleRate`.
-- `tracesSampler` dinámico por ruta.
-- Spans manuales en generadores PDF y RPCs específicos.
+- `Sentry.replayIntegration` (rrweb en crash time).
+- `profilesSampleRate` (Browser Profiling).
+- `tracesSampler` dinámico por ruta (subir sample en rutas críticas como `/embarques/nuevo`, bajar en `/dashboard`).
+- Spans manuales en generadores PDF y RPCs críticos (deletes, liquidaciones).
 
 ---
 
-### Acción requerida del usuario antes de implementar
+### Acción del usuario antes de implementar
 
 Necesito que confirmes:
-1. ¿DSN separado para edge functions (recomendado) o reutilizamos el del frontend? Si es separado, crea el proyecto en Sentry y pásame el DSN para guardarlo como secret `SENTRY_DSN_EDGE`.
-2. ¿Envolvemos las **10 edge functions** listadas o prefieres empezar sólo con las críticas (`parse-cfdi-xml`, `parse-csf`, `user-management`)?
+
+1. **`SENTRY_AUTH_TOKEN`** — ¿lo creas en Sentry (Settings → Account → Auth Tokens, scope `project:releases` + `org:read`) y lo agregas en **Workspace Settings → Build Secrets**? No lo puedo configurar yo: los Build Secrets son del workspace. Sin este token el plugin entra en modo no-op (build sigue funcionando, sólo no sube sourcemaps).
+
+2. **Slug de org y proyecto Sentry** — necesito `org slug` (ej. `elogistix`) y `project slug` (ej. `javascript-react`) para hardcodearlos en `vite.config.ts`. ¿Me los confirmas?
+
+3. ¿Activamos también el tunnel ahora o sólo source maps en esta tanda? Recomiendo ambos: el tunnel es 1 archivo y captura eventos que hoy se pierden.
