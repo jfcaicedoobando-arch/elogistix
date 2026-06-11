@@ -10,6 +10,9 @@
 // cross-tenant.
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+
+initSentryEdge("cxc-recordatorios");
 
 interface Body { organization_id?: string }
 

@@ -3,6 +3,9 @@
 // Es seguro que la contraseña sea pública: es una cuenta demo compartida.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+
+initSentryEdge("demo-access");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

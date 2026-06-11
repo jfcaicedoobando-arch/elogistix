@@ -8,6 +8,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+
+initSentryEdge("auditoria-snapshot-daily");
 
 /** Returns true when the provided secret matches the header value. */
 export function checkCronSecret(
