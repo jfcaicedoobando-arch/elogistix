@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.8] - 2026-06-11
+- **fix(rls/cxp)**: el rol `contador` ahora puede crear/editar/eliminar facturas de proveedor, sus conceptos, notas de crédito y pagos. Antes las políticas de `proveedor_facturas`, `proveedor_facturas_conceptos`, `proveedor_notas_credito` y `pagos_proveedor` sólo permitían `admin`/`super_admin`, lo que generaba "new row violates row-level security policy" al guardar una factura desde el módulo Cuentas por Pagar.
+
 ## [12.77.7] - 2026-06-11
 - **fix(costeo/tarifas)**: el botón Duplicar ahora precarga el formulario con los datos de la tarifa origen (incluyendo recargos). Se agregó `useEffect` en `TarifaForm` para resetear el estado al abrir el diálogo, y se incluyeron los `recargos` en `CosteoTarifaRow` para clonarlos.
 
