@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.13] - 2026-06-11
+- **observability(sentry P0)**: cobertura ampliada en 3 frentes. (1) Nuevo wrapper `supabase/functions/_shared/sentry.ts` (Deno SDK `npm:@sentry/deno@8`) con `initSentryEdge(fn)` + `captureEdgeException(err, ctx)`; no-op si falta el secret `SENTRY_DSN_EDGE` (no rompe deploys ni tests). Instrumentadas 10 edge functions (`parse-cfdi-xml`, `parse-csf`, `user-management`, `tracking-public`, `cxc-recordatorios`, `process-email-queue`, `exchange-rates`, `demo-access`, `client-error-log`, `auditoria-snapshot-daily`): los catches 5xx capturan a Sentry con tags `fn`/`request_id`/`status_code` y hacen `flush(2000)`. NO se envían payloads del request. (2) `logger.error(scope, err)` ahora reenvía a `Sentry.captureException` en producción vía import dinámico de `@sentry/react` (sin agregar peso al chunk crítico), unificando los `logger.error(...)` distribuidos en servicios/PDFs/RPCs. (3) Confirmado que `sentryUser.ts` ya etiqueta `organization_id` + `effective_role` globalmente. Requiere agregar el secret `SENTRY_DSN_EDGE` (DSN del proyecto Sentry para backend) para activar el envío desde edge.
+
 ## [12.77.12] - 2026-06-11
 - **fix(cfdi)**: la subida de XML CFDI ya no se queda colgada en "Procesando…". Se añadió timeout de 8 s al `fetch` del AI Gateway en `parse-cfdi-xml` (con `AbortController`; si Gemini no responde, devuelve fallback con los conceptos como notas y `outcome: "timeout"` en logs) y timeout de 15 s en el cliente (`Promise.race`) con toast claro: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual." Causa raíz: en el último intento de Isela el gateway tardó 52 s en responder.
 

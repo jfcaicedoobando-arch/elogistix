@@ -3,6 +3,9 @@
 // Es seguro que la contraseña sea pública: es una cuenta demo compartida.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+
+initSentryEdge("demo-access");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,6 +77,7 @@ Deno.serve(async (req) => {
           ? err
           : JSON.stringify(err);
     console.error("demo-access error:", message, err);
+    await captureEdgeException(err, { fn: "demo-access", status_code: 500 });
     return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

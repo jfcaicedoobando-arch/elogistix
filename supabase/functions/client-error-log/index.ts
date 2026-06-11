@@ -8,6 +8,9 @@
  *  - Rate limit persistente vía RPC `check_ratelimit` (tabla `ratelimit_buckets`).
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+
+initSentryEdge("client-error-log");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,6 +111,11 @@ Deno.serve(async (req: Request) => {
 
   if (error) {
     console.error("client-error-log rpc failed:", error.message);
+    await captureEdgeException(new Error(`log_client_error_v1 failed: ${error.message}`), {
+      fn: "client-error-log",
+      status_code: 500,
+      request_id: requestId,
+    });
     return new Response(JSON.stringify({ error: "insert_failed" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

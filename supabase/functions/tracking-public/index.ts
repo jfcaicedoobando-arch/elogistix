@@ -2,6 +2,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+
+initSentryEdge("tracking-public");
 
 type TrackingRpcResult = {
   error?: string;
@@ -77,6 +80,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log.finish(500, "unhandled_error", { payload: { error: msg } });
+    await captureEdgeException(err, { fn: "tracking-public", status_code: 500 });
     return errorResponse("Error interno del servidor", 500);
   }
 });
