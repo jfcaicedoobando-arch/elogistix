@@ -70,6 +70,7 @@ export interface CosteoTarifaRow extends CosteoTarifa {
   tipo_contenedor_nombre: string;
   recargos_total: number;
   total_comparable: number;
+  recargos: CosteoTarifaRecargo[];
 }
 
 /** Fila devuelta por la vista `costeo_tarifas_vigentes_v` / RPC `get_top_tarifas`. */
