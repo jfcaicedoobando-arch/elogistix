@@ -81,10 +81,13 @@ async function sugerirCategoria(
   let outcome: AiOutcome = "ok";
   let result: { categoria_id: string | null; notas: string };
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
@@ -111,7 +114,11 @@ async function sugerirCategoria(
   } catch (e) {
     const name = e instanceof Error ? e.name : "";
     outcome = name === "AbortError" ? "timeout" : "network_error";
-    result = { categoria_id: null, notas: "" };
+    result = outcome === "timeout"
+      ? fallbackResult(conceptos)
+      : { categoria_id: null, notas: "" };
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const latency_ms = Math.round(performance.now() - t0);
