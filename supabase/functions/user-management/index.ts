@@ -22,6 +22,7 @@ import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
 import {
   handleCreate,
   handleDelete,
@@ -29,6 +30,8 @@ import {
   handleInviteClient,
   handleListClients,
 } from "./handlers.ts";
+
+initSentryEdge("user-management");
 
 export type Action = "list" | "create" | "delete" | "invite-client" | "list-clients";
 

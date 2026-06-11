@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
     const msg = (err as Error).message;
     console.error("[auditoria-snapshot-daily] error:", err);
     log.finish(500, "unhandled_error", { payload: { error: msg } });
+    await captureEdgeException(err, { fn: "auditoria-snapshot-daily", status_code: 500 });
     return new Response(
       JSON.stringify({ ok: false, error: msg }),
       {
