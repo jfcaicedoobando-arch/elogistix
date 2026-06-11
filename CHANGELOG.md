@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.5] - 2026-06-11
+- **chore(catálogos)**: activado el tipo de contenedor `40' High Cube` (`40HC`) en `tipos_contenedor` para que aparezca en el selector de nuevas tarifas marítimas.
+
 ## [12.77.4] - 2026-06-10
 - **fix(costeo/tarifas)**: al crear una tarifa marítima con recargos, el segundo insert (`costeo_tarifa_recargos`) fallaba con "column organization_id does not exist" porque la tabla hija no tiene esa columna (la RLS la deriva vía JOIN a la tarifa padre). El primer insert ya había persistido la tarifa, por eso aparecía un toast de error pero la tarifa quedaba guardada (sin recargos). Se elimina `organization_id` del payload de recargos.
 
