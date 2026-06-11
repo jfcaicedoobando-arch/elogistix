@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
     const [code, ...rest] = msg.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
     log.finish(status, "unhandled_error", { payload: { error: msg } });
+    if (status >= 500) await captureEdgeException(err, { fn: "user-management", status_code: status });
     return errorResponse(rest.join(":") || msg, status, cors);
   }
 });

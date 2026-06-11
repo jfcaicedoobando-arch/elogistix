@@ -4,6 +4,9 @@ import {
   loadFailedAttempts,
 } from './queueAuth.ts'
 import { processMessage } from './messageProcessor.ts'
+import { initSentryEdge, captureEdgeException } from '../_shared/sentry.ts'
+
+initSentryEdge('process-email-queue')
 
 const jsonResp = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
