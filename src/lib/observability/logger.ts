@@ -3,7 +3,10 @@
  *
  * - `debug`/`info`: sólo se imprimen fuera de producción.
  * - `warn`: siempre va a consola (con prefijo).
- * - `error`: a consola + reporta a `app_logs` vía `logClientError` (fire-and-forget).
+ * - `error`: a consola + reporta a `app_logs` vía `logClientError` + Sentry
+ *   (`captureException`) en producción para que cualquier `logger.error(...)`
+ *   distribuido en el código (PDFs, RPCs, servicios) llegue a Sentry sin tocar
+ *   call sites. Carga dinámica de `@sentry/react` para no romper el code-split.
  *
  * Reemplaza llamadas directas a `console.warn|error` en código productivo.
  */
@@ -14,6 +17,18 @@ const isProd =
 
 function fmt(scope: string, args: unknown[]): unknown[] {
   return [`[${scope}]`, ...args];
+}
+
+/** Reporta a Sentry en producción, perezosamente (no añade peso al chunk crítico). */
+function reportToSentry(scope: string, err: Error): void {
+  if (!isProd) return;
+  void import("@sentry/react")
+    .then((Sentry) => {
+      Sentry.captureException(err, { tags: { scope, source: "logger" } });
+    })
+    .catch(() => {
+      // Sentry es best-effort; un fallo al cargarlo no debe romper la app.
+    });
 }
 
 export const logger = {
@@ -35,12 +50,15 @@ export const logger = {
      
     console.error(...fmt(scope, args));
     try {
-      const first = args.find((a) => a instanceof Error) as Error | undefined;
-      const message = first?.message ?? String(args[0] ?? "unknown error");
+      const firstError = args.find((a) => a instanceof Error) as Error | undefined;
+      const message = firstError?.message ?? String(args[0] ?? "unknown error");
+      // Conservar stack: si no vino Error, sintetizar uno para Sentry.
+      const errForSentry = firstError ?? new Error(message);
       logClientError({
         message: `[${scope}] ${message}`,
-        stack: first?.stack,
+        stack: errForSentry.stack,
       });
+      reportToSentry(scope, errForSentry);
     } catch {
       // nunca propagar desde el logger
     }
