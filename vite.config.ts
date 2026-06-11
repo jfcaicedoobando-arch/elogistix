@@ -58,6 +58,13 @@ export default defineConfig(({ mode }) => ({
       org: "elogistix",
       project: "javascript-react",
       authToken: process.env.SENTRY_AUTH_TOKEN,
+      // Empata con `release` en src/lib/sentry.ts (`libre-carga@${APP_VERSION}`).
+      release: { name: `libre-carga@${process.env.APP_VERSION ?? "unknown"}` },
+      sourcemaps: {
+        // Borrar .map del dist tras subirlos: nunca queremos servir sourcemaps
+        // al cliente en producción (filtración de código fuente).
+        filesToDeleteAfterUpload: ["./dist/**/*.map"],
+      },
     }) : null,
     mode === "production" && verifyHtmlBundlePlugin(),
   ].filter(Boolean),
@@ -67,7 +74,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    sourcemap: true,
+    // 'hidden' genera .map sin agregar // sourceMappingURL en los .js, así los
+    // browsers no los descargan aunque queden en dist. El plugin de Sentry los
+    // sube y luego los borra (filesToDeleteAfterUpload).
+    sourcemap: mode === "production" ? "hidden" : true,
     minify: "terser",
     terserOptions: {
       compress: {
