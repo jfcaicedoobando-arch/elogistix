@@ -40,6 +40,7 @@ function mapRow(r: RawRow): CosteoTarifaRow {
     tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
     puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
     puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
+    recargos,
     recargos_total,
     total_comparable: Number(r.flete_base || 0) + recargos_total,
   };
