@@ -1,0 +1,1 @@
+UPDATE public.tipos_contenedor SET activo = true WHERE code = '40HC';

@@ -1,18 +1,9 @@
-## Problema
-Juan Luis (`juanluis.martinez@elogistixshipping.com`) tiene rol **coordinador_logistico**. Las rutas `/costeo/*` no tienen guard de rol, pero el sidebar (`useAppSidebarSections.ts`) sólo muestra la sección "Costeo" en la rama default (admin / admin_org / super_admin). Los roles `coordinador_logistico`, `operador` y `ejecutivo_pricing` devuelven arrays fijos sin esa sección, por lo que no ven el menú y creen que no tienen acceso.
+Activar el tipo de contenedor 40' High Cube en el catálogo global.
 
-## Cambio
-Agregar `{ label: "Costeo", items: SIDEBAR_COSTEO_ITEMS }` a las ramas de:
-- `coordinador_logistico` / `operador`
-- `ejecutivo_pricing`
+Problema: El tipo de contenedor con código `40HC` y nombre `40' High Cube` ya existe en la tabla `tipos_contenedor`, pero está marcado como inactivo (`activo = false`). El hook `useTiposContenedor` (y `fetchTiposContenedor`) filtra por activos por defecto, por lo que no aparece en el selector de nuevas tarifas marítimas.
 
-La sección se posicionará entre "Gestión" y "Reportes/Directorio" para mantener coherencia visual con la rama default.
+Acción:
+1. Actualizar la tabla `tipos_contenedor` para marcar el registro con `code = '40HC'` como activo (`activo = true`).
+2. Actualizar `CHANGELOG.md` y `APP_VERSION`.
 
-## Archivos a tocar
-- `src/hooks/layout/useAppSidebarSections.ts` — agregar `SIDEBAR_COSTEO_ITEMS` en 2 bloques condicionales.
-- `src/constants/appVersion.ts` — bump a `12.77.1`.
-- `CHANGELOG.md` — entrada breve.
-
-## Fuera de alcance
-- No se agrega `Costeo` a `gerente_operaciones`, `contador`, `tesorero`, `vendedor`, `viewer`, `customer_service` (no fueron solicitados).
-- No se agregan guards de ruta (las rutas ya están abiertas; esto solo es visibilidad del menú).
+No se requieren cambios de código ni de esquema.
