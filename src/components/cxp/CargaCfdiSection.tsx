@@ -51,14 +51,26 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
   const procesar = async () => {
     if (!xml) return;
     setLoading(true);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      const data = await parseCfdiXml(xml, categorias);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("CLIENT_TIMEOUT")), 15000);
+      });
+      const data = await Promise.race([
+        parseCfdiXml(xml, categorias),
+        timeoutPromise,
+      ]);
       onParsed(data, { xml, pdf });
       toast.success("CFDI procesado");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando XML";
-      toast.error(msg);
+      if (msg === "CLIENT_TIMEOUT") {
+        toast.error("Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   };
