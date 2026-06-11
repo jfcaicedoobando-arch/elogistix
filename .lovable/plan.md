@@ -1,29 +1,39 @@
-## Problema
+## Diagnóstico
 
-En `CosteoTarifas.tsx` el botón "Duplicar" llama a `setInitial(...)` y abre el diálogo `TarifaForm`. Pero dentro de `TarifaForm`:
+Isela tiene rol `contador`. Las políticas RLS de **CXP** sólo permiten CRUD a `admin` / `super_admin`:
 
-```ts
-const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
-```
+| Tabla | CRUD permitido a |
+|---|---|
+| `proveedor_facturas` | admin, super_admin |
+| `proveedor_facturas_conceptos` | admin, super_admin |
+| `proveedor_notas_credito` | admin, super_admin |
+| `pagos_proveedor` | admin, super_admin |
 
-El inicializador de `useState` sólo corre la **primera vez** que se monta el componente. Como `TarifaForm` permanece montado entre aperturas (sólo cambia `open`), los nuevos valores de `initial` que llegan al duplicar nunca se aplican al estado interno → el formulario aparece vacío/con los valores previos.
+Por eso al guardar la factura: `new row violates row-level security policy for table "proveedor_facturas"`.
 
-Además, `duplicar()` está pasando `recargos: []`, descartando los recargos de la tarifa original.
+El rol `contador` existe pero no aparece en ninguna política de CXP — fue olvidado cuando se creó el módulo. Es exactamente el rol que debe gestionar cuentas por pagar.
 
 ## Cambios
 
-1. **`src/features/costeo/components/TarifaForm.tsx`**
-   - Agregar `useEffect` que reconstruya `form` con `buildInitialForm(initial)` cada vez que `open` pase a `true` (y se incluya `initial` en las dependencias). Cleanup no aplica.
-   - Esto garantiza precarga al duplicar y reset al abrir para "Nueva tarifa".
+### 1. Migración: ampliar políticas CRUD de CXP para incluir `contador`
 
-2. **`src/features/costeo/routes/CosteoTarifas.tsx`** (función `duplicar`)
-   - Mapear también `t.recargos` al payload `initial` (concepto, monto, moneda, etc.) para que la duplicación clone los recargos reales en vez de dejarlos vacíos. Verificar la forma exacta de `t.recargos` antes de mapear.
+Reemplazar la cláusula `(has_role(uid,'admin') OR has_role(uid,'super_admin'))` por `(has_role(uid,'admin') OR has_role(uid,'super_admin') OR has_role(uid,'contador'))` en las 4 tablas:
 
-3. **Changelog / versión**
-   - Bump `APP_VERSION` a `12.77.7` en `src/constants/appVersion.ts`.
-   - Entrada en `CHANGELOG.md` raíz: "Fix: el botón Duplicar de tarifas marítimas ahora precarga el formulario con los datos (y recargos) de la tarifa origen."
+- `proveedor_facturas` — DROP + CREATE "Tenant CRUD proveedor_facturas"
+- `proveedor_facturas_conceptos` — DROP + CREATE "Tenant CRUD proveedor_facturas_conceptos"
+- `proveedor_notas_credito` — DROP + CREATE "Tenant CRUD proveedor_notas_credito"
+- `pagos_proveedor` — DROP + CREATE "Tenant CRUD pagos_proveedor"
+
+Se conservan: la política de soft-delete (`deleted_at IS NULL`), la de `viewer`, y la de `cliente` donde aplica. `tesorero` queda fuera de este cambio (no es el caso reportado); si se quiere agregar también lo discutimos aparte.
+
+### 2. Changelog / versión
+
+- `APP_VERSION` → `12.77.8` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` raíz:
+  > **fix(rls/cxp)**: el rol `contador` ahora puede crear/editar facturas de proveedor, sus conceptos, notas de crédito y pagos. Antes las políticas de `proveedor_facturas`, `proveedor_facturas_conceptos`, `proveedor_notas_credito` y `pagos_proveedor` sólo permitían `admin`/`super_admin`, lo que rompía el flujo de "Capturar factura de proveedor" para contadores.
 
 ## Fuera de alcance
 
-- No se tocan validaciones ni servicios de tarifas.
-- No se renombra ni reestructura `TarifaForm`.
+- No se tocan UI/forms de CXP — el flujo del wizard ya envía correctamente `organization_id` y datos válidos; el bloqueo es exclusivamente de RLS.
+- No se modifican las políticas de `viewer` ni de `cliente`.
+- No se agrega `tesorero` ni otros roles en esta pasada (puede ser un follow-up si se confirma).
