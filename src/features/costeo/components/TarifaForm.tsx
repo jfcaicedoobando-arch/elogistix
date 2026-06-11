@@ -2,7 +2,7 @@
  * Formulario de alta de tarifa marítima con sub-editor de recargos.
  * Todas las tarifas se capturan en USD (Fase 3).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
