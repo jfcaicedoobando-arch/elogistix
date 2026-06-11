@@ -48,26 +48,32 @@ async function processQueue(args: ProcessQueueArgs): Promise<{ processed: number
 }
 
 Deno.serve(async (req) => {
-  const auth = authenticateRequest(req)
-  if (!auth.ok) return auth.response
-  const { supabase, apiKey } = auth
+  try {
+    const auth = authenticateRequest(req)
+    if (!auth.ok) return auth.response
+    const { supabase, apiKey } = auth
 
-  const config = await loadQueueConfig(supabase)
-  if (config.rateLimited) {
-    return jsonResp({ skipped: true, reason: 'rate_limited' })
-  }
-
-  let totalProcessed = 0
-  for (const queue of ['auth_emails', 'transactional_emails']) {
-    const res = await processQueue({
-      supabase, queue, batchSize: config.batchSize, sendDelayMs: config.sendDelayMs,
-      ttlMinutes: config.ttlMinutes[queue], apiKey,
-    })
-    totalProcessed += res.processed
-    if (res.stop) {
-      return jsonResp({ processed: totalProcessed, stopped: res.stop })
+    const config = await loadQueueConfig(supabase)
+    if (config.rateLimited) {
+      return jsonResp({ skipped: true, reason: 'rate_limited' })
     }
-  }
 
-  return jsonResp({ processed: totalProcessed })
+    let totalProcessed = 0
+    for (const queue of ['auth_emails', 'transactional_emails']) {
+      const res = await processQueue({
+        supabase, queue, batchSize: config.batchSize, sendDelayMs: config.sendDelayMs,
+        ttlMinutes: config.ttlMinutes[queue], apiKey,
+      })
+      totalProcessed += res.processed
+      if (res.stop) {
+        return jsonResp({ processed: totalProcessed, stopped: res.stop })
+      }
+    }
+
+    return jsonResp({ processed: totalProcessed })
+  } catch (err) {
+    await captureEdgeException(err, { fn: 'process-email-queue', status_code: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    return jsonResp({ error: msg }, 500)
+  }
 })
