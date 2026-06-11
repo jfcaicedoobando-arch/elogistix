@@ -60,6 +60,10 @@ export function initSentry(): void {
     release: `libre-carga@${APP_VERSION}`,
     environment: import.meta.env.MODE,
     tracesSampleRate: 0.1,
+    // Anti-adblock: enviamos los envelopes a una edge function propia que los
+    // reenvía al ingest oficial. Evita que uBlock/AdGuard bloqueen reportes
+    // (perdíamos ~20% de eventos en silencio).
+    tunnel: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentry-tunnel`,
 
     // Defensa en profundidad: estos errores de Vite (chunk viejo cacheado)
     // se auto-recuperan con reload y no aportan señal. `ignoreErrors` corre

@@ -2,3 +2,6 @@ project_id = "eorqadkulqtneqjbsblk"
 
 [functions.process-email-queue]
 verify_jwt = true
+
+[functions.sentry-tunnel]
+verify_jwt = false
