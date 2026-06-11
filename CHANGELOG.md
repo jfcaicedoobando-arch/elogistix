@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.11] - 2026-06-11
+- **observability(cfdi)**: instrumentación Sentry + logs estructurados para la edge function `parse-cfdi-xml`. La llamada al AI Gateway ahora emite `ai_gateway_call` con `outcome` (`ok|http_error|timeout|network_error|parse_error|skipped`), `latency_ms` y `status_code`; el log final `cfdi parseado` incluye `ai_outcome` y `ai_latency_ms` para agregar por estado. En cliente, `parseCfdiXml` envuelve la invocación en `Sentry.startSpan` con breadcrumbs (`parse_cfdi_xml.start|ok|error`) y `captureException` con tag `feature:cfdi_upload` + contexto `{ xml_size, latency_ms }`. NO se envía contenido del CFDI (RFC, montos, conceptos) a Sentry.
+
 ## [12.77.10] - 2026-06-11
 - **feat(costeo/tarifas)**: nuevo botón "Editar" (ícono lápiz) en cada fila de la matriz de tarifas marítimas. Abre el mismo formulario con todos los datos precargados (incluidos recargos) y guarda los cambios sobre la tarifa existente. Se agregó `updateTarifaConRecargos` en el servicio (update + delete/insert de recargos) y la mutación `actualizar` en `useCosteoTarifaMutations`.
 
