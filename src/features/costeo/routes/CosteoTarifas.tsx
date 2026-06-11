@@ -10,7 +10,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Copy } from "lucide-react";
+import { Plus, Trash2, Copy, Pencil } from "lucide-react";
 import {
   useCosteoTarifas, useCosteoTarifaMutations,
 } from "@/features/costeo/hooks/useCosteoTarifas";
@@ -31,6 +31,7 @@ export default function CosteoTarifas() {
   const [tipoId, setTipoId] = useState<string>("todos");
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<Partial<TarifaInput> | undefined>();
+  const [editId, setEditId] = useState<string | undefined>();
 
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
@@ -41,32 +42,46 @@ export default function CosteoTarifas() {
   });
   const { eliminar } = useCosteoTarifaMutations();
 
+  const buildInitialFromTarifa = (t: typeof tarifas[number]): Partial<TarifaInput> => ({
+    agente_id: t.agente_id,
+    naviera_id: t.naviera_id,
+    ruta_id: t.ruta_id,
+    tipo_contenedor_id: t.tipo_contenedor_id,
+    flete_base: Number(t.flete_base),
+    dias_libres_demoras: t.dias_libres_demoras,
+    vigente_desde: t.vigente_desde,
+    vigente_hasta: t.vigente_hasta,
+    transit_time_dias: t.transit_time_dias,
+    notas: t.notas,
+    recargos: (t.recargos ?? []).map((r) => ({
+      concepto: r.concepto,
+      lado: r.lado ?? undefined,
+      monto: Number(r.monto),
+      moneda: r.moneda ?? "USD",
+      incluido_en_total: r.incluido_en_total ?? true,
+    })),
+  });
+
   const duplicar = (id: string) => {
     const t = tarifas.find((x) => x.id === id);
     if (!t) return;
+    setEditId(undefined);
     setInitial({
-      agente_id: t.agente_id,
-      naviera_id: t.naviera_id,
-      ruta_id: t.ruta_id,
-      tipo_contenedor_id: t.tipo_contenedor_id,
-      flete_base: Number(t.flete_base),
-      dias_libres_demoras: t.dias_libres_demoras,
+      ...buildInitialFromTarifa(t),
       vigente_desde: new Date().toISOString().slice(0, 10),
-      vigente_hasta: t.vigente_hasta,
-      transit_time_dias: t.transit_time_dias,
-      notas: t.notas,
-      recargos: (t.recargos ?? []).map((r) => ({
-        concepto: r.concepto,
-        lado: r.lado ?? undefined,
-        monto: Number(r.monto),
-        moneda: r.moneda ?? "USD",
-        incluido_en_total: r.incluido_en_total ?? true,
-      })),
     });
     setOpen(true);
   };
 
-  const nuevo = () => { setInitial(undefined); setOpen(true); };
+  const editar = (id: string) => {
+    const t = tarifas.find((x) => x.id === id);
+    if (!t) return;
+    setEditId(id);
+    setInitial(buildInitialFromTarifa(t));
+    setOpen(true);
+  };
+
+  const nuevo = () => { setEditId(undefined); setInitial(undefined); setOpen(true); };
 
   return (
     <div className="p-6 space-y-4">
@@ -160,6 +175,9 @@ export default function CosteoTarifas() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1 justify-end">
+                    <Button size="icon" variant="ghost" onClick={() => editar(t.id)} aria-label="Editar">
+                      <Pencil className="size-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => duplicar(t.id)} aria-label="Duplicar">
                       <Copy className="size-4" />
                     </Button>
@@ -179,7 +197,7 @@ export default function CosteoTarifas() {
         </Table>
       </Card>
 
-      <TarifaForm open={open} onOpenChange={setOpen} initial={initial} />
+      <TarifaForm open={open} onOpenChange={setOpen} initial={initial} tarifaId={editId} />
     </div>
   );
 }

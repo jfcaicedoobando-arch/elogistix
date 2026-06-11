@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/shared";
 import {
   fetchCosteoTarifas,
   insertTarifaConRecargos,
+  updateTarifaConRecargos,
   deleteTarifa,
   marcarTarifaReemplazada,
   type FetchTarifasFilters,
@@ -38,6 +39,17 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Error al guardar", description: e.message, variant: "destructive" }),
   });
 
+  const actualizar = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: TarifaInput }) =>
+      updateTarifaConRecargos(id, input),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Tarifa actualizada" });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Error al actualizar", description: e.message, variant: "destructive" }),
+  });
+
   const reemplazar = useMutation({
     mutationFn: (id: string) => marcarTarifaReemplazada(id),
     onSuccess: () => {
@@ -58,5 +70,5 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
   });
 
-  return { crear, reemplazar, eliminar };
+  return { crear, actualizar, reemplazar, eliminar };
 }
