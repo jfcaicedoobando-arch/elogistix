@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.6] - 2026-06-11
+- **chore(tests/arch)**: sincronizada la allowlist `OVERSIZED_BASELINE` en `src/__tests__/audit-report.test.ts` con los 11 archivos productivos preexistentes >200 líneas (ya estaban en `architecture-baseline.test.ts`). Desbloquea el shard 6/16 de CI.
+
 ## [12.77.5] - 2026-06-11
 - **chore(catálogos)**: activado el tipo de contenedor `40' High Cube` (`40HC`) en `tipos_contenedor` para que aparezca en el selector de nuevas tarifas marítimas.
 
