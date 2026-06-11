@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.77.9] - 2026-06-11
+- **fix(costeo/tarifas)**: el botón "Guardar tarifa" ya no genera `UnhandledRejection` en Sentry cuando la inserción falla (RLS, constraint, etc.). Se reemplazó `mutateAsync` + `await` por `mutate` con `onSuccess`, así el error se maneja vía el `onError` del hook (toast) sin propagarse al handler global.
+
 ## [12.77.8] - 2026-06-11
 - **fix(rls/cxp)**: el rol `contador` ahora puede crear/editar/eliminar facturas de proveedor, sus conceptos, notas de crédito y pagos. Antes las políticas de `proveedor_facturas`, `proveedor_facturas_conceptos`, `proveedor_notas_credito` y `pagos_proveedor` sólo permitían `admin`/`super_admin`, lo que generaba "new row violates row-level security policy" al guardar una factura desde el módulo Cuentas por Pagar.
 
