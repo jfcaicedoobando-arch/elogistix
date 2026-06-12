@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.81.2] - 2026-06-12
+- **fix(ui)**: rescate global del scroll-lock de Radix. En CXP (y cualquier otra tabla con filtros tipo Select) los headers, botones "Pagar" y clicks en filas dejaban de responder después de abrir/cerrar un Select porque Radix dejaba `<body>` con `pointer-events: none` y `data-scroll-locked`. Nuevo hook `useRadixPointerEventsRescue` montado en `App.tsx` observa el body con `MutationObserver` y, si no queda ningún overlay Radix abierto en el DOM, limpia el bloqueo. Cleanup del observer al desmontar.
+
 ## [12.81.1] - 2026-06-12
 - **fix(cxp)**: la columna "Días vencido" ya no muestra un número en rojo cuando la factura está pagada o sin saldo. La factura YA-1610 de Yassen Eventos (vencimiento 04/06, pagada el mismo día) aparecía con "8" en rojo aunque su estatus era "Pagada". Fix en `src/services/cxp/proveedorFacturas.ts`: el mapper ahora fuerza `dias_vencido = 0` cuando `estado === "Pagada"` o `saldo <= 0.01`. Refuerzo defensivo en `src/components/cxp/cxpColumns.tsx`: la celda renderiza `—` para estatus `Pagada` / `Sin saldo` aunque el dato venga distinto. Los KPIs no cambian (ya filtraban por saldo).
 

@@ -10,8 +10,11 @@ import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { queryClient } from "./lib/queryClient";
 import { AppRoutes } from "./routes";
 import { DemoModeBanner } from "@/components/marketing/DemoModeBanner";
+import { useRadixPointerEventsRescue } from "@/hooks/shared/useRadixPointerEventsRescue";
 
-const App = () => (
+const App = () => {
+  useRadixPointerEventsRescue();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -28,6 +31,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
