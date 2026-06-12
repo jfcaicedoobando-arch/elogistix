@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
-import { parseCsf } from "@/services/csf";
 import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/services/proveedor";
 import { useOrgFilter } from "@/hooks/shared";
 import {
@@ -14,6 +13,7 @@ import {
   type SubtipoGasto,
   type TipoProveedor,
 } from "./useNuevoProveedorController.constants";
+import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
 
 export {
   DOCS_EXTRANJERO,
@@ -157,31 +157,11 @@ export function useNuevoProveedorController(
   };
 
 
-  /**
-   * Sube un PDF de Constancia de Situación Fiscal y auto-rellena nombre y RFC.
-   * Solo aplica para proveedores de gasto operativo (nacionales).
-   */
   const handleCsfUpload = async (file: File) => {
     setCsfLoading(true);
-    try {
-      const data = await parseCsf(file);
-      setForm((prev) => ({
-        ...prev,
-        nombre: data.nombre?.trim() || prev.nombre,
-        rfc: data.rfc?.trim() || prev.rfc,
-        cp: data.cp?.trim() || prev.cp,
-        direccion: data.direccion?.trim() || prev.direccion,
-        ciudad: data.ciudad?.trim() || prev.ciudad,
-        estado: data.estado?.trim() || prev.estado,
-        regimen_fiscal: data.regimen_fiscal?.trim() || prev.regimen_fiscal,
-      }));
-      toast.success("CSF procesada. Verifica los datos extraídos.");
-    } catch (err) {
-      const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-      toast.error(mensaje);
-    } finally {
-      setCsfLoading(false);
-    }
+    const patch = await procesarCsfUpload(file);
+    if (patch) setForm((prev) => mergeCsfPatch(prev, patch));
+    setCsfLoading(false);
   };
 
   return {
