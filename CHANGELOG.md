@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.2] - 2026-06-12
+- **fix(tests/deno)**: `supabase/functions/client-error-log/validate_test.ts` importaba `checkRateLimit` que ya no existe (en 12.32.0 se migró a la RPC persistente `check_ratelimit` con tabla `ratelimit_buckets`). Se eliminan los 2 tests obsoletos del rate-limit in-memory y se conservan los tests de `truncate` y `getClientIp` (más uno nuevo para objetos serializados). `deno test` pasa con 95+ tests verdes y 0 fallos.
+
 ## [12.92.1] - 2026-06-12
 - **fix(lint)**: 3 errores eliminados — (1) `src/App.tsx` importa `useRadixPointerEventsRescue` desde el barrel `@/hooks/shared` (re-exportado desde `src/hooks/shared/index.ts`); (2) `src/test/helpers/assertOrgScoped.ts` mantiene el import directo al mock con `eslint-disable-next-line no-restricted-imports` justificado (helper de tests); (3) `supabase/functions/_shared/sentry.ts` reemplaza `scope: any` por type inline tipado. Además se eliminan 3 directivas `eslint-disable` no usadas en `bitacora/__tests__/index.test.ts` y `pdfLeak.test.tsx`. Lint pasa con 0 errores.
 
