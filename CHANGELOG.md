@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.8] - 2026-06-12
+- **test(coverage)**: añade 5 suites para services con 0% cobertura previa — `proveedor` (14 tests), `usuario` (12), `proforma/crud` (9), `facturas/notasCredito` (8), `embarques/dependenciasFinancieras` (3). Total 46 tests nuevos cubriendo paths felices, propagación de errores Supabase y validaciones de dominio (transiciones de estado de notas de crédito, RFCs genéricos SAT, etc.). Sube umbrales globales `lines`/`statements` de 28 → 29 en `vitest.config.ts` recuperando el nivel anterior al drift de 12.92.7.
+
 ## [12.92.7] - 2026-06-12
 - **ci(coverage)**: ajusta umbrales globales de `lines`/`statements` de 29 → 28 en `vitest.config.ts` tras drift menor (cobertura real 28.56%). `functions=45` y `branches=65` se mantienen. Pendiente recuperar a 29% añadiendo tests a `services/embarques/*Financieras`, `services/facturas/notasCredito`, `services/proforma/crud`, `services/proveedor` y `services/usuario` (todos con 0% actual).
 

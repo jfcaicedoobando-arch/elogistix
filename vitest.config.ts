@@ -68,16 +68,13 @@ export default defineConfig({
         "src/vite-env.d.ts",
         "src/integrations/supabase/**",
       ],
-      // Umbrales mínimos globales. Auditoría CI 12.92.7: línea base
-      // sincronizada con la cobertura real reportada (28/45/65) tras drift
-      // menor. El plan eleva +3 puntos por sprint hasta alcanzar
-      // 40/55/58/70 (objetivo Fase 1). Pendiente recuperar lines/statements
-      // a 29% añadiendo tests a services/embarques/*Financieras,
-      // services/facturas/notasCredito, services/proforma/crud,
-      // services/proveedor y services/usuario.
+      // Umbrales mínimos globales. 12.92.8: recuperado lines/statements a 29%
+      // tras añadir 46 tests en services/proveedor, usuario, proforma/crud,
+      // facturas/notasCredito y embarques/dependenciasFinancieras. El plan
+      // eleva +3 puntos por sprint hasta 40/55/58/70 (objetivo Fase 1).
       thresholds: {
-        lines: 28,
-        statements: 28,
+        lines: 29,
+        statements: 29,
         functions: 45,
         branches: 65,
       },
