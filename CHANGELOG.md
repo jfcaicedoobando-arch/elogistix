@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.94.0] - 2026-06-12
+- **feat(cxp/conciliación)**: Fase 1 conciliación **cotizado vs real** — al capturar una factura de proveedor, si el proveedor tiene `conceptos_costo` pendientes, aparece la sección "Vincular a costos de embarque" agrupada por expediente. Se insertan `proveedor_facturas_conceptos` con `concepto_costo_id` y, si el monto vinculado cubre ≥ 99% del costo cotizado, el `concepto_costo` se marca como **Pagado** automáticamente (con `fecha_pago = emisión` y `referencia_pago = folio`). Si todos los vínculos comparten un único embarque, también se guarda `proveedor_facturas.embarque_id` para alimentar el EERR devengado por modo. Sin migración nueva: usa los FKs `embarque_id` y `concepto_costo_id` que ya existían.
+- Nuevos archivos: `services/cxp/conceptosCostoVinculables.ts`, `hooks/cxp/useConceptosCostoAbiertos.ts`, `components/cxp/VincularEmbarqueSection.tsx`. Hook `useNuevaFacturaProveedorForm` extendido con estado `vinculos` + `toggleVinculo`/`setVinculoMonto`.
+
 ## [12.93.1] - 2026-06-12
 - **feat(cxp)**: agregado método de pago **SPID** (Sistema de Pagos Interbancarios en Dólares) en el diálogo "Registrar pago a proveedor". Disponible para proveedores Nacionales y Extranjeros, con hint de referencia específico ("Clave de rastreo SPID (USD)").
 
