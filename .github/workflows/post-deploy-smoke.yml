@@ -2,13 +2,21 @@ name: post-deploy-smoke
 
 # Smoke test diario que verifica que los edge functions críticos en producción
 # (https://elogistix.lovable.app + https://librecarga.com) respondan con el
-# contrato esperado. Ver supabase/functions/user-management/smoke_test.ts.
+# contrato esperado. Cubre:
+#   - user-management (smoke_test.ts con login real)
+#   - exchange-rates (HTTP smoke vía curl)
+#   - tracking-public (HTTP smoke vía curl)
 
 on:
   schedule:
     # 13:00 UTC = 07:00 CDMX (UTC-6)
     - cron: "0 13 * * *"
   workflow_dispatch:
+
+env:
+  SUPABASE_URL: https://eorqadkulqtneqjbsblk.supabase.co
+  # anon key — pública (rol anon), no es un secreto
+  ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcnFhZGt1bHF0bmVxamJzYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzM5MzEsImV4cCI6MjA4NzgwOTkzMX0.bNeS84nv01bheza5wL5l8N-2A2OONn0fKKkZQ8ADZRc
 
 jobs:
   user-management-smoke:
@@ -21,19 +29,61 @@ jobs:
         with:
           deno-version: v1.x
 
+      - name: Validate required secrets
+        env:
+          DEMO_USER_EMAIL: ${{ secrets.DEMO_USER_EMAIL }}
+          DEMO_USER_PASSWORD: ${{ secrets.DEMO_USER_PASSWORD }}
+        run: |
+          if [ -z "$DEMO_USER_EMAIL" ] || [ -z "$DEMO_USER_PASSWORD" ]; then
+            echo "::error::Faltan secrets DEMO_USER_EMAIL / DEMO_USER_PASSWORD"
+            exit 1
+          fi
+
       - name: Run user-management smoke
         env:
           DEMO_USER_EMAIL: ${{ secrets.DEMO_USER_EMAIL }}
           DEMO_USER_PASSWORD: ${{ secrets.DEMO_USER_PASSWORD }}
-          # URL y anon key son públicos (rol anon) — no son secretos.
-          VITE_SUPABASE_URL: https://eorqadkulqtneqjbsblk.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcnFhZGt1bHF0bmVxamJzYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzM5MzEsImV4cCI6MjA4NzgwOTkzMX0.bNeS84nv01bheza5wL5l8N-2A2OONn0fKKkZQ8ADZRc
+          VITE_SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ env.ANON_KEY }}
         run: |
-          if [ -z "$DEMO_USER_EMAIL" ] || [ -z "$DEMO_USER_PASSWORD" ]; then
-            echo "::warning::Faltan secrets DEMO_USER_EMAIL / DEMO_USER_PASSWORD — el test se ignora."
-          fi
           deno test \
             --allow-net \
             --allow-env \
             --allow-read \
             supabase/functions/user-management/smoke_test.ts
+
+  exchange-rates-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping exchange-rates
+        run: |
+          set -euo pipefail
+          STATUS=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            "${SUPABASE_URL}/functions/v1/exchange-rates")
+          echo "HTTP $STATUS"
+          cat /tmp/resp.json
+          test "$STATUS" = "200"
+          # Contrato mínimo: payload con clave 'rates' o 'USD'
+          grep -E '"(rates|USD|MXN)"' /tmp/resp.json > /dev/null
+
+  tracking-public-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping tracking-public (token inexistente debe responder 404/410)
+        run: |
+          set -euo pipefail
+          STATUS=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            "${SUPABASE_URL}/functions/v1/tracking-public?token=smoke-no-existe-xyz")
+          echo "HTTP $STATUS"
+          cat /tmp/resp.json
+          # Esperamos 404 (no encontrado) o 410 (expirado). 200/500 = degradación.
+          if [ "$STATUS" != "404" ] && [ "$STATUS" != "410" ] && [ "$STATUS" != "400" ]; then
+            echo "::error::tracking-public respondió $STATUS (esperado 404/410/400)"
+            exit 1
+          fi
