@@ -15,6 +15,7 @@ import { useNuevaFacturaProveedorForm } from "@/hooks/cxp";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
+import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 
 interface Props {
   open: boolean;
