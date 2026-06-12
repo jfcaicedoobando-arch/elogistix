@@ -19,11 +19,7 @@ import { useTiposContenedor } from "@/hooks/catalogos";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { TarifaEstadoBadge } from "@/features/costeo/components/TarifaEstadoBadge";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-
-const usd = (n: number) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD" }).format(n);
-
-type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
+import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
 
 export default function CosteoTarifas() {
   const [estado, setEstado] = useState<EstadoFiltro>("vigente");
@@ -41,26 +37,6 @@ export default function CosteoTarifas() {
     tipoContenedorId: tipoId === "todos" ? undefined : tipoId,
   });
   const { eliminar } = useCosteoTarifaMutations();
-
-  const buildInitialFromTarifa = (t: typeof tarifas[number]): Partial<TarifaInput> => ({
-    agente_id: t.agente_id,
-    naviera_id: t.naviera_id,
-    ruta_id: t.ruta_id,
-    tipo_contenedor_id: t.tipo_contenedor_id,
-    flete_base: Number(t.flete_base),
-    dias_libres_demoras: t.dias_libres_demoras,
-    vigente_desde: t.vigente_desde,
-    vigente_hasta: t.vigente_hasta,
-    transit_time_dias: t.transit_time_dias,
-    notas: t.notas,
-    recargos: (t.recargos ?? []).map((r) => ({
-      concepto: r.concepto,
-      lado: r.lado ?? undefined,
-      monto: Number(r.monto),
-      moneda: r.moneda ?? "USD",
-      incluido_en_total: r.incluido_en_total ?? true,
-    })),
-  });
 
   const duplicar = (id: string) => {
     const t = tarifas.find((x) => x.id === id);

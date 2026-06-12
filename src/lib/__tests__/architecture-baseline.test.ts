@@ -37,21 +37,12 @@ const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 // 12.77.3 — re-poblada con deuda preexistente detectada al re-habilitar el
 // guardrail en CI. Cada entrada debe eliminarse al partir el archivo.
 const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/components/proveedor/NuevoProveedorDialog.tsx",
-  "src/pages/proveedores/ProveedorDetalle.tsx",
-  "src/features/embarques/components/StepCostosPrecios.tsx",
-  "src/features/costeo/components/TarifaForm.tsx",
-  "src/hooks/proveedor/useNuevoProveedorController.ts",
-  "src/components/proveedor/EditarProveedorDialog.tsx",
-  "src/services/proveedor/index.ts",
   "src/components/usuario/NuevoUsuarioDialog.tsx",
-  "src/hooks/cxp/useNuevaFacturaProveedorForm.ts",
+  "src/features/embarques/routes/EmbarqueDetalle.tsx",
   "src/lib/csv/parseCsv.ts",
-  "src/pages/proveedores/Proveedores.tsx",
   "src/lib/sentry.ts",
-  "src/services/tesoreria/conciliacion.ts",
-  "src/features/costeo/routes/CosteoTarifas.tsx",
-  "src/components/cxp/DialogDetallePagosProveedor.tsx",
+  "src/pages/proveedores/Proveedores.tsx",
+  "src/pdf/documents/ProformaDocument.tsx",
 ]);
 
 

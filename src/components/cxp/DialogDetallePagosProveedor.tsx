@@ -9,14 +9,12 @@
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { Info, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,47 +22,13 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/hooks/cxp";
 import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/services/cxp";
+import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   factura: FacturaCxP | null;
   canEdit: boolean;
-}
-
-type KpiTone = "default" | "success" | "warn";
-
-function Kpi({ label, value, tone = "default" }: {
-  label: string; value: string; tone?: KpiTone;
-}) {
-  const valueCls =
-    tone === "success" ? "text-success"
-    : tone === "warn" ? "text-warning"
-    : "text-foreground";
-  return (
-    <div className="rounded-lg border bg-muted/30 p-3">
-      <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground mb-1">
-        {label}
-      </p>
-      <p className={cn("text-lg font-semibold tabular-nums", valueCls)}>{value}</p>
-    </div>
-  );
-}
-
-function HeaderWithTooltip({ label, hint }: { label: string; hint: string }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex items-center justify-end gap-1 cursor-help">
-          {label}
-          <Info className="h-3 w-3 text-muted-foreground/70" />
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[240px] text-xs">
-        {hint}
-      </TooltipContent>
-    </Tooltip>
-  );
 }
 
 export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEdit }: Props) {
