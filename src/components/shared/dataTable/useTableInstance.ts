@@ -80,15 +80,18 @@ export function useTableInstance<T>({
       }
     : undefined;
 
-  return useReactTable<T>({
+  const baseOptions = {
     data,
     columns: columnDefs,
     getRowId,
     enableSorting,
     manualSorting: isServer,
-    state: isServer ? { sorting: sortingState } : undefined,
-    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
-  });
+  };
+  return useReactTable<T>(
+    isServer
+      ? { ...baseOptions, state: { sorting: sortingState }, onSortingChange: handleSortingChange }
+      : baseOptions,
+  );
 }
