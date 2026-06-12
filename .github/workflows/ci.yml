@@ -127,6 +127,15 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Upload JUnit report (shard ${{ matrix.shard }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-${{ matrix.shard }}
+          path: reports/junit.xml
+          if-no-files-found: ignore
+          retention-days: 7
+
   coverage:
     name: Coverage merge & report
     needs: tests

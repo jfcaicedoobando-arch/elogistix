@@ -1,49 +1,41 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-const { mockSupabase } = vi.hoisted(() => {
-  // Chain completo con todos los operadores que usa fetchBitacora.
-  // `then` se invoca cuando se hace `await query`; resolvemos con datos/count.
-  const chain: Record<string, unknown> = {
-    _data: [] as unknown[],
-    _error: null as unknown,
-    _count: 10 as number,
-  };
-  const methods = ['from', 'select', 'order', 'range', 'neq', 'eq', 'gte', 'lte', 'in', 'insert'] as const;
-  for (const m of methods) {
-    chain[m] = vi.fn().mockReturnValue(chain);
-  }
-  chain.then = vi.fn().mockImplementation(function (this: typeof chain, resolve: (v: unknown) => void) {
-    resolve({ data: chain._data, count: chain._count, error: chain._error });
-  });
-  return { mockSupabase: chain };
+import { describe, it, expect, beforeEach } from "vitest";
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
 });
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
-}));
-
-import { fetchBitacora } from '../index';
+import { fetchBitacora } from "../index";
 
 beforeEach(() => {
-  // Resetea historial pero conserva las implementaciones del chain.
-  for (const key of Object.keys(mockSupabase)) {
-    const v = (mockSupabase as Record<string, unknown>)[key];
-    if (typeof v === 'function' && 'mockClear' in (v as unknown as object)) {
-      (v as unknown as { mockClear: () => void }).mockClear();
-    }
-  }
+  mock.tableCalls.length = 0;
 });
 
-describe('bitacora/index', () => {
-  it('fetchBitacora realiza consulta paginada', async () => {
+describe("bitacora/index", () => {
+  it("fetchBitacora realiza consulta paginada y devuelve count", async () => {
+    // El helper compartido pasa el response completo a `then`, así que count
+    // se incluye junto a data/error aunque el tipo nominal no lo exponga.
+    mock.setTableResult("bitacora_actividad", {
+      data: [],
+      error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- count out-of-band
+      count: 10,
+    } as any);
     const result = await fetchBitacora({ pagina: 1, limite: 10 });
-    expect((mockSupabase.from as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('bitacora_actividad');
-    expect((mockSupabase.range as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith(10, 19);
+    const call = mock.tableCalls.find((c) => c.table === "bitacora_actividad");
+    expect(call).toBeTruthy();
+    const rangeIdx = call!.ops.indexOf("range");
+    expect(call!.opArgs[rangeIdx]).toEqual([10, 19]);
     expect(result.total).toBe(10);
   });
 
-  it('fetchBitacora maneja filtros de modulo', async () => {
-    await fetchBitacora({ modulo: 'crm' });
-    expect((mockSupabase.eq as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('modulo', 'crm');
+  it("fetchBitacora aplica filtro .eq('modulo', 'crm')", async () => {
+    mock.setTableResult("bitacora_actividad", { data: [], error: null } as any);
+    await fetchBitacora({ modulo: "crm" });
+    const call = mock.tableCalls.find((c) => c.table === "bitacora_actividad")!;
+    const eqArgs = call.ops
+      .map((op, i) => (op === "eq" ? call.opArgs[i] : null))
+      .filter((x): x is unknown[] => x !== null);
+    expect(eqArgs).toContainEqual(["modulo", "crm"]);
   });
 });
