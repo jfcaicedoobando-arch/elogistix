@@ -13,11 +13,11 @@ const mockProforma = makeProforma({
 
 const mockEmbarque = makeEmbarque({
   modo: "Marítimo",
-  tipo: "FCL",
+  tipo: "Importación",
   incoterm: "FOB",
   puerto_origen: "Shanghai",
   puerto_destino: "Manzanillo",
-} as unknown as Partial<ReturnType<typeof makeEmbarque>>);
+});
 
 describe("ProformaHeader", () => {
   it("muestra número, expediente, cliente, modo/incoterm y vigencia", () => {

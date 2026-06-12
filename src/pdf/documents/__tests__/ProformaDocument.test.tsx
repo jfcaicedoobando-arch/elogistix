@@ -18,12 +18,12 @@ const mockProforma = makeProforma({
 
 const mockEmbarque = makeEmbarque({
   modo: "Marítimo",
-  tipo: "FCL",
+  tipo: "Importación",
   incoterm: "FOB",
   puerto_origen: "Shanghai",
   puerto_destino: "Manzanillo",
   descripcion_mercancia: "Carga seca general",
-} as unknown as Partial<ReturnType<typeof makeEmbarque>>);
+});
 
 const mockConcepto = {
   descripcion: "Flete marítimo Shanghai-Manzanillo",
@@ -45,7 +45,7 @@ describe("ProformaDocument", () => {
     expect(text).toContain("EXP-2024-99");
     expect(text).toContain("Acme Corp");
     expect(text).toContain("Marítimo");
-    expect(text).toContain("FCL");
+    expect(text).toContain("Importación");
     expect(text).toContain("Shanghai");
     expect(text).toContain("Manzanillo");
     expect(text).toContain("Carga seca general");
