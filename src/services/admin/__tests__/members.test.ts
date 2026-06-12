@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const mock = await vi.hoisted(async () => {
+const { mock, invokeMock } = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
+  const { vi: v } = await import("vitest");
+  return { mock: createSupabaseMock(), invokeMock: v.fn() };
 });
-const invokeMock = vi.fn();
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     ...mock.supabase,
