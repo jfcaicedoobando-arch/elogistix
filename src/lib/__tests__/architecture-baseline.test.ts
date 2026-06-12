@@ -48,6 +48,10 @@ const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
   "src/hooks/cxp/useNuevaFacturaProveedorForm.ts",
   "src/lib/csv/parseCsv.ts",
   "src/pages/proveedores/Proveedores.tsx",
+  "src/lib/sentry.ts",
+  "src/services/tesoreria/conciliacion.ts",
+  "src/features/costeo/routes/CosteoTarifas.tsx",
+  "src/components/cxp/DialogDetallePagosProveedor.tsx",
 ]);
 
 

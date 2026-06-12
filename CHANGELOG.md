@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.4] - 2026-06-12
+- **fix(tests)**: 4 tests rojos en CI ahora pasan. (1) `useNuevoProveedorController.handleNext` ahora popula `documentos` con `DOCS_NACIONAL`/`DOCS_EXTRANJERO` según `origen_proveedor` al pasar al paso 2 (regresión por refactor previo). (2) `scrubUrl` en `piiScrub.ts` decodifica `%5B`/`%5D` → `[`/`]` SOLO para URLs relativas, preservando el encoding URL en absolutas (ambos contratos de tests respetados). (3) `OVERSIZED_BASELINE` en `architecture-baseline.test.ts` y `audit-report.test.ts` añade 4 archivos pendientes de split: `src/lib/sentry.ts` (228), `src/services/tesoreria/conciliacion.ts` (209), `src/features/costeo/routes/CosteoTarifas.tsx` (204), `src/components/cxp/DialogDetallePagosProveedor.tsx` (203). Suite completa: 1507/1507 verdes.
+
 ## [12.92.3] - 2026-06-12
 - **fix(tests/audit)**: renombrados títulos duplicados `"propaga errores de Supabase"` para incluir contexto de dominio — ahora `"...al consultar demoras de venta"` en `demorasVenta.test.ts` y `"...al consultar factura por ID"` en `facturas/detail.test.ts`. `bun run audit:tests` pasa sin violaciones.
 

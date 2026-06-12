@@ -126,6 +126,8 @@ export function useNuevoProveedorController(
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
+    const lista = form.origen_proveedor === "Extranjero" ? DOCS_EXTRANJERO : DOCS_NACIONAL;
+    setDocumentos(lista.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
   };
 
