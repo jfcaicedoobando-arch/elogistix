@@ -1,0 +1,100 @@
+import { useRef, useState } from "react";
+import { Upload, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { parseCsf, type CsfParsedData } from "@/services/csf";
+import type { Tables } from "@/types/db";
+
+interface Props {
+  proveedor: Tables<"proveedores">;
+  onUpdate: (id: string, patch: Record<string, string>) => Promise<unknown>;
+}
+
+/**
+ * Botón "Actualizar con CSF": parsea la Constancia, valida que el RFC
+ * coincida con el proveedor y aplica únicamente los campos presentes.
+ * Extraído de `ProveedorDetalle` para mantener ese archivo ≤200 líneas.
+ */
+export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
+  const csfInputRef = useRef<HTMLInputElement>(null);
+  const [csfLoading, setCsfLoading] = useState(false);
+
+  const handleCsfFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setCsfLoading(true);
+    let data: CsfParsedData;
+    try {
+      data = await parseCsf(file);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "No se pudo procesar la CSF";
+      toast.error(msg);
+      setCsfLoading(false);
+      return;
+    }
+
+    const rfcCsf = (data.rfc ?? "").trim().toUpperCase();
+    const rfcProv = (proveedor.rfc ?? "").trim().toUpperCase();
+    if (!rfcCsf) {
+      toast.error("No se pudo extraer el RFC de la CSF. Verifica que el PDF sea legible.");
+      setCsfLoading(false);
+      return;
+    }
+    if (rfcCsf !== rfcProv) {
+      toast.error("La CSF no corresponde a este proveedor", {
+        description: `La constancia pertenece a ${data.nombre ?? "otra empresa"} (RFC ${rfcCsf}). El proveedor tiene RFC ${rfcProv || "—"}. No se actualizó nada.`,
+        duration: 8000,
+      });
+      setCsfLoading(false);
+      return;
+    }
+
+    const patch: Record<string, string> = {};
+    if (data.nombre?.trim()) patch.nombre = data.nombre.trim();
+    if (data.cp?.trim()) patch.cp = data.cp.trim();
+    if (data.direccion?.trim()) patch.direccion = data.direccion.trim();
+    if (data.ciudad?.trim()) patch.ciudad = data.ciudad.trim();
+    if (data.estado?.trim()) patch.estado = data.estado.trim();
+    if (data.regimen_fiscal?.trim()) patch.regimen_fiscal = data.regimen_fiscal.trim();
+
+    if (Object.keys(patch).length === 0) {
+      toast.warning("La CSF se validó correctamente pero no contenía datos nuevos para actualizar.");
+      setCsfLoading(false);
+      return;
+    }
+
+    try {
+      await onUpdate(proveedor.id, patch);
+      toast.success("Datos fiscales actualizados desde la CSF");
+    } finally {
+      setCsfLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <input
+        ref={csfInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleCsfFile}
+      />
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={csfLoading}
+        onClick={() => csfInputRef.current?.click()}
+        title="Actualizar datos fiscales desde la Constancia de Situación Fiscal"
+      >
+        {csfLoading ? (
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Procesando…</>
+        ) : (
+          <><Upload className="mr-2 h-4 w-4" /> Actualizar con CSF</>
+        )}
+      </Button>
+    </>
+  );
+}
