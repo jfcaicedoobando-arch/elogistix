@@ -17,6 +17,12 @@ export default defineConfig({
       "src/**/*.perf.test.tsx",
       "src/**/*.perf.ts",
     ],
+    // Reporter JUnit (12.85.0): además de los defaults, escribimos test-results.xml
+    // para que dashboards externos (GitHub Actions test reporter, Jenkins, etc.)
+    // puedan consumir resultados estructurados. Default + junit en paralelo para
+    // no perder el output legible en consola.
+    reporters: process.env.CI ? ["default", "junit"] : ["default"],
+    outputFile: { junit: "./reports/junit.xml" },
     // Suite completa medida en ~189s (sandbox Lovable). Archivo más lento: 5.1s,
     // resto <1s. 15s por test/hook deja ~3x de margen sobre el peor caso real
     // sin esconder tests que se cuelgan.
