@@ -136,7 +136,17 @@ export function initSentry(): void {
       return breadcrumb;
     },
     integrations: [
-      Sentry.browserTracingIntegration(),
+      // Router v6 instrumentation: parametriza las rutas (`/embarques/:id` en lugar
+      // de `/embarques/<uuid>`) y permite que `sampleByRoute` y los dashboards de
+      // Sentry agrupen métricas por patrón, no por instancia. Sin esto, el
+      // throughput por ruta queda fragmentado en miles de transactions únicas.
+      Sentry.reactRouterV6BrowserTracingIntegration({
+        useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes,
+      }),
       Sentry.browserProfilingIntegration(),
       Sentry.replayIntegration({
         maskAllText: true,
