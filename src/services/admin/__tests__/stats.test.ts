@@ -110,7 +110,7 @@ describe("services/admin/stats", () => {
   });
 
   it("countByOrg propaga error", async () => {
-    mock.setTable("organization_members", { data: null, count: null, error: { message: "x" } });
+    mock.setTable("organization_members", { data: null, error: { message: "x" } });
     await expect(countOrgMembers("o1")).rejects.toBeTruthy();
   });
 });
