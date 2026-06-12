@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.94.1] - 2026-06-12
+- **feat(embarques/conciliación)**: Fase 2 — nueva pestaña **Conciliación** en el detalle del embarque que compara línea a línea **Cotizado vs Real** usando los `proveedor_facturas_conceptos` vinculados en Fase 1. Tabla con badge de desviación (verde ≤ 5%, amarillo ≤ 15%, rojo > 15%, gris si todavía no llega factura) y KPIs totales (cotizado, real, % desviación, conceptos sin factura). Cada folio de factura es link directo al CxP. Sin migración: cálculo en función pura `buildFilasReconciliacion` + `calcularResumen` en `services/embarques/reconciliacionCostos.ts`.
+- Nuevos archivos: `services/embarques/reconciliacionCostos.ts`, `features/embarques/hooks/useReconciliacionEmbarque.ts`, `features/embarques/components/TabConciliacion.tsx`. Tests: 9 nuevos para la matemática pura (desviación %, ignorar facturas borradas, agregación de resumen).
+
 ## [12.94.0] - 2026-06-12
 - **feat(cxp/conciliación)**: Fase 1 conciliación **cotizado vs real** — al capturar una factura de proveedor, si el proveedor tiene `conceptos_costo` pendientes, aparece la sección "Vincular a costos de embarque" agrupada por expediente. Se insertan `proveedor_facturas_conceptos` con `concepto_costo_id` y, si el monto vinculado cubre ≥ 99% del costo cotizado, el `concepto_costo` se marca como **Pagado** automáticamente (con `fecha_pago = emisión` y `referencia_pago = folio`). Si todos los vínculos comparten un único embarque, también se guarda `proveedor_facturas.embarque_id` para alimentar el EERR devengado por modo. Sin migración nueva: usa los FKs `embarque_id` y `concepto_costo_id` que ya existían.
 - Nuevos archivos: `services/cxp/conceptosCostoVinculables.ts`, `hooks/cxp/useConceptosCostoAbiertos.ts`, `components/cxp/VincularEmbarqueSection.tsx`. Hook `useNuevaFacturaProveedorForm` extendido con estado `vinculos` + `toggleVinculo`/`setVinculoMonto`.
