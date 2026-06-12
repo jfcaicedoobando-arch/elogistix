@@ -25,9 +25,29 @@ function vigenciaPlus30(fechaEmision: string): string {
   }
 }
 
+function resumirContenedores(contenedores: NonNullable<EmbarqueLite["contenedores"]>): string {
+  if (contenedores.length === 0) return "";
+  if (contenedores.length <= 3) {
+    return contenedores
+      .map((c) => `${c.numero_contenedor}${c.tipo_contenedor ? ` · ${c.tipo_contenedor}` : ""}`)
+      .join(", ");
+  }
+  const tipos = new Map<string, number>();
+  for (const c of contenedores) {
+    const t = c.tipo_contenedor || "—";
+    tipos.set(t, (tipos.get(t) ?? 0) + 1);
+  }
+  const resumen = Array.from(tipos.entries())
+    .map(([t, n]) => `${n} × ${t}`)
+    .join(" + ");
+  const numeros = contenedores.map((c) => c.numero_contenedor).join(", ");
+  return `${resumen} — ${numeros}`;
+}
+
 function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
   const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || "-";
   const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || "-";
+  const contenedores = embarque.contenedores ?? [];
   return (
     <>
       <Text style={styles.h3}>Datos del Embarque</Text>
@@ -42,6 +62,12 @@ function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
           ["Ruta", `${origen} → ${destino}`],
         ]}
       />
+      {contenedores.length > 0 ? (
+        <View style={{ marginTop: 4 }}>
+          <Text style={styles.label}>Contenedores</Text>
+          <Text style={styles.value}>{resumirContenedores(contenedores)}</Text>
+        </View>
+      ) : null}
       {embarque.descripcion_mercancia ? (
         <View style={{ marginTop: 4 }}>
           <Text style={styles.label}>Descripción de la mercancía</Text>
@@ -67,7 +93,8 @@ export function ProformaHeader({ proforma, cliente, embarque, esConsolidada, emi
     { label: "Vigencia", value: vigenciaPlus30(proforma.fecha_emision) },
     { label: "Expediente", value: proforma.expediente },
   ];
-  if (proforma.bl_master) meta.push({ label: "BL/MAWB", value: proforma.bl_master });
+  if (proforma.bl_master) meta.push({ label: "BL Master / MAWB", value: proforma.bl_master });
+  if (embarque.bl_house) meta.push({ label: "BL House / HAWB", value: embarque.bl_house });
   if (proforma.operador) meta.push({ label: "Ejecutivo", value: proforma.operador });
 
   return (
