@@ -200,3 +200,28 @@ export function sampleByRoute(ctx: {
 export function isSentryReady(): boolean {
   return initialized;
 }
+
+/**
+ * Aplica scrub de PII sobre un Sentry event (P3): recorta `event.user` a sólo
+ * `{ id }`, redacta query strings sensibles en `event.request.url`, y aplica
+ * regex de RFC/CURP/email sobre `event.message` y `event.exception.values[*].value`.
+ * Exportado para tests.
+ */
+export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
+  if (event.user) {
+    event.user = { id: event.user.id };
+  }
+  if (event.request?.url) {
+    event.request.url = scrubUrl(event.request.url);
+  }
+  if (typeof event.message === "string") {
+    event.message = scrubPii(event.message);
+  }
+  const values = event.exception?.values;
+  if (values) {
+    for (const v of values) {
+      if (typeof v.value === "string") v.value = scrubPii(v.value);
+    }
+  }
+  return event;
+}
