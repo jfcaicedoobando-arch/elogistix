@@ -86,6 +86,16 @@ jobs:
         with:
           deno-version: v1.x
 
+      - name: Cache Deno deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('supabase/functions/**/*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
       - name: Run Deno tests (excluding smoke)
         run: |
           deno test \
