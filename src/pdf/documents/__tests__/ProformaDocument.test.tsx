@@ -61,7 +61,7 @@ describe("ProformaDocument", () => {
   });
 
   it("muestra BL House y lista de contenedores en el header cuando existen", () => {
-    const embarque = makeEmbarque({
+    const base = makeEmbarque({
       modo: "Marítimo",
       tipo: "Importación",
       incoterm: "FOB",
@@ -69,10 +69,13 @@ describe("ProformaDocument", () => {
       puerto_destino: "Manzanillo",
       bl_master: "MAEU123456789",
       bl_house: "HBL-2026-0007",
+    });
+    const embarque = {
+      ...base,
       contenedores: [
         { id: "c1", numero_contenedor: "MSCU1234567", tipo_contenedor: "40HC" },
       ],
-    }) as Parameters<typeof ProformaDocument>[0]["embarque"];
+    } as unknown as Parameters<typeof ProformaDocument>[0]["embarque"];
     const { container } = render(
       <ProformaDocument proforma={mockProforma} embarque={embarque} conceptos={[mockConcepto]} />,
     );
