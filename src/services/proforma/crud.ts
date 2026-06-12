@@ -54,6 +54,12 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
   );
   if (error) throw error;
   if (!data) throw new Error("No se pudo crear la proforma");
+  // P3: métrica de negocio. Sólo monto agregado en MXN, sin cliente/RFC.
+  try {
+    Sentry.metrics?.distribution?.("proforma.total_mxn", params.totales.total_mxn, {
+      unit: "none",
+    });
+  } catch { /* best-effort */ }
   return fromDb<ProformaRow>(data);
 }
 
