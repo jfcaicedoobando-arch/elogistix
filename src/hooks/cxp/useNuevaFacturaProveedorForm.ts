@@ -11,12 +11,15 @@ import {
 } from "@/services/proveedor";
 import {
   subirArchivosCfdiFactura,
+  vincularFacturaAConceptos,
   type CfdiParsedResponse,
+  type ConceptoCostoAbierto,
 } from "@/services/cxp";
 import { useCrearFacturaProveedor } from "@/hooks/cxp";
 import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/components/cxp/facturaFormPrimitives";
 import type { CargaMode } from "@/components/cxp/CargaCfdiSection";
+import type { SeleccionLinea } from "@/components/cxp/VincularEmbarqueSection";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
