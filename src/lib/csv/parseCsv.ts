@@ -157,7 +157,6 @@ function buildAliasMap(raw?: Record<string, string>): Record<string, string> {
   }
   return aliases;
 }
-
 function rowsFromRecords(records: string[][], effective: string[]): Record<string, string>[] {
   const rows: Record<string, string>[] = [];
   for (let r = 1; r < records.length; r++) {

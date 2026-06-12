@@ -149,7 +149,6 @@ export default function Proveedores() {
         ))}
       </Tabs>
 
-
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
 
       <BulkImportDialog
