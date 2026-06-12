@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.6] - 2026-06-12
+- **ci(actions)**: `codecov/codecov-action@v5` → `@v6` (soporte nativo Node.js 24, elimina warning de `actions/github-script`). Defensa en job `coverage`: step de verificación `check-blobs` omite el merge de coverage si no se descargaron blob reports (evita fallo del job cuando shards de tests fallan).
+
 ## [12.92.5] - 2026-06-12
 - **ci(actions)**: actualización de GitHub Actions a versiones con soporte nativo de Node.js 24. `actions/checkout@v4` → `@v6`, `actions/cache@v4` → `@v5`, `actions/upload-artifact@v4` → `@v6`, `actions/download-artifact@v4` → `@v7` en `ci.yml`, `e2e.yml` y `post-deploy-smoke.yml`. Se elimina la variable `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` ya que las acciones actualizadas corren nativamente sobre Node.js 24.
 
