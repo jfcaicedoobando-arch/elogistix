@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.9] - 2026-06-12
+- **test(coverage)**: 110 tests nuevos en 10 suites cubriendo módulos services con 0% previo: `facturas/index` (14), `facturas/cobranzaAggregates` (11), `pagos-factura` (10), `cliente/contactos` (10), `admin/papelera` (8), `admin/stats` (11), `portal/perfil` (9), `cotizacion/queries` (13), `crm/leaderboard` (10), `crm/etapas` (14). Cubre paths felices, errores Supabase, agregación pura de saldos por moneda (sin contaminar buckets MXN/USD), ranking de leaderboard, RPCs de papelera y conteos por organización. Suite completa: 110/110 verdes en 3.4s.
+- **test(infra)**: añade `like`, `ilike` y `contains` al `createSupabaseMock` compartido (`src/services/__tests__/_supabaseChainMock.ts`) para soportar queries con búsqueda por patrón usadas por `generarFolioCotizacion` y futuros services.
+
 ## [12.92.8] - 2026-06-12
 - **test(coverage)**: añade 5 suites para services con 0% cobertura previa — `proveedor` (14 tests), `usuario` (12), `proforma/crud` (9), `facturas/notasCredito` (8), `embarques/dependenciasFinancieras` (3). Total 46 tests nuevos cubriendo paths felices, propagación de errores Supabase y validaciones de dominio (transiciones de estado de notas de crédito, RFCs genéricos SAT, etc.). Sube umbrales globales `lines`/`statements` de 28 → 29 en `vitest.config.ts` recuperando el nivel anterior al drift de 12.92.7.
 
