@@ -1,0 +1,105 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+vi.mock("@sentry/react", () => ({
+  startSpan: (_o: unknown, fn: () => unknown) => fn(),
+  metrics: { distribution: vi.fn() },
+}));
+
+import {
+  crearProforma,
+  eliminarProforma,
+  aprobarProformas,
+} from "@/services/proforma/crud";
+
+const TOTALES = {
+  subtotal_usd: 100,
+  iva_usd: 16,
+  total_usd: 116,
+  subtotal_mxn: 2000,
+  iva_mxn: 320,
+  total_mxn: 2320,
+};
+
+const BASE = {
+  organizationId: "org1",
+  embarqueId: "e1",
+  clienteId: "c1",
+  clienteNombre: "ACME",
+  expediente: "EXP-1",
+  blMaster: null,
+  totales: TOTALES,
+  notas: null,
+  operador: null,
+  diasCredito: 30,
+  tasaIva: 0.16,
+};
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+});
+
+describe("services/proforma/crud", () => {
+  it("crearProforma rechaza si no hay conceptos", async () => {
+    await expect(
+      crearProforma({ ...BASE, conceptoIds: [] } as never),
+    ).rejects.toThrow(/al menos un concepto/);
+  });
+
+  it("crearProforma devuelve fila desde RPC", async () => {
+    mock.setRpcResult("crear_proforma_atomica", {
+      data: { id: "pf1", numero: "PRF-001" },
+      error: null,
+    });
+    const r = await crearProforma({ ...BASE, conceptoIds: ["c1"] } as never);
+    expect(r.id).toBe("pf1");
+  });
+
+  it("crearProforma propaga error de RPC", async () => {
+    mock.setRpcResult("crear_proforma_atomica", { data: null, error: { message: "x" } });
+    await expect(
+      crearProforma({ ...BASE, conceptoIds: ["c1"] } as never),
+    ).rejects.toBeTruthy();
+  });
+
+  it("crearProforma lanza si RPC retorna data null sin error", async () => {
+    mock.setRpcResult("crear_proforma_atomica", { data: null, error: null });
+    await expect(
+      crearProforma({ ...BASE, conceptoIds: ["c1"] } as never),
+    ).rejects.toThrow(/No se pudo crear/);
+  });
+
+  it("eliminarProforma actualiza conceptos y borra fila", async () => {
+    mock.setTableResult("conceptos_venta", { data: null, error: null });
+    mock.setTableResult("proformas", { data: null, error: null });
+    await expect(
+      eliminarProforma({ proformaId: "pf1", embarqueId: "e1" }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("eliminarProforma propaga error de update conceptos", async () => {
+    mock.setTableResult("conceptos_venta", { data: null, error: { message: "x" } });
+    await expect(
+      eliminarProforma({ proformaId: "pf1", embarqueId: "e1" }),
+    ).rejects.toBeTruthy();
+  });
+
+  it("aprobarProformas rechaza con array vacío", async () => {
+    await expect(aprobarProformas([])).rejects.toThrow(/al menos una proforma/);
+  });
+
+  it("aprobarProformas actualiza estado", async () => {
+    mock.setTableResult("proformas", { data: null, error: null });
+    await expect(aprobarProformas(["pf1"])).resolves.toBeUndefined();
+  });
+
+  it("aprobarProformas propaga error", async () => {
+    mock.setTableResult("proformas", { data: null, error: { message: "x" } });
+    await expect(aprobarProformas(["pf1"])).rejects.toBeTruthy();
+  });
+});
