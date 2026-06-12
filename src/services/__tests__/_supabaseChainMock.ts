@@ -57,6 +57,8 @@ export function createSupabaseMock() {
     chain.like = passthrough("like");
     chain.ilike = passthrough("ilike");
     chain.contains = passthrough("contains");
+    chain.or = passthrough("or");
+    chain.match = passthrough("match");
     chain.order = passthrough("order");
     chain.limit = passthrough("limit");
     chain.range = passthrough("range");
