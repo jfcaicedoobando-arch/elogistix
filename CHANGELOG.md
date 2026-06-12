@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.93.0] - 2026-06-12
+- **test(coverage)**: 116 tests nuevos en 10 suites cubriendo services con 0% previo: `cotizacion/costos` (9), `cotizacion/informativa` (12), `crm/plantillas` (12), `crm/lineage` (13), `crm/cliente360` (10), `crm/prospectoSearch` (11), `admin/organizations` (13), `admin/members` (12), `auth/session` (8), `facturas/huecoFacturacion/buildFilas` (16). Cubre paths felices, propagación de errores Supabase, parseo defensivo de jsonb (tarifas informativas), agregación pura por embarque (hueco facturación) y fallbacks de edge functions. Umbrales globales `lines`/`statements` 29 → 30 en `vitest.config.ts`.
+- **test(infra)**: añade `or` y `match` al `createSupabaseMock` compartido para soportar queries de búsqueda combinada (`crm/prospectoSearch`).
+
 ## [12.92.9] - 2026-06-12
 - **test(coverage)**: 110 tests nuevos en 10 suites cubriendo módulos services con 0% previo: `facturas/index` (14), `facturas/cobranzaAggregates` (11), `pagos-factura` (10), `cliente/contactos` (10), `admin/papelera` (8), `admin/stats` (11), `portal/perfil` (9), `cotizacion/queries` (13), `crm/leaderboard` (10), `crm/etapas` (14). Cubre paths felices, errores Supabase, agregación pura de saldos por moneda (sin contaminar buckets MXN/USD), ranking de leaderboard, RPCs de papelera y conteos por organización. Suite completa: 110/110 verdes en 3.4s.
 - **test(infra)**: añade `like`, `ilike` y `contains` al `createSupabaseMock` compartido (`src/services/__tests__/_supabaseChainMock.ts`) para soportar queries con búsqueda por patrón usadas por `generarFolioCotizacion` y futuros services.

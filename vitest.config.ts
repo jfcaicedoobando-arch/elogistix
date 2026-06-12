@@ -68,13 +68,13 @@ export default defineConfig({
         "src/vite-env.d.ts",
         "src/integrations/supabase/**",
       ],
-      // Umbrales mínimos globales. 12.92.8: recuperado lines/statements a 29%
-      // tras añadir 46 tests en services/proveedor, usuario, proforma/crud,
-      // facturas/notasCredito y embarques/dependenciasFinancieras. El plan
-      // eleva +3 puntos por sprint hasta 40/55/58/70 (objetivo Fase 1).
+      // Umbrales mínimos globales. 12.93.0: subimos lines/statements a 30%
+      // tras añadir 116 tests en 10 suites nuevas (services/cotizacion/costos,
+      // informativa, crm/{plantillas,lineage,cliente360,prospectoSearch},
+      // admin/{organizations,members}, auth/session, facturas/huecoFacturacion/buildFilas).
       thresholds: {
-        lines: 29,
-        statements: 29,
+        lines: 30,
+        statements: 30,
         functions: 45,
         branches: 65,
       },
