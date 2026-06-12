@@ -1,9 +1,10 @@
 import React from "react";
 import * as Sentry from "@sentry/react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, MessageSquarePlus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { logClientError } from "@/services/observability";
+import { logger } from "@/lib/observability/logger";
 import {
   isDynamicImportError,
   tryReloadForChunkError,
@@ -16,34 +17,46 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  eventId: string | null;
 }
 
+/**
+ * ErrorBoundary con doble reporte:
+ *  - `Sentry.captureException` con `componentStack` y `eventId` capturado para
+ *    poder ofrecer el widget de feedback pre-llenado (usuario reporta directo
+ *    sobre el evento que rompió la UI).
+ *  - `logClientError` (edge function) para persistir en `app_logs` y poder
+ *    cruzar con métricas de negocio sin depender de Sentry.
+ *  - Recuperación automática para errores de chunks stale (Vite).
+ */
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, eventId: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, eventId: null };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("[ErrorBoundary]", error, errorInfo);
+    logger.error("ErrorBoundary", error, { componentStack: errorInfo.componentStack });
 
     if (isDynamicImportError(error)) {
       tryReloadForChunkError();
       return;
     }
-    // Reporte a Sentry con el componentStack como contexto adicional.
+    let eventId: string | null = null;
     Sentry.withScope((scope) => {
       scope.setTag("source", "react-error-boundary");
       if (errorInfo.componentStack) {
         scope.setContext("react", { componentStack: errorInfo.componentStack });
       }
-      Sentry.captureException(error);
+      eventId = Sentry.captureException(error);
     });
-    // Reporte a app_logs vía servicio dedicado. Fire-and-forget; nunca debe romper la UI.
+    if (eventId) {
+      this.setState({ eventId });
+    }
     logClientError({
       message: error.message,
       stack: error.stack,
@@ -55,8 +68,22 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (isDynamicImportError(this.state.error) && tryReloadForChunkError()) {
       return;
     }
+    this.setState({ hasError: false, error: null, eventId: null });
+  };
 
-    this.setState({ hasError: false, error: null });
+  handleReportFeedback = async () => {
+    const feedback = Sentry.getFeedback();
+    if (!feedback) return;
+    try {
+      const form = await feedback.createForm({
+        // Asocia el feedback con el evento exacto que provocó el crash.
+        ...(this.state.eventId ? { eventId: this.state.eventId } : {}),
+      });
+      form.appendToDom();
+      form.open();
+    } catch {
+      // best-effort: si el widget falla, el usuario aún puede usar Reintentar.
+    }
   };
 
   render() {
@@ -75,13 +102,23 @@ export class ErrorBoundary extends React.Component<Props, State> {
                   {this.state.error.message}
                 </pre>
               )}
-              <div className="flex gap-2 justify-center">
+              {this.state.eventId && (
+                <p className="text-[10px] text-muted-foreground font-mono">
+                  ID del evento: {this.state.eventId}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 justify-center">
                 <Button variant="outline" onClick={this.handleReset}>
                   <RefreshCw className="h-4 w-4 mr-1" /> Reintentar
                 </Button>
                 <Button onClick={() => { window.location.href = "/"; }}>
                   Ir al inicio
                 </Button>
+                {this.state.eventId && (
+                  <Button variant="secondary" onClick={this.handleReportFeedback}>
+                    <MessageSquarePlus className="h-4 w-4 mr-1" /> Reportar
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
