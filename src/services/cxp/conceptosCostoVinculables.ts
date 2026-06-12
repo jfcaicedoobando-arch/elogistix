@@ -105,7 +105,7 @@ export async function vincularFacturaAConceptos(
   const { error: errUp } = await supabase
     .from("conceptos_costo")
     .update({
-      estado_liquidacion: "Liquidado",
+      estado_liquidacion: "Pagado",
       fecha_pago: input.fechaEmision,
       referencia_pago: input.folio,
     })
