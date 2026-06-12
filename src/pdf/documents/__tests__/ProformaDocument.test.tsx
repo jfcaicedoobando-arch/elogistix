@@ -59,4 +59,48 @@ describe("ProformaDocument", () => {
     expect(text).toContain("Flete marítimo Shanghai-Manzanillo");
     expect(text).toMatch(/sin validez fiscal/i);
   });
+
+  it("muestra BL House y lista de contenedores en el header cuando existen", () => {
+    const proforma = makeProforma({
+      numero: "PROF-001",
+      fecha_emision: "2023-01-15",
+      expediente: "EXP-2024-99",
+      cliente_nombre: "Acme Corp",
+      bl_master: "MAEU123456789",
+    });
+    const base = makeEmbarque({
+      modo: "Marítimo",
+      tipo: "Importación",
+      incoterm: "FOB",
+      puerto_origen: "Shanghai",
+      puerto_destino: "Manzanillo",
+      bl_house: "HBL-2026-0007",
+    });
+    const embarque = {
+      ...base,
+      contenedores: [
+        { id: "c1", numero_contenedor: "MSCU1234567", tipo_contenedor: "40HC" },
+      ],
+    } as unknown as Parameters<typeof ProformaDocument>[0]["embarque"];
+    const { container } = render(
+      <ProformaDocument proforma={proforma} embarque={embarque} conceptos={[mockConcepto]} />,
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("BL Master / MAWB");
+    expect(text).toContain("MAEU123456789");
+    expect(text).toContain("BL House / HAWB");
+    expect(text).toContain("HBL-2026-0007");
+    expect(text).toContain("Contenedores");
+    expect(text).toContain("MSCU1234567");
+    expect(text).toContain("40HC");
+  });
+
+  it("no renderiza fila Contenedores cuando no hay contenedores", () => {
+    const { container } = render(
+      <ProformaDocument proforma={mockProforma} embarque={mockEmbarque} conceptos={[mockConcepto]} />,
+    );
+    const text = container.textContent ?? "";
+    expect(text).not.toContain("Contenedores");
+    expect(text).not.toContain("BL House");
+  });
 });

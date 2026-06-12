@@ -84,7 +84,7 @@ export async function fetchEmbarqueParaPdf(embarqueId: string) {
   const { data, error } = await supabase
     .from("embarques")
     .select(
-      "expediente, bl_master, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia",
+      "expediente, bl_master, bl_house, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia, contenedores:embarque_contenedores(id, numero_contenedor, tipo_contenedor)",
     )
     .eq("id", embarqueId)
     .single();
