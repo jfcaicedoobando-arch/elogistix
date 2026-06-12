@@ -1,42 +1,37 @@
-## Diagnóstico
+## Diagnóstico real (v12.81.3)
 
-Probé los headers en la preview y el click sí dispara el sort de TanStack — la lógica está bien (`enableSorting`, `sortingFn`, `getToggleSortingHandler` en `DataTableHeaderRow`).
+El fix anterior (rescue de pointer-events de Radix) era correcto pero **no era la causa raíz** del problema de sort en CXP. Verificado en preview con logs temporales:
 
-El síntoma real está en el session replay: al abrir el `Select` "Moneda" en los filtros de CXP, Radix puso en el `<body>`:
+1. Click en header `<th>` → onClick **sí** dispara.
+2. `header.column.getCanSort()` → **true**.
+3. `getToggleSortingHandler()` → función válida que se ejecuta.
+4. Pero el siguiente render de `DataTableHeaderRow` mostraba `table.getState().sorting === []` → **el state nunca cambia**.
 
-```html
-<body data-scroll-locked="1" style="pointer-events: none;">
+Causa raíz en `useTableInstance.ts`: para modo client se pasaba
+
+```ts
+state: undefined,
+onSortingChange: undefined,
 ```
 
-Esto es correcto mientras el Select está abierto (Radix bloquea la página detrás). El problema es que **Radix a veces no limpia ese estilo al cerrar** — bug conocido cuando hay varios overlays (Select, Dropdown, Dialog) que se abren/cierran rápido o cuando uno se desmonta mientras otro abre. Cuando eso pasa, todo el `<body>` queda con `pointer-events: none` y **ningún click llega a nada** (headers, botones de fila, "Pagar"…). La página se ve normal pero está "congelada".
-
-Coincide 1-a-1 con lo que reportas: estás en CXP, abriste filtros, y después los headers no responden.
+TanStack v8 implementa `setSorting` como `options.onSortingChange?.(updater)`. Si `onSortingChange` es `undefined`, **es un no-op silencioso**. No hay fallback a un setState interno cuando se omite — el caller siempre tiene que conectar `state.sorting` + `onSortingChange`.
 
 ## Fix
 
-Hook global defensivo `useRadixPointerEventsRescue()` montado una sola vez en `App.tsx`:
+En `src/components/shared/dataTable/useTableInstance.ts`:
 
-1. Observa `document.body` con un `MutationObserver` sobre `style` y `data-scroll-locked`.
-2. Cada vez que cambian, verifica si queda algún overlay abierto en el DOM con el selector:
-   ```
-   [data-radix-popper-content-wrapper] [data-state="open"],
-   [role="dialog"][data-state="open"],
-   [role="menu"][data-state="open"],
-   [role="listbox"][data-state="open"]
-   ```
-3. Si **no** hay ninguno abierto pero el body sigue con `pointer-events: none` o `data-scroll-locked`, los quita. Esto es safe: si Radix reabre algo, vuelve a poner los atributos.
-4. Cleanup del observer en el unmount (regla Power of 10).
+- Modo client: `useState<SortingState>([])` interno + pasar `state.sorting` y `onSortingChange: setInternalSorting` al `useReactTable`.
+- Modo server: sigue igual, conectado a `controlledSort` + `handleSortingChange` (que delega en `onSortChange` del page-state).
 
-Archivo nuevo: `src/hooks/shared/useRadixPointerEventsRescue.ts` (~40 líneas).
-Edición mínima en `src/App.tsx`: llamar al hook dentro del componente raíz.
+Una sola fuente de verdad por modo, sin tocar columnas, callers ni `DataTable.tsx`.
+
+## Verificación
+
+`/cxp` → click en header "Total":
+- Aparece flecha ↓ activa.
+- Filas reordenan desc: MXN 70,180 → 34,320 → … → 1.12.
 
 ## Changelog / versión
 
-- Bump `APP_VERSION` → `12.81.2` (patch).
-- Entrada en `CHANGELOG.md`: `fix(ui): rescate global del scroll-lock de Radix — los headers de tablas y botones dejaban de responder tras abrir/cerrar Selects de filtros (CXP, Embarques, etc.) porque <body> quedaba con pointer-events:none.`
-
-## Fuera de alcance
-
-- No se modifica `DataTable`, columnas ni la lógica de sort (funcionan).
-- No se cambia ningún Select / Dialog específico (el fix es transversal).
-- No se agregan dependencias.
+- `APP_VERSION` → `12.81.3`.
+- Entrada `[12.81.3]` en `CHANGELOG.md` con la explicación técnica.
