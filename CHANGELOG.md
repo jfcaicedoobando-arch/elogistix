@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.95.3] - 2026-06-12
+- **chore(audit)**: ejecutados los pasos rápidos del plan de auditoría arquitectónica. (1) `services/embarques/reconciliacionCostos.ts:125`: cast `as unknown as CCRow[]` ahora lleva marcador `// SAFE-CAST:` justificando que el shape proviene del `select` explícito, dejando la auditoría en 0 casts HIGH/CRITICAL. (2) Renombrados 3 títulos duplicados de tests para resolver `audit:tests`: `dependenciasFinancieras.test.ts` ("propaga error de facturas en dependencias financieras del embarque"), `cobranza.test.ts` (suffijos "(cobranza — …)" en los dos `describe` que colisionaban con `cobranzaAggregates.test.ts`). El resto del plan (Power-of-10 en 17 archivos, migración a `features/*`, descomposición de god controllers) queda como roadmap iterativo en `.lovable/plan.md`.
+
 ## [12.95.2] - 2026-06-12
 - **feat(pdf/proforma)**: salto de página inteligente antes de la sección **Conceptos** en `ProformaDocument` y `ProformaConsolidadaDocument`. El bloque (título + tablas por moneda) se envuelve en un `<View minPresenceAhead={140}>`: si quedan menos de ~140pt libres en la hoja actual react-pdf empuja todo el bloque a la página siguiente para evitar títulos huérfanos y tablas cortadas a 1 fila; si caben holgados, se quedan en la misma página. No fuerza salto en proformas cortas (no desperdicia papel) y mantiene el `wrap={false}` por grupo de contenedor.
 

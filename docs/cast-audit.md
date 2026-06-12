@@ -10,12 +10,12 @@ Total de `as` casts detectados: **1358**
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 463     | 34.1% |
-| LOW       | 1 | 20      | 1.5% |
+| LOW       | 1 | 21      | 1.5% |
 | MEDIUM    | 2 | 874   | 64.4% |
-| HIGH      | 3 | 1     | 0.1% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **1358**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/services/embarques/reconciliacionCostos.ts:125`
-
-```ts
-const conceptos = (cc ?? []) as unknown as CCRow[];
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
