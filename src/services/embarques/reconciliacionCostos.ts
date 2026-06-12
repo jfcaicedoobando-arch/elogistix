@@ -122,6 +122,7 @@ export async function fetchReconciliacionEmbarque(
     .eq("embarque_id", embarqueId)
     .is("deleted_at", null);
   if (errCc) throw errCc;
+  // SAFE-CAST: shape modelado por CCRow a partir del select explícito de columnas arriba.
   const conceptos = (cc ?? []) as unknown as CCRow[];
   if (conceptos.length === 0) return [];
 

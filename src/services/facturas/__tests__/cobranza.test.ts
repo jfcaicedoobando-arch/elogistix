@@ -25,7 +25,7 @@ const f = (over: Partial<FacturaCobranza> = {}): FacturaCobranza => ({
   ...over,
 });
 
-describe("agruparSaldosPorMoneda", () => {
+describe("agruparSaldosPorMoneda (cobranza — separación de monedas)", () => {
   it("separa MXN y USD sin mezclar", () => {
     const r = agruparSaldosPorMoneda([
       f({ moneda: "MXN", saldo: 100 }),
@@ -71,7 +71,7 @@ describe("agruparSaldosPorMoneda", () => {
   });
 });
 
-describe("calcularKPIs", () => {
+describe("calcularKPIs (cobranza — consistencia con agruparSaldosPorMoneda)", () => {
   it("totales coinciden con agruparSaldosPorMoneda", () => {
     const filas = [
       f({ moneda: "MXN", saldo: 100 }),
