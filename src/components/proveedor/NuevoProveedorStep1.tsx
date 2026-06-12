@@ -7,15 +7,17 @@ import {
   CsfUploader,
   TipoLogisticoSelect,
   SubtipoGastoSelect,
+  ContactoFields,
+} from "./NuevoProveedorStep1Fields";
+import {
   PaisAgenteSelect,
   RfcField,
   DireccionFiscalGastoFields,
-  ContactoFields,
-} from "./NuevoProveedorStep1Fields";
+} from "./NuevoProveedorStep1FiscalFields";
 
 /**
  * Paso 1 del wizard de Nuevo Proveedor.
- * Orquestador delgado: cada bloque vive en `NuevoProveedorStep1Fields.tsx`.
+ * Orquestador delgado: cada bloque vive en archivos `*Fields.tsx` hermanos.
  */
 export function NuevoProveedorStep1({ c }: { c: Controller }) {
   const mostrarCsf = c.isGasto || (c.isLogistico && c.form.origen_proveedor === "Nacional");
