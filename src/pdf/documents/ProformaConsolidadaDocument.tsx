@@ -51,14 +51,16 @@ function columnas(moneda: "USD" | "MXN", hayIva: boolean): PdfColumn<ConceptoCon
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum,
       render: (r) => formatCurrency(Number(r.precio_unitario), moneda) },
-    { key: "total", title: "Total", cellStyle: styles.cellNum,
-      render: (r) => formatCurrency(Number(r.total), moneda) },
+    { key: "importe", title: "Importe", cellStyle: styles.cellNum,
+      render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), moneda) },
   ];
   if (!hayIva) return base;
   return [
     ...base,
     { key: "iva", title: "IVA", cellStyle: styles.cellNum,
       render: (r) => r.aplica_iva ? formatCurrency(Number(r.iva), moneda) : "—" },
+    { key: "total", title: "Total", cellStyle: styles.cellNum,
+      render: (r) => formatCurrency(Number(r.total), moneda) },
   ];
 }
 

@@ -1,79 +1,40 @@
-## Diagnóstico
+## Problema
 
-Audité la base y encontré **proformas con IVA desincronizado**: el flag `aplica_iva` y `tasa_iva_aplicada` de los conceptos están correctos, pero los totales (`iva_usd`, `total_usd`) almacenados en la proforma son `0`.
+En el PDF de proforma (`ProformaDocument.tsx`), las columnas inline de cada concepto se muestran como:
 
-Ejemplos reales (`PRO-2026-0319/0321/0322`):
-
-| Proforma   | iva_usd guardado | IVA recalculado desde conceptos |
-|------------|------------------|---------------------------------|
-| PRO-2026-0319 | 0   | 20 USD |
-| PRO-2026-0321 | 0   | 40 USD |
-| PRO-2026-0322 | 0   | 20 USD |
-
-### Causa raíz
-
-`useDialogGenerarProformaController` envía dos cosas separadas a la RPC `crear_proforma_atomica`:
-1. **`totales`** calculados en cliente (memo sobre `ivaPorConcepto`).
-2. **`ivaOverrides`** por concepto (también desde `ivaPorConcepto`).
-
-La RPC **confía ciegamente** en `totales` y solo persiste overrides en `conceptos_venta`. Cualquier desfase entre los dos cálculos en cliente (re-render por refetch de React Query mientras el diálogo está abierto, `useEffect` que reinicializa `ivaPorConcepto` al cambiar referencia de `conceptosPendientes`, race entre `setState` y memo) produce el bug: los conceptos quedan marcados con IVA pero el total de la proforma queda en cero.
-
-Bug secundario: en `PasoSeleccionConceptos.tsx:84`, `ivaPorConcepto[c.id] ?? false` muestra el switch en OFF antes de que el `useEffect` de inicialización corra, dando una ventana donde el usuario puede submitir sin que el estado refleje los defaults reales.
-
-## Plan de remediación
-
-### 1. Mover la fuente de verdad al servidor (fix definitivo)
-
-Modificar `crear_proforma_atomica` para **recalcular** los totales dentro de la RPC desde los conceptos seleccionados y los overrides, ignorando los `p_*_usd`/`p_*_mxn` del cliente (o usarlos solo como validación con tolerancia).
-
-Pseudo-SQL:
-```sql
--- después de aplicar overrides:
-SELECT
-  SUM(CASE WHEN moneda='USD' THEN cantidad*precio_unitario END) AS sub_usd,
-  SUM(CASE WHEN moneda='USD' AND aplica_iva
-           THEN cantidad*precio_unitario*tasa_iva_aplicada END) AS iva_usd,
-  ... -- MXN siempre con IVA
-INTO v_sub_usd, v_iva_usd, ...
-FROM conceptos_venta
-WHERE id = ANY(p_concepto_ids) AND organization_id = v_org;
 ```
-Si los totales del cliente difieren de los recalculados en > $0.01, **levantar excepción** y log en `bitacora_actividad` para detectar regresiones futuras. Insertar siempre los valores recalculados.
+Descripción | Cant. | P. Unit. | Total | IVA
+```
 
-### 2. Reparar proformas existentes
+El orden es contraintuitivo: la columna "Total" aparece antes de "IVA", cuando lógicamente el IVA debería calcularse antes y el Total al final (importe + IVA = total de línea).
 
-Migración one-shot que recalcula `iva_usd`, `total_usd`, `iva_mxn`, `total_mxn` para todas las proformas con `estado_revision != 'facturada'` cuyos totales no cuadren con sus conceptos. Las facturadas no se tocan (impacto fiscal); se listan en bitácora para revisión manual del usuario.
+## Cambio propuesto
 
-### 3. Endurecer el cliente
+Reordenar las columnas en `columnasUSD` (y revisar `columnasMXN`) a:
 
-- `useDialogGenerarProformaController`: cambiar el `useEffect` de inicialización para que **solo** se ejecute en transición `open: false → true` (usar `useRef` para detectar primer abrir) y no en cada cambio de referencia de `conceptosPendientes`. Esto preserva los toggles del usuario ante refetches.
-- `PasoSeleccionConceptos.tsx:84`: cambiar `?? false` por `?? !!c.aplica_iva` para evitar la ventana de UI inconsistente.
+```
+Descripción | Cant. | P. Unit. | Importe | IVA | Total
+```
 
-### 4. Tests
+Donde:
+- **Importe** = `cantidad × precio_unitario` (lo que hoy se llama "Total")
+- **IVA** = monto de IVA de la línea (o "—" si no aplica)
+- **Total** = Importe + IVA (nueva columna, total real de línea)
 
-- Unit test en `lib/domain/proforma.test.ts` cubriendo el caso "concepto con `aplica_iva=true` y `ivaOverrides` ausente debe sumar IVA".
-- Test de regresión en `services/proforma/crud.test.ts` que valida la RPC con totales recalculados.
-- E2E (Playwright `03-factura.spec.ts`): crear proforma con mezcla USD con/sin IVA y verificar `total_usd = subtotal + iva` post-creación.
+Esto deja claro al cliente cómo se forma el total de cada renglón y respeta el orden de lectura natural.
 
-### 5. Bitácora / Changelog
+### Aplica a:
+- `src/pdf/documents/ProformaDocument.tsx` (`columnasUSD`, `columnasMXN`)
+- Revisar `ProformaConsolidadaDocument.tsx` si tiene el mismo orden (probablemente sí) y aplicar el mismo arreglo
+- Actualizar los snapshots/tests en `src/pdf/documents/__tests__/ProformaDocument.test.tsx` y `ProformaConsolidadaDocument.test.tsx` si validan headers/orden
 
-- Actualizar `CHANGELOG.md` y bump `APP_VERSION` a `12.94.2`.
-- Registrar incidencia en `mem://features/proforma-iva-fix` documentando que la RPC es ahora source of truth.
+### MXN
+Hoy MXN no muestra columna de IVA inline (siempre aplica 16% y se ve sólo en `TotalesBox`). Para consistencia, agregar también columnas `Importe | IVA | Total` en MXN, ya que el IVA siempre aplica.
 
-## Detalles técnicos
+### Metadata
+- Bump `APP_VERSION` a `12.94.3`
+- Entrada en `CHANGELOG.md`: "PDF Proforma: reordenar columnas a Importe → IVA → Total para mayor claridad."
 
-- **Archivos afectados**:
-  - Nueva migración SQL: redefinir `crear_proforma_atomica` + script de reparación.
-  - `src/features/embarques/hooks/useDialogGenerarProformaController.ts`
-  - `src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx`
-  - `src/lib/domain/__tests__/proforma.test.ts`
-  - `src/services/proforma/__tests__/crud.test.ts`
-  - `e2e/specs/03-factura.spec.ts`
-  - `CHANGELOG.md`, `src/constants/appVersion.ts`
+## Pregunta
 
-- **Riesgo**: la migración de reparación afecta proformas no facturadas; se ejecuta en transacción con `RAISE NOTICE` por proforma corregida.
-- **No se tocan**: proformas ya facturadas (mantener auditoría fiscal), facturas, ni notas de crédito.
-
-## Pregunta antes de implementar
-
-¿Quieres que repare automáticamente las proformas no facturadas existentes (paso 2), o prefieres que solo arregle el flujo a futuro y te entregue un reporte de las afectadas para que las corrijas manualmente?
+¿Confirmas que quieres la columna nueva **Total = Importe + IVA** por línea, o prefieres sólo **reordenar** (mover IVA antes de Total, manteniendo "Total" como cantidad × precio sin IVA)?

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.94.3] - 2026-06-12
+- **fix(pdf/proforma)**: reordena columnas inline de conceptos a `Descripción | Cant. | P. Unit. | Importe | IVA | Total`. Antes el "Total" salía antes que el IVA y representaba sólo `cantidad × precio_unitario`, lo que confundía al cliente. Ahora **Importe** = cantidad × P. Unit., **IVA** = monto de impuesto de la línea (o "—" si no aplica), **Total** = Importe + IVA. Aplicado en `ProformaDocument` y `ProformaConsolidadaDocument`; MXN ahora también muestra IVA inline (siempre aplica 16%).
+
 ## [12.94.2] - 2026-06-12
 - **fix(proformas/IVA)**: corrige proformas que se guardaban con `iva_usd` (o `iva_mxn`) en cero pese a tener conceptos con `aplica_iva = true`. La RPC `crear_proforma_atomica` ahora **recalcula los totales server-side** desde los conceptos seleccionados después de aplicar los overrides de IVA (single source of truth); los totales enviados por el cliente quedan sólo como señal de auditoría (`RAISE NOTICE` si difieren > $0.01). Esto blinda el flujo ante cualquier desincronización entre `ivaPorConcepto` y el memo de `totales` en el diálogo.
 - **fix(proformas/UI)**: en `useDialogGenerarProformaController`, el efecto que inicializa `ivaPorConcepto`/`seleccionados` ahora corre **sólo en la transición cerrado→abierto** (gated por `useRef`). Antes se ejecutaba en cada cambio de referencia de `conceptosPendientes`, así que un refetch de React Query durante el diálogo borraba los toggles del usuario. Adicionalmente, `PasoSeleccionConceptos` cae al `aplica_iva` real del concepto cuando el state aún no se ha hidratado, eliminando la ventana donde el switch aparecía OFF.
