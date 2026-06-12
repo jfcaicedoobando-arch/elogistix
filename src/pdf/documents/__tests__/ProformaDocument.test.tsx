@@ -83,7 +83,7 @@ describe("ProformaDocument", () => {
       ],
     } as unknown as Parameters<typeof ProformaDocument>[0]["embarque"];
     const { container } = render(
-      <ProformaDocument proforma={mockProforma} embarque={embarque} conceptos={[mockConcepto]} />,
+      <ProformaDocument proforma={proforma} embarque={embarque} conceptos={[mockConcepto]} />,
     );
     const text = container.textContent ?? "";
     expect(text).toContain("BL Master / MAWB");
