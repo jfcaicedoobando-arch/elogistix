@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { calcularTotalesProforma } from "@/lib/domain/proforma";
@@ -47,7 +48,10 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
     // SAFE-CAST: la RPC acepta NULL en bl_master/notas/operador/dias_credito y los tipos
     // generados por Supabase los exponen como required; el cast sólo cierra ese gap.
   } as unknown as Parameters<typeof supabase.rpc<"crear_proforma_atomica">>[1];
-  const { data, error } = await supabase.rpc("crear_proforma_atomica", rpcArgs);
+  const { data, error } = await Sentry.startSpan(
+    { name: "rpc.crear_proforma_atomica", op: "db.rpc", attributes: { embarque_id: params.embarqueId } },
+    () => supabase.rpc("crear_proforma_atomica", rpcArgs),
+  );
   if (error) throw error;
   if (!data) throw new Error("No se pudo crear la proforma");
   return fromDb<ProformaRow>(data);
