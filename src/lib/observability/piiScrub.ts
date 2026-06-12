@@ -38,7 +38,8 @@ export function scrubUrl(url: string | undefined | null): string | undefined {
     // Conservar el path original (sin host artificial cuando la URL era relativa).
     const isAbsolute = /^https?:\/\//i.test(url);
     const out = isAbsolute ? u.toString() : `${u.pathname}${u.search}`;
-    return scrubPii(out);
+    // URL encodea `[` y `]` como %5B/%5D; restauramos los placeholders legibles.
+    return scrubPii(out.replace(/%5B/gi, "[").replace(/%5D/gi, "]"));
   } catch {
     return scrubPii(url);
   }
