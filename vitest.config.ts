@@ -68,14 +68,14 @@ export default defineConfig({
         "src/vite-env.d.ts",
         "src/integrations/supabase/**",
       ],
-      // Umbrales mínimos globales. Auditoría Fase 3 (12.86.0): segundo
-      // incremento, lines/statements 30 → 35, functions 45 → 50. Plan: +5
-      // puntos por sprint hasta alcanzar 60/60/55/65 (objetivo auditoría).
+      // Umbrales mínimos globales. Auditoría Fase 3 (12.87.0): tercer
+      // incremento, lines/statements 35 → 40, functions 50 → 55, branches
+      // 55 → 58. Plan: +5 puntos por sprint hasta alcanzar 60/60/55/65.
       thresholds: {
-        lines: 35,
-        statements: 35,
-        functions: 50,
-        branches: 55,
+        lines: 40,
+        statements: 40,
+        functions: 55,
+        branches: 58,
       },
     },
   },

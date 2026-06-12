@@ -1,24 +1,29 @@
 import { describe, it, expect } from "vitest";
 import { ProformaDocument } from "../ProformaDocument";
 import { render } from "@testing-library/react";
+import { makeProforma, makeEmbarque } from "@/test/fixtures";
 
-const mockProforma = {
+const mockProforma = makeProforma({
   numero: "PROF-001",
   fecha_emision: "2023-01-15",
   expediente: "EXP-2024-99",
   cliente_nombre: "Acme Corp",
-  subtotal_usd: 100, iva_usd: 16, total_usd: 116,
-  subtotal_mxn: 0, iva_mxn: 0, total_mxn: 0,
-} as any;
+  subtotal_usd: 100,
+  iva_usd: 16,
+  total_usd: 116,
+  subtotal_mxn: 0,
+  iva_mxn: 0,
+  total_mxn: 0,
+});
 
-const mockEmbarque = {
+const mockEmbarque = makeEmbarque({
   modo: "Marítimo",
   tipo: "FCL",
   incoterm: "FOB",
   puerto_origen: "Shanghai",
   puerto_destino: "Manzanillo",
   descripcion_mercancia: "Carga seca general",
-} as any;
+} as unknown as Partial<ReturnType<typeof makeEmbarque>>);
 
 const mockConcepto = {
   descripcion: "Flete marítimo Shanghai-Manzanillo",
@@ -27,7 +32,7 @@ const mockConcepto = {
   precio_unitario: 100,
   subtotal: 100,
   aplica_iva: true,
-} as any;
+} as unknown as Parameters<typeof ProformaDocument>[0]["conceptos"][number];
 
 describe("ProformaDocument", () => {
   it("muestra número, expediente, cliente, modo y puertos en el documento", () => {

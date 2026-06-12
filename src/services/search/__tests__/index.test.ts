@@ -1,36 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { buscarGlobal } from '../index';
+import { createSupabaseMock } from '@/services/__tests__/_supabaseChainMock';
 
-const { mockSupabase } = vi.hoisted(() => ({
-  mockSupabase: {
-    rpc: vi.fn(),
-  },
-}));
+const { mockRef } = vi.hoisted(() => ({ mockRef: { current: null as ReturnType<typeof createSupabaseMock> | null } }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  get supabase() { return mockRef.current!.supabase; },
 }));
+
+import { buscarGlobal } from '../index';
 
 describe('search/index', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockRef.current = createSupabaseMock();
   });
 
   it('buscarGlobal llama al RPC busqueda_global', async () => {
-    mockSupabase.rpc.mockResolvedValue({ data: [{ id: '1', label: 'test' }], error: null });
+    mockRef.current!.setRpcResult('busqueda_global', { data: [{ id: '1', label: 'test' }], error: null });
     const result = await buscarGlobal('query');
-    expect(mockSupabase.rpc).toHaveBeenCalledWith('busqueda_global', { termino: 'query', limite: 5 });
+    expect(mockRef.current!.rpcCalls[0]).toEqual({ fn: 'busqueda_global', args: { termino: 'query', limite: 5 } });
     expect(result).toEqual([{ id: '1', label: 'test' }]);
   });
 
   it('buscarGlobal retorna vacio si no hay termino', async () => {
     const result = await buscarGlobal('  ');
     expect(result).toEqual([]);
-    expect(mockSupabase.rpc).not.toHaveBeenCalled();
+    expect(mockRef.current!.rpcCalls.length).toBe(0);
   });
 
   it('buscarGlobal devuelve [] en error de RPC y loggea', async () => {
-    mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('RPC fail') });
+    mockRef.current!.setRpcResult('busqueda_global', { data: null, error: new Error('RPC fail') });
     const result = await buscarGlobal('query');
     expect(result).toEqual([]);
   });
