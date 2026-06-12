@@ -172,3 +172,14 @@ jobs:
             coverage/
             reports/coverage-report.md
           retention-days: 30
+
+      # Codecov upload (informational — no falla el job si el token no está).
+      # Para activar reporting nominal: agregar `CODECOV_TOKEN` como secret de repo.
+      - name: Upload coverage to Codecov
+        if: always()
+        continue-on-error: true
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
