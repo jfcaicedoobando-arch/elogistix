@@ -48,7 +48,7 @@ describe("costeo/services/demorasVenta", () => {
     expect(call?.ops).toContain("eq");
   });
 
-  it("propaga errores de Supabase", async () => {
+  it("propaga errores de Supabase al consultar demoras de venta", async () => {
     mock.setTableResult("costeo_demoras_venta_tarifa", { data: null, error: { message: "rls" } });
     await expect(fetchDemorasVenta()).rejects.toBeDefined();
   });

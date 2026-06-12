@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.3] - 2026-06-12
+- **fix(tests/audit)**: renombrados títulos duplicados `"propaga errores de Supabase"` para incluir contexto de dominio — ahora `"...al consultar demoras de venta"` en `demorasVenta.test.ts` y `"...al consultar factura por ID"` en `facturas/detail.test.ts`. `bun run audit:tests` pasa sin violaciones.
+
 ## [12.92.2] - 2026-06-12
 - **fix(tests/deno)**: `supabase/functions/client-error-log/validate_test.ts` importaba `checkRateLimit` que ya no existe (en 12.32.0 se migró a la RPC persistente `check_ratelimit` con tabla `ratelimit_buckets`). Se eliminan los 2 tests obsoletos del rate-limit in-memory y se conservan los tests de `truncate` y `getClientIp` (más uno nuevo para objetos serializados). `deno test` pasa con 95+ tests verdes y 0 fallos.
 
