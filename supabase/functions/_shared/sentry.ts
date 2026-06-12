@@ -90,7 +90,7 @@ export async function captureEdgeException(err: unknown, ctx: EdgeErrorContext):
   const Sentry = await loadSentry();
   if (!Sentry) return;
   try {
-    Sentry.withScope((scope: any) => {
+    Sentry.withScope((scope: { setTag: (k: string, v: string) => void; setUser: (u: { id: string }) => void; setExtra: (k: string, v: unknown) => void; setContext: (k: string, v: Record<string, unknown>) => void }) => {
       scope.setTag("fn", ctx.fn);
       if (ctx.request_id) scope.setTag("request_id", ctx.request_id);
       if (ctx.user_id) scope.setUser({ id: ctx.user_id });
