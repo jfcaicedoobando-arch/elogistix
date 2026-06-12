@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { useAuth } from "@/contexts/AuthContext";
 import { listActiveOrganizations } from "@/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
+import { syncSentryActiveOrg } from "@/lib/sentryUser";
 
 export interface Organization {
   id: string;
