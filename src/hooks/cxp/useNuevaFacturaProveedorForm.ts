@@ -1,14 +1,13 @@
 /**
  * Hook controller para DialogNuevaFacturaProveedor.
- * Encapsula estado del formulario, parseo CFDI, validación y submit.
+ * Orquesta estado del formulario, parseo CFDI, validación y submit.
+ * Helpers puros viven en `useNuevaFacturaProveedorForm.helpers.ts`.
  */
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import {
-  findProveedorByRfcEnOrg,
-} from "@/services/proveedor";
+import { findProveedorByRfcEnOrg } from "@/services/proveedor";
 import {
   subirArchivosCfdiFactura,
   vincularFacturaAConceptos,
@@ -16,38 +15,21 @@ import {
   type ConceptoCostoAbierto,
 } from "@/services/cxp";
 import { useCrearFacturaProveedor } from "@/hooks/cxp";
-import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/components/cxp/facturaFormPrimitives";
 import type { CargaMode } from "@/components/cxp/CargaCfdiSection";
 import type { SeleccionLinea } from "@/components/cxp/VincularEmbarqueSection";
+import {
+  type PendingCfdi,
+  type VinculoLinea,
+  addDays,
+  initialValues,
+  calcularTotal,
+  validateFactura,
+  buildPayload,
+  mapCfdiToValues,
+} from "./useNuevaFacturaProveedorForm.helpers";
 
-type Moneda = Database["public"]["Enums"]["moneda"];
-
-interface PendingCfdi {
-  uuid: string;
-  rfcEmisor: string;
-  xmlFile: File;
-  pdfFile: File | null;
-}
-
-function addDays(iso: string, days: number): string {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-const today = () => new Date().toISOString().slice(0, 10);
-
-function initialValues(): FacturaFormValues {
-  const t = today();
-  return {
-    provId: "", provNombre: "", folio: "",
-    emision: t, diasCredito: 30, vencimiento: addDays(t, 30),
-    moneda: "MXN", tc: "",
-    subtotal: "", iva: "", retenciones: "",
-    categoriaId: "", notas: "",
-  };
-}
+type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
 
 export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const { user } = useAuth();
@@ -58,15 +40,9 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const [mode, setMode] = useState<CargaMode>("manual");
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
-  /** Conceptos_costo seleccionados para vincular. Key = concepto_costo.id. */
-  const [vinculos, setVinculos] = useState<Record<string, SeleccionLinea & { embarqueId: string; montoOriginal: number; descripcion: string }>>({});
+  const [vinculos, setVinculos] = useState<VinculosState>({});
 
-  const total = useMemo(() => {
-    const s = Number(values.subtotal) || 0;
-    const i = Number(values.iva) || 0;
-    const r = Number(values.retenciones) || 0;
-    return s + i - r;
-  }, [values.subtotal, values.iva, values.retenciones]);
+  const total = useMemo(() => calcularTotal(values), [values]);
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {
     setValues((prev) => {
@@ -82,7 +58,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const handleProveedor = (id: string, nombre: string) => {
     setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
-    setVinculos({}); // limpia selección previa al cambiar proveedor
+    setVinculos({});
   };
 
   const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
@@ -116,8 +92,6 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
     const c = data.cfdi;
-    const monedaValida: Moneda = c.moneda === "USD" || c.moneda === "EUR" ? c.moneda : "MXN";
-
     let provId = "";
     let provNombre = c.emisor.nombre;
     try {
@@ -126,63 +100,16 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
       else setAskCrearProv({ rfc: c.emisor.rfc, nombre: c.emisor.nombre });
     } catch { /* lookup opcional */ }
 
-    setValues({
-      provId, provNombre,
-      folio: [c.serie, c.folio].filter(Boolean).join("-") || c.uuid.slice(0, 8),
-      emision: c.fecha || today(),
-      diasCredito: 30,
-      vencimiento: addDays(c.fecha || today(), 30),
-      moneda: monedaValida,
-      tc: monedaValida === "MXN" ? "" : String(c.tipo_cambio || ""),
-      subtotal: String(c.subtotal || ""),
-      iva: String(c.iva_trasladado || ""),
-      retenciones: String(c.retenciones || ""),
-      categoriaId: data.ai.categoria_id ?? "",
-      notas: data.ai.notas || "",
-    });
+    setValues(mapCfdiToValues(data, provId, provNombre));
     setErrors({});
     setPendingCfdi({ uuid: c.uuid, rfcEmisor: c.emisor.rfc, xmlFile: files.xml, pdfFile: files.pdf });
   };
 
   const validate = (): boolean => {
-    const next: Partial<Record<keyof FacturaFormValues, string>> = {};
-    if (!values.provId) next.provId = "Selecciona un proveedor";
-    if (!values.folio.trim()) next.folio = "Captura el folio del proveedor";
-    if (total <= 0) next.subtotal = "El total debe ser mayor a 0";
-    if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
-      next.tc = "Captura el tipo de cambio";
-    }
+    const next = validateFactura(values, total);
     setErrors(next);
     return Object.keys(next).length === 0;
   };
-
-  /** Si todos los vínculos comparten un único embarque, lo guardamos en la factura. */
-  const embarqueIdUnico = (): string | null => {
-    const ids = new Set(Object.values(vinculos).map((v) => v.embarqueId));
-    return ids.size === 1 ? [...ids][0] : null;
-  };
-
-  const buildPayload = () => ({
-    proveedor_id: values.provId,
-    proveedor_nombre: values.provNombre,
-    folio_proveedor: values.folio.trim(),
-    fecha_emision: values.emision,
-    fecha_vencimiento: values.vencimiento,
-    dias_credito: Number(values.diasCredito) || 0,
-    moneda: values.moneda,
-    tipo_cambio_usd: Number(values.tc) || 0,
-    subtotal: Number(values.subtotal) || 0,
-    iva: Number(values.iva) || 0,
-    retenciones: Number(values.retenciones) || 0,
-    total,
-    estado: "Vigente" as const,
-    notas: values.notas,
-    categoria_presupuesto_id: values.categoriaId || null,
-    created_by: user?.id,
-    uuid_fiscal: pendingCfdi?.uuid ?? null,
-    rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
-    embarque_id: embarqueIdUnico(),
-  });
 
   const uploadCfdiSafe = async (createdId: string) => {
     if (!pendingCfdi) return;
@@ -239,7 +166,9 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
       return;
     }
     try {
-      const created = await crear.mutateAsync(buildPayload());
+      const created = await crear.mutateAsync(
+        buildPayload({ values, total, userId: user?.id, pendingCfdi, vinculos }),
+      );
       if (created?.id) {
         await uploadCfdiSafe(created.id);
         await vincularSafe(created.id);
@@ -262,4 +191,3 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     organizationId,
   };
 }
-
