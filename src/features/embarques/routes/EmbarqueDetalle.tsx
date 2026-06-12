@@ -23,6 +23,7 @@ import { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
 import { TabNotas } from "@/features/embarques/components/TabNotas";
 import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
+import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 
 import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
@@ -30,7 +31,7 @@ import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueD
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
-const TABS_VALIDOS = ["resumen", "documentos", "costos", "facturacion", "garantias", "tracking", "notas"] as const;
+const TABS_VALIDOS = ["resumen", "documentos", "costos", "conciliacion", "facturacion", "garantias", "tracking", "notas"] as const;
 
 function LoadingState() {
   return (
@@ -121,6 +122,7 @@ export default function EmbarqueDetalle() {
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="costos">Costos</TabsTrigger>
+          <TabsTrigger value="conciliacion">Conciliación</TabsTrigger>
           <TabsTrigger value="facturacion">Facturación</TabsTrigger>
           <TabsTrigger value="garantias">Garantías</TabsTrigger>
           <TabsTrigger value="tracking">Tracking</TabsTrigger>
@@ -170,6 +172,12 @@ export default function EmbarqueDetalle() {
             canEdit={canEdit}
           />
         </TabsContent>
+
+        <TabsContent value="conciliacion" className="space-y-6">
+          <TabConciliacion embarqueId={id!} />
+        </TabsContent>
+
+
 
         <TabsContent value="facturacion">
           <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
