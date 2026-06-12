@@ -14,11 +14,11 @@ type TarifaRow = {
   dias_libres_demoras: number;
   vigente_desde: string;
   vigente_hasta: string;
-  transit_time_dias: number;
+  transit_time_dias: number | null;
   notas: string | null;
   recargos?: Array<{
     concepto: string;
-    lado: string | null;
+    lado: "origen" | "destino" | string | null;
     monto: number | string;
     moneda: string | null;
     incluido_en_total: boolean | null;
@@ -35,11 +35,11 @@ export function buildInitialFromTarifa(t: TarifaRow): Partial<TarifaInput> {
     dias_libres_demoras: t.dias_libres_demoras,
     vigente_desde: t.vigente_desde,
     vigente_hasta: t.vigente_hasta,
-    transit_time_dias: t.transit_time_dias,
+    transit_time_dias: t.transit_time_dias ?? 0,
     notas: t.notas,
     recargos: (t.recargos ?? []).map((r) => ({
       concepto: r.concepto,
-      lado: r.lado ?? undefined,
+      lado: (r.lado === "origen" || r.lado === "destino") ? r.lado : undefined,
       monto: Number(r.monto),
       moneda: r.moneda ?? "USD",
       incluido_en_total: r.incluido_en_total ?? true,
