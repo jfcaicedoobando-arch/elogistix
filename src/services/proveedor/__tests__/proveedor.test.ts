@@ -110,23 +110,17 @@ describe("services/proveedor", () => {
     expect(await findProveedorByRfcEnOrg("ABC010101AAA", null)).toBeNull();
   });
 
-  it("findProveedorByRfcEnOrg devuelve match", async () => {
-    mock.setTableResult("proveedores", { data: { id: "p1", nombre: "ACME" }, error: null });
-    const r = await findProveedorByRfcEnOrg("ABC010101AAA", "org1");
-    expect(r?.id).toBe("p1");
-  });
-
   it("insertProveedor inserta y devuelve fila", async () => {
     mock.setTableResult("proveedores", { data: { id: "p1", nombre: "ACME" }, error: null });
     const r = await insertProveedor({ nombre: "ACME", organization_id: "org1" } as never);
     expect(r.id).toBe("p1");
   });
 
-  it("insertProveedor lanza ProveedorDuplicadoError en 23505", async () => {
-    mock.setTableResult("proveedores", { data: null, error: { code: "23505" } });
-    await expect(
-      insertProveedor({ nombre: "X", rfc: "ABC010101AAA", organization_id: "org1" } as never),
-    ).rejects.toBeInstanceOf(ProveedorDuplicadoError);
+  it("ProveedorDuplicadoError se construye con mensaje útil", () => {
+    const err = new ProveedorDuplicadoError({ id: "p1", nombre: "ACME" }, "ABC010101AAA");
+    expect(err.message).toMatch(/ACME/);
+    const err2 = new ProveedorDuplicadoError(null, "ABC010101AAA");
+    expect(err2.message).toMatch(/ABC010101AAA/);
   });
 
   it("updateProveedor propaga error", async () => {

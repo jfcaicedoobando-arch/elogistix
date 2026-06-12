@@ -19,8 +19,8 @@ beforeEach(() => {
 
 describe("fetchEmbarqueDependenciasFinancieras", () => {
   it("sin dependencias devuelve tieneDependencias=false", async () => {
-    setCount("facturas", 0);
-    setCount("proveedor_facturas", 0);
+    setEmpty("facturas");
+    setEmpty("proveedor_facturas");
     const r = await fetchEmbarqueDependenciasFinancieras("e1");
     expect(r.tieneDependencias).toBe(false);
     expect(r.cxc.count).toBe(0);
