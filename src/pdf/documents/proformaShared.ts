@@ -12,10 +12,17 @@ export type ProformaRow = Tables<"proformas">;
 export type EmbarqueRow = Tables<"embarques">;
 export type ClienteRow = Tables<"clientes">;
 
+export interface ContenedorLite {
+  id: string;
+  numero_contenedor: string;
+  tipo_contenedor: string;
+}
+
 export type EmbarqueLite = Pick<
   EmbarqueRow,
   | "expediente"
   | "bl_master"
+  | "bl_house"
   | "modo"
   | "tipo"
   | "incoterm"
@@ -28,7 +35,7 @@ export type EmbarqueLite = Pick<
   | "naviera"
   | "aerolinea"
   | "descripcion_mercancia"
->;
+> & { contenedores?: ContenedorLite[] | null };
 
 export type ClienteLite =
   | Pick<ClienteRow, "nombre" | "rfc" | "direccion" | "ciudad" | "estado" | "cp">
