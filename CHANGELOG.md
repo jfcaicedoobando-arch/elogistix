@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.81.4] - 2026-06-12
+- **ui(cxp)**: rediseño del modal "Detalle de pagos". KPIs con tonos semánticos (Total Factura, Total Pagado en verde, Saldo Pendiente en ámbar si > 0, # Pagos). Columnas técnicas aclaradas con tooltip: "TC Pago" (tipo de cambio USD→MXN al momento del pago) y "Dif. Cambio" (diferencia cambiaria en MXN entre la tasa de la factura y la del pago). Método y Referencia agrupados en una sola columna. Botón eliminar con hover destructive.
+
 ## [12.81.3] - 2026-06-12
 - **fix(tabla)**: los headers de DataTable en modo client (CXP, Proveedores, etc.) no ordenaban al hacer click. Causa: en `useTableInstance` se pasaba `onSortingChange: undefined` y `state: undefined`, y TanStack v8 deja `setSorting` como no-op si no se conectan `state.sorting` + `onSortingChange` controlados. Fix: en modo client el hook ahora mantiene `useState<SortingState>` interno y lo conecta a `state.sorting` + `onSortingChange`; el modo server sigue delegando a `controlledSort` + `onSortChange`. Verificado en `/cxp` clickeando "Total" → la tabla ahora ordena descendente y muestra la flecha activa.
 
