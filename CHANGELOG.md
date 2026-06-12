@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.81.1] - 2026-06-12
+- **fix(cxp)**: la columna "Días vencido" ya no muestra un número en rojo cuando la factura está pagada o sin saldo. La factura YA-1610 de Yassen Eventos (vencimiento 04/06, pagada el mismo día) aparecía con "8" en rojo aunque su estatus era "Pagada". Fix en `src/services/cxp/proveedorFacturas.ts`: el mapper ahora fuerza `dias_vencido = 0` cuando `estado === "Pagada"` o `saldo <= 0.01`. Refuerzo defensivo en `src/components/cxp/cxpColumns.tsx`: la celda renderiza `—` para estatus `Pagada` / `Sin saldo` aunque el dato venga distinto. Los KPIs no cambian (ya filtraban por saldo).
+
 ## [12.81.0] - 2026-06-12
 - **observability(sentry P3.1)**: canal de alertas confirmado = **email** (integración nativa de Sentry, sin Slack/Discord/webhook). Actualizado `docs/observability.md` con: (1) tabla de alertas con acción `Send email to team`; (2) sección "Cómo crearlas en Sentry (una sola vez)" con pasos exactos en la UI (Alerts → Create Alert → Issues/Metric → Send notification to Members and Teams); (3) nota de que la creación de Alert Rules no está disponible vía API/MCP y debe hacerse manualmente. Los destinatarios se gestionan en Sentry → Settings → Members. Sin cambios de código de runtime.
 

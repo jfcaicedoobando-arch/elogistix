@@ -78,9 +78,12 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
       accessorFn: (f) => f.dias_vencido, enableSorting: true,
       sortingFn: sortByNumber<FacturaCxP>((f) => f.dias_vencido),
       meta: { width: "w-[90px]", align: "right", className: "tabular-nums text-xs" },
-      cell: ({ row }) => row.original.dias_vencido > 0
-        ? <span className="text-destructive font-medium">{row.original.dias_vencido}</span>
-        : <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => {
+        const f = row.original;
+        const saldada = f.estatus === "Pagada" || f.estatus === "Sin saldo";
+        if (saldada || f.dias_vencido <= 0) return <span className="text-muted-foreground">—</span>;
+        return <span className="text-destructive font-medium">{f.dias_vencido}</span>;
+      },
     },
     {
       id: "moneda", header: "Mon.",
