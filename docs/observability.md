@@ -65,15 +65,32 @@ Sentry → Insights → Metrics.
 
 ## Alertas (Sentry UI)
 
-Configuradas como Alert Rules en el proyecto `elogistix/javascript-react`. Si se
-modifican, actualizar esta tabla. Las acciones (Slack/email/webhook) se definen
-en la integración del workspace.
+**Canal de notificación:** email. Las alertas se envían al equipo a través de la
+integración nativa de email de Sentry (no requiere Slack/Discord/webhook). Cada
+miembro del proyecto Sentry recibe los avisos en el correo con el que se dio de
+alta. Para agregar/quitar destinatarios: Sentry → Settings → Members, o crear
+un Team y asignarlo al proyecto.
 
-| Alerta                       | Condición                                                                | Acción            |
-| ---------------------------- | ------------------------------------------------------------------------ | ----------------- |
-| Regression in new release    | `event.type:error AND release:libre-carga@latest AND times_seen:>5 in 1h` | Notificación equipo |
-| High error rate              | `event.type:error count() > 50 in 10min`                                 | Notificación equipo |
-| Critical RPC failure         | `span.op:db.rpc status:internal_error count() > 3 in 5min`               | Notificación equipo |
+Configuradas como Alert Rules en el proyecto `elogistix/javascript-react`. Si se
+modifican, actualizar esta tabla.
+
+| Alerta                       | Condición                                                                | Acción              |
+| ---------------------------- | ------------------------------------------------------------------------ | ------------------- |
+| Regression in new release    | `event.type:error AND release:libre-carga@latest AND times_seen:>5 in 1h` | Send email to team  |
+| High error rate              | `event.type:error count() > 50 in 10min`                                 | Send email to team  |
+| Critical RPC failure         | `span.op:db.rpc status:internal_error count() > 3 in 5min`               | Send email to team  |
+
+### Cómo crearlas en Sentry (una sola vez)
+
+1. Sentry → **Alerts** → **Create Alert** → tipo **Issues** (las dos primeras) o
+   **Metric** (la de RPC).
+2. Pegar la condición de la tabla en el filtro.
+3. En **Then perform these actions** elegir **Send a notification to Members
+   and Teams** y seleccionar el team del proyecto (o `#all-members`).
+4. Guardar con el nombre exacto de la tabla para mantener trazabilidad.
+
+> **Nota:** la creación de Alert Rules no está disponible vía API/MCP en este
+> proyecto; se configura manualmente en la UI. Una vez creadas, son persistentes.
 
 ## Runbook
 
@@ -87,6 +104,7 @@ en la integración del workspace.
 
 ## Cambios recientes
 
+- `12.81.0` — P3.1: canal de alertas = email + instrucciones de setup en UI.
 - `12.80.0` — P3: PII scrub + métricas custom + esta documentación.
 - `12.79.0` — P2: replay, profiling, sampling dinámico, spans manuales.
 - `12.78.0` — P1: source maps + sentry-tunnel.
