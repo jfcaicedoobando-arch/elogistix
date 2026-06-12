@@ -82,6 +82,27 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const handleProveedor = (id: string, nombre: string) => {
     setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
+    setVinculos({}); // limpia selección previa al cambiar proveedor
+  };
+
+  const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
+    setVinculos((prev) => {
+      const next = { ...prev };
+      if (!checked) { delete next[c.id]; return next; }
+      next[c.id] = {
+        embarqueId: c.embarque_id,
+        descripcion: c.concepto,
+        monto: c.monto,
+        montoOriginal: c.monto,
+      };
+      return next;
+    });
+  };
+
+  const setVinculoMonto = (conceptoId: string, monto: number) => {
+    setVinculos((prev) => prev[conceptoId]
+      ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
+      : prev);
   };
 
   const reset = () => {
@@ -90,6 +111,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     setMode("manual");
     setPendingCfdi(null);
     setAskCrearProv(null);
+    setVinculos({});
   };
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
