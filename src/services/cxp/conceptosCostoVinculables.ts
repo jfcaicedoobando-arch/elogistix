@@ -1,0 +1,115 @@
+/**
+ * Vínculo factura de proveedor ↔ conceptos_costo de embarque (Fase 1 conciliación
+ * cotizado vs real). Permite traer los conceptos_costo abiertos de un proveedor
+ * y registrar el matching línea a línea al capturar la factura.
+ *
+ * Reglas:
+ *  - Sólo trae conceptos con `estado_liquidacion = 'Pendiente'` y `deleted_at IS NULL`.
+ *  - Al vincular, inserta filas en `proveedor_facturas_conceptos` y, si el monto
+ *    vinculado cubre (≥ 99%) el `concepto_costo.monto`, marca el concepto como
+ *    Liquidado con `fecha_pago = fecha_emision` y `referencia_pago = folio`.
+ *  - El umbral 99% absorbe diferencias menores por redondeo / IVA proveedor.
+ */
+import { supabase } from "@/integrations/supabase/client";
+
+export interface ConceptoCostoAbierto {
+  id: string;
+  embarque_id: string;
+  embarque_expediente: string | null;
+  concepto: string;
+  monto: number;
+  moneda: string;
+  fecha_vencimiento: string | null;
+}
+
+interface RowJoined {
+  id: string;
+  embarque_id: string;
+  concepto: string;
+  monto: number;
+  moneda: string;
+  fecha_vencimiento: string | null;
+  embarques: { expediente: string | null } | null;
+}
+
+export async function fetchConceptosCostoAbiertosDeProveedor(
+  proveedorId: string,
+  organizationId: string | null,
+): Promise<ConceptoCostoAbierto[]> {
+  if (!proveedorId) return [];
+  let q = supabase
+    .from("conceptos_costo")
+    .select("id, embarque_id, concepto, monto, moneda, fecha_vencimiento, embarques(expediente)")
+    .eq("proveedor_id", proveedorId)
+    .eq("estado_liquidacion", "Pendiente")
+    .is("deleted_at", null)
+    .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
+    .limit(200);
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data, error } = await q;
+  if (error) throw error;
+  // SAFE-CAST: shape modelado por RowJoined a partir del select con embed.
+  return ((data as unknown as RowJoined[] | null) ?? []).map((r) => ({
+    id: r.id,
+    embarque_id: r.embarque_id,
+    embarque_expediente: r.embarques?.expediente ?? null,
+    concepto: r.concepto,
+    monto: Number(r.monto),
+    moneda: r.moneda,
+    fecha_vencimiento: r.fecha_vencimiento,
+  }));
+}
+
+export interface LineaVinculo {
+  conceptoCostoId: string;
+  descripcion: string;
+  monto: number;
+  /** Monto total del concepto_costo original (para decidir auto-liquidación). */
+  montoOriginal: number;
+}
+
+export interface VincularFacturaInput {
+  facturaId: string;
+  organizationId: string;
+  folio: string;
+  fechaEmision: string;
+  lineas: LineaVinculo[];
+}
+
+/** Devuelve los IDs de conceptos marcados como Liquidados (>= 99% cubierto). */
+export async function vincularFacturaAConceptos(
+  input: VincularFacturaInput,
+): Promise<{ insertadas: number; liquidados: string[] }> {
+  if (input.lineas.length === 0) return { insertadas: 0, liquidados: [] };
+
+  const inserts = input.lineas.map((l) => ({
+    proveedor_factura_id: input.facturaId,
+    organization_id: input.organizationId,
+    concepto_costo_id: l.conceptoCostoId,
+    descripcion: l.descripcion,
+    cantidad: 1,
+    monto: l.monto,
+  }));
+  const { error: errIns } = await supabase
+    .from("proveedor_facturas_conceptos")
+    .insert(inserts);
+  if (errIns) throw errIns;
+
+  const liquidables = input.lineas.filter(
+    (l) => l.montoOriginal > 0 && l.monto >= l.montoOriginal * 0.99,
+  );
+  if (liquidables.length === 0) {
+    return { insertadas: inserts.length, liquidados: [] };
+  }
+  const ids = liquidables.map((l) => l.conceptoCostoId);
+  const { error: errUp } = await supabase
+    .from("conceptos_costo")
+    .update({
+      estado_liquidacion: "Liquidado",
+      fecha_pago: input.fechaEmision,
+      referencia_pago: input.folio,
+    })
+    .in("id", ids);
+  if (errUp) throw errUp;
+  return { insertadas: inserts.length, liquidados: ids };
+}
