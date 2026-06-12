@@ -1,0 +1,127 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  const base = createSupabaseMock();
+  const invoke = vi.fn();
+  const getSession = vi.fn();
+  return {
+    ...base,
+    invoke,
+    getSession,
+    supabase: {
+      ...base.supabase,
+      auth: { getSession },
+      functions: { invoke },
+    },
+  };
+});
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+
+import {
+  fetchUsuariosOrganizacion,
+  updateUserRole,
+  deleteUserViaEdgeFunction,
+  createUserViaEdgeFunction,
+  deleteUserViaEdgeFunctionAuth,
+  UNRESOLVED_EMAIL,
+} from "@/services/usuario";
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.invoke.mockReset();
+  mock.getSession.mockReset();
+  mock.getSession.mockResolvedValue({ data: { session: { access_token: "tok" } } });
+});
+
+describe("services/usuario", () => {
+  it("fetchUsuariosOrganizacion combina members + emails", async () => {
+    mock.setTableResult("organization_members", {
+      data: [{ user_id: "u1", role: "admin", created_at: "2026-01-01" }],
+      error: null,
+    });
+    mock.invoke.mockResolvedValue({
+      data: [{ id: "u1", email: "a@b.com", created_at: "2026-02-01" }],
+      error: null,
+    });
+    const r = await fetchUsuariosOrganizacion();
+    expect(r[0].email).toBe("a@b.com");
+    expect(r[0].role).toBe("admin");
+  });
+
+  it("fetchUsuariosOrganizacion usa UNRESOLVED_EMAIL si edge falla", async () => {
+    mock.setTableResult("organization_members", {
+      data: [{ user_id: "u1", role: "admin", created_at: "2026-01-01" }],
+      error: null,
+    });
+    mock.invoke.mockResolvedValue({ data: null, error: { message: "fail" } });
+    const r = await fetchUsuariosOrganizacion();
+    expect(r[0].email).toBe(UNRESOLVED_EMAIL);
+  });
+
+  it("fetchUsuariosOrganizacion propaga error de members", async () => {
+    mock.setTableResult("organization_members", { data: null, error: { message: "boom" } });
+    await expect(fetchUsuariosOrganizacion()).rejects.toBeTruthy();
+  });
+
+  it("updateUserRole hace update", async () => {
+    mock.setTableResult("organization_members", { data: null, error: null });
+    await expect(updateUserRole("u1", "admin")).resolves.toBeUndefined();
+  });
+
+  it("updateUserRole propaga error", async () => {
+    mock.setTableResult("organization_members", { data: null, error: { message: "fail" } });
+    await expect(updateUserRole("u1", "admin")).rejects.toBeTruthy();
+  });
+
+  it("deleteUserViaEdgeFunction lanza si edge devuelve error", async () => {
+    mock.invoke.mockResolvedValue({ data: null, error: { message: "no" } });
+    await expect(deleteUserViaEdgeFunction("u1")).rejects.toBeTruthy();
+  });
+
+  it("deleteUserViaEdgeFunction devuelve data ok", async () => {
+    mock.invoke.mockResolvedValue({ data: { ok: true }, error: null });
+    const r = await deleteUserViaEdgeFunction("u1");
+    expect(r).toEqual({ ok: true });
+  });
+
+  it("createUserViaEdgeFunction crea usuario sin orgId", async () => {
+    mock.invoke.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    const r = await createUserViaEdgeFunction({
+      email: "a@b.com",
+      password: "xx",
+      role: "admin",
+    });
+    expect(r.user?.id).toBe("u1");
+  });
+
+  it("createUserViaEdgeFunction inserta membership cuando orgId presente", async () => {
+    mock.invoke.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    mock.setTableResult("organization_members", { data: null, error: null });
+    await createUserViaEdgeFunction({
+      email: "a@b.com",
+      password: "xx",
+      role: "admin",
+      orgId: "org1",
+    });
+    expect(mock.tableCalls.some((c) => c.table === "organization_members")).toBe(true);
+  });
+
+  it("createUserViaEdgeFunction lanza si body trae error", async () => {
+    mock.invoke.mockResolvedValue({ data: { error: "bad" }, error: null });
+    await expect(
+      createUserViaEdgeFunction({ email: "a", password: "x", role: "admin" }),
+    ).rejects.toBeTruthy();
+  });
+
+  it("deleteUserViaEdgeFunctionAuth lanza con error body", async () => {
+    mock.invoke.mockResolvedValue({ data: { error: "bad" }, error: null });
+    await expect(deleteUserViaEdgeFunctionAuth("u1")).rejects.toBeTruthy();
+  });
+
+  it("deleteUserViaEdgeFunctionAuth ok", async () => {
+    mock.invoke.mockResolvedValue({ data: { ok: true }, error: null });
+    const r = await deleteUserViaEdgeFunctionAuth("u1");
+    expect(r).toEqual({ ok: true });
+  });
+});
