@@ -18,7 +18,6 @@ interface Props<T> {
 }
 
 export function DataTableHeaderRow<T>({ table, striped, bordered }: Props<T>) {
-  console.log("[DT] render sorting=", JSON.stringify(table.getState().sorting));
   const borderCell = bordered ? "border-r last:border-r-0" : "";
 
   return (
