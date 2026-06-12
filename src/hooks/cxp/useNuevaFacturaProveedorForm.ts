@@ -58,6 +58,8 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const [mode, setMode] = useState<CargaMode>("manual");
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
+  /** Conceptos_costo seleccionados para vincular. Key = concepto_costo.id. */
+  const [vinculos, setVinculos] = useState<Record<string, SeleccionLinea & { embarqueId: string; montoOriginal: number; descripcion: string }>>({});
 
   const total = useMemo(() => {
     const s = Number(values.subtotal) || 0;
