@@ -143,9 +143,11 @@ export function ProformaConsolidadaDocument({
     <Document title={`${proforma.numero} - Proforma Consolidada`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={true} emisor={emisor} />
-        <Text style={styles.h3}>Conceptos por Contenedor</Text>
-        <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} />
-        <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} />
+        <View minPresenceAhead={140}>
+          <Text style={styles.h3}>Conceptos por Contenedor</Text>
+          <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} />
+          <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} />
+        </View>
 
         <TotalesBox bloques={bloquesTotales} />
 

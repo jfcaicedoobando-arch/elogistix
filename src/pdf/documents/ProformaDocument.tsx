@@ -190,10 +190,11 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
     <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
-        <Text style={styles.h3}>{multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}</Text>
-
-        <SeccionMonedaPdf grupos={grupos} moneda="USD" tasaIva={tasaIva} multiContenedor={multiContenedor} />
-        <SeccionMonedaPdf grupos={grupos} moneda="MXN" tasaIva={tasaIva} multiContenedor={multiContenedor} />
+        <View minPresenceAhead={140}>
+          <Text style={styles.h3}>{multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}</Text>
+          <SeccionMonedaPdf grupos={grupos} moneda="USD" tasaIva={tasaIva} multiContenedor={multiContenedor} />
+          <SeccionMonedaPdf grupos={grupos} moneda="MXN" tasaIva={tasaIva} multiContenedor={multiContenedor} />
+        </View>
 
         <TotalesBox bloques={bloquesTotales} />
 

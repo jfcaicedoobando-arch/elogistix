@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.95.2] - 2026-06-12
+- **feat(pdf/proforma)**: salto de página inteligente antes de la sección **Conceptos** en `ProformaDocument` y `ProformaConsolidadaDocument`. El bloque (título + tablas por moneda) se envuelve en un `<View minPresenceAhead={140}>`: si quedan menos de ~140pt libres en la hoja actual react-pdf empuja todo el bloque a la página siguiente para evitar títulos huérfanos y tablas cortadas a 1 fila; si caben holgados, se quedan en la misma página. No fuerza salto en proformas cortas (no desperdicia papel) y mantiene el `wrap={false}` por grupo de contenedor.
+
 ## [12.95.1] - 2026-06-12
 - **feat(pdf/proforma)**: el header del PDF ahora muestra **BL Master / MAWB**, **BL House / HAWB** (cuando existe) y una fila **Contenedores** con el listado completo (`MSCU1234567 · 40HC, MSCU2345678 · 20GP`); cuando hay >3 contenedores se resume por tipo (`3 × 40HC + 1 × 20GP — MSCU...`). Antes los números/tipo de contenedor sólo se veían como cabecera de grupo cuando había 2+, dejando invisibles los datos cuando la proforma cubría un solo contenedor. `fetchEmbarqueParaPdf` carga ahora `bl_house` y `embarque_contenedores` anidados.
 
