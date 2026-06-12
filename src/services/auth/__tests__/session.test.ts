@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const mock = await vi.hoisted(async () => {
+const { mock, onAuthStateChange, getSession, signOut } = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
+  const { vi: v } = await import("vitest");
+  return {
+    mock: createSupabaseMock(),
+    onAuthStateChange: v.fn(() => ({ data: { subscription: { unsubscribe: v.fn() } } })),
+    getSession: v.fn(),
+    signOut: v.fn(),
+  };
 });
-const onAuthStateChange = vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }));
-const getSession = vi.fn();
-const signOut = vi.fn();
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     ...mock.supabase,
