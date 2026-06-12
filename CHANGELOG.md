@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.5] - 2026-06-12
+- **ci(actions)**: actualización de GitHub Actions a versiones con soporte nativo de Node.js 24. `actions/checkout@v4` → `@v6`, `actions/cache@v4` → `@v5`, `actions/upload-artifact@v4` → `@v6`, `actions/download-artifact@v4` → `@v7` en `ci.yml`, `e2e.yml` y `post-deploy-smoke.yml`. Se elimina la variable `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` ya que las acciones actualizadas corren nativamente sobre Node.js 24.
+
 ## [12.92.4] - 2026-06-12
 - **fix(tests)**: 4 tests rojos en CI ahora pasan. (1) `useNuevoProveedorController.handleNext` ahora popula `documentos` con `DOCS_NACIONAL`/`DOCS_EXTRANJERO` según `origen_proveedor` al pasar al paso 2 (regresión por refactor previo). (2) `scrubUrl` en `piiScrub.ts` decodifica `%5B`/`%5D` → `[`/`]` SOLO para URLs relativas, preservando el encoding URL en absolutas (ambos contratos de tests respetados). (3) `OVERSIZED_BASELINE` en `architecture-baseline.test.ts` y `audit-report.test.ts` añade 4 archivos pendientes de split: `src/lib/sentry.ts` (228), `src/services/tesoreria/conciliacion.ts` (209), `src/features/costeo/routes/CosteoTarifas.tsx` (204), `src/components/cxp/DialogDetallePagosProveedor.tsx` (203). Suite completa: 1507/1507 verdes.
 
