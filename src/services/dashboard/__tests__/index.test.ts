@@ -1,32 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchDashboardSummary, fetchDashboardDetails } from '../index';
+import { createSupabaseMock } from '@/services/__tests__/_supabaseChainMock';
 
-const { mockSupabase } = vi.hoisted(() => ({
-  mockSupabase: {
-    rpc: vi.fn(),
-  },
-}));
+const { mockRef } = vi.hoisted(() => ({ mockRef: { current: null as ReturnType<typeof createSupabaseMock> | null } }));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  get supabase() { return mockRef.current!.supabase; },
 }));
+
+import { fetchDashboardSummary, fetchDashboardDetails } from '../index';
 
 describe('dashboard/index', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockRef.current = createSupabaseMock();
   });
 
   it('fetchDashboardSummary llama al RPC correcto', async () => {
-    mockSupabase.rpc.mockResolvedValue({ data: { kpis: {} }, error: null });
+    mockRef.current!.setRpcResult('dashboard_summary', { data: { kpis: {} }, error: null });
     const result = await fetchDashboardSummary();
-    expect(mockSupabase.rpc).toHaveBeenCalledWith('dashboard_summary');
+    expect(mockRef.current!.rpcCalls[0]?.fn).toBe('dashboard_summary');
     expect(result).toEqual({ kpis: {} });
   });
 
   it('fetchDashboardDetails llama al RPC correcto', async () => {
-    mockSupabase.rpc.mockResolvedValue({ data: { items: [] }, error: null });
+    mockRef.current!.setRpcResult('dashboard_details', { data: { items: [] }, error: null });
     const result = await fetchDashboardDetails();
-    expect(mockSupabase.rpc).toHaveBeenCalledWith('dashboard_details');
+    expect(mockRef.current!.rpcCalls[0]?.fn).toBe('dashboard_details');
     expect(result).toEqual({ items: [] });
   });
 });
