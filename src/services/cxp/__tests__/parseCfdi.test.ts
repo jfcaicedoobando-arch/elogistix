@@ -6,13 +6,13 @@ vi.mock("@sentry/react", () => ({
   startSpan: vi.fn((_opts: unknown, fn: () => unknown) => fn()),
 }));
 
-const supabaseMock = {
+const supabaseMock = vi.hoisted(() => ({
   auth: {
     getSession: vi.fn().mockResolvedValue({
       data: { session: { access_token: "tok-abc" } },
     }),
   },
-};
+}));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: supabaseMock }));
 
 import { parseCfdiXml } from "@/services/cxp/parseCfdi";
