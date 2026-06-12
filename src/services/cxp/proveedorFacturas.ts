@@ -101,7 +101,9 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
       .reduce((s, n) => s + Number(n.monto), 0);
     const total = Number(f.total);
     const saldo = Math.max(0, total - pagado - nc);
-    const dv = diasVencido(f.fecha_vencimiento);
+    // Una factura ya pagada (o sin saldo) nunca debe mostrar días vencidos.
+    const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
+    const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
     return {
       id: f.id,
       proveedor_id: f.proveedor_id,
