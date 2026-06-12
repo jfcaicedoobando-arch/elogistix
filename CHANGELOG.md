@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.93.1] - 2026-06-12
+- **feat(cxp)**: agregado método de pago **SPID** (Sistema de Pagos Interbancarios en Dólares) en el diálogo "Registrar pago a proveedor". Disponible para proveedores Nacionales y Extranjeros, con hint de referencia específico ("Clave de rastreo SPID (USD)").
+
 ## [12.93.0] - 2026-06-12
 - **test(coverage)**: 116 tests nuevos en 10 suites cubriendo services con 0% previo: `cotizacion/costos` (9), `cotizacion/informativa` (12), `crm/plantillas` (12), `crm/lineage` (13), `crm/cliente360` (10), `crm/prospectoSearch` (11), `admin/organizations` (13), `admin/members` (12), `auth/session` (8), `facturas/huecoFacturacion/buildFilas` (16). Cubre paths felices, propagación de errores Supabase, parseo defensivo de jsonb (tarifas informativas), agregación pura por embarque (hueco facturación) y fallbacks de edge functions. Umbrales globales `lines`/`statements` 29 → 30 en `vitest.config.ts`.
 - **test(infra)**: añade `or` y `match` al `createSupabaseMock` compartido para soportar queries de búsqueda combinada (`crm/prospectoSearch`).
