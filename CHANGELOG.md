@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.92.1] - 2026-06-12
+- **fix(lint)**: 3 errores eliminados — (1) `src/App.tsx` importa `useRadixPointerEventsRescue` desde el barrel `@/hooks/shared` (re-exportado desde `src/hooks/shared/index.ts`); (2) `src/test/helpers/assertOrgScoped.ts` mantiene el import directo al mock con `eslint-disable-next-line no-restricted-imports` justificado (helper de tests); (3) `supabase/functions/_shared/sentry.ts` reemplaza `scope: any` por type inline tipado. Además se eliminan 3 directivas `eslint-disable` no usadas en `bitacora/__tests__/index.test.ts` y `pdfLeak.test.tsx`. Lint pasa con 0 errores.
+
 ## [12.92.0] - 2026-06-12
 - **auditoría(ci+tests — actualización de actions)**: mitigación de deprecación de Node.js 20 en GitHub Actions. (1) `actions/checkout@v4`, `actions/cache@v4`, `actions/upload-artifact@v4`, `actions/download-artifact@v4` — se mantiene en v4 (es la última versión major disponible) pero se agrega la variable de entorno `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` a nivel de workflow en `ci.yml`, `e2e.yml` y `post-deploy-smoke.yml` para forzar ejecución sobre Node.js 24 y eliminar warnings de deprecación. (2) `codecov/codecov-action@v4` → `v5` en `ci.yml`. (3) `denoland/setup-deno@v1` → `v2` en `ci.yml` y `post-deploy-smoke.yml`. (4) `APP_VERSION` → `12.92.0`.
 
