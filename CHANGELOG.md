@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.82.0] - 2026-06-12
+- **ci(fase-1)**: red de seguridad básica del pipeline. (1) Nuevo paso `typecheck` (`tsc --noEmit`) en el job `quality` — antes los errores de tipos podían llegar a `main` porque SWC no chequea tipos. (2) Nuevo job `edge-functions` que ejecuta los 10 tests Deno (`*_test.ts` en `supabase/functions`, excluyendo `smoke_test.ts` que requiere secrets de demo). (3) Versiones de GitHub Actions pineadas a `@v4` (`checkout`, `upload-artifact`, `download-artifact`) y `setup-bun` a `bun-version: "1.x"` para reproducibilidad. (4) `lefthook.yml` añadido con hooks pre-commit (eslint + typecheck) y pre-push (vitest related) — opcional para devs locales, no afecta a Lovable. (5) Scripts `typecheck` y `test:ci` añadidos a `package.json`.
+
+
 ## [12.81.4] - 2026-06-12
 - **ui(cxp)**: rediseño del modal "Detalle de pagos". KPIs con tonos semánticos (Total Factura, Total Pagado en verde, Saldo Pendiente en ámbar si > 0, # Pagos). Columnas técnicas aclaradas con tooltip: "TC Pago" (tipo de cambio USD→MXN al momento del pago) y "Dif. Cambio" (diferencia cambiaria en MXN entre la tasa de la factura y la del pago). Método y Referencia agrupados en una sola columna. Botón eliminar con hover destructive.
 
