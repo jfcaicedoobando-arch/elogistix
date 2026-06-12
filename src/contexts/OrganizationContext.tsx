@@ -98,6 +98,13 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     };
   }, [isSuperAdmin, superAdminOrgs, superAdminActiveId, cachedOrgId, cachedOrg, authLoading, loadingSA, setActiveOrganization]);
 
+  // Refresca el tag de Sentry cuando cambia la organización efectiva (super-admin
+  // impersonando otro tenant o usuario regular cargando su org). Sin esto, los
+  // eventos posteriores al cambio quedarían tagueados con el org anterior.
+  useEffect(() => {
+    syncSentryActiveOrg(value.organizationId);
+  }, [value.organizationId]);
+
   return (
     <OrganizationContext.Provider value={value}>
       {children}
