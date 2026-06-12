@@ -11,6 +11,13 @@
  * flotante por defecto.
  */
 import * as Sentry from "@sentry/react";
+import { useEffect } from "react";
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
 import { APP_VERSION } from "@/constants/appVersion";
 import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
