@@ -1,0 +1,25 @@
+# Lefthook git hooks — Libre Carga
+# Instalación local (opcional, sólo para devs trabajando en GitHub fuera de Lovable):
+#   bunx lefthook install
+#
+# Lovable usa sus propios pipelines internos; estos hooks sólo aplican a clones
+# locales del repo. CI (.github/workflows/ci.yml) sigue siendo la red de seguridad
+# final para PRs y merges a main.
+
+pre-commit:
+  parallel: true
+  commands:
+    eslint:
+      glob: "*.{ts,tsx}"
+      run: bun x eslint --fix --max-warnings 0 {staged_files}
+      stage_fixed: true
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: bun run typecheck
+
+pre-push:
+  commands:
+    tests-changed:
+      # Corre sólo los tests relacionados con los archivos del push.
+      # Si falla, abortar el push para evitar romper main/PR.
+      run: bun x vitest related --run {push_files} || bun run test:shard
