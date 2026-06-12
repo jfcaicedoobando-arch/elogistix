@@ -1,43 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchEmisorEmpresa, invalidarEmisorCache } from '../emisor';
 
-const { mockSupabase } = vi.hoisted(() => ({
-  mockSupabase: {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    then: vi.fn().mockImplementation(function(this: { _data: unknown; _error: unknown }, resolve: (r: unknown) => void) {
-      resolve({ data: this._data, error: this._error });
-    }),
-    _data: null as unknown,
-    _error: null as unknown,
-  },
-}));
+const { mock } = vi.hoisted(() => {
+  return { mock: { current: null as any } };
+});
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
+  get supabase() { return mock.current.supabase; },
 }));
+
+import { createSupabaseMock } from '@/services/__tests__/_supabaseChainMock';
+import { fetchEmisorEmpresa, invalidarEmisorCache } from '../emisor';
 
 describe('configuracion/emisor', () => {
   beforeEach(() => {
-    // Cache TTL en memoria contamina entre tests; invalidar siempre.
     invalidarEmisorCache();
+    mock.current = createSupabaseMock();
   });
 
   it('fetchEmisorInfo obtiene datos de la tabla configuracion', async () => {
-    // El servicio mapea por clave: usa "nombre" como razonSocial fallback.
-    (mockSupabase as unknown as { _data: unknown })._data = [
-      { clave: 'nombre', valor: 'Test Org' },
-    ];
+    mock.current.setTableResult('configuracion', {
+      data: [{ clave: 'nombre', valor: 'Test Org' }],
+      error: null,
+    });
     const result = await fetchEmisorEmpresa();
-    expect(mockSupabase.from).toHaveBeenCalledWith('configuracion');
+    expect(mock.current.tableCalls[0].table).toBe('configuracion');
+    expect(mock.current.tableCalls[0].ops).toContain('eq');
     expect(result.razonSocial).toBe('Test Org');
   });
 
   it('fetchEmisorInfo usa fallback si no hay datos', async () => {
-    (mockSupabase as unknown as { _data: unknown })._data = [];
+    mock.current.setTableResult('configuracion', { data: [], error: null });
     const result = await fetchEmisorEmpresa();
     expect(result.razonSocial).toBe('Empresa');
   });
 });
-
