@@ -2,13 +2,13 @@
  * Tests para vincular factura de proveedor ↔ conceptos_costo (Fase 1).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createSupabaseMock } from "@/services/__tests__/_supabaseChainMock";
 
-const mock = createSupabaseMock();
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: mock.supabase,
-}));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
   fetchConceptosCostoAbiertosDeProveedor,
