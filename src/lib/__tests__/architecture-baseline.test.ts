@@ -36,14 +36,7 @@ const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 // Allowlist temporal para archivos > 200 líneas pendientes de split.
 // 12.77.3 — re-poblada con deuda preexistente detectada al re-habilitar el
 // guardrail en CI. Cada entrada debe eliminarse al partir el archivo.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/components/usuario/NuevoUsuarioDialog.tsx",
-  "src/features/embarques/routes/EmbarqueDetalle.tsx",
-  "src/lib/csv/parseCsv.ts",
-  "src/lib/sentry.ts",
-  "src/pages/proveedores/Proveedores.tsx",
-  "src/pdf/documents/ProformaDocument.tsx",
-]);
+const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 
 function walk(dir: string, out: string[] = []): string[] {

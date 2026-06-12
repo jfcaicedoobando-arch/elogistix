@@ -1,10 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { PackageX } from "lucide-react";
 import { useState } from "react";
 
-import EmptyState from "@/components/empty/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FileEdit } from "lucide-react";
 import { usePermissions, useTabsParam } from "@/hooks/shared";
@@ -28,31 +25,11 @@ import { TabConciliacion } from "@/features/embarques/components/TabConciliacion
 import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
 import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueDetalleHeader";
+import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 const TABS_VALIDOS = ["resumen", "documentos", "costos", "conciliacion", "facturacion", "garantias", "tracking", "notas"] as const;
-
-function LoadingState() {
-  return (
-    <div className="space-y-6">
-      <Skeleton className="h-10 w-64" />
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-64 w-full" />
-    </div>
-  );
-}
-
-function NotFoundState({ onBack }: { onBack: () => void }) {
-  return (
-    <EmptyState
-      icon={PackageX}
-      title="Embarque no encontrado"
-      description="El embarque que buscas no existe, fue eliminado o no tienes permiso para verlo."
-      primaryAction={{ label: "Volver a embarques", onClick: onBack }}
-    />
-  );
-}
 
 export default function EmbarqueDetalle() {
   const { id } = useParams();
