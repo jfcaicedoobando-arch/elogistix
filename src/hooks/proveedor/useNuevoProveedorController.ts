@@ -1,61 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { Enums, TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { parseCsf } from "@/services/csf";
 import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/services/proveedor";
 import { useOrgFilter } from "@/hooks/shared";
+import {
+  DOCS_EXTRANJERO,
+  DOCS_NACIONAL,
+  EMPTY_PROVEEDOR_FORM,
+  type CategoriaProveedor,
+  type NuevoProveedorForm,
+  type SubtipoGasto,
+  type TipoProveedor,
+} from "./useNuevoProveedorController.constants";
 
-
-type TipoProveedor = Enums<"tipo_proveedor">;
-type Moneda = Enums<"moneda">;
-type CategoriaProveedor = Enums<"categoria_proveedor">;
-type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
-
-export const DOCS_NACIONAL = [
-  "CIF",
-  "Opinión fiscal",
-  "Acta constitutiva",
-  "INE RL",
-  "Poder notarial",
-  "Comprobante de domicilio",
-  "Datos bancarios",
-];
-
-export const DOCS_EXTRANJERO = [
-  "Certificado de ID",
-  "Comprobante de domicilio",
-  "Documento que acredite su legalidad",
-  "Identificación del RL",
-  "Datos bancarios",
-  "Poder notarial del RL",
-];
-
-export const EMPTY_PROVEEDOR_FORM = {
-  nombre: "",
-  categoria: "" as CategoriaProveedor | "",
-  tipo: null as TipoProveedor | null,
-  subtipo_gasto: null as SubtipoGasto | null,
-  pais: "",
-  rfc: "",
-  contacto: "",
-  email: "",
-  telefono: "",
-  moneda_preferida: "MXN" as Moneda,
-  origen_proveedor: null as "Nacional" | "Extranjero" | null,
-  // Datos fiscales (CSF) — opcionales, solo para registro interno.
-  cp: "",
-  direccion: "",
-  ciudad: "",
-  estado: "",
-  regimen_fiscal: "",
-  // Datos bancarios — opcionales (paso 2).
-  banco: "",
-  clabe: "",
-};
-
-
-export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;
+export {
+  DOCS_EXTRANJERO,
+  DOCS_NACIONAL,
+  EMPTY_PROVEEDOR_FORM,
+  type NuevoProveedorForm,
+} from "./useNuevoProveedorController.constants";
 
 /**
  * Controller del diálogo de alta de proveedores (wizard 2 pasos).
