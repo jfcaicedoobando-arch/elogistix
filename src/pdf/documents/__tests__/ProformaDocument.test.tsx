@@ -61,13 +61,19 @@ describe("ProformaDocument", () => {
   });
 
   it("muestra BL House y lista de contenedores en el header cuando existen", () => {
+    const proforma = makeProforma({
+      numero: "PROF-001",
+      fecha_emision: "2023-01-15",
+      expediente: "EXP-2024-99",
+      cliente_nombre: "Acme Corp",
+      bl_master: "MAEU123456789",
+    });
     const base = makeEmbarque({
       modo: "Marítimo",
       tipo: "Importación",
       incoterm: "FOB",
       puerto_origen: "Shanghai",
       puerto_destino: "Manzanillo",
-      bl_master: "MAEU123456789",
       bl_house: "HBL-2026-0007",
     });
     const embarque = {
