@@ -131,7 +131,7 @@ function SeccionMonedaPdf({ grupos, moneda, tasaIva, multiContenedor }: SeccionP
           (s, i) => s + Number(i.cantidad) * Number(i.precio_unitario),
           0,
         );
-        const cols = moneda === "USD" ? columnasUSD(tasaIva, hayIva) : columnasMXN();
+        const cols = moneda === "USD" ? columnasUSD(tasaIva, hayIva) : columnasMXN(tasaIva);
         return (
           <View key={`${g.contenedorId ?? "gen"}-${moneda}`} wrap={false}>
             {multiContenedor ? (
