@@ -80,18 +80,27 @@ export function useTableInstance<T>({
       }
     : undefined;
 
-  const baseOptions = {
+  // Estado interno de sort para modo client. TanStack v8 requiere
+  // `state.sorting` + `onSortingChange` controlados para que `setSorting`
+  // (invocado por `getToggleSortingHandler`) tenga efecto. Pasar ambos como
+  // `undefined` deja el `setSorting` interno en no-op y los headers no
+  // ordenan al hacer click.
+  const [internalSorting, setInternalSorting] = useState<SortingState>([]);
+
+  const sorting: SortingState = isServer ? (sortingState ?? []) : internalSorting;
+  const onSortingChange: OnChangeFn<SortingState> = isServer
+    ? (handleSortingChange as OnChangeFn<SortingState>)
+    : setInternalSorting;
+
+  return useReactTable<T>({
     data,
     columns: columnDefs,
     getRowId,
     enableSorting,
     manualSorting: isServer,
+    state: { sorting },
+    onSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
-  };
-  return useReactTable<T>(
-    isServer
-      ? { ...baseOptions, state: { sorting: sortingState }, onSortingChange: handleSortingChange }
-      : baseOptions,
-  );
+  });
 }
