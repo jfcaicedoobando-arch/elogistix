@@ -11,7 +11,7 @@
  * No reintroducir `useMemo` que ordene `data` ni `useEffect` que rehidrate
  * el estado de sort desde fuera del page-state.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   getCoreRowModel,
   getSortedRowModel,
