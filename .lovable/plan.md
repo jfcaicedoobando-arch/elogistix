@@ -1,108 +1,104 @@
-## Plan P2 — Cobertura avanzada Sentry (replay, profiling, sampling dinámico, spans manuales)
+## Plan P3 — Endurecimiento Sentry (PII scrub, alertas, integración equipo, métricas custom)
 
-P0 y P1 quedaron implementados (wrapper edge + tunnel + source maps). Esta fase agrega visibilidad **profunda** en errores reales de cliente y latencia en operaciones críticas.
+P0/P1/P2 ya están en producción (wrapper edge + tunnel + source maps + replay + profiling + sampling dinámico + spans manuales). Esta fase cierra el ciclo: **proteger datos**, **avisar al equipo cuando algo se rompe**, y **medir lo que importa al negocio**.
 
 ---
 
-### 1) Session Replay (rrweb en crash time)
+### 1) `beforeSend` / `beforeBreadcrumb` — Scrub adicional de PII
 
-**Problema:** cuando un usuario reporta "se trabó al guardar el embarque", hoy sólo vemos el stack. No sabemos qué tocó, qué vio, ni en qué pantalla estaba.
+**Problema:** aunque Replay ya enmascara texto visible, los **breadcrumbs** y **eventos** pueden contener RFC, montos, emails, y payloads de Supabase en URLs / bodies que llegan en claro a Sentry.
 
 **Cambios en `src/lib/sentry.ts`:**
-- Agregar `Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })`.
-- `replaysSessionSampleRate: 0` (no grabamos sesiones random — caro).
-- `replaysOnErrorSampleRate: 1.0` (100% de sesiones con error → replay completo de los últimos ~60s).
-- Privacidad: `maskAllText: true` enmascara texto (RFC, montos, nombres clientes); `blockAllMedia: true` ignora imágenes/PDFs renderizados.
+- `beforeSend(event)`:
+  - Recortar `event.request.url` quitando query strings que contengan `email=`, `rfc=`, `token=`.
+  - Recortar `event.user` a sólo `{ id }` (no email, no username).
+  - Aplicar regex de RFC mexicano (`/[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}/g`) y CURP sobre `event.message` y `event.exception.values[*].value` → reemplazar por `[RFC]` / `[CURP]`.
+  - Regex de email → `[EMAIL]`.
+- `beforeBreadcrumb(breadcrumb)`:
+  - Si `category === 'fetch'` o `'xhr'` y la URL apunta a `/rest/v1/clientes|facturas|proformas` → eliminar `breadcrumb.data.request_body` y `response_body`.
+  - Drop completo de breadcrumbs `category === 'console'` con `level === 'log'` (sólo conservar `warn` / `error`).
 
-**Costo:** Sentry cobra por replay; con `onErrorSampleRate=1.0` y volumen actual (<50 errores/día) entra holgado en el tier free/team.
-
-**Bundle:** `@sentry/replay` ya viene incluido en `@sentry/react@8`, no agrega dep.
-
----
-
-### 2) Browser Profiling
-
-**Problema:** cuando un PDF tarda 8s o el dashboard lagea, no sabemos qué función concreta consume CPU.
-
-**Cambios en `src/lib/sentry.ts`:**
-- Importar `browserProfilingIntegration` de `@sentry/react`.
-- Agregar a `integrations`.
-- `profilesSampleRate: 0.1` (10% de transactions perfiladas — suficiente para detectar hotspots sin saturar).
-
-**Requisito:** los profiles sólo se generan dentro de transactions activas (ya tenemos `tracesSampleRate: 0.1`), así que se aprovecha la instrumentación existente.
+**Beneficio:** cumplimos privacidad de datos fiscales aunque el proyecto sea demo, y reducimos ruido en breadcrumbs en ~70%.
 
 ---
 
-### 3) `tracesSampler` dinámico por ruta
+### 2) Alertas Sentry por release (regression detection)
 
-**Problema:** hoy `tracesSampleRate: 0.1` global. Trazamos 10% del dashboard (alto volumen, bajo valor) y 10% del wizard de embarque (bajo volumen, alto valor → perdemos casos).
+**Problema:** hoy nadie se entera cuando un deploy introduce un error nuevo hasta que un usuario reporta. Sentry tiene **release tracking** ya activo (via `release: libre-carga@${APP_VERSION}` en `sentryVitePlugin`), pero **no hay alertas configuradas**.
 
-**Cambios en `src/lib/sentry.ts`:**
-- Reemplazar `tracesSampleRate` por `tracesSampler(samplingContext)`:
-  - `1.0` en rutas críticas: `/embarques/nuevo`, `/embarques/:id/editar`, `/cotizaciones/nueva`, `/facturas/nueva`, `/conciliacion/*`.
-  - `0.5` en operaciones financieras: `/profit/*`, `/tesoreria/*`, `/comisiones`.
-  - `0.05` en navegación/listados: `/dashboard`, `/embarques` (lista), `/clientes`.
-  - `0` en marketing público: `/`, `/landing`, `/privacidad`, `/terminos`.
-- Mantener `0.1` como fallback para rutas no listadas.
+**Cambios (vía Sentry MCP, sin cambios de código):**
+- Crear alert rule **"Regression in new release"**:
+  - Trigger: `event.type:error AND release:libre-carga@latest AND times_seen:>5 in 1h`
+  - Action: email al owner del proyecto + (opcional) webhook.
+- Crear alert rule **"High error rate"**:
+  - Trigger: `event.type:error count() > 50 in 10min`.
+- Crear alert rule **"Critical RPC failure"**:
+  - Trigger: cualquier transaction con `op:db.rpc` y `status:internal_error` (>3 en 5min) — esto aprovecha los spans manuales P2.
 
-**Resultado:** capturamos 100% de los flujos donde el usuario realmente pierde dinero/tiempo, sin inflar el cuota de transactions.
+Estas reglas se crean con `mcp_sentry_r1zPu` desde la UI de Sentry, no requieren commit. Lo que sí queda en código es **documentación** en `docs/observability.md` (nuevo) describiendo qué dispara cada alerta y a quién avisa.
 
 ---
 
-### 4) Spans manuales en operaciones críticas
+### 3) Integración Sentry ↔ canal del equipo
 
-**Problema:** las transactions auto-instrumentadas miden `pageload`/`navigation`/`http`, pero no vemos cuánto tarda **generar un PDF** o **un RPC de liquidación**.
+**Decisión pendiente del usuario:** ¿email, Slack, Discord, o webhook genérico? (ver pregunta 2 abajo).
+
+Una vez decidido:
+- Instalar la integración nativa de Sentry para ese canal (UI de Sentry, sin código).
+- Apuntar las 3 alertas del punto 2 a ese canal.
+- Documentar en `docs/observability.md` el flujo: error → Sentry → canal → on-call.
+
+---
+
+### 4) Métricas custom (Sentry Metrics API)
+
+**Problema:** medimos latencia técnica (spans), pero no KPIs de negocio. Ej: ¿cuántos MB pesa un PDF promedio? ¿cuánto tarda un wizard de embarque end-to-end? ¿cuántas conciliaciones fallan?
 
 **Cambios:**
 
-**`src/pdf/render/descargarPdf.ts`** — envolver el render en `Sentry.startSpan({ name: 'pdf.render', op: 'pdf', attributes: { document } }, ...)`. Hoy es la queja #1 de latencia.
+**`src/pdf/render/descargarPdf.ts`** — agregar `Sentry.metrics.distribution('pdf.size_kb', sizeKb, { tags: { filename_prefix } })` después del render (ya tenemos el `size_kb` como atributo del span; sólo lo emitimos también como métrica agregable).
 
-**`src/generators/proformaPdf.tsx`, `cotizacionPdf.tsx`, `rentabilidadPdf.tsx`** — un span por generador con el `document` como atributo. Mide tanto el render como el `Blob` final.
+**`src/features/embarques/hooks/useNuevoEmbarqueWizard.ts`** — al completar el wizard:
+- `Sentry.metrics.distribution('embarque.wizard_duration_ms', durationMs)`.
+- `Sentry.metrics.increment('embarque.created', 1, { tags: { modo: 'maritimo|terrestre|aereo' } })`.
 
-**RPCs financieros críticos** (envoltura ligera con `Sentry.startSpan`):
-- `liquidar_factura` (en `src/services/facturas*` — verificar nombre exacto al implementar).
-- `eliminar_embarque` (en `src/services/embarques*`).
-- `generar_proforma` / `conciliar_pago`.
+**`src/services/conciliacion/*`** — al fallar una conciliación:
+- `Sentry.metrics.increment('conciliacion.failed', 1, { tags: { reason } })`.
 
-Patrón:
-```ts
-return Sentry.startSpan(
-  { name: 'rpc.liquidar_factura', op: 'db.rpc', attributes: { factura_id } },
-  async () => supabase.rpc('liquidar_factura', { ... })
-);
-```
+**`src/services/proforma/crud.ts`** — al crear proforma:
+- `Sentry.metrics.distribution('proforma.total_mxn', total, { unit: 'currency' })` (sin RFC, sin cliente — sólo monto agregado).
 
-Sólo en las 4-5 RPCs más críticas, no en todas (eso lo cubre la auto-instrumentación).
+Con esto Sentry nos da dashboards de "tamaño promedio de PDF la última semana", "tasa de éxito de conciliación", etc., sin necesidad de Mixpanel/Amplitude adicional.
 
 ---
 
 ### 5) Versionado + changelog
 
-- `APP_VERSION` → `12.79.0` (minor bump, observabilidad nueva).
-- `CHANGELOG.md` → entrada `[12.79.0]` con los 4 puntos.
+- `APP_VERSION` → `12.80.0` (minor bump, sigue siendo observabilidad).
+- `CHANGELOG.md` → entrada `[12.80.0]` con los 4 puntos.
+- Nuevo archivo `docs/observability.md` con: arquitectura Sentry (tunnel + edge wrapper), lista de alertas, lista de métricas custom, y runbook básico ("llegó alerta X → revisar Y").
 
 ---
 
 ### Detalles técnicos
 
-- **Bundle impact:** Replay y Profiling ya están en `@sentry/react@8` (no añade deps), pero pesa ~30 KB extra gzip. Aceptable porque Sentry se carga vía `requestIdleCallback` fuera del critical path (ver `src/main.tsx`).
-- **Privacy by default:** `maskAllText: true` + `blockAllMedia: true` evitan filtración de datos fiscales/personales en los replays (cumple con la sensibilidad del proyecto aunque sea demo).
-- **Sin secrets nuevos:** todo corre con el DSN actual.
-- **Tests:** no se rompen tests existentes — Sentry está mockeado/no-op en `src/test/setup.ts`.
+- **`beforeSend` performance:** las regex corren sólo en errores (decenas/día), impacto despreciable.
+- **Metrics API:** disponible en `@sentry/react@8`, no agrega deps. Los `tags` deben ser low-cardinality (no `cliente_id`, no `embarque_id` — sólo enums).
+- **Sin secrets nuevos:** todo con el DSN actual + integración nativa Sentry.
+- **Sin migración DB.**
 
 ---
 
-### Fuera de alcance (P3 futuro)
+### Fuera de alcance (P4 futuro, si llegamos)
 
-- `beforeSend` para scrub adicional de PII en breadcrumbs.
-- Alertas Sentry por release (regression detection).
-- Integración Sentry ↔ Slack/email del equipo.
-- Métricas custom (`Sentry.metrics.distribution('pdf.size_kb', ...)`).
+- Distributed tracing con propagación a edge functions (hoy frontend y edge son traces separadas).
+- Sentry Crons para los cron-jobs de `cxc-recordatorios` / `auditoria-snapshot-daily`.
+- Custom dashboards versionados en repo.
 
 ---
 
 ### Confirmaciones antes de implementar
 
-1. **Replay con 100% on-error** — ¿OK el costo? Con el volumen actual de errores entra en plan gratuito. Si prefieres más conservador, puedo bajar a `0.5` (50% de errores graban replay).
-2. **Profiling al 10%** — ¿OK o lo subimos al 25% durante 1 semana para tener baseline y luego ajustamos?
-3. **Lista de rutas críticas para `tracesSampler`** — la propuesta de arriba ¿cubre lo que más te importa o quieres agregar/quitar alguna?
+1. **PII scrub agresivo** — ¿OK redactar RFC/email/CURP de mensajes y breadcrumbs? Asumo sí (proyecto maneja datos fiscales mexicanos). Si prefieres ver los datos crudos en Sentry para debug más rápido, podemos hacerlo opt-in por entorno (`dev` sin scrub, `prod` con scrub).
+2. **Canal de alertas** — ¿Email, Slack, Discord, o webhook a otro sistema? Necesito saber a dónde mandar las alertas para configurar la integración.
+3. **Métricas custom propuestas** — ¿las 4 (PDF size, wizard duration, conciliación fallida, monto proforma) cubren lo que te interesa medir, o agregamos/quitamos alguna?

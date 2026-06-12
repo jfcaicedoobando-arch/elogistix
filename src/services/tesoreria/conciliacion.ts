@@ -6,6 +6,7 @@
  * - ignorarMovimiento: marcar como Ignorado con motivo.
  * - sugerirCandidatos: matching por monto (±$1) y fecha (±5 días) contra CxC/CxP pendientes.
  */
+import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/lib/import/bbva";
@@ -173,7 +174,15 @@ export async function conciliarConPago(
       conciliado_at: new Date().toISOString(),
     })
     .eq("id", movId);
-  if (error) throw error;
+  if (error) {
+    // P3: métrica de negocio — tasa de fallos de conciliación por código de error.
+    try {
+      Sentry.metrics?.count?.("conciliacion.failed", 1, {
+        attributes: { tipo, reason: error.code ?? "unknown" },
+      });
+    } catch { /* best-effort */ }
+    throw error;
+  }
 }
 
 export async function desconciliarMovimiento(movId: string) {

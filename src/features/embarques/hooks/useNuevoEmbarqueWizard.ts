@@ -8,7 +8,8 @@
  * Expediente (modo nuevo/existente) → `useNuevoEmbarqueExpediente`.
  * Vinculación con cotización + hidratación → `useNuevoEmbarqueCotVinculada`.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import * as Sentry from "@sentry/react";
 import { useToast } from "@/hooks/shared";
 import {
   useProveedoresForSelect,
@@ -87,6 +88,9 @@ export function useNuevoEmbarqueWizard() {
   // ── Submit final (delegado al orquestador) ─────────────────
   const orchestrator = useEmbarqueSubmitOrchestrator();
 
+  // P3: marca de tiempo de inicio del wizard para medir duración end-to-end.
+  const wizardStartedAt = useRef<number>(Date.now());
+
   const handleFinish = async () => {
     for (const step of [1, 2, 3, 4]) {
       if (!validateStep(step)) {
@@ -95,8 +99,9 @@ export function useNuevoEmbarqueWizard() {
       }
     }
 
+    const values = methods.getValues();
     await orchestrator.submit({
-      values: methods.getValues(),
+      values,
       modoExpediente: expediente.modoExpediente,
       expedienteSeleccionado: expediente.expedienteSeleccionado,
       cotizacionVinculada: cotVinc.cotizacionVinculada,
@@ -111,6 +116,18 @@ export function useNuevoEmbarqueWizard() {
       conceptosVenta: conceptos.conceptosVenta,
       conceptosCosto: conceptos.conceptosCosto,
     });
+
+    // P3: métricas de negocio. `modo` es enum low-cardinality (maritimo/terrestre/aereo).
+    try {
+      Sentry.metrics?.distribution?.(
+        "embarque.wizard_duration_ms",
+        Date.now() - wizardStartedAt.current,
+        { unit: "millisecond" },
+      );
+      Sentry.metrics?.count?.("embarque.created", 1, {
+        attributes: { modo: String(values.modo ?? "desconocido") },
+      });
+    } catch { /* best-effort */ }
   };
 
   return {

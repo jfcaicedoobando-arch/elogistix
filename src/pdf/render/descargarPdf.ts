@@ -23,7 +23,15 @@ export async function descargarPdf(
     { name: "pdf.render", op: "pdf", attributes: { filename: finalName } },
     async (span) => {
       const blob = await pdf(elemento).toBlob();
-      span?.setAttribute("size_kb", Math.round(blob.size / 1024));
+      const sizeKb = Math.round(blob.size / 1024);
+      span?.setAttribute("size_kb", sizeKb);
+      // P3: métrica agregable de negocio (sin nombre de cliente/RFC, sólo prefijo).
+      try {
+        Sentry.metrics?.distribution?.("pdf.size_kb", sizeKb, {
+          unit: "kilobyte",
+          attributes: { prefix: finalName.split("-")[0] ?? "unknown" },
+        });
+      } catch { /* metrics es best-effort, no romper la descarga */ }
       descargarBlob(blob, finalName);
     },
   );
