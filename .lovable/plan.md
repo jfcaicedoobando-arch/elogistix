@@ -1,48 +1,57 @@
-# Mostrar BL y contenedores en la proforma
+# Salto de página condicional antes de Conceptos en PDF de proforma
 
-## Estado actual
+## Estrategia
 
-- **BL Master**: ya aparece en el header (`ProformaHeader.tsx` línea 70) como "BL/MAWB".
-- **BL House**: **NO** se muestra en ningún lado, pese a existir en `embarques.bl_house`.
-- **Contenedores**: sólo se muestran como **encabezado de grupo** dentro de la tabla de conceptos, y **únicamente cuando hay 2+ contenedores** (`multiContenedor` requiere `idsUnicos.size >= 2`). Si la proforma cubre un único contenedor, su número/tipo no se ven en el PDF.
+Usar `minPresenceAhead` de `@react-pdf/renderer` para **no forzar** salto de página, sino reservar un espacio mínimo. Si los conceptos no caben con dignidad en la página actual, react-pdf los empuja a la siguiente automáticamente; si caben holgados, se quedan donde están y no se desperdicia papel.
 
-## Lo que voy a hacer
+El `minPresenceAhead` se aplica a un wrapper `<View>` que envuelve el título "Conceptos" + la primera sección de tabla, evitando que el título quede huérfano en la página anterior con la tabla en la siguiente.
 
-### 1. Header del PDF — sección "Datos del Embarque"
-- Renombrar la entrada actual **"BL/MAWB"** → **"BL Master / MAWB"** (más explícito).
-- Añadir **"BL House / HAWB"** justo debajo, sólo si `embarque.bl_house` existe.
-- Añadir fila **"Contenedores"** con la lista completa, formato: `MSCU1234567 · 40HC, MSCU2345678 · 20GP`. Si hay >3 contenedores, resumir como `3 × 40HC + 1 × 20GP — MSCU1234567, MSCU2345678, …` para no romper el grid.
-- Si no hay contenedores cargados (modo aéreo o sin asignar), la fila no se renderiza.
+## Cambios
 
-### 2. Data layer
-- `fetchEmbarqueParaPdf` (`src/services/proforma/queries.ts`): agregar `bl_house` al `select` y un nested `embarque_contenedores(id, numero_contenedor, tipo_contenedor)`.
-- `EmbarqueLite` (`src/pdf/documents/proformaShared.ts`): agregar `bl_house` al `Pick` y un campo opcional `contenedores?: { id; numero_contenedor; tipo_contenedor }[]`.
+### 1. `src/pdf/documents/ProformaDocument.tsx`
+Envolver el bloque de Conceptos en un `View` con `minPresenceAhead`:
 
-### 3. Consolidada
-- `ProformaConsolidadaDocument` no renderiza `SeccionEmbarque` (cubre N embarques). **No se toca** — los contenedores ya aparecen agrupados por embarque cuando aplica.
+```tsx
+<View minPresenceAhead={140}>
+  <Text style={styles.h3}>{multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}</Text>
+  <SeccionMonedaPdf grupos={grupos} moneda="USD" ... />
+  <SeccionMonedaPdf grupos={grupos} moneda="MXN" ... />
+</View>
+```
 
-### 4. Tests
-- Ampliar `src/pdf/documents/__tests__/ProformaDocument.test.tsx`:
-  - Caso con `bl_house` y 1 contenedor → ambos renderizan en el header.
-  - Caso sin `bl_house` ni contenedores → no aparecen filas vacías.
+El valor `140` ≈ alto de encabezado de tabla + 2 filas. Si quedan menos de 140pt libres antes del footer, el wrapper salta de página completo.
 
-### 5. Metadata
-- `APP_VERSION` → `12.95.1`.
-- `CHANGELOG.md`: entrada `[12.95.1]` describiendo BL House + lista de contenedores en header de proforma.
+`TotalesBox` queda fuera del wrapper para que también pueda saltar por su cuenta si los conceptos consumen toda la hoja siguiente.
 
-## Sección técnica (archivos tocados)
+### 2. `src/pdf/documents/ProformaConsolidadaDocument.tsx`
+Mismo tratamiento: envolver el bloque equivalente (título + tabla consolidada) en un `View` con `minPresenceAhead={140}`.
+
+### 3. Tests
+Los tests actuales validan presencia de texto en el render, no paginación. No requieren cambio — `minPresenceAhead` no afecta el `textContent` final.
+
+### 4. Metadata
+- `APP_VERSION` → `12.95.2`
+- `CHANGELOG.md`: entrada `[12.95.2]` explicando el salto condicional.
+
+## Por qué `minPresenceAhead` y no `break`
+
+| Opción | Comportamiento | Veredicto |
+|---|---|---|
+| `break` en el `View` | Siempre fuerza nueva página | Descartado (desperdicia papel) |
+| `wrap={false}` | Mantiene el bloque junto, lo salta entero si no cabe — pero si el bloque mismo es más alto que una página rompe el render | Riesgoso con multi-contenedor |
+| `minPresenceAhead={N}` | Salta sólo si quedan menos de N pt — y el contenido interno sigue pudiendo paginarse normalmente | ✅ Elegido |
+
+## Archivos tocados
 
 | Archivo | Cambio |
 |---|---|
-| `src/services/proforma/queries.ts` | `fetchEmbarqueParaPdf`: añadir `bl_house` y nested `embarque_contenedores` |
-| `src/pdf/documents/proformaShared.ts` | `EmbarqueLite`: +`bl_house`, +`contenedores?` |
-| `src/pdf/documents/ProformaHeader.tsx` | `meta` con BL Master/House; `SeccionEmbarque` con fila Contenedores |
-| `src/pdf/documents/__tests__/ProformaDocument.test.tsx` | nuevos casos |
-| `src/constants/appVersion.ts` | `12.95.1` |
+| `src/pdf/documents/ProformaDocument.tsx` | Wrapper `<View minPresenceAhead={140}>` alrededor del título + secciones de moneda |
+| `src/pdf/documents/ProformaConsolidadaDocument.tsx` | Mismo wrapper sobre su bloque de conceptos |
+| `src/constants/appVersion.ts` | `12.95.2` |
 | `CHANGELOG.md` | nueva entrada |
 
 ## Fuera de alcance
 
-- No se cambian las **cabeceras de agrupamiento por contenedor** dentro de las tablas (`multiContenedor`) — siguen apareciendo igual cuando hay 2+.
-- No se toca la proforma consolidada.
-- No se modifica la factura ni la cotización (sólo proforma, como pidió el usuario).
+- No se cambian fuentes, márgenes ni estilos del PDF.
+- No se modifica la factura ni la cotización.
+- No se ajusta el comportamiento de los grupos por contenedor (ya tienen `wrap={false}` propio).
