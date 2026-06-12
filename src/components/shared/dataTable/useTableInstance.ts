@@ -11,7 +11,7 @@
  * No reintroducir `useMemo` que ordene `data` ni `useEffect` que rehidrate
  * el estado de sort desde fuera del page-state.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -80,14 +80,26 @@ export function useTableInstance<T>({
       }
     : undefined;
 
+  // Estado interno de sort para modo client. TanStack v8 requiere
+  // `state.sorting` + `onSortingChange` controlados para que `setSorting`
+  // (invocado por `getToggleSortingHandler`) tenga efecto. Pasar ambos como
+  // `undefined` deja el `setSorting` interno en no-op y los headers no
+  // ordenan al hacer click.
+  const [internalSorting, setInternalSorting] = useState<SortingState>([]);
+
+  const sorting: SortingState = isServer ? (sortingState ?? []) : internalSorting;
+  const onSortingChange: OnChangeFn<SortingState> = isServer
+    ? (handleSortingChange as OnChangeFn<SortingState>)
+    : setInternalSorting;
+
   return useReactTable<T>({
     data,
     columns: columnDefs,
     getRowId,
     enableSorting,
     manualSorting: isServer,
-    state: isServer ? { sorting: sortingState } : undefined,
-    onSortingChange: handleSortingChange,
+    state: { sorting },
+    onSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
   });
