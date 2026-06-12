@@ -1,17 +1,22 @@
 /**
- * Detalle de pagos de una factura de proveedor — versión reescrita.
- * - Dialog 3xl scrollable.
- * - Header con KPIs mini (Total, Pagado, Saldo, # pagos).
- * - Tabla zebra-striping.
- * - Eliminación de pago con doble confirmación (typable ELIMINAR).
+ * Detalle de pagos de una factura de proveedor.
+ * Diseño "Densa + tooltips":
+ * - Header con folio en mono.
+ * - 4 KPIs con tonos semánticos.
+ * - Tabla con columnas TC Pago / Dif. Cambio aclaradas vía tooltip.
+ * - Método + Referencia agrupados.
+ * - Eliminación de pago con doble confirmación typable ELIMINAR.
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Info, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,15 +32,38 @@ interface Props {
   canEdit: boolean;
 }
 
+type KpiTone = "default" | "success" | "warn";
+
 function Kpi({ label, value, tone = "default" }: {
-  label: string; value: string; tone?: "default" | "success" | "warn";
+  label: string; value: string; tone?: KpiTone;
 }) {
-  const cls = tone === "success" ? "text-success" : tone === "warn" ? "text-warning" : "text-foreground";
+  const valueCls =
+    tone === "success" ? "text-success"
+    : tone === "warn" ? "text-warning"
+    : "text-foreground";
   return (
-    <div className="rounded-md border bg-muted/30 px-3 py-2 flex-1 min-w-[120px]">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={cn("text-base font-semibold tabular-nums", cls)}>{value}</p>
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground mb-1">
+        {label}
+      </p>
+      <p className={cn("text-lg font-semibold tabular-nums", valueCls)}>{value}</p>
     </div>
+  );
+}
+
+function HeaderWithTooltip({ label, hint }: { label: string; hint: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center justify-end gap-1 cursor-help">
+          {label}
+          <Info className="h-3 w-3 text-muted-foreground/70" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-[240px] text-xs">
+        {hint}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -45,27 +73,28 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
 
   return (
-    <>
+    <TooltipProvider delayDuration={150}>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn(dialogSize["3xl"], "max-h-[90vh] flex flex-col gap-0 p-0")}>
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle>Detalle de pagos</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="font-mono uppercase tracking-wider text-xs">
               {factura ? `${factura.folio_proveedor} — ${factura.proveedor_nombre}` : ""}
             </DialogDescription>
-            {factura && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Kpi label="Total" value={formatCurrency(factura.total, factura.moneda)} />
-                <Kpi label="Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
-                <Kpi
-                  label="Saldo"
-                  value={formatCurrency(factura.saldo, factura.moneda)}
-                  tone={factura.saldo > 0 ? "warn" : "default"}
-                />
-                <Kpi label="Pagos" value={String(pagos.length)} />
-              </div>
-            )}
           </DialogHeader>
+
+          {factura && (
+            <div className="px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-b">
+              <Kpi label="Total Factura" value={formatCurrency(factura.total, factura.moneda)} />
+              <Kpi label="Total Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
+              <Kpi
+                label="Saldo Pendiente"
+                value={formatCurrency(factura.saldo, factura.moneda)}
+                tone={factura.saldo > 0 ? "warn" : "default"}
+              />
+              <Kpi label="# Pagos" value={String(pagos.length)} />
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto px-6 py-5">
             {isLoading ? (
@@ -81,52 +110,63 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
             ) : (
               <div className="overflow-x-auto rounded-md border">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted/40 text-xs text-muted-foreground">
+                  <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
                     <tr>
-                      <th className="text-left px-3 py-2 font-medium">Fecha</th>
-                      <th className="text-left px-3 py-2 font-medium">Método</th>
-                      <th className="text-left px-3 py-2 font-medium">Referencia</th>
-                      <th className="text-right px-3 py-2 font-medium">Monto</th>
-                      <th className="text-right px-3 py-2 font-medium">TC</th>
-                      <th className="text-right px-3 py-2 font-medium">Δ MXN</th>
+                      <th className="text-left px-4 py-3 font-bold">Fecha</th>
+                      <th className="text-left px-4 py-3 font-bold">Método</th>
+                      <th className="text-right px-4 py-3 font-bold">Monto</th>
+                      <th className="text-right px-4 py-3 font-bold">
+                        <HeaderWithTooltip
+                          label="TC Pago"
+                          hint="Tipo de cambio USD→MXN registrado al momento de aplicar el pago."
+                        />
+                      </th>
+                      <th className="text-right px-4 py-3 font-bold">
+                        <HeaderWithTooltip
+                          label="Dif. Cambio"
+                          hint="Diferencia cambiaria en MXN (ganancia o pérdida) entre la tasa de la factura y la tasa del pago."
+                        />
+                      </th>
                       <th className="w-12" />
                     </tr>
                   </thead>
-                  <tbody>
-                    {pagos.map((p, idx) => (
-                      <tr
-                        key={p.id}
-                        className={cn(
-                          "border-t border-border",
-                          idx % 2 === 1 && "bg-muted/20",
-                        )}
-                      >
-                        <td className="px-3 py-2 whitespace-nowrap">
+                  <tbody className="divide-y divide-border">
+                    {pagos.map((p) => (
+                      <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 whitespace-nowrap text-foreground">
                           {format(new Date(p.fecha_pago + "T00:00:00"), "dd/MM/yyyy")}
                         </td>
-                        <td className="px-3 py-2">{p.metodo_pago}</td>
-                        <td className="px-3 py-2 text-xs text-muted-foreground">
-                          {p.referencia || "—"}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-foreground">{p.metodo_pago}</span>
+                            {p.referencia && (
+                              <span className="text-[11px] text-muted-foreground">
+                                Ref: {p.referencia}
+                              </span>
+                            )}
+                          </div>
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums font-medium">
+                        <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">
                           {formatCurrency(Number(p.monto), p.moneda)}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums text-xs">
+                        <td className="px-4 py-3 text-right tabular-nums text-xs text-muted-foreground">
                           {p.tipo_cambio_usd ? Number(p.tipo_cambio_usd).toFixed(4) : "—"}
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums text-xs">
+                        <td className="px-4 py-3 text-right tabular-nums text-xs text-muted-foreground">
                           {p.diferencia_cambiaria_mxn != null
                             ? formatCurrency(Number(p.diferencia_cambiaria_mxn), "MXN")
                             : "—"}
                         </td>
-                        <td className="px-3 py-2 text-right">
+                        <td className="px-2 py-3 text-right">
                           {canEdit && (
                             <Button
-                              variant="ghost" size="icon"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               onClick={() => setPagoAEliminar(p.id)}
                               title="Eliminar pago"
                             >
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           )}
                         </td>
@@ -157,6 +197,6 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
           setPagoAEliminar(null);
         }}
       />
-    </>
+    </TooltipProvider>
   );
 }
