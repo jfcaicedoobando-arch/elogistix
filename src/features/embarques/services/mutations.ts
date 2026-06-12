@@ -1,4 +1,5 @@
 import { z } from "zod";
+import * as Sentry from "@sentry/react";
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
@@ -135,9 +136,10 @@ export async function duplicarEmbarqueRpc(
 }
 
 export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {
-  const { error } = await supabase.rpc('eliminar_embarque_completo', {
-    p_embarque_id: embarqueId,
-  });
+  const { error } = await Sentry.startSpan(
+    { name: "rpc.eliminar_embarque_completo", op: "db.rpc", attributes: { embarque_id: embarqueId } },
+    () => supabase.rpc('eliminar_embarque_completo', { p_embarque_id: embarqueId }),
+  );
   if (error) throw error;
 }
 
