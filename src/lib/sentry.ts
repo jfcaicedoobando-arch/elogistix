@@ -59,7 +59,18 @@ export function initSentry(): void {
     dsn: DSN,
     release: `libre-carga@${APP_VERSION}`,
     environment: import.meta.env.MODE,
-    tracesSampleRate: 0.1,
+    // Sampling dinámico por ruta: capturamos 100% de los flujos donde el usuario
+    // realmente pierde dinero/tiempo (wizards, edición, conciliación) y muy
+    // poco de listados/marketing. Ver plan P2 en .lovable/plan.md.
+    tracesSampler: sampleByRoute,
+    // 10% de las transactions trazadas también capturan profile de CPU.
+    // Sólo se activa con browserProfilingIntegration y dentro de transactions.
+    profilesSampleRate: 0.1,
+    // Session Replay: NO grabamos sesiones random (caro). Sólo cuando ocurre
+    // un error capturamos los ~60s previos. Texto y media enmascarados por
+    // defecto para no filtrar RFC/montos/nombres de cliente.
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 1.0,
     // Anti-adblock: enviamos los envelopes a una edge function propia que los
     // reenvía al ingest oficial. Evita que uBlock/AdGuard bloqueen reportes
     // (perdíamos ~20% de eventos en silencio).
@@ -99,6 +110,11 @@ export function initSentry(): void {
     },
     integrations: [
       Sentry.browserTracingIntegration(),
+      Sentry.browserProfilingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
       Sentry.feedbackIntegration({
         autoInject: false,
         colorScheme: "light",
@@ -123,6 +139,41 @@ export function initSentry(): void {
       }),
     ],
   });
+}
+
+/**
+ * Sampling dinámico por ruta. Devuelve la probabilidad [0..1] de trazar la
+ * transaction actual. Prioriza flujos críticos donde el usuario pierde dinero
+ * o tiempo (edición/creación de embarques, cotizaciones, facturas,
+ * conciliación) y minimiza listados y marketing público.
+ */
+export function sampleByRoute(ctx: {
+  name?: string;
+  attributes?: Record<string, unknown>;
+  location?: { pathname?: string };
+}): number {
+  // El path lo obtenemos del SDK (samplingContext.location) o del window como fallback.
+  const path =
+    ctx.location?.pathname ??
+    (typeof window !== "undefined" ? window.location.pathname : "") ??
+    "";
+
+  // Marketing público: no trazar.
+  if (/^\/(landing|privacidad|terminos|guia|tracking)?\/?$/i.test(path)) return 0;
+
+  // Rutas críticas: 100%.
+  if (/\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturas\/nueva|conciliacion)/i.test(path)) {
+    return 1.0;
+  }
+
+  // Operaciones financieras: 50%.
+  if (/^\/(profit|tesoreria|comisiones|cxc|cxp)/i.test(path)) return 0.5;
+
+  // Listados de alto volumen: 5%.
+  if (/^\/(dashboard|embarques|clientes|proveedores)\/?$/i.test(path)) return 0.05;
+
+  // Fallback.
+  return 0.1;
 }
 
 /** True una vez `initSentry()` se ha invocado al menos una vez. */

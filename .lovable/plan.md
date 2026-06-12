@@ -1,89 +1,108 @@
-## Plan P1 — Source maps en builds + tunnel anti-adblock
+## Plan P2 — Cobertura avanzada Sentry (replay, profiling, sampling dinámico, spans manuales)
 
-Siguiente fase de cobertura Sentry. Mejora drásticamente la legibilidad de stacks en producción y evita la pérdida de eventos por bloqueadores de anuncios.
+P0 y P1 quedaron implementados (wrapper edge + tunnel + source maps). Esta fase agrega visibilidad **profunda** en errores reales de cliente y latencia en operaciones críticas.
 
 ---
 
-### 1) Source maps automáticos en build con `@sentry/vite-plugin`
+### 1) Session Replay (rrweb en crash time)
 
-**Problema actual:** los stacks en Sentry vienen minificados (`a.b.c is not a function`), imposibles de mapear a archivos `.tsx` reales. Hoy `vite.config.ts` no sube sourcemaps.
+**Problema:** cuando un usuario reporta "se trabó al guardar el embarque", hoy sólo vemos el stack. No sabemos qué tocó, qué vio, ni en qué pantalla estaba.
+
+**Cambios en `src/lib/sentry.ts`:**
+- Agregar `Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })`.
+- `replaysSessionSampleRate: 0` (no grabamos sesiones random — caro).
+- `replaysOnErrorSampleRate: 1.0` (100% de sesiones con error → replay completo de los últimos ~60s).
+- Privacidad: `maskAllText: true` enmascara texto (RFC, montos, nombres clientes); `blockAllMedia: true` ignora imágenes/PDFs renderizados.
+
+**Costo:** Sentry cobra por replay; con `onErrorSampleRate=1.0` y volumen actual (<50 errores/día) entra holgado en el tier free/team.
+
+**Bundle:** `@sentry/replay` ya viene incluido en `@sentry/react@8`, no agrega dep.
+
+---
+
+### 2) Browser Profiling
+
+**Problema:** cuando un PDF tarda 8s o el dashboard lagea, no sabemos qué función concreta consume CPU.
+
+**Cambios en `src/lib/sentry.ts`:**
+- Importar `browserProfilingIntegration` de `@sentry/react`.
+- Agregar a `integrations`.
+- `profilesSampleRate: 0.1` (10% de transactions perfiladas — suficiente para detectar hotspots sin saturar).
+
+**Requisito:** los profiles sólo se generan dentro de transactions activas (ya tenemos `tracesSampleRate: 0.1`), así que se aprovecha la instrumentación existente.
+
+---
+
+### 3) `tracesSampler` dinámico por ruta
+
+**Problema:** hoy `tracesSampleRate: 0.1` global. Trazamos 10% del dashboard (alto volumen, bajo valor) y 10% del wizard de embarque (bajo volumen, alto valor → perdemos casos).
+
+**Cambios en `src/lib/sentry.ts`:**
+- Reemplazar `tracesSampleRate` por `tracesSampler(samplingContext)`:
+  - `1.0` en rutas críticas: `/embarques/nuevo`, `/embarques/:id/editar`, `/cotizaciones/nueva`, `/facturas/nueva`, `/conciliacion/*`.
+  - `0.5` en operaciones financieras: `/profit/*`, `/tesoreria/*`, `/comisiones`.
+  - `0.05` en navegación/listados: `/dashboard`, `/embarques` (lista), `/clientes`.
+  - `0` en marketing público: `/`, `/landing`, `/privacidad`, `/terminos`.
+- Mantener `0.1` como fallback para rutas no listadas.
+
+**Resultado:** capturamos 100% de los flujos donde el usuario realmente pierde dinero/tiempo, sin inflar el cuota de transactions.
+
+---
+
+### 4) Spans manuales en operaciones críticas
+
+**Problema:** las transactions auto-instrumentadas miden `pageload`/`navigation`/`http`, pero no vemos cuánto tarda **generar un PDF** o **un RPC de liquidación**.
 
 **Cambios:**
 
-**`vite.config.ts`** — agregar:
-- `build.sourcemap: true` (ya genera `.map` files locales).
-- Plugin `sentryVitePlugin({ org, project, authToken, release, sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] } })` — sólo se activa cuando `SENTRY_AUTH_TOKEN` está presente (en CI/build de producción).
-- `release` igual a `libre-carga@${APP_VERSION}` para empatar con `Sentry.init`.
+**`src/pdf/render/descargarPdf.ts`** — envolver el render en `Sentry.startSpan({ name: 'pdf.render', op: 'pdf', attributes: { document } }, ...)`. Hoy es la queja #1 de latencia.
 
-**Dependencia nueva:** `@sentry/vite-plugin` (devDependency).
+**`src/generators/proformaPdf.tsx`, `cotizacionPdf.tsx`, `rentabilidadPdf.tsx`** — un span por generador con el `document` como atributo. Mide tanto el render como el `Blob` final.
 
-**Secrets:** `SENTRY_AUTH_TOKEN` (token de usuario Sentry con permiso `project:releases`). El plugin lo lee de `process.env.SENTRY_AUTH_TOKEN`. Se necesita configurarlo como **Build Secret** (Workspace Settings → Build Secrets), no como Runtime Secret, porque corre en build time.
+**RPCs financieros críticos** (envoltura ligera con `Sentry.startSpan`):
+- `liquidar_factura` (en `src/services/facturas*` — verificar nombre exacto al implementar).
+- `eliminar_embarque` (en `src/services/embarques*`).
+- `generar_proforma` / `conciliar_pago`.
 
-**`.gitignore`** — agregar `*.map` y `**/*.js.map` si no están (defensa en profundidad: nunca queremos sourcemaps servidos al cliente).
-
-**Resultado:** todos los issues en Sentry muestran archivo+línea exactos del código fuente original.
-
----
-
-### 2) Edge function `sentry-tunnel` (anti-adblock)
-
-**Problema actual:** ~20% de los usuarios tienen uBlock/AdGuard que bloquean `*.ingest.sentry.io` → los errores nunca llegan. Hoy la app pierde eventos en silencio.
-
-**Nuevo archivo:** `supabase/functions/sentry-tunnel/index.ts`
-- Recibe POST con el envelope binario de Sentry desde el browser.
-- Extrae el `dsn` del primer header del envelope (es el estándar de tunneling).
-- Valida que el host del DSN sea uno de los permitidos (whitelist hardcoded: el host del DSN del frontend).
-- Reenvía el envelope a `https://{host}/api/{project_id}/envelope/` con el `X-Sentry-Auth` header reconstruido.
-- Devuelve la respuesta de Sentry tal cual.
-- `verify_jwt = false` (los reportes anónimos del frontend deben pasar antes del login).
-- Sin logging del payload (privacidad).
-
-**`supabase/config.toml`** — agregar:
-```toml
-[functions.sentry-tunnel]
-verify_jwt = false
-```
-
-**`src/lib/sentry.ts`** — agregar a `Sentry.init`:
+Patrón:
 ```ts
-tunnel: `${SUPABASE_URL}/functions/v1/sentry-tunnel`
+return Sentry.startSpan(
+  { name: 'rpc.liquidar_factura', op: 'db.rpc', attributes: { factura_id } },
+  async () => supabase.rpc('liquidar_factura', { ... })
+);
 ```
 
-**Resultado:** los reportes salen desde el dominio del proyecto, indistinguibles de cualquier otro request a Supabase. Sin pérdida por adblockers.
+Sólo en las 4-5 RPCs más críticas, no en todas (eso lo cubre la auto-instrumentación).
 
 ---
 
-### 3) Versionado + changelog
+### 5) Versionado + changelog
 
-- `APP_VERSION` → `12.78.0` (minor bump, hay infra nueva).
-- `CHANGELOG.md` → entrada `[12.78.0]` con los 2 puntos.
+- `APP_VERSION` → `12.79.0` (minor bump, observabilidad nueva).
+- `CHANGELOG.md` → entrada `[12.79.0]` con los 4 puntos.
 
 ---
 
 ### Detalles técnicos
 
-- **No** se sube nada de `node_modules`, secrets ni `.env` a Sentry — el plugin sube sólo `dist/**/*.js.map`.
-- **No** se cambia `tracesSampleRate` ni se agrega replay/profiling (eso es P2).
-- El edge function `sentry-tunnel` cuenta para los límites de invocación de Edge Functions, pero el volumen esperado es bajo (sólo errores reales).
-- Tests existentes no se tocan.
+- **Bundle impact:** Replay y Profiling ya están en `@sentry/react@8` (no añade deps), pero pesa ~30 KB extra gzip. Aceptable porque Sentry se carga vía `requestIdleCallback` fuera del critical path (ver `src/main.tsx`).
+- **Privacy by default:** `maskAllText: true` + `blockAllMedia: true` evitan filtración de datos fiscales/personales en los replays (cumple con la sensibilidad del proyecto aunque sea demo).
+- **Sin secrets nuevos:** todo corre con el DSN actual.
+- **Tests:** no se rompen tests existentes — Sentry está mockeado/no-op en `src/test/setup.ts`.
 
 ---
 
-### Fuera de alcance (P2 posterior)
+### Fuera de alcance (P3 futuro)
 
-- `Sentry.replayIntegration` (rrweb en crash time).
-- `profilesSampleRate` (Browser Profiling).
-- `tracesSampler` dinámico por ruta (subir sample en rutas críticas como `/embarques/nuevo`, bajar en `/dashboard`).
-- Spans manuales en generadores PDF y RPCs críticos (deletes, liquidaciones).
+- `beforeSend` para scrub adicional de PII en breadcrumbs.
+- Alertas Sentry por release (regression detection).
+- Integración Sentry ↔ Slack/email del equipo.
+- Métricas custom (`Sentry.metrics.distribution('pdf.size_kb', ...)`).
 
 ---
 
-### Acción del usuario antes de implementar
+### Confirmaciones antes de implementar
 
-Necesito que confirmes:
-
-1. **`SENTRY_AUTH_TOKEN`** — ¿lo creas en Sentry (Settings → Account → Auth Tokens, scope `project:releases` + `org:read`) y lo agregas en **Workspace Settings → Build Secrets**? No lo puedo configurar yo: los Build Secrets son del workspace. Sin este token el plugin entra en modo no-op (build sigue funcionando, sólo no sube sourcemaps).
-
-2. **Slug de org y proyecto Sentry** — necesito `org slug` (ej. `elogistix`) y `project slug` (ej. `javascript-react`) para hardcodearlos en `vite.config.ts`. ¿Me los confirmas?
-
-3. ¿Activamos también el tunnel ahora o sólo source maps en esta tanda? Recomiendo ambos: el tunnel es 1 archivo y captura eventos que hoy se pierden.
+1. **Replay con 100% on-error** — ¿OK el costo? Con el volumen actual de errores entra en plan gratuito. Si prefieres más conservador, puedo bajar a `0.5` (50% de errores graban replay).
+2. **Profiling al 10%** — ¿OK o lo subimos al 25% durante 1 semana para tener baseline y luego ajustamos?
+3. **Lista de rutas críticas para `tracesSampler`** — la propuesta de arriba ¿cubre lo que más te importa o quieres agregar/quitar alguna?
