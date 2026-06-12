@@ -189,6 +189,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Download shard blobs
+        id: download-blobs
+        continue-on-error: true
         uses: actions/download-artifact@v7
         with:
           pattern: vitest-blob-*
