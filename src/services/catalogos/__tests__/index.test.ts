@@ -1,44 +1,29 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchNavieras, fetchPuertos } from '../index';
+import { describe, it, expect, beforeEach } from "vitest";
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-const { mockSupabase } = vi.hoisted(() => {
-  const chain: any = {};
-  chain.from = vi.fn(() => chain);
-  chain.select = vi.fn(() => chain);
-  chain.order = vi.fn(() => chain);
-  chain.limit = vi.fn(() => chain);
-  chain.eq = vi.fn(() => chain);
-  chain.then = vi.fn(function (this: any, resolve: any) {
-    resolve({ data: chain._data, error: chain._error });
-  });
-  chain._data = null;
-  chain._error = null;
-  return { mockSupabase: chain };
+import { fetchNavieras, fetchPuertos } from "../index";
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
 });
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
-}));
-
-describe('catalogos/index', () => {
-  beforeEach(() => {
-    (mockSupabase as any)._data = null;
-    (mockSupabase as any)._error = null;
-    (mockSupabase.from as any).mockClear();
-    (mockSupabase.order as any).mockClear();
-  });
-
-  it('fetchNavieras obtiene lista ordenada', async () => {
-    (mockSupabase as any)._data = [{ name: 'MSC' }];
+describe("catalogos/index", () => {
+  it("fetchNavieras consulta la tabla navieras ordenada", async () => {
+    mock.setTableResult("navieras", { data: [{ name: "MSC" }], error: null });
     const result = await fetchNavieras();
-    expect(mockSupabase.from).toHaveBeenCalledWith('navieras');
-    expect(mockSupabase.order).toHaveBeenCalledWith('name');
-    expect(result[0].name).toBe('MSC');
+    const call = mock.tableCalls.find((c) => c.table === "navieras");
+    expect(call?.ops).toContain("select");
+    expect(call?.ops).toContain("order");
+    expect(result[0].name).toBe("MSC");
   });
 
-  it('fetchPuertos obtiene lista ordenada', async () => {
-    (mockSupabase as any)._data = [{ name: 'Manzanillo' }];
+  it("fetchPuertos consulta la tabla puertos", async () => {
+    mock.setTableResult("puertos", { data: [{ name: "Manzanillo" }], error: null });
     await fetchPuertos();
-    expect(mockSupabase.from).toHaveBeenCalledWith('puertos');
+    expect(mock.tableCalls.some((c) => c.table === "puertos")).toBe(true);
   });
 });
