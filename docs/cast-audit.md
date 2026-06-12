@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-06-10
+# Cast Audit — generado 2026-06-12
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **1256**
+Total de `as` casts detectados: **1358**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 454     | 36.1% |
-| LOW       | 1 | 21      | 1.7% |
-| MEDIUM    | 2 | 781   | 62.2% |
-| HIGH      | 3 | 0     | 0.0% |
+| SAFE      | 0 | 463     | 34.1% |
+| LOW       | 1 | 20      | 1.5% |
+| MEDIUM    | 2 | 874   | 64.4% |
+| HIGH      | 3 | 1     | 0.1% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.1%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -29,25 +29,30 @@ Total de `as` casts detectados: **1256**
 
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
-| 1 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
-| 2 | `src/hooks/profit/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 3 | `src/hooks/proveedor/useNuevoProveedorController.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 4 | `src/test/setup.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 5 | `src/services/planes/__tests__/index.test.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
-| 6 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 7 | `src/lib/__tests__/downloadBlob.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 8 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
-| 9 | `src/lib/domain/estadoResultados.ts` | 7 | 12 | 1 | 0 | 6 | 0 | 0 |
-| 10 | `src/services/catalogos/__tests__/index.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 11 | `src/services/cotizacion/conversiones/__tests__/embarquesHelpers.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 12 | `src/services/bitacora/__tests__/index.test.ts` | 10 | 11 | 4 | 1 | 5 | 0 | 0 |
-| 13 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 14 | `src/features/costeo/services/navieraCondiciones.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 15 | `src/features/embarques/hooks/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 1 | `src/services/cotizacion/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 2 | `src/services/pagos-factura/__tests__/pagosFactura.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
+| 3 | `src/services/profit/estadoResultadosDevengado.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 4 | `src/test/setup.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 5 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
+| 6 | `src/hooks/profit/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 7 | `src/hooks/proveedor/useNuevoProveedorController.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 8 | `src/services/facturas/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 9 | `src/lib/sentry.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
+| 10 | `src/services/facturas/__tests__/facturasIndex.test.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
+| 11 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 12 | `src/lib/__tests__/downloadBlob.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 13 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
+| 14 | `src/lib/domain/estadoResultados.ts` | 7 | 12 | 1 | 0 | 6 | 0 | 0 |
+| 15 | `src/services/cotizacion/conversiones/__tests__/embarquesHelpers.test.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-_Ningún cast HIGH o CRITICAL detectado._
+### 1. [HIGH] `src/services/embarques/reconciliacionCostos.ts:125`
+
+```ts
+const conceptos = (cc ?? []) as unknown as CCRow[];
+```
+
 
 ## Roadmap
 
