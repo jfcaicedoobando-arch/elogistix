@@ -13,6 +13,7 @@
 import * as Sentry from "@sentry/react";
 import { APP_VERSION } from "@/constants/appVersion";
 import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
+import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
 
 /** Detecta si un error proviene de React Refresh / HMR de Vite.
  *  Ocurre cuando un bundle stale intenta re-renderizar y referencia
@@ -106,7 +107,26 @@ export function initSentry(): void {
       if (exc && isReactRefreshHmrError(exc)) return null;
       if (values && values.some((v) => isReactRefreshStackTrace(v.stacktrace))) return null;
 
-      return event;
+      return scrubEventPii(event);
+    },
+    beforeBreadcrumb(breadcrumb) {
+      // Drop console.log (sólo conservamos warn/error en breadcrumbs).
+      if (breadcrumb.category === "console" && breadcrumb.level === "log") return null;
+      // Eliminar bodies de endpoints sensibles y scrub de URL.
+      if ((breadcrumb.category === "fetch" || breadcrumb.category === "xhr") && breadcrumb.data) {
+        const url = breadcrumb.data.url as string | undefined;
+        if (isSensitiveApiUrl(url)) {
+          delete (breadcrumb.data as Record<string, unknown>).request_body;
+          delete (breadcrumb.data as Record<string, unknown>).response_body;
+        }
+        if (typeof url === "string") {
+          breadcrumb.data.url = scrubUrl(url);
+        }
+      }
+      if (typeof breadcrumb.message === "string") {
+        breadcrumb.message = scrubPii(breadcrumb.message);
+      }
+      return breadcrumb;
     },
     integrations: [
       Sentry.browserTracingIntegration(),
