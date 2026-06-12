@@ -7,8 +7,8 @@ const mock = await vi.hoisted(async () => {
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 // Helper to override "from(table)" with custom count per table
-function setCount(table: string, count: number, rows: unknown[] = []) {
-  mock.setTableResult(table, { data: rows, error: null });
+function setEmpty(table: string) {
+  mock.setTableResult(table, { data: [], error: null });
 }
 
 import { fetchEmbarqueDependenciasFinancieras } from "@/services/embarques/dependenciasFinancieras";
