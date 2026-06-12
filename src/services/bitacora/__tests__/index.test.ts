@@ -18,7 +18,6 @@ describe("bitacora/index", () => {
     mock.setTableResult("bitacora_actividad", {
       data: [],
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- count out-of-band
       count: 10,
     } as any);
     const result = await fetchBitacora({ pagina: 1, limite: 10 });
