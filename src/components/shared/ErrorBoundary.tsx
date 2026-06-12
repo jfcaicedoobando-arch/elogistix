@@ -75,12 +75,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
     const feedback = Sentry.getFeedback();
     if (!feedback) return;
     try {
-      const form = await feedback.createForm({
-        // Asocia el feedback con el evento exacto que provocó el crash.
-        ...(this.state.eventId ? { eventId: this.state.eventId } : {}),
-      });
+      const form = await feedback.createForm();
       form.appendToDom();
       form.open();
+      // Asocia el feedback con el evento exacto que rompió la UI, si lo tenemos.
+      if (this.state.eventId) {
+        Sentry.getCurrentScope().setTag("crash_event_id", this.state.eventId);
+      }
     } catch {
       // best-effort: si el widget falla, el usuario aún puede usar Reintentar.
     }
