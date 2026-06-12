@@ -11,6 +11,13 @@
  * flotante por defecto.
  */
 import * as Sentry from "@sentry/react";
+import { useEffect } from "react";
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
 import { APP_VERSION } from "@/constants/appVersion";
 import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
@@ -129,7 +136,17 @@ export function initSentry(): void {
       return breadcrumb;
     },
     integrations: [
-      Sentry.browserTracingIntegration(),
+      // Router v6 instrumentation: parametriza las rutas (`/embarques/:id` en lugar
+      // de `/embarques/<uuid>`) y permite que `sampleByRoute` y los dashboards de
+      // Sentry agrupen métricas por patrón, no por instancia. Sin esto, el
+      // throughput por ruta queda fragmentado en miles de transactions únicas.
+      Sentry.reactRouterV6BrowserTracingIntegration({
+        useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes,
+      }),
       Sentry.browserProfilingIntegration(),
       Sentry.replayIntegration({
         maskAllText: true,

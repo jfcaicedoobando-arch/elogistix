@@ -49,3 +49,19 @@ export function syncSentryUser(params: SyncParams): void {
       // Sentry es best-effort; un fallo al cargar el SDK no debe romper auth.
     });
 }
+
+/**
+ * Refresca el tag `active_organization_id` en el scope global de Sentry.
+ * Usar cuando un super-admin cambia de organización activa (impersonación)
+ * sin re-loguear: garantiza que cualquier evento posterior llegue tagueado
+ * con el tenant real que el usuario estaba viendo.
+ */
+export function syncSentryActiveOrg(orgId: string | null): void {
+  loadSentry()
+    .then((Sentry) => {
+      Sentry.getCurrentScope().setTag("active_organization_id", orgId ?? "none");
+    })
+    .catch(() => {
+      // best-effort
+    });
+}

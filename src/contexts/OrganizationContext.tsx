@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { useAuth } from "@/contexts/AuthContext";
 import { listActiveOrganizations } from "@/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
+import { syncSentryActiveOrg } from "@/lib/sentryUser";
 
 export interface Organization {
   id: string;
@@ -96,6 +97,13 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       loading: authLoading,
     };
   }, [isSuperAdmin, superAdminOrgs, superAdminActiveId, cachedOrgId, cachedOrg, authLoading, loadingSA, setActiveOrganization]);
+
+  // Refresca el tag de Sentry cuando cambia la organización efectiva (super-admin
+  // impersonando otro tenant o usuario regular cargando su org). Sin esto, los
+  // eventos posteriores al cambio quedarían tagueados con el org anterior.
+  useEffect(() => {
+    syncSentryActiveOrg(value.organizationId);
+  }, [value.organizationId]);
 
   return (
     <OrganizationContext.Provider value={value}>

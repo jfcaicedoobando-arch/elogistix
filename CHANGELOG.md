@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.95.0] - 2026-06-12
+- **feat(observability/sentry)**: cobertura ampliada en tres frentes. (1) Router v6 integration: el `browserTracingIntegration` ahora recibe `useEffect/useLocation/useNavigationType/createRoutesFromChildren/matchRoutes`, así las transactions agrupan por patrón (`/embarques/:id`) en lugar de por instancia (`/embarques/<uuid>`), corrigiendo la fragmentación que rompía dashboards y el sampling por ruta. (2) `ErrorBoundary` captura ahora `eventId` de Sentry y lo muestra en el fallback con un botón **Reportar** que abre el widget de feedback enlazado al crash exacto; además reemplaza `console.error` por `logger.error` para evitar doble reporte. (3) `OrganizationContext` invoca `syncSentryActiveOrg(orgId)` en cada cambio de organización efectiva, así los eventos de un super-admin que impersona otro tenant quedan tagueados con el `active_organization_id` correcto.
+
 ## [12.94.3] - 2026-06-12
 - **fix(pdf/proforma)**: reordena columnas inline de conceptos a `Descripción | Cant. | P. Unit. | Importe | IVA | Total`. Antes el "Total" salía antes que el IVA y representaba sólo `cantidad × precio_unitario`, lo que confundía al cliente. Ahora **Importe** = cantidad × P. Unit., **IVA** = monto de impuesto de la línea (o "—" si no aplica), **Total** = Importe + IVA. Aplicado en `ProformaDocument` y `ProformaConsolidadaDocument`; MXN ahora también muestra IVA inline (siempre aplica 16%).
 
