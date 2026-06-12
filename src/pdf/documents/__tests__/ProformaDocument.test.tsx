@@ -23,7 +23,7 @@ const mockEmbarque = makeEmbarque({
   puerto_origen: "Shanghai",
   puerto_destino: "Manzanillo",
   descripcion_mercancia: "Carga seca general",
-} as Partial<ReturnType<typeof makeEmbarque>>);
+} as unknown as Partial<ReturnType<typeof makeEmbarque>>);
 
 const mockConcepto = {
   descripcion: "Flete marítimo Shanghai-Manzanillo",

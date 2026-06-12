@@ -17,7 +17,7 @@ const mockEmbarque = makeEmbarque({
   incoterm: "FOB",
   puerto_origen: "Shanghai",
   puerto_destino: "Manzanillo",
-} as Partial<ReturnType<typeof makeEmbarque>>);
+} as unknown as Partial<ReturnType<typeof makeEmbarque>>);
 
 describe("ProformaHeader", () => {
   it("muestra número, expediente, cliente, modo/incoterm y vigencia", () => {
