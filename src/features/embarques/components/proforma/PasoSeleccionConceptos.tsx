@@ -81,7 +81,10 @@ export function PasoSeleccionConceptos({
           {conceptosVisibles.map(c => {
             const sub = Number(c.cantidad) * Number(c.precio_unitario);
             const isSelected = seleccionados.has(c.id);
-            const ivaActivo = ivaPorConcepto[c.id] ?? false;
+            // Fix v12.94.2: caer al `aplica_iva` real del concepto si el state aún no
+            // se inicializó, para evitar ventana donde el switch muestra OFF pese a
+            // que el concepto sí lleva IVA.
+            const ivaActivo = ivaPorConcepto[c.id] ?? (c.moneda === "MXN" ? true : !!c.aplica_iva);
             const ivaBloqueado = c.moneda === "MXN";
             const contLabel = c.contenedor_id ? contenedorNumeroById.get(c.contenedor_id) : null;
             return (

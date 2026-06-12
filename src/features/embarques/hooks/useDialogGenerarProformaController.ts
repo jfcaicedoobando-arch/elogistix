@@ -5,7 +5,7 @@
  * El submit completo (crear proforma + generar PDF) vive en
  * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import { useCrearProforma } from "@/features/embarques/hooks/useProformas";
@@ -53,15 +53,16 @@ export function useDialogGenerarProformaController(
     [conceptosPendientes, filtroContenedor],
   );
 
-  // Reset al abrir
+  // Fix v12.94.2: solo reinicializar el state al pasar de cerrado→abierto.
+  // Antes este efecto dependía de `conceptosPendientes`, y un refetch de React
+  // Query durante el diálogo borraba los toggles de IVA del usuario provocando
+  // proformas con IVA en cero pese a estar marcado en pantalla.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (open) {
+    if (open && !wasOpenRef.current) {
+      wasOpenRef.current = true;
       setPaso("seleccion");
       setFiltroContenedor(initialFiltroContenedor);
-      // v12.14.0: cuando se abre filtrado a un contenedor concreto, preseleccionar
-      // sólo los conceptos de ese filtro (evita facturar de más al encadenar
-      // proformas por contenedor). En modo 'todos' se mantiene la selección
-      // completa de pendientes.
       const inicial = initialFiltroContenedor === "todos"
         ? conceptosPendientes
         : filtrarPorContenedor(conceptosPendientes, initialFiltroContenedor);
@@ -73,6 +74,8 @@ export function useDialogGenerarProformaController(
       setIvaPorConcepto(ivaInit);
       setNotas("");
       setDiasCredito("");
+    } else if (!open && wasOpenRef.current) {
+      wasOpenRef.current = false;
     }
   }, [open, conceptosPendientes, initialFiltroContenedor]);
 

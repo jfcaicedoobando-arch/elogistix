@@ -1,66 +1,79 @@
 ## Diagnóstico
 
-Buena noticia: el esquema ya está casi listo. No hace falta romper nada.
+Audité la base y encontré **proformas con IVA desincronizado**: el flag `aplica_iva` y `tasa_iva_aplicada` de los conceptos están correctos, pero los totales (`iva_usd`, `total_usd`) almacenados en la proforma son `0`.
 
-Hoy tienes 3 capas de costo conviviendo:
+Ejemplos reales (`PRO-2026-0319/0321/0322`):
 
-```text
-cotizacion_costos        →  costo estimado (oferta comercial)
-        ↓ (al ganar y crear embarque)
-conceptos_costo          →  costo presupuestado del embarque (lo que YO esperaba pagar)
-        ↑
-proveedor_facturas       →  factura real del proveedor (lo que REALMENTE pagué)
-   └ proveedor_facturas_conceptos.concepto_costo_id  ←  vínculo línea a línea (ya existe)
+| Proforma   | iva_usd guardado | IVA recalculado desde conceptos |
+|------------|------------------|---------------------------------|
+| PRO-2026-0319 | 0   | 20 USD |
+| PRO-2026-0321 | 0   | 40 USD |
+| PRO-2026-0322 | 0   | 20 USD |
+
+### Causa raíz
+
+`useDialogGenerarProformaController` envía dos cosas separadas a la RPC `crear_proforma_atomica`:
+1. **`totales`** calculados en cliente (memo sobre `ivaPorConcepto`).
+2. **`ivaOverrides`** por concepto (también desde `ivaPorConcepto`).
+
+La RPC **confía ciegamente** en `totales` y solo persiste overrides en `conceptos_venta`. Cualquier desfase entre los dos cálculos en cliente (re-render por refetch de React Query mientras el diálogo está abierto, `useEffect` que reinicializa `ivaPorConcepto` al cambiar referencia de `conceptosPendientes`, race entre `setState` y memo) produce el bug: los conceptos quedan marcados con IVA pero el total de la proforma queda en cero.
+
+Bug secundario: en `PasoSeleccionConceptos.tsx:84`, `ivaPorConcepto[c.id] ?? false` muestra el switch en OFF antes de que el `useEffect` de inicialización corra, dando una ventana donde el usuario puede submitir sin que el estado refleje los defaults reales.
+
+## Plan de remediación
+
+### 1. Mover la fuente de verdad al servidor (fix definitivo)
+
+Modificar `crear_proforma_atomica` para **recalcular** los totales dentro de la RPC desde los conceptos seleccionados y los overrides, ignorando los `p_*_usd`/`p_*_mxn` del cliente (o usarlos solo como validación con tolerancia).
+
+Pseudo-SQL:
+```sql
+-- después de aplicar overrides:
+SELECT
+  SUM(CASE WHEN moneda='USD' THEN cantidad*precio_unitario END) AS sub_usd,
+  SUM(CASE WHEN moneda='USD' AND aplica_iva
+           THEN cantidad*precio_unitario*tasa_iva_aplicada END) AS iva_usd,
+  ... -- MXN siempre con IVA
+INTO v_sub_usd, v_iva_usd, ...
+FROM conceptos_venta
+WHERE id = ANY(p_concepto_ids) AND organization_id = v_org;
 ```
+Si los totales del cliente difieren de los recalculados en > $0.01, **levantar excepción** y log en `bitacora_actividad` para detectar regresiones futuras. Insertar siempre los valores recalculados.
 
-El campo `proveedor_facturas.embarque_id` y `proveedor_facturas_conceptos.concepto_costo_id` ya existen. Lo que falta es **cerrar el ciclo de uso**: forzar/sugerir el vínculo, exponer la comparación, y consumirla en EERR.
+### 2. Reparar proformas existentes
 
-## Mejor práctica recomendada
+Migración one-shot que recalcula `iva_usd`, `total_usd`, `iva_mxn`, `total_mxn` para todas las proformas con `estado_revision != 'facturada'` cuyos totales no cuadren con sus conceptos. Las facturadas no se tocan (impacto fiscal); se listan en bitácora para revisión manual del usuario.
 
-Mantener la **separación devengado vs presupuestado**, que ya está bien pensada:
+### 3. Endurecer el cliente
 
-- `conceptos_costo` = costo **planeado/devengado** del embarque (lo que cotizamos, lo que se va provisionando).
-- `proveedor_facturas` + `proveedor_facturas_conceptos` = costo **real facturado**.
-- La conciliación es un *matching* entre ambos, no una sustitución.
+- `useDialogGenerarProformaController`: cambiar el `useEffect` de inicialización para que **solo** se ejecute en transición `open: false → true` (usar `useRef` para detectar primer abrir) y no en cada cambio de referencia de `conceptosPendientes`. Esto preserva los toggles del usuario ante refetches.
+- `PasoSeleccionConceptos.tsx:84`: cambiar `?? false` por `?? !!c.aplica_iva` para evitar la ventana de UI inconsistente.
 
-Esto evita doble contabilización y respeta el principio de devengado que ya usa `estadoResultadosDevengado.ts`.
+### 4. Tests
 
-## Plan por fases
+- Unit test en `lib/domain/proforma.test.ts` cubriendo el caso "concepto con `aplica_iva=true` y `ivaOverrides` ausente debe sumar IVA".
+- Test de regresión en `services/proforma/crud.test.ts` que valida la RPC con totales recalculados.
+- E2E (Playwright `03-factura.spec.ts`): crear proforma con mezcla USD con/sin IVA y verificar `total_usd = subtotal + iva` post-creación.
 
-### Fase 1 — Cierre del vínculo (UX y datos)
-1. En `DialogNuevaFacturaProveedor`: si el proveedor tiene embarques con costos pendientes de liquidar, mostrar selector de embarque y, al elegirlo, sugerir los `conceptos_costo` abiertos como líneas (pre-llena `proveedor_facturas_conceptos` con `concepto_costo_id` + monto sugerido).
-2. Al guardar la factura, si todas sus líneas cubren el monto del `concepto_costo`, marcar automáticamente `estado_liquidacion = 'Liquidado'` y registrar `referencia_pago = folio_proveedor`.
-3. Agregar columna "Factura proveedor" en la tabla de costos del embarque (link al `proveedor_factura_id` cuando exista).
+### 5. Bitácora / Changelog
 
-### Fase 2 — Reporte "Cotizado vs Real" por embarque
-1. Nueva vista SQL `embarque_costos_reconciliacion_v` que para cada embarque devuelva por concepto/proveedor:
-   `cotizado` (de cotizacion_costos vía `cotizacion_id`), `presupuestado` (conceptos_costo), `real_facturado` (suma de proveedor_facturas_conceptos), `diferencia`, `% desviación`.
-2. Nueva pestaña en detalle de embarque: **Conciliación de costos** (tabla + KPI de desviación global + badge verde/amarillo/rojo por línea).
-3. Reporte mensual exportable: "Top 10 embarques con mayor desviación de costos".
-
-### Fase 3 — Alimentación al EERR
-1. `estadoResultadosDevengado.ts` ya usa `proveedor_facturas` para costos reales. Sólo agregar **drill-down por modo más confiable**: hoy hace fallback a "Marítimo" cuando no hay `embarque_id` — con el vínculo obligatorio de Fase 1 esto se vuelve preciso.
-2. Nuevo KPI ejecutivo: **Margen Real vs Margen Presupuestado** (compara `conceptos_venta` − `conceptos_costo` contra `facturas` − `proveedor_facturas`).
-3. Alerta automática en bitácora cuando un embarque cierre con desviación > X% (configurable en `configuracion_global`).
-
-### Fase 4 — Automatización (opcional, futuro)
-- Al subir CFDI XML del proveedor (`parse-cfdi-xml`), intentar auto-vincular al embarque por: RFC proveedor + monto + ventana de fechas ±15 días. Sugerir match con confianza %, no auto-aplicar.
+- Actualizar `CHANGELOG.md` y bump `APP_VERSION` a `12.94.2`.
+- Registrar incidencia en `mem://features/proforma-iva-fix` documentando que la RPC es ahora source of truth.
 
 ## Detalles técnicos
 
-- **Sin migración pesada en Fase 1**: el FK `embarque_id` y `concepto_costo_id` ya existen.
-- **Migración mínima Fase 2**: una vista SQL + índice compuesto `(embarque_id, concepto_costo_id)` ya existente en `proveedor_facturas_conceptos`.
-- **Multi-moneda**: usar `tipo_cambio_usd` del embarque (no de la factura) para que la comparación cotizado/real sea en la misma base, igual que hace `embarqueKpis.ts`.
-- **RLS**: heredar por `organization_id` (mismo patrón ya usado).
-- **Tests**: agregar a `services/cxp/__tests__/` casos de auto-liquidación al facturar y de cálculo de desviación.
-- **Centralizar matemática** en `lib/financial/financialUtils.ts` (regla de memoria).
+- **Archivos afectados**:
+  - Nueva migración SQL: redefinir `crear_proforma_atomica` + script de reparación.
+  - `src/features/embarques/hooks/useDialogGenerarProformaController.ts`
+  - `src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx`
+  - `src/lib/domain/__tests__/proforma.test.ts`
+  - `src/services/proforma/__tests__/crud.test.ts`
+  - `e2e/specs/03-factura.spec.ts`
+  - `CHANGELOG.md`, `src/constants/appVersion.ts`
 
-## Lo que NO recomiendo
+- **Riesgo**: la migración de reparación afecta proformas no facturadas; se ejecuta en transacción con `RAISE NOTICE` por proforma corregida.
+- **No se tocan**: proformas ya facturadas (mantener auditoría fiscal), facturas, ni notas de crédito.
 
-- ❌ Crear una tabla nueva tipo `gastos_embarque` o duplicar montos en `embarques`. Rompe la fuente única de verdad y duplica el cálculo.
-- ❌ Borrar `conceptos_costo` cuando llegue la factura real. Pierdes la trazabilidad cotizado→presupuestado→real.
-- ❌ Hacer el vínculo obligatorio de golpe — primero suaviza con sugerencias (Fase 1), luego endurece con validación.
+## Pregunta antes de implementar
 
-## Entregable de esta conversación
-
-Si apruebas, arranco por **Fase 1** (cierre del vínculo + auto-liquidación). Es la que más valor entrega con menos riesgo y desbloquea las fases 2-3.
+¿Quieres que repare automáticamente las proformas no facturadas existentes (paso 2), o prefieres que solo arregle el flujo a futuro y te entregue un reporte de las afectadas para que las corrijas manualmente?
