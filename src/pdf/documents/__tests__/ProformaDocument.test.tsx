@@ -18,12 +18,12 @@ const mockProforma = makeProforma({
 
 const mockEmbarque = makeEmbarque({
   modo: "Marítimo",
-  tipo: "FCL",
+  tipo: "Importación",
   incoterm: "FOB",
   puerto_origen: "Shanghai",
   puerto_destino: "Manzanillo",
   descripcion_mercancia: "Carga seca general",
-} as unknown as Partial<ReturnType<typeof makeEmbarque>>);
+});
 
 const mockConcepto = {
   descripcion: "Flete marítimo Shanghai-Manzanillo",
