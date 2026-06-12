@@ -62,13 +62,14 @@ export default defineConfig({
         "src/vite-env.d.ts",
         "src/integrations/supabase/**",
       ],
-      // Umbrales mínimos globales. Subimos de 10 → 25 tras la auditoría de
-      // tests (la app está en ~29% lines / 47% functions / 67% branches).
-      // Deja margen de ~4 puntos sobre el real para absorber fluctuaciones.
+      // Umbrales mínimos globales. Auditoría Fase 3 (12.84.0): subimos
+      // lines/statements de 25 → 30 y functions de 40 → 45 manteniendo
+      // ~4 puntos de margen sobre el real. Plan: +5 puntos por sprint hasta
+      // alcanzar 60/60/55/65 (objetivo final auditoría).
       thresholds: {
-        lines: 25,
-        statements: 25,
-        functions: 40,
+        lines: 30,
+        statements: 30,
+        functions: 45,
         branches: 55,
       },
     },
