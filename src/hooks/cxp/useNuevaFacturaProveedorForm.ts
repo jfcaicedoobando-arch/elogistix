@@ -156,6 +156,12 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     return Object.keys(next).length === 0;
   };
 
+  /** Si todos los vínculos comparten un único embarque, lo guardamos en la factura. */
+  const embarqueIdUnico = (): string | null => {
+    const ids = new Set(Object.values(vinculos).map((v) => v.embarqueId));
+    return ids.size === 1 ? [...ids][0] : null;
+  };
+
   const buildPayload = () => ({
     proveedor_id: values.provId,
     proveedor_nombre: values.provNombre,
@@ -175,7 +181,48 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     created_by: user?.id,
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
+    embarque_id: embarqueIdUnico(),
   });
+
+  const uploadCfdiSafe = async (createdId: string) => {
+    if (!pendingCfdi) return;
+    try {
+      await subirArchivosCfdiFactura({
+        facturaId: createdId,
+        organizationId,
+        xmlFile: pendingCfdi.xmlFile,
+        pdfFile: pendingCfdi.pdfFile,
+      });
+    } catch (uploadErr) {
+      const err = uploadErr as { message?: string };
+      toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
+    }
+  };
+
+  const vincularSafe = async (createdId: string) => {
+    const lineas = Object.entries(vinculos).map(([conceptoCostoId, v]) => ({
+      conceptoCostoId,
+      descripcion: v.descripcion,
+      monto: v.monto,
+      montoOriginal: v.montoOriginal,
+    }));
+    if (lineas.length === 0 || !organizationId) return;
+    try {
+      const res = await vincularFacturaAConceptos({
+        facturaId: createdId,
+        organizationId,
+        folio: values.folio.trim(),
+        fechaEmision: values.emision,
+        lineas,
+      });
+      if (res.liquidados.length > 0) {
+        toast.success(`${res.liquidados.length} concepto(s) marcados como pagados`);
+      }
+    } catch (linkErr) {
+      const err = linkErr as { message?: string };
+      toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
+    }
+  };
 
   const uploadCfdiSafe = async (createdId: string) => {
     if (!pendingCfdi) return;
