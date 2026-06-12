@@ -4,20 +4,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createSupabaseMock } from "@/services/__tests__/_supabaseChainMock";
 
+const mock = createSupabaseMock();
+
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: createSupabaseMock(),
+  supabase: mock.supabase,
 }));
 
-import { supabase } from "@/integrations/supabase/client";
 import {
   fetchConceptosCostoAbiertosDeProveedor,
   vincularFacturaAConceptos,
 } from "../conceptosCostoVinculables";
 
-const sb = supabase as unknown as ReturnType<typeof createSupabaseMock>;
-
 describe("fetchConceptosCostoAbiertosDeProveedor", () => {
-  beforeEach(() => sb.__reset());
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+  });
 
   it("regresa vacío si no hay proveedorId", async () => {
     const out = await fetchConceptosCostoAbiertosDeProveedor("", "org-1");
@@ -25,7 +26,7 @@ describe("fetchConceptosCostoAbiertosDeProveedor", () => {
   });
 
   it("mapea filas con expediente del embarque embed", async () => {
-    sb.__setResult({
+    mock.setTableResult("conceptos_costo", {
       data: [{
         id: "cc-1", embarque_id: "emb-1", concepto: "Flete", monto: "1000",
         moneda: "USD", fecha_vencimiento: null,
@@ -41,13 +42,17 @@ describe("fetchConceptosCostoAbiertosDeProveedor", () => {
   });
 
   it("lanza si Supabase devuelve error", async () => {
-    sb.__setResult({ data: null, error: { message: "boom" } });
+    mock.setTableResult("conceptos_costo", { data: null, error: { message: "boom" } });
     await expect(fetchConceptosCostoAbiertosDeProveedor("p", "o")).rejects.toBeTruthy();
   });
 });
 
 describe("vincularFacturaAConceptos", () => {
-  beforeEach(() => sb.__reset());
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+    mock.setTableResult("proveedor_facturas_conceptos", { data: null, error: null });
+    mock.setTableResult("conceptos_costo", { data: null, error: null });
+  });
 
   it("no inserta nada si no hay líneas", async () => {
     const res = await vincularFacturaAConceptos({
@@ -58,8 +63,6 @@ describe("vincularFacturaAConceptos", () => {
   });
 
   it("inserta líneas y marca como Pagados los conceptos cubiertos ≥99%", async () => {
-    sb.__setResult({ data: null, error: null }); // insert OK
-    sb.__setResult({ data: null, error: null }); // update OK
     const res = await vincularFacturaAConceptos({
       facturaId: "f-1", organizationId: "o-1", folio: "A-1",
       fechaEmision: "2026-06-12",
@@ -69,16 +72,20 @@ describe("vincularFacturaAConceptos", () => {
       ],
     });
     expect(res.insertadas).toBe(2);
-    expect(res.liquidados).toEqual(["cc-1"]); // sólo el primero cubre ≥99%
+    expect(res.liquidados).toEqual(["cc-1"]); // sólo cc-1 cubre ≥99%
+    const updatePayload = mock.getMutationPayload("conceptos_costo", "update") as
+      { estado_liquidacion: string; referencia_pago: string } | null;
+    expect(updatePayload?.estado_liquidacion).toBe("Pagado");
+    expect(updatePayload?.referencia_pago).toBe("A-1");
   });
 
   it("no llama al update si ningún concepto se cubre", async () => {
-    sb.__setResult({ data: null, error: null }); // insert OK
     const res = await vincularFacturaAConceptos({
       facturaId: "f-1", organizationId: "o-1", folio: "A-1",
       fechaEmision: "2026-06-12",
       lineas: [{ conceptoCostoId: "cc-1", descripcion: "X", monto: 100, montoOriginal: 1000 }],
     });
     expect(res).toEqual({ insertadas: 1, liquidados: [] });
+    expect(mock.getMutationPayload("conceptos_costo", "update")).toBeNull();
   });
 });
