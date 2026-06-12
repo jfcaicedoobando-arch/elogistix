@@ -224,21 +224,6 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     }
   };
 
-  const uploadCfdiSafe = async (createdId: string) => {
-    if (!pendingCfdi) return;
-    try {
-      await subirArchivosCfdiFactura({
-        facturaId: createdId,
-        organizationId,
-        xmlFile: pendingCfdi.xmlFile,
-        pdfFile: pendingCfdi.pdfFile,
-      });
-    } catch (uploadErr) {
-      const err = uploadErr as { message?: string };
-      toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
-    }
-  };
-
   const handleSubmitError = (e: unknown) => {
     const err = e as { message?: string; code?: string };
     if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
@@ -255,7 +240,10 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     }
     try {
       const created = await crear.mutateAsync(buildPayload());
-      if (created?.id) await uploadCfdiSafe(created.id);
+      if (created?.id) {
+        await uploadCfdiSafe(created.id);
+        await vincularSafe(created.id);
+      }
       toast.success("Factura de proveedor capturada");
       reset();
       onDone();
@@ -268,8 +256,10 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     values, errors, mode, setMode,
     total, pendingCfdi, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
+    vinculos, toggleVinculo, setVinculoMonto,
     reset, submit,
     isPending: crear.isPending,
     organizationId,
   };
 }
+
