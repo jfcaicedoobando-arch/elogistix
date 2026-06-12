@@ -116,10 +116,15 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
         const lines = src.split("\n");
         lines.forEach((line, idx) => {
           if (!/\bas\s+unknown\s+as\b/.test(line)) return;
-          const prev = lines[idx - 1] ?? "";
-          const sameLine = line.includes("SAFE-CAST");
-          const prevLine = /\/\/\s*SAFE-CAST:/.test(prev);
-          if (!sameLine && !prevLine) offenders.push(`${f}:${idx + 1}`);
+          if (line.includes("SAFE-CAST")) return;
+          // Buscar hacia arriba a través del bloque de comentarios `//` contiguo.
+          let i = idx - 1;
+          let marked = false;
+          while (i >= 0 && /^\s*\/\//.test(lines[i])) {
+            if (/SAFE-CAST:/.test(lines[i])) { marked = true; break; }
+            i--;
+          }
+          if (!marked) offenders.push(`${f}:${idx + 1}`);
         });
       }
     }
