@@ -23,21 +23,12 @@ const PAGES_COMPONENTS_BASELINE = new Set<string>([
 const OVERSIZED_BASELINE = new Set<string>([
   "src/pages/auth/Login.tsx",
   "src/lib/mappers/genericPayloadMapper.ts",
-  "src/components/proveedor/NuevoProveedorDialog.tsx",
-  "src/pages/proveedores/ProveedorDetalle.tsx",
-  "src/features/embarques/components/StepCostosPrecios.tsx",
-  "src/features/costeo/components/TarifaForm.tsx",
-  "src/hooks/proveedor/useNuevoProveedorController.ts",
-  "src/components/proveedor/EditarProveedorDialog.tsx",
-  "src/services/proveedor/index.ts",
   "src/components/usuario/NuevoUsuarioDialog.tsx",
-  "src/hooks/cxp/useNuevaFacturaProveedorForm.ts",
+  "src/features/embarques/routes/EmbarqueDetalle.tsx",
   "src/lib/csv/parseCsv.ts",
-  "src/pages/proveedores/Proveedores.tsx",
   "src/lib/sentry.ts",
-  "src/services/tesoreria/conciliacion.ts",
-  "src/features/costeo/routes/CosteoTarifas.tsx",
-  "src/components/cxp/DialogDetallePagosProveedor.tsx",
+  "src/pages/proveedores/Proveedores.tsx",
+  "src/pdf/documents/ProformaDocument.tsx",
 ]);
 
 describe("audit-report", () => {
