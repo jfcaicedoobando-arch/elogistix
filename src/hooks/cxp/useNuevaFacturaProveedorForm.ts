@@ -11,12 +11,15 @@ import {
 } from "@/services/proveedor";
 import {
   subirArchivosCfdiFactura,
+  vincularFacturaAConceptos,
   type CfdiParsedResponse,
+  type ConceptoCostoAbierto,
 } from "@/services/cxp";
 import { useCrearFacturaProveedor } from "@/hooks/cxp";
 import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/components/cxp/facturaFormPrimitives";
 import type { CargaMode } from "@/components/cxp/CargaCfdiSection";
+import type { SeleccionLinea } from "@/components/cxp/VincularEmbarqueSection";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -55,6 +58,8 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const [mode, setMode] = useState<CargaMode>("manual");
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
+  /** Conceptos_costo seleccionados para vincular. Key = concepto_costo.id. */
+  const [vinculos, setVinculos] = useState<Record<string, SeleccionLinea & { embarqueId: string; montoOriginal: number; descripcion: string }>>({});
 
   const total = useMemo(() => {
     const s = Number(values.subtotal) || 0;
@@ -77,6 +82,27 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const handleProveedor = (id: string, nombre: string) => {
     setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
+    setVinculos({}); // limpia selección previa al cambiar proveedor
+  };
+
+  const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
+    setVinculos((prev) => {
+      const next = { ...prev };
+      if (!checked) { delete next[c.id]; return next; }
+      next[c.id] = {
+        embarqueId: c.embarque_id,
+        descripcion: c.concepto,
+        monto: c.monto,
+        montoOriginal: c.monto,
+      };
+      return next;
+    });
+  };
+
+  const setVinculoMonto = (conceptoId: string, monto: number) => {
+    setVinculos((prev) => prev[conceptoId]
+      ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
+      : prev);
   };
 
   const reset = () => {
@@ -85,6 +111,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     setMode("manual");
     setPendingCfdi(null);
     setAskCrearProv(null);
+    setVinculos({});
   };
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
@@ -129,6 +156,12 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     return Object.keys(next).length === 0;
   };
 
+  /** Si todos los vínculos comparten un único embarque, lo guardamos en la factura. */
+  const embarqueIdUnico = (): string | null => {
+    const ids = new Set(Object.values(vinculos).map((v) => v.embarqueId));
+    return ids.size === 1 ? [...ids][0] : null;
+  };
+
   const buildPayload = () => ({
     proveedor_id: values.provId,
     proveedor_nombre: values.provNombre,
@@ -148,6 +181,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     created_by: user?.id,
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
+    embarque_id: embarqueIdUnico(),
   });
 
   const uploadCfdiSafe = async (createdId: string) => {
@@ -162,6 +196,31 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     } catch (uploadErr) {
       const err = uploadErr as { message?: string };
       toast.warning(`Factura guardada pero el XML/PDF falló: ${err.message ?? "error"}`);
+    }
+  };
+
+  const vincularSafe = async (createdId: string) => {
+    const lineas = Object.entries(vinculos).map(([conceptoCostoId, v]) => ({
+      conceptoCostoId,
+      descripcion: v.descripcion,
+      monto: v.monto,
+      montoOriginal: v.montoOriginal,
+    }));
+    if (lineas.length === 0 || !organizationId) return;
+    try {
+      const res = await vincularFacturaAConceptos({
+        facturaId: createdId,
+        organizationId,
+        folio: values.folio.trim(),
+        fechaEmision: values.emision,
+        lineas,
+      });
+      if (res.liquidados.length > 0) {
+        toast.success(`${res.liquidados.length} concepto(s) marcados como pagados`);
+      }
+    } catch (linkErr) {
+      const err = linkErr as { message?: string };
+      toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
     }
   };
 
@@ -181,7 +240,10 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     }
     try {
       const created = await crear.mutateAsync(buildPayload());
-      if (created?.id) await uploadCfdiSafe(created.id);
+      if (created?.id) {
+        await uploadCfdiSafe(created.id);
+        await vincularSafe(created.id);
+      }
       toast.success("Factura de proveedor capturada");
       reset();
       onDone();
@@ -194,8 +256,10 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     values, errors, mode, setMode,
     total, pendingCfdi, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
+    vinculos, toggleVinculo, setVinculoMonto,
     reset, submit,
     isPending: crear.isPending,
     organizationId,
   };
 }
+

@@ -15,6 +15,7 @@ import { useNuevaFacturaProveedorForm } from "@/hooks/cxp";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
+import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 
 interface Props {
   open: boolean;
@@ -60,6 +61,14 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
               categorias={cats.data ?? []}
               total={ctl.total}
               errors={ctl.errors}
+            />
+
+            <VincularEmbarqueSection
+              proveedorId={ctl.values.provId}
+              organizationId={ctl.organizationId}
+              seleccion={ctl.vinculos}
+              onToggle={ctl.toggleVinculo}
+              onChangeMonto={ctl.setVinculoMonto}
             />
           </div>
 
