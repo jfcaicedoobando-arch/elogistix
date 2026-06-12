@@ -1,37 +1,58 @@
-## Diagnóstico real (v12.81.3)
+## Objetivo
 
-El fix anterior (rescue de pointer-events de Radix) era correcto pero **no era la causa raíz** del problema de sort en CXP. Verificado en preview con logs temporales:
+Mejorar el modal **Detalle de pagos** (CXP) siguiendo la dirección "Densa + tooltips", aclarando las columnas técnicas TC y Δ MXN sin agregar funcionalidad nueva.
 
-1. Click en header `<th>` → onClick **sí** dispara.
-2. `header.column.getCanSort()` → **true**.
-3. `getToggleSortingHandler()` → función válida que se ejecuta.
-4. Pero el siguiente render de `DataTableHeaderRow` mostraba `table.getState().sorting === []` → **el state nunca cambia**.
+## Aclaración de términos (mostrados como tooltips)
 
-Causa raíz en `useTableInstance.ts`: para modo client se pasaba
+- **TC Pago** — Tipo de Cambio USD→MXN registrado al momento de aplicar el pago.
+- **Dif. Cambio** — Diferencia cambiaria en MXN entre la tasa de la factura y la del pago (ganancia/pérdida cambiaria).
 
-```ts
-state: undefined,
-onSortingChange: undefined,
-```
+## Cambios
 
-TanStack v8 implementa `setSorting` como `options.onSortingChange?.(updater)`. Si `onSortingChange` es `undefined`, **es un no-op silencioso**. No hay fallback a un setState interno cuando se omite — el caller siempre tiene que conectar `state.sorting` + `onSortingChange`.
+Archivo único: `src/components/cxp/DialogDetallePagosProveedor.tsx`.
 
-## Fix
+### Header
+- Subtítulo `folio — proveedor` en estilo monoespaciado, mayúsculas, tracking amplio.
 
-En `src/components/shared/dataTable/useTableInstance.ts`:
+### KPIs
+- Grid de 4 columnas con tarjetas `bg-muted/30 border` y padding mayor.
+- Labels en `text-[10px] uppercase font-bold tracking-tight text-muted-foreground`.
+- Etiquetas más explícitas: **Total Factura**, **Total Pagado**, **Saldo Pendiente**, **# Pagos**.
+- Tonos semánticos: Pagado en `text-success`; Saldo en `text-warning` si > 0, gris si 0.
 
-- Modo client: `useState<SortingState>([])` interno + pasar `state.sorting` y `onSortingChange: setInternalSorting` al `useReactTable`.
-- Modo server: sigue igual, conectado a `controlledSort` + `handleSortingChange` (que delega en `onSortChange` del page-state).
+### Tabla
+- Renombrar columnas:
+  - `TC` → **TC Pago** + ícono `Info` con `Tooltip` ("Tipo de cambio USD→MXN al momento del pago").
+  - `Δ MXN` → **Dif. Cambio** + ícono `Info` con `Tooltip` ("Diferencia cambiaria (ganancia/pérdida) en MXN entre la tasa de la factura y la del pago").
+- Combinar Método + Referencia en una sola columna apilada (método en negrita arriba, `Ref: XXXX` chico abajo). Eliminar la columna Referencia separada.
+- Header de tabla con fondo `bg-muted/40`, separador `divide-y`.
+- Hover de fila `hover:bg-muted/30`.
+- Mantener tabular-nums y formato actual de fechas/montos.
+- Botón eliminar: ícono más pequeño con hover destructive (`hover:bg-destructive/10 hover:text-destructive`).
 
-Una sola fuente de verdad por modo, sin tocar columnas, callers ni `DataTable.tsx`.
+### Footer
+- Sin cambios funcionales (botón Cerrar).
+
+## Tokens y reglas
+
+- Usar tokens semánticos (`bg-muted`, `text-muted-foreground`, `text-success`, `text-warning`, `text-destructive`, `border`) — NO clases zinc/slate del prototipo.
+- Tooltip vía `@/components/ui/tooltip` (Radix) envuelto en `TooltipProvider` local.
+- Componente debe seguir <200 líneas y respetar Power of 10.
+
+## Lo que NO cambia
+
+- Lógica de datos (`usePagosProveedor`, `useEliminarPagoProveedor`).
+- Tamaño del modal (`dialogSize["3xl"]`).
+- Flujo de doble confirmación de eliminación.
+- Permiso `canEdit`.
+
+## Versionado
+
+- `APP_VERSION` → `12.81.4`.
+- Entrada en `CHANGELOG.md`: "Mejora visual del modal Detalle de pagos en CXP: KPIs con tonos semánticos, tooltips explicativos en columnas TC Pago / Dif. Cambio, y agrupado de Método+Referencia."
 
 ## Verificación
 
-`/cxp` → click en header "Total":
-- Aparece flecha ↓ activa.
-- Filas reordenan desc: MXN 70,180 → 34,320 → … → 1.12.
-
-## Changelog / versión
-
-- `APP_VERSION` → `12.81.3`.
-- Entrada `[12.81.3]` en `CHANGELOG.md` con la explicación técnica.
+1. Abrir CXP → clic en una factura con pagos → confirmar KPIs, tooltips al hover en TC Pago / Dif. Cambio, y columna combinada Método/Referencia.
+2. Probar eliminación de pago (doble confirmación) sigue funcionando.
+3. Validar contraste correcto en tema oscuro.
