@@ -62,6 +62,14 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
               total={ctl.total}
               errors={ctl.errors}
             />
+
+            <VincularEmbarqueSection
+              proveedorId={ctl.values.provId}
+              organizationId={ctl.organizationId}
+              seleccion={ctl.vinculos}
+              onToggle={ctl.toggleVinculo}
+              onChangeMonto={ctl.setVinculoMonto}
+            />
           </div>
 
           <div className="px-6 py-4 border-t flex justify-end gap-2 bg-background">
