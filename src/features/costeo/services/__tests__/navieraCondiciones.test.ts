@@ -98,8 +98,8 @@ describe("costeo/services/navieraCondiciones", () => {
   it("replaceDemorasTramos primero borra y luego inserta los tramos nuevos", async () => {
     mock.setTableResult("costeo_naviera_demoras_tarifa", { data: null, error: null });
     await replaceDemorasTramos("c1", "tc", [
-      { desde_dia: 1, hasta_dia: 5, monto_por_dia: 100, moneda: "USD" },
-      { desde_dia: 6, hasta_dia: null, monto_por_dia: 150, moneda: "USD" },
+      { tipo_contenedor_id: "tc", desde_dia: 1, hasta_dia: 5, monto_por_dia: 100, moneda: "USD" },
+      { tipo_contenedor_id: "tc", desde_dia: 6, hasta_dia: null, monto_por_dia: 150, moneda: "USD" },
     ]);
     const calls = mock.tableCalls.filter((c) => c.table === "costeo_naviera_demoras_tarifa");
     expect(calls[0].ops).toContain("delete");
