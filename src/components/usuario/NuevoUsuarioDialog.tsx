@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+// Input se usa dentro de NuevoUsuarioCredencialesSection.
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
