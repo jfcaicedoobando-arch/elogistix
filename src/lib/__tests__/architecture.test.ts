@@ -101,5 +101,68 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
       `Hooks/contexts deben usar servicios en lugar del cliente Supabase directo:\n${violators.join("\n")}`,
     ).toEqual([]);
   });
+
+  // Paso 4 del plan de auditoría: prohibir `as unknown as` sin justificación
+  // fuera de src/lib y src/test. Permitido si la misma línea o la inmediata
+  // anterior incluye el marcador `// SAFE-CAST:` (ver mem://principles/safe-cast).
+  it("no hay `as unknown as` sin marcador SAFE-CAST fuera de src/lib y src/test", () => {
+    const roots = ["src/components", "src/hooks", "src/services", "src/pages", "src/contexts", "src/features"];
+    const offenders: string[] = [];
+    for (const root of roots) {
+      let files: string[] = [];
+      try { files = walk(root); } catch { continue; }
+      for (const f of files) {
+        const src = readFileSync(f, "utf8");
+        const lines = src.split("\n");
+        lines.forEach((line, idx) => {
+          if (!/\bas\s+unknown\s+as\b/.test(line)) return;
+          if (line.includes("SAFE-CAST")) return;
+          // Buscar hacia arriba a través del bloque de comentarios `//` contiguo.
+          let i = idx - 1;
+          let marked = false;
+          while (i >= 0 && /^\s*\/\//.test(lines[i])) {
+            if (/SAFE-CAST:/.test(lines[i])) { marked = true; break; }
+            i--;
+          }
+          if (!marked) offenders.push(`${f}:${idx + 1}`);
+        });
+      }
+    }
+    expect(
+      offenders,
+      `Casts \`as unknown as\` requieren marcador \`// SAFE-CAST:\` (ver mem://principles/safe-cast):\n${offenders.join("\n")}`,
+    ).toEqual([]);
+  });
+
+  // Paso 4 del plan de auditoría: no introducir nuevas carpetas de dominio en
+  // src/{components,hooks,services,pages}/<dominio> cuando ya existe el
+  // equivalente en src/features/<dominio>/. Fuerza la migración progresiva.
+  it("no se duplican carpetas de dominio en src/{components,hooks,services,pages} si existe src/features/<dominio>", () => {
+    // Allowlist: deuda histórica permitida hasta completar la migración del
+    // dominio. Cada entrada debe removerse al mover los archivos a features/.
+    const SHADOW_ALLOWLIST = new Set<string>([
+      "src/services/embarques",
+    ]);
+    let features: string[] = [];
+    try {
+      features = readdirSync("src/features").filter((d) => {
+        try { return statSync(join("src/features", d)).isDirectory(); } catch { return false; }
+      });
+    } catch { /* features/ may not exist */ }
+    const layers = ["components", "hooks", "services", "pages"] as const;
+    const shadows: string[] = [];
+    for (const dom of features) {
+      for (const layer of layers) {
+        const p = `src/${layer}/${dom}`;
+        try {
+          if (statSync(p).isDirectory() && !SHADOW_ALLOWLIST.has(p)) shadows.push(p);
+        } catch { /* missing */ }
+      }
+    }
+    expect(
+      shadows,
+      `Estas carpetas duplican un dominio ya migrado a src/features. Muévelas a features/<dominio>/<capa>/:\n${shadows.join("\n")}`,
+    ).toEqual([]);
+  });
 });
 
