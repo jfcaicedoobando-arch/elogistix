@@ -53,7 +53,6 @@ describe("PDF leak canary (200 renders)", () => {
 
     for (let i = 0; i < 200; i++) {
       const { unmount } = render(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fixtures mínimas locales
         <ProformaDocument proforma={proforma as any} embarque={embarque as any} conceptos={[concepto as any]} />,
       );
       unmount();
@@ -64,7 +63,6 @@ describe("PDF leak canary (200 renders)", () => {
     const driftMB = (heapAfter - heapBefore) / (1024 * 1024);
 
     // Log informativo (útil cuando falla en CI).
-    // eslint-disable-next-line no-console -- diagnostic only
     console.log(`[pdfLeak.canary] drift = ${driftMB.toFixed(2)} MB`);
     expect(driftMB).toBeLessThan(50);
   });

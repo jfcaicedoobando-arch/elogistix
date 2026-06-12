@@ -10,7 +10,7 @@ import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { queryClient } from "./lib/queryClient";
 import { AppRoutes } from "./routes";
 import { DemoModeBanner } from "@/components/marketing/DemoModeBanner";
-import { useRadixPointerEventsRescue } from "@/hooks/shared/useRadixPointerEventsRescue";
+import { useRadixPointerEventsRescue } from "@/hooks/shared";
 
 const App = () => {
   useRadixPointerEventsRescue();
