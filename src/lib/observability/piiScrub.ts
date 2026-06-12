@@ -37,9 +37,12 @@ export function scrubUrl(url: string | undefined | null): string | undefined {
     if (!changed) return scrubPii(url);
     // Conservar el path original (sin host artificial cuando la URL era relativa).
     const isAbsolute = /^https?:\/\//i.test(url);
-    const out = isAbsolute ? u.toString() : `${u.pathname}${u.search}`;
-    // URL encodea `[` y `]` como %5B/%5D; restauramos los placeholders legibles.
-    return scrubPii(out.replace(/%5B/gi, "[").replace(/%5D/gi, "]"));
+    // En URLs relativas decodificamos los corchetes para mantener `[REDACTED]`
+    // legible (logs/UI). En URLs absolutas conservamos la codificación URL.
+    const out = isAbsolute
+      ? u.toString()
+      : `${u.pathname}${u.search}`.replace(/%5B/gi, "[").replace(/%5D/gi, "]");
+    return scrubPii(out);
   } catch {
     return scrubPii(url);
   }
