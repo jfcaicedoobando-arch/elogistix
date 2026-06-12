@@ -45,7 +45,7 @@ export function DataTableHeaderRow<T>({ table, striped, bordered }: Props<T>) {
                   meta.sticky && "sticky left-0 z-20 bg-background",
                   meta.stickyRight && "sticky right-0 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                 )}
-                onClick={canSort ? (e) => { console.log("[DT] header click", header.column.id, "canSort=", canSort, "toggleType=", typeof toggle); toggle?.(e); } : undefined}
+                onClick={canSort ? toggle : undefined}
               >
                 {canSort ? (
                   <span
