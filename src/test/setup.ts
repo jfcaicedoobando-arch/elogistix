@@ -17,6 +17,32 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 /**
+ * Polyfills globales para jsdom (Fase 3 auditoría 12.84.0).
+ *
+ * jsdom no implementa `ResizeObserver` ni `IntersectionObserver`. Varios
+ * componentes Radix (Select, Tooltip, Popover) y `react-resizable-panels`
+ * los invocan al montar; sin polyfill cada test que los usa falla con
+ * `ResizeObserver is not defined`. Stub mínimo no-op (suficiente para tests
+ * que no verifican layout real).
+ */
+class NoopObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): unknown[] { return []; }
+}
+if (typeof (globalThis as { ResizeObserver?: unknown }).ResizeObserver === "undefined") {
+  (globalThis as unknown as { ResizeObserver: typeof NoopObserver }).ResizeObserver = NoopObserver;
+}
+if (typeof (globalThis as { IntersectionObserver?: unknown }).IntersectionObserver === "undefined") {
+  (globalThis as unknown as { IntersectionObserver: typeof NoopObserver }).IntersectionObserver = NoopObserver;
+}
+// `scrollIntoView` no existe en jsdom — Radix Select lo llama al abrir.
+if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView(): void {};
+}
+
+/**
  * Helper: invoca global.gc() si Node corre con --expose-gc. No-op en caso
  * contrario. Permite recuperar heap entre archivos de test cuando se ejecuta
  * la suite completa en un solo proceso.
