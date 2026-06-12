@@ -1,36 +1,38 @@
-## Problema
+# Plan: +100 tests y umbral global 30%
 
-El job **Coverage merge & report** falla porque la cobertura real bajó ligeramente:
+## Objetivo
+Subir cobertura global de **29% → 30%** (lines/statements) agregando ~110 tests sobre servicios y hooks puros con 0% de cobertura actual, sin tocar lógica de producción.
 
-- `lines: 28.56%` vs umbral `29%`
-- `statements: 28.56%` vs umbral `29%`
-- `functions: 45.83%` ✓
-- `branches: 66.98%` ✓
+## Alcance (10 archivos de test, ~11 tests c/u)
 
-Sólo statements/lines incumplen, por 0.44 puntos.
+Servicios sin cobertura candidatos (lógica pura + Supabase mockeable):
 
-## Opciones
+1. `services/embarques/queries.test.ts` — listado, filtros, paginación server-side.
+2. `services/embarques/mutations.test.ts` — crear/actualizar/eliminar embarque, validaciones.
+3. `services/cotizacion/mutations.test.ts` — crear/duplicar/aprobar/rechazar cotización.
+4. `services/cotizacion/conceptos.test.ts` — sync de conceptos (delete + reinsert).
+5. `services/facturas/proyeccion/*.test.ts` — cálculos de proyección de cobranza.
+6. `services/facturas/aplicacionPagos.test.ts` — aplicación de pagos con diferencia cambiaria.
+7. `services/cliente/queries.test.ts` — listado, búsqueda, filtros por organización.
+8. `services/cliente/mutations.test.ts` — alta/edición/baja lógica + validación RFC.
+9. `services/tracking/timeline.test.ts` — generación automática de eventos timeline.
+10. `services/costeo/tarifasMaritimas.test.ts` — ranking Top 3 y matriz CN→MX.
 
-1. **Bajar el umbral a 28** (rápido, desbloquea CI ya). Riesgo: pierde 1 punto de protección hasta el próximo sprint que vuelva a subirlo.
-2. **Añadir tests** a archivos con 0% cobertura (`services/embarques/*FinancieraS.ts`, `services/facturas/notasCredito.ts`, `services/proforma/crud.ts`, `services/proveedor/index.ts`, `services/usuario/index.ts`, varios `src/types/*`) para volver ≥29%. Más trabajo, varias horas.
+Cada suite cubre: happy path, error de Supabase, validación de entrada, edge cases (vacío/null), y al menos un caso de transición o cálculo.
 
-Recomiendo **Opción 1** ahora y abrir un follow-up para recuperar terreno. El comentario del config ya prevé re-sincronizar con la cobertura real.
+## Reglas a seguir
+- Reusar `src/services/__tests__/_supabaseChainMock.ts` (extender si falta `.in()`, `.gte()`, `.lte()`).
+- Cero cambios en código de producción; sólo tests + config.
+- Cada test ≤ 200 líneas; sin `any`; cleanup en `afterEach` global ya existente.
 
-## Cambios
-
-### `vitest.config.ts`
-- `thresholds.lines: 29 → 28`
-- `thresholds.statements: 29 → 28`
-- Actualizar comentario para reflejar la nueva línea base (28/45/65) y mantener la nota de meta Fase 1 (40/55/58/70).
-
-### `src/constants/appVersion.ts`
-- `APP_VERSION → 12.92.7`
-
-### `CHANGELOG.md`
-- Entrada `## [12.92.7] - 2026-06-12`: "CI: ajusta umbral de cobertura a 28% (lines/statements) tras drift menor; mantiene functions=45, branches=65. Pendiente recuperar a 29% añadiendo tests a `services/embarques/*Financieras`, `services/facturas/notasCredito`, `services/proforma/crud`, `services/proveedor`, `services/usuario`."
+## Cambios de configuración
+- `vitest.config.ts`: subir `lines` y `statements` de **29 → 30**.
+- `src/constants/appVersion.ts`: bump a `12.93.0`.
+- `CHANGELOG.md`: entrada `## [12.93.0] - 2026-06-12` con resumen (+110 tests, umbral 30%).
 
 ## Validación
+- Correr suite completa local; confirmar que pasa el umbral 30% en `lines`/`statements`.
+- Si alguna suite baja branches por debajo del umbral actual (65), agregar 1-2 casos de rama.
 
-CI ya reporta los números reales; con el umbral ajustado el job pasa sin volver a correr la suite localmente.
-
-¿Confirmas la Opción 1, o prefieres que añada tests (Opción 2)?
+## Ejecución
+Spawn de 3 subagentes en paralelo, cada uno encargado de 3-4 archivos de test, para reducir tiempo de elaboración.
