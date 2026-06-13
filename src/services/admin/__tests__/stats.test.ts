@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 const mock = await vi.hoisted(() => {
   const tableResults = new Map<string, { data: unknown; count?: number; error: unknown }>();
   const setTable = (t: string, r: { data: unknown; count?: number; error: unknown }) => tableResults.set(t, r);
+  const clear = () => tableResults.clear();
   const supabase = {
     from: (table: string) => {
       const res = tableResults.get(table) ?? { data: [], error: null };
@@ -18,7 +19,7 @@ const mock = await vi.hoisted(() => {
       return chain;
     },
   };
-  return { supabase, setTable };
+  return { supabase, setTable, clear };
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
@@ -33,7 +34,8 @@ import {
 } from "@/services/admin/stats";
 
 beforeEach(() => {
-  // limpiar
+  // Reset por test: evita arrastrar `count`/`data` configurados en el anterior.
+  mock.clear();
 });
 
 describe("services/admin/stats", () => {
