@@ -1,56 +1,35 @@
-# Plan: Cerrar brecha de coverage (12.98.5)
+# Plan: Más tests de lógica de negocio (12.98.6)
 
-**Diagnóstico:** Coverage actual `lines/statements = 30.55%` queda por debajo del umbral `40%` en `vitest.config.ts` → falla el job de cobertura en CI. Functions (49%) y branches (68%) están por encima de sus umbrales y no requieren acción.
+Continuación de 12.98.5. Foco: módulos **puros o casi puros** con 0% de cobertura y alto valor de negocio. Evitamos componentes React/páginas — sólo dominio y servicios.
 
-## Estrategia híbrida en 3 cortes
+## Módulos objetivo
 
-### 1. Limpieza del denominador (excluir ruido no testeable de manera útil)
+| Módulo | Tipo | Líneas | Estrategia |
+|---|---|---:|---|
+| `src/lib/auth/translateAuthError.ts` | Puro (mapa de mensajes) | 34 | Tests directos por cada caso de error de Supabase Auth (credenciales, email no confirmado, rate-limit, etc.) + fallback. |
+| `src/features/crm/domain/oportunidadFormHelpers.ts` | Puro (helpers RHF) | 32 | Casos: estado inicial vacío, hidratación desde row existente, normalización de moneda y valores numéricos. |
+| `src/features/crm/domain/oportunidadPayload.ts` | Puro (mapper INSERT) | 34 | Casos: payload mínimo válido, omisión de campos opcionales nulos, conversión de probabilidad/monto. |
+| `src/lib/facturacion/proyeccionCsv.ts` | Puro (CSV builder) | 38 | Casos: encabezado correcto, escape de comillas/comas en concepto, agrupación por mes, total al pie. |
+| `src/features/costeo/services/tarifas.ts` | Supabase (CRUD + ranking) | 113 | Mock de `supabase` con cadena thenable (patrón `mem://technical/testing-mock-patterns`). Cubrir: listado con filtros, ranking Top 3 CN→MX (memoria `costeo-tarifas-maritimas`), CRUD de recargos hijos, manejo de `error` no-null. |
 
-Agregar a `coverage.exclude` en `vitest.config.ts` archivos puramente declarativos o de presentación pura:
+**Cobertura esperada:** +~250 líneas cubiertas (~+0.5 puntos sobre el denominador depurado de 12.98.5).
 
-- `src/pages/marketing/**` — landing copy estático (`landingCopy.ts`, +128 líneas de texto).
-- `src/**/*Columns.{ts,tsx}` y `src/**/*columns.{ts,tsx}` — definiciones de columnas de DataTable (JSX declarativo, casi 0 lógica). Aplica a `embarqueColumns`, `facturacionColumns`, `cxpColumns`, etc.
-- `src/pages/**/*.tsx` cuando son page-shells de composición (validar caso por caso — si tiene lógica, NO se excluye; el target son Dashboard/Bitacora/Clientes/ClienteDetalle/Idempotencia que sólo orquestan hooks ya cubiertos por otros tests).
-- `src/types/**` — sólo `type`/`interface` (ya no aporta).
+## Convenciones
 
-Esperado: el denominador baja ~3-5k líneas, el % sube a ~33-34% sin tocar tests.
-
-### 2. Tests dirigidos a lógica de negocio sin cobertura (subir numerador)
-
-Agregar tests unitarios a 4 módulos de alto valor que aparecen en el top-20 con 0%:
-
-| Módulo | Líneas | Qué testear |
-|---|---:|---|
-| `src/lib/import/bbva.ts` | 122 | Parser de CSV BBVA: happy path, encabezados faltantes, montos negativos, fechas inválidas. Fácil — entrada/salida pura. |
-| `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts` | 147 | Cálculo de subtotal/IVA/total con `useTasaIVA` mockeado; validación de proveedor requerido. |
-| `src/features/embarques/hooks/useNuevoEmbarqueWizard.ts` | 122 | Avance/retroceso de pasos, validación de campos obligatorios (ya documentada en `mem://features/shipment-validation`). |
-| `src/features/embarques/hooks/useEmbarquesPageState.ts` | 126 | Filtros + debounce + paginación server-side (mock de Supabase con cadena thenable, ver `mem://technical/testing-mock-patterns`). |
-
-Esperado: +~500 líneas cubiertas → +~1.5-2 puntos.
-
-### 3. Umbral con ratchet
-
-Tras (1) + (2), bajar temporalmente los umbrales en `vitest.config.ts` a un piso que CI pase con margen y que sólo se pueda subir:
-
-```text
-lines: 35       (de 40)
-statements: 35  (de 40)
-functions: 48   (de 45 — ya estamos en 49, subimos el piso)
-branches: 67    (de 65 — ya estamos en 68, subimos el piso)
-```
-
-Comentario en el config: `// RATCHET: subir lines/statements a 40 cuando coverage real ≥ 42%`.
+- Tests bajo `__tests__/` colindante a cada módulo.
+- Mock de Supabase encapsulado en `vi.mock("@/integrations/supabase/client", ...)` con cadena thenable reusable; sin tocar el cliente real.
+- Sólo `describe` + `it` + `expect`. Sin `render` ni RTL (no son componentes).
+- Cero `any`. Si un tipo no encaja, `// SAFE-CAST:` con justificación (regla `mem://principles/safe-cast`).
 
 ## Entregables
 
-1. `vitest.config.ts` — nuevo `exclude` + thresholds ajustados.
-2. 4 archivos de test nuevos bajo `__tests__/` colindantes a cada hook/módulo.
-3. `CHANGELOG.md` — entrada `## [12.98.5]` con resumen.
-4. `src/constants/appVersion.ts` → `12.98.5`.
-5. Verificación local: `bun run test:coverage` y confirmar que el resumen cumple los nuevos umbrales.
+1. 5 archivos `*.test.ts` nuevos (uno por módulo).
+2. Bump `APP_VERSION → 12.98.6`.
+3. Entrada en `CHANGELOG.md` con resumen y lista de módulos cubiertos.
+4. Verificación local: `bunx vitest run` sobre los 5 archivos nuevos, todos verdes.
 
 ## Fuera de alcance
 
-- No se reescribe ningún componente.
-- No se agregan tests a páginas de UI (Dashboard.tsx, ClienteDetalle.tsx) — quedan excluidas en (1) porque son orquestadores; su lógica ya vive en hooks que sí cubrimos.
-- No se toca el job de CI (los workflows ya están bien tras 12.98.3/4).
+- Hooks que dependen de RHF + Supabase + toasts simultáneamente (`useNuevaFacturaProveedorForm`, `useNuevoEmbarqueWizard`, `useEmbarquesPageState`) — quedan para una iteración posterior si CI lo requiere.
+- Componentes presentacionales (`*.tsx` de páginas) — el plan 12.98.5 ya excluyó el ruido declarativo.
+- No se tocan thresholds: los actuales (35/35/48/67) ya pasan; este plan sube el numerador como buffer hacia el ratchet (40/40).
