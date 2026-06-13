@@ -41,11 +41,15 @@ describe('useCxP Hooks', () => {
     expect(mockListarPagos).toHaveBeenCalledWith('f1');
   });
 
-  it('useRegistrarPagoProveedor registers a payment', async () => {
+  it('useRegistrarPagoProveedor pasa el payload completo al servicio', async () => {
     mockRegistrarPago.mockResolvedValueOnce({ id: 'p2' });
     const { result } = renderHook(() => useRegistrarPagoProveedor(), { wrapper: createWrapper() });
-    await result.current.mutateAsync({ proveedor_factura_id: 'f1', monto: 50, fecha_pago: '2023-01-01', moneda: 'USD', tipo_cambio_usd: 1, metodo_pago: 'transferencia' });
-    expect(mockRegistrarPago).toHaveBeenCalled();
+    const pago = { proveedor_factura_id: 'f1', monto: 50, fecha_pago: '2023-01-01', moneda: 'USD' as const, tipo_cambio_usd: 1, metodo_pago: 'transferencia' };
+    await result.current.mutateAsync(pago);
+    expect(mockRegistrarPago).toHaveBeenCalledTimes(1);
+    expect(mockRegistrarPago).toHaveBeenCalledWith(
+      expect.objectContaining({ proveedor_factura_id: 'f1', monto: 50, moneda: 'USD', metodo_pago: 'transferencia' }),
+    );
   });
 
   it('useEliminarPagoProveedor deletes a payment', async () => {

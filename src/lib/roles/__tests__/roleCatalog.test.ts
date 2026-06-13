@@ -28,9 +28,12 @@ describe("roleCatalog", () => {
       "viewer",
     ];
     for (const r of roles) {
-      expect(ROLE_LABELS[r]).toBeTruthy();
-      expect(ROLE_DESCRIPTIONS[r]).toBeTruthy();
-      expect(ROLE_BADGE_CLASSES[r]).toMatch(/bg-|text-/);
+      expect(typeof ROLE_LABELS[r]).toBe("string");
+      expect(ROLE_LABELS[r].length).toBeGreaterThanOrEqual(3);
+      expect(typeof ROLE_DESCRIPTIONS[r]).toBe("string");
+      expect(ROLE_DESCRIPTIONS[r].length).toBeGreaterThanOrEqual(10);
+      expect(ROLE_BADGE_CLASSES[r]).toMatch(/bg-/);
+      expect(ROLE_BADGE_CLASSES[r]).toMatch(/text-/);
     }
   });
 
