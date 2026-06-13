@@ -52,11 +52,14 @@ jobs:
       - name: Test hygiene (no skip/only/todo, no duplicate titles)
         run: bun run audit:tests
 
-      - name: Architecture audit (gating — layers + oversized files)
+      - name: Architecture audit (informational logs)
         run: bun run audit:arch
 
-      - name: Casts audit (gating — no nuevos HIGH/CRITICAL)
+      - name: Casts audit (informational logs)
         run: bun run audit:casts
+
+      - name: Architecture gating tests (oversized, casts, layers, shadow folders)
+        run: bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts
 
       - name: Architecture & cast report
         if: always()
