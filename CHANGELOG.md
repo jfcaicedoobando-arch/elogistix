@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.5] - 2026-06-13
+- **fix(tests/shard-3)**: `usePortalDocumentDownload.test.tsx` fallaba con `createObjectURL does not exist` porque jsdom no define ese método en `URL`, así que `vi.spyOn` no podía instrumentarlo y el shard salía con `exit code 1` sin stack visible (reporter blob). Ahora se parchan `URL.createObjectURL`/`revokeObjectURL` con `Object.defineProperty` configurable + `vi.fn()`; los reset entre archivos siguen aplicando vía `unstubAllGlobals`/`restoreAllMocks` del setup global.
+
 ## [13.0.4] - 2026-06-13
 - **fix(tests/shard-9)**: Corrige fugas detectadas por inspección en el shard 9: `mutations.extra.test.ts` activa fake timers por test para no quedar desincronizado con el cleanup global, y `useEmbarqueDocumentosActions.test.tsx` usa `vi.stubGlobal("fetch", ...)` en lugar de asignar `global.fetch` directamente.
 
