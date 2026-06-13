@@ -51,7 +51,11 @@ export function useClienteDetalleHandlers(deps: Deps) {
   const handleSaveCliente = async (data: ClienteFormData) => {
     if (!cliente) return;
     try {
-      const cambios = diffFields(cliente, data, SENSITIVE_FIELDS.cliente);
+      const cambios = diffFields<ClienteFormData>(
+        cliente as Partial<ClienteFormData>,
+        data,
+        SENSITIVE_FIELDS.cliente,
+      );
       await updateCliente.mutateAsync({ id: cliente.id, ...data });
       registrarActividad.mutate({
         accion: "editar",
