@@ -4,7 +4,7 @@ import {
   actualizarEtapaOportunidad,
   type CrearCotizacionDesdeOpInput,
 } from "@/features/crm/services";
-import { generarFolioCotizacion } from "@/services/cotizacion/queries";
+import { generarFolioCotizacion } from "@/features/cotizacion/services/queries";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 

@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatDate, formatCurrency } from "@/lib/formatters";
-import type { CotizacionRow } from "@/types/cotizacion";
-import { parseTarifasInformativas } from "@/services/cotizacion";
+import type { CotizacionRow } from "@/features/cotizacion/types";
+import { parseTarifasInformativas } from "@/features/cotizacion/services";
 import { useToast } from "@/hooks/shared";
 
 interface Props {

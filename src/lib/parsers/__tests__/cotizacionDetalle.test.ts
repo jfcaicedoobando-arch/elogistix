@@ -5,7 +5,7 @@ import {
   getNombreDestinatario,
   EMPTY_TOTALES,
 } from "@/lib/parsers/cotizacionDetalle";
-import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 
 const concepto = (over: Partial<ConceptoVentaCotizacion>): ConceptoVentaCotizacion => ({
   descripcion: "Flete",

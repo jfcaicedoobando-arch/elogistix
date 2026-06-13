@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { splitConceptos, calcularTotales } from "../conceptosTables";
-import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 
 const mkConcepto = (
   moneda: string,

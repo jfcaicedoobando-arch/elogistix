@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { buildDatosGenerales, buildMercancia } from "../datosGenerales";
-import type { CotizacionRow } from "@/types/cotizacion";
+import type { CotizacionRow } from "@/features/cotizacion/types";
 
 vi.mock("@/lib/formatters", () => ({
   formatCurrency: (n: number, m: string) => `${m} ${n}`,

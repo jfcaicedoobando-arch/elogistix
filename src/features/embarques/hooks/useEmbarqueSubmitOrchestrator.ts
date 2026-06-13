@@ -21,7 +21,7 @@ import {
 import {
   useUpdateEstadoCotizacion,
   type CotizacionRow,
-} from "@/hooks/cotizacion";
+} from "@/features/cotizacion/hooks";
 import {
   resolverExpediente,
   subirDocumentosEmbarque,

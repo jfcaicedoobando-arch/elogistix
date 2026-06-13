@@ -2,7 +2,7 @@
  * Adaptador thin: delega en CotizacionDocument (@react-pdf/renderer) y descarga
  * el blob resultante. Carga los datos del emisor desde `configuracion.empresa`.
  */
-import type { CotizacionRow } from "@/types/cotizacion";
+import type { CotizacionRow } from "@/features/cotizacion/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
 import { descargarPdf } from "@/pdf/render/descargarPdf";

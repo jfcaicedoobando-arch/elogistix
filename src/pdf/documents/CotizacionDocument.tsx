@@ -1,5 +1,5 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import type { CotizacionRow, ConceptoVentaCotizacion } from "@/types/cotizacion";
+import type { CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {

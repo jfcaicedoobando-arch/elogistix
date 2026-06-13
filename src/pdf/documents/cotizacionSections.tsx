@@ -1,6 +1,6 @@
 import { View, Text } from "@react-pdf/renderer";
 import { styles } from "../theme/styles";
-import type { CotizacionRow, DimensionLCL, DimensionAerea } from "@/types/cotizacion";
+import type { CotizacionRow, DimensionLCL, DimensionAerea } from "@/features/cotizacion/types";
 import { buildDatosGenerales, buildMercancia } from "@/generators/cotizacion/datosGenerales";
 import { KeyValueGrid } from "../components/KeyValueGrid";
 import { DataTable, type PdfColumn } from "../components/DataTable";

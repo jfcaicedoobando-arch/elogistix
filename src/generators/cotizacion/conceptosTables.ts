@@ -1,4 +1,4 @@
-import type { ConceptoVentaCotizacion } from '@/types/cotizacion';
+import type { ConceptoVentaCotizacion } from '@/features/cotizacion/types';
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from '@/lib/financial/financialUtils';
 
 export interface ConceptosTotales {

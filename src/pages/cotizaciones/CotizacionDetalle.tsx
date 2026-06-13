@@ -1,16 +1,16 @@
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
-import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
-import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
-import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
-import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
-import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
-import { CotizacionDatosGeneralesCard } from "@/components/cotizacion/detalle/CotizacionDatosGeneralesCard";
-import { CotizacionDetalleHeader } from "@/components/cotizacion/detalle/CotizacionDetalleHeader";
-import { DialogGenerarEmbarques } from "@/components/cotizacion/detalle/DialogGenerarEmbarques";
-import { useCotizacionDetalleState } from "@/hooks/cotizacion";
+import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
+import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
+import ResumenTotalesCotizacion from "@/features/cotizacion/components/ResumenTotalesCotizacion";
+import DialogConvertirProspecto from "@/features/cotizacion/components/DialogConvertirProspecto";
+import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
+import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/features/cotizacion/components/CotizacionDetalleSecciones";
+import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
+import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
+import { DialogGenerarEmbarques } from "@/features/cotizacion/components/detalle/DialogGenerarEmbarques";
+import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import CotizacionInformativaDetalle from "@/pages/cotizaciones/CotizacionInformativaDetalle";
 

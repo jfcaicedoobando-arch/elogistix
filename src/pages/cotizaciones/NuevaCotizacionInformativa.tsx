@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/shared/PageHeader";
-import WizardInformativa from "@/components/cotizacion/informativa/WizardInformativa";
+import WizardInformativa from "@/features/cotizacion/components/informativa/WizardInformativa";
 
 export default function NuevaCotizacionInformativa() {
   return (

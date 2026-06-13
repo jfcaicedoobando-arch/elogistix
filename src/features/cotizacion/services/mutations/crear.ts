@@ -1,0 +1,26 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { CotizacionRow, CreateCotizacionInput } from "@/features/cotizacion/types";
+import { fromDb } from "@/lib/supabase/cast";
+import { cotizacionDraftInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
+import { generarFolioCotizacion } from "../queries";
+import { buildCotizacionInsertPayload } from "./payloadBuilders";
+
+export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
+  parseOrThrow(cotizacionDraftInputSchema, input, "Cotización");
+  const folio = await generarFolioCotizacion();
+  const fechaVigencia = new Date();
+  fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
+  const payload = buildCotizacionInsertPayload(
+    input,
+    folio,
+    fechaVigencia.toISOString().split("T")[0],
+  );
+
+  const { data, error } = await supabase
+    .from("cotizaciones")
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return fromDb<CotizacionRow>(data);
+}

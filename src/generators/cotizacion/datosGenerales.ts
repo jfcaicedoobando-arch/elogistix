@@ -1,4 +1,4 @@
-import type { CotizacionRow } from '@/types/cotizacion';
+import type { CotizacionRow } from '@/features/cotizacion/types';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 
 function rowsMaritimo(c: CotizacionRow): [string, string][] {
