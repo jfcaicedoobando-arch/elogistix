@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.96.1] - 2026-06-13
+- **refactor(arquitectura)**: Folder-style migration Fase 2 — dominio `cliente`. Se consolidan `src/hooks/cliente/` (8 archivos), `src/services/cliente/` (4 archivos), `src/components/cliente/` (8 archivos + carpeta `detalle/`), y `src/types/{cliente,clienteForm}.ts` bajo `src/features/cliente/{hooks,services,components,types}`. 25 importadores actualizados. Nuevo barrel `src/features/cliente/index.ts`. Sin cambios funcionales.
+
 ## [12.96.0] - 2026-06-13
 - **refactor(arquitectura)**: Folder-style migration Fase 1 — dominio `proveedor`. Se consolidan `src/hooks/proveedor/` (8 archivos + 4 tests), `src/services/proveedor/` (4 archivos + 1 test) y `src/components/proveedor/` (7 archivos) bajo `src/features/proveedor/{hooks,services,components}`. 20 importadores actualizados (`@/hooks/proveedor` → `@/features/proveedor/hooks`, etc.). Nuevo barrel `src/features/proveedor/index.ts`. `queryKeys.ts` ya estaba en su lugar desde 12.95.23. Sin cambios funcionales.
 
