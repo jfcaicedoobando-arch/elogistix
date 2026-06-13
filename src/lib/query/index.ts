@@ -2,36 +2,36 @@
  * Query Key Factory centralizado para React Query.
  * Importar desde aquí en lugar de usar strings hardcodeados.
  *
- * Refactor 11.60.0 (Bloque B4): partido por dominio en `keys/*.ts` para
- * cumplir Power of 10 (archivos ≤200 líneas). API pública intacta —
- * `import { queryKeys } from "@/lib/query"` sigue funcionando idéntico.
+ * Refactor 12.95.23 (Paso 2 completo): cada dominio reside ahora en
+ * `src/features/<dominio>/queryKeys.ts`. La API pública
+ * `import { queryKeys } from "@/lib/query"` permanece intacta.
  */
 import { embarques } from "@/features/embarques/queryKeys";
-import { proformas } from "./keys/proformas";
-import { cotizaciones } from "./keys/cotizaciones";
-import { clientes } from "./keys/clientes";
-import { facturas } from "./keys/facturas";
-import { proveedores } from "./keys/proveedores";
+import { proformas } from "@/features/proformas/queryKeys";
+import { cotizaciones } from "@/features/cotizacion/queryKeys";
+import { clientes } from "@/features/cliente/queryKeys";
+import { facturas } from "@/features/facturas/queryKeys";
+import { proveedores } from "@/features/proveedor/queryKeys";
 import {
   configuracion, puertos, exchangeRates, navieras, tiposContenedor,
   configuracionGlobal, configuracionOrg,
-} from "./keys/catalogos";
-import { dashboard, operadores, operaciones, reportes, sidebar } from "./keys/dashboard";
-import { usuarios, planes, admin, appLogs, papelera, idempotenciaLog } from "./keys/admin";
+} from "@/features/catalogos/queryKeys";
+import { dashboard, operadores, operaciones, reportes, sidebar } from "@/features/dashboard/queryKeys";
+import { usuarios, planes, admin, appLogs, papelera, idempotenciaLog } from "@/features/admin/queryKeys";
 import { crm } from "@/features/crm/queryKeys";
-import { portal } from "./keys/portal";
-import { auditoria } from "./keys/auditoria";
-import { facturacion } from "./keys/facturacion";
-import { profit } from "./keys/profit";
-import { cxp } from "./keys/cxp";
-import { tesoreria } from "./keys/tesoreria";
-import { comisiones } from "./keys/comisiones";
-import { presupuesto } from "./keys/presupuesto";
-import { dashboardEjecutivo } from "./keys/dashboardEjecutivo";
+import { portal } from "@/features/portal/queryKeys";
+import { auditoria } from "@/features/auditoria/queryKeys";
+import { facturacion } from "@/features/facturacion/queryKeys";
+import { profit } from "@/features/profit/queryKeys";
+import { cxp } from "@/features/cxp/queryKeys";
+import { tesoreria } from "@/features/tesoreria/queryKeys";
+import { comisiones } from "@/features/comisiones/queryKeys";
+import { presupuesto } from "@/features/presupuesto/queryKeys";
+import { dashboardEjecutivo } from "@/features/dashboardEjecutivo/queryKeys";
 import {
   bitacora, trackingLinks, clienteFinancials,
   pdfPreviewCotizacion, trackingPublico,
-} from "./keys/misc";
+} from "@/features/misc/queryKeys";
 
 export const queryKeys = {
   embarques,
