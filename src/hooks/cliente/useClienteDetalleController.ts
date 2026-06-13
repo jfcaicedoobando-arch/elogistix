@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -11,51 +10,21 @@ import {
   useEmbarquesCliente,
   useCotizacionesCliente,
 } from "@/hooks/cliente/useClientes";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useClienteFinancials } from "@/hooks/cliente/useClienteFinancials";
-import { useToast } from "@/hooks/shared";
-import { usePermissions } from "@/hooks/shared";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
-import { getErrorMessage } from "@/lib/errors";
-import type { Tables, Enums } from "@/integrations/supabase/types";
+import { usePermissions, useRegistrarActividad } from "@/hooks/shared";
+import { useClienteDetalleHandlers } from "./useClienteDetalleHandlers";
 
-type ContactoCliente = Tables<"contactos_cliente">;
-type TipoContacto = Enums<"tipo_contacto">;
-
-export interface ContactoFormData {
-  nombre: string;
-  rfc: string;
-  tipo: TipoContacto;
-  pais: string;
-  ciudad: string;
-  direccion: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-}
-
-export interface ClienteFormData {
-  nombre: string;
-  rfc: string;
-  direccion: string;
-  ciudad: string;
-  estado: string;
-  cp: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-}
+export type { ContactoFormData, ClienteFormData } from "./useClienteDetalleController.types";
 
 /**
  * Controller-hook para la página de detalle de cliente. Centraliza queries,
  * mutations, estado de diálogos y handlers, dejando ClienteDetalle.tsx como
- * composición pura de UI.
+ * composición pura de UI. Los handlers viven en `useClienteDetalleHandlers.ts`
+ * y los tipos en `useClienteDetalleController.types.ts` (Power-of-10 ≤200 LOC).
  */
 export function useClienteDetalleController() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Queries
   const { data: cliente, isLoading: loadingCliente } = useCliente(id);
@@ -74,88 +43,18 @@ export function useClienteDetalleController() {
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
-  // Estado de diálogos
-  const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [editingContacto, setEditingContacto] = useState<ContactoCliente | null>(null);
-  const [editClienteOpen, setEditClienteOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingContactoId, setDeletingContactoId] = useState<string | null>(null);
-
-  // Handlers
-  const handleSaveContacto = async (data: ContactoFormData, editingId: string | null) => {
-    if (!cliente) return;
-    try {
-      if (editingId) {
-        await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
-        notifySuccess(toast, { title: "Contacto actualizado" });
-      } else {
-        await createContacto.mutateAsync({ cliente_id: cliente.id, ...data });
-        notifySuccess(toast, { title: "Contacto creado" });
-      }
-      setContactDialogOpen(false);
-      setEditingContacto(null);
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE_CONTACTO" });
-    }
-  };
-
-  const handleSaveCliente = async (data: ClienteFormData) => {
-    if (!cliente) return;
-    try {
-      const cambios = diffFields(
-        cliente,
-        data,
-        SENSITIVE_FIELDS.cliente,
-      );
-      await updateCliente.mutateAsync({ id: cliente.id, ...data });
-      registrarActividad.mutate({
-        accion: "editar",
-        modulo: "clientes",
-        entidad_id: cliente.id,
-        entidad_nombre: data.nombre,
-        detalles: cambios.length > 0 ? { cambios } : undefined,
-      });
-      notifySuccess(toast, { title: "Cliente actualizado" });
-      setEditClienteOpen(false);
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE_CLIENTE" });
-    }
-  };
-
-  const startDelete = (contactoId: string) => {
-    setDeletingContactoId(contactoId);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!deletingContactoId || !cliente) return;
-    try {
-      await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
-      notifySuccess(toast, { title: "Contacto eliminado" });
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "CONFIRM_DELETE" });
-    }
-  };
-
-  const openNewContact = () => {
-    setEditingContacto(null);
-    setContactDialogOpen(true);
-  };
-
-  const openEditContact = (c: ContactoCliente) => {
-    setEditingContacto(c);
-    setContactDialogOpen(true);
-  };
-
-  const closeDeleteDialog = (open: boolean) => {
-    setDeleteDialogOpen(open);
-    if (!open) setDeletingContactoId(null);
-  };
+  // Handlers + estado de diálogos (sub-hook)
+  const handlers = useClienteDetalleHandlers({
+    cliente,
+    createContacto,
+    updateContacto,
+    deleteContacto,
+    updateCliente,
+    registrarActividad,
+  });
 
   return {
-    // navegación
     navigate,
-    // datos
     cliente,
     loadingCliente,
     contactos,
@@ -165,26 +64,10 @@ export function useClienteDetalleController() {
     cotizacionesCliente,
     loadingCotizaciones,
     financials,
-    // permisos
     canEdit,
-    // mutations (estado pending para diálogos)
     isContactSaving: createContacto.isPending || updateContacto.isPending,
     isClientSaving: updateCliente.isPending,
     isContactDeleting: deleteContacto.isPending,
-    // estado de diálogos
-    contactDialogOpen,
-    setContactDialogOpen,
-    editingContacto,
-    editClienteOpen,
-    setEditClienteOpen,
-    deleteDialogOpen,
-    closeDeleteDialog,
-    // handlers
-    handleSaveContacto,
-    handleSaveCliente,
-    startDelete,
-    confirmDelete,
-    openNewContact,
-    openEditContact,
+    ...handlers,
   };
 }
