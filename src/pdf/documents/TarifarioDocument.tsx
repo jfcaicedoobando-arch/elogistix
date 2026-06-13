@@ -3,15 +3,15 @@
  * Lista comparativa de tarifas con vigencia global.
  */
 import { Document, Page, Text, View } from "@react-pdf/renderer";
-import type { CotizacionRow } from "@/types/cotizacion";
+import type { CotizacionRow } from "@/features/cotizacion/types";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { BillToBlock } from "../components/BillToBlock";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
-import { parseTarifasInformativas } from "@/services/cotizacion";
-import type { TarifaInformativa } from "@/types/cotizacion";
+import { parseTarifasInformativas } from "@/features/cotizacion/services";
+import type { TarifaInformativa } from "@/features/cotizacion/types";
 
 interface Props {
   cotizacion: CotizacionRow;

@@ -8,10 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
-import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
-import { PortalEmbarqueResumenTab } from "@/components/portal/embarqueDetalle/PortalEmbarqueResumenTab";
-import { PortalEmbarqueStepper } from "@/components/portal/embarqueDetalle/PortalEmbarqueStepper";
+import { PortalEmbarqueTimeline } from "@/features/portal/components/PortalEmbarqueTimeline";
+import { PortalEmbarqueDocumentos } from "@/features/portal/components/PortalEmbarqueDocumentos";
+import { PortalEmbarqueResumenTab } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueResumenTab";
+import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueStepper";
 
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";

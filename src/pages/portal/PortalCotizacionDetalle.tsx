@@ -2,16 +2,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePortalCotizacion } from "@/hooks/portal";
-import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
-import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
-import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
-import { usePortalCotizacionDetalle } from "@/hooks/cotizacion";
-import { usePortalCotizacionDetalleController } from "@/hooks/cotizacion";
-import PortalCotizacionHeader from "@/components/portal/cotizacion/PortalCotizacionHeader";
-import PortalCotizacionEstadoBanner from "@/components/portal/cotizacion/PortalCotizacionEstadoBanner";
-import PortalCotizacionConfirmDialog from "@/components/portal/cotizacion/PortalCotizacionConfirmDialog";
-import DatosGeneralesCard from "@/components/portal/cotizacion/DatosGeneralesCard";
+import { usePortalCotizacion } from "@/features/portal/hooks";
+import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
+import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
+import ResumenTotalesCotizacion from "@/features/cotizacion/components/ResumenTotalesCotizacion";
+import { usePortalCotizacionDetalle } from "@/features/cotizacion/hooks";
+import { usePortalCotizacionDetalleController } from "@/features/cotizacion/hooks";
+import PortalCotizacionHeader from "@/features/portal/components/cotizacion/PortalCotizacionHeader";
+import PortalCotizacionEstadoBanner from "@/features/portal/components/cotizacion/PortalCotizacionEstadoBanner";
+import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizacion/PortalCotizacionConfirmDialog";
+import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 

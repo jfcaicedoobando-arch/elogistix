@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/hooks/tesoreria";
+import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import type { Database } from "@/integrations/supabase/types";
 

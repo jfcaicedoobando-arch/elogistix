@@ -6,7 +6,7 @@ import {
   calcularFechaVigencia,
   type CotizacionCostoLike,
 } from "@/lib/domain/cotizacion";
-import type { FilaCostoLocal } from "@/types/cotizacion";
+import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const TASA = 0.16;
 

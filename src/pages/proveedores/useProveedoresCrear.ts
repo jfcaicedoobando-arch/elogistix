@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
-import { useProveedorMutations } from "@/hooks/proveedor";
+import { useProveedorMutations } from "@/features/proveedor/hooks";
 import { useToast, useRegistrarActividad } from "@/hooks/shared";
-import { ProveedorDuplicadoError } from "@/services/proveedor";
+import { ProveedorDuplicadoError } from "@/features/proveedor/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/types/db";

@@ -2,13 +2,13 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Eye } from "lucide-react";
-import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
+import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
-import type { useFacturas } from "@/hooks/facturacion";
-import type { useFacturacionPageController } from "@/hooks/facturacion";
+import type { useFacturas } from "@/features/facturacion/hooks";
+import type { useFacturacionPageController } from "@/features/facturacion/hooks";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 export type GastoPendiente = ReturnType<typeof useFacturacionPageController>["gastosPendientes"][number];

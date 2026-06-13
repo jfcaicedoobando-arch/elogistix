@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildPaso1Data } from "@/lib/mappers/cotizacion";
-import { COTIZACION_FORM_DEFAULTS } from "@/types/cotizacion";
+import { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/types";
 
 describe("cotizacion · buildPaso1Data", () => {
   it("calcula peso/volumen/piezas a partir de dimensiones LCL marítimas", () => {

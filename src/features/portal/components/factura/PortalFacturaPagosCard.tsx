@@ -1,0 +1,79 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+import { usePortalPagosFactura } from "@/features/portal/hooks";
+import { CheckCircle2, Clock } from "lucide-react";
+
+interface Props {
+  facturaId: string;
+  totalFactura: number;
+  moneda: string;
+}
+
+export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda }: Props) {
+  const { data: pagos = [], isLoading } = usePortalPagosFactura(facturaId);
+
+  const totalPagado = pagos.reduce((acc, p) => acc + Number(p.monto_aplicado_factura ?? 0), 0);
+  const saldo = Math.max(0, totalFactura - totalPagado);
+  const liquidada = saldo < 0.01;
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <CardTitle className="text-lg">Historial de pagos</CardTitle>
+        {pagos.length > 0 && (
+          <Badge variant={liquidada ? "default" : "secondary"} className="gap-1">
+            {liquidada ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+            {liquidada ? "Liquidada" : "Saldo pendiente"}
+          </Badge>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : pagos.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">
+            Aún no se han registrado pagos para esta factura.
+          </p>
+        ) : (
+          <ul className="divide-y">
+            {pagos.map((p) => (
+              <li key={p.id} className="py-2 flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{formatDate(p.fecha_pago)}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {p.forma_pago}{p.referencia ? ` • ${p.referencia}` : ""}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold tabular-nums">
+                    {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
+                  </p>
+                  {p.moneda !== moneda && (
+                    <p className="text-[10px] text-muted-foreground">
+                      {formatCurrency(Number(p.monto), p.moneda)}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <p className="text-xs text-muted-foreground">Pagado</p>
+            <p className="font-semibold tabular-nums">{formatCurrency(totalPagado, moneda)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Saldo</p>
+            <p className={`font-bold tabular-nums ${liquidada ? "text-success" : "text-accent"}`}>
+              {formatCurrency(saldo, moneda)}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

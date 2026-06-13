@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { fetchDashboardEjecutivo } from "@/services/dashboard-ejecutivo";
-import { useCobranza } from "@/hooks/facturacion";
-import { useFacturasCxP } from "@/hooks/cxp";
+import { useCobranza } from "@/features/facturacion/hooks";
+import { useFacturasCxP } from "@/features/cxp/hooks";
 
 export function useDashboardEjecutivo(periodo: string) {
   const { organizationId } = useOrganization();

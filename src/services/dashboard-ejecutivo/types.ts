@@ -2,8 +2,8 @@
  * Tipos del snapshot del Dashboard Ejecutivo Financiero.
  */
 import type { EstadoResultados } from "@/lib/domain/estadoResultados";
-import type { ResumenTesoreria, TopItem } from "@/services/tesoreria";
-import type { FlujoProyectado } from "@/services/tesoreria";
+import type { ResumenTesoreria, TopItem } from "@/features/tesoreria/services";
+import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/services/presupuesto";
 
 export type SeveridadAlerta = "info" | "warning" | "critica";

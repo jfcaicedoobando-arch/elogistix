@@ -9,11 +9,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useCuentasBancarias, useMovimientos, useImportarMovimientos } from "@/hooks/tesoreria";
+import { useCuentasBancarias, useMovimientos, useImportarMovimientos } from "@/features/tesoreria/hooks";
 import { parseEstadoCuentaBBVA } from "@/lib/import/bbva";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { PanelConciliacionMovimiento } from "@/components/tesoreria/PanelConciliacionMovimiento";
-import type { MovimientoBBVA } from "@/services/tesoreria";
+import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
+import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
 const ESTADO_COLOR: Record<string, string> = {
   Pendiente: "bg-warning/10 text-warning border-warning/20",

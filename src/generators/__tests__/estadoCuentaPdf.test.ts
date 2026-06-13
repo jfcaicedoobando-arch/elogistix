@@ -15,7 +15,7 @@ vi.mock("@/lib/utils", () => ({
 }));
 
 import { generarEstadoCuentaPdf } from "../estadoCuentaPdf";
-import { fetchEstadoCuentaFacturas } from "@/services/facturas";
+import { fetchEstadoCuentaFacturas } from "@/features/facturas/services";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
 const mockFetch = fetchEstadoCuentaFacturas as ReturnType<typeof vi.fn>;

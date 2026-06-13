@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "@/generators/exportCsv";
 import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/features/embarques/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
-import { useClientesForSelect } from "@/hooks/cliente/useClientes";
+import { useClientesForSelect } from "@/features/cliente/hooks/useClientes";
 import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";

@@ -7,15 +7,15 @@ import {
 } from "@/components/ui/tooltip";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { TabProformas } from "@/components/facturacion/TabProformas";
-import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
-import { TabFacturasEmitidas } from "@/components/facturacion/TabFacturasEmitidas";
-import { TabCobranza } from "@/components/facturacion/TabCobranza";
-import { DialogRegistrarPago } from "@/components/facturacion/DialogRegistrarPago";
-import { DialogHistorialPagos } from "@/components/facturacion/DialogHistorialPagos";
-import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
-import { GuiaPrefacturacion } from "@/components/facturacion/GuiaPrefacturacion";
-import { useFacturacionPageController, useFacturacionDateRange } from "@/hooks/facturacion";
+import { TabProformas } from "@/features/facturacion/components/TabProformas";
+import { TabProformasPendientes } from "@/features/facturacion/components/TabProformasPendientes";
+import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
+import { TabCobranza } from "@/features/facturacion/components/TabCobranza";
+import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
+import { DialogHistorialPagos } from "@/features/facturacion/components/DialogHistorialPagos";
+import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
+import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
+import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { buildFacturaColumns, buildGastoColumns, type Factura } from "./facturacionColumns";
 
 type TabDef = { value: string; label: string; hint: string; badge?: number };

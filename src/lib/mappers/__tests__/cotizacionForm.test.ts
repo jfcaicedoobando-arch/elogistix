@@ -4,7 +4,7 @@ import {
   buildCotizacionInitialCostos,
   COTIZACION_FORM_DEFAULTS,
 } from "@/lib/mappers/cotizacionForm";
-import type { CotizacionInitialData } from "@/types/cotizacion";
+import type { CotizacionInitialData } from "@/features/cotizacion/types";
 
 function baseData(overrides: Partial<CotizacionInitialData> = {}): CotizacionInitialData {
   return {

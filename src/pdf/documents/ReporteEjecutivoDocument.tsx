@@ -15,7 +15,7 @@ import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
 import type { SnapshotEjecutivo } from "@/services/dashboard-ejecutivo";
-import type { TopItem } from "@/services/tesoreria";
+import type { TopItem } from "@/features/tesoreria/services";
 import type { AlertaEjecutiva } from "@/services/dashboard-ejecutivo";
 
 interface Props {

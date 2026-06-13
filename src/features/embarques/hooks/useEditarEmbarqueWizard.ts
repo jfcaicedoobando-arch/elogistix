@@ -10,10 +10,10 @@ import {
 } from "@/features/embarques/hooks/useEmbarques";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
+import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { useConceptosForm } from "@/hooks/cotizacion";
+import { useConceptosForm } from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
 import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";

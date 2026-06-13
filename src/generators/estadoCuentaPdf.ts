@@ -5,7 +5,7 @@
  * y totales por moneda. Reusa el patrón print-to-PDF (`window.open` + `print`)
  * de cotizacionPdf.ts para no introducir dependencias nuevas.
  */
-import { fetchEstadoCuentaFacturas } from "@/services/facturas";
+import { fetchEstadoCuentaFacturas } from "@/features/facturas/services";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { escapeHtml as esc } from "@/lib/utils";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";

@@ -20,9 +20,9 @@ import {
 import {
   useCotizacionesPageController,
   ESTADOS_COTIZACION,
-} from "@/hooks/cotizacion";
-import { buildCotizacionesColumns } from "@/components/cotizacion/cotizacionesColumns";
-import { CotizacionesMobileFilters } from "@/components/cotizacion/CotizacionesMobileFilters";
+} from "@/features/cotizacion/hooks";
+import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
+import { CotizacionesMobileFilters } from "@/features/cotizacion/components/CotizacionesMobileFilters";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();

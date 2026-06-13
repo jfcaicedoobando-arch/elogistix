@@ -4,7 +4,7 @@
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchDiasCreditoCliente } from "@/services/cliente";
+import { fetchDiasCreditoCliente } from "@/features/cliente/services";
 import { fetchClienteParaPdf } from "@/services/proforma";
 
 /**

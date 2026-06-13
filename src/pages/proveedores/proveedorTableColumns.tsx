@@ -1,7 +1,7 @@
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { Badge } from "@/components/ui/badge";
-import type { ProveedorListItem } from "@/hooks/proveedor";
+import type { ProveedorListItem } from "@/features/proveedor/hooks";
 import { toTitleCase } from "@/lib/formatters";
 import { labelSubtipoGasto } from "@/constants/proveedorConstants";
 

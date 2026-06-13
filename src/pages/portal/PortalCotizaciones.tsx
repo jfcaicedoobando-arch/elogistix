@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePortalCotizaciones, usePortalClientUsers } from "@/hooks/portal";
+import { usePortalCotizaciones, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { Search, FileText, Filter, Ship } from "lucide-react";

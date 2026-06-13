@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
-import { useProveedoresPaginados } from "@/hooks/proveedor";
+import { useProveedoresPaginados } from "@/features/proveedor/hooks";
 import { useDebounce, useListPageState } from "@/hooks/shared";
 import type { Enums } from "@/types/db";
 import { proveedorColumns } from "./proveedorTableColumns";

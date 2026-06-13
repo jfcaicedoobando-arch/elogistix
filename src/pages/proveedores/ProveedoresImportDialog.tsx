@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { insertProveedor } from "@/services/proveedor";
+import { insertProveedor } from "@/features/proveedor/services";
 import { useToast, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
 import { notifySuccess } from "@/components/shared/utils/appFeedback";
 

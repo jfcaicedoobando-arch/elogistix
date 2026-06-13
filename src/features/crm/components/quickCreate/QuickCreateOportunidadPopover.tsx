@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
-import { useClientesForSelect } from "@/hooks/cliente";
+import { useClientesForSelect } from "@/features/cliente/hooks";
 
 interface Props {
   onCreated: (id: string) => void;
