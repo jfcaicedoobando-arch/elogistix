@@ -20,6 +20,7 @@ Suites adicionales:
 - `test_rls_financiero.sql` — `facturas`, `proformas`, `cotizaciones`, gastos.
 - `test_rls_financiero_critico.sql` — `cuentas_bancarias`, `bbva_movimientos`, `proveedor_facturas`, `pagos_factura`, `pagos_proveedor`, `cotizacion_costos`, `factura_notas_credito`, `comisiones_devengadas`, `liquidaciones_comision`.
 - `test_rls_crm_operacional.sql` — `crm_leads`, `crm_oportunidades`, `crm_actividades`, `documentos_embarque`, `presupuesto_mensual` (8 aserciones).
+- `test_rls_operaciones.sql` — `proveedores`, `conceptos_venta`, `conceptos_costo`, `conceptos_factura`, `embarque_contenedores`, `eventos_embarque`, `tracking_externo` (9 aserciones).
 
 ## Cómo correrlos
 
