@@ -24,12 +24,12 @@ describe("diffFields.extra", () => {
   });
 
   it("diffFields: null y cadena vacía se tratan como iguales (no difieren)", () => {
-    const r = diffFields({ rfc: null }, { rfc: "" });
+    const r = diffFields<{ rfc: string | null }>({ rfc: null }, { rfc: "" });
     expect(r).toHaveLength(0);
   });
 
   it("diffFields: undefined en before equivale a null", () => {
-    const r = diffFields({ email: undefined }, { email: null });
+    const r = diffFields<{ email: string | null }>({ email: undefined }, { email: null });
     expect(r).toHaveLength(0);
   });
 
@@ -39,7 +39,7 @@ describe("diffFields.extra", () => {
   });
 
   it("diffFields: boolean false != null sí es un cambio", () => {
-    const r = diffFields({ activo: null }, { activo: false });
+    const r = diffFields<{ activo: boolean | null }>({ activo: null }, { activo: false });
     expect(r).toHaveLength(1);
     expect(r[0].despues).toBe(false);
   });

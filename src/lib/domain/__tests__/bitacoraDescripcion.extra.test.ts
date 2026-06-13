@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { describirEntrada, GRUPOS_ACCION, type DescripcionBitacora } from "@/lib/domain/bitacoraDescripcion";
+import { describirEntrada, GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
 import type { EntradaBitacora } from "@/types/bitacora";
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
