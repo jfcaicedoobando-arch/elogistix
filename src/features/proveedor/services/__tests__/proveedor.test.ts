@@ -17,7 +17,7 @@ import {
   deleteProveedor,
   fetchProveedorOperaciones,
   ProveedorDuplicadoError,
-} from "@/services/proveedor";
+} from "@/features/proveedor/services";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

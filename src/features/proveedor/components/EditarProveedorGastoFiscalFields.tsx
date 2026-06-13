@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
-import type { useEditarProveedorController } from "@/hooks/proveedor";
+import type { useEditarProveedorController } from "@/features/proveedor/hooks";
 
 type Controller = ReturnType<typeof useEditarProveedorController>;
 

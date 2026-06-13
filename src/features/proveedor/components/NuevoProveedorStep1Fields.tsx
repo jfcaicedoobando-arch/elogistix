@@ -16,7 +16,7 @@ import {
   SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import type { Enums } from "@/types/db";
-import type { useNuevoProveedorController } from "@/hooks/proveedor";
+import type { useNuevoProveedorController } from "@/features/proveedor/hooks";
 
 export type Controller = ReturnType<typeof useNuevoProveedorController>;
 

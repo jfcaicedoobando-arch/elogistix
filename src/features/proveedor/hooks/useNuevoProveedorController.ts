@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
-import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/services/proveedor";
+import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/features/proveedor/services";
 import { useOrgFilter } from "@/hooks/shared";
 import {
   DOCS_EXTRANJERO,

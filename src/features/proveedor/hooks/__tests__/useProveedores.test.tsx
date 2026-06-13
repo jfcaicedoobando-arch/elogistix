@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useProveedoresPaginados, useProveedorMutations } from "../useProveedores";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as proveedorService from "@/services/proveedor";
+import * as proveedorService from "@/features/proveedor/services";
 
 vi.mock("@/services/proveedor", () => ({
   fetchProveedoresPaginados: vi.fn().mockResolvedValue({ data: [], count: 0 }),

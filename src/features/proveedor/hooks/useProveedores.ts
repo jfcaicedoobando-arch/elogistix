@@ -14,7 +14,7 @@ import {
   type ProveedorListItem,
   type ProveedorOperacion,
   type ProveedorLite,
-} from "@/services/proveedor";
+} from "@/features/proveedor/services";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;

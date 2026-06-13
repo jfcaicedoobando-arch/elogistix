@@ -13,7 +13,7 @@ import {
   CATEGORIAS_PROVEEDOR,
   SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
-import { useEditarProveedorController } from "@/hooks/proveedor";
+import { useEditarProveedorController } from "@/features/proveedor/hooks";
 import EditarProveedorGastoFiscalFields from "./EditarProveedorGastoFiscalFields";
 
 type Proveedor = Tables<"proveedores">;

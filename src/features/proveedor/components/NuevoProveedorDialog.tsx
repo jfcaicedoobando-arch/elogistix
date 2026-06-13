@@ -4,7 +4,7 @@ import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTo
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import type { TablesInsert } from "@/types/db";
-import { useNuevoProveedorController } from "@/hooks/proveedor";
+import { useNuevoProveedorController } from "@/features/proveedor/hooks";
 import { NuevoProveedorStep1 } from "./NuevoProveedorStep1";
 import { NuevoProveedorStep2 } from "./NuevoProveedorStep2";
 

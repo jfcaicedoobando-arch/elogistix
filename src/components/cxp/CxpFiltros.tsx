@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
-import { useProveedoresLite } from "@/hooks/proveedor";
+import { useProveedoresLite } from "@/features/proveedor/hooks";
 import type { EstatusCxP } from "@/services/cxp";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields, ESTATUS } from "./CxpFiltrosSheetFields";

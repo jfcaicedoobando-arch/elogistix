@@ -4,7 +4,7 @@ import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
+import NuevoProveedorDialog from "@/features/proveedor/components/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { usePermissions } from "@/hooks/shared";
 import { ProveedorTable } from "./ProveedorTable";
