@@ -40,8 +40,8 @@ interface Args<T> {
 export interface VirtualTableState<T> {
   table: Table<T>;
   rows: Row<T>[];
-  virtualizer: Virtualizer<HTMLDivElement, Element>;
-  virtualItems: ReturnType<Virtualizer<HTMLDivElement, Element>["getVirtualItems"]>;
+  virtualizer: Virtualizer<HTMLDivElement, HTMLElement>;
+  virtualItems: ReturnType<Virtualizer<HTMLDivElement, HTMLElement>["getVirtualItems"]>;
   gridTemplate: string;
 }
 
