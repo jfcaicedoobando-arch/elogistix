@@ -108,8 +108,10 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     resolverExpedienteMock.mockClear();
     createEmbarqueMock.mockClear();
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    // SAFE-CAST: ExpedienteCliente es opaco; aquí basta con un fixture mínimo.
+    const expedienteFixture = { expediente: "EXP-999", cliente_id: "cli-1" } as unknown as SubmitParams["expedienteSeleccionado"];
     const success = await result.current.submit(
-      makeSubmitParams({ modoExpediente: "existente", expedienteSeleccionado: "EXP-999" }),
+      makeSubmitParams({ modoExpediente: "existente", expedienteSeleccionado: expedienteFixture }),
     );
     expect(resolverExpedienteMock).not.toHaveBeenCalled();
     expect(createEmbarqueMock).toHaveBeenCalledTimes(1);
