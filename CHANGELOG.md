@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.0] - 2026-06-13
+- **test(coverage)**: +400 tests unitarios puros distribuidos en 40 archivos `.extra`/`.test.ts` para subir cobertura sobre formatters, utils, mappers, parsers, dominio, validation, financial, audit, auth, errors, facturación, operaciones, roles y servicios costeo/CRM leads. Todos los archivos usan `vitest` + `@/services/__tests__/_supabaseChainMock` cuando aplica y títulos prefijados para no romper el shard del audit-report.
+
 ## [12.99.1] - 2026-06-13
+
 - **fix(lint)**: Resuelve 1 error y 7 warnings de ESLint:
   - Extrae helpers puros de `ProveedorCsfUpdateButton` y `procesarCsfUpload` para bajar complejidad ciclomática por debajo de 16.
   - Extrae `extractImpuestos` en `parse-cfdi-xml/parser` para bajar complejidad de `parseCfdi`.
