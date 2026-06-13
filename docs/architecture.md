@@ -100,6 +100,21 @@ dominio que aún no tiene `features/<dominio>/` puede vivir transitoriamente en
 `src/lib/domain/<dominio>.ts`, documentando el plan de migración en la cabecera
 del archivo.
 
+## 5c. Convención `queries/` vs `mutations/` en `services/<dominio>/`
+
+Cuando un dominio acumula **muchas operaciones de I/O**, separar lecturas y
+escrituras en sub-carpetas mejora la legibilidad y facilita auditar permisos.
+Aplicar la convención **`services/<dominio>/queries/` + `services/<dominio>/mutations/`**
+(modelo: `src/services/cotizacion/`) cuando se cumpla **alguna** de estas:
+
+1. ≥6 operaciones de escritura (`crear`, `actualizar`, `eliminar`, transiciones de estado).
+2. Un único archivo del dominio supera **150 LOC mezclando reads y writes**.
+3. Lecturas y escrituras tienen reglas RLS o caching radicalmente distintas.
+
+Para dominios pequeños (≤4 funciones totales) **no forzar** el split — la
+sobre-modularización genera ruido sin ganancia. Sub-carpetas por **subdominio
+funcional** (ej. `services/facturas/{cobranza,exports,notasCredito}`) son
+preferibles cuando la división natural es por feature, no por verbo.
 
 
 ## 6. Backend (Lovable Cloud / Supabase)
