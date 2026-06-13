@@ -1,0 +1,85 @@
+name: rls-tests
+
+# Ejecuta las suites SQL de RLS contra un Postgres efímero, validando el
+# aislamiento multi-tenant en cada PR que toque la base de datos.
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/rls/**"
+      - ".github/workflows/rls-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/rls/**"
+      - ".github/workflows/rls-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  rls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -X -q
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -p 5432 -U postgres && exit 0
+            sleep 1
+          done
+          echo "::error::Postgres no respondió en 30s"; exit 1
+
+      - name: Bootstrap (stubs auth.*)
+        run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
+
+      - name: Apply migrations
+        run: |
+          shopt -s nullglob
+          for f in supabase/migrations/*.sql; do
+            echo "▶ $(basename "$f")"
+            $PSQL -f "$f"
+          done
+
+      - name: Post-migrate (drop auth.users FKs para CI)
+        run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
+
+      - name: Run RLS suite — isolation
+        run: $PSQL -f supabase/tests/rls/test_rls_isolation.sql
+
+      - name: Run RLS suite — financiero
+        run: $PSQL -f supabase/tests/rls/test_rls_financiero.sql
+
+      - name: Run RLS suite — financiero crítico
+        run: $PSQL -f supabase/tests/rls/test_rls_financiero_critico.sql
+
+      - name: Run RLS suite — CRM operacional
+        run: $PSQL -f supabase/tests/rls/test_rls_crm_operacional.sql
+
+      - name: Run RLS suite — operaciones
+        run: $PSQL -f supabase/tests/rls/test_rls_operaciones.sql

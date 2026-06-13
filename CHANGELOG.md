@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.12.0] - 2026-06-13
+- **ci(rls)**: Nuevo workflow `.github/workflows/rls-tests.yml` que ejecuta las 5 suites SQL de RLS (`isolation`, `financiero`, `financiero_critico`, `crm_operacional`, `operaciones`) contra un Postgres 15 efímero en cada PR/push que toque `supabase/migrations/**` o `supabase/tests/rls/**`. Bootstrap CI (`_ci_bootstrap.sql`) stubea `auth.uid/jwt/role` + tabla mínima `auth.users` + roles `anon/authenticated/service_role`. Post-migrate (`_ci_post_migrate.sql`) suelta FKs a `auth.users` para que los seeds con UUIDs aleatorios pasen. No requiere secrets ni toca producción. Cierra Fase 5/C aislamiento multi-tenant con validación automatizada por commit.
+
 ## [13.11.0] - 2026-06-13
 - **test(rls/operaciones)**: Auditoría de RLS cont. Nueva suite `supabase/tests/rls/test_rls_operaciones.sql` con 9 aserciones que cubren tablas operativas y catálogos no incluidos previamente: `proveedores` (read isolation + intento de UPDATE cruzado bloqueado), `conceptos_venta` (isolation + monto de venta de otra org nunca visible), `conceptos_costo` (isolation + monto de costo nunca visible → protege margen), `conceptos_factura` (isolation vía factura padre), `embarque_contenedores`, `eventos_embarque` (timeline), `tracking_externo`. Mismo patrón BEGIN/ROLLBACK con `pg_temp.as_user` / `pg_temp.assert`. README de RLS actualizado con el nuevo suite. Total cobertura RLS: 4 suites SQL, ~40 aserciones.
 

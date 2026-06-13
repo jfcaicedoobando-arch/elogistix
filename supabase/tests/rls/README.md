@@ -22,15 +22,47 @@ Suites adicionales:
 - `test_rls_crm_operacional.sql` — `crm_leads`, `crm_oportunidades`, `crm_actividades`, `documentos_embarque`, `presupuesto_mensual` (8 aserciones).
 - `test_rls_operaciones.sql` — `proveedores`, `conceptos_venta`, `conceptos_costo`, `conceptos_factura`, `embarque_contenedores`, `eventos_embarque`, `tracking_externo` (9 aserciones).
 
-## Cómo correrlos
+## CI automatizado
 
-Desde un entorno con `psql` y `DATABASE_URL` apuntando a la base de pruebas:
+El workflow `.github/workflows/rls-tests.yml` corre las 5 suites en cada
+PR/push que toque `supabase/migrations/**` o `supabase/tests/rls/**`.
+
+Flujo:
+
+1. Levanta `postgres:15` efímero.
+2. Aplica `_ci_bootstrap.sql` (stubs de `auth.uid/jwt/role` + `auth.users`
+   + roles `anon/authenticated/service_role`).
+3. Aplica todas las migraciones en orden alfabético.
+4. Aplica `_ci_post_migrate.sql` (suelta los FK a `auth.users` para que
+   los seeds con UUIDs aleatorios pasen).
+5. Ejecuta cada suite con `psql -v ON_ERROR_STOP=1`. Cualquier
+   `RAISE EXCEPTION` falla el job.
+
+No requiere secrets ni toca Lovable Cloud / producción.
+
+## Cómo correrlos local
+
+Con Docker:
+
+```bash
+docker run -d --name pg-rls -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:15
+export PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
+psql -v ON_ERROR_STOP=1 -f supabase/tests/rls/_ci_bootstrap.sql
+for f in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$f"; done
+psql -v ON_ERROR_STOP=1 -f supabase/tests/rls/_ci_post_migrate.sql
+for s in isolation financiero financiero_critico crm_operacional operaciones; do
+  psql -v ON_ERROR_STOP=1 -f "supabase/tests/rls/test_rls_${s}.sql"
+done
+```
+
+Contra una base ya provisionada por Supabase (staging) basta con saltar
+los pasos 1-2 y 4:
 
 ```bash
 psql "$DATABASE_URL" -f supabase/tests/rls/test_rls_isolation.sql
 ```
 
-El script:
+Cada suite:
 
 1. Siembra dos organizaciones, dos admins y un cliente dentro de una
    transacción.
