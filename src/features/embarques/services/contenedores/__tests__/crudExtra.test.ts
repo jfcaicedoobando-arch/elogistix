@@ -96,7 +96,7 @@ describe("embarques/services/contenedores/crud", () => {
   it("contenedores.sincronizar: pasa lista con id=null cuando es nuevo", async () => {
     mock.setRpcResult("sincronizar_contenedores_embarque", { data: [], error: null });
     await sincronizarContenedores("e1", [
-      { numero_contenedor: "A1", tipo_contenedor: "20DV", bl_house: null, peso_kg: 1000, volumen_m3: 33, piezas: 10, orden: 1 },
+      { numero_contenedor: "A1", tipo_contenedor: "20DV", bl_house: "", peso_kg: 1000, volumen_m3: 33, piezas: 10, orden: 1 },
     ]);
     const args = mock.rpcCalls[0].args as { p_contenedores: Array<Record<string, unknown>> };
     expect(args.p_contenedores[0].id).toBeNull();

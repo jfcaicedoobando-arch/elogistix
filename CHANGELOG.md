@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.99.0] - 2026-06-13
+- **test(coverage)**: Suma 10 archivos de tests sobre lógica de negocio (~100 casos verdes) en módulos previamente sin cobertura directa:
+  - `src/features/crm/services/vincularCotizacion/helpers.ts` — 10 casos (buildOpNombre, resolveEtapaCotizandoId, setCotizacionOportunidad).
+  - `src/features/crm/services/notificaciones.ts` — 10 casos (insert silencioso, fallback de mensaje/link, warning en error).
+  - `src/features/embarques/services/garantias.ts` — 10 casos (fetch + updateGarantia con/sin fechas, propagación errores).
+  - `src/features/embarques/services/demorasEmbarque.ts` — 10 casos (RPC calcular_demoras_embarque, eliminación de auto en costo+venta).
+  - `src/features/embarques/services/bitacoraEmbarque.ts` — 10 casos (filtro OR con expediente, limit/order, propagación error).
+  - `src/features/cliente/services/relacionados.ts` — 10 casos (embarques + cotizaciones por cliente_id).
+  - `src/features/proveedor/services/operaciones.ts` — 10 casos (join embarques aplanado, fallback a strings vacías).
+  - `src/features/embarques/services/contenedores/crud.ts` — 10 casos extra (listar/crear/reemplazar/sincronizar via RPC).
+  - `src/lib/utils/*` y `src/lib/formatters/numbers.ts` — 10 casos puros (omitUndefined, cn, uniqueSorted, formatNumber, pluralS, formatDiasCredito).
+  - `src/lib/csv/parseCsv.helpers.ts` — 10 casos puros (normalizeHeader, detectDelimiter, buildEffectiveHeaders, tokenize RFC 4180).
+
 ## [12.98.9] - 2026-06-13
 - **test(coverage)**: Suma 6 archivos de tests sobre lógica de negocio crítica previamente en 0% (64 casos verdes):
   - `src/features/crm/services/automatizacionesEtapa.ts` — 16 casos (notify vendedor, tareas ganada/seguimiento, cancelar perdida, runAutomatizaciones orquestador).
