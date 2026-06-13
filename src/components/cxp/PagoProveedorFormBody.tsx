@@ -23,7 +23,7 @@ interface Props {
   setFecha: (v: string) => void;
   metodo: string;
   setMetodo: (v: string) => void;
-  metodosDisponibles: string[];
+  metodosDisponibles: readonly string[];
   monto: string;
   setMonto: (v: string) => void;
   moneda: Moneda;
