@@ -1,0 +1,136 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const uploadFileMock = vi.fn(async () => undefined);
+vi.mock("@/services/storage/index", () => ({ uploadFile: uploadFileMock }));
+vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T,>(x: unknown) => x as T }));
+
+import { savePaso1, savePaso2, savePaso3, savePasoFinal } from "../wizard";
+
+function makeForm(over: Record<string, unknown> = {}) {
+  return {
+    getValues: () => ({ tipoCarga: "Carga General", ...over }) as never,
+  };
+}
+const muts = {
+  crearCotizacion: { mutateAsync: vi.fn(async () => ({ id: "cot1" })) },
+  updateCotizacion: { mutateAsync: vi.fn(async () => undefined) },
+  upsertCostos: { mutateAsync: vi.fn(async () => []) },
+};
+
+beforeEach(() => {
+  uploadFileMock.mockClear();
+  muts.crearCotizacion.mutateAsync.mockClear();
+  muts.updateCotizacion.mutateAsync.mockClear();
+  muts.upsertCostos.mutateAsync.mockClear();
+});
+
+describe("savePaso1", () => {
+  it("crea cotización nueva cuando cotizacionId es null", async () => {
+    const id = await savePaso1({
+      form: makeForm(), msdsFile: null, cotizacionId: null,
+      buildPaso1Data: () => ({ folio: "F1" }),
+      mutations: muts,
+    });
+    expect(id).toBe("cot1");
+    expect(muts.crearCotizacion.mutateAsync).toHaveBeenCalledTimes(1);
+    expect(muts.updateCotizacion.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("actualiza cotización existente cuando cotizacionId está presente", async () => {
+    const id = await savePaso1({
+      form: makeForm(), msdsFile: null, cotizacionId: "existente",
+      buildPaso1Data: () => ({ folio: "F2" }),
+      mutations: muts,
+    });
+    expect(id).toBe("existente");
+    expect(muts.updateCotizacion.mutateAsync).toHaveBeenCalledWith({
+      id: "existente",
+      data: expect.objectContaining({ folio: "F2", msds_archivo: null }),
+    });
+  });
+
+  it("sube MSDS sólo cuando tipoCarga es 'Mercancía Peligrosa' y hay archivo", async () => {
+    const file = new File(["x"], "ficha.pdf", { type: "application/pdf" });
+    await savePaso1({
+      form: makeForm({ tipoCarga: "Mercancía Peligrosa" }),
+      msdsFile: file, cotizacionId: null,
+      buildPaso1Data: () => ({}), mutations: muts,
+    });
+    expect(uploadFileMock).toHaveBeenCalledTimes(1);
+    const arg = (uploadFileMock.mock.calls[0][0] as string);
+    expect(arg.startsWith("cotizaciones/msds-")).toBe(true);
+    expect(arg.endsWith(".pdf")).toBe(true);
+  });
+
+  it("no sube MSDS si tipoCarga es general aunque haya archivo", async () => {
+    const file = new File(["x"], "ficha.pdf", { type: "application/pdf" });
+    await savePaso1({
+      form: makeForm({ tipoCarga: "Carga General" }),
+      msdsFile: file, cotizacionId: null,
+      buildPaso1Data: () => ({}), mutations: muts,
+    });
+    expect(uploadFileMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("savePaso2", () => {
+  it("no llama upsertCostos si la lista está vacía", async () => {
+    await savePaso2({ cotizacionId: "c1", costosInternos: [], mutations: muts });
+    expect(muts.upsertCostos.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("calcula costo_total = cantidad × costo_unitario", async () => {
+    await savePaso2({
+      cotizacionId: "c1",
+      costosInternos: [{
+        concepto: "Flete", moneda: "USD", proveedor: "X",
+        cantidad: 3, costo_unitario: 100, precio_venta: 150,
+        unidad_medida: "unidad", notas: undefined,
+      }],
+      mutations: muts,
+    });
+    const arg = muts.upsertCostos.mutateAsync.mock.calls[0][0] as { costos: Array<{ costo_total: number; notas: string }> };
+    expect(arg.costos[0].costo_total).toBe(300);
+    expect(arg.costos[0].notas).toBe("");
+  });
+});
+
+describe("savePaso3", () => {
+  it("update con subtotal=totalUSD y conceptos_venta", async () => {
+    await savePaso3({
+      cotizacionId: "c1",
+      conceptosVenta: [{ concepto: "A" }],
+      totalUSD: 500,
+      mutations: muts,
+    });
+    expect(muts.updateCotizacion.mutateAsync).toHaveBeenCalledWith({
+      id: "c1",
+      data: { conceptos_venta: [{ concepto: "A" }], subtotal: 500 },
+    });
+  });
+});
+
+describe("savePasoFinal", () => {
+  const registrar = vi.fn();
+  beforeEach(() => registrar.mockClear());
+
+  it("modo create: cambia estado a Borrador y registra 'crear'", async () => {
+    await savePasoFinal({
+      cotizacionId: "c1", isEditMode: false,
+      mutations: muts, registrarActividad: registrar,
+    });
+    expect(muts.updateCotizacion.mutateAsync).toHaveBeenCalledWith({
+      id: "c1", data: { estado: "Borrador" },
+    });
+    expect(registrar).toHaveBeenCalledWith(expect.objectContaining({ accion: "crear", modulo: "cotizaciones" }));
+  });
+
+  it("modo edit: NO cambia estado pero registra 'editar'", async () => {
+    await savePasoFinal({
+      cotizacionId: "c1", isEditMode: true,
+      mutations: muts, registrarActividad: registrar,
+    });
+    expect(muts.updateCotizacion.mutateAsync).not.toHaveBeenCalled();
+    expect(registrar).toHaveBeenCalledWith(expect.objectContaining({ accion: "editar" }));
+  });
+});
