@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -25,7 +25,7 @@ jobs:
           bun-version: "1.x"
 
       - name: Cache Bun deps
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
@@ -71,7 +71,7 @@ jobs:
 
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: audit-report
           path: |
@@ -88,7 +88,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -96,7 +96,7 @@ jobs:
           deno-version: v1.x
 
       - name: Cache Deno deps
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/deno
@@ -125,7 +125,7 @@ jobs:
         total: [16]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -133,7 +133,7 @@ jobs:
           bun-version: "1.x"
 
       - name: Cache Bun deps
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
@@ -155,7 +155,7 @@ jobs:
 
       - name: Upload shard blob report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: vitest-blob-${{ matrix.shard }}
           path: .vitest-reports/blob-${{ matrix.shard }}.json
@@ -164,7 +164,7 @@ jobs:
 
       - name: Upload JUnit report (shard ${{ matrix.shard }})
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: junit-${{ matrix.shard }}
           path: reports/junit.xml
@@ -179,7 +179,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -187,7 +187,7 @@ jobs:
           bun-version: "1.x"
 
       - name: Cache Bun deps
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
@@ -200,7 +200,7 @@ jobs:
       - name: Download shard blobs
         id: download-blobs
         continue-on-error: true
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           pattern: vitest-blob-*
           path: .vitest-reports/
@@ -230,7 +230,7 @@ jobs:
 
       - name: Upload coverage artifacts
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: |
@@ -243,7 +243,7 @@ jobs:
       - name: Upload coverage to Codecov
         if: always()
         continue-on-error: true
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v4
         with:
           files: coverage/lcov.info
           fail_ci_if_error: false
