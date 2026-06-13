@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.9.0] - 2026-06-13
+- **test(integration/B.3.5)**: Auditoría de tests — Fase 5 cont. Quinto y último test de integración cross-módulo del plan B.3: flujo Portal Aprobación de Cotización. Nueva suite `usePortalCotizacionDetalleController.integration.test.tsx` con 5 tests que ejercitan el wiring real controller ↔ React Query ↔ service RPC (sólo se mockea `portalResponderCotizacion`): **(1)** flujo Aceptada — invoca RPC con `(cotizacionId, "Aceptada", comentario)`, dispara `notifySuccess` con copy "Tu respuesta fue registrada" + reset de `confirmAction` y `comentario`; **(2)** flujo Rechazada — copy diferenciado "Cotización rechazada" + mismo reset; **(3)** error path — `notifyError` con título "Error" + mensaje del error + reset, sin `notifySuccess`; **(4)** `handleResponder` es no-op si falta `confirmAction` o `cotizacionId`; **(5)** `onDialogOpenChange(false)` resetea estado. Cubre B.3.5 y cierra la Fase 5/B.3 completa.
+
 ## [13.8.0] - 2026-06-13
 - **test(integration/B.3.4)**: Auditoría de tests — Fase 5 cont. Cuarto test de integración cross-módulo: flujo Comisión Devengada → Liquidación (capa pura de KPIs). Nueva suite `devengadas.integration.test.ts` con 4 tests sobre `calcularKPIsComisiones` cubriendo ciclo de vida completo: **(1)** mezcla realista con Devengadas/Liquidadas del mes actual + Devengadas/Liquidadas del mes anterior + Cancelada (devengado_mes excluye canceladas, pendiente suma sólo "Devengada" sin importar el mes, liquidado_mes sólo cuenta liquidaciones del mes actual); **(2)** lista vacía → todos los KPIs en cero; **(3)** 100% canceladas no contaminan ningún KPI; **(4)** transición Devengada → Liquidada: pendiente baja a 0 y liquidado_mes sube al mismo monto. Cubre B.3.4 del plan sin mocks de BD.
 
