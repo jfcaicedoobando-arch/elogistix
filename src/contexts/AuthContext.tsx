@@ -54,21 +54,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Preload de rutas frecuentes en idle tras login → mejora TTI percibido al navegar
   useEffect(() => {
     if (!user || loading) return;
-    type IdleWindow = { requestIdleCallback?: (cb: () => void) => number };
-    const idle = (cb: () => void) => {
-      const w = fromDb<IdleWindow>(window);
-      if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(cb);
-      else setTimeout(cb, 1500);
+    type IdleWindow = {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (handle: number) => void;
     };
-    idle(() => {
+    const w = fromDb<IdleWindow>(window);
+    let idleHandle: number | null = null;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    const cb = () => {
       void import("@/features/embarques/routes/Embarques");
       void import("@/pages/cotizaciones/Cotizaciones");
       void import("@/pages/dashboard/Dashboard");
       void import("@/pages/clientes/Clientes");
       void import("@/pages/proveedores/Proveedores");
       void import("@/pages/facturacion/Facturacion");
-    });
+    };
+    if (typeof w.requestIdleCallback === "function") {
+      idleHandle = w.requestIdleCallback(cb);
+    } else {
+      timeoutHandle = setTimeout(cb, 1500);
+    }
+    return () => {
+      if (idleHandle !== null && typeof w.cancelIdleCallback === "function") {
+        w.cancelIdleCallback(idleHandle);
+      }
+      if (timeoutHandle !== null) clearTimeout(timeoutHandle);
+    };
   }, [user, loading]);
+
 
   // Snapshot global de la sesión para consumirla fuera del árbol React (errorReport).
   useEffect(() => {
