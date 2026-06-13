@@ -4,7 +4,7 @@ import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { useSidebarAlerts } from "@/hooks/shared";
+import { useSidebarAlerts } from "@/hooks/layout";
 import {
   Sidebar,
   SidebarContent,
