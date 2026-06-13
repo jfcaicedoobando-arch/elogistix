@@ -10,6 +10,36 @@ interface Props {
   onUpdate: (id: string, patch: Record<string, string>) => Promise<unknown>;
 }
 
+function validarCsf(
+  data: CsfParsedData,
+  proveedor: Tables<"proveedores">,
+): { ok: true } | { ok: false; msg: string; description?: string } {
+  const rfcCsf = (data.rfc ?? "").trim().toUpperCase();
+  const rfcProv = (proveedor.rfc ?? "").trim().toUpperCase();
+  if (!rfcCsf) {
+    return { ok: false, msg: "No se pudo extraer el RFC de la CSF. Verifica que el PDF sea legible." };
+  }
+  if (rfcCsf !== rfcProv) {
+    return {
+      ok: false,
+      msg: "La CSF no corresponde a este proveedor",
+      description: `La constancia pertenece a ${data.nombre ?? "otra empresa"} (RFC ${rfcCsf}). El proveedor tiene RFC ${rfcProv || "—"}. No se actualizó nada.`,
+    };
+  }
+  return { ok: true };
+}
+
+function construirPatchCsf(data: CsfParsedData): Record<string, string> {
+  const patch: Record<string, string> = {};
+  if (data.nombre?.trim()) patch.nombre = data.nombre.trim();
+  if (data.cp?.trim()) patch.cp = data.cp.trim();
+  if (data.direccion?.trim()) patch.direccion = data.direccion.trim();
+  if (data.ciudad?.trim()) patch.ciudad = data.ciudad.trim();
+  if (data.estado?.trim()) patch.estado = data.estado.trim();
+  if (data.regimen_fiscal?.trim()) patch.regimen_fiscal = data.regimen_fiscal.trim();
+  return patch;
+}
+
 /**
  * Botón "Actualizar con CSF": parsea la Constancia, valida que el RFC
  * coincida con el proveedor y aplica únicamente los campos presentes.
@@ -35,30 +65,17 @@ export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
       return;
     }
 
-    const rfcCsf = (data.rfc ?? "").trim().toUpperCase();
-    const rfcProv = (proveedor.rfc ?? "").trim().toUpperCase();
-    if (!rfcCsf) {
-      toast.error("No se pudo extraer el RFC de la CSF. Verifica que el PDF sea legible.");
-      setCsfLoading(false);
-      return;
-    }
-    if (rfcCsf !== rfcProv) {
-      toast.error("La CSF no corresponde a este proveedor", {
-        description: `La constancia pertenece a ${data.nombre ?? "otra empresa"} (RFC ${rfcCsf}). El proveedor tiene RFC ${rfcProv || "—"}. No se actualizó nada.`,
+    const validacion = validarCsf(data, proveedor);
+    if (!validacion.ok) {
+      toast.error(validacion.msg, validacion.description ? {
+        description: validacion.description,
         duration: 8000,
-      });
+      } : undefined);
       setCsfLoading(false);
       return;
     }
 
-    const patch: Record<string, string> = {};
-    if (data.nombre?.trim()) patch.nombre = data.nombre.trim();
-    if (data.cp?.trim()) patch.cp = data.cp.trim();
-    if (data.direccion?.trim()) patch.direccion = data.direccion.trim();
-    if (data.ciudad?.trim()) patch.ciudad = data.ciudad.trim();
-    if (data.estado?.trim()) patch.estado = data.estado.trim();
-    if (data.regimen_fiscal?.trim()) patch.regimen_fiscal = data.regimen_fiscal.trim();
-
+    const patch = construirPatchCsf(data);
     if (Object.keys(patch).length === 0) {
       toast.warning("La CSF se validó correctamente pero no contenía datos nuevos para actualizar.");
       setCsfLoading(false);
