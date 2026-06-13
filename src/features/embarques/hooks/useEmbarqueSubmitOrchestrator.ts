@@ -30,6 +30,10 @@ import {
   resolveExpedienteForSubmit,
   buildBitacoraDetalles,
 } from "@/features/embarques/domain/embarqueWizard";
+import {
+  deriveContenedoresPayload,
+  reportPhaseError,
+} from "./useEmbarqueSubmitOrchestrator.helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { useStableRequestId } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
