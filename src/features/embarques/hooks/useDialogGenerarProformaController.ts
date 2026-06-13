@@ -6,7 +6,6 @@
  * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
 import { useState, useMemo, useEffect, useRef } from "react";
-import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import { useCrearProforma } from "@/features/embarques/hooks/useProformas";
 import {
@@ -19,6 +18,10 @@ import {
   type FiltroContenedor,
 } from "@/lib/domain/conceptosPorContenedor";
 import { submitProformaDialog } from "./submitProformaDialog";
+import {
+  calcularTotalesProforma,
+  buildInitialProformaState,
+} from "./useDialogGenerarProformaController.helpers";
 
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -63,15 +66,9 @@ export function useDialogGenerarProformaController(
       wasOpenRef.current = true;
       setPaso("seleccion");
       setFiltroContenedor(initialFiltroContenedor);
-      const inicial = initialFiltroContenedor === "todos"
-        ? conceptosPendientes
-        : filtrarPorContenedor(conceptosPendientes, initialFiltroContenedor);
-      setSeleccionados(new Set(inicial.map((c) => c.id)));
-      const ivaInit: Record<string, boolean> = {};
-      conceptosPendientes.forEach((c) => {
-        ivaInit[c.id] = c.moneda === "MXN" ? true : !!c.aplica_iva;
-      });
-      setIvaPorConcepto(ivaInit);
+      const init = buildInitialProformaState(conceptosPendientes, initialFiltroContenedor);
+      setSeleccionados(init.seleccionados);
+      setIvaPorConcepto(init.ivaPorConcepto);
       setNotas("");
       setDiasCredito("");
     } else if (!open && wasOpenRef.current) {
@@ -127,27 +124,10 @@ export function useDialogGenerarProformaController(
     [conceptosPendientes, seleccionados],
   );
 
-  const totales = useMemo(() => {
-    const usd = conceptosSeleccionados.filter((c) => c.moneda === "USD");
-    const mxn = conceptosSeleccionados.filter((c) => c.moneda === "MXN");
-    const getter = (c: ConceptoVenta) => ({ cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario) });
-
-    const subtotal_usd = sumarSubtotales(usd, getter);
-    const iva_usd = sumarMontos(
-      usd.map((c) => (ivaPorConcepto[c.id]
-        ? calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))
-        : 0)),
-    );
-    const total_usd = subtotal_usd + iva_usd;
-
-    const subtotal_mxn = sumarSubtotales(mxn, getter);
-    const iva_mxn = sumarMontos(
-      mxn.map((c) => calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
-    );
-    const total_mxn = subtotal_mxn + iva_mxn;
-
-    return { subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn };
-  }, [conceptosSeleccionados, tasaIva, ivaPorConcepto]);
+  const totales = useMemo(
+    () => calcularTotalesProforma(conceptosSeleccionados, ivaPorConcepto, tasaIva),
+    [conceptosSeleccionados, tasaIva, ivaPorConcepto],
+  );
 
   const handleConfirmar = async () => {
     try {
