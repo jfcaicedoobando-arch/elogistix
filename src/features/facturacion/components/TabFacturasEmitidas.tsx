@@ -17,7 +17,7 @@ interface Props {
   search: string;
   setSearch: (v: string) => void;
   filterEstado: string;
-  setFilter: (k: string, v: string) => void;
+  setFilter: <K extends "estado">(k: K, v: string) => void;
   exportarFacturasCsv: () => void;
   exportarLayoutContable: () => void;
   columns: ColumnDef<Factura, unknown>[];
