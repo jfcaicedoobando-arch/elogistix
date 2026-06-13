@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.9] - 2026-06-13
+- **test(coverage)**: Suma 6 archivos de tests sobre lógica de negocio crítica previamente en 0% (64 casos verdes):
+  - `src/features/crm/services/automatizacionesEtapa.ts` — 16 casos (notify vendedor, tareas ganada/seguimiento, cancelar perdida, runAutomatizaciones orquestador).
+  - `src/features/embarques/services/dashboardOperador.ts` — 9 casos con `vi.useFakeTimers` (docs pendientes ordenados desc, flag `proximoArribo` a ≤2 días de ETA, filtros eq+in).
+  - `src/features/cotizacion/services/wizard.ts` — 9 casos (savePaso1 crea/actualiza + MSDS condicional, savePaso2 calcula `costo_total`, savePaso3 subtotal, savePasoFinal estado Borrador sólo en create).
+  - `src/features/crm/services/cotizacionDesdeOportunidad.ts` — 6 casos (`es_prospecto` derivado de `cliente_id`, nulls → "", `actualizarEtapaOportunidad` filtra por id).
+  - `src/lib/mappers/cotizacion.ts` — 15 casos puros (peso/volumen/piezas por modo, Terrestre forza `incoterm="N/A"`, vigencia mínima 1 día, validez serializada `YYYY-MM-DD`).
+  - `src/features/facturas/services/exports.ts` — 9 casos (map RFC por `cliente_id`, omite rfc null, skip query clientes si todas las facturas son sin cliente, propagación de errores).
+
 ## [12.98.8] - 2026-06-13
 - **test(coverage)**: Suma 9 archivos de tests sobre lógica de negocio pura previamente en 0% (≈50 casos verdes):
   - `src/features/crm/domain/leadEditDirty.ts` — diff lead vs form (nulls, score default 3, todos los campos).
