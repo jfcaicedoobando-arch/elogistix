@@ -119,8 +119,8 @@ describe("B.3.5 flujo Portal Aprobación Cotización", () => {
 
   it("handleResponder es no-op si no hay confirmAction o cotizacionId", async () => {
     const { result, rerender } = renderHook(
-      ({ id }: { id?: string }) => usePortalCotizacionDetalleController(id),
-      { wrapper: createWrapper(), initialProps: { id: "cot-1" } },
+      ({ id }: { id: string | undefined }) => usePortalCotizacionDetalleController(id),
+      { wrapper: createWrapper(), initialProps: { id: "cot-1" as string | undefined } },
     );
 
     // Sin confirmAction.
