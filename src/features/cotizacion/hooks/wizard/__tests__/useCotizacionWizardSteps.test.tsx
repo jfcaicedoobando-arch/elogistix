@@ -36,34 +36,35 @@ vi.mock("../handlePaso1Crm", () => ({
 import { useCotizacionWizardSteps } from "../useCotizacionWizardSteps";
 
 function makeDeps(over: Partial<Parameters<typeof useCotizacionWizardSteps>[0]> = {}) {
-  const setCurrentStep = vi.fn();
-  const setCotizacionId = vi.fn();
-  const setConceptosUSD = vi.fn();
-  const setConceptosMXN = vi.fn();
-  const setCostosPreLlenados = vi.fn();
-  const navigate = vi.fn();
-  const toast = vi.fn();
+  const refs = {
+    setCurrentStep: vi.fn(),
+    setCotizacionId: vi.fn(),
+    setConceptosUSD: vi.fn(),
+    setConceptosMXN: vi.fn(),
+    setCostosPreLlenados: vi.fn(),
+    navigate: vi.fn(),
+    mutations: {
+      crearCotizacion: { mutateAsync: vi.fn().mockResolvedValue({ id: "cot-1" }), isPending: false },
+      updateCotizacion: { mutateAsync: vi.fn().mockResolvedValue(undefined), isPending: false },
+      upsertCostos: { mutateAsync: vi.fn().mockResolvedValue([]), isPending: false },
+      registrarActividad: { mutate: vi.fn() },
+    },
+  };
   const form = {
     getValues: () => ({ clienteId: "cli-1", esProspecto: false }),
   } as never;
-  const mutations = {
-    crearCotizacion: { mutateAsync: vi.fn().mockResolvedValue({ id: "cot-1" }), isPending: false },
-    updateCotizacion: { mutateAsync: vi.fn().mockResolvedValue(undefined), isPending: false },
-    upsertCostos: { mutateAsync: vi.fn().mockResolvedValue([]), isPending: false },
-    registrarActividad: { mutate: vi.fn() },
-  };
-  return {
-    form, toast, navigate, isEditMode: false,
-    cotizacionId: null, setCotizacionId,
-    currentStep: 1, setCurrentStep,
-    msdsFile: null, costosInternos: [], costosPreLlenados: false, setCostosPreLlenados,
-    conceptosUSD: [], conceptosMXN: [], setConceptosUSD, setConceptosMXN,
+  const deps = {
+    form, toast: vi.fn(), navigate: refs.navigate, isEditMode: false,
+    cotizacionId: null, setCotizacionId: refs.setCotizacionId,
+    currentStep: 1, setCurrentStep: refs.setCurrentStep,
+    msdsFile: null, costosInternos: [], costosPreLlenados: false, setCostosPreLlenados: refs.setCostosPreLlenados,
+    conceptosUSD: [], conceptosMXN: [], setConceptosUSD: refs.setConceptosUSD, setConceptosMXN: refs.setConceptosMXN,
     totalUSD: 0, tasaIva: 0.16,
     buildPaso1Data: () => ({ foo: "bar" }),
-    mutations,
+    mutations: refs.mutations,
     ...over,
-    _refs: { setCurrentStep, setCotizacionId, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, navigate, mutations },
-  } as never;
+  } as Parameters<typeof useCotizacionWizardSteps>[0];
+  return { deps, refs };
 }
 
 beforeEach(() => { vi.clearAllMocks(); savePaso1.mockResolvedValue("cot-1"); savePaso2.mockResolvedValue(undefined); savePaso3.mockResolvedValue(undefined); savePasoFinal.mockResolvedValue(undefined); });
