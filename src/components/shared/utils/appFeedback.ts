@@ -19,10 +19,11 @@ import { openErrorReport } from "@/components/shared/utils/errorDetailsStore";
 /**
  * Firma laxa retenida sólo por compatibilidad con call sites que aún pasan
  * el `toast` del antiguo shadcn `useToast`. El argumento se ignora — usamos
- * `unknown[]` rest para aceptar cualquier toast (shadcn `{title,...}`,
- * sonner, etc.) bajo `strictFunctionTypes`.
+ * `never` en posición contravariante para aceptar cualquier toast (shadcn
+ * `{title,...}`, sonner, etc.) bajo `strictFunctionTypes`. La función NUNCA
+ * se invoca dentro de los helpers — todo va por `sonner` directo.
  */
-export type AnyToastFn = (...args: unknown[]) => unknown;
+export type AnyToastFn = (props: never) => unknown;
 
 export interface ErrorNotifyOptions {
   step?: number;
