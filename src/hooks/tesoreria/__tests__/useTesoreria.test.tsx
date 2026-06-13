@@ -28,7 +28,9 @@ describe('useFlujoProyectado (composer)', () => {
   });
 
   it('queda deshabilitado mientras alguna fuente no está lista', () => {
-    mockCobranza.mockReturnValueOnce({ data: undefined, isLoading: true, error: null });
+    mockCobranza.mockReturnValueOnce({ data: [] as never[], isLoading: true, error: null });
+    // Cobranza vacía pero loading → enabled false → no se invoca queryFn.
+    mockFetchFlujo.mockClear();
     const { result } = renderHook(() => useFlujoProyectado(), { wrapper: createWrapper() });
     expect(result.current.fetchStatus).toBe('idle');
   });
