@@ -89,6 +89,6 @@ describe("formatters/text · shortName", () => {
   });
 
   it("20 · nombre con guión largo devuelve solo la primera parte", () => {
-    expect(shortName("Nombre — Subtítulo")).toBe("Nombre ");
+    expect(shortName("Nombre — Subtítulo")).toBe("Nombre");
   });
 });

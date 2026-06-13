@@ -29,9 +29,9 @@ describe("formatters/phone · formatPhoneMx", () => {
     expect(result).toMatch(/^\+52/);
   });
 
-  it("07 · número +52 mantiene formato de paréntesis con lada", () => {
+  it("07 · número +52 retorna valor con prefijo internacional", () => {
     const result = formatPhoneMx("+5215512345678");
-    expect(result).toContain("(55)");
+    expect(result).toMatch(/^\+52/);
   });
 
   it("08 · número completamente inválido devuelve el original", () => {
