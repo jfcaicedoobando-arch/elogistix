@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.2] - 2026-06-13
+- **fix(ci, crítico)**: Revierte el bump erróneo de GitHub Actions de 12.97.1 que rompió CI (exit 127 — "command not found"). Las versiones `@v6/@v7/@v8` que apliqué no existen como releases publicados. Se restauran las versiones estables verificadas: `actions/checkout@v4`, `actions/cache@v4`, `actions/upload-artifact@v4`, `actions/download-artifact@v4`, `codecov/codecov-action@v5`. Aplica a `ci.yml`, `e2e.yml` y `post-deploy-smoke.yml`.
+
 ## [12.98.1] - 2026-06-13
 - **chore(tests)**: Nuevo script `test:fast` para iteración local rápida (no CI). Activa `fileParallelism` con `maxForks: 4 / minForks: 2` y excluye canarios pesados (`**/canaries/**`, `pdfLeak*`, perf). El default CI sigue intacto (16 shards secuenciales, `singleFork: true`) para preservar la estabilidad de memoria ya verificada en sandbox.
 - Sin cambios funcionales para el usuario final: acelera el ciclo `vitest` en desarrollo local de minutos a segundos por iteración.
