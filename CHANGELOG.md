@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.0] - 2026-06-13
+- **chore(types)**: Activa `strict: true` completo en `tsconfig.app.json` (suma `strictFunctionTypes`, `strictBindCallApply`, `strictPropertyInitialization`, `noImplicitThis`, `useUnknownInCatchVariables`, `alwaysStrict`).
+- **chore(lint)**: Activa `react-hooks/exhaustive-deps: "error"` (antes warn) en `eslint.config.js`.
+- **fix(types)**: 14 correcciones de tipado para alinear el código con el modo estricto:
+  - `AnyToastFn` ahora usa `(props: never) => unknown` en posición contravariante para aceptar cualquier wrapper de toast (shadcn legacy, sonner) sin perder seguridad de tipos.
+  - `useVirtualTableState` y `VirtualRowsContainer` unifican el tipo del virtualizer en `Virtualizer<HTMLDivElement, HTMLElement>` (antes mezclaban `HTMLElement` y `Element`).
+  - `useClienteDetalleHandlers` tipa explícitamente el contrato de `registrarActividad.mutate` (antes `Record<string, unknown>` genérico).
+  - `TabFacturasEmitidas` acepta el `setFilter` genérico `<K extends "estado">` proveniente de `useListPageState`.
+  - `useProveedoresCrear` recibe `TablesInsert<"proveedores">` (compatible con el formulario del diálogo).
+  - `downloadBlob.test.ts` tipa los spies con `MockInstance<...>` explícito.
+  - `Cxp.tsx` envuelve `onEliminar` en `useCallback` y agrega la dep faltante al `useMemo` de columnas.
+- Sin cambios funcionales para el usuario final: refuerza la red de seguridad de tipos para el código nuevo.
+
 ## [12.97.1] - 2026-06-13
 - **ci**: Actualización de GitHub Actions a versiones más recientes en `ci.yml`, `e2e.yml` y `post-deploy-smoke.yml`: `actions/checkout@v6`, `actions/cache@v5`, `actions/upload-artifact@v7`, `actions/download-artifact@v8`, `codecov/codecov-action@v7`. Sin cambios funcionales en la app.
 
