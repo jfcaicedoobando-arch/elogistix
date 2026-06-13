@@ -2,7 +2,7 @@
  * Estado del formulario de NuevaOportunidadDialog.
  * Extraído del componente para mantenerlo ≤200 LOC.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CrmOportunidadRow } from "@/features/crm/hooks/useOportunidades";
 import type { User } from "@supabase/supabase-js";
 import {
