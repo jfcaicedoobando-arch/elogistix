@@ -5,8 +5,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { descargarBlob } from "@/lib/downloadBlob";
 
 describe("descargarBlob", () => {
-  let createSpy: ReturnType<typeof vi.spyOn>;
-  let revokeSpy: ReturnType<typeof vi.spyOn>;
+  let createSpy: ReturnType<typeof vi.spyOn<typeof URL, "createObjectURL">>;
+  let revokeSpy: ReturnType<typeof vi.spyOn<typeof URL, "revokeObjectURL">>;
 
   beforeEach(() => {
     vi.useFakeTimers();
