@@ -18,7 +18,6 @@
  * `./parseCsv.helpers.ts` para mantener este archivo ≤200 LOC.
  */
 import {
-  normalizeHeader,
   detectDelimiter,
   tokenize,
   buildEffectiveHeaders,
