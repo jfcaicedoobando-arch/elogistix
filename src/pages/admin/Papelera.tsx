@@ -1,19 +1,12 @@
-import { useState } from "react";
 import { Trash2, RotateCcw, X } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
 import { Navigate } from "react-router-dom";
-import { listTrash, restoreRecord, purgeRecord, type SoftTable as SoftTableSvc, type TrashRow as TrashRowSvc } from "@/services/admin";
-import { queryKeys } from "@/lib/query";
-
-type SoftTable = SoftTableSvc;
-type TrashRow = TrashRowSvc;
+import { usePapelera, type SoftTable, type TrashRow } from "@/hooks/admin";
 
 const TABLAS: { value: SoftTable; label: string }[] = [
   { value: "embarques", label: "Embarques" },
@@ -42,33 +35,7 @@ const dtf = new Intl.DateTimeFormat("es-MX", {
 
 export default function Papelera() {
   const { isAdmin } = usePermissions();
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const [tabla, setTabla] = useState<SoftTable>("embarques");
-
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.papelera(tabla),
-    queryFn: () => listTrash(tabla, 200, 0),
-    enabled: isAdmin,
-  });
-
-  const restore = useMutation({
-    mutationFn: (id: string) => restoreRecord(tabla, id),
-    onSuccess: () => {
-      toast({ title: "Registro restaurado" });
-      qc.invalidateQueries({ queryKey: queryKeys.papelera(tabla) });
-    },
-    onError: (e: Error) => toast({ title: "Error al restaurar", description: e.message, variant: "destructive" }),
-  });
-
-  const purge = useMutation({
-    mutationFn: (id: string) => purgeRecord(tabla, id),
-    onSuccess: () => {
-      toast({ title: "Registro eliminado definitivamente" });
-      qc.invalidateQueries({ queryKey: queryKeys.papelera(tabla) });
-    },
-    onError: (e: Error) => toast({ title: "Error al purgar", description: e.message, variant: "destructive" }),
-  });
+  const { tabla, setTabla, rows, isLoading, restore, purge } = usePapelera(isAdmin);
 
   if (!isAdmin) return <Navigate to="/" replace />;
 
@@ -128,8 +95,6 @@ export default function Papelera() {
       },
     },
   ]);
-
-  const rows = data ?? [];
 
   return (
     <div className="space-y-6">

@@ -5,27 +5,33 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-vi.mock("@/services/facturas", () => ({ fetchCobranza: vi.fn().mockResolvedValue([]) }));
-vi.mock("@/services/cxp", () => ({ fetchFacturasCxP: vi.fn().mockResolvedValue([]) }));
-
-import { fetchResumenTesoreria } from "../resumen";
+import { fetchResumenTesoreria, fetchSaldosCuentas } from "../resumen";
 
 describe("resumen tesoreria service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
   });
 
-  it("fetchResumenTesoreria calcula saldos por cuenta", async () => {
+  it("fetchSaldosCuentas calcula saldos por cuenta", async () => {
     mock.setTableResult("cuentas_bancarias", { data: [{ id: "c1", alias: "A", banco: "B", moneda: "MXN", saldo_inicial: 1000 }], error: null });
     mock.setTableResult("bbva_movimientos", { data: [{ cargo: 100, abono: 200 }], error: null });
-    
-    const res = await fetchResumenTesoreria();
-    expect(res.cuentas.length).toBe(1);
-    expect(res.cuentas[0].saldo).toBe(1100);
+
+    const cuentas = await fetchSaldosCuentas();
+    expect(cuentas.length).toBe(1);
+    expect(cuentas[0].saldo).toBe(1100);
   });
 
   it("propaga error de supabase al leer cuentas_bancarias", async () => {
     mock.setTableResult("cuentas_bancarias", { data: null, error: new Error("db error") });
-    await expect(fetchResumenTesoreria()).rejects.toThrow("db error");
+    await expect(fetchSaldosCuentas()).rejects.toThrow("db error");
+  });
+
+  it("fetchResumenTesoreria compone cuentas + cobranza/cxp inyectados", async () => {
+    mock.setTableResult("cuentas_bancarias", { data: [{ id: "c1", alias: "A", banco: "B", moneda: "MXN", saldo_inicial: 500 }], error: null });
+    mock.setTableResult("bbva_movimientos", { data: [], error: null });
+    const res = await fetchResumenTesoreria({ cobranza: [], cxp: [] });
+    expect(res.cuentas).toHaveLength(1);
+    expect(res.top_deudores).toEqual([]);
+    expect(res.top_acreedores).toEqual([]);
   });
 });

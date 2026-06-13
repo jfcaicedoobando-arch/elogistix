@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/lib/crm/crmToast";
+import { crmToast } from "@/features/crm/domain/crmToast";
 import { useConvertirLead, type CrmLeadRow } from "@/hooks/crm";
 
 interface Props {

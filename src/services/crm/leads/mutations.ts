@@ -2,8 +2,8 @@
  * Leads — mutaciones individuales (create/update/softDelete).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { type LeadInput } from "@/lib/crm/leads/constants";
-import { buildLeadInsertPayload, type AuthLite } from "@/lib/crm/leads/leadPayload";
+import { type LeadInput } from "@/features/crm/domain/leads/constants";
+import { buildLeadInsertPayload, type AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
 export async function createLead(input: LeadInput, user: AuthLite | null): Promise<{ id: string }> {
   const payload = buildLeadInsertPayload(input, user);

@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("@/lib/crm/oportunidadPayload", () => ({
+vi.mock("@/features/crm/domain/oportunidadPayload", () => ({
   buildOportunidadInsertPayload: vi.fn((_i: unknown, _u: unknown) => ({ nombre: "Test", etapa_id: "e-1" })),
 }));
 

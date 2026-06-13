@@ -1,17 +1,24 @@
 /**
- * Agregador del Dashboard Ejecutivo: ejecuta todos los servicios financieros
- * en paralelo y construye un único snapshot consumible por la UI.
+ * Agregador del Dashboard Ejecutivo: ejecuta servicios financieros en paralelo
+ * y construye un snapshot. Auditoría Paso 4 (v12.95.11): recibe `cobranza` y
+ * `cxp` inyectados por el hook caller para no acoplar service→service.
  */
 import { fetchEstadoResultadosDevengado } from "@/services/profit/estadoResultadosDevengado";
-import { fetchResumenTesoreria } from "@/services/tesoreria";
-import { fetchFlujoProyectado } from "@/services/tesoreria";
+import {
+  fetchSaldosCuentas,
+  fetchResumenTesoreria,
+  fetchFlujoProyectado,
+} from "@/services/tesoreria";
 import { fetchPresupuestoVsReal } from "@/services/presupuesto";
+import type { CobranzaRow, CxpRow } from "@/lib/domain/tesoreria";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
 
 export interface FetchSnapshotParams {
   organizationId: string | null;
   periodo: string; // YYYY-MM
+  cobranza: CobranzaRow[];
+  cxp: CxpRow[];
 }
 
 function periodoAnterior(periodo: string): string {
@@ -37,21 +44,21 @@ function meses12Atras(periodo: string): Array<{ year: number; month: number; key
 export async function fetchDashboardEjecutivo(
   params: FetchSnapshotParams,
 ): Promise<SnapshotEjecutivo> {
-  const { organizationId, periodo } = params;
+  const { organizationId, periodo, cobranza, cxp } = params;
   const [year, month] = periodo.split("-").map(Number);
   const prev = periodoAnterior(periodo);
   const [prevY, prevM] = prev.split("-").map(Number);
 
-  // Ejecución paralela de servicios base
+  const cuentas = await fetchSaldosCuentas();
+
   const [eerrPeriodo, eerrPrev, tesoreria, flujo, presupuesto] = await Promise.all([
     fetchEstadoResultadosDevengado({ organizationId, year, month }),
     fetchEstadoResultadosDevengado({ organizationId, year: prevY, month: prevM }),
-    fetchResumenTesoreria(),
-    fetchFlujoProyectado(28),
+    fetchResumenTesoreria({ cobranza, cxp }),
+    fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28 }),
     fetchPresupuestoVsReal(periodo),
   ]);
 
-  // EERR rolling 12 meses (también en paralelo)
   const meses = meses12Atras(periodo);
   const eerrMensuales = await Promise.all(
     meses.map((m) =>
@@ -68,15 +75,7 @@ export async function fetchDashboardEjecutivo(
     };
   });
 
-  const base = {
-    periodo,
-    eerrPeriodo,
-    eerr12m,
-    tesoreria,
-    flujo,
-    presupuesto,
-  };
-
+  const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
 

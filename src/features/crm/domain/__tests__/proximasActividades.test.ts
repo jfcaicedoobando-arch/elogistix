@@ -4,7 +4,7 @@ import {
   esVencida,
   esHoy,
   type ActividadRowLite,
-} from "@/lib/crm/proximasActividades";
+} from "@/features/crm/domain/proximasActividades";
 
 function a(partial: Partial<ActividadRowLite> & { id: string; entidad_id: string }): ActividadRowLite {
   return {

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/lib/crm/crmToast";
+import { crmToast } from "@/features/crm/domain/crmToast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCrearLead } from "@/hooks/crm";
 import { useCrearActividad } from "@/hooks/crm";

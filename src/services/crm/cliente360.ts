@@ -2,8 +2,8 @@
  * Servicio CRM — Cliente 360°. Agrega oportunidades, última cotización y último embarque.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { computeCliente360Totals } from "@/lib/crm/cliente360";
-import type { EtapaTipo } from "@/lib/crm/forecast";
+import { computeCliente360Totals } from "@/features/crm/domain/cliente360";
+import type { EtapaTipo } from "@/features/crm/domain/forecast";
 
 export interface Cliente360Oportunidad {
   id: string;

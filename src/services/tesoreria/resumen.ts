@@ -1,39 +1,22 @@
 /**
- * Resumen ejecutivo de Tesorería: saldos por cuenta + KPIs CxC/CxP +
- * flujo esperado 30 días + top 5 clientes/proveedores.
+ * Servicio Tesorería — fuentes propias (cuentas + saldos calculados desde
+ * movimientos BBVA). Ya NO importa `@/services/facturas` ni `@/services/cxp`
+ * (Auditoría Paso 4, v12.95.11).
  *
- * Cálculo de saldo en banco:
- *   saldo = saldo_inicial + Σ(abonos) − Σ(cargos) sobre cuenta.
+ * El cálculo del resumen se hace con la función pura
+ * `calcularResumenTesoreria` en `@/lib/domain/tesoreria`, alimentada por el
+ * hook `useResumenTesoreria` que compone las tres fuentes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCobranza } from "@/services/facturas";
-import { fetchFacturasCxP } from "@/services/cxp";
+import {
+  calcularResumenTesoreria,
+  type ResumenCuenta,
+  type ResumenTesoreria,
+  type CobranzaRow,
+  type CxpRow,
+} from "@/lib/domain/tesoreria";
 
-export interface ResumenCuenta {
-  id: string;
-  alias: string;
-  banco: string;
-  moneda: string;
-  saldo: number;
-}
-
-export interface FlujoMes {
-  por_cobrar_mxn: number;
-  por_cobrar_usd: number;
-  por_pagar_mxn: number;
-  por_pagar_usd: number;
-  flujo_neto_mxn: number;
-  flujo_neto_usd: number;
-}
-
-export interface TopItem { nombre: string; saldo: number; moneda: string; dias?: number }
-
-export interface ResumenTesoreria {
-  cuentas: ResumenCuenta[];
-  flujo: FlujoMes;
-  top_deudores: TopItem[];
-  top_acreedores: TopItem[];
-}
+export type { ResumenCuenta, ResumenTesoreria, FlujoMes, TopItem } from "@/lib/domain/tesoreria";
 
 async function calcularSaldoCuenta(cuentaId: string, saldoInicial: number): Promise<number> {
   const { data, error } = await supabase
@@ -48,58 +31,30 @@ async function calcularSaldoCuenta(cuentaId: string, saldoInicial: number): Prom
   return s;
 }
 
-export async function fetchResumenTesoreria(): Promise<ResumenTesoreria> {
-  const { data: cuentas, error: errCuentas } = await supabase
+export async function fetchSaldosCuentas(): Promise<ResumenCuenta[]> {
+  const { data: cuentas, error } = await supabase
     .from("cuentas_bancarias")
     .select("id, alias, banco, moneda, saldo_inicial")
     .eq("activa", true)
     .order("alias");
-  if (errCuentas) throw errCuentas;
+  if (error) throw error;
 
-
-  const cuentasRes: ResumenCuenta[] = [];
+  const out: ResumenCuenta[] = [];
   for (const c of cuentas ?? []) {
     const saldo = await calcularSaldoCuenta(c.id, Number(c.saldo_inicial));
-    cuentasRes.push({ id: c.id, alias: c.alias, banco: c.banco, moneda: c.moneda, saldo });
+    out.push({ id: c.id, alias: c.alias, banco: c.banco, moneda: c.moneda, saldo });
   }
+  return out;
+}
 
-  const [cobranza, cxp] = await Promise.all([fetchCobranza({}), fetchFacturasCxP({})]);
-
-  // Flujo: CxC con vencimiento en próximos 30 días vs CxP igual ventana.
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  const limite = new Date(hoy); limite.setDate(limite.getDate() + 30);
-  const enVentana = (iso: string | null) =>
-    !!iso && new Date(iso + "T00:00:00") <= limite;
-
-  const flujo: FlujoMes = {
-    por_cobrar_mxn: 0, por_cobrar_usd: 0,
-    por_pagar_mxn: 0, por_pagar_usd: 0,
-    flujo_neto_mxn: 0, flujo_neto_usd: 0,
-  };
-  for (const f of cobranza) {
-    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
-    if (f.moneda === "USD") flujo.por_cobrar_usd += f.saldo;
-    else flujo.por_cobrar_mxn += f.saldo;
-  }
-  for (const f of cxp) {
-    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
-    if (f.moneda === "USD") flujo.por_pagar_usd += f.saldo;
-    else flujo.por_pagar_mxn += f.saldo;
-  }
-  flujo.flujo_neto_mxn = flujo.por_cobrar_mxn - flujo.por_pagar_mxn;
-  flujo.flujo_neto_usd = flujo.por_cobrar_usd - flujo.por_pagar_usd;
-
-  const top_deudores = cobranza
-    .filter((f) => f.saldo > 0 && f.estatus_cobranza === "Vencida")
-    .sort((a, b) => b.saldo - a.saldo)
-    .slice(0, 5)
-    .map((f) => ({ nombre: f.cliente_nombre, saldo: f.saldo, moneda: f.moneda, dias: f.dias_vencido }));
-
-  const top_acreedores = cxp
-    .filter((f) => f.saldo > 0 && (f.estatus === "Por vencer" || f.estatus === "Vencida"))
-    .sort((a, b) => b.saldo - a.saldo)
-    .slice(0, 5)
-    .map((f) => ({ nombre: f.proveedor_nombre, saldo: f.saldo, moneda: f.moneda, dias: f.dias_vencido }));
-
-  return { cuentas: cuentasRes, flujo, top_deudores, top_acreedores };
+/**
+ * Compone resumen a partir de cuentas (fetched aquí) + cobranza/cxp (inyectados
+ * por el caller). El hook `useResumenTesoreria` provee las dos últimas.
+ */
+export async function fetchResumenTesoreria(args: {
+  cobranza: CobranzaRow[];
+  cxp: CxpRow[];
+}): Promise<ResumenTesoreria> {
+  const cuentas = await fetchSaldosCuentas();
+  return calcularResumenTesoreria({ cuentas, cobranza: args.cobranza, cxp: args.cxp });
 }

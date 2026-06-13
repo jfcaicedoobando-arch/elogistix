@@ -2,8 +2,8 @@
  * Leads — operaciones en lote (bulk create/update/softDelete).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { type LeadInput } from "@/lib/crm/leads/constants";
-import { buildLeadInsertPayload, type AuthLite } from "@/lib/crm/leads/leadPayload";
+import { type LeadInput } from "@/features/crm/domain/leads/constants";
+import { buildLeadInsertPayload, type AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
 export async function bulkUpdateLeads(ids: string[], patch: Partial<LeadInput>): Promise<number> {
   if (ids.length === 0) return 0;

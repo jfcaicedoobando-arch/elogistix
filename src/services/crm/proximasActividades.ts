@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { buildProximasMap } from "@/lib/crm/proximasActividades";
+import { buildProximasMap } from "@/features/crm/domain/proximasActividades";
 
 type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 

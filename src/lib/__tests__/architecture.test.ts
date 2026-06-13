@@ -142,6 +142,12 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
     // dominio. Cada entrada debe removerse al mover los archivos a features/.
     const SHADOW_ALLOWLIST = new Set<string>([
       "src/services/embarques",
+      // CRM: migración iterativa. v12.95.10 movió lib/crm → features/crm/domain.
+      // Pasos 6+9 del plan migrarán services/components/hooks/pages a features/crm/.
+      "src/components/crm",
+      "src/hooks/crm",
+      "src/services/crm",
+      "src/pages/crm",
     ]);
     let features: string[] = [];
     try {

@@ -86,6 +86,22 @@ Dominios pendientes de migrar (layer-first → folder-style, plan iterativo en
 - `src/components/<dominio>/` está en proceso de migrar a
   `src/features/<dominio>/components/`.
 
+## 5b. Regla de admisión a `src/lib/`
+
+`src/lib/` es para **utilidades cross-dominio puras**. No es papelera de
+lógica sin dueño. Un módulo solo entra a `src/lib/` si cumple **las dos**:
+
+1. Es importado por **≥2 dominios distintos** (cross-cutting real).
+2. **No tiene dominio dueño claro** (no es regla de negocio de un solo dominio).
+
+Si pertenece a un dominio único → `src/features/<dominio>/domain/`.
+Excepción: durante la migración layer-first → folder-style, lógica de un
+dominio que aún no tiene `features/<dominio>/` puede vivir transitoriamente en
+`src/lib/domain/<dominio>.ts`, documentando el plan de migración en la cabecera
+del archivo.
+
+
+
 ## 6. Backend (Lovable Cloud / Supabase)
 
 - Todas las tablas en `public` requieren `GRANT` explícito + RLS habilitada.

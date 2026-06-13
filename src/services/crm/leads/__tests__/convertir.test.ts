@@ -15,7 +15,7 @@ import {
   convertirLead,
   type ConvertirLeadParams,
 } from "../convertir";
-import type { CrmLeadRow } from "@/lib/crm/leads/constants";
+import type { CrmLeadRow } from "@/features/crm/domain/leads/constants";
 
 const lead = {
   id: "lead-1",

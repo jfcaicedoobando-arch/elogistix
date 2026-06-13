@@ -12,5 +12,8 @@ export * from './useAppLogs';
 export * from './useAppLogsHealth';
 export * from './useOrgMembersMutations';
 export * from './useOrganizationsList';
+export * from './useIdempotenciaLog';
+export * from './usePapelera';
 export * from './usePlanes';
+
 

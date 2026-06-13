@@ -8,11 +8,11 @@ import type { User } from "@supabase/supabase-js";
 import {
   EMPTY_OPORTUNIDAD,
   type OportunidadFormState,
-} from "@/lib/crm/oportunidadFormState";
+} from "@/features/crm/domain/oportunidadFormState";
 import {
   buildFromOportunidad,
   buildEmptyForNueva,
-} from "@/lib/crm/oportunidadFormHelpers";
+} from "@/features/crm/domain/oportunidadFormHelpers";
 
 export type { OportunidadFormState };
 export { EMPTY_OPORTUNIDAD };

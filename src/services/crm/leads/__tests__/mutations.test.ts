@@ -10,7 +10,7 @@ const mock = await vi.hoisted(async () => {
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import { createLead, updateLead, softDeleteLead } from "../mutations";
-import type { LeadInput } from "@/lib/crm/leads/constants";
+import type { LeadInput } from "@/features/crm/domain/leads/constants";
 
 const leadInput = {
   empresa: "Acme",

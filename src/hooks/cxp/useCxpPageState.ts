@@ -1,0 +1,59 @@
+/**
+ * Estado de página para `pages/cxp/Cxp.tsx`: filtros + selección de modales.
+ * Extraído en v12.95.10 (Auditoría Paso 3) para que la página quede como
+ * orquestador puro y el estado sea testeable de forma aislada.
+ */
+import { useState } from "react";
+import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
+
+export function useCxpPageState() {
+  const [search, setSearch] = useState("");
+  const [estatus, setEstatus] = useState<EstatusCxP | "todos">("todos");
+  const [moneda, setMoneda] = useState<"todas" | "MXN" | "USD" | "EUR">("todas");
+  const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
+  const [proveedorId, setProveedorId] = useState<string>("todos");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+
+  const [openNueva, setOpenNueva] = useState(false);
+  const [pagar, setPagar] = useState<FacturaCxP | null>(null);
+  const [detalle, setDetalle] = useState<FacturaCxP | null>(null);
+  const [aEliminar, setAEliminar] = useState<FacturaCxP | null>(null);
+
+  const hayFiltros =
+    search !== "" ||
+    estatus !== "todos" ||
+    moneda !== "todas" ||
+    origen !== "todos" ||
+    proveedorId !== "todos" ||
+    fechaDesde !== "" ||
+    fechaHasta !== "";
+
+  const queryArgs = {
+    search: search || undefined,
+    estatus,
+    moneda,
+    origen,
+    proveedor_id: proveedorId === "todos" ? undefined : proveedorId,
+    fecha_desde: fechaDesde || undefined,
+    fecha_hasta: fechaHasta || undefined,
+  };
+
+  return {
+    // Filtros
+    search, setSearch,
+    estatus, setEstatus,
+    moneda, setMoneda,
+    origen, setOrigen,
+    proveedorId, setProveedorId,
+    fechaDesde, setFechaDesde,
+    fechaHasta, setFechaHasta,
+    hayFiltros,
+    queryArgs,
+    // Modales
+    openNueva, setOpenNueva,
+    pagar, setPagar,
+    detalle, setDetalle,
+    aEliminar, setAEliminar,
+  };
+}

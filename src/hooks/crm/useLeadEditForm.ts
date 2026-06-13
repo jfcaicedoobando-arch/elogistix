@@ -3,9 +3,9 @@
  * Extraído de `pages/crm/LeadDetalle.tsx` (Power of 10: componente ≤200 LOC).
  */
 import { useEffect, useMemo, useState } from "react";
-import { isLeadDirty } from "@/lib/crm/leadEditDirty";
+import { isLeadDirty } from "@/features/crm/domain/leadEditDirty";
 import { type LeadEditForm, EMPTY_LEAD_EDIT_FORM as EMPTY_FORM } from "@/types/crm/leadEditForm";
-import type { CrmLeadEstado, CrmLeadFuente } from "@/lib/crm/leads/constants";
+import type { CrmLeadEstado, CrmLeadFuente } from "@/features/crm/domain/leads/constants";
 
 export type { LeadEditForm };
 

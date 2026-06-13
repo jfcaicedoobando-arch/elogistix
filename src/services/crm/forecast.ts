@@ -9,7 +9,7 @@ import {
   type EtapaTipo,
   type ForecastResumen,
   type ReportesCRM,
-} from "@/lib/crm/forecast";
+} from "@/features/crm/domain/forecast";
 
 export type { ForecastResumen, ReportesCRM };
 

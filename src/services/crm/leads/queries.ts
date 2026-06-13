@@ -7,7 +7,7 @@ import {
   type CrmLeadRow,
   type LeadFiltros,
   type LeadsResultado,
-} from "@/lib/crm/leads/constants";
+} from "@/features/crm/domain/leads/constants";
 
 export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
   const {
