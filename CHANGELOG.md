@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.6] - 2026-06-13
+- **fix(ci/coverage)**: Elimina `.vitest-reports/` (17 blobs ~6 MB c/u, ~100 MB) y `find_shard.ts`/`test_files.txt` que quedaron commiteados de sesiones de depuración. El blob huérfano `blob-dynamicImportError.json` lo traían los 16 shards desde el checkout, se subía como artifact en cada uno y `vitest --merge-reports` lo combinaba con los blobs reales: como sólo cubría `dynamicImportError.ts` pero declaraba 104k LOC instrumentadas, inflaba el denominador y bajaba la cobertura agregada a 17.03%, por debajo del umbral global (35% lines/statements, 48% functions, 67% branches), tumbando el job "Coverage merge & report" con exit 1. Ningún test fallaba en ningún shard.
+
 ## [13.0.5] - 2026-06-13
+
 - **fix(tests/shard-3)**: `usePortalDocumentDownload.test.tsx` fallaba con `createObjectURL does not exist` porque jsdom no define ese método en `URL`, así que `vi.spyOn` no podía instrumentarlo y el shard salía con `exit code 1` sin stack visible (reporter blob). Ahora se parchan `URL.createObjectURL`/`revokeObjectURL` con `Object.defineProperty` configurable + `vi.fn()`; los reset entre archivos siguen aplicando vía `unstubAllGlobals`/`restoreAllMocks` del setup global.
 
 ## [13.0.4] - 2026-06-13
