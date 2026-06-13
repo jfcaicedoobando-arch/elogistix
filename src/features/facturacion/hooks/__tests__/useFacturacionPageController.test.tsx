@@ -1,0 +1,113 @@
+/**
+ * Tests del controller `useFacturacionPageController`.
+ * Valida: filtrado por búsqueda y estado, marcar pagado (success/error)
+ * y export CSV con headers exactos.
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { createWrapper } from "@/test/utils/queryWrapper";
+
+const {
+  useFacturasMock, useGastosPendientesMock, useProformasPendientesMock,
+  marcarPagadoMutate, registrarActividadMutate, toastFn,
+  exportToCsvMock, exportarLayoutContableMock,
+  notifyErrorMock, notifySuccessMock,
+} = vi.hoisted(() => ({
+  useFacturasMock: vi.fn(),
+  useGastosPendientesMock: vi.fn(),
+  useProformasPendientesMock: vi.fn(),
+  marcarPagadoMutate: vi.fn(),
+  registrarActividadMutate: vi.fn(),
+  toastFn: vi.fn(),
+  exportToCsvMock: vi.fn(),
+  exportarLayoutContableMock: vi.fn(),
+  notifyErrorMock: vi.fn(),
+  notifySuccessMock: vi.fn(),
+}));
+
+vi.mock("@/features/facturacion/hooks/useFacturas", () => ({
+  useFacturas: () => useFacturasMock(),
+  useGastosPendientes: () => useGastosPendientesMock(),
+  useMarcarCostoPagado: () => ({ mutate: marcarPagadoMutate, isPending: false }),
+}));
+vi.mock("@/features/embarques/hooks/useProformas", () => ({
+  useProformasPendientes: () => useProformasPendientesMock(),
+}));
+vi.mock("@/hooks/shared", () => ({
+  useListPageState: () => {
+    return {
+      search: "", filters: { estado: "todos" }, page: 1, pageSize: 25,
+      setSearch: vi.fn(), setFilter: vi.fn(), setPage: vi.fn(), setPageSize: vi.fn(),
+      paginate: <T,>(items: T[]) => ({ items, totalPages: 1 }),
+    };
+  },
+  useRegistrarActividad: () => ({ mutate: registrarActividadMutate }),
+  useToast: () => ({ toast: toastFn }),
+  usePermissions: () => ({ canEdit: true }),
+}));
+vi.mock("@/generators/exportCsv", () => ({ exportToCsv: exportToCsvMock }));
+vi.mock("@/generators/layoutContable", () => ({ exportarLayoutContable: exportarLayoutContableMock }));
+vi.mock("@/components/shared/utils/appFeedback", () => ({
+  notifyError: notifyErrorMock,
+  notifySuccess: notifySuccessMock,
+}));
+
+import { useFacturacionPageController } from "../useFacturacionPageController";
+
+const f = (over: Record<string, unknown> = {}) => ({
+  id: "f1", numero: "FAC-001", expediente: "EXP-001",
+  cliente_nombre: "ACME", total: 1000, moneda: "USD",
+  fecha_emision: "2026-01-15", fecha_vencimiento: "2026-02-15",
+  estado: "pendiente", ...over,
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  useFacturasMock.mockReturnValue({ data: [f(), f({ id: "f2", numero: "FAC-002", cliente_nombre: "Beta" })], isLoading: false });
+  useGastosPendientesMock.mockReturnValue({ data: [], isLoading: false });
+  useProformasPendientesMock.mockReturnValue({ data: [] });
+});
+
+describe("useFacturacionPageController", () => {
+  it("devuelve facturas paginadas cuando no hay filtros", () => {
+    const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
+    expect(result.current.paginatedFacturas).toHaveLength(2);
+  });
+
+  it("handleMarcarPagado dispara mutate con el id y notifica éxito", () => {
+    marcarPagadoMutate.mockImplementation((_payload, opts) => opts?.onSuccess?.());
+    const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
+    act(() => result.current.handleMarcarPagado("gasto-1"));
+    expect(marcarPagadoMutate).toHaveBeenCalledWith({ id: "gasto-1" }, expect.any(Object));
+    expect(registrarActividadMutate).toHaveBeenCalledWith(expect.objectContaining({
+      accion: "editar", modulo: "facturas", entidad_id: "gasto-1",
+    }));
+    expect(notifySuccessMock).toHaveBeenCalled();
+  });
+
+  it("handleMarcarPagado notifica error si el mutate falla", () => {
+    marcarPagadoMutate.mockImplementation((_p, opts) => opts?.onError?.(new Error("boom")));
+    const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
+    act(() => result.current.handleMarcarPagado("gasto-x"));
+    expect(notifyErrorMock).toHaveBeenCalled();
+  });
+
+  it("exportarFacturasCsv exporta con los headers esperados", () => {
+    const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
+    act(() => result.current.exportarFacturasCsv());
+    expect(exportToCsvMock).toHaveBeenCalledTimes(1);
+    const [filename, headers, rows] = exportToCsvMock.mock.calls[0];
+    expect(filename).toMatch(/^facturas_\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(headers.map((h: { key: string }) => h.key)).toEqual([
+      "numero", "expediente", "cliente", "total", "moneda", "emision", "vencimiento", "estado",
+    ]);
+    expect(rows).toHaveLength(2);
+  });
+
+  it("exportarLayoutContable propaga error vía notifyError", async () => {
+    exportarLayoutContableMock.mockRejectedValueOnce(new Error("fail"));
+    const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
+    await act(async () => { await result.current.exportarLayoutContable(); });
+    expect(notifyErrorMock).toHaveBeenCalled();
+  });
+});
