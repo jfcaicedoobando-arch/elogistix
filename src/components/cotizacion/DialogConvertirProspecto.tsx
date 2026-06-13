@@ -7,7 +7,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 
-import type { ClienteFormData } from "@/types/clienteForm";
+import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
 
 interface Props {
   open: boolean;

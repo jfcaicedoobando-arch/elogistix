@@ -11,7 +11,7 @@ import {
 } from "@/hooks/cotizacion/useCotizaciones";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
-import type { ClienteFormData } from "@/types/clienteForm";
+import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
