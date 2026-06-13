@@ -6,11 +6,8 @@ import { TotalesBox } from "../components/TotalesBox";
 import { ProformaHeader } from "./ProformaHeader";
 import type { EmisorInfo } from "../components/BrandHeader";
 import type { ClienteLite, EmbarqueLite, ProformaRow } from "./proformaShared";
-import {
-  agruparPorContenedor,
-  SeccionMonedaPdf,
-  type ConceptoVenta,
-} from "./ProformaConceptosSection";
+import { SeccionMonedaPdf } from "./ProformaConceptosSection";
+import { agruparPorContenedor, type ConceptoVenta } from "./proformaConceptosColumns";
 
 interface Props {
   proforma: ProformaRow;

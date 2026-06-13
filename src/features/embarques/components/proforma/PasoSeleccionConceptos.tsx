@@ -2,8 +2,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FiltroContenedorChips } from "./FiltroContenedorChips";
 import {
-  ConceptoRow, TotalesProformaBox, ProformaFooterFields, buildContenedorLabelMap,
+  ConceptoRow, TotalesProformaBox, ProformaFooterFields,
 } from "./PasoSeleccionConceptos.parts";
+import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
