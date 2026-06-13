@@ -13,9 +13,12 @@ vi.mock("@/lib/observability/logger", () => ({
 
 import { crearNotificacionSilencioso } from "../notificaciones";
 
+const originalFrom = mock.supabase.from;
+
 beforeEach(() => {
   mock.tableCalls.length = 0;
   loggerWarn.mockReset();
+  mock.supabase.from = originalFrom;
 });
 
 describe("crm/services/notificaciones", () => {
