@@ -116,9 +116,9 @@ describe("Integración Cotización → Embarque (helpers puros)", () => {
       expect(rows[2].contenedor_id).toBe("h2");
     });
 
-    it("unidad_medida nula por defecto se trata como Contenedor", () => {
+    it("unidad_medida undefined por defecto se trata como Contenedor", () => {
       const rows = construirCostosRows(
-        [costo({ unidad_medida: null })],
+        [costo({ unidad_medida: undefined })],
         "emb-1", hijos,
       );
       expect(rows).toHaveLength(2);
