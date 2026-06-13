@@ -72,7 +72,7 @@ describe("notifyVendedorMovido", () => {
   it("notifica al vendedor con título y link correctos", async () => {
     await notifyVendedorMovido(ctx());
     expect(notificarMock).toHaveBeenCalledTimes(1);
-    const arg = notificarMock.mock.calls[0][0] as { titulo: string; link: string; mensaje: string };
+    const arg = (notificarMock.mock.calls[0] as unknown as [{ titulo: string; link: string; mensaje: string }])[0];
     expect(arg.titulo).toContain("Cotizando");
     expect(arg.link).toBe("/crm/oportunidades/o1");
     expect(arg.mensaje).toContain("Cliente SA");

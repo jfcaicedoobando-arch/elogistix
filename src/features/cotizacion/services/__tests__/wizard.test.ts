@@ -57,7 +57,7 @@ describe("savePaso1", () => {
       buildPaso1Data: () => ({}), mutations: muts,
     });
     expect(uploadFileMock).toHaveBeenCalledTimes(1);
-    const arg = (uploadFileMock.mock.calls[0][0] as string);
+    const arg = (uploadFileMock.mock.calls[0] as unknown as [string])[0];
     expect(arg.startsWith("cotizaciones/msds-")).toBe(true);
     expect(arg.endsWith(".pdf")).toBe(true);
   });
@@ -89,7 +89,7 @@ describe("savePaso2", () => {
       }],
       mutations: muts,
     });
-    const arg = muts.upsertCostos.mutateAsync.mock.calls[0][0] as { costos: Array<{ costo_total: number; notas: string }> };
+    const arg = (muts.upsertCostos.mutateAsync.mock.calls[0] as unknown as [{ costos: Array<{ costo_total: number; notas: string }> }])[0];
     expect(arg.costos[0].costo_total).toBe(300);
     expect(arg.costos[0].notas).toBe("");
   });
