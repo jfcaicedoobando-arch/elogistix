@@ -71,7 +71,7 @@ beforeEach(() => { vi.clearAllMocks(); savePaso1.mockResolvedValue("cot-1"); sav
 
 describe("useCotizacionWizardSteps", () => {
   it("handleSiguiente paso 1: si validatePaso1 falla, notifyError y no avanza", async () => {
-    const deps = makeDeps({
+    const { deps, refs } = makeDeps({
       form: { getValues: () => ({ clienteId: "", esProspecto: false }) } as never,
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
@@ -81,30 +81,30 @@ describe("useCotizacionWizardSteps", () => {
   });
 
   it("handleSiguiente paso 1 OK: llama savePaso1, setCotizacionId y avanza a 2", async () => {
-    const deps = makeDeps();
+    const { deps, refs } = makeDeps();
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
     expect(savePaso1).toHaveBeenCalledTimes(1);
-    expect(deps._refs.setCotizacionId).toHaveBeenCalledWith("cot-1");
-    expect(deps._refs.setCurrentStep).toHaveBeenCalledWith(2);
+    expect(refs.setCotizacionId).toHaveBeenCalledWith("cot-1");
+    expect(refs.setCurrentStep).toHaveBeenCalledWith(2);
   });
 
   it("handleSiguiente paso 2: con costos prellena conceptos USD/MXN y avanza", async () => {
-    const deps = makeDeps({
+    const { deps, refs } = makeDeps({
       currentStep: 2, cotizacionId: "cot-1",
       costosInternos: [{ id: "x", monto: 100, moneda: "USD" } as never],
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
     expect(savePaso2).toHaveBeenCalledTimes(1);
-    expect(deps._refs.setConceptosUSD).toHaveBeenCalledWith([{ descripcion: "Flete", monto: 100 }]);
-    expect(deps._refs.setConceptosMXN).toHaveBeenCalledWith([{ descripcion: "Despacho", monto: 200 }]);
-    expect(deps._refs.setCostosPreLlenados).toHaveBeenCalledWith(true);
-    expect(deps._refs.setCurrentStep).toHaveBeenCalledWith(3);
+    expect(refs.setConceptosUSD).toHaveBeenCalledWith([{ descripcion: "Flete", monto: 100 }]);
+    expect(refs.setConceptosMXN).toHaveBeenCalledWith([{ descripcion: "Despacho", monto: 200 }]);
+    expect(refs.setCostosPreLlenados).toHaveBeenCalledWith(true);
+    expect(refs.setCurrentStep).toHaveBeenCalledWith(3);
   });
 
   it("handleSiguiente paso 3: sin conceptos válidos bloquea con notifyError", async () => {
-    const deps = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
+    const { deps, refs } = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
     expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Agrega al menos un concepto de venta" });
@@ -112,25 +112,25 @@ describe("useCotizacionWizardSteps", () => {
   });
 
   it("handleGuardar: éxito navega a /cotizaciones/:id y notifySuccess", async () => {
-    const deps = makeDeps({ cotizacionId: "cot-1" });
+    const { deps, refs } = makeDeps({ cotizacionId: "cot-1" });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleGuardar(); });
     expect(savePasoFinal).toHaveBeenCalledTimes(1);
     expect(notifySuccess).toHaveBeenCalled();
-    expect(deps._refs.navigate).toHaveBeenCalledWith("/cotizaciones/cot-1");
+    expect(refs.navigate).toHaveBeenCalledWith("/cotizaciones/cot-1");
   });
 
   it("handleBack en step 1 navega a /cotizaciones", () => {
-    const deps = makeDeps();
+    const { deps, refs } = makeDeps();
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     act(() => { result.current.handleBack(); });
-    expect(deps._refs.navigate).toHaveBeenCalledWith("/cotizaciones");
+    expect(refs.navigate).toHaveBeenCalledWith("/cotizaciones");
   });
 
   it("handleBack en step >1 decrementa paso", () => {
-    const deps = makeDeps({ currentStep: 3 });
+    const { deps, refs } = makeDeps({ currentStep: 3 });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     act(() => { result.current.handleBack(); });
-    expect(deps._refs.setCurrentStep).toHaveBeenCalledWith(expect.any(Function));
+    expect(refs.setCurrentStep).toHaveBeenCalledWith(expect.any(Function));
   });
 });
