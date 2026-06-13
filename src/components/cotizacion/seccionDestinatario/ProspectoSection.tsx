@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { VinculoChip } from "./VinculoChip";
 import { BuscadorProspectos } from "./BuscadorProspectos";
 import { FormularioNuevoProspecto } from "./FormularioNuevoProspecto";
-import type { ProspectoMatch } from "@/hooks/crm";
+import type { ProspectoMatch } from "@/features/crm/hooks";
 
 interface Props {
   modo: "vincular" | "nuevo";

@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/shared";
-import { useCrmProspectoSearch, type ProspectoMatch } from "@/hooks/crm";
+import { useCrmProspectoSearch, type ProspectoMatch } from "@/features/crm/hooks";
 
 interface Props {
   onSelect: (m: ProspectoMatch) => void;
