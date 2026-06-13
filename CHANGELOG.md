@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.1] - 2026-06-13
+- **chore(tests)**: Nuevo script `test:fast` para iteración local rápida (no CI). Activa `fileParallelism` con `maxForks: 4 / minForks: 2` y excluye canarios pesados (`**/canaries/**`, `pdfLeak*`, perf). El default CI sigue intacto (16 shards secuenciales, `singleFork: true`) para preservar la estabilidad de memoria ya verificada en sandbox.
+- Sin cambios funcionales para el usuario final: acelera el ciclo `vitest` en desarrollo local de minutos a segundos por iteración.
+
 ## [12.98.0] - 2026-06-13
 - **chore(types)**: Activa `strict: true` completo en `tsconfig.app.json` (suma `strictFunctionTypes`, `strictBindCallApply`, `strictPropertyInitialization`, `noImplicitThis`, `useUnknownInCatchVariables`, `alwaysStrict`).
 - **chore(lint)**: Activa `react-hooks/exhaustive-deps: "error"` (antes warn) en `eslint.config.js`.
