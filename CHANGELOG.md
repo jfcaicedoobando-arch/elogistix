@@ -6,6 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.8] - 2026-06-13
+- **test(coverage)**: Suma 9 archivos de tests sobre lógica de negocio pura previamente en 0% (≈50 casos verdes):
+  - `src/features/crm/domain/leadEditDirty.ts` — diff lead vs form (nulls, score default 3, todos los campos).
+  - `src/features/crm/domain/crmToast.ts` — wrappers sonner (success/error/info/undo, descripción Error/string).
+  - `src/features/auditoria/domain/reglaLabels.ts` — etiquetas cortas para 10 reglas.
+  - `src/lib/mappers/embarqueFromDb.ts` — mapeo BD→form, defaults `Carga General`/`FOB`, TC defaults.
+  - `src/lib/mappers/embarqueToDb.ts` — payload de inserción, consignatario `__cliente__`, suma de contenedores FCL, validación zod de modo/incoterm/moneda.
+  - `src/lib/mappers/_helpers.ts` — coerciones (`str`/`num`/`bool`/`emptyToNull`) y rechazo de NaN/Infinity.
+  - `src/lib/contacto/index.ts` — resolver y resolución inversa (`__cliente__`, `__otro__`, match exacto y por nombre).
+  - `src/features/proveedor/services/duplicadoRfc.ts` — RFCs genéricos SAT, ProveedorDuplicadoError, propagación de errores.
+  - `src/features/crm/services/nbaSignals.ts` — fetch paralelo leads+oportunidades, mapeo y errores.
+
 ## [12.98.7] - 2026-06-13
 - **test(coverage)**: Suma 4 archivos de tests sobre lógica de negocio pura (28 casos verdes) que estaban en 0%:
   - `src/lib/roles/roleCatalog.ts` — 7 casos (labels/descripciones/badges para 14 roles, asignables sin super_admin/legacy, fallback de `getRoleLabel`).
