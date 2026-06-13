@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.7] - 2026-06-13
+- **test(coverage)**: Suma 4 archivos de tests sobre lógica de negocio pura (28 casos verdes) que estaban en 0%:
+  - `src/lib/roles/roleCatalog.ts` — 7 casos (labels/descripciones/badges para 14 roles, asignables sin super_admin/legacy, fallback de `getRoleLabel`).
+  - `src/lib/mappers/embarqueCotizacion.ts` — 5 casos (mapeo completo vincular, defaults `Carga General`/`FOB`, conversión de 0 a string vacío, simetría vincular/desvincular).
+  - `src/lib/csv/serializeCsv.ts` — 8 casos (delimitador `,`/`;`, escape RFC 4180 de comillas, comas y saltos de línea, headers sin filas).
+  - `src/features/tesoreria/services/sugerirCandidatos.ts` — 6 casos con `createSupabaseMock` (cargo→`pagos_proveedor`, abono→`pagos_factura`, tolerancia ±1 monto y ±5 días, orden por `delta_monto` luego `delta_dias`, fallback `'—'` cuando falta join).
+
 ## [12.98.6] - 2026-06-13
 - **test(coverage)**: Agrega 5 archivos de tests unitarios sobre lógica de negocio pura que estaba en 0% (50 tests verdes, ~250 líneas cubiertas, buffer hacia el ratchet 40/40):
   - `src/lib/auth/translateAuthError.ts` — 16 casos (mapas de mensajes Supabase Auth en es-MX + fallback).
