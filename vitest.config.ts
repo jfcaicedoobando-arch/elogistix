@@ -68,16 +68,16 @@ export default defineConfig({
         "src/vite-env.d.ts",
         "src/integrations/supabase/**",
       ],
-      // Umbrales mínimos globales. 12.93.0: subimos lines/statements a 30%
-      // tras añadir 116 tests en 10 suites nuevas (services/cotizacion/costos,
-      // informativa, crm/{plantillas,lineage,cliente360,prospectoSearch},
-      // admin/{organizations,members}, auth/session, facturas/huecoFacturacion/buildFilas).
+      // Umbrales mínimos globales. 12.97.2: subimos lines/statements 30→40%
+      // como parte del plan de mejora CI. Si nueva código baja la cobertura,
+      // el merge falla en CI y el PR no puede mergear.
       thresholds: {
-        lines: 30,
-        statements: 30,
+        lines: 40,
+        statements: 40,
         functions: 45,
         branches: 65,
       },
+
     },
   },
   resolve: {
