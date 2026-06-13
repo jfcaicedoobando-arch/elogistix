@@ -43,13 +43,19 @@ const embarque = {
 };
 
 describe("getSiguienteEstado", () => {
-  it("retorna el siguiente estado en la secuencia", () => {
-    expect(typeof getSiguienteEstado("Confirmado")).toBe("string");
-    expect(getSiguienteEstado("Confirmado")).not.toBe("Confirmado");
+  it("retorna el siguiente estado concreto en la secuencia oficial", () => {
+    expect(getSiguienteEstado("Borrador")).toBe("Confirmado");
+    expect(getSiguienteEstado("Confirmado")).toBe("En Tránsito");
+    expect(getSiguienteEstado("En Tránsito")).toBe("Arribo");
+    expect(getSiguienteEstado("Arribo")).toBe("En Aduana");
+    expect(getSiguienteEstado("En Aduana")).toBe("Entregado");
+    expect(getSiguienteEstado("Entregado")).toBe("EIR");
+    expect(getSiguienteEstado("EIR")).toBe("Cerrado");
   });
 
-  it("retorna null para el último estado", () => {
+  it("retorna null para el último estado o un estado desconocido", () => {
     expect(getSiguienteEstado("Cerrado")).toBeNull();
+    expect(getSiguienteEstado("inexistente")).toBeNull();
   });
 });
 

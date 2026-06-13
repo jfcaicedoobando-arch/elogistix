@@ -16,17 +16,38 @@ vi.mock("@/hooks/shared", () => ({
 }));
 
 describe("useProveedores", () => {
-  it("fetches paginated providers", async () => {
-    const { result } = renderHook(() => useProveedoresPaginados({ tipo: "Naviera", search: "", page: 1, pageSize: 10 }), { wrapper: createWrapper() });
-    
+  it("fetches paginated providers with full filter contract and org scope", async () => {
+    const { result } = renderHook(
+      () => useProveedoresPaginados({ tipo: "Naviera", search: "ACME", page: 2, pageSize: 25 }),
+      { wrapper: createWrapper() },
+    );
+
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(proveedorService.fetchProveedoresPaginados).toHaveBeenCalled();
+    expect(proveedorService.fetchProveedoresPaginados).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: "Naviera",
+        search: "ACME",
+        page: 2,
+        pageSize: 25,
+        organizationId: "org-1",
+      }),
+    );
+    expect(result.current.data).toEqual({ data: [], count: 0 });
   });
 
-  it("provides mutation functions", async () => {
+  it("addProveedor pasa el payload tipado completo al servicio", async () => {
     const { result } = renderHook(() => useProveedorMutations(), { wrapper: createWrapper() });
-    
-    await result.current.addProveedor({ nombre: "New" } as any);
-    expect(proveedorService.insertProveedor).toHaveBeenCalled();
+    const payload = {
+      nombre: "Naviera Nueva",
+      tipo: "Naviera" as const,
+      rfc: "NAV010101AAA",
+      email: "x@x.mx",
+    };
+
+    await result.current.addProveedor(payload as Parameters<typeof result.current.addProveedor>[0]);
+    expect(proveedorService.insertProveedor).toHaveBeenCalledTimes(1);
+    expect(proveedorService.insertProveedor).toHaveBeenCalledWith(
+      expect.objectContaining({ nombre: "Naviera Nueva", tipo: "Naviera", rfc: "NAV010101AAA" }),
+    );
   });
 });

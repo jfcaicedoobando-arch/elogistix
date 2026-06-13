@@ -37,8 +37,12 @@ describe("logClientError", () => {
     expect(opts?.body.component_stack).toBeNull();
   });
 
-  it("no propaga errores aunque invoke lance síncronamente", () => {
+  it("no propaga errores aunque invoke lance síncronamente y sí lo intentó invocar", () => {
     invoke.mockImplementationOnce(() => { throw new Error("network"); });
     expect(() => logClientError({ message: "x" })).not.toThrow();
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledWith("client-error-log", expect.objectContaining({
+      body: expect.objectContaining({ message: "x" }),
+    }));
   });
 });

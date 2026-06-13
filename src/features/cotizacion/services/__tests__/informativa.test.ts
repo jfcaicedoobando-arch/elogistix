@@ -90,7 +90,7 @@ describe("parseTarifasInformativas", () => {
     expect(payload.folio).toBe("COT-2026-0001");
     expect(payload.tipo_documento).toBe("informativa");
     expect(payload.origen).toBe("MX");
-    expect(r).toBeTruthy();
+    expect(r).toMatchObject({ id: "c1", folio: "COT-2026-0001" });
   });
 
   it("crearCotizacionInformativa con es_prospecto pone cliente_id null", async () => {
@@ -125,7 +125,7 @@ describe("parseTarifasInformativas", () => {
     expect(p.destino).toBe("");
   });
 
-  it("crearCotizacionInformativa propaga error", async () => {
+  it("crearCotizacionInformativa propaga error con mensaje del backend", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "boom" } });
     await expect(
       crearCotizacionInformativa({
@@ -137,7 +137,7 @@ describe("parseTarifasInformativas", () => {
         operador: "op",
         tarifas: [],
       } as never),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/boom/);
   });
 
   it("crearCotizacionInformativa default estado Enviada", async () => {

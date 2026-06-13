@@ -241,6 +241,7 @@ describe("useAuditoriaEjecutivo", () => {
   it("formatea generadoEn en es-MX cuando hay reporte", () => {
     setMocks([]);
     const { result } = renderHook(() => useAuditoriaEjecutivo());
-    expect(result.current.generadoEn).toBeTruthy();
+    // Formato es-MX corto: "DD/MM/YY, HH:MM a.m./p.m."
+    expect(result.current.generadoEn).toMatch(/^\d{1,2}\/\d{1,2}\/\d{2},\s+\d{1,2}:\d{2}\s+(a\.?\s?m\.?|p\.?\s?m\.?)/i);
   });
 });
