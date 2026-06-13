@@ -13,12 +13,9 @@ vi.mock("@/lib/observability/logger", () => ({
 
 import { crearNotificacionSilencioso } from "../notificaciones";
 
-const originalFrom = mock.supabase.from;
-
 beforeEach(() => {
   mock.tableCalls.length = 0;
   loggerWarn.mockReset();
-  mock.supabase.from = originalFrom;
 });
 
 describe("crm/services/notificaciones", () => {
@@ -61,18 +58,18 @@ describe("crm/services/notificaciones", () => {
   });
 
   it("notificaciones.crear: nunca lanza aunque supabase falle (silencioso)", async () => {
-    mock.supabase.from = vi.fn(() => {
+    mock.supabase.from.mockImplementationOnce(() => {
       throw new Error("network");
-    }) as never;
+    });
     await expect(
       crearNotificacionSilencioso({ user_id: "u", tipo: "x", titulo: "T" }),
     ).resolves.toBeUndefined();
   });
 
   it("notificaciones.crear: registra warning cuando falla", async () => {
-    mock.supabase.from = vi.fn(() => {
+    mock.supabase.from.mockImplementationOnce(() => {
       throw new Error("oops");
-    }) as never;
+    });
     await crearNotificacionSilencioso({ user_id: "u", tipo: "x", titulo: "T" });
     expect(loggerWarn).toHaveBeenCalled();
   });
