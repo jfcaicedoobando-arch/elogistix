@@ -45,24 +45,6 @@ export async function getOportunidad(id: string): Promise<CrmOportunidadRow | nu
   return (data ?? null) as CrmOportunidadRow | null;
 }
 
-export type OportunidadInput = {
-  nombre: string;
-  cliente_id?: string | null;
-  cliente_nombre?: string;
-  lead_id?: string | null;
-  etapa_id: string;
-  monto_estimado?: number;
-  moneda?: Moneda;
-  probabilidad?: number;
-  fecha_estimada_cierre?: string | null;
-  modo?: string;
-  tipo_carga?: string;
-  origen?: string;
-  destino?: string;
-  notas?: string;
-  vendedor_id?: string | null;
-  vendedor_email?: string;
-};
 
 export async function crearOportunidad(
   input: OportunidadInput,
