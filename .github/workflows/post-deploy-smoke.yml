@@ -68,8 +68,8 @@ jobs:
           echo "HTTP $STATUS"
           cat /tmp/resp.json
           test "$STATUS" = "200"
-          # Contrato mínimo: payload con clave 'rates' o 'USD'
-          grep -E '"(rates|USD|MXN)"' /tmp/resp.json > /dev/null
+          # Contrato mínimo: payload con claves usdMxn/eurMxn (o rates/USD/MXN como fallback)
+          grep -E '"(usdMxn|eurMxn|rates|USD|MXN)"' /tmp/resp.json > /dev/null
 
   tracking-public-smoke:
     runs-on: ubuntu-latest
