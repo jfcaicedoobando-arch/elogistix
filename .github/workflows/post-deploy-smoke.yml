@@ -22,8 +22,10 @@ jobs:
   user-management-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.DEMO_USER_EMAIL_PRESENT == 'true' }}
     steps:
       - uses: actions/checkout@v4
+
 
       - uses: denoland/setup-deno@v2
         with:

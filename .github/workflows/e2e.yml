@@ -46,7 +46,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         if: steps.guard.outputs.missing == 'false'
         with:
-          bun-version: latest
+          bun-version: "1.x"
 
       - name: Cache bun dependencies
         if: steps.guard.outputs.missing == 'false'
