@@ -52,7 +52,7 @@ export default function Cxp() {
       onVerDetalle: f.setDetalle,
       onEliminar,
     }),
-    [canEdit, f.setPagar, f.setDetalle],
+    [canEdit, f.setPagar, f.setDetalle, onEliminar],
   );
 
   return (
