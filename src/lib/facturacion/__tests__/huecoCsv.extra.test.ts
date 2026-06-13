@@ -30,7 +30,7 @@ describe("huecoCsv · HUECO_CSV_HEADERS", () => {
     expect(HUECO_CSV_HEADERS).toHaveLength(10);
   });
 
-  it("primera columna es 'expediente'", () => {
+  it("huecoCsv: primera columna es 'expediente'", () => {
     expect(HUECO_CSV_HEADERS[0].key).toBe("expediente");
   });
 
@@ -56,7 +56,7 @@ describe("huecoCsv · buildHuecoCsvFilename", () => {
     );
   });
 
-  it("termina en '.csv'", () => {
+  it("huecoCsv: termina en '.csv'", () => {
     expect(buildHuecoCsvFilename(new Date("2025-01-01T00:00:00Z"))).toMatch(/\.csv$/);
   });
 
@@ -80,7 +80,7 @@ describe("huecoCsv · buildHuecoCsvRows", () => {
     expect(row.operador).toBe("Juan Pérez");
   });
 
-  it("formatea ventaUsd con 2 decimales", () => {
+  it("huecoCsv: formatea ventaUsd con 2 decimales", () => {
     const fila = makeFilaHueco({ ventaUsd: 1234.5 });
     const [row] = buildHuecoCsvRows([fila]);
     expect(row.venta_usd).toBe("1234.50");
@@ -104,7 +104,7 @@ describe("huecoCsv · buildHuecoCsvRows", () => {
     expect(row.bl_house).toBe("");
   });
 
-  it("eta es cadena vacía cuando es null", () => {
+  it("huecoCsv: eta es cadena vacía cuando es null", () => {
     const fila = makeFilaHueco({ eta: null });
     const [row] = buildHuecoCsvRows([fila]);
     expect(row.eta).toBe("");

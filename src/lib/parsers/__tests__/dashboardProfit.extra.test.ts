@@ -7,7 +7,7 @@ import {
 } from "@/lib/parsers/dashboardProfit";
 
 describe("dashboardProfit | numOr0", () => {
-  it("retorna el número directamente", () => {
+  it("dashboardProfit.extra: retorna el número directamente", () => {
     expect(numOr0(42)).toBe(42);
   });
 
@@ -67,7 +67,7 @@ describe("dashboardProfit | safeMargen", () => {
     expect(safeMargen(25, 100)).toBeCloseTo(25, 5);
   });
 
-  it("retorna 0 cuando la venta es 0 (evita división por cero)", () => {
+  it("dashboardProfit.extra: retorna 0 cuando la venta es 0 (evita división por cero)", () => {
     expect(safeMargen(100, 0)).toBe(0);
   });
 
