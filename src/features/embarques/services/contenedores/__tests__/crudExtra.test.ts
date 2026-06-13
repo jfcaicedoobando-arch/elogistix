@@ -55,8 +55,8 @@ describe("embarques/services/contenedores/crud", () => {
   it("contenedores.crearMuchos: asigna orden por índice cuando borrador no lo trae", async () => {
     mock.setTableResult("embarque_contenedores", { data: [], error: null });
     await crearMuchos("e1", [
-      { numero_contenedor: "A1", tipo_contenedor: "20DV", bl_house: null, peso_kg: null, volumen_m3: null, piezas: null, orden: 0 },
-      { numero_contenedor: "A2", tipo_contenedor: "20DV", bl_house: null, peso_kg: null, volumen_m3: null, piezas: null, orden: 0 },
+      { numero_contenedor: "A1", tipo_contenedor: "20DV", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 0 },
+      { numero_contenedor: "A2", tipo_contenedor: "20DV", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 0 },
     ]);
     const payload = mock.getMutationPayload("embarque_contenedores", "insert") as Array<Record<string, unknown>>;
     expect(payload[0].orden).toBe(1);
@@ -66,7 +66,7 @@ describe("embarques/services/contenedores/crud", () => {
   it("contenedores.crearMuchos: respeta orden explícito", async () => {
     mock.setTableResult("embarque_contenedores", { data: [], error: null });
     await crearMuchos("e1", [
-      { numero_contenedor: "A1", tipo_contenedor: "20DV", bl_house: null, peso_kg: null, volumen_m3: null, piezas: null, orden: 5 },
+      { numero_contenedor: "A1", tipo_contenedor: "20DV", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 5 },
     ]);
     const payload = mock.getMutationPayload("embarque_contenedores", "insert") as Array<Record<string, unknown>>;
     expect(payload[0].orden).toBe(5);
