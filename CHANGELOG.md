@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.95.14] - 2026-06-13
+- **refactor(arquitectura)**: Auditoría complementaria — Paso 5 (iteración 3). `useDialogGenerarProformaController.ts` baja de 181 → 161 LOC extrayendo a nuevo `useDialogGenerarProformaController.helpers.ts` dos funciones puras: (1) `calcularTotalesProforma(conceptos, ivaPorConcepto, tasaIva)` → `TotalesProforma` (antes ~20 LOC inline en `useMemo` con la lógica USD/MXN + toggle IVA por concepto + regla "MXN siempre IVA"); (2) `buildInitialProformaState(conceptos, filtroInicial)` que arma `{ seleccionados, ivaPorConcepto }` al pasar el diálogo de cerrado→abierto (antes ~14 LOC inline). Sin React, testeables en aislamiento. Mismas reglas fiscales, mismos defaults, mismo comportamiento. Margen amplio bajo el umbral Power-of-10.
+
 ## [12.95.13] - 2026-06-13
 - **refactor(arquitectura)**: Auditoría complementaria — Paso 5 (iteración 2). `useEmbarqueSubmitOrchestrator.ts` baja de 190 → 172 LOC extrayendo a nuevo `useEmbarqueSubmitOrchestrator.helpers.ts` dos helpers puros: (1) `deriveContenedoresPayload(values)` que encapsula la regla "marítimo LCL → fila auto-LCL única / marítimo FCL → contenedores del form / otros modos → vacío" (antes ternario anidado inline en Fase 3); (2) `reportPhaseError(toast, title, err)` que centraliza el patrón `notifyError({ title, description: getErrorMessage(err), error, method: METHOD_TAG }) → return false` usado en Fases 1 y 2 (–12 LOC de boilerplate duplicado). Fase 3 conserva su `notifyError` inline porque usa la firma alterna `{ phase, message }`. Sin cambios funcionales: mismos toasts, mismo método de auditoría, mismo flujo de 5 fases. Margen amplio bajo el umbral Power-of-10 (≤200 LOC).
 
