@@ -16,6 +16,11 @@ Row-Level Security (RLS) impiden el cruce de datos entre organizaciones.
 | 7 | Admin A consulta `app_logs` | Solo logs de Org A |
 | 8 | Insert en `bitacora_actividad` con `usuario_id` falso | Rechazado por `WITH CHECK` |
 
+Suites adicionales:
+- `test_rls_financiero.sql` — `facturas`, `proformas`, `cotizaciones`, gastos.
+- `test_rls_financiero_critico.sql` — `cuentas_bancarias`, `bbva_movimientos`, `proveedor_facturas`, `pagos_factura`, `pagos_proveedor`, `cotizacion_costos`, `factura_notas_credito`, `comisiones_devengadas`, `liquidaciones_comision`.
+- `test_rls_crm_operacional.sql` — `crm_leads`, `crm_oportunidades`, `crm_actividades`, `documentos_embarque`, `presupuesto_mensual` (8 aserciones).
+
 ## Cómo correrlos
 
 Desde un entorno con `psql` y `DATABASE_URL` apuntando a la base de pruebas:
