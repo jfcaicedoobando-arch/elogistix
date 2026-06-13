@@ -1,0 +1,89 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+
+import { calcularDemorasEmbarque, eliminarDemorasAuto } from "../demorasEmbarque";
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+});
+
+describe("embarques/services/demorasEmbarque", () => {
+  it("demorasEmb.calcular: invoca RPC calcular_demoras_embarque con id", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", { data: { dias_demora: 0, costo_usd: 0, venta_usd: 0 }, error: null });
+    await calcularDemorasEmbarque("emb-1");
+    expect(mock.rpcCalls[0].fn).toBe("calcular_demoras_embarque");
+    expect(mock.rpcCalls[0].args).toEqual({ p_embarque_id: "emb-1" });
+  });
+
+  it("demorasEmb.calcular: retorna shape del RPC tal cual", async () => {
+    const shape = { dias_demora: 3, costo_usd: 300, venta_usd: 450 };
+    mock.setRpcResult("calcular_demoras_embarque", { data: shape, error: null });
+    const r = await calcularDemorasEmbarque("emb-1");
+    expect(r).toEqual(shape);
+  });
+
+  it("demorasEmb.calcular: propaga error del RPC", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", { data: null, error: { message: "rpc fail" } });
+    await expect(calcularDemorasEmbarque("e")).rejects.toBeDefined();
+  });
+
+  it("demorasEmb.eliminarAuto: borra de conceptos_costo y conceptos_venta", async () => {
+    mock.setTableResult("conceptos_costo", { data: null, error: null });
+    mock.setTableResult("conceptos_venta", { data: null, error: null });
+    await eliminarDemorasAuto("emb-1");
+    expect(mock.tableCalls.some((c) => c.table === "conceptos_costo")).toBe(true);
+    expect(mock.tableCalls.some((c) => c.table === "conceptos_venta")).toBe(true);
+  });
+
+  it("demorasEmb.eliminarAuto: filtra por embarque_id y origen=demoras_auto", async () => {
+    mock.setTableResult("conceptos_costo", { data: null, error: null });
+    mock.setTableResult("conceptos_venta", { data: null, error: null });
+    await eliminarDemorasAuto("emb-1");
+    const costo = mock.tableCalls.find((c) => c.table === "conceptos_costo");
+    const eqArgs = costo?.opArgs.filter((_, i) => costo.ops[i] === "eq") ?? [];
+    expect(eqArgs).toContainEqual(["embarque_id", "emb-1"]);
+    expect(eqArgs).toContainEqual(["origen", "demoras_auto"]);
+  });
+
+  it("demorasEmb.eliminarAuto: incluye op delete", async () => {
+    mock.setTableResult("conceptos_costo", { data: null, error: null });
+    mock.setTableResult("conceptos_venta", { data: null, error: null });
+    await eliminarDemorasAuto("emb-1");
+    const costo = mock.tableCalls.find((c) => c.table === "conceptos_costo");
+    expect(costo?.ops).toContain("delete");
+  });
+
+  it("demorasEmb.eliminarAuto: propaga error de conceptos_costo", async () => {
+    mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
+    mock.setTableResult("conceptos_venta", { data: null, error: null });
+    await expect(eliminarDemorasAuto("e")).rejects.toBeDefined();
+  });
+
+  it("demorasEmb.eliminarAuto: propaga error de conceptos_venta", async () => {
+    mock.setTableResult("conceptos_costo", { data: null, error: null });
+    mock.setTableResult("conceptos_venta", { data: null, error: { message: "y" } });
+    await expect(eliminarDemorasAuto("e")).rejects.toBeDefined();
+  });
+
+  it("demorasEmb.eliminarAuto: ejecuta ambas borrados en paralelo (Promise.all)", async () => {
+    mock.setTableResult("conceptos_costo", { data: null, error: null });
+    mock.setTableResult("conceptos_venta", { data: null, error: null });
+    await eliminarDemorasAuto("e");
+    // Ambas tablas deben estar presentes en tableCalls
+    const tables = mock.tableCalls.map((c) => c.table);
+    expect(tables).toContain("conceptos_costo");
+    expect(tables).toContain("conceptos_venta");
+  });
+
+  it("demorasEmb.calcular: con id vacío sigue llamando RPC", async () => {
+    mock.setRpcResult("calcular_demoras_embarque", { data: { dias_demora: 0, costo_usd: 0, venta_usd: 0 }, error: null });
+    await calcularDemorasEmbarque("");
+    expect(mock.rpcCalls[0].args).toEqual({ p_embarque_id: "" });
+  });
+});
