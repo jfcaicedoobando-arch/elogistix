@@ -11,8 +11,8 @@
  *  - Calcula `hash_dedupe = sha1(fecha|concepto|referencia|cargo|abono)` para
  *    evitar duplicados al re-importar el mismo periodo.
  */
-import * as XLSX from "xlsx";
 import Papa from "papaparse";
+
 
 export interface MovimientoParseado {
   fecha: string;             // ISO YYYY-MM-DD
@@ -147,9 +147,13 @@ export async function parseEstadoCuentaBBVA(file: File): Promise<MovimientoParse
     return filasAMovimientos(data);
   }
   const buf = await file.arrayBuffer();
+  // Dynamic import: xlsx (~400 KB) sólo se carga al importar un .xlsx real,
+  // evitando arrastrar la lib en el bundle inicial de Tesorería.
+  const XLSX = await import("xlsx");
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   // SAFE-CAST: XLSX retorna unknown[][]; sólo lo usamos como strings en filasAMovimientos.
   const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true }) as unknown as string[][];
   return filasAMovimientos(rows);
 }
+

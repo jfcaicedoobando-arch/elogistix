@@ -85,6 +85,10 @@ export default defineConfig(({ mode }) => ({
         drop_debugger: mode === "production",
       },
     },
+    // Bajar de 500 → 350 kB fuerza disciplina de split. Si un chunk supera
+    // este umbral, Vite emite warning en build (no rompe el CI, pero queda
+    // visible en logs y en el bundle-size gate del workflow).
+    chunkSizeWarningLimit: 350,
     // NOTA: se eliminó `rollupOptions.output.manualChunks` por completo.
     // Agrupar paquetes con imports circulares internos (recharts, @react-pdf,
     // sentry, etc.) en chunks vendor monolíticos rompe el orden de
@@ -94,3 +98,4 @@ export default defineConfig(({ mode }) => ({
     // y la app deja de quedarse en pantalla en blanco.
   },
 }));
+
