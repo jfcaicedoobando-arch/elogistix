@@ -15,7 +15,13 @@ import { describe, it, expect } from "vitest";
 import { parseEstadoCuentaBBVA } from "../bbva";
 
 function csvFile(name: string, body: string): File {
-  return new File([body], name, { type: "text/csv" });
+  const f = new File([body], name, { type: "text/csv" });
+  // jsdom no implementa Blob.prototype.text(); lo polyfileamos puntualmente
+  // sólo para este test (evitamos contaminar el setup global).
+  if (typeof f.text !== "function") {
+    (f as unknown as { text: () => Promise<string> }).text = async () => body;
+  }
+  return f;
 }
 
 const HEADER = "FECHA,DESCRIPCION,REFERENCIA,CARGO,ABONO,SALDO";
