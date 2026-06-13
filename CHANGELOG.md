@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.10.0] - 2026-06-13
+- **test(rls/crm-operacional)**: Auditoría de RLS — nueva suite `supabase/tests/rls/test_rls_crm_operacional.sql` con 8 aserciones que cubren tablas no incluidas en los suites previos: `crm_leads` (read isolation + intento de UPDATE cruzado bloqueado), `crm_oportunidades` (isolation + `monto_estimado` de otra org nunca visible), `crm_actividades` (isolation), `documentos_embarque` (isolation vía embarque), `presupuesto_mensual` (isolation financiera + monto presupuestal de otra org nunca visible). Sigue el patrón de los suites existentes (BEGIN/ROLLBACK, `pg_temp.as_user`, `pg_temp.assert`). Requiere correrse en base de pruebas con `auth.users` pre-seeded (mismo blocker que el resto). Actualizada documentación en `supabase/tests/rls/README.md`.
+
 ## [13.9.0] - 2026-06-13
 - **test(integration/B.3.5)**: Auditoría de tests — Fase 5 cont. Quinto y último test de integración cross-módulo del plan B.3: flujo Portal Aprobación de Cotización. Nueva suite `usePortalCotizacionDetalleController.integration.test.tsx` con 5 tests que ejercitan el wiring real controller ↔ React Query ↔ service RPC (sólo se mockea `portalResponderCotizacion`): **(1)** flujo Aceptada — invoca RPC con `(cotizacionId, "Aceptada", comentario)`, dispara `notifySuccess` con copy "Tu respuesta fue registrada" + reset de `confirmAction` y `comentario`; **(2)** flujo Rechazada — copy diferenciado "Cotización rechazada" + mismo reset; **(3)** error path — `notifyError` con título "Error" + mensaje del error + reset, sin `notifySuccess`; **(4)** `handleResponder` es no-op si falta `confirmAction` o `cotizacionId`; **(5)** `onDialogOpenChange(false)` resetea estado. Cubre B.3.5 y cierra la Fase 5/B.3 completa.
 
