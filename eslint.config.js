@@ -19,6 +19,8 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Power of 10 §5 — dependencias completas en hooks evitan stale closures.
+      "react-hooks/exhaustive-deps": "error",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
       // Power of 10 §5/§10 — Tipado estricto: prohibido `any` sin override documentado.

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus, FileText, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,13 +37,13 @@ export default function Cxp() {
     );
   };
 
-  const onEliminar = (fact: FacturaCxP) => {
+  const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
       toast.error("No se puede eliminar: la factura tiene pagos registrados");
       return;
     }
     f.setAEliminar(fact);
-  };
+  }, [f]);
 
   const columns = useMemo(
     () => buildCxPColumns({
@@ -52,7 +52,7 @@ export default function Cxp() {
       onVerDetalle: f.setDetalle,
       onEliminar,
     }),
-    [canEdit, f.setPagar, f.setDetalle],
+    [canEdit, f.setPagar, f.setDetalle, onEliminar],
   );
 
   return (

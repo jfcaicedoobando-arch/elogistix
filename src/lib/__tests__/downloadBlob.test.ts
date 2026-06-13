@@ -1,12 +1,12 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 import { descargarBlob } from "@/lib/downloadBlob";
 
 describe("descargarBlob", () => {
-  let createSpy: ReturnType<typeof vi.spyOn>;
-  let revokeSpy: ReturnType<typeof vi.spyOn>;
+  let createSpy: MockInstance<(obj: Blob | MediaSource) => string>;
+  let revokeSpy: MockInstance<(url: string) => void>;
 
   beforeEach(() => {
     vi.useFakeTimers();

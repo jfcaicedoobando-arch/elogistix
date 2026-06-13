@@ -21,11 +21,11 @@ function fakeRow(id: string): Row<{ id: string }> {
   return { id } as unknown as Row<{ id: string }>;
 }
 
-function fakeVirtualizer(): Virtualizer<HTMLDivElement, Element> {
+function fakeVirtualizer(): Virtualizer<HTMLDivElement, HTMLElement> {
   return {
     getTotalSize: () => 1000,
     measureElement: () => 0,
-  } as unknown as Virtualizer<HTMLDivElement, Element>;
+  } as unknown as Virtualizer<HTMLDivElement, HTMLElement>;
 }
 
 function vi_(index: number): VirtualItem {
