@@ -1,0 +1,135 @@
+/**
+ * Tests del controller `useCotizacionWizardSteps`.
+ * Mockea servicios `savePaso*` y valida que la navegación entre pasos
+ * llama al servicio correcto con los datos del form y maneja errores.
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+
+const savePaso1 = vi.fn();
+const savePaso2 = vi.fn();
+const savePaso3 = vi.fn();
+const savePasoFinal = vi.fn();
+const notifyError = vi.fn();
+const notifySuccess = vi.fn();
+
+vi.mock("@/features/cotizacion/services", () => ({
+  savePaso1: (...a: unknown[]) => savePaso1(...a),
+  savePaso2: (...a: unknown[]) => savePaso2(...a),
+  savePaso3: (...a: unknown[]) => savePaso3(...a),
+  savePasoFinal: (...a: unknown[]) => savePasoFinal(...a),
+  buildConceptosFromCostos: (_costos: unknown, _iva: number) => ({
+    usd: [{ descripcion: "Flete", monto: 100 }],
+    mxn: [{ descripcion: "Despacho", monto: 200 }],
+  }),
+}));
+vi.mock("@/components/shared/utils/appFeedback", () => ({
+  notifyError: (...a: unknown[]) => notifyError(...a),
+  notifySuccess: (...a: unknown[]) => notifySuccess(...a),
+}));
+vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T,>(x: T) => x }));
+vi.mock("../handlePaso1Crm", () => ({
+  validatePaso1: (v: { clienteId?: string }) => (v.clienteId ? null : "Falta cliente"),
+  vincularCrmTrasCrear: vi.fn().mockResolvedValue(undefined),
+}));
+
+import { useCotizacionWizardSteps } from "../useCotizacionWizardSteps";
+
+function makeDeps(over: Partial<Parameters<typeof useCotizacionWizardSteps>[0]> = {}) {
+  const setCurrentStep = vi.fn();
+  const setCotizacionId = vi.fn();
+  const setConceptosUSD = vi.fn();
+  const setConceptosMXN = vi.fn();
+  const setCostosPreLlenados = vi.fn();
+  const navigate = vi.fn();
+  const toast = vi.fn();
+  const form = {
+    getValues: () => ({ clienteId: "cli-1", esProspecto: false }),
+  } as never;
+  const mutations = {
+    crearCotizacion: { mutateAsync: vi.fn().mockResolvedValue({ id: "cot-1" }), isPending: false },
+    updateCotizacion: { mutateAsync: vi.fn().mockResolvedValue(undefined), isPending: false },
+    upsertCostos: { mutateAsync: vi.fn().mockResolvedValue([]), isPending: false },
+    registrarActividad: { mutate: vi.fn() },
+  };
+  return {
+    form, toast, navigate, isEditMode: false,
+    cotizacionId: null, setCotizacionId,
+    currentStep: 1, setCurrentStep,
+    msdsFile: null, costosInternos: [], costosPreLlenados: false, setCostosPreLlenados,
+    conceptosUSD: [], conceptosMXN: [], setConceptosUSD, setConceptosMXN,
+    totalUSD: 0, tasaIva: 0.16,
+    buildPaso1Data: () => ({ foo: "bar" }),
+    mutations,
+    ...over,
+    _refs: { setCurrentStep, setCotizacionId, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, navigate, mutations },
+  } as never;
+}
+
+beforeEach(() => { vi.clearAllMocks(); savePaso1.mockResolvedValue("cot-1"); savePaso2.mockResolvedValue(undefined); savePaso3.mockResolvedValue(undefined); savePasoFinal.mockResolvedValue(undefined); });
+
+describe("useCotizacionWizardSteps", () => {
+  it("handleSiguiente paso 1: si validatePaso1 falla, notifyError y no avanza", async () => {
+    const deps = makeDeps({
+      form: { getValues: () => ({ clienteId: "", esProspecto: false }) } as never,
+    });
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    await act(async () => { await result.current.handleSiguiente(); });
+    expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Falta cliente" });
+    expect(savePaso1).not.toHaveBeenCalled();
+  });
+
+  it("handleSiguiente paso 1 OK: llama savePaso1, setCotizacionId y avanza a 2", async () => {
+    const deps = makeDeps();
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    await act(async () => { await result.current.handleSiguiente(); });
+    expect(savePaso1).toHaveBeenCalledTimes(1);
+    expect(deps._refs.setCotizacionId).toHaveBeenCalledWith("cot-1");
+    expect(deps._refs.setCurrentStep).toHaveBeenCalledWith(2);
+  });
+
+  it("handleSiguiente paso 2: con costos prellena conceptos USD/MXN y avanza", async () => {
+    const deps = makeDeps({
+      currentStep: 2, cotizacionId: "cot-1",
+      costosInternos: [{ id: "x", monto: 100, moneda: "USD" } as never],
+    });
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    await act(async () => { await result.current.handleSiguiente(); });
+    expect(savePaso2).toHaveBeenCalledTimes(1);
+    expect(deps._refs.setConceptosUSD).toHaveBeenCalledWith([{ descripcion: "Flete", monto: 100 }]);
+    expect(deps._refs.setConceptosMXN).toHaveBeenCalledWith([{ descripcion: "Despacho", monto: 200 }]);
+    expect(deps._refs.setCostosPreLlenados).toHaveBeenCalledWith(true);
+    expect(deps._refs.setCurrentStep).toHaveBeenCalledWith(3);
+  });
+
+  it("handleSiguiente paso 3: sin conceptos válidos bloquea con notifyError", async () => {
+    const deps = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    await act(async () => { await result.current.handleSiguiente(); });
+    expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Agrega al menos un concepto de venta" });
+    expect(savePaso3).not.toHaveBeenCalled();
+  });
+
+  it("handleGuardar: éxito navega a /cotizaciones/:id y notifySuccess", async () => {
+    const deps = makeDeps({ cotizacionId: "cot-1" });
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    await act(async () => { await result.current.handleGuardar(); });
+    expect(savePasoFinal).toHaveBeenCalledTimes(1);
+    expect(notifySuccess).toHaveBeenCalled();
+    expect(deps._refs.navigate).toHaveBeenCalledWith("/cotizaciones/cot-1");
+  });
+
+  it("handleBack en step 1 navega a /cotizaciones", () => {
+    const deps = makeDeps();
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    act(() => { result.current.handleBack(); });
+    expect(deps._refs.navigate).toHaveBeenCalledWith("/cotizaciones");
+  });
+
+  it("handleBack en step >1 decrementa paso", () => {
+    const deps = makeDeps({ currentStep: 3 });
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    act(() => { result.current.handleBack(); });
+    expect(deps._refs.setCurrentStep).toHaveBeenCalledWith(expect.any(Function));
+  });
+});
