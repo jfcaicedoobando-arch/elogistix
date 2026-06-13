@@ -1,6 +1,6 @@
-# Audit Report — 12.76.3
+# Audit Report — 12.98.3
 
-Generado: 2026-06-10T06:01:08.647Z
+Generado: 2026-06-13T04:35:12.540Z
 
 ## Resumen
 
@@ -9,7 +9,7 @@ Generado: 2026-06-10T06:01:08.647Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 1256 |
+| Casts HIGH + CRITICAL | ✅ | 0 / 1374 |
 | Higiene de tests | ✅ | 0 violaciones |
 
 ## Arquitectura
@@ -25,13 +25,13 @@ Generado: 2026-06-10T06:01:08.647Z
 
 ## Casts
 
-Total: **1256** — HIGH: **0**, CRITICAL: **0**
+Total: **1374** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 454 |
-| LOW | 21 |
-| MEDIUM | 781 |
+| SAFE | 466 |
+| LOW | 22 |
+| MEDIUM | 886 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -39,16 +39,16 @@ Total: **1256** — HIGH: **0**, CRITICAL: **0**
 
 | # | Archivo | Total | Peso |
 |---|---|---:|---:|
-| 1 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
-| 2 | `src/hooks/profit/__tests__/useProfit.test.tsx` | 8 | 16 |
-| 3 | `src/hooks/proveedor/useNuevoProveedorController.ts` | 8 | 16 |
-| 4 | `src/test/setup.ts` | 8 | 16 |
-| 5 | `src/services/planes/__tests__/index.test.ts` | 7 | 14 |
-| 6 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 6 | 12 |
-| 7 | `src/lib/__tests__/downloadBlob.test.ts` | 6 | 12 |
-| 8 | `src/lib/audit/diffFields.ts` | 12 | 12 |
-| 9 | `src/lib/domain/estadoResultados.ts` | 7 | 12 |
-| 10 | `src/services/catalogos/__tests__/index.test.ts` | 6 | 12 |
+| 1 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
+| 2 | `src/services/pagos-factura/__tests__/pagosFactura.test.ts` | 11 | 20 |
+| 3 | `src/services/profit/estadoResultadosDevengado.ts` | 10 | 20 |
+| 4 | `src/test/setup.ts` | 10 | 20 |
+| 5 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
+| 6 | `src/features/facturas/services/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 |
+| 7 | `src/hooks/profit/__tests__/useProfit.test.tsx` | 8 | 16 |
+| 8 | `src/features/facturas/services/__tests__/facturasIndex.test.ts` | 7 | 14 |
+| 9 | `src/lib/sentry.ts` | 7 | 14 |
+| 10 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.test.ts` | 6 | 12 |
 
 ## Tests
 

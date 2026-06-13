@@ -1,25 +1,50 @@
 {
-  "version": "12.76.3",
-  "generatedAt": "2026-06-10T06:01:08.647Z",
+  "version": "12.98.3",
+  "generatedAt": "2026-06-13T04:35:12.540Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 1256,
+    "total": 1374,
     "bySeverity": {
-      "SAFE": 454,
-      "LOW": 21,
-      "MEDIUM": 781,
+      "SAFE": 466,
+      "LOW": 22,
+      "MEDIUM": 886,
       "HIGH": 0,
       "CRITICAL": 0
     },
     "topFiles": [
       {
+        "file": "src/features/cotizacion/services/__tests__/informativa.test.ts",
+        "total": 10,
+        "weight": 20
+      },
+      {
+        "file": "src/services/pagos-factura/__tests__/pagosFactura.test.ts",
+        "total": 11,
+        "weight": 20
+      },
+      {
+        "file": "src/services/profit/estadoResultadosDevengado.ts",
+        "total": 10,
+        "weight": 20
+      },
+      {
+        "file": "src/test/setup.ts",
+        "total": 10,
+        "weight": 20
+      },
+      {
         "file": "src/lib/mappers/genericPayloadMapper.ts",
         "total": 11,
         "weight": 19
+      },
+      {
+        "file": "src/features/facturas/services/huecoFacturacion/__tests__/buildFilas.test.ts",
+        "total": 8,
+        "weight": 16
       },
       {
         "file": "src/hooks/profit/__tests__/useProfit.test.tsx",
@@ -27,42 +52,17 @@
         "weight": 16
       },
       {
-        "file": "src/hooks/proveedor/useNuevoProveedorController.ts",
-        "total": 8,
-        "weight": 16
-      },
-      {
-        "file": "src/test/setup.ts",
-        "total": 8,
-        "weight": 16
-      },
-      {
-        "file": "src/services/planes/__tests__/index.test.ts",
+        "file": "src/features/facturas/services/__tests__/facturasIndex.test.ts",
         "total": 7,
         "weight": 14
       },
       {
-        "file": "src/generators/cotizacion/__tests__/datosGenerales.test.ts",
-        "total": 6,
-        "weight": 12
-      },
-      {
-        "file": "src/lib/__tests__/downloadBlob.test.ts",
-        "total": 6,
-        "weight": 12
-      },
-      {
-        "file": "src/lib/audit/diffFields.ts",
-        "total": 12,
-        "weight": 12
-      },
-      {
-        "file": "src/lib/domain/estadoResultados.ts",
+        "file": "src/lib/sentry.ts",
         "total": 7,
-        "weight": 12
+        "weight": 14
       },
       {
-        "file": "src/services/catalogos/__tests__/index.test.ts",
+        "file": "src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.test.ts",
         "total": 6,
         "weight": 12
       }
