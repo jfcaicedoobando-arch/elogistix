@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.8.0] - 2026-06-13
+- **test(integration/B.3.4)**: Auditoría de tests — Fase 5 cont. Cuarto test de integración cross-módulo: flujo Comisión Devengada → Liquidación (capa pura de KPIs). Nueva suite `devengadas.integration.test.ts` con 4 tests sobre `calcularKPIsComisiones` cubriendo ciclo de vida completo: **(1)** mezcla realista con Devengadas/Liquidadas del mes actual + Devengadas/Liquidadas del mes anterior + Cancelada (devengado_mes excluye canceladas, pendiente suma sólo "Devengada" sin importar el mes, liquidado_mes sólo cuenta liquidaciones del mes actual); **(2)** lista vacía → todos los KPIs en cero; **(3)** 100% canceladas no contaminan ningún KPI; **(4)** transición Devengada → Liquidada: pendiente baja a 0 y liquidado_mes sube al mismo monto. Cubre B.3.4 del plan sin mocks de BD.
+
 ## [13.7.0] - 2026-06-13
 - **test(integration/B.3.3)**: Auditoría de tests — Fase 5 cont. Tercer test de integración cross-módulo: flujo Factura Proveedor → Conciliación (capa pura). Nueva suite `reconciliacionCostos.integration.test.ts` con 4 tests sobre la composición real de `buildFilasReconciliacion` + `calcularResumen` + `calcularDesviacionPct`: **(1)** embarque realista con 3 conceptos, 2 proveedores, parciales que suman exacto, over-billing (THC +20%), soft-delete de factura, vínculo huérfano (`proveedor_facturas=null`) y vínculo sin `concepto_costo_id` — todos descartados correctamente; totales 7300 cotizado / 2360 real / -4940 dif / -67.67% desviación; **(2)** cotizado=0 con real>0 propaga 100% tanto en fila como en resumen; **(3)** caso vacío → resumen totalmente cero; **(4)** garantía de composición: `fila.desviacion_pct === calcularDesviacionPct(cotizado, real)` directo. Cubre B.3.3 del plan sin mocks de BD.
 
