@@ -8,16 +8,24 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-const navigateMock = vi.fn();
-const toastFn = vi.fn();
-const actualizarEstadoMutateAsync = vi.fn();
-const convertirProspectoMutateAsync = vi.fn();
-const convertirAEmbarquesMutateAsync = vi.fn();
-const crearBorradorMutateAsync = vi.fn();
-const sincronizarEtapaMock = vi.fn();
-const propagarConversionMock = vi.fn();
-const notifyErrorMock = vi.fn();
-const notifySuccessMock = vi.fn();
+const {
+  navigateMock, toastFn,
+  actualizarEstadoMutateAsync, convertirProspectoMutateAsync,
+  convertirAEmbarquesMutateAsync, crearBorradorMutateAsync,
+  sincronizarEtapaMock, propagarConversionMock,
+  notifyErrorMock, notifySuccessMock,
+} = vi.hoisted(() => ({
+  navigateMock: vi.fn(),
+  toastFn: vi.fn(),
+  actualizarEstadoMutateAsync: vi.fn(),
+  convertirProspectoMutateAsync: vi.fn(),
+  convertirAEmbarquesMutateAsync: vi.fn(),
+  crearBorradorMutateAsync: vi.fn(),
+  sincronizarEtapaMock: vi.fn(),
+  propagarConversionMock: vi.fn(),
+  notifyErrorMock: vi.fn(),
+  notifySuccessMock: vi.fn(),
+}));
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateMock }));
 vi.mock("@/hooks/shared", () => ({ useToast: () => ({ toast: toastFn }) }));
