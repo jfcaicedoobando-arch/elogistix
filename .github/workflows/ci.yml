@@ -52,6 +52,12 @@ jobs:
       - name: Test hygiene (no skip/only/todo, no duplicate titles)
         run: bun run audit:tests
 
+      - name: Architecture audit (gating — layers + oversized files)
+        run: bun run audit:arch
+
+      - name: Casts audit (gating — no nuevos HIGH/CRITICAL)
+        run: bun run audit:casts
+
       - name: Architecture & cast report
         if: always()
         run: bun run audit:report
