@@ -49,6 +49,7 @@ describe('useCxP Hooks', () => {
     expect(mockRegistrarPago).toHaveBeenCalledTimes(1);
     expect(mockRegistrarPago).toHaveBeenCalledWith(
       expect.objectContaining({ proveedor_factura_id: 'f1', monto: 50, moneda: 'USD', metodo_pago: 'transferencia' }),
+      'user-123',
     );
   });
 
