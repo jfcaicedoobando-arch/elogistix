@@ -42,10 +42,10 @@ export function isDynamicImportError(error: unknown): boolean {
 }
 
 /** Recarga una sola vez por sesión. Devuelve true si disparó reload. */
-export function tryReloadForChunkError(): boolean {
+export function tryReloadForChunkError(reloadPage?: () => void): boolean {
   if (typeof window === "undefined") return false;
   if (hasChunkReloadBeenAttempted()) return false;
   markChunkReloadAttempted();
-  window.location.reload();
+  (reloadPage ?? (() => window.location.reload()))();
   return true;
 }

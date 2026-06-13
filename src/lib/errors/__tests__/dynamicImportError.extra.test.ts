@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 
 vi.mock("@/lib/browserStorage", () => ({
@@ -93,33 +93,17 @@ describe("dynamicImportError · isDynamicImportError", () => {
 
 describe("dynamicImportError · tryReloadForChunkError", () => {
   let reloadSpy: ReturnType<typeof vi.fn>;
-  let originalReload: typeof window.location.reload;
 
   beforeEach(() => {
     vi.mocked(hasChunkReloadBeenAttempted).mockReturnValue(false);
     vi.mocked(markChunkReloadAttempted).mockReset();
-    // Spy SOLO sobre `window.location.reload`. Reemplazar `globalThis.window`
-    // completo contamina jsdom para los archivos siguientes del shard y
-    // `vi.unstubAllGlobals()` del setup global no lo restaura.
+    // No mutamos `window.location.reload`: en jsdom `Location.reload` no es
+    // configurable y redefinirlo falla antes de escribir el reporte blob.
     reloadSpy = vi.fn();
-    originalReload = window.location.reload;
-    Object.defineProperty(window.location, "reload", {
-      configurable: true,
-      writable: true,
-      value: reloadSpy,
-    });
-  });
-
-  afterEach(() => {
-    Object.defineProperty(window.location, "reload", {
-      configurable: true,
-      writable: true,
-      value: originalReload,
-    });
   });
 
   it("devuelve true y marca el intento cuando no se ha intentado antes", () => {
-    const result = tryReloadForChunkError();
+    const result = tryReloadForChunkError(reloadSpy);
     expect(result).toBe(true);
     expect(markChunkReloadAttempted).toHaveBeenCalledOnce();
     expect(reloadSpy).toHaveBeenCalledOnce();
@@ -127,7 +111,7 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
 
   it("devuelve false y NO marca si ya se intentó", () => {
     vi.mocked(hasChunkReloadBeenAttempted).mockReturnValue(true);
-    const result = tryReloadForChunkError();
+    const result = tryReloadForChunkError(reloadSpy);
     expect(result).toBe(false);
     expect(markChunkReloadAttempted).not.toHaveBeenCalled();
     expect(reloadSpy).not.toHaveBeenCalled();
