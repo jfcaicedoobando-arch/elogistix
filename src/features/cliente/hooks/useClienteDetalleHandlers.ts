@@ -18,7 +18,15 @@ interface Deps {
   updateContacto: { mutateAsync: (d: { id: string; cliente_id: string } & ContactoFormData) => Promise<unknown> };
   deleteContacto: { mutateAsync: (d: { id: string; cliente_id: string }) => Promise<unknown> };
   updateCliente: { mutateAsync: (d: { id: string } & ClienteFormData) => Promise<unknown> };
-  registrarActividad: { mutate: (d: Record<string, unknown>) => void };
+  registrarActividad: {
+    mutate: (d: {
+      accion: string;
+      modulo: string;
+      entidad_id?: string | null;
+      entidad_nombre?: string;
+      detalles?: Record<string, unknown>;
+    }) => void;
+  };
 }
 
 export function useClienteDetalleHandlers(deps: Deps) {
