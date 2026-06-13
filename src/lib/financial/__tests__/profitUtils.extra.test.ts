@@ -55,7 +55,7 @@ describe("profitUtils.extra — calcularTotalesPL cálculos", () => {
     expect(result.totalVenta).toBe(800);
   });
 
-  it("profit negativo cuando costo > venta", () => {
+  it("profitUtils.extra: profit negativo cuando costo > venta", () => {
     const result = calcularTotalesPL([fila(1, 200, 100)]);
     expect(result.profit).toBe(-100);
   });

@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import { formatPhoneMx } from "@/lib/formatters/phone";
 
 describe("formatters/phone · formatPhoneMx", () => {
-  it("01 · null devuelve string vacío", () => {
+  it("phone.01 · null devuelve string vacío", () => {
     expect(formatPhoneMx(null)).toBe("");
   });
 
-  it("02 · undefined devuelve string vacío", () => {
+  it("phone.02 · undefined devuelve string vacío", () => {
     expect(formatPhoneMx(undefined)).toBe("");
   });
 
