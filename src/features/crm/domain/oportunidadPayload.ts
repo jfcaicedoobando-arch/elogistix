@@ -2,7 +2,7 @@
  * Construcción del payload de INSERT en `crm_oportunidades`.
  * Módulo puro reutilizable por services/. No depende de hooks ni de Supabase.
  */
-import type { OportunidadInput } from "@/features/crm/services/oportunidades";
+import type { OportunidadInput } from "@/features/crm/types/oportunidades";
 import type { AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
 function stripUndefined<T extends object>(obj: T): Partial<T> {
