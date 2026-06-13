@@ -28,14 +28,14 @@ interface FacturaRow {
   factura_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
 }
 
-function ventana(diasParaVencer: number): "T-3" | "T+7" | "T+15" | null {
+export function ventana(diasParaVencer: number): "T-3" | "T+7" | "T+15" | null {
   if (diasParaVencer === -3) return "T-3";
   if (diasParaVencer === 7) return "T+7";
   if (diasParaVencer === 15) return "T+15";
   return null;
 }
 
-function buildBucketEntry(f: FacturaRow, saldo: number, dias: number) {
+export function buildBucketEntry(f: FacturaRow, saldo: number, dias: number) {
   return {
     factura_id: f.id,
     numero: f.numero,
@@ -48,7 +48,7 @@ function buildBucketEntry(f: FacturaRow, saldo: number, dias: number) {
   };
 }
 
-function calcularSaldoFactura(f: FacturaRow): number {
+export function calcularSaldoFactura(f: FacturaRow): number {
   const pagado = (f.pagos_factura ?? [])
     .filter((p) => !p.deleted_at)
     .reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
@@ -58,10 +58,13 @@ function calcularSaldoFactura(f: FacturaRow): number {
   return Math.max(0, Number(f.total) - pagado - nc);
 }
 
-function diasParaVencer(fechaVenc: string, hoy: Date): number {
+export function diasParaVencer(fechaVenc: string, hoy: Date): number {
   const venc = new Date(fechaVenc + "T00:00:00Z");
   return Math.floor((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
 }
+
+export type { FacturaRow };
+
 
 
 
