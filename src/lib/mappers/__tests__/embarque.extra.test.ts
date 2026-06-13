@@ -20,7 +20,7 @@ function base(over: Partial<EmbarqueFormValues> = {}): EmbarqueFormValues {
     descripcionMercancia: "Mercancía",
     pesoKg: "500",
     volumenM3: "5",
-    piezas: 10,
+    piezas: "10",
     incoterm: "FOB",
     ...over,
   };
@@ -30,8 +30,8 @@ describe("embarque.extra — buildEmbarquePayload contenedores dinámicos", () =
   it("[EE-01] suma peso/vol/piezas desde contenedores en modo Marítimo", () => {
     const v = base({
       contenedores: [
-        { numero_contenedor: "ABCD1234567", tipo_contenedor: "20GP", peso_kg: 200, volumen_m3: 2, piezas: 4 },
-        { numero_contenedor: "EFGH7654321", tipo_contenedor: "40HC", peso_kg: 300, volumen_m3: 3, piezas: 6 },
+        { numero_contenedor: "ABCD1234567", tipo_contenedor: "20GP", bl_house: "", peso_kg: 200, volumen_m3: 2, piezas: 4, orden: 1 },
+        { numero_contenedor: "EFGH7654321", tipo_contenedor: "40HC", bl_house: "", peso_kg: 300, volumen_m3: 3, piezas: 6, orden: 2 },
       ],
     });
     const p = buildEmbarquePayload(v, [], "Cliente", "op");
@@ -43,7 +43,7 @@ describe("embarque.extra — buildEmbarquePayload contenedores dinámicos", () =
   it("[EE-02] tipo_contenedor hereda del primer contenedor cuando tipoServicio != LCL", () => {
     const v = base({
       tipoServicio: "FCL",
-      contenedores: [{ numero_contenedor: "ABCD1234567", tipo_contenedor: "40HC", peso_kg: 0, volumen_m3: 0, piezas: 0 }],
+      contenedores: [{ numero_contenedor: "ABCD1234567", tipo_contenedor: "40HC", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 1 }],
     });
     const p = buildEmbarquePayload(v, [], "Cliente", "op");
     expect(p.tipo_contenedor).toBe("40HC");
@@ -52,7 +52,7 @@ describe("embarque.extra — buildEmbarquePayload contenedores dinámicos", () =
   it("[EE-03] tipo_contenedor es 'LCL' cuando tipoServicio=LCL", () => {
     const v = base({
       tipoServicio: "LCL",
-      contenedores: [{ numero_contenedor: "NONE", tipo_contenedor: "20GP", peso_kg: 0, volumen_m3: 0, piezas: 0 }],
+      contenedores: [{ numero_contenedor: "NONE", tipo_contenedor: "20GP", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 1 }],
     });
     const p = buildEmbarquePayload(v, [], "Cliente", "op");
     expect(p.tipo_contenedor).toBe("LCL");
