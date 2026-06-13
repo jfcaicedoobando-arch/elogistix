@@ -34,8 +34,20 @@ beforeEach(() => {
       blob: () => Promise.resolve(new Blob(["pdf"], { type: "application/pdf" })),
     }),
   );
-  vi.spyOn(URL, "createObjectURL").mockImplementation(() => "blob:fake");
-  vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  // jsdom no implementa `URL.createObjectURL`/`revokeObjectURL`, así que no se
+  // puede usar `vi.spyOn` (requiere que la propiedad exista). Se parchan con
+  // `stubGlobal` sobre `URL` re-asignando los métodos faltantes; el
+  // `unstubAllGlobals` del setup global los limpia entre archivos.
+  Object.defineProperty(URL, "createObjectURL", {
+    configurable: true,
+    writable: true,
+    value: vi.fn(() => "blob:fake"),
+  });
+  Object.defineProperty(URL, "revokeObjectURL", {
+    configurable: true,
+    writable: true,
+    value: vi.fn(),
+  });
 
   // Stub sólo el anchor; `restoreAllMocks` (afterEach local) evita acumular
   // spies dentro del archivo.
