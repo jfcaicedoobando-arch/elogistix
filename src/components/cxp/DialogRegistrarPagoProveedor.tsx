@@ -1,8 +1,8 @@
 /**
  * Registrar pago a proveedor.
- * Helpers de método (SPEI/SWIFT) extraídos a pagoProveedorHelpers.ts.
+ * Refactor v12.95.23: estado movido a `usePagoProveedorForm` y cuerpo del
+ * formulario a `PagoProveedorFormBody`. Este archivo sólo orquesta.
  */
-import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,20 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { useRegistrarPagoProveedor } from "@/hooks/cxp";
 import type { FacturaCxP } from "@/services/cxp";
-import type { Database } from "@/integrations/supabase/types";
-import { metodosFor, defaultMetodo, referenciaHint } from "./pagoProveedorHelpers";
-import { FormSection } from "./facturaFormPrimitives";
-import { PagoFacturaHeaderInfo, PagoSaldoRestante } from "./PagoProveedorBits";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
+import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
+import { usePagoProveedorForm } from "./usePagoProveedorForm";
+import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
 
 interface Props {
   open: boolean;
@@ -34,58 +25,24 @@ interface Props {
 
 export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Props) {
   const registrar = useRegistrarPagoProveedor();
-  const today = new Date().toISOString().slice(0, 10);
-
-  const [fecha, setFecha] = useState(today);
-  const [monto, setMonto] = useState("");
-  const [moneda, setMoneda] = useState<Moneda>("MXN");
-  const [tc, setTc] = useState("");
-  const [metodo, setMetodo] = useState<string>("Transferencia");
-  const [referencia, setReferencia] = useState("");
-  const [notas, setNotas] = useState("");
-  const [diffMxn, setDiffMxn] = useState<string>("");
-
-  useEffect(() => {
-    if (!factura || !open) return;
-    setFecha(today);
-    setMonto(factura.saldo.toFixed(2));
-    setMoneda(factura.moneda);
-    setTc(factura.tipo_cambio_usd ? String(factura.tipo_cambio_usd) : "");
-    setMetodo(defaultMetodo(factura.proveedor_origen));
-    setReferencia("");
-    setNotas("");
-    setDiffMxn("");
-  }, [factura, open, today]);
-
-  const metodosDisponibles = useMemo(
-    () => metodosFor(factura?.proveedor_origen ?? null),
-    [factura?.proveedor_origen],
-  );
-
-  const montoNum = Number(monto) || 0;
-  const saldoRestante = useMemo(
-    () => Math.max(0, (factura?.saldo ?? 0) - montoNum),
-    [factura, montoNum],
-  );
-  const esUsdPagadoEnMxn = factura?.moneda === "USD" && moneda === "MXN";
-  const showTc = moneda !== "MXN";
-  const excede = factura ? montoNum > factura.saldo + 0.01 : false;
+  const f = usePagoProveedorForm(factura, open);
 
   const submit = async () => {
     if (!factura) return;
-    if (montoNum <= 0) return toast.error("El monto debe ser mayor a 0");
-    if (excede) return toast.error("El monto excede el saldo pendiente");
+    if (f.montoNum <= 0) return toast.error("El monto debe ser mayor a 0");
+    if (f.excede) return toast.error("El monto excede el saldo pendiente");
     try {
       await registrar.mutateAsync({
         proveedor_factura_id: factura.id,
-        fecha_pago: fecha,
-        monto: montoNum,
-        moneda,
-        tipo_cambio_usd: Number(tc) || 0,
-        metodo_pago: metodo,
-        referencia,
-        notas,
-        diferencia_cambiaria_mxn: esUsdPagadoEnMxn && diffMxn !== "" ? Number(diffMxn) : null,
+        fecha_pago: f.fecha,
+        monto: f.montoNum,
+        moneda: f.moneda,
+        tipo_cambio_usd: Number(f.tc) || 0,
+        metodo_pago: f.metodo,
+        referencia: f.referencia,
+        notas: f.notas,
+        diferencia_cambiaria_mxn:
+          f.esUsdPagadoEnMxn && f.diffMxn !== "" ? Number(f.diffMxn) : null,
       });
       toast.success("Pago registrado");
       onOpenChange(false);
@@ -106,88 +63,13 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
           {factura && <PagoFacturaHeaderInfo factura={factura} />}
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-          <FormSection title="Fecha y método">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Fecha de pago</Label>
-                <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Método</Label>
-                <Select value={metodo} onValueChange={setMetodo}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {metodosDisponibles.map((m: string) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </FormSection>
-
-          <FormSection title="Monto">
-            <div className={cn("grid grid-cols-1 gap-3", showTc ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
-              <div className="space-y-1">
-                <Label>Monto</Label>
-                <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                  value={monto} onChange={(e) => setMonto(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Moneda pago</Label>
-                <Select value={moneda} onValueChange={(v) => setMoneda(v as Moneda)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MXN">MXN</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {showTc && (
-                <div className="space-y-1">
-                  <Label>Tipo de cambio</Label>
-                  <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                    value={tc} onChange={(e) => setTc(e.target.value)} />
-                </div>
-              )}
-            </div>
-
-            <PagoSaldoRestante factura={factura} saldoRestante={saldoRestante} excede={excede} />
-          </FormSection>
-
-          {esUsdPagadoEnMxn && (
-            <FormSection title="Diferencia cambiaria">
-              <div className="space-y-1">
-                <Label>Diferencia cambiaria MXN (opcional)</Label>
-                <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                  value={diffMxn} onChange={(e) => setDiffMxn(e.target.value)} />
-                <p className="text-xs text-muted-foreground">
-                  Captura la diferencia cambiaria entre el TC de la factura y el TC del pago.
-                </p>
-              </div>
-            </FormSection>
-          )}
-
-          <FormSection title="Referencia y notas">
-            <div className="space-y-1">
-              <Label>Referencia</Label>
-              <Input value={referencia} onChange={(e) => setReferencia(e.target.value)}
-                placeholder={referenciaHint(metodo)} />
-              <p className="text-[11px] text-muted-foreground">{referenciaHint(metodo)}</p>
-            </div>
-            <div className="space-y-1">
-              <Label>Notas</Label>
-              <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2}
-                placeholder="Observaciones internas…" />
-            </div>
-          </FormSection>
-        </div>
+        <PagoProveedorFormBody factura={factura} {...f} />
 
         <div className="px-6 py-4 border-t flex justify-end gap-2 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={registrar.isPending || excede || montoNum <= 0}>
+          <Button onClick={submit} disabled={registrar.isPending || f.excede || f.montoNum <= 0}>
             {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {registrar.isPending ? "Guardando…" : "Registrar pago"}
           </Button>
