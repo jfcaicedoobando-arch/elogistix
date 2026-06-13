@@ -18,7 +18,7 @@ import {
 } from "./keys/catalogos";
 import { dashboard, operadores, operaciones, reportes, sidebar } from "./keys/dashboard";
 import { usuarios, planes, admin, appLogs, papelera, idempotenciaLog } from "./keys/admin";
-import { crm } from "./keys/crm";
+import { crm } from "@/features/crm/queryKeys";
 import { portal } from "./keys/portal";
 import { auditoria } from "./keys/auditoria";
 import { facturacion } from "./keys/facturacion";
