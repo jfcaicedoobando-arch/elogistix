@@ -2,7 +2,7 @@
  * genericPayloadMapper.extra — edge cases no cubiertos en genericPayloadMapper.test.ts.
  */
 import { describe, it, expect } from "vitest";
-import { z, ZodError } from "zod";
+// removed unused zod import
 import { createPayloadMapper, F } from "@/lib/mappers/genericPayloadMapper";
 
 interface SimpleForm { name: string; count: string; tag: string }
