@@ -5,9 +5,7 @@ import { useToast, useRegistrarActividad } from "@/hooks/shared";
 import { ProveedorDuplicadoError } from "@/features/proveedor/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import type { Tables } from "@/types/db";
-
-type Proveedor = Tables<"proveedores">;
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 /**
  * Encapsula el flujo de crear un proveedor desde la página `Proveedores`:
@@ -20,7 +18,7 @@ export function useProveedoresCrear() {
   const registrarActividad = useRegistrarActividad();
   const { toast } = useToast();
 
-  return async (data: Omit<Proveedor, "id">) => {
+  return async (data: TablesInsert<"proveedores">) => {
     try {
       const proveedorCreado = await addProveedor(data);
       registrarActividad.mutate({
