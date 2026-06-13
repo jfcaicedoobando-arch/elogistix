@@ -18,6 +18,10 @@ import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
 import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { useHidratacionEditarEmbarque } from "./useHidratacionEditarEmbarque";
+import {
+  validarContenedoresMaritimo,
+  buildBitacoraDetallesEdit,
+} from "./useEditarEmbarqueWizard.helpers";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -95,17 +99,15 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     if (!id || !embarque) return;
     try {
       const contenedoresActuales = methods.getValues('contenedores') ?? [];
-      // Validación: cuando es Marítimo, cada contenedor requiere número y tipo.
       const modoActual = methods.getValues('modo');
-      if (modoActual === 'Marítimo' && contenedoresActuales.some(
-        (c) => !c.numero_contenedor.trim() || !c.tipo_contenedor.trim(),
-      )) {
+      const errContenedores = validarContenedoresMaritimo(modoActual, contenedoresActuales);
+      if (errContenedores) {
         notifyError(toast, {
           title: "Faltan datos de contenedores",
-          description: "Cada contenedor requiere número y tipo. Revisa el paso 2.",
+          description: errContenedores.description,
           method: "HANDLE_SAVE",
         });
-        setCurrentStep(2);
+        setCurrentStep(errContenedores.step);
         return;
       }
 
@@ -114,11 +116,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       const nuevosCosto = buildConceptosCostoPayload(conceptosCosto, proveedoresDb);
 
       // Diff de campos sensibles ANTES de mutar (Bloque 3.6 ext).
-      const cambiosEmbarque = diffFields(
-        embarque,
-        nuevoEmbarquePayload,
-        SENSITIVE_FIELDS.embarque,
-      );
+      const cambiosEmbarque = diffFields(embarque, nuevoEmbarquePayload, SENSITIVE_FIELDS.embarque);
       const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
       const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
 
@@ -131,26 +129,19 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       });
 
       const v = methods.getValues();
-      const tuvoCambios = cambiosEmbarque.length > 0
-        || cambiosVenta.agregados + cambiosVenta.eliminados + cambiosVenta.modificados > 0
-        || cambiosCosto.agregados + cambiosCosto.eliminados + cambiosCosto.modificados > 0;
       registrarActividad.mutate({
         accion: 'editar',
         modulo: 'embarques',
         entidad_id: id,
         entidad_nombre: embarque.expediente,
-        detalles: {
-          cliente: selectedCliente?.nombre ?? '',
+        detalles: buildBitacoraDetallesEdit({
+          clienteNombre: selectedCliente?.nombre ?? '',
           modo: v.modo,
           tipo: v.tipo,
-          ...(tuvoCambios && {
-            cambios: JSON.parse(JSON.stringify({
-              embarque: cambiosEmbarque,
-              ventas: cambiosVenta,
-              costos: cambiosCosto,
-            })),
-          }),
-        },
+          cambiosEmbarque,
+          cambiosVenta,
+          cambiosCosto,
+        }),
       });
 
       notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
