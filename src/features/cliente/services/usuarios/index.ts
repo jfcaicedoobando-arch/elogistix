@@ -28,12 +28,20 @@ export interface InviteClientUserParams {
   organization_id: string;
 }
 
-export async function inviteClientUser(params: InviteClientUserParams) {
+export interface InviteClientUserResult {
+  is_new: boolean;
+  user_id?: string;
+  email?: string;
+}
+
+export async function inviteClientUser(
+  params: InviteClientUserParams,
+): Promise<InviteClientUserResult> {
   const { data, error } = await supabase.functions.invoke("user-management", {
     body: { action: "invite-client", ...params },
   });
   if (error) throw error;
-  return data;
+  return (data ?? { is_new: false }) as InviteClientUserResult;
 }
 
 export async function revokeClientUser(id: string): Promise<void> {
