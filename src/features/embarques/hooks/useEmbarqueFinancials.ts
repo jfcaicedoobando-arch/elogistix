@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { computeEmbarqueKpis, type ConceptoVentaKpi, type ConceptoCostoKpi } from '@/lib/financial/embarqueKpis';
+import { computeEmbarqueKpis, type ConceptoVentaKpi, type ConceptoCostoKpi } from '@/features/embarques/domain/embarqueKpis';
 
 interface UseEmbarqueFinancialsParams {
   conceptosVenta: ConceptoVentaKpi[];
