@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from "vitest";
 import type { LeadInput } from "@/features/crm/domain/leads/constants";
 import type { AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
-vi.useFakeTimers({ now: new Date("2026-06-13T12:00:00Z") });
+// Fake timers escopados al archivo. NUNCA en top-level: en pool forks con
+// singleFork+isolate, los timers parchados a nivel de módulo pueden filtrarse
+// al siguiente archivo del shard y colgar `waitFor` indefinidamente (OOM).
+beforeAll(() => { vi.useFakeTimers({ now: new Date("2026-06-13T12:00:00Z") }); });
+afterAll(() => { vi.useRealTimers(); });
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
