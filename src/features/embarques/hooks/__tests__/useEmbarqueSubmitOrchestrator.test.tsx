@@ -41,6 +41,31 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+type SubmitParams = Parameters<ReturnType<typeof useEmbarqueSubmitOrchestrator>["submit"]>[0];
+
+function makeSubmitParams(overrides: Partial<SubmitParams> = {}): SubmitParams {
+  const base = {
+    values: { modo: "Marítimo", tipo: "FCL", blMaster: "BL123" },
+    modoExpediente: "nuevo",
+    expedienteSeleccionado: null,
+    cotizacionVinculada: null,
+    contactos: [],
+    selectedClienteNombre: "Cliente Test",
+    proveedoresDb: [],
+    documentosArchivos: {},
+    buildEmbarquePayload: vi.fn().mockReturnValue({}),
+    buildConceptosVentaPayload: vi.fn().mockReturnValue([]),
+    buildConceptosCostoPayload: vi.fn().mockReturnValue([]),
+    getDocumentosChecklist: vi.fn().mockReturnValue([]),
+    conceptosVenta: [],
+    conceptosCosto: [],
+    ...overrides,
+  };
+  // SAFE-CAST: el tipo `SubmitParams` es interno del hook y mezcla fixtures complejos
+  // (RHF values, queries) que sólo importan parcialmente para estos tests.
+  return base as unknown as SubmitParams;
+}
+
 describe("useEmbarqueSubmitOrchestrator", () => {
   it("inicializa correctamente", () => {
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
@@ -48,29 +73,46 @@ describe("useEmbarqueSubmitOrchestrator", () => {
     expect(result.current.isPending).toBe(false);
   });
 
-  it("el flujo de submit llama a las dependencias", async () => {
+  it("el flujo de submit llama a las dependencias con argumentos correctos", async () => {
     const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
-    const mockParams = {
-      values: { modo: "Marítimo", tipo: "FCL", blMaster: "BL123" },
-      modoExpediente: "nuevo",
-      expedienteSeleccionado: null,
-      cotizacionVinculada: null,
-      contactos: [],
-      selectedClienteNombre: "Cliente Test",
-      proveedoresDb: [],
-      documentosArchivos: {},
-      buildEmbarquePayload: vi.fn().mockReturnValue({}),
-      buildConceptosVentaPayload: vi.fn().mockReturnValue([]),
-      buildConceptosCostoPayload: vi.fn().mockReturnValue([]),
-      getDocumentosChecklist: vi.fn().mockReturnValue([]),
-      conceptosVenta: [],
-      conceptosCosto: [],
-    };
+    resolverExpedienteMock.mockClear();
+    subirDocsMock.mockClear();
+    createEmbarqueMock.mockClear();
 
-    const success = await result.current.submit(mockParams as any);
+    const success = await result.current.submit(makeSubmitParams());
     expect(resolverExpedienteMock).toHaveBeenCalledWith("BL123", "FCL");
-    expect(subirDocsMock).toHaveBeenCalled();
-    expect(createEmbarqueMock).toHaveBeenCalled();
+    expect(subirDocsMock).toHaveBeenCalledTimes(1);
+    expect(createEmbarqueMock).toHaveBeenCalledTimes(1);
+    expect(success).toBe(true);
+  });
+
+  it("retorna false y no crea embarque cuando resolverExpediente falla", async () => {
+    resolverExpedienteMock.mockRejectedValueOnce(new Error("expediente no resuelto"));
+    createEmbarqueMock.mockClear();
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const success = await result.current.submit(makeSubmitParams());
+    expect(success).toBe(false);
+    expect(createEmbarqueMock).not.toHaveBeenCalled();
+  });
+
+  it("retorna false cuando subirDocumentos falla", async () => {
+    subirDocsMock.mockRejectedValueOnce(new Error("upload error"));
+    createEmbarqueMock.mockClear();
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const success = await result.current.submit(makeSubmitParams());
+    expect(success).toBe(false);
+    expect(createEmbarqueMock).not.toHaveBeenCalled();
+  });
+
+  it("modo existente: usa expedienteSeleccionado sin invocar resolverExpediente", async () => {
+    resolverExpedienteMock.mockClear();
+    createEmbarqueMock.mockClear();
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const success = await result.current.submit(
+      makeSubmitParams({ modoExpediente: "existente", expedienteSeleccionado: "EXP-999" }),
+    );
+    expect(resolverExpedienteMock).not.toHaveBeenCalled();
+    expect(createEmbarqueMock).toHaveBeenCalledTimes(1);
     expect(success).toBe(true);
   });
 });
