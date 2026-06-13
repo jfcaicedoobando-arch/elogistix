@@ -5,9 +5,12 @@ import {
   listarCuentas, crearCuenta, eliminarCuenta,
   listarMovimientos, importarMovimientos, conciliarConPago, desconciliarMovimiento,
   ignorarMovimiento, sugerirCandidatos,
-  fetchResumenTesoreria,
+  fetchSaldosCuentas,
   type FiltrosMovimientos, type MovimientoBBVA,
 } from "@/services/tesoreria";
+import { calcularResumenTesoreria, type ResumenTesoreria } from "@/lib/domain/tesoreria";
+import { useCobranza } from "@/hooks/facturacion";
+import { useFacturasCxP } from "@/hooks/cxp";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/lib/import/bbva";
 
@@ -26,7 +29,6 @@ export function useCrearCuenta() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all }),
   });
 }
-
 
 export function useEliminarCuenta() {
   const qc = useQueryClient();
@@ -92,12 +94,43 @@ export function useIgnorarMovimiento() {
   });
 }
 
-export function useResumenTesoreria() {
+/**
+ * Saldos por cuenta (sin lectura de facturas). Reutilizable.
+ */
+export function useSaldosCuentas() {
   return useQuery({
-    queryKey: queryKeys.tesoreria.resumen(),
-    queryFn: fetchResumenTesoreria,
+    queryKey: queryKeys.tesoreria.saldosCuentas?.() ?? ["tesoreria", "saldos-cuentas"],
+    queryFn: fetchSaldosCuentas,
     staleTime: 60_000,
   });
+}
+
+/**
+ * Compone resumen de tesorería a partir de cobranza (CxC) + CxP + saldos.
+ * Auditoría Paso 4: ya no hay acoplamiento service→service.
+ */
+export function useResumenTesoreria(): {
+  data: ResumenTesoreria | undefined;
+  isLoading: boolean;
+  error: unknown;
+} {
+  const cobranzaQ = useCobranza({});
+  const cxpQ = useFacturasCxP({});
+  const cuentasQ = useSaldosCuentas();
+
+  const isLoading = cobranzaQ.isLoading || cxpQ.isLoading || cuentasQ.isLoading;
+  const error = cobranzaQ.error ?? cxpQ.error ?? cuentasQ.error;
+  const ready = !!cobranzaQ.data && !!cxpQ.data && !!cuentasQ.data;
+
+  const data = ready
+    ? calcularResumenTesoreria({
+        cuentas: cuentasQ.data!,
+        cobranza: cobranzaQ.data!,
+        cxp: cxpQ.data!,
+      })
+    : undefined;
+
+  return { data, isLoading, error };
 }
 
 export { useFlujoProyectado } from "./useFlujoProyectado";
