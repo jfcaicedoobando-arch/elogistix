@@ -32,7 +32,7 @@ const baseValues = {
   eta: "2026-02-01",
 };
 
-describe("buildEmbarquePayload", () => {
+describe("buildEmbarquePayload (toDb)", () => {
   it("resuelve shipper desde catálogo y consignatario = cliente", () => {
     const p = buildEmbarquePayload(baseValues, contactos, "Cliente SA", "operador@x.com");
     expect(p.shipper).toBe("Shipper Co — Proveedor (CN)");
@@ -81,7 +81,7 @@ describe("buildEmbarquePayload", () => {
   });
 });
 
-describe("buildConceptosVentaPayload", () => {
+describe("buildConceptosVentaPayload (toDb)", () => {
   it("filtra conceptos sin descripción y calcula total", () => {
     const out = buildConceptosVentaPayload([
       { concepto: "Flete", cantidad: 2, precioUnitario: 100, moneda: "USD" } as never,
@@ -101,7 +101,7 @@ describe("buildConceptosVentaPayload", () => {
   });
 });
 
-describe("buildConceptosCostoPayload", () => {
+describe("buildConceptosCostoPayload (toDb)", () => {
   it("resuelve proveedor_nombre desde catálogo y filtra vacíos", () => {
     const out = buildConceptosCostoPayload(
       [

@@ -18,7 +18,7 @@ describe("resolverContacto", () => {
   });
 });
 
-describe("resolverValorContactoDesdeTexto", () => {
+describe("resolverValorContactoDesdeTexto (lib/contacto)", () => {
   it("string vacío → value='' manual=''", () => {
     expect(resolverValorContactoDesdeTexto("", cs, "Cliente")).toEqual({ value: "", manual: "" });
     expect(resolverValorContactoDesdeTexto(null, cs, "Cliente")).toEqual({ value: "", manual: "" });

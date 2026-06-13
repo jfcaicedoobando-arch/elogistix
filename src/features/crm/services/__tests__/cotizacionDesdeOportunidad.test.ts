@@ -63,7 +63,7 @@ describe("insertCotizacionDesdeOportunidad", () => {
     expect(payload.destino).toBe("");
   });
 
-  it("propaga error de supabase", async () => {
+  it("cotizacionDesdeOportunidad: propaga error de supabase", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: new Error("db") });
     await expect(insertCotizacionDesdeOportunidad({
       folio: "F", modo: "Marítimo", oportunidad: opBase, operador: "u",
@@ -81,7 +81,7 @@ describe("actualizarEtapaOportunidad", () => {
     expect(call?.ops).toContain("eq");
   });
 
-  it("propaga error", async () => {
+  it("cotizacionDesdeOportunidad: propaga error al crear cotización", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: new Error("nope") });
     await expect(actualizarEtapaOportunidad("o", "e", 10)).rejects.toThrow("nope");
   });

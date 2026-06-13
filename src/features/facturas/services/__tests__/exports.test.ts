@@ -112,7 +112,7 @@ describe("fetchEstadoCuentaFacturas", () => {
     expect(await fetchEstadoCuentaFacturas("cl1")).toEqual([]);
   });
 
-  it("propaga error", async () => {
+  it("exports facturas: propaga error de supabase", async () => {
     mock.setTableResult("facturas", { data: null, error: new Error("db") });
     await expect(fetchEstadoCuentaFacturas("cl1")).rejects.toThrow("db");
   });

@@ -102,7 +102,7 @@ describe("buildPaso1Data — mercancía y ruta", () => {
     expect(r.dias_almacenaje).toBe(5);
   });
 
-  it("seguro=false fuerza valor_seguro_usd=0", () => {
+  it("mapper cotizacion: seguro=false fuerza valor_seguro_usd=0", () => {
     const r = buildPaso1Data(values({ seguro: false, valorSeguroUsd: 10_000 }), CLIENTES, "op@x");
     expect(r.valor_seguro_usd).toBe(0);
   });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { toCsv } from "@/lib/csv/serializeCsv";
 
-describe("toCsv", () => {
+describe("toCsv (serializeCsv)", () => {
   it("genera headers + filas con delimitador coma por defecto", () => {
     const csv = toCsv(["a", "b"], [["1", "2"], ["3", "4"]]);
     expect(csv).toBe("a,b\n1,2\n3,4");
