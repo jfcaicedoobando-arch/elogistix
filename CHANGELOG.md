@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.1] - 2026-06-13
+- **fix(tests)**: Resuelve hang/OOM en shards 3 y 9. `bulk.test.ts` y `mutations.extra.test.ts` (CRM leads) llamaban `vi.useFakeTimers()` a nivel top-level; en `pool=forks` con `singleFork`, los timers parchados se filtraban al siguiente archivo del shard y colgaban indefinidamente cualquier `waitFor` posterior (cliente, embarques, admin), agotando el heap de 8 GB. Ahora los fake timers se activan en `beforeAll` y se restauran en `afterAll`.
+
 ## [13.0.0] - 2026-06-13
 - **test(coverage)**: +400 tests unitarios puros distribuidos en 40 archivos `.extra`/`.test.ts` para subir cobertura sobre formatters, utils, mappers, parsers, dominio, validation, financial, audit, auth, errors, facturación, operaciones, roles y servicios costeo/CRM leads. Todos los archivos usan `vitest` + `@/services/__tests__/_supabaseChainMock` cuando aplica y títulos prefijados para no romper el shard del audit-report.
 
