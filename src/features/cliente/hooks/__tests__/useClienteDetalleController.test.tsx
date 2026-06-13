@@ -8,7 +8,7 @@ vi.mock("react-router-dom", () => ({
   useParams: vi.fn(() => ({ id: "client-1" })),
 }));
 
-vi.mock("@/hooks/cliente/useClientes", () => ({
+vi.mock("@/features/cliente/hooks/useClientes", () => ({
   useCliente: vi.fn(() => ({ data: { id: "client-1", nombre: "Client One" }, isLoading: false })),
   useContactosCliente: vi.fn(() => ({ data: [], isLoading: false })),
   useEmbarquesCliente: vi.fn(() => ({ data: [], isLoading: false })),
@@ -19,7 +19,7 @@ vi.mock("@/hooks/cliente/useClientes", () => ({
   useUpdateCliente: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }));
 
-vi.mock("@/hooks/cliente/useClienteFinancials", () => ({
+vi.mock("@/features/cliente/hooks/useClienteFinancials", () => ({
   useClienteFinancials: vi.fn(() => ({ data: null })),
 }));
 

@@ -7,7 +7,7 @@ const { mockDiasCredito, mockClientePdf } = vi.hoisted(() => ({
   mockClientePdf: vi.fn(),
 }));
 
-vi.mock("@/services/cliente", () => ({
+vi.mock("@/features/cliente/services", () => ({
   fetchDiasCreditoCliente: mockDiasCredito,
 }));
 

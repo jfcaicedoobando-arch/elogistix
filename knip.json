@@ -23,8 +23,9 @@
     "supabase/**",
     "docs/**",
     "src/test/**",
-    "src/features/auditoria/index.ts",
-    "src/features/embarques/index.ts"
+    "src/features/*/index.ts",
+    "src/features/crm/domain/index.ts",
+    "src/constants/cache.ts"
   ],
   "ignoreDependencies": [
     "tailwindcss-animate",

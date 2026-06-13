@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("@/services/cotizacion/queries", () => ({
+vi.mock("@/features/cotizacion/services/queries", () => ({
   generarFolioCotizacion: vi.fn().mockResolvedValue("COT-2026-0001"),
 }));
 

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useClienteFinancials } from "../useClienteFinancials";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/cliente", () => ({
+vi.mock("@/features/cliente/services", () => ({
   fetchClienteFinancials: vi.fn().mockResolvedValue({ balance: 1000, creditLimit: 5000 }),
 }));
 

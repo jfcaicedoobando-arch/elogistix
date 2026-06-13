@@ -2,11 +2,9 @@
  * Servicio CRM — Oportunidades. Capa de I/O para `crm_oportunidades`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
-
-export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
-export type Moneda = "MXN" | "USD" | "EUR";
+export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm/types/oportunidades";
+import type { CrmOportunidadRow, OportunidadInput } from "@/features/crm/types/oportunidades";
 
 const COLS =
   "id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email, etapa_id, monto_estimado, valor_real, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real, motivo_perdida_id, modo, tipo_carga, origen, destino, notas, cotizacion_ganadora_id, embarque_ganador_id, created_at, updated_at";
@@ -47,24 +45,6 @@ export async function getOportunidad(id: string): Promise<CrmOportunidadRow | nu
   return (data ?? null) as CrmOportunidadRow | null;
 }
 
-export type OportunidadInput = {
-  nombre: string;
-  cliente_id?: string | null;
-  cliente_nombre?: string;
-  lead_id?: string | null;
-  etapa_id: string;
-  monto_estimado?: number;
-  moneda?: Moneda;
-  probabilidad?: number;
-  fecha_estimada_cierre?: string | null;
-  modo?: string;
-  tipo_carga?: string;
-  origen?: string;
-  destino?: string;
-  notas?: string;
-  vendedor_id?: string | null;
-  vendedor_email?: string;
-};
 
 export async function crearOportunidad(
   input: OportunidadInput,

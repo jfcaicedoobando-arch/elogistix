@@ -5,7 +5,7 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 const fetchCotizacionCostos = vi.hoisted(() => vi.fn());
 const upsertCotizacionCostos = vi.hoisted(() => vi.fn());
 
-vi.mock("@/services/cotizacion", () => ({
+vi.mock("@/features/cotizacion/services", () => ({
   fetchCotizacionCostos,
   upsertCotizacionCostos,
 }));

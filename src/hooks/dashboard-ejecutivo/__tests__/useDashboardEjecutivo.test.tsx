@@ -16,8 +16,8 @@ vi.mock('@/contexts/OrganizationContext', () => ({
   useOrganization: () => ({ organizationId: 'org-1' }),
 }));
 
-vi.mock('@/hooks/facturacion', () => ({ useCobranza: mockCobranza }));
-vi.mock('@/hooks/cxp', () => ({ useFacturasCxP: mockCxp }));
+vi.mock('@/features/facturacion/hooks', () => ({ useCobranza: mockCobranza }));
+vi.mock('@/features/cxp/hooks', () => ({ useFacturasCxP: mockCxp }));
 
 import { useDashboardEjecutivo } from '../useDashboardEjecutivo';
 

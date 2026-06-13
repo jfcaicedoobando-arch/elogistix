@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 
 const mockCot = { id: "cot-1", folio: "COT-001" };
 
-vi.mock("@/hooks/cotizacion", () => ({
+vi.mock("@/features/cotizacion/hooks", () => ({
   useCotizacion: (id: string) => ({
     data: id === "cot-1" ? mockCot : null,
   }),

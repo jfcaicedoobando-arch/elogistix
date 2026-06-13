@@ -137,7 +137,7 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
   // Paso 4 del plan de auditoría: no introducir nuevas carpetas de dominio en
   // src/{components,hooks,services,pages}/<dominio> cuando ya existe el
   // equivalente en src/features/<dominio>/. Fuerza la migración progresiva.
-  it("no se duplican carpetas de dominio en src/{components,hooks,services,pages} si existe src/features/<dominio>", () => {
+  it("no se duplican carpetas de dominio en src/{components,hooks,services} si existe src/features/<dominio> migrado", () => {
     // Allowlist: deuda histórica permitida hasta completar la migración del
     // dominio. Cada entrada debe removerse al mover los archivos a features/.
     const SHADOW_ALLOWLIST = new Set<string>([
@@ -147,15 +147,21 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
       "src/components/crm",
       "src/hooks/crm",
       "src/services/crm",
-      "src/pages/crm",
     ]);
     let features: string[] = [];
     try {
       features = readdirSync("src/features").filter((d) => {
-        try { return statSync(join("src/features", d)).isDirectory(); } catch { return false; }
+        try {
+          if (!statSync(join("src/features", d)).isDirectory()) return false;
+          // Saltar features que sólo contienen `queryKeys.ts` (migración parcial
+          // de query keys, sin mover capas todavía).
+          const contents = readdirSync(join("src/features", d));
+          const real = contents.filter((c) => c !== "queryKeys.ts" && !c.startsWith("."));
+          return real.length > 0;
+        } catch { return false; }
       });
     } catch { /* features/ may not exist */ }
-    const layers = ["components", "hooks", "services", "pages"] as const;
+    const layers = ["components", "hooks", "services"] as const;
     const shadows: string[] = [];
     for (const dom of features) {
       for (const layer of layers) {

@@ -9,12 +9,12 @@ const { mockFetchFlujo, mockFetchSaldos, mockCobranza, mockCxp } = vi.hoisted(()
   mockCxp: vi.fn(() => ({ data: [], isLoading: false, error: null })),
 }));
 
-vi.mock('@/services/tesoreria', () => ({
+vi.mock('@/features/tesoreria/services', () => ({
   fetchFlujoProyectado: mockFetchFlujo,
   fetchSaldosCuentas: mockFetchSaldos,
 }));
-vi.mock('@/hooks/facturacion', () => ({ useCobranza: mockCobranza }));
-vi.mock('@/hooks/cxp', () => ({ useFacturasCxP: mockCxp }));
+vi.mock('@/features/facturacion/hooks', () => ({ useCobranza: mockCobranza }));
+vi.mock('@/features/cxp/hooks', () => ({ useFacturasCxP: mockCxp }));
 
 import { useFlujoProyectado } from '../useFlujoProyectado';
 

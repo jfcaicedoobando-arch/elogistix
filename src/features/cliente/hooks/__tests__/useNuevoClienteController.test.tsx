@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useNuevoClienteController } from "../useNuevoClienteController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/hooks/cliente/useClientes", () => ({
+vi.mock("@/features/cliente/hooks/useClientes", () => ({
   useCreateCliente: vi.fn(() => ({
     mutateAsync: vi.fn().mockResolvedValue({ id: "1", nombre: "Test" }),
     isPending: false,

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/services/facturas", () => ({
+vi.mock("@/features/facturas/services", () => ({
   fetchEstadoCuentaFacturas: vi.fn(),
 }));
 vi.mock("@/pdf/emisor", () => ({

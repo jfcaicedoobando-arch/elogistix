@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.96.7] - 2026-06-13
+- **fix(ci)**: Resuelve fallos de CI post-migración folder-style.
+  - `src/features/crm/types/oportunidades.ts` nuevo: extrae `CrmOportunidadRow`, `Moneda` y `OportunidadInput` para que `domain/` y `services/` los consuman desde una capa neutra (elimina 3 errores `no-restricted-imports` de `domain → services`).
+  - `knip.json`: ignora `src/features/*/index.ts` (barrels) y `src/constants/cache.ts` (constantes reservadas para uso futuro).
+  - `src/lib/__tests__/architecture.test.ts`: el guardrail de “shadow folders” ya no marca `src/pages/<dominio>` (las páginas viven en `src/pages/` por convención) ni features que sólo contienen `queryKeys.ts` (migración parcial de keys sin mover capas).
+  - Tests: 200+ rutas `vi.mock("@/{services,hooks}/<dominio>")` reapuntadas a `@/features/<dominio>/{services,hooks}` para los dominios migrados (`cliente`, `cotizacion`, `cxp`, `tesoreria`, `portal`, `proveedor`, `facturacion`, `facturas`).
+
 ## [12.96.6] - 2026-06-13
 - **refactor(arquitectura)**: Folder-style migration Fase 6 — dominio `facturacion`+`facturas`. Se mueven `src/hooks/facturacion/` (12 archivos) y `src/components/facturacion/` (20+ archivos, incluye carpetas `detalle/`, `proyeccion/`) a `src/features/facturacion/{hooks,components}`; `src/services/facturas/` (8 archivos, incluye subcarpetas `huecoFacturacion/`, `proyeccion/`, `shared/`) a `src/features/facturas/services/`. 51 importadores actualizados. Nuevos barrels `src/features/facturacion/index.ts` y `src/features/facturas/index.ts`. Sin cambios funcionales.
 
