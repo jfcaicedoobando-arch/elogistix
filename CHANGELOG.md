@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.97.1] - 2026-06-13
+- **ci**: Actualización de GitHub Actions a versiones más recientes en `ci.yml`, `e2e.yml` y `post-deploy-smoke.yml`: `actions/checkout@v6`, `actions/cache@v5`, `actions/upload-artifact@v7`, `actions/download-artifact@v8`, `codecov/codecov-action@v7`. Sin cambios funcionales en la app.
+
 ## [12.97.0] - 2026-06-13
 - **fix(ci, crítico)**: Restaura CI roto por versiones de GitHub Actions inexistentes (`@v6`/`@v7`). Se degradan a `@v4` estable en `ci.yml`, `e2e.yml`, `post-deploy-smoke.yml` (`actions/checkout`, `actions/cache`, `actions/upload-artifact`, `actions/download-artifact`, `codecov/codecov-action`).
 - **ci**: Añade `permissions: contents: read` a nivel workflow en `ci.yml` (principio de mínimo privilegio).
