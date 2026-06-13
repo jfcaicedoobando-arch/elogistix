@@ -4,7 +4,7 @@
  * orquestador puro y el estado sea testeable de forma aislada.
  */
 import { useState } from "react";
-import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
+import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
 
 export function useCxpPageState() {
   const [search, setSearch] = useState("");

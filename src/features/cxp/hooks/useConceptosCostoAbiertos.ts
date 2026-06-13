@@ -3,7 +3,7 @@
  * Usado al capturar una factura de proveedor para sugerir vínculos a embarques.
  */
 import { useQuery } from "@tanstack/react-query";
-import { fetchConceptosCostoAbiertosDeProveedor, type ConceptoCostoAbierto } from "@/services/cxp";
+import { fetchConceptosCostoAbiertosDeProveedor, type ConceptoCostoAbierto } from "@/features/cxp/services";
 
 export type { ConceptoCostoAbierto };
 

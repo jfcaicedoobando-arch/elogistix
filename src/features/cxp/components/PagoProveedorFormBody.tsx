@@ -12,7 +12,7 @@ import {
 import { FormSection } from "./facturaFormPrimitives";
 import { PagoSaldoRestante } from "./PagoProveedorBits";
 import { referenciaHint } from "./pagoProveedorHelpers";
-import type { FacturaCxP } from "@/services/cxp";
+import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 
 type Moneda = Database["public"]["Enums"]["moneda"];

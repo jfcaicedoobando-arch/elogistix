@@ -6,7 +6,7 @@ import {
   registrarPagoProveedor,
   eliminarPagoProveedor,
   type RegistrarPagoProveedorInput,
-} from "@/services/cxp";
+} from "@/features/cxp/services";
 
 export function usePagosProveedor(facturaId: string | null | undefined) {
   return useQuery({

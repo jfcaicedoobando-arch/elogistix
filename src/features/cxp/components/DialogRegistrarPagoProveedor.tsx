@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import { useRegistrarPagoProveedor } from "@/hooks/cxp";
-import type { FacturaCxP } from "@/services/cxp";
+import { useRegistrarPagoProveedor } from "@/features/cxp/hooks";
+import type { FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "./usePagoProveedorForm";
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";

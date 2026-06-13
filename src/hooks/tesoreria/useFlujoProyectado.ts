@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { fetchFlujoProyectado } from "@/services/tesoreria";
 import { useCobranza } from "@/hooks/facturacion";
-import { useFacturasCxP } from "@/hooks/cxp";
+import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useSaldosCuentas } from "./index";
 
 export function useFlujoProyectado(dias = 90) {

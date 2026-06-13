@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
-import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/hooks/cxp";
+import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
 
 export interface SeleccionLinea {
   monto: number;

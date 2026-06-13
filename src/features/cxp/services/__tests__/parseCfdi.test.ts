@@ -15,7 +15,7 @@ const supabaseMock = vi.hoisted(() => ({
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: supabaseMock }));
 
-import { parseCfdiXml } from "@/services/cxp/parseCfdi";
+import { parseCfdiXml } from "@/features/cxp/services/parseCfdi";
 
 const xmlFile = () =>
   new File(["<cfdi/>"], "factura.xml", { type: "application/xml" });

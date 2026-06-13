@@ -4,7 +4,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import type { FacturaCxP, KPIsCxP } from "@/services/cxp";
+import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
 function KPICard({
   label, value, count, tone = "default",

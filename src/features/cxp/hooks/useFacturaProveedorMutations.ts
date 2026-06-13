@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   crearFacturaProveedor,
   softDeleteFacturaProveedor,
-} from "@/services/cxp";
+} from "@/features/cxp/services";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
 export function useCrearFacturaProveedor() {

@@ -3,7 +3,7 @@
  * Extraído v12.95.23 para mantener el dialog ≤200 LOC.
  */
 import { useEffect, useMemo, useState } from "react";
-import type { FacturaCxP } from "@/services/cxp";
+import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 import { defaultMetodo, metodosFor } from "./pagoProveedorHelpers";
 

@@ -10,7 +10,7 @@ import {
 } from "@/services/tesoreria";
 import { calcularResumenTesoreria, type ResumenTesoreria } from "@/lib/domain/tesoreria";
 import { useCobranza } from "@/hooks/facturacion";
-import { useFacturasCxP } from "@/hooks/cxp";
+import { useFacturasCxP } from "@/features/cxp/hooks";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/lib/import/bbva";
 

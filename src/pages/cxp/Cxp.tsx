@@ -7,17 +7,17 @@ import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
-import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/hooks/cxp";
-import { buildCxPColumns } from "@/components/cxp/cxpColumns";
-import { DialogNuevaFacturaProveedor } from "@/components/cxp/DialogNuevaFacturaProveedor";
-import { DialogRegistrarPagoProveedor } from "@/components/cxp/DialogRegistrarPagoProveedor";
-import { DialogDetallePagosProveedor } from "@/components/cxp/DialogDetallePagosProveedor";
-import { CxpFiltros } from "@/components/cxp/CxpFiltros";
-import { CxpKpiCards } from "@/components/cxp/CxpKpiCards";
+import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
+import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
+import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
+import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRegistrarPagoProveedor";
+import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
+import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
+import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
 import { useCobranza } from "@/hooks/facturacion";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
-import type { FacturaCxP } from "@/services/cxp";
+import type { FacturaCxP } from "@/features/cxp/services";
 
 export default function Cxp() {
   const { canEdit } = usePermissions();

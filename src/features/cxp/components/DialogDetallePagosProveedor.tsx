@@ -19,9 +19,9 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { usePagosProveedor, useEliminarPagoProveedor } from "@/hooks/cxp";
+import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
 import { formatCurrency } from "@/lib/formatters";
-import type { FacturaCxP } from "@/services/cxp";
+import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 
 interface Props {

@@ -11,7 +11,7 @@ import { Upload, FileText, Loader2, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { parseCfdiXml, type CfdiParsedResponse } from "@/services/cxp";
+import { parseCfdiXml, type CfdiParsedResponse } from "@/features/cxp/services";
 import { toast } from "sonner";
 
 export type CargaMode = "manual" | "cfdi";

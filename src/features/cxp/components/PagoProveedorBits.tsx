@@ -3,7 +3,7 @@
  */
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
-import type { FacturaCxP } from "@/services/cxp";
+import type { FacturaCxP } from "@/features/cxp/services";
 
 export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
   return (

@@ -10,7 +10,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useCobranza } from "@/hooks/facturacion";
-import { useFacturasCxP } from "@/hooks/cxp";
+import { useFacturasCxP } from "@/features/cxp/hooks";
 import { buildCobranzaColumns } from "./cobranzaColumns";
 import { DialogRegistrarPago } from "./DialogRegistrarPago";
 import { DialogNotaCredito } from "./DialogNotaCredito";

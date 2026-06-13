@@ -13,11 +13,11 @@ import {
   vincularFacturaAConceptos,
   type CfdiParsedResponse,
   type ConceptoCostoAbierto,
-} from "@/services/cxp";
-import { useCrearFacturaProveedor } from "@/hooks/cxp";
-import type { FacturaFormValues } from "@/components/cxp/facturaFormPrimitives";
-import type { CargaMode } from "@/components/cxp/CargaCfdiSection";
-import type { SeleccionLinea } from "@/components/cxp/VincularEmbarqueSection";
+} from "@/features/cxp/services";
+import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
+import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
+import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
+import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
 import {
   type PendingCfdi,
   type VinculoLinea,

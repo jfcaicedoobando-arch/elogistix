@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import type { EstatusCxP } from "@/services/cxp";
+import type { EstatusCxP } from "@/features/cxp/services";
 
 const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
 
