@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.98.4] - 2026-06-13
+- **fix(ci)**: Resincroniza `bun.lockb` con `package.json` (CI fallaba con `lockfile had changes, but lockfile is frozen` → exit 1 en todos los shards, y a su vez `bun run audit:report` salía 127 porque `tsx` nunca se instalaba). Tras el `bun install` se elimina 1 paquete obsoleto y el lockfile queda congelable. `audit:report` verificado verde localmente.
+
 ## [12.98.3] - 2026-06-13
 - **fix(ci)**: Restaura los bumps de GitHub Actions a versiones más recientes (revertí erróneamente en 12.98.2 — todas existen y son las publicadas estables): `actions/checkout@v6` (jun 2026), `actions/cache@v5` (abr 2026), `actions/upload-artifact@v7` (feb 2026), `actions/download-artifact@v8` (feb 2026), `codecov/codecov-action@v7` (jun 2026). Aplica a `ci.yml`, `e2e.yml`, `post-deploy-smoke.yml`.
 
