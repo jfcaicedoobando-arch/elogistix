@@ -30,6 +30,10 @@ import {
   resolveExpedienteForSubmit,
   buildBitacoraDetalles,
 } from "@/features/embarques/domain/embarqueWizard";
+import {
+  deriveContenedoresPayload,
+  reportPhaseError,
+} from "./useEmbarqueSubmitOrchestrator.helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { useStableRequestId } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
@@ -86,13 +90,7 @@ export function useEmbarqueSubmitOrchestrator() {
           resolverNuevo: resolverExpediente,
         });
       } catch (err: unknown) {
-        notifyError(toast, {
-          title: "Error: generación de expediente",
-          description: getErrorMessage(err),
-          error: err,
-          method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR",
-        });
-        return false;
+        return reportPhaseError(toast, "Error: generación de expediente", err);
       }
 
       // Fase 2: subir documentos
@@ -104,13 +102,7 @@ export function useEmbarqueSubmitOrchestrator() {
           p.documentosArchivos,
         );
       } catch (err: unknown) {
-        notifyError(toast, {
-          title: "Error: subida de documentos",
-          description: getErrorMessage(err),
-          error: err,
-          method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR",
-        });
-        return false;
+        return reportPhaseError(toast, "Error: subida de documentos", err);
       }
 
       // Fase 3: crear embarque
@@ -120,25 +112,15 @@ export function useEmbarqueSubmitOrchestrator() {
           ...p.buildEmbarquePayload(p.contactos, p.selectedClienteNombre, user?.email || ""),
           ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
         };
-
-        // Derivar contenedores efectivos: en LCL forzar fila auto-LCL.
-        const contenedoresPayload =
-          p.values.modo === "Marítimo"
-            ? p.values.tipoServicio === "LCL"
-              ? [{ numero_contenedor: "", tipo_contenedor: "LCL", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 1 }]
-              : p.values.contenedores ?? []
-            : [];
-
         await createEmbarque.mutateAsync({
           embarque: embarquePayload,
           conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
           conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
           documentos: docPayload,
-          contenedores: contenedoresPayload,
+          contenedores: deriveContenedoresPayload(p.values),
           requestId: reqId.get(),
         });
         reqId.reset();
-
       } catch (err: unknown) {
         notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
         return false;
