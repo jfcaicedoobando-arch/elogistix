@@ -11,8 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { useFlujoProyectado } from "@/features/tesoreria/hooks";
 
-const GraficoFlujoProyectado = lazy(() => import("@/components/tesoreria/GraficoFlujoProyectado"));
-const TablaFlujoSemanal = lazy(() => import("@/components/tesoreria/TablaFlujoSemanal"));
+const GraficoFlujoProyectado = lazy(() => import("@/features/tesoreria/components/GraficoFlujoProyectado"));
+const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/TablaFlujoSemanal"));
 
 function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" | "success" | "warn" }) {
   const tt = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : tone === "warn" ? "text-warning" : "text-foreground";
