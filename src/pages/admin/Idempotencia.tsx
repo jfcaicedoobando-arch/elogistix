@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { Repeat2, RefreshCw, Copy } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,14 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { usePermissions } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
-import { listIdempotencyLog, type IdempotenciaRow } from "@/services/admin";
-import { queryKeys } from "@/lib/query";
-
-type IdemRow = IdempotenciaRow;
-
-type FnFilter = "todos" | "crear_embarque_completo" | "duplicar_embarque_completo" | "consolidar_proformas" | "marcar_proforma_facturada" | "actualizar_embarque_completo" | "avanzar_estado_embarque" | "actualizar_cotizacion_costos" | "upload_documento_embarque";
+import { usePermissions, useToast } from "@/hooks/shared";
+import { useIdempotenciaLog, type FnFilter } from "@/hooks/admin";
+import type { IdempotenciaRow } from "@/services/admin";
 
 const FN_LABEL: Record<string, string> = {
   crear_embarque_completo: "Crear embarque",
@@ -48,17 +41,10 @@ const dtf = new Intl.DateTimeFormat("es-MX", {
 export default function Idempotencia() {
   const { isAdmin } = usePermissions();
   const { toast } = useToast();
-  const [filtroFn, setFiltroFn] = useState<FnFilter>("todos");
-
-  const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: queryKeys.idempotenciaLog,
-    queryFn: () => listIdempotencyLog(200, 0),
-    enabled: isAdmin,
-  });
+  const { filtroFn, setFiltroFn, rows, isLoading, isFetching, refetch, totales } =
+    useIdempotenciaLog(isAdmin);
 
   if (!isAdmin) return <Navigate to="/" replace />;
-
-  const rows = (data ?? []).filter((r) => filtroFn === "todos" || r.fn === filtroFn);
 
   const copyKey = async (k: string) => {
     try {
@@ -69,7 +55,7 @@ export default function Idempotencia() {
     }
   };
 
-  const columns: ColumnDef<IdemRow, unknown>[] = defineColumns<IdemRow>([
+  const columns: ColumnDef<IdempotenciaRow, unknown>[] = defineColumns<IdempotenciaRow>([
     {
       id: "created_at",
       header: "Fecha",
@@ -122,10 +108,6 @@ export default function Idempotencia() {
     },
   ]);
 
-  const totalCreados = rows.filter((r) => !r.pending && r.hits === 0).length;
-  const totalCacheados = rows.filter((r) => !r.pending && r.hits > 0).length;
-  const totalDuplicadosBloqueados = rows.reduce((s, r) => s + r.hits, 0);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -143,15 +125,15 @@ export default function Idempotencia() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card><CardContent className="p-4">
           <div className="text-xs text-muted-foreground">Registros creados</div>
-          <div className="text-2xl font-semibold tabular-nums">{totalCreados}</div>
+          <div className="text-2xl font-semibold tabular-nums">{totales.totalCreados}</div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <div className="text-xs text-muted-foreground">Respuestas cacheadas</div>
-          <div className="text-2xl font-semibold tabular-nums">{totalCacheados}</div>
+          <div className="text-2xl font-semibold tabular-nums">{totales.totalCacheados}</div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <div className="text-xs text-muted-foreground">Duplicados bloqueados</div>
-          <div className="text-2xl font-semibold tabular-nums">{totalDuplicadosBloqueados}</div>
+          <div className="text-2xl font-semibold tabular-nums">{totales.totalDuplicadosBloqueados}</div>
         </CardContent></Card>
       </div>
 

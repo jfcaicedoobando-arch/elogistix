@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Plus, FileText, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
-import { useFacturasCxP, useEliminarFacturaProveedor } from "@/hooks/cxp";
+import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/hooks/cxp";
 import { buildCxPColumns } from "@/components/cxp/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/components/cxp/DialogNuevaFacturaProveedor";
 import { DialogRegistrarPagoProveedor } from "@/components/cxp/DialogRegistrarPagoProveedor";
@@ -17,40 +17,15 @@ import { CxpKpiCards } from "@/components/cxp/CxpKpiCards";
 import { useCobranza } from "@/hooks/facturacion";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
-import type { FacturaCxP, EstatusCxP } from "@/services/cxp";
-
-function useCxpFiltrosState() {
-  const [search, setSearch] = useState("");
-  const [estatus, setEstatus] = useState<EstatusCxP | "todos">("todos");
-  const [moneda, setMoneda] = useState<"todas" | "MXN" | "USD" | "EUR">("todas");
-  const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
-  const [proveedorId, setProveedorId] = useState<string>("todos");
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-  const hayFiltros =
-    search !== "" || estatus !== "todos" || moneda !== "todas" || origen !== "todos" ||
-    proveedorId !== "todos" || fechaDesde !== "" || fechaHasta !== "";
-  return {
-    search, setSearch, estatus, setEstatus, moneda, setMoneda, origen, setOrigen,
-    proveedorId, setProveedorId, fechaDesde, setFechaDesde, fechaHasta, setFechaHasta,
-    hayFiltros,
-  };
-}
+import type { FacturaCxP } from "@/services/cxp";
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
-  const f = useCxpFiltrosState();
+  const f = useCxpPageState();
 
-  const { data = [], isLoading, kpis } = useFacturasCxP({
-    search: f.search || undefined,
-    estatus: f.estatus,
-    moneda: f.moneda,
-    origen: f.origen,
-    proveedor_id: f.proveedorId === "todos" ? undefined : f.proveedorId,
-    fecha_desde: f.fechaDesde || undefined,
-    fecha_hasta: f.fechaHasta || undefined,
-  });
+  const { data = [], isLoading, kpis } = useFacturasCxP(f.queryArgs);
   const { data: cxc = [] } = useCobranza({});
+  const eliminar = useEliminarFacturaProveedor();
 
   const handlePdf = async () => {
     await descargarPdf(
@@ -62,26 +37,22 @@ export default function Cxp() {
     );
   };
 
-  const [openNueva, setOpenNueva] = useState(false);
-  const [pagar, setPagar] = useState<FacturaCxP | null>(null);
-  const [detalle, setDetalle] = useState<FacturaCxP | null>(null);
-  const [aEliminar, setAEliminar] = useState<FacturaCxP | null>(null);
-
-  const eliminar = useEliminarFacturaProveedor();
-
-  const onEliminar = (f: FacturaCxP) => {
-    if (f.pagado > 0) {
+  const onEliminar = (fact: FacturaCxP) => {
+    if (fact.pagado > 0) {
       toast.error("No se puede eliminar: la factura tiene pagos registrados");
       return;
     }
-    setAEliminar(f);
+    f.setAEliminar(fact);
   };
 
   const columns = useMemo(
     () => buildCxPColumns({
-      canEdit, onRegistrarPago: setPagar, onVerDetalle: setDetalle, onEliminar,
+      canEdit,
+      onRegistrarPago: f.setPagar,
+      onVerDetalle: f.setDetalle,
+      onEliminar,
     }),
-    [canEdit],
+    [canEdit, f.setPagar, f.setDetalle],
   );
 
   return (
@@ -95,11 +66,10 @@ export default function Cxp() {
               <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
             {canEdit && (
-              <Button onClick={() => setOpenNueva(true)}>
+              <Button onClick={() => f.setOpenNueva(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Capturar factura
               </Button>
             )}
-
           </div>
         }
       />
@@ -131,11 +101,10 @@ export default function Cxp() {
                 y empezar a registrar pagos.
               </p>
               {canEdit && (
-                <Button className="mt-4" onClick={() => setOpenNueva(true)}>
+                <Button className="mt-4" onClick={() => f.setOpenNueva(true)}>
                   <Plus className="h-4 w-4 mr-2" /> Capturar primera factura
                 </Button>
               )}
-
             </div>
           ) : (
             <DataTable
@@ -145,40 +114,40 @@ export default function Cxp() {
               emptyMessage="No hay facturas que coincidan con los filtros"
               rowKey={(f) => f.id}
               density="compact"
-              onRowClick={(f) => setDetalle(f)}
+              onRowClick={(fact) => f.setDetalle(fact)}
             />
           )}
         </CardContent>
       </Card>
 
-      <DialogNuevaFacturaProveedor open={openNueva} onOpenChange={setOpenNueva} />
+      <DialogNuevaFacturaProveedor open={f.openNueva} onOpenChange={f.setOpenNueva} />
       <DialogRegistrarPagoProveedor
-        open={!!pagar}
-        onOpenChange={(o) => !o && setPagar(null)}
-        factura={pagar}
+        open={!!f.pagar}
+        onOpenChange={(o) => !o && f.setPagar(null)}
+        factura={f.pagar}
       />
       <DialogDetallePagosProveedor
-        open={!!detalle}
-        onOpenChange={(o) => !o && setDetalle(null)}
-        factura={detalle}
+        open={!!f.detalle}
+        onOpenChange={(o) => !o && f.setDetalle(null)}
+        factura={f.detalle}
         canEdit={canEdit}
       />
       <DoubleConfirmDeleteDialog
-        open={!!aEliminar}
-        onOpenChange={(o) => !o && setAEliminar(null)}
-        entityName={aEliminar ? `la factura ${aEliminar.folio_proveedor}` : "la factura"}
-        description={aEliminar
-          ? `La factura ${aEliminar.folio_proveedor} de ${aEliminar.proveedor_nombre} será enviada a la papelera.`
+        open={!!f.aEliminar}
+        onOpenChange={(o) => !o && f.setAEliminar(null)}
+        entityName={f.aEliminar ? `la factura ${f.aEliminar.folio_proveedor}` : "la factura"}
+        description={f.aEliminar
+          ? `La factura ${f.aEliminar.folio_proveedor} de ${f.aEliminar.proveedor_nombre} será enviada a la papelera.`
           : undefined}
         finalDescription="Puedes restaurarla desde la papelera si fue un error."
         isPending={eliminar.isPending}
         onConfirm={async () => {
-          if (!aEliminar) return;
-          await eliminar.mutateAsync(aEliminar.id, {
+          if (!f.aEliminar) return;
+          await eliminar.mutateAsync(f.aEliminar.id, {
             onSuccess: () => toast.success("Factura eliminada"),
             onError: (e) => toast.error((e as Error).message),
           });
-          setAEliminar(null);
+          f.setAEliminar(null);
         }}
       />
     </div>
