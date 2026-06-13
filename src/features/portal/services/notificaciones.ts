@@ -2,7 +2,7 @@
  * Servicio Portal — Notificaciones del cliente.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { NotificacionCliente } from "@/types/portal";
+import type { NotificacionCliente } from "@/features/portal/types/portal";
 
 export async function fetchNotificacionesCliente(): Promise<NotificacionCliente[]> {
   const { data, error } = await supabase

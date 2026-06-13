@@ -7,12 +7,12 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
-import EmbarqueCard from "@/components/portal/EmbarqueCard";
+import EmbarqueCard from "@/features/portal/components/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { PortalEmbarquesMobileFilters } from "@/components/portal/PortalEmbarquesMobileFilters";
+import { PortalEmbarquesMobileFilters } from "@/features/portal/components/PortalEmbarquesMobileFilters";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
-import { usePortalEmbarquesController } from "@/hooks/portal";
+import { usePortalEmbarquesController } from "@/features/portal/hooks";
 import { useIsMobile } from "@/hooks/shared";
 
 export default function PortalEmbarques() {

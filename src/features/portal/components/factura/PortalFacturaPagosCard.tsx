@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { usePortalPagosFactura } from "@/hooks/portal";
+import { usePortalPagosFactura } from "@/features/portal/hooks";
 import { CheckCircle2, Clock } from "lucide-react";
 
 interface Props {

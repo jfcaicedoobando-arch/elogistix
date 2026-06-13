@@ -7,15 +7,15 @@ import {
   usePortalClientUsers,
   usePortalClienteName,
   usePortalOrgName,
-} from "@/hooks/portal";
-import { usePortalDashboardKpis } from "@/hooks/portal";
+} from "@/features/portal/hooks";
+import { usePortalDashboardKpis } from "@/features/portal/hooks";
 
-import { PortalWelcomeCard } from "@/components/portal/dashboard/PortalWelcomeCard";
-import { PortalKpiGrid } from "@/components/portal/dashboard/PortalKpiGrid";
-import { PortalEstadoEmbarquesCard } from "@/components/portal/dashboard/PortalEstadoEmbarquesCard";
-import { PortalProximosArribosCard } from "@/components/portal/dashboard/PortalProximosArribosCard";
-import { PortalFacturacionPendienteCard } from "@/components/portal/dashboard/PortalFacturacionPendienteCard";
-import { PortalEmbarquesRecientesCard } from "@/components/portal/dashboard/PortalEmbarquesRecientesCard";
+import { PortalWelcomeCard } from "@/features/portal/components/dashboard/PortalWelcomeCard";
+import { PortalKpiGrid } from "@/features/portal/components/dashboard/PortalKpiGrid";
+import { PortalEstadoEmbarquesCard } from "@/features/portal/components/dashboard/PortalEstadoEmbarquesCard";
+import { PortalProximosArribosCard } from "@/features/portal/components/dashboard/PortalProximosArribosCard";
+import { PortalFacturacionPendienteCard } from "@/features/portal/components/dashboard/PortalFacturacionPendienteCard";
+import { PortalEmbarquesRecientesCard } from "@/features/portal/components/dashboard/PortalEmbarquesRecientesCard";
 
 export default function PortalDashboard() {
   const { data: clientUsers = [] } = usePortalClientUsers();

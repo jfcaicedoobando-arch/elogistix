@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Pencil, KeyRound, User as UserIcon, Building2 } from "lucide-react";
-import { usePortalPerfil } from "@/hooks/portal";
-import { EditarContactoDialog } from "@/components/portal/perfil/EditarContactoDialog";
-import { CambiarPasswordDialog } from "@/components/portal/perfil/CambiarPasswordDialog";
+import { usePortalPerfil } from "@/features/portal/hooks";
+import { EditarContactoDialog } from "@/features/portal/components/perfil/EditarContactoDialog";
+import { CambiarPasswordDialog } from "@/features/portal/components/perfil/CambiarPasswordDialog";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (

@@ -4,8 +4,8 @@ import {
   fetchPortalPerfil,
   actualizarContactoPortal,
   cambiarPasswordPortal,
-} from "@/services/portal";
-import type { PortalPerfilData } from "@/services/portal";
+} from "@/features/portal/services";
+import type { PortalPerfilData } from "@/features/portal/services";
 
 export type { PortalPerfilData };
 

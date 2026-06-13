@@ -18,7 +18,7 @@ import {
   fetchPortalPerfil,
   actualizarContactoPortal,
   cambiarPasswordPortal,
-} from "@/services/portal/perfil";
+} from "@/features/portal/services/perfil";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

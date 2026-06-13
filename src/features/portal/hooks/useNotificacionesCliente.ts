@@ -8,11 +8,11 @@ import {
   fetchNotificacionesCliente,
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas,
-} from "@/services/portal";
+} from "@/features/portal/services";
 
 const KEY = ["portal", "notificaciones"] as const;
 
-export type { NotificacionCliente } from "@/types/portal";
+export type { NotificacionCliente } from "@/features/portal/types/portal";
 
 export function useNotificacionesCliente(enabled = true) {
   return useQuery({

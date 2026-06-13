@@ -14,7 +14,7 @@ import {
   fetchPortalFacturas,
   fetchPortalFactura,
   fetchPortalPagosFactura,
-} from "@/services/portal/queries";
+} from "@/features/portal/services/queries";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

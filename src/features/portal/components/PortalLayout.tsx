@@ -1,7 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
-import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal";
+import { usePortalClienteName, usePortalOrgName } from "@/features/portal/hooks";
 import { APP_VERSION } from "@/constants/appVersion";
 import { PortalHeader } from "./layout/PortalHeader";
 import { PortalBreadcrumbsBar } from "./layout/PortalBreadcrumbsBar";

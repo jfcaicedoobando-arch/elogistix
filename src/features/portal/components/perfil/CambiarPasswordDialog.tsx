@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { useActualizarContactoPortal } from "@/hooks/portal";
+import { useCambiarPasswordPortal } from "@/features/portal/hooks";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -21,48 +21,40 @@ import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contactoActual: string;
-  telefonoActual: string;
 }
 
-export function EditarContactoDialog({
-  open,
-  onOpenChange,
-  contactoActual,
-  telefonoActual,
-}: Props) {
+export function CambiarPasswordDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
-  const { mutateAsync, isPending } = useActualizarContactoPortal();
-  const [nombre, setNombre] = useState(contactoActual);
-  const [telefono, setTelefono] = useState(telefonoActual);
+  const { mutateAsync, isPending } = useCambiarPasswordPortal();
+  const [nueva, setNueva] = useState("");
+  const [confirma, setConfirma] = useState("");
 
   useEffect(() => {
-    if (open) {
-      setNombre(contactoActual);
-      setTelefono(telefonoActual);
+    if (!open) {
+      setNueva("");
+      setConfirma("");
     }
-  }, [open, contactoActual, telefonoActual]);
+  }, [open]);
 
   const handleSubmit = async () => {
-    const trimmed = nombre.trim();
-    if (!trimmed || trimmed.length > 100) {
-      toast({ title: "Nombre inválido", description: "Ingresa un nombre (máx 100 caracteres).", variant: "destructive" });
+    if (nueva.length < 8) {
+      toast({ title: "Contraseña muy corta", description: "Mínimo 8 caracteres.", variant: "destructive" });
       return;
     }
-    if (telefono.length > 30) {
-      toast({ title: "Teléfono inválido", description: "Máximo 30 caracteres.", variant: "destructive" });
+    if (nueva !== confirma) {
+      toast({ title: "No coinciden", description: "La confirmación no coincide.", variant: "destructive" });
       return;
     }
     try {
-      await mutateAsync({ nombre: trimmed, telefono: telefono.trim() });
-      toast({ title: "Contacto actualizado" });
+      await mutateAsync(nueva);
+      toast({ title: "Contraseña actualizada" });
       onOpenChange(false);
     } catch (err) {
       notifyError(toast, {
-        title: "No se pudo actualizar",
+        title: "No se pudo actualizar la contraseña",
         description: getErrorMessage(err),
         error: err,
-        method: "PORTAL_EDITAR_CONTACTO",
+        method: "PORTAL_CAMBIAR_PASSWORD",
       });
     }
   };
@@ -71,27 +63,30 @@ export function EditarContactoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("sm:max-w-md", scrollableDialog)}>
         <DialogHeader>
-          <DialogTitle>Editar contacto</DialogTitle>
-          <DialogDescription>Actualiza el nombre y teléfono del contacto principal.</DialogDescription>
+          <DialogTitle>Cambiar contraseña</DialogTitle>
+          <DialogDescription>Ingresa tu nueva contraseña (mínimo 8 caracteres).</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="perfil-contacto-nombre">Nombre del contacto</Label>
+            <Label htmlFor="perfil-pass-nueva">Nueva contraseña</Label>
             <Input
-              id="perfil-contacto-nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              maxLength={100}
-              autoFocus
+              id="perfil-pass-nueva"
+              type="password"
+              value={nueva}
+              onChange={(e) => setNueva(e.target.value)}
+              autoComplete="new-password"
+              maxLength={72}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="perfil-contacto-telefono">Teléfono</Label>
+            <Label htmlFor="perfil-pass-confirma">Confirmar contraseña</Label>
             <Input
-              id="perfil-contacto-telefono"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              maxLength={30}
+              id="perfil-pass-confirma"
+              type="password"
+              value={confirma}
+              onChange={(e) => setConfirma(e.target.value)}
+              autoComplete="new-password"
+              maxLength={72}
             />
           </div>
         </div>

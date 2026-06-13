@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/portal/usePortalData";
+import { usePortalEmbarques, usePortalClientUsers } from "@/features/portal/hooks/usePortalData";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 
 type EmbarqueRow = ReturnType<typeof usePortalEmbarques>["data"] extends ReadonlyArray<infer U> | undefined ? U : never;

@@ -3,15 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle } from "lucide-react";
-import { usePortalFactura } from "@/hooks/portal";
+import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
 import { toast } from "@/hooks/shared";
-import PortalFacturaResumenCard from "@/components/portal/factura/PortalFacturaResumenCard";
-import PortalFacturaConceptosTable from "@/components/portal/factura/PortalFacturaConceptosTable";
-import PortalFacturaPagosCard from "@/components/portal/factura/PortalFacturaPagosCard";
+import PortalFacturaResumenCard from "@/features/portal/components/factura/PortalFacturaResumenCard";
+import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";
+import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalFacturaPagosCard";
 
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
