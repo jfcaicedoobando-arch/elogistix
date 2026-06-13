@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.3] - 2026-06-13
+- **fix(tests/shard-3)**: Corrige `dynamicImportError.extra.test.ts` para no redefinir `window.location.reload`; jsdom lo expone como propiedad no configurable y eso podía provocar `exit code 1` en el shard 3 con reporter blob sin stack legible. `tryReloadForChunkError` ahora acepta una función opcional de recarga para pruebas, sin cambiar el comportamiento productivo.
+
 ## [13.0.2] - 2026-06-13
 - **fix(tests/shard-3)**: Elimina causas de timeout/OOM en el shard 3 detectadas por inspección (sin ejecutar shards):
   - `dynamicImportError.extra.test.ts` ya no reemplaza `globalThis.window` entero; ahora hace `spy` reversible de `window.location.reload` con `afterEach` que restaura el original (antes el `window` parchado se filtraba al siguiente archivo del shard y `vi.unstubAllGlobals()` no podía revertirlo).
