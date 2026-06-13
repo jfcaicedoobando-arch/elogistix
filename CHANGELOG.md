@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.95.9] - 2026-06-13
+- **ci(arquitectura)**: Pasos 8 y 9 del plan — cierre de la auditoría. (8) Verificado que `src/components/ui/` solo contiene primitivas shadcn + wrappers neutrales (`ErrorDetailsDialog`, `date-picker-mx`); cero referencias a `supabase`, `useQuery`, fetch o lógica de dominio. No requiere movimientos. (9) `.github/workflows/ci.yml` (job `quality`): nuevos steps `audit:arch` y `audit:casts` (logs informativos) + step gating "Architecture gating tests" que ejecuta `architecture.test.ts`, `architecture-baseline.test.ts`, `audit-report.test.ts` y `audit-casts-classifier.test.ts` en el job rápido (fuera del shard de tests), garantizando feedback en <5 min ante cualquier regresión de capas, oversized files, casts HIGH/CRITICAL o shadow folders. El step de `audit:report` se mantiene como artefacto + PR summary. Con esto el plan de auditoría arquitectónica queda 100% completado (Pasos 1–9).
+
 ## [12.95.8] - 2026-06-12
 - **docs(arquitectura)**: Paso 7 del plan — nuevo `docs/architecture.md` como documento canónico de capas (Pages → Components → Hooks → Services → Lib/Domain → Integrations), estructura folder-style `src/features/<dominio>/`, reglas de separación de concerns por capa, convenciones de naming, política de `src/components/ui` (solo primitivas shadcn), reglas backend (RLS + GRANT + `user_roles`), versionado/changelog y referencias cruzadas a memorias (`power-of-10`, `safe-cast`, `inline-styles`, `architecture-and-standards`). Centraliza información hasta ahora dispersa entre memorias y comentarios, y deja explícito el roadmap de migración pendiente (dominios layer-first → folder-style). Sin cambios de código productivo.
 
