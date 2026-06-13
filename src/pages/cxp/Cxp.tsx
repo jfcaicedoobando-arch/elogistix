@@ -37,13 +37,13 @@ export default function Cxp() {
     );
   };
 
-  const onEliminar = (fact: FacturaCxP) => {
+  const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
       toast.error("No se puede eliminar: la factura tiene pagos registrados");
       return;
     }
     f.setAEliminar(fact);
-  };
+  }, [f]);
 
   const columns = useMemo(
     () => buildCxPColumns({
