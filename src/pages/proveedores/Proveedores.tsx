@@ -1,23 +1,12 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState } from "react";
-import { toast as sonnerToast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProveedorMutations } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useToast } from "@/hooks/shared";
-import { usePermissions, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
-import type { Tables } from "@/types/db";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
-import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { insertProveedor, ProveedorDuplicadoError } from "@/services/proveedor";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query";
+import { usePermissions } from "@/hooks/shared";
 import { ProveedorTable } from "./ProveedorTable";
 import {
   ProveedoresFiltros,
@@ -26,8 +15,8 @@ import {
   type TipoFiltro,
   type SubtipoFiltro,
 } from "./ProveedoresFiltros";
-
-type Proveedor = Tables<"proveedores">;
+import { useProveedoresCrear } from "./useProveedoresCrear";
+import { ProveedoresImportDialog } from "./ProveedoresImportDialog";
 
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -44,39 +33,8 @@ export default function Proveedores() {
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const navigate = useNavigate();
-  const { addProveedor } = useProveedorMutations();
   const { canEdit } = usePermissions();
-  const registrarActividad = useRegistrarActividad();
-  const { toast } = useToast();
-  const { organizationId } = useOrgFilter();
-  const queryClient = useQueryClient();
-
-  const handleAdd = async (data: Omit<Proveedor, "id">) => {
-    try {
-      const proveedorCreado = await addProveedor(data);
-      registrarActividad.mutate({
-        accion: "crear",
-        modulo: "proveedores",
-        entidad_id: proveedorCreado.id,
-        entidad_nombre: data.nombre,
-      });
-      notifySuccess(toast, { title: "Proveedor creado correctamente" });
-    } catch (err) {
-      if (err instanceof ProveedorDuplicadoError) {
-        const existente = err.existente;
-        sonnerToast.error("Proveedor duplicado", {
-          description: existente
-            ? `Ya existe "${existente.nombre}" con este RFC en tu organización.`
-            : "Ya existe un proveedor con este RFC en tu organización.",
-          action: existente
-            ? { label: "Ver", onClick: () => navigate(`/proveedores/${existente.id}`) }
-            : undefined,
-        });
-        throw err; // mantiene el diálogo abierto
-      }
-      notifyError(toast, { title: "Error al crear proveedor", method: "HANDLE_ADD", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    }
-  };
+  const handleAdd = useProveedoresCrear();
 
   const limpiarFiltros = () => {
     setOrigen("todos");
@@ -151,41 +109,7 @@ export default function Proveedores() {
 
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
 
-      <BulkImportDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        title="Importar proveedores desde CSV"
-        description="Carga un CSV con proveedores. Incluye la columna 'categoria' (Logistico o GastoOperativo) y, según el caso, 'tipo' o 'subtipo_gasto'."
-        templateHeaders={PROVEEDOR_TEMPLATE_HEADERS}
-        templateExampleRow={[
-          "Maersk Line",
-          "Logistico",
-          "Naviera",
-          "",
-          "MLI010101AAA",
-          "Sandra López",
-          "55 1111 2222",
-          "contacto@maersk.com",
-          "USD",
-          "Dinamarca",
-        ]}
-        templateFileName="plantilla-proveedores.csv"
-        mapRows={(rows) => mapProveedorRows(rows, organizationId)}
-        onCommit={async (payloads) => {
-          for (const p of payloads) {
-            await insertProveedor(p);
-          }
-          registrarActividad.mutate({
-            accion: "crear",
-            modulo: "proveedores",
-            entidad_nombre: `Importación CSV (${payloads.length})`,
-          });
-        }}
-        onSuccess={(n) => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
-          notifySuccess(toast, { title: `Importados ${n} proveedores` });
-        }}
-      />
+      <ProveedoresImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {canEdit && (
         <FloatingActionButton

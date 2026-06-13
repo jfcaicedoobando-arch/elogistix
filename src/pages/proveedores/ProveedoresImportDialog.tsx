@@ -1,0 +1,61 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
+import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
+import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
+import { insertProveedor } from "@/services/proveedor";
+import { useToast, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
+import { notifySuccess } from "@/components/shared/utils/appFeedback";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * Diálogo de importación masiva de proveedores desde CSV.
+ * Extraído de `Proveedores.tsx` para mantener el page ≤200 LOC.
+ */
+export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
+  const { organizationId } = useOrgFilter();
+  const queryClient = useQueryClient();
+  const registrarActividad = useRegistrarActividad();
+  const { toast } = useToast();
+
+  return (
+    <BulkImportDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Importar proveedores desde CSV"
+      description="Carga un CSV con proveedores. Incluye la columna 'categoria' (Logistico o GastoOperativo) y, según el caso, 'tipo' o 'subtipo_gasto'."
+      templateHeaders={PROVEEDOR_TEMPLATE_HEADERS}
+      templateExampleRow={[
+        "Maersk Line",
+        "Logistico",
+        "Naviera",
+        "",
+        "MLI010101AAA",
+        "Sandra López",
+        "55 1111 2222",
+        "contacto@maersk.com",
+        "USD",
+        "Dinamarca",
+      ]}
+      templateFileName="plantilla-proveedores.csv"
+      mapRows={(rows) => mapProveedorRows(rows, organizationId)}
+      onCommit={async (payloads) => {
+        for (const p of payloads) {
+          await insertProveedor(p);
+        }
+        registrarActividad.mutate({
+          accion: "crear",
+          modulo: "proveedores",
+          entidad_nombre: `Importación CSV (${payloads.length})`,
+        });
+      }}
+      onSuccess={(n) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
+        notifySuccess(toast, { title: `Importados ${n} proveedores` });
+      }}
+    />
+  );
+}
