@@ -7,16 +7,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-const useFacturasMock = vi.fn();
-const useGastosPendientesMock = vi.fn();
-const useProformasPendientesMock = vi.fn();
-const marcarPagadoMutate = vi.fn();
-const registrarActividadMutate = vi.fn();
-const toastFn = vi.fn();
-const exportToCsvMock = vi.fn();
-const exportarLayoutContableMock = vi.fn();
-const notifyErrorMock = vi.fn();
-const notifySuccessMock = vi.fn();
+const {
+  useFacturasMock, useGastosPendientesMock, useProformasPendientesMock,
+  marcarPagadoMutate, registrarActividadMutate, toastFn,
+  exportToCsvMock, exportarLayoutContableMock,
+  notifyErrorMock, notifySuccessMock,
+} = vi.hoisted(() => ({
+  useFacturasMock: vi.fn(),
+  useGastosPendientesMock: vi.fn(),
+  useProformasPendientesMock: vi.fn(),
+  marcarPagadoMutate: vi.fn(),
+  registrarActividadMutate: vi.fn(),
+  toastFn: vi.fn(),
+  exportToCsvMock: vi.fn(),
+  exportarLayoutContableMock: vi.fn(),
+  notifyErrorMock: vi.fn(),
+  notifySuccessMock: vi.fn(),
+}));
 
 vi.mock("@/features/facturacion/hooks/useFacturas", () => ({
   useFacturas: () => useFacturasMock(),
