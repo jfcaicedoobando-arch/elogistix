@@ -42,6 +42,7 @@ const cot = (over: Record<string, unknown> = {}) => ({
   id: "cot-1", oportunidad_id: "opp-1", num_contenedores: 3,
   prospecto_empresa: "ACME", prospecto_contacto: "Juan",
   prospecto_email: "j@acme.mx", prospecto_telefono: "555",
+  ...over,
   // SAFE-CAST: shape mínimo de CotizacionRow requerido por el hook
 } as unknown as Parameters<typeof useCotizacionDetalleHandlers>[0]);
 
