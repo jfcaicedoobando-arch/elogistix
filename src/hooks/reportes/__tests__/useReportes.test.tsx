@@ -6,7 +6,7 @@ const { mockUseRentabilidad } = vi.hoisted(() => ({
   mockUseRentabilidad: vi.fn(),
 }));
 
-vi.mock('@/hooks/cliente/useRentabilidadClientes', () => ({
+vi.mock('@/features/cliente/hooks/useRentabilidadClientes', () => ({
   useRentabilidadClientes: mockUseRentabilidad,
 }));
 

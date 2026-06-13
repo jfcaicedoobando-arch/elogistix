@@ -9,7 +9,7 @@ const { mockFetchFacturas, mockListarPagos, mockRegistrarPago, mockEliminarPago 
   mockEliminarPago: vi.fn(),
 }));
 
-vi.mock('@/services/cxp', () => ({
+vi.mock('@/features/cxp/services', () => ({
   fetchFacturasCxP: mockFetchFacturas,
   calcularKPIsCxP: vi.fn(() => ({ total: 100 })),
   listarPagosProveedor: mockListarPagos,
