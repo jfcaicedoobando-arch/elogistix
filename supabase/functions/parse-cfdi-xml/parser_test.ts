@@ -93,3 +93,42 @@ Deno.test("parseCfdi suma Traslado/Retencion cuando no hay totales en raíz", ()
   assertEquals(r.iva_trasladado, 160);
   assertEquals(r.retenciones, 100);
 });
+
+Deno.test("parseCfdi rechaza XML vacío o no-CFDI", () => {
+  assertThrows(() => parseCfdi(""), Error, "CFDI válido");
+  assertThrows(() => parseCfdi("<foo/>"), Error, "CFDI válido");
+});
+
+Deno.test("parseCfdi limita conceptos a 10 (anti-DoS)", () => {
+  const conceptos = Array.from({ length: 25 }, (_, i) =>
+    `<cfdi:Concepto Descripcion="C${i}" Importe="10.00"/>`,
+  ).join("\n");
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="50" Fecha="2025-03-14T10:00:00" SubTotal="250.00" Total="250.00" Moneda="MXN">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Conceptos>${conceptos}</cfdi:Conceptos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="bbbbbbbb-cccc-dddd-eeee-ffffffffffff"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.conceptos.length, 10);
+  assertEquals(r.conceptos[0].descripcion, "C0");
+  assertEquals(r.conceptos[9].descripcion, "C9");
+});
+
+Deno.test("parseCfdi default: tipo_cambio=1 y moneda=MXN cuando faltan atributos", () => {
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="60" Fecha="2025-03-14T10:00:00" SubTotal="100.00" Total="100.00">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="cccccccc-dddd-eeee-ffff-000000000000"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.moneda, "MXN");
+  assertEquals(r.tipo_cambio, 1);
+});
+
