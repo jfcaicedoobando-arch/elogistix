@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { computeCliente360Totals } from "@/lib/crm/cliente360";
-import type { EtapaTipo } from "@/lib/crm/forecast";
+import { computeCliente360Totals } from "@/features/crm/domain/cliente360";
+import type { EtapaTipo } from "@/features/crm/domain/forecast";
 
 const tipos = new Map<string, EtapaTipo>([
   ["abierta", "abierta"],

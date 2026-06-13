@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, UserPlus, FileText, Target, AlarmClock, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { NbaIcono, NbaItem } from "@/lib/crm/nextBestActions";
+import type { NbaIcono, NbaItem } from "@/features/crm/domain/nextBestActions";
 
 const ICONS: Record<NbaIcono, typeof UserPlus> = {
   lead: UserPlus,

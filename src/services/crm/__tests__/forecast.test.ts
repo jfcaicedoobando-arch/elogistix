@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("@/lib/crm/forecast", () => ({
+vi.mock("@/features/crm/domain/forecast", () => ({
   computeForecast: vi.fn(() => ({ total: 0, ponderado: 0, por_vendedor: [] })),
   computeReportesCRM: vi.fn(() => ({ leads: [], oportunidades: [], motivosPerdida: [] })),
 }));

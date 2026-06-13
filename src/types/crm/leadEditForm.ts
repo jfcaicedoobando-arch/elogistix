@@ -3,7 +3,7 @@
  * Vivía en `hooks/crm/useLeadEditForm.ts`; movido a `types/` para que
  * `lib/crm/leadEditDirty.ts` pueda tiparse sin violar la regla lib→hooks.
  */
-import type { CrmLeadEstado, CrmLeadFuente } from "@/lib/crm/leads/constants";
+import type { CrmLeadEstado, CrmLeadFuente } from "@/features/crm/domain/leads/constants";
 
 export interface LeadEditForm {
   empresa: string;

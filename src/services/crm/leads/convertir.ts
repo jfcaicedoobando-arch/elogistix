@@ -2,8 +2,8 @@
  * Leads — conversión a cliente + oportunidad.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { type CrmLeadRow } from "@/lib/crm/leads/constants";
-import { type AuthLite } from "@/lib/crm/leads/leadPayload";
+import { type CrmLeadRow } from "@/features/crm/domain/leads/constants";
+import { type AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
 export interface ResolveClienteParams {
   lead: CrmLeadRow;

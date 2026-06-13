@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { useActualizarActividadNotas } from "@/hooks/crm";
 import type { CrmActividadRow } from "@/hooks/crm";
-import { crmToast } from "@/lib/crm/crmToast";
+import { crmToast } from "@/features/crm/domain/crmToast";
 
 interface Props {
   actividad: CrmActividadRow | null;

@@ -1,1 +1,1 @@
-export * from "@/lib/crm/leads/constants";
+export * from "@/features/crm/domain/leads/constants";

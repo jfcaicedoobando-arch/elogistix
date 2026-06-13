@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyEtapa, makeBucket, applyDelta } from "@/lib/crm/forecastBuckets";
+import { classifyEtapa, makeBucket, applyDelta } from "@/features/crm/domain/forecastBuckets";
 
 describe("classifyEtapa", () => {
   it("identifica abierta/ganada", () => {

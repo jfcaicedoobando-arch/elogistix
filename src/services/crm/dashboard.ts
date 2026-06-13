@@ -11,7 +11,7 @@ import {
   type EtapaRow,
   type TopDeal,
   type EmbudoRow,
-} from "@/lib/crm/dashboardAggregates";
+} from "@/features/crm/domain/dashboardAggregates";
 
 export interface CrmDashboardData {
   kpis: {

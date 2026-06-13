@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { buildOportunidadInsertPayload } from "@/lib/crm/oportunidadPayload";
+import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 
 export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
 export type Moneda = "MXN" | "USD" | "EUR";

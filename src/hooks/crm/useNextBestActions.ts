@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActividadesVencidasList } from "./useCrmDashboard";
 import { useCotizacionesSinRespuesta } from "./useCotizacionesSinRespuesta";
-import { computeNextBestActions, type NbaItem } from "@/lib/crm/nextBestActions";
+import { computeNextBestActions, type NbaItem } from "@/features/crm/domain/nextBestActions";
 import { fetchNbaSignals, type NbaSignals } from "@/services/crm/nbaSignals";
 
 function useNbaSignals() {

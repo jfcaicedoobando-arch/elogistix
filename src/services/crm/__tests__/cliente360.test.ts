@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("@/lib/crm/cliente360", () => ({
+vi.mock("@/features/crm/domain/cliente360", () => ({
   computeCliente360Totals: vi.fn(() => ({ totalAbierto: 1000, totalGanado: 500 })),
 }));
 

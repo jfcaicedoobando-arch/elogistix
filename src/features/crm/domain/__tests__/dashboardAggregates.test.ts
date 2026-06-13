@@ -6,7 +6,7 @@ import {
   isoDaysFromNow,
   type OpRow,
   type EtapaRow,
-} from "@/lib/crm/dashboardAggregates";
+} from "@/features/crm/domain/dashboardAggregates";
 
 const ops: OpRow[] = [
   { id: "a", nombre: "A", cliente_nombre: "X", monto_estimado: 1000, moneda: "MXN", probabilidad: 50, fecha_estimada_cierre: null, etapa_id: "e1" },

@@ -9,7 +9,7 @@ import {
   LEAD_FUENTES,
   type CrmLeadEstado,
   type CrmLeadFuente,
-} from "@/lib/crm/leads/constants";
+} from "@/features/crm/domain/leads/constants";
 
 export interface ParsedLeadRow {
   empresa: string;

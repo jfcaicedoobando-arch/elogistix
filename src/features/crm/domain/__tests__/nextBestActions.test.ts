@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeNextBestActions } from "@/lib/crm/nextBestActions";
+import { computeNextBestActions } from "@/features/crm/domain/nextBestActions";
 
 const NOW = new Date("2026-06-15T12:00:00Z");
 

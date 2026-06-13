@@ -10,7 +10,7 @@ import {
   mesLabel,
   type EtapaTipo,
   type OportunidadRow,
-} from "@/lib/crm/forecast";
+} from "@/features/crm/domain/forecast";
 
 const etapaTipos = new Map<string, EtapaTipo>([
   ["abierta-1", "abierta"],
