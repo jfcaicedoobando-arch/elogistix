@@ -45,3 +45,21 @@ Deno.test("resolveRedirectTo: usa fallback para origen no permitido", () => {
 Deno.test("resolveRedirectTo: permite localhost", () => {
   assertEquals(resolveRedirectTo("http://localhost:8080"), "http://localhost:8080/portal/login");
 });
+
+Deno.test("resolveRedirectTo: permite localhost sin puerto", () => {
+  assertEquals(resolveRedirectTo("http://localhost"), "http://localhost/portal/login");
+});
+
+Deno.test("resolveRedirectTo: permite preview oficial allow-listado", () => {
+  const ok = "https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app";
+  assertEquals(resolveRedirectTo(ok), `${ok}/portal/login`);
+});
+
+Deno.test("resolveRedirectTo: rechaza http no-localhost (downgrade attack)", () => {
+  assertEquals(resolveRedirectTo("http://elogistix.lovable.app"), "https://elogistix.lovable.app/portal/login");
+});
+
+Deno.test("resolveRedirectTo: rechaza string vacío", () => {
+  assertEquals(resolveRedirectTo(""), "https://elogistix.lovable.app/portal/login");
+});
+
