@@ -3,10 +3,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { DataTable } from "../components/DataTable";
 import {
-  agruparPorContenedor,
   columnasUSD,
   columnasMXN,
-  type ConceptoVenta,
   type GrupoContenedor,
 } from "./proformaConceptosColumns";
 
