@@ -6,7 +6,7 @@ import React from "react";
 vi.mock("@/hooks/shared", () => ({
   useOrgFilter: () => ({ organizationId: "org-1" }),
 }));
-vi.mock("@/services/facturas", () => ({
+vi.mock("@/features/facturas/services", () => ({
   fetchHuecoFacturacion: vi.fn(),
 }));
 vi.mock("@/generators/exportCsv", () => ({
