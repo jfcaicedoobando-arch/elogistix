@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuditoriaCount } from "@/features/auditoria/hooks";
 import { useAlertasPendingCount } from "@/hooks/admin";
-import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
+import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboard";
 import {
   SIDEBAR_DASHBOARD_ITEMS,
   SIDEBAR_GESTION_ITEMS,

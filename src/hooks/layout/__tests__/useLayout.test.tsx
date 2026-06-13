@@ -10,7 +10,7 @@ vi.mock('@/features/auditoria/hooks', () => ({
 vi.mock('@/hooks/admin', () => ({
   useAlertasPendingCount: () => ({ count: 2 }),
 }));
-vi.mock('@/hooks/crm/useCrmDashboard', () => ({
+vi.mock('@/features/crm/hooks/useCrmDashboard', () => ({
   useActividadesVencidasCount: () => ({ data: 0 }),
 }));
 

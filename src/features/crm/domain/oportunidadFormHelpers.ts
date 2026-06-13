@@ -2,7 +2,7 @@
  * Helpers para construir estado inicial del formulario de Oportunidad.
  * Extraído de `useOportunidadForm.ts` para bajar complejidad de la arrow del useEffect.
  */
-import type { CrmOportunidadRow, Moneda } from "@/services/crm/oportunidades";
+import type { CrmOportunidadRow, Moneda } from "@/features/crm/services/oportunidades";
 import type { User } from "@supabase/supabase-js";
 import { EMPTY_OPORTUNIDAD, type OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
 

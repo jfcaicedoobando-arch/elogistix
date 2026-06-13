@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
-import Cliente360Panel from "@/components/crm/Cliente360Panel";
+import Cliente360Panel from "@/features/crm/components/Cliente360Panel";
 import { DataTable } from "@/components/shared/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
 import TablaContactos from "@/components/cliente/TablaContactos";

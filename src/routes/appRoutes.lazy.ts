@@ -55,13 +55,13 @@ export const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
 export const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
 
 // CRM — anidado bajo /crm con CrmLayout
-export const CrmLayout = lazy(() => import("@/pages/crm/CrmLayout"));
-export const CrmDashboard = lazy(() => import("@/pages/crm/CrmDashboard"));
-export const CrmMiDia = lazy(() => import("@/pages/crm/MiDia"));
-export const Leads = lazy(() => import("@/pages/crm/Leads"));
-export const LeadDetalle = lazy(() => import("@/pages/crm/LeadDetalle"));
-export const Oportunidades = lazy(() => import("@/pages/crm/Oportunidades"));
-export const OportunidadDetalle = lazy(() => import("@/pages/crm/OportunidadDetalle"));
-export const ActividadesCrm = lazy(() => import("@/pages/crm/Actividades"));
-export const AnaliticaCrm = lazy(() => import("@/pages/crm/Analitica"));
-export const CrmConfiguracion = lazy(() => import("@/pages/crm/Configuracion"));
+export const CrmLayout = lazy(() => import("@/features/crm/routes/CrmLayout"));
+export const CrmDashboard = lazy(() => import("@/features/crm/routes/CrmDashboard"));
+export const CrmMiDia = lazy(() => import("@/features/crm/routes/MiDia"));
+export const Leads = lazy(() => import("@/features/crm/routes/Leads"));
+export const LeadDetalle = lazy(() => import("@/features/crm/routes/LeadDetalle"));
+export const Oportunidades = lazy(() => import("@/features/crm/routes/Oportunidades"));
+export const OportunidadDetalle = lazy(() => import("@/features/crm/routes/OportunidadDetalle"));
+export const ActividadesCrm = lazy(() => import("@/features/crm/routes/Actividades"));
+export const AnaliticaCrm = lazy(() => import("@/features/crm/routes/Analitica"));
+export const CrmConfiguracion = lazy(() => import("@/features/crm/routes/Configuracion"));
