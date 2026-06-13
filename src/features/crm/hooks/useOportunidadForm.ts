@@ -2,7 +2,7 @@
  * Estado del formulario de NuevaOportunidadDialog.
  * Extraído del componente para mantenerlo ≤200 LOC.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CrmOportunidadRow } from "@/features/crm/hooks/useOportunidades";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -30,13 +30,29 @@ export function useOportunidadForm(
 ) {
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
+  // Sólo recalculamos cuando cambia la *identidad* del registro o el estado
+  // open. `etapas` y `user` se leen vía ref para evitar que padres que pasen
+  // arreglos/objetos nuevos en cada render provoquen un loop infinito
+  // (setForm → re-render → useEffect → setForm…) que en suites grandes
+  // termina en OOM (~8GB). Ref + lectura perezosa rompe el ciclo sin
+  // perder el valor más reciente.
+  const etapasRef = useRef(etapas);
+  const userRef = useRef(user);
+  etapasRef.current = etapas;
+  userRef.current = user;
+
+  const oportunidadId = oportunidad?.id ?? null;
+
   useEffect(() => {
     if (oportunidad) {
       setForm(buildFromOportunidad(oportunidad));
     } else if (open) {
-      setForm(buildEmptyForNueva(etapas, user));
+      setForm(buildEmptyForNueva(etapasRef.current, userRef.current));
     }
-  }, [oportunidad, open, etapas, user]);
+    // `oportunidad` se usa como objeto pero la dependencia es el id; si el
+    // backend devuelve una nueva referencia con el mismo id, no recalculamos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oportunidadId, open]);
 
   const set = <K extends keyof OportunidadFormState>(k: K, v: OportunidadFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
