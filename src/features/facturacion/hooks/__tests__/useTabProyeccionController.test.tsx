@@ -89,6 +89,7 @@ describe("useTabProyeccionController", () => {
   });
 
   it("exportarCsv invoca exportToCsv con el nombre del mes actual", async () => {
+    fetchProyeccionMesMock.mockResolvedValueOnce([]);
     const { result, rerender } = renderHook(() => useTabProyeccionController(), {
       wrapper: wrapperFor("/facturacion?mes=2026-01"),
     });
