@@ -10,7 +10,7 @@ import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFactura } from "@/hooks/facturacion";
+import { useFactura } from "@/features/facturacion/hooks";
 import { usePermissions, useToast } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
@@ -19,11 +19,11 @@ import { openFacturaInNewTab } from "@/services/storage";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
-import { FacturaResumenCard } from "@/components/facturacion/detalle/FacturaResumenCard";
-import { FacturaConceptosTable } from "@/components/facturacion/detalle/FacturaConceptosTable";
-import { FacturaPagosSection } from "@/components/facturacion/detalle/FacturaPagosSection";
-import { FacturaBitacoraCard } from "@/components/facturacion/detalle/FacturaBitacoraCard";
-import { DialogRegistrarPago } from "@/components/facturacion/DialogRegistrarPago";
+import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
+import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
+import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
+import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
+import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();

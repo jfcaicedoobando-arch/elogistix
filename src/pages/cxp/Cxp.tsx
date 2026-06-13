@@ -14,7 +14,7 @@ import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRe
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
 import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
-import { useCobranza } from "@/hooks/facturacion";
+import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";

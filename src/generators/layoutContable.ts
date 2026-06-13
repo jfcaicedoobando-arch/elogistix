@@ -8,7 +8,7 @@
  * `services/facturas/exports.ts`. Este archivo es puramente presentación.
  */
 import { exportToCsv } from "@/generators/exportCsv";
-import { fetchLayoutContableData, type FacturaListItem } from "@/services/facturas";
+import { fetchLayoutContableData, type FacturaListItem } from "@/features/facturas/services";
 
 const HEADERS = [
   { key: "folio", label: "Folio" },

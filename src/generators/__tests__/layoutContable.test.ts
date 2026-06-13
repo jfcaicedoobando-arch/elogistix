@@ -8,7 +8,7 @@ vi.mock("@/generators/exportCsv", () => ({
 }));
 
 import { exportarLayoutContable } from "../layoutContable";
-import { fetchLayoutContableData } from "@/services/facturas";
+import { fetchLayoutContableData } from "@/features/facturas/services";
 import { exportToCsv } from "@/generators/exportCsv";
 
 const mockFetch = fetchLayoutContableData as ReturnType<typeof vi.fn>;

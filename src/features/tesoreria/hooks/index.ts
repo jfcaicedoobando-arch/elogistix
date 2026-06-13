@@ -9,7 +9,7 @@ import {
   type FiltrosMovimientos, type MovimientoBBVA,
 } from "@/features/tesoreria/services";
 import { calcularResumenTesoreria, type ResumenTesoreria } from "@/lib/domain/tesoreria";
-import { useCobranza } from "@/hooks/facturacion";
+import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/lib/import/bbva";

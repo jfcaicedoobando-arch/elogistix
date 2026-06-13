@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/shared/PageHeader";
-import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
+import { TabProyeccion } from "@/features/facturacion/components/TabProyeccion";
 
 export default function ProfitProyeccion() {
   return (
