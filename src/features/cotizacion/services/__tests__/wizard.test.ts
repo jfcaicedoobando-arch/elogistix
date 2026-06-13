@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const uploadFileMock = vi.fn(async () => undefined);
+const { uploadFileMock } = vi.hoisted(() => ({ uploadFileMock: vi.fn(async () => undefined) }));
 vi.mock("@/services/storage/index", () => ({ uploadFile: uploadFileMock }));
 vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T,>(x: unknown) => x as T }));
 

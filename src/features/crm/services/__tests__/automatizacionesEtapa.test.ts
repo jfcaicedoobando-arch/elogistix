@@ -6,7 +6,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-const notificarMock = vi.fn(async () => undefined);
+const { notificarMock } = vi.hoisted(() => ({ notificarMock: vi.fn(async () => undefined) }));
 vi.mock("../notificaciones", () => ({ crearNotificacionSilencioso: notificarMock }));
 
 import {
