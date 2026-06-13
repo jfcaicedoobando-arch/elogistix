@@ -17,7 +17,7 @@ import type { Virtualizer, VirtualItem } from "@tanstack/react-virtual";
 import { VirtualRow } from "@/components/shared/VirtualRow";
 
 interface VirtualRowsContainerProps<T> {
-  virtualizer: Virtualizer<HTMLDivElement, Element>;
+  virtualizer: Virtualizer<HTMLDivElement, HTMLElement>;
   virtualItems: VirtualItem[];
   rows: Row<T>[];
   gridTemplate: string;
