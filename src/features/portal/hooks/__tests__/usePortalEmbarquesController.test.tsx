@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-vi.mock("@/hooks/portal/usePortalData", () => ({
+vi.mock("@/features/portal/hooks/usePortalData", () => ({
   usePortalClientUsers: () => ({ data: [{ cliente_id: "c1" }] }),
   usePortalEmbarques: () => ({
     data: [

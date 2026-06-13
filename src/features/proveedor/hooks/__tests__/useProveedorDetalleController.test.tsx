@@ -8,7 +8,7 @@ vi.mock("react-router-dom", () => ({
   useParams: vi.fn(() => ({ id: "prov-1" })),
 }));
 
-vi.mock("@/hooks/proveedor/useProveedores", () => ({
+vi.mock("@/features/proveedor/hooks/useProveedores", () => ({
   useProveedor: vi.fn(() => ({ data: { id: "prov-1", nombre: "Prov One" }, isLoading: false })),
   useProveedorMutations: vi.fn(() => ({
     updateProveedor: vi.fn(),

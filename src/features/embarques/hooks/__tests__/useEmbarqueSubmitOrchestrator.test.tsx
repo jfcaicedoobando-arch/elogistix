@@ -18,7 +18,7 @@ vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
   useCreateEmbarque: () => ({ mutateAsync: createEmbarqueMock, isPending: false }),
 }));
 
-vi.mock("@/hooks/cotizacion", () => ({
+vi.mock("@/features/cotizacion/hooks", () => ({
   useUpdateEstadoCotizacion: () => ({ mutateAsync: vi.fn() }),
 }));
 

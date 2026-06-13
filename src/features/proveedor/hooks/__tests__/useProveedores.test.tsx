@@ -4,7 +4,7 @@ import { useProveedoresPaginados, useProveedorMutations } from "../useProveedore
 import { createWrapper } from "@/test/utils/queryWrapper";
 import * as proveedorService from "@/features/proveedor/services";
 
-vi.mock("@/services/proveedor", () => ({
+vi.mock("@/features/proveedor/services", () => ({
   fetchProveedoresPaginados: vi.fn().mockResolvedValue({ data: [], count: 0 }),
   insertProveedor: vi.fn().mockResolvedValue({ success: true }),
   updateProveedor: vi.fn().mockResolvedValue({ success: true }),

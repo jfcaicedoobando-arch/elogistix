@@ -20,7 +20,7 @@ vi.mock("../useContenedoresEmbarque", () => ({
   useContenedoresEmbarque: () => ({ data: [], isLoading: false }),
 }));
 
-vi.mock("@/hooks/cliente/useClientes", () => ({
+vi.mock("@/features/cliente/hooks/useClientes", () => ({
   useClientesForSelect: () => ({ data: [{ id: "cli-1", nombre: "Cliente 1" }] }),
   useContactosCliente: () => ({ data: [] }),
 }));

@@ -6,7 +6,7 @@ const convertirProspectoACliente = vi.hoisted(() => vi.fn());
 const convertirCotizacionAEmbarques = vi.hoisted(() => vi.fn());
 const crearEmbarqueBorradorDesdeCotizacion = vi.hoisted(() => vi.fn());
 
-vi.mock("@/services/cotizacion", () => ({
+vi.mock("@/features/cotizacion/services", () => ({
   convertirProspectoACliente,
   convertirCotizacionAEmbarques,
   crearEmbarqueBorradorDesdeCotizacion,

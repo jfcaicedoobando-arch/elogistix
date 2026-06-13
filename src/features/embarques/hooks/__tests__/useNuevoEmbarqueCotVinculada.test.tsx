@@ -4,7 +4,7 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 import { useNuevoEmbarqueCotVinculada } from "../useNuevoEmbarqueCotVinculada";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("@/services/cotizacion", () => ({
+vi.mock("@/features/cotizacion/services", () => ({
   fetchCotizacionCostosForEmbarque: vi.fn().mockResolvedValue([]),
 }));
 
