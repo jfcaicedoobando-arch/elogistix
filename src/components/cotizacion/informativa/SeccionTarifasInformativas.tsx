@@ -14,7 +14,7 @@ import { MONEDAS_TARIFARIO, UNIDADES_MEDIDA_TARIFARIO } from "@/constants/cotiza
 import {
   nuevaTarifaInformativa,
   type TarifaInformativa,
-} from "@/types/cotizacionInformativa";
+} from "@/types/cotizacion";
 
 interface Props {
   tarifas: TarifaInformativa[];

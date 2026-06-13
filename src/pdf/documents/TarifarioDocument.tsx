@@ -11,7 +11,7 @@ import { BillToBlock } from "../components/BillToBlock";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { parseTarifasInformativas } from "@/services/cotizacion";
-import type { TarifaInformativa } from "@/types/cotizacionInformativa";
+import type { TarifaInformativa } from "@/types/cotizacion";
 
 interface Props {
   cotizacion: CotizacionRow;

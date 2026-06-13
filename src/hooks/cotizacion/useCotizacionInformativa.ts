@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { crearCotizacionInformativa } from "@/services/cotizacion/informativa";
-import type { CotizacionInformativaInput } from "@/types/cotizacionInformativa";
+import type { CotizacionInformativaInput } from "@/types/cotizacion";
 
 export function useCreateCotizacionInformativa() {
   const qc = useQueryClient();

@@ -6,8 +6,8 @@ import {
 } from '@/services/cotizacion';
 import { newRequestId } from '@/lib/idempotency';
 
-export type { CostoCotizacion } from '@/types/cotizacionCosto';
-import type { CostoCotizacion } from '@/types/cotizacionCosto';
+export type { CostoCotizacion } from '@/types/cotizacion';
+import type { CostoCotizacion } from '@/types/cotizacion';
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({

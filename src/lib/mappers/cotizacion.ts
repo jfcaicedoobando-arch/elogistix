@@ -1,5 +1,5 @@
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/types/cotizacion';
-import type { CotizacionFormValues } from '@/types/cotizacionForm';
+import type { CotizacionFormValues } from '@/types/cotizacion';
 
 /**
  * Construye el payload de datos generales (Paso 1) para crear/actualizar una cotización.
