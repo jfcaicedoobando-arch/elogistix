@@ -3,7 +3,7 @@ import { renderHook } from "@testing-library/react";
 
 const { mockCompute } = vi.hoisted(() => ({ mockCompute: vi.fn() }));
 
-vi.mock("@/lib/financial/embarqueKpis", () => ({
+vi.mock("@/features/embarques/domain/embarqueKpis", () => ({
   computeEmbarqueKpis: mockCompute,
 }));
 

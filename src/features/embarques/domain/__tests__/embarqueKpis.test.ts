@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeEmbarqueKpis } from "@/lib/financial/embarqueKpis";
+import { computeEmbarqueKpis } from "@/features/embarques/domain/embarqueKpis";
 
 describe("computeEmbarqueKpis", () => {
   it("retorna ceros con listas vacías", () => {
