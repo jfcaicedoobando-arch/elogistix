@@ -6,7 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.97.0] - 2026-06-13
+- **fix(ci, crítico)**: Restaura CI roto por versiones de GitHub Actions inexistentes (`@v6`/`@v7`). Se degradan a `@v4` estable en `ci.yml`, `e2e.yml`, `post-deploy-smoke.yml` (`actions/checkout`, `actions/cache`, `actions/upload-artifact`, `actions/download-artifact`, `codecov/codecov-action`).
+- **ci**: Añade `permissions: contents: read` a nivel workflow en `ci.yml` (principio de mínimo privilegio).
+- **ci**: Fija `bun-version: 1.x` en `e2e.yml` (consistente con `ci.yml`, evita roturas por upgrade silencioso).
+- **ci**: Incluye `deno.json`/`deno.lock` en la key de cache de Deno (`ci.yml`) para invalidación precisa.
+- **ci**: Nuevo gate de tamaño de bundle (`scripts/check-bundle-size.sh`, budget 350 KB gzipped en entry chunk) + step de bundle analyzer informativo que sube `dist/bundle-stats.html` como artifact.
+- **perf(bundle)**: `src/lib/import/bbva.ts` ahora hace `await import("xlsx")` dentro de `parseEstadoCuentaBBVA`. La lib (~400 KB) sale del chunk de Tesorería y sólo se descarga cuando un usuario importa un .xlsx real.
+- **build**: `vite.config.ts` baja `chunkSizeWarningLimit` de 500 → 350 kB para visibilizar regresiones tempranas.
+- **deps**: `rollup-plugin-visualizer` movido a `devDependencies` (es plugin de build, no runtime).
+- **tests**: `vitest.config.ts` sube umbrales de coverage `lines/statements` de 30 → 40%. Nuevas features deben venir con tests o el merge falla.
+
 ## [12.96.7] - 2026-06-13
+
 - **fix(ci)**: Resuelve fallos de CI post-migración folder-style.
   - `src/features/crm/types/oportunidades.ts` nuevo: extrae `CrmOportunidadRow`, `Moneda` y `OportunidadInput` para que `domain/` y `services/` los consuman desde una capa neutra (elimina 3 errores `no-restricted-imports` de `domain → services`).
   - `knip.json`: ignora `src/features/*/index.ts` (barrels) y `src/constants/cache.ts` (constantes reservadas para uso futuro).
