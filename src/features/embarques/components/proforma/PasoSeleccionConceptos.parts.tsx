@@ -9,7 +9,6 @@ import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
-type EmbarqueContenedor = Tables<"embarque_contenedores">;
 
 interface ConceptoRowProps {
   c: ConceptoVenta;
@@ -153,8 +152,3 @@ export function ProformaFooterFields({
   );
 }
 
-export function buildContenedorLabelMap(contenedores: EmbarqueContenedor[]) {
-  return new Map(
-    contenedores.map((c) => [c.id, c.numero_contenedor || `#${c.orden}`]),
-  );
-}

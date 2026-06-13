@@ -29,7 +29,7 @@ describe("lib/utils — cn", () => {
   });
 
   it("cn: ignora falsy values", () => {
-    expect(cn("a", false && "b", null, undefined, "c")).toBe("a c");
+    expect(cn("a", "", null, undefined, "c")).toBe("a c");
   });
 });
 

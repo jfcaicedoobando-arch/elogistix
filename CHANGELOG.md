@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.99.1] - 2026-06-13
+- **fix(lint)**: Resuelve 1 error y 7 warnings de ESLint:
+  - Extrae helpers puros de `ProveedorCsfUpdateButton` y `procesarCsfUpload` para bajar complejidad ciclomática por debajo de 16.
+  - Extrae `extractImpuestos` en `parse-cfdi-xml/parser` para bajar complejidad de `parseCfdi`.
+  - Mueve `buildContenedorLabelMap` a `PasoSeleccionConceptos.helpers.ts` y las columnas PDF (`columnasUSD`, `columnasMXN`, `agruparPorContenedor`) a `proformaConceptosColumns.ts`, eliminando warnings `react-refresh/only-export-components`.
+  - Corrige test `utilsPuros` reemplazando expresión binaria constante `false && "b"` por `""`.
+
 ## [12.99.0] - 2026-06-13
 - **test(coverage)**: Suma 10 archivos de tests sobre lógica de negocio (~100 casos verdes) en módulos previamente sin cobertura directa:
   - `src/features/crm/services/vincularCotizacion/helpers.ts` — 10 casos (buildOpNombre, resolveEtapaCotizandoId, setCotizacionOportunidad).

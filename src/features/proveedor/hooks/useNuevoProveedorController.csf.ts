@@ -4,7 +4,7 @@
  * que el controller fusionará en el form. Solo aplica a proveedores nacionales.
  */
 import { toast } from "sonner";
-import { parseCsf } from "@/services/csf";
+import { parseCsf, type CsfParsedData } from "@/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
 export type CsfPatch = Partial<
@@ -14,19 +14,23 @@ export type CsfPatch = Partial<
   >
 >;
 
+function buildCsfPatch(data: CsfParsedData): CsfPatch {
+  return {
+    nombre: data.nombre?.trim() || undefined,
+    rfc: data.rfc?.trim() || undefined,
+    cp: data.cp?.trim() || undefined,
+    direccion: data.direccion?.trim() || undefined,
+    ciudad: data.ciudad?.trim() || undefined,
+    estado: data.estado?.trim() || undefined,
+    regimen_fiscal: data.regimen_fiscal?.trim() || undefined,
+  };
+}
+
 export async function procesarCsfUpload(file: File): Promise<CsfPatch | null> {
   try {
     const data = await parseCsf(file);
     toast.success("CSF procesada. Verifica los datos extraídos.");
-    return {
-      nombre: data.nombre?.trim() || undefined,
-      rfc: data.rfc?.trim() || undefined,
-      cp: data.cp?.trim() || undefined,
-      direccion: data.direccion?.trim() || undefined,
-      ciudad: data.ciudad?.trim() || undefined,
-      estado: data.estado?.trim() || undefined,
-      regimen_fiscal: data.regimen_fiscal?.trim() || undefined,
-    };
+    return buildCsfPatch(data);
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
     toast.error(mensaje);
