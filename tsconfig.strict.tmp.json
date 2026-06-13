@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.app.json","compilerOptions":{"strict":true,"strictFunctionTypes":true,"strictBindCallApply":true,"strictPropertyInitialization":true,"noImplicitThis":true,"useUnknownInCatchVariables":true,"alwaysStrict":true}}
