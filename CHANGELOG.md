@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.4] - 2026-06-13
+- **fix(tests/shard-9)**: Corrige fugas detectadas por inspección en el shard 9: `mutations.extra.test.ts` activa fake timers por test para no quedar desincronizado con el cleanup global, y `useEmbarqueDocumentosActions.test.tsx` usa `vi.stubGlobal("fetch", ...)` en lugar de asignar `global.fetch` directamente.
+
 ## [13.0.3] - 2026-06-13
 - **fix(tests/shard-3)**: Corrige `dynamicImportError.extra.test.ts` para no redefinir `window.location.reload`; jsdom lo expone como propiedad no configurable y eso podía provocar `exit code 1` en el shard 3 con reporter blob sin stack legible. `tryReloadForChunkError` ahora acepta una función opcional de recarga para pruebas, sin cambiar el comportamiento productivo.
 

@@ -1,12 +1,9 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { LeadInput } from "@/features/crm/domain/leads/constants";
 import type { AuthLite } from "@/features/crm/domain/leads/leadPayload";
 
-// Fake timers escopados al archivo. NUNCA en top-level: en pool forks con
-// singleFork+isolate, los timers parchados a nivel de módulo pueden filtrarse
-// al siguiente archivo del shard y colgar `waitFor` indefinidamente (OOM).
-beforeAll(() => { vi.useFakeTimers({ now: new Date("2026-06-13T12:00:00Z") }); });
-afterAll(() => { vi.useRealTimers(); });
+// Fake timers POR TEST: el cleanup global llama `vi.useRealTimers()` después de
+// cada caso, así que activarlos en beforeAll deja al resto con fecha real.
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -20,7 +17,11 @@ const TABLE = "crm_leads";
 const minInput: LeadInput = { empresa: "Empresa Test" };
 const user: AuthLite = { id: "u-1", email: "user@test.com" };
 
-beforeEach(() => { mock.tableCalls.length = 0; });
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  vi.useFakeTimers({ now: new Date("2026-06-13T12:00:00Z") });
+});
+afterEach(() => { vi.useRealTimers(); });
 
 describe("crm/leads/mutations (extra)", () => {
   it("01 — createLead: retorna el id del registro creado", async () => {

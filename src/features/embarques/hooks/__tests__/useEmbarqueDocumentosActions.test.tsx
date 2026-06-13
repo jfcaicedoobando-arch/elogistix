@@ -73,10 +73,10 @@ describe("useEmbarqueDocumentosActions", () => {
   it("handleDownload obtiene signed URL, descarga blob y resetea downloadingDocId", async () => {
     getSignedUrlMock.mockClear();
     descargarBlobMock.mockClear();
-    global.fetch = vi.fn().mockResolvedValue({
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,
       blob: () => Promise.resolve(new Blob(["pdf-data"])),
-    }) as unknown as typeof fetch;
+    }));
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },
@@ -91,7 +91,7 @@ describe("useEmbarqueDocumentosActions", () => {
 
   it("handleDownload notifica error cuando fetch falla", async () => {
     sonnerSuccess.mockClear(); sonnerError.mockClear();
-    global.fetch = vi.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },
