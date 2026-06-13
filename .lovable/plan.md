@@ -1,115 +1,117 @@
-# Auditoría Arquitectónica — v12.95.2
+# Auditoría Arquitectónica — Hallazgos fuera de `audit:all`
 
-Baseline general: **muy saludable**. El proyecto ya tiene un pipeline de auditoría continuo (`bun run audit:all`) con reglas Power-of-10 y tests de arquitectura. La mayoría de capas están limpias. Los hallazgos son acotados y priorizables.
+`bun run audit:all` está 100% verde (0 oversized, 0 imports directos, 0 casts HIGH, 0 duplicados de test). Esta auditoría se enfoca en lo que el pipeline automático **no** detecta: acoplamiento, misplaced logic, god hooks en zona de riesgo, duplicación estructural y cajones de sastre.
 
 ## Resumen ejecutivo
 
-| Área | Estado | Detalle |
-|---|---|---|
-| Capa Pages→Hooks→Services→Lib | ✅ | 0 imports directos a `@/integrations/supabase/client` desde hooks/components/pages |
-| Power-of-10 (>200 líneas) | ⚠️ | 17 archivos productivos exceden el límite |
-| Casts riesgosos | ✅ | 1 HIGH, 0 CRITICAL sobre 1358 casts |
-| Higiene de tests | ⚠️ | 3 títulos duplicados |
-| Organización por dominio | ⚠️ | Convivencia de dos patrones: `src/features/*` (folder-style) y `src/{components,hooks,services,pages}/<dominio>` (layer-first) |
-| Separación de concerns | ✅ | Servicios desacoplados, hooks orquestan, componentes presentacionales |
 
-## Hallazgos principales
+| Área                                    | Estado | Hallazgo principal                                                                                                                                                     |
+| --------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Layer-first vs folder-style          | ❌      | 16 dominios en 4 carpetas espejo. CRM (137 archivos), cotizacion (97), portal (57) son los peores                                                                      |
+| 2. Misplaced logic                      | ⚠️     | `pages/cxp/Cxp.tsx` 12 `useState` inline; `Papelera.tsx`/`Idempotencia.tsx` con `useQuery`/`useMutation` directos                                                      |
+| 3. God hooks (150-200 líneas)           | ⚠️     | 10 hooks a 1 PR del guard: `useUpdateEmbarque` (198), `useNuevaFacturaProveedorForm` (193), `useNuevoProveedorController` (190)                                        |
+| 4. Acoplamiento entre dominios          | ❌      | `services/tesoreria/{resumen,flujoProyectado}.ts` importan **directamente** `services/facturas` y `services/cxp`; `dashboard-ejecutivo` re-exporta tipos de 4 dominios |
+| 5. Duplicación                          | ⚠️     | `lib/crm/` (12 archivos) y `lib/domain/` (11) = shadow-features; `lib/financial/` mezcla embarques + profit + IVA                                                      |
+| 6. Services sin split queries/mutations | ⚠️     | `crm`, `facturas`, `cxp`, `tesoreria`, `admin` mezclan lecturas y escrituras                                                                                           |
+| 7. Cajones de sastre                    | ⚠️     | `components/selects/{Naviera,Port}Select` son dominio; `components/shared/ProfitBadge` tiene reglas de negocio; `hooks/shared/useSidebarAlerts` es layout              |
+| 8. `lib` con lógica de dominio          | ❌      | `lib/crm/`, `lib/domain/{cotizacion,proforma,estadoResultados,proyeccionFacturacion}`, `lib/facturacion/`, `lib/operaciones/`                                          |
+| 9. Barrels                              | ✅      | Sin ciclos; sin self-imports en features                                                                                                                               |
+| 10. Generators/PDF                      | ✅      | Limpios; sin Supabase, sin duplicación funcional                                                                                                                       |
+| 11. Routing                             | ✅      | Split limpio, lazy consistente                                                                                                                                         |
+| 12. Tipos                               | ⚠️     | `src/types/cotizacion*.ts` (5 archivos) drift vs `features/*/types/`                                                                                                   |
 
-### 1. Inconsistencia estructural (modular vs por capa) — ALTA
-Solo 3 dominios (`auditoria`, `costeo`, `embarques`) viven en `src/features/<dominio>/{domain,services,hooks,components,routes,types}`. El resto (proveedor, cliente, cotizacion, facturas, cxp, crm, tesoreria, profit, presupuesto, comisiones, portal, etc.) está disperso en `src/components/<dominio>`, `src/hooks/<dominio>`, `src/services/<dominio>` y `src/pages/<dominio>`. Esto:
-- Obliga a saltar entre 4 árboles para entender un dominio.
-- Fragmenta la propiedad y dificulta refactors transversales.
-- Reduce el beneficio del barrel `index.ts` ya adoptado en `features/*`.
 
-### 2. Archivos > 200 líneas (Power-of-10) — ALTA
-17 archivos rompen el límite. Top 5:
-- `components/proveedor/NuevoProveedorDialog.tsx` (325) — mezcla wizard + validación + IO.
-- `pages/proveedores/ProveedorDetalle.tsx` (293) — tabs + queries + acciones.
-- `hooks/cxp/useNuevaFacturaProveedorForm.ts` (266) — RHF + cálculos + side-effects.
-- `features/costeo/components/TarifaForm.tsx` (261).
-- `features/embarques/components/StepCostosPrecios.tsx` (247).
+## Hallazgos críticos (detalle)
 
-### 3. Cast HIGH único — MEDIA
-`src/services/embarques/reconciliacionCostos.ts:125`:
-```ts
-const conceptos = (cc ?? []) as unknown as CCRow[];
-```
-Doble cast sobre respuesta Supabase sin parseo.
+**CRÍTICO-1 — `lib/crm/` es feature sin padre.** 12 archivos de dominio (`cliente360`, `forecast`, `nextBestActions`, `oportunidadFormState`, etc.) viven fuera de cualquier feature mientras `crm` tiene 230+ archivos repartidos en 4 capas.
 
-### 4. Hygiene de tests — BAJA
-3 títulos duplicados (cliente/embarques, facturas/cobranza).
+**CRÍTICO-2 — `lib/domain/` papelera multidominio.** `cotizacion.ts` (133L), `estadoResultados.ts` (183L), `proforma.ts`, `proyeccionFacturacion/` son reglas de negocio sin owner; sin convención, este directorio crece sin freno.
 
-### 5. UI distribuida en dos árboles — MEDIA
-Coexisten `src/components/<dominio>/` y `src/pages/<dominio>/` para el mismo dominio (ej. `proveedor` tiene componentes en `components/proveedor` y rutas en `pages/proveedores`). Refuerza el #1.
-
-### 6. God components / controllers gordos — MEDIA
-`useNuevoProveedorController.ts` (246) y `useNuevaFacturaProveedorForm.ts` (266) acumulan estado RHF + cálculos derivados + submission + side-effects. Idealmente: hook de estado + hook de mutación + utilidades puras en `lib/`.
-
-## Plan de mejora (orden de prioridad)
+**CRÍTICO-3 — Acoplamiento service→service.**
 
 ```text
-CRÍTICO  →  Paso 1, 2
-ALTO     →  Paso 3, 4
-MEDIO    →  Paso 5, 6
-OPCIONAL →  Paso 7, 8, 9
+services/tesoreria/resumen.ts:9-10   → @/services/facturas, @/services/cxp
+services/tesoreria/flujoProyectado.ts:12-13 → mismos
 ```
 
-### Paso 1 — Resolver el cast HIGH (esfuerzo: bajo)
-Reemplazar el `as unknown as CCRow[]` en `services/embarques/reconciliacionCostos.ts:125` por un type guard o `zod`/`fromDb` ya usado en el proyecto. Deja la auditoría 100% verde.
+Cualquier cambio de firma en `fetchCobranza`/`fetchFacturasCxP` rompe tesorería sin señal en el grafo.
 
-### Paso 2 — Bajar todos los archivos productivos a ≤200 líneas (esfuerzo: medio)
-Una PR por archivo, extrayendo:
-- Sub-componentes a `<dominio>/<Componente>/<Subparte>.tsx`.
-- Lógica de validación/cálculos a `lib/` o `domain/`.
-- Mutaciones React Query a hooks dedicados.
-Empezar por los 5 top y avanzar hasta vaciar la lista de 17.
+**ALTO-1..5** (detalle abreviado):
 
-### Paso 3 — Adoptar `src/features/<dominio>/` como estructura única (esfuerzo: alto, iterativo)
-Migrar dominios uno a uno desde `{components,hooks,services,pages}/<dominio>` a `features/<dominio>/{domain,services,hooks,components,routes,types,index.ts}`. Orden sugerido por volumen y acoplamiento:
-1. `proveedor` (más oversized hits).
-2. `cxp`.
-3. `cotizacion`.
-4. `facturas`.
-5. `cliente`.
-6. `crm`.
-7. `tesoreria`, `profit`, `presupuesto`, `comisiones`, `portal` (más pequeños, último).
+- `pages/cxp/Cxp.tsx` líneas 23-68 — 12 `useState` + memos sin controller
+- `pages/admin/Papelera.tsx` líneas 46-75 — `useQuery`+2 `useMutation` inline
+- `components/facturacion/TabCobranza.tsx` importa `useFacturasCxP` (cruce de dominios en UI)
+- `services/dashboard-ejecutivo/types.ts:1-5` re-declara tipos de tesorería/presupuesto
+- 16 dominios en layer-first; CRM/cotizacion/portal los más voluminosos
 
-Cada migración: mover archivos, actualizar imports, conservar barrel `index.ts`, mantener el test de arquitectura verde.
+## Plan ordenado (CRÍTICO → OPCIONAL)
 
-### Paso 4 — Endurecer ESLint y tests de arquitectura (esfuerzo: bajo)
-Añadir a `src/lib/__tests__/architecture.test.ts`:
-- Regla: no se permite crear nuevas carpetas en `src/{components,hooks,services,pages}/<dominio>` si ya existe `src/features/<dominio>/` (forzar la migración).
-- Regla: archivos productivos > 200 líneas → falla el test (hoy solo lo reporta el script).
-- Regla: prohibir `as unknown as` fuera de `lib/mappers/*` y tests.
+```text
+CRÍTICO  →  Pasos 1, 2, 3, 4
+ALTO     →  Pasos 5, 6
+MEDIO    →  Pasos 7, 8
+OPCIONAL →  Pasos 9, 10
+```
 
-### Paso 5 — Resolver duplicate-title en tests (esfuerzo: trivial)
-Renombrar los 3 `it`/`describe` reportados o agregarlos al allowlist con justificación.
+### Paso 1 — Regla explícita para `src/lib/` (esfuerzo: trivial)
 
-### Paso 6 — Descomponer "god controllers" (esfuerzo: medio)
-Para `useNuevoProveedorController`, `useNuevaFacturaProveedorForm` y similares:
-- `useXxxFormState` → solo RHF + defaults.
-- `useXxxDerived` → cálculos memoizados puros (testeable sin RHF).
-- `useXxxMutations` → React Query.
-- `useXxx` (orquestador) → compone los anteriores, debe quedar ≤80 líneas.
+ADR + test de arquitectura: *"Solo entra en `lib/` lo que no tiene dominio dueño y es importado por ≥2 dominios distintos."* Frena la acumulación sin requerir migración inmediata.
 
-### Paso 7 — Documentación de capas (esfuerzo: bajo)
-Un único `docs/architecture.md` que dibuje `Pages → Hooks → Services → Lib`, defina la estructura `features/<dominio>/` como canónica y prohíba shortcuts. Hoy esto vive disperso entre memorias y comentarios.
+### Paso 2 — Mover `lib/crm/` → `features/crm/domain/` (esfuerzo: bajo)
 
-### Paso 8 — Consolidar `src/components/ui` vs componentes de dominio (esfuerzo: bajo)
-Verificar que `src/components/ui/` solo contenga shadcn/primitivas. Mover cualquier componente con lógica de dominio al feature correspondiente.
+12 archivos, dependencias mecánicas. Habilita Paso 9 (migración CRM).
 
-### Paso 9 — Auditoría continua en CI (esfuerzo: trivial)
-Agregar `bun run audit:all` como job obligatorio en GitHub Actions (hoy existe localmente y en lefthook; falta gating en CI según `package.json`).
+### Paso 3 — Extraer hook controllers para 3 páginas con state inline (esfuerzo: bajo)
+
+- `hooks/cxp/useCxpPageState.ts` ← `Cxp.tsx`
+- `hooks/admin/usePapelera.ts` ← `Papelera.tsx`
+- `hooks/admin/useIdempotenciaLog.ts` ← `Idempotencia.tsx`
+
+### Paso 4 — Romper acoplamiento `tesoreria → facturas/cxp` (esfuerzo: medio)
+
+Nuevo `hooks/tesoreria/useTesoreriaSourceData.ts` que consume `useCobranza` + `useFacturasCxP` en paralelo (React Query) y pasa datos a funciones puras. `services/tesoreria/*.ts` dejan de importar otros servicios.
+
+### Paso 5 — Aplicar patrón `*.helpers.ts`/`*.constants.ts` a los 10 god hooks (esfuerzo: medio)
+
+Prioridad: `useUpdateEmbarque` (198L), `useNuevaFacturaProveedorForm` (193L), `useNuevoProveedorController` (190L), `useClienteDetalleController` (190L), `useEmbarqueSubmitOrchestrator` (190L), `useDialogGenerarProformaController` (181L), `useEditarEmbarqueWizard` (179L), `useOperacionesData` (174L), `useCotizacionWizardSteps` (163L), `useNuevoClienteController` (163L). Antes de que crucen 200.
+
+### Paso 6 — Split `queries/`/`mutations/` en `services/{crm,cxp,tesoreria,facturas,admin}/` (esfuerzo: medio)
+
+Modelo: `services/cotizacion/` y `services/embarques/`. Empezar por CxP y admin (más pequeños), terminar en CRM (20 archivos).
+
+### Paso 7 — Reubicar `lib/financial/` por dominio (esfuerzo: bajo)
+
+- `embarqueKpis.ts` → `features/embarques/domain/`
+- `profitUtils.ts` → `lib/domain/profit.ts` (o futura `features/profit/domain/`)
+- `costosUSD.ts` → `lib/domain/` si es cross, si no a embarques
+- `financialUtils.ts` (IVA/totales) renombrado a `lib/financial/ivaUtils.ts`
+
+### Paso 8 — Reubicar componentes/hooks mal-clasificados (esfuerzo: trivial)
+
+- `components/selects/{Naviera,Port}Select.tsx` → `components/catalogos/`
+- `components/shared/ProfitBadge.tsx` → `components/profit/`
+- `hooks/shared/useSidebarAlerts.ts` → `hooks/layout/`
+- `services/proforma/queries.ts`: eliminar re-export de `fetchDiasCreditoCliente`
+- `lib/facturacion/` y `lib/operaciones/` → al servicio/feature dueño
+
+### Paso 9 — Migrar CRM completo a `features/crm/` (esfuerzo: alto, 1-2 sprints)
+
+Con Pasos 2+6 hechos. Colapsar `components/crm/`, `hooks/crm/`, `pages/crm/`, `services/crm/`, `lib/crm/` → `features/crm/{routes,components,hooks,services,domain,types}/`. Mayor ROI por volumen (137 archivos).
+
+### Paso 10 — Consolidar `src/types/cotizacion*.ts` (esfuerzo: bajo, condicionado)
+
+Hacerlo en el mismo PR que cree `features/cotizacion/`. No bloqueante hoy.
 
 ## Detalle técnico
 
-- **Script de referencia**: `scripts/audit-architecture.ts` ya enumera oversized + imports directos. La extensión sugerida en Paso 4 es agregar un `expect(oversized).toEqual([])` en el test de arquitectura.
-- **Reglas memoria aplicables**: `mem://principles/power-of-10`, `mem://technical/architecture-and-standards`, `mem://audit/pendings`.
-- **No tocar**: `src/integrations/supabase/{client,types}.ts`, `supabase/config.toml`, `src/components/ui/sidebar.tsx` (exento).
-- **Bump de versión**: cada paso completado actualiza `CHANGELOG.md` y `APP_VERSION` (regla del proyecto).
+- **No incluido**: cambios de UX, negocio, RLS, schema. Solo estructura.
+- **Bump de versión + CHANGELOG** después de cada paso (regla del proyecto).
+- **Guards a añadir** al cerrar pasos 1, 4 y 6: tests en `architecture.test.ts` que prohíban service→service imports cruzados y impongan la convención `queries/`/`mutations/` en services nuevos.
 
 ## Fuera de alcance
 
+- Refactor de PDF, RLS, auth.
 - Cambios funcionales o de negocio.
-- Refactor de PDF, RLS o auth (otras auditorías).
-- Migrar tests existentes (solo renombrar duplicados).
+- Migrar tests existentes salvo los que se mueven con su feature.
+
+Ejecuta todos los pasos en orden, avisame si tienes alguna duda
