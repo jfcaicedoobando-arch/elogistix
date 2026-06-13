@@ -9,7 +9,7 @@ import type { CotizacionRow } from "@/types/cotizacion";
 import type {
   CotizacionInformativaInput,
   TarifaInformativa,
-} from "@/types/cotizacionInformativa";
+} from "@/types/cotizacion";
 import { generarFolioCotizacion } from "./queries";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;

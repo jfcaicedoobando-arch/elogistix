@@ -7,8 +7,8 @@
  */
 import { describe, it, expect } from "vitest";
 import { buildPaso1Data } from "@/lib/mappers/cotizacion";
-import { COTIZACION_FORM_DEFAULTS } from "@/types/cotizacionForm";
-import type { CotizacionFormValues } from "@/types/cotizacionForm";
+import { COTIZACION_FORM_DEFAULTS } from "@/types/cotizacion";
+import type { CotizacionFormValues } from "@/types/cotizacion";
 
 const baseClientes = [{ id: "c1", nombre: "ACME SA" }];
 

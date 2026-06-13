@@ -19,7 +19,7 @@ import {
   nuevaTarifaInformativa,
   validateCotizacionInformativa,
   type TarifaInformativa,
-} from "@/types/cotizacionInformativa";
+} from "@/types/cotizacion";
 
 export default function WizardInformativa() {
   const navigate = useNavigate();

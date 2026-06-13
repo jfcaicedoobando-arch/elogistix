@@ -3,13 +3,13 @@
  * Tipos del formulario viven en `@/data/cotizacionFormTypes` (capa neutra).
  */
 import type { DimensionLCL, DimensionAerea } from "@/types/cotizacion";
-import type { FilaCostoLocal } from "@/types/cotizacionPL";
+import type { FilaCostoLocal } from "@/types/cotizacion";
 import {
   type CotizacionFormValues,
   type CotizacionInitialData,
   type CotizacionInitialCosto,
   COTIZACION_FORM_DEFAULTS,
-} from "@/types/cotizacionForm";
+} from "@/types/cotizacion";
 
 export type { CotizacionFormValues, CotizacionInitialData, CotizacionInitialCosto };
 export { COTIZACION_FORM_DEFAULTS };

@@ -6,10 +6,10 @@
  * deliberada para reutilizar el wizard tanto en NuevaCotizacion como en EditarCotizacion.
  */
 import { uploadFile } from "@/services/storage/index";
-import type { CotizacionFormValues } from "@/types/cotizacionForm";
+import type { CotizacionFormValues } from "@/types/cotizacion";
 import type { CreateCotizacionInput } from "@/types/cotizacion";
-import type { CostoCotizacion } from "@/types/cotizacionCosto";
-import type { FilaCostoLocal } from "@/types/cotizacionPL";
+import type { CostoCotizacion } from "@/types/cotizacion";
+import type { FilaCostoLocal } from "@/types/cotizacion";
 import { fromDb } from "@/lib/supabase/cast";
 
 interface Mutations {
