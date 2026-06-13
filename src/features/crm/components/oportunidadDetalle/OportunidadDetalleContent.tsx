@@ -16,7 +16,7 @@ import { OportunidadGanadaBanner } from "./OportunidadGanadaBanner";
 import { DatosComercialesCard } from "./DatosComercialesCard";
 import { ContactoRapidoCard } from "./ContactoRapidoCard";
 import { useOportunidadDetalleActions } from "@/features/crm/hooks";
-import { useContactosCliente } from "@/hooks/cliente";
+import { useContactosCliente } from "@/features/cliente/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
 interface Etapa {

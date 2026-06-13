@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
-import { useClientesForSelect } from "@/hooks/cliente";
+import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacionInformativa } from "@/hooks/cotizacion";
 import SeccionTarifasInformativas from "./SeccionTarifasInformativas";
 import {

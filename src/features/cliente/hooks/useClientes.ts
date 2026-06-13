@@ -14,10 +14,10 @@ import {
   deleteContacto,
   fetchEmbarquesCliente,
   fetchCotizacionesCliente,
-} from "@/services/cliente";
-import type { Cliente, ContactoCliente } from "@/types/cliente";
+} from "@/features/cliente/services";
+import type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
 
-export type { Cliente, ContactoCliente } from "@/types/cliente";
+export type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
 
 // --- Hook paginado server-side para la vista de lista ---
 

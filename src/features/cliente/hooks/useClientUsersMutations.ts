@@ -5,7 +5,7 @@ import {
   inviteClientUser,
   revokeClientUser,
   type InviteClientUserParams,
-} from "@/services/cliente-usuarios";
+} from "@/features/cliente/services-usuarios";
 
 /**
  * Lista los usuarios del portal vinculados a un cliente específico.

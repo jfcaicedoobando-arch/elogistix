@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
-import { useInviteClientUser } from "@/hooks/cliente";
+import { useInviteClientUser } from "@/features/cliente/hooks";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";

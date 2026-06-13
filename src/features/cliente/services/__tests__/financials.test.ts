@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchClienteFinancials } from "@/services/cliente/financials";
+import { fetchClienteFinancials } from "@/features/cliente/services/financials";
 
 beforeEach(() => {
   mock.rpcCalls.length = 0;

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
-import { useClientesForSelect } from "@/hooks/cliente";
+import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacion, useUpdateCotizacion } from "@/hooks/cotizacion";
 import { useUpsertCotizacionCostos } from "@/hooks/cotizacion";
 import { useRegistrarActividad } from "@/hooks/shared";

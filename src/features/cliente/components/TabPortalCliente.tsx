@@ -11,9 +11,9 @@ import {
   useClientUsers,
   useRevokeClientUser,
   useResendClientUserInvite,
-} from "@/hooks/cliente";
+} from "@/features/cliente/hooks";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import type { ClientUserEnriched } from "@/services/cliente-usuarios";
+import type { ClientUserEnriched } from "@/features/cliente/services-usuarios";
 import PortalInviteDialog from "./PortalInviteDialog";
 import { useState } from "react";
 

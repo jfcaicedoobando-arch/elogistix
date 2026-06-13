@@ -1,5 +1,5 @@
-import DialogContacto from "@/components/cliente/DialogContacto";
-import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
+import DialogContacto from "@/features/cliente/components/DialogContacto";
+import DialogEditarCliente from "@/features/cliente/components/DialogEditarCliente";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 
 interface Cliente {

@@ -12,7 +12,7 @@ import {
   updateContacto,
   deleteContacto,
   CONTACTO_COLUMNS,
-} from "@/services/cliente/contactos";
+} from "@/features/cliente/services/contactos";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

@@ -2,20 +2,20 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import TabPortalCliente from "@/components/cliente/TabPortalCliente";
+import TabPortalCliente from "@/features/cliente/components/TabPortalCliente";
 import Cliente360Panel from "@/features/crm/components/Cliente360Panel";
 import { DataTable } from "@/components/shared/DataTable";
-import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
-import TablaContactos from "@/components/cliente/TablaContactos";
-import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
-import { ClienteDetalleDialogs } from "@/components/cliente/detalle/ClienteDetalleDialogs";
+import { embarqueColumns, cotizacionColumns } from "@/features/cliente/components/clienteColumns";
+import TablaContactos from "@/features/cliente/components/TablaContactos";
+import ClienteSummaryCards from "@/features/cliente/components/ClienteSummaryCards";
+import { ClienteDetalleDialogs } from "@/features/cliente/components/detalle/ClienteDetalleDialogs";
 import {
   ClienteDetalleHeader,
   ClienteLoadingState,
   ClienteNotFoundState,
-} from "@/components/cliente/detalle/ClienteDetalleHeader";
-import { ClienteInformacionCard } from "@/components/cliente/detalle/ClienteInformacionCard";
-import { useClienteDetalleController } from "@/hooks/cliente";
+} from "@/features/cliente/components/detalle/ClienteDetalleHeader";
+import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
+import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function ClienteDetalle() {

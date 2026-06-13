@@ -9,8 +9,8 @@ import {
   useUpdateCliente,
   useEmbarquesCliente,
   useCotizacionesCliente,
-} from "@/hooks/cliente/useClientes";
-import { useClienteFinancials } from "@/hooks/cliente/useClienteFinancials";
+} from "@/features/cliente/hooks/useClientes";
+import { useClienteFinancials } from "@/features/cliente/hooks/useClienteFinancials";
 import { usePermissions, useRegistrarActividad } from "@/hooks/shared";
 import { useClienteDetalleHandlers } from "./useClienteDetalleHandlers";
 

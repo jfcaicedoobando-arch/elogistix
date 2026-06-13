@@ -23,7 +23,7 @@ import {
   type CrmOportunidadRow,
 } from "@/features/crm/hooks";
 import { useEtapasPipeline } from "@/features/crm/hooks";
-import { useClientesForSelect } from "@/hooks/cliente";
+import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
 import { useOportunidadForm } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
