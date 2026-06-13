@@ -1,50 +1,72 @@
-## Objetivo
+Revisé el shard 3 archivo por archivo sin ejecutar el shard. El reparto calculado por Vitest contiene 26 tests; los riesgos reales están concentrados en contaminación de globales y timers.
 
-Agregar **100 tests unitarios** de lógica de negocio sobre servicios/mappers/utilidades que aún tienen cobertura 0% o baja. Todos los tests deben:
-- Ejecutarse con `vitest` puro (sin red, sin DB).
-- Usar `createSupabaseMock` (chain mock existente) para servicios I/O.
-- Usar tests puros (sin mocks) para mappers/utils.
-- Tener títulos únicos (para no romper shard 6/16 del audit-report).
+## Hallazgos principales
 
-## Distribución (10 archivos × ~10 tests = 100)
+1. `src/lib/errors/__tests__/dynamicImportError.extra.test.ts`
+   - Riesgo alto: reemplaza `globalThis.window` completo con `Object.defineProperty`.
+   - Eso no lo revierte `vi.unstubAllGlobals()` y puede dejar el fork con un `window` incompleto para los archivos siguientes.
+   - Es el candidato más fuerte para timeout/cuelgue transversal.
 
-Voy a lanzar **subagentes en paralelo** (read-only exploración) para mapear la firma exacta de cada servicio antes de escribir, y luego escribiré los 10 archivos de tests en paralelo.
+2. `src/features/crm/services/leads/__tests__/bulk.test.ts`
+   - Riesgo medio: usa `vi.useFakeTimers()` en `beforeAll`, pero el `afterEach` global de `src/test/setup.ts` llama `vi.useRealTimers()` después de cada test.
+   - Resultado: sólo el primer test queda con timers falsos; el test que espera fecha congelada puede comportarse de forma no determinística.
 
-| # | Archivo de tests | Módulo bajo prueba | ~Tests |
-|---|---|---|---|
-| 1 | `src/features/crm/services/__tests__/leads/mutations.test.ts` | `createLead`, `updateLead`, `deleteLead` (CRM) | 10 |
-| 2 | `src/features/crm/services/__tests__/oportunidades.test.ts` | `crearOportunidad`, `actualizarOportunidad`, transiciones de etapa | 10 |
-| 3 | `src/features/crm/services/vincularCotizacion/__tests__/vincularOCrear.test.ts` | Casos A/B/C (oportunidad existente, lead sin op, crear ambos) | 10 |
-| 4 | `src/features/embarques/services/__tests__/contenedores.test.ts` | `sincronizarContenedores` (insert/update/delete diff) | 10 |
-| 5 | `src/features/embarques/services/__tests__/garantiasDemoras.test.ts` | Cálculo automático garantías (no facturable) + demoras (costo + venta) | 10 |
-| 6 | `src/features/facturas/services/__tests__/pagos.test.ts` | Registrar pago, conciliar, propagación de saldos | 10 |
-| 7 | `src/features/tesoreria/services/__tests__/sugerirCandidatos.test.ts` (extender) | Más casos de matching de movimientos bancarios | 10 |
-| 8 | `src/features/cotizacion/services/__tests__/conversionUSD.test.ts` | Conversión MXN↔USD con tasas dinámicas + IVA dinámico | 10 |
-| 9 | `src/lib/mappers/__tests__/facturaFromDb.test.ts` | Mapper facturas DB→dominio (estados, totales, fechas UTC) | 10 |
-| 10 | `src/generators/__tests__/exportCsvExtended.test.ts` | Casos extra de `exportCsv` (escape, BOM, separadores, vacíos) | 10 |
+3. `src/features/portal/hooks/__tests__/usePortalDocumentDownload.test.tsx`
+   - Riesgo medio/bajo: asigna directamente `global.fetch`, `URL.createObjectURL`, `URL.revokeObjectURL` y mantiene un spy de `document.createElement` entre tests del archivo.
+   - Conviene usar `vi.stubGlobal`/`vi.spyOn` con restauración por test para evitar fugas.
 
-## Convenciones obligatorias
+4. `src/services/admin/__tests__/stats.test.ts`
+   - Riesgo bajo: el mock por tabla conserva `tableResults` entre tests y el `beforeEach` está vacío.
+   - No parece causa directa del timeout, pero puede generar contaminación de datos entre casos.
 
-- Títulos de test **prefijados con el módulo** (ej. `"leads.create: valida email"`) para garantizar unicidad global y no romper `audit-report.test.ts` shard 6/16.
-- Mock de Supabase vía `@/services/__tests__/_supabaseChainMock` + `vi.hoisted`.
-- Para fechas: `vi.useFakeTimers()` con fecha fija `2026-06-13T12:00:00Z`.
-- Sin tocar código de producción; si un servicio resulta no testeable sin refactor, lo registro en `.lovable/plan.md` y lo sustituyo por otro candidato equivalente del mismo módulo.
+## Archivos revisados sin hallazgos de cuelgue
 
-## Metadata
+- `src/services/proforma/__tests__/consolidar.test.ts`
+- `src/features/cxp/services/__tests__/parseCfdi.test.ts` (usa stubs, pero el cleanup global los revierte)
+- `src/features/proveedor/services/__tests__/operaciones.test.ts`
+- `src/features/cotizacion/services/__tests__/costos.test.ts`
+- `src/pdf/documents/__tests__/ProformaHeader.test.tsx`
+- `src/features/embarques/services/__tests__/idempotencyClaimSchema.test.ts`
+- `src/features/crm/services/__tests__/notificaciones.test.ts`
+- `src/hooks/shared/__tests__/useTabsParam.test.tsx`
+- `src/features/cotizacion/hooks/__tests__/usePortalCotizacionDetalle.test.tsx`
+- `src/hooks/admin/__tests__/useAdminData.test.tsx`
+- `src/features/embarques/domain/__tests__/embarqueKpis.test.ts`
+- `src/features/embarques/hooks/__tests__/useEmbarqueQueries.test.tsx`
+- `src/features/crm/domain/__tests__/forecast.test.ts`
+- `src/hooks/shared/__tests__/useListPageState.test.ts`
+- `src/features/crm/services/__tests__/automatizacionesEtapa.test.ts`
+- `src/services/__tests__/idempotency.integration.test.ts`
+- `src/features/crm/services/__tests__/lineage.test.ts`
+- `src/lib/mappers/__tests__/embarqueRoundtrip.test.ts`
+- `src/features/auditoria/domain/__tests__/csv.test.ts`
+- `src/services/configuracion/__tests__/emisor.test.ts`
+- `src/services/admin/__tests__/papelera.test.ts`
+- `src/features/cxp/services/__tests__/proveedorFacturas.test.ts`
 
-- Bump `APP_VERSION`: `12.98.9` → `12.99.0` (100 tests = milestone menor).
-- `CHANGELOG.md` raíz: entrada `## [12.99.0] - 2026-06-13` listando los 10 archivos y el total (~100 tests).
+## Plan de implementación
 
-## Verificación
+1. Corregir `dynamicImportError.extra.test.ts`
+   - No reemplazar `globalThis.window` completo.
+   - Mockear sólo `location.reload` de forma reversible con utilidades de Vitest o restauración explícita.
+   - Asegurar que cada test deja intacto el `window` real de JSDOM.
 
-1. `bunx vitest run <los 10 archivos>` → 100/100 verdes.
-2. `bun run test:coverage:shard -- --shard=6/16` → debe seguir verde (títulos únicos).
-3. Si algún archivo falla por shape de Supabase autogenerado, ajuste con cast mínimo al tipo correcto (sin `any`).
+2. Corregir `bulk.test.ts`
+   - Cambiar timers congelados de `beforeAll` a `beforeEach`, o congelarlos sólo en el caso que valida `deleted_at`.
+   - Dejar que el cleanup global haga `vi.useRealTimers()` después de cada test.
 
-## Fuera de alcance
+3. Corregir `usePortalDocumentDownload.test.tsx`
+   - Reemplazar asignaciones directas de globales por `vi.stubGlobal`/`vi.spyOn`.
+   - Restaurar el spy de `document.createElement` después de cada test para evitar acumulación dentro del archivo.
 
-- Tests de componentes React / hooks RHF (alto costo de mock).
-- Tests E2E (van por Playwright).
-- Refactors de código de producción.
+4. Endurecer `stats.test.ts`
+   - Agregar limpieza real del `Map` de resultados por tabla en `beforeEach` para evitar contaminación entre casos.
 
-¿Apruebas el plan para que ejecute los 10 archivos en paralelo con subagentes?
+5. Actualizar metadatos del proyecto
+   - Bump de `APP_VERSION`.
+   - Entrada nueva en `CHANGELOG.md` con el arreglo del shard 3.
+
+## Validación
+
+- No ejecutaré el shard 3 completo.
+- Validaré por inspección y, si hace falta, sólo con pruebas individuales/dirigidas, nunca con `--shard=3/16`.
