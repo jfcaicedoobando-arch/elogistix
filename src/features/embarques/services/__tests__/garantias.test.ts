@@ -33,7 +33,7 @@ describe("embarques/services/garantias", () => {
   });
 
   it("garantias.fetch: retorna data tal cual cuando viene array", async () => {
-    const rows = [{ id: "g1", embarque_id: "e", estado: "depositada" }];
+    const rows = [{ id: "g1", embarque_id: "e", estado: "depositado" }];
     mock.setTableResult("embarque_garantias_contenedor", { data: rows, error: null });
     const r = await fetchGarantiasEmbarque("e");
     expect(r).toHaveLength(1);
@@ -42,29 +42,29 @@ describe("embarques/services/garantias", () => {
 
   it("garantias.update: hace update sin id en el patch", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: null });
-    await updateGarantia({ id: "g1", estado: "liberada" });
+    await updateGarantia({ id: "g1", estado: "liberado" });
     const payload = mock.getMutationPayload("embarque_garantias_contenedor", "update") as Record<string, unknown>;
-    expect(payload.estado).toBe("liberada");
+    expect(payload.estado).toBe("liberado");
     expect((payload as { id?: string }).id).toBeUndefined();
   });
 
   it("garantias.update: persiste fecha_liberacion", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: null });
-    await updateGarantia({ id: "g1", estado: "liberada", fecha_liberacion: "2026-06-13" });
+    await updateGarantia({ id: "g1", estado: "liberado", fecha_liberacion: "2026-06-13" });
     const payload = mock.getMutationPayload("embarque_garantias_contenedor", "update") as Record<string, unknown>;
     expect(payload.fecha_liberacion).toBe("2026-06-13");
   });
 
   it("garantias.update: persiste monto_deposito_usd", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: null });
-    await updateGarantia({ id: "g1", estado: "depositada", monto_deposito_usd: 1500 });
+    await updateGarantia({ id: "g1", estado: "depositado", monto_deposito_usd: 1500 });
     const payload = mock.getMutationPayload("embarque_garantias_contenedor", "update") as Record<string, unknown>;
     expect(payload.monto_deposito_usd).toBe(1500);
   });
 
   it("garantias.update: aplica filtro eq por id", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: null });
-    await updateGarantia({ id: "g1", estado: "depositada" });
+    await updateGarantia({ id: "g1", estado: "depositado" });
     const call = mock.tableCalls.find((c) => c.table === "embarque_garantias_contenedor");
     const idx = call?.ops.indexOf("eq") ?? -1;
     expect(call?.opArgs[idx]).toEqual(["id", "g1"]);
@@ -72,14 +72,14 @@ describe("embarques/services/garantias", () => {
 
   it("garantias.update: propaga error", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: { message: "fail" } });
-    await expect(updateGarantia({ id: "g1", estado: "depositada" })).rejects.toBeDefined();
+    await expect(updateGarantia({ id: "g1", estado: "depositado" })).rejects.toBeDefined();
   });
 
   it("garantias.update: acepta notas y fecha_deposito", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: null });
     await updateGarantia({
       id: "g1",
-      estado: "depositada",
+      estado: "depositado",
       fecha_deposito: "2026-06-10",
       notas: "Pago BBVA",
     });
