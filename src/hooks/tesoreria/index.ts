@@ -99,7 +99,7 @@ export function useIgnorarMovimiento() {
  */
 export function useSaldosCuentas() {
   return useQuery({
-    queryKey: queryKeys.tesoreria.saldosCuentas?.() ?? ["tesoreria", "saldos-cuentas"],
+    queryKey: ["tesoreria", "saldos-cuentas"] as const,
     queryFn: fetchSaldosCuentas,
     staleTime: 60_000,
   });
