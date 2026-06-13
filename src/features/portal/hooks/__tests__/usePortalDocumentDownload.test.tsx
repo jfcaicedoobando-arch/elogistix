@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 vi.mock("@/hooks/shared", () => ({
@@ -24,15 +24,21 @@ const mockNotifyError = vi.mocked(notifyError);
 beforeEach(() => {
   vi.clearAllMocks();
 
-  global.fetch = vi.fn().mockResolvedValue({
-    ok: true,
-    blob: () => Promise.resolve(new Blob(["pdf"], { type: "application/pdf" })),
-  }) as never;
+  // `vi.stubGlobal` + el `vi.unstubAllGlobals()` del setup garantizan que
+  // estos parches se reviertan entre archivos del shard (antes la asignación
+  // directa a `global.fetch` persistía y podía contaminar otros tests).
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(["pdf"], { type: "application/pdf" })),
+    }),
+  );
+  vi.spyOn(URL, "createObjectURL").mockImplementation(() => "blob:fake");
+  vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
 
-  global.URL.createObjectURL = vi.fn(() => "blob:fake");
-  global.URL.revokeObjectURL = vi.fn();
-
-  // Only stub the anchor creation, not ALL createElement calls
+  // Stub sólo el anchor; `restoreAllMocks` (afterEach local) evita acumular
+  // spies dentro del archivo.
   const origCreate = document.createElement.bind(document);
   vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
     if (tag === "a") {
@@ -42,6 +48,10 @@ beforeEach(() => {
     }
     return origCreate(tag);
   });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("usePortalDocumentDownload", () => {

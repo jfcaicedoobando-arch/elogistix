@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 
 vi.mock("@/lib/browserStorage", () => ({
   hasChunkReloadBeenAttempted: vi.fn(() => false),
@@ -91,12 +92,29 @@ describe("dynamicImportError · isDynamicImportError", () => {
 });
 
 describe("dynamicImportError · tryReloadForChunkError", () => {
+  let reloadSpy: ReturnType<typeof vi.fn>;
+  let originalReload: typeof window.location.reload;
+
   beforeEach(() => {
     vi.mocked(hasChunkReloadBeenAttempted).mockReturnValue(false);
     vi.mocked(markChunkReloadAttempted).mockReset();
-    Object.defineProperty(globalThis, "window", {
-      value: { location: { reload: vi.fn() } },
+    // Spy SOLO sobre `window.location.reload`. Reemplazar `globalThis.window`
+    // completo contamina jsdom para los archivos siguientes del shard y
+    // `vi.unstubAllGlobals()` del setup global no lo restaura.
+    reloadSpy = vi.fn();
+    originalReload = window.location.reload;
+    Object.defineProperty(window.location, "reload", {
+      configurable: true,
       writable: true,
+      value: reloadSpy,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window.location, "reload", {
+      configurable: true,
+      writable: true,
+      value: originalReload,
     });
   });
 
@@ -104,6 +122,7 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
     const result = tryReloadForChunkError();
     expect(result).toBe(true);
     expect(markChunkReloadAttempted).toHaveBeenCalledOnce();
+    expect(reloadSpy).toHaveBeenCalledOnce();
   });
 
   it("devuelve false y NO marca si ya se intentó", () => {
@@ -111,5 +130,6 @@ describe("dynamicImportError · tryReloadForChunkError", () => {
     const result = tryReloadForChunkError();
     expect(result).toBe(false);
     expect(markChunkReloadAttempted).not.toHaveBeenCalled();
+    expect(reloadSpy).not.toHaveBeenCalled();
   });
 });

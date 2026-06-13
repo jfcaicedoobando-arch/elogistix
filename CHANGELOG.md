@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.0.2] - 2026-06-13
+- **fix(tests/shard-3)**: Elimina causas de timeout/OOM en el shard 3 detectadas por inspección (sin ejecutar shards):
+  - `dynamicImportError.extra.test.ts` ya no reemplaza `globalThis.window` entero; ahora hace `spy` reversible de `window.location.reload` con `afterEach` que restaura el original (antes el `window` parchado se filtraba al siguiente archivo del shard y `vi.unstubAllGlobals()` no podía revertirlo).
+  - `crm/leads/bulk.test.ts` mueve `vi.useFakeTimers()` de `beforeAll` a `beforeEach` con `afterEach` que llama `vi.useRealTimers()`, porque el cleanup global ya desactivaba los timers tras el primer test y dejaba a los demás sin fecha congelada.
+  - `usePortalDocumentDownload.test.tsx` reemplaza asignaciones directas a `global.fetch`/`URL.createObjectURL` por `vi.stubGlobal`/`vi.spyOn` y agrega `afterEach(() => vi.restoreAllMocks())` para no acumular espías del `document.createElement`.
+  - `admin/stats.test.ts` limpia el `Map` de resultados por tabla en `beforeEach` para evitar contaminación entre casos.
+
 ## [13.0.1] - 2026-06-13
 - **fix(tests)**: Resuelve hang/OOM en shards 3 y 9. `bulk.test.ts` y `mutations.extra.test.ts` (CRM leads) llamaban `vi.useFakeTimers()` a nivel top-level; en `pool=forks` con `singleFork`, los timers parchados se filtraban al siguiente archivo del shard y colgaban indefinidamente cualquier `waitFor` posterior (cliente, embarques, admin), agotando el heap de 8 GB. Ahora los fake timers se activan en `beforeAll` y se restauran en `afterAll`.
 

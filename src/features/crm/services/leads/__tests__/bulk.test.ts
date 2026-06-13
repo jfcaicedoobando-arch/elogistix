@@ -1,12 +1,6 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { LeadInput } from "@/features/crm/domain/leads/constants";
 import type { AuthLite } from "@/features/crm/domain/leads/leadPayload";
-
-// Fake timers escopados al archivo. NUNCA en top-level: en pool forks con
-// singleFork+isolate, los timers parchados a nivel de módulo pueden filtrarse
-// al siguiente archivo del shard y colgar `waitFor` indefinidamente (OOM).
-beforeAll(() => { vi.useFakeTimers({ now: new Date("2026-06-13T12:00:00Z") }); });
-afterAll(() => { vi.useRealTimers(); });
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -19,7 +13,15 @@ import { bulkUpdateLeads, bulkSoftDeleteLeads, bulkCreateLeads } from "../bulk";
 const TABLE = "crm_leads";
 const user: AuthLite = { id: "u-1", email: "user@test.com" };
 
-beforeEach(() => { mock.tableCalls.length = 0; mock.setTableResult(TABLE, { data: null, error: null }); });
+// Fake timers se activan POR TEST porque el `afterEach` global de
+// `src/test/setup.ts` ejecuta `vi.useRealTimers()`. Activarlos en `beforeAll`
+// dejaba al resto del archivo sin congelación tras el primer test.
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.setTableResult(TABLE, { data: null, error: null });
+  vi.useFakeTimers({ now: new Date("2026-06-13T12:00:00Z") });
+});
+afterEach(() => { vi.useRealTimers(); });
 
 describe("crm/leads/bulk", () => {
   it("01 — bulkUpdateLeads: retorna 0 con arreglo vacío sin llamar a Supabase", async () => {
