@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { useFlujoProyectado } from "@/hooks/tesoreria";
+import { useFlujoProyectado } from "@/features/tesoreria/hooks";
 
 const GraficoFlujoProyectado = lazy(() => import("@/components/tesoreria/GraficoFlujoProyectado"));
 const TablaFlujoSemanal = lazy(() => import("@/components/tesoreria/TablaFlujoSemanal"));

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Wallet, ArrowRight, FileText, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
-import { useResumenTesoreria } from "@/hooks/tesoreria";
+import { useResumenTesoreria } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";

@@ -8,7 +8,7 @@ import {
   fetchSaldosCuentas,
   fetchResumenTesoreria,
   fetchFlujoProyectado,
-} from "@/services/tesoreria";
+} from "@/features/tesoreria/services";
 import { fetchPresupuestoVsReal } from "@/services/presupuesto";
 import type { CobranzaRow, CxpRow } from "@/lib/domain/tesoreria";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";

@@ -5,7 +5,7 @@ import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import type { SemanaFlujo } from "@/services/tesoreria";
+import type { SemanaFlujo } from "@/features/tesoreria/services";
 import { formatCurrencyCompact } from "@/lib/formatters/numbers";
 
 interface Props { semanas: SemanaFlujo[] }

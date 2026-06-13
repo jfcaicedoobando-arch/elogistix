@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDesconciliar } from "@/hooks/tesoreria";
+import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDesconciliar } from "@/features/tesoreria/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import type { MovimientoBBVA } from "@/services/tesoreria";
+import type { MovimientoBBVA } from "@/features/tesoreria/services";
 import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 

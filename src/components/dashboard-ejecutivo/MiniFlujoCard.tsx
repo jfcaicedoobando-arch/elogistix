@@ -4,7 +4,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { formatCurrencyCompact } from "@/lib/formatters/numbers";
-import type { FlujoProyectado } from "@/services/tesoreria";
+import type { FlujoProyectado } from "@/features/tesoreria/services";
 
 interface Props {
   flujo: FlujoProyectado;

@@ -7,7 +7,7 @@ import {
   ignorarMovimiento, sugerirCandidatos,
   fetchSaldosCuentas,
   type FiltrosMovimientos, type MovimientoBBVA,
-} from "@/services/tesoreria";
+} from "@/features/tesoreria/services";
 import { calcularResumenTesoreria, type ResumenTesoreria } from "@/lib/domain/tesoreria";
 import { useCobranza } from "@/hooks/facturacion";
 import { useFacturasCxP } from "@/features/cxp/hooks";

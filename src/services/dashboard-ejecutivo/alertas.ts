@@ -5,8 +5,8 @@ import type {
   AlertaEjecutiva,
   SnapshotEjecutivo,
 } from "./types";
-import type { FlujoProyectado } from "@/services/tesoreria";
-import type { ResumenTesoreria } from "@/services/tesoreria";
+import type { FlujoProyectado } from "@/features/tesoreria/services";
+import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/services/presupuesto";
 
 export interface AlertasInput {

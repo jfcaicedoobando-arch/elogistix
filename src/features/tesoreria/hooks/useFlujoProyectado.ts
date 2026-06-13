@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchFlujoProyectado } from "@/services/tesoreria";
+import { fetchFlujoProyectado } from "@/features/tesoreria/services";
 import { useCobranza } from "@/hooks/facturacion";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useSaldosCuentas } from "./index";
