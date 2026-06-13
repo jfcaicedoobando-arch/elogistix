@@ -71,7 +71,7 @@ beforeEach(() => { vi.clearAllMocks(); savePaso1.mockResolvedValue("cot-1"); sav
 
 describe("useCotizacionWizardSteps", () => {
   it("handleSiguiente paso 1: si validatePaso1 falla, notifyError y no avanza", async () => {
-    const { deps, refs } = makeDeps({
+    const { deps } = makeDeps({
       form: { getValues: () => ({ clienteId: "", esProspecto: false }) } as never,
     });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
@@ -104,7 +104,7 @@ describe("useCotizacionWizardSteps", () => {
   });
 
   it("handleSiguiente paso 3: sin conceptos válidos bloquea con notifyError", async () => {
-    const { deps, refs } = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
+    const { deps } = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
     await act(async () => { await result.current.handleSiguiente(); });
     expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Agrega al menos un concepto de venta" });
