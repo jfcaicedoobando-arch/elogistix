@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.11.0] - 2026-06-13
+- **test(rls/operaciones)**: Auditoría de RLS cont. Nueva suite `supabase/tests/rls/test_rls_operaciones.sql` con 9 aserciones que cubren tablas operativas y catálogos no incluidos previamente: `proveedores` (read isolation + intento de UPDATE cruzado bloqueado), `conceptos_venta` (isolation + monto de venta de otra org nunca visible), `conceptos_costo` (isolation + monto de costo nunca visible → protege margen), `conceptos_factura` (isolation vía factura padre), `embarque_contenedores`, `eventos_embarque` (timeline), `tracking_externo`. Mismo patrón BEGIN/ROLLBACK con `pg_temp.as_user` / `pg_temp.assert`. README de RLS actualizado con el nuevo suite. Total cobertura RLS: 4 suites SQL, ~40 aserciones.
+
 ## [13.10.0] - 2026-06-13
 - **test(rls/crm-operacional)**: Auditoría de RLS — nueva suite `supabase/tests/rls/test_rls_crm_operacional.sql` con 8 aserciones que cubren tablas no incluidas en los suites previos: `crm_leads` (read isolation + intento de UPDATE cruzado bloqueado), `crm_oportunidades` (isolation + `monto_estimado` de otra org nunca visible), `crm_actividades` (isolation), `documentos_embarque` (isolation vía embarque), `presupuesto_mensual` (isolation financiera + monto presupuestal de otra org nunca visible). Sigue el patrón de los suites existentes (BEGIN/ROLLBACK, `pg_temp.as_user`, `pg_temp.assert`). Requiere correrse en base de pruebas con `auth.users` pre-seeded (mismo blocker que el resto). Actualizada documentación en `supabase/tests/rls/README.md`.
 
