@@ -103,7 +103,7 @@ describe("costeo/services/tarifas", () => {
       expect(res[0].recargos_total).toBe(0);
     });
 
-    it("propaga errores de Supabase", async () => {
+    it("tarifas costeo: propaga errores de Supabase", async () => {
       mock.setTableResult("costeo_tarifas", { data: null, error: { message: "boom" } });
       await expect(fetchCosteoTarifas(ORG)).rejects.toBeDefined();
     });

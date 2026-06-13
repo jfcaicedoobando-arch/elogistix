@@ -63,7 +63,7 @@ describe("fetchDocsFaltantesOperador", () => {
     expect(res.map(r => r.id)).toEqual(["e2", "e1"]);
   });
 
-  it("propaga error de embarques", async () => {
+  it("dashboardOperador: propaga error de embarques", async () => {
     mock.setTableResult("embarques", { data: null, error: new Error("boom") });
     await expect(fetchDocsFaltantesOperador(EMAIL)).rejects.toThrow("boom");
   });

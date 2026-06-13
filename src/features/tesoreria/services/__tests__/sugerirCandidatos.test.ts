@@ -20,7 +20,7 @@ beforeEach(() => {
   mock.tableCalls.length = 0;
 });
 
-describe("sugerirCandidatos", () => {
+describe("sugerirCandidatos (helpers)", () => {
   it("devuelve [] cuando cargo y abono son 0", async () => {
     const res = await sugerirCandidatos(mov({ cargo: 0, abono: 0, fecha: "2026-06-10" }));
     expect(res).toEqual([]);
