@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.10] - 2026-06-14
+- **docs(estándar)**: Documentar estándar de arquitectura feature-first en `.lovable/plan.md` — estructura de directorios, reglas de ubicación, nomenclatura (kebab-case dirs, PascalCase componentes, camelCase hooks/servicios), prohibiciones (sin lógica en barrels, sin `as unknown as`, sin archivos huérfanos fuera de features) y métricas de calidad (archivos ≤300 líneas, funciones ≤50 líneas). Base para pasos 2-12 de la auditoría de arquitectura.
+
 ## [13.14.9] - 2026-06-14
 - **perf(ci)**: Optimizar `ci.yml` — (1) colapsar build duplicada activando `ANALYZE=true` en la build principal (ahorra ~1-2 min eliminando el segundo `vite build`); (2) reducir matriz de tests de 16 → 8 shards (mismo paralelismo útil, mitad de minutos facturados); (3) extraer `Setup Bun + install` a composite action reutilizable en `.github/actions/setup-bun/action.yml` (elimina drift entre jobs); (4) `paths-ignore` para `**/*.md` y `docs/**` (los PR sólo-docs ya no disparan CI).
 
