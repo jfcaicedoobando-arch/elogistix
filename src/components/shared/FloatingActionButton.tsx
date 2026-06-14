@@ -35,7 +35,9 @@ export function FloatingActionButton({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "md:hidden fixed bottom-6 right-4 z-40",
+        "md:hidden fixed right-4 z-40",
+        // Respeta safe-area de iOS (home indicator) en 20:9 / iPhone con notch.
+        "bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]",
         "inline-flex items-center justify-center gap-2",
         "h-14 min-w-14 px-4",
         "rounded-full bg-primary text-primary-foreground",

@@ -11,6 +11,7 @@ import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
  */
 const SEGMENT_LABELS: Record<string, string> = {
   "": "Inicio",
+  inicio: "Inicio",
   embarques: "Embarques",
   cotizaciones: "Cotizaciones",
   clientes: "Clientes",
@@ -19,7 +20,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   operaciones: "Operaciones",
   reportes: "Reportes",
   rentabilidad: "Rentabilidad",
-  
   bitacora: "Bitácora",
   usuarios: "Usuarios",
   configuracion: "Configuración",
@@ -30,6 +30,42 @@ const SEGMENT_LABELS: Record<string, string> = {
   nuevo: "Nuevo",
   nueva: "Nueva",
   editar: "Editar",
+  // CRM
+  crm: "CRM",
+  "mi-dia": "Mi día",
+  leads: "Leads",
+  oportunidades: "Oportunidades",
+  actividades: "Actividades",
+  analitica: "Analítica",
+  // Profit / finanzas
+  profit: "Profit",
+  dashboard: "Dashboard",
+  ejecutivo: "Ejecutivo",
+  "estado-resultados": "Estado de Resultados",
+  proyeccion: "Proyección",
+  presupuesto: "Presupuesto",
+  comisiones: "Comisiones",
+  // Tesorería / CxP
+  tesoreria: "Tesorería",
+  cuentas: "Cuentas",
+  flujo: "Flujo",
+  cxp: "CxP",
+  // Costeo
+  costeo: "Costeo",
+  rutas: "Rutas",
+  tarifas: "Tarifas",
+  buscar: "Buscar",
+  "demoras-venta": "Demoras / Venta",
+  // Catálogos / dev
+  catalogos: "Catálogos",
+  navieras: "Navieras",
+  puertos: "Puertos",
+  contenedores: "Contenedores",
+  dev: "Dev",
+  diagnostico: "Diagnóstico",
+  papelera: "Papelera",
+  planes: "Planes",
+  idempotencia: "Idempotencia",
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
