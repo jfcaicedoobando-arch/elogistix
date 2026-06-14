@@ -32,10 +32,7 @@ const OVERSIZED_BASELINE = new Set<string>([
 const WEAK_REJECTS_BASELINE = new Set<string>([
   "src/features/cliente/services/__tests__/contactos.test.ts",
   "src/features/cliente/services/__tests__/crud.test.ts",
-  "src/features/cliente/services/__tests__/relacionados.test.ts",
-  "src/features/costeo/services/__tests__/agentes.test.ts",
-  "src/features/costeo/services/__tests__/demorasVenta.test.ts",
-  "src/features/costeo/services/__tests__/tarifas.test.ts",
+
   "src/features/cotizacion/services/__tests__/costos.test.ts",
   "src/features/cotizacion/services/__tests__/queries.test.ts",
   "src/features/cotizacion/services/mutations/__tests__/crear.test.ts",
