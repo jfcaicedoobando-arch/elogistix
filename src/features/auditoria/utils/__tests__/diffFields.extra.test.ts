@@ -5,7 +5,7 @@ import {
   SENSITIVE_FIELDS,
   type FieldDiff,
   type ConceptoLike,
-} from "@/lib/audit/diffFields";
+} from "@/features/auditoria/utils/diffFields";
 
 describe("diffFields.extra", () => {
   // ── diffFields ─────────────────────────────────────────────────────────────

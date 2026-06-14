@@ -15,7 +15,7 @@ import {
   type TipoFiltro,
   type SubtipoFiltro,
 } from "./ProveedoresFiltros";
-import { useProveedoresCrear } from "./useProveedoresCrear";
+import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
 import { ProveedoresImportDialog } from "./ProveedoresImportDialog";
 
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [

@@ -16,7 +16,7 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { useConceptosForm } from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
-import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
+import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
 import { useHidratacionEditarEmbarque } from "./useHidratacionEditarEmbarque";
 import {
   validarContenedoresMaritimo,

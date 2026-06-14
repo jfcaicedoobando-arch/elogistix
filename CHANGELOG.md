@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.12] - 2026-06-14
+- **refactor(arquitectura)**: Paso 3 — Reubicar archivos fuera de su feature: `useProveedoresCrear` `src/pages/proveedores/` → `src/features/proveedor/hooks/` (y exportado en el barrel); `submitProformaDialog` `features/embarques/hooks/` → `features/embarques/services/` (es un service, no un hook); `diffFields` `src/lib/audit/` → `src/features/auditoria/utils/` (con sus tests). Elimina `src/lib/audit/` vacío. Actualiza 6 consumidores.
+- **refactor(paginas)**: Paso 6 — Extraer controllers de páginas. `TesoreriaCuentas.tsx` (141→107 LOC) delega el formulario y mutaciones a `useTesoreriaCuentasController`. `Comisiones.tsx` (130→114 LOC) delega el toast warning de emails sin resolver a `useVendedorasEmailWarning`. Las páginas quedan limpias de side-effects y mutaciones inline.
+
 ## [13.14.11] - 2026-06-14
 - **refactor(arquitectura)**: Paso 2 — Purga de barrels con lógica. Mover implementación de `src/features/proveedor/services/index.ts` → `proveedoresCrud.ts`, de `src/features/tesoreria/hooks/index.ts` → `useTesoreriaCuentas.ts` / `useTesoreriaMovimientos.ts` / `useResumenTesoreria.ts`, y de `src/features/facturas/services/index.ts` → `facturasCrud.ts`. Los `index.ts` quedan como re-exports puros (preservan la API pública de cada feature).
 - **refactor(crm)**: Paso 7 — Centralizar columnas duplicadas de `crm_actividades` en `src/features/crm/services/crmActividadesColumns.ts` (`CRM_ACTIVIDADES_COLUMNS_FULL`, `_MIN`, `_SEARCH`). Refactoriza `actividades.ts`, `proximasActividades.ts`, `dashboard.ts` y `search.ts` para consumir las constantes compartidas.
