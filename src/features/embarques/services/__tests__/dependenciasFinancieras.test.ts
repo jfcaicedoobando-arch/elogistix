@@ -11,7 +11,7 @@ function setEmpty(table: string) {
   mock.setTableResult(table, { data: [], error: null });
 }
 
-import { fetchEmbarqueDependenciasFinancieras } from "@/services/embarques/dependenciasFinancieras";
+import { fetchEmbarqueDependenciasFinancieras } from "@/features/embarques/services/dependenciasFinancieras";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

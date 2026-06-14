@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { marcarProformaFacturada } from "@/services/proforma/facturar";
+import { marcarProformaFacturada } from "@/features/proformas/services/facturar";
 
 function proformaRow(overrides: Record<string, unknown> = {}) {
   return {

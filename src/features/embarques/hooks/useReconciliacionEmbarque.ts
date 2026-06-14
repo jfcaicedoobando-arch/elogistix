@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchReconciliacionEmbarque,
   type FilaReconciliacion,
-} from "@/services/embarques/reconciliacionCostos";
+} from "@/features/embarques/services/reconciliacionCostos";
 
 export type { FilaReconciliacion };
 

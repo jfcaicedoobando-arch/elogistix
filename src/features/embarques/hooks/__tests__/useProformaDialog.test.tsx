@@ -11,7 +11,7 @@ vi.mock("@/features/cliente/services", () => ({
   fetchDiasCreditoCliente: mockDiasCredito,
 }));
 
-vi.mock("@/services/proforma", () => ({
+vi.mock("@/features/proformas/services", () => ({
   fetchClienteParaPdf: mockClientePdf,
   fetchProformasEmbarque: vi.fn(),
   fetchProformasAprobadas: vi.fn(),

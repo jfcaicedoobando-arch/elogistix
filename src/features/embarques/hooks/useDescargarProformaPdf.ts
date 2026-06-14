@@ -14,7 +14,7 @@ import {
   fetchConceptosProforma,
   fetchEmbarqueParaPdf,
   type ProformaRow,
-} from "@/services/proforma";
+} from "@/features/proformas/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
 interface ProformaInput {

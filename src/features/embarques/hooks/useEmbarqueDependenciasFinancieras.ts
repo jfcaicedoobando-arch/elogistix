@@ -7,7 +7,7 @@ import {
   fetchEmbarqueDependenciasFinancieras,
   type EmbarqueDependenciasFinancieras,
   type FacturaLigada,
-} from '@/services/embarques/dependenciasFinancieras';
+} from '@/features/embarques/services/dependenciasFinancieras';
 
 export type { EmbarqueDependenciasFinancieras, FacturaLigada };
 

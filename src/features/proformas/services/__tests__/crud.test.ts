@@ -14,7 +14,7 @@ import {
   crearProforma,
   eliminarProforma,
   aprobarProformas,
-} from "@/services/proforma/crud";
+} from "@/features/proformas/services/crud";
 
 const TOTALES = {
   subtotal_usd: 100,

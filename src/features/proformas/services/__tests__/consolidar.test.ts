@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { consolidarProformas } from "@/services/proforma/consolidar";
+import { consolidarProformas } from "@/features/proformas/services/consolidar";
 
 const base = {
   organizationId: "org-1",

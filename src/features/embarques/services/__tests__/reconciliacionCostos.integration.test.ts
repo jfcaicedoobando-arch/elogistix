@@ -11,7 +11,7 @@ import {
   buildFilasReconciliacion,
   calcularDesviacionPct,
   calcularResumen,
-} from "@/services/embarques/reconciliacionCostos";
+} from "@/features/embarques/services/reconciliacionCostos";
 
 describe("B.3.3 flujo Factura proveedor → Conciliación", () => {
   it("embarque real: 3 conceptos, 2 proveedores, mezcla de over/under/sin factura", () => {

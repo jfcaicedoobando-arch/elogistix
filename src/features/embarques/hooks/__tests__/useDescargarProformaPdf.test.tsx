@@ -8,7 +8,7 @@ vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({
 vi.mock("@/hooks/shared", () => ({
   toast: vi.fn(),
 }));
-vi.mock("@/services/proforma", () => ({
+vi.mock("@/features/proformas/services", () => ({
   fetchClienteParaPdf: vi.fn().mockResolvedValue({ id: "cli-1" }),
   fetchConceptosProforma: vi.fn().mockResolvedValue([]),
   fetchConceptosConsolidados: vi.fn().mockResolvedValue([]),
@@ -39,7 +39,7 @@ describe("useDescargarProformaPdf", () => {
   });
 
   it("maneja error sin lanzar al caller", async () => {
-    const { fetchEmbarqueParaPdf } = await import("@/services/proforma");
+    const { fetchEmbarqueParaPdf } = await import("@/features/proformas/services");
     vi.mocked(fetchEmbarqueParaPdf).mockRejectedValueOnce(new Error("network"));
     const { result } = renderHook(() => useDescargarProformaPdf(), { wrapper: createWrapper() });
     await expect(act(async () => result.current.descargar(proformaStub))).resolves.not.toThrow();

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
-import type { ProformaConFactura } from "@/services/proforma";
+import type { ProformaConFactura } from "@/features/proformas/services";
 
 interface Props {
   proformas: ProformaConFactura[];
