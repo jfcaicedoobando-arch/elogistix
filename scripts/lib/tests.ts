@@ -28,9 +28,6 @@ const SUPABASE_MOCK_REGEX = /vi\.mock\(\s*["']@\/integrations\/supabase\/client[
 const SUPABASE_HELPER_REGEX = /createSupabaseMock|_supabaseChainMock/;
 
 
-const SKIP_REGEX = /\b(it|test|describe)\.(skip|only|todo)\(|\bxdescribe\(|\bxit\(/;
-const ISSUE_REGEX = /\/\/\s*(TODO|FIXME)\(#\d+\)/i;
-const TITLE_REGEX = /^\s*(describe|it|test)\(/;
 // Detecta el inicio de un caso de test (no `describe`, no `.skip/.only/.todo`).
 const TEST_START_REGEX = /^\s*(it|test)\(\s*(['"`])([^'"`]+)\2/;
 // Heurística de aserción: expect(...), assert*, expectTypeOf, toThrow vía cualquier matcher.
