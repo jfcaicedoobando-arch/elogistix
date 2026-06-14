@@ -99,16 +99,24 @@ export function auditTests(root: string): TestViolation[] {
     const rel = relPath(root, file);
 
     // File-level: detecta vi.mock supabase sin usar el helper estándar.
+    // Sólo aplica cuando el test consume la API tabular (`.from(...)`); los
+    // que sólo mockean `auth`/`functions`/`storage` no necesitan el chain mock.
     const fileText = lines.join("\n");
-    if (SUPABASE_MOCK_REGEX.test(fileText) && !SUPABASE_HELPER_REGEX.test(fileText)) {
+    const usesFromChain = /supabase[^\n]*\.from\(|mockSupabase[^\n]*\.from\(|mock\.supabase[^\n]*\.from\(/.test(fileText);
+    if (
+      SUPABASE_MOCK_REGEX.test(fileText) &&
+      !SUPABASE_HELPER_REGEX.test(fileText) &&
+      usesFromChain
+    ) {
       const mockLine = lines.findIndex((l) => SUPABASE_MOCK_REGEX.test(l));
       violations.push({
         file: rel,
         line: mockLine + 1,
         rule: "supabase-mock-helper",
-        detail: "vi.mock('@/integrations/supabase/client') sin createSupabaseMock",
+        detail: "vi.mock('@/integrations/supabase/client') con .from(...) sin createSupabaseMock",
       });
     }
+
 
     lines.forEach((raw, idx) => {
       if (SKIP_REGEX.test(raw)) {

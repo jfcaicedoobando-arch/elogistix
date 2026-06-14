@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.2] - 2026-06-14
+- **test(audit/lint)**: Regla `supabase-mock-helper` ajustada — sólo flagea cuando el test consume la API tabular (`.from(...)`); los tests que únicamente mockean `auth`/`functions`/`storage` quedan exentos (no necesitan `createSupabaseMock`). Tras el tightening, `SUPABASE_MOCK_BASELINE` baja de 12 a **0 archivos**. Ambas reglas (`weak-rejects-assertion` y `supabase-mock-helper`) cierran Fase 2 completa con baselines vacíos.
+- **test(financiero/proyeccion)**: Nuevo `kpis-conversion.test.ts` (9 casos puros) cubre `calcularKpisProyeccion` (totales, avance%, margen sin div/0, lista vacía, 100% facturado) y `sumarConceptosEnMxn/Usd` (conversión MXN/USD/EUR, default MXN, guardia `tcUsd<=0` sin division by zero, mezcla multi-moneda).
+
 ## [13.14.1] - 2026-06-14
+
 - **test(refactor)**: Cierre completo de Fase 2.2 — refactor masivo de las 41 archivos restantes del baseline `weak-rejects-assertion` (`.rejects.toBeDefined()` → `.rejects.toThrow()`). Baseline ahora en **0 archivos**; cualquier regresión nueva falla CI inmediatamente. 923/923 tests siguen verdes.
 - **test(financiero/proyeccion)**: Nuevo `agrupar.test.ts` (7 casos puros) cubre `agruparPorExpediente`: consolidación de filas, dedupe de contenedores, estado Facturado vs Pendiente, ETA mínima del grupo (cortes fiscales), `margenPct=0` sin división por cero, orden por ETA con nulls al final, y key sintética cuando expediente está vacío.
 
