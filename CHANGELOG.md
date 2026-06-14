@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.13] - 2026-06-14
+- **refactor(dashboard)**: Paso 6 (cierre) — `Dashboard.tsx` (188→82 LOC) delega toda la orquestación (scope `mios|todos`, derivación de KPIs filtrados, saludo/fecha) a `useDashboardController` en `src/features/dashboard/hooks/`. La página queda como vista pura. Extrae `ESTADOS_LLEGADO` como constante.
+
 ## [13.14.12] - 2026-06-14
 - **refactor(arquitectura)**: Paso 3 — Reubicar archivos fuera de su feature: `useProveedoresCrear` `src/pages/proveedores/` → `src/features/proveedor/hooks/` (y exportado en el barrel); `submitProformaDialog` `features/embarques/hooks/` → `features/embarques/services/` (es un service, no un hook); `diffFields` `src/lib/audit/` → `src/features/auditoria/utils/` (con sus tests). Elimina `src/lib/audit/` vacío. Actualiza 6 consumidores.
 - **refactor(paginas)**: Paso 6 — Extraer controllers de páginas. `TesoreriaCuentas.tsx` (141→107 LOC) delega el formulario y mutaciones a `useTesoreriaCuentasController`. `Comisiones.tsx` (130→114 LOC) delega el toast warning de emails sin resolver a `useVendedorasEmailWarning`. Las páginas quedan limpias de side-effects y mutaciones inline.
