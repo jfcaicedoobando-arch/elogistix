@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.1] - 2026-06-14
+- **ux(mobile 20:9 — Fase 7: validación visual)**: Recorrido manual en preview a 412×915 (mobile) y 1366×768 (desktop). Verificado en `/inicio`, `/embarques`, `/proveedores`, `/profit/dashboard`, `/tesoreria/flujo`: search siempre visible, botón "Filtros" con badge correcto, `KpiStrip` con carrusel snap en `<sm`, `PageHeader` con `text-display` escalando suavemente, tablas → cards en `<sm` sin overflow horizontal, sidebar con badges. Sin regresiones detectadas. Notado que el título "Flujo de caja proyectado · 90 días" usa `truncate` y aparece con "…" en móvil cuando hay back-button: aceptable, no se modifica.
+
 ## [13.21.0] - 2026-06-14
+
 - **ux(mobile 20:9 — Fase 6: tipografía fluida)**: Añadidas utilidades `text-display` y `text-kpi` con `clamp()` en `tailwind.config.ts` para escalar suavemente entre móvil y desktop sin breakpoints rígidos. `PageHeader` adopta `text-display` (1.5rem → 2.25rem según viewport) eliminando el "salto" en sm/md. Inputs ya cumplen tap target ≥40 px (`h-10`). Tokens disponibles para futuras KPI cards.
 
 ## [13.20.0] - 2026-06-14
