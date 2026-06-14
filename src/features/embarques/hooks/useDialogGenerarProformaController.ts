@@ -17,7 +17,7 @@ import {
   filtrarPorContenedor,
   type FiltroContenedor,
 } from "@/lib/domain/conceptosPorContenedor";
-import { submitProformaDialog } from "./submitProformaDialog";
+import { submitProformaDialog } from "@/features/embarques/services/submitProformaDialog";
 import {
   calcularTotalesProforma,
   buildInitialProformaState,

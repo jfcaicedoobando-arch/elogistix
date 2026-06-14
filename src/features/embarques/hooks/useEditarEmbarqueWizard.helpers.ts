@@ -2,7 +2,7 @@
  * Helpers puros de `useEditarEmbarqueWizard`. Sin React.
  */
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
-import type { FieldDiff, ConceptosDiff } from "@/lib/audit/diffFields";
+import type { FieldDiff, ConceptosDiff } from "@/features/auditoria/utils/diffFields";
 
 /**
  * Marítimo exige número + tipo en cada contenedor. Devuelve `null` si OK,

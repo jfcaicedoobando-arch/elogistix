@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useToast } from "@/hooks/shared";
-import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
+import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ContactoFormData, ClienteFormData } from "./useClienteDetalleController.types";
