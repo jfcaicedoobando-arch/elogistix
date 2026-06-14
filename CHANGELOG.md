@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 6: tipografía fluida)**: Añadidas utilidades `text-display` y `text-kpi` con `clamp()` en `tailwind.config.ts` para escalar suavemente entre móvil y desktop sin breakpoints rígidos. `PageHeader` adopta `text-display` (1.5rem → 2.25rem según viewport) eliminando el "salto" en sm/md. Inputs ya cumplen tap target ≥40 px (`h-10`). Tokens disponibles para futuras KPI cards.
+
 ## [13.20.0] - 2026-06-14
+
 - **ux(mobile 20:9 — Fase 5b: cobertura legacy)**: `PageHeader` ahora usa `text-2xl sm:text-3xl`, descripción con `line-clamp-2` y acciones full-width en `<md` (`w-full md:w-auto` + hijos `flex-1`). Normalizado `space-y-6` → `space-y-4 sm:space-y-6` en Admin (Organizaciones, Usuarios, Configuración, Papelera, OrgDetalle), Admin-Org (Usuarios, Configuración), Reportes, Ayuda, Portal (Dashboard, Perfil), Profit (EstadoResultados, Proyección). Tabs de Configuración Global envueltos con `overflow-x-auto scrollbar-thin` (`w-max min-w-full`) para evitar truncamiento en móvil. `ProveedoresFiltros` migrado a `MobileFiltersSheet`: en `<md` muestra search + botón "Filtros (N)" con badge; en `≥md` mantiene la barra inline. Sin cambios de lógica de negocio.
 
 ## [13.19.0] - 2026-06-14

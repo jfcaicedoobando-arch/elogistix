@@ -17,6 +17,12 @@ export default {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
+      fontSize: {
+        // Tipografía fluida (Fase 6) — clamp(min, preferida, max).
+        display: ["clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem)", { lineHeight: "1.15", fontWeight: "700" }],
+        kpi: ["clamp(1.125rem, 0.95rem + 0.8vw, 1.5rem)", { lineHeight: "1.2", fontWeight: "600" }],
+      },
+
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
