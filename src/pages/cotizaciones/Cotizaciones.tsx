@@ -159,8 +159,8 @@ export default function Cotizaciones() {
                   <div className="font-semibold text-sm truncate">{r.folio}</div>
                   <div className="text-xs text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre ?? "")}</div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {r.fecha ? formatDate(r.fecha) : ""}
-                    {typeof r.total === "number" ? ` · ${formatCurrency(r.total, r.moneda ?? "USD")}` : ""}
+                    {r.created_at ? formatDate(r.created_at) : ""}
+                    {typeof r.subtotal === "number" ? ` · ${formatCurrency(r.subtotal, r.moneda ?? "USD")}` : ""}
                   </div>
                 </div>
                 <Badge variant="secondary" className={`text-[10px] whitespace-nowrap ${getEstadoColor(r.estado ?? "")}`}>{r.estado}</Badge>
