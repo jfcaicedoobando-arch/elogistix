@@ -19,7 +19,7 @@ export async function searchCrm(term: string): Promise<CrmSearchHit[]> {
       .limit(6),
     supabase
       .from("crm_actividades")
-      .select("id, asunto, entidad_tipo, entidad_id")
+      .select(CRM_ACTIVIDADES_COLUMNS_SEARCH)
       .ilike("asunto", like)
       .is("fecha_completada", null)
       .limit(6),

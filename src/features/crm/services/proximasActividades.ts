@@ -16,7 +16,7 @@ export interface ProximaActividad {
   fecha_programada: string | null;
 }
 
-const COLS = "id, entidad_tipo, entidad_id, tipo, asunto, fecha_programada";
+import { CRM_ACTIVIDADES_COLUMNS_MIN as COLS } from "./crmActividadesColumns";
 
 export async function fetchProximasActividades(
   entidadTipo: CrmEntidadTipo,

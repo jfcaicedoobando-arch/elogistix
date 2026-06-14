@@ -8,8 +8,7 @@ export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["R
 export type CrmActividadTipo = Database["public"]["Enums"]["crm_actividad_tipo"];
 export type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 
-const COLS =
-  "id, tipo, asunto, descripcion, entidad_tipo, entidad_id, fecha_programada, fecha_completada, duracion_min, resultado, responsable_id, responsable_email, created_at, updated_at";
+import { CRM_ACTIVIDADES_COLUMNS_FULL as COLS, CRM_ACTIVIDADES_COLUMNS_MIN } from "./crmActividadesColumns";
 
 export interface ListActividadesParams {
   search: string;
@@ -128,7 +127,7 @@ export type ActividadVencida = {
 export async function listActividadesVencidas(userId: string, limit: number): Promise<ActividadVencida[]> {
   const { data, error } = await supabase
     .from("crm_actividades")
-    .select("id, asunto, tipo, fecha_programada, entidad_tipo, entidad_id")
+    .select(CRM_ACTIVIDADES_COLUMNS_MIN)
     .is("fecha_completada", null)
     .lt("fecha_programada", new Date().toISOString())
     .eq("responsable_id", userId)
