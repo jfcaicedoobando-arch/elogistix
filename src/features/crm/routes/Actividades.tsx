@@ -82,7 +82,7 @@ export default function Actividades() {
   };
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <CrmSubheader
         context={`${data?.count ?? 0} actividades`}
         actions={vencidasOnly ? (

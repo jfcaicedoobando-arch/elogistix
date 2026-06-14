@@ -118,7 +118,7 @@ export default function Oportunidades() {
   const totalPipeline = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(totalPipeline)}`} />
 
       <Card>

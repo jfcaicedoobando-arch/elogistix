@@ -32,7 +32,7 @@ export default function MiDia() {
   const hoy = new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <CrmSubheader context={`Mi día · ${hoy}`} />
 
       <section className="space-y-3">

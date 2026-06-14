@@ -18,7 +18,7 @@ export default function CrmConfiguracion() {
     return <div className="p-8 text-center text-sm text-muted-foreground">No tienes permiso para configurar el CRM.</div>;
   }
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <PageHeader
         icon={<Settings className="h-6 w-6 text-primary" />}
         title="Configuración del CRM"

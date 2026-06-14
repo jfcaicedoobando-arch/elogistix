@@ -129,7 +129,7 @@ function EmbudoYPerdidas() {
 export default function Analitica() {
   const { canEdit } = usePermissions();
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <CrmSubheader context="Forecast · Embudo · Pérdidas · Vendedores" />
       <ForecastPanel />
       <EmbudoYPerdidas />

@@ -46,7 +46,7 @@ export default function Leads() {
   const columns = useMemo(() => makeLeadsColumns(selected, toggle, toggleAll, leads), [selected, leads]);
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <CrmSubheader context={`${totalCount} leads en cartera`} />
 
       {canEditCrm && selected.size > 0 && (
