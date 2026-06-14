@@ -83,3 +83,7 @@ jobs:
 
       - name: Run RLS suite — operaciones
         run: $PSQL -f supabase/tests/rls/test_rls_operaciones.sql
+
+      - name: Run RLS suite — tarifas y costeo
+        run: $PSQL -f supabase/tests/rls/test_rls_tarifas_y_costeo.sql
+
