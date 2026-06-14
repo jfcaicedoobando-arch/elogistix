@@ -1,10 +1,6 @@
-import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/shared";
-import { useDashboardData, ESTADOS_FILTRO } from "@/hooks/dashboard";
 import { DashboardStatusCards } from "@/components/dashboard/DashboardStatusCards";
 import { AlertasDemoraCard } from "@/components/dashboard/AlertasDemoraCard";
 import { ProximosArribosCard } from "@/components/dashboard/ProximosArribosCard";
@@ -12,116 +8,14 @@ import { ProfitTable } from "@/components/dashboard/ProfitTable";
 import { EmbarquesActivosTable } from "@/components/dashboard/EmbarquesActivosTable";
 import { CargasActivasClienteCard } from "@/components/dashboard/CargasActivasClienteCard";
 import { MiOperacionSection } from "@/components/dashboard/operador/MiOperacionSection";
-
-function getSaludo() {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 19) return "Buenas tardes";
-  return "Buenas noches";
-}
-
-type Scope = "todos" | "mios";
+import { useDashboardController, type DashboardScope } from "@/features/dashboard/hooks/useDashboardController";
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { isOperador, canViewFinancials, role } = usePermissions();
-  const showScopeToggle = isOperador || role === "vendedor";
-  const [scope, setScope] = useState<Scope>(showScopeToggle ? "mios" : "todos");
-
   const {
-    isLoading,
-    conteoPorEstado,
-    totalActivos,
-    alertasDemora,
-    proximosArribos,
-    profitArribosEsteMes,
-    embarquesMesSiguiente,
-    resumenMesSiguiente,
-    arribosEsteMes,
-    cargasPorCliente,
-    cargasActivasTotal,
-  } = useDashboardData();
-
-  const operadorEmail = user?.email ?? "";
-
-  // Filtrado por scope=mios — match por embarque.operador === user.email (case-insensitive)
-  const scoped = useMemo(() => {
-    if (scope === "todos") {
-      return {
-        alertasDemora,
-        proximosArribos,
-        profitArribosEsteMes,
-        embarquesMesSiguiente,
-        conteoPorEstado,
-        totalActivos,
-        arribosEsteMes,
-        resumenMesSiguiente,
-      };
-    }
-    const mine = (op: string | null | undefined) =>
-      (op ?? "").toLowerCase() === operadorEmail.toLowerCase();
-
-    const ad = alertasDemora.filter((e) => mine(e.operador));
-    const pa = proximosArribos.filter((e) => mine(e.operador));
-    const pf = profitArribosEsteMes.filter((e) => mine(e.operador));
-    const em = embarquesMesSiguiente.filter((e) => mine(e.operador));
-
-    // Recalcular conteoPorEstado desde activos del operador
-    const activos = [...ad, ...pa, ...pf, ...em];
-    const seen = new Set<string>();
-    const conteo: Record<string, number> = Object.fromEntries(ESTADOS_FILTRO.map((e) => [e, 0]));
-    for (const e of activos) {
-      if (seen.has(e.id)) continue;
-      seen.add(e.id);
-      if (e.estadoReal in conteo) conteo[e.estadoReal] += 1;
-    }
-    const total = seen.size;
-
-    // Recalcular arribos del mes desde profitArribosEsteMes filtrado
-    const arribosScoped = {
-      ...arribosEsteMes,
-      total: pf.length,
-      yaLlegaron: pf.filter((e) => ["Arribo", "En Aduana", "Entregado"].includes(e.estadoReal)).length,
-      enCamino: pf.filter((e) => !["Arribo", "En Aduana", "Entregado"].includes(e.estadoReal)).length,
-    };
-
-    // Recalcular resumen del mes siguiente desde embarquesMesSiguiente filtrado
-    const resumenScoped = {
-      ...resumenMesSiguiente,
-      totalEmbarques: em.length,
-      facturados: em.filter((e) => e.facturado).length,
-    };
-
-    return {
-      alertasDemora: ad,
-      proximosArribos: pa,
-      profitArribosEsteMes: pf,
-      embarquesMesSiguiente: em,
-      conteoPorEstado: conteo as typeof conteoPorEstado,
-      totalActivos: total,
-      arribosEsteMes: arribosScoped,
-      resumenMesSiguiente: resumenScoped,
-    };
-  }, [
-    scope, operadorEmail,
-    alertasDemora, proximosArribos, profitArribosEsteMes, embarquesMesSiguiente,
-    conteoPorEstado, totalActivos, arribosEsteMes, resumenMesSiguiente,
-  ]);
-
-  const { saludo, hoyStr } = useMemo(() => {
-    const fecha = new Date().toLocaleDateString("es-MX", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    return {
-      saludo: getSaludo(),
-      hoyStr: fecha.charAt(0).toUpperCase() + fecha.slice(1),
-    };
-  }, []);
-
-  const hideFinancials = !canViewFinancials;
+    scope, setScope, showScopeToggle, operadorEmail,
+    isOperador, canViewFinancials, hideFinancials, isLoading,
+    cargasPorCliente, cargasActivasTotal, scoped, saludo, hoyStr,
+  } = useDashboardController();
 
   return (
     <div className="space-y-6">
@@ -136,7 +30,7 @@ export default function Dashboard() {
       />
 
       {showScopeToggle && (
-        <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
+        <Tabs value={scope} onValueChange={(v) => setScope(v as DashboardScope)}>
           <TabsList>
             <TabsTrigger value="mios" disabled={!operadorEmail}>Míos</TabsTrigger>
             <TabsTrigger value="todos">Todos</TabsTrigger>
