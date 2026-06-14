@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.16] - 2026-06-14
+- **refactor(constantes)**: Paso 9 (cierre parcial). Crear `src/constants/queryStaleTime.ts` con buckets estandarizados (`STALE_VOLATILE 15s`, `STALE_SHORT 30s`, `STALE_MEDIUM 60s`, `STALE_LONG 5min`, `STALE_STATIC 30min`) para reemplazar `staleTime: 30_000 | 60_000 | …` repartidos por los hooks. La adopción ocurre incremental conforme se toquen los hooks afectados.
+- **note(arquitectura)**: Paso 8 reanalizado — el inventario real son ~10 ocurrencias de `as unknown as` en producción (no 75; el resto vive en `src/test/fixtures` y es legítimo). Las restantes ya llevan marcador `SAFE-CAST:` documentando la deuda contra el tipo generado de Supabase y se resolverán cuando la firma del RPC/cliente se regenere. No requiere acción adicional ahora.
+- **note(arquitectura)**: Paso 10 reanalizado — `errorDetailsExtract.ts` (182 LOC) está justificado por defensividad contra `ZodError | PostgrestError | objeto plano` con detección por duck-typing y cycle-guard. Refactorizar sin nuevos requisitos solo añadiría riesgo. Marcado como **cerrado: no requiere cambios**.
+
 ## [13.14.15] - 2026-06-14
 - **refactor(arquitectura)**: Paso 4 (cierre). Migrar 9 dominios adicionales a `src/features/<dominio>/{services,hooks}/`: `catalogos`, `configuracion`, `operaciones`, `presupuesto`, `profit`, `reportes`, `admin`, `proforma` → `proformas/services`, y consolidar `src/services/embarques/*` dentro del feature embarques. Tras esta migración `src/services/` queda exclusivamente con infraestructura transversal (auth, organization, usuario, planes, bitacora, observability, csf, search, storage, tracking, notificaciones, pagos-factura, demoAccess/Mode), tal como define el estándar feature-first del Paso 1. Actualiza todos los imports `@/services/<x>` y `@/hooks/<x>` por sus equivalentes en `@/features/<x>/`.
 - **fix(arquitectura)**: Corregir paths mal sustituidos `@/features/dashboard/{services,hooks}-ejecutivo` → `@/features/dashboardEjecutivo/{services,hooks}` (efecto colateral del sed sobre `dashboard\b`).
