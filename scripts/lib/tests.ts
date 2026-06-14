@@ -23,7 +23,7 @@ export interface TestViolation {
 const SKIP_REGEX = /\b(it|test|describe)\.(skip|only|todo)\(|\bxdescribe\(|\bxit\(/;
 const ISSUE_REGEX = /\/\/\s*(TODO|FIXME)\(#\d+\)/i;
 const TITLE_REGEX = /^\s*(describe|it|test)\(/;
-const WEAK_REJECTS_REGEX = /\.rejects\.(toBeDefined|toBeTruthy)\s*\(/;
+const WEAK_REJECTS_REGEX = /\)\s*\.rejects\.(toBeDefined|toBeTruthy)\s*\(/;
 const SUPABASE_MOCK_REGEX = /vi\.mock\(\s*["']@\/integrations\/supabase\/client["']/;
 const SUPABASE_HELPER_REGEX = /createSupabaseMock|_supabaseChainMock/;
 
