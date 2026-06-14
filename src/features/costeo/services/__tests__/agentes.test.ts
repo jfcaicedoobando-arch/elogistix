@@ -66,6 +66,6 @@ describe("costeo/services/agentes", () => {
 
   it("fetchCosteoAgentes propaga errores", async () => {
     mock.setTableResult("costeo_agentes", { data: null, error: { message: "boom" } });
-    await expect(fetchCosteoAgentes(ORG)).rejects.toBeDefined();
+    await expect(fetchCosteoAgentes(ORG)).rejects.toThrow();
   });
 });

@@ -32,7 +32,7 @@ describe("configuracion service", () => {
       data: null,
       error: { message: "boom" },
     });
-    await expect(fetchConfiguracionByOrg("org1")).rejects.toBeDefined();
+    await expect(fetchConfiguracionByOrg("org1")).rejects.toThrow();
   });
 
   it("fetchConfiguracion devuelve [] cuando data es null", async () => {

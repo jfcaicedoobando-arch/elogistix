@@ -75,7 +75,7 @@ describe("embarques/services/bitacoraEmbarque", () => {
 
   it("bitacora.fetch: propaga error", async () => {
     mock.setTableResult("bitacora_actividad", { data: null, error: { message: "x" } });
-    await expect(fetchBitacoraEmbarque("e1", null)).rejects.toBeDefined();
+    await expect(fetchBitacoraEmbarque("e1", null)).rejects.toThrow();
   });
 
   it("bitacora.fetch: retorna data cuando existe", async () => {
