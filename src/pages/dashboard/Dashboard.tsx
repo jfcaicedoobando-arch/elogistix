@@ -18,7 +18,7 @@ export default function Dashboard() {
   } = useDashboardController();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title={`${saludo} 👋`}
         description={hoyStr}
@@ -54,7 +54,7 @@ export default function Dashboard() {
         hideFinancials={hideFinancials}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <AlertasDemoraCard alertas={scoped.alertasDemora} isLoading={isLoading} />
         <ProximosArribosCard arribos={scoped.proximosArribos} isLoading={isLoading} />
       </div>

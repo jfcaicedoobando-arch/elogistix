@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.17.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 3: dashboards responsive)**: Nuevo wrapper `KpiStrip` que renderiza bandas de KPIs como carrusel horizontal con scroll-snap en `<sm` (cards ~78% del ancho) y como grid en `≥sm`. Migrados `BandaKPIs` (Dashboard Ejecutivo, 6 KPIs) y la `StatStrip` inferior del CRM (4 KPIs) — desaparece el apretujamiento de 4 columnas a 412 px. CRM Dashboard reduce padding a `p-4 sm:p-6`. Dashboard operativo usa `space-y-4 sm:space-y-6` y `gap-4 sm:gap-6` para densidad táctil más cómoda.
+
 ## [13.16.0] - 2026-06-14
 - **ux(mobile 20:9 — Fase 2: tablas responsive)**: Nuevo wrapper `ResponsiveDataTable` que renderiza `DataTable` en `≥sm` y una lista de tarjetas táctiles (≥56 px) en `<sm`. Migradas Embarques, Cotizaciones, Proveedores, CRM Leads y Reportes/Desglose por Cliente — desaparece el scroll horizontal en móvil sin tocar lógica. Cada card muestra título primario (folio/empresa/cliente), línea secundaria (cliente/ruta/contacto) y badge de estado. Padding inferior `pb-24 sm:pb-0` añadido en páginas con FAB para que la última fila no quede tapada por el botón flotante.
 
