@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.4] - 2026-06-14
+- **perf(bundle)**: `PdfPreview` ahora carga `@react-pdf/renderer` con `React.lazy` + `Suspense` — sólo la ruta `/dev/pdf-preview` paga los ~250–450 KB del visor (antes inflaba cualquier chunk que importara el wrapper). `descargarPdf` sigue eager porque la API `pdf().toBlob()` se invoca al instante en handlers.
+- **perf(assets)**: Eliminados `public/changelog.json` (274 KB, huérfano — no había `/changelog` ni referencias) y `public/librecarga-logo.png` (154 KB, sin uso; existe `librecarga-logo.svg` <1 KB). Ahorro ~428 KB de transferencia inicial potencial.
+- **perf(fuentes)**: Inter movido de `@import` en `src/index.css` (bloqueante) a `<link rel="preload" as="style">` + `media="print"` swap en `index.html` con `preconnect` a Google Fonts. La hoja de fuentes deja de bloquear el CSS crítico.
+- **perf(render)**: `ThemeContext` ahora memoiza el `value` del Provider con `useMemo` (deps: `theme, toggleTheme, setTheme`). Evita que cada render del provider re-cree el objeto y dispare re-renders en todos los consumidores del tema.
+- **perf(cache)**: Catálogos con `staleTime: 0` corregidos — `useUsuarios` 5 min / 30 min gcTime, `useOperadoresDistintos` 30 min / 60 min. Elimina refetch en cada mount de listas usuario y filtros de operadores.
+- **perf(bundle/tree-shake)**: `package.json` declara `"sideEffects": ["*.css", "*.scss", "./src/main.tsx", "./src/lib/sentry.ts"]` — habilita tree-shaking agresivo en barrels `src/features/**/index.ts` sin romper estilos ni la inicialización de Sentry.
+- **No incluido** (riesgo): `manualChunks` en `vite.config.ts` se mantiene desactivado por la nota documentada (rompe inicialización de `recharts`/`@react-pdf` con `Cannot access 'n' before initialization`). Migraciones RPC del Dashboard (Fase 2) y refactor de `sidebar.tsx`/`DataTable` virtualization quedan diferidos a su propio ciclo por superficie de cambio.
+
 ## [13.14.3] - 2026-06-14
 - **test(financiero/comisiones)**: Nuevo `devengadas.kpis.test.ts` (5 casos puros con `vi.useFakeTimers`) cubre `calcularKPIsComisiones`: lista vacía, exclusión de estado `Cancelada` del devengado del mes, soporte de montos negativos (reversos/abonos), mes distinto al actual (sólo `pendiente_liquidar` acumula), y `Liquidada` que cuenta en `liquidado_mes` pero no en `pendiente`.
 - **test(financiero/presupuesto)**: Nuevo `vsReal.bordes.test.ts` (5 casos) cubre `fetchPresupuestoVsReal` en bordes críticos: `presupuesto=0` → `cumplimiento_pct=0` sin div/0 ni Infinity, USD con `tipo_cambio_usd` válido convierte a MXN, USD con `tipo_cambio_usd=null` usa monto sin convertir (no multiplica por 0), liquidaciones mapeadas a categoría "Comisiones" por nombre, y sin gastos/presupuesto → totales y variación en 0.
