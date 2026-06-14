@@ -44,6 +44,3 @@ export const BANCOS_MEXICO: readonly string[] = [
   "Stori",
   "Ualá",
 ] as const;
-
-/** Valida que una CLABE interbancaria tenga exactamente 18 dígitos numéricos. */
-export const isClabeValida = (clabe: string): boolean => /^\d{18}$/.test(clabe);

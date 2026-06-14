@@ -55,12 +55,6 @@ export const getModoLucideIcon = (modo: string): LucideIcon => {
  *  @deprecated Importar `ROLE_LABELS` / `getRoleLabel` desde `@/lib/roles/roleCatalog`. */
 export { ROLE_LABELS as roleLabels, getRoleLabel } from "@/lib/roles/roleCatalog";
 
-/** Color del bullet de timeline para una nota según su tipo. */
-export const getNotaTipoColorClass = (tipo: string): string => {
-  if (tipo === "cambio_estado") return "bg-accent";
-  if (tipo === "nota") return "bg-warning";
-  return "bg-muted-foreground";
-};
 
 /** Color del indicador de estado de un documento de embarque. */
 export const getDocEstadoColorClass = (estado: string): string => {
