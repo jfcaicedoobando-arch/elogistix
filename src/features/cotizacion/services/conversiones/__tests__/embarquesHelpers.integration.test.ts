@@ -37,7 +37,7 @@ const costo = (over: Partial<Tables<"cotizacion_costos">> = {}): Tables<"cotizac
 } as unknown as Tables<"cotizacion_costos">);
 
 describe("Integración Cotización → Embarque (helpers puros)", () => {
-  describe("construirHijosPayload", () => {
+  describe("[integration] construirHijosPayload", () => {
     it("reparte peso/volumen equitativamente y reserva piezas residuales al último", () => {
       const hijos = construirHijosPayload("emb-1", cot(), 3, {
         pesoTotal: 1000, volumenTotal: 30, piezasTotal: 101,
@@ -74,7 +74,7 @@ describe("Integración Cotización → Embarque (helpers puros)", () => {
     });
   });
 
-  describe("construirCostosRows", () => {
+  describe("[integration] construirCostosRows", () => {
     const hijos = [
       { id: "h1", orden: 1 },
       { id: "h2", orden: 2 },
@@ -125,7 +125,7 @@ describe("Integración Cotización → Embarque (helpers puros)", () => {
     });
   });
 
-  describe("parsearVentasJsonb", () => {
+  describe("[integration] parsearVentasJsonb", () => {
     it("descarta entradas sin descripción y filas no-objeto", () => {
       const out = parsearVentasJsonb(
         [
