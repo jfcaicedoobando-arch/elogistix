@@ -51,7 +51,7 @@ export PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
 psql -v ON_ERROR_STOP=1 -f supabase/tests/rls/_ci_bootstrap.sql
 for f in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$f"; done
 psql -v ON_ERROR_STOP=1 -f supabase/tests/rls/_ci_post_migrate.sql
-for s in isolation financiero financiero_critico crm_operacional operaciones; do
+for s in isolation financiero financiero_critico crm_operacional operaciones tarifas_y_costeo; do
   psql -v ON_ERROR_STOP=1 -f "supabase/tests/rls/test_rls_${s}.sql"
 done
 ```
