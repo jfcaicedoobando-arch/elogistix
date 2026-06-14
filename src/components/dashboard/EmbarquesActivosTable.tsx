@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -113,9 +114,10 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
     : 0;
   const colorClass = pctFacturados >= 75 ? "[&>div]:bg-success" : pctFacturados >= 25 ? "[&>div]:bg-warning" : "[&>div]:bg-destructive";
 
-  const visibleColumns = hideFinancials
-    ? columns.filter((c) => c.id !== "profit" && c.id !== "facturado")
-    : columns;
+  const visibleColumns = useMemo(
+    () => (hideFinancials ? columns.filter((c) => c.id !== "profit" && c.id !== "facturado") : columns),
+    [hideFinancials],
+  );
 
   return (
     <Card>
