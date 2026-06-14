@@ -32,4 +32,39 @@ if [ "$GZIPPED_KB" -gt "$BUDGET_KB" ]; then
   exit 1
 fi
 
-echo "✓ Bundle size OK"
+# Phase 4.2 — Auditoría 13.14.0: gate adicional para chunks lazy y vendor.
+# Budget conservador, ajustar si vendors crecen por features nuevas.
+LAZY_BUDGET_KB="${LAZY_BUDGET_KB:-250}"
+VENDOR_BUDGET_KB="${VENDOR_BUDGET_KB:-500}"
+FAIL=0
+
+for f in "$DIST_DIR"/*.js; do
+  [ -f "$f" ] || continue
+  name=$(basename "$f")
+  # Saltar el entry, ya validado arriba.
+  case "$name" in index-*.js) continue ;; esac
+
+  g=$(gzip -c "$f" | wc -c)
+  kb=$(( g / 1024 ))
+
+  if echo "$name" | grep -qE '^(vendor|chunk-vendor|react-vendor)'; then
+    budget="$VENDOR_BUDGET_KB"
+    label="vendor"
+  else
+    budget="$LAZY_BUDGET_KB"
+    label="lazy"
+  fi
+
+  if [ "$kb" -gt "$budget" ]; then
+    echo "::error::Chunk $label '$name' = ${kb} KB excede budget ${budget} KB."
+    FAIL=1
+  fi
+done
+
+if [ "$FAIL" -eq 1 ]; then
+  echo "::error::Bundle size gate FALLÓ. Revisa imports estáticos pesados o falta de lazy()."
+  exit 1
+fi
+
+echo "✓ Bundle size OK (entry + lazy + vendor)"
+
