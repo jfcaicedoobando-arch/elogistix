@@ -9,7 +9,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { Badge } from "@/components/ui/badge";
+import { toTitleCase } from "@/lib/formatters";
 import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
@@ -80,7 +82,7 @@ export default function Leads() {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={leads}
             isLoading={isLoading}
@@ -88,12 +90,22 @@ export default function Leads() {
             onRowClick={(l) => navigate(`/crm/leads/${l.id}`)}
             rowKey={(l) => l.id}
             density="comfortable"
+            mobileCard={(l) => (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm truncate">{toTitleCase(l.empresa)}</div>
+                  <div className="text-xs text-muted-foreground truncate mt-0.5">{toTitleCase(l.contacto ?? "") || l.email || "—"}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{l.fuente}{typeof l.score === "number" ? ` · score ${l.score}` : ""}</div>
+                </div>
+                <Badge variant="secondary" className="text-[10px] whitespace-nowrap">{l.estado}</Badge>
+              </div>
+            )}
             pagination={{
               page,
               totalPages,
               onPageChange: setPage,
               pageSize,
-              onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+              onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
               pageSizeOptions: [100, 999999],
               pageSizeLabels: { 999999: "Todos" },
             }}
