@@ -40,7 +40,7 @@ export default function Ayuda() {
   }, [search]);
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       <PageHeader
         title="Centro de ayuda"
         description="Glosario, preguntas frecuentes y guías rápidas para usar el ERP en operación diaria."

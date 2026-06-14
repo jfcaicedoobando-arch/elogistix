@@ -41,19 +41,20 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 flex-1">
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+        <h1 className="flex items-center gap-2 text-2xl sm:text-3xl font-bold tracking-tight">
           {icon}
           <span className="truncate">{title}</span>
         </h1>
         {description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{description}</p>
         ) : null}
       </div>
       {actions ? (
-        <div className="flex flex-wrap items-center gap-2 md:flex-nowrap md:justify-end">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:flex-nowrap md:justify-end [&>*]:flex-1 sm:[&>*]:flex-none">
           {actions}
         </div>
       ) : null}
     </div>
   );
 }
+

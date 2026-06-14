@@ -33,7 +33,7 @@ export default function Reportes() {
   } = useReportesPageController();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Rentabilidad por Cliente"
         description="P&L agrupado por cuenta con filtros de periodo y modo"

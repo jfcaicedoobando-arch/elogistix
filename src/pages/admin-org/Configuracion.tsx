@@ -23,9 +23,9 @@ export default function Configuracion() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configuración</h1>
           <p className="text-sm text-muted-foreground">Parámetros generales del sistema</p>
         </div>
         <div className="space-y-4">
@@ -38,7 +38,8 @@ export default function Configuracion() {
   const mostrarGuardar = TABS_CON_GUARDAR.has(tab);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Configuración</h1>

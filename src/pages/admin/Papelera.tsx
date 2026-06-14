@@ -97,7 +97,7 @@ export default function Papelera() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         icon={<Trash2 className="h-6 w-6" />}
         title="Papelera"
