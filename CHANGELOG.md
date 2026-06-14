@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.3] - 2026-06-14
+- **test(financiero/comisiones)**: Nuevo `devengadas.kpis.test.ts` (5 casos puros con `vi.useFakeTimers`) cubre `calcularKPIsComisiones`: lista vacía, exclusión de estado `Cancelada` del devengado del mes, soporte de montos negativos (reversos/abonos), mes distinto al actual (sólo `pendiente_liquidar` acumula), y `Liquidada` que cuenta en `liquidado_mes` pero no en `pendiente`.
+- **test(financiero/presupuesto)**: Nuevo `vsReal.bordes.test.ts` (5 casos) cubre `fetchPresupuestoVsReal` en bordes críticos: `presupuesto=0` → `cumplimiento_pct=0` sin div/0 ni Infinity, USD con `tipo_cambio_usd` válido convierte a MXN, USD con `tipo_cambio_usd=null` usa monto sin convertir (no multiplica por 0), liquidaciones mapeadas a categoría "Comisiones" por nombre, y sin gastos/presupuesto → totales y variación en 0.
+- **test(auth/sesion)**: Nuevo `useAuthSession.refresh.test.ts` (4 casos) cubre transiciones faltantes: `TOKEN_REFRESHED` con mismo `access_token` preserva referencia (no re-renderiza) y mantiene `lastEvent` previo, `TOKEN_REFRESHED` con nuevo token reemplaza sesión sin mover `lastEvent`, `SIGNED_OUT` limpia user/session, y `USER_UPDATED` actualiza usuario y marca `lastEvent`. Cierra gap de Fase 3.4 (refresh/sesión expirada).
+
 ## [13.14.2] - 2026-06-14
 - **test(audit/lint)**: Regla `supabase-mock-helper` ajustada — sólo flagea cuando el test consume la API tabular (`.from(...)`); los tests que únicamente mockean `auth`/`functions`/`storage` quedan exentos (no necesitan `createSupabaseMock`). Tras el tightening, `SUPABASE_MOCK_BASELINE` baja de 12 a **0 archivos**. Ambas reglas (`weak-rejects-assertion` y `supabase-mock-helper`) cierran Fase 2 completa con baselines vacíos.
 - **test(financiero/proyeccion)**: Nuevo `kpis-conversion.test.ts` (9 casos puros) cubre `calcularKpisProyeccion` (totales, avance%, margen sin div/0, lista vacía, 100% facturado) y `sumarConceptosEnMxn/Usd` (conversión MXN/USD/EUR, default MXN, guardia `tcUsd<=0` sin division by zero, mezcla multi-moneda).
