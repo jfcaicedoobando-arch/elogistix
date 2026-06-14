@@ -1,113 +1,91 @@
-# Auditoría de Tests — Estado actual y plan de mejora
+# Auditoría de Performance — Libre Carga
 
-## TL;DR
+Análisis estático ejecutado por 3 subagentes paralelos (fetching, render, bundle). Sin cambios de código; este reporte propone qué optimizar y en qué orden.
 
-- **421 archivos** de tests Vitest/RTL + **5 suites RLS SQL** + **12 edge functions con tests Deno** + **5 specs Playwright** + **1 canary PDF**.
-- **Higiene base excelente**: 0 violaciones `.only/.skip/duplicate-title` (después del fix de `13.12.1`).
-- **Gaps principales** (en orden de riesgo):
-  1. **41% de módulos productivos sin test asociado** (199 de 482), concentrados en cálculos financieros y mutaciones.
-  2. **Aserciones débiles de error** (`.rejects.toBeDefined()`) en ~12% de tests de servicios.
-  3. **RLS sin cubrir** en tablas sensibles: `costeo_tarifas`, `costeo_rutas`, `auditoria_revisiones`, `proveedor_notas_credito`.
-  4. **E2E no bloquea PRs** y no cubre cross-org security ni descarga real de PDF.
-  5. **Sin canarios** de query timeout ni bundle size gate real.
+## Resumen ejecutivo
+
+Tres causas explican la mayor parte del "sluggish":
+1. **Dashboard Ejecutivo dispara ~60 queries** para una sola carga (loop de 12 meses × 5 queries).
+2. **Bundle inicial inflado** por imports eager de `@react-pdf/renderer` y `recharts`, sin `manualChunks`, más assets pesados en `public/`.
+3. **Re-renders innecesarios** por contextos sin `useMemo`, keys inestables (`Math.random`, `Date.now`) y tablas sin virtualización.
 
 ---
 
 ## Hallazgos por capa
 
-### A. Frontend (Vitest + RTL) — 421 tests
+### A. Datos y red (Supabase / React Query)
 
-| Severidad | Hallazgo |
-|---|---|
-| HIGH | Aserciones débiles `expect(...).rejects.toBeDefined()` en `relacionados.test.ts:41`, `agentes.test.ts:67`, `tarifas.test.ts:106` y otros ~12% de tests de servicios. No garantizan el error correcto. |
-| HIGH | **Solo 11 tests de componentes** y 1 smoke de rutas vs. 190 tests de features. Formularios complejos (embarques, auditoría) sin test de integración Hook↔UI. |
-| MEDIUM | Mocks Supabase inconsistentes — `usuarios/__tests__/index.test.ts` y `services/csf/__tests__/index.test.ts` no usan `_supabaseChainMock` estándar. |
-| MEDIUM | Archivos sobredimensionados: `DataTable.regression.test.tsx` (367), `useAuditoriaEjecutivo.test.tsx` (247), `DataTable.perf.test.tsx` (245), `DataTable.e2e.test.tsx` (245). |
-| LOW | `waitFor` sin timeout explícito en `useAuthProfile.test.ts:40`, `useComisiones.test.tsx:10` — riesgo de flakiness en CI lento. |
+1. **CRITICAL — `src/services/dashboard-ejecutivo/agregador.ts:63`**: N+1 — loop de 12 meses, cada uno llamando a `fetchEstadoResultadosDevengado` que ya hace 5 queries (~60 round-trips por carga). *Fix:* RPC `fn_eerr_12_meses(org_id)` que devuelva un JSON agregado en una sola llamada.
+2. **HIGH — `src/services/admin/stats.ts:30-31`**: Descarga `organization_id` de toda la tabla `embarques`/`cotizaciones` para contar en JS. *Fix:* `.select('*', { count: 'exact', head: true })` agrupado, o RPC de conteos.
+3. **HIGH — `src/services/profit/estadoResultadosDevengado.ts:157-165`**: 5 queries paralelas que pueden consolidarse en una vista. *Fix:* vista SQL / RPC unificada para EERR devengado.
+4. **MEDIUM — `src/hooks/usuario/useUsuarios.ts:14`, `src/hooks/catalogos/useOperadoresDistintos.ts:10`**: catálogos con `staleTime: 0`, se refetchean en cada mount. *Fix:* `staleTime: 5–60 min` para catálogos casi inmutables.
+5. **MEDIUM — `src/hooks/admin/useAdminOrgKpis.ts:14-29`**: 4 `useQuery` paralelas para KPIs admin. *Fix:* un solo hook + un solo RPC agregador.
+6. **MEDIUM — `src/features/tesoreria/services/cuentas.ts:10`, `src/features/portal/services/queries.ts:157`, `src/features/embarques/services/eventos.ts:18`**: `.select("*")` y sin `.limit()` en tablas que crecerán. *Fix:* columnas explícitas + `.range()`.
+7. **MEDIUM — `src/services/admin/stats.ts:28`**: `limit(500)` arbitrario en lista de organizaciones. *Fix:* paginación cursor/offset real.
 
-### B. Cobertura — 199 módulos productivos sin test (41%)
+### B. Render y main thread
 
-**Top 10 CRITICAL/HIGH sin test:**
+8. **HIGH — `src/contexts/ThemeContext.tsx:46`**: `value={{ theme, toggleTheme }}` sin `useMemo` — todo consumidor re-renderiza con cada render del provider. *Fix:* envolver value en `useMemo` con deps explícitas.
+9. **HIGH — `src/features/costeo/components/DemorasTarifaEditor.tsx:31` y `src/features/cotizacion/types/informativa.ts:40`**: keys con `Date.now()` / `Math.random()` → re-mount completo en cada render. *Fix:* ID estable del dominio o `useId()` una sola vez al crear.
+10. **MEDIUM — `src/components/shared/DataTable.tsx`** (tablas estándar en Clientes/Cotizaciones >100 filas) vs `VirtualDataTable.tsx` ya existente. *Fix:* migrar a virtual cuando `rows > 50`. Además memoizar filas/celdas de `DataTableBody.tsx:102` con `React.memo`.
+11. **MEDIUM — `src/components/ui/sidebar.tsx` (637 líneas)**: viola Power of 10 (≤200) y mezcla contexto + cookies + sub-componentes. *Fix:* dividir en sub-archivos.
+12. **MEDIUM — `src/components/dashboard/EmbarquesActivosTable.tsx`**: parseo de fechas/estados en render path. *Fix:* `useMemo` con la transformación.
 
-| Módulo | Tipo | Escenario clave faltante |
-|---|---|---|
-| `src/features/embarques/hooks/useCostosPreciosCalc.ts` | Cálculo financiero | Redondeos multi-moneda y margen real |
-| `src/hooks/profit/useEstadoResultados.ts` | Cálculo financiero | Consolidación ingresos/egresos en MXN |
-| `src/hooks/presupuesto/usePresupuestoVsReal.ts` | Cálculo financiero | Desviaciones por TC fluctuante |
-| `src/features/embarques/hooks/mutations/useCreateEmbarque.ts` | Mutación | Fallo atómico de conceptos venta/costo |
-| `src/features/facturacion/hooks/useFactura.ts` | Mutación | Sincronización cancelación SAT |
-| `src/hooks/comisiones/useComisionesDevengadas.ts` | Cálculo | Prorrateo multi-ejecutivo |
-| `src/features/cxp/services/cfdiStorage.ts` | Parseo | CFDI XML corrupto |
-| `src/features/cotizacion/hooks/mutations/useCotizacionMutations.ts` | Mutación | Idempotencia doble envío |
-| `src/lib/domain/proyeccionFacturacion/agrupar.ts` | Cálculo | Cortes fiscales fin de año |
-| `src/features/crm/hooks/leads/bulk.ts` | Mutación | Errores parciales en inserción masiva |
+### C. Bundle y assets
 
-**Flujos con cobertura insuficiente** (tienen tests pero faltan ramas críticas): CRM Pipeline (0 tests de transiciones), Comisiones (0 tests de recálculo por NC), Presupuesto vs Real (0), EERR/Profit (0 tests de IVA exento), Auth (3 tests, falta refresh token expirado).
+13. **CRITICAL — `vite.config.ts:92`**: sin `manualChunks` ni `splitVendorChunkPlugin` → vendors estables (Radix, Tanstack, recharts) inflan entry o se duplican. *Fix:* `manualChunks` por grupo (`react-vendor`, `radix`, `charts`, `pdf`).
+14. **HIGH — `src/pdf/render/descargarPdf.ts:12` y `src/pdf/render/PdfPreview.tsx:12`**: import eager de `@react-pdf/renderer` (~250–450 KB). *Fix:* `await import("@react-pdf/renderer")` dentro de la función y `React.lazy` para `PDFViewer`.
+15. **HIGH — `public/changelog.json` (274 KB)**: asset huérfano. *Fix:* eliminar o cargar bajo demanda.
+16. **MEDIUM — `src/index.css:1`**: Google Fonts vía `@import` bloquea CSS. *Fix:* `<link rel="preconnect">` + `<link rel="stylesheet">` en `index.html` con `font-display: swap`.
+17. **MEDIUM — `index.html`**: sin `preload` para logo LCP ni fuente Inter. *Fix:* `<link rel="preload" as="image" fetchpriority="high">` + preload de Inter woff2.
+18. **MEDIUM — `public/librecarga-logo.png` (154 KB)** cuando existe `librecarga-logo.svg` (<1 KB). *Fix:* usar SVG o WebP/AVIF.
+19. **MEDIUM — `src/components/reportes/*.tsx`**: `recharts` eager (~150 KB gzip). *Fix:* `React.lazy` por cada gráfica.
+20. **LOW — Barrel exports en `src/features/**/index.ts`**: riesgo de romper tree-shaking. *Fix:* `"sideEffects": false` en `package.json` y/o importar desde submódulos.
 
-### C. Backend / RLS / CI / E2E
-
-| Capa | Estado | Gap clave |
-|---|---|---|
-| Edge functions | 12/12 con tests | Faltan ramas error específicas de Auth (JWT expirado vs inválido) |
-| RLS SQL | 5 suites, ~40 tablas | **Sin cubrir**: `auditoria_revisiones`, `costeo_tarifas`, `costeo_rutas`, `proveedor_notas_credito` |
-| CI workflows | Lint/Type/RLS bloquean PR | E2E corre sólo nightly/manual, **no bloquea PR**. Coverage gate es informacional. |
-| E2E Playwright | 5 specs (login, embarque, factura, conciliación, portal) | Sin: nueva cotización end-to-end, descarga PDF real, impersonación, **cross-org security** |
-| Canarios/Perf | Solo `pdfRenderLeak.test.tsx` | Sin canary de query timeout ni bundle size gate efectivo |
+### Positivo
+- `xlsx` y `Sentry` ya usan import dinámico / idle (`src/main.tsx`).
+- Existe `VirtualDataTable` listo para adoptar.
+- Existe `scripts/check-bundle-size.sh` con gates duros (250 KB lazy / 500 KB vendor) — falta enforcement en CI bloqueante.
 
 ---
 
-## Plan de mejora — 4 fases (12 entregables)
+## Recomendaciones priorizadas (orden sugerido)
 
-Cada fase es independiente y deja CI verde. Bump `APP_VERSION` y `CHANGELOG.md` por entregable.
+```text
+Fase 1 — Quick wins de bundle (1 sesión)
+  1.1  manualChunks en vite.config.ts                 [#13]
+  1.2  Lazy de @react-pdf/renderer + PDFViewer        [#14]
+  1.3  Eliminar public/changelog.json + logo SVG      [#15, #18]
+  1.4  Preload de LCP + preconnect a Google Fonts     [#16, #17]
 
-### Fase 1 — Riesgo de fuga de datos (RLS + Security E2E) · 2 entregables
+Fase 2 — Fetching del Dashboard (1 sesión, requiere migración SQL)
+  2.1  RPC fn_eerr_12_meses → agregador.ts            [#1]
+  2.2  Vista materializada / RPC para EERR devengado  [#3]
+  2.3  RPC agregador para admin KPIs                  [#5]
+  2.4  Conteos head:true en admin/stats.ts            [#2, #7]
 
-**1.1** `supabase/tests/rls/test_rls_tarifas_y_costeo.sql` — cubre `costeo_tarifas`, `costeo_rutas`, `proveedor_notas_credito`, `auditoria_revisiones`. Mismo patrón BEGIN/ROLLBACK + `pg_temp.as_user/assert`. Registrar en workflow `rls-tests.yml`.
+Fase 3 — Render hygiene (1 sesión)
+  3.1  useMemo en ThemeContext value                  [#8]
+  3.2  Eliminar Math.random / Date.now en keys        [#9]
+  3.3  React.memo en filas de DataTableBody           [#10]
+  3.4  Migrar tablas grandes a VirtualDataTable       [#10]
+  3.5  useMemo de transforms en EmbarquesActivosTable [#12]
 
-**1.2** `e2e/specs/06-security-cross-org.spec.ts` — usuario Org A intenta GET `/embarques/:idDeOrgB`, `/facturas/:idDeOrgB`, `/cotizaciones/:idDeOrgB`. Espera 404/redirect. Marcar workflow `e2e.yml` como required en PRs que toquen `src/components/**` o `supabase/migrations/**`.
+Fase 4 — Higiene de caché y partición (1 sesión)
+  4.1  staleTime: 30 min en catálogos                 [#4]
+  4.2  Columnas explícitas + .range() en tesorería/portal/eventos [#6]
+  4.3  Partir sidebar.tsx (637 → ≤200)                [#11]
+  4.4  Lazy de recharts por gráfica                   [#19]
+  4.5  sideEffects:false en package.json              [#20]
+```
 
-### Fase 2 — Robustez de aserciones · 3 entregables
+## Validación esperada tras cada fase
+- **Fase 1**: bundle entry ↓ 30–40 %, FCP/LCP medibles vía `browser--performance_profile`.
+- **Fase 2**: carga del Dashboard Ejecutivo de ~60 requests a 1–3; TTI ↓ 60 %.
+- **Fase 3**: re-renders por interacción medibles con React DevTools Profiler, tablas grandes a <16 ms/frame.
+- **Fase 4**: refetches por mount eliminados en catálogos; bundle vendor < 500 KB gzip.
 
-**2.1** Lint custom en `scripts/lib/tests.ts`: nueva regla `weak-rejects-assertion` que detecta `.rejects.toBeDefined()` / `.rejects.toBeTruthy()` y lo registra en `audit-report.test.ts`. Allowlist inicial con los ~50 hits actuales para no romper baseline.
-
-**2.2** Refactor de los **15 tests más críticos** de servicios (financiero, embarques, facturación) para usar `.rejects.toThrow(/mensaje/)` o `.rejects.toMatchObject({ code })`. Reducir allowlist.
-
-**2.3** Normalizar mocks Supabase: migrar `usuarios/__tests__/index.test.ts` y `services/csf/__tests__/index.test.ts` a `createSupabaseChainMock`. Agregar regla `audit-tests` que detecte `vi.mock("@/integrations/supabase/client")` sin importar el helper estándar.
-
-### Fase 3 — Cierre de gaps de cobertura financiera · 4 entregables
-
-**3.1** Tests de cálculo puro (alto ROI, sin mocks): `useCostosPreciosCalc`, `useEstadoResultados`, `usePresupuestoVsReal`, `useComisionesDevengadas`, `agrupar.ts`. Aislar lógica pura si está acoplada al hook.
-
-**3.2** Tests de mutaciones críticas con `createSupabaseChainMock`: `useCreateEmbarque` (rollback parcial), `useCotizacionMutations` (idempotencia), `useFacturaProveedorMutations` (duplicidad RFC+folio).
-
-**3.3** Tests de flujos sin cobertura: CRM transiciones de etapa (`crm_oportunidades` domain), Comisiones recálculo por NC, EERR con IVA exento vs gravado.
-
-**3.4** Refresh token / sesión expirada en `useAuthSession`.
-
-### Fase 4 — Performance & guardrails · 3 entregables
-
-**4.1** `src/test/canaries/queryTimeout.test.ts` — ejecuta las 5 queries más pesadas (lista embarques, EERR, cobranza, tesorería flujo, dashboard ejecutivo) contra mocks deterministas y falla si tardan >250ms en CPU CI.
-
-**4.2** Bundle size gate real: `scripts/check-bundle-size.sh` con umbral duro por chunk (lazy chunks <250KB gzip, vendor <500KB). Integrar a `lint, typecheck, unused code & build` job para fallar PR.
-
-**4.3** Refactor de los 4 archivos test sobredimensionados (`DataTable.*`, `useAuditoriaEjecutivo`) — partir por aspecto (sorting, pagination, perf) cada uno <200 líneas para alinear con regla Power of 10.
-
----
-
-## Detalles técnicos
-
-- **Auditor existente**: `scripts/lib/tests.ts` + `src/__tests__/audit-report.test.ts` ya enforzan `duplicate-title`, `.only`, `.skip`. Las nuevas reglas (`weak-rejects-assertion`, `supabase-mock-helper`) siguen el mismo contrato (`{file, line, rule, detail}`) y respetan baseline/allowlist como el patrón actual.
-- **RLS suite nueva**: replicar header de `test_rls_operaciones.sql` con `BEGIN` y `ROLLBACK`. Sembrar 2 orgs + admin + cliente portal. Registrar archivo en `.github/workflows/rls-tests.yml` (paso adicional `psql -f`).
-- **E2E cross-org**: usar `e2e/fixtures/auth.ts` para sesionar como Org A y atacar IDs sembrados en Org B en `globalSetup`.
-- **Allowlist temporal** para regla `weak-rejects-assertion`: documentar en mismo formato que `PAGES_COMPONENTS_BASELINE` en `audit-report.test.ts`.
-- **Cada PR**: bump `APP_VERSION` patch + entrada en `CHANGELOG.md` (regla `mem://instructions/changelog-updates`).
-
-## Fuera de alcance
-
-- Cobertura 100% de componentes UI puros (alto costo, bajo ROI).
-- Linter SQL (`sqlfluff`) — pospuesto, RLS tests ya garantizan integridad funcional.
-- Tests de integración con DB real desde edge functions (requiere infra adicional).
-
-## Recomendación de orden
-
-Ejecutar **Fase 1 primero** (2 entregables, ~1 sesión) — mitiga el riesgo #1 del negocio (fuga de tarifas/datos cross-org). Luego Fase 2 (eleva la señal de la suite existente) antes de Fase 3 (escala cobertura). Fase 4 como guardrail continuo al final.
+## Fuera de alcance de este reporte
+- Optimización de queries SQL específicas (requiere `EXPLAIN ANALYZE` con `supabase--slow_queries`).
+- Compute sizing de Lovable Cloud — si tras Fase 2 persiste lentitud DB, considerar upgrade de instancia.
+- Rediseño de componentes UI por accesibilidad/UX.
