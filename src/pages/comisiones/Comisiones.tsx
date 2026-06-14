@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -9,10 +8,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { useComisionesDevengadas, useUsuariosVendedores } from "@/hooks/comisiones";
+import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
 import { buildComisionesColumns } from "@/components/comisiones/comisionesColumns";
 import { TabLiquidaciones } from "@/components/comisiones/TabLiquidaciones";
 import { TabVendedorasConfig } from "@/components/comisiones/TabVendedorasConfig";
-import { UNRESOLVED_EMAIL } from "@/services/usuario";
 import type { EstadoComision } from "@/services/comisiones";
 
 function KPICard({ label, value }: { label: string; value: string }) {
@@ -40,17 +39,7 @@ export default function Comisiones() {
     periodo: periodo || undefined,
   });
 
-  const warnedRef = useRef(false);
-  useEffect(() => {
-    if (warnedRef.current || vendedoras.length === 0) return;
-    const unresolved = vendedoras.filter((v) => v.email === UNRESOLVED_EMAIL).length;
-    if (unresolved > 0) {
-      warnedRef.current = true;
-      toast.warning("Correos de vendedoras no disponibles", {
-        description: `No se pudieron resolver los correos de ${unresolved} vendedora(s). Verifica la conexión con el servidor de autenticación.`,
-      });
-    }
-  }, [vendedoras]);
+  useVendedorasEmailWarning(vendedoras);
 
   const columns = useMemo(() => buildComisionesColumns(), []);
 
