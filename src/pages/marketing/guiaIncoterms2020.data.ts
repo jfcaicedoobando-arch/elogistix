@@ -77,7 +77,7 @@ export const ARTICLE_JSONLD = {
   publisher: {
     "@type": "Organization",
     name: "Libre Carga",
-    logo: { "@type": "ImageObject", url: "https://librecarga.com/librecarga-logo.png" },
+    logo: { "@type": "ImageObject", url: "https://librecarga.com/librecarga-logo.svg" },
   },
   mainEntityOfPage: { "@type": "WebPage", "@id": URL },
 };

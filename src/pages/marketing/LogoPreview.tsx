@@ -77,7 +77,7 @@ function Lockup({
       <span
         className={`flex ${boxSize} shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm ring-1 ${sub.ring}`}
       >
-        <img src="/librecarga-logo.png" alt="" className="h-full w-full object-contain" />
+        <img src="/librecarga-logo.svg" alt="" className="h-full w-full object-contain" />
       </span>
       <span className={`whitespace-nowrap font-semibold tracking-tight ${textSize} ${textClass}`}>
         Libre Carga
