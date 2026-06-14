@@ -88,7 +88,7 @@ export default function LeadDetalle() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={() => navigate("/crm/leads")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Leads

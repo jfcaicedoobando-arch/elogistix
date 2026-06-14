@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.19.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 5: padding legacy)**: Normalizado padding de página `p-6` → `p-4 sm:p-6` y `space-y-6` → `space-y-4 sm:space-y-6` en 7 rutas CRM (Leads, Oportunidades, Configuración, MiDía, Actividades, Analítica, LeadDetalle). Gana ~16 px laterales en `<sm` sin afectar desktop. `PageHeader` ya apila título/acciones en mobile (verificado, sin cambios).
+
+## [13.18.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 4: filtros móviles)**: Nuevo wrapper `MobileFiltersSheet` (Sheet derecho con footer "Limpiar/Aplicar" y respeto a `safe-area-inset-bottom`). Aplicado a CRM Leads, CRM Oportunidades, Reportes y Auditoría Hallazgos: en `<md` aparece un botón "Filtros (N)" junto al search con badge de filtros activos; en `≥md` se mantiene la fila inline. Embarques, Cotizaciones y CxP ya usaban el mismo patrón. Elimina hasta 6 selects apilados verticalmente en pantallas 20:9.
+
 ## [13.17.0] - 2026-06-14
 - **ux(mobile 20:9 — Fase 3: dashboards responsive)**: Nuevo wrapper `KpiStrip` que renderiza bandas de KPIs como carrusel horizontal con scroll-snap en `<sm` (cards ~78% del ancho) y como grid en `≥sm`. Migrados `BandaKPIs` (Dashboard Ejecutivo, 6 KPIs) y la `StatStrip` inferior del CRM (4 KPIs) — desaparece el apretujamiento de 4 columnas a 412 px. CRM Dashboard reduce padding a `p-4 sm:p-6`. Dashboard operativo usa `space-y-4 sm:space-y-6` y `gap-4 sm:gap-6` para densidad táctil más cómoda.
 

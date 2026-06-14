@@ -5,18 +5,15 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import SearchInput from "@/components/selects/SearchInput";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { Badge } from "@/components/ui/badge";
 import { toTitleCase } from "@/lib/formatters";
 import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
+import { LeadsFiltersBar } from "@/features/crm/components/LeadsFiltersBar";
 import {
-  LEAD_ESTADOS, LEAD_FUENTES, useLeads,
+  useLeads,
   type CrmLeadEstado, type CrmLeadFuente, type CrmLeadRow,
 } from "@/features/crm/hooks";
 import { makeLeadsColumns } from "./leadsColumns";
@@ -49,36 +46,21 @@ export default function Leads() {
   const columns = useMemo(() => makeLeadsColumns(selected, toggle, toggleAll, leads), [selected, leads]);
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <CrmSubheader context={`${totalCount} leads en cartera`} />
 
       {canEditCrm && selected.size > 0 && (
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
       )}
 
-      <Card>
-        <CardContent className="p-3 flex flex-col md:flex-row gap-3">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Buscar por empresa, contacto o email..."
-          />
-          <Select value={estado} onValueChange={(v) => { setEstado(v as typeof estado); setPage(0); }}>
-            <SelectTrigger className="md:w-[180px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los estados</SelectItem>
-              {LEAD_ESTADOS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={fuente} onValueChange={(v) => { setFuente(v as typeof fuente); setPage(0); }}>
-            <SelectTrigger className="md:w-[180px]"><SelectValue placeholder="Fuente" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todas las fuentes</SelectItem>
-              {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      <LeadsFiltersBar
+        search={search}
+        onSearchChange={setSearch}
+        estado={estado}
+        onEstadoChange={(v) => { setEstado(v); setPage(0); }}
+        fuente={fuente}
+        onFuenteChange={(v) => { setFuente(v); setPage(0); }}
+      />
 
       <Card>
         <CardContent className="p-0">
