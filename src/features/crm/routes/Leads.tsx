@@ -56,29 +56,14 @@ export default function Leads() {
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
       )}
 
-      <Card>
-        <CardContent className="p-3 flex flex-col md:flex-row gap-3">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Buscar por empresa, contacto o email..."
-          />
-          <Select value={estado} onValueChange={(v) => { setEstado(v as typeof estado); setPage(0); }}>
-            <SelectTrigger className="md:w-[180px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los estados</SelectItem>
-              {LEAD_ESTADOS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={fuente} onValueChange={(v) => { setFuente(v as typeof fuente); setPage(0); }}>
-            <SelectTrigger className="md:w-[180px]"><SelectValue placeholder="Fuente" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todas las fuentes</SelectItem>
-              {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      <LeadsFiltersBar
+        search={search}
+        onSearchChange={setSearch}
+        estado={estado}
+        onEstadoChange={(v) => { setEstado(v); setPage(0); }}
+        fuente={fuente}
+        onFuenteChange={(v) => { setFuente(v); setPage(0); }}
+      />
 
       <Card>
         <CardContent className="p-0">
