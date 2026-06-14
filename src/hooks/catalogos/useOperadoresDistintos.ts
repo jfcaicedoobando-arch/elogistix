@@ -10,5 +10,8 @@ export function useOperadoresDistintos() {
   return useQuery({
     queryKey: queryKeys.operadores.distintos,
     queryFn: fetchOperadoresDistintos,
+    // Catálogo derivado: estable durante la sesión, evitar refetch por mount.
+    staleTime: 30 * 60_000,
+    gcTime: 60 * 60_000,
   });
 }

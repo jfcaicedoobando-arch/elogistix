@@ -14,6 +14,9 @@ export function useUsuarios() {
   return useQuery({
     queryKey: queryKeys.usuarios.all,
     queryFn: fetchUsuariosOrganizacion,
+    // Catálogo: cambia rara vez, evitar refetch en cada mount.
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 }
 
