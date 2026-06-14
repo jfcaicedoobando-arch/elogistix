@@ -74,7 +74,7 @@ describe("Integración Cotización → Embarque (helpers puros)", () => {
     });
   });
 
-  describe("construirCostosRows", () => {
+  describe("[integration] construirCostosRows", () => {
     const hijos = [
       { id: "h1", orden: 1 },
       { id: "h2", orden: 2 },
