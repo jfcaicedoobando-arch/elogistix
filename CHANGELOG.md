@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.12.1] - 2026-06-14
+- **fix(tests)**: Corregidas 4 violaciones de `duplicate-title` detectadas por `auditTests` en CI (shard 6/16). Renombrados `describe()` internos de `embarquesHelpers.integration.test.ts` con prefijo `[integration]` para diferenciarlos de `embarquesHelpers.test.ts`, y el `it("filtra por search sobre cliente_nombre")` de `useTabProformasPendientesController.test.tsx` con prefijo `[pendientes]` para no chocar con `useTabProformasState.test.tsx`. Restablece verde el job "Tests (shard 6/16)" y el smoke `audit-report > test hygiene baseline: 0 violaciones`.
+
 ## [13.12.0] - 2026-06-13
 - **ci(rls)**: Nuevo workflow `.github/workflows/rls-tests.yml` que ejecuta las 5 suites SQL de RLS (`isolation`, `financiero`, `financiero_critico`, `crm_operacional`, `operaciones`) contra un Postgres 15 efímero en cada PR/push que toque `supabase/migrations/**` o `supabase/tests/rls/**`. Bootstrap CI (`_ci_bootstrap.sql`) stubea `auth.uid/jwt/role` + tabla mínima `auth.users` + roles `anon/authenticated/service_role`. Post-migrate (`_ci_post_migrate.sql`) suelta FKs a `auth.users` para que los seeds con UUIDs aleatorios pasen. No requiere secrets ni toca producción. Cierra Fase 5/C aislamiento multi-tenant con validación automatizada por commit.
 
