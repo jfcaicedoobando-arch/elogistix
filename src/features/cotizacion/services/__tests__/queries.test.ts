@@ -51,7 +51,7 @@ describe("services/cotizacion/queries", () => {
 
   it("generarFolioCotizacion propaga error", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
-    await expect(generarFolioCotizacion()).rejects.toBeTruthy();
+    await expect(generarFolioCotizacion()).rejects.toThrow();
   });
 
   it("fetchCotizaciones devuelve lista", async () => {
@@ -68,7 +68,7 @@ describe("services/cotizacion/queries", () => {
 
   it("fetchCotizaciones propaga error", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
-    await expect(fetchCotizaciones("org1")).rejects.toBeTruthy();
+    await expect(fetchCotizaciones("org1")).rejects.toThrow();
   });
 
   it("fetchCotizacionesAceptadas filtra por estado", async () => {
@@ -88,7 +88,7 @@ describe("services/cotizacion/queries", () => {
 
   it("fetchCotizacionById propaga error", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
-    await expect(fetchCotizacionById("c1")).rejects.toBeTruthy();
+    await expect(fetchCotizacionById("c1")).rejects.toThrow();
   });
 
   it("fetchEmbarquesVinculados devuelve lista", async () => {

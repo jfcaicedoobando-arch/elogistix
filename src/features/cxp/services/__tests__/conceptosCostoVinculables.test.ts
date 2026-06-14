@@ -43,7 +43,7 @@ describe("fetchConceptosCostoAbiertosDeProveedor", () => {
 
   it("lanza si Supabase devuelve error", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "boom" } });
-    await expect(fetchConceptosCostoAbiertosDeProveedor("p", "o")).rejects.toBeTruthy();
+    await expect(fetchConceptosCostoAbiertosDeProveedor("p", "o")).rejects.toThrow();
   });
 });
 

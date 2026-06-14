@@ -42,7 +42,7 @@ describe("services/facturas/notasCredito", () => {
 
   it("listarNotasCreditoPorFactura propaga error", async () => {
     mock.setTableResult("factura_notas_credito", { data: null, error: { message: "x" } });
-    await expect(listarNotasCreditoPorFactura("f1")).rejects.toBeTruthy();
+    await expect(listarNotasCreditoPorFactura("f1")).rejects.toThrow();
   });
 
   it("crearNotaCredito inserta con estado Borrador", async () => {
@@ -56,7 +56,7 @@ describe("services/facturas/notasCredito", () => {
 
   it("crearNotaCredito propaga error", async () => {
     mock.setTableResult("factura_notas_credito", { data: null, error: { message: "x" } });
-    await expect(crearNotaCredito(INPUT as never)).rejects.toBeTruthy();
+    await expect(crearNotaCredito(INPUT as never)).rejects.toThrow();
   });
 
   it("cambiarEstadoNotaCredito permite Borrador→Aprobada", async () => {
@@ -83,6 +83,6 @@ describe("services/facturas/notasCredito", () => {
     mock.setTableResult("factura_notas_credito", { data: null, error: { message: "boom" } });
     await expect(
       cambiarEstadoNotaCredito("nc1", "Borrador", "Cancelada"),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 });

@@ -72,7 +72,7 @@ describe("services/proveedor", () => {
     mock.setRpcResult("proveedores_listado", { data: null, error: { message: "boom" } });
     await expect(
       fetchProveedoresPaginados({ search: "", page: 0, pageSize: 10, organizationId: null }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 
   it("fetchProveedoresLite devuelve lista", async () => {
@@ -125,7 +125,7 @@ describe("services/proveedor", () => {
 
   it("updateProveedor propaga error", async () => {
     mock.setTableResult("proveedores", { data: null, error: { message: "fail" } });
-    await expect(updateProveedor("p1", { nombre: "X" } as never)).rejects.toBeTruthy();
+    await expect(updateProveedor("p1", { nombre: "X" } as never)).rejects.toThrow();
   });
 
   it("deleteProveedor resuelve sin error", async () => {

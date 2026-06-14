@@ -30,7 +30,7 @@ beforeEach(() => {
 describe("services/portal/perfil", () => {
   it("fetchPortalPerfil lanza si no hay usuario", async () => {
     mock.getUser.mockResolvedValue({ data: { user: null } });
-    await expect(fetchPortalPerfil()).rejects.toBeTruthy();
+    await expect(fetchPortalPerfil()).rejects.toThrow();
   });
 
   it("fetchPortalPerfil devuelve email + cliente", async () => {
@@ -54,7 +54,7 @@ describe("services/portal/perfil", () => {
   it("fetchPortalPerfil propaga error de Supabase", async () => {
     mock.getUser.mockResolvedValue({ data: { user: { id: "u1", email: "a@b.com" } } });
     mock.setTableResult("client_users", { data: null, error: { message: "x" } });
-    await expect(fetchPortalPerfil()).rejects.toBeTruthy();
+    await expect(fetchPortalPerfil()).rejects.toThrow();
   });
 
   it("fetchPortalPerfil usa '' si email null", async () => {
@@ -74,7 +74,7 @@ describe("services/portal/perfil", () => {
 
   it("actualizarContactoPortal propaga error", async () => {
     mock.setRpcResult("portal_update_contacto", { data: null, error: { message: "x" } });
-    await expect(actualizarContactoPortal({ nombre: "", telefono: "" })).rejects.toBeTruthy();
+    await expect(actualizarContactoPortal({ nombre: "", telefono: "" })).rejects.toThrow();
   });
 
   it("cambiarPasswordPortal llama auth.updateUser", async () => {
@@ -85,6 +85,6 @@ describe("services/portal/perfil", () => {
 
   it("cambiarPasswordPortal propaga error", async () => {
     mock.updateUser.mockResolvedValue({ error: { message: "x" } });
-    await expect(cambiarPasswordPortal("p")).rejects.toBeTruthy();
+    await expect(cambiarPasswordPortal("p")).rejects.toThrow();
   });
 });

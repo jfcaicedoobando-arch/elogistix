@@ -53,25 +53,25 @@ describe("services/crm/cliente360", () => {
   it("fetchCliente360 propaga error de oportunidades", async () => {
     seedHappy();
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "x" } });
-    await expect(fetchCliente360("cli-1")).rejects.toBeTruthy();
+    await expect(fetchCliente360("cli-1")).rejects.toThrow();
   });
 
   it("fetchCliente360 propaga error de cotizaciones", async () => {
     seedHappy();
     mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
-    await expect(fetchCliente360("cli-1")).rejects.toBeTruthy();
+    await expect(fetchCliente360("cli-1")).rejects.toThrow();
   });
 
   it("fetchCliente360 propaga error de embarques", async () => {
     seedHappy();
     mock.setTableResult("embarques", { data: null, error: { message: "x" } });
-    await expect(fetchCliente360("cli-1")).rejects.toBeTruthy();
+    await expect(fetchCliente360("cli-1")).rejects.toThrow();
   });
 
   it("fetchCliente360 propaga error de etapas", async () => {
     seedHappy();
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
-    await expect(fetchCliente360("cli-1")).rejects.toBeTruthy();
+    await expect(fetchCliente360("cli-1")).rejects.toThrow();
   });
 
   it("fetchCliente360 oportunidades=[] cuando data null", async () => {

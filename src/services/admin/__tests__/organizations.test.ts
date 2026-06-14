@@ -28,7 +28,7 @@ describe("services/admin/organizations", () => {
 
   it("fetchAdminOrganizations propaga error", async () => {
     mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(fetchAdminOrganizations()).rejects.toBeTruthy();
+    await expect(fetchAdminOrganizations()).rejects.toThrow();
   });
 
   it("fetchAdminOrganizations ordena por nombre", async () => {
@@ -46,7 +46,7 @@ describe("services/admin/organizations", () => {
 
   it("fetchOrganizationsList propaga error", async () => {
     mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(fetchOrganizationsList()).rejects.toBeTruthy();
+    await expect(fetchOrganizationsList()).rejects.toThrow();
   });
 
   it("createOrganization inserta payload", async () => {
@@ -58,7 +58,7 @@ describe("services/admin/organizations", () => {
 
   it("createOrganization propaga error", async () => {
     mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(createOrganization({ nombre: "x", rfc: "y" })).rejects.toBeTruthy();
+    await expect(createOrganization({ nombre: "x", rfc: "y" })).rejects.toThrow();
   });
 
   it("fetchAdminOrganization devuelve fila única", async () => {
@@ -69,7 +69,7 @@ describe("services/admin/organizations", () => {
 
   it("fetchAdminOrganization propaga error", async () => {
     mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(fetchAdminOrganization("o1")).rejects.toBeTruthy();
+    await expect(fetchAdminOrganization("o1")).rejects.toThrow();
   });
 
   it("updateAdminOrganization actualiza payload", async () => {
@@ -97,6 +97,6 @@ describe("services/admin/organizations", () => {
 
   it("setOrganizationActivo propaga error", async () => {
     mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(setOrganizationActivo("o1", true)).rejects.toBeTruthy();
+    await expect(setOrganizationActivo("o1", true)).rejects.toThrow();
   });
 });

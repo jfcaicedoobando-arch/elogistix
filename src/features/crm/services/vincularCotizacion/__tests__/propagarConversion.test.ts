@@ -35,6 +35,6 @@ describe("propagarConversionProspectoCRM", () => {
 
   it("propaga error del select de oportunidad", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "db error" } });
-    await expect(propagarConversionProspectoCRM({ oportunidadId: "op-1", clienteId: "c-1", clienteNombre: "X" })).rejects.toBeTruthy();
+    await expect(propagarConversionProspectoCRM({ oportunidadId: "op-1", clienteId: "c-1", clienteNombre: "X" })).rejects.toThrow();
   });
 });

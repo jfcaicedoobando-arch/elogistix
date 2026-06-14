@@ -25,7 +25,7 @@ describe("crearOportunidad", () => {
 
   it("propaga error supabase", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "err" } });
-    await expect(crearOportunidad(validInput, null)).rejects.toBeTruthy();
+    await expect(crearOportunidad(validInput, null)).rejects.toThrow();
   });
 });
 
@@ -38,7 +38,7 @@ describe("actualizarOportunidad", () => {
 
   it("propaga error", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "rls" } });
-    await expect(actualizarOportunidad({ id: "op-1", patch: { nombre: "X" } })).rejects.toBeTruthy();
+    await expect(actualizarOportunidad({ id: "op-1", patch: { nombre: "X" } })).rejects.toThrow();
   });
 });
 

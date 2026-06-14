@@ -27,7 +27,7 @@ describe("createCliente", () => {
 
   it("propaga error de supabase al crear cliente", async () => {
     mock.setTableResult("clientes", { data: null, error: { message: "RLS denied" } });
-    await expect(createCliente(validInsert)).rejects.toBeTruthy();
+    await expect(createCliente(validInsert)).rejects.toThrow();
   });
 
   it("zod: nombre vacío lanza antes del insert", async () => {
@@ -46,7 +46,7 @@ describe("updateCliente", () => {
 
   it("propaga error de supabase", async () => {
     mock.setTableResult("clientes", { data: null, error: { message: "conflict" } });
-    await expect(updateCliente("c-1", { nombre: "X" })).rejects.toBeTruthy();
+    await expect(updateCliente("c-1", { nombre: "X" })).rejects.toThrow();
   });
 
   it("zod: email malformado lanza antes del update", async () => {

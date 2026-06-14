@@ -69,7 +69,7 @@ describe("crearCotizacion", () => {
       data: null,
       error: { message: "RLS denied" },
     });
-    await expect(crearCotizacion(baseInput)).rejects.toBeTruthy();
+    await expect(crearCotizacion(baseInput)).rejects.toThrow();
   });
 
   it("zod boundary: cliente_nombre vacío lanza error con contexto 'Cotización'", async () => {
@@ -99,7 +99,7 @@ describe("crearCotizacion", () => {
   });
 
   it("no llama insert si la validación falla", async () => {
-    await expect(crearCotizacion({ ...baseInput, cliente_nombre: "" })).rejects.toBeTruthy();
+    await expect(crearCotizacion({ ...baseInput, cliente_nombre: "" })).rejects.toThrow();
     expect(mock.tableCalls).toHaveLength(0);
     expect(generarFolioCotizacion).not.toHaveBeenCalled();
   });

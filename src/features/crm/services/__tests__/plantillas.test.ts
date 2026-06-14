@@ -56,7 +56,7 @@ describe("services/crm/plantillas", () => {
 
   it("fetchPlantillasMensaje propaga error", async () => {
     mock.setTableResult("crm_plantillas_mensaje", { data: null, error: { message: "x" } });
-    await expect(fetchPlantillasMensaje()).rejects.toBeTruthy();
+    await expect(fetchPlantillasMensaje()).rejects.toThrow();
   });
 
   it("crearPlantilla inserta con defaults", async () => {
@@ -75,7 +75,7 @@ describe("services/crm/plantillas", () => {
 
   it("crearPlantilla propaga error", async () => {
     mock.setTableResult("crm_plantillas_mensaje", { data: null, error: { message: "x" } });
-    await expect(crearPlantilla({ nombre: "X", canal: "email", cuerpo: "c" })).rejects.toBeTruthy();
+    await expect(crearPlantilla({ nombre: "X", canal: "email", cuerpo: "c" })).rejects.toThrow();
   });
 
   it("actualizarPlantilla envía patch a id", async () => {
@@ -95,6 +95,6 @@ describe("services/crm/plantillas", () => {
 
   it("eliminarPlantilla propaga error", async () => {
     mock.setTableResult("crm_plantillas_mensaje", { data: null, error: { message: "x" } });
-    await expect(eliminarPlantilla("p1")).rejects.toBeTruthy();
+    await expect(eliminarPlantilla("p1")).rejects.toThrow();
   });
 });

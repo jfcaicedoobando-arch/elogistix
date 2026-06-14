@@ -84,7 +84,7 @@ describe("services/facturas index", () => {
 
   it("fetchFacturasListado propaga error", async () => {
     mock.setRpcResult("facturas_listado", { data: null, error: { message: "boom" } });
-    await expect(fetchFacturasListado({ organizationId: "org1" })).rejects.toBeTruthy();
+    await expect(fetchFacturasListado({ organizationId: "org1" })).rejects.toThrow();
   });
 
   it("fetchFacturas delega en listado con pageSize alto", async () => {
@@ -110,7 +110,7 @@ describe("services/facturas index", () => {
 
   it("marcarCostoPagado propaga error", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
-    await expect(marcarCostoPagado({ id: "c1" })).rejects.toBeTruthy();
+    await expect(marcarCostoPagado({ id: "c1" })).rejects.toThrow();
   });
 
   it("fetchGastosPendientes devuelve listado", async () => {
@@ -121,6 +121,6 @@ describe("services/facturas index", () => {
 
   it("fetchGastosPendientes propaga error", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
-    await expect(fetchGastosPendientes()).rejects.toBeTruthy();
+    await expect(fetchGastosPendientes()).rejects.toThrow();
   });
 });

@@ -61,7 +61,7 @@ describe("services/usuario", () => {
 
   it("fetchUsuariosOrganizacion propaga error de members", async () => {
     mock.setTableResult("organization_members", { data: null, error: { message: "boom" } });
-    await expect(fetchUsuariosOrganizacion()).rejects.toBeTruthy();
+    await expect(fetchUsuariosOrganizacion()).rejects.toThrow();
   });
 
   it("updateUserRole hace update", async () => {
@@ -71,12 +71,12 @@ describe("services/usuario", () => {
 
   it("updateUserRole propaga error", async () => {
     mock.setTableResult("organization_members", { data: null, error: { message: "fail" } });
-    await expect(updateUserRole("u1", "admin")).rejects.toBeTruthy();
+    await expect(updateUserRole("u1", "admin")).rejects.toThrow();
   });
 
   it("deleteUserViaEdgeFunction lanza si edge devuelve error", async () => {
     mock.invoke.mockResolvedValue({ data: null, error: { message: "no" } });
-    await expect(deleteUserViaEdgeFunction("u1")).rejects.toBeTruthy();
+    await expect(deleteUserViaEdgeFunction("u1")).rejects.toThrow();
   });
 
   it("deleteUserViaEdgeFunction devuelve data ok", async () => {
@@ -111,12 +111,12 @@ describe("services/usuario", () => {
     mock.invoke.mockResolvedValue({ data: { error: "bad" }, error: null });
     await expect(
       createUserViaEdgeFunction({ email: "a", password: "x", role: "admin" }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 
   it("deleteUserViaEdgeFunctionAuth lanza con error body", async () => {
     mock.invoke.mockResolvedValue({ data: { error: "bad" }, error: null });
-    await expect(deleteUserViaEdgeFunctionAuth("u1")).rejects.toBeTruthy();
+    await expect(deleteUserViaEdgeFunctionAuth("u1")).rejects.toThrow();
   });
 
   it("deleteUserViaEdgeFunctionAuth ok", async () => {

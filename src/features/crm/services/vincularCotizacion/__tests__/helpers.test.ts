@@ -86,6 +86,6 @@ describe("vincularCotizacion/helpers", () => {
 
   it("vincular.setCotizacionOportunidad: propaga error", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "boom" } });
-    await expect(setCotizacionOportunidad("c", "o")).rejects.toBeDefined();
+    await expect(setCotizacionOportunidad("c", "o")).rejects.toThrow();
   });
 });

@@ -39,7 +39,7 @@ describe("services/crm/lineage", () => {
 
   it("fetchLeadLineage propaga error", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "x" } });
-    await expect(fetchLeadLineage("l1")).rejects.toBeTruthy();
+    await expect(fetchLeadLineage("l1")).rejects.toThrow();
   });
 
   it("fetchOportunidadCotsLineage filtra deleted_at null", async () => {
@@ -52,7 +52,7 @@ describe("services/crm/lineage", () => {
 
   it("fetchOportunidadCotsLineage propaga error", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
-    await expect(fetchOportunidadCotsLineage("op-1")).rejects.toBeTruthy();
+    await expect(fetchOportunidadCotsLineage("op-1")).rejects.toThrow();
   });
 
   it("fetchOportunidadCotsLineage devuelve [] cuando data null", async () => {
@@ -76,7 +76,7 @@ describe("services/crm/lineage", () => {
 
   it("fetchEmbarquesByIds propaga error", async () => {
     mock.setTableResult("embarques", { data: null, error: { message: "x" } });
-    await expect(fetchEmbarquesByIds(["x"])).rejects.toBeTruthy();
+    await expect(fetchEmbarquesByIds(["x"])).rejects.toThrow();
   });
 
   it("fetchLeadResumen devuelve fila", async () => {
@@ -92,6 +92,6 @@ describe("services/crm/lineage", () => {
 
   it("fetchLeadResumen propaga error", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "x" } });
-    await expect(fetchLeadResumen("l1")).rejects.toBeTruthy();
+    await expect(fetchLeadResumen("l1")).rejects.toThrow();
   });
 });

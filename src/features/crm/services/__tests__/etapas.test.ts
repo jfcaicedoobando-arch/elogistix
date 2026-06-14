@@ -36,7 +36,7 @@ describe("services/crm/etapas", () => {
 
   it("fetchEtapasPipelineActivas propaga error", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
-    await expect(fetchEtapasPipelineActivas()).rejects.toBeTruthy();
+    await expect(fetchEtapasPipelineActivas()).rejects.toThrow();
   });
 
   it("fetchEtapasPipelineTodas no aplica filtro activa", async () => {
@@ -48,7 +48,7 @@ describe("services/crm/etapas", () => {
 
   it("fetchEtapasPipelineTodas propaga error", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
-    await expect(fetchEtapasPipelineTodas()).rejects.toBeTruthy();
+    await expect(fetchEtapasPipelineTodas()).rejects.toThrow();
   });
 
   it("actualizarEtapa hace update con patch", async () => {
@@ -60,7 +60,7 @@ describe("services/crm/etapas", () => {
 
   it("actualizarEtapa propaga error", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
-    await expect(actualizarEtapa({ id: "e1", patch: {} })).rejects.toBeTruthy();
+    await expect(actualizarEtapa({ id: "e1", patch: {} })).rejects.toThrow();
   });
 
   it("fetchMotivosPerdida soloActivos=true por default", async () => {
@@ -77,7 +77,7 @@ describe("services/crm/etapas", () => {
 
   it("fetchMotivosPerdida propaga error", async () => {
     mock.setTableResult("crm_motivos_perdida", { data: null, error: { message: "x" } });
-    await expect(fetchMotivosPerdida()).rejects.toBeTruthy();
+    await expect(fetchMotivosPerdida()).rejects.toThrow();
   });
 
   it("actualizarMotivoPerdida update", async () => {
@@ -88,7 +88,7 @@ describe("services/crm/etapas", () => {
 
   it("actualizarMotivoPerdida propaga error", async () => {
     mock.setTableResult("crm_motivos_perdida", { data: null, error: { message: "x" } });
-    await expect(actualizarMotivoPerdida({ id: "m1", patch: {} })).rejects.toBeTruthy();
+    await expect(actualizarMotivoPerdida({ id: "m1", patch: {} })).rejects.toThrow();
   });
 
   it("crearMotivoPerdida inserta con activa=true", async () => {
@@ -100,6 +100,6 @@ describe("services/crm/etapas", () => {
 
   it("crearMotivoPerdida propaga error", async () => {
     mock.setTableResult("crm_motivos_perdida", { data: null, error: { message: "x" } });
-    await expect(crearMotivoPerdida("X")).rejects.toBeTruthy();
+    await expect(crearMotivoPerdida("X")).rejects.toThrow();
   });
 });

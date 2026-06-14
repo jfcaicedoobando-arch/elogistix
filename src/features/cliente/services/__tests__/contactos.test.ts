@@ -40,7 +40,7 @@ describe("services/cliente/contactos", () => {
 
   it("fetchContactosCliente propaga error", async () => {
     mock.setTableResult("contactos_cliente", { data: null, error: { message: "x" } });
-    await expect(fetchContactosCliente("cli-1")).rejects.toBeTruthy();
+    await expect(fetchContactosCliente("cli-1")).rejects.toThrow();
   });
 
   it("createContacto inserta y devuelve la fila", async () => {
@@ -51,7 +51,7 @@ describe("services/cliente/contactos", () => {
 
   it("createContacto propaga error", async () => {
     mock.setTableResult("contactos_cliente", { data: null, error: { message: "x" } });
-    await expect(createContacto({} as never)).rejects.toBeTruthy();
+    await expect(createContacto({} as never)).rejects.toThrow();
   });
 
   it("updateContacto actualiza", async () => {
@@ -62,7 +62,7 @@ describe("services/cliente/contactos", () => {
 
   it("updateContacto propaga error", async () => {
     mock.setTableResult("contactos_cliente", { data: null, error: { message: "x" } });
-    await expect(updateContacto("c1", { nombre: "Y" })).rejects.toBeTruthy();
+    await expect(updateContacto("c1", { nombre: "Y" })).rejects.toThrow();
   });
 
   it("deleteContacto llama RPC soft_delete_record", async () => {
@@ -75,6 +75,6 @@ describe("services/cliente/contactos", () => {
 
   it("deleteContacto propaga error", async () => {
     mock.setRpcResult("soft_delete_record", { data: null, error: { message: "x" } });
-    await expect(deleteContacto("c1")).rejects.toBeTruthy();
+    await expect(deleteContacto("c1")).rejects.toThrow();
   });
 });

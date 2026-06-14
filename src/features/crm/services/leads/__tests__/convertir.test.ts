@@ -83,7 +83,7 @@ describe("resolveClienteForConversion", () => {
     mock.setTableResult("clientes", { data: null, error: { message: "RLS" } });
     await expect(
       resolveClienteForConversion({ lead, crearCliente: true, clienteIdExistente: null }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 
   it("clienteIdExistente con consulta sin data → usa lead.empresa como fallback", async () => {
@@ -114,7 +114,7 @@ describe("fetchPrimeraEtapaAbierta", () => {
 
   it("propaga error de Supabase al consultar etapa abierta", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
-    await expect(fetchPrimeraEtapaAbierta()).rejects.toBeTruthy();
+    await expect(fetchPrimeraEtapaAbierta()).rejects.toThrow();
   });
 });
 
@@ -144,6 +144,6 @@ describe("convertirLead (integración happy path)", () => {
       error: null,
     });
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "fail" } });
-    await expect(convertirLead(baseParams, user)).rejects.toBeTruthy();
+    await expect(convertirLead(baseParams, user)).rejects.toThrow();
   });
 });

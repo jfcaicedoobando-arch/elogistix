@@ -49,7 +49,7 @@ describe("services/pagos-factura", () => {
 
   it("listarPagosFactura propaga error", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "x" } });
-    await expect(listarPagosFactura("f1")).rejects.toBeTruthy();
+    await expect(listarPagosFactura("f1")).rejects.toThrow();
   });
 
   it("registrarPagoFactura inserta con created_by", async () => {
@@ -85,7 +85,7 @@ describe("services/pagos-factura", () => {
 
   it("registrarPagoFactura propaga error", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "x" } });
-    await expect(registrarPagoFactura(INPUT as never)).rejects.toBeTruthy();
+    await expect(registrarPagoFactura(INPUT as never)).rejects.toThrow();
   });
 
   it("eliminarPagoFactura hace soft delete con deleted_by", async () => {
@@ -98,6 +98,6 @@ describe("services/pagos-factura", () => {
 
   it("eliminarPagoFactura propaga error", async () => {
     mock.setTableResult("pagos_factura", { data: null, error: { message: "x" } });
-    await expect(eliminarPagoFactura("p1")).rejects.toBeTruthy();
+    await expect(eliminarPagoFactura("p1")).rejects.toThrow();
   });
 });
