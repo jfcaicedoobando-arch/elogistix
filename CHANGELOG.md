@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.8] - 2026-06-14
+- **fix(tests)**: `stats.test.ts` actualiza el mock de Supabase para incluir `rpc()` y reescribe los 2 tests de `fetchAdminOrgActivity` para consumir la respuesta agregada de `fn_admin_org_activity` (antes mockeaban tablas individuales, falla `supabase.rpc is not a function` tras la migración a RPC en 13.14.5).
+- **fix(ci/bundle-size)**: `scripts/check-bundle-size.sh` agrega exención para chunks `react-pdf*` con budget de 500 KB (configurable via `REACT_PDF_BUDGET_KB`). `@react-pdf/renderer` pesa ~465 KB gz por sí solo, ya es lazy vía dynamic import y no admite split razonable. Antes rompía el gate de 250 KB.
+
 ## [13.14.7] - 2026-06-14
 - **fix(branding)**: Restaurar logo visible en sidebar, footer y nav de landing — se reemplazan referencias a `/librecarga-logo.png` (archivo eliminado durante limpieza de bundle) por `/librecarga-logo.svg` existente en `public/`.
 
