@@ -3,8 +3,15 @@ name: CI
 on:
   pull_request:
     branches: ["**"]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
 
 permissions:
   contents: read
@@ -23,21 +30,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.x"
-
-      - name: Cache Bun deps
-        uses: actions/cache@v5
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
 
       - name: ESLint
         run: bun run lint
@@ -83,18 +77,15 @@ jobs:
             reports/audit-report.json
           retention-days: 30
 
-      - name: Build
+      - name: Build (with bundle analyzer)
+        env:
+          ANALYZE: "true"
         run: bun run build
 
       - name: Bundle size gate (entry chunk gzipped)
         env:
           BUNDLE_BUDGET_KB: "350"
         run: bash scripts/check-bundle-size.sh
-
-      - name: Bundle analyzer (informational)
-        if: always()
-        continue-on-error: true
-        run: ANALYZE=true bun run build
 
       - name: Upload bundle stats
         if: always()
@@ -145,27 +136,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-        total: [16]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        total: [8]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.x"
-
-      - name: Cache Bun deps
-        uses: actions/cache@v5
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
 
       - name: Prepare blob output directory
         run: mkdir -p .vitest-reports
@@ -205,21 +183,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.x"
-
-      - name: Cache Bun deps
-        uses: actions/cache@v5
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
 
       - name: Download shard blobs
         id: download-blobs
