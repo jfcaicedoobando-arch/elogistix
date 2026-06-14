@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/shared/DataTable";
+import { Badge } from "@/components/ui/badge";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
@@ -8,7 +9,10 @@ import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
 import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
-import { useEmbarquesPageController } from "@/features/embarques/hooks";
+import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/embarques/hooks";
+import { ModoIcon } from "@/components/shared/ModoIcon";
+import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
