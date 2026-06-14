@@ -16,9 +16,17 @@ export const DUPLICATE_ALLOWLIST = new Set<string>([
 export interface TestViolation {
   file: string;
   line: number;
-  rule: "skip-without-issue" | "duplicate-title" | "missing-assertions";
+  rule: "skip-without-issue" | "duplicate-title" | "missing-assertions" | "weak-rejects-assertion" | "supabase-mock-helper";
   detail: string;
 }
+
+const SKIP_REGEX = /\b(it|test|describe)\.(skip|only|todo)\(|\bxdescribe\(|\bxit\(/;
+const ISSUE_REGEX = /\/\/\s*(TODO|FIXME)\(#\d+\)/i;
+const TITLE_REGEX = /^\s*(describe|it|test)\(/;
+const WEAK_REJECTS_REGEX = /\.rejects\.(toBeDefined|toBeTruthy)\s*\(/;
+const SUPABASE_MOCK_REGEX = /vi\.mock\(\s*["']@\/integrations\/supabase\/client["']/;
+const SUPABASE_HELPER_REGEX = /createSupabaseMock|_supabaseChainMock/;
+
 
 const SKIP_REGEX = /\b(it|test|describe)\.(skip|only|todo)\(|\bxdescribe\(|\bxit\(/;
 const ISSUE_REGEX = /\/\/\s*(TODO|FIXME)\(#\d+\)/i;
