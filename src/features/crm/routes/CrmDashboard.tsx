@@ -32,7 +32,7 @@ export default function CrmDashboard() {
   const { isLoading } = vm;
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-4 sm:p-6">
       <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -42,12 +42,12 @@ export default function CrmDashboard() {
         <LeadsSinContactarCard items={vm.leadsSinContactar} />
       </div>
 
-      <div className="flex border rounded-md bg-card overflow-hidden">
+      <KpiStrip desktopCols={4} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
         <StatStripItem icon={Users} label="Leads" value={v(isLoading, vm.kpis.leads)} />
         <StatStripItem icon={Target} label="Oportunidades abiertas" value={v(isLoading, vm.kpis.oportunidadesAbiertas)} />
         <StatStripItem icon={Activity} label="Actividades pendientes" value={v(isLoading, vm.kpis.actividadesPendientes)} />
         <StatStripItem icon={TrendingUp} label="Pipeline ponderado" value={isLoading ? "…" : formatCurrencyCompact(vm.kpis.pipelinePonderado, "MXN")} />
-      </div>
+      </KpiStrip>
     </div>
   );
 }
