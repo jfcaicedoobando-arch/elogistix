@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { MARGIN_THRESHOLDS } from "@/constants/reportes";
 
