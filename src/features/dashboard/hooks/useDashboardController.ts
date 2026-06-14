@@ -1,0 +1,116 @@
+/**
+ * Controller del Dashboard: agrega `useDashboardData`, gestiona scope `mios|todos`
+ * (filtra por operador) y derivaciones de KPIs/fecha. Extraído de la página
+ * (Auditoría Paso 6).
+ */
+import { useMemo, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/shared";
+import { useDashboardData, ESTADOS_FILTRO } from "@/hooks/dashboard";
+
+export type DashboardScope = "todos" | "mios";
+
+const ESTADOS_LLEGADO = ["Arribo", "En Aduana", "Entregado"] as const;
+
+function getSaludo(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+function getHoyStr(): string {
+  const fecha = new Date().toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return fecha.charAt(0).toUpperCase() + fecha.slice(1);
+}
+
+export function useDashboardController() {
+  const { user } = useAuth();
+  const { isOperador, canViewFinancials, role } = usePermissions();
+  const showScopeToggle = isOperador || role === "vendedor";
+  const [scope, setScope] = useState<DashboardScope>(showScopeToggle ? "mios" : "todos");
+
+  const data = useDashboardData();
+  const operadorEmail = user?.email ?? "";
+
+  const scoped = useMemo(() => {
+    if (scope === "todos") {
+      return {
+        alertasDemora: data.alertasDemora,
+        proximosArribos: data.proximosArribos,
+        profitArribosEsteMes: data.profitArribosEsteMes,
+        embarquesMesSiguiente: data.embarquesMesSiguiente,
+        conteoPorEstado: data.conteoPorEstado,
+        totalActivos: data.totalActivos,
+        arribosEsteMes: data.arribosEsteMes,
+        resumenMesSiguiente: data.resumenMesSiguiente,
+      };
+    }
+    const mine = (op: string | null | undefined) =>
+      (op ?? "").toLowerCase() === operadorEmail.toLowerCase();
+
+    const ad = data.alertasDemora.filter((e) => mine(e.operador));
+    const pa = data.proximosArribos.filter((e) => mine(e.operador));
+    const pf = data.profitArribosEsteMes.filter((e) => mine(e.operador));
+    const em = data.embarquesMesSiguiente.filter((e) => mine(e.operador));
+
+    const activos = [...ad, ...pa, ...pf, ...em];
+    const seen = new Set<string>();
+    const conteo: Record<string, number> = Object.fromEntries(ESTADOS_FILTRO.map((e) => [e, 0]));
+    for (const e of activos) {
+      if (seen.has(e.id)) continue;
+      seen.add(e.id);
+      if (e.estadoReal in conteo) conteo[e.estadoReal] += 1;
+    }
+
+    const arribosScoped = {
+      ...data.arribosEsteMes,
+      total: pf.length,
+      yaLlegaron: pf.filter((e) => (ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length,
+      enCamino: pf.filter((e) => !(ESTADOS_LLEGADO as readonly string[]).includes(e.estadoReal)).length,
+    };
+
+    const resumenScoped = {
+      ...data.resumenMesSiguiente,
+      totalEmbarques: em.length,
+      facturados: em.filter((e) => e.facturado).length,
+    };
+
+    return {
+      alertasDemora: ad,
+      proximosArribos: pa,
+      profitArribosEsteMes: pf,
+      embarquesMesSiguiente: em,
+      conteoPorEstado: conteo as typeof data.conteoPorEstado,
+      totalActivos: seen.size,
+      arribosEsteMes: arribosScoped,
+      resumenMesSiguiente: resumenScoped,
+    };
+  }, [scope, operadorEmail, data]);
+
+  const { saludo, hoyStr } = useMemo(
+    () => ({ saludo: getSaludo(), hoyStr: getHoyStr() }),
+    [],
+  );
+
+  return {
+    scope,
+    setScope,
+    showScopeToggle,
+    operadorEmail,
+    isOperador,
+    canViewFinancials,
+    hideFinancials: !canViewFinancials,
+    isLoading: data.isLoading,
+    cargasPorCliente: data.cargasPorCliente,
+    cargasActivasTotal: data.cargasActivasTotal,
+    scoped,
+    saludo,
+    hoyStr,
+  };
+}
