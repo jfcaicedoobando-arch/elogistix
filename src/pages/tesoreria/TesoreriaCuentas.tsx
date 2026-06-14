@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,41 +11,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
-import type { Database } from "@/integrations/supabase/types";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
+import {
+  useTesoreriaCuentasController,
+  type Moneda,
+} from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
 
 export default function TesoreriaCuentas() {
-  const { data: cuentas = [], isLoading } = useCuentasBancarias(false);
-  const crear = useCrearCuenta();
-  const eliminar = useEliminarCuenta();
-  const [open, setOpen] = useState(false);
-  const [banco, setBanco] = useState("BBVA");
-  const [alias, setAlias] = useState("");
-  const [numero, setNumero] = useState("");
-  const [clabe, setClabe] = useState("");
-  const [moneda, setMoneda] = useState<Moneda>("MXN");
-  const [saldoInicial, setSaldoInicial] = useState(0);
-
-  const reset = () => {
-    setBanco("BBVA"); setAlias(""); setNumero(""); setClabe(""); setMoneda("MXN"); setSaldoInicial(0);
-  };
-
-  const submit = async () => {
-    if (!alias.trim()) return toast.error("Captura un alias");
-    try {
-      await crear.mutateAsync({
-        banco, alias: alias.trim(), numero_cuenta: numero, clabe,
-        moneda, saldo_inicial: Number(saldoInicial) || 0, activa: true,
-      });
-      toast.success("Cuenta creada");
-      reset(); setOpen(false);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
+  const {
+    cuentas, isLoading, open, setOpen, form, setField, submit, submitting, confirmarEliminar,
+  } = useTesoreriaCuentasController();
 
   return (
     <div className="space-y-4">
@@ -77,9 +50,7 @@ export default function TesoreriaCuentas() {
                   </div>
                   <Button
                     variant="ghost" size="icon"
-                    onClick={() => {
-                      if (window.confirm(`¿Eliminar cuenta "${c.alias}"?`)) eliminar.mutate(c.id);
-                    }}
+                    onClick={() => confirmarEliminar(c.id, c.alias)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -100,23 +71,23 @@ export default function TesoreriaCuentas() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Banco</Label>
-              <Input value={banco} onChange={(e) => setBanco(e.target.value)} />
+              <Input value={form.banco} onChange={(e) => setField("banco", e.target.value)} />
             </div>
             <div>
               <Label>Alias *</Label>
-              <Input value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="BBVA Cheques MXN" />
+              <Input value={form.alias} onChange={(e) => setField("alias", e.target.value)} placeholder="BBVA Cheques MXN" />
             </div>
             <div>
               <Label>Número de cuenta</Label>
-              <Input value={numero} onChange={(e) => setNumero(e.target.value)} />
+              <Input value={form.numero} onChange={(e) => setField("numero", e.target.value)} />
             </div>
             <div>
               <Label>CLABE</Label>
-              <Input value={clabe} onChange={(e) => setClabe(e.target.value)} />
+              <Input value={form.clabe} onChange={(e) => setField("clabe", e.target.value)} />
             </div>
             <div>
               <Label>Moneda</Label>
-              <Select value={moneda} onValueChange={(v) => setMoneda(v as Moneda)}>
+              <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MXN">MXN</SelectItem>
@@ -127,12 +98,12 @@ export default function TesoreriaCuentas() {
             </div>
             <div>
               <Label>Saldo inicial</Label>
-              <Input type="number" step="0.01" value={saldoInicial} onChange={(e) => setSaldoInicial(Number(e.target.value))} />
+              <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={submit} disabled={crear.isPending}>Guardar</Button>
+            <Button onClick={submit} disabled={submitting}>Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
