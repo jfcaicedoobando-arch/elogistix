@@ -71,6 +71,6 @@ export function BandaKPIs({ kpis }: Props) {
         icon={Target}
         onClick={() => nav("/profit/presupuesto")}
       />
-    </div>
+    </KpiStrip>
   );
 }
