@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.11] - 2026-06-14
+- **refactor(arquitectura)**: Paso 2 — Purga de barrels con lógica. Mover implementación de `src/features/proveedor/services/index.ts` → `proveedoresCrud.ts`, de `src/features/tesoreria/hooks/index.ts` → `useTesoreriaCuentas.ts` / `useTesoreriaMovimientos.ts` / `useResumenTesoreria.ts`, y de `src/features/facturas/services/index.ts` → `facturasCrud.ts`. Los `index.ts` quedan como re-exports puros (preservan la API pública de cada feature).
+- **refactor(crm)**: Paso 7 — Centralizar columnas duplicadas de `crm_actividades` en `src/features/crm/services/crmActividadesColumns.ts` (`CRM_ACTIVIDADES_COLUMNS_FULL`, `_MIN`, `_SEARCH`). Refactoriza `actividades.ts`, `proximasActividades.ts`, `dashboard.ts` y `search.ts` para consumir las constantes compartidas.
+- **chore(dead-code)**: Paso 11 — Eliminar utilidades sin referencias: `isClabeValida` (`bancosMexico.ts`), `getNotaTipoColorClass` (`uiMappings.ts`), `formatRegimenFiscal` (`regimenFiscalSAT.ts`). Reduce superficie de mantenimiento.
+
 ## [13.14.10] - 2026-06-14
 - **docs(estándar)**: Documentar estándar de arquitectura feature-first en `.lovable/plan.md` — estructura de directorios, reglas de ubicación, nomenclatura (kebab-case dirs, PascalCase componentes, camelCase hooks/servicios), prohibiciones (sin lógica en barrels, sin `as unknown as`, sin archivos huérfanos fuera de features) y métricas de calidad (archivos ≤300 líneas, funciones ≤50 líneas). Base para pasos 2-12 de la auditoría de arquitectura.
 
