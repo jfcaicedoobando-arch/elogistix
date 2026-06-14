@@ -105,7 +105,7 @@ describe("costeo/services/tarifas", () => {
 
     it("tarifas costeo: propaga errores de Supabase", async () => {
       mock.setTableResult("costeo_tarifas", { data: null, error: { message: "boom" } });
-      await expect(fetchCosteoTarifas(ORG)).rejects.toBeDefined();
+      await expect(fetchCosteoTarifas(ORG)).rejects.toThrow();
     });
   });
 
@@ -159,7 +159,7 @@ describe("costeo/services/tarifas", () => {
 
     it("propaga el error del insert padre", async () => {
       mock.setTableResult("costeo_tarifas", { data: null, error: { message: "fk" } });
-      await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toBeDefined();
+      await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toThrow();
     });
   });
 
@@ -207,7 +207,7 @@ describe("costeo/services/tarifas", () => {
 
     it("propaga errores de marcarTarifaReemplazada", async () => {
       mock.setTableResult("costeo_tarifas", { data: null, error: { message: "rls" } });
-      await expect(marcarTarifaReemplazada("t11")).rejects.toBeDefined();
+      await expect(marcarTarifaReemplazada("t11")).rejects.toThrow();
     });
   });
 });

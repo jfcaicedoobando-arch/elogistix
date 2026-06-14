@@ -38,7 +38,7 @@ describe("cliente/services/relacionados", () => {
 
   it("relacionados.embarques: propaga error", async () => {
     mock.setTableResult("embarques", { data: null, error: { message: "x" } });
-    await expect(fetchEmbarquesCliente("c1")).rejects.toBeDefined();
+    await expect(fetchEmbarquesCliente("c1")).rejects.toThrow();
   });
 
   it("relacionados.embarques: retorna data tal cual", async () => {
@@ -72,7 +72,7 @@ describe("cliente/services/relacionados", () => {
 
   it("relacionados.cotizaciones: propaga error", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
-    await expect(fetchCotizacionesCliente("c1")).rejects.toBeDefined();
+    await expect(fetchCotizacionesCliente("c1")).rejects.toThrow();
   });
 
   it("relacionados.cotizaciones: retorna registros", async () => {

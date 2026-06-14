@@ -16,13 +16,18 @@ export const DUPLICATE_ALLOWLIST = new Set<string>([
 export interface TestViolation {
   file: string;
   line: number;
-  rule: "skip-without-issue" | "duplicate-title" | "missing-assertions";
+  rule: "skip-without-issue" | "duplicate-title" | "missing-assertions" | "weak-rejects-assertion" | "supabase-mock-helper";
   detail: string;
 }
 
 const SKIP_REGEX = /\b(it|test|describe)\.(skip|only|todo)\(|\bxdescribe\(|\bxit\(/;
 const ISSUE_REGEX = /\/\/\s*(TODO|FIXME)\(#\d+\)/i;
 const TITLE_REGEX = /^\s*(describe|it|test)\(/;
+const WEAK_REJECTS_REGEX = /\)\s*\.rejects\.(toBeDefined|toBeTruthy)\s*\(/;
+const SUPABASE_MOCK_REGEX = /vi\.mock\(\s*["']@\/integrations\/supabase\/client["']/;
+const SUPABASE_HELPER_REGEX = /createSupabaseMock|_supabaseChainMock/;
+
+
 // Detecta el inicio de un caso de test (no `describe`, no `.skip/.only/.todo`).
 const TEST_START_REGEX = /^\s*(it|test)\(\s*(['"`])([^'"`]+)\2/;
 // Heurística de aserción: expect(...), assert*, expectTypeOf, toThrow vía cualquier matcher.
@@ -93,6 +98,18 @@ export function auditTests(root: string): TestViolation[] {
     const lines = readFileSync(file, "utf8").split("\n");
     const rel = relPath(root, file);
 
+    // File-level: detecta vi.mock supabase sin usar el helper estándar.
+    const fileText = lines.join("\n");
+    if (SUPABASE_MOCK_REGEX.test(fileText) && !SUPABASE_HELPER_REGEX.test(fileText)) {
+      const mockLine = lines.findIndex((l) => SUPABASE_MOCK_REGEX.test(l));
+      violations.push({
+        file: rel,
+        line: mockLine + 1,
+        rule: "supabase-mock-helper",
+        detail: "vi.mock('@/integrations/supabase/client') sin createSupabaseMock",
+      });
+    }
+
     lines.forEach((raw, idx) => {
       if (SKIP_REGEX.test(raw)) {
         const prev = idx > 0 ? lines[idx - 1] : "";
@@ -104,6 +121,18 @@ export function auditTests(root: string): TestViolation[] {
         const key = raw.trim();
         if (!titleIndex.has(key)) titleIndex.set(key, []);
         titleIndex.get(key)!.push(`${rel}:${idx + 1}`);
+      }
+
+      // Regla weak-rejects-assertion: .rejects.toBeDefined()/toBeTruthy() no
+      // verifica el error correcto. Preferir .rejects.toThrow(/msg/) o
+      // .rejects.toMatchObject({ code }).
+      if (WEAK_REJECTS_REGEX.test(raw)) {
+        violations.push({
+          file: rel,
+          line: idx + 1,
+          rule: "weak-rejects-assertion",
+          detail: raw.trim(),
+        });
       }
 
       // Regla missing-assertions: cada `it`/`test` (no skip/only/todo) debe
@@ -130,6 +159,7 @@ export function auditTests(root: string): TestViolation[] {
       }
     });
   }
+
 
   for (const [title, locations] of titleIndex) {
     if (locations.length < 2) continue;
