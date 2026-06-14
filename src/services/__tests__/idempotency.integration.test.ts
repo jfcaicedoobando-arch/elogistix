@@ -23,7 +23,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import { crearEmbarqueRpc } from "@/features/embarques/services/mutations";
-import { consolidarProformas } from "@/services/proforma/consolidar";
+import { consolidarProformas } from "@/features/proformas/services/consolidar";
 import { useStableRequestId } from "@/lib/idempotency";
 
 const UUID_A = "11111111-1111-4111-8111-111111111111";

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import type { ProximoArribo } from "@/hooks/dashboard";
+import type { ProximoArribo } from "@/features/dashboard/hooks";
 
 interface Props {
   arribos: ProximoArribo[];

@@ -3,7 +3,7 @@
  */
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTiposContenedor } from "@/hooks/catalogos";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import {
   crearContenedorVacio,
   type ContenedorBorrador,

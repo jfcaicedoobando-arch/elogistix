@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import type { EmbarqueConProfit } from "@/hooks/dashboard";
+import type { EmbarqueConProfit } from "@/features/dashboard/hooks";
 
 interface Props {
   embarques: EmbarqueConProfit[];

@@ -16,7 +16,7 @@ vi.mock("@/features/embarques/hooks/useProformas", () => ({
   useAprobarProformas: () => ({ mutate: aprobarMutate, isPending: false }),
   useConsolidarProformas: () => ({ mutate: consolidarMutate, isPending: false }),
 }));
-vi.mock("@/hooks/catalogos/useTasaIVA", () => ({ useTasaIVA: () => 0.16 }));
+vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({ useTasaIVA: () => 0.16 }));
 vi.mock("@/lib/idempotency", () => ({
   useStableRequestId: () => ({ get: () => "req-xyz", reset: vi.fn() }),
 }));

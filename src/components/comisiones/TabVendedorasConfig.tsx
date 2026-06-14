@@ -14,7 +14,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   useVendedorasConfig, useUpsertVendedoraConfig, useUpdateVendedoraConfig,
   useEmbarquesSinVendedora, useAsignarVendedoraEmbarque,
-} from "@/hooks/comisiones";
+} from "@/features/comisiones/hooks";
 
 interface VendedoraOpt { id: string; nombre: string }
 

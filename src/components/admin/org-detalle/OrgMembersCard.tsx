@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { Trash2, UserPlus, Users } from "lucide-react";
-import type { MemberRow } from "@/hooks/admin";
+import type { MemberRow } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
 
 const roleBadge: Record<string, string> = {

@@ -10,7 +10,7 @@ import {
   useAppLogsHealthSummary,
   useAppLogsHealthTimeline,
   type HealthSummaryRow,
-} from "@/hooks/admin";
+} from "@/features/admin/hooks";
 import HealthKpisRow from "@/components/admin/diagnosticoHealth/HealthKpisRow";
 import HealthSlowestTable from "@/components/admin/diagnosticoHealth/HealthSlowestTable";
 

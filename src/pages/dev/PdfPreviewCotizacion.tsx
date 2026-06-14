@@ -5,7 +5,7 @@
  */
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useTasaIVA } from "@/hooks/catalogos";
+import { useTasaIVA } from "@/features/catalogos/hooks";
 import { fetchCotizacionById } from "@/features/cotizacion/services";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";

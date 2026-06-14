@@ -11,7 +11,7 @@ import {
   type ProformaPendienteConEmbarque,
 } from "@/features/embarques/hooks/useProformas";
 
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useStableRequestId } from "@/lib/idempotency";
 import {
   agruparProformasPendientes,

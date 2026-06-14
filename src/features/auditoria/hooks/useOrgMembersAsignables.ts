@@ -3,7 +3,7 @@
  * Filtra a admins y operadores; excluye viewers y clientes.
  */
 import { useQuery } from "@tanstack/react-query";
-import { fetchOrgMembers, type OrgMemberRow } from "@/services/admin/members";
+import { fetchOrgMembers, type OrgMemberRow } from "@/features/admin/services/members";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { queryKeys } from "@/lib/query";
 

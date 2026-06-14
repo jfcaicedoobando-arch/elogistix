@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { Save, Building2, FileText, Anchor, Wrench } from "lucide-react";
-import { useConfiguracionState } from "@/hooks/configuracion";
+import { useConfiguracionState } from "@/features/configuracion/hooks";
 import TabEmpresa from "@/components/configuracion/TabEmpresa";
 import TabFacturacion from "@/components/configuracion/TabFacturacion";
 import TabPuertos from "@/components/configuracion/TabPuertos";

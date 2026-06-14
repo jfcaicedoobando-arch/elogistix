@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useRentabilidadClientes } from "../useRentabilidadClientes";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/reportes", () => ({
+vi.mock("@/features/reportes/services", () => ({
   fetchReportesResumen: vi.fn().mockResolvedValue({
     clientes: [{ id: "1", nombre: "Client A", profit: 500 }],
     kpis: { totalClientes: 1, revenue: 1000, profit: 500, margenProm: 50 },
@@ -20,7 +20,7 @@ describe("useRentabilidadClientes", () => {
   });
 
   it("returns empty arrays when data is missing", async () => {
-    const { fetchReportesResumen } = await import("@/services/reportes");
+    const { fetchReportesResumen } = await import("@/features/reportes/services");
     vi.mocked(fetchReportesResumen).mockResolvedValueOnce({ clientes: [], kpis: null } as any);
     const { result } = renderHook(() => useRentabilidadClientes({}), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isLoading).toBe(false));

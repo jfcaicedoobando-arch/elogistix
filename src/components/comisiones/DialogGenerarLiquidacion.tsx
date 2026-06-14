@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { useGenerarLiquidacion } from "@/hooks/comisiones";
+import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
 
 interface VendedoraOpt { id: string; nombre: string }
 

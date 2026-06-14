@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/shared";
 import { Loader2, UserPlus, Building2, ShieldCheck } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateUser } from "@/hooks/usuario";
-import { useOrganizationsList } from "@/hooks/admin";
+import { useOrganizationsList } from "@/features/admin/hooks";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles/roleCatalog";

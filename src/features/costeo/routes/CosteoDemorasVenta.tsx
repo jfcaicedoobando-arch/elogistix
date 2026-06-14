@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
-import { useTiposContenedor } from "@/hooks/catalogos";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
 

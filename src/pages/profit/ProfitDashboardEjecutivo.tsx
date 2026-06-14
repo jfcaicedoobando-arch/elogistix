@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
-import { useDashboardEjecutivo } from "@/hooks/dashboard-ejecutivo";
+import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks";
 import { SelectorPeriodo, type PresetPeriodo } from "@/components/dashboard-ejecutivo/SelectorPeriodo";
 import { BandaKPIs } from "@/components/dashboard-ejecutivo/BandaKPIs";
 import { GraficoEERR12m } from "@/components/dashboard-ejecutivo/GraficoEERR12m";

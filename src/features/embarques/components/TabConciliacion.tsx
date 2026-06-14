@@ -14,7 +14,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { useReconciliacionEmbarque, type FilaReconciliacion } from "@/features/embarques/hooks";
-import { calcularResumen } from "@/services/embarques/reconciliacionCostos";
+import { calcularResumen } from "@/features/embarques/services/reconciliacionCostos";
 
 interface Props {
   embarqueId: string;

@@ -1,7 +1,7 @@
 /**
  * Helpers puros para `MiOperacionSection`. Sin dependencias de React.
  */
-import type { AlertaDemora, ProximoArribo } from "@/hooks/dashboard";
+import type { AlertaDemora, ProximoArribo } from "@/features/dashboard/hooks";
 
 export interface Pendiente {
   id: string;

@@ -27,7 +27,7 @@ vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
 vi.mock("@/features/cliente/hooks/useClientes", () => ({
   useClientesForSelect: () => ({ data: [{ id: "c1", nombre: "ACME" }] }),
 }));
-vi.mock("@/hooks/catalogos/useOperadoresDistintos", () => ({
+vi.mock("@/features/catalogos/hooks/useOperadoresDistintos", () => ({
   useOperadoresDistintos: () => ({ data: ["op-1"] }),
 }));
 vi.mock("@/hooks/shared", () => ({

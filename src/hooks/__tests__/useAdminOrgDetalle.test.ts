@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { AppRole } from "@/types/appRole";
-import type { MemberRow } from "@/hooks/admin/useAdminOrgDetalle";
+import type { MemberRow } from "@/features/admin/hooks/useAdminOrgDetalle";
 import { agruparConfigPorCategoria, type ConfigItemLike } from "@/lib/domain/configuracion";
 
 // Tests sobre el contrato real exportado por useAdminOrgDetalle y la lógica de

@@ -14,9 +14,9 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
-import type { SnapshotEjecutivo } from "@/services/dashboard-ejecutivo";
+import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 import type { TopItem } from "@/features/tesoreria/services";
-import type { AlertaEjecutiva } from "@/services/dashboard-ejecutivo";
+import type { AlertaEjecutiva } from "@/features/dashboardEjecutivo/services";
 
 interface Props {
   snapshot: SnapshotEjecutivo;

@@ -22,7 +22,7 @@ import {
   type ProformaConFactura,
   type ProformaPendienteConEmbarque,
   type ProformaRow,
-} from "@/services/proforma";
+} from "@/features/proformas/services";
 import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 

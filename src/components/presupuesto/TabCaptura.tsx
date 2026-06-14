@@ -13,7 +13,7 @@ import {
   usePresupuestoCategorias,
   usePresupuestoMensualAnio,
   useUpsertCeldaPresupuesto,
-} from "@/hooks/presupuesto";
+} from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
 const MESES_LABEL = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];

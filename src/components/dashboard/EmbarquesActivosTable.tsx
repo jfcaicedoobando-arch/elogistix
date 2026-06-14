@@ -7,7 +7,7 @@ import { sortByString, sortByNumber, sortByDate } from "@/components/shared/data
 import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/dashboard";
+import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashboard/hooks";
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
 import { Progress } from "@/components/ui/progress";

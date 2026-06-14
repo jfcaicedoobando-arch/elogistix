@@ -15,7 +15,7 @@ import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useCosteoRutas } from "@/features/costeo/hooks/useCosteoRutas";
 import { useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
-import { useNavieras, useTiposContenedor } from "@/hooks/catalogos";
+import { useNavieras, useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaRecargosEditor } from "./TarifaRecargosEditor";
 import {
   EntidadesFields, RutaTipoFields, NumerosFields, VigenciaFields,

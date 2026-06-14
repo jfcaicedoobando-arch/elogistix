@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
-import { useDashboardData, ESTADOS_FILTRO } from "@/hooks/dashboard";
+import { useDashboardData, ESTADOS_FILTRO } from "@/features/dashboard/hooks";
 
 export type DashboardScope = "todos" | "mios";
 

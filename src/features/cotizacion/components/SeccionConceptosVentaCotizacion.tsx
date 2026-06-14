@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Plus } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
-import { useTasaIVA } from "@/hooks/catalogos";
+import { useTasaIVA } from "@/features/catalogos/hooks";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { detectarFilasMixtas } from "@/lib/financial/costosUSD";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";

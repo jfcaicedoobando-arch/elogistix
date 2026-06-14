@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import type { OperadorData } from "@/hooks/operaciones";
-import { useDesempenoChartData } from "@/hooks/operaciones";
+import type { OperadorData } from "@/features/operaciones/hooks";
+import { useDesempenoChartData } from "@/features/operaciones/hooks";
 import { OperadorCard } from "./OperadorCard";
 
 // Lazy: difiere recharts fuera del TTI de la página Operaciones.

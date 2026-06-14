@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/shared";
 import { uploadFile } from "@/services/storage/index";
-import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
+import { useExchangeRates } from "@/features/catalogos/hooks/useExchangeRates";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {

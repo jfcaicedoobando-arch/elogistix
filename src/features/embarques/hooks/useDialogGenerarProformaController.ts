@@ -6,7 +6,7 @@
  * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearProforma } from "@/features/embarques/hooks/useProformas";
 import {
   useDiasCreditoCliente,

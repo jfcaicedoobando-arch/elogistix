@@ -1,4 +1,4 @@
-import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones";
+import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/features/operaciones/hooks";
 
 type EmbarqueItem = EmbarquesPorEstadoBucket["items"][number];
 

@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.15] - 2026-06-14
+- **refactor(arquitectura)**: Paso 4 (cierre). Migrar 9 dominios adicionales a `src/features/<dominio>/{services,hooks}/`: `catalogos`, `configuracion`, `operaciones`, `presupuesto`, `profit`, `reportes`, `admin`, `proforma` → `proformas/services`, y consolidar `src/services/embarques/*` dentro del feature embarques. Tras esta migración `src/services/` queda exclusivamente con infraestructura transversal (auth, organization, usuario, planes, bitacora, observability, csf, search, storage, tracking, notificaciones, pagos-factura, demoAccess/Mode), tal como define el estándar feature-first del Paso 1. Actualiza todos los imports `@/services/<x>` y `@/hooks/<x>` por sus equivalentes en `@/features/<x>/`.
+- **fix(arquitectura)**: Corregir paths mal sustituidos `@/features/dashboard/{services,hooks}-ejecutivo` → `@/features/dashboardEjecutivo/{services,hooks}` (efecto colateral del sed sobre `dashboard\b`).
+
+## [13.14.14] - 2026-06-14
+- **refactor(arquitectura)**: Paso 4 (parcial — 3 dominios completos). Migrar al modelo feature-first:
+  - `src/services/comisiones/*` + `src/hooks/comisiones/*` → `src/features/comisiones/{services,hooks}/`.
+  - `src/services/dashboard/*` + `src/hooks/dashboard/*` → `src/features/dashboard/{services,hooks}/`.
+  - `src/services/dashboard-ejecutivo/*` + `src/hooks/dashboard-ejecutivo/*` → `src/features/dashboardEjecutivo/{services,hooks}/`.
+  Actualiza todos los imports con `@/services/<x>` y `@/hooks/<x>` por sus equivalentes en `@/features/<x>/{services,hooks}`. Tests internos consumen rutas relativas (`../`) y siguen pasando sin cambios.
+
 ## [13.14.13] - 2026-06-14
 - **refactor(dashboard)**: Paso 6 (cierre) — `Dashboard.tsx` (188→82 LOC) delega toda la orquestación (scope `mios|todos`, derivación de KPIs filtrados, saludo/fecha) a `useDashboardController` en `src/features/dashboard/hooks/`. La página queda como vista pura. Extrae `ESTADOS_LLEGADO` como constante.
 

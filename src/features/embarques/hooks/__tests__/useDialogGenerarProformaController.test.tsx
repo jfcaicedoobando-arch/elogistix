@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useDialogGenerarProformaController } from "../useDialogGenerarProformaController";
 
-vi.mock("@/hooks/catalogos/useTasaIVA", () => ({
+vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({
   useTasaIVA: () => 0.16,
 }));
 
