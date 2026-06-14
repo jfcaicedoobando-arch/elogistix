@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SearchInput from "@/components/selects/SearchInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import type { Enums } from "@/types/db";
 import {
   TIPOS_PROVEEDOR,
@@ -39,6 +41,8 @@ export function ProveedoresFiltros(props: Props) {
     categoriaTab, onLimpiar,
   } = props;
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   const filtrosActivos: { label: string; onClear: () => void }[] = [];
   if (origen !== "todos") filtrosActivos.push({ label: `Origen: ${origen}`, onClear: () => onOrigenChange("todos") });
   if (tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo") {
@@ -48,43 +52,63 @@ export function ProveedoresFiltros(props: Props) {
     filtrosActivos.push({ label: `Gasto: ${labelSubtipoGasto(subtipoFiltro)}`, onClear: () => onSubtipoChange("todos") });
   }
 
+  const selectsContent = (
+    <>
+      <Select value={origen} onValueChange={(v) => onOrigenChange(v as OrigenFiltro)}>
+        <SelectTrigger className="h-9 w-full md:w-[160px]"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Origen: todos</SelectItem>
+          <SelectItem value="Nacional">Nacional</SelectItem>
+          <SelectItem value="Extranjero">Extranjero</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {categoriaTab !== "GastoOperativo" && (
+        <Select value={tipoFiltro} onValueChange={(v) => onTipoChange(v as TipoFiltro)}>
+          <SelectTrigger className="h-9 w-full md:w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Tipo logístico: todos</SelectItem>
+            {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )}
+
+      {categoriaTab !== "Logistico" && (
+        <Select value={subtipoFiltro} onValueChange={(v) => onSubtipoChange(v as SubtipoFiltro)}>
+          <SelectTrigger className="h-9 w-full md:w-[220px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Tipo de gasto: todos</SelectItem>
+            {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
+              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </>
+  );
+
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
-        <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar por nombre, RFC, contacto o email..." />
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar por nombre, RFC, contacto o email..." />
+          </div>
+          <div className="md:hidden">
+            <MobileFiltersSheet
+              open={sheetOpen}
+              onOpenChange={setSheetOpen}
+              activeCount={filtrosActivos.length}
+              onClearAll={onLimpiar}
+              title="Filtros de proveedores"
+            >
+              {selectsContent}
+            </MobileFiltersSheet>
+          </div>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={origen} onValueChange={(v) => onOrigenChange(v as OrigenFiltro)}>
-            <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Origen: todos</SelectItem>
-              <SelectItem value="Nacional">Nacional</SelectItem>
-              <SelectItem value="Extranjero">Extranjero</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {categoriaTab !== "GastoOperativo" && (
-            <Select value={tipoFiltro} onValueChange={(v) => onTipoChange(v as TipoFiltro)}>
-              <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Tipo logístico: todos</SelectItem>
-                {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-
-          {categoriaTab !== "Logistico" && (
-            <Select value={subtipoFiltro} onValueChange={(v) => onSubtipoChange(v as SubtipoFiltro)}>
-              <SelectTrigger className="h-9 w-[220px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Tipo de gasto: todos</SelectItem>
-                {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
+        <div className="hidden md:flex flex-wrap items-center gap-2">
+          {selectsContent}
           {filtrosActivos.length > 0 && (
             <Button variant="ghost" size="sm" className="h-9" onClick={onLimpiar}>
               Limpiar filtros

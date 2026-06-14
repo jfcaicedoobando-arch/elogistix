@@ -6,7 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.19.0] - 2026-06-14
+## [13.20.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 5b: cobertura legacy)**: `PageHeader` ahora usa `text-2xl sm:text-3xl`, descripción con `line-clamp-2` y acciones full-width en `<md` (`w-full md:w-auto` + hijos `flex-1`). Normalizado `space-y-6` → `space-y-4 sm:space-y-6` en Admin (Organizaciones, Usuarios, Configuración, Papelera, OrgDetalle), Admin-Org (Usuarios, Configuración), Reportes, Ayuda, Portal (Dashboard, Perfil), Profit (EstadoResultados, Proyección). Tabs de Configuración Global envueltos con `overflow-x-auto scrollbar-thin` (`w-max min-w-full`) para evitar truncamiento en móvil. `ProveedoresFiltros` migrado a `MobileFiltersSheet`: en `<md` muestra search + botón "Filtros (N)" con badge; en `≥md` mantiene la barra inline. Sin cambios de lógica de negocio.
+
+
 - **ux(mobile 20:9 — Fase 5: padding legacy)**: Normalizado padding de página `p-6` → `p-4 sm:p-6` y `space-y-6` → `space-y-4 sm:space-y-6` en 7 rutas CRM (Leads, Oportunidades, Configuración, MiDía, Actividades, Analítica, LeadDetalle). Gana ~16 px laterales en `<sm` sin afectar desktop. `PageHeader` ya apila título/acciones en mobile (verificado, sin cambios).
 
 ## [13.18.0] - 2026-06-14
