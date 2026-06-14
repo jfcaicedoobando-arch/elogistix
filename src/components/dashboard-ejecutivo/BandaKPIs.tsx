@@ -3,6 +3,7 @@ import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from
 import { KpiCard } from "./KpiCard";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
+import { KpiStrip } from "@/components/shared/KpiStrip";
 
 interface Props {
   kpis: KPIsEjecutivos;
@@ -25,7 +26,7 @@ export function BandaKPIs({ kpis }: Props) {
     cumplimiento === 0 ? "neutral" : cumplimiento > 110 ? "negative" : cumplimiento > 100 ? "neutral" : "positive";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+    <KpiStrip desktopCols={6}>
       <KpiCard
         label="Ingresos del periodo"
         value={formatCurrency(kpis.ingresos_mxn, "MXN")}
