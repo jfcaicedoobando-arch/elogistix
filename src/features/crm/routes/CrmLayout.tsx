@@ -41,34 +41,36 @@ export default function CrmLayout() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
-        <nav className="px-6 flex items-center gap-1 overflow-x-auto h-12">
-          {TABS.map((t) => {
-            const showBadge = t.to === "/crm/actividades" && vencidas > 0;
-            return (
-              <NavLink
-                key={t.to}
-                to={t.to}
-                end={t.end}
-                className={({ isActive }) =>
-                  cn(
-                    "inline-flex items-center gap-2 px-3 h-12 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors",
-                    isActive
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
-                  )
-                }
-              >
-                <t.icon className="h-4 w-4" />
-                {t.label}
-                {showBadge && (
-                  <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px] font-bold rounded-full">
-                    {vencidas > 99 ? "99+" : vencidas}
-                  </Badge>
-                )}
-              </NavLink>
-            );
-          })}
-          <div className="ml-auto flex items-center gap-2">
+        <div className="px-3 sm:px-6 flex items-center gap-2 h-12">
+          <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 h-12 -mb-px">
+            {TABS.map((t) => {
+              const showBadge = t.to === "/crm/actividades" && vencidas > 0;
+              return (
+                <NavLink
+                  key={t.to}
+                  to={t.to}
+                  end={t.end}
+                  className={({ isActive }) =>
+                    cn(
+                      "inline-flex items-center gap-2 px-3 h-12 text-sm font-medium border-b-2 whitespace-nowrap transition-colors shrink-0",
+                      isActive
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
+                    )
+                  }
+                >
+                  <t.icon className="h-4 w-4" />
+                  {t.label}
+                  {showBadge && (
+                    <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px] font-bold rounded-full">
+                      {vencidas > 99 ? "99+" : vencidas}
+                    </Badge>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+          <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-border/60">
             {canEdit && <QuickAddMenu openTrigger={openTrigger} dialogTrigger={dialogTrigger} />}
             {canEditCrm && (
               <NavLink
@@ -88,8 +90,9 @@ export default function CrmLayout() {
               </NavLink>
             )}
           </div>
-        </nav>
+        </div>
       </div>
+
       <div className="flex-1 overflow-auto">
         <Outlet />
       </div>
