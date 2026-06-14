@@ -8,7 +8,7 @@ const { mockFetch, mockCobranza, mockCxp } = vi.hoisted(() => ({
   mockCxp: vi.fn(() => ({ data: [], isLoading: false, error: null })),
 }));
 
-vi.mock('@/features/dashboard/services-ejecutivo', () => ({
+vi.mock('@/features/dashboardEjecutivo/services', () => ({
   fetchDashboardEjecutivo: mockFetch,
 }));
 

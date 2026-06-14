@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { ReporteEjecutivoDocument } from "../ReporteEjecutivoDocument";
-import type { SnapshotEjecutivo } from "@/features/dashboard/services-ejecutivo";
+import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 
 const mockSnapshot = {
   periodo: "2023-01",

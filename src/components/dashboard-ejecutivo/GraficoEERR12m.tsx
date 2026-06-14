@@ -4,7 +4,7 @@ import {
   Tooltip, Legend, CartesianGrid,
 } from "recharts";
 import { formatCurrencyCompact } from "@/lib/formatters/numbers";
-import type { PuntoEERR } from "@/features/dashboard/services-ejecutivo";
+import type { PuntoEERR } from "@/features/dashboardEjecutivo/services";
 
 interface Props {
   data: PuntoEERR[];
