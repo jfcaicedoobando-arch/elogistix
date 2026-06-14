@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useAppLogsHealthSummary, computeKpis } from "../useAppLogsHealth";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/admin", () => ({
+vi.mock("@/features/admin/services", () => ({
   fetchAppLogsHealthSummary: vi.fn().mockResolvedValue([
     { function_name: "test", total: 10, errors: 2, warns: 1 }
   ]),

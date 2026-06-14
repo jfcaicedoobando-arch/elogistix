@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useAdminOrganizacionesController } from "../useAdminOrganizacionesController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/hooks/admin/useAdminData", () => ({
+vi.mock("@/features/admin/hooks/useAdminData", () => ({
   useAdminOrganizations: vi.fn(() => ({
     data: [
       { id: "1", nombre: "Org Alpha", rfc: "RFC1", plan: "Premium", activo: true },

@@ -2,9 +2,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useAdminDashboardStats, useCreateOrganization } from "../useAdminData";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as adminService from "@/services/admin";
+import * as adminService from "@/features/admin/services";
 
-vi.mock("@/services/admin", () => ({
+vi.mock("@/features/admin/services", () => ({
   fetchAdminDashboardStats: vi.fn().mockResolvedValue({ totalOrgs: 10 }),
   createOrganization: vi.fn().mockResolvedValue({ id: "new-org" }),
 }));

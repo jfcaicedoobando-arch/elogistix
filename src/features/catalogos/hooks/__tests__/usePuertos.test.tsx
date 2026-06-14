@@ -2,9 +2,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { usePuertos, useAdminPuertos } from "../usePuertos";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as catalogosService from "@/services/catalogos";
+import * as catalogosService from "@/features/catalogos/services";
 
-vi.mock("@/services/catalogos", () => ({
+vi.mock("@/features/catalogos/services", () => ({
   fetchPuertos: vi.fn().mockResolvedValue([{ id: "1", name: "Veracruz", code: "VER" }]),
   insertPuerto: vi.fn().mockResolvedValue({ success: true }),
   setPuertoActivo: vi.fn().mockResolvedValue({ success: true }),

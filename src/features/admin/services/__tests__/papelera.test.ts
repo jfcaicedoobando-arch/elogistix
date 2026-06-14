@@ -6,7 +6,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { listTrash, restoreRecord, purgeRecord } from "@/services/admin/papelera";
+import { listTrash, restoreRecord, purgeRecord } from "@/features/admin/services/papelera";
 
 beforeEach(() => {
   mock.rpcCalls.length = 0;

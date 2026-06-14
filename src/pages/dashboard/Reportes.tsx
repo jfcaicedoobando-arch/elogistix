@@ -7,7 +7,7 @@ import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import ReportesFiltros from "@/components/reportes/ReportesFiltros";
 import ReportesKpiCards from "@/components/reportes/ReportesKpiCards";
 import ReportesTablaClientes from "@/components/reportes/ReportesTablaClientes";
-import { useReportesPageController } from "@/hooks/reportes";
+import { useReportesPageController } from "@/features/reportes/hooks";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la página.
 const ReportesTopChart = lazy(() => import("@/components/reportes/ReportesTopChart"));

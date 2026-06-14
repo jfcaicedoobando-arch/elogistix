@@ -6,7 +6,7 @@ import {
   fetchConfiguracion,
   updateConfiguracionByCategoriaClave,
   type ConfigItem,
-} from "@/services/configuracion";
+} from "@/features/configuracion/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { ConfigItem };

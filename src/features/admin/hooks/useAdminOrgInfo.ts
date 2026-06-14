@@ -9,7 +9,7 @@ import {
   fetchAdminOrganization,
   setOrganizationActivo,
   updateAdminOrganization,
-} from "@/services/admin";
+} from "@/features/admin/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";

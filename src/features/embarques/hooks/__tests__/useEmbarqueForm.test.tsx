@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEmbarqueForm } from "../useEmbarqueForm";
 
-vi.mock("@/hooks/catalogos/useExchangeRates", () => ({
+vi.mock("@/features/catalogos/hooks/useExchangeRates", () => ({
   useExchangeRates: () => ({
     data: { usdMxn: 20, eurMxn: 22 },
   }),

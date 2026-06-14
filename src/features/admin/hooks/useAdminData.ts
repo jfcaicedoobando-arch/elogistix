@@ -12,7 +12,7 @@ import {
   type AdminRecentOrg,
   type GlobalUserRow,
   type OrgRow,
-} from '@/services/admin';
+} from '@/features/admin/services';
 
 export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, OrgRow };
 

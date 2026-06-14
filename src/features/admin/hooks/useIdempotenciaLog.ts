@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listIdempotencyLog, type IdempotenciaRow } from "@/services/admin";
+import { listIdempotencyLog, type IdempotenciaRow } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 
 export type FnFilter =

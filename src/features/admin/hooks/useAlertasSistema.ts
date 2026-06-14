@@ -6,7 +6,7 @@ import {
   fetchAlertasSistema,
   acknowledgeAlerta,
   type AlertaSistema,
-} from "@/services/admin";
+} from "@/features/admin/services";
 
 export type { AlertaSistema };
 

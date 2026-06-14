@@ -3,7 +3,7 @@ import { queryKeys } from "@/lib/query";
 import {
   fetchConfiguracionByOrg,
   type ConfigItem,
-} from "@/services/configuracion";
+} from "@/features/configuracion/services";
 
 export type { ConfigItem };
 

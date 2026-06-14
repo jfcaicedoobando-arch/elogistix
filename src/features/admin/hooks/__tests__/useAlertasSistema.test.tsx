@@ -2,13 +2,13 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useAlertasPendingCount, useAlertasSistemaList, useAcknowledgeAlerta } from "../useAlertasSistema";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as adminService from "@/services/admin";
+import * as adminService from "@/features/admin/services";
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: vi.fn(() => ({ user: { id: "test-user" }, role: "super_admin" })),
 }));
 
-vi.mock("@/services/admin", () => ({
+vi.mock("@/features/admin/services", () => ({
   fetchAlertasPendingCount: vi.fn().mockResolvedValue(5),
   fetchAlertasSistema: vi.fn().mockResolvedValue([{ id: "1", mensaje: "Error" }]),
   acknowledgeAlerta: vi.fn().mockResolvedValue({ success: true }),

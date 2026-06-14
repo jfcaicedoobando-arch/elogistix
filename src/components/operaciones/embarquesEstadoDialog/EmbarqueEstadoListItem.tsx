@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
 import { formatDate, toTitleCase } from "@/lib/formatters";
-import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones";
+import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/features/operaciones/hooks";
 import { calcularExtra, toneClass, subtituloPartes, rutaTexto } from "./extras";
 
 type EmbarqueItem = EmbarquesPorEstadoBucket["items"][number];

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
-import { useNavieras } from "@/hooks/catalogos/useNavieras";
+import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess } from "@/components/shared/utils/appFeedback";
 

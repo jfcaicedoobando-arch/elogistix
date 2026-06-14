@@ -38,7 +38,7 @@ import {
   countOrgEmbarques,
   countOrgClientes,
   countOrgCotizaciones,
-} from "@/services/admin/stats";
+} from "@/features/admin/services/stats";
 
 beforeEach(() => {
   // Reset por test: evita arrastrar `count`/`data` configurados en el anterior.

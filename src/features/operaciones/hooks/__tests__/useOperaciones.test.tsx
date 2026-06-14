@@ -6,7 +6,7 @@ const { mockFetchStats } = vi.hoisted(() => ({
   mockFetchStats: vi.fn(),
 }));
 
-vi.mock('@/services/operaciones', () => ({
+vi.mock('@/features/operaciones/services', () => ({
   fetchOperacionesStats: mockFetchStats,
 }));
 

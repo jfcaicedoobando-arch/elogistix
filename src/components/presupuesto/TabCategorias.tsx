@@ -14,9 +14,9 @@ import {
 import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   usePresupuestoCategorias, useEliminarCategoriaPresupuesto,
-} from "@/hooks/presupuesto";
-import { seedCategoriasDefault } from "@/services/presupuesto";
-import type { CategoriaPresupuesto } from "@/services/presupuesto";
+} from "@/features/presupuesto/hooks";
+import { seedCategoriasDefault } from "@/features/presupuesto/services";
+import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 
 export function TabCategorias() {

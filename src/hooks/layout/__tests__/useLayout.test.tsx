@@ -7,7 +7,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 vi.mock('@/features/auditoria/hooks', () => ({
   useAuditoriaCount: () => ({ data: 5 }),
 }));
-vi.mock('@/hooks/admin', () => ({
+vi.mock('@/features/admin/hooks', () => ({
   useAlertasPendingCount: () => ({ count: 2 }),
 }));
 vi.mock('@/features/crm/hooks/useCrmDashboard', () => ({

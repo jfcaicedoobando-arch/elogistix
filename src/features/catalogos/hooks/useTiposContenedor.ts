@@ -8,7 +8,7 @@ import {
   setTipoContenedorActivo,
   deleteTipoContenedor,
   type TipoContenedor,
-} from "@/services/catalogos";
+} from "@/features/catalogos/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { TipoContenedor };

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { getVal, buildStateFromConfig } from "@/hooks/configuracion/useConfiguracionState";
-import type { ConfigItem } from "@/hooks/configuracion/useConfiguracion";
+import { getVal, buildStateFromConfig } from "@/features/configuracion/hooks/useConfiguracionState";
+import type { ConfigItem } from "@/features/configuracion/hooks/useConfiguracion";
 
 const item = (id: string, categoria: string, clave: string, valor: unknown): ConfigItem => ({
   id, categoria, clave, valor, descripcion: "",

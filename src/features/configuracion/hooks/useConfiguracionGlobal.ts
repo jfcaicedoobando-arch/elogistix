@@ -6,7 +6,7 @@ import {
   fetchConfiguracionGlobal,
   updateConfiguracionGlobalItems,
   type ConfigGlobalItem,
-} from "@/services/configuracion";
+} from "@/features/configuracion/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { ConfigGlobalItem };

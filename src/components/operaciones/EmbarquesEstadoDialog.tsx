@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, AlertTriangle } from "lucide-react";
 import { nombreDesdeEmail } from "@/lib/formatters";
-import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones";
+import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/features/operaciones/hooks";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
 import { EmbarqueEstadoListItem } from "./embarquesEstadoDialog/EmbarqueEstadoListItem";
 

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import { usePresupuestoCategorias } from "@/hooks/presupuesto";
+import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";

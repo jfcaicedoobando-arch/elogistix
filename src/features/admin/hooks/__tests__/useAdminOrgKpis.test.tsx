@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useAdminOrgKpis } from "../useAdminOrgKpis";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/admin", () => ({
+vi.mock("@/features/admin/services", () => ({
   countOrgMembers: vi.fn().mockResolvedValue(10),
   countOrgEmbarques: vi.fn().mockResolvedValue(20),
   countOrgClientes: vi.fn().mockResolvedValue(30),

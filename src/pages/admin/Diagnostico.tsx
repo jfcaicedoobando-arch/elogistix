@@ -8,7 +8,7 @@ import { Activity, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/hooks/admin";
+import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/features/admin/hooks";
 import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
 import { DiagnosticoHealthPanel } from "@/components/admin/DiagnosticoHealthPanel";
 import AlertasSistemaPanel from "@/components/admin/AlertasSistemaPanel";

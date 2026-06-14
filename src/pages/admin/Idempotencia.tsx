@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePermissions, useToast } from "@/hooks/shared";
-import { useIdempotenciaLog, type FnFilter } from "@/hooks/admin";
-import type { IdempotenciaRow } from "@/services/admin";
+import { useIdempotenciaLog, type FnFilter } from "@/features/admin/hooks";
+import type { IdempotenciaRow } from "@/features/admin/services";
 
 const FN_LABEL: Record<string, string> = {
   crear_embarque_completo: "Crear embarque",

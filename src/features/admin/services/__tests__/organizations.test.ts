@@ -13,7 +13,7 @@ import {
   fetchAdminOrganization,
   updateAdminOrganization,
   setOrganizationActivo,
-} from "@/services/admin/organizations";
+} from "@/features/admin/services/organizations";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

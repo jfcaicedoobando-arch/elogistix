@@ -3,7 +3,7 @@ import {
   useOperacionesData,
   MAX_CONTENEDORES,
   type PeriodoFiltro,
-} from "@/hooks/operaciones/useOperacionesData";
+} from "@/features/operaciones/hooks/useOperacionesData";
 
 /**
  * Controller de la página /operaciones.

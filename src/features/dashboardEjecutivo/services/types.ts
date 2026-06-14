@@ -4,7 +4,7 @@
 import type { EstadoResultados } from "@/lib/domain/estadoResultados";
 import type { ResumenTesoreria, TopItem } from "@/features/tesoreria/services";
 import type { FlujoProyectado } from "@/features/tesoreria/services";
-import type { ResumenVsReal } from "@/services/presupuesto";
+import type { ResumenVsReal } from "@/features/presupuesto/services";
 
 export type SeveridadAlerta = "info" | "warning" | "critica";
 

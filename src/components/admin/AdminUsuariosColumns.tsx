@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
-import type { GlobalUserRow } from "@/hooks/admin";
+import type { GlobalUserRow } from "@/features/admin/hooks";
 import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 
 const ROLE_BADGE: Record<string, string> = {

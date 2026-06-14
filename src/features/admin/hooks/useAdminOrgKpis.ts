@@ -8,7 +8,7 @@ import {
   countOrgCotizaciones,
   countOrgEmbarques,
   countOrgMembers,
-} from "@/services/admin";
+} from "@/features/admin/services";
 
 export function useAdminOrgKpis(id: string | undefined) {
   const { data: memberCount = 0 } = useQuery({

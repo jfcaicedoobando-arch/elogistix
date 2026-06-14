@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useOrganizationsList } from "../useOrganizationsList";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/admin", () => ({
+vi.mock("@/features/admin/services", () => ({
   fetchOrganizationsList: vi.fn().mockResolvedValue([{ id: "1", nombre: "Org A" }]),
 }));
 

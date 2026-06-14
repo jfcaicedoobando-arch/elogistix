@@ -8,7 +8,7 @@ import {
   useAdminDashboardStats,
   useAdminOrgActivity,
   useAdminRecentOrgs,
-} from "@/hooks/admin";
+} from "@/features/admin/hooks";
 import { formatDate } from "@/lib/formatters";
 
 // Lazy: difiere recharts fuera del TTI.

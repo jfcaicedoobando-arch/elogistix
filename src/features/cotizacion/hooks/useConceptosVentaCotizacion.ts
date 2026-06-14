@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { calcularIVA, calcularTotalConIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 
 // ── Factories ──
 const emptyUSD = (): ConceptoVentaCotizacion => ({

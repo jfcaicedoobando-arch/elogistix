@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchPresupuestoVsReal } from "@/services/presupuesto";
+import { fetchPresupuestoVsReal } from "@/features/presupuesto/services";
 
 export function usePresupuestoVsReal(periodo: string) {
   return useQuery({

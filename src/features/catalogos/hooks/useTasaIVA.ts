@@ -1,4 +1,4 @@
-import { useConfigValue } from "@/hooks/configuracion/useConfiguracion";
+import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 /**

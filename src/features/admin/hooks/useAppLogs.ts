@@ -6,7 +6,7 @@
  */
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchAppLogs, fetchAppLogsFnList, type AppLogLevel, type AppLogRow } from "@/services/admin";
+import { fetchAppLogs, fetchAppLogsFnList, type AppLogLevel, type AppLogRow } from "@/features/admin/services";
 
 export type { AppLogLevel, AppLogRow };
 

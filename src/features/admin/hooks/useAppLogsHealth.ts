@@ -10,7 +10,7 @@ import {
   fetchAppLogsHealthTimeline,
   type HealthSummaryRow,
   type HealthTimelinePoint,
-} from "@/services/admin";
+} from "@/features/admin/services";
 
 export type { HealthSummaryRow, HealthTimelinePoint };
 

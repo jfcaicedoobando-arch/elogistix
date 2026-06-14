@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
+import { useAdminGlobalUsers, type GlobalUserRow } from "@/features/admin/hooks/useAdminData";
 import { useDeleteUserAuth as useDeleteUser } from "@/hooks/usuario";
 import { uniqueSorted } from "@/lib/utils/uniqueSorted";
 

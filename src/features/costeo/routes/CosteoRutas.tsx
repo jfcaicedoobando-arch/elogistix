@@ -28,7 +28,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
-import { usePuertos } from "@/hooks/catalogos/usePuertos";
+import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
 import { useCosteoRutas, useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
 
 export default function CosteoRutas() {

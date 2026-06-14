@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { listIdempotencyLog } from "@/services/admin/idempotencia";
+import { listIdempotencyLog } from "@/features/admin/services/idempotencia";
 
 describe("listIdempotencyLog", () => {
   it("invoca la RPC con limit/offset y devuelve filas casteadas", async () => {

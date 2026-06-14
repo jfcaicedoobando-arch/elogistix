@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
-import { listTrash, restoreRecord, purgeRecord, type SoftTable, type TrashRow } from "@/services/admin";
+import { listTrash, restoreRecord, purgeRecord, type SoftTable, type TrashRow } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 
 export type { SoftTable, TrashRow };

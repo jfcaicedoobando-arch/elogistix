@@ -9,7 +9,7 @@ import {
   removeOrgMember,
   updateOrgMemberRole,
   type OrgMemberRow,
-} from "@/services/admin";
+} from "@/features/admin/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import type { AppRole } from "@/types/appRole";
 

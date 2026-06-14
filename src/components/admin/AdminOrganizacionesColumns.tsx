@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
-import type { OrgRow } from "@/hooks/admin";
+import type { OrgRow } from "@/features/admin/hooks";
 import { toTitleCase } from "@/lib/formatters";
 
 export function buildAdminOrganizacionesColumns(

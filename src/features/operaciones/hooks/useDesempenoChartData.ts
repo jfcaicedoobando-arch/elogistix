@@ -2,7 +2,7 @@
  * Wrapper de React sobre `buildDesempenoChartRows` (lib/operaciones/desempenoChart).
  */
 import { useMemo } from "react";
-import type { OperadorData } from "@/hooks/operaciones/useOperacionesData";
+import type { OperadorData } from "@/features/operaciones/hooks/useOperacionesData";
 import {
   buildDesempenoChartRows,
   ESTADOS_KEYS,

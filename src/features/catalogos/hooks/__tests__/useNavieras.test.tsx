@@ -2,9 +2,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useNavieras, useAdminNavieras } from "../useNavieras";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as catalogosService from "@/services/catalogos";
+import * as catalogosService from "@/features/catalogos/services";
 
-vi.mock("@/services/catalogos", () => ({
+vi.mock("@/features/catalogos/services", () => ({
   fetchNavieras: vi.fn().mockResolvedValue([{ id: "1", name: "Maersk", code: "MAEU" }]),
   insertNaviera: vi.fn().mockResolvedValue({ success: true }),
   setNavieraActivo: vi.fn().mockResolvedValue({ success: true }),

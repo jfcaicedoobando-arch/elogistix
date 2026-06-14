@@ -7,7 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { formatCurrency } from "@/lib/formatters";
-import { useExchangeRates } from "@/hooks/catalogos";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 import { useRegistrarPagoFactura, usePagosFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";

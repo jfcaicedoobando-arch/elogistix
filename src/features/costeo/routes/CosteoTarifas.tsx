@@ -15,7 +15,7 @@ import {
   useCosteoTarifas, useCosteoTarifaMutations,
 } from "@/features/costeo/hooks/useCosteoTarifas";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
-import { useTiposContenedor } from "@/hooks/catalogos";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { TarifaEstadoBadge } from "@/features/costeo/components/TarifaEstadoBadge";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";

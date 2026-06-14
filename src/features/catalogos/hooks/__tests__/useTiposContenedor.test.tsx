@@ -2,9 +2,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useTiposContenedor, useAdminTiposContenedor } from "../useTiposContenedor";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as catalogosService from "@/services/catalogos";
+import * as catalogosService from "@/features/catalogos/services";
 
-vi.mock("@/services/catalogos", () => ({
+vi.mock("@/features/catalogos/services", () => ({
   fetchTiposContenedor: vi.fn().mockResolvedValue([{ id: "1", name: "40 HC", code: "40HC" }]),
   insertTipoContenedor: vi.fn().mockResolvedValue({ success: true }),
   setTipoContenedorActivo: vi.fn().mockResolvedValue({ success: true }),

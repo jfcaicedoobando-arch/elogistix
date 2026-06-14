@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   useCrearCategoriaPresupuesto, useActualizarCategoriaPresupuesto,
-} from "@/hooks/presupuesto";
-import type { CategoriaPresupuesto } from "@/services/presupuesto";
+} from "@/features/presupuesto/hooks";
+import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 
 interface Props {
   open: boolean;

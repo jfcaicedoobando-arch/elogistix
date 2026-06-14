@@ -8,7 +8,7 @@ import {
   setNavieraActivo,
   deleteNaviera,
   type Naviera,
-} from "@/services/catalogos";
+} from "@/features/catalogos/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { Naviera };

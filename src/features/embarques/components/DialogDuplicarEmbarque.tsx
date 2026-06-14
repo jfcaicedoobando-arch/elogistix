@@ -16,7 +16,7 @@ import {
   DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useTiposContenedor } from "@/hooks/catalogos";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { CopiaContenedorRow } from "./duplicarEmbarque/CopiaContenedorRow";
 import { useDuplicarEmbarqueDialog } from "./duplicarEmbarque/useDuplicarEmbarqueDialog";
 import { MAX_COPIAS } from "./duplicarEmbarque/types";

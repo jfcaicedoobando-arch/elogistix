@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/hooks/catalogos/useTasaIVA", () => ({
+vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({
   useTasaIVA: () => 0.16,
 }));
 vi.mock("@/hooks/shared", () => ({

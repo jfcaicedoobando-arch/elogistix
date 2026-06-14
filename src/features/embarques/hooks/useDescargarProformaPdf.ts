@@ -7,7 +7,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/shared";
 import type { generarPdfProforma } from "@/generators/proformaPdf";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import {
   fetchClienteParaPdf,
   fetchConceptosConsolidados,

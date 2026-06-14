@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useAdminUsuariosController } from "../useAdminUsuariosController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/hooks/admin/useAdminData", () => ({
+vi.mock("@/features/admin/hooks/useAdminData", () => ({
   useAdminGlobalUsers: vi.fn(() => ({
     data: [
       { user_id: "1", email: "user1@test.com", org_nombre: "Org A", role: "admin" },

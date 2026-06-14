@@ -12,7 +12,7 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
 } from "recharts";
-import { ESTADOS_KEYS, type ChartRow } from "@/hooks/operaciones";
+import { ESTADOS_KEYS, type ChartRow } from "@/features/operaciones/hooks";
 import { ESTADO_COLOR } from "./desempenoVisuals";
 
 interface Props {

@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useAdminOrgConfig } from "../useAdminOrgConfig";
 
-vi.mock("@/hooks/configuracion/useConfiguracionOrg", () => ({
+vi.mock("@/features/configuracion/hooks/useConfiguracionOrg", () => ({
   useConfiguracionByOrg: vi.fn(() => ({
     data: [{ categoria: "general", clave: "test", valor: "val" }],
     isLoading: false,

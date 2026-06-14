@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchReportesResumen } from "@/services/reportes";
+import { fetchReportesResumen } from "@/features/reportes/services";
 
 interface FiltrosRentabilidad {
   fechaDesde?: string;

@@ -19,7 +19,7 @@ import {
   updateOrgMemberRole,
   removeOrgMember,
   addOrgMember,
-} from "@/services/admin/members";
+} from "@/features/admin/services/members";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

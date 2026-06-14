@@ -7,7 +7,7 @@ import type {
 } from "./types";
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
-import type { ResumenVsReal } from "@/services/presupuesto";
+import type { ResumenVsReal } from "@/features/presupuesto/services";
 
 export interface AlertasInput {
   flujo: FlujoProyectado;

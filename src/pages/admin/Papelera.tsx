@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared";
 import { Navigate } from "react-router-dom";
-import { usePapelera, type SoftTable, type TrashRow } from "@/hooks/admin";
+import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hooks";
 
 const TABLAS: { value: SoftTable; label: string }[] = [
   { value: "embarques", label: "Embarques" },

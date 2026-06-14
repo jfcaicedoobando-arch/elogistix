@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchOperacionesStats } from "@/services/operaciones";
-import type { EmbarquesPorEstado } from "@/services/operaciones";
+import { fetchOperacionesStats } from "@/features/operaciones/services";
+import type { EmbarquesPorEstado } from "@/features/operaciones/services";
 
-export type { EmbarqueResumen, EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from "@/services/operaciones";
+export type { EmbarqueResumen, EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from "@/features/operaciones/services";
 
 export const MAX_CONTENEDORES = 150;
 

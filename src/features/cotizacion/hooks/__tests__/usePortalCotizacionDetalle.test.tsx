@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
-vi.mock("@/hooks/catalogos/useTasaIVA", () => ({
+vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({
   useTasaIVA: () => 0.16,
 }));
 

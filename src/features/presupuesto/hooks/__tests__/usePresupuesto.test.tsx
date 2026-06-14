@@ -9,7 +9,7 @@ const { mockFetchMensual, mockUpsert, mockFetchVsReal, mockFetchCats } = vi.hois
   mockFetchCats: vi.fn(),
 }));
 
-vi.mock('@/services/presupuesto', () => ({
+vi.mock('@/features/presupuesto/services', () => ({
   fetchPresupuestoMensualAnio: mockFetchMensual,
   upsertCeldaPresupuesto: mockUpsert,
   fetchPresupuestoVsReal: mockFetchVsReal,

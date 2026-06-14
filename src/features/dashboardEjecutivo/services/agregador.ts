@@ -3,13 +3,13 @@
  * y construye un snapshot. Auditoría Paso 4 (v12.95.11): recibe `cobranza` y
  * `cxp` inyectados por el hook caller para no acoplar service→service.
  */
-import { fetchEstadoResultadosDevengado } from "@/services/profit/estadoResultadosDevengado";
+import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
 import {
   fetchSaldosCuentas,
   fetchResumenTesoreria,
   fetchFlujoProyectado,
 } from "@/features/tesoreria/services";
-import { fetchPresupuestoVsReal } from "@/services/presupuesto";
+import { fetchPresupuestoVsReal } from "@/features/presupuesto/services";
 import type { CobranzaRow, CxpRow } from "@/lib/domain/tesoreria";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";

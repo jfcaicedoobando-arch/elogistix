@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchOrganizationsList } from "@/services/admin";
+import { fetchOrganizationsList } from "@/features/admin/services";
 
 /**
  * Lista de organizaciones (id + nombre) para selectores de admin.

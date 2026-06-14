@@ -6,7 +6,7 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
-import type { ResumenVsReal, FilaVsReal } from "@/services/presupuesto";
+import type { ResumenVsReal, FilaVsReal } from "@/features/presupuesto/services";
 
 interface Props {
   resumen: ResumenVsReal;

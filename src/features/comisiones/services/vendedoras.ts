@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
-import { fetchAvailableUsers } from "@/services/admin/members";
+import { fetchAvailableUsers } from "@/features/admin/services/members";
 import { UNRESOLVED_EMAIL } from "@/services/usuario";
 
 export type VendedoraConfigRow = Tables<"vendedora_config">;

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useAppLogs } from "../useAppLogs";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/admin", () => ({
+vi.mock("@/features/admin/services", () => ({
   fetchAppLogs: vi.fn().mockResolvedValue({ rows: [{ id: "1", level: "info" }], total: 1 }),
 }));
 

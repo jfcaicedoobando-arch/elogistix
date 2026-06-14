@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
-import { fetchEstadoResultadosMes, fetchEstadoResultadosDevengado } from "@/services/profit";
+import { fetchEstadoResultadosMes, fetchEstadoResultadosDevengado } from "@/features/profit/services";
 import { generarMesesDisponibles, mesActualKey } from "@/lib/domain/proyeccionFacturacion";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 

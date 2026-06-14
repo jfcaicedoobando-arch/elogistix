@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useExchangeRates } from "../useExchangeRates";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-vi.mock("@/services/catalogos", () => ({
+vi.mock("@/features/catalogos/services", () => ({
   fetchExchangeRates: vi.fn().mockResolvedValue([{ pair: "USD/MXN", rate: 20 }]),
 }));
 
@@ -17,7 +17,7 @@ describe("useExchangeRates", () => {
   });
 
   it("invoca al servicio fetchExchangeRates", async () => {
-    const { fetchExchangeRates } = await import("@/services/catalogos");
+    const { fetchExchangeRates } = await import("@/features/catalogos/services");
     renderHook(() => useExchangeRates(), { wrapper: createWrapper() });
     await waitFor(() => expect(fetchExchangeRates).toHaveBeenCalled());
   });
