@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.9] - 2026-06-14
+- **perf(ci)**: Optimizar `ci.yml` — (1) colapsar build duplicada activando `ANALYZE=true` en la build principal (ahorra ~1-2 min eliminando el segundo `vite build`); (2) reducir matriz de tests de 16 → 8 shards (mismo paralelismo útil, mitad de minutos facturados); (3) extraer `Setup Bun + install` a composite action reutilizable en `.github/actions/setup-bun/action.yml` (elimina drift entre jobs); (4) `paths-ignore` para `**/*.md` y `docs/**` (los PR sólo-docs ya no disparan CI).
+
 ## [13.14.8] - 2026-06-14
 - **fix(tests)**: `stats.test.ts` actualiza el mock de Supabase para incluir `rpc()` y reescribe los 2 tests de `fetchAdminOrgActivity` para consumir la respuesta agregada de `fn_admin_org_activity` (antes mockeaban tablas individuales, falla `supabase.rpc is not a function` tras la migración a RPC en 13.14.5).
 - **fix(ci/bundle-size)**: `scripts/check-bundle-size.sh` agrega exención para chunks `react-pdf*` con budget de 500 KB (configurable via `REACT_PDF_BUDGET_KB`). `@react-pdf/renderer` pesa ~465 KB gz por sí solo, ya es lazy vía dynamic import y no admite split razonable. Antes rompía el gate de 250 KB.
