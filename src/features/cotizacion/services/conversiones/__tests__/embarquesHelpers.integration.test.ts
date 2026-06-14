@@ -37,7 +37,7 @@ const costo = (over: Partial<Tables<"cotizacion_costos">> = {}): Tables<"cotizac
 } as unknown as Tables<"cotizacion_costos">);
 
 describe("Integración Cotización → Embarque (helpers puros)", () => {
-  describe("construirHijosPayload", () => {
+  describe("[integration] construirHijosPayload", () => {
     it("reparte peso/volumen equitativamente y reserva piezas residuales al último", () => {
       const hijos = construirHijosPayload("emb-1", cot(), 3, {
         pesoTotal: 1000, volumenTotal: 30, piezasTotal: 101,
