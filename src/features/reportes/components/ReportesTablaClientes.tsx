@@ -54,7 +54,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[400px] overflow-auto">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={data}
             isLoading={isLoading}
@@ -67,6 +67,16 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
             }}
             emptyMessage="Sin datos en el periodo seleccionado"
             density="compact"
+            mobileCard={(c) => (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm truncate">{toTitleCase(c.cliente_nombre)}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{c.total_embarques} embarques · Venta {formatCurrency(c.venta_usd, "USD")}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Profit {formatCurrency(c.profit_usd, "USD")}</div>
+                </div>
+                {margenBadge(c.margen)}
+              </div>
+            )}
           />
         </div>
       </CardContent>
