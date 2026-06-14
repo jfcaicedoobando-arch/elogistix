@@ -10,16 +10,18 @@ import { ActividadesHoyCard } from "@/features/crm/components/crmDashboard/Activ
 import { CerrandoSemanaCard, LeadsSinContactarCard } from "@/features/crm/components/crmDashboard/DealsCards";
 import { NextBestActionsCard } from "@/features/crm/components/crmDashboard/NextBestActionsCard";
 import { CotizacionesSinRespuestaCard } from "@/features/crm/components/crmDashboard/CotizacionesSinRespuestaCard";
+import { KpiStrip } from "@/components/shared/KpiStrip";
+import { Card } from "@/components/ui/card";
 
 function StatStripItem({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
-    <div className="flex items-center gap-3 px-4 h-14 border-r last:border-r-0 flex-1 min-w-0">
+    <Card className="flex items-center gap-3 px-4 h-14 rounded-md sm:rounded-none sm:border-0 sm:border-r last:sm:border-r-0 sm:shadow-none">
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
       <div className="min-w-0">
         <div className="text-[11px] text-muted-foreground truncate">{label}</div>
         <div className="text-base font-semibold tabular-nums truncate">{value}</div>
       </div>
-    </div>
+    </Card>
   );
 }
 
