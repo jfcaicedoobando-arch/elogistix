@@ -1,11 +1,11 @@
 import { useParams } from "react-router-dom";
 import { Users, Ship, UserCheck, FileText } from "lucide-react";
-import { KpiCard } from "@/components/operaciones/KpiCard";
-import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
-import { OrgHeader } from "@/components/admin/org-detalle/OrgHeader";
-import { OrgInfoCard } from "@/components/admin/org-detalle/OrgInfoCard";
-import { OrgMembersCard } from "@/components/admin/org-detalle/OrgMembersCard";
-import { OrgConfigCard } from "@/components/admin/org-detalle/OrgConfigCard";
+import { KpiCard } from "@/features/operaciones/components/KpiCard";
+import AgregarMiembroOrgDialog from "@/features/admin/components/AgregarMiembroOrgDialog";
+import { OrgHeader } from "@/features/admin/components/org-detalle/OrgHeader";
+import { OrgInfoCard } from "@/features/admin/components/org-detalle/OrgInfoCard";
+import { OrgMembersCard } from "@/features/admin/components/org-detalle/OrgMembersCard";
+import { OrgConfigCard } from "@/features/admin/components/org-detalle/OrgConfigCard";
 import { useAdminOrgDetalle } from "@/features/admin/hooks";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";

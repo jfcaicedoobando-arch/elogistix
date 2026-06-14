@@ -1,10 +1,10 @@
 import { Settings, CreditCard, Shield, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import TabPlanes from "@/components/admin/TabPlanes";
-import TabSeguridadGlobal from "@/components/admin/TabSeguridadGlobal";
-import TabCatalogosGlobales from "@/components/admin/TabCatalogosGlobales";
-import ConfigOrganizacion from "@/components/admin/ConfigOrganizacion";
+import TabPlanes from "@/features/admin/components/TabPlanes";
+import TabSeguridadGlobal from "@/features/admin/components/TabSeguridadGlobal";
+import TabCatalogosGlobales from "@/features/admin/components/TabCatalogosGlobales";
+import ConfigOrganizacion from "@/features/admin/components/ConfigOrganizacion";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function AdminConfiguracion() {

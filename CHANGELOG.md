@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.17] - 2026-06-14
+- **refactor(arquitectura)**: Paso 4 (cierre real). Migrar `src/components/{admin,catalogos,comisiones,configuracion,dashboard,operaciones,presupuesto,profit,reportes}` a `src/features/<dominio>/components/` para satisfacer el test `architecture.test.ts` que falló en CI (9 carpetas de componentes duplicaban dominios ya migrados). Actualizar imports `@/components/<dom>/...` → `@/features/<dom>/components/...` en todo el árbol.
+
 ## [13.14.16] - 2026-06-14
 - **refactor(constantes)**: Paso 9 (cierre parcial). Crear `src/constants/queryStaleTime.ts` con buckets estandarizados (`STALE_VOLATILE 15s`, `STALE_SHORT 30s`, `STALE_MEDIUM 60s`, `STALE_LONG 5min`, `STALE_STATIC 30min`) para reemplazar `staleTime: 30_000 | 60_000 | …` repartidos por los hooks. La adopción ocurre incremental conforme se toquen los hooks afectados.
 - **note(arquitectura)**: Paso 8 reanalizado — el inventario real son ~10 ocurrencias de `as unknown as` en producción (no 75; el resto vive en `src/test/fixtures` y es legítimo). Las restantes ya llevan marcador `SAFE-CAST:` documentando la deuda contra el tipo generado de Supabase y se resolverán cuando la firma del RPC/cliente se regenere. No requiere acción adicional ahora.

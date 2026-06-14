@@ -4,13 +4,13 @@ import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
-import ReportesFiltros from "@/components/reportes/ReportesFiltros";
-import ReportesKpiCards from "@/components/reportes/ReportesKpiCards";
-import ReportesTablaClientes from "@/components/reportes/ReportesTablaClientes";
+import ReportesFiltros from "@/features/reportes/components/ReportesFiltros";
+import ReportesKpiCards from "@/features/reportes/components/ReportesKpiCards";
+import ReportesTablaClientes from "@/features/reportes/components/ReportesTablaClientes";
 import { useReportesPageController } from "@/features/reportes/hooks";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la página.
-const ReportesTopChart = lazy(() => import("@/components/reportes/ReportesTopChart"));
+const ReportesTopChart = lazy(() => import("@/features/reportes/components/ReportesTopChart"));
 
 export default function Reportes() {
   const {

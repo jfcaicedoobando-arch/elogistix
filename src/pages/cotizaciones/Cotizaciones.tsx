@@ -4,7 +4,7 @@ import {
   CheckCircle, XCircle, BarChart3,
 } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { KpiCard } from "@/components/operaciones/KpiCard";
+import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {

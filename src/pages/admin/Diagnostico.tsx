@@ -9,10 +9,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/features/admin/hooks";
-import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
-import { DiagnosticoHealthPanel } from "@/components/admin/DiagnosticoHealthPanel";
-import AlertasSistemaPanel from "@/components/admin/AlertasSistemaPanel";
-import { diagnosticoColumns } from "@/components/admin/DiagnosticoColumns";
+import { DiagnosticoFilters } from "@/features/admin/components/DiagnosticoFilters";
+import { DiagnosticoHealthPanel } from "@/features/admin/components/DiagnosticoHealthPanel";
+import AlertasSistemaPanel from "@/features/admin/components/AlertasSistemaPanel";
+import { diagnosticoColumns } from "@/features/admin/components/DiagnosticoColumns";
 import { useDebounce } from "@/hooks/shared";
 
 // Page size más pequeño que el global (100) porque la bitácora de logs

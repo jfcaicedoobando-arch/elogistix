@@ -5,9 +5,9 @@ import { Building2, Plus } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminOrganizacionesController } from "@/features/admin/hooks";
-import { AdminOrganizacionesFilters } from "@/components/admin/AdminOrganizacionesFilters";
-import { NuevaOrganizacionDialog } from "@/components/admin/NuevaOrganizacionDialog";
-import { buildAdminOrganizacionesColumns } from "@/components/admin/AdminOrganizacionesColumns";
+import { AdminOrganizacionesFilters } from "@/features/admin/components/AdminOrganizacionesFilters";
+import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrganizacionDialog";
+import { buildAdminOrganizacionesColumns } from "@/features/admin/components/AdminOrganizacionesColumns";
 
 export default function AdminOrganizaciones() {
   const navigate = useNavigate();

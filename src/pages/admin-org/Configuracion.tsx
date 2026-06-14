@@ -4,10 +4,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { Save, Building2, FileText, Anchor, Wrench } from "lucide-react";
 import { useConfiguracionState } from "@/features/configuracion/hooks";
-import TabEmpresa from "@/components/configuracion/TabEmpresa";
-import TabFacturacion from "@/components/configuracion/TabFacturacion";
-import TabPuertos from "@/components/configuracion/TabPuertos";
-import TabExportar from "@/components/configuracion/TabExportar";
+import TabEmpresa from "@/features/configuracion/components/TabEmpresa";
+import TabFacturacion from "@/features/configuracion/components/TabFacturacion";
+import TabPuertos from "@/features/configuracion/components/TabPuertos";
+import TabExportar from "@/features/configuracion/components/TabExportar";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
   if (isSaving) return "Guardando...";

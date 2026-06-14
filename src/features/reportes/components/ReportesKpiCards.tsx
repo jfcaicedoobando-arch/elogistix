@@ -1,5 +1,5 @@
 import { Users, DollarSign, TrendingUp, Percent } from "lucide-react";
-import { KpiCard } from "@/components/operaciones/KpiCard";
+import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import type { KpiTone } from "@/components/shared/utils/kpiTones";
 
