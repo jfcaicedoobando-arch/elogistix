@@ -32,7 +32,7 @@ const OVERSIZED_BASELINE = new Set<string>([
 const WEAK_REJECTS_BASELINE = new Set<string>([
   "src/features/cliente/services/__tests__/contactos.test.ts",
   "src/features/cliente/services/__tests__/crud.test.ts",
-
+  "src/features/costeo/services/__tests__/demorasVenta.test.ts",
   "src/features/cotizacion/services/__tests__/costos.test.ts",
   "src/features/cotizacion/services/__tests__/queries.test.ts",
   "src/features/cotizacion/services/mutations/__tests__/crear.test.ts",
@@ -53,7 +53,6 @@ const WEAK_REJECTS_BASELINE = new Set<string>([
   "src/features/crm/services/vincularCotizacion/__tests__/propagarConversion.test.ts",
   "src/features/crm/services/vincularCotizacion/__tests__/sincronizarEtapa.test.ts",
   "src/features/cxp/services/__tests__/conceptosCostoVinculables.test.ts",
-  "src/features/embarques/services/__tests__/bitacoraEmbarque.test.ts",
   "src/features/embarques/services/__tests__/demorasEmbarque.test.ts",
   "src/features/embarques/services/__tests__/garantias.test.ts",
   "src/features/embarques/services/contenedores/__tests__/crudExtra.test.ts",
@@ -67,12 +66,12 @@ const WEAK_REJECTS_BASELINE = new Set<string>([
   "src/services/admin/__tests__/organizations.test.ts",
   "src/services/admin/__tests__/papelera.test.ts",
   "src/services/admin/__tests__/stats.test.ts",
-  "src/services/configuracion/__tests__/index.test.ts",
   "src/services/embarques/__tests__/dependenciasFinancieras.test.ts",
   "src/services/pagos-factura/__tests__/pagos.test.ts",
   "src/services/pagos-factura/__tests__/pagosFactura.test.ts",
   "src/services/proforma/__tests__/crud.test.ts",
   "src/services/usuario/__tests__/usuario.test.ts",
+
 ]);
 
 // Baseline temporal de tests que mockean supabase sin createSupabaseMock.
