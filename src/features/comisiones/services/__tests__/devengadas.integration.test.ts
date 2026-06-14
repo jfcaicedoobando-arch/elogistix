@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import {
   calcularKPIsComisiones,
   type ComisionDevengada,
-} from "@/services/comisiones/devengadas";
+} from "@/features/comisiones/services/devengadas";
 
 const MES_ACTUAL = new Date().toISOString().slice(0, 7);
 const fechaEnMes = (yyyymm: string, dia = 15) => `${yyyymm}-${String(dia).padStart(2, "0")}T12:00:00Z`;

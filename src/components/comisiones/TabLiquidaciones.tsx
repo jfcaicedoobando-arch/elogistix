@@ -3,10 +3,10 @@ import { Loader2, Plus, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useLiquidaciones } from "@/hooks/comisiones";
+import { useLiquidaciones } from "@/features/comisiones/hooks";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
-import type { LiquidacionRow } from "@/services/comisiones";
+import type { LiquidacionRow } from "@/features/comisiones/services";
 
 interface VendedoraOpt { id: string; nombre: string }
 

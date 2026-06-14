@@ -9,7 +9,7 @@ import {
   calcularKPIsComisiones,
   type FetchComisionesFiltros,
   type EstadoComision,
-} from "@/services/comisiones";
+} from "@/features/comisiones/services";
 
 export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
   // SAFE: filtros se desestructura en primitivos antes del useMemo para evitar

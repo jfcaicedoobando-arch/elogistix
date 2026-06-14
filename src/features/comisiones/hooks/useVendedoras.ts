@@ -11,7 +11,7 @@ import {
   fetchUsuariosVendedores,
   fetchEmbarquesSinVendedora,
   asignarVendedoraEmbarque,
-} from "@/services/comisiones";
+} from "@/features/comisiones/services";
 
 export function useVendedorasConfig() {
   return useQuery({

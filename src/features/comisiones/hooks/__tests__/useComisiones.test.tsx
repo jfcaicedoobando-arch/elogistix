@@ -9,7 +9,7 @@ const { mockFetchLiquidaciones, mockGenerar, mockRegistrar, mockFetchVendedoras 
   mockFetchVendedoras: vi.fn(),
 }));
 
-vi.mock('@/services/comisiones', () => ({
+vi.mock('@/features/comisiones/services', () => ({
   fetchLiquidaciones: mockFetchLiquidaciones,
   generarLiquidacion: mockGenerar,
   registrarPagoLiquidacion: mockRegistrar,
