@@ -1,75 +1,74 @@
-## Qué falta en el workspace de Lovable vs. tu repo de GitHub
+## Optimizar `.github/workflows/ci.yml`
 
-Comparé los logs de CI (`hlopezb83/liftgo`, run de hoy 01:03 UTC) contra lo que está sincronizado aquí. **El repo de GitHub está más adelantado que el preview.** Estos son los faltantes detectados.
-
----
-
-### 1. Workflows de GitHub Actions (3 jobs distintos)
-
-Los logs muestran 3 jobs con nombres que **no coinciden** con los de `.github/workflows/ci.yml` y `e2e.yml` actuales:
-
-| Job en CI (logs)                                                  | Job equivalente local              | Estado                          |
-| ----------------------------------------------------------------- | ---------------------------------- | ------------------------------- |
-| `Lint, Knip, Tests, Build`                                        | `quality` + `tests` (separados)    | Workflow **reescrito en GitHub**, no sincronizado |
-| `Edge Functions (Deno smoke tests)`                               | `edge-functions` (excluye smoke)   | Reescrito: ahora **incluye** smoke + `deno fmt --check` |
-| `E2E (Playwright shard ${{ matrix.shard }}_${{ matrix.total }})` | `playwright` (single job, semanal) | Convertido a **matriz sharded**, probablemente corre en PR |
-
-### 2. Archivos de tests E2E
-
-ESLint rompió en estos archivos que **no existen** aquí:
-
-- `tests/e2e/fixtures/portalSeed.ts` (línea 116 — `throw` dentro de `finally`)
-- `tests/e2e/fixtures/seed.ts` (línea 124 — mismo problema)
-
-Local sólo tenemos `e2e/fixtures/auth.ts`. La carpeta `tests/` no existe. Esto sugiere que migraste de `e2e/` a `tests/e2e/` directamente en GitHub.
-
-### 3. Edge Functions nuevas
-
-Estas dos funciones rompieron `deno fmt --check` y **tampoco existen** aquí:
-
-- `supabase/functions/refresh-cancellation-status/handler.ts` + `handler_test.ts`
-- `supabase/functions/cancel-cfdi/handler.ts` + `handler_test.ts`
-
-Parecen ser un módulo nuevo de cancelación de CFDI (Facturapi).
-
-### 4. Probable: `package.json` scripts y dependencias
-
-Si el job se llama `Lint, Knip, Tests, Build` en un solo step, lo más probable es que también haya un script `bun run ci` o similar nuevo en GitHub.
+Cuatro mejoras concretas para acortar wall-time del CI sin reducir cobertura. Ahorro estimado: **~3-5 min por run** (depende del cache hit ratio).
 
 ---
 
-## Causa raíz
+### Cambios propuestos
 
-La sincronización bidireccional Lovable ↔ GitHub **no está trayendo** los cambios de GitHub al preview. Posibles causas:
+**1. Eliminar la segunda compilación duplicada (`quality` job)**
 
-- La conexión GitHub se desconectó o cambió de cuenta.
-- Estás trabajando en una **rama distinta a `main`** en GitHub que Lovable no observa.
-- Los commits se hicieron en el repo pero el webhook a Lovable falló.
+Hoy: `Build` corre `vite build` (~60-90 s), luego `Bundle analyzer (informational)` corre `ANALYZE=true bun run build` (~60-90 s otra vez). Son **dos builds completas**. La 2ª sólo existe para emitir `dist/bundle-stats.html` vía `rollup-plugin-visualizer`.
+
+Fix: una sola build con `ANALYZE=true` siempre activo. `visualizer` añade <100 ms; el HTML se sube como artifact con `if-no-files-found: ignore` para el caso de que el plugin se desactive.
+
+**Ahorro: ~1-2 min por run.**
+
+**2. Reducir shards de tests de 16 → 8**
+
+16 shards en un repo de ~140 test files genera mucho overhead de spin-up + `bun install` por shard. Cada shard hoy paga ~25-45 s de checkout + install + arranque vitest antes de empezar. Con 8 shards:
+- mismo paralelismo útil (la mayoría de runners free no permiten >20 jobs concurrentes igual),
+- la mitad de minutos GitHub-runner facturados,
+- merge de coverage más rápido (menos blobs).
+
+Si algún shard se acerca al timeout de 20 min subimos a 10. Hoy los shards corren bajo 5 min según los logs subidos.
+
+**Ahorro: ~40-60% en minutos facturados de la matriz.**
+
+**3. Composite action para "setup + install"**
+
+Hoy `Setup Bun` + `Cache Bun deps` + `Install dependencies` se repite **3 veces** (quality, tests, coverage). Mover a `.github/actions/setup-bun/action.yml` y referenciarlo con `uses: ./.github/actions/setup-bun`. Sin cambio funcional, sólo de mantenimiento (un solo lugar para bumpear `bun-version`, cambiar la clave de cache, etc.).
+
+**Ahorro: 0 s wall-time, pero elimina drift entre jobs.**
+
+**4. Saltar CI en cambios sólo-docs**
+
+Añadir `paths-ignore` para archivos que no afectan build/tests:
+
+```yaml
+on:
+  pull_request:
+    paths-ignore: ["**/*.md", "docs/**", ".github/ISSUE_TEMPLATE/**", "CHANGELOG.md"]
+  push:
+    branches: [main]
+    paths-ignore: ["**/*.md", "docs/**", "CHANGELOG.md"]
+```
+
+Importante: dejar `push: main` también con `paths-ignore` para no romper required checks si el commit toca solo el changelog.
+
+**Ahorro: ~12 min cuando aplica (PR de solo docs).**
 
 ---
 
-## Recomendación (qué hacer)
+### Lo que NO toco (y por qué)
 
-Antes de tocar código, decidir cuál de estos dos caminos quieres:
-
-**Opción A — Sincronizar GitHub → Lovable (recomendado)**
-1. Verificar en Settings → GitHub que el repo `hlopezb83/liftgo` siga conectado y que la rama por defecto sea la correcta.
-2. Hacer un commit dummy en GitHub (`main`) para forzar el webhook.
-3. Validar que aparezcan: `tests/e2e/fixtures/`, las 2 edge functions de CFDI, los 4 workflows reescritos.
-
-**Opción B — Recrear en Lovable**
-Si la conexión está rota o quieres rehacerlo aquí: recrear manualmente los 3 workflows, los 2 fixtures de E2E y las 2 edge functions, y fixear los errores de lint/fmt en el mismo paso. Requiere que me pases el contenido actual de esos archivos (o me autorices a inferirlo, lo cual no es ideal porque no veo `tests/e2e/fixtures/portalSeed.ts:116`).
+- **`quality` job lineal**: separar `lint/typecheck/audit` en jobs distintos paraleliza, pero cada uno pagaría ~30 s de install. El total acaba siendo similar y con más yaml.
+- **`coverage` corre `bun install`**: necesita `tsx` para `coverage:report`, no se puede saltar.
+- **Pinear actions a SHA**: gano seguridad pero no velocidad; lo dejo para otro ticket.
+- **Cache de `dist/`** entre runs: poco beneficio porque `bun run build` se ejecuta una sola vez (post-fix #1) y los inputs cambian en cada commit.
 
 ---
 
-## Lo que está sincronizado y sano
+### Archivos a tocar
 
-Para referencia, sí están aquí: `.github/workflows/{ci,e2e,post-deploy-smoke,rls-tests}.yml`, `e2e/specs/*`, `supabase/functions/{auditoria-*,cxc-recordatorios,demo-access,exchange-rates,parse-cfdi-xml,parse-csf,process-email-queue,sentry-tunnel,tracking-public,user-management,client-error-log}`.
+- `.github/workflows/ci.yml` — los 4 cambios.
+- `.github/actions/setup-bun/action.yml` — **nuevo** (composite action).
+- `CHANGELOG.md` + `src/constants/appVersion.ts` — bump a `13.14.9`.
 
----
+### Riesgos
 
-## Detalles técnicos
+- **`ANALYZE=true` siempre activo** podría romper si alguien remueve `rollup-plugin-visualizer` del `vite.config.ts`. El paso de upload tolera ausencia (`if-no-files-found: ignore`), no rompe el job.
+- **Reducir a 8 shards** podría llevar un shard cerca del timeout si crece la suite. Timeout actual es 20 min, los logs muestran <5 min por shard hoy.
+- **`paths-ignore`**: si el repo tiene un required check `Tests`/`Build` en branch protection, los PRs sólo-docs se quedan en "pending" y no pueden mergearse. Mitigación: si tienes branch protection, **no aplicar este punto** o usar el patrón "always-passing skip job" (lo aclaro en el commit).
 
-- Los workflows en logs usan `actions/upload-artifact@v7`, `actions/cache@v5`, `oven-sh/setup-bun@v2`, `denoland/setup-deno@v2`, `mikepenz/action-junit-report@v6` — todos compatibles con lo que ya tenemos.
-- El step `deno fmt --check` no existe en nuestro `edge-functions` job actual; en GitHub sí.
-- El job `tests` en GitHub está **fusionado** con lint/build (single runner), mientras aquí tenemos `tests` sharded en 16 y `quality` aparte.
+¿Aplicar los 4 puntos? ¿O sólo 1+2+3 (omitir `paths-ignore` por la duda de branch protection)?
