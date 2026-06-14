@@ -7,7 +7,7 @@ const { mockFetchSummary, mockFetchDetails } = vi.hoisted(() => ({
   mockFetchDetails: vi.fn(),
 }));
 
-vi.mock('@/services/dashboard', () => ({
+vi.mock('@/features/dashboard/services', () => ({
   fetchDashboardSummary: mockFetchSummary,
   fetchDashboardDetails: mockFetchDetails,
 }));

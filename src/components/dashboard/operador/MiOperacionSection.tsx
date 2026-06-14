@@ -8,13 +8,13 @@ import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, FileWarning, Radio } from "lucide-react";
 import { toTitleCase } from "@/lib/formatters";
-import type { AlertaDemora, ProximoArribo } from "@/hooks/dashboard";
+import type { AlertaDemora, ProximoArribo } from "@/features/dashboard/hooks";
 import {
   useDocsFaltantesOperador,
   useSinTrackingOperador,
   type DocsFaltantesItem,
   type SinTrackingItem,
-} from "@/hooks/dashboard";
+} from "@/features/dashboard/hooks";
 import { WidgetCard, Row } from "./MiOperacionWidgets";
 import { buildPendientes } from "./miOperacionUtils";
 

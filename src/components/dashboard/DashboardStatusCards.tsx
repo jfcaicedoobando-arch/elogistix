@@ -1,4 +1,4 @@
-import type { EstadoFiltro } from "@/hooks/dashboard";
+import type { EstadoFiltro } from "@/features/dashboard/hooks";
 import { TimelineEstadosCard } from "./statusCards/TimelineEstadosCard";
 import { ArribosCard, type ArribosEsteMes } from "./statusCards/ArribosCard";
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { fetchDashboardEjecutivo } from "@/services/dashboard-ejecutivo";
+import { fetchDashboardEjecutivo } from "@/features/dashboard/services-ejecutivo";
 import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 

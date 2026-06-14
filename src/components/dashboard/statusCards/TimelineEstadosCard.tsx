@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/dashboard";
+import { ESTADOS_FILTRO, type EstadoFiltro } from "@/features/dashboard/hooks";
 import { ESTADO_CONFIG } from "@/components/shared/utils/estadoConfig";
 
 interface Props {
