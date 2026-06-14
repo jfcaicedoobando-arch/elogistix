@@ -5252,6 +5252,15 @@ export type Database = {
           total_count: number
         }[]
       }
+      fn_admin_org_activity: {
+        Args: never
+        Returns: {
+          cotizaciones: number
+          embarques: number
+          id: string
+          nombre: string
+        }[]
+      }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       generar_liquidacion_comision: {
         Args: {

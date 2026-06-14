@@ -49,22 +49,31 @@ export async function fetchDashboardEjecutivo(
   const prev = periodoAnterior(periodo);
   const [prevY, prevM] = prev.split("-").map(Number);
 
-  const cuentas = await fetchSaldosCuentas();
-
-  const [eerrPeriodo, eerrPrev, tesoreria, flujo, presupuesto] = await Promise.all([
+  // Optimización: una sola ola de Promise.all que incluye los 12 meses + EERR
+  // periodo + EERR previo + tesorería + flujo + presupuesto + cuentas. Antes
+  // había 2 olas secuenciales (cuentas, después el resto), lo que sumaba ~1
+  // RTT extra por la latencia agregada de cuentas.
+  const meses = meses12Atras(periodo);
+  const [
+    cuentas,
+    eerrPeriodo,
+    eerrPrev,
+    tesoreria,
+    presupuesto,
+    ...eerrMensuales
+  ] = await Promise.all([
+    fetchSaldosCuentas(),
     fetchEstadoResultadosDevengado({ organizationId, year, month }),
     fetchEstadoResultadosDevengado({ organizationId, year: prevY, month: prevM }),
     fetchResumenTesoreria({ cobranza, cxp }),
-    fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28 }),
     fetchPresupuestoVsReal(periodo),
-  ]);
-
-  const meses = meses12Atras(periodo);
-  const eerrMensuales = await Promise.all(
-    meses.map((m) =>
+    ...meses.map((m) =>
       fetchEstadoResultadosDevengado({ organizationId, year: m.year, month: m.month }),
     ),
-  );
+  ]);
+  // `flujo` necesita `cuentas` ya resueltas — segunda fase mínima.
+  const flujo = await fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28 });
+
   const eerr12m: PuntoEERR[] = meses.map((m, i) => {
     const er = eerrMensuales[i];
     return {

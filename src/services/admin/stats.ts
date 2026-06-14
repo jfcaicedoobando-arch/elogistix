@@ -25,25 +25,16 @@ export interface AdminRecentOrg {
 }
 
 export async function fetchAdminOrgActivity(): Promise<AdminOrgActivity[]> {
-  const [orgsRes, embRes, cotRes] = await Promise.all([
-    supabase.from("organizations").select("id, nombre").order("nombre").limit(500),
-    supabase.from("embarques").select("organization_id"),
-    supabase.from("cotizaciones").select("organization_id"),
-  ]);
-  const orgs = orgsRes.data ?? [];
-  const embCounts: Record<string, number> = {};
-  (embRes.data ?? []).forEach((r) => {
-    if (r.organization_id) embCounts[r.organization_id] = (embCounts[r.organization_id] ?? 0) + 1;
-  });
-  const cotCounts: Record<string, number> = {};
-  (cotRes.data ?? []).forEach((r) => {
-    if (r.organization_id) cotCounts[r.organization_id] = (cotCounts[r.organization_id] ?? 0) + 1;
-  });
-  return orgs.map((o) => ({
-    id: o.id,
-    nombre: o.nombre,
-    embarques: embCounts[o.id] ?? 0,
-    cotizaciones: cotCounts[o.id] ?? 0,
+  // Optimización: RPC `fn_admin_org_activity` agrega conteos en SQL en una
+  // sola consulta. Antes descargaba toda la tabla embarques+cotizaciones
+  // (escaneo completo + conteo en JS) — fallaba por timeout al crecer la DB.
+  const { data, error } = await supabase.rpc("fn_admin_org_activity");
+  if (error) throw error;
+  return ((data ?? []) as Array<{ id: string; nombre: string; embarques: number; cotizaciones: number }>).map((r) => ({
+    id: r.id,
+    nombre: r.nombre,
+    embarques: Number(r.embarques) || 0,
+    cotizaciones: Number(r.cotizaciones) || 0,
   }));
 }
 
