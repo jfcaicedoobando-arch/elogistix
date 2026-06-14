@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.0] - 2026-06-14
+- **test(audit/lint)**: Fases 2-4 de la auditoría de tests. Nuevas reglas en `scripts/lib/tests.ts`: `weak-rejects-assertion` detecta `.rejects.toBeDefined()/toBeTruthy()` y `supabase-mock-helper` detecta `vi.mock("@/integrations/supabase/client")` sin usar `createSupabaseMock`. Ambas reglas usan baselines temporales en `src/__tests__/audit-report.test.ts` (`WEAK_REJECTS_BASELINE` 41 archivos, `SUPABASE_MOCK_BASELINE` 12 archivos) — no se admiten archivos nuevos en el baseline; refactorizar uno a uno y removerlos. Refactorizados 5 archivos críticos (`tarifas`, `relacionados`, `agentes`, `configuracion`, `bitacoraEmbarque`) a `.rejects.toThrow()` y removidos del baseline.
+- **test(canary/perf)**: Nuevo `src/test/canaries/queryTimeout.test.ts` — 3 mediciones puras (sumarEnMoneda x5k/10k + Map agrupado x10k) con budget 30-50ms. Falla rápido si una regresión introduce O(n²) en hot paths de cálculo financiero.
+- **test(financiero/embarques)**: Nuevo `useCostosPreciosCalc.test.ts` (4 casos) cubre el cierre del gap #1 de cobertura financiera: suma homogénea, conversión multi-moneda con TC válido, fallback `tcMissing` cuando TC=0 y listas vacías.
+- **ci(bundle-size)**: `scripts/check-bundle-size.sh` extendido — además del entry, valida cada chunk lazy <250KB y vendor <500KB gzipped (configurable vía `LAZY_BUDGET_KB`/`VENDOR_BUDGET_KB`). Falla el job si cualquier chunk excede su budget.
+
 ## [13.13.0] - 2026-06-14
+
 - **test(rls/tarifas-y-costeo)**: Fase 1 de la auditoría de tests. Nueva suite `supabase/tests/rls/test_rls_tarifas_y_costeo.sql` (8 aserciones) que cierra el gap #1 de riesgo de negocio — fuga cross-org de listas de precios y datos de cumplimiento. Cubre `costeo_rutas`, `costeo_tarifas` (incluye intento de UPDATE cruzado bloqueado + verificación de no fuga de `flete_base` competitivo), `proveedor_notas_credito` (monto contable nunca visible) y `auditoria_revisiones` (detalle de hallazgo aislado). Registrada en `.github/workflows/rls-tests.yml` (paso adicional `psql -f`). Total cobertura RLS: **6 suites SQL, ~48 aserciones**.
 - **test(e2e/security)**: Nuevo spec `e2e/specs/06-security-cross-org.spec.ts` que loguea con `internalCreds()` e intenta acceder vía URL directa a `/embarques/:id`, `/facturacion/facturas/:id` y `/cotizaciones/:id` usando un UUID válido pero ajeno a la sesión. Acepta como bloqueo: redirect fuera del detalle o copy explícito de "no encontrado/sin acceso". Si se definen secrets `E2E_CROSS_ORG_*_ID` con IDs reales de otra org, el spec los usa en lugar del UUID dummy. Cubre el agujero E2E de validación de RLS desde la UI.
 
