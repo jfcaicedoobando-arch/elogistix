@@ -94,7 +94,7 @@ export default function Embarques() {
                 sortDir={sortDir}
                 onClear={() => handleSortChange(null, "asc")}
               />
-              <DataTable
+              <ResponsiveDataTable
                 columns={columns}
                 data={filtered}
                 isLoading={isLoading}
@@ -107,12 +107,34 @@ export default function Embarques() {
                 controlledSort={{ key: sortKey, dir: sortDir }}
                 onSortChange={handleSortChange}
                 density="comfortable"
+                className="pb-24 sm:pb-0"
+                mobileCard={(e) => {
+                  const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+                  return (
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 font-semibold text-sm">
+                          <ModoIcon modo={e.modo} size={14} />
+                          <span className="truncate">{e.expediente}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate mt-0.5">
+                          {toTitleCase(e.cliente_nombre)}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {shortName(getOrigen(e))} → {shortName(getDestino(e))}
+                          {e.eta ? ` · ETA ${formatDate(e.eta)}` : ""}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className={`text-[10px] whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
+                    </div>
+                  );
+                }}
                 pagination={{
                   page,
                   totalPages,
                   onPageChange: setPage,
                   pageSize,
-                  onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+                  onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
                   pageSizeOptions: [100, 999999],
                   pageSizeLabels: { 999999: "Todos" },
                 }}
