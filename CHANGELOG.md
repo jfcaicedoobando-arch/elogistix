@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.6] - 2026-06-14
+- **perf(dashboard-ejecutivo)**: `fetchDashboardEjecutivo` colapsa las 2 olas secuenciales en una sola `Promise.all` (cuentas + EERR periodo + EERR previo + tesorería + presupuesto + 12 meses EERR). El `flujo` queda como segunda fase mínima (depende de `cuentas`). Antes: 2 round-trip groups con latencia agregada de la cuenta primero. Ahora: ~1 RTT en lugar de 2 para todo el snapshot.
+- **perf(eventos-embarque)**: `fetchEventosEmbarque` selecciona columnas explícitas (`EVENTO_COLS`) en lugar de `*` — la tabla `eventos_embarque` es append-only y crece sin límite por embarque; el over-fetch sumaba metadata innecesaria a cada timeline.
+
 ## [13.14.5] - 2026-06-14
 - **perf(admin)**: Nueva RPC `fn_admin_org_activity()` agrega conteos de `embarques` y `cotizaciones` por organización en SQL (LEFT JOIN + GROUP BY, restringida a `super_admin` vía `has_role`). `fetchAdminOrgActivity` antes descargaba columna `organization_id` de las dos tablas completas y contaba en JS (escaneo total + memoria O(N)); ahora 1 round-trip con datos pre-agregados. Sin riesgo de timeout al crecer la base.
 - **perf(render)**: `EmbarquesActivosTable.visibleColumns` memoizado con `useMemo(deps: [hideFinancials])` — antes el filtro de columnas se re-ejecutaba en cada render del dashboard generando una nueva referencia que invalidaba la memoización interna de TanStack Table.
