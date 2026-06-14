@@ -31,22 +31,11 @@ const OVERSIZED_BASELINE = new Set<string>([
 const WEAK_REJECTS_BASELINE = new Set<string>();
 
 
-// Baseline temporal de tests que mockean supabase sin createSupabaseMock.
-// Normalizar uno por uno migrando a `@/services/__tests__/_supabaseChainMock`.
-const SUPABASE_MOCK_BASELINE = new Set<string>([
-  "src/features/auditoria/services/__tests__/reporte.test.ts",
-  "src/features/cliente/services/usuarios/__tests__/index.test.ts",
-  "src/features/cxp/services/__tests__/parseCfdi.test.ts",
-  "src/services/__tests__/csfService.test.ts",
-  "src/services/__tests__/idempotency.integration.test.ts",
-  "src/services/__tests__/tracking.test.ts",
-  "src/services/admin/__tests__/stats.test.ts",
-  "src/services/csf/__tests__/index.test.ts",
-  "src/services/observability/__tests__/logClientError.test.ts",
-  "src/services/storage/__tests__/facturas.test.ts",
-  "src/services/storage/__tests__/index.test.ts",
-  "src/services/tracking/__tests__/index.test.ts",
-]);
+// Baseline de tests que mockean supabase con `.from(...)` sin createSupabaseMock.
+// 13.14.2: tras tightening de la regla (sólo flagea cuando usa cadena tabular),
+// baseline en 0. NO agregar nuevos archivos.
+const SUPABASE_MOCK_BASELINE = new Set<string>();
+
 
 
 describe("audit-report", () => {
