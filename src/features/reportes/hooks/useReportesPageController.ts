@@ -7,7 +7,7 @@ import { exportToCsv } from "@/generators/exportCsv";
 import type { generarRentabilidadPdf as GenerarRentabilidadPdfFn } from "@/generators/rentabilidadPdf";
 import { useRentabilidadClientes } from "@/features/cliente/hooks/useRentabilidadClientes";
 import { toTitleCase } from "@/lib/formatters";
-import type { SortField } from "@/components/reportes/ReportesTablaClientes";
+import type { SortField } from "@/features/reportes/components/ReportesTablaClientes";
 
 /**
  * Controller-hook que absorbe todo el estado, derivaciones y handlers de la

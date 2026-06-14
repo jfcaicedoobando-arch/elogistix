@@ -4,9 +4,9 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { TabCaptura } from "@/components/presupuesto/TabCaptura";
-import { TabVsReal } from "@/components/presupuesto/TabVsReal";
-import { TabCategorias } from "@/components/presupuesto/TabCategorias";
+import { TabCaptura } from "@/features/presupuesto/components/TabCaptura";
+import { TabVsReal } from "@/features/presupuesto/components/TabVsReal";
+import { TabCategorias } from "@/features/presupuesto/components/TabCategorias";
 
 export default function ProfitPresupuesto() {
   const [anio, setAnio] = useState(new Date().getFullYear());

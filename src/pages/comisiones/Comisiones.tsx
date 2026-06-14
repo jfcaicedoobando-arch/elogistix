@@ -9,9 +9,9 @@ import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { useComisionesDevengadas, useUsuariosVendedores } from "@/features/comisiones/hooks";
 import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
-import { buildComisionesColumns } from "@/components/comisiones/comisionesColumns";
-import { TabLiquidaciones } from "@/components/comisiones/TabLiquidaciones";
-import { TabVendedorasConfig } from "@/components/comisiones/TabVendedorasConfig";
+import { buildComisionesColumns } from "@/features/comisiones/components/comisionesColumns";
+import { TabLiquidaciones } from "@/features/comisiones/components/TabLiquidaciones";
+import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedorasConfig";
 import type { EstadoComision } from "@/features/comisiones/services";
 
 function KPICard({ label, value }: { label: string; value: string }) {

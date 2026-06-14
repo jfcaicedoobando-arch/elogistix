@@ -8,11 +8,11 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useEstadoResultados } from "@/features/profit/hooks";
 import {
   EstadoResultadosTable,
-} from "@/components/profit/EstadoResultadosTable";
+} from "@/features/profit/components/EstadoResultadosTable";
 import {
   ESTADO_RESULTADOS_CSV_HEADERS,
   buildEstadoResultadosCsvRows,
-} from "@/components/profit/EstadoResultadosTable.helpers";
+} from "@/features/profit/components/EstadoResultadosTable.helpers";
 import { exportToCsv } from "@/generators/exportCsv";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";

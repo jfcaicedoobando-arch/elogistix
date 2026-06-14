@@ -8,14 +8,14 @@ import { TrendingUp, AlertTriangle, Package, Container, Ship } from "lucide-reac
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import { KpiCard } from "@/components/operaciones/KpiCard";
+import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
+import { DesempenoOperadores } from "@/features/operaciones/components/DesempenoOperadores";
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI.
 const OperacionesTendenciaChart = lazy(
-  () => import("@/components/operaciones/OperacionesTendenciaChart"),
+  () => import("@/features/operaciones/components/OperacionesTendenciaChart"),
 );
 
 export default function Operaciones() {

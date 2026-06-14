@@ -1,13 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DashboardStatusCards } from "@/components/dashboard/DashboardStatusCards";
-import { AlertasDemoraCard } from "@/components/dashboard/AlertasDemoraCard";
-import { ProximosArribosCard } from "@/components/dashboard/ProximosArribosCard";
-import { ProfitTable } from "@/components/dashboard/ProfitTable";
-import { EmbarquesActivosTable } from "@/components/dashboard/EmbarquesActivosTable";
-import { CargasActivasClienteCard } from "@/components/dashboard/CargasActivasClienteCard";
-import { MiOperacionSection } from "@/components/dashboard/operador/MiOperacionSection";
+import { DashboardStatusCards } from "@/features/dashboard/components/DashboardStatusCards";
+import { AlertasDemoraCard } from "@/features/dashboard/components/AlertasDemoraCard";
+import { ProximosArribosCard } from "@/features/dashboard/components/ProximosArribosCard";
+import { ProfitTable } from "@/features/dashboard/components/ProfitTable";
+import { EmbarquesActivosTable } from "@/features/dashboard/components/EmbarquesActivosTable";
+import { CargasActivasClienteCard } from "@/features/dashboard/components/CargasActivasClienteCard";
+import { MiOperacionSection } from "@/features/dashboard/components/operador/MiOperacionSection";
 import { useDashboardController, type DashboardScope } from "@/features/dashboard/hooks/useDashboardController";
 
 export default function Dashboard() {

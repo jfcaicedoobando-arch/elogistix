@@ -6,8 +6,8 @@ import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminUsuariosController } from "@/features/admin/hooks";
-import { AdminUsuariosFilters } from "@/components/admin/AdminUsuariosFilters";
-import { buildAdminUsuariosColumns } from "@/components/admin/AdminUsuariosColumns";
+import { AdminUsuariosFilters } from "@/features/admin/components/AdminUsuariosFilters";
+import { buildAdminUsuariosColumns } from "@/features/admin/components/AdminUsuariosColumns";
 
 export default function AdminUsuarios() {
   const { state, setters, data, actions } = useAdminUsuariosController();

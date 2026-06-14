@@ -13,7 +13,7 @@ import { formatDate } from "@/lib/formatters";
 
 // Lazy: difiere recharts fuera del TTI.
 const AdminDashboardActivityChart = lazy(
-  () => import("@/components/admin/AdminDashboardActivityChart"),
+  () => import("@/features/admin/components/AdminDashboardActivityChart"),
 );
 
 

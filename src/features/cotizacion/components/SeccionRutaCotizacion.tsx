@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import PortSelect from "@/components/catalogos/PortSelect";
+import PortSelect from "@/features/catalogos/components/PortSelect";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";

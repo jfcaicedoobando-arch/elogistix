@@ -11,15 +11,15 @@ import {
   useAppLogsHealthTimeline,
   type HealthSummaryRow,
 } from "@/features/admin/hooks";
-import HealthKpisRow from "@/components/admin/diagnosticoHealth/HealthKpisRow";
-import HealthSlowestTable from "@/components/admin/diagnosticoHealth/HealthSlowestTable";
+import HealthKpisRow from "@/features/admin/components/diagnosticoHealth/HealthKpisRow";
+import HealthSlowestTable from "@/features/admin/components/diagnosticoHealth/HealthSlowestTable";
 
 // Lazy: difiere recharts fuera del TTI del panel de diagnóstico.
 const HealthTimelineChart = lazy(
-  () => import("@/components/admin/diagnosticoHealth/HealthTimelineChart"),
+  () => import("@/features/admin/components/diagnosticoHealth/HealthTimelineChart"),
 );
 const HealthTopErrorsChart = lazy(
-  () => import("@/components/admin/diagnosticoHealth/HealthTopErrorsChart"),
+  () => import("@/features/admin/components/diagnosticoHealth/HealthTopErrorsChart"),
 );
 
 
