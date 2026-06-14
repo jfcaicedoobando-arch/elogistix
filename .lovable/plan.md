@@ -1,51 +1,60 @@
-# Fase 2 — Tablas responsive + paginación/FAB sin colisiones
+# Fase 3 — Dashboard responsive (scroll-snap + densidad móvil)
 
 ## Objetivo
-Eliminar el scroll horizontal incómodo en móvil (20:9) en las tablas principales, evitar que el FAB tape la paginación, y dar densidad táctil adecuada sin tocar lógica de negocio.
+Hacer que los dashboards (operativo, ejecutivo y CRM) sean cómodos en 20:9 (≤412px): KPIs en carrusel horizontal con scroll-snap en móvil y grid en desktop, cards con jerarquía clara y sin overflow, y secciones con padding consistente.
 
-## Alcance (sólo UI / presentación)
+## Alcance (solo UI / presentación)
 
-### 1. Nuevo componente `ResponsiveDataTable`
-Ruta: `src/components/shared/dataTable/ResponsiveDataTable.tsx`
+### 1. Nuevo componente `KpiStrip`
+Ruta: `src/components/shared/KpiStrip.tsx`
+- Wrapper genérico que recibe `children` (cards KPI) y aplica:
+  - `<sm`: `flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-4 px-4 pb-2 [&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[78%]`
+  - `≥sm`: `grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3`
+- Prop opcional `desktopCols` para sobreescribir el grid de desktop (default 6).
+- Indicador visual: barra de scroll fina con `scrollbar-thin` (utilidad ya existente o inline). Sin lógica nueva.
 
-- Wrapper sobre `DataTable` existente. Acepta los mismos props + uno nuevo opcional:
-  - `mobileCard: (row) => ReactNode` — render alternativo en pantallas `<sm` (640px).
-  - `mobilePrimary?: string` / `mobileSecondary?: string[]` — atajo para auto-generar tarjetas cuando no se pasa `mobileCard` (toma columnas por id).
-- Comportamiento:
-  - `<sm`: lista de `<button>`/`<div role="row">` tipo card (border + padding + tap target ≥44px) con `onRowClick` preservado.
-  - `≥sm`: renderiza el `DataTable` normal sin cambios.
-  - La paginación se renderiza siempre desde el `DataTable` (no duplicar).
-- Sin cambios en `DataTable` ni en `VirtualTableParts`.
+### 2. Migrar bandas de KPIs a `KpiStrip`
+Solo cambia el contenedor (no las cards):
+- `src/components/dashboard-ejecutivo/BandaKPIs.tsx` (6 KPIs) → `desktopCols={6}`
+- `src/features/dashboard/components/DashboardStatusCards.tsx` (status cards del dashboard operativo) → `desktopCols={5}` o el que ya use
+- `src/features/crm/routes/CrmDashboard.tsx` → la "StatStrip" inferior (Leads/Oportunidades/Actividades/Pipeline) pasa de `flex border` a `KpiStrip` con `desktopCols={4}` para que en móvil sea carrusel en lugar de 4 columnas apretadas.
 
-### 2. Migrar tablas de mayor dolor en móvil
-Sólo cambiar la llamada para usar `ResponsiveDataTable` y definir `mobileCard`:
-- `src/features/embarques/.../EmbarquesList*` (lista principal)
-- `src/pages/cotizaciones/Cotizaciones.tsx`
-- `src/pages/proveedores/ProveedorTable.tsx`
-- `src/features/crm/routes/leads*` (tabla de leads)
-- `src/features/reportes/components/ReportesTablaClientes.tsx`
+### 3. Dashboard operativo — densidad móvil
+`src/pages/dashboard/Dashboard.tsx`:
+- `space-y-6` → `space-y-4 sm:space-y-6`.
+- Grid de `AlertasDemoraCard` + `ProximosArribosCard`: ya es `grid-cols-1 lg:grid-cols-2`; añadir `gap-4 sm:gap-6` (ya lo tiene, validar).
+- `PageHeader`: el badge "X embarques activos" en `<sm` debe quedar debajo del título — verificar que `PageHeader` ya lo haga; si no, no se toca aquí (queda para Fase 5).
+- `TimelineEstadosCard` ya fue ajustado en Fase 1.
 
-Cada `mobileCard` muestra: título principal (folio/empresa/cliente), línea secundaria (cliente/estado/fecha), badge de estado a la derecha y monto si aplica. Sin lógica nueva — los datos ya vienen en `row`.
+### 4. Dashboard ejecutivo
+`src/pages/profit/ProfitDashboardEjecutivo.tsx` (y `AuditoriaEjecutivoTab.tsx` si aplica patrón similar):
+- Verificar contenedor: añadir `px-4 sm:px-6` y `space-y-4 sm:space-y-6` si no lo tiene.
+- Grids `md:grid-cols-3` que en móvil quedan apilados — ok, no se cambian. Solo se aplica `KpiStrip` en BandaKPIs.
 
-### 3. Paginación + FAB sin colisión
-- `src/components/shared/dataTable/DataTablePagination.tsx` (o equivalente): en `<sm` añadir `pb-[env(safe-area-inset-bottom)]` y `mb-20` cuando hay FAB visible (clase utilitaria `data-[fab=true]:mb-20`).
-- `src/components/shared/FloatingActionButton.tsx`: ya quedó con safe-area; añadir `aria-label` consistente y `sm:bottom-6` para que en desktop no se mueva.
-- En páginas con tabla + FAB (Embarques, Cotizaciones, Proveedores, CRM Leads), pasar `className="pb-24 sm:pb-0"` al contenedor de la tabla para que la última fila no quede tapada.
+### 5. CRM Dashboard
+`src/features/crm/routes/CrmDashboard.tsx`:
+- `p-6` → `p-4 sm:p-6`.
+- `grid grid-cols-1 lg:grid-cols-2 gap-4` queda igual.
+- StatStrip inferior pasa a `KpiStrip` (ver punto 2).
 
-### 4. Mejora menor de header de tabla en móvil
-- `src/components/ui/table.tsx` y `VirtualTableParts.tsx`: cuando la tabla queda en modo desktop dentro de móvil grande (tablet vertical), reducir `text-[11px]` a `text-[10px]` con `sm:text-[11px]`. Cambio puramente cosmético.
+### 6. Cards internas — overflow seguro
+Revisar y añadir `truncate`/`min-w-0` donde haya texto largo que rompa el layout en móvil:
+- `KpiCard` (operaciones + dashboard-ejecutivo): verificar que `value` use `truncate` y `tabular-nums`.
+- `NextBestActionsCard`, `ActividadesHoyCard`, `CerrandoSemanaCard`, `LeadsSinContactarCard`, `CotizacionesSinRespuestaCard`: si tienen líneas con `flex`, añadir `min-w-0` al contenedor y `truncate` al texto largo. Solo donde se detecte overflow — cambios mínimos.
 
-## No incluye (queda para fases siguientes)
+## No incluye
 - Refactor de filtros (Fase 4).
 - Páginas legacy sin responsive (Fase 5).
-- Tipografía `clamp()` global (Fase 6).
-- Dashboard scroll-snap (Fase 3).
+- Tipografía `clamp()` (Fase 6).
+- Cambios de lógica de negocio o de queries.
 
-## Archivos a tocar (estimado)
-- Nuevo: `src/components/shared/dataTable/ResponsiveDataTable.tsx`
-- Editar: 5 páginas/tablas listadas arriba + `FloatingActionButton.tsx` + paginación.
-- Metadata: `CHANGELOG.md` (entrada `[13.16.0]`) y `src/constants/appVersion.ts`.
+## Archivos a tocar
+- Nuevo: `src/components/shared/KpiStrip.tsx`.
+- Editar: `BandaKPIs.tsx`, `DashboardStatusCards.tsx`, `CrmDashboard.tsx`, `Dashboard.tsx`, `ProfitDashboardEjecutivo.tsx`, posibles ajustes puntuales en cards CRM.
+- Metadata: `CHANGELOG.md` (entrada `[13.17.0]`) y `src/constants/appVersion.ts`.
 
 ## Validación
-- `bunx vitest run` enfocado en archivos modificados.
-- Screenshot móvil 412×915 en `/embarques`, `/cotizaciones`, `/proveedores`, `/crm/leads`: verificar que no hay scroll horizontal, que cada card es tappable, y que el FAB no tapa la paginación.
+- `tsc --noEmit` limpio.
+- `bunx vitest run` sobre archivos modificados (si tienen test).
+- Screenshots móvil 412×915 en `/`, `/profit/dashboard-ejecutivo`, `/crm`: KPIs deslizan horizontalmente con snap, sin overflow vertical raro, sin texto cortado.
+- Screenshot desktop 1366×768 en las mismas rutas: grid sigue idéntico al actual.
