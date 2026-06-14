@@ -3,3 +3,4 @@ export * from './useEditarProveedorController';
 export * from './useNuevoProveedorController';
 export * from './useProveedorDetalleController';
 export * from './useProveedores';
+export * from './useProveedoresCrear';
