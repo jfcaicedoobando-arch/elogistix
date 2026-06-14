@@ -49,6 +49,6 @@ describe("sincronizarEtapaPorEstadoCotizacion", () => {
 
   it("propaga error de supabase al sincronizar etapa", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "rls" } });
-    await expect(sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-1", estadoCotizacion: "Enviada" })).rejects.toBeTruthy();
+    await expect(sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-1", estadoCotizacion: "Enviada" })).rejects.toThrow();
   });
 });

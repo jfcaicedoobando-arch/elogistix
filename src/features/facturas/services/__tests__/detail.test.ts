@@ -51,6 +51,6 @@ describe("fetchFacturaById", () => {
 
   it("propaga errores de Supabase al consultar factura por ID", async () => {
     mock.setTableResult("facturas", { data: null, error: { message: "boom" } });
-    await expect(fetchFacturaById("x")).rejects.toBeTruthy();
+    await expect(fetchFacturaById("x")).rejects.toThrow();
   });
 });

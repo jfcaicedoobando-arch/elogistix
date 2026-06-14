@@ -39,7 +39,7 @@ describe("services/admin/papelera", () => {
 
   it("listTrash propaga error", async () => {
     mock.setRpcResult("list_trash", { data: null, error: { message: "x" } });
-    await expect(listTrash("clientes")).rejects.toBeTruthy();
+    await expect(listTrash("clientes")).rejects.toThrow();
   });
 
   it("restoreRecord llama restore_record", async () => {
@@ -52,7 +52,7 @@ describe("services/admin/papelera", () => {
 
   it("restoreRecord propaga error", async () => {
     mock.setRpcResult("restore_record", { data: null, error: { message: "x" } });
-    await expect(restoreRecord("facturas", "f1")).rejects.toBeTruthy();
+    await expect(restoreRecord("facturas", "f1")).rejects.toThrow();
   });
 
   it("purgeRecord llama purge_record", async () => {
@@ -63,6 +63,6 @@ describe("services/admin/papelera", () => {
 
   it("purgeRecord propaga error", async () => {
     mock.setRpcResult("purge_record", { data: null, error: { message: "x" } });
-    await expect(purgeRecord("embarques", "e1")).rejects.toBeTruthy();
+    await expect(purgeRecord("embarques", "e1")).rejects.toThrow();
   });
 });

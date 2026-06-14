@@ -121,6 +121,6 @@ describe("fetchLeaderboardRaw (I/O)", () => {
     mock.setTableResult("crm_cuotas_vendedor", { data: null, error: { message: "x" } });
     mock.setTableResult("crm_oportunidades", { data: [], error: null });
     mock.setTableResult("crm_etapas_pipeline", { data: [], error: null });
-    await expect(fetchLeaderboardRaw(2026, 6, "2026-06-01")).rejects.toBeTruthy();
+    await expect(fetchLeaderboardRaw(2026, 6, "2026-06-01")).rejects.toThrow();
   });
 });

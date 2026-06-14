@@ -26,7 +26,7 @@ describe("updateCotizacion", () => {
 
   it("propaga error de Supabase al actualizar cotización", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "RLS denied" } });
-    await expect(updateCotizacion("cot-1", { notas: "x" })).rejects.toBeTruthy();
+    await expect(updateCotizacion("cot-1", { notas: "x" })).rejects.toThrow();
   });
 
   it("acepta patch vacío sin lanzar", async () => {

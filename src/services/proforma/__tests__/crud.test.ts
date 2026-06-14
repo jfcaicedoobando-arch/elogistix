@@ -64,7 +64,7 @@ describe("services/proforma/crud", () => {
     mock.setRpcResult("crear_proforma_atomica", { data: null, error: { message: "x" } });
     await expect(
       crearProforma({ ...BASE, conceptoIds: ["c1"] } as never),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 
   it("crearProforma lanza si RPC retorna data null sin error", async () => {
@@ -86,7 +86,7 @@ describe("services/proforma/crud", () => {
     mock.setTableResult("conceptos_venta", { data: null, error: { message: "x" } });
     await expect(
       eliminarProforma({ proformaId: "pf1", embarqueId: "e1" }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 
   it("aprobarProformas rechaza con array vacío", async () => {
@@ -100,6 +100,6 @@ describe("services/proforma/crud", () => {
 
   it("aprobarProformas propaga error", async () => {
     mock.setTableResult("proformas", { data: null, error: { message: "x" } });
-    await expect(aprobarProformas(["pf1"])).rejects.toBeTruthy();
+    await expect(aprobarProformas(["pf1"])).rejects.toThrow();
   });
 });

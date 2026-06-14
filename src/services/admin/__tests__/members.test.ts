@@ -40,7 +40,7 @@ describe("services/admin/members", () => {
 
   it("fetchAvailableUsers propaga error", async () => {
     invokeMock.mockResolvedValue({ data: null, error: { message: "x" } });
-    await expect(fetchAvailableUsers()).rejects.toBeTruthy();
+    await expect(fetchAvailableUsers()).rejects.toThrow();
   });
 
   it("fetchAdminGlobalUsers mapea email y org", async () => {
@@ -69,7 +69,7 @@ describe("services/admin/members", () => {
 
   it("fetchAdminGlobalUsers propaga error de organization_members", async () => {
     mock.setTableResult("organization_members", { data: null, error: { message: "x" } });
-    await expect(fetchAdminGlobalUsers()).rejects.toBeTruthy();
+    await expect(fetchAdminGlobalUsers()).rejects.toThrow();
   });
 
   it("fetchOrgMembers devuelve filas con email", async () => {
@@ -94,7 +94,7 @@ describe("services/admin/members", () => {
 
   it("fetchOrgMembers propaga error", async () => {
     mock.setTableResult("organization_members", { data: null, error: { message: "x" } });
-    await expect(fetchOrgMembers("o1")).rejects.toBeTruthy();
+    await expect(fetchOrgMembers("o1")).rejects.toThrow();
   });
 
   it("updateOrgMemberRole envía role y filtra por id", async () => {

@@ -43,7 +43,7 @@ describe("embarques/services/contenedores/crud", () => {
 
   it("contenedores.listar: propaga error", async () => {
     mock.setTableResult("embarque_contenedores", { data: null, error: { message: "rls" } });
-    await expect(listarPorEmbarque("e1")).rejects.toBeDefined();
+    await expect(listarPorEmbarque("e1")).rejects.toThrow();
   });
 
   it("contenedores.crearMuchos: noop con array vacío (no llama supabase)", async () => {
@@ -90,7 +90,7 @@ describe("embarques/services/contenedores/crud", () => {
 
   it("contenedores.sincronizar: propaga error del RPC", async () => {
     mock.setRpcResult("sincronizar_contenedores_embarque", { data: null, error: { message: "rls" } });
-    await expect(sincronizarContenedores("e1", [])).rejects.toBeDefined();
+    await expect(sincronizarContenedores("e1", [])).rejects.toThrow();
   });
 
   it("contenedores.sincronizar: pasa lista con id=null cuando es nuevo", async () => {

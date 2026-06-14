@@ -27,7 +27,7 @@ describe("crearActividad", () => {
 
   it("propaga error supabase al crear actividad", async () => {
     mock.setTableResult("crm_actividades", { data: null, error: { message: "err" } });
-    await expect(crearActividad(validInput, null)).rejects.toBeTruthy();
+    await expect(crearActividad(validInput, null)).rejects.toThrow();
   });
 });
 

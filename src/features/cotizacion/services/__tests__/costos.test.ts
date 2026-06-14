@@ -33,7 +33,7 @@ describe("services/cotizacion/costos", () => {
 
   it("fetchCotizacionCostos propaga error", async () => {
     mock.setTableResult("cotizacion_costos", { data: null, error: { message: "x" } });
-    await expect(fetchCotizacionCostos("cot-1")).rejects.toBeTruthy();
+    await expect(fetchCotizacionCostos("cot-1")).rejects.toThrow();
   });
 
   it("fetchCotizacionCostos filtra por cotizacion_id", async () => {
@@ -78,7 +78,7 @@ describe("services/cotizacion/costos", () => {
     mock.setRpcResult("actualizar_cotizacion_costos", { data: null, error: { message: "boom" } });
     await expect(
       upsertCotizacionCostos("cot-1", []),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow();
   });
 
   it("fetchCotizacionCostosForEmbarque devuelve filas tipadas", async () => {

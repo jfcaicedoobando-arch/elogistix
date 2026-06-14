@@ -70,7 +70,7 @@ describe("services/admin/stats", () => {
 
   it("fetchAdminRecentOrgs propaga error", async () => {
     mock.setTable("organizations", { data: null, error: { message: "x" } });
-    await expect(fetchAdminRecentOrgs()).rejects.toBeTruthy();
+    await expect(fetchAdminRecentOrgs()).rejects.toThrow();
   });
 
   it("fetchAdminDashboardStats devuelve totales", async () => {
@@ -113,6 +113,6 @@ describe("services/admin/stats", () => {
 
   it("countByOrg propaga error", async () => {
     mock.setTable("organization_members", { data: null, error: { message: "x" } });
-    await expect(countOrgMembers("o1")).rejects.toBeTruthy();
+    await expect(countOrgMembers("o1")).rejects.toThrow();
   });
 });

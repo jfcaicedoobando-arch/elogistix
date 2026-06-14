@@ -43,7 +43,7 @@ describe("createLead", () => {
 
   it("propaga error de Supabase al crear lead", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "unique" } });
-    await expect(createLead(leadInput, user)).rejects.toBeTruthy();
+    await expect(createLead(leadInput, user)).rejects.toThrow();
   });
 
   it("funciona con user=null (sin sesión)", async () => {
@@ -62,7 +62,7 @@ describe("updateLead", () => {
 
   it("propaga error de Supabase al actualizar lead", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "x" } });
-    await expect(updateLead("lead-1", {})).rejects.toBeTruthy();
+    await expect(updateLead("lead-1", {})).rejects.toThrow();
   });
 
   it("acepta patch vacío", async () => {
@@ -85,6 +85,6 @@ describe("softDeleteLead", () => {
 
   it("propaga error de Supabase al soft-delete lead", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "RLS" } });
-    await expect(softDeleteLead("lead-1", "usr-1")).rejects.toBeTruthy();
+    await expect(softDeleteLead("lead-1", "usr-1")).rejects.toThrow();
   });
 });

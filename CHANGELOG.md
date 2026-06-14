@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.14.1] - 2026-06-14
+- **test(refactor)**: Cierre completo de Fase 2.2 — refactor masivo de las 41 archivos restantes del baseline `weak-rejects-assertion` (`.rejects.toBeDefined()` → `.rejects.toThrow()`). Baseline ahora en **0 archivos**; cualquier regresión nueva falla CI inmediatamente. 923/923 tests siguen verdes.
+- **test(financiero/proyeccion)**: Nuevo `agrupar.test.ts` (7 casos puros) cubre `agruparPorExpediente`: consolidación de filas, dedupe de contenedores, estado Facturado vs Pendiente, ETA mínima del grupo (cortes fiscales), `margenPct=0` sin división por cero, orden por ETA con nulls al final, y key sintética cuando expediente está vacío.
+
 ## [13.14.0] - 2026-06-14
+
 - **test(audit/lint)**: Fases 2-4 de la auditoría de tests. Nuevas reglas en `scripts/lib/tests.ts`: `weak-rejects-assertion` detecta `.rejects.toBeDefined()/toBeTruthy()` y `supabase-mock-helper` detecta `vi.mock("@/integrations/supabase/client")` sin usar `createSupabaseMock`. Ambas reglas usan baselines temporales en `src/__tests__/audit-report.test.ts` (`WEAK_REJECTS_BASELINE` 41 archivos, `SUPABASE_MOCK_BASELINE` 12 archivos) — no se admiten archivos nuevos en el baseline; refactorizar uno a uno y removerlos. Refactorizados 5 archivos críticos (`tarifas`, `relacionados`, `agentes`, `configuracion`, `bitacoraEmbarque`) a `.rejects.toThrow()` y removidos del baseline.
 - **test(canary/perf)**: Nuevo `src/test/canaries/queryTimeout.test.ts` — 3 mediciones puras (sumarEnMoneda x5k/10k + Map agrupado x10k) con budget 30-50ms. Falla rápido si una regresión introduce O(n²) en hot paths de cálculo financiero.
 - **test(financiero/embarques)**: Nuevo `useCostosPreciosCalc.test.ts` (4 casos) cubre el cierre del gap #1 de cobertura financiera: suma homogénea, conversión multi-moneda con TC válido, fallback `tcMissing` cuando TC=0 y listas vacías.

@@ -34,7 +34,7 @@ describe("updateEstadoCotizacion", () => {
 
   it("propaga error de Supabase al cambiar estado", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: { message: "row not found" } });
-    await expect(updateEstadoCotizacion("cot-x", "Aceptada")).rejects.toBeTruthy();
+    await expect(updateEstadoCotizacion("cot-x", "Aceptada")).rejects.toThrow();
   });
 
   it("acepta estado arbitrario sin guard (responsabilidad del caller)", async () => {

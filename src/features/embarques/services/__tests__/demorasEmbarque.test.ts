@@ -30,7 +30,7 @@ describe("embarques/services/demorasEmbarque", () => {
 
   it("demorasEmb.calcular: propaga error del RPC", async () => {
     mock.setRpcResult("calcular_demoras_embarque", { data: null, error: { message: "rpc fail" } });
-    await expect(calcularDemorasEmbarque("e")).rejects.toBeDefined();
+    await expect(calcularDemorasEmbarque("e")).rejects.toThrow();
   });
 
   it("demorasEmb.eliminarAuto: borra de conceptos_costo y conceptos_venta", async () => {
@@ -62,13 +62,13 @@ describe("embarques/services/demorasEmbarque", () => {
   it("demorasEmb.eliminarAuto: propaga error de conceptos_costo", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
     mock.setTableResult("conceptos_venta", { data: null, error: null });
-    await expect(eliminarDemorasAuto("e")).rejects.toBeDefined();
+    await expect(eliminarDemorasAuto("e")).rejects.toThrow();
   });
 
   it("demorasEmb.eliminarAuto: propaga error de conceptos_venta", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: null });
     mock.setTableResult("conceptos_venta", { data: null, error: { message: "y" } });
-    await expect(eliminarDemorasAuto("e")).rejects.toBeDefined();
+    await expect(eliminarDemorasAuto("e")).rejects.toThrow();
   });
 
   it("demorasEmb.eliminarAuto: ejecuta ambas borrados en paralelo (Promise.all)", async () => {

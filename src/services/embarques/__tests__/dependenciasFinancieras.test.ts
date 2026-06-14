@@ -42,6 +42,6 @@ describe("fetchEmbarqueDependenciasFinancieras", () => {
 
   it("propaga error de facturas en dependencias financieras del embarque", async () => {
     mock.setTableResult("facturas", { data: null, error: { message: "boom" } });
-    await expect(fetchEmbarqueDependenciasFinancieras("e1")).rejects.toBeTruthy();
+    await expect(fetchEmbarqueDependenciasFinancieras("e1")).rejects.toThrow();
   });
 });

@@ -50,6 +50,6 @@ describe("costeo/services/demorasVenta", () => {
 
   it("propaga errores de Supabase al consultar demoras de venta", async () => {
     mock.setTableResult("costeo_demoras_venta_tarifa", { data: null, error: { message: "rls" } });
-    await expect(fetchDemorasVenta()).rejects.toBeDefined();
+    await expect(fetchDemorasVenta()).rejects.toThrow();
   });
 });

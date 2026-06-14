@@ -29,7 +29,7 @@ describe("embarques/services/garantias", () => {
 
   it("garantias.fetch: propaga error de supabase", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: { message: "rls" } });
-    await expect(fetchGarantiasEmbarque("e")).rejects.toBeDefined();
+    await expect(fetchGarantiasEmbarque("e")).rejects.toThrow();
   });
 
   it("garantias.fetch: retorna data tal cual cuando viene array", async () => {
@@ -72,7 +72,7 @@ describe("embarques/services/garantias", () => {
 
   it("garantias.update: propaga error", async () => {
     mock.setTableResult("embarque_garantias_contenedor", { data: null, error: { message: "fail" } });
-    await expect(updateGarantia({ id: "g1", estado: "depositado" })).rejects.toBeDefined();
+    await expect(updateGarantia({ id: "g1", estado: "depositado" })).rejects.toThrow();
   });
 
   it("garantias.update: acepta notas y fecha_deposito", async () => {

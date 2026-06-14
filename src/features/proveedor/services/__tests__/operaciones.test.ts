@@ -38,7 +38,7 @@ describe("proveedor/services/operaciones", () => {
 
   it("operaciones.fetch: propaga error", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "rls" } });
-    await expect(fetchProveedorOperaciones("p1")).rejects.toBeDefined();
+    await expect(fetchProveedorOperaciones("p1")).rejects.toThrow();
   });
 
   it("operaciones.fetch: convierte monto a número", async () => {

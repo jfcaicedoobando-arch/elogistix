@@ -74,13 +74,13 @@ describe("services/crm/prospectoSearch", () => {
   it("propaga error de crm_leads", async () => {
     mock.setTableResult("crm_leads", { data: null, error: { message: "x" } });
     mock.setTableResult("crm_oportunidades", { data: [], error: null });
-    await expect(buscarProspectos("x")).rejects.toBeTruthy();
+    await expect(buscarProspectos("x")).rejects.toThrow();
   });
 
   it("propaga error de crm_oportunidades", async () => {
     mock.setTableResult("crm_leads", { data: [], error: null });
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "x" } });
-    await expect(buscarProspectos("x")).rejects.toBeTruthy();
+    await expect(buscarProspectos("x")).rejects.toThrow();
   });
 
   it("limita resultados a 8 por fuente", async () => {
