@@ -2,6 +2,7 @@
  * Servicio CRM — búsqueda rápida (leads, oportunidades, actividades).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CRM_ACTIVIDADES_COLUMNS_SEARCH } from "./crmActividadesColumns";
 
 export type CrmSearchHit =
   | { kind: "lead"; id: string; title: string; subtitle: string }
@@ -19,7 +20,7 @@ export async function searchCrm(term: string): Promise<CrmSearchHit[]> {
       .limit(6),
     supabase
       .from("crm_actividades")
-      .select("id, asunto, entidad_tipo, entidad_id")
+      .select(CRM_ACTIVIDADES_COLUMNS_SEARCH)
       .ilike("asunto", like)
       .is("fecha_completada", null)
       .limit(6),

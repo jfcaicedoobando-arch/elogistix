@@ -2,6 +2,7 @@
  * Servicio CRM — Dashboard. Agregaciones I/O.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CRM_ACTIVIDADES_COLUMNS_MIN } from "./crmActividadesColumns";
 import {
   isoDaysFromNow,
   computePipelinePonderado,
@@ -65,7 +66,7 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
       .is("fecha_completada", null),
     supabase
       .from("crm_actividades")
-      .select("id, asunto, tipo, fecha_programada, entidad_tipo, entidad_id")
+      .select(CRM_ACTIVIDADES_COLUMNS_MIN)
       .is("fecha_completada", null)
       .eq("responsable_id", userId ?? "")
       .gte("fecha_programada", hoyInicio.toISOString())

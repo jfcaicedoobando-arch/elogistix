@@ -30,9 +30,3 @@ export const REGIMENES_FISCALES_SAT: readonly RegimenFiscalSAT[] = [
   { clave: "626", descripcion: "Régimen Simplificado de Confianza" },
 ] as const;
 
-/** Devuelve la etiqueta "clave - descripcion" para una clave dada, o la clave cruda si no se encuentra. */
-export function formatRegimenFiscal(clave: string | null | undefined): string {
-  if (!clave) return "";
-  const found = REGIMENES_FISCALES_SAT.find((r) => r.clave === clave);
-  return found ? `${found.clave} - ${found.descripcion}` : clave;
-}

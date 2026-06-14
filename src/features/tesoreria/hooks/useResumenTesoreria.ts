@@ -1,0 +1,32 @@
+/**
+ * Compone el resumen de tesorería a partir de cobranza (CxC) + CxP + saldos.
+ * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
+ */
+import { calcularResumenTesoreria, type ResumenTesoreria } from "@/lib/domain/tesoreria";
+import { useCobranza } from "@/features/facturacion/hooks";
+import { useFacturasCxP } from "@/features/cxp/hooks";
+import { useSaldosCuentas } from "./useTesoreriaCuentas";
+
+export function useResumenTesoreria(): {
+  data: ResumenTesoreria | undefined;
+  isLoading: boolean;
+  error: unknown;
+} {
+  const cobranzaQ = useCobranza({});
+  const cxpQ = useFacturasCxP({});
+  const cuentasQ = useSaldosCuentas();
+
+  const isLoading = cobranzaQ.isLoading || cxpQ.isLoading || cuentasQ.isLoading;
+  const error = cobranzaQ.error ?? cxpQ.error ?? cuentasQ.error;
+  const ready = !!cobranzaQ.data && !!cxpQ.data && !!cuentasQ.data;
+
+  const data = ready
+    ? calcularResumenTesoreria({
+        cuentas: cuentasQ.data!,
+        cobranza: cobranzaQ.data!,
+        cxp: cxpQ.data!,
+      })
+    : undefined;
+
+  return { data, isLoading, error };
+}
