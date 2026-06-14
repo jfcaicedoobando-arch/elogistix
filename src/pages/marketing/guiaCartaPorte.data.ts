@@ -88,7 +88,7 @@ export const ARTICLE_JSONLD = {
     name: "Libre Carga",
     logo: {
       "@type": "ImageObject",
-      url: "https://librecarga.com/librecarga-logo.png",
+      url: "https://librecarga.com/librecarga-logo.svg",
     },
   },
   mainEntityOfPage: { "@type": "WebPage", "@id": URL },
