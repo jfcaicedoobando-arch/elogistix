@@ -5,18 +5,15 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import SearchInput from "@/components/selects/SearchInput";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { Badge } from "@/components/ui/badge";
 import { toTitleCase } from "@/lib/formatters";
 import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
+import { LeadsFiltersBar } from "@/features/crm/components/LeadsFiltersBar";
 import {
-  LEAD_ESTADOS, LEAD_FUENTES, useLeads,
+  useLeads,
   type CrmLeadEstado, type CrmLeadFuente, type CrmLeadRow,
 } from "@/features/crm/hooks";
 import { makeLeadsColumns } from "./leadsColumns";
