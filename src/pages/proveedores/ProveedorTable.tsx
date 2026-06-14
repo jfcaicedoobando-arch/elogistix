@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/shared/DataTable";
+import { Badge } from "@/components/ui/badge";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { useProveedoresPaginados } from "@/features/proveedor/hooks";
 import { useDebounce, useListPageState } from "@/hooks/shared";
+import { toTitleCase } from "@/lib/formatters";
 import type { Enums } from "@/types/db";
 import { proveedorColumns } from "./proveedorTableColumns";
 
@@ -49,7 +51,7 @@ export function ProveedorTable({ categoria, tipo, subtipoGasto, search, origen, 
   return (
     <Card>
       <CardContent className="p-0">
-        <DataTable
+        <ResponsiveDataTable
           columns={proveedorColumns}
           data={proveedores}
           isLoading={isLoading && proveedores.length === 0}
@@ -57,12 +59,25 @@ export function ProveedorTable({ categoria, tipo, subtipoGasto, search, origen, 
           onRowClick={(p) => onSelect(p.id)}
           rowKey={(p) => p.id}
           density="comfortable"
+          className="pb-24 sm:pb-0"
+          mobileCard={(p) => (
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-sm truncate">{toTitleCase(p.nombre)}</div>
+                <div className="text-xs text-muted-foreground truncate mt-0.5">{p.rfc || "—"}</div>
+                <div className="text-[11px] text-muted-foreground truncate mt-0.5">{p.contacto ? toTitleCase(p.contacto) : ""}</div>
+              </div>
+              {p.origen_proveedor && (
+                <Badge variant="outline" className="text-[10px] whitespace-nowrap">{p.origen_proveedor}</Badge>
+              )}
+            </div>
+          )}
           pagination={{
             page,
             totalPages,
             onPageChange: setPage,
             pageSize,
-            onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+            onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
             pageSizeOptions: [100, 999999],
             pageSizeLabels: { 999999: "Todos" },
           }}

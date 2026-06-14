@@ -11,7 +11,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
@@ -140,7 +143,7 @@ export default function Cotizaciones() {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={c.paginated}
             isLoading={c.isLoading}
@@ -149,12 +152,26 @@ export default function Cotizaciones() {
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
             density="comfortable"
+            className="pb-24 sm:pb-0"
+            mobileCard={(r) => (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm truncate">{r.folio}</div>
+                  <div className="text-xs text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre ?? "")}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {r.created_at ? formatDate(r.created_at) : ""}
+                    {typeof r.subtotal === "number" ? ` · ${formatCurrency(r.subtotal, r.moneda ?? "USD")}` : ""}
+                  </div>
+                </div>
+                <Badge variant="secondary" className={`text-[10px] whitespace-nowrap ${getEstadoColor(r.estado ?? "")}`}>{r.estado}</Badge>
+              </div>
+            )}
             pagination={{
               page: c.page,
               totalPages: c.totalPages,
               onPageChange: c.setPage,
               pageSize: c.pageSize,
-              onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
+              onPageSizeChange: (s: number) => { c.setPageSize(s); c.setPage(0); },
               pageSizeOptions: [100, 999999],
               pageSizeLabels: { 999999: "Todos" },
             }}
