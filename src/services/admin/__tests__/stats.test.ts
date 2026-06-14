@@ -3,8 +3,10 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // Custom mock: por-tabla devolvemos data y count separados.
 const mock = await vi.hoisted(() => {
   const tableResults = new Map<string, { data: unknown; count?: number; error: unknown }>();
+  const rpcResults = new Map<string, { data: unknown; error: unknown }>();
   const setTable = (t: string, r: { data: unknown; count?: number; error: unknown }) => tableResults.set(t, r);
-  const clear = () => tableResults.clear();
+  const setRpc = (name: string, r: { data: unknown; error: unknown }) => rpcResults.set(name, r);
+  const clear = () => { tableResults.clear(); rpcResults.clear(); };
   const supabase = {
     from: (table: string) => {
       const res = tableResults.get(table) ?? { data: [], error: null };
@@ -18,9 +20,14 @@ const mock = await vi.hoisted(() => {
         Promise.resolve({ data: res.data, error: res.error, count: res.count ?? null }).then(cb);
       return chain;
     },
+    rpc: (name: string) => {
+      const res = rpcResults.get(name) ?? { data: [], error: null };
+      return Promise.resolve(res);
+    },
   };
-  return { supabase, setTable, clear };
+  return { supabase, setTable, setRpc, clear };
 });
+
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
