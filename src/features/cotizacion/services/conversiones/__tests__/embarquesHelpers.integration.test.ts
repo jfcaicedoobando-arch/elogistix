@@ -125,7 +125,7 @@ describe("Integración Cotización → Embarque (helpers puros)", () => {
     });
   });
 
-  describe("parsearVentasJsonb", () => {
+  describe("[integration] parsearVentasJsonb", () => {
     it("descarta entradas sin descripción y filas no-objeto", () => {
       const out = parsearVentasJsonb(
         [
