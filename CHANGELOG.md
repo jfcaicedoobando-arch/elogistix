@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.13.0] - 2026-06-14
+- **test(rls/tarifas-y-costeo)**: Fase 1 de la auditoría de tests. Nueva suite `supabase/tests/rls/test_rls_tarifas_y_costeo.sql` (8 aserciones) que cierra el gap #1 de riesgo de negocio — fuga cross-org de listas de precios y datos de cumplimiento. Cubre `costeo_rutas`, `costeo_tarifas` (incluye intento de UPDATE cruzado bloqueado + verificación de no fuga de `flete_base` competitivo), `proveedor_notas_credito` (monto contable nunca visible) y `auditoria_revisiones` (detalle de hallazgo aislado). Registrada en `.github/workflows/rls-tests.yml` (paso adicional `psql -f`). Total cobertura RLS: **6 suites SQL, ~48 aserciones**.
+- **test(e2e/security)**: Nuevo spec `e2e/specs/06-security-cross-org.spec.ts` que loguea con `internalCreds()` e intenta acceder vía URL directa a `/embarques/:id`, `/facturacion/facturas/:id` y `/cotizaciones/:id` usando un UUID válido pero ajeno a la sesión. Acepta como bloqueo: redirect fuera del detalle o copy explícito de "no encontrado/sin acceso". Si se definen secrets `E2E_CROSS_ORG_*_ID` con IDs reales de otra org, el spec los usa en lugar del UUID dummy. Cubre el agujero E2E de validación de RLS desde la UI.
+
 ## [13.12.1] - 2026-06-14
 - **fix(tests)**: Corregidas 4 violaciones de `duplicate-title` detectadas por `auditTests` en CI (shard 6/16). Renombrados `describe()` internos de `embarquesHelpers.integration.test.ts` con prefijo `[integration]` para diferenciarlos de `embarquesHelpers.test.ts`, y el `it("filtra por search sobre cliente_nombre")` de `useTabProformasPendientesController.test.tsx` con prefijo `[pendientes]` para no chocar con `useTabProformasState.test.tsx`. Restablece verde el job "Tests (shard 6/16)" y el smoke `audit-report > test hygiene baseline: 0 violaciones`.
 
