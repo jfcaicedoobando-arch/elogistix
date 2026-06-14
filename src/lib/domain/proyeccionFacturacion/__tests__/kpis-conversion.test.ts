@@ -28,7 +28,7 @@ const grupo = (over: Partial<GrupoProyeccion> = {}): GrupoProyeccion => ({
   ...over,
 });
 
-describe("calcularKpisProyeccion", () => {
+describe("calcularKpisProyeccion [kpis.ts unit]", () => {
   it("totales y avance con mezcla facturado/pendiente", () => {
     const kpis = calcularKpisProyeccion([
       grupo({ estado: "Facturado" }),
