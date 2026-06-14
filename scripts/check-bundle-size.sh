@@ -50,10 +50,16 @@ for f in "$DIST_DIR"/*.js; do
   if echo "$name" | grep -qE '^(vendor|chunk-vendor|react-vendor)'; then
     budget="$VENDOR_BUDGET_KB"
     label="vendor"
+  elif echo "$name" | grep -qE '^react-pdf'; then
+    # @react-pdf/renderer es intrínsecamente grande (~465 KB gz) y ya es lazy
+    # vía dynamic import en PdfPreview/descargarPdf. No tiene split razonable.
+    budget="${REACT_PDF_BUDGET_KB:-500}"
+    label="lazy(react-pdf)"
   else
     budget="$LAZY_BUDGET_KB"
     label="lazy"
   fi
+
 
   if [ "$kb" -gt "$budget" ]; then
     echo "::error::Chunk $label '$name' = ${kb} KB excede budget ${budget} KB."

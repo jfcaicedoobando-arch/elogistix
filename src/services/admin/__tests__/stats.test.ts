@@ -3,8 +3,10 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // Custom mock: por-tabla devolvemos data y count separados.
 const mock = await vi.hoisted(() => {
   const tableResults = new Map<string, { data: unknown; count?: number; error: unknown }>();
+  const rpcResults = new Map<string, { data: unknown; error: unknown }>();
   const setTable = (t: string, r: { data: unknown; count?: number; error: unknown }) => tableResults.set(t, r);
-  const clear = () => tableResults.clear();
+  const setRpc = (name: string, r: { data: unknown; error: unknown }) => rpcResults.set(name, r);
+  const clear = () => { tableResults.clear(); rpcResults.clear(); };
   const supabase = {
     from: (table: string) => {
       const res = tableResults.get(table) ?? { data: [], error: null };
@@ -18,9 +20,14 @@ const mock = await vi.hoisted(() => {
         Promise.resolve({ data: res.data, error: res.error, count: res.count ?? null }).then(cb);
       return chain;
     },
+    rpc: (name: string) => {
+      const res = rpcResults.get(name) ?? { data: [], error: null };
+      return Promise.resolve(res);
+    },
   };
-  return { supabase, setTable, clear };
+  return { supabase, setTable, setRpc, clear };
 });
+
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
@@ -40,9 +47,13 @@ beforeEach(() => {
 
 describe("services/admin/stats", () => {
   it("fetchAdminOrgActivity agrega conteos por org", async () => {
-    mock.setTable("organizations", { data: [{ id: "o1", nombre: "A" }, { id: "o2", nombre: "B" }], error: null });
-    mock.setTable("embarques", { data: [{ organization_id: "o1" }, { organization_id: "o1" }, { organization_id: "o2" }], error: null });
-    mock.setTable("cotizaciones", { data: [{ organization_id: "o1" }], error: null });
+    mock.setRpc("fn_admin_org_activity", {
+      data: [
+        { id: "o1", nombre: "A", embarques: 2, cotizaciones: 1 },
+        { id: "o2", nombre: "B", embarques: 1, cotizaciones: 0 },
+      ],
+      error: null,
+    });
     const r = await fetchAdminOrgActivity();
     expect(r).toHaveLength(2);
     const o1 = r.find((x) => x.id === "o1")!;
@@ -51,12 +62,14 @@ describe("services/admin/stats", () => {
   });
 
   it("fetchAdminOrgActivity ignora filas sin organization_id", async () => {
-    mock.setTable("organizations", { data: [{ id: "o1", nombre: "A" }], error: null });
-    mock.setTable("embarques", { data: [{ organization_id: null }, { organization_id: "o1" }], error: null });
-    mock.setTable("cotizaciones", { data: [], error: null });
+    mock.setRpc("fn_admin_org_activity", {
+      data: [{ id: "o1", nombre: "A", embarques: 1, cotizaciones: 0 }],
+      error: null,
+    });
     const r = await fetchAdminOrgActivity();
     expect(r[0].embarques).toBe(1);
   });
+
 
   it("fetchAdminRecentOrgs devuelve filas", async () => {
     mock.setTable("organizations", {
