@@ -18,3 +18,4 @@ export {
 } from "./useTesoreriaMovimientos";
 export { useResumenTesoreria } from "./useResumenTesoreria";
 export { useFlujoProyectado } from "./useFlujoProyectado";
+export { useTesoreriaCuentasController } from "./useTesoreriaCuentasController";
