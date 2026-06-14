@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.16.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 2: tablas responsive)**: Nuevo wrapper `ResponsiveDataTable` que renderiza `DataTable` en `≥sm` y una lista de tarjetas táctiles (≥56 px) en `<sm`. Migradas Embarques, Cotizaciones, Proveedores, CRM Leads y Reportes/Desglose por Cliente — desaparece el scroll horizontal en móvil sin tocar lógica. Cada card muestra título primario (folio/empresa/cliente), línea secundaria (cliente/ruta/contacto) y badge de estado. Padding inferior `pb-24 sm:pb-0` añadido en páginas con FAB para que la última fila no quede tapada por el botón flotante.
+
 ## [13.15.0] - 2026-06-14
 - **ux(mobile 20:9 — Fase 1: chrome global)**: Header se compacta a 44 px y reduce paddings en `<sm`; el botón Feedback se oculta en pantallas <640 px para no saturar la barra. `FloatingActionButton` ahora respeta `env(safe-area-inset-bottom)` para no quedar bajo el home indicator de iOS. `<main>` reduce padding a `p-4` en mobile.
 - **ux(breadcrumbs)**: Diccionario `SEGMENT_LABELS` ampliado con 25+ entradas (crm, mi-dia, leads, oportunidades, actividades, analitica, profit, dashboard, estado-resultados, proyeccion, presupuesto, comisiones, tesoreria, cxp, costeo, rutas, tarifas, buscar, demoras-venta, catalogos, navieras, puertos, contenedores, dev, diagnostico, papelera, planes, idempotencia, inicio). Se eliminan los slugs en minúsculas crudos ("crm", "inicio") del header en móvil.
