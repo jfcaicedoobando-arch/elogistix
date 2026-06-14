@@ -2,6 +2,7 @@
  * Servicio CRM — Dashboard. Agregaciones I/O.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CRM_ACTIVIDADES_COLUMNS_MIN } from "./crmActividadesColumns";
 import {
   isoDaysFromNow,
   computePipelinePonderado,

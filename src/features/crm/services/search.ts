@@ -2,6 +2,7 @@
  * Servicio CRM — búsqueda rápida (leads, oportunidades, actividades).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CRM_ACTIVIDADES_COLUMNS_SEARCH } from "./crmActividadesColumns";
 
 export type CrmSearchHit =
   | { kind: "lead"; id: string; title: string; subtitle: string }
