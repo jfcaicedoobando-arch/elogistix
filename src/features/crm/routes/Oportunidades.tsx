@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Collapsible, CollapsibleContent, CollapsibleTrigger,
+  Collapsible, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import SearchInput from "@/components/selects/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -122,7 +123,28 @@ export default function Oportunidades() {
 
       <Card>
         <CardContent className="p-3 space-y-3">
-          <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
+          {/* Mobile */}
+          <div className="flex gap-2 md:hidden">
+            <div className="flex-1 min-w-0">
+              <SearchInput value={search} onChange={setSearch} placeholder="Buscar..." />
+            </div>
+            <MobileFiltersSheet
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              title="Filtros de oportunidades"
+              activeCount={activos}
+              onClearAll={() => setFiltros(FILTROS_DEFAULT)}
+            >
+              <OportunidadesFiltersBar
+                etapas={etapas as CrmEtapaRow[]}
+                vendedores={vendedores}
+                value={filtros}
+                onChange={setFiltros}
+              />
+            </MobileFiltersSheet>
+          </div>
+          {/* Desktop */}
+          <div className="hidden md:flex md:flex-row md:gap-2 md:items-center">
             <div className="flex-1">
               <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o cliente..." />
             </div>
@@ -134,14 +156,6 @@ export default function Oportunidades() {
                   {activos > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{activos}</Badge>}
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="md:hidden mt-2">
-                <OportunidadesFiltersBar
-                  etapas={etapas as CrmEtapaRow[]}
-                  vendedores={vendedores}
-                  value={filtros}
-                  onChange={setFiltros}
-                />
-              </CollapsibleContent>
             </Collapsible>
           </div>
           {filtersOpen && (
