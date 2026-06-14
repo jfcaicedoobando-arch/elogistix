@@ -29,7 +29,7 @@ const base: FilaProyeccion = {
   costo_usd: 380,
 };
 
-describe("agruparPorExpediente", () => {
+describe("agruparPorExpediente [agrupar.ts unit]", () => {
   it("consolida 2 filas mismo expediente sumando montos y dedupe contenedores", () => {
     const out = agruparPorExpediente([
       base,
