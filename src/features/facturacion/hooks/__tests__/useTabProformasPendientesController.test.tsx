@@ -38,7 +38,7 @@ const p = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => { vi.clearAllMocks(); });
 
 describe("useTabProformasPendientesController", () => {
-  it("filtra por search sobre cliente_nombre", () => {
+  it("[pendientes] filtra por search sobre cliente_nombre", () => {
     useProformasPendientesMock.mockReturnValue({
       data: [p(), p({ id: "p2", cliente_nombre: "Beta Corp", numero: "PRO-002" })],
       isLoading: false,
