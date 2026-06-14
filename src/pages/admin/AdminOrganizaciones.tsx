@@ -15,7 +15,7 @@ export default function AdminOrganizaciones() {
   const columns = useMemo(() => buildAdminOrganizacionesColumns(navigate), [navigate]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         icon={<Building2 className="h-6 w-6 text-primary" />}
         title="Organizaciones"

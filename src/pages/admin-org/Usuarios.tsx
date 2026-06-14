@@ -69,7 +69,7 @@ export default function Usuarios() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         icon={<ShieldCheck className="h-6 w-6 text-primary" />}
         title="Gestión de Usuarios"
