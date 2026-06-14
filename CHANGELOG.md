@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.15.0] - 2026-06-14
+- **ux(mobile 20:9 — Fase 1: chrome global)**: Header se compacta a 44 px y reduce paddings en `<sm`; el botón Feedback se oculta en pantallas <640 px para no saturar la barra. `FloatingActionButton` ahora respeta `env(safe-area-inset-bottom)` para no quedar bajo el home indicator de iOS. `<main>` reduce padding a `p-4` en mobile.
+- **ux(breadcrumbs)**: Diccionario `SEGMENT_LABELS` ampliado con 25+ entradas (crm, mi-dia, leads, oportunidades, actividades, analitica, profit, dashboard, estado-resultados, proyeccion, presupuesto, comisiones, tesoreria, cxp, costeo, rutas, tarifas, buscar, demoras-venta, catalogos, navieras, puertos, contenedores, dev, diagnostico, papelera, planes, idempotencia, inicio). Se eliminan los slugs en minúsculas crudos ("crm", "inicio") del header en móvil.
+- **ux(crm tabs)**: Separar botón de Configuración fuera del contenedor `overflow-x-auto`, usando layout grid (1fr · auto) con divisor. Garantiza que el engrane siempre sea visible en mobile sin requerir scroll lateral, y los tabs se desplazan independientemente.
+- **ux(dashboard timeline estados)**: Card responsive — íconos 40 px en `<sm` (antes 48), `min-width` reducido a 480 px, tipografía y gaps ajustados, labels con `truncate` y centrados. Reduce clipping del 3er estado a 412 px.
+
 ## [13.14.17] - 2026-06-14
 - **refactor(arquitectura)**: Paso 4 (cierre real). Migrar `src/components/{admin,catalogos,comisiones,configuracion,dashboard,operaciones,presupuesto,profit,reportes}` a `src/features/<dominio>/components/` para satisfacer el test `architecture.test.ts` que falló en CI (9 carpetas de componentes duplicaban dominios ya migrados). Actualizar imports `@/components/<dom>/...` → `@/features/<dom>/components/...` en todo el árbol.
 
