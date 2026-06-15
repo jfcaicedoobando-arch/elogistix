@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.19] - 2026-06-15
+- **fix(ci/rls-tests)**: Drift-fix adicional para `public.tracking_intentos`: la tabla se creó manualmente en prod y la migración `20260527061320` sólo redefine sus policies, así que CI rompía con `ERROR: relation "public.tracking_intentos" does not exist`. Añadido `CREATE TABLE IF NOT EXISTS` (stub mínimo con `organization_id`, `embarque_id`, `resultado`, etc. + GRANTs + RLS) justo antes de aplicar esa migración.
+
 ## [13.21.18] - 2026-06-15
 - **fix(ci/rls-tests)**: Añadidos roles managed-only de Supabase al bootstrap (`supabase_auth_admin`, `supabase_storage_admin`, `authenticator`). La migración `20260518225551` hacía `GRANT ... TO supabase_storage_admin` y rompía CI con `ERROR: role "supabase_storage_admin" does not exist`.
 
