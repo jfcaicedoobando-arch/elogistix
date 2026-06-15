@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.22] - 2026-06-15
+- **fix(auditoria/bloque-1)**: Correctness crítico del módulo Auditoría Operativa según auditoría:
+  - **C-1 · Paginación servidor** (`services/revisiones.ts`): `fetchAuditoriaRevisiones()` ahora aplica `.limit(5000)` defensivo + `.gte("created_at", desdeIso)` con ventana por defecto de 90 días (cubre snooze máx + revisados recientes). Parámetro `{ desdeIso }` opcional para casos especiales. Cierra la regla de paginación servidor del proyecto.
+  - **C-2/H · `organization_id` explícito en upserts** (`services/revisiones.ts`, `services/snooze.ts`): los 3 upserts (`upsertAuditoriaRevision`, `asignarResponsableHallazgo`, `snoozeRevision`) ahora reciben `organization_id` como campo requerido y lanzan si falta. Hooks (`useMarcarRevisado`, `useAsignarResponsable`, `useSnoozeHallazgo`) lo leen de `useAuth().organizationId`. El `DEFAULT current_user_org_id()` de la BD queda como red de seguridad, no como mecanismo primario.
+  - **H-1 · Drift UTC** (`domain/ejecutivoAgregados.ts`, `services/snapshots.ts`): reemplazado `setDate/getDate` locales por aritmética `Date.now() ± n * 86_400_000` consistente con el contrato UTC declarado en `core.ts`. Evita conteos erróneos de "urgentes por ETA" y rangos de snapshots en CDMX cerca de medianoche.
+  - **H-4 · Edge `weekly-digest` silenciaba errores RPC** (`auditoria-weekly-digest/index.ts`): el destructuring ahora captura `error` del RPC `auditoria_embarques_org`; si falla loggea a consola y marca la org como `error: "RPC: <msg>"` en lugar de enviar un email con `total_hallazgos: 0` falso positivo.
+  - **Tests**: actualizados `revisiones.test.ts` y `snooze.test.ts` para validar payload con `organization_id` + 2 nuevos casos que verifican que se rechaza el upsert sin org_id. 85/85 tests del módulo en verde.
+
 ## [13.21.21] - 2026-06-15
 - **chore(ci)**: Aplicadas 3 recomendaciones de la auditoría de GitHub Actions:
   - **Aggregator `ci-success`** (`ci.yml`): nuevo job final que depende de `quality`, `edge-functions`, `tests` y `coverage`, y falla si cualquiera no terminó en `success`. Permite usarlo como único required check en branch protection sin tener que listar los 8 shards de tests uno por uno.
