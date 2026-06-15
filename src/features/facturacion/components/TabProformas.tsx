@@ -12,6 +12,7 @@ import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 import { useMemo } from "react";
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
+  const navigate = useNavigate();
   const c = useTabProformasController({ isInRange });
 
   const columns = useMemo(
