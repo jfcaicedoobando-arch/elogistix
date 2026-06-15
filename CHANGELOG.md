@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.21] - 2026-06-15
+- **chore(ci)**: Aplicadas 3 recomendaciones de la auditoría de GitHub Actions:
+  - **Aggregator `ci-success`** (`ci.yml`): nuevo job final que depende de `quality`, `edge-functions`, `tests` y `coverage`, y falla si cualquiera no terminó en `success`. Permite usarlo como único required check en branch protection sin tener que listar los 8 shards de tests uno por uno.
+  - **CodeQL pinneado por SHA** (`codeql.yml`): `init@v3` y `analyze@v3` reemplazados por `@f09c1c0a94de965c15400f5634aa42fac8fb8f88` (v3.27.5). Cierra el único hueco de tags flotantes que quedaba en el repo.
+  - **RLS snapshot** (`rls-tests.yml`): el job `rls` ahora ejecuta bootstrap + drift + migrations + verify una sola vez, hace `pg_dump --format=custom` del estado y lo sube como artifact `rls-db-snapshot`. Las 6 suites de la matriz hacen `pg_restore` (~3 s) en lugar de repetir todo el pipeline. Postgres también queda pinneado por digest (`postgres@sha256:2c0d947...` ≡ 15.8).
+
 ## [13.21.20] - 2026-06-15
 - **chore(ci/rls-tests)**: Hardening de la suite de RLS según auditoría:
   - **Cobertura RLS** (`_ci_verify_rls.sql`): nuevo verificador que aborta CI si encuentra tablas en `public` con RLS habilitado pero **cero policies** (falso verde: los tests de "no debe ver X" pasaban trivialmente con count=0), o tablas sin RLS fuera del whitelist (`ratelimit_buckets`, `_backup_*`).

@@ -260,3 +260,28 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  ci-success:
+    name: CI Success (aggregator)
+    needs: [quality, edge-functions, tests, coverage]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Verify all required jobs succeeded
+        run: |
+          # Falla si cualquier job requerido falló o fue cancelado.
+          # Úsalo como único required check en branch protection: así puedes
+          # cambiar la matriz de shards sin tocar la configuración del repo.
+          if [ "${{ needs.quality.result }}" != "success" ] \
+            || [ "${{ needs.edge-functions.result }}" != "success" ] \
+            || [ "${{ needs.tests.result }}" != "success" ] \
+            || [ "${{ needs.coverage.result }}" != "success" ]; then
+            echo "::error::Uno o más jobs requeridos no terminaron en success."
+            echo "quality=${{ needs.quality.result }}"
+            echo "edge-functions=${{ needs.edge-functions.result }}"
+            echo "tests=${{ needs.tests.result }}"
+            echo "coverage=${{ needs.coverage.result }}"
+            exit 1
+          fi
+          echo "Todos los jobs requeridos pasaron."
