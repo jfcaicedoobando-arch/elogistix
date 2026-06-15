@@ -50,6 +50,8 @@ export default function AdminAuditoriaPlataforma() {
           </ul>
         </CardContent>
       </Card>
+
+      <BackfillLegacyCard />
     </div>
   );
 }
