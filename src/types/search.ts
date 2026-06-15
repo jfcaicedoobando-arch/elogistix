@@ -6,6 +6,6 @@ export interface GlobalSearchResult {
   id: string;
   label: string;
   sublabel?: string;
-  type: "embarque" | "cliente" | "proveedor" | "factura" | "cotizacion";
+  type: "embarque" | "cliente" | "proveedor" | "factura" | "cotizacion" | "proforma";
   url: string;
 }

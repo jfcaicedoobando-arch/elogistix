@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Ship, Users, Truck, FileText, ClipboardList } from "lucide-react";
+import { Search, Ship, Users, Truck, FileText, ClipboardList, Receipt } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,6 +19,7 @@ const typeIcons = {
   proveedor: Truck,
   factura: FileText,
   cotizacion: ClipboardList,
+  proforma: Receipt,
 };
 
 const typeLabels = {
@@ -27,6 +28,7 @@ const typeLabels = {
   proveedor: "Proveedores",
   factura: "Facturas",
   cotizacion: "Cotizaciones",
+  proforma: "Proformas",
 };
 
 export function GlobalSearch() {

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.22.5] - 2026-06-15
+- **feat(buscador-global)**: El buscador global (Ctrl+K) ahora incluye proformas. Se puede buscar por número de proforma, cliente o expediente; al seleccionar se navega al embarque con el tab de proformas abierto. RPC `busqueda_global` extendida con un `UNION ALL` adicional sobre `proformas` filtrado por organización.
+
 ## [13.22.4] - 2026-06-15
 - **fix(auditoria/docs)**: Hallazgos críticos falsos por documentos "Pendiente" fantasma en `/auditoria` (ej. ELIMP00216 marcaba "Certificado de Origen" como pendiente aunque en el embarque estaba en "No aplica"). Causa real: `auditoria_embarques_org()` no filtraba `deleted_at IS NULL` en `documentos_embarque` ni en `eventos_embarque`, por lo que filas borradas lógicamente seguían contando. Se agregó el filtro a `docs_existentes`, `hall_docs_pendientes` y `ult_evento`. Además se purgaron duplicados activos por `(embarque_id, nombre)` (conservando la mejor: Recibido > No aplica > Pendiente, con archivo, más reciente) y se creó índice único parcial `documentos_embarque_unico_por_nombre` para bloquear reincidencia.
 - **fix(auditoria/explicar-ia)**: La explicación con IA ahora incluye la lista real de documentos del embarque con su estado y marca duplicados explícitamente. El system prompt fuerza a Gemini a analizar la tabla de documentos cuando la regla es `docs_*` en lugar de divagar sobre backfill/facturación. Edge function `auditoria-explicar-hallazgo` redeployada.

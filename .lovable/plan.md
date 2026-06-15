@@ -1,51 +1,47 @@
-## Diagnóstico
+# Buscador global no encuentra proformas
 
-ELIMP00216 tiene **filas duplicadas en `documentos_embarque`**: para el mismo nombre coexisten una marcada `No aplica` (la que ve el usuario en la UI) y otra `Pendiente` (legacy/duplicado). La regla `docs_pendientes_avanzado` cuenta la segunda y dispara el hallazgo crítico.
+## Causa raíz
 
-Ejemplo real del expediente:
+La RPC `public.busqueda_global(termino, limite)` sólo consulta 5 entidades: `embarques`, `clientes`, `proveedores`, `facturas` y `cotizaciones`. **No incluye `proformas`**, por eso aunque escribas el número (ej. `P-001`) o el cliente, no aparece nada en Ctrl+K.
 
-```text
-Certificado de Origen | No aplica
-Certificado de Origen | Pendiente   ← este dispara el hallazgo
-Bill of Lading (BL House) | No aplica
-Bill of Lading (BL House) | Recibido
-Packing List | No aplica
-Packing List | No aplica            ← duplicado exacto
-...
+Además, el frontend (`GlobalSearch.tsx` + `types/search.ts`) sólo conoce los 5 tipos existentes y no tiene icono/label/ruta para `proforma`.
+
+## Cambios propuestos
+
+### 1. Migración SQL — extender `busqueda_global`
+Agregar un `UNION ALL` extra que devuelva proformas filtradas por org (mismo patrón que las demás):
+
+```sql
+UNION ALL
+(SELECT pr.id, pr.numero AS label,
+        (pr.cliente_nombre || ' · ' || pr.expediente) AS sublabel,
+        'proforma'::text AS tipo,
+        '/embarques/' || pr.embarque_id || '?tab=proformas' AS url
+ FROM proformas pr
+ WHERE (pr.numero ILIKE '%'||termino||'%'
+        OR pr.cliente_nombre ILIKE '%'||termino||'%'
+        OR pr.expediente ILIKE '%'||termino||'%')
+   AND (pr.organization_id = current_user_org_id() OR has_role(auth.uid(),'super_admin'))
+ LIMIT limite)
 ```
 
-Además, la explicación con Gemini sale genérica (“ejecuta backfill, depura huérfanos”) porque la edge function `auditoria-explicar-hallazgo` sólo manda **conteos** (`documentos_count`) y nunca la lista real de documentos con su estado. La IA no puede ver que el “pendiente” es un duplicado de uno “No aplica”.
+Se hace `CREATE OR REPLACE FUNCTION` conservando `SECURITY DEFINER`, `STABLE` y `search_path=public`.
 
-## Plan
+### 2. Frontend — soportar el tipo `proforma`
+- `src/types/search.ts`: agregar `"proforma"` al union `type`.
+- `src/components/shared/GlobalSearch.tsx`: agregar entrada en `typeIcons` (icono `FileSpreadsheet` o `Receipt` de lucide) y en `typeLabels` (`"Proformas"`).
 
-### Bug 1 — Documentos pendientes fantasma
+La URL ya apunta al detalle del embarque con el tab de proformas, ruta que ya existe.
 
-1. **Migración de limpieza** (`supabase/migrations/...sql`):
-   - Para cada `(embarque_id, nombre)` con más de una fila, conservar la “mejor” (`Recibido` > `No aplica` > `Pendiente`; con archivo > sin archivo; más reciente > más viejo) y borrar lógicamente las demás (`deleted_at = now()`, `deleted_by = null`).
-   - Crear índice único parcial: `UNIQUE (embarque_id, nombre) WHERE deleted_at IS NULL`.
-2. **Endurecer la regla** `docs_pendientes_avanzado` dentro de `auditoria_embarques_org(uuid)` y `auditoria_embarques_org()` para que ignore una fila `Pendiente` cuando exista otra fila viva del mismo `(embarque_id, nombre)` en estado `Recibido` o `No aplica`. Defensa en profundidad por si vuelve a aparecer un duplicado.
-3. Misma defensa en `hall_docs_faltantes` (ya usa `bool_or`, pero confirmar que sigue funcionando con filas vivas únicamente).
+### 3. Verificación
+- Probar Ctrl+K con un número de proforma conocido y con el nombre de un cliente que tenga proformas.
+- Confirmar que el grupo "Proformas" aparece con icono y al hacer clic navega al embarque correspondiente.
 
-### Bug 2 — Explicación IA sin contexto real
-
-4. **Editar `supabase/functions/auditoria-explicar-hallazgo/index.ts`**:
-   - Ampliar `ContextoEmbarque` con `documentos: Array<{ nombre, estado, tiene_archivo }>` (máx 20 filas vivas).
-   - Incluirlo en el `userPrompt` agrupado por nombre, marcando duplicados explícitamente (ej. `Certificado de Origen [No aplica, Pendiente] ← duplicado`).
-   - Reforzar `SYSTEM_PROMPT` para que cuando la regla sea `docs_*` priorice analizar la tabla de documentos antes que hablar de facturación/backfill.
-5. Desplegar la edge function.
-
-### Metadata
-
-6. Bump `APP_VERSION` a `13.22.4`.
-7. Agregar entrada en `CHANGELOG.md` describiendo: limpieza de duplicados, índice único, endurecimiento de regla y contexto real para IA.
+### 4. Metadata
+- Bump `APP_VERSION` (patch → `13.22.5`).
+- Entrada en `CHANGELOG.md` (root) bajo nueva versión: *"Buscador global (Ctrl+K) ahora incluye proformas por número, cliente o expediente."*
 
 ## Fuera de alcance
-
-- No tocar UI de auditoría ni de detalle de embarque.
-- No cambiar otras reglas (`fechas`, `margen_*`, `proforma_vencida`, etc.).
-- No modificar el flujo de creación del checklist de documentos (eso se atacará después si siguen apareciendo duplicados nuevos; el índice único ya lo bloqueará).
-
-## Validación
-
-- Tras la migración, re-correr `auditoria_embarques_org()` y confirmar que ELIMP00216 desaparece de `docs_pendientes_avanzado`.
-- Abrir el popover de IA en otro hallazgo y verificar que la explicación menciona documentos reales con su estado.
+- No se modifica el buscador del CRM (`useCrmSearch`).
+- No se cambia el límite por tipo (sigue en 5).
+- No se rediseña el popover de resultados.
