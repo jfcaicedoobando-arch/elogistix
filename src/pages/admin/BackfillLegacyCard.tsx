@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { Database, Loader2, CheckCircle2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { runAuditoriaBackfillLegacy, type BackfillLegacyResult } from "@/features/admin/services/backfillLegacy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,26 +19,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-interface BackfillResult {
-  ejecutado_at: string;
-  totales: {
-    conceptos_actualizados: number;
-    embarques_afectados: number;
-    proformas_actualizadas: number;
-  };
-}
-
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const [result, setResult] = useState<BackfillResult | null>(null);
+  const [result, setResult] = useState<BackfillLegacyResult | null>(null);
 
   const run = useMutation({
-    mutationFn: async (): Promise<BackfillResult> => {
-      const { data, error } = await supabase.rpc("run_auditoria_backfill_legacy");
-      if (error) throw error;
-      return data as unknown as BackfillResult;
-    },
+    mutationFn: runAuditoriaBackfillLegacy,
     onSuccess: (data) => {
       setResult(data);
       setOpen(false);
