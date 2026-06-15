@@ -1,0 +1,787 @@
+﻿2026-06-15T23:27:42.5702640Z Current runner version: '2.335.1'
+2026-06-15T23:27:42.5729053Z ##[group]Runner Image Provisioner
+2026-06-15T23:27:42.5729970Z Hosted Compute Agent
+2026-06-15T23:27:42.5730576Z Version: 20260527.539
+2026-06-15T23:27:42.5731288Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-15T23:27:42.5732066Z Build Date: 2026-05-27T21:39:57Z
+2026-06-15T23:27:42.5732748Z Worker ID: {1e7d88fd-8e83-42cc-bae5-39c2d9a79cd6}
+2026-06-15T23:27:42.5733652Z Azure Region: northcentralus
+2026-06-15T23:27:42.5734284Z ##[endgroup]
+2026-06-15T23:27:42.5736250Z ##[group]Operating System
+2026-06-15T23:27:42.5736928Z Ubuntu
+2026-06-15T23:27:42.5737461Z 24.04.4
+2026-06-15T23:27:42.5738125Z LTS
+2026-06-15T23:27:42.5738664Z ##[endgroup]
+2026-06-15T23:27:42.5739256Z ##[group]Runner Image
+2026-06-15T23:27:42.5739881Z Image: ubuntu-24.04
+2026-06-15T23:27:42.5740467Z Version: 20260607.184.1
+2026-06-15T23:27:42.5741882Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-15T23:27:42.5743499Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-15T23:27:42.5744525Z ##[endgroup]
+2026-06-15T23:27:42.5746120Z ##[group]GITHUB_TOKEN Permissions
+2026-06-15T23:27:42.5748123Z Contents: read
+2026-06-15T23:27:42.5748746Z Metadata: read
+2026-06-15T23:27:42.5749424Z ##[endgroup]
+2026-06-15T23:27:42.5751946Z Secret source: Actions
+2026-06-15T23:27:42.5752733Z Prepare workflow directory
+2026-06-15T23:27:42.6204271Z Prepare all required actions
+2026-06-15T23:27:42.6242958Z Getting action download info
+2026-06-15T23:27:42.8687831Z Download action repository 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-15T23:27:43.1636456Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-06-15T23:27:43.3637746Z Complete job name: Prepare RLS database snapshot
+2026-06-15T23:27:43.4169700Z ##[group]Checking docker version
+2026-06-15T23:27:43.4182750Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-06-15T23:27:43.5051509Z '1.48'
+2026-06-15T23:27:43.5071912Z Docker daemon API version: '1.48'
+2026-06-15T23:27:43.5072725Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-06-15T23:27:43.5256547Z '1.48'
+2026-06-15T23:27:43.5270219Z Docker client API version: '1.48'
+2026-06-15T23:27:43.5276430Z ##[endgroup]
+2026-06-15T23:27:43.5278880Z ##[group]Clean up resources from previous jobs
+2026-06-15T23:27:43.5284588Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=5cd7bf"
+2026-06-15T23:27:43.5487144Z ##[command]/usr/bin/docker network prune --force --filter "label=5cd7bf"
+2026-06-15T23:27:43.5632242Z ##[endgroup]
+2026-06-15T23:27:43.5632774Z ##[group]Create local container network
+2026-06-15T23:27:43.5643245Z ##[command]/usr/bin/docker network create --label 5cd7bf github_network_dad73a5b975c4e19938a671f1738042a
+2026-06-15T23:27:43.6281742Z f57156b66dfd0fece6e72bd8002e8a1041c2d4d54f22b20f75834d679b5db9fa
+2026-06-15T23:27:43.6313592Z ##[endgroup]
+2026-06-15T23:27:43.6338583Z ##[group]Starting postgres service container
+2026-06-15T23:27:43.6360980Z ##[command]/usr/bin/docker pull postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:43.9044156Z docker.io/library/postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb: Pulling from library/postgres
+2026-06-15T23:27:43.9052013Z 2d429b9e73a6: Pulling fs layer
+2026-06-15T23:27:43.9053810Z 8264392a8c63: Pulling fs layer
+2026-06-15T23:27:43.9054627Z 10dc7a46d285: Pulling fs layer
+2026-06-15T23:27:43.9056117Z a3e832e126d8: Pulling fs layer
+2026-06-15T23:27:43.9057023Z a57591b52775: Pulling fs layer
+2026-06-15T23:27:43.9057922Z 8bd747615de8: Pulling fs layer
+2026-06-15T23:27:43.9058769Z e96a70b56e29: Pulling fs layer
+2026-06-15T23:27:43.9059629Z 3db3c2765775: Pulling fs layer
+2026-06-15T23:27:43.9060569Z 1635531b3f1f: Pulling fs layer
+2026-06-15T23:27:43.9061725Z cccb4da64aa2: Pulling fs layer
+2026-06-15T23:27:43.9062308Z a1cc9f823061: Pulling fs layer
+2026-06-15T23:27:43.9062970Z dbb2f6dde8bc: Pulling fs layer
+2026-06-15T23:27:43.9063591Z e1a3b3584c6c: Pulling fs layer
+2026-06-15T23:27:43.9064303Z 92a5f4d34f14: Pulling fs layer
+2026-06-15T23:27:43.9064935Z e96a70b56e29: Waiting
+2026-06-15T23:27:43.9065667Z 3db3c2765775: Waiting
+2026-06-15T23:27:43.9066257Z 1635531b3f1f: Waiting
+2026-06-15T23:27:43.9066789Z cccb4da64aa2: Waiting
+2026-06-15T23:27:43.9067395Z a1cc9f823061: Waiting
+2026-06-15T23:27:43.9068002Z dbb2f6dde8bc: Waiting
+2026-06-15T23:27:43.9068515Z e1a3b3584c6c: Waiting
+2026-06-15T23:27:43.9069116Z a3e832e126d8: Waiting
+2026-06-15T23:27:43.9069770Z 92a5f4d34f14: Waiting
+2026-06-15T23:27:43.9070354Z a57591b52775: Waiting
+2026-06-15T23:27:43.9070869Z 8bd747615de8: Waiting
+2026-06-15T23:27:43.9801631Z 8264392a8c63: Verifying Checksum
+2026-06-15T23:27:43.9802601Z 8264392a8c63: Download complete
+2026-06-15T23:27:44.0154764Z 10dc7a46d285: Verifying Checksum
+2026-06-15T23:27:44.0156447Z 10dc7a46d285: Download complete
+2026-06-15T23:27:44.0778758Z a3e832e126d8: Verifying Checksum
+2026-06-15T23:27:44.0797022Z a3e832e126d8: Download complete
+2026-06-15T23:27:44.0917784Z 2d429b9e73a6: Verifying Checksum
+2026-06-15T23:27:44.0927298Z 2d429b9e73a6: Download complete
+2026-06-15T23:27:44.1311883Z a57591b52775: Verifying Checksum
+2026-06-15T23:27:44.1312770Z a57591b52775: Download complete
+2026-06-15T23:27:44.1668628Z e96a70b56e29: Verifying Checksum
+2026-06-15T23:27:44.1669772Z e96a70b56e29: Download complete
+2026-06-15T23:27:44.1694689Z 8bd747615de8: Verifying Checksum
+2026-06-15T23:27:44.1697396Z 8bd747615de8: Download complete
+2026-06-15T23:27:44.2047175Z 3db3c2765775: Verifying Checksum
+2026-06-15T23:27:44.2055941Z 3db3c2765775: Download complete
+2026-06-15T23:27:44.2584955Z cccb4da64aa2: Verifying Checksum
+2026-06-15T23:27:44.2587024Z cccb4da64aa2: Download complete
+2026-06-15T23:27:44.2791466Z a1cc9f823061: Download complete
+2026-06-15T23:27:44.3477815Z dbb2f6dde8bc: Verifying Checksum
+2026-06-15T23:27:44.3480266Z dbb2f6dde8bc: Download complete
+2026-06-15T23:27:44.3693286Z e1a3b3584c6c: Verifying Checksum
+2026-06-15T23:27:44.3696364Z e1a3b3584c6c: Download complete
+2026-06-15T23:27:44.4245168Z 92a5f4d34f14: Verifying Checksum
+2026-06-15T23:27:44.4251040Z 92a5f4d34f14: Download complete
+2026-06-15T23:27:44.6612877Z 1635531b3f1f: Verifying Checksum
+2026-06-15T23:27:44.6613462Z 1635531b3f1f: Download complete
+2026-06-15T23:27:45.3234091Z 2d429b9e73a6: Pull complete
+2026-06-15T23:27:47.1515374Z 8264392a8c63: Pull complete
+2026-06-15T23:27:47.2847303Z 10dc7a46d285: Pull complete
+2026-06-15T23:27:47.3301531Z a3e832e126d8: Pull complete
+2026-06-15T23:27:47.6254142Z a57591b52775: Pull complete
+2026-06-15T23:27:47.6991413Z 8bd747615de8: Pull complete
+2026-06-15T23:27:47.7080747Z e96a70b56e29: Pull complete
+2026-06-15T23:27:47.7173171Z 3db3c2765775: Pull complete
+2026-06-15T23:27:50.5622825Z 1635531b3f1f: Pull complete
+2026-06-15T23:27:50.5910395Z cccb4da64aa2: Pull complete
+2026-06-15T23:27:50.6036315Z a1cc9f823061: Pull complete
+2026-06-15T23:27:50.6121028Z dbb2f6dde8bc: Pull complete
+2026-06-15T23:27:50.6224872Z e1a3b3584c6c: Pull complete
+2026-06-15T23:27:50.6310313Z 92a5f4d34f14: Pull complete
+2026-06-15T23:27:50.6340335Z Digest: sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:50.6347414Z Status: Downloaded newer image for postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:50.6356656Z docker.io/library/postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:50.6422702Z ##[command]/usr/bin/docker create --name 432b8a6e5a324464832e5b6b2e5cfa70_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_35c9cf --label 5cd7bf --network github_network_dad73a5b975c4e19938a671f1738042a --network-alias postgres -p 5432:5432 --health-cmd="pg_isready -U postgres" --health-interval=5s --health-timeout=5s --health-retries=10 -e "POSTGRES_PASSWORD=postgres" -e "POSTGRES_DB=postgres" -e GITHUB_ACTIONS=true -e CI=true postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:50.6679506Z fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:50.6704741Z ##[command]/usr/bin/docker start fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:50.8944899Z fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:50.8967564Z ##[command]/usr/bin/docker ps --all --filter id=fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-06-15T23:27:50.9109314Z fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8 Up Less than a second (health: starting)
+2026-06-15T23:27:50.9140425Z ##[command]/usr/bin/docker port fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:50.9301848Z 5432/tcp -> 0.0.0.0:5432
+2026-06-15T23:27:50.9302629Z 5432/tcp -> [::]:5432
+2026-06-15T23:27:50.9363655Z ##[endgroup]
+2026-06-15T23:27:50.9376348Z ##[group]Waiting for all services to be ready
+2026-06-15T23:27:50.9394752Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:50.9541348Z starting
+2026-06-15T23:27:50.9567021Z postgres service is starting, waiting 2 seconds before checking again.
+2026-06-15T23:27:52.9566074Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:52.9692505Z starting
+2026-06-15T23:27:52.9706401Z postgres service is starting, waiting 3 seconds before checking again.
+2026-06-15T23:27:56.9588419Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:27:56.9712273Z healthy
+2026-06-15T23:27:56.9731352Z postgres service is healthy.
+2026-06-15T23:27:56.9732034Z ##[endgroup]
+2026-06-15T23:27:57.0082444Z ##[group]Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+2026-06-15T23:27:57.0083129Z with:
+2026-06-15T23:27:57.0083379Z   repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:27:57.0086973Z   token: ***
+2026-06-15T23:27:57.0087209Z   ssh-strict: true
+2026-06-15T23:27:57.0087432Z   ssh-user: git
+2026-06-15T23:27:57.0087662Z   persist-credentials: true
+2026-06-15T23:27:57.0087901Z   clean: true
+2026-06-15T23:27:57.0088124Z   sparse-checkout-cone-mode: true
+2026-06-15T23:27:57.0088377Z   fetch-depth: 1
+2026-06-15T23:27:57.0088577Z   fetch-tags: false
+2026-06-15T23:27:57.0088789Z   show-progress: true
+2026-06-15T23:27:57.0088996Z   lfs: false
+2026-06-15T23:27:57.0089183Z   submodules: false
+2026-06-15T23:27:57.0089390Z   set-safe-directory: true
+2026-06-15T23:27:57.0089861Z env:
+2026-06-15T23:27:57.0090268Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:57.0090758Z   PGHOST: localhost
+2026-06-15T23:27:57.0091002Z   PGPORT: 5432
+2026-06-15T23:27:57.0091209Z   PGUSER: postgres
+2026-06-15T23:27:57.0091471Z   PGPASSWORD: postgres
+2026-06-15T23:27:57.0091693Z   PGDATABASE: postgres
+2026-06-15T23:27:57.0091933Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:27:57.0092196Z ##[endgroup]
+2026-06-15T23:27:57.1090917Z Syncing repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:27:57.1092518Z ##[group]Getting Git version info
+2026-06-15T23:27:57.1092923Z Working directory is '/home/runner/work/elogistix/elogistix'
+2026-06-15T23:27:57.1093496Z [command]/usr/bin/git version
+2026-06-15T23:27:57.1157289Z git version 2.54.0
+2026-06-15T23:27:57.1180562Z ##[endgroup]
+2026-06-15T23:27:57.1197441Z Temporarily overriding HOME='/home/runner/work/_temp/26256c78-aa81-4d7e-adfe-1e8a3691960d' before making global git config changes
+2026-06-15T23:27:57.1198636Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-15T23:27:57.1204291Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/elogistix/elogistix
+2026-06-15T23:27:57.1259793Z Deleting the contents of '/home/runner/work/elogistix/elogistix'
+2026-06-15T23:27:57.1264767Z ##[group]Determining repository object format
+2026-06-15T23:27:57.1267728Z ##[endgroup]
+2026-06-15T23:27:57.1268341Z ##[group]Initializing the repository
+2026-06-15T23:27:57.1273096Z [command]/usr/bin/git init /home/runner/work/elogistix/elogistix
+2026-06-15T23:27:57.1377156Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-15T23:27:57.1377767Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-15T23:27:57.1378288Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-15T23:27:57.1378692Z hint: call:
+2026-06-15T23:27:57.1378895Z hint:
+2026-06-15T23:27:57.1379191Z hint: 	git config --global init.defaultBranch <name>
+2026-06-15T23:27:57.1379569Z hint:
+2026-06-15T23:27:57.1379885Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-15T23:27:57.1380379Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-15T23:27:57.1380746Z hint:
+2026-06-15T23:27:57.1380961Z hint: 	git branch -m <name>
+2026-06-15T23:27:57.1381189Z hint:
+2026-06-15T23:27:57.1381514Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-15T23:27:57.1383564Z Initialized empty Git repository in /home/runner/work/elogistix/elogistix/.git/
+2026-06-15T23:27:57.1396116Z [command]/usr/bin/git remote add origin https://github.com/jfcaicedoobando-arch/elogistix
+2026-06-15T23:27:57.1443689Z ##[endgroup]
+2026-06-15T23:27:57.1444113Z ##[group]Disabling automatic garbage collection
+2026-06-15T23:27:57.1448786Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-15T23:27:57.1482654Z ##[endgroup]
+2026-06-15T23:27:57.1483511Z ##[group]Setting up auth
+2026-06-15T23:27:57.1484236Z Removing SSH command configuration
+2026-06-15T23:27:57.1491594Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-15T23:27:57.1529094Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-15T23:27:57.1876829Z Removing HTTP extra header
+2026-06-15T23:27:57.1882730Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-15T23:27:57.1918907Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-15T23:27:57.2154549Z Removing includeIf entries pointing to credentials config files
+2026-06-15T23:27:57.2160854Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-15T23:27:57.2195425Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-15T23:27:57.2435425Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-15T23:27:57.2477403Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/elogistix/elogistix/.git.path /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:27:57.2508793Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:27:57.2542953Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:27:57.2573713Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:27:57.2600990Z ##[endgroup]
+2026-06-15T23:27:57.2601397Z ##[group]Fetching the repository
+2026-06-15T23:27:57.2610664Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f8e33315b20f7fb5677601640ee92698883dd01e:refs/remotes/origin/main
+2026-06-15T23:27:58.0109542Z From https://github.com/jfcaicedoobando-arch/elogistix
+2026-06-15T23:27:58.0110490Z  * [new ref]         f8e33315b20f7fb5677601640ee92698883dd01e -> origin/main
+2026-06-15T23:27:58.0159084Z [command]/usr/bin/git branch --list --remote origin/main
+2026-06-15T23:27:58.0191828Z   origin/main
+2026-06-15T23:27:58.0201835Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-06-15T23:27:58.0230087Z f8e33315b20f7fb5677601640ee92698883dd01e
+2026-06-15T23:27:58.0239574Z ##[endgroup]
+2026-06-15T23:27:58.0240320Z ##[group]Determining the checkout info
+2026-06-15T23:27:58.0241022Z ##[endgroup]
+2026-06-15T23:27:58.0241453Z [command]/usr/bin/git sparse-checkout disable
+2026-06-15T23:27:58.0293687Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-15T23:27:58.0325019Z ##[group]Checking out the ref
+2026-06-15T23:27:58.0330817Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-15T23:27:58.1521341Z Switched to a new branch 'main'
+2026-06-15T23:27:58.1521898Z branch 'main' set up to track 'origin/main'.
+2026-06-15T23:27:58.1532384Z ##[endgroup]
+2026-06-15T23:27:58.1580401Z [command]/usr/bin/git log -1 --format=%H
+2026-06-15T23:27:58.1607696Z f8e33315b20f7fb5677601640ee92698883dd01e
+2026-06-15T23:27:58.1800652Z ##[group]Run $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
+2026-06-15T23:27:58.1801174Z [36;1m$PSQL -f supabase/tests/rls/_ci_bootstrap.sql[0m
+2026-06-15T23:27:58.1840284Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:27:58.1840585Z env:
+2026-06-15T23:27:58.1841015Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:58.1841502Z   PGHOST: localhost
+2026-06-15T23:27:58.1841721Z   PGPORT: 5432
+2026-06-15T23:27:58.1841938Z   PGUSER: postgres
+2026-06-15T23:27:58.1842151Z   PGPASSWORD: postgres
+2026-06-15T23:27:58.1842376Z   PGDATABASE: postgres
+2026-06-15T23:27:58.1842605Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:27:58.1842872Z ##[endgroup]
+2026-06-15T23:27:58.3000412Z ##[group]Run $PSQL -f supabase/tests/rls/_ci_drift.sql
+2026-06-15T23:27:58.3000823Z [36;1m$PSQL -f supabase/tests/rls/_ci_drift.sql[0m
+2026-06-15T23:27:58.3035537Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:27:58.3035812Z env:
+2026-06-15T23:27:58.3036228Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:58.3036719Z   PGHOST: localhost
+2026-06-15T23:27:58.3036969Z   PGPORT: 5432
+2026-06-15T23:27:58.3037178Z   PGUSER: postgres
+2026-06-15T23:27:58.3037411Z   PGPASSWORD: postgres
+2026-06-15T23:27:58.3037634Z   PGDATABASE: postgres
+2026-06-15T23:27:58.3037868Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:27:58.3038146Z ##[endgroup]
+2026-06-15T23:27:58.3477470Z psql:supabase/tests/rls/_ci_drift.sql:41: NOTICE:  event trigger "_ci_proformas_es_consolidada_trg" does not exist, skipping
+2026-06-15T23:27:58.3593783Z psql:supabase/tests/rls/_ci_drift.sql:136: WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:27:58.3594452Z HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:27:58.3643420Z ##[group]Run shopt -s nullglob
+2026-06-15T23:27:58.3643754Z [36;1mshopt -s nullglob[0m
+2026-06-15T23:27:58.3644144Z [36;1mfor f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do[0m
+2026-06-15T23:27:58.3644540Z [36;1m  base=$(basename "$f")[0m
+2026-06-15T23:27:58.3644797Z [36;1m  echo "▶ $base"[0m
+2026-06-15T23:27:58.3645029Z [36;1m  sed -E \[0m
+2026-06-15T23:27:58.3646141Z [36;1m    -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \[0m
+2026-06-15T23:27:58.3647087Z [36;1m    -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \[0m
+2026-06-15T23:27:58.3647647Z [36;1m    "$f" | $PSQL[0m
+2026-06-15T23:27:58.3647881Z [36;1mdone[0m
+2026-06-15T23:27:58.3682581Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:27:58.3682844Z env:
+2026-06-15T23:27:58.3683309Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:27:58.3683805Z   PGHOST: localhost
+2026-06-15T23:27:58.3684024Z   PGPORT: 5432
+2026-06-15T23:27:58.3684236Z   PGUSER: postgres
+2026-06-15T23:27:58.3684453Z   PGPASSWORD: postgres
+2026-06-15T23:27:58.3684683Z   PGDATABASE: postgres
+2026-06-15T23:27:58.3684916Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:27:58.3685387Z ##[endgroup]
+2026-06-15T23:27:58.3781537Z ▶ 20260228005947_e0895f16-62d9-45e4-99eb-6ecad9fe5892.sql
+2026-06-15T23:27:58.4258833Z ▶ 20260228011257_0df15625-d074-4cfe-b273-7be04eb8f4c4.sql
+2026-06-15T23:27:58.5179369Z ▶ 20260301192552_ad1ea69b-29ee-4c05-8f2a-2fc6f94824dc.sql
+2026-06-15T23:27:58.5617829Z ▶ 20260301200638_3ba185fa-9ac2-441d-b729-a290d2ff354f.sql
+2026-06-15T23:27:58.6127005Z ▶ 20260302165947_552d282b-6f4f-4ffd-85b9-2131d9fa965e.sql
+2026-06-15T23:27:58.6642945Z ▶ 20260302171122_61c874cd-153b-486d-be3d-a071009ad4ca.sql
+2026-06-15T23:27:58.7065142Z ▶ 20260302175211_5c57040e-88d4-4a80-b848-12d4f9616ec9.sql
+2026-06-15T23:27:58.7471668Z ▶ 20260302181241_932b807b-1457-413b-a845-e1a2ff33c035.sql
+2026-06-15T23:27:58.7893706Z ▶ 20260302182908_f66ed247-64fe-491b-af4b-2a4bdf343c11.sql
+2026-06-15T23:27:58.8298428Z ▶ 20260302185738_bdefb765-d281-4bba-89d5-bd8db2bb20eb.sql
+2026-06-15T23:27:58.8721012Z ▶ 20260302190748_c9878fa4-38b9-46a8-8a20-c1900c04f0e5.sql
+2026-06-15T23:27:58.9135122Z ▶ 20260302192840_9586246b-a512-4d0b-ae29-6fa1e2ee485d.sql
+2026-06-15T23:27:58.9541593Z ▶ 20260302210856_0ab6d34a-36ac-49ab-ad6d-97b6fa69620e.sql
+2026-06-15T23:27:58.9953807Z ▶ 20260303002316_6ef3f714-5aad-486d-b992-643350cbd82f.sql
+2026-06-15T23:27:59.0420472Z ▶ 20260304011413_744a62a3-df89-40ce-8733-1b475b03f098.sql
+2026-06-15T23:27:59.0839561Z ▶ 20260304020604_b79a3632-aef2-428b-9817-45e7bb8efac7.sql
+2026-06-15T23:27:59.1314101Z ▶ 20260304061510_4fdd1ec3-05be-42ad-8c77-623fb8f8e6a4.sql
+2026-06-15T23:27:59.1821640Z ▶ 20260304231441_cc5960f2-9d2c-4765-8b31-2cfbc1ff8bfb.sql
+2026-06-15T23:27:59.2299610Z ▶ 20260305033514_c097326e-2993-4477-bfde-1b2bf426c649.sql
+2026-06-15T23:27:59.2688440Z ▶ 20260305164008_723f0942-9795-4abd-b77a-14e661afd427.sql
+2026-06-15T23:27:59.3148387Z ▶ 20260306165407_c55948ed-c426-4300-8212-c8d70429c951.sql
+2026-06-15T23:27:59.3556196Z ▶ 20260306215859_9e9a409c-d6f4-4e0d-9645-396992097496.sql
+2026-06-15T23:27:59.4024351Z ▶ 20260309175658_8db3a796-99c0-498a-9e20-fbb2f694929b.sql
+2026-06-15T23:27:59.4454408Z ▶ 20260310165816_be1a9b73-c2a0-4ee3-99ae-d71df0ce1e0f.sql
+2026-06-15T23:27:59.4859328Z ▶ 20260310172436_5866f90b-9025-42ab-9256-5ebbca35ef6d.sql
+2026-06-15T23:27:59.5294871Z ▶ 20260310180409_73610cda-dda4-44a6-947a-fba815acab82.sql
+2026-06-15T23:27:59.5702982Z ▶ 20260311172213_3f9e03e2-f5ac-4e0f-a70c-9dfccf956954.sql
+2026-06-15T23:27:59.6100234Z ▶ 20260311172311_01aeb7c3-745a-473f-a5d8-250f6873d626.sql
+2026-06-15T23:27:59.6501573Z ▶ 20260311174533_f60d06c3-938d-4ac7-8c02-c5c2ba482520.sql
+2026-06-15T23:27:59.6905390Z ▶ 20260313065240_d41b45c7-9c3e-46cb-a856-4bee41ad1f88.sql
+2026-06-15T23:27:59.7334700Z ▶ 20260313065940_bb4d9629-cacb-47aa-be95-aa742633d8db.sql
+2026-06-15T23:27:59.7743808Z ▶ 20260313070348_f2c54d97-1ec8-4d34-a2bf-679dc6bc3d73.sql
+2026-06-15T23:27:59.8151531Z ▶ 20260313154855_21156a9a-0b0b-4119-a4bc-2ab995466086.sql
+2026-06-15T23:27:59.8588287Z ▶ 20260318020753_f0453f81-4a14-4fe9-a2c8-5e41b39c55ce.sql
+2026-06-15T23:27:59.8998124Z ▶ 20260318050744_f0ff6818-856e-42ba-8266-9b5eea2c06a1.sql
+2026-06-15T23:27:59.9463876Z ▶ 20260324234446_564ec7a6-209a-4fa9-b25c-8c0c63e1effc.sql
+2026-06-15T23:27:59.9861429Z ▶ 20260326215332_69fd9dc0-b4a6-4a74-9630-a8083b1d0e66.sql
+2026-06-15T23:28:00.0267808Z ▶ 20260326215426_cc66e753-8d3a-401c-bdb2-d24191d381d2.sql
+2026-06-15T23:28:00.0782872Z ▶ 20260326215454_efd12f32-1805-4d7f-939f-7f0a976082b6.sql
+2026-06-15T23:28:00.1430477Z ▶ 20260326215520_13ce9526-d1ff-4b9c-a245-0ca6eaa7a0b3.sql
+2026-06-15T23:28:00.1913185Z ▶ 20260326215558_27132359-0d6f-453d-a73d-08a90d7fdf4f.sql
+2026-06-15T23:28:00.2476237Z ▶ 20260326215709_d7186378-3972-41c7-bf8f-02e755e5fbfb.sql
+2026-06-15T23:28:00.2940355Z ▶ 20260326220011_8d7a33bb-e8bb-45e4-a3b4-e3536ea75840.sql
+2026-06-15T23:28:00.3421090Z ▶ 20260326220310_b577217c-aa16-404a-9616-fce03f1806ee.sql
+2026-06-15T23:28:00.3822519Z ▶ 20260327205122_2577369b-edb5-45dc-9515-5da46be37367.sql
+2026-06-15T23:28:00.4261386Z ▶ 20260327210010_6637d1e9-9cc5-4b0e-a9d6-8ab072b2bbab.sql
+2026-06-15T23:28:00.4783123Z ▶ 20260327212831_e2d6e301-006a-4135-b68b-8f6c8d4ed09a.sql
+2026-06-15T23:28:00.5275860Z ▶ 20260327221336_32351384-c2db-476b-a1a2-1d1789e518c8.sql
+2026-06-15T23:28:00.5699406Z ▶ 20260327222043_57e74c16-6ccd-4150-9434-00c567bfb557.sql
+2026-06-15T23:28:00.6126692Z ▶ 20260330063035_84468a7e-0746-48c2-9eff-9b7ecd177a4a.sql
+2026-06-15T23:28:00.6541583Z ▶ 20260330073611_ef01da26-82b9-45c7-993f-b113f0fb1d5e.sql
+2026-06-15T23:28:00.6959560Z ▶ 20260409035332_98e9b8a9-d9e2-482b-9770-5c83a069fdaa.sql
+2026-06-15T23:28:00.7357784Z ▶ 20260409035421_ae9e8b2b-552a-4e23-9d7d-3c808526dd31.sql
+2026-06-15T23:28:00.7903746Z ▶ 20260409040751_69c43a31-7ef7-41f8-b7d8-ddf2be25df7a.sql
+2026-06-15T23:28:00.8309997Z ▶ 20260409041043_2427a63d-11e9-4ec2-baf7-c19133a540c6.sql
+2026-06-15T23:28:00.8741626Z ▶ 20260409044442_60c9c644-f577-46ec-970f-fd722c70e3ea.sql
+2026-06-15T23:28:00.9150813Z ▶ 20260409045918_96251294-a0fe-48dd-96f6-82e2a3110346.sql
+2026-06-15T23:28:00.9562496Z ▶ 20260410004757_3cdb4890-5e37-4620-8434-ce4b7ac84451.sql
+2026-06-15T23:28:01.0020376Z ▶ 20260410005236_dd6472c3-5b78-449f-9e3a-3cce12e5cca3.sql
+2026-06-15T23:28:01.0475066Z ▶ 20260410180318_f1698829-51c3-46df-8ddd-78c23eb94a97.sql
+2026-06-15T23:28:01.0886132Z ▶ 20260413013536_cc22d70a-248f-48b4-b3e1-0487013e619a.sql
+2026-06-15T23:28:01.1299564Z ▶ 20260414222646_239ac2a8-d42d-4c39-ae11-a643cb573abf.sql
+2026-06-15T23:28:01.1718297Z ▶ 20260415180258_104c3bee-e2c4-49dd-aae8-8c76e293af65.sql
+2026-06-15T23:28:01.2130165Z ▶ 20260417160339_0505b7b5-3926-47ed-a182-dffec3484a91.sql
+2026-06-15T23:28:01.2545690Z ▶ 20260418073230_30bc7e2b-3d4d-4fbc-a684-4a822fa746bb.sql
+2026-06-15T23:28:01.3092611Z NOTICE:  relation "idx_embarques_cliente_id" already exists, skipping
+2026-06-15T23:28:01.3100973Z NOTICE:  relation "idx_embarques_estado" already exists, skipping
+2026-06-15T23:28:01.3113833Z NOTICE:  relation "idx_conceptos_costo_embarque" already exists, skipping
+2026-06-15T23:28:01.3117218Z NOTICE:  relation "idx_conceptos_venta_embarque" already exists, skipping
+2026-06-15T23:28:01.3141655Z NOTICE:  relation "idx_facturas_embarque" already exists, skipping
+2026-06-15T23:28:01.3223714Z ▶ 20260418073249_48a1209b-7a9a-4827-9bb0-644998a89775.sql
+2026-06-15T23:28:01.3625089Z ▶ 20260418073738_94ef7c90-9279-41b3-b463-431fed81e33e.sql
+2026-06-15T23:28:01.4042978Z ▶ 20260418074921_02c1a9a3-784f-4371-b0f6-befa63286383.sql
+2026-06-15T23:28:01.4460871Z ▶ 20260418222102_dd81ee15-7251-4671-a667-58ca919046ae.sql
+2026-06-15T23:28:01.4887845Z ▶ 20260424164231_f387b6f4-23b3-4bc0-ad03-48d960c090a7.sql
+2026-06-15T23:28:01.5253697Z NOTICE:  table "proformas" does not exist, skipping
+2026-06-15T23:28:01.5459323Z ▶ 20260424164746_92b850eb-992d-4bcc-9301-0814daebc2f8.sql
+2026-06-15T23:28:01.5873302Z ▶ 20260424172259_fc8af74c-90f4-4846-912d-ee52fa3b0583.sql
+2026-06-15T23:28:01.6283662Z ▶ 20260424172417_bc1c17c2-6800-41d7-be1d-e0cb3a19f686.sql
+2026-06-15T23:28:01.6689528Z ▶ 20260424175131_d55f60cc-c3e6-4cfd-ba89-0c5fad84ee0f.sql
+2026-06-15T23:28:01.7076526Z NOTICE:  constraint "proformas_estado_proforma_check" of relation "proformas" does not exist, skipping
+2026-06-15T23:28:01.7112425Z ▶ 20260424183008_9cc6a8f9-3e6a-4fd4-8335-7ef3140687aa.sql
+2026-06-15T23:28:01.7533657Z NOTICE:  policy "Public read facturas" for relation "storage.objects" does not exist, skipping
+2026-06-15T23:28:01.7539997Z NOTICE:  policy "Authenticated upload facturas" for relation "storage.objects" does not exist, skipping
+2026-06-15T23:28:01.7546781Z NOTICE:  policy "Authenticated update facturas" for relation "storage.objects" does not exist, skipping
+2026-06-15T23:28:01.7553249Z NOTICE:  policy "Authenticated delete facturas" for relation "storage.objects" does not exist, skipping
+2026-06-15T23:28:01.7590319Z ▶ 20260424231755_3f492847-dfdc-44cc-b159-ee9c97b3731d.sql
+2026-06-15T23:28:01.8031567Z ▶ 20260424232518_f5a641f6-a1b5-4dd5-a012-e898404dc510.sql
+2026-06-15T23:28:01.8524151Z ▶ 20260425060836_f48ceeba-8884-45cc-84b3-b6cbf8119f2d.sql
+2026-06-15T23:28:01.8941052Z ▶ 20260425100950_0cf53cdf-309c-4e1e-8cdc-65c81cbf3c68.sql
+2026-06-15T23:28:01.9364296Z ▶ 20260425101041_f08049ce-dbb5-40ff-9d14-0752dbcffa0c.sql
+2026-06-15T23:28:01.9787950Z ▶ 20260427013715_122fd1d8-931a-48e1-8376-0c9687de009e.sql
+2026-06-15T23:28:02.0206080Z ▶ 20260427014036_6a1bb7a3-820f-4b1f-9bc6-90d6e4c6bb68.sql
+2026-06-15T23:28:02.0612156Z NOTICE:  trigger "trg_sync_cotizacion_embarque_link" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:02.0646285Z ▶ 20260427014113_efa90aa5-e81a-4eff-b0f7-9e4cb43d4dff.sql
+2026-06-15T23:28:02.1059536Z ▶ 20260427015721_29151373-29ae-48f5-b652-f67f91a48a29.sql
+2026-06-15T23:28:02.1545409Z ▶ 20260427025307_31c1a4e0-734b-4137-91fa-6deade321b33.sql
+2026-06-15T23:28:02.1951467Z ▶ 20260427030659_5b66a473-eec8-40ee-8b20-40d67e3bf8a8.sql
+2026-06-15T23:28:02.2351086Z ▶ 20260427032756_f52966f5-116e-4261-a9be-835f6514924e.sql
+2026-06-15T23:28:02.2759971Z ▶ 20260427033930_b4c3d595-dc95-4c11-9784-a69a0db31405.sql
+2026-06-15T23:28:02.3162305Z ▶ 20260428112900_5e5b0db0-79c4-453f-9dee-e830a017535c.sql
+2026-06-15T23:28:02.3570713Z ▶ 20260429051732_9b663fdc-97e9-4e9f-835a-ed2574d9195f.sql
+2026-06-15T23:28:02.3994434Z ▶ 20260429053432_197b5394-b8ea-4e93-b993-a724478740a7.sql
+2026-06-15T23:28:02.4420102Z ▶ 20260429054512_d3a5d362-e710-4e4d-9941-d50ef4dc4a14.sql
+2026-06-15T23:28:02.4891870Z ▶ 20260429054928_38e1641c-3037-47b0-be09-8e3fcd4ed87f.sql
+2026-06-15T23:28:02.5409081Z ▶ 20260429072623_f736e84e-ce0b-4d60-93ff-d69f1585be0f.sql
+2026-06-15T23:28:02.5824038Z ▶ 20260429073049_c2de1120-ff37-4d2a-801e-69ffe0b178bd.sql
+2026-06-15T23:28:02.6247966Z ▶ 20260502174351_b50d1c11-5185-48d7-9235-0b7175908eaf.sql
+2026-06-15T23:28:02.6675084Z NOTICE:  trigger "trg_touch_auditoria_revisiones" for relation "public.auditoria_revisiones" does not exist, skipping
+2026-06-15T23:28:02.6706684Z ▶ 20260502191310_a581d263-9b18-4fd7-89fa-1bf3f08e0fb1.sql
+2026-06-15T23:28:02.7142557Z NOTICE:  policy "Tenant read auditoria_comentarios" for relation "public.auditoria_comentarios" does not exist, skipping
+2026-06-15T23:28:02.7150528Z NOTICE:  policy "Tenant write auditoria_comentarios" for relation "public.auditoria_comentarios" does not exist, skipping
+2026-06-15T23:28:02.7197617Z NOTICE:  policy "Tenant read auditoria_snapshots" for relation "public.auditoria_snapshots" does not exist, skipping
+2026-06-15T23:28:02.7202989Z NOTICE:  policy "Tenant write auditoria_snapshots" for relation "public.auditoria_snapshots" does not exist, skipping
+2026-06-15T23:28:02.7269491Z ▶ 20260505182846_7ea2b603-635c-4605-9e31-c128fafd65e0.sql
+2026-06-15T23:28:02.7688727Z ▶ 20260509211340_a7cbed20-680e-4f1a-b338-31233c2bbfbb.sql
+2026-06-15T23:28:02.8084658Z NOTICE:  trigger "embarques_set_fechas_originales" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:02.8115393Z ▶ 20260515194606_5fcd3750-d919-4fe4-b974-a7e1d34fd07f.sql
+2026-06-15T23:28:02.8553321Z ▶ 20260515195451_31d04a9c-3e27-46e8-a79a-b5fd506215f6.sql
+2026-06-15T23:28:02.9010949Z ▶ 20260515234628_9d7c31cf-61df-4a3a-8f9b-306c7c323ed0.sql
+2026-06-15T23:28:02.9438152Z ▶ 20260516020347_34367ce9-a01f-486b-b97f-d324568ab709.sql
+2026-06-15T23:28:02.9927969Z ▶ 20260516021519_57f23fcb-e73f-49c2-a418-8087ca5165fe.sql
+2026-06-15T23:28:03.0362518Z ▶ 20260516022318_75f486e3-8a69-4a4c-b9b4-59f88af3da21.sql
+2026-06-15T23:28:03.0785588Z ▶ 20260516191240_04bf88ec-fc69-4f30-b977-bfcf99caec96.sql
+2026-06-15T23:28:03.1343640Z NOTICE:  relation "idx_embarques_cliente_id" already exists, skipping
+2026-06-15T23:28:03.1368088Z NOTICE:  relation "idx_embarques_estado" already exists, skipping
+2026-06-15T23:28:03.1466616Z NOTICE:  relation "idx_facturas_proforma_id" already exists, skipping
+2026-06-15T23:28:03.1508775Z NOTICE:  relation "idx_proformas_org" already exists, skipping
+2026-06-15T23:28:03.1540974Z NOTICE:  relation "idx_eventos_embarque_embarque_id" already exists, skipping
+2026-06-15T23:28:03.1695893Z ▶ 20260516191616_9ae3d485-2945-44bc-9806-27de32539a18.sql
+2026-06-15T23:28:03.2251414Z ▶ 20260516192335_ee599879-72eb-4e31-93f2-fae06cd4a708.sql
+2026-06-15T23:28:03.2623346Z NOTICE:  policy "Hide soft deleted clientes" for relation "public.clientes" does not exist, skipping
+2026-06-15T23:28:03.2628383Z NOTICE:  policy "Hide soft deleted contactos_cliente" for relation "public.contactos_cliente" does not exist, skipping
+2026-06-15T23:28:03.2631960Z NOTICE:  policy "Hide soft deleted embarques" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:03.2634488Z NOTICE:  policy "Hide soft deleted documentos_embarque" for relation "public.documentos_embarque" does not exist, skipping
+2026-06-15T23:28:03.2637286Z NOTICE:  policy "Hide soft deleted eventos_embarque" for relation "public.eventos_embarque" does not exist, skipping
+2026-06-15T23:28:03.2639991Z NOTICE:  policy "Hide soft deleted notas_embarque" for relation "public.notas_embarque" does not exist, skipping
+2026-06-15T23:28:03.2642916Z NOTICE:  policy "Hide soft deleted cotizaciones" for relation "public.cotizaciones" does not exist, skipping
+2026-06-15T23:28:03.2645553Z NOTICE:  policy "Hide soft deleted cotizacion_costos" for relation "public.cotizacion_costos" does not exist, skipping
+2026-06-15T23:28:03.2647941Z NOTICE:  policy "Hide soft deleted facturas" for relation "public.facturas" does not exist, skipping
+2026-06-15T23:28:03.2649559Z NOTICE:  policy "Hide soft deleted conceptos_factura" for relation "public.conceptos_factura" does not exist, skipping
+2026-06-15T23:28:03.2652179Z NOTICE:  policy "Hide soft deleted proformas" for relation "public.proformas" does not exist, skipping
+2026-06-15T23:28:03.2655795Z NOTICE:  policy "Hide soft deleted proforma_conceptos_consolidados" for relation "public.proforma_conceptos_consolidados" does not exist, skipping
+2026-06-15T23:28:03.2657707Z NOTICE:  policy "Hide soft deleted conceptos_costo" for relation "public.conceptos_costo" does not exist, skipping
+2026-06-15T23:28:03.2660210Z NOTICE:  policy "Hide soft deleted conceptos_venta" for relation "public.conceptos_venta" does not exist, skipping
+2026-06-15T23:28:03.2726448Z ▶ 20260516193820_3ee9a564-74e3-425f-94d5-835cb8b3f2e3.sql
+2026-06-15T23:28:03.3144199Z ▶ 20260516195302_46cddeca-c330-446e-b180-08c3ebd66423.sql
+2026-06-15T23:28:03.3630872Z NOTICE:  function public.marcar_proforma_facturada(uuid,text,date) does not exist, skipping
+2026-06-15T23:28:03.3663983Z ▶ 20260516202549_0ac08ab9-e3a7-4652-8b5e-1e3372146ea3.sql
+2026-06-15T23:28:03.4090333Z ▶ 20260516202951_fd65ac48-2cdf-4139-8f06-e2503b81cbfd.sql
+2026-06-15T23:28:03.4504028Z ▶ 20260516204620_317f0e2e-f332-428c-9617-8cf2469b45ec.sql
+2026-06-15T23:28:03.4918977Z NOTICE:  trigger "trg_congelar_factura" for relation "public.facturas" does not exist, skipping
+2026-06-15T23:28:03.4931741Z NOTICE:  trigger "trg_bloquear_factura_emitida" for relation "public.facturas" does not exist, skipping
+2026-06-15T23:28:03.4941448Z NOTICE:  trigger "trg_congelar_proforma" for relation "public.proformas" does not exist, skipping
+2026-06-15T23:28:03.4972045Z ▶ 20260516213928_5398bd79-7568-4146-bc85-b00735f86c0a.sql
+2026-06-15T23:28:03.5532184Z ▶ 20260517013350_bc571457-9d39-472e-a4f1-f08c2aa9c743.sql
+2026-06-15T23:28:03.6022366Z ▶ 20260517020010_135bfcce-c3bc-414d-a077-449c1496a866.sql
+2026-06-15T23:28:03.6432805Z ▶ 20260517020910_3c5470ca-5ead-4c9c-941b-89854cdc0daa.sql
+2026-06-15T23:28:03.6864816Z  ?column? 
+2026-06-15T23:28:03.6865155Z ----------
+2026-06-15T23:28:03.6865656Z         1
+2026-06-15T23:28:03.6865852Z (1 row)
+2026-06-15T23:28:03.6865963Z 
+2026-06-15T23:28:03.6866286Z  schedule 
+2026-06-15T23:28:03.6866822Z ----------
+2026-06-15T23:28:03.6867183Z         0
+2026-06-15T23:28:03.6867444Z (1 row)
+2026-06-15T23:28:03.6867598Z 
+2026-06-15T23:28:03.6891124Z ▶ 20260517021556_ec3a2b48-397e-490d-ace7-a4945a32441c.sql
+2026-06-15T23:28:03.7287207Z ▶ 20260517022211_4f3d1cd3-8767-4ea2-8252-d0472e47095a.sql
+2026-06-15T23:28:03.7734263Z ▶ 20260517130217_13deae1a-12fb-417a-9ac8-1333864ac51b.sql
+2026-06-15T23:28:03.8171107Z NOTICE:  trigger "trg_notif_cli_embarque_estado" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:03.8208554Z ▶ 20260517130236_04b0195d-1ff6-4bed-8e86-5f56dcd2d7c8.sql
+2026-06-15T23:28:03.8587518Z ▶ 20260517193546_88ea375f-21ed-4584-8d77-3a5d597564f4.sql
+2026-06-15T23:28:03.9050703Z ▶ 20260518182215_31b812c3-24ea-4138-8e67-6c216340da11.sql
+2026-06-15T23:28:03.9428027Z NOTICE:  trigger "trg_set_embarque_created_by" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:03.9477072Z ▶ 20260518195702_cdf1e070-f13b-43a5-9609-a72d782728bc.sql
+2026-06-15T23:28:03.9898691Z ▶ 20260518201811_45c8ba61-4d44-478b-82b1-f98c4a09d23b.sql
+2026-06-15T23:28:04.0339891Z ▶ 20260518213041_062de13d-f1ae-44bf-b142-17dcd63b34f0.sql
+2026-06-15T23:28:04.0765962Z ▶ 20260518215452_6f9833ae-e993-4889-89ab-d93fd6228349.sql
+2026-06-15T23:28:04.1208572Z ▶ 20260518220814_52c3442b-bbc5-420d-8b49-654918288327.sql
+2026-06-15T23:28:04.1641713Z ▶ 20260518225551_873af960-d7ac-421f-98c9-01ff6f5c83ad.sql
+2026-06-15T23:28:04.2075623Z ▶ 20260518225729_1d2075be-7136-42cf-a3b9-e20791c61c39.sql
+2026-06-15T23:28:04.2447267Z ▶ 20260518232754_c4cf51dd-ce6d-4047-b3a9-baf273b7dc0d.sql
+2026-06-15T23:28:04.2826556Z ▶ 20260519000723_72a1a075-5aa7-4213-9a7e-6b9f9e3e3988.sql
+2026-06-15T23:28:04.3206154Z ▶ 20260519022554_1f1adcf2-3f9e-4063-886d-39f6e564fc20.sql
+2026-06-15T23:28:04.3751164Z ▶ 20260519090431_1773cb61-df39-47f1-9fca-3e8af8788f7f.sql
+2026-06-15T23:28:04.4171409Z ▶ 20260525014231_e39f0867-c453-4877-a20d-95ff31d9f6e9.sql
+2026-06-15T23:28:04.4544557Z ▶ 20260525014353_fbd4ccb6-cbd2-45b4-9221-d5ef15b3aacd.sql
+2026-06-15T23:28:04.5279333Z NOTICE:  trigger "trg_crm_etapas_updated_at" for relation "public.crm_etapas_pipeline" does not exist, skipping
+2026-06-15T23:28:04.5285636Z NOTICE:  trigger "trg_crm_leads_updated_at" for relation "public.crm_leads" does not exist, skipping
+2026-06-15T23:28:04.5292177Z NOTICE:  trigger "trg_crm_op_updated_at" for relation "public.crm_oportunidades" does not exist, skipping
+2026-06-15T23:28:04.5297986Z NOTICE:  trigger "trg_crm_act_updated_at" for relation "public.crm_actividades" does not exist, skipping
+2026-06-15T23:28:04.5303999Z NOTICE:  trigger "trg_crm_cuotas_updated_at" for relation "public.crm_cuotas_vendedor" does not exist, skipping
+2026-06-15T23:28:04.5314972Z NOTICE:  trigger "trg_cotizacion_acepta_oportunidad" for relation "public.cotizaciones" does not exist, skipping
+2026-06-15T23:28:04.5363384Z ▶ 20260525033411_b94c2bf4-eebc-453f-842f-f6cf0d145635.sql
+2026-06-15T23:28:04.5854407Z ▶ 20260525035856_b98c246d-5847-417c-9abd-b57a82751544.sql
+2026-06-15T23:28:04.6290809Z NOTICE:  trigger "trg_crm_set_valor_real_on_aceptada" for relation "public.cotizaciones" does not exist, skipping
+2026-06-15T23:28:04.6302038Z NOTICE:  trigger "trg_crm_notify_comentario_oportunidad" for relation "public.crm_comentarios_oportunidad" does not exist, skipping
+2026-06-15T23:28:04.6333974Z ▶ 20260525043606_58d9bfc9-f2ec-4563-bb35-ac827fb45c11.sql
+2026-06-15T23:28:04.6792626Z ▶ 20260525044141_47f947f4-9abc-434a-8890-5a8eb17af4ed.sql
+2026-06-15T23:28:04.7172856Z ▶ 20260525232901_fe930c58-3ed2-492f-97c0-2f3034b15f43.sql
+2026-06-15T23:28:04.7560573Z NOTICE:  trigger "trg_cotizacion_cierra_oportunidad" for relation "public.cotizaciones" does not exist, skipping
+2026-06-15T23:28:04.7591236Z ▶ 20260525232928_116a6dad-8dfa-43eb-8476-dcc11f57363a.sql
+2026-06-15T23:28:04.7966980Z ▶ 20260527061320_4cb9567e-3bbe-4452-8513-f38a418df7f9.sql
+2026-06-15T23:28:04.8336246Z NOTICE:  policy "Tenant read tracking_intentos" for relation "public.tracking_intentos" does not exist, skipping
+2026-06-15T23:28:04.8337675Z NOTICE:  policy "Tenant insert tracking_intentos" for relation "public.tracking_intentos" does not exist, skipping
+2026-06-15T23:28:04.8373524Z ▶ 20260528201035_46eeb0f6-55ea-4e6d-b9bf-f132865218bd.sql
+2026-06-15T23:28:04.8907723Z ▶ 20260528202044_5aa22e86-fa9a-4fad-9664-689c24f9821c.sql
+2026-06-15T23:28:04.9300457Z ▶ 20260528210924_d64b2f60-7eae-40b2-976e-5e779e06d138.sql
+2026-06-15T23:28:04.9697631Z ▶ 20260528213534_14ba497d-6402-457c-8ffc-4fb63bcdf633.sql
+2026-06-15T23:28:05.0160389Z ▶ 20260529230525_8d77aa11-b190-4dce-9518-a91d9e40e6ee.sql
+2026-06-15T23:28:05.0592696Z ▶ 20260530180308_7e1d83cf-84e1-4838-815b-91f617f5ad7b.sql
+2026-06-15T23:28:05.0986282Z ▶ 20260530180341_99e24385-1259-482b-a939-4958421deef4.sql
+2026-06-15T23:28:05.1493039Z ▶ 20260530214748_0aec3320-5801-4678-a01c-788e652fb457.sql
+2026-06-15T23:28:05.1893757Z ▶ 20260531161616_93e372c5-0480-4561-9359-c2d9fbc10756.sql
+2026-06-15T23:28:05.2306540Z ▶ 20260531162349_62b7e5c9-030b-42b2-9b5f-d8b49fcdc988.sql
+2026-06-15T23:28:05.2775697Z ▶ 20260531163314_f8a2c672-919e-49de-9ded-0fde98c9406e.sql
+2026-06-15T23:28:05.3321559Z ▶ 20260531184216_c2f626a5-8466-47c3-9ee7-68d74374d452.sql
+2026-06-15T23:28:05.3805436Z ▶ 20260531184238_5c8a17c0-18b5-4bc5-b6d7-65ab0c3032f9.sql
+2026-06-15T23:28:05.4183450Z ▶ 20260601174336_d5441d4f-2445-4afe-9771-18004e3d0d2f.sql
+2026-06-15T23:28:05.4685754Z ▶ 20260602070742_131b80bb-a163-40b1-ba5a-d505518c33eb.sql
+2026-06-15T23:28:05.5325156Z ▶ 20260602075533_e448def5-082a-409b-ac3c-ad1832a8a160.sql
+2026-06-15T23:28:05.5734008Z ▶ 20260602075640_639b1393-6722-49f6-b57d-af15d9d310ab.sql
+2026-06-15T23:28:05.6170511Z ▶ 20260602185003_e5d31c8f-7b23-436d-b8c8-3e0b0dc0d72b.sql
+2026-06-15T23:28:05.6918573Z ▶ 20260602191723_1abb58da-e461-43fd-8578-4daf1d1231e6.sql
+2026-06-15T23:28:05.7462094Z ▶ 20260602193937_1131d459-841a-4cb5-af6d-3ada147b4de4.sql
+2026-06-15T23:28:05.8252250Z NOTICE:  trigger "trg_pago_factura_comision_ins" for relation "public.pagos_factura" does not exist, skipping
+2026-06-15T23:28:05.8291711Z ▶ 20260602194000_4844d75f-3e28-4e7f-b363-bd80ac5327ae.sql
+2026-06-15T23:28:05.8682760Z ▶ 20260602201808_f574df22-182e-4949-af86-88fb95ae99ee.sql
+2026-06-15T23:28:05.9229699Z ▶ 20260602213410_c80ca8f9-6b6f-43f3-b103-bb23a04a42f8.sql
+2026-06-15T23:28:05.9622025Z NOTICE:  Unificación: 0 grupos, 0 embarques hijos a reapuntar
+2026-06-15T23:28:05.9745566Z NOTICE:  Migración OK: 0 grupos unificados, 0 embarques eliminados
+2026-06-15T23:28:05.9778883Z ▶ 20260602213446_32350259-eb13-45c5-a94e-719d1c0887c8.sql
+2026-06-15T23:28:06.0178891Z ▶ 20260602214147_d9f880c7-c2a4-445a-8c17-61a52343cdf3.sql
+2026-06-15T23:28:06.0599651Z ▶ 20260602230939_7d15e9fd-331d-48a5-ac15-55f9038e7eea.sql
+2026-06-15T23:28:06.1070577Z ▶ 20260602234936_a8c3cacb-a6f8-4fe7-9a72-f90ae012e0a6.sql
+2026-06-15T23:28:06.1481439Z ▶ 20260603013929_daee4eae-fb28-46e2-93fe-74d2b5443ec6.sql
+2026-06-15T23:28:06.1850291Z NOTICE:  trigger "trg_bloquear_conceptos_venta_cerrado" for relation "public.conceptos_venta" does not exist, skipping
+2026-06-15T23:28:06.1857336Z NOTICE:  trigger "trg_bloquear_conceptos_costo_cerrado" for relation "public.conceptos_costo" does not exist, skipping
+2026-06-15T23:28:06.1884968Z ▶ 20260603015449_ad60c6b8-9661-4cc5-9ba3-c8dd87532a44.sql
+2026-06-15T23:28:06.2291208Z ▶ 20260603015642_6d18e392-ce7f-4d67-ba38-f8d49122ba29.sql
+2026-06-15T23:28:06.2693365Z ▶ 20260603032512_77fd6ebb-5500-45e1-883f-b9ebcd5f26fb.sql
+2026-06-15T23:28:06.3082720Z ▶ 20260603033841_158e301b-4fff-4b5b-b3b4-f2a443996a09.sql
+2026-06-15T23:28:06.3496606Z ▶ 20260603034640_abfb2f4e-d674-4fee-95aa-6c9a6877fc94.sql
+2026-06-15T23:28:06.3884960Z ▶ 20260603040539_faad6f74-c799-4759-af45-3eb14a942181.sql
+2026-06-15T23:28:06.4278332Z ▶ 20260604020144_9a5f3c5e-8211-4954-918f-f437d0b91028.sql
+2026-06-15T23:28:06.4738419Z NOTICE:  policy "Super admin read backup embarques" for relation "public._backup_merge_embarques_20260602" does not exist, skipping
+2026-06-15T23:28:06.4743398Z NOTICE:  policy "Super admin read backup fk remap" for relation "public._backup_merge_fk_remap_20260602" does not exist, skipping
+2026-06-15T23:28:06.4776691Z ▶ 20260604031230_015a97c8-9202-4d6d-b08b-9f6665687d80.sql
+2026-06-15T23:28:06.5182683Z ▶ 20260604044004_c6869bd6-26fb-4b43-9719-c60369137195.sql
+2026-06-15T23:28:06.5574185Z ▶ 20260604052500_email_infra.sql
+2026-06-15T23:28:06.5923508Z  ?column? 
+2026-06-15T23:28:06.5923831Z ----------
+2026-06-15T23:28:06.5924114Z         1
+2026-06-15T23:28:06.5924364Z (1 row)
+2026-06-15T23:28:06.5924521Z 
+2026-06-15T23:28:06.5941153Z  ?column? 
+2026-06-15T23:28:06.5941394Z ----------
+2026-06-15T23:28:06.5941602Z         1
+2026-06-15T23:28:06.5941839Z (1 row)
+2026-06-15T23:28:06.5942016Z 
+2026-06-15T23:28:06.5942479Z  ?column? 
+2026-06-15T23:28:06.5942755Z ----------
+2026-06-15T23:28:06.5942978Z         1
+2026-06-15T23:28:06.5943156Z (1 row)
+2026-06-15T23:28:06.5943268Z 
+2026-06-15T23:28:06.6248918Z ▶ 20260604152129_5a036adc-e0a9-4c5c-a5a7-974587ed9bcc.sql
+2026-06-15T23:28:06.6636339Z ▶ 20260604210554_ba05b4f9-30b4-4450-9d0b-4a9735919246.sql
+2026-06-15T23:28:06.7031981Z ▶ 20260608014926_2a8947a8-a048-412b-bcae-4745770e7133.sql
+2026-06-15T23:28:06.7420869Z NOTICE:  constraint "conceptos_venta_tasa_iva_chk" of relation "conceptos_venta" does not exist, skipping
+2026-06-15T23:28:06.7432130Z NOTICE:  constraint "conceptos_costo_tasa_iva_chk" of relation "conceptos_costo" does not exist, skipping
+2026-06-15T23:28:06.7461169Z ▶ 20260608032942_27e3580c-d7c9-4aed-bc58-12d7eb9896cc.sql
+2026-06-15T23:28:06.7868530Z ▶ 20260608194628_fd1211ea-6118-4428-946d-b5c663677d03.sql
+2026-06-15T23:28:06.8255840Z ▶ 20260608195926_e13392f7-e28d-458d-9b01-e76d25619214.sql
+2026-06-15T23:28:06.8658285Z ▶ 20260609052157_be4205b9-671c-4cfc-81e7-db965f5e5492.sql
+2026-06-15T23:28:06.9059883Z ▶ 20260609190306_03343384-ec23-4655-908c-d2bb4d4aa999.sql
+2026-06-15T23:28:06.9441184Z NOTICE:  constraint "proveedores_categoria_check" of relation "proveedores" does not exist, skipping
+2026-06-15T23:28:06.9494449Z ▶ 20260609195309_b6f85f14-2989-4553-9586-1461b4f2dfc0.sql
+2026-06-15T23:28:06.9888243Z ▶ 20260609195529_a2b20798-df44-47c6-9a5c-717abdbdacd0.sql
+2026-06-15T23:28:07.0331523Z ▶ 20260609200325_f8896348-a9e0-4a1b-9e58-fed27b42865d.sql
+2026-06-15T23:28:07.0746948Z ▶ 20260609201125_7847d619-690b-4800-b23c-84089cb124f2.sql
+2026-06-15T23:28:07.1133245Z ▶ 20260609222326_9c1be47c-c424-4aa9-b22d-ba76f360b7e8.sql
+2026-06-15T23:28:07.1515509Z ▶ 20260609223646_e7d4e731-5c32-43db-bfc6-cf3df536f407.sql
+2026-06-15T23:28:07.1880389Z NOTICE:  constraint "cotizaciones_tipo_documento_check" of relation "cotizaciones" does not exist, skipping
+2026-06-15T23:28:07.1919017Z NOTICE:  trigger "trg_validate_cotizacion_informativa" for relation "public.cotizaciones" does not exist, skipping
+2026-06-15T23:28:07.1948061Z ▶ 20260609224645_0abae5c3-7b8b-43f4-9402-83f57895eed0.sql
+2026-06-15T23:28:07.2337888Z ▶ 20260609233716_e858a09b-a6a5-4cec-a6fa-fc879c85a7d9.sql
+2026-06-15T23:28:07.2706092Z NOTICE:  trigger "trg_embarques_protect_creator" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:07.2734002Z ▶ 20260610033412_ed8b146f-eacf-4cb1-afde-bea8fe54a78c.sql
+2026-06-15T23:28:07.3409404Z ▶ 20260610035415_1c849f7a-e3f4-4fee-bffc-6c1799be0002.sql
+2026-06-15T23:28:07.4020141Z ▶ 20260610035451_0b1e6c41-3c7d-473b-aeaa-9b09a078eddc.sql
+2026-06-15T23:28:07.4409259Z ▶ 20260610041001_3edc1f4b-57ef-4375-8e46-75541802ddc1.sql
+2026-06-15T23:28:07.4803159Z NOTICE:  trigger "trg_costeo_tarifas_marcar_reemplazadas" for relation "public.costeo_tarifas" does not exist, skipping
+2026-06-15T23:28:07.4890616Z ▶ 20260610041022_eaa60766-7449-410d-9476-0cbf1ecb5bf3.sql
+2026-06-15T23:28:07.5266277Z ▶ 20260610042924_a7366a21-c799-457a-a02f-b055b3a2afe2.sql
+2026-06-15T23:28:07.5750387Z NOTICE:  trigger "trg_crear_garantia_contenedor" for relation "public.embarque_contenedores" does not exist, skipping
+2026-06-15T23:28:07.5872409Z ▶ 20260610043017_410d5a7f-8bf7-43f0-92cb-97c004967ebd.sql
+2026-06-15T23:28:07.6272465Z NOTICE:  trigger "trg_embarques_entregado_demoras" for relation "public.embarques" does not exist, skipping
+2026-06-15T23:28:07.6301884Z ▶ 20260610051809_a693a268-f01d-41b6-bba6-d742a4b6bd09.sql
+2026-06-15T23:28:07.6724387Z ▶ 20260610053655_32cb9f67-3bc3-4389-a6c8-17a4916f082f.sql
+2026-06-15T23:28:07.7109256Z ▶ 20260610053811_5dfa967c-cf7e-457c-9714-df965bda0b06.sql
+2026-06-15T23:28:07.7499678Z ▶ 20260610053939_d0e0cfba-66e8-4ecf-9231-0458327aace3.sql
+2026-06-15T23:28:07.7891958Z ▶ 20260610054044_c82c5ad8-94cd-4d07-b7f2-43a66d590e9a.sql
+2026-06-15T23:28:07.8283455Z ▶ 20260610054530_269e509d-2ff6-42f3-9101-86ec415d747d.sql
+2026-06-15T23:28:07.8667431Z ▶ 20260610174146_4e4c7b6b-de63-4a12-be4b-cdea78cd09e0.sql
+2026-06-15T23:28:07.9054058Z ▶ 20260610182646_3eac45f9-9439-438c-811b-126986d20aae.sql
+2026-06-15T23:28:07.9425007Z ▶ 20260610182715_98a2994b-ea54-460e-89b2-747c44ee97ad.sql
+2026-06-15T23:28:07.9808266Z ▶ 20260610192305_11504ddb-bb86-4731-aafd-d9e501f31b68.sql
+2026-06-15T23:28:08.0193365Z ▶ 20260610200258_b067625f-cc1d-433c-9472-bc4c16e46f99.sql
+2026-06-15T23:28:08.0576974Z ▶ 20260610202316_e7bf8dd9-23da-4666-9088-02e991f9429e.sql
+2026-06-15T23:28:08.0963395Z ▶ 20260610203759_91f81371-c911-4846-b384-dad8b10b26a9.sql
+2026-06-15T23:28:08.1368007Z ▶ 20260610231815_bc553fd0-486f-468d-885b-5367fef2a06f.sql
+2026-06-15T23:28:08.1750726Z ▶ 20260611000435_1f2ff55d-43da-47e8-99ad-56ff6684ecc7.sql
+2026-06-15T23:28:08.2131287Z ▶ 20260611003920_00559730-b5bf-404f-ae79-c67bab954b57.sql
+2026-06-15T23:28:08.2545930Z ▶ 20260612213437_b5fb4b82-b5db-4078-bae7-c39994ce8971.sql
+2026-06-15T23:28:08.2974244Z ▶ 20260614005946_4a5a6dd0-a9f7-415b-af46-01a991445d0c.sql
+2026-06-15T23:28:08.3375903Z ▶ 20260615192405_541838e5-19d1-419e-8e89-60ff7396166e.sql
+2026-06-15T23:28:08.3790011Z NOTICE:  trigger "trg_set_revisado_at" for relation "public.auditoria_revisiones" does not exist, skipping
+2026-06-15T23:28:08.3831047Z ▶ 20260615195748_557f87aa-7da8-446c-a864-e1f33b0ab15e.sql
+2026-06-15T23:28:08.4255140Z ▶ 20260615202414_c4e90140-4bd1-4f97-9d8e-17defb3fa4e4.sql
+2026-06-15T23:28:08.4657022Z ▶ 20260615203058_2672c21f-a83d-4840-b68a-781761cff0ae.sql
+2026-06-15T23:28:08.5055509Z ▶ 20260615203654_c5ca9b72-2377-453a-9630-abe561dcc262.sql
+2026-06-15T23:28:08.5475951Z ▶ 20260615203801_a72b46d0-79a5-40a0-8c30-9c94dce4f2be.sql
+2026-06-15T23:28:08.5888651Z ▶ 20260615205522_8b6eef56-1742-43bc-b01f-e437c05b961e.sql
+2026-06-15T23:28:08.6307141Z ▶ 20260615205837_2c14752f-1c3f-4716-bbce-49e727a3d380.sql
+2026-06-15T23:28:08.6719587Z ▶ 20260615211233_c79d6500-96d4-4801-8947-d529a10d71fa.sql
+2026-06-15T23:28:08.7124868Z ▶ 20260615212544_ab6d85f6-02f7-4c92-9cc5-3de2a9767731.sql
+2026-06-15T23:28:08.7527410Z ▶ 20260615221107_d3cbcfa4-a0b5-4507-88fa-c96df6c72a1d.sql
+2026-06-15T23:28:08.7955842Z ▶ 20260615222120_f36a5e6d-b0ac-40d8-9ec8-071cb12650bc.sql
+2026-06-15T23:28:08.8341761Z ▶ 20260615222527_08cb9691-9fd5-4990-a267-9a5d4894f481.sql
+2026-06-15T23:28:08.8740719Z ▶ 20260615223809_90544edf-8071-4e9b-8a61-48974fd6f208.sql
+2026-06-15T23:28:08.9142353Z ▶ 20260615224234_5ee9bcfa-1eaf-40d6-b5d9-41e3b2d0416f.sql
+2026-06-15T23:28:08.9550937Z ▶ 20260615225019_37edbbbb-1a6d-4a48-9f8f-d5ef9100e7e7.sql
+2026-06-15T23:28:08.9961889Z ##[group]Run $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
+2026-06-15T23:28:08.9962375Z [36;1m$PSQL -f supabase/tests/rls/_ci_post_migrate.sql[0m
+2026-06-15T23:28:08.9997025Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:08.9997287Z env:
+2026-06-15T23:28:08.9997703Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:08.9998182Z   PGHOST: localhost
+2026-06-15T23:28:08.9998398Z   PGPORT: 5432
+2026-06-15T23:28:08.9998602Z   PGUSER: postgres
+2026-06-15T23:28:08.9998823Z   PGPASSWORD: postgres
+2026-06-15T23:28:08.9999047Z   PGDATABASE: postgres
+2026-06-15T23:28:08.9999281Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:08.9999746Z ##[endgroup]
+2026-06-15T23:28:09.0487315Z ##[group]Run $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
+2026-06-15T23:28:09.0487749Z [36;1m$PSQL -f supabase/tests/rls/_ci_verify_rls.sql[0m
+2026-06-15T23:28:09.0520577Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:09.0520845Z env:
+2026-06-15T23:28:09.0521255Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:09.0521736Z   PGHOST: localhost
+2026-06-15T23:28:09.0521954Z   PGPORT: 5432
+2026-06-15T23:28:09.0522158Z   PGUSER: postgres
+2026-06-15T23:28:09.0522373Z   PGPASSWORD: postgres
+2026-06-15T23:28:09.0522596Z   PGDATABASE: postgres
+2026-06-15T23:28:09.0522829Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:09.0523098Z ##[endgroup]
+2026-06-15T23:28:09.0955148Z psql:supabase/tests/rls/_ci_verify_rls.sql:68: NOTICE:  ✓ RLS coverage OK — todas las tablas en public tienen RLS + al menos 1 policy
+2026-06-15T23:28:09.0996358Z ##[group]Run mkdir -p .rls-snapshot
+2026-06-15T23:28:09.0996722Z [36;1mmkdir -p .rls-snapshot[0m
+2026-06-15T23:28:09.0997157Z [36;1m# --clean + --if-exists permite restaurar sobre una BD vacía sin colisiones.[0m
+2026-06-15T23:28:09.0997663Z [36;1mpg_dump --format=custom --no-owner --no-privileges \[0m
+2026-06-15T23:28:09.0998039Z [36;1m  --file=.rls-snapshot/db.dump postgres[0m
+2026-06-15T23:28:09.0998357Z [36;1mls -lh .rls-snapshot/[0m
+2026-06-15T23:28:09.1031462Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:09.1031718Z env:
+2026-06-15T23:28:09.1032135Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:09.1032612Z   PGHOST: localhost
+2026-06-15T23:28:09.1032828Z   PGPORT: 5432
+2026-06-15T23:28:09.1033029Z   PGUSER: postgres
+2026-06-15T23:28:09.1033256Z   PGPASSWORD: postgres
+2026-06-15T23:28:09.1033477Z   PGDATABASE: postgres
+2026-06-15T23:28:09.1033707Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:09.1034025Z ##[endgroup]
+2026-06-15T23:28:09.3434481Z total 696K
+2026-06-15T23:28:09.3435039Z -rw-r--r-- 1 runner runner 694K Jun 15 23:28 db.dump
+2026-06-15T23:28:09.3499702Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+2026-06-15T23:28:09.3500121Z with:
+2026-06-15T23:28:09.3500329Z   name: rls-db-snapshot
+2026-06-15T23:28:09.3500583Z   path: .rls-snapshot/db.dump
+2026-06-15T23:28:09.3500840Z   if-no-files-found: error
+2026-06-15T23:28:09.3501099Z   retention-days: 1
+2026-06-15T23:28:09.3501321Z   compression-level: 6
+2026-06-15T23:28:09.3501543Z   overwrite: false
+2026-06-15T23:28:09.3501770Z   include-hidden-files: false
+2026-06-15T23:28:09.3502010Z   archive: true
+2026-06-15T23:28:09.3502210Z env:
+2026-06-15T23:28:09.3502611Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:09.3503085Z   PGHOST: localhost
+2026-06-15T23:28:09.3503298Z   PGPORT: 5432
+2026-06-15T23:28:09.3503504Z   PGUSER: postgres
+2026-06-15T23:28:09.3503715Z   PGPASSWORD: postgres
+2026-06-15T23:28:09.3503950Z   PGDATABASE: postgres
+2026-06-15T23:28:09.3504229Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:09.3504512Z ##[endgroup]
+2026-06-15T23:28:09.4920002Z With the provided path, there will be 1 file uploaded
+2026-06-15T23:28:09.4924548Z Artifact name is valid!
+2026-06-15T23:28:09.4925117Z Root directory input is valid!
+2026-06-15T23:28:09.7084570Z Uploading artifact: rls-db-snapshot.zip
+2026-06-15T23:28:09.7141939Z Beginning upload of artifact content to blob storage
+2026-06-15T23:28:09.9716430Z Uploaded bytes 109650
+2026-06-15T23:28:10.0080268Z Finished uploading artifact content to blob storage!
+2026-06-15T23:28:10.0081184Z SHA256 digest of uploaded artifact is 807bf39db8546073853ae17a74ddac340201a6b540986304e49be316b9310390
+2026-06-15T23:28:10.0081965Z Finalizing artifact upload
+2026-06-15T23:28:10.2517930Z Artifact rls-db-snapshot successfully finalized. Artifact ID 7653451182
+2026-06-15T23:28:10.2518733Z Artifact rls-db-snapshot has been successfully uploaded! Final size is 109650 bytes. Artifact ID is 7653451182
+2026-06-15T23:28:10.2522056Z Artifact download URL: https://github.com/jfcaicedoobando-arch/elogistix/actions/runs/27583155375/artifacts/7653451182
+2026-06-15T23:28:10.2708071Z Post job cleanup.
+2026-06-15T23:28:10.3543612Z [command]/usr/bin/git version
+2026-06-15T23:28:10.3580302Z git version 2.54.0
+2026-06-15T23:28:10.3617270Z Temporarily overriding HOME='/home/runner/work/_temp/c85510f1-4881-4cf9-90c2-11e51d6b8469' before making global git config changes
+2026-06-15T23:28:10.3618474Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-15T23:28:10.3622170Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/elogistix/elogistix
+2026-06-15T23:28:10.3654251Z Removing SSH command configuration
+2026-06-15T23:28:10.3660563Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-15T23:28:10.3696261Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-15T23:28:10.3930715Z Removing HTTP extra header
+2026-06-15T23:28:10.3936310Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-15T23:28:10.3968502Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-15T23:28:10.4202862Z Removing includeIf entries pointing to credentials config files
+2026-06-15T23:28:10.4209639Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-15T23:28:10.4267831Z includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path
+2026-06-15T23:28:10.4268708Z includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path
+2026-06-15T23:28:10.4269534Z includeif.gitdir:/github/workspace/.git.path
+2026-06-15T23:28:10.4270241Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-15T23:28:10.4278284Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path
+2026-06-15T23:28:10.4300345Z /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4311241Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4346979Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path
+2026-06-15T23:28:10.4370260Z /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4379401Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4411630Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-06-15T23:28:10.4433437Z /github/runner_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4441127Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4472890Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-15T23:28:10.4494293Z /github/runner_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4504255Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config
+2026-06-15T23:28:10.4537645Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-15T23:28:10.4768231Z Removing credentials config '/home/runner/work/_temp/git-credentials-ce6344f9-7720-4dd6-83f7-033324bce033.config'
+2026-06-15T23:28:10.4888339Z Print service container logs: 432b8a6e5a324464832e5b6b2e5cfa70_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_35c9cf
+2026-06-15T23:28:10.4893049Z ##[command]/usr/bin/docker logs --details fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:28:10.5023902Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:28:10.5026137Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:28:10.5027297Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:28:10.5028428Z  2026-06-15 23:27:51.785 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:10.5029208Z  2026-06-15 23:27:51.785 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:28:10.5029738Z  2026-06-15 23:27:51.785 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:28:10.5030266Z  2026-06-15 23:27:51.786 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:10.5030815Z  2026-06-15 23:27:51.788 UTC [62] LOG:  database system was shut down at 2026-06-15 23:27:51 UTC
+2026-06-15T23:28:10.5031367Z  2026-06-15 23:27:51.793 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:28:10.5031874Z  2026-06-15 23:27:58.359 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:28:10.5032417Z  2026-06-15 23:27:58.359 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:28:10.5032992Z  2026-06-15 23:27:58.359 UTC [75] CONTEXT:  SQL statement "CREATE PUBLICATION supabase_realtime"
+2026-06-15T23:28:10.5033511Z  	PL/pgSQL function inline_code_block line 4 at SQL statement
+2026-06-15T23:28:10.5033907Z  This user must also own the server process.
+2026-06-15T23:28:10.5034207Z  
+2026-06-15T23:28:10.5034504Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:28:10.5034952Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:28:10.5035629Z  The default text search configuration will be set to "english".
+2026-06-15T23:28:10.5036127Z  
+2026-06-15T23:28:10.5036434Z  Data page checksums are disabled.
+2026-06-15T23:28:10.5036816Z  
+2026-06-15T23:28:10.5037274Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:28:10.5037900Z  creating subdirectories ... ok
+2026-06-15T23:28:10.5038407Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:28:10.5038965Z  selecting default max_connections ... 100
+2026-06-15T23:28:10.5039429Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:28:10.5039898Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:28:10.5040349Z  creating configuration files ... ok
+2026-06-15T23:28:10.5040772Z  running bootstrap script ... ok
+2026-06-15T23:28:10.5041238Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:28:10.5041727Z  syncing data to disk ... ok
+2026-06-15T23:28:10.5042099Z  
+2026-06-15T23:28:10.5042466Z  
+2026-06-15T23:28:10.5042840Z  Success. You can now start the database server using:
+2026-06-15T23:28:10.5043304Z  
+2026-06-15T23:28:10.5043664Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:28:10.5044129Z  
+2026-06-15T23:28:10.5045336Z  waiting for server to start....2026-06-15 23:27:51.546 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:10.5046772Z  2026-06-15 23:27:51.546 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:10.5047609Z  2026-06-15 23:27:51.548 UTC [51] LOG:  database system was shut down at 2026-06-15 23:27:51 UTC
+2026-06-15T23:28:10.5048724Z  2026-06-15 23:27:51.552 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:28:10.5049553Z   done
+2026-06-15T23:28:10.5049842Z  server started
+2026-06-15T23:28:10.5050151Z  
+2026-06-15T23:28:10.5050650Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:28:10.5051274Z  
+2026-06-15T23:28:10.5051817Z  2026-06-15 23:27:51.662 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:28:10.5052502Z  waiting for server to shut down....2026-06-15 23:27:51.662 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:28:10.5053216Z  2026-06-15 23:27:51.665 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:28:10.5053762Z  2026-06-15 23:27:51.665 UTC [49] LOG:  shutting down
+2026-06-15T23:28:10.5054152Z  2026-06-15 23:27:51.665 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:28:10.5055117Z  2026-06-15 23:27:51.668 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:28:10.5056262Z  2026-06-15 23:27:51.672 UTC [48] LOG:  database system is shut down
+2026-06-15T23:28:10.5056597Z   done
+2026-06-15T23:28:10.5056802Z  server stopped
+2026-06-15T23:28:10.5057002Z  
+2026-06-15T23:28:10.5057245Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:28:10.5057545Z  
+2026-06-15T23:28:10.5062629Z Stop and remove container: 432b8a6e5a324464832e5b6b2e5cfa70_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_35c9cf
+2026-06-15T23:28:10.5067927Z ##[command]/usr/bin/docker rm --force fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:28:10.6606449Z fa507569de449ed98588c35a6172d42add38b22332750428aff48b112701fca8
+2026-06-15T23:28:10.6638533Z Remove container network: github_network_dad73a5b975c4e19938a671f1738042a
+2026-06-15T23:28:10.6642882Z ##[command]/usr/bin/docker network rm github_network_dad73a5b975c4e19938a671f1738042a
+2026-06-15T23:28:10.7730434Z github_network_dad73a5b975c4e19938a671f1738042a
+2026-06-15T23:28:10.7798678Z Cleaning up orphan processes

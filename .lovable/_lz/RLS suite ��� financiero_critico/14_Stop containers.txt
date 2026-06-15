@@ -1,0 +1,317 @@
+﻿2026-06-15T23:28:32.7715935Z Print service container logs: ceeaab9a59b24d89b36389d67451eeb8_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f482f8
+2026-06-15T23:28:32.7720731Z ##[command]/usr/bin/docker logs --details 3a3db92d44e08c3f9d8d2963949fb0adb8d33e276121e15bd6d2555c917ef7c1
+2026-06-15T23:28:32.7848087Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:28:32.7849046Z  This user must also own the server process.
+2026-06-15T23:28:32.7850771Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:28:32.7851911Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:28:32.7853201Z  
+2026-06-15T23:28:32.7853892Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:28:32.7855033Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:28:32.7856005Z  The default text search configuration will be set to "english".
+2026-06-15T23:28:32.7856807Z  
+2026-06-15T23:28:32.7857301Z  Data page checksums are disabled.
+2026-06-15T23:28:32.7857900Z  
+2026-06-15T23:28:32.7858545Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:28:32.7859374Z  creating subdirectories ... ok
+2026-06-15T23:28:32.7860064Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:28:32.7860804Z  selecting default max_connections ... 100
+2026-06-15T23:28:32.7861896Z  2026-06-15 23:28:24.173 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:32.7863103Z  2026-06-15 23:28:24.174 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:28:32.7863653Z  2026-06-15 23:28:24.174 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:28:32.7864220Z  2026-06-15 23:28:24.175 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:32.7865050Z  2026-06-15 23:28:24.177 UTC [62] LOG:  database system was shut down at 2026-06-15 23:28:24 UTC
+2026-06-15T23:28:32.7865685Z  2026-06-15 23:28:24.181 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:28:32.7866286Z  2026-06-15 23:28:32.473 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:28:32.7866931Z  2026-06-15 23:28:32.473 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:28:32.7867648Z  2026-06-15 23:28:32.532 UTC [76] ERROR:  new row for relation "proveedores" violates check constraint "proveedores_categoria_check"
+2026-06-15T23:28:32.7868946Z  2026-06-15 23:28:32.532 UTC [76] DETAIL:  Failing row contains (645440c1-dc37-490a-915e-81e233768ffe, ProvFC A, null, null, , , , , MXN, null, 2026-06-15 23:28:32.522942+00, 2026-06-15 23:28:32.522942+00, 9a1a0ed9-4f28-4a3a-aa10-18a0c5e47299, Logistico, null, null, null, null, null, null, null, null).
+2026-06-15T23:28:32.7870488Z  2026-06-15 23:28:32.532 UTC [76] CONTEXT:  SQL statement "INSERT INTO public.proveedores(id, nombre, organization_id)
+2026-06-15T23:28:32.7871154Z  	    VALUES (prov_a, 'ProvFC A', org_a), (prov_b, 'ProvFC B', org_b)"
+2026-06-15T23:28:32.7871660Z  	PL/pgSQL function inline_code_block line 44 at SQL statement
+2026-06-15T23:28:32.7872084Z  2026-06-15 23:28:32.532 UTC [76] STATEMENT:  DO $$
+2026-06-15T23:28:32.7872425Z  	DECLARE
+2026-06-15T23:28:32.7872656Z  	  org_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7872983Z  	  org_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7873313Z  	  user_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7873637Z  	  user_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7873940Z  	  cli_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7874247Z  	  cli_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7874639Z  	  emb_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7875367Z  	  emb_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7875804Z  	  prov_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7876520Z  	  prov_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7876938Z  	  fac_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7877359Z  	  fac_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7877762Z  	  cot_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7878174Z  	  cuenta_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7878597Z  	  cuenta_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7879014Z  	  pf_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7879407Z  	  pf_b uuid := gen_random_uuid();
+2026-06-15T23:28:32.7879820Z  	  pago_fac_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7880259Z  	  pago_prov_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7880681Z  	  nc_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7881000Z  	  vend_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7881279Z  	  liq_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7881542Z  	  com_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7881817Z  	  mov_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7882077Z  	  cc_a uuid := gen_random_uuid();
+2026-06-15T23:28:32.7882341Z  	  visible int;
+2026-06-15T23:28:32.7882554Z  	BEGIN
+2026-06-15T23:28:32.7882837Z  	  -- Seed mínimo (bypass RLS como rol postgres)
+2026-06-15T23:28:32.7883368Z  	  INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS FIN-C A'), (org_b, 'RLS FIN-C B');
+2026-06-15T23:28:32.7883999Z  	  INSERT INTO public.organization_members(organization_id, user_id, role)
+2026-06-15T23:28:32.7884453Z  	    VALUES (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
+2026-06-15T23:28:32.7885737Z  	  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
+2026-06-15T23:28:32.7886402Z  	
+2026-06-15T23:28:32.7886747Z  	  INSERT INTO public.clientes(id, nombre, organization_id)
+2026-06-15T23:28:32.7887181Z  	    VALUES (cli_a, 'CliFinC A', org_a), (cli_b, 'CliFinC B', org_b);
+2026-06-15T23:28:32.7887520Z  	
+2026-06-15T23:28:32.7887976Z  	  INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm)
+2026-06-15T23:28:32.7888511Z  	    VALUES
+2026-06-15T23:28:32.7888955Z  	      (emb_a, 'EXP-FC-A', cli_a, 'CliFinC A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
+2026-06-15T23:28:32.7889571Z  	      (emb_b, 'EXP-FC-B', cli_b, 'CliFinC B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
+2026-06-15T23:28:32.7889972Z  	
+2026-06-15T23:28:32.7890258Z  	  INSERT INTO public.proveedores(id, nombre, organization_id)
+2026-06-15T23:28:32.7890693Z  	    VALUES (prov_a, 'ProvFC A', org_a), (prov_b, 'ProvFC B', org_b);
+2026-06-15T23:28:32.7891025Z  	
+2026-06-15T23:28:32.7891264Z  	  -- =========================================================================
+2026-06-15T23:28:32.7891638Z  	  -- TEST 1: cuentas_bancarias aislamiento
+2026-06-15T23:28:32.7892153Z  	  -- =========================================================================
+2026-06-15T23:28:32.7892503Z  	  INSERT INTO public.cuentas_bancarias(
+2026-06-15T23:28:32.7892976Z  	    id, organization_id, banco, alias, numero_cuenta, clabe, moneda, saldo_inicial, activa, notas
+2026-06-15T23:28:32.7893429Z  	  ) VALUES
+2026-06-15T23:28:32.7893743Z  	    (cuenta_a, org_a, 'BBVA', 'Op A', '0001', '012180000000000001', 'MXN', 0, true, ''),
+2026-06-15T23:28:32.7894201Z  	    (cuenta_b, org_b, 'BBVA', 'Op B', '0002', '012180000000000002', 'MXN', 0, true, '');
+2026-06-15T23:28:32.7894562Z  	
+2026-06-15T23:28:32.7894773Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:32.7895411Z  	  SELECT count(*) INTO visible FROM public.cuentas_bancarias;
+2026-06-15T23:28:32.7895909Z  	  PERFORM pg_temp.assert(visible = 1, format('user_a debe ver 1 cuenta, vio %s', visible));
+2026-06-15T23:28:32.7896453Z  	  SELECT count(*) INTO visible FROM public.cuentas_bancarias WHERE id = cuenta_b;
+2026-06-15T23:28:32.7896980Z  	  PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver cuenta_bancaria de org_b');
+2026-06-15T23:28:32.7897377Z  	  RESET ROLE;
+2026-06-15T23:28:32.7897589Z  	
+2026-06-15T23:28:32.7897880Z  	  -- =========================================================================
+2026-06-15T23:28:32.7898375Z  	  -- TEST 2: bbva_movimientos aislamiento
+2026-06-15T23:28:32.7898691Z  	  -- =========================================================================
+2026-06-15T23:28:32.7899018Z  	  INSERT INTO public.bbva_movimientos(
+2026-06-15T23:28:32.7899391Z  	    id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+2026-06-15T23:28:32.7899886Z  	    cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en
+2026-06-15T23:28:32.7900265Z  	  ) VALUES (
+2026-06-15T23:28:32.7900569Z  	    mov_a, org_a, cuenta_a, CURRENT_DATE, 'Depósito test', 'REF-001',
+2026-06-15T23:28:32.7900955Z  	    0, 1000, 'hash-test-001', 'pendiente', '', now()
+2026-06-15T23:28:32.7901249Z  	  );
+2026-06-15T23:28:32.7901447Z  	
+2026-06-15T23:28:32.7901655Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7902030Z  	  SELECT count(*) INTO visible FROM public.bbva_movimientos WHERE id = mov_a;
+2026-06-15T23:28:32.7902553Z  	  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver bbva_movimientos de org_a');
+2026-06-15T23:28:32.7902957Z  	  RESET ROLE;
+2026-06-15T23:28:32.7903158Z  	
+2026-06-15T23:28:32.7903382Z  	  -- =========================================================================
+2026-06-15T23:28:32.7903720Z  	  -- TEST 3: proveedor_facturas aislamiento
+2026-06-15T23:28:32.7904043Z  	  -- =========================================================================
+2026-06-15T23:28:32.7904363Z  	  INSERT INTO public.proveedor_facturas(
+2026-06-15T23:28:32.7904773Z  	    id, organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
+2026-06-15T23:28:32.7905624Z  	    fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas
+2026-06-15T23:28:32.7906114Z  	  ) VALUES
+2026-06-15T23:28:32.7906376Z  	    (pf_a, org_a, prov_a, 'ProvFC A', emb_a, 'PV-A-001',
+2026-06-15T23:28:32.7906754Z  	      CURRENT_DATE, 30, 'MXN', 0, 1000, 160, 0, 1160, 'Vigente', ''),
+2026-06-15T23:28:32.7907146Z  	    (pf_b, org_b, prov_b, 'ProvFC B', emb_b, 'PV-B-001',
+2026-06-15T23:28:32.7907500Z  	      CURRENT_DATE, 30, 'MXN', 0, 2000, 320, 0, 2320, 'Vigente', '');
+2026-06-15T23:28:32.7907814Z  	
+2026-06-15T23:28:32.7908018Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:32.7908368Z  	  SELECT count(*) INTO visible FROM public.proveedor_facturas;
+2026-06-15T23:28:32.7908885Z  	  PERFORM pg_temp.assert(visible = 1, format('user_a debe ver 1 factura proveedor, vio %s', visible));
+2026-06-15T23:28:32.7909437Z  	  SELECT count(*) INTO visible FROM public.proveedor_facturas WHERE id = pf_b;
+2026-06-15T23:28:32.7909950Z  	  PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver factura proveedor de org_b');
+2026-06-15T23:28:32.7910351Z  	  RESET ROLE;
+2026-06-15T23:28:32.7910704Z  	
+2026-06-15T23:28:32.7910926Z  	  -- =========================================================================
+2026-06-15T23:28:32.7911308Z  	  -- TEST 4: cotizacion_costos aislamiento (markups internos)
+2026-06-15T23:28:32.7911679Z  	  -- =========================================================================
+2026-06-15T23:28:32.7912206Z  	  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, modo, tipo, incoterm, estado)
+2026-06-15T23:28:32.7912870Z  	    VALUES (cot_a, org_a, cli_a, 'CliFinC A', 'Marítimo', 'Importación', 'FOB', 'Cotizada');
+2026-06-15T23:28:32.7913270Z  	
+2026-06-15T23:28:32.7913477Z  	  INSERT INTO public.cotizacion_costos(
+2026-06-15T23:28:32.7913929Z  	    id, cotizacion_id, concepto, moneda, proveedor, cantidad, costo_unitario, precio_venta,
+2026-06-15T23:28:32.7914378Z  	    unidad_medida, organization_id, notas
+2026-06-15T23:28:32.7914653Z  	  ) VALUES (
+2026-06-15T23:28:32.7915099Z  	    cc_a, cot_a, 'Flete', 'USD', 'ProvFC A', 1, 500, 800, 'BL', org_a, ''
+2026-06-15T23:28:32.7915457Z  	  );
+2026-06-15T23:28:32.7915646Z  	
+2026-06-15T23:28:32.7915847Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7916223Z  	  SELECT count(*) INTO visible FROM public.cotizacion_costos WHERE id = cc_a;
+2026-06-15T23:28:32.7916878Z  	  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver cotizacion_costos de org_a');
+2026-06-15T23:28:32.7917280Z  	  RESET ROLE;
+2026-06-15T23:28:32.7917482Z  	
+2026-06-15T23:28:32.7917713Z  	  -- =========================================================================
+2026-06-15T23:28:32.7918100Z  	  -- TEST 5: pagos_factura aislamiento (requiere factura previa)
+2026-06-15T23:28:32.7918467Z  	  -- =========================================================================
+2026-06-15T23:28:32.7918985Z  	  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='facturas') THEN
+2026-06-15T23:28:32.7919493Z  	    INSERT INTO public.facturas(
+2026-06-15T23:28:32.7919852Z  	      id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+2026-06-15T23:28:32.7920355Z  	      fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+2026-06-15T23:28:32.7920755Z  	    ) VALUES (
+2026-06-15T23:28:32.7921026Z  	      fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
+2026-06-15T23:28:32.7921444Z  	      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'
+2026-06-15T23:28:32.7921808Z  	    );
+2026-06-15T23:28:32.7922006Z  	
+2026-06-15T23:28:32.7922215Z  	    INSERT INTO public.pagos_factura(
+2026-06-15T23:28:32.7922599Z  	      id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
+2026-06-15T23:28:32.7923112Z  	      monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn
+2026-06-15T23:28:32.7923522Z  	    ) VALUES (
+2026-06-15T23:28:32.7923801Z  	      pago_fac_a, fac_a, org_a, CURRENT_DATE, 500, 'MXN', 1,
+2026-06-15T23:28:32.7924149Z  	      500, 'Transferencia', 'REF-PF-A', '', 0
+2026-06-15T23:28:32.7924445Z  	    );
+2026-06-15T23:28:32.7924630Z  	
+2026-06-15T23:28:32.7925021Z  	    PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7925465Z  	    SELECT count(*) INTO visible FROM public.pagos_factura WHERE id = pago_fac_a;
+2026-06-15T23:28:32.7925998Z  	    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver pagos_factura de org_a');
+2026-06-15T23:28:32.7926393Z  	    RESET ROLE;
+2026-06-15T23:28:32.7926602Z  	
+2026-06-15T23:28:32.7926830Z  	    -- TEST 6: factura_notas_credito aislamiento
+2026-06-15T23:28:32.7927161Z  	    INSERT INTO public.factura_notas_credito(
+2026-06-15T23:28:32.7927557Z  	      id, organization_id, factura_id, folio, motivo, descripcion, monto, moneda,
+2026-06-15T23:28:32.7927954Z  	      tipo_cambio, estado, fecha_emision
+2026-06-15T23:28:32.7928226Z  	    ) VALUES (
+2026-06-15T23:28:32.7928502Z  	      nc_a, org_a, fac_a, 'NC-A-001', 'descuento', 'Ajuste', 100, 'MXN',
+2026-06-15T23:28:32.7928860Z  	      1, 'aplicada', CURRENT_DATE
+2026-06-15T23:28:32.7929261Z  	    );
+2026-06-15T23:28:32.7929451Z  	
+2026-06-15T23:28:32.7929650Z  	    PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7930056Z  	    SELECT count(*) INTO visible FROM public.factura_notas_credito WHERE id = nc_a;
+2026-06-15T23:28:32.7930593Z  	    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver nota de crédito de org_a');
+2026-06-15T23:28:32.7930997Z  	    RESET ROLE;
+2026-06-15T23:28:32.7931214Z  	  END IF;
+2026-06-15T23:28:32.7931410Z  	
+2026-06-15T23:28:32.7931642Z  	  -- =========================================================================
+2026-06-15T23:28:32.7931980Z  	  -- TEST 7: pagos_proveedor aislamiento
+2026-06-15T23:28:32.7932290Z  	  -- =========================================================================
+2026-06-15T23:28:32.7932617Z  	  INSERT INTO public.pagos_proveedor(
+2026-06-15T23:28:32.7933043Z  	    id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
+2026-06-15T23:28:32.7933486Z  	    metodo_pago, referencia, notas
+2026-06-15T23:28:32.7933763Z  	  ) VALUES (
+2026-06-15T23:28:32.7934032Z  	    pago_prov_a, org_a, pf_a, CURRENT_DATE, 500, 'MXN', 0,
+2026-06-15T23:28:32.7934365Z  	    'Transferencia', 'REF-PP-A', ''
+2026-06-15T23:28:32.7934777Z  	  );
+2026-06-15T23:28:32.7935178Z  	
+2026-06-15T23:28:32.7935381Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7935773Z  	  SELECT count(*) INTO visible FROM public.pagos_proveedor WHERE id = pago_prov_a;
+2026-06-15T23:28:32.7936314Z  	  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver pagos_proveedor de org_a');
+2026-06-15T23:28:32.7936705Z  	  RESET ROLE;
+2026-06-15T23:28:32.7936904Z  	
+2026-06-15T23:28:32.7937123Z  	  -- =========================================================================
+2026-06-15T23:28:32.7937475Z  	  -- TEST 8: comisiones_devengadas aislamiento
+2026-06-15T23:28:32.7937789Z  	  -- =========================================================================
+2026-06-15T23:28:32.7938353Z  	  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='comisiones_devengadas')
+2026-06-15T23:28:32.7938972Z  	     AND EXISTS (SELECT 1 FROM public.facturas WHERE id = fac_a)
+2026-06-15T23:28:32.7939424Z  	     AND EXISTS (SELECT 1 FROM public.pagos_factura WHERE id = pago_fac_a) THEN
+2026-06-15T23:28:32.7939843Z  	    INSERT INTO public.comisiones_devengadas(
+2026-06-15T23:28:32.7940214Z  	      id, organization_id, pago_factura_id, embarque_id, factura_id,
+2026-06-15T23:28:32.7940730Z  	      monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado, comision_mxn, estado
+2026-06-15T23:28:32.7941158Z  	    ) VALUES (
+2026-06-15T23:28:32.7941390Z  	      com_a, org_a, pago_fac_a, emb_a, fac_a,
+2026-06-15T23:28:32.7941682Z  	      500, 200, 0.10, 20, 'pendiente'
+2026-06-15T23:28:32.7941935Z  	    );
+2026-06-15T23:28:32.7942124Z  	
+2026-06-15T23:28:32.7942329Z  	    PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7942727Z  	    SELECT count(*) INTO visible FROM public.comisiones_devengadas WHERE id = com_a;
+2026-06-15T23:28:32.7943280Z  	    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver comisiones_devengadas de org_a');
+2026-06-15T23:28:32.7943696Z  	    RESET ROLE;
+2026-06-15T23:28:32.7943913Z  	  END IF;
+2026-06-15T23:28:32.7944111Z  	
+2026-06-15T23:28:32.7944339Z  	  -- =========================================================================
+2026-06-15T23:28:32.7944674Z  	  -- TEST 9: liquidaciones_comision aislamiento
+2026-06-15T23:28:32.7945192Z  	  -- =========================================================================
+2026-06-15T23:28:32.7945798Z  	  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='vendedoras')
+2026-06-15T23:28:32.7946559Z  	     AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='liquidaciones_comision') THEN
+2026-06-15T23:28:32.7947189Z  	    INSERT INTO public.vendedoras(id, organization_id, nombre)
+2026-06-15T23:28:32.7947552Z  	      VALUES (vend_a, org_a, 'Vendedora A');
+2026-06-15T23:28:32.7948056Z  	    INSERT INTO public.liquidaciones_comision(
+2026-06-15T23:28:32.7948407Z  	      id, organization_id, vendedora_id, periodo, total_mxn
+2026-06-15T23:28:32.7948773Z  	    ) VALUES (liq_a, org_a, vend_a, '2026-01', 1000);
+2026-06-15T23:28:32.7949068Z  	
+2026-06-15T23:28:32.7949277Z  	    PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7949671Z  	    SELECT count(*) INTO visible FROM public.liquidaciones_comision WHERE id = liq_a;
+2026-06-15T23:28:32.7950231Z  	    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver liquidaciones_comision de org_a');
+2026-06-15T23:28:32.7950654Z  	    RESET ROLE;
+2026-06-15T23:28:32.7950865Z  	  END IF;
+2026-06-15T23:28:32.7951063Z  	
+2026-06-15T23:28:32.7951289Z  	  -- =========================================================================
+2026-06-15T23:28:32.7951712Z  	  -- TEST 10: WITH CHECK — bloquear INSERT cruzado de org desde user_b a org_a.
+2026-06-15T23:28:32.7952215Z  	  -- Las pruebas 1-9 sólo validan SELECT; este bloque cubre el otro lado de la
+2026-06-15T23:28:32.7952719Z  	  -- policy (mutaciones) para tablas financieras críticas. Si una policy tiene
+2026-06-15T23:28:32.7953159Z  	  -- USING pero le falta WITH CHECK, este test lo detecta.
+2026-06-15T23:28:32.7953672Z  	  -- =========================================================================
+2026-06-15T23:28:32.7954001Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:32.7954262Z  	
+2026-06-15T23:28:32.7954473Z  	  PERFORM pg_temp.assert_insert_blocked(
+2026-06-15T23:28:32.7954745Z  	    format(
+2026-06-15T23:28:32.7955456Z  	      'INSERT INTO public.cuentas_bancarias(organization_id, banco, alias, numero_cuenta, clabe, moneda, saldo_inicial, activa, notas)
+2026-06-15T23:28:32.7956053Z  	       VALUES (%L, %L, %L, %L, %L, %L, 0, true, %L)',
+2026-06-15T23:28:32.7956400Z  	      org_a, 'HACK', 'spoof', '9999', '012180000000009999', 'MXN', ''
+2026-06-15T23:28:32.7956730Z  	    ),
+2026-06-15T23:28:32.7957001Z  	    'cuentas_bancarias acepta INSERT con organization_id ajeno'
+2026-06-15T23:28:32.7957349Z  	  );
+2026-06-15T23:28:32.7957538Z  	
+2026-06-15T23:28:32.7957759Z  	  PERFORM pg_temp.assert_insert_blocked(
+2026-06-15T23:28:32.7958029Z  	    format(
+2026-06-15T23:28:32.7958826Z  	      'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas)
+2026-06-15T23:28:32.7959791Z  	       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L)',
+2026-06-15T23:28:32.7960223Z  	      org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', ''
+2026-06-15T23:28:32.7960550Z  	    ),
+2026-06-15T23:28:32.7960818Z  	    'proveedor_facturas acepta INSERT con organization_id ajeno'
+2026-06-15T23:28:32.7961160Z  	  );
+2026-06-15T23:28:32.7961349Z  	
+2026-06-15T23:28:32.7961556Z  	  PERFORM pg_temp.assert_insert_blocked(
+2026-06-15T23:28:32.7961825Z  	    format(
+2026-06-15T23:28:32.7962423Z  	      'INSERT INTO public.cotizacion_costos(cotizacion_id, concepto, moneda, proveedor, cantidad, costo_unitario, precio_venta, unidad_medida, organization_id, notas)
+2026-06-15T23:28:32.7963127Z  	       VALUES (%L, %L, %L, %L, 1, 100, 200, %L, %L, %L)',
+2026-06-15T23:28:32.7963467Z  	      cot_a, 'HACK', 'USD', 'spoof', 'BL', org_a, ''
+2026-06-15T23:28:32.7963760Z  	    ),
+2026-06-15T23:28:32.7964025Z  	    'cotizacion_costos acepta INSERT con organization_id ajeno'
+2026-06-15T23:28:32.7964355Z  	  );
+2026-06-15T23:28:32.7964537Z  	
+2026-06-15T23:28:32.7964744Z  	  PERFORM pg_temp.as_postgres();
+2026-06-15T23:28:32.7965161Z  	
+2026-06-15T23:28:32.7965484Z  	  RAISE NOTICE 'RLS FIN CRITICO: 9 SELECTs + 3 WITH CHECK aserciones pasaron';
+2026-06-15T23:28:32.7965869Z  	END;
+2026-06-15T23:28:32.7966069Z  	$$;
+2026-06-15T23:28:32.7966295Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:28:32.7966604Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:28:32.7966903Z  creating configuration files ... ok
+2026-06-15T23:28:32.7967347Z  running bootstrap script ... ok
+2026-06-15T23:28:32.7967661Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:28:32.7967982Z  syncing data to disk ... ok
+2026-06-15T23:28:32.7968243Z  
+2026-06-15T23:28:32.7968432Z  
+2026-06-15T23:28:32.7968676Z  Success. You can now start the database server using:
+2026-06-15T23:28:32.7968992Z  
+2026-06-15T23:28:32.7969261Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:28:32.7969591Z  
+2026-06-15T23:28:32.7970237Z  waiting for server to start....2026-06-15 23:28:23.934 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:32.7971090Z  2026-06-15 23:28:23.935 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:32.7971675Z  2026-06-15 23:28:23.937 UTC [51] LOG:  database system was shut down at 2026-06-15 23:28:23 UTC
+2026-06-15T23:28:32.7972184Z  2026-06-15 23:28:23.941 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:28:32.7972570Z   done
+2026-06-15T23:28:32.7972782Z  server started
+2026-06-15T23:28:32.7973000Z  
+2026-06-15T23:28:32.7973336Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:28:32.7973863Z  
+2026-06-15T23:28:32.7974141Z  2026-06-15 23:28:24.051 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:28:32.7974663Z  waiting for server to shut down....2026-06-15 23:28:24.051 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:28:32.7975475Z  2026-06-15 23:28:24.054 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:28:32.7976021Z  2026-06-15 23:28:24.054 UTC [49] LOG:  shutting down
+2026-06-15T23:28:32.7976419Z  2026-06-15 23:28:24.054 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:28:32.7977356Z  2026-06-15 23:28:24.056 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.002 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:28:32.7978260Z  2026-06-15 23:28:24.060 UTC [48] LOG:  database system is shut down
+2026-06-15T23:28:32.7978600Z   done
+2026-06-15T23:28:32.7978802Z  server stopped
+2026-06-15T23:28:32.7979015Z  
+2026-06-15T23:28:32.7979274Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:28:32.7979585Z  
+2026-06-15T23:28:32.7985352Z Stop and remove container: ceeaab9a59b24d89b36389d67451eeb8_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f482f8
+2026-06-15T23:28:32.7991227Z ##[command]/usr/bin/docker rm --force 3a3db92d44e08c3f9d8d2963949fb0adb8d33e276121e15bd6d2555c917ef7c1
+2026-06-15T23:28:32.9427088Z 3a3db92d44e08c3f9d8d2963949fb0adb8d33e276121e15bd6d2555c917ef7c1
+2026-06-15T23:28:32.9456926Z Remove container network: github_network_5a1d3e1cfa0f4a99af48e2fce8f31a1c
+2026-06-15T23:28:32.9461300Z ##[command]/usr/bin/docker network rm github_network_5a1d3e1cfa0f4a99af48e2fce8f31a1c
+2026-06-15T23:28:33.0381078Z github_network_5a1d3e1cfa0f4a99af48e2fce8f31a1c

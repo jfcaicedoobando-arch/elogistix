@@ -1,0 +1,579 @@
+﻿2026-06-15T23:28:22.1635424Z Current runner version: '2.335.1'
+2026-06-15T23:28:22.1661679Z ##[group]Runner Image Provisioner
+2026-06-15T23:28:22.1662599Z Hosted Compute Agent
+2026-06-15T23:28:22.1663214Z Version: 20260527.539
+2026-06-15T23:28:22.1663934Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-15T23:28:22.1664708Z Build Date: 2026-05-27T21:39:57Z
+2026-06-15T23:28:22.1665444Z Worker ID: {24e0733e-960e-4d1d-8dfa-cddb06087327}
+2026-06-15T23:28:22.1666266Z Azure Region: eastus2
+2026-06-15T23:28:22.1666875Z ##[endgroup]
+2026-06-15T23:28:22.1668518Z ##[group]Operating System
+2026-06-15T23:28:22.1669177Z Ubuntu
+2026-06-15T23:28:22.1669749Z 24.04.4
+2026-06-15T23:28:22.1670378Z LTS
+2026-06-15T23:28:22.1670921Z ##[endgroup]
+2026-06-15T23:28:22.1671533Z ##[group]Runner Image
+2026-06-15T23:28:22.1672194Z Image: ubuntu-24.04
+2026-06-15T23:28:22.1672819Z Version: 20260607.184.1
+2026-06-15T23:28:22.1674169Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-15T23:28:22.1675795Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-15T23:28:22.1676821Z ##[endgroup]
+2026-06-15T23:28:22.1678145Z ##[group]GITHUB_TOKEN Permissions
+2026-06-15T23:28:22.1680160Z Contents: read
+2026-06-15T23:28:22.1680783Z Metadata: read
+2026-06-15T23:28:22.1681451Z ##[endgroup]
+2026-06-15T23:28:22.1683555Z Secret source: Actions
+2026-06-15T23:28:22.1684283Z Prepare workflow directory
+2026-06-15T23:28:22.2124797Z Prepare all required actions
+2026-06-15T23:28:22.2162718Z Getting action download info
+2026-06-15T23:28:22.4767608Z Download action repository 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-15T23:28:22.6713046Z Download action repository 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-06-15T23:28:23.0030768Z Complete job name: RLS suite — crm_operacional
+2026-06-15T23:28:23.0526470Z ##[group]Checking docker version
+2026-06-15T23:28:23.0540517Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-06-15T23:28:23.1161610Z '1.48'
+2026-06-15T23:28:23.1174918Z Docker daemon API version: '1.48'
+2026-06-15T23:28:23.1176861Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-06-15T23:28:23.1350086Z '1.48'
+2026-06-15T23:28:23.1381764Z Docker client API version: '1.48'
+2026-06-15T23:28:23.1386478Z ##[endgroup]
+2026-06-15T23:28:23.1389920Z ##[group]Clean up resources from previous jobs
+2026-06-15T23:28:23.1395745Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=96ab7e"
+2026-06-15T23:28:23.1549332Z ##[command]/usr/bin/docker network prune --force --filter "label=96ab7e"
+2026-06-15T23:28:23.1726321Z ##[endgroup]
+2026-06-15T23:28:23.1727159Z ##[group]Create local container network
+2026-06-15T23:28:23.1739019Z ##[command]/usr/bin/docker network create --label 96ab7e github_network_c281aa717dd9480aa0ba8642cb57f03a
+2026-06-15T23:28:23.2381850Z b0f4898169b62f60431cb7340aa3b8aa0d9b2c69da234f2775976761d73ffeb1
+2026-06-15T23:28:23.2401973Z ##[endgroup]
+2026-06-15T23:28:23.2439142Z ##[group]Starting postgres service container
+2026-06-15T23:28:23.2469126Z ##[command]/usr/bin/docker pull postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:23.4769989Z docker.io/library/postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb: Pulling from library/postgres
+2026-06-15T23:28:23.4775340Z 2d429b9e73a6: Pulling fs layer
+2026-06-15T23:28:23.4776564Z 8264392a8c63: Pulling fs layer
+2026-06-15T23:28:23.4777991Z 10dc7a46d285: Pulling fs layer
+2026-06-15T23:28:23.4779202Z a3e832e126d8: Pulling fs layer
+2026-06-15T23:28:23.4780354Z a57591b52775: Pulling fs layer
+2026-06-15T23:28:23.4781501Z 8bd747615de8: Pulling fs layer
+2026-06-15T23:28:23.4782751Z e96a70b56e29: Pulling fs layer
+2026-06-15T23:28:23.4783734Z 3db3c2765775: Pulling fs layer
+2026-06-15T23:28:23.4784775Z 1635531b3f1f: Pulling fs layer
+2026-06-15T23:28:23.4786343Z cccb4da64aa2: Pulling fs layer
+2026-06-15T23:28:23.4787682Z a1cc9f823061: Pulling fs layer
+2026-06-15T23:28:23.4788692Z dbb2f6dde8bc: Pulling fs layer
+2026-06-15T23:28:23.4789689Z e1a3b3584c6c: Pulling fs layer
+2026-06-15T23:28:23.4790860Z 92a5f4d34f14: Pulling fs layer
+2026-06-15T23:28:23.4791932Z a3e832e126d8: Waiting
+2026-06-15T23:28:23.4792840Z a57591b52775: Waiting
+2026-06-15T23:28:23.4793695Z 1635531b3f1f: Waiting
+2026-06-15T23:28:23.4794586Z 8bd747615de8: Waiting
+2026-06-15T23:28:23.4795475Z e96a70b56e29: Waiting
+2026-06-15T23:28:23.4796518Z cccb4da64aa2: Waiting
+2026-06-15T23:28:23.4797676Z a1cc9f823061: Waiting
+2026-06-15T23:28:23.4798589Z dbb2f6dde8bc: Waiting
+2026-06-15T23:28:23.4799604Z e1a3b3584c6c: Waiting
+2026-06-15T23:28:23.4800492Z 92a5f4d34f14: Waiting
+2026-06-15T23:28:23.4801358Z 3db3c2765775: Waiting
+2026-06-15T23:28:23.7505811Z 8264392a8c63: Download complete
+2026-06-15T23:28:23.8145065Z 10dc7a46d285: Verifying Checksum
+2026-06-15T23:28:23.8146564Z 10dc7a46d285: Download complete
+2026-06-15T23:28:23.8401849Z a3e832e126d8: Verifying Checksum
+2026-06-15T23:28:23.8408797Z a3e832e126d8: Download complete
+2026-06-15T23:28:23.8796676Z 2d429b9e73a6: Verifying Checksum
+2026-06-15T23:28:23.8798673Z 2d429b9e73a6: Download complete
+2026-06-15T23:28:23.9330622Z 8bd747615de8: Verifying Checksum
+2026-06-15T23:28:23.9332093Z 8bd747615de8: Download complete
+2026-06-15T23:28:23.9342330Z e96a70b56e29: Verifying Checksum
+2026-06-15T23:28:23.9344021Z e96a70b56e29: Download complete
+2026-06-15T23:28:23.9437108Z a57591b52775: Verifying Checksum
+2026-06-15T23:28:23.9439315Z a57591b52775: Download complete
+2026-06-15T23:28:23.9859129Z 3db3c2765775: Download complete
+2026-06-15T23:28:23.9932426Z cccb4da64aa2: Verifying Checksum
+2026-06-15T23:28:23.9934413Z cccb4da64aa2: Download complete
+2026-06-15T23:28:24.0367309Z a1cc9f823061: Verifying Checksum
+2026-06-15T23:28:24.0369672Z a1cc9f823061: Download complete
+2026-06-15T23:28:24.0464853Z dbb2f6dde8bc: Verifying Checksum
+2026-06-15T23:28:24.0466925Z dbb2f6dde8bc: Download complete
+2026-06-15T23:28:24.0891915Z e1a3b3584c6c: Verifying Checksum
+2026-06-15T23:28:24.0893743Z e1a3b3584c6c: Download complete
+2026-06-15T23:28:24.0959679Z 92a5f4d34f14: Verifying Checksum
+2026-06-15T23:28:24.0960675Z 92a5f4d34f14: Download complete
+2026-06-15T23:28:24.4260158Z 1635531b3f1f: Verifying Checksum
+2026-06-15T23:28:24.4262485Z 1635531b3f1f: Download complete
+2026-06-15T23:28:25.1316062Z 2d429b9e73a6: Pull complete
+2026-06-15T23:28:27.1243443Z 8264392a8c63: Pull complete
+2026-06-15T23:28:27.2598607Z 10dc7a46d285: Pull complete
+2026-06-15T23:28:27.3000206Z a3e832e126d8: Pull complete
+2026-06-15T23:28:27.5909848Z a57591b52775: Pull complete
+2026-06-15T23:28:27.6662733Z 8bd747615de8: Pull complete
+2026-06-15T23:28:27.6737595Z e96a70b56e29: Pull complete
+2026-06-15T23:28:27.6819648Z 3db3c2765775: Pull complete
+2026-06-15T23:28:30.5316951Z 1635531b3f1f: Pull complete
+2026-06-15T23:28:30.5594421Z cccb4da64aa2: Pull complete
+2026-06-15T23:28:30.5723872Z a1cc9f823061: Pull complete
+2026-06-15T23:28:30.5801549Z dbb2f6dde8bc: Pull complete
+2026-06-15T23:28:30.5882586Z e1a3b3584c6c: Pull complete
+2026-06-15T23:28:30.5958017Z 92a5f4d34f14: Pull complete
+2026-06-15T23:28:30.5987610Z Digest: sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:30.5996608Z Status: Downloaded newer image for postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:30.6004209Z docker.io/library/postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:30.6072447Z ##[command]/usr/bin/docker create --name 0d235dbfa49e4cada5eb75ae41c15341_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f930f5 --label 96ab7e --network github_network_c281aa717dd9480aa0ba8642cb57f03a --network-alias postgres -p 5432:5432 --health-cmd="pg_isready -U postgres" --health-interval=5s --health-timeout=5s --health-retries=10 -e "POSTGRES_PASSWORD=postgres" -e "POSTGRES_DB=postgres" -e GITHUB_ACTIONS=true -e CI=true postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:30.6327281Z 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:30.6340264Z ##[command]/usr/bin/docker start 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:30.8185413Z 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:30.8209858Z ##[command]/usr/bin/docker ps --all --filter id=2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-06-15T23:28:30.8341986Z 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249 Up Less than a second (health: starting)
+2026-06-15T23:28:30.8372996Z ##[command]/usr/bin/docker port 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:30.8511508Z 5432/tcp -> 0.0.0.0:5432
+2026-06-15T23:28:30.8512383Z 5432/tcp -> [::]:5432
+2026-06-15T23:28:30.8562209Z ##[endgroup]
+2026-06-15T23:28:30.8571056Z ##[group]Waiting for all services to be ready
+2026-06-15T23:28:30.8584646Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:30.8749580Z starting
+2026-06-15T23:28:30.8770691Z postgres service is starting, waiting 2 seconds before checking again.
+2026-06-15T23:28:32.8767897Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:32.8898731Z starting
+2026-06-15T23:28:32.8911160Z postgres service is starting, waiting 4 seconds before checking again.
+2026-06-15T23:28:37.0087043Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:37.0211930Z healthy
+2026-06-15T23:28:37.0228140Z postgres service is healthy.
+2026-06-15T23:28:37.0228930Z ##[endgroup]
+2026-06-15T23:28:37.0479099Z ##[group]Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+2026-06-15T23:28:37.0479716Z with:
+2026-06-15T23:28:37.0479961Z   repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:28:37.0483017Z   token: ***
+2026-06-15T23:28:37.0556172Z   ssh-strict: true
+2026-06-15T23:28:37.0556465Z   ssh-user: git
+2026-06-15T23:28:37.0556696Z   persist-credentials: true
+2026-06-15T23:28:37.0556937Z   clean: true
+2026-06-15T23:28:37.0557151Z   sparse-checkout-cone-mode: true
+2026-06-15T23:28:37.0557597Z   fetch-depth: 1
+2026-06-15T23:28:37.0557890Z   fetch-tags: false
+2026-06-15T23:28:37.0558124Z   show-progress: true
+2026-06-15T23:28:37.0558340Z   lfs: false
+2026-06-15T23:28:37.0558535Z   submodules: false
+2026-06-15T23:28:37.0558775Z   set-safe-directory: true
+2026-06-15T23:28:37.0560446Z env:
+2026-06-15T23:28:37.0560864Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:37.0561344Z   PGHOST: localhost
+2026-06-15T23:28:37.0561589Z   PGPORT: 5432
+2026-06-15T23:28:37.0561789Z   PGUSER: postgres
+2026-06-15T23:28:37.0561998Z   PGPASSWORD: postgres
+2026-06-15T23:28:37.0562214Z   PGDATABASE: postgres
+2026-06-15T23:28:37.0562450Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:37.0562707Z ##[endgroup]
+2026-06-15T23:28:37.1559758Z Syncing repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:28:37.1561131Z ##[group]Getting Git version info
+2026-06-15T23:28:37.1561526Z Working directory is '/home/runner/work/elogistix/elogistix'
+2026-06-15T23:28:37.1562253Z [command]/usr/bin/git version
+2026-06-15T23:28:37.1596882Z git version 2.54.0
+2026-06-15T23:28:37.1650954Z ##[endgroup]
+2026-06-15T23:28:37.1665934Z Temporarily overriding HOME='/home/runner/work/_temp/72a0ada5-e253-41f3-8ba6-6d9f5b60dda0' before making global git config changes
+2026-06-15T23:28:37.1667182Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-15T23:28:37.1672588Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/elogistix/elogistix
+2026-06-15T23:28:37.1717390Z Deleting the contents of '/home/runner/work/elogistix/elogistix'
+2026-06-15T23:28:37.1722223Z ##[group]Determining repository object format
+2026-06-15T23:28:37.1724939Z ##[endgroup]
+2026-06-15T23:28:37.1725562Z ##[group]Initializing the repository
+2026-06-15T23:28:37.1729879Z [command]/usr/bin/git init /home/runner/work/elogistix/elogistix
+2026-06-15T23:28:37.1800594Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-15T23:28:37.1801262Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-15T23:28:37.1802041Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-15T23:28:37.1802638Z hint: call:
+2026-06-15T23:28:37.1802928Z hint:
+2026-06-15T23:28:37.1803363Z hint: 	git config --global init.defaultBranch <name>
+2026-06-15T23:28:37.1803901Z hint:
+2026-06-15T23:28:37.1804397Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-15T23:28:37.1805183Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-15T23:28:37.1805770Z hint:
+2026-06-15T23:28:37.1806077Z hint: 	git branch -m <name>
+2026-06-15T23:28:37.1806314Z hint:
+2026-06-15T23:28:37.1806633Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-15T23:28:37.1807191Z Initialized empty Git repository in /home/runner/work/elogistix/elogistix/.git/
+2026-06-15T23:28:37.1815566Z [command]/usr/bin/git remote add origin https://github.com/jfcaicedoobando-arch/elogistix
+2026-06-15T23:28:37.1855539Z ##[endgroup]
+2026-06-15T23:28:37.1856154Z ##[group]Disabling automatic garbage collection
+2026-06-15T23:28:37.1860360Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-15T23:28:37.1890160Z ##[endgroup]
+2026-06-15T23:28:37.1890669Z ##[group]Setting up auth
+2026-06-15T23:28:37.1891353Z Removing SSH command configuration
+2026-06-15T23:28:37.1896975Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-15T23:28:37.1929625Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-15T23:28:37.2232989Z Removing HTTP extra header
+2026-06-15T23:28:37.2238146Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-15T23:28:37.2270172Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-15T23:28:37.2496210Z Removing includeIf entries pointing to credentials config files
+2026-06-15T23:28:37.2503122Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-15T23:28:37.2535796Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-15T23:28:37.2782014Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-15T23:28:37.2824719Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/elogistix/elogistix/.git.path /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:37.2856167Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:37.2889196Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:37.2920120Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:37.2946430Z ##[endgroup]
+2026-06-15T23:28:37.2946918Z ##[group]Fetching the repository
+2026-06-15T23:28:37.2955893Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f8e33315b20f7fb5677601640ee92698883dd01e:refs/remotes/origin/main
+2026-06-15T23:28:37.6014316Z From https://github.com/jfcaicedoobando-arch/elogistix
+2026-06-15T23:28:37.6015183Z  * [new ref]         f8e33315b20f7fb5677601640ee92698883dd01e -> origin/main
+2026-06-15T23:28:37.6054707Z [command]/usr/bin/git branch --list --remote origin/main
+2026-06-15T23:28:37.6082956Z   origin/main
+2026-06-15T23:28:37.6092676Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-06-15T23:28:37.6116006Z f8e33315b20f7fb5677601640ee92698883dd01e
+2026-06-15T23:28:37.6120524Z ##[endgroup]
+2026-06-15T23:28:37.6121077Z ##[group]Determining the checkout info
+2026-06-15T23:28:37.6121966Z ##[endgroup]
+2026-06-15T23:28:37.6126599Z [command]/usr/bin/git sparse-checkout disable
+2026-06-15T23:28:37.6168658Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-15T23:28:37.6195374Z ##[group]Checking out the ref
+2026-06-15T23:28:37.6199341Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-15T23:28:37.7432801Z Switched to a new branch 'main'
+2026-06-15T23:28:37.7435184Z branch 'main' set up to track 'origin/main'.
+2026-06-15T23:28:37.7444614Z ##[endgroup]
+2026-06-15T23:28:37.7499070Z [command]/usr/bin/git log -1 --format=%H
+2026-06-15T23:28:37.7526886Z f8e33315b20f7fb5677601640ee92698883dd01e
+2026-06-15T23:28:37.7739176Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+2026-06-15T23:28:37.7739592Z with:
+2026-06-15T23:28:37.7739809Z   name: rls-db-snapshot
+2026-06-15T23:28:37.7740049Z   path: .rls-snapshot/
+2026-06-15T23:28:37.7740281Z   merge-multiple: false
+2026-06-15T23:28:37.7740561Z   repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:28:37.7740850Z   run-id: 27583155375
+2026-06-15T23:28:37.7741080Z   skip-decompress: false
+2026-06-15T23:28:37.7741326Z   digest-mismatch: error
+2026-06-15T23:28:37.7741549Z env:
+2026-06-15T23:28:37.7741949Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:37.7742410Z   PGHOST: localhost
+2026-06-15T23:28:37.7742625Z   PGPORT: 5432
+2026-06-15T23:28:37.7742834Z   PGUSER: postgres
+2026-06-15T23:28:37.7743053Z   PGPASSWORD: postgres
+2026-06-15T23:28:37.7743276Z   PGDATABASE: postgres
+2026-06-15T23:28:37.7743517Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:37.7743821Z ##[endgroup]
+2026-06-15T23:28:37.9090180Z Downloading single artifact
+2026-06-15T23:28:38.0138881Z Preparing to download the following artifacts:
+2026-06-15T23:28:38.0140158Z - rls-db-snapshot (ID: 7653451182, Size: 109650, Expected Digest: sha256:807bf39db8546073853ae17a74ddac340201a6b540986304e49be316b9310390)
+2026-06-15T23:28:38.1809525Z Redirecting to blob download url: https://productionresultssa5.blob.core.windows.net/actions-results/bd6d65ac-3f96-4029-bc5d-7636e61ac51e/workflow-job-run-f915b54a-a7a9-5552-8751-0d9b73b16fb8/artifacts/c30f24d1ddb4ef2af83be339d9ec5ddd997e06ccc7f3558b5c9deab3f69392e8.zip
+2026-06-15T23:28:38.1811610Z Starting download of artifact to: /home/runner/work/elogistix/elogistix/.rls-snapshot
+2026-06-15T23:28:38.2066541Z (node:2693) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-06-15T23:28:38.2068321Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-15T23:28:38.2159928Z SHA256 digest of downloaded artifact is 807bf39db8546073853ae17a74ddac340201a6b540986304e49be316b9310390
+2026-06-15T23:28:38.2161107Z Artifact download completed successfully.
+2026-06-15T23:28:38.2161845Z Total of 1 artifact(s) downloaded
+2026-06-15T23:28:38.2165620Z Download artifact has finished successfully
+2026-06-15T23:28:38.2294409Z ##[group]Run $PSQL <<'SQL'
+2026-06-15T23:28:38.2294785Z [36;1m$PSQL <<'SQL'[0m
+2026-06-15T23:28:38.2295033Z [36;1mDO $$[0m
+2026-06-15T23:28:38.2295253Z [36;1mBEGIN[0m
+2026-06-15T23:28:38.2295594Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN[0m
+2026-06-15T23:28:38.2296018Z [36;1m    CREATE ROLE anon NOLOGIN;[0m
+2026-06-15T23:28:38.2296294Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2296656Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN[0m
+2026-06-15T23:28:38.2297108Z [36;1m    CREATE ROLE authenticated NOLOGIN;[0m
+2026-06-15T23:28:38.2297403Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2297900Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN[0m
+2026-06-15T23:28:38.2298334Z [36;1m    CREATE ROLE service_role NOLOGIN BYPASSRLS;[0m
+2026-06-15T23:28:38.2298650Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2299029Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN[0m
+2026-06-15T23:28:38.2299453Z [36;1m    CREATE ROLE authenticator NOLOGIN;[0m
+2026-06-15T23:28:38.2299741Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2300085Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN[0m
+2026-06-15T23:28:38.2300522Z [36;1m    CREATE ROLE supabase_admin NOLOGIN;[0m
+2026-06-15T23:28:38.2300808Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2301159Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN[0m
+2026-06-15T23:28:38.2301601Z [36;1m    CREATE ROLE supabase_auth_admin NOLOGIN;[0m
+2026-06-15T23:28:38.2301899Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2302252Z [36;1m  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_storage_admin') THEN[0m
+2026-06-15T23:28:38.2302707Z [36;1m    CREATE ROLE supabase_storage_admin NOLOGIN;[0m
+2026-06-15T23:28:38.2303004Z [36;1m  END IF;[0m
+2026-06-15T23:28:38.2303217Z [36;1mEND $$;[0m
+2026-06-15T23:28:38.2303424Z [36;1mSQL[0m
+2026-06-15T23:28:38.2342845Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:38.2343132Z env:
+2026-06-15T23:28:38.2343554Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:38.2344043Z   PGHOST: localhost
+2026-06-15T23:28:38.2344282Z   PGPORT: 5432
+2026-06-15T23:28:38.2344495Z   PGUSER: postgres
+2026-06-15T23:28:38.2344719Z   PGPASSWORD: postgres
+2026-06-15T23:28:38.2344949Z   PGDATABASE: postgres
+2026-06-15T23:28:38.2345199Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:38.2345482Z ##[endgroup]
+2026-06-15T23:28:38.3433206Z ##[group]Run # pg_restore es ~10x más rápido que rehacer bootstrap+migrations.
+2026-06-15T23:28:38.3433831Z [36;1m# pg_restore es ~10x más rápido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:38.3434329Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:38.3434715Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:38.3469034Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:38.3469298Z env:
+2026-06-15T23:28:38.3469706Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:38.3470183Z   PGHOST: localhost
+2026-06-15T23:28:38.3470414Z   PGPORT: 5432
+2026-06-15T23:28:38.3470624Z   PGUSER: postgres
+2026-06-15T23:28:38.3470851Z   PGPASSWORD: postgres
+2026-06-15T23:28:38.3471078Z   PGDATABASE: postgres
+2026-06-15T23:28:38.3471319Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:38.3471630Z ##[endgroup]
+2026-06-15T23:28:39.0715180Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_crm_operacional.sql
+2026-06-15T23:28:39.0715698Z [36;1m$PSQL -f supabase/tests/rls/test_rls_crm_operacional.sql[0m
+2026-06-15T23:28:39.0749802Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:39.0750067Z env:
+2026-06-15T23:28:39.0750474Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:39.0750955Z   PGHOST: localhost
+2026-06-15T23:28:39.0751367Z   PGPORT: 5432
+2026-06-15T23:28:39.0751580Z   PGUSER: postgres
+2026-06-15T23:28:39.0751804Z   PGPASSWORD: postgres
+2026-06-15T23:28:39.0752033Z   PGDATABASE: postgres
+2026-06-15T23:28:39.0752284Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:39.0752583Z ##[endgroup]
+2026-06-15T23:28:39.1346313Z psql:supabase/tests/rls/test_rls_crm_operacional.sql:163: ERROR:  invalid input value for enum crm_lead_fuente: "web"
+2026-06-15T23:28:39.1347698Z LINE 5: ..., 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Ma...
+2026-06-15T23:28:39.1348541Z                                                              ^
+2026-06-15T23:28:39.1349163Z QUERY:  INSERT INTO public.crm_leads(
+2026-06-15T23:28:39.1349855Z     id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
+2026-06-15T23:28:39.1350635Z     fuente, interes_modo, score, estado, vendedor_email, notas
+2026-06-15T23:28:39.1351128Z   ) VALUES
+2026-06-15T23:28:39.1352393Z     (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Marítimo', 50, 'Nuevo', 'v@a.mx', ''),
+2026-06-15T23:28:39.1353834Z     (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'web', 'Aéreo', 50, 'Nuevo', 'v@b.mx', '')
+2026-06-15T23:28:39.1354777Z CONTEXT:  PL/pgSQL function inline_code_block line 50 at SQL statement
+2026-06-15T23:28:39.1375348Z ##[error]Process completed with exit code 3.
+2026-06-15T23:28:39.1510181Z Post job cleanup.
+2026-06-15T23:28:39.2332594Z [command]/usr/bin/git version
+2026-06-15T23:28:39.2372848Z git version 2.54.0
+2026-06-15T23:28:39.2411637Z Temporarily overriding HOME='/home/runner/work/_temp/e9d0ca6e-bc8c-45c2-a8b0-77a00f6eb672' before making global git config changes
+2026-06-15T23:28:39.2412881Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-15T23:28:39.2417649Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/elogistix/elogistix
+2026-06-15T23:28:39.2450826Z Removing SSH command configuration
+2026-06-15T23:28:39.2457020Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-15T23:28:39.2490828Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-15T23:28:39.2730322Z Removing HTTP extra header
+2026-06-15T23:28:39.2735280Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-15T23:28:39.2773550Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-15T23:28:39.3025799Z Removing includeIf entries pointing to credentials config files
+2026-06-15T23:28:39.3035659Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-15T23:28:39.3065606Z includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path
+2026-06-15T23:28:39.3066758Z includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path
+2026-06-15T23:28:39.3067992Z includeif.gitdir:/github/workspace/.git.path
+2026-06-15T23:28:39.3068834Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-15T23:28:39.3076338Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path
+2026-06-15T23:28:39.3132442Z /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3144021Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3181668Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path
+2026-06-15T23:28:39.3206613Z /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3218681Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3254020Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-06-15T23:28:39.3278462Z /github/runner_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3286175Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3319445Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-15T23:28:39.3344518Z /github/runner_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3351945Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config
+2026-06-15T23:28:39.3387618Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-15T23:28:39.3639592Z Removing credentials config '/home/runner/work/_temp/git-credentials-10cfc0f3-6016-452d-8930-ba5f5d35f275.config'
+2026-06-15T23:28:39.3760822Z Print service container logs: 0d235dbfa49e4cada5eb75ae41c15341_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f930f5
+2026-06-15T23:28:39.3766171Z ##[command]/usr/bin/docker logs --details 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:39.3908483Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:28:39.3910645Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:28:39.3911088Z  This user must also own the server process.
+2026-06-15T23:28:39.3911630Z  
+2026-06-15T23:28:39.3912099Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:28:39.3912769Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:28:39.3913835Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:28:39.3914548Z  The default text search configuration will be set to "english".
+2026-06-15T23:28:39.3915664Z  2026-06-15 23:28:31.707 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:39.3916613Z  
+2026-06-15T23:28:39.3917138Z  2026-06-15 23:28:31.707 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:28:39.3918037Z  2026-06-15 23:28:31.707 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:28:39.3918567Z  2026-06-15 23:28:31.708 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:39.3919470Z  2026-06-15 23:28:31.710 UTC [62] LOG:  database system was shut down at 2026-06-15 23:28:31 UTC
+2026-06-15T23:28:39.3920265Z  2026-06-15 23:28:31.714 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:28:39.3921060Z  2026-06-15 23:28:39.064 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:28:39.3921924Z  2026-06-15 23:28:39.064 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:28:39.3922851Z  2026-06-15 23:28:39.125 UTC [76] ERROR:  invalid input value for enum crm_lead_fuente: "web" at character 248
+2026-06-15T23:28:39.3923669Z  2026-06-15 23:28:39.125 UTC [76] QUERY:  INSERT INTO public.crm_leads(
+2026-06-15T23:28:39.3924150Z  	    id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
+2026-06-15T23:28:39.3924603Z  	    fuente, interes_modo, score, estado, vendedor_email, notas
+2026-06-15T23:28:39.3924930Z  	  ) VALUES
+2026-06-15T23:28:39.3925593Z  	    (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Marítimo', 50, 'Nuevo', 'v@a.mx', ''),
+2026-06-15T23:28:39.3926178Z  	    (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'web', 'Aéreo', 50, 'Nuevo', 'v@b.mx', '')
+2026-06-15T23:28:39.3926811Z  2026-06-15 23:28:39.125 UTC [76] CONTEXT:  PL/pgSQL function inline_code_block line 50 at SQL statement
+2026-06-15T23:28:39.3927291Z  2026-06-15 23:28:39.125 UTC [76] STATEMENT:  DO $$
+2026-06-15T23:28:39.3927863Z  	DECLARE
+2026-06-15T23:28:39.3928182Z  	  org_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3928595Z  	  org_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3929001Z  	  user_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3929419Z  	  user_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3929830Z  	  cli_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3930252Z  	  cli_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3930653Z  	  emb_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3931059Z  	  emb_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3931478Z  	  lead_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3931872Z  	  lead_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3932298Z  	  etapa_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3932723Z  	  etapa_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3933127Z  	  op_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3933797Z  	  op_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3934224Z  	  act_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3934630Z  	  act_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3935021Z  	  doc_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3935402Z  	  doc_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3935792Z  	  cat_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3936181Z  	  cat_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3936581Z  	  pres_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3937024Z  	  pres_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3937597Z  	  visible int;
+2026-06-15T23:28:39.3937925Z  	BEGIN
+2026-06-15T23:28:39.3938231Z  	  -- Seed base
+2026-06-15T23:28:39.3938859Z  	  INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS CRM A'), (org_b, 'RLS CRM B');
+2026-06-15T23:28:39.3939785Z  	  INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
+2026-06-15T23:28:39.3940480Z  	    (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
+2026-06-15T23:28:39.3941207Z  	  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
+2026-06-15T23:28:39.3941879Z  	
+2026-06-15T23:28:39.3942279Z  	  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
+2026-06-15T23:28:39.3943069Z  	    (cli_a, 'Cli CRM A', org_a), (cli_b, 'Cli CRM B', org_b);
+2026-06-15T23:28:39.3943552Z  	
+2026-06-15T23:28:39.3944215Z  	  INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
+2026-06-15T23:28:39.3944927Z  	  VALUES
+2026-06-15T23:28:39.3945382Z  	    (emb_a, 'EXP-CRM-A', cli_a, 'Cli CRM A', org_a, 'Marítimo', 'Importación'),
+2026-06-15T23:28:39.3946112Z  	    (emb_b, 'EXP-CRM-B', cli_b, 'Cli CRM B', org_b, 'Marítimo', 'Importación');
+2026-06-15T23:28:39.3946463Z  	
+2026-06-15T23:28:39.3946729Z  	  -- Etapas pipeline (FK requerido por crm_oportunidades)
+2026-06-15T23:28:39.3947282Z  	  INSERT INTO public.crm_etapas_pipeline(id, organization_id, nombre, orden, probabilidad_default, color, tipo)
+2026-06-15T23:28:39.3947985Z  	  VALUES
+2026-06-15T23:28:39.3948254Z  	    (etapa_a, org_a, 'Prospecto', 1, 10, '#2563EB', 'abierta'),
+2026-06-15T23:28:39.3948626Z  	    (etapa_b, org_b, 'Prospecto', 1, 10, '#2563EB', 'abierta');
+2026-06-15T23:28:39.3948934Z  	
+2026-06-15T23:28:39.3949175Z  	  -- =========================================================================
+2026-06-15T23:28:39.3949544Z  	  -- TEST 1: crm_leads — aislamiento por organization_id
+2026-06-15T23:28:39.3949898Z  	  -- =========================================================================
+2026-06-15T23:28:39.3950221Z  	  INSERT INTO public.crm_leads(
+2026-06-15T23:28:39.3950794Z  	    id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
+2026-06-15T23:28:39.3951225Z  	    fuente, interes_modo, score, estado, vendedor_email, notas
+2026-06-15T23:28:39.3951562Z  	  ) VALUES
+2026-06-15T23:28:39.3951937Z  	    (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Marítimo', 50, 'Nuevo', 'v@a.mx', ''),
+2026-06-15T23:28:39.3952511Z  	    (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'web', 'Aéreo', 50, 'Nuevo', 'v@b.mx', '');
+2026-06-15T23:28:39.3952925Z  	
+2026-06-15T23:28:39.3953151Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3953571Z  	  SELECT COUNT(*) INTO visible FROM public.crm_leads WHERE id IN (lead_a, lead_b);
+2026-06-15T23:28:39.3953983Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3954331Z  	    format('User A vio %s crm_leads, esperaba 1', visible));
+2026-06-15T23:28:39.3954651Z  	
+2026-06-15T23:28:39.3954881Z  	  -- TEST 2: User A no puede UPDATE lead de Org B
+2026-06-15T23:28:39.3955279Z  	  UPDATE public.crm_leads SET empresa = 'HACKED' WHERE id = lead_b;
+2026-06-15T23:28:39.3955728Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3956229Z  	  SELECT COUNT(*) INTO visible FROM public.crm_leads WHERE id = lead_b AND empresa = 'HACKED';
+2026-06-15T23:28:39.3956952Z  	  PERFORM pg_temp.assert(visible = 0, 'User A modificó crm_leads de Org B (fuga RLS)');
+2026-06-15T23:28:39.3957367Z  	
+2026-06-15T23:28:39.3957768Z  	  -- =========================================================================
+2026-06-15T23:28:39.3958118Z  	  -- TEST 3: crm_oportunidades — aislamiento
+2026-06-15T23:28:39.3958442Z  	  -- =========================================================================
+2026-06-15T23:28:39.3958774Z  	  INSERT INTO public.crm_oportunidades(
+2026-06-15T23:28:39.3959165Z  	    id, organization_id, nombre, cliente_nombre, vendedor_email, etapa_id,
+2026-06-15T23:28:39.3959665Z  	    monto_estimado, moneda, probabilidad, modo, tipo_carga, origen, destino, notas
+2026-06-15T23:28:39.3960072Z  	  ) VALUES
+2026-06-15T23:28:39.3960447Z  	    (op_a, org_a, 'Op A', 'Cli CRM A', 'v@a.mx', etapa_a, 100000, 'MXN', 30, 'Marítimo', 'FCL', 'CN', 'MX', ''),
+2026-06-15T23:28:39.3961029Z  	    (op_b, org_b, 'Op B', 'Cli CRM B', 'v@b.mx', etapa_b, 200000, 'USD', 50, 'Aéreo', 'General', 'US', 'MX', '');
+2026-06-15T23:28:39.3961452Z  	
+2026-06-15T23:28:39.3961671Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3962079Z  	  SELECT COUNT(*) INTO visible FROM public.crm_oportunidades WHERE id IN (op_a, op_b);
+2026-06-15T23:28:39.3962500Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3962863Z  	    format('User A vio %s crm_oportunidades, esperaba 1', visible));
+2026-06-15T23:28:39.3963204Z  	
+2026-06-15T23:28:39.3963466Z  	  -- TEST 4: monto_estimado de Org B NUNCA visible para User A
+2026-06-15T23:28:39.3963946Z  	  SELECT COUNT(*) INTO visible FROM public.crm_oportunidades WHERE monto_estimado = 200000;
+2026-06-15T23:28:39.3964523Z  	  PERFORM pg_temp.assert(visible = 0, 'User A vio monto_estimado de oportunidad de Org B');
+2026-06-15T23:28:39.3964923Z  	
+2026-06-15T23:28:39.3965179Z  	  -- =========================================================================
+2026-06-15T23:28:39.3965517Z  	  -- TEST 5: crm_actividades — aislamiento
+2026-06-15T23:28:39.3965849Z  	  -- =========================================================================
+2026-06-15T23:28:39.3966234Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3966598Z  	  INSERT INTO public.crm_actividades(
+2026-06-15T23:28:39.3966981Z  	    id, organization_id, tipo, asunto, descripcion, entidad_tipo, entidad_id,
+2026-06-15T23:28:39.3967368Z  	    resultado, responsable_email
+2026-06-15T23:28:39.3967796Z  	  ) VALUES
+2026-06-15T23:28:39.3968124Z  	    (act_a, org_a, 'llamada', 'Asunto A', 'desc', 'lead', lead_a, 'pendiente', 'v@a.mx'),
+2026-06-15T23:28:39.3968624Z  	    (act_b, org_b, 'correo', 'Asunto B', 'desc', 'lead', lead_b, 'pendiente', 'v@b.mx');
+2026-06-15T23:28:39.3969146Z  	
+2026-06-15T23:28:39.3969352Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3969754Z  	  SELECT COUNT(*) INTO visible FROM public.crm_actividades WHERE id IN (act_a, act_b);
+2026-06-15T23:28:39.3970164Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3970505Z  	    format('User A vio %s crm_actividades, esperaba 1', visible));
+2026-06-15T23:28:39.3970840Z  	
+2026-06-15T23:28:39.3971072Z  	  -- =========================================================================
+2026-06-15T23:28:39.3971443Z  	  -- TEST 6: documentos_embarque — aislamiento vía embarque
+2026-06-15T23:28:39.3971791Z  	  -- =========================================================================
+2026-06-15T23:28:39.3972173Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3972694Z  	  INSERT INTO public.documentos_embarque(id, embarque_id, nombre, estado, organization_id) VALUES
+2026-06-15T23:28:39.3973203Z  	    (doc_a, emb_a, 'BL', 'Recibido', org_a),
+2026-06-15T23:28:39.3973509Z  	    (doc_b, emb_b, 'BL', 'Recibido', org_b);
+2026-06-15T23:28:39.3973778Z  	
+2026-06-15T23:28:39.3973978Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3974378Z  	  SELECT COUNT(*) INTO visible FROM public.documentos_embarque WHERE id IN (doc_a, doc_b);
+2026-06-15T23:28:39.3974811Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3975320Z  	    format('User A vio %s documentos_embarque, esperaba 1', visible));
+2026-06-15T23:28:39.3975667Z  	
+2026-06-15T23:28:39.3975894Z  	  -- =========================================================================
+2026-06-15T23:28:39.3976263Z  	  -- TEST 7: presupuesto_mensual — aislamiento financiero
+2026-06-15T23:28:39.3976608Z  	  -- =========================================================================
+2026-06-15T23:28:39.3976976Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3977672Z  	  INSERT INTO public.presupuesto_categorias(id, organization_id, nombre, orden, activa) VALUES
+2026-06-15T23:28:39.3978214Z  	    (cat_a, org_a, 'Ventas', 1, true),
+2026-06-15T23:28:39.3978491Z  	    (cat_b, org_b, 'Ventas', 1, true);
+2026-06-15T23:28:39.3978943Z  	  INSERT INTO public.presupuesto_mensual(id, organization_id, categoria_id, periodo, monto_mxn) VALUES
+2026-06-15T23:28:39.3979432Z  	    (pres_a, org_a, cat_a, '2026-06', 500000),
+2026-06-15T23:28:39.3979738Z  	    (pres_b, org_b, cat_b, '2026-06', 999999);
+2026-06-15T23:28:39.3979997Z  	
+2026-06-15T23:28:39.3980202Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3980634Z  	  SELECT COUNT(*) INTO visible FROM public.presupuesto_mensual WHERE id IN (pres_a, pres_b);
+2026-06-15T23:28:39.3981071Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3981423Z  	    format('User A vio %s presupuesto_mensual, esperaba 1', visible));
+2026-06-15T23:28:39.3981774Z  	
+2026-06-15T23:28:39.3982013Z  	  -- TEST 8: monto presupuestal de Org B nunca visible
+2026-06-15T23:28:39.3982463Z  	  SELECT COUNT(*) INTO visible FROM public.presupuesto_mensual WHERE monto_mxn = 999999;
+2026-06-15T23:28:39.3982996Z  	  PERFORM pg_temp.assert(visible = 0, 'User A vio monto presupuestal de Org B');
+2026-06-15T23:28:39.3983381Z  	
+2026-06-15T23:28:39.3983676Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3984118Z  	  RAISE NOTICE '✓ test_rls_crm_operacional: 8 aserciones OK';
+2026-06-15T23:28:39.3984462Z  	END;
+2026-06-15T23:28:39.3984655Z  	$$;
+2026-06-15T23:28:39.3984867Z  Data page checksums are disabled.
+2026-06-15T23:28:39.3985125Z  
+2026-06-15T23:28:39.3985424Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:28:39.3985816Z  creating subdirectories ... ok
+2026-06-15T23:28:39.3986135Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:28:39.3986478Z  selecting default max_connections ... 100
+2026-06-15T23:28:39.3986774Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:28:39.3987068Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:28:39.3987721Z  creating configuration files ... ok
+2026-06-15T23:28:39.3988000Z  running bootstrap script ... ok
+2026-06-15T23:28:39.3988306Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:28:39.3988625Z  syncing data to disk ... ok
+2026-06-15T23:28:39.3988863Z  
+2026-06-15T23:28:39.3989045Z  
+2026-06-15T23:28:39.3989288Z  Success. You can now start the database server using:
+2026-06-15T23:28:39.3989598Z  
+2026-06-15T23:28:39.3989840Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:28:39.3990143Z  
+2026-06-15T23:28:39.3990763Z  waiting for server to start....2026-06-15 23:28:31.467 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:39.3991587Z  2026-06-15 23:28:31.468 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:39.3992124Z  2026-06-15 23:28:31.471 UTC [51] LOG:  database system was shut down at 2026-06-15 23:28:31 UTC
+2026-06-15T23:28:39.3992619Z  2026-06-15 23:28:31.474 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:28:39.3992985Z   done
+2026-06-15T23:28:39.3993179Z  server started
+2026-06-15T23:28:39.3993383Z  
+2026-06-15T23:28:39.3993701Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:28:39.3994231Z  
+2026-06-15T23:28:39.3994493Z  2026-06-15 23:28:31.584 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:28:39.3995001Z  waiting for server to shut down....2026-06-15 23:28:31.584 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:28:39.3995664Z  2026-06-15 23:28:31.586 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:28:39.3996179Z  2026-06-15 23:28:31.587 UTC [49] LOG:  shutting down
+2026-06-15T23:28:39.3996567Z  2026-06-15 23:28:31.588 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:28:39.3997634Z  2026-06-15 23:28:31.589 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:28:39.3998551Z  2026-06-15 23:28:31.593 UTC [48] LOG:  database system is shut down
+2026-06-15T23:28:39.3998885Z   done
+2026-06-15T23:28:39.3999085Z  server stopped
+2026-06-15T23:28:39.3999299Z  
+2026-06-15T23:28:39.3999545Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:28:39.3999848Z  
+2026-06-15T23:28:39.4005169Z Stop and remove container: 0d235dbfa49e4cada5eb75ae41c15341_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f930f5
+2026-06-15T23:28:39.4011366Z ##[command]/usr/bin/docker rm --force 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:39.5571096Z 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:39.5599814Z Remove container network: github_network_c281aa717dd9480aa0ba8642cb57f03a
+2026-06-15T23:28:39.5604386Z ##[command]/usr/bin/docker network rm github_network_c281aa717dd9480aa0ba8642cb57f03a
+2026-06-15T23:28:39.6583055Z github_network_c281aa717dd9480aa0ba8642cb57f03a
+2026-06-15T23:28:39.6652912Z Cleaning up orphan processes

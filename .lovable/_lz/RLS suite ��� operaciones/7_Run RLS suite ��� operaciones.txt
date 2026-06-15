@@ -1,0 +1,22 @@
+﻿2026-06-15T23:28:35.4893350Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_operaciones.sql
+2026-06-15T23:28:35.4893903Z [36;1m$PSQL -f supabase/tests/rls/test_rls_operaciones.sql[0m
+2026-06-15T23:28:35.4924738Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:35.4925007Z env:
+2026-06-15T23:28:35.4925424Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:35.4926088Z   PGHOST: localhost
+2026-06-15T23:28:35.4926305Z   PGPORT: 5432
+2026-06-15T23:28:35.4926511Z   PGUSER: postgres
+2026-06-15T23:28:35.4926725Z   PGPASSWORD: postgres
+2026-06-15T23:28:35.4926951Z   PGDATABASE: postgres
+2026-06-15T23:28:35.4927187Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:35.4927459Z ##[endgroup]
+2026-06-15T23:28:35.5528718Z psql:supabase/tests/rls/test_rls_operaciones.sql:190: ERROR:  invalid input value for enum categoria_proveedor: "Naviera"
+2026-06-15T23:28:35.5539077Z LINE 4: ...'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera')...
+2026-06-15T23:28:35.5539962Z                                                              ^
+2026-06-15T23:28:35.5540949Z QUERY:  INSERT INTO public.proveedores(
+2026-06-15T23:28:35.5546069Z     id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, categoria
+2026-06-15T23:28:35.5547040Z   ) VALUES
+2026-06-15T23:28:35.5547980Z     (prov_a, 'Prov A', 'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera'),
+2026-06-15T23:28:35.5549035Z     (prov_b, 'Prov B', 'RFCB010101BBB', 'C', 'b@b', '555', 'MXN', org_b, 'Naviera')
+2026-06-15T23:28:35.5550049Z CONTEXT:  PL/pgSQL function inline_code_block line 46 at SQL statement
+2026-06-15T23:28:35.5562592Z ##[error]Process completed with exit code 3.

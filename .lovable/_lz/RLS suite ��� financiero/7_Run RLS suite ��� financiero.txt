@@ -1,0 +1,25 @@
+﻿2026-06-15T23:28:40.8862351Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_financiero.sql
+2026-06-15T23:28:40.8862881Z [36;1m$PSQL -f supabase/tests/rls/test_rls_financiero.sql[0m
+2026-06-15T23:28:40.8893181Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:40.8893445Z env:
+2026-06-15T23:28:40.8893852Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:40.8894511Z   PGHOST: localhost
+2026-06-15T23:28:40.8894725Z   PGPORT: 5432
+2026-06-15T23:28:40.8894932Z   PGUSER: postgres
+2026-06-15T23:28:40.8895143Z   PGPASSWORD: postgres
+2026-06-15T23:28:40.8895363Z   PGDATABASE: postgres
+2026-06-15T23:28:40.8895597Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:40.8895868Z ##[endgroup]
+2026-06-15T23:28:40.9372683Z psql:supabase/tests/rls/test_rls_financiero.sql:135: ERROR:  column "saldo" of relation "facturas" does not exist
+2026-06-15T23:28:40.9374136Z LINE 3: ... fecha_vencimiento, moneda, subtotal, iva, total, saldo, est...
+2026-06-15T23:28:40.9376750Z                                                              ^
+2026-06-15T23:28:40.9378809Z QUERY:  INSERT INTO public.facturas(
+2026-06-15T23:28:40.9380169Z     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+2026-06-15T23:28:40.9381220Z     fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+2026-06-15T23:28:40.9381972Z   ) VALUES
+2026-06-15T23:28:40.9382409Z     (fac_a, org_a, cli_a, 'Cliente Fin A', emb_a, 'FA-001',
+2026-06-15T23:28:40.9383132Z       CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'),
+2026-06-15T23:28:40.9383866Z     (fac_b, org_b, cli_b, 'Cliente Fin B', emb_b, 'FB-001',
+2026-06-15T23:28:40.9384629Z       CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 2320, 'Pendiente')
+2026-06-15T23:28:40.9385457Z CONTEXT:  PL/pgSQL function inline_code_block line 36 at SQL statement
+2026-06-15T23:28:40.9397503Z ##[error]Process completed with exit code 3.
