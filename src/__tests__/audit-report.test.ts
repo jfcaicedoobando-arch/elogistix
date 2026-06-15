@@ -21,8 +21,8 @@ const PAGES_COMPONENTS_BASELINE = new Set<string>([
 
 // Sincronizado con OVERSIZED_BASELINE en architecture-baseline.test.ts.
 const OVERSIZED_BASELINE = new Set<string>([
-  "src/pages/auth/Login.tsx",
-  "src/lib/mappers/genericPayloadMapper.ts",
+  "src/features/auditoria/domain/ejecutivoAgregados.ts",
+  "src/features/proformas/routes/ProformaDetalle.tsx",
 ]);
 
 // Baseline temporal de archivos con `.rejects.toBeDefined()/toBeTruthy()`.

@@ -1,15 +1,11 @@
 /**
- * useExplicarHallazgo — Llama a la edge function `auditoria-explicar-hallazgo`
- * y cachea por hash del hallazgo.
+ * useExplicarHallazgo — Llama al servicio `explicarHallazgo` y cachea por hash del hallazgo.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { explicarHallazgo, type ExplicacionHallazgo } from "@/features/auditoria/services/explicarHallazgo";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
-export interface ExplicacionHallazgo {
-  explicacion: string;
-  modelo: string;
-}
+export type { ExplicacionHallazgo };
 
 function cacheKey(h: HallazgoAuditoria) {
   return ["auditoria-explicacion", h.embarque_id, h.regla, h.detalle] as const;
@@ -21,12 +17,11 @@ export function useExplicarHallazgo() {
     mutationFn: async (h: HallazgoAuditoria): Promise<ExplicacionHallazgo> => {
       const cached = qc.getQueryData<ExplicacionHallazgo>(cacheKey(h));
       if (cached) return cached;
-      const { data, error } = await supabase.functions.invoke<ExplicacionHallazgo>(
-        "auditoria-explicar-hallazgo",
-        { body: { embarque_id: h.embarque_id, regla: h.regla, detalle: h.detalle } },
-      );
-      if (error) throw error;
-      if (!data?.explicacion) throw new Error("Respuesta vacía");
+      const data = await explicarHallazgo({
+        embarque_id: h.embarque_id,
+        regla: h.regla,
+        detalle: h.detalle,
+      });
       qc.setQueryData(cacheKey(h), data);
       return data;
     },

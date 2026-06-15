@@ -1,10 +1,10 @@
 /**
  * Hook que consulta los documentos faltantes para que un embarque
  * avance a un estado destino. Usa la RPC `embarque_docs_faltantes`
- * (fuente única compartida con la auditoría).
+ * (fuente única compartida con la auditoría) vía servicio.
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchDocsFaltantesParaEstado } from "@/features/embarques/services/docsFaltantes";
 
 /** Estados en los que faltar documentos BLOQUEA el avance (hard). */
 const ESTADOS_BLOQUEANTES = new Set<string>([
@@ -28,14 +28,7 @@ export function useDocsFaltantesParaEstado(
   const enabled = !!embarqueId && !!estadoDestino;
   const { data, isLoading } = useQuery({
     queryKey: ["embarque_docs_faltantes", embarqueId, estadoDestino],
-    queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase.rpc("embarque_docs_faltantes", {
-        p_embarque_id: embarqueId!,
-        p_estado_destino: estadoDestino!,
-      });
-      if (error) throw error;
-      return (data as string[] | null) ?? [];
-    },
+    queryFn: () => fetchDocsFaltantesParaEstado(embarqueId!, estadoDestino!),
     enabled,
     staleTime: 30_000,
   });
