@@ -1,9 +1,0 @@
-{
-  "$comment": "Budget por patrón de chunk (gzipped KB). El primer patrón que matchea aplica. Default 250.",
-  "default_kb": 250,
-  "chunks": [
-    { "pattern": "^index-.*\\.js$", "budget_kb": 350, "label": "entry" },
-    { "pattern": "^react-pdf.*\\.js$", "budget_kb": 500, "label": "lazy(react-pdf)" },
-    { "pattern": "^(vendor|chunk-vendor|react-vendor).*\\.js$", "budget_kb": 500, "label": "vendor" }
-  ]
-}
