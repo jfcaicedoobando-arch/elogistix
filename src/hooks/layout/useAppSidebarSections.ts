@@ -106,6 +106,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   }
 
   // Gerente de operaciones: todo lectura + edición operativa, sin admin.
+  // No incluye "Auditoría operativa" (decisión 13.21.26: solo admin + viewer).
   if (effectiveRole === "gerente_operaciones") {
     return [
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
@@ -114,7 +115,7 @@ export function useAppSidebarSections(): SidebarSection[] {
       { label: "CRM", items: crmItems },
       { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-      { label: "Sistema", items: sistemaItems },
+      { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
     ];
   }
 
