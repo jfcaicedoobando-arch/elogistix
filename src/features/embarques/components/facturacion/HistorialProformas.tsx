@@ -1,4 +1,5 @@
 import { Download, Loader2, Receipt, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar, onEliminar }: Props) {
+  const navigate = useNavigate();
   const renderEstado = (p: ProformaConFactura) => {
     const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
     const rev = p.estado_revision ?? "aprobada";
@@ -120,6 +122,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
           data={proformas}
           rowKey={(p) => p.id}
           density="compact"
+          onRowClick={(p) => navigate(`/proformas/${p.id}`)}
           emptyState={<EmptyStateInline icon={Receipt} message="No hay proformas generadas para este embarque." />}
         />
       </CardContent>

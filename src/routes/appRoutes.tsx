@@ -13,7 +13,7 @@ import {
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
-  Facturacion, FacturaDetalle,
+  Facturacion, FacturaDetalle, ProformaDetalle,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
@@ -38,6 +38,7 @@ export const appRoutes = (
     <Route path="/embarques/:id/editar" element={<EditarEmbarque />} />
     <Route path="/facturacion" element={<Facturacion />} />
     <Route path="/facturacion/:id" element={<FacturaDetalle />} />
+    <Route path="/proformas/:id" element={<ProformaDetalle />} />
     <Route
       path="/cxp"
       element={

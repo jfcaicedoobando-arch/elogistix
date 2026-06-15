@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.23.0] - 2026-06-15
+- **feat(proformas/detalle)**: Nueva página dedicada `/proformas/:id` con datos generales, conceptos, totales USD/MXN, factura asociada y descarga de PDF. Drilldown habilitado desde el tab Facturación del embarque (tabla "Proformas Generadas") y desde Pre-facturación → tab Proformas. El buscador global ahora navega directo al detalle de la proforma.
+
 ## [13.22.5] - 2026-06-15
 - **feat(buscador-global)**: El buscador global (Ctrl+K) ahora incluye proformas. Se puede buscar por número de proforma, cliente o expediente; al seleccionar se navega al embarque con el tab de proformas abierto. RPC `busqueda_global` extendida con un `UNION ALL` adicional sobre `proformas` filtrado por organización.
 

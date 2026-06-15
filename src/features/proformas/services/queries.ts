@@ -17,6 +17,32 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
   return fromDb<ProformaConFactura[]>(data ?? []);
 }
 
+export type ProformaDetalleFull = ProformaConFactura & {
+  facturas_full: {
+    id: string;
+    numero: string;
+    estado: string;
+    total: number;
+    moneda: string;
+    factura_pdf_url: string | null;
+    factura_xml_url: string | null;
+  } | null;
+};
+
+export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFull | null> {
+  const { data, error } = await supabase
+    .from("proformas")
+    .select(
+      "*, facturas:factura_id(factura_pdf_url, factura_xml_url), facturas_full:factura_id(id, numero, estado, total, moneda, factura_pdf_url, factura_xml_url)",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return fromDb<ProformaDetalleFull>(data);
+}
+
+
 export async function fetchProformasAprobadas(organizationId: string): Promise<ProformaConFactura[]> {
   const { data, error } = await supabase
     .from("proformas")

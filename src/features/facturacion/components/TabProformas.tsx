@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -11,6 +12,7 @@ import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 import { useMemo } from "react";
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
+  const navigate = useNavigate();
   const c = useTabProformasController({ isInRange });
 
   const columns = useMemo(
@@ -65,6 +67,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
             emptyMessage="No hay proformas generadas"
             rowKey={(p) => p.id}
             density="comfortable"
+            onRowClick={(p) => navigate(`/proformas/${p.id}`)}
             pagination={{
               page: c.page,
               totalPages: c.totalPages,
