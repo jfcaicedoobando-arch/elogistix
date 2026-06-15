@@ -69,7 +69,15 @@ jobs:
         run: |
           shopt -s nullglob
           for f in supabase/migrations/*.sql; do
-            echo "▶ $(basename "$f")"
+            base=$(basename "$f")
+            # Drift fix: la columna es_consolidada se añadió manualmente en prod
+            # y nunca tuvo migración de creación; la inyectamos antes de la
+            # migración que asume su existencia para que CI (DB limpia) no rompa.
+            if [ "$base" = "20260424231755_3f492847-dfdc-44cc-b159-ee9c97b3731d.sql" ]; then
+              echo "▶ drift-fix: ensure public.proformas.es_consolidada"
+              $PSQL -c "ALTER TABLE public.proformas ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false;"
+            fi
+            echo "▶ $base"
             $PSQL -f "$f"
           done
 
