@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.5] - 2026-06-15
+- **style(branding)**: Sustituido el isotipo por la versión PNG de alta calidad provista por el usuario (`public/librecarga-logo.png`). Se eliminan los SVG previos y se actualizan todas las referencias (BrandLockup, LandingNav, LandingFooter, LogoPreview, schema.org).
+
 ## [13.21.4] - 2026-06-15
 - **style(branding)**: Reemplazados `librecarga-icon.svg`, `librecarga-logo.svg` y `librecarga-icon-light.svg` por el diseño propio del usuario — bloques apilados (contenedores) + flecha curva ascendente que evoca dinamismo y alcance global. Paleta: `#1C3B6E` (oscuro), `#234C81` (claro). Variante light invierte a `#F8FAFC` + `#93C5FD` para sidebar oscuro.
 
