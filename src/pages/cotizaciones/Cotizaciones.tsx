@@ -100,8 +100,8 @@ export default function Cotizaciones() {
             onSearchChange={c.setSearch}
             activeFilterCount={activeFilterCount}
             onClearAll={clearAllFilters}
-            estadoSelect={EstadoSelect}
-            clienteSelect={ClienteSelect}
+            estadoSelect={estadoSelect}
+            clienteSelect={clienteSelect}
           />
           <div className="hidden md:flex md:flex-wrap gap-4">
             <SearchInput
@@ -110,8 +110,8 @@ export default function Cotizaciones() {
               placeholder="Buscar por folio, cliente o mercancía..."
               className="flex-1 min-w-[200px]"
             />
-            {EstadoSelect}
-            {ClienteSelect}
+            {estadoSelect}
+            {clienteSelect}
           </div>
         </CardContent>
       </Card>
