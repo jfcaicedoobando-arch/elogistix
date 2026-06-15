@@ -39,10 +39,6 @@ export const SUBTIPOS_GASTO_OPERATIVO: { value: SubtipoGasto; label: string }[] 
   { value: 'Otros', label: 'Otros' },
 ];
 
-export function labelCategoria(c: CategoriaProveedor | null | undefined): string {
-  if (!c) return '—';
-  return CATEGORIAS_PROVEEDOR.find((x) => x.value === c)?.label ?? c;
-}
 
 export function labelSubtipoGasto(s: SubtipoGasto | null | undefined): string {
   if (!s) return '—';
@@ -64,7 +60,4 @@ export const METODOS_PAGO_PROVEEDOR = [
   'Otro',
 ] as const;
 
-export type MetodoPagoProveedor = typeof METODOS_PAGO_PROVEEDOR[number];
-
 export const ORIGENES_PROVEEDOR = ['Nacional', 'Extranjero'] as const;
-export type OrigenProveedor = typeof ORIGENES_PROVEEDOR[number];
