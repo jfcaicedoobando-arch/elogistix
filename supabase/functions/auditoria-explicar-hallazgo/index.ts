@@ -146,48 +146,36 @@ function handleGatewayError(status: number, log: ReturnType<typeof createLogger>
   return errorResponse("Error al generar la explicación", 500, cors);
 }
 
-async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>): Promise<Response> {
-  const auth = await authenticate(req, log);
-  const body = await req.json().catch(() => null) as { embarque_id?: string; regla?: string; detalle?: string } | null;
-  if (!body?.embarque_id || !body?.regla || !body?.detalle) {
-    return errorResponse("embarque_id, regla y detalle son requeridos", 400, cors);
-  }
-
-  // Verifica que el embarque pertenece a una org del usuario
+async function authorizeEmbarque(
+  adminClient: ReturnType<typeof authenticate> extends Promise<infer A> ? (A extends { adminClient: infer C } ? C : never) : never,
+  userId: string,
+  embarqueId: string,
+): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
   // @ts-expect-error supabase chain
-  const { data: emb } = await auth.adminClient
-    .from("embarques")
-    .select("organization_id")
-    .eq("id", body.embarque_id)
-    .maybeSingle();
-  if (!emb?.organization_id) return errorResponse("Embarque no encontrado", 404, cors);
+  const { data: emb } = await adminClient
+    .from("embarques").select("organization_id").eq("id", embarqueId).maybeSingle();
+  if (!emb?.organization_id) return { ok: false, status: 404, message: "Embarque no encontrado" };
 
   // @ts-expect-error supabase chain
-  const { data: membership } = await auth.adminClient
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", auth.userId)
-    .eq("organization_id", emb.organization_id)
-    .maybeSingle();
-  // super_admin bypass
+  const { data: membership } = await adminClient
+    .from("organization_members").select("organization_id")
+    .eq("user_id", userId).eq("organization_id", emb.organization_id).maybeSingle();
+  if (membership) return { ok: true };
+
   // @ts-expect-error supabase chain
-  const { data: superRole } = await auth.adminClient
-    .from("user_roles").select("role").eq("user_id", auth.userId).eq("role", "super_admin").maybeSingle();
-  if (!membership && !superRole) return errorResponse("No autorizado para este embarque", 403, cors);
+  const { data: superRole } = await adminClient
+    .from("user_roles").select("role").eq("user_id", userId).eq("role", "super_admin").maybeSingle();
+  if (superRole) return { ok: true };
 
-  const ctx = await buildContexto(auth.adminClient, body.embarque_id);
-  if (!ctx) return errorResponse("No se pudo cargar el contexto", 404, cors);
+  return { ok: false, status: 403, message: "No autorizado para este embarque" };
+}
 
-  const apiKey = env("LOVABLE_API_KEY");
-  if (!apiKey) {
-    log.error("LOVABLE_API_KEY missing", { status_code: 500 });
-    return errorResponse("Configuración de IA no disponible", 500, cors);
-  }
-
-  const userPrompt = [
+function buildUserPrompt(regla: string, detalle: string, ctx: Awaited<ReturnType<typeof buildContexto>>): string {
+  if (!ctx) return "";
+  return [
     `**Hallazgo**`,
-    `Regla: ${body.regla}`,
-    `Detalle: ${body.detalle}`,
+    `Regla: ${regla}`,
+    `Detalle: ${detalle}`,
     ``,
     `**Contexto real del embarque**`,
     `Expediente: ${ctx.expediente} | Estado: ${ctx.estado} | Modo: ${ctx.modo}`,
@@ -201,17 +189,49 @@ async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<t
     `**Documentos (${ctx.documentos.length} filas vivas)**`,
     formatDocumentos(ctx.documentos),
   ].join("\n");
+}
 
-  const resp = await callGateway(apiKey, userPrompt);
-  if (!resp.ok) return handleGatewayError(resp.status, log, cors);
-
+async function invocarGateway(
+  ctx: Awaited<ReturnType<typeof buildContexto>>,
+  regla: string,
+  detalle: string,
+  log: ReturnType<typeof createLogger>,
+  cors: HeadersInit,
+): Promise<{ ok: true; content: string } | { ok: false; response: Response }> {
+  const apiKey = env("LOVABLE_API_KEY");
+  if (!apiKey) {
+    log.error("LOVABLE_API_KEY missing", { status_code: 500 });
+    return { ok: false, response: errorResponse("Configuración de IA no disponible", 500, cors) };
+  }
+  const resp = await callGateway(apiKey, buildUserPrompt(regla, detalle, ctx));
+  if (!resp.ok) return { ok: false, response: handleGatewayError(resp.status, log, cors) };
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content ?? "";
-  if (!content) return errorResponse("Respuesta IA vacía", 422, cors);
+  if (!content) return { ok: false, response: errorResponse("Respuesta IA vacía", 422, cors) };
+  return { ok: true, content };
+}
+
+async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>): Promise<Response> {
+  const auth = await authenticate(req, log);
+  const body = await req.json().catch(() => null) as { embarque_id?: string; regla?: string; detalle?: string } | null;
+  if (!body?.embarque_id || !body?.regla || !body?.detalle) {
+    return errorResponse("embarque_id, regla y detalle son requeridos", 400, cors);
+  }
+
+  const authz = await authorizeEmbarque(auth.adminClient, auth.userId, body.embarque_id);
+  if (!authz.ok) return errorResponse(authz.message, authz.status, cors);
+
+  const ctx = await buildContexto(auth.adminClient, body.embarque_id);
+  if (!ctx) return errorResponse("No se pudo cargar el contexto", 404, cors);
+
+  const result = await invocarGateway(ctx, body.regla, body.detalle, log, cors);
+  if (!result.ok) return result.response;
 
   log.finish(200, "hallazgo explicado");
-  return jsonResponse({ explicacion: content, modelo: "google/gemini-3-flash-preview" }, 200, cors);
+  return jsonResponse({ explicacion: result.content, modelo: "google/gemini-3-flash-preview" }, 200, cors);
 }
+
+
 
 serve(async (req) => {
   const preflight = handlePreflightStrict(req);

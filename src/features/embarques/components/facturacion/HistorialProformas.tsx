@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/proformas/services";
+import { esBorradorVacio } from "./esBorradorVacio";
 
 interface Props {
   proformas: ProformaConFactura[];
@@ -17,15 +18,6 @@ interface Props {
   onEliminar: (id: string, numero: string) => void;
 }
 
-/** Detecta borradores vacíos (sin conceptos / total cero) que aún están en estado pendiente. */
-export function esBorradorVacio(p: ProformaConFactura): boolean {
-  return (
-    (p.estado_proforma ?? "pendiente") === "pendiente" &&
-    (p.estado_aprobacion ?? "aprobada") === "borrador" &&
-    Number(p.total_mxn ?? 0) === 0 &&
-    Number(p.total_usd ?? 0) === 0
-  );
-}
 
 export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar, onEliminar }: Props) {
   const navigate = useNavigate();

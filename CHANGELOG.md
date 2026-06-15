@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.25.2] - 2026-06-15
+- **fix(ci/rls)**: El snapshot de RLS en CI fallaba con `RLS COVERAGE FAIL` porque el stub de `public.tracking_externo` (creado en `_ci_drift.sql`) habilitaba RLS sin policy. Se añade una policy de respaldo `_ci_stub_deny_all` (deny-all) sólo en CI; las policies reales viven en migraciones posteriores.
+- **chore(lint)**: ESLint con `--max-warnings 0` ahora pasa. Se mueve `esBorradorVacio` a su propio archivo (regla `react-refresh/only-export-components`) y se reduce la complejidad ciclomática de `ProformaDetalle` (extrae `TotalesCard`) y de `auditoria-explicar-hallazgo/processRequest` (extrae `authorizeEmbarque`, `buildUserPrompt` e `invocarGateway`).
+
 ## [13.25.1] - 2026-06-15
 - **fix(observabilidad/client-error-log)**: RPC `log_client_error_v1` ahora recibe `p_request_id` como `uuid` (antes `text`), eliminando el error de Sentry `column "request_id" is of type uuid but expression is of type text`. Además `_shared/logger.ts` valida que los headers `x-request-id` / `x-correlation-id` cumplan formato UUID antes de insertar en `app_logs`; si no, genera uno nuevo.
 
