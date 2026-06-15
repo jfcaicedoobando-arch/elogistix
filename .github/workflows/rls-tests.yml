@@ -77,6 +77,34 @@ jobs:
               echo "▶ drift-fix: ensure public.proformas.es_consolidada"
               $PSQL -c "ALTER TABLE public.proformas ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false;"
             fi
+            # Drift fix: public.tracking_intentos se creó manualmente en prod;
+            # esta migración sólo redefine sus policies. Creamos un stub mínimo.
+            if [ "$base" = "20260527061320_4cb9567e-3bbe-4452-8513-f38a418df7f9.sql" ]; then
+              echo "▶ drift-fix: ensure public.tracking_intentos"
+              $PSQL <<'SQL'
+CREATE TABLE IF NOT EXISTS public.tracking_intentos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL,
+  embarque_id uuid NOT NULL,
+  provider text NOT NULL DEFAULT 'unknown',
+  accion text NOT NULL DEFAULT 'request',
+  resultado text NOT NULL,
+  http_status integer,
+  mensaje text,
+  detalle jsonb,
+  request_type text,
+  request_number text,
+  scac text,
+  tracking_request_id uuid,
+  usuario_id uuid,
+  usuario_email text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.tracking_intentos TO authenticated;
+GRANT ALL ON public.tracking_intentos TO service_role;
+ALTER TABLE public.tracking_intentos ENABLE ROW LEVEL SECURITY;
+SQL
+            fi
             echo "▶ $base"
             # CI no tiene pg_cron / pg_net / pgmq / supabase_vault (sólo existen
             # en Supabase managed Postgres). Reemplazamos los CREATE EXTENSION
