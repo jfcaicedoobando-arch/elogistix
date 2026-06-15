@@ -198,14 +198,10 @@ export default function ProformaDetalle() {
             </div>
             <div className="flex gap-2">
               {factura.factura_pdf_url && (
-                <FacturaDownloadButton stored={factura.factura_pdf_url} kind="pdf">
-                  <FileText className="h-4 w-4 mr-1.5 text-destructive" /> PDF
-                </FacturaDownloadButton>
+                <FacturaDownloadButton stored={factura.factura_pdf_url} kind="pdf" size="sm" />
               )}
               {factura.factura_xml_url && (
-                <FacturaDownloadButton stored={factura.factura_xml_url} kind="xml">
-                  <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> XML
-                </FacturaDownloadButton>
+                <FacturaDownloadButton stored={factura.factura_xml_url} kind="xml" size="sm" />
               )}
             </div>
           </CardContent>
