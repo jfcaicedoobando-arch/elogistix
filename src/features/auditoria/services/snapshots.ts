@@ -1,12 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 
+/**
+ * Lista snapshots de auditoría de los últimos `dias` (UTC).
+ * El cálculo del rango usa aritmética sobre `Date.now()` (UTC) para evitar
+ * drift en runtimes con TZ local (ej. CDMX cerca de medianoche).
+ */
 export async function fetchAuditoriaSnapshots(
   dias = 30,
 ): Promise<AuditoriaSnapshot[]> {
-  const desde = new Date();
-  desde.setDate(desde.getDate() - dias);
-  const desdeIso = desde.toISOString().slice(0, 10);
+  const desdeIso = new Date(Date.now() - dias * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
   const { data, error } = await supabase
     .from("auditoria_snapshots")
     .select("*")

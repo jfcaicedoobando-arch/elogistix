@@ -116,10 +116,10 @@ export function agruparPorEtapaYCliente(pendientes: HallazgoAuditoria[]) {
 }
 
 export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
-  const hoyIso = new Date().toISOString().slice(0, 10);
-  const en3dias = new Date();
-  en3dias.setDate(en3dias.getDate() + 3);
-  const en3DiasIso = en3dias.toISOString().slice(0, 10);
+  // UTC-only: evita drift por TZ local (ver banner core.ts).
+  const nowMs = Date.now();
+  const hoyIso = new Date(nowMs).toISOString().slice(0, 10);
+  const en3DiasIso = new Date(nowMs + 3 * 86_400_000).toISOString().slice(0, 10);
   let pendientesVencidos = 0;
   let pendientesUrgentesPorEta = 0;
   let sumaDias = 0;
@@ -128,7 +128,7 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
     if (!h.eta) continue;
     if (h.eta < hoyIso) {
       pendientesVencidos++;
-      const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / (1000 * 60 * 60 * 24));
+      const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / 86_400_000);
       sumaDias += dias;
       countDias++;
     } else if (h.eta <= en3DiasIso) {

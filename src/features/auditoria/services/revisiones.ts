@@ -1,16 +1,34 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
-export async function fetchAuditoriaRevisiones(): Promise<AuditoriaRevision[]> {
+/** Ventana por defecto para listar revisiones (días). Cubre snooze máx (30d) +
+ *  ventana de auditoría reciente. Configurable vía `desdeIso`. */
+const DEFAULT_VENTANA_DIAS = 90;
+const ROW_LIMIT = 5000;
+
+export interface FetchRevisionesOpts {
+  /** ISO timestamp inicio (inclusive). Default: hoy - 90 días en UTC. */
+  desdeIso?: string;
+}
+
+export async function fetchAuditoriaRevisiones(
+  opts: FetchRevisionesOpts = {},
+): Promise<AuditoriaRevision[]> {
+  const desdeIso =
+    opts.desdeIso ??
+    new Date(Date.now() - DEFAULT_VENTANA_DIAS * 86_400_000).toISOString();
   const { data, error } = await supabase
     .from("auditoria_revisiones")
     .select("*")
-    .order("created_at", { ascending: false });
+    .gte("created_at", desdeIso)
+    .order("created_at", { ascending: false })
+    .limit(ROW_LIMIT);
   if (error) throw error;
   return (data ?? []) as AuditoriaRevision[];
 }
 
 export interface UpsertRevisionInput {
+  organization_id: string;
   embarque_id: string;
   regla: HallazgoAuditoria["regla"];
   detalle_hash: string;
@@ -23,6 +41,9 @@ export interface UpsertRevisionInput {
 export async function upsertAuditoriaRevision(
   input: UpsertRevisionInput,
 ): Promise<AuditoriaRevision> {
+  if (!input.organization_id) {
+    throw new Error("organization_id requerido para upsert de revisión");
+  }
   const { data, error } = await supabase
     .from("auditoria_revisiones")
     .upsert(
@@ -40,6 +61,7 @@ export async function upsertAuditoriaRevision(
 }
 
 export interface AsignarResponsableInput {
+  organization_id: string;
   embarque_id: string;
   regla: HallazgoAuditoria["regla"];
   detalle_hash: string;
@@ -60,7 +82,11 @@ export interface AsignarResponsableInput {
 export async function asignarResponsableHallazgo(
   input: AsignarResponsableInput,
 ): Promise<AuditoriaRevision> {
+  if (!input.organization_id) {
+    throw new Error("organization_id requerido para asignar responsable");
+  }
   const payload = {
+    organization_id: input.organization_id,
     embarque_id: input.embarque_id,
     regla: input.regla,
     detalle_hash: input.detalle_hash,
