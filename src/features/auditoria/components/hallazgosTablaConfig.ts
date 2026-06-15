@@ -13,6 +13,8 @@ export const reglaLabel: Record<ReglaAuditoria, string> = {
   venta_sin_costo: "Venta sin costo",
   costo_sin_venta: "Costo sin venta",
   proforma_vencida: "Proforma vencida",
+  proforma_borrador_abandonada: "Borrador abandonado",
+  proforma_inconsistente: "Proforma inconsistente",
   embarque_huerfano: "Embarque huérfano",
 };
 
@@ -26,6 +28,8 @@ export const reglaToTab: Record<ReglaAuditoria, string> = {
   venta_sin_costo: "financiero",
   costo_sin_venta: "financiero",
   proforma_vencida: "facturacion",
+  proforma_borrador_abandonada: "facturacion",
+  proforma_inconsistente: "facturacion",
   embarque_huerfano: "tracking",
 };
 

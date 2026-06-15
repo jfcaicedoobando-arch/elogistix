@@ -15,6 +15,8 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   venta_sin_costo: "financiero",
   costo_sin_venta: "financiero",
   proforma_vencida: "facturacion",
+  proforma_borrador_abandonada: "facturacion",
+  proforma_inconsistente: "facturacion",
   embarque_huerfano: "tracking",
 };
 

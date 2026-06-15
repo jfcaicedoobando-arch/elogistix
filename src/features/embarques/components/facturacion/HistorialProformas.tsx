@@ -17,13 +17,34 @@ interface Props {
   onEliminar: (id: string, numero: string) => void;
 }
 
+/** Detecta borradores vacíos (sin conceptos / total cero) que aún están en estado pendiente. */
+export function esBorradorVacio(p: ProformaConFactura): boolean {
+  return (
+    (p.estado_proforma ?? "pendiente") === "pendiente" &&
+    (p.estado_aprobacion ?? "aprobada") === "borrador" &&
+    Number(p.total_mxn ?? 0) === 0 &&
+    Number(p.total_usd ?? 0) === 0
+  );
+}
+
 export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar, onEliminar }: Props) {
   const navigate = useNavigate();
   const renderEstado = (p: ProformaConFactura) => {
     const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
     const rev = p.estado_revision ?? "aprobada";
+    const vacio = esBorradorVacio(p);
     let badgeRevision;
-    if (rev === "pendiente") {
+    if (vacio) {
+      badgeRevision = (
+        <Badge
+          variant="outline"
+          className="w-fit bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+          title="Borrador sin conceptos asignados y con total en cero"
+        >
+          Borrador vacío
+        </Badge>
+      );
+    } else if (rev === "pendiente") {
       badgeRevision = <Badge variant="warning" className="w-fit">Pendiente de revisión</Badge>;
     } else if (rev === "consolidada") {
       const consolidadaNumero = proformas.find(x => x.id === p.consolidada_en)?.numero;

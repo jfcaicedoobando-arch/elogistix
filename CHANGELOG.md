@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.24.0] - 2026-06-15
+- **feat(auditoría/proformas)**: Endurecida la regla `proforma_vencida` para que solo aplique a proformas reales (excluye borradores, total cero y proformas sin conceptos vinculados).
+- **feat(auditoría/proformas)**: Nuevos hallazgos `proforma_borrador_abandonada` (severidad media, umbral configurable `dias_borrador_abandonado` con default 15) y `proforma_inconsistente` (severidad alta) cuando un borrador vacío coexiste con conceptos pendientes en el mismo embarque.
+- **feat(embarques/facturación)**: Badge "Borrador vacío" en la tabla de proformas y alerta inline con acciones rápidas para asignar todos los conceptos pendientes al borrador (nuevo RPC `asignar_conceptos_a_proforma`) o eliminarlo.
+
 ## [13.23.0] - 2026-06-15
 - **feat(proformas/detalle)**: Nueva página dedicada `/proformas/:id` con datos generales, conceptos, totales USD/MXN, factura asociada y descarga de PDF. Drilldown habilitado desde el tab Facturación del embarque (tabla "Proformas Generadas") y desde Pre-facturación → tab Proformas. El buscador global ahora navega directo al detalle de la proforma.
 

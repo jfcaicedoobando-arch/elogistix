@@ -26,6 +26,8 @@ export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "venta_sin_costo",
   "costo_sin_venta",
   "proforma_vencida",
+  "proforma_borrador_abandonada",
+  "proforma_inconsistente",
   "embarque_huerfano",
 ];
 

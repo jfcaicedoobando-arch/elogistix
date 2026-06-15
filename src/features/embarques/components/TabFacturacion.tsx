@@ -17,8 +17,9 @@ import { useDescargarProformaPdf } from "@/features/embarques/hooks";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
-import { HistorialProformas } from "./facturacion/HistorialProformas";
+import { HistorialProformas, esBorradorVacio } from "./facturacion/HistorialProformas";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
+import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
@@ -58,6 +59,18 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
     [conceptos]
   );
 
+  // Conceptos verdaderamente huérfanos (sin proforma asignada) — usados por la
+  // alerta de proforma inconsistente.
+  const conceptosHuerfanos = useMemo(
+    () => conceptos.filter(c => c.estado_facturacion === 'pendiente' && !c.proforma_id),
+    [conceptos]
+  );
+
+  const borradorVacio = useMemo(
+    () => proformas.find(esBorradorVacio) ?? null,
+    [proformas]
+  );
+
   const handleDescargarProforma = async (proformaId: string) => {
     const proforma = proformas.find(p => p.id === proformaId);
     if (!proforma) return;
@@ -80,6 +93,15 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
           setDialogOpen(true);
         }}
       />
+
+      {borradorVacio && (
+        <ProformaInconsistenteAlert
+          proformaBorrador={borradorVacio}
+          conceptosPendientes={conceptosHuerfanos}
+          embarqueId={embarque.id}
+          onEliminarBorrador={() => setProformaAEliminar({ id: borradorVacio.id, numero: borradorVacio.numero })}
+        />
+      )}
 
       <HistorialProformas
         proformas={proformas}

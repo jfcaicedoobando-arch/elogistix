@@ -85,6 +85,20 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
       "Proformas emitidas con más días que el umbral configurado y aún sin factura.",
     icon: Receipt,
   },
+  proforma_borrador_abandonada: {
+    shortLabel: "Borrador abandonado",
+    label: "Borrador de proforma abandonada",
+    description:
+      "Proformas en estado borrador con total cero o sin conceptos vinculados desde hace más del umbral configurado.",
+    icon: Receipt,
+  },
+  proforma_inconsistente: {
+    shortLabel: "Proforma inconsistente",
+    label: "Proforma inconsistente con conceptos pendientes",
+    description:
+      "Borrador de proforma vacío vinculado al mismo embarque donde existen conceptos de venta pendientes sin asignar.",
+    icon: Receipt,
+  },
   embarque_huerfano: {
     shortLabel: "Embarque huérfano",
     label: "Embarques huérfanos",
@@ -100,7 +114,9 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "ventas_sin_facturar",
   "margen_negativo",
   "margen_bajo",
+  "proforma_inconsistente",
   "proforma_vencida",
+  "proforma_borrador_abandonada",
   "venta_sin_costo",
   "costo_sin_venta",
   "embarque_huerfano",
