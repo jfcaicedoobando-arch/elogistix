@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.26] - 2026-06-15
+- **feat(auditoria/separación-módulos)**: Se distingue conceptualmente entre dos módulos de auditoría:
+  - `/auditoria` → **Auditoría operativa** (clientes/tenants). Título y descripción del `PageHeader` aclaran que es por organización. Acceso restringido vía `ProtectedRoute` a `admin`, `admin_org`, `viewer` y `customer_service`; operador / coordinador logístico / gerente de operaciones / pricing dejan de verla.
+  - `/admin/auditoria` → **Auditoría de plataforma** (dueño Libre Carga, `super_admin`). Nueva página placeholder (`AdminAuditoriaPlataforma.tsx`) con KPIs previstos (uso por org, errores, snapshots globales, integridad multi-tenant). No implementa lógica todavía.
+  - Entrada del sidebar app renombrada a "Auditoría operativa"; sidebar admin gana entrada "Auditoría plataforma".
+  - Sin cambios en RPCs, edge functions, tablas `auditoria_*` ni lógica de hallazgos.
+
 ## [13.21.25] - 2026-06-15
 - **fix(auditoria/bloque-4)**: Hardening y observabilidad del módulo Auditoría Operativa:
   - **M-4 · Sentry por organización** (`auditoria-snapshot-daily/index.ts`): el loop por-org ahora llama a `captureEdgeException` cuando `auditoria_capturar_snapshot` falla, con tag `organization_id` y `extra.organization_nombre`. Antes solo el catch global enviaba a Sentry y un fallo en una org individual quedaba invisible.
