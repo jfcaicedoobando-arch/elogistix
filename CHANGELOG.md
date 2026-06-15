@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.11] - 2026-06-15
+- **ci(hardening)**: Acciones de terceros pineadas por SHA (`oven-sh/setup-bun@v2.2.0`, `denoland/setup-deno@v2.0.4`, `codecov/codecov-action@v7.0.0`). Nuevo `.github/dependabot.yml` con bumps semanales agrupados de GitHub Actions. Nuevos workflows: `actionlint` (lint de YAML en PR), `codeql` (SAST js/ts semanal + push/PR a `main`), `gitleaks` (escaneo de secretos en PR con allowlist del ANON_KEY público en `.gitleaks.toml`). `post-deploy-smoke` ahora abre/actualiza issue con label `smoke-failure` cuando falla cualquier job.
+
 ## [13.21.10] - 2026-06-15
 - **ci(hardening)**: Permisos mínimos (`contents: read`) y bloque `concurrency` agregados a workflows `post-deploy-smoke` (group fijo, sin cancel) y `rls-tests` (group por ref, cancel-in-progress). Newline final corregido en `post-deploy-smoke.yml`.
 

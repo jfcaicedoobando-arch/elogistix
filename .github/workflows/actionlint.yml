@@ -1,0 +1,39 @@
+name: actionlint
+
+# Lint estático de los workflows y composite actions de `.github/`.
+# Corre solo cuando un PR modifica archivos relevantes.
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+      - ".github/dependabot.yml"
+      - ".github/actionlint.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: actionlint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download actionlint
+        id: get
+        run: |
+          set -euo pipefail
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          echo "bin=$(pwd)/actionlint" >> "$GITHUB_OUTPUT"
+
+      - name: Run actionlint
+        run: |
+          set -euo pipefail
+          "${{ steps.get.outputs.bin }}" -color

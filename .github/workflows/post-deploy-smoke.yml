@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v6
 
 
-      - uses: denoland/setup-deno@v2
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
         with:
           deno-version: v1.x
 
@@ -96,3 +96,56 @@ jobs:
             echo "::error::tracking-public respondió $STATUS (esperado 404/410/400)"
             exit 1
           fi
+
+  notify-failure:
+    name: Notificar fallo de smoke (issue)
+    needs: [user-management-smoke, exchange-rates-smoke, tracking-public-smoke]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Crear o actualizar issue de fallo
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = 'smoke-failure';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `🚨 post-deploy-smoke falló (${new Date().toISOString().slice(0,10)})`;
+            const body = [
+              `El workflow **post-deploy-smoke** falló.`,
+              ``,
+              `- Run: ${runUrl}`,
+              `- Trigger: \`${context.eventName}\``,
+              `- SHA: \`${context.sha}\``,
+              ``,
+              `Revisar logs de los jobs: user-management-smoke / exchange-rates-smoke / tracking-public-smoke.`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 1,
+            });
+
+            if (existing.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+            }
+
