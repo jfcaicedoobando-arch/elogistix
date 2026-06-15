@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.23] - 2026-06-15
+- **fix(auditoria/bloque-2)**: Consistencia UI del módulo Auditoría Operativa según auditoría:
+  - **H-2 · QueryFn única para revisiones** (`hooks/revisiones/query.ts`, `useAuditoria.ts`): extraída `buildRevisionesMap()` exportada y reutilizada por `useAuditoriaRevisiones` y `useAuditoriaCount`. React Query usa la primera queryFn registrada por key, así que tener dos definiciones distintas era un bug latente dependiente del orden de montaje. Ahora ambos hooks producen exactamente el mismo Map.
+  - **H-3 · Búsqueda extendida** (`hooks/hallazgosTablaFilters.ts`): el predicado `q` ya no solo busca en `expediente`, también cubre `cliente_nombre` y `detalle`. Resuelve la UX rota donde buscar "Acme" o "factura vencida" no devolvía resultados.
+  - **H-5 · Toggle "Ver revisados" sí afecta la tabla** (`AuditoriaHallazgosTab.tsx`): la tabla recibe `hallazgosFiltrados` (subset ya filtrado por severidad/modo del tab) en lugar de `hallazgos` crudos, y el `key` incluye el flag `mostrarRevisados` para forzar reset del `defaultRevision` interno cuando el usuario alterna. Antes, los KPIs decían "20 hallazgos" pero la tabla mostraba 12 sin explicación.
+  - **M-6 · `useAuditoriaCount` expone `isError`/`error`**: el badge del sidebar ahora puede distinguir "0 hallazgos" de "fallo de red" en lugar de mostrar siempre cero ante errores.
+  - **Tests**: 122/122 en verde (incluye los nuevos casos de `organization_id` requerido del bloque 1).
+
 ## [13.21.22] - 2026-06-15
 - **fix(auditoria/bloque-1)**: Correctness crítico del módulo Auditoría Operativa según auditoría:
   - **C-1 · Paginación servidor** (`services/revisiones.ts`): `fetchAuditoriaRevisiones()` ahora aplica `.limit(5000)` defensivo + `.gte("created_at", desdeIso)` con ventana por defecto de 90 días (cubre snooze máx + revisados recientes). Parámetro `{ desdeIso }` opcional para casos especiales. Cierra la regla de paginación servidor del proyecto.
