@@ -1,60 +1,44 @@
-## Contexto
+## Diagnóstico
 
-La regla `ventas_sin_facturar` de la RPC de auditoría dispara cuando algún `conceptos_venta.estado_facturacion = 'pendiente'` en embarques Entregado/Cerrado — NO mira si existe `factura`. Como la facturación se construyó en una etapa posterior, los conceptos de embarques antiguos quedaron en `pendiente` aunque sí estén facturados. Mismo patrón en otras reglas legacy. Hay que arreglar el dato + dar al usuario una herramienta de IA para entender hallazgos caso por caso.
+El backfill falla porque las funciones SQL referencian columnas y valores de enum que no existen en la BD real:
 
-## Alcance
+**1. `backfill_proformas_aceptadas` — rompe primero (column does not exist)**
+- Usa `p.estado` → la columna real es `p.estado_proforma`.
+- Filtra por `('borrador','enviada','aceptada')` → valores reales son `'pendiente'`, `'facturada'`.
+- Setea `estado = 'facturada'` → debe ser `estado_proforma = 'facturada'`.
 
-Dos entregables en paralelo:
+**2. `backfill_conceptos_venta_facturados` — fallaría después**
+- Filtra `facturas.estado IN ('emitida','pagada','parcial','timbrada')` en minúsculas.
+- El enum `estado_factura` real es: `'Borrador','Emitida','Pagada','Vencida','Cancelada','Parcialmente pagada'` (capitalizado, sin `'parcial'` ni `'timbrada'`).
 
-### A) Backfill de datos legacy (migración SQL + script)
+Esto explica el error al ejecutar y también por qué la regla `ventas_sin_facturar` siguió dando falsos positivos en embarques viejos: el backfill nunca matcheó nada.
 
-1. **Función `backfill_estado_facturacion_legacy()`** (SECURITY DEFINER, scoped por organization_id):
-   - Recorre `conceptos_venta` con `estado_facturacion = 'pendiente'` cuyo `embarque_id` tenga al menos una `facturas` en estado `emitida`/`pagada`/`parcial`.
-   - Marca el concepto como `facturado` y popula `factura_id` con la factura más reciente del embarque.
-   - Devuelve resumen `{ embarques_afectados, conceptos_actualizados, por_organizacion[] }`.
-2. **Backfill complementarios** (mismo patrón, funciones separadas):
-   - `proformas.estado` → `aceptada`/`facturada` cuando existe factura ligada.
-   - `embarque_huerfano`: deja como está (no se puede inventar fechas) — se cubrirá con IA + snooze.
-3. **UI en `/admin/auditoria` (dueño)**: botón "Ejecutar backfill legacy" con doble confirmación tipo ELIMINAR, muestra el resumen post-ejecución. Sólo `super_admin`.
-4. **Bitácora**: cada ejecución registra entrada en `bitacora_actividad`.
+## Cambios
 
-### B) "Explicar con IA" por hallazgo
+Una sola migración SQL que reemplaza ambas funciones con los nombres/valores correctos:
 
-1. **Edge function `auditoria-explicar-hallazgo`**:
-   - Input: `{ embarque_id, regla, detalle }`.
-   - Valida JWT + membresía a la organización del embarque.
-   - Lee contexto: embarque + conceptos_venta/costo + facturas + proformas + documentos + notas (resumen compacto, no payload completo).
-   - Llama Lovable AI Gateway con `google/gemini-3-flash-preview`.
-   - Prompt system: "Eres analista de operaciones forwarder. Dado un hallazgo de auditoría, explica en español MX (1) qué significa, (2) posibles causas concretas incluyendo backfill/datos legacy si aplica, (3) 2-3 pasos sugeridos. Máx 180 palabras. No inventes datos."
-   - Devuelve `{ explicacion, posibles_causas[], pasos_sugeridos[] }`.
-2. **UI: ícono Sparkles → Popover en cada fila de `AuditoriaHallazgosTab`**:
-   - Botón pequeño en la columna acciones de la tabla.
-   - Popover muestra spinner mientras llama la edge function.
-   - Cachea la respuesta por hash de hallazgo en `react-query` (`['auditoria-explicacion', embarque_id, regla, detalle_hash]`).
-   - Markdown render simple, copiable.
-3. **Manejo de errores**: 429/402 con toast claro ("Lovable AI sin créditos / límite alcanzado").
+```text
+backfill_conceptos_venta_facturados()
+  - facturas.estado IN ('Emitida','Pagada','Parcialmente pagada')
+  - (sin cambios en lógica de UPDATE)
 
-## Detalles técnicos
+backfill_proformas_aceptadas()
+  - WHERE p.estado_proforma = 'pendiente'
+  - AND EXISTS (factura con estado IN ('Emitida','Pagada','Parcialmente pagada'))
+  - SET estado_proforma = 'facturada'
+```
 
-- Migración SQL incluye GRANT EXECUTE a `authenticated` para la función de backfill (acotada por org), y wrapper que sólo `super_admin` puede llamar (verificación `has_role`).
-- Edge function: `supabase/functions/auditoria-explicar-hallazgo/index.ts`, usa `_shared/cors.ts`, `_shared/auth.ts`, `_shared/ai-gateway.ts`. No persiste — sólo proxy AI.
-- Hook nuevo: `src/features/auditoria/hooks/useExplicarHallazgo.ts` (≤80 líneas).
-- Componente nuevo: `src/features/auditoria/components/ExplicarHallazgoButton.tsx` (≤150 líneas).
-- Wire-up en `hallazgosTablaConfig` añadiendo columna acción.
-
-## Out of scope
-
-- Reescribir la RPC de auditoría (la lógica actual es correcta una vez backfilled).
-- Backfill de `docs_pendientes_avanzado` / fechas (requiere intervención humana — la IA ayudará a triagear).
-- Persistir explicaciones IA (se cachean en cliente, no en DB).
-
-## Versionado
-
-- `APP_VERSION` bump + entrada en `CHANGELOG.md` raíz.
-- Actualizar `mem://features/auditoria-modulos` con la nota del backfill + IA explicativa.
+`run_auditoria_backfill_legacy()` no cambia — sigue orquestando las dos.
 
 ## Validación
 
-1. Antes de correr backfill en prod: ejecutar SELECT de conteo (cuántos conceptos/embarques afectados).
-2. Probar "Explicar con IA" sobre expediente 00062 y validar que la respuesta menciona facturas existentes + sugiere backfill.
-3. Tests unitarios: hook de explicación (mock fetch), función backfill (smoke con datos seed).
+1. Antes de ejecutar en prod, query de conteo:
+   - `SELECT COUNT(*) FROM conceptos_venta cv JOIN embarques e ON e.id=cv.embarque_id WHERE cv.estado_facturacion='pendiente' AND e.estado IN ('Entregado','Cerrado') AND EXISTS (SELECT 1 FROM facturas f WHERE f.embarque_id=cv.embarque_id AND f.estado IN ('Emitida','Pagada','Parcialmente pagada'));`
+   - Mismo para proformas.
+2. Ejecutar el botón en `/admin/auditoria` — debe devolver totales > 0 y eliminar los falsos positivos en expediente 00062.
+
+## Fuera de alcance
+
+- Backfill de `docs_pendientes_avanzado` / `fechas` (requieren intervención humana).
+- Cambios en la UI (`BackfillLegacyCard`) — el contrato JSON de respuesta no cambia.
+- `CHANGELOG.md` + bump `APP_VERSION` patch (`13.22.1`) post-implementación.
