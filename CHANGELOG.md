@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.15] - 2026-06-15
+- **ci(actionlint)**: Corregidos 3 warnings de shellcheck: SC2046 (`find` sin quote en `ci.yml`, solucionado con `readarray`), SC2015 (`A && B || C` en coverage summary reescrito a `if...fi`), SC2034 (variable `i` sin usar en loop de espera de Postgres, renombrada a `_`).
+
 ## [13.21.14] - 2026-06-15
 - **fix(ci/rls-tests)**: Bootstrap del Postgres efímero ahora también stubea el schema `storage` (tablas `storage.buckets` y `storage.objects` + helper `storage.foldername`). Antes la migración `20260301192552` (`INSERT INTO storage.buckets`) abortaba el workflow `rls-tests` con `ERROR: relation "storage.buckets" does not exist`.
 
