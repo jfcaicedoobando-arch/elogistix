@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.2] - 2026-06-15
+- **style(branding)**: Invertida la paleta del logo Libre Carga (`librecarga-logo.svg` y `librecarga-icon.svg`) — fondo `#F8FAFC`, contenedor y trazos en azul primario `#2563EB`, divisores horizontales/verticales en `#93C5FD`. Mejora drásticamente la legibilidad sobre headers claros y elimina el "bloque oscuro" reportado.
+
 ## [13.21.1] - 2026-06-14
 - **ux(mobile 20:9 — Fase 7: validación visual)**: Recorrido manual en preview a 412×915 (mobile) y 1366×768 (desktop). Verificado en `/inicio`, `/embarques`, `/proveedores`, `/profit/dashboard`, `/tesoreria/flujo`: search siempre visible, botón "Filtros" con badge correcto, `KpiStrip` con carrusel snap en `<sm`, `PageHeader` con `text-display` escalando suavemente, tablas → cards en `<sm` sin overflow horizontal, sidebar con badges. Sin regresiones detectadas. Notado que el título "Flujo de caja proyectado · 90 días" usa `truncate` y aparece con "…" en móvil cuando hay back-button: aceptable, no se modifica.
 
