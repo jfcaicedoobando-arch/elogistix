@@ -1,47 +1,46 @@
-# Buscador global no encuentra proformas
+# Detalle de proforma con drilldown
 
-## Causa raíz
+## Objetivo
 
-La RPC `public.busqueda_global(termino, limite)` sólo consulta 5 entidades: `embarques`, `clientes`, `proveedores`, `facturas` y `cotizaciones`. **No incluye `proformas`**, por eso aunque escribas el número (ej. `P-001`) o el cliente, no aparece nada en Ctrl+K.
+Permitir clic en una fila de "Proformas Generadas" (tab Facturación del embarque) para abrir una página dedicada `/proformas/:id` con el detalle completo.
 
-Además, el frontend (`GlobalSearch.tsx` + `types/search.ts`) sólo conoce los 5 tipos existentes y no tiene icono/label/ruta para `proforma`.
+## Cambios
 
-## Cambios propuestos
+### 1. Nueva página `src/features/proformas/routes/ProformaDetalle.tsx`
 
-### 1. Migración SQL — extender `busqueda_global`
-Agregar un `UNION ALL` extra que devuelva proformas filtradas por org (mismo patrón que las demás):
+Estructura siguiendo el patrón de `FacturaDetalle`:
 
-```sql
-UNION ALL
-(SELECT pr.id, pr.numero AS label,
-        (pr.cliente_nombre || ' · ' || pr.expediente) AS sublabel,
-        'proforma'::text AS tipo,
-        '/embarques/' || pr.embarque_id || '?tab=proformas' AS url
- FROM proformas pr
- WHERE (pr.numero ILIKE '%'||termino||'%'
-        OR pr.cliente_nombre ILIKE '%'||termino||'%'
-        OR pr.expediente ILIKE '%'||termino||'%')
-   AND (pr.organization_id = current_user_org_id() OR has_role(auth.uid(),'super_admin'))
- LIMIT limite)
-```
+- **Header**: número de proforma, badges (estado revisión + estado facturación), botón "Volver al embarque" (link a `/embarques/:embarque_id?tab=facturacion`), botón "Descargar PDF" (reutiliza `useDescargarProformaPdf`).
+- **Card datos generales**: cliente, expediente, fecha emisión, operador, días crédito, folio factura externa (si existe).
+- **Card conceptos**: `DataTable` con cantidad / descripción / moneda / precio unitario / importe / IVA (usa `fetchConceptosProforma`).
+- **Card totales**: subtotal/IVA/total USD y MXN (reutiliza `calcularTotalesProforma` de `@/lib/domain/proforma`).
+- **Card factura asociada** (si `facturas` no null): folio, PDF/XML download buttons.
 
-Se hace `CREATE OR REPLACE FUNCTION` conservando `SECURITY DEFINER`, `STABLE` y `search_path=public`.
+Datos vía nuevo hook `useProformaDetalle(id)` en `src/features/proformas/hooks/useProformaDetalle.ts` que llama a una nueva query `fetchProformaPorId(id)` (un solo SELECT con join a `facturas` y `embarques(expediente, cliente_nombre, organization_id, id)`).
 
-### 2. Frontend — soportar el tipo `proforma`
-- `src/types/search.ts`: agregar `"proforma"` al union `type`.
-- `src/components/shared/GlobalSearch.tsx`: agregar entrada en `typeIcons` (icono `FileSpreadsheet` o `Receipt` de lucide) y en `typeLabels` (`"Proformas"`).
+### 2. Ruta
 
-La URL ya apunta al detalle del embarque con el tab de proformas, ruta que ya existe.
+- `src/routes/appRoutes.lazy.ts`: agregar `export const ProformaDetalle = lazy(() => import("@/features/proformas/routes/ProformaDetalle"));`
+- `src/routes/appRoutes.tsx`: agregar `<Route path="/proformas/:id" element={<ProformaDetalle />} />` junto a las demás protegidas.
 
-### 3. Verificación
-- Probar Ctrl+K con un número de proforma conocido y con el nombre de un cliente que tenga proformas.
-- Confirmar que el grupo "Proformas" aparece con icono y al hacer clic navega al embarque correspondiente.
+### 3. Drilldown en `HistorialProformas.tsx`
 
-### 4. Metadata
-- Bump `APP_VERSION` (patch → `13.22.5`).
-- Entrada en `CHANGELOG.md` (root) bajo nueva versión: *"Buscador global (Ctrl+K) ahora incluye proformas por número, cliente o expediente."*
+- Hacer la fila clickeable usando la prop `onRowClick` del `DataTable` (o envolver el número en `Link`). Confirmar primero qué soporta el `DataTable` compartido; si no tiene `onRowClick`, convertir la celda "Número" en un `Link to={\`/proformas/${p.id}}` con estilo de enlace primario.
+- Mantener `e.stopPropagation()` en todos los botones de acciones (Descargar, Eliminar, FacturaDownloadButton) — ya están así.
+
+### 4. Buscador global
+
+La URL de proforma que devuelve `busqueda_global` (`/embarques/:embarqueId?tab=proformas`) se actualiza a `/proformas/:id` para que el resultado vaya directo al detalle. Migración corta: `CREATE OR REPLACE FUNCTION busqueda_global` ajustando el URL del bloque proformas.
+
+### 5. Metadata
+
+- `APP_VERSION` → `13.23.0` (nuevo feature de UI).
+- Entrada en `CHANGELOG.md`: *"Detalle de proforma como página dedicada `/proformas/:id` con drilldown desde el tab Facturación del embarque y desde el buscador global."*
 
 ## Fuera de alcance
-- No se modifica el buscador del CRM (`useCrmSearch`).
-- No se cambia el límite por tipo (sigue en 5).
-- No se rediseña el popover de resultados.
+
+- No se modifica el flujo de generación/aprobación de proformas.
+- No se rediseña la tabla de proformas en el embarque (sólo se agrega navegación).
+- No se crea edición inline en la página de detalle (sólo lectura + descargar).
+
+Tambien que se pueda hacer drill down desde el modulo prefacturacion, tab proformas. 
