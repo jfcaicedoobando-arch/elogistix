@@ -45,19 +45,3 @@ export function labelSubtipoGasto(s: SubtipoGasto | null | undefined): string {
   return SUBTIPOS_GASTO_OPERATIVO.find((x) => x.value === s)?.label ?? s;
 }
 
-/**
- * Métodos de pago a proveedor. SPEI sólo aplica a proveedores nacionales
- * (transferencia interbancaria mexicana). Transferencia internacional /
- * SWIFT aplica a proveedores extranjeros.
- */
-export const METODOS_PAGO_PROVEEDOR = [
-  'SPEI',
-  'Transferencia internacional',
-  'Transferencia',
-  'Cheque',
-  'Efectivo',
-  'Tarjeta',
-  'Otro',
-] as const;
-
-export const ORIGENES_PROVEEDOR = ['Nacional', 'Extranjero'] as const;
