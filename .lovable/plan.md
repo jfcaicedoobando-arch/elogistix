@@ -1,47 +1,41 @@
-## Objetivo
-Restaurar el desglose financiero del embarque **ELIMP00058** (`30848925-…`) que tiene proforma + 2 facturas con totales pero sin conceptos individuales en ninguna tabla.
+# Paso 1: Hardening rápido de GitHub Actions
 
-## Datos fuente (desde la proforma `PRO-2026-0024`)
-- USD: subtotal 585.00 · IVA 37.60 · total 622.60 (IVA al 16% aplicado al ~40%, pero respetamos lo grabado)
-- MXN: subtotal 8,500.00 · IVA 1,360.00 · total 9,860.00
-- Tasa IVA registrada: 0.16
-- Cliente: INDIMEX TRADING · org `00000000-0000-0000-0000-000000000001`
+Aplicar las mejoras de bajo riesgo y alto valor identificadas en la auditoría a los dos workflows que hoy heredan permisos por defecto y no tienen control de concurrencia.
 
-## Cambios (solo datos — sin migración de esquema)
+## Cambios
 
-### 1. `conceptos_venta` (2 filas) en el embarque
-Crear dos conceptos genéricos marcados como ya facturados y vinculados a la proforma, para que el tab de Costos del embarque cuadre con la factura emitida:
+### 1. `.github/workflows/post-deploy-smoke.yml`
+- Agregar bloque a nivel workflow:
+  ```yaml
+  permissions:
+    contents: read
+  concurrency:
+    group: post-deploy-smoke
+    cancel-in-progress: false
+  ```
+  - `cancel-in-progress: false` para no abortar un smoke nocturno en curso si se dispara un `workflow_dispatch` manual.
+- Asegurar newline final del archivo (hoy falta).
 
-| descripción | moneda | precio_unitario | total | aplica_iva | tasa_iva_aplicada | estado_facturacion | proforma_id | origen |
-|---|---|---|---|---|---|---|---|---|
-| "Servicios logísticos facturados (USD) — restaurado desde proforma PRO-2026-0024" | USD | 585.00 | 585.00 | true | 0.16 | facturado | bdc97c51-… | backfill |
-| "Servicios logísticos facturados (MXN) — restaurado desde proforma PRO-2026-0024" | MXN | 8500.00 | 8500.00 | true | 0.16 | facturado | bdc97c51-… | backfill |
+### 2. `.github/workflows/rls-tests.yml`
+- Agregar a nivel workflow:
+  ```yaml
+  permissions:
+    contents: read
+  concurrency:
+    group: rls-tests-${{ github.ref }}
+    cancel-in-progress: true
+  ```
+  - `cancel-in-progress: true` porque en PRs queremos cancelar corridas obsoletas; el grupo por `ref` evita que un PR cancele la corrida de `main`.
 
-> Nota: el IVA grabado en la proforma (37.60 USD sobre 585 = 6.43%) no corresponde a 16% sobre todo el subtotal. Esto sugiere que sólo parte del concepto USD tenía IVA. Para no inventar desglose, asentamos los conceptos con el subtotal y dejamos el monto de IVA tal cual está en la cabecera de la factura/proforma — no recalculamos. `aplica_iva=true` documenta que el original llevaba IVA mixto.
+### 3. Verificación
+- `cat` de ambos archivos para confirmar sintaxis YAML válida (indentación consistente, llaves dobles correctas).
+- No se tocan jobs, steps, secrets ni triggers existentes.
 
-### 2. `proforma_conceptos_consolidados` (2 filas)
-Espejo de los dos conceptos anteriores ligados a `proforma_id = bdc97c51-…` y `embarque_id` del embarque, con `iva = 37.60` (USD) y `iva = 1360.00` (MXN) para preservar los montos originales.
+## Metadata
+- `src/constants/appVersion.ts` → `13.21.10`
+- `CHANGELOG.md` → nueva entrada `## [13.21.10] - 2026-06-15` con bullet: "CI: permisos mínimos (`contents: read`) y `concurrency` en workflows post-deploy-smoke y rls-tests; newline final corregido."
 
-### 3. `conceptos_factura` (1 fila por factura, 2 totales)
-- Factura USD `0d4acfb2-…` → 1 fila: "Servicios logísticos facturados — restaurado", USD, total 585.00
-- Factura MXN `c1db8a0e-…` → 1 fila: "Servicios logísticos facturados — restaurado", MXN, total 8500.00
-
-### 4. Bitácora de actividad
-Registrar un evento manual en `bitacora_actividad` por cada tabla tocada (módulo `embarques`, acción `backfill_conceptos`, entidad_nombre `ELIMP00058`) con detalles del origen del backfill y los IDs creados. Esto deja rastro auditable.
-
-## Validación post-cambio
-- Re-consultar: `conceptos_venta`=2, `conceptos_factura`=2, `proforma_conceptos_consolidados`=2.
-- Sumas: USD venta total = 585, MXN venta total = 8500 (cuadra con cabeceras existentes — **no se tocan** las cabeceras de proforma ni de factura).
-- Abrir `/embarques/30848925-…?tab=costos` y verificar que ahora aparece el desglose.
-
-## Lo que NO se toca
-- Totales en `proformas` y `facturas` (ya están correctos, sólo faltaba el detalle).
-- Estado del embarque (sigue `Cerrado`).
-- Costos (`conceptos_costo` ya tiene sus 4 filas).
-- Tipo de cambio, fechas, folios fiscales.
-
-## Riesgo / reversibilidad
-Las 5 filas creadas tendrán todas `origen='backfill'` (en `conceptos_venta`) y descripciones con marcador "restaurado desde proforma PRO-2026-0024". Si quieres revertir, basta con borrar por ese criterio.
-
-## Changelog
-Bump `APP_VERSION` → `13.21.9` + entrada en `CHANGELOG.md` describiendo el backfill puntual de ELIMP00058.
+## Fuera de alcance (siguiente iteración)
+- Pinning por SHA de `oven-sh/setup-bun@v2`, `denoland/setup-deno@v2`, `codecov/codecov-action@v7`.
+- `dependabot.yml` y workflow de `actionlint`.
+- CodeQL, gitleaks, notificaciones de fallo de smoke.
