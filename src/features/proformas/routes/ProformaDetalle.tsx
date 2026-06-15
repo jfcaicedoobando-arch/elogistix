@@ -4,7 +4,7 @@
  */
 import { useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Download, FileText, FileCode2, Ship, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Ship, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
