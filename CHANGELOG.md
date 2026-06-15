@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.16] - 2026-06-15
+- **fix(ci/rls-tests)**: La migración `20260424231755` asumía que `public.proformas.es_consolidada` ya existía (se había añadido manualmente en prod, nunca vía migración) y rompía CI con `ERROR: column "es_consolidada" does not exist`. Añadido drift-fix en el step `Apply migrations` que ejecuta `ALTER TABLE ... ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false` justo antes de aplicar esa migración.
+
 ## [13.21.15] - 2026-06-15
 - **ci(actionlint)**: Corregidos 3 warnings de shellcheck: SC2046 (`find` sin quote en `ci.yml`, solucionado con `readarray`), SC2015 (`A && B || C` en coverage summary reescrito a `if...fi`), SC2034 (variable `i` sin usar en loop de espera de Postgres, renombrada a `_`).
 
