@@ -24,14 +24,23 @@ initSentryEdge("auditoria-explicar-hallazgo");
 const env = (k: string) => Deno.env.get(k);
 
 const SYSTEM_PROMPT = `Eres un analista senior de operaciones de un freight forwarder mexicano (Libre Carga).
-Recibirás un hallazgo de auditoría sobre un embarque y un resumen de su contexto real (facturas, proformas, conceptos, fechas).
+Recibirás un hallazgo de auditoría sobre un embarque y un resumen de su contexto real (facturas, proformas, conceptos, fechas y la lista REAL de documentos con su estado).
 
 Tu trabajo:
 1) Explicar en español MX qué significa el hallazgo (1-2 oraciones).
-2) Listar 2-4 posibles causas concretas en BULLETS. Considera SIEMPRE como hipótesis si los datos del contexto contradicen el hallazgo (ej. el embarque sí tiene facturas pero los conceptos_venta siguen en 'pendiente'), lo cual indica un problema de BACKFILL de datos legacy (embarques creados antes de que existiera el módulo de facturación). Sé directo: "Es muy probable que sea backfill" cuando aplique.
-3) Sugerir 2-3 pasos concretos en BULLETS (ej. "Ejecutar backfill desde /admin/auditoria", "Marcar como revisado con nota", "Re-facturar concepto X").
+2) Listar 2-4 posibles causas concretas en BULLETS, basándote SIEMPRE en los datos del contexto:
+   - Si la regla es \`docs_*\`, analiza la tabla de DOCUMENTOS primero. Identifica el documento concreto que dispara el hallazgo, revisa si hay duplicados (mismo nombre con distintos estados) y sé directo: "Es muy probable que sea un registro duplicado/legacy de '<nombre>' que quedó en Pendiente mientras otro idéntico ya está en No aplica/Recibido".
+   - Si la regla es financiera o de facturación y el embarque ya tiene facturas pero los conceptos siguen en 'pendiente', menciona explícitamente que es un problema de BACKFILL de datos legacy.
+   - No menciones backfill/facturación cuando la regla sea de documentos.
+3) Sugerir 2-3 pasos concretos en BULLETS, alineados con la regla (ej. "Eliminar el registro duplicado de 'Certificado de Origen' en Pendiente", "Marcar como revisado con nota", "Ejecutar backfill desde /admin/auditoria").
 
-Máximo 200 palabras totales. No inventes datos que no estén en el contexto. Usa formato markdown simple (## títulos, - bullets).`;
+Máximo 220 palabras totales. No inventes datos que no estén en el contexto. Usa formato markdown simple (## títulos, - bullets).`;
+
+interface DocumentoCtx {
+  nombre: string;
+  estado: string;
+  tiene_archivo: boolean;
+}
 
 interface ContextoEmbarque {
   expediente: string;
@@ -47,7 +56,7 @@ interface ContextoEmbarque {
   conceptos_costo_total: number;
   facturas: Array<{ folio: string; estado: string; total: number; moneda: string }>;
   proformas: Array<{ folio: string; estado: string }>;
-  documentos_count: number;
+  documentos: DocumentoCtx[];
 }
 
 async function buildContexto(adminClient: ReturnType<typeof authenticate> extends Promise<infer T> ? (T extends { adminClient: infer C } ? C : never) : never, embarqueId: string): Promise<ContextoEmbarque | null> {
@@ -60,15 +69,20 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
   if (!e) return null;
 
   // @ts-expect-error supabase chain
-  const [{ data: cv }, { data: cc }, { data: facturas }, { data: proformas }, { count: docCount }] = await Promise.all([
+  const [{ data: cv }, { data: cc }, { data: facturas }, { data: proformas }, { data: docs }] = await Promise.all([
     adminClient.from("conceptos_venta").select("id, estado_facturacion").eq("embarque_id", embarqueId),
     adminClient.from("conceptos_costo").select("id").eq("embarque_id", embarqueId),
     adminClient.from("facturas").select("numero, estado, total, moneda").eq("embarque_id", embarqueId).limit(10),
     adminClient.from("proformas").select("folio, estado").eq("embarque_id", embarqueId).limit(10),
-    adminClient.from("documentos_embarque").select("id", { count: "exact", head: true }).eq("embarque_id", embarqueId),
+    adminClient.from("documentos_embarque").select("nombre, estado, archivo").eq("embarque_id", embarqueId).is("deleted_at", null).limit(40),
   ]);
 
   const cvList = (cv ?? []) as Array<{ estado_facturacion: string }>;
+  const docList = ((docs ?? []) as Array<{ nombre: string; estado: string; archivo: string | null }>).map((d) => ({
+    nombre: d.nombre,
+    estado: d.estado,
+    tiene_archivo: Boolean(d.archivo),
+  }));
   return {
     expediente: e.expediente,
     estado: e.estado,
@@ -85,8 +99,30 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
       folio: f.numero, estado: f.estado, total: Number(f.total ?? 0), moneda: f.moneda ?? "MXN",
     })),
     proformas: ((proformas ?? []) as Array<{ folio: string; estado: string }>).map((p) => ({ folio: p.folio, estado: p.estado })),
-    documentos_count: docCount ?? 0,
+    documentos: docList,
   };
+}
+
+/** Agrupa documentos por nombre y marca duplicados explícitamente. */
+function formatDocumentos(docs: DocumentoCtx[]): string {
+  if (docs.length === 0) return "—";
+  const byName = new Map<string, DocumentoCtx[]>();
+  for (const d of docs) {
+    const arr = byName.get(d.nombre) ?? [];
+    arr.push(d);
+    byName.set(d.nombre, arr);
+  }
+  const lines: string[] = [];
+  for (const [nombre, rows] of byName) {
+    if (rows.length === 1) {
+      const r = rows[0];
+      lines.push(`- ${nombre}: ${r.estado}${r.tiene_archivo ? " (con archivo)" : ""}`);
+    } else {
+      const estados = rows.map((r) => `${r.estado}${r.tiene_archivo ? "+archivo" : ""}`).join(", ");
+      lines.push(`- ${nombre}: [${estados}] ← DUPLICADO (${rows.length} filas)`);
+    }
+  }
+  return lines.join("\n");
 }
 
 async function callGateway(apiKey: string, userPrompt: string): Promise<Response> {
@@ -159,9 +195,11 @@ async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<t
     `ETD: ${ctx.etd ?? "—"} | ETA: ${ctx.eta ?? "—"} | Llegada real: ${ctx.fecha_llegada_real ?? "—"}`,
     `Conceptos venta: ${ctx.conceptos_venta_total} (pendientes: ${ctx.conceptos_venta_pendientes}, facturados: ${ctx.conceptos_venta_facturados})`,
     `Conceptos costo: ${ctx.conceptos_costo_total}`,
-    `Documentos: ${ctx.documentos_count}`,
     `Facturas (${ctx.facturas.length}): ${ctx.facturas.map((f) => `${f.folio} [${f.estado}] ${f.total} ${f.moneda}`).join("; ") || "—"}`,
     `Proformas (${ctx.proformas.length}): ${ctx.proformas.map((p) => `${p.folio} [${p.estado}]`).join("; ") || "—"}`,
+    ``,
+    `**Documentos (${ctx.documentos.length} filas vivas)**`,
+    formatDocumentos(ctx.documentos),
   ].join("\n");
 
   const resp = await callGateway(apiKey, userPrompt);
