@@ -18,7 +18,7 @@ interface Props {
 }
 
 /** Detecta borradores vacíos (sin conceptos / total cero) que aún están en estado pendiente. */
-function esBorradorVacio(p: ProformaConFactura): boolean {
+export function esBorradorVacio(p: ProformaConFactura): boolean {
   return (
     (p.estado_proforma ?? "pendiente") === "pendiente" &&
     (p.estado_aprobacion ?? "aprobada") === "borrador" &&
