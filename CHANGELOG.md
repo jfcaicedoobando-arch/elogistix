@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.22.3] - 2026-06-15
+- **fix(auditoria/backfill-legacy)**: Corregido el tercer bloqueo del botón "Ejecutar backfill" en `/admin/auditoria`. La validación de `conceptos_venta.estado_facturacion` ahora acepta `facturado` y el trigger que protege embarques `Cerrado` permite exclusivamente este cambio administrativo del backfill, sin abrir edición manual de conceptos. Validado con la sesión `super_admin`: el RPC completo devuelve `113` conceptos, `22` embarques y `151` proformas en una transacción reversible.
+
 ## [13.22.2] - 2026-06-15
 - **fix(auditoria/backfill-legacy)**: `backfill_conceptos_venta_facturados` ya no intenta escribir en `conceptos_venta.factura_id` (columna inexistente) — sólo actualiza `estado_facturacion = 'facturado'`. Era el error que rompía la ejecución del botón "Ejecutar backfill" en `/admin/auditoria`. Se re-publican `GRANT EXECUTE` de las tres funciones del backfill a `authenticated` y `service_role`.
 
