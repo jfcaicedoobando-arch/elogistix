@@ -21,26 +21,8 @@
 
 BEGIN;
 
-CREATE OR REPLACE FUNCTION pg_temp.as_user(_user_id uuid) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  PERFORM set_config(
-    'request.jwt.claims',
-    json_build_object('sub', _user_id, 'role', 'authenticated')::text,
-    true
-  );
-  PERFORM set_config('role', 'authenticated', true);
-END;
-$$;
+\i supabase/tests/rls/_helpers.sql
 
-CREATE OR REPLACE FUNCTION pg_temp.assert(cond boolean, msg text) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT cond THEN
-    RAISE EXCEPTION 'RLS FIN CRITICO FAIL: %', msg;
-  END IF;
-END;
-$$;
 
 DO $$
 DECLARE
@@ -250,7 +232,44 @@ BEGIN
     RESET ROLE;
   END IF;
 
-  RAISE NOTICE 'RLS FIN CRITICO: 9 aserciones de tablas financieras pasaron';
+  -- =========================================================================
+  -- TEST 10: WITH CHECK — bloquear INSERT cruzado de org desde user_b a org_a.
+  -- Las pruebas 1-9 sólo validan SELECT; este bloque cubre el otro lado de la
+  -- policy (mutaciones) para tablas financieras críticas. Si una policy tiene
+  -- USING pero le falta WITH CHECK, este test lo detecta.
+  -- =========================================================================
+  PERFORM pg_temp.as_user(user_b);
+
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.cuentas_bancarias(organization_id, banco, alias, numero_cuenta, clabe, moneda, saldo_inicial, activa, notas)
+       VALUES (%L, %L, %L, %L, %L, %L, 0, true, %L)',
+      org_a, 'HACK', 'spoof', '9999', '012180000000009999', 'MXN', ''
+    ),
+    'cuentas_bancarias acepta INSERT con organization_id ajeno'
+  );
+
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas)
+       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L)',
+      org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', ''
+    ),
+    'proveedor_facturas acepta INSERT con organization_id ajeno'
+  );
+
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.cotizacion_costos(cotizacion_id, concepto, moneda, proveedor, cantidad, costo_unitario, precio_venta, unidad_medida, organization_id, notas)
+       VALUES (%L, %L, %L, %L, 1, 100, 200, %L, %L, %L)',
+      cot_a, 'HACK', 'USD', 'spoof', 'BL', org_a, ''
+    ),
+    'cotizacion_costos acepta INSERT con organization_id ajeno'
+  );
+
+  PERFORM pg_temp.as_postgres();
+
+  RAISE NOTICE 'RLS FIN CRITICO: 9 SELECTs + 3 WITH CHECK aserciones pasaron';
 END;
 $$;
 

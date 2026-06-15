@@ -19,26 +19,8 @@
 
 BEGIN;
 
-CREATE OR REPLACE FUNCTION pg_temp.as_user(_user_id uuid) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  PERFORM set_config(
-    'request.jwt.claims',
-    json_build_object('sub', _user_id, 'role', 'authenticated')::text,
-    true
-  );
-  PERFORM set_config('role', 'authenticated', true);
-END;
-$$;
+\i supabase/tests/rls/_helpers.sql
 
-CREATE OR REPLACE FUNCTION pg_temp.assert(cond boolean, msg text) RETURNS void
-LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT cond THEN
-    RAISE EXCEPTION 'RLS OPS FAIL: %', msg;
-  END IF;
-END;
-$$;
 
 DO $$
 DECLARE
