@@ -1,0 +1,31 @@
+﻿2026-06-15T23:28:22.5948854Z Current runner version: '2.335.1'
+2026-06-15T23:28:22.5974758Z ##[group]Runner Image Provisioner
+2026-06-15T23:28:22.5975620Z Hosted Compute Agent
+2026-06-15T23:28:22.5976216Z Version: 20260527.539
+2026-06-15T23:28:22.5976919Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-15T23:28:22.5977679Z Build Date: 2026-05-27T21:39:57Z
+2026-06-15T23:28:22.5978406Z Worker ID: {e7da89de-b8d8-4fb0-929b-952d0167b324}
+2026-06-15T23:28:22.5979158Z Azure Region: centralus
+2026-06-15T23:28:22.5980056Z ##[endgroup]
+2026-06-15T23:28:22.5981578Z ##[group]Operating System
+2026-06-15T23:28:22.5982224Z Ubuntu
+2026-06-15T23:28:22.5982859Z 24.04.4
+2026-06-15T23:28:22.5983392Z LTS
+2026-06-15T23:28:22.5983934Z ##[endgroup]
+2026-06-15T23:28:22.5984530Z ##[group]Runner Image
+2026-06-15T23:28:22.5985134Z Image: ubuntu-24.04
+2026-06-15T23:28:22.5985702Z Version: 20260607.184.1
+2026-06-15T23:28:22.5986831Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-15T23:28:22.5988923Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-15T23:28:22.5990091Z ##[endgroup]
+2026-06-15T23:28:22.5991248Z ##[group]GITHUB_TOKEN Permissions
+2026-06-15T23:28:22.5993191Z Contents: read
+2026-06-15T23:28:22.5993802Z Metadata: read
+2026-06-15T23:28:22.5994467Z ##[endgroup]
+2026-06-15T23:28:22.5996933Z Secret source: Actions
+2026-06-15T23:28:22.5997767Z Prepare workflow directory
+2026-06-15T23:28:22.6451401Z Prepare all required actions
+2026-06-15T23:28:22.6490230Z Getting action download info
+2026-06-15T23:28:22.9263773Z Download action repository 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-15T23:28:23.2754134Z Download action repository 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-06-15T23:28:23.8756359Z Complete job name: RLS suite — financiero

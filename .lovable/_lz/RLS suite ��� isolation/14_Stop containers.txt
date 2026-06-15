@@ -1,0 +1,228 @@
+﻿2026-06-15T23:28:43.0658664Z Print service container logs: dbc05660ddfc41828b111fea251c4bbf_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_512e84
+2026-06-15T23:28:43.0663239Z ##[command]/usr/bin/docker logs --details 211cebb5b139baa91e1158a82379c1114d893bfdf52a66d5071ea18592a071f3
+2026-06-15T23:28:43.0780738Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:28:43.0783723Z  This user must also own the server process.
+2026-06-15T23:28:43.0784477Z  
+2026-06-15T23:28:43.0785418Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:28:43.0786757Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:28:43.0788018Z  The default text search configuration will be set to "english".
+2026-06-15T23:28:43.0789187Z  
+2026-06-15T23:28:43.0790800Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:28:43.0792104Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:28:43.0793298Z  2026-06-15 23:28:33.702 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:43.0794048Z  2026-06-15 23:28:33.703 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:28:43.0794558Z  2026-06-15 23:28:33.703 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:28:43.0795408Z  2026-06-15 23:28:33.704 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:43.0796411Z  2026-06-15 23:28:33.706 UTC [62] LOG:  database system was shut down at 2026-06-15 23:28:33 UTC
+2026-06-15T23:28:43.0797062Z  2026-06-15 23:28:33.709 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:28:43.0797590Z  2026-06-15 23:28:42.775 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:28:43.0798140Z  2026-06-15 23:28:42.775 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:28:43.0798652Z  2026-06-15 23:28:42.832 UTC [76] ERROR:  permission denied for table clientes
+2026-06-15T23:28:43.0799273Z  2026-06-15 23:28:42.832 UTC [76] CONTEXT:  SQL statement "SELECT COUNT(*)                    FROM public.clientes WHERE nombre LIKE 'Cliente %'"
+2026-06-15T23:28:43.0799888Z  	PL/pgSQL function inline_code_block line 43 at SQL statement
+2026-06-15T23:28:43.0800260Z  2026-06-15 23:28:42.832 UTC [76] STATEMENT:  DO $$
+2026-06-15T23:28:43.0800555Z  	DECLARE
+2026-06-15T23:28:43.0800761Z  	  org_a uuid := gen_random_uuid();
+2026-06-15T23:28:43.0801027Z  	  org_b uuid := gen_random_uuid();
+2026-06-15T23:28:43.0801327Z  	  user_a uuid := gen_random_uuid();
+2026-06-15T23:28:43.0801599Z  	  user_b uuid := gen_random_uuid();
+2026-06-15T23:28:43.0801861Z  	  user_cli uuid := gen_random_uuid();
+2026-06-15T23:28:43.0802125Z  	  cli_a uuid := gen_random_uuid();
+2026-06-15T23:28:43.0802383Z  	  cli_b uuid := gen_random_uuid();
+2026-06-15T23:28:43.0802640Z  	  emb_a uuid := gen_random_uuid();
+2026-06-15T23:28:43.0802891Z  	  emb_b uuid := gen_random_uuid();
+2026-06-15T23:28:43.0803135Z  	  visible_count int;
+2026-06-15T23:28:43.0803353Z  	BEGIN
+2026-06-15T23:28:43.0803692Z  	  -- Insertamos como rol postgres (bypass RLS) para preparar el escenario
+2026-06-15T23:28:43.0804920Z  	  INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'TEST Org A'), (org_b, 'TEST Org B');
+2026-06-15T23:28:43.0806261Z  	
+2026-06-15T23:28:43.0806609Z  	  INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
+2026-06-15T23:28:43.0807043Z  	    (org_a, user_a, 'admin'),
+2026-06-15T23:28:43.0807293Z  	    (org_b, user_b, 'admin');
+2026-06-15T23:28:43.0807523Z  	
+2026-06-15T23:28:43.0807752Z  	  -- Roles globales (tabla user_roles)
+2026-06-15T23:28:43.0808081Z  	  INSERT INTO public.user_roles(user_id, role) VALUES
+2026-06-15T23:28:43.0808398Z  	    (user_a, 'admin'),
+2026-06-15T23:28:43.0808624Z  	    (user_b, 'admin'),
+2026-06-15T23:28:43.0809032Z  	    (user_cli, 'cliente');
+2026-06-15T23:28:43.0809262Z  	
+2026-06-15T23:28:43.0809545Z  	  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
+2026-06-15T23:28:43.0809905Z  	    (cli_a, 'Cliente A', org_a),
+2026-06-15T23:28:43.0810164Z  	    (cli_b, 'Cliente B', org_b);
+2026-06-15T23:28:43.0810407Z  	
+2026-06-15T23:28:43.0810716Z  	  INSERT INTO public.client_users(cliente_id, user_id, organization_id) VALUES
+2026-06-15T23:28:43.0811111Z  	    (cli_a, user_cli, org_a);
+2026-06-15T23:28:43.0811339Z  	
+2026-06-15T23:28:43.0811735Z  	  INSERT INTO public.embarques(id, cliente_id, cliente_nombre, organization_id, tipo, modo, expediente)
+2026-06-15T23:28:43.0812208Z  	    VALUES
+2026-06-15T23:28:43.0812552Z  	      (emb_a, cli_a, 'Cliente A', org_a, 'Importación', 'Marítimo', 'EXP-A-001'),
+2026-06-15T23:28:43.0813034Z  	      (emb_b, cli_b, 'Cliente B', org_b, 'Importación', 'Marítimo', 'EXP-B-001');
+2026-06-15T23:28:43.0813391Z  	
+2026-06-15T23:28:43.0813659Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0814046Z  	  -- Test 1: Admin de Org A solo ve clientes de Org A
+2026-06-15T23:28:43.0814427Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0814793Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0815498Z  	  SELECT COUNT(*) INTO visible_count FROM public.clientes WHERE nombre LIKE 'Cliente %';
+2026-06-15T23:28:43.0815975Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0816355Z  	    format('Admin A vio %s clientes, esperaba 1', visible_count));
+2026-06-15T23:28:43.0816699Z  	
+2026-06-15T23:28:43.0816960Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0817364Z  	  -- Test 2: Admin de Org B solo ve clientes de Org B
+2026-06-15T23:28:43.0817737Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0818090Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:43.0818506Z  	  SELECT COUNT(*) INTO visible_count FROM public.clientes WHERE nombre LIKE 'Cliente %';
+2026-06-15T23:28:43.0818960Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0819322Z  	    format('Admin B vio %s clientes, esperaba 1', visible_count));
+2026-06-15T23:28:43.0819652Z  	
+2026-06-15T23:28:43.0819911Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0820300Z  	  -- Test 3: Admin A no puede UPDATE clientes de Org B
+2026-06-15T23:28:43.0820672Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0821019Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0821363Z  	  UPDATE public.clientes SET nombre = 'HACKED' WHERE id = cli_b;
+2026-06-15T23:28:43.0821718Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:43.0822029Z  	  SELECT COUNT(*) INTO visible_count FROM public.clientes
+2026-06-15T23:28:43.0822374Z  	    WHERE id = cli_b AND nombre = 'HACKED';
+2026-06-15T23:28:43.0822682Z  	  PERFORM pg_temp.assert(visible_count = 0,
+2026-06-15T23:28:43.0823030Z  	    'Admin A pudo modificar cliente de Org B (¡fuga RLS!)');
+2026-06-15T23:28:43.0823348Z  	
+2026-06-15T23:28:43.0823608Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0823988Z  	  -- Test 4: Embarques aislados por organización
+2026-06-15T23:28:43.0824503Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0824850Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0825414Z  	  SELECT COUNT(*) INTO visible_count FROM public.embarques
+2026-06-15T23:28:43.0825792Z  	    WHERE expediente IN ('EXP-A-001', 'EXP-B-001');
+2026-06-15T23:28:43.0826116Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0826481Z  	    format('Admin A vio %s embarques, esperaba 1', visible_count));
+2026-06-15T23:28:43.0826813Z  	
+2026-06-15T23:28:43.0827067Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0827706Z  	  -- Test 5: Cliente del portal solo ve sus propios embarques (cli_a)
+2026-06-15T23:28:43.0828127Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0828477Z  	  PERFORM pg_temp.as_user(user_cli);
+2026-06-15T23:28:43.0828804Z  	  SELECT COUNT(*) INTO visible_count FROM public.embarques
+2026-06-15T23:28:43.0829310Z  	    WHERE expediente IN ('EXP-A-001', 'EXP-B-001');
+2026-06-15T23:28:43.0829634Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0830028Z  	    format('Cliente del portal vio %s embarques, esperaba 1', visible_count));
+2026-06-15T23:28:43.0830394Z  	
+2026-06-15T23:28:43.0830650Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0831042Z  	  -- Test 6: Cliente NO puede ver clientes (tabla)
+2026-06-15T23:28:43.0831408Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0831771Z  	  PERFORM pg_temp.as_user(user_cli);
+2026-06-15T23:28:43.0832099Z  	  SELECT COUNT(*) INTO visible_count FROM public.clientes
+2026-06-15T23:28:43.0832425Z  	    WHERE id IN (cli_a, cli_b);
+2026-06-15T23:28:43.0832708Z  	  PERFORM pg_temp.assert(visible_count <= 1,
+2026-06-15T23:28:43.0833123Z  	    format('Cliente vio %s registros en clientes, esperaba ≤1', visible_count));
+2026-06-15T23:28:43.0833502Z  	
+2026-06-15T23:28:43.0833757Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0834157Z  	  -- Test 7: app_logs — admin de Org A solo ve logs de su org
+2026-06-15T23:28:43.0834553Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0834885Z  	  RESET ROLE;
+2026-06-15T23:28:43.0835470Z  	  PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:43.0835902Z  	  INSERT INTO public.app_logs(level, fn, msg, organization_id) VALUES
+2026-06-15T23:28:43.0836282Z  	    ('info', 'test-fn', 'log-A', org_a),
+2026-06-15T23:28:43.0836653Z  	    ('info', 'test-fn', 'log-B', org_b);
+2026-06-15T23:28:43.0836992Z  	
+2026-06-15T23:28:43.0837293Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0837619Z  	  SELECT COUNT(*) INTO visible_count FROM public.app_logs
+2026-06-15T23:28:43.0838091Z  	    WHERE fn = 'test-fn';
+2026-06-15T23:28:43.0838361Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0838718Z  	    format('Admin A vio %s logs, esperaba 1', visible_count));
+2026-06-15T23:28:43.0839178Z  	
+2026-06-15T23:28:43.0839452Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0839940Z  	  -- Test 8: bitacora_actividad — usuario no puede insertar para otro user_id
+2026-06-15T23:28:43.0840420Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0840773Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0841038Z  	  BEGIN
+2026-06-15T23:28:43.0841441Z  	    INSERT INTO public.bitacora_actividad(usuario_id, usuario_email, accion, modulo, organization_id)
+2026-06-15T23:28:43.0841981Z  	      VALUES (user_b, 'spoof@test.mx', 'spoof', 'test', org_a);
+2026-06-15T23:28:43.0842323Z  	    PERFORM pg_temp.assert(false,
+2026-06-15T23:28:43.0842695Z  	      'Insert con usuario_id falso debería haber fallado por WITH CHECK');
+2026-06-15T23:28:43.0843224Z  	  EXCEPTION
+2026-06-15T23:28:43.0843485Z  	    WHEN insufficient_privilege OR check_violation THEN
+2026-06-15T23:28:43.0843816Z  	      NULL; -- esperado
+2026-06-15T23:28:43.0844035Z  	  END;
+2026-06-15T23:28:43.0844215Z  	
+2026-06-15T23:28:43.0844469Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0844937Z  	  -- Test 9 (12.61.11): notificaciones_internas — bug-simulado con organization_id
+2026-06-15T23:28:43.0845699Z  	  -- de otra org NO debe ser visible aunque usuario_id coincida.
+2026-06-15T23:28:43.0846105Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0846577Z  	  RESET ROLE;
+2026-06-15T23:28:43.0846841Z  	  PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:43.0847342Z  	  INSERT INTO public.notificaciones_internas(usuario_id, organization_id, tipo, titulo, mensaje)
+2026-06-15T23:28:43.0847791Z  	    VALUES
+2026-06-15T23:28:43.0848021Z  	      (user_a, org_a, 'info', 'noti-A', 'msg-A'),
+2026-06-15T23:28:43.0848410Z  	      (user_a, org_b, 'info', 'noti-CROSS', 'msg-CROSS'); -- bug: org cruzada
+2026-06-15T23:28:43.0848756Z  	
+2026-06-15T23:28:43.0848948Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0849315Z  	  SELECT COUNT(*) INTO visible_count FROM public.notificaciones_internas
+2026-06-15T23:28:43.0849694Z  	    WHERE usuario_id = user_a;
+2026-06-15T23:28:43.0849966Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0850465Z  	    format('User A vio %s notificaciones internas, esperaba 1 (la cruzada debe bloquearse)', visible_count));
+2026-06-15T23:28:43.0850945Z  	
+2026-06-15T23:28:43.0851202Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0851604Z  	  -- Test 10 (12.61.11): crm_notificaciones — mismo refuerzo
+2026-06-15T23:28:43.0851994Z  	  -- --------------------------------------------------------------------------
+2026-06-15T23:28:43.0852324Z  	  RESET ROLE;
+2026-06-15T23:28:43.0852583Z  	  PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:43.0853049Z  	  INSERT INTO public.crm_notificaciones(user_id, organization_id, tipo, titulo, mensaje)
+2026-06-15T23:28:43.0853473Z  	    VALUES
+2026-06-15T23:28:43.0853694Z  	      (user_a, org_a, 'info', 'crm-A', 'msg-A'),
+2026-06-15T23:28:43.0854022Z  	      (user_a, org_b, 'info', 'crm-CROSS', 'msg-CROSS');
+2026-06-15T23:28:43.0854315Z  	
+2026-06-15T23:28:43.0854526Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:43.0854875Z  	  SELECT COUNT(*) INTO visible_count FROM public.crm_notificaciones
+2026-06-15T23:28:43.0855565Z  	    WHERE user_id = user_a;
+2026-06-15T23:28:43.0855853Z  	  PERFORM pg_temp.assert(visible_count = 1,
+2026-06-15T23:28:43.0856348Z  	    format('User A vio %s crm_notificaciones, esperaba 1 (la cruzada debe bloquearse)', visible_count));
+2026-06-15T23:28:43.0856811Z  	
+2026-06-15T23:28:43.0856992Z  	  -- Limpieza
+2026-06-15T23:28:43.0857193Z  	  RESET ROLE;
+2026-06-15T23:28:43.0857457Z  	  PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:43.0857767Z  	
+2026-06-15T23:28:43.0858038Z  	  RAISE NOTICE '✓ Todos los tests de RLS pasaron correctamente';
+2026-06-15T23:28:43.0858377Z  	END;
+2026-06-15T23:28:43.0858559Z  	$$;
+2026-06-15T23:28:43.0858778Z  Data page checksums are disabled.
+2026-06-15T23:28:43.0859021Z  
+2026-06-15T23:28:43.0859320Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:28:43.0859707Z  creating subdirectories ... ok
+2026-06-15T23:28:43.0860013Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:28:43.0860352Z  selecting default max_connections ... 100
+2026-06-15T23:28:43.0860656Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:28:43.0860942Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:28:43.0861219Z  creating configuration files ... ok
+2026-06-15T23:28:43.0861487Z  running bootstrap script ... ok
+2026-06-15T23:28:43.0861780Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:28:43.0862228Z  syncing data to disk ... ok
+2026-06-15T23:28:43.0862452Z  
+2026-06-15T23:28:43.0862618Z  
+2026-06-15T23:28:43.0862850Z  Success. You can now start the database server using:
+2026-06-15T23:28:43.0863139Z  
+2026-06-15T23:28:43.0863367Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:28:43.0863667Z  
+2026-06-15T23:28:43.0864298Z  waiting for server to start....2026-06-15 23:28:33.466 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:43.0865437Z  2026-06-15 23:28:33.466 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:43.0866145Z  2026-06-15 23:28:33.469 UTC [51] LOG:  database system was shut down at 2026-06-15 23:28:33 UTC
+2026-06-15T23:28:43.0866662Z  2026-06-15 23:28:33.473 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:28:43.0867031Z   done
+2026-06-15T23:28:43.0867218Z  server started
+2026-06-15T23:28:43.0867420Z  
+2026-06-15T23:28:43.0867731Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:28:43.0868125Z  
+2026-06-15T23:28:43.0868377Z  2026-06-15 23:28:33.583 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:28:43.0868899Z  waiting for server to shut down....2026-06-15 23:28:33.584 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:28:43.0869574Z  2026-06-15 23:28:33.585 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:28:43.0870103Z  2026-06-15 23:28:33.586 UTC [49] LOG:  shutting down
+2026-06-15T23:28:43.0870507Z  2026-06-15 23:28:33.586 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:28:43.0871437Z  2026-06-15 23:28:33.588 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:28:43.0872369Z  2026-06-15 23:28:33.592 UTC [48] LOG:  database system is shut down
+2026-06-15T23:28:43.0872702Z   done
+2026-06-15T23:28:43.0872884Z  server stopped
+2026-06-15T23:28:43.0873081Z  
+2026-06-15T23:28:43.0873315Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:28:43.0873617Z  
+2026-06-15T23:28:43.0879276Z Stop and remove container: dbc05660ddfc41828b111fea251c4bbf_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_512e84
+2026-06-15T23:28:43.0884011Z ##[command]/usr/bin/docker rm --force 211cebb5b139baa91e1158a82379c1114d893bfdf52a66d5071ea18592a071f3
+2026-06-15T23:28:43.2338153Z 211cebb5b139baa91e1158a82379c1114d893bfdf52a66d5071ea18592a071f3
+2026-06-15T23:28:43.2364401Z Remove container network: github_network_12c2ea04d81040c4b5beed244e8df79a
+2026-06-15T23:28:43.2369252Z ##[command]/usr/bin/docker network rm github_network_12c2ea04d81040c4b5beed244e8df79a
+2026-06-15T23:28:43.3448686Z github_network_12c2ea04d81040c4b5beed244e8df79a

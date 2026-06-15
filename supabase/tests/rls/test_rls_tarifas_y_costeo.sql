@@ -81,10 +81,10 @@ BEGIN
 
   -- Proveedores (necesarios para costeo_agentes y proveedor_facturas)
   INSERT INTO public.proveedores(
-    id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, categoria
+    id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, tipo, categoria
   ) VALUES
-    (prov_a, 'Prov TAR A', 'RTA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Agente'),
-    (prov_b, 'Prov TAR B', 'RTB010101BBB', 'C', 'b@b', '555', 'USD', org_b, 'Agente');
+    (prov_a, 'Prov TAR A', 'RTA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor),
+    (prov_b, 'Prov TAR B', 'RTB010101BBB', 'C', 'b@b', '555', 'USD', org_b, 'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 
   INSERT INTO public.costeo_agentes(
     id, organization_id, proveedor_id, nombre, pais, dias_credito, activo

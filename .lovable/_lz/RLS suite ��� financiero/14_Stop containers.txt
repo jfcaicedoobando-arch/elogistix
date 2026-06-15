@@ -1,0 +1,185 @@
+﻿2026-06-15T23:28:41.1690525Z Print service container logs: fa5e15cac6d04e1bae33d15d19bd98b2_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_bf9da2
+2026-06-15T23:28:41.1697503Z ##[command]/usr/bin/docker logs --details 896decb0b65db7b21c3d8f2d87c238933c3e71ac02e63d5ad285820d86085f68
+2026-06-15T23:28:41.1843790Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:28:41.1845368Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:28:41.1846646Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:28:41.1848086Z  2026-06-15 23:28:32.864 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:41.1849640Z  2026-06-15 23:28:32.864 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:28:41.1850575Z  2026-06-15 23:28:32.864 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:28:41.1851586Z  2026-06-15 23:28:32.866 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:41.1852427Z  2026-06-15 23:28:32.868 UTC [62] LOG:  database system was shut down at 2026-06-15 23:28:32 UTC
+2026-06-15T23:28:41.1853322Z  2026-06-15 23:28:32.872 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:28:41.1854205Z  2026-06-15 23:28:40.879 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:28:41.1854782Z  2026-06-15 23:28:40.879 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:28:41.1855385Z  2026-06-15 23:28:40.936 UTC [76] ERROR:  column "saldo" of relation "facturas" does not exist at character 172
+2026-06-15T23:28:41.1855924Z  2026-06-15 23:28:40.936 UTC [76] QUERY:  INSERT INTO public.facturas(
+2026-06-15T23:28:41.1856383Z  	    id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+2026-06-15T23:28:41.1856895Z  	    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+2026-06-15T23:28:41.1857311Z  	  ) VALUES
+2026-06-15T23:28:41.1857566Z  	    (fac_a, org_a, cli_a, 'Cliente Fin A', emb_a, 'FA-001',
+2026-06-15T23:28:41.1857991Z  	      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'),
+2026-06-15T23:28:41.1858713Z  	    (fac_b, org_b, cli_b, 'Cliente Fin B', emb_b, 'FB-001',
+2026-06-15T23:28:41.1859123Z  	      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 2320, 'Pendiente')
+2026-06-15T23:28:41.1860207Z  2026-06-15 23:28:40.936 UTC [76] CONTEXT:  PL/pgSQL function inline_code_block line 36 at SQL statement
+2026-06-15T23:28:41.1860970Z  2026-06-15 23:28:40.936 UTC [76] STATEMENT:  DO $$
+2026-06-15T23:28:41.1861450Z  	DECLARE
+2026-06-15T23:28:41.1861653Z  	  org_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1861912Z  	  org_b uuid := gen_random_uuid();
+2026-06-15T23:28:41.1862165Z  	  user_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1862433Z  	  user_b uuid := gen_random_uuid();
+2026-06-15T23:28:41.1862689Z  	  cli_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1862940Z  	  cli_b uuid := gen_random_uuid();
+2026-06-15T23:28:41.1863188Z  	  emb_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1863468Z  	  emb_b uuid := gen_random_uuid();
+2026-06-15T23:28:41.1863720Z  	  fac_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1863962Z  	  fac_b uuid := gen_random_uuid();
+2026-06-15T23:28:41.1864215Z  	  prof_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1864473Z  	  cot_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1864722Z  	  gasto_a uuid := gen_random_uuid();
+2026-06-15T23:28:41.1864964Z  	  visible int;
+2026-06-15T23:28:41.1865164Z  	BEGIN
+2026-06-15T23:28:41.1865423Z  	  -- Seed mínimo (bypass RLS como rol postgres)
+2026-06-15T23:28:41.1865923Z  	  INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS FIN A'), (org_b, 'RLS FIN B');
+2026-06-15T23:28:41.1866591Z  	  INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
+2026-06-15T23:28:41.1867752Z  	    (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
+2026-06-15T23:28:41.1868517Z  	  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
+2026-06-15T23:28:41.1868967Z  	
+2026-06-15T23:28:41.1869250Z  	  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
+2026-06-15T23:28:41.1869925Z  This user must also own the server process.
+2026-06-15T23:28:41.1870279Z  	    (cli_a, 'Cliente Fin A', org_a),
+2026-06-15T23:28:41.1870546Z  	    (cli_b, 'Cliente Fin B', org_b);
+2026-06-15T23:28:41.1870786Z  	
+2026-06-15T23:28:41.1871248Z  	  INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm)
+2026-06-15T23:28:41.1871790Z  	  VALUES
+2026-06-15T23:28:41.1872194Z  	    (emb_a, 'EXP-FIN-A', cli_a, 'Cliente Fin A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
+2026-06-15T23:28:41.1872882Z  	    (emb_b, 'EXP-FIN-B', cli_b, 'Cliente Fin B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
+2026-06-15T23:28:41.1873329Z  	
+2026-06-15T23:28:41.1873558Z  	  -- =========================================================================
+2026-06-15T23:28:41.1873894Z  	  -- TEST 1: facturas aislamiento
+2026-06-15T23:28:41.1874196Z  	  -- =========================================================================
+2026-06-15T23:28:41.1874547Z  	  INSERT INTO public.facturas(
+2026-06-15T23:28:41.1874914Z  	    id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+2026-06-15T23:28:41.1875418Z  	    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+2026-06-15T23:28:41.1875811Z  	  ) VALUES
+2026-06-15T23:28:41.1876058Z  	    (fac_a, org_a, cli_a, 'Cliente Fin A', emb_a, 'FA-001',
+2026-06-15T23:28:41.1876505Z  	      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'),
+2026-06-15T23:28:41.1876936Z  	    (fac_b, org_b, cli_b, 'Cliente Fin B', emb_b, 'FB-001',
+2026-06-15T23:28:41.1877351Z  	      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 2320, 'Pendiente');
+2026-06-15T23:28:41.1877737Z  	
+2026-06-15T23:28:41.1877941Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:41.1878259Z  	  SELECT count(*) INTO visible FROM public.facturas;
+2026-06-15T23:28:41.1878724Z  	  PERFORM pg_temp.assert(visible = 1, format('user_a debe ver 1 factura, vio %s', visible));
+2026-06-15T23:28:41.1879685Z  	  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_b;
+2026-06-15T23:28:41.1880195Z  	  PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver factura de org_b');
+2026-06-15T23:28:41.1880569Z  	  RESET ROLE;
+2026-06-15T23:28:41.1880756Z  	
+2026-06-15T23:28:41.1880985Z  	  -- =========================================================================
+2026-06-15T23:28:41.1881314Z  	  -- TEST 2: proformas aislamiento
+2026-06-15T23:28:41.1881620Z  	  -- =========================================================================
+2026-06-15T23:28:41.1881950Z  	  INSERT INTO public.proformas(
+2026-06-15T23:28:41.1882350Z  	    id, organization_id, embarque_id, cliente_id, cliente_nombre, expediente,
+2026-06-15T23:28:41.1882800Z  	    numero, fecha_emision, subtotal_usd, iva_usd, total_usd,
+2026-06-15T23:28:41.1883146Z  	    subtotal_mxn, iva_mxn, total_mxn, estado
+2026-06-15T23:28:41.1883419Z  	  ) VALUES
+2026-06-15T23:28:41.1883693Z  	    (prof_a, org_a, emb_a, cli_a, 'Cliente Fin A', 'EXP-FIN-A',
+2026-06-15T23:28:41.1884090Z  	      'PA-001', CURRENT_DATE, 100, 16, 116, 0, 0, 0, 'Borrador');
+2026-06-15T23:28:41.1884401Z  	
+2026-06-15T23:28:41.1884596Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:41.1884956Z  	  SELECT count(*) INTO visible FROM public.proformas WHERE id = prof_a;
+2026-06-15T23:28:41.1885436Z  	  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver proforma de org_a');
+2026-06-15T23:28:41.1885807Z  	  RESET ROLE;
+2026-06-15T23:28:41.1885997Z  	
+2026-06-15T23:28:41.1886209Z  	  -- =========================================================================
+2026-06-15T23:28:41.1886704Z  	  -- TEST 3: cotizaciones aislamiento
+2026-06-15T23:28:41.1886998Z  	  -- =========================================================================
+2026-06-15T23:28:41.1887328Z  	  INSERT INTO public.cotizaciones(
+2026-06-15T23:28:41.1887717Z  	    id, organization_id, cliente_id, cliente_nombre, modo, tipo, incoterm, estado
+2026-06-15T23:28:41.1888104Z  	  ) VALUES
+2026-06-15T23:28:41.1888457Z  	    (cot_a, org_a, cli_a, 'Cliente Fin A', 'Marítimo', 'Importación', 'FOB', 'Cotizada');
+2026-06-15T23:28:41.1888854Z  	
+2026-06-15T23:28:41.1889042Z  	  PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:41.1889643Z  	  SELECT count(*) INTO visible FROM public.cotizaciones WHERE id = cot_a;
+2026-06-15T23:28:41.1890202Z  	  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver cotización de org_a');
+2026-06-15T23:28:41.1890603Z  	  RESET ROLE;
+2026-06-15T23:28:41.1890798Z  	
+2026-06-15T23:28:41.1891019Z  	  -- =========================================================================
+2026-06-15T23:28:41.1891381Z  	  -- TEST 4: cuentas_por_cobrar derivadas de facturas
+2026-06-15T23:28:41.1891744Z  	  -- =========================================================================
+2026-06-15T23:28:41.1892188Z  	  -- Algunas implementaciones derivan CxC vía view o tabla; chequeamos si existe.
+2026-06-15T23:28:41.1892646Z  	  IF EXISTS (SELECT 1 FROM information_schema.tables
+2026-06-15T23:28:41.1893093Z  	             WHERE table_schema = 'public' AND table_name = 'cuentas_por_cobrar') THEN
+2026-06-15T23:28:41.1893508Z  	    PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:41.1894012Z  	    EXECUTE 'SELECT count(*) FROM public.cuentas_por_cobrar WHERE organization_id = $1' INTO visible USING org_b;
+2026-06-15T23:28:41.1894628Z  	    PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver CxC de org_b');
+2026-06-15T23:28:41.1894998Z  	    RESET ROLE;
+2026-06-15T23:28:41.1895199Z  	  END IF;
+2026-06-15T23:28:41.1895376Z  	
+2026-06-15T23:28:41.1895603Z  	  -- =========================================================================
+2026-06-15T23:28:41.1895988Z  	  -- TEST 5: gastos_embarque aislamiento (si la tabla existe)
+2026-06-15T23:28:41.1896345Z  	  -- =========================================================================
+2026-06-15T23:28:41.1896698Z  	  IF EXISTS (SELECT 1 FROM information_schema.tables
+2026-06-15T23:28:41.1897112Z  	             WHERE table_schema = 'public' AND table_name = 'gastos_embarque') THEN
+2026-06-15T23:28:41.1897746Z  	    EXECUTE format(
+2026-06-15T23:28:41.1898151Z  	      'INSERT INTO public.gastos_embarque(id, organization_id, embarque_id, concepto, monto, moneda)
+2026-06-15T23:28:41.1898619Z  	       VALUES (%L, %L, %L, %L, %L, %L)',
+2026-06-15T23:28:41.1898916Z  	      gasto_a, org_a, emb_a, 'Maniobras', 500, 'MXN'
+2026-06-15T23:28:41.1899197Z  	    );
+2026-06-15T23:28:41.1899658Z  	    PERFORM pg_temp.as_user(user_b);
+2026-06-15T23:28:41.1900155Z  	    EXECUTE 'SELECT count(*) FROM public.gastos_embarque WHERE id = $1' INTO visible USING gasto_a;
+2026-06-15T23:28:41.1900728Z  	    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver gasto de org_a');
+2026-06-15T23:28:41.1901098Z  	    RESET ROLE;
+2026-06-15T23:28:41.1901299Z  	  END IF;
+2026-06-15T23:28:41.1901474Z  	
+2026-06-15T23:28:41.1901733Z  	  RAISE NOTICE 'RLS FINANCIERO: todas las aserciones pasaron';
+2026-06-15T23:28:41.1902070Z  	END;
+2026-06-15T23:28:41.1902256Z  	$$;
+2026-06-15T23:28:41.1902426Z  
+2026-06-15T23:28:41.1902696Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:28:41.1903132Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:28:41.1903556Z  The default text search configuration will be set to "english".
+2026-06-15T23:28:41.1903878Z  
+2026-06-15T23:28:41.1904067Z  Data page checksums are disabled.
+2026-06-15T23:28:41.1904309Z  
+2026-06-15T23:28:41.1904603Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:28:41.1904993Z  creating subdirectories ... ok
+2026-06-15T23:28:41.1905307Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:28:41.1905808Z  selecting default max_connections ... 100
+2026-06-15T23:28:41.1906098Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:28:41.1906388Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:28:41.1906665Z  creating configuration files ... ok
+2026-06-15T23:28:41.1906948Z  running bootstrap script ... ok
+2026-06-15T23:28:41.1907241Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:28:41.1907545Z  syncing data to disk ... ok
+2026-06-15T23:28:41.1907768Z  
+2026-06-15T23:28:41.1907938Z  
+2026-06-15T23:28:41.1908157Z  Success. You can now start the database server using:
+2026-06-15T23:28:41.1908447Z  
+2026-06-15T23:28:41.1908678Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:28:41.1908974Z  
+2026-06-15T23:28:41.1909866Z  waiting for server to start....2026-06-15 23:28:32.624 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:41.1910764Z  2026-06-15 23:28:32.625 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:41.1911329Z  2026-06-15 23:28:32.628 UTC [51] LOG:  database system was shut down at 2026-06-15 23:28:32 UTC
+2026-06-15T23:28:41.1911836Z  2026-06-15 23:28:32.632 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:28:41.1912207Z   done
+2026-06-15T23:28:41.1912383Z  server started
+2026-06-15T23:28:41.1912581Z  
+2026-06-15T23:28:41.1912894Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:28:41.1913285Z  
+2026-06-15T23:28:41.1913537Z  2026-06-15 23:28:32.743 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:28:41.1914058Z  waiting for server to shut down....2026-06-15 23:28:32.743 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:28:41.1914743Z  2026-06-15 23:28:32.746 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:28:41.1915278Z  2026-06-15 23:28:32.746 UTC [49] LOG:  shutting down
+2026-06-15T23:28:41.1915668Z  2026-06-15 23:28:32.746 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:28:41.1916616Z  2026-06-15 23:28:32.748 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:28:41.1917679Z  2026-06-15 23:28:32.752 UTC [48] LOG:  database system is shut down
+2026-06-15T23:28:41.1918008Z   done
+2026-06-15T23:28:41.1918189Z  server stopped
+2026-06-15T23:28:41.1918381Z  
+2026-06-15T23:28:41.1918617Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:28:41.1918923Z  
+2026-06-15T23:28:41.1925424Z Stop and remove container: fa5e15cac6d04e1bae33d15d19bd98b2_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_bf9da2
+2026-06-15T23:28:41.1931258Z ##[command]/usr/bin/docker rm --force 896decb0b65db7b21c3d8f2d87c238933c3e71ac02e63d5ad285820d86085f68
+2026-06-15T23:28:41.3649649Z 896decb0b65db7b21c3d8f2d87c238933c3e71ac02e63d5ad285820d86085f68
+2026-06-15T23:28:41.3676024Z Remove container network: github_network_1e20ac159ecb4a45bf2406e76acc3bcd
+2026-06-15T23:28:41.3680819Z ##[command]/usr/bin/docker network rm github_network_1e20ac159ecb4a45bf2406e76acc3bcd
+2026-06-15T23:28:41.4797685Z github_network_1e20ac159ecb4a45bf2406e76acc3bcd

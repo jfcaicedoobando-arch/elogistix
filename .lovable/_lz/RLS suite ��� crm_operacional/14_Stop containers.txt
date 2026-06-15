@@ -1,0 +1,211 @@
+﻿2026-06-15T23:28:39.3760810Z Print service container logs: 0d235dbfa49e4cada5eb75ae41c15341_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f930f5
+2026-06-15T23:28:39.3766160Z ##[command]/usr/bin/docker logs --details 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:39.3908460Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:28:39.3910633Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:28:39.3911084Z  This user must also own the server process.
+2026-06-15T23:28:39.3911626Z  
+2026-06-15T23:28:39.3912091Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:28:39.3912765Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:28:39.3913829Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:28:39.3914502Z  The default text search configuration will be set to "english".
+2026-06-15T23:28:39.3915656Z  2026-06-15 23:28:31.707 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:39.3916608Z  
+2026-06-15T23:28:39.3917123Z  2026-06-15 23:28:31.707 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:28:39.3918035Z  2026-06-15 23:28:31.707 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:28:39.3918563Z  2026-06-15 23:28:31.708 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:39.3919463Z  2026-06-15 23:28:31.710 UTC [62] LOG:  database system was shut down at 2026-06-15 23:28:31 UTC
+2026-06-15T23:28:39.3920257Z  2026-06-15 23:28:31.714 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:28:39.3921055Z  2026-06-15 23:28:39.064 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:28:39.3921910Z  2026-06-15 23:28:39.064 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:28:39.3922846Z  2026-06-15 23:28:39.125 UTC [76] ERROR:  invalid input value for enum crm_lead_fuente: "web" at character 248
+2026-06-15T23:28:39.3923665Z  2026-06-15 23:28:39.125 UTC [76] QUERY:  INSERT INTO public.crm_leads(
+2026-06-15T23:28:39.3924147Z  	    id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
+2026-06-15T23:28:39.3924600Z  	    fuente, interes_modo, score, estado, vendedor_email, notas
+2026-06-15T23:28:39.3924927Z  	  ) VALUES
+2026-06-15T23:28:39.3925586Z  	    (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Marítimo', 50, 'Nuevo', 'v@a.mx', ''),
+2026-06-15T23:28:39.3926174Z  	    (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'web', 'Aéreo', 50, 'Nuevo', 'v@b.mx', '')
+2026-06-15T23:28:39.3926808Z  2026-06-15 23:28:39.125 UTC [76] CONTEXT:  PL/pgSQL function inline_code_block line 50 at SQL statement
+2026-06-15T23:28:39.3927277Z  2026-06-15 23:28:39.125 UTC [76] STATEMENT:  DO $$
+2026-06-15T23:28:39.3927858Z  	DECLARE
+2026-06-15T23:28:39.3928178Z  	  org_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3928592Z  	  org_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3928998Z  	  user_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3929417Z  	  user_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3929827Z  	  cli_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3930249Z  	  cli_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3930650Z  	  emb_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3931056Z  	  emb_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3931475Z  	  lead_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3931869Z  	  lead_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3932294Z  	  etapa_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3932720Z  	  etapa_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3933124Z  	  op_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3933509Z  	  op_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3934220Z  	  act_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3934626Z  	  act_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3935018Z  	  doc_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3935399Z  	  doc_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3935789Z  	  cat_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3936178Z  	  cat_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3936576Z  	  pres_a uuid := gen_random_uuid();
+2026-06-15T23:28:39.3937018Z  	  pres_b uuid := gen_random_uuid();
+2026-06-15T23:28:39.3937593Z  	  visible int;
+2026-06-15T23:28:39.3937922Z  	BEGIN
+2026-06-15T23:28:39.3938228Z  	  -- Seed base
+2026-06-15T23:28:39.3938847Z  	  INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS CRM A'), (org_b, 'RLS CRM B');
+2026-06-15T23:28:39.3939781Z  	  INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
+2026-06-15T23:28:39.3940476Z  	    (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
+2026-06-15T23:28:39.3941192Z  	  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
+2026-06-15T23:28:39.3941873Z  	
+2026-06-15T23:28:39.3942276Z  	  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
+2026-06-15T23:28:39.3943062Z  	    (cli_a, 'Cli CRM A', org_a), (cli_b, 'Cli CRM B', org_b);
+2026-06-15T23:28:39.3943538Z  	
+2026-06-15T23:28:39.3944211Z  	  INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
+2026-06-15T23:28:39.3944922Z  	  VALUES
+2026-06-15T23:28:39.3945375Z  	    (emb_a, 'EXP-CRM-A', cli_a, 'Cli CRM A', org_a, 'Marítimo', 'Importación'),
+2026-06-15T23:28:39.3946109Z  	    (emb_b, 'EXP-CRM-B', cli_b, 'Cli CRM B', org_b, 'Marítimo', 'Importación');
+2026-06-15T23:28:39.3946460Z  	
+2026-06-15T23:28:39.3946727Z  	  -- Etapas pipeline (FK requerido por crm_oportunidades)
+2026-06-15T23:28:39.3947279Z  	  INSERT INTO public.crm_etapas_pipeline(id, organization_id, nombre, orden, probabilidad_default, color, tipo)
+2026-06-15T23:28:39.3947972Z  	  VALUES
+2026-06-15T23:28:39.3948251Z  	    (etapa_a, org_a, 'Prospecto', 1, 10, '#2563EB', 'abierta'),
+2026-06-15T23:28:39.3948625Z  	    (etapa_b, org_b, 'Prospecto', 1, 10, '#2563EB', 'abierta');
+2026-06-15T23:28:39.3948931Z  	
+2026-06-15T23:28:39.3949173Z  	  -- =========================================================================
+2026-06-15T23:28:39.3949541Z  	  -- TEST 1: crm_leads — aislamiento por organization_id
+2026-06-15T23:28:39.3949896Z  	  -- =========================================================================
+2026-06-15T23:28:39.3950218Z  	  INSERT INTO public.crm_leads(
+2026-06-15T23:28:39.3950791Z  	    id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
+2026-06-15T23:28:39.3951223Z  	    fuente, interes_modo, score, estado, vendedor_email, notas
+2026-06-15T23:28:39.3951560Z  	  ) VALUES
+2026-06-15T23:28:39.3951934Z  	    (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Marítimo', 50, 'Nuevo', 'v@a.mx', ''),
+2026-06-15T23:28:39.3952501Z  	    (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'web', 'Aéreo', 50, 'Nuevo', 'v@b.mx', '');
+2026-06-15T23:28:39.3952922Z  	
+2026-06-15T23:28:39.3953147Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3953568Z  	  SELECT COUNT(*) INTO visible FROM public.crm_leads WHERE id IN (lead_a, lead_b);
+2026-06-15T23:28:39.3953980Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3954328Z  	    format('User A vio %s crm_leads, esperaba 1', visible));
+2026-06-15T23:28:39.3954649Z  	
+2026-06-15T23:28:39.3954878Z  	  -- TEST 2: User A no puede UPDATE lead de Org B
+2026-06-15T23:28:39.3955276Z  	  UPDATE public.crm_leads SET empresa = 'HACKED' WHERE id = lead_b;
+2026-06-15T23:28:39.3955726Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3956226Z  	  SELECT COUNT(*) INTO visible FROM public.crm_leads WHERE id = lead_b AND empresa = 'HACKED';
+2026-06-15T23:28:39.3956794Z  	  PERFORM pg_temp.assert(visible = 0, 'User A modificó crm_leads de Org B (fuga RLS)');
+2026-06-15T23:28:39.3957364Z  	
+2026-06-15T23:28:39.3957766Z  	  -- =========================================================================
+2026-06-15T23:28:39.3958115Z  	  -- TEST 3: crm_oportunidades — aislamiento
+2026-06-15T23:28:39.3958440Z  	  -- =========================================================================
+2026-06-15T23:28:39.3958773Z  	  INSERT INTO public.crm_oportunidades(
+2026-06-15T23:28:39.3959163Z  	    id, organization_id, nombre, cliente_nombre, vendedor_email, etapa_id,
+2026-06-15T23:28:39.3959663Z  	    monto_estimado, moneda, probabilidad, modo, tipo_carga, origen, destino, notas
+2026-06-15T23:28:39.3960070Z  	  ) VALUES
+2026-06-15T23:28:39.3960444Z  	    (op_a, org_a, 'Op A', 'Cli CRM A', 'v@a.mx', etapa_a, 100000, 'MXN', 30, 'Marítimo', 'FCL', 'CN', 'MX', ''),
+2026-06-15T23:28:39.3961026Z  	    (op_b, org_b, 'Op B', 'Cli CRM B', 'v@b.mx', etapa_b, 200000, 'USD', 50, 'Aéreo', 'General', 'US', 'MX', '');
+2026-06-15T23:28:39.3961439Z  	
+2026-06-15T23:28:39.3961669Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3962076Z  	  SELECT COUNT(*) INTO visible FROM public.crm_oportunidades WHERE id IN (op_a, op_b);
+2026-06-15T23:28:39.3962495Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3962861Z  	    format('User A vio %s crm_oportunidades, esperaba 1', visible));
+2026-06-15T23:28:39.3963202Z  	
+2026-06-15T23:28:39.3963464Z  	  -- TEST 4: monto_estimado de Org B NUNCA visible para User A
+2026-06-15T23:28:39.3963943Z  	  SELECT COUNT(*) INTO visible FROM public.crm_oportunidades WHERE monto_estimado = 200000;
+2026-06-15T23:28:39.3964521Z  	  PERFORM pg_temp.assert(visible = 0, 'User A vio monto_estimado de oportunidad de Org B');
+2026-06-15T23:28:39.3964921Z  	
+2026-06-15T23:28:39.3965177Z  	  -- =========================================================================
+2026-06-15T23:28:39.3965514Z  	  -- TEST 5: crm_actividades — aislamiento
+2026-06-15T23:28:39.3965841Z  	  -- =========================================================================
+2026-06-15T23:28:39.3966232Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3966596Z  	  INSERT INTO public.crm_actividades(
+2026-06-15T23:28:39.3966979Z  	    id, organization_id, tipo, asunto, descripcion, entidad_tipo, entidad_id,
+2026-06-15T23:28:39.3967365Z  	    resultado, responsable_email
+2026-06-15T23:28:39.3967793Z  	  ) VALUES
+2026-06-15T23:28:39.3968121Z  	    (act_a, org_a, 'llamada', 'Asunto A', 'desc', 'lead', lead_a, 'pendiente', 'v@a.mx'),
+2026-06-15T23:28:39.3968622Z  	    (act_b, org_b, 'correo', 'Asunto B', 'desc', 'lead', lead_b, 'pendiente', 'v@b.mx');
+2026-06-15T23:28:39.3969144Z  	
+2026-06-15T23:28:39.3969350Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3969752Z  	  SELECT COUNT(*) INTO visible FROM public.crm_actividades WHERE id IN (act_a, act_b);
+2026-06-15T23:28:39.3970162Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3970496Z  	    format('User A vio %s crm_actividades, esperaba 1', visible));
+2026-06-15T23:28:39.3970838Z  	
+2026-06-15T23:28:39.3971070Z  	  -- =========================================================================
+2026-06-15T23:28:39.3971440Z  	  -- TEST 6: documentos_embarque — aislamiento vía embarque
+2026-06-15T23:28:39.3971789Z  	  -- =========================================================================
+2026-06-15T23:28:39.3972170Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3972691Z  	  INSERT INTO public.documentos_embarque(id, embarque_id, nombre, estado, organization_id) VALUES
+2026-06-15T23:28:39.3973201Z  	    (doc_a, emb_a, 'BL', 'Recibido', org_a),
+2026-06-15T23:28:39.3973505Z  	    (doc_b, emb_b, 'BL', 'Recibido', org_b);
+2026-06-15T23:28:39.3973776Z  	
+2026-06-15T23:28:39.3973976Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3974376Z  	  SELECT COUNT(*) INTO visible FROM public.documentos_embarque WHERE id IN (doc_a, doc_b);
+2026-06-15T23:28:39.3974799Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3975155Z  	    format('User A vio %s documentos_embarque, esperaba 1', visible));
+2026-06-15T23:28:39.3975665Z  	
+2026-06-15T23:28:39.3975892Z  	  -- =========================================================================
+2026-06-15T23:28:39.3976260Z  	  -- TEST 7: presupuesto_mensual — aislamiento financiero
+2026-06-15T23:28:39.3976606Z  	  -- =========================================================================
+2026-06-15T23:28:39.3976974Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3977668Z  	  INSERT INTO public.presupuesto_categorias(id, organization_id, nombre, orden, activa) VALUES
+2026-06-15T23:28:39.3978211Z  	    (cat_a, org_a, 'Ventas', 1, true),
+2026-06-15T23:28:39.3978490Z  	    (cat_b, org_b, 'Ventas', 1, true);
+2026-06-15T23:28:39.3978941Z  	  INSERT INTO public.presupuesto_mensual(id, organization_id, categoria_id, periodo, monto_mxn) VALUES
+2026-06-15T23:28:39.3979430Z  	    (pres_a, org_a, cat_a, '2026-06', 500000),
+2026-06-15T23:28:39.3979728Z  	    (pres_b, org_b, cat_b, '2026-06', 999999);
+2026-06-15T23:28:39.3979995Z  	
+2026-06-15T23:28:39.3980200Z  	  PERFORM pg_temp.as_user(user_a);
+2026-06-15T23:28:39.3980631Z  	  SELECT COUNT(*) INTO visible FROM public.presupuesto_mensual WHERE id IN (pres_a, pres_b);
+2026-06-15T23:28:39.3981070Z  	  PERFORM pg_temp.assert(visible = 1,
+2026-06-15T23:28:39.3981421Z  	    format('User A vio %s presupuesto_mensual, esperaba 1', visible));
+2026-06-15T23:28:39.3981772Z  	
+2026-06-15T23:28:39.3982011Z  	  -- TEST 8: monto presupuestal de Org B nunca visible
+2026-06-15T23:28:39.3982460Z  	  SELECT COUNT(*) INTO visible FROM public.presupuesto_mensual WHERE monto_mxn = 999999;
+2026-06-15T23:28:39.3982994Z  	  PERFORM pg_temp.assert(visible = 0, 'User A vio monto presupuestal de Org B');
+2026-06-15T23:28:39.3983380Z  	
+2026-06-15T23:28:39.3983673Z  	  RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
+2026-06-15T23:28:39.3984110Z  	  RAISE NOTICE '✓ test_rls_crm_operacional: 8 aserciones OK';
+2026-06-15T23:28:39.3984460Z  	END;
+2026-06-15T23:28:39.3984653Z  	$$;
+2026-06-15T23:28:39.3984865Z  Data page checksums are disabled.
+2026-06-15T23:28:39.3985123Z  
+2026-06-15T23:28:39.3985422Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:28:39.3985814Z  creating subdirectories ... ok
+2026-06-15T23:28:39.3986133Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:28:39.3986476Z  selecting default max_connections ... 100
+2026-06-15T23:28:39.3986772Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:28:39.3987066Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:28:39.3987718Z  creating configuration files ... ok
+2026-06-15T23:28:39.3987997Z  running bootstrap script ... ok
+2026-06-15T23:28:39.3988304Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:28:39.3988617Z  syncing data to disk ... ok
+2026-06-15T23:28:39.3988860Z  
+2026-06-15T23:28:39.3989044Z  
+2026-06-15T23:28:39.3989279Z  Success. You can now start the database server using:
+2026-06-15T23:28:39.3989596Z  
+2026-06-15T23:28:39.3989838Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:28:39.3990141Z  
+2026-06-15T23:28:39.3990759Z  waiting for server to start....2026-06-15 23:28:31.467 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:28:39.3991584Z  2026-06-15 23:28:31.468 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:28:39.3992122Z  2026-06-15 23:28:31.471 UTC [51] LOG:  database system was shut down at 2026-06-15 23:28:31 UTC
+2026-06-15T23:28:39.3992617Z  2026-06-15 23:28:31.474 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:28:39.3992983Z   done
+2026-06-15T23:28:39.3993177Z  server started
+2026-06-15T23:28:39.3993381Z  
+2026-06-15T23:28:39.3993699Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:28:39.3994086Z  
+2026-06-15T23:28:39.3994490Z  2026-06-15 23:28:31.584 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:28:39.3994998Z  waiting for server to shut down....2026-06-15 23:28:31.584 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:28:39.3995654Z  2026-06-15 23:28:31.586 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:28:39.3996177Z  2026-06-15 23:28:31.587 UTC [49] LOG:  shutting down
+2026-06-15T23:28:39.3996564Z  2026-06-15 23:28:31.588 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:28:39.3997631Z  2026-06-15 23:28:31.589 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:28:39.3998549Z  2026-06-15 23:28:31.593 UTC [48] LOG:  database system is shut down
+2026-06-15T23:28:39.3998883Z   done
+2026-06-15T23:28:39.3999078Z  server stopped
+2026-06-15T23:28:39.3999297Z  
+2026-06-15T23:28:39.3999543Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:28:39.3999847Z  
+2026-06-15T23:28:39.4005158Z Stop and remove container: 0d235dbfa49e4cada5eb75ae41c15341_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_f930f5
+2026-06-15T23:28:39.4011354Z ##[command]/usr/bin/docker rm --force 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:39.5571044Z 2b8103acc821dc945a8599729d681c176008232e82d59279a653f01b53e96249
+2026-06-15T23:28:39.5599798Z Remove container network: github_network_c281aa717dd9480aa0ba8642cb57f03a
+2026-06-15T23:28:39.5604375Z ##[command]/usr/bin/docker network rm github_network_c281aa717dd9480aa0ba8642cb57f03a
+2026-06-15T23:28:39.6583005Z github_network_c281aa717dd9480aa0ba8642cb57f03a

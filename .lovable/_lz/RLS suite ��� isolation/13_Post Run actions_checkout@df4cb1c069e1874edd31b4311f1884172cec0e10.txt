@@ -1,0 +1,32 @@
+﻿2026-06-15T23:28:42.8483851Z Post job cleanup.
+2026-06-15T23:28:42.9329746Z [command]/usr/bin/git version
+2026-06-15T23:28:42.9373413Z git version 2.54.0
+2026-06-15T23:28:42.9417039Z Temporarily overriding HOME='/home/runner/work/_temp/319222c3-c151-43d1-993c-7428dc0c59d1' before making global git config changes
+2026-06-15T23:28:42.9418623Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-15T23:28:42.9423217Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/elogistix/elogistix
+2026-06-15T23:28:42.9457587Z Removing SSH command configuration
+2026-06-15T23:28:42.9465377Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-15T23:28:42.9499826Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-15T23:28:42.9742284Z Removing HTTP extra header
+2026-06-15T23:28:42.9749317Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-15T23:28:42.9786772Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-15T23:28:43.0025497Z Removing includeIf entries pointing to credentials config files
+2026-06-15T23:28:43.0033088Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-15T23:28:43.0070868Z includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path
+2026-06-15T23:28:43.0071991Z includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path
+2026-06-15T23:28:43.0072915Z includeif.gitdir:/github/workspace/.git.path
+2026-06-15T23:28:43.0073680Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-15T23:28:43.0082802Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path
+2026-06-15T23:28:43.0125768Z /home/runner/work/_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0135284Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/elogistix/elogistix/.git.path /home/runner/work/_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0161813Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path
+2026-06-15T23:28:43.0183718Z /home/runner/work/_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0193244Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0225519Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-06-15T23:28:43.0246458Z /github/runner_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0254228Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0283483Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-15T23:28:43.0303694Z /github/runner_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0313107Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config
+2026-06-15T23:28:43.0342705Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-15T23:28:43.0553037Z Removing credentials config '/home/runner/work/_temp/git-credentials-ed7be670-3675-4c07-9880-66dfdd26ea8c.config'
