@@ -4894,6 +4894,53 @@ export type Database = {
         Args: { _nc_id: string }
         Returns: undefined
       }
+      asignar_conceptos_a_proforma: {
+        Args: { p_concepto_ids: string[]; p_proforma_id: string }
+        Returns: {
+          bl_master: string | null
+          cliente_id: string
+          cliente_nombre: string
+          consolidada_en: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number | null
+          embarque_id: string | null
+          embarques_ids: string[] | null
+          es_consolidada: boolean
+          estado_aprobacion: string
+          estado_proforma: string
+          estado_revision: string
+          expediente: string
+          factura_id: string | null
+          factura_secundaria_id: string | null
+          fecha_emision: string
+          fecha_facturacion: string | null
+          folio_factura_externa: string | null
+          id: string
+          iva_mxn: number
+          iva_usd: number
+          notas: string | null
+          numero: string
+          operador: string | null
+          organization_id: string
+          proformas_origen: string[] | null
+          snapshot_emision: Json | null
+          subtotal_mxn: number
+          subtotal_usd: number
+          tasa_iva_aplicada: number
+          total_mxn: number
+          total_usd: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "proformas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       auditoria_capturar_snapshot: {
         Args: { p_organization_id: string }
         Returns: string
