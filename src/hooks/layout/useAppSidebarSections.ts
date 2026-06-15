@@ -46,6 +46,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   }
 
   // Atención a clientes (antes "viewer"): solo lectura operativa.
+  // Por decisión de producto (13.21.26) viewer SÍ ve "Auditoría operativa".
   if (effectiveRole === "customer_service" || effectiveRole === "viewer") {
     const gestionCS = SIDEBAR_GESTION_ITEMS.filter((it) =>
       ["/cotizaciones", "/embarques"].includes(it.url),
@@ -54,7 +55,7 @@ export function useAppSidebarSections(): SidebarSection[] {
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
       { label: "Gestión", items: gestionCS },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
+      { label: "Sistema", items: sistemaItems.filter((it) => ["/auditoria", "/ayuda"].includes(it.url)) },
     ];
   }
 
