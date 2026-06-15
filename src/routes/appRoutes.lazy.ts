@@ -33,6 +33,7 @@ export const Proveedores = lazy(() => import("@/pages/proveedores/Proveedores"))
 export const ProveedorDetalle = lazy(() => import("@/pages/proveedores/ProveedorDetalle"));
 export const Facturacion = lazy(() => import("@/pages/facturacion/Facturacion"));
 export const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
+export const ProformaDetalle = lazy(() => import("@/features/proformas/routes/ProformaDetalle"));
 export const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
 export const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
 export const ProfitPresupuesto = lazy(() => import("@/pages/profit/ProfitPresupuesto"));
