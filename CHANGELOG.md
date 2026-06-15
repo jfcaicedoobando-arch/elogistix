@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.24] - 2026-06-15
+- **fix(auditoria/bloque-3)**: Calidad de métricas del tablero ejecutivo:
+  - **M-3 · MTTR usa `revisado_at` real** (migración + `domain/ejecutivoAgregados.ts`): nueva columna `auditoria_revisiones.revisado_at` + trigger `set_auditoria_revisado_at` que la llena automáticamente cuando `estado_revision` pasa a 'revisado'. Backfill: revisiones ya marcadas reciben `updated_at` como aproximación. El cálculo de MTTR ahora usa `revisado_at` en lugar de `updated_at`, así comentarios o reasignaciones posteriores no distorsionan la métrica. **Nota**: valores históricos de MTTR pueden cambiar ligeramente al recalcularse.
+  - **M-2 · Ranking dual responsables/revisores** (`domain/ejecutivoAgregados.ts`, `AuditoriaOperadoresCard.tsx`, `useAuditoriaEjecutivo.ts`): antes se mezclaban `responsable_email` y `revisado_por_email` bajo una sola clave produciendo métricas ambiguas (si A asignaba y B resolvía, contaba bajo A). Ahora hay dos rankings independientes mostrados en tabs:
+    - **Responsables**: carga de trabajo (pendientes + vencidos + resueltos por quien tiene asignado).
+    - **Revisores**: productividad de resolución (quién marcó "revisado" cada hallazgo).
+    Se mantiene alias `rankingOperadores` → `rankingResponsables` para compatibilidad.
+  - **Tests**: 122/122 en verde. Test de ranking actualizado para validar split + uso de `revisado_at` (con `updated_at` movido a +5d para verificar que NO contamina el MTTR).
+
 ## [13.21.23] - 2026-06-15
 - **fix(auditoria/bloque-2)**: Consistencia UI del módulo Auditoría Operativa según auditoría:
   - **H-2 · QueryFn única para revisiones** (`hooks/revisiones/query.ts`, `useAuditoria.ts`): extraída `buildRevisionesMap()` exportada y reutilizada por `useAuditoriaRevisiones` y `useAuditoriaCount`. React Query usa la primera queryFn registrada por key, así que tener dos definiciones distintas era un bug latente dependiente del orden de montaje. Ahora ambos hooks producen exactamente el mismo Map.
