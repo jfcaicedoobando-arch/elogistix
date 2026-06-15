@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.13] - 2026-06-15
+- **ci(mvp-fit)**: Pineadas por SHA todas las acciones oficiales (`actions/checkout` v6.0.3, `actions/cache` v5.0.5, `actions/upload-artifact` v7.0.1, `actions/download-artifact` v8.0.1, `actions/github-script` v7.1.0). Nuevo `CONTRIBUTING.md` con la lista de status checks requeridos para branch protection. **Cleanup MVP**: eliminados `sql-lint.yml`+`.sqlfluff` (poco valor en migraciones Supabase), `bundle-budget.json`+`check-bundle-budget.mjs` (duplicaba el gate `.sh`), comentario duplicado de coverage en PR (ya está el summary), y nightly diario de E2E (vuelve a weekly). Workflows ahora dimensionados a un MVP, manteniendo lo crítico: CI, CodeQL, Gitleaks, Dependabot, smoke prod, RLS tests, E2E weekly.
+
 ## [13.21.12] - 2026-06-15
 - **ci(hardening)**: Implementadas las 8 mejoras pendientes del audit. `dependency-review.yml` (PR, falla en severidad `high`). `bun install --ignore-scripts` por defecto en composite `setup-bun` (protección postinstall). ESLint corre con `--max-warnings 0` explícito. E2E ahora también nightly diario 06:00 UTC. Job `coverage` comenta en el PR cuando falla. Nuevo `sql-lint.yml` con `sqlfluff 3.2.5` (dialect postgres) sobre `supabase/migrations/**`. Bundle budget versionado en `.github/bundle-budget.json` + `scripts/check-bundle-budget.mjs`. Cache de Vite (`node_modules/.vite`) y Vitest (`node_modules/.vitest`, `.vitest-reports`) por shard en CI.
 

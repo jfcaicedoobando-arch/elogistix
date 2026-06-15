@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: audit-report
           path: |
@@ -78,7 +78,7 @@ jobs:
           retention-days: 30
 
       - name: Cache Vite build
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             node_modules/.vite
@@ -96,12 +96,9 @@ jobs:
           BUNDLE_BUDGET_KB: "350"
         run: bash scripts/check-bundle-size.sh
 
-      - name: Bundle budget per chunk (versioned)
-        run: node scripts/check-bundle-budget.mjs
-
       - name: Upload bundle stats
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bundle-stats
           path: dist/bundle-stats.html
@@ -115,7 +112,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Setup Deno
         uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
@@ -123,7 +120,7 @@ jobs:
           deno-version: v1.x
 
       - name: Cache Deno deps
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ~/.cache/deno
@@ -152,13 +149,13 @@ jobs:
         total: [8]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
 
       - name: Cache Vitest reports
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             node_modules/.vitest
@@ -179,7 +176,7 @@ jobs:
 
       - name: Upload shard blob report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vitest-blob-${{ matrix.shard }}
           path: .vitest-reports/blob-${{ matrix.shard }}.json
@@ -188,7 +185,7 @@ jobs:
 
       - name: Upload JUnit report (shard ${{ matrix.shard }})
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: junit-${{ matrix.shard }}
           path: reports/junit.xml
@@ -201,12 +198,9 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
@@ -214,7 +208,7 @@ jobs:
       - name: Download shard blobs
         id: download-blobs
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: vitest-blob-*
           path: .vitest-reports/
@@ -244,7 +238,7 @@ jobs:
 
       - name: Upload coverage artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage
           path: |
@@ -262,37 +256,3 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      # Comentario en el PR cuando el merge/threshold de coverage falla.
-      - name: Comment coverage failure on PR
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const fs = require("fs");
-            let summary = "Coverage merge o thresholds fallaron.";
-            try {
-              if (fs.existsSync("reports/coverage-report.md")) {
-                const md = fs.readFileSync("reports/coverage-report.md", "utf8");
-                summary = md.length > 60000 ? md.slice(0, 60000) + "\n\n…(truncado)" : md;
-              }
-            } catch (e) {
-              core.warning(`No se pudo leer coverage-report.md: ${e.message}`);
-            }
-            const body = [
-              `### ❌ Coverage falló`,
-              ``,
-              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              ``,
-              `<details><summary>Resumen de coverage</summary>`,
-              ``,
-              summary,
-              ``,
-              `</details>`,
-            ].join("\n");
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body,
-            });
