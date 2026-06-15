@@ -77,6 +77,15 @@ jobs:
             reports/audit-report.json
           retention-days: 30
 
+      - name: Cache Vite build
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules/.vite
+          key: ${{ runner.os }}-vite-${{ hashFiles('bun.lockb', 'vite.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-
+
       - name: Build (with bundle analyzer)
         env:
           ANALYZE: "true"
@@ -86,6 +95,9 @@ jobs:
         env:
           BUNDLE_BUDGET_KB: "350"
         run: bash scripts/check-bundle-size.sh
+
+      - name: Bundle budget per chunk (versioned)
+        run: node scripts/check-bundle-budget.mjs
 
       - name: Upload bundle stats
         if: always()
@@ -144,6 +156,16 @@ jobs:
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
+
+      - name: Cache Vitest reports
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules/.vitest
+            .vitest-reports
+          key: ${{ runner.os }}-vitest-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-vitest-${{ matrix.shard }}-
 
       - name: Prepare blob output directory
         run: mkdir -p .vitest-reports
