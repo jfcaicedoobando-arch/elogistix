@@ -16,6 +16,7 @@ import {
   reglaToTab,
   severidadConfig,
 } from "./hallazgosTablaConfig";
+import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
 
 interface Props {
   visibles: HallazgoAuditoria[];
