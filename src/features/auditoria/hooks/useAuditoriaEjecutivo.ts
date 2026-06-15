@@ -47,6 +47,7 @@ export interface AuditoriaEjecutivoData {
   riesgoPorRegla: Partial<Record<ReglaAuditoria, number>>;
   mttrHoras: number | null;
   rankingOperadores: OperadorRanking[];
+  rankingRevisores: OperadorRanking[];
   generadoEn: string | null;
 }
 
@@ -72,7 +73,7 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
     const { score, scoreEstado } = calcularScore(agg.suma, totalPendientes);
     const { porEtapa, topClientes } = agruparPorEtapaYCliente(pendientes);
     const venc = calcularVencimientos(pendientes);
-    const { mttrHoras, rankingOperadores } = calcularRanking(revisiones, venc.hoyIso);
+    const { mttrHoras, rankingOperadores, rankingRevisores } = calcularRanking(revisiones, venc.hoyIso);
 
     const generadoEn = data?.generated_at
       ? new Date(data.generated_at).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
@@ -88,7 +89,7 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       edadPromediaPendientesDias: venc.edadPromediaPendientesDias,
       riesgoFinancieroMxn: agg.riesgoFinancieroMxn,
       riesgoPorRegla: agg.riesgoPorRegla,
-      mttrHoras, rankingOperadores, generadoEn,
+      mttrHoras, rankingOperadores, rankingRevisores, generadoEn,
     };
   }, [data, revisiones, isLoading]);
 }
