@@ -1,33 +1,24 @@
-## Resumen
-Reemplazar los 3 archivos SVG de marca actuales (contenedor + globo) con el nuevo diseño propio del usuario: **bloques isométricos apilados + flecha curva ascendente + wordmark**. Mantener la integración existente en `BrandLockup.tsx`, nav, footer y schema.org sin cambios de comportamiento.
+## Objetivo
+Dejar `bun run lint:unused` (knip) sin errores ni hints.
 
-## Archivos a modificar
+## Cambios
 
-### 1. `public/librecarga-icon.svg` (isotipo, cuadrado)
-- Extraer solo el grupo `<g id="LC_Icon">` del SVG del usuario (sin el `<text>`).
-- Reajustar `viewBox` a cuadrado (ej. `0 0 120 120`) y centrar el icono.
-- Preservar los colores exactos del usuario: `#1C3B6E` (oscuro), `#234C81` (claro), `#002D5B` (texto).
-- Limpieza: remover las clases CSS internas `<style>` y aplicar `fill`/`stroke` inline directamente en cada `<path>`/`<polygon>` para máxima compatibilidad como archivo SVG autónomo.
+### 1. Eliminar código muerto
+- Borrar archivo `src/constants/queryStaleTime.ts` (no se importa en ningún lado).
+- En `src/constants/cotizacionTerrestre.ts`: eliminar `type ModalidadEquipoTerrestre` y la función `requiereTresPuntos` (sin consumidores).
+- En `src/constants/proveedorConstants.ts`: eliminar `function labelCategoria`, `type MetodoPagoProveedor` y `type OrigenProveedor` (el `OrigenProveedor` que se usa vive en `pagoProveedorHelpers.ts`, es independiente).
 
-### 2. `public/librecarga-logo.svg` (marca completa, reemplazo directo)
-- Inicialmente idéntico a `librecarga-icon.svg`.
-- Motivo: todos los consumidores actuales (`BrandLockup.tsx`, `LandingNav.tsx`, `LandingFooter.tsx`, `LogoPreview.tsx`, schema.org) lo usan como imagen de marca; `BrandLockup` renderiza el texto "Libre Carga" por separado vía `BRAND.name`.
-- No incluir texto dentro del SVG para evitar duplicación con el DOM.
+### 2. Limpiar `knip.json` según los hints
+- Quitar `src/integrations/supabase/client.ts` de `ignore` (knip ya lo detecta como entry o usado).
+- Quitar `supabase/**` y `docs/**` de `ignore` (no están en `project`).
+- Quitar `tailwindcss-animate` y `@tailwindcss/typography` de `ignoreDependencies` (ya se resuelven).
+- Quitar de `entry` los patrones redundantes que ya están cubiertos por `project` + auto-detección: `src/main.tsx`, `vite.config.ts`, `vitest.config.ts`, `tailwind.config.ts`, `postcss.config.js`, `eslint.config.js`. Conservar `index.html`, `scripts/**/*.ts` y los patrones de tests.
 
-### 3. `public/librecarga-icon-light.svg` (variante para fondos oscuros)
-- Misma geometría que el isotipo, pero con inversión de colores:
-  - `#1C3B6E` → `#F8FAFC` (blanco)
-  - `#234C81` → `#93C5FD` (azul claro)
-- Garantizar contraste adecuado sobre el sidebar oscuro y headers dark mode.
-
-### 4. Metadatos de versión
-- `src/constants/appVersion.ts`: bump `13.21.3` → `13.21.4`.
-- `CHANGELOG.md`: entrada `[13.21.4]` con descripción breve del reemplazo de marca.
+### 3. Versionado y changelog
+- Bump `APP_VERSION` en `src/constants/appVersion.ts` → `13.21.8`.
+- Añadir entrada `## [13.21.8] - 2026-06-15` en `CHANGELOG.md` (root) describiendo la limpieza.
 
 ## Validación
-- Verificar `/login` (BrandLockup stacked) y sidebar colapsado (iconOnly) en preview.
-- Confirmar que `LandingNav` y `LandingFooter` siguen mostrando la marca sin distorsión de aspecto.
-
-## Notas técnicas
-- No se toca `BrandLockup.tsx` ni `index.html`: los paths de archivo se mantienen (`/librecarga-logo.svg`, `/librecarga-icon.svg`, `/librecarga-icon-light.svg`).
-- No nuevas dependencias: cambio puro de assets SVG.
+- `bun run lint:unused` (knip) sin errores ni hints.
+- `bun run lint` sigue en verde.
+- Suite de tests sigue 2855/2855.
