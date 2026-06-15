@@ -16,17 +16,26 @@ export async function resolveAuthUser(ctxUser: User | null): Promise<User> {
   return getCurrentUser();
 }
 
+/**
+ * Construye el Map<key, AuditoriaRevision> desde la lista plana de revisiones.
+ * Exportado para que `useAuditoriaCount` (en `useAuditoria.ts`) y este hook
+ * compartan EXACTAMENTE la misma queryFn — React Query usa la primera queryFn
+ * registrada para un key dado, así que tener dos definiciones distintas era
+ * un bug latente dependiente del orden de montaje.
+ */
+export async function buildRevisionesMap(): Promise<Map<string, AuditoriaRevision>> {
+  const list = await fetchAuditoriaRevisiones();
+  const map = new Map<string, AuditoriaRevision>();
+  for (const r of list) {
+    map.set(`${r.embarque_id}|${r.regla}|${r.detalle_hash}`, r);
+  }
+  return map;
+}
+
 export function useAuditoriaRevisiones() {
   return useQuery({
     queryKey: AUDITORIA_REVISIONES_KEY,
-    queryFn: async (): Promise<Map<string, AuditoriaRevision>> => {
-      const list = await fetchAuditoriaRevisiones();
-      const map = new Map<string, AuditoriaRevision>();
-      for (const r of list) {
-        map.set(`${r.embarque_id}|${r.regla}|${r.detalle_hash}`, r);
-      }
-      return map;
-    },
+    queryFn: buildRevisionesMap,
     staleTime: 60_000,
   });
 }
