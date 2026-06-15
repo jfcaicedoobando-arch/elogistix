@@ -1,9 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
-  <rect x="34" y="68" width="132" height="84" rx="10" fill="#F8FAFC"/>
-  <rect x="34" y="68" width="132" height="84" rx="10" stroke="#2563EB" stroke-width="4"/>
-  <line x1="60" y1="95" x2="140" y2="95" stroke="#93C5FD" stroke-width="3" opacity="0.7"/>
-  <line x1="60" y1="115" x2="140" y2="115" stroke="#93C5FD" stroke-width="3" opacity="0.55"/>
-  <line x1="60" y1="135" x2="110" y2="135" stroke="#93C5FD" stroke-width="3" opacity="0.4"/>
-  <path d="M100 22 L124 52 L112 52 L112 70 L88 70 L88 52 L76 52 Z" fill="#2563EB"/>
-  <path d="M48 172 Q100 188 152 172" stroke="#2563EB" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Globe -->
+  <circle cx="100" cy="100" r="78" fill="#F8FAFC" stroke="#1B2B4B" stroke-width="4"/>
+  <!-- Meridians -->
+  <ellipse cx="100" cy="100" rx="78" ry="28" stroke="#1B2B4B" stroke-width="2" opacity="0.35"/>
+  <ellipse cx="100" cy="100" rx="28" ry="78" stroke="#1B2B4B" stroke-width="2" opacity="0.35"/>
+  <line x1="22" y1="100" x2="178" y2="100" stroke="#1B2B4B" stroke-width="2" opacity="0.35"/>
+  <!-- Container body (front-facing, overlapping globe) -->
+  <rect x="44" y="98" width="112" height="62" rx="4" fill="#2563EB" stroke="#1B2B4B" stroke-width="4"/>
+  <!-- Corrugated vertical lines -->
+  <line x1="64" y1="106" x2="64" y2="152" stroke="#F8FAFC" stroke-width="2.5" opacity="0.85"/>
+  <line x1="82" y1="106" x2="82" y2="152" stroke="#F8FAFC" stroke-width="2.5" opacity="0.85"/>
+  <line x1="100" y1="106" x2="100" y2="152" stroke="#F8FAFC" stroke-width="2.5" opacity="0.85"/>
+  <line x1="118" y1="106" x2="118" y2="152" stroke="#F8FAFC" stroke-width="2.5" opacity="0.85"/>
+  <line x1="136" y1="106" x2="136" y2="152" stroke="#F8FAFC" stroke-width="2.5" opacity="0.85"/>
+  <!-- Container doors handle accent (top edge) -->
+  <line x1="44" y1="112" x2="156" y2="112" stroke="#1B2B4B" stroke-width="2" opacity="0.5"/>
+  <line x1="44" y1="146" x2="156" y2="146" stroke="#1B2B4B" stroke-width="2" opacity="0.5"/>
 </svg>

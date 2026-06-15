@@ -1,54 +1,30 @@
-# Fase 7 — Validación visual y ajustes finos
+# Nuevo logo: Contenedor + Globo
 
-Validar las fases 1-6 con capturas reales en móvil y desktop, detectar overflow/regresiones y aplicar ajustes puntuales si aparecen.
+Reemplazar el isotipo actual por un pictograma de **contenedor de carga envuelto por un globo terráqueo**, manteniendo paleta navy `#1B2B4B` + azul `#2563EB` sobre fondo claro `#F8FAFC`.
 
-## 1. Capturas
+## Cambios
 
-Móvil **412×915** y desktop **1366×768** sobre las rutas clave (login con cuenta demo si hace falta):
+1. **`public/librecarga-icon.svg`** — Nuevo SVG vectorial (200x200):
+   - Círculo (globo) con meridianos sutiles en navy.
+   - Contenedor isométrico al frente: cara izquierda navy, cara derecha azul, líneas verticales blancas tipo "corrugado".
+   - Geometría limpia, sin sombras, escalable a 16px (favicon) y 512px.
 
-- `/dashboard`
-- `/embarques`
-- `/proveedores`
-- `/cotizaciones`
-- `/crm/leads`, `/crm/oportunidades`, `/crm/mi-dia`
-- `/cxp`, `/reportes`, `/auditoria`
-- `/profit/dashboard-ejecutivo`, `/profit/estado-resultados`, `/profit/presupuesto`
-- `/tesoreria/cuentas`, `/tesoreria/flujo`
-- `/admin/organizaciones`, `/admin-org/usuarios`, `/admin-org/configuracion`
-- `/portal/dashboard`, `/portal/perfil`
+2. **`public/librecarga-logo.svg`** — Versión horizontal que reusa el isotipo nuevo (sin texto, solo el ícono optimizado para headers).
 
-## 2. Checklist por captura
+3. **`public/librecarga-icon-light.svg`** — Variante con trazos en azul brillante `#60A5FA` para fondos oscuros.
 
-- Search siempre visible en listados.
-- Botón "Filtros (n)" abre Sheet con badge correcto en `<md`.
-- Sin scroll horizontal en `<sm`.
-- `PageHeader` no trunca acciones; título usa `text-display` sin desbordar.
-- Tabs scrollables sin cortar etiquetas.
-- KPIs sin desbordar en 343 px.
-- Tablas → cards en `<sm` (Fase 2) sin tarjetas rotas.
+4. **`public/favicon.svg`** (si existe) — Sincronizar con el nuevo isotipo.
 
-## 3. Ajustes finos
+5. **Changelog + versión**
+   - `src/constants/appVersion.ts` → `13.21.3`
+   - `CHANGELOG.md` → entrada `[13.21.3]` describiendo el rediseño del isotipo.
 
-Por cada hallazgo:
-- Corrección puntual (clases Tailwind, sin lógica).
-- Si aparece overflow recurrente en KPIs, aplicar `text-kpi` + `tabular-nums break-words`.
-- Si un Sheet de filtros queda corto de altura en iOS, revisar `pb-[max(env(safe-area-inset-bottom),1rem)]`.
+## Validación
 
-## 4. Metadata
+- Capturar `/login` y el sidebar en preview para verificar legibilidad del nuevo logo en ambos contextos (header oscuro y light).
 
-- Si hay ajustes → bump `13.21.1` + entrada en `CHANGELOG.md` resumiendo los fixes.
-- Si todo pasa limpio → bump opcional `13.21.1` con nota "validación visual sin regresiones".
+## Notas técnicas
 
-## Excluye
-
-- Cambios de lógica de negocio.
-- Rediseño tipográfico o de paleta.
-- Pruebas Vitest (no aplica para CSS responsivo).
-
-## Orden
-
-1. Login en preview (si la sesión está caducada, pedir al usuario que se autentique).
-2. Recorrer rutas en mobile 412×915, capturando.
-3. Recorrer rutas en desktop 1366×768, capturando.
-4. Aplicar ajustes finos detectados.
-5. Bump `13.21.1` + entrada en `CHANGELOG.md` con el resumen del recorrido.
+- Sin dependencias nuevas; SVG inline puro.
+- El ícono se construye con `<circle>` + `<path>` (sin imágenes raster).
+- Compatible con todos los puntos donde ya se referencian estos archivos (no se renombran rutas).
