@@ -45,7 +45,7 @@ export default function Auditoria() {
       <PageHeader
         icon={<ShieldAlert className="h-6 w-6" />}
         title="Auditoría operativa"
-        description="Salud operativa, hallazgos y acciones pendientes detectadas en los embarques."
+        description="Salud operativa, hallazgos y acciones pendientes detectadas en los embarques de tu organización."
         actions={
           <div className="flex items-center gap-2">
             <Button
