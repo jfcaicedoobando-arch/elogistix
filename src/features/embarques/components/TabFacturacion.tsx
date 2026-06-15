@@ -59,6 +59,18 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
     [conceptos]
   );
 
+  // Conceptos verdaderamente huérfanos (sin proforma asignada) — usados por la
+  // alerta de proforma inconsistente.
+  const conceptosHuerfanos = useMemo(
+    () => conceptos.filter(c => c.estado_facturacion === 'pendiente' && !c.proforma_id),
+    [conceptos]
+  );
+
+  const borradorVacio = useMemo(
+    () => proformas.find(esBorradorVacio) ?? null,
+    [proformas]
+  );
+
   const handleDescargarProforma = async (proformaId: string) => {
     const proforma = proformas.find(p => p.id === proformaId);
     if (!proforma) return;
