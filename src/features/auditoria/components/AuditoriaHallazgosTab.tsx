@@ -125,9 +125,17 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
         </div>
       </div>
 
+      {/*
+        Bloque 2 (auditoría 13.21.23): se pasa `hallazgosFiltrados` (subset ya
+        filtrado por severidad/modo del tab) a la tabla, y el `key` incluye el
+        toggle `mostrarRevisados` para que el filtro interno `defaultRevision`
+        de `useHallazgosTablaState` se recalcule cuando el usuario alterna
+        "Ver/Ocultar revisados". Sin esto, los KPIs y la tabla mostraban
+        conteos inconsistentes (el toggle no llegaba a la tabla).
+      */}
       <HallazgosTablaPaginada
-        key={tablaKey}
-        hallazgos={c.hallazgos}
+        key={`${tablaKey}-${c.mostrarRevisados ? "r" : "p"}`}
+        hallazgos={c.hallazgosFiltrados}
         mostrarRevisadosDefault={c.mostrarRevisados}
         initialFilters={drillFilters}
       />
