@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.6] - 2026-06-15
+- **refactor(power-of-10)**: Dividir `Oportunidades.tsx` (209→177) y `Cotizaciones.tsx` (200→175) extrayendo `oportunidadesTable.ts` y `CotizacionesFilterSelects.tsx`. Baseline de tamaño verde.
+
 ## [13.21.5] - 2026-06-15
 - **style(branding)**: Sustituido el isotipo por la versión PNG de alta calidad provista por el usuario (`public/librecarga-logo.png`). Se eliminan los SVG previos y se actualizan todas las referencias (BrandLockup, LandingNav, LandingFooter, LogoPreview, schema.org).
 

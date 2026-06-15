@@ -7,9 +7,6 @@ import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +17,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  useCotizacionesPageController,
-  ESTADOS_COTIZACION,
-} from "@/features/cotizacion/hooks";
+import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 import { CotizacionesMobileFilters } from "@/features/cotizacion/components/CotizacionesMobileFilters";
+import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -50,28 +45,8 @@ export default function Cotizaciones() {
     c.setFilter("cliente", "todos");
   };
 
-  const EstadoSelect = (
-    <Select value={c.filterEstado} onValueChange={(v) => c.setFilter("estado", v)}>
-      <SelectTrigger className="w-full md:w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-      <SelectContent>
-        <SelectItem value="todos">Todos los estados</SelectItem>
-        {ESTADOS_COTIZACION.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-      </SelectContent>
-    </Select>
-  );
-  const ClienteSelect = (
-    <Select value={c.filterCliente} onValueChange={(v) => c.setFilter("cliente", v)}>
-      <SelectTrigger className="w-full md:w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-      <SelectContent>
-        <SelectItem value="todos">Todos los clientes</SelectItem>
-        {c.clientes.map((cli) => (
-          <SelectItem key={cli.id} value={cli.id}>
-            {cli.nombre.split(" ").slice(0, 3).join(" ")}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
+  const estadoSelect = <EstadoSelect value={c.filterEstado} onChange={(v) => c.setFilter("estado", v)} />;
+  const clienteSelect = <ClienteSelect value={c.filterCliente} onChange={(v) => c.setFilter("cliente", v)} clientes={c.clientes} />;
 
   return (
     <div className="space-y-6">
@@ -125,8 +100,8 @@ export default function Cotizaciones() {
             onSearchChange={c.setSearch}
             activeFilterCount={activeFilterCount}
             onClearAll={clearAllFilters}
-            estadoSelect={EstadoSelect}
-            clienteSelect={ClienteSelect}
+            estadoSelect={estadoSelect}
+            clienteSelect={clienteSelect}
           />
           <div className="hidden md:flex md:flex-wrap gap-4">
             <SearchInput
@@ -135,8 +110,8 @@ export default function Cotizaciones() {
               placeholder="Buscar por folio, cliente o mercancía..."
               className="flex-1 min-w-[200px]"
             />
-            {EstadoSelect}
-            {ClienteSelect}
+            {estadoSelect}
+            {clienteSelect}
           </div>
         </CardContent>
       </Card>
