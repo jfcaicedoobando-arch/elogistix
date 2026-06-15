@@ -1,60 +1,70 @@
+## Problema
 
-# Step 3 — 8 mejoras pendientes de GitHub Actions
+CI (`rls-tests`) sigue rompiendo en `Apply migrations`. Resuelto el drift de `es_consolidada`, ahora el siguiente blocker es:
 
-Bump: `APP_VERSION` → `13.21.12` + entrada en `CHANGELOG.md`.
+```
+psql:supabase/migrations/20260517020910_…sql:96: ERROR: extension "pg_cron" is not available
+```
 
-## Bloque C — Seguridad de supply chain
+Las migraciones `20260517020910` y `20260604052500_email_infra.sql` hacen `CREATE EXTENSION pg_cron` (+ `pg_net`) y llaman `cron.schedule(...)`. La imagen `postgres:15` de GitHub Actions **no trae** `pg_cron` ni `pg_net` (sólo existen en la Postgres administrada de Supabase). En prod ya están instaladas; en CI no hay forma de instalarlas sin cambiar de imagen.
 
-### C1. Dependency Review en PRs (item #5)
-Nuevo workflow `.github/workflows/dependency-review.yml`:
-- Trigger: `pull_request` sobre `main`.
-- `actions/dependency-review-action` SHA-pinneado.
-- `fail-on-severity: high`, `comment-summary-in-pr: on-failure`.
-- `permissions: contents: read, pull-requests: write`.
+Como las migraciones son inmutables, hay que neutralizar esas líneas **sólo en CI**, manteniendo prod intacto.
 
-### C2. `--ignore-scripts` en bun install (item #10)
-Editar `.github/actions/setup-bun/action.yml` (composite) para correr `bun install --frozen-lockfile --ignore-scripts` por defecto. Protege contra postinstall maliciosos en dependencias.
+## Estrategia
 
-## Bloque D — Calidad y feedback
+Mismo patrón que ya usamos para `auth.*`, `storage.*` y el drift de `es_consolidada`: stubs en bootstrap + intercepción en el loop del workflow.
 
-### D1. ESLint `--max-warnings 0` explícito (item #11)
-En `.github/workflows/ci.yml`, paso de lint: `bun run lint -- --max-warnings 0` (sin tocar `package.json`).
+### 1. Ampliar `supabase/tests/rls/_ci_bootstrap.sql`
 
-### D2. E2E nightly (item #12)
-Editar `.github/workflows/e2e.yml`: añadir `schedule: cron '0 6 * * *'` (06:00 UTC diario ≈ 00:00 CDMX) además del lunes existente. Mantener `concurrency` para evitar duplicados.
+Agregar al final:
 
-### D3. Comentario de cobertura en PR cuando falla (item #14)
-En `ci.yml` job de tests: añadir step condicional `if: failure()` que use `actions/github-script` para postear comentario con link al run y resumen del coverage report (si existe `coverage/coverage-summary.json`). `permissions: pull-requests: write` solo en ese job.
+- `CREATE SCHEMA IF NOT EXISTS cron;`
+- `CREATE SCHEMA IF NOT EXISTS net;`
+- Funciones no-op compatibles con las firmas que invoca el código:
+  - `cron.schedule(job_name text, schedule text, command text) RETURNS bigint` → devuelve `0`.
+  - `cron.unschedule(job_name text) RETURNS boolean` → devuelve `true`.
+  - `net.http_post(url text, headers jsonb, body jsonb) RETURNS bigint` → devuelve `0` (si la migración email lo invoca).
+- `GRANT USAGE` a `anon, authenticated, service_role`.
 
-## Bloque E — Validaciones y performance
+Esto permite que cualquier `SELECT cron.schedule(...)` ejecute sin error.
 
-### E1. Lint de migraciones SQL (item #15)
-Nuevo workflow `.github/workflows/sql-lint.yml`:
-- Trigger: PRs que tocan `supabase/migrations/**`.
-- Usa `sqlfluff` (Python, dialect `postgres`) con config mínima `.sqlfluff` permisiva (solo errores de parsing y reglas críticas L010/L030/L048).
-- `permissions: contents: read`.
+### 2. Filtrar `CREATE EXTENSION pg_cron|pg_net` en el loop del workflow
 
-### E2. Bundle budget por chunk versionado (item #16)
-Nuevo archivo `.github/bundle-budget.json` con límites en KB por chunk principal (`index`, `vendor-react`, `vendor-supabase`, `vendor-charts`, etc.). Nuevo step en `ci.yml` después del build: script `scripts/check-bundle-budget.mjs` que lee `dist/assets/*.js` (gzipped) y compara contra el JSON; falla si excede.
+En `.github/workflows/rls-tests.yml`, dentro del step `Apply migrations`, cambiar:
 
-### E3. Cache de Vite/Vitest (item #17)
-En `ci.yml`, añadir `actions/cache` (SHA-pinneado) para:
-- `node_modules/.vite`
-- `node_modules/.vitest`
-- `.vitest-reports`
-Key basado en `bun.lockb` + hash de `vite.config.ts`/`vitest.config.ts`.
+```bash
+$PSQL -f "$f"
+```
 
-## Detalles técnicos
+por:
 
-- Todas las acciones de terceros SHA-pinneadas con comentario de versión (consistente con Step 2).
-- Permisos mínimos por job (default `contents: read`, elevar solo donde se requiera).
-- Sin tocar `rls-tests.yml` ni `post-deploy-smoke.yml`.
-- `sqlfluff` corre vía `pip install sqlfluff==3.x` en un job Ubuntu con `actions/setup-python` SHA-pinneado.
-- `bundle-budget.json` con valores iniciales calibrados al build actual + 10% de margen.
+```bash
+# CI no tiene pg_cron / pg_net (sólo existen en Supabase managed Postgres).
+# Comentamos esas líneas on-the-fly; los stubs en cron/net del bootstrap
+# se encargan de que cron.schedule(...) ejecute como no-op.
+sed -E 's/^[[:space:]]*CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?pg_(cron|net).*/-- [ci] &/I' "$f" | $PSQL
+```
 
-## Fuera de alcance
+El `DO $$ ... CREATE EXTENSION pg_cron ... $$` de `20260604052500` queda dentro de un bloque PL/pgSQL y `sed` no puede tocarlo selectivamente; ese bloque está protegido por `IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')` — en CI el `SELECT` devuelve falso y entra al `CREATE EXTENSION` que también falla. Lo arreglo añadiendo, **antes** de aplicar esa migración específica (mismo patrón de drift-fix que `es_consolidada`), un sentinel:
 
-- Reusable workflows / composite refactor mayor.
-- SLSA / build provenance.
-- Cambios a `package.json` scripts.
-- Renovate (ya hay Dependabot).
+```sql
+INSERT INTO pg_extension(extname, …)
+```
+
+no es viable — `pg_extension` es system catalog. Alternativa real: aplicar también `sed` a esa migración para reemplazar el bloque `CREATE EXTENSION pg_cron;` interno por `NULL;`. La regex anterior con `[[:space:]]*` cubre indentación arbitraria, así que también captura el caso indentado de `email_infra`.
+
+### 3. Versionado
+
+- `APP_VERSION` → `13.21.17`
+- Entrada en `CHANGELOG.md` describiendo el stub de `cron`/`net` y el filtro de `CREATE EXTENSION`.
+
+## Archivos a tocar
+
+- `supabase/tests/rls/_ci_bootstrap.sql` — añadir bloque cron/net.
+- `.github/workflows/rls-tests.yml` — cambiar `$PSQL -f` por pipeline con `sed`.
+- `src/constants/appVersion.ts` — bump.
+- `CHANGELOG.md` — entrada `[13.21.17]`.
+
+## Pregunta
+
+¿Quieres que también agregue un comentario explicativo en las dos migraciones afectadas (no editando — sólo no se puede), o basta con dejar la nota en `CONTRIBUTING.md` para que futuros devs sepan que `pg_cron`/`pg_net` se neutralizan en CI?
