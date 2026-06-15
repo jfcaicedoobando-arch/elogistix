@@ -35,6 +35,11 @@ vi.mock("@/features/embarques/hooks/useEmbarqueQueries", () => ({
   useEmbarqueConceptosVenta: () => ({ data: [] }),
 }));
 
+vi.mock("@/features/embarques/hooks/useDocsFaltantesParaEstado", () => ({
+  useDocsFaltantesParaEstado: () => ({ faltantes: [], bloqueante: false, loading: false }),
+  esEstadoBloqueante: () => false,
+}));
+
 import { useEmbarqueEstadoActions, getSiguienteEstado } from "../useEmbarqueEstadoActions";
 
 const embarque = {
