@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.3] - 2026-06-15
+- **style(branding)**: Rediseñado el isotipo Libre Carga como pictograma de **contenedor + globo terráqueo** (`librecarga-icon.svg`, `librecarga-logo.svg`, `librecarga-icon-light.svg`). Globo con meridianos sutiles en navy `#1B2B4B`, contenedor frontal en azul `#2563EB` con corrugado blanco. Transmite alcance global y carga corporativa, con mejor legibilidad a tamaños pequeños (favicon a 16px).
+
 ## [13.21.2] - 2026-06-15
 - **style(branding)**: Invertida la paleta del logo Libre Carga (`librecarga-logo.svg` y `librecarga-icon.svg`) — fondo `#F8FAFC`, contenedor y trazos en azul primario `#2563EB`, divisores horizontales/verticales en `#93C5FD`. Mejora drásticamente la legibilidad sobre headers claros y elimina el "bloque oscuro" reportado.
 
