@@ -12,17 +12,10 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- public.proformas.es_consolidada
--- Añadida manualmente en prod; migración 20260424231755 asume que existe.
+-- (resuelto) public.proformas.es_consolidada
+-- La migración 20260424231755 ahora crea la columna con ADD COLUMN IF NOT EXISTS,
+-- por lo que el drift fix ya no es necesario.
 -- ---------------------------------------------------------------------------
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_name = 'proformas') THEN
-    EXECUTE 'ALTER TABLE public.proformas
-             ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false';
-  END IF;
-END $$;
 
 -- ---------------------------------------------------------------------------
 -- public.tracking_intentos (tabla completa)
