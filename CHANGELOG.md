@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.25.3] - 2026-06-15
+- **fix(ci/rls)**: Las 6 suites RLS fallaban tras el `pg_restore` por dos motivos: (1) los seeds usaban valores que no existen en los enums reales (`'web'` en `crm_lead_fuente`, `'Naviera'`/`'Agente'` en `categoria_proveedor`) o columnas inexistentes (`facturas.saldo`, estado `'Pendiente'`), y (2) en Postgres vainilla de CI los roles `authenticated`/`anon`/`service_role` no tenían `GRANT` sobre las tablas de `public` (Supabase managed los concede por default). Se alinearon los fixtures con el esquema real y se añadieron los `GRANT` equivalentes en `_ci_post_migrate.sql` (sólo CI).
+
 ## [13.25.2] - 2026-06-15
 - **fix(ci/rls)**: El snapshot de RLS en CI fallaba con `RLS COVERAGE FAIL` porque el stub de `public.tracking_externo` (creado en `_ci_drift.sql`) habilitaba RLS sin policy. Se añade una policy de respaldo `_ci_stub_deny_all` (deny-all) sólo en CI; las policies reales viven en migraciones posteriores.
 - **chore(lint)**: ESLint con `--max-warnings 0` ahora pasa. Se mueve `esBorradorVacio` a su propio archivo (regla `react-refresh/only-export-components`) y se reduce la complejidad ciclomática de `ProformaDetalle` (extrae `TotalesCard`) y de `auditoria-explicar-hallazgo/processRequest` (extrae `authorizeEmbarque`, `buildUserPrompt` e `invocarGateway`).
