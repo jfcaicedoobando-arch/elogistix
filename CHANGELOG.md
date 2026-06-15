@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.25.1] - 2026-06-15
+- **fix(observabilidad/client-error-log)**: RPC `log_client_error_v1` ahora recibe `p_request_id` como `uuid` (antes `text`), eliminando el error de Sentry `column "request_id" is of type uuid but expression is of type text`. Además `_shared/logger.ts` valida que los headers `x-request-id` / `x-correlation-id` cumplan formato UUID antes de insertar en `app_logs`; si no, genera uno nuevo.
+
 ## [13.25.0] - 2026-06-15
 - **feat(embarques/candado-docs)**: Candado mixto al avanzar estado. Estados avanzados (`En Aduana`, `Llegada`, `Arribo`, `Entregado`, `EIR`, `Cerrado`) ahora **bloquean** el avance si faltan documentos mínimos (botón "Avanzar" deshabilitado con tooltip + RPC `avanzar_estado_embarque` rechaza con `documentos_faltantes: ...`). Estados tempranos (`Confirmado`, `En Tránsito`) muestran confirmación suave. "No aplica" satisface el requisito (consistente con auditoría).
 - **feat(backend)**: Nueva función helper inmutable `_docs_requeridos_por_estado(modo, estado)` como fuente única para la matriz de documentos. Nueva RPC `embarque_docs_faltantes(embarque_id, estado_destino)` consumida por el frontend.
