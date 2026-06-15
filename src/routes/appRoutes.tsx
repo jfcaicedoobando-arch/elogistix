@@ -13,7 +13,7 @@ import {
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
-  Facturacion, FacturaDetalle,
+  Facturacion, FacturaDetalle, ProformaDetalle,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
