@@ -152,16 +152,19 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
           </Button>
         );
       } },
-    { id: "open", header: "", meta: { width: "w-[50px]" },
+    { id: "open", header: "", meta: { width: "w-[80px]" },
       cell: ({ row }) => {
         const h = row.original;
         return (
-          <Button size="icon" variant="ghost" className="h-7 w-7"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
-            aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+            <ExplicarHallazgoButton hallazgo={h} />
+            <Button size="icon" variant="ghost" className="h-7 w-7"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
+              aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         );
       } },
   ]);
