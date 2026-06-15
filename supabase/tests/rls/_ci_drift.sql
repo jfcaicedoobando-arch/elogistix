@@ -82,3 +82,15 @@ CREATE TABLE IF NOT EXISTS public.tracking_intentos (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.tracking_intentos TO authenticated;
 GRANT ALL ON public.tracking_intentos TO service_role;
 ALTER TABLE public.tracking_intentos ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- publication supabase_realtime
+-- En Supabase prod existe por defecto. En CI vanilla Postgres no, y migraciones
+-- posteriores hacen `ALTER PUBLICATION supabase_realtime ADD TABLE ...`.
+-- ---------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END $$;
