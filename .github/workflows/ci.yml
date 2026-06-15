@@ -131,12 +131,13 @@ jobs:
 
       - name: Run Deno tests (excluding smoke)
         run: |
+          readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
           deno test \
             --allow-env \
             --allow-net \
             --allow-read \
             --no-check \
-            $(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
+            "${tests[@]}"
 
   tests:
     name: Tests (shard ${{ matrix.shard }}/${{ matrix.total }})
@@ -234,7 +235,10 @@ jobs:
 
       - name: PR summary (coverage)
         if: always() && github.event_name == 'pull_request'
-        run: test -f reports/coverage-report.md && cat reports/coverage-report.md >> "$GITHUB_STEP_SUMMARY" || true
+        run: |
+          if test -f reports/coverage-report.md; then
+            cat reports/coverage-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload coverage artifacts
         if: always()
