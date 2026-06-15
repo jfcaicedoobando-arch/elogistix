@@ -155,7 +155,14 @@ export const appRoutes = (
         </ProtectedRoute>
       }
     />
-    <Route path="/auditoria" element={<Auditoria />} />
+    <Route
+      path="/auditoria"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "admin_org", "viewer", "customer_service"]}>
+          <Auditoria />
+        </ProtectedRoute>
+      }
+    />
     <Route
       path="/usuarios"
       element={
