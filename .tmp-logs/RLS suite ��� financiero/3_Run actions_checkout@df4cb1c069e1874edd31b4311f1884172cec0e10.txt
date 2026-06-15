@@ -1,0 +1,93 @@
+﻿2026-06-15T23:20:36.5856953Z ##[group]Run actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+2026-06-15T23:20:36.5857609Z with:
+2026-06-15T23:20:36.5857867Z   repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:20:36.5861057Z   token: ***
+2026-06-15T23:20:36.5861279Z   ssh-strict: true
+2026-06-15T23:20:36.5861507Z   ssh-user: git
+2026-06-15T23:20:36.5861726Z   persist-credentials: true
+2026-06-15T23:20:36.5861964Z   clean: true
+2026-06-15T23:20:36.5862189Z   sparse-checkout-cone-mode: true
+2026-06-15T23:20:36.5862445Z   fetch-depth: 1
+2026-06-15T23:20:36.5862649Z   fetch-tags: false
+2026-06-15T23:20:36.5862857Z   show-progress: true
+2026-06-15T23:20:36.5863069Z   lfs: false
+2026-06-15T23:20:36.5863266Z   submodules: false
+2026-06-15T23:20:36.5863478Z   set-safe-directory: true
+2026-06-15T23:20:36.5863859Z env:
+2026-06-15T23:20:36.5864274Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:20:36.5865031Z   PGHOST: localhost
+2026-06-15T23:20:36.5865237Z   PGPORT: 5432
+2026-06-15T23:20:36.5865486Z   PGUSER: postgres
+2026-06-15T23:20:36.5865704Z   PGPASSWORD: postgres
+2026-06-15T23:20:36.5865936Z   PGDATABASE: postgres
+2026-06-15T23:20:36.5866167Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:20:36.5866432Z ##[endgroup]
+2026-06-15T23:20:36.6888230Z Syncing repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:20:36.6889801Z ##[group]Getting Git version info
+2026-06-15T23:20:36.6890182Z Working directory is '/home/runner/work/elogistix/elogistix'
+2026-06-15T23:20:36.6890734Z [command]/usr/bin/git version
+2026-06-15T23:20:36.6954172Z git version 2.54.0
+2026-06-15T23:20:36.7010061Z ##[endgroup]
+2026-06-15T23:20:36.7025270Z Temporarily overriding HOME='/home/runner/work/_temp/75b2e33d-1c8c-4255-8c80-f989c8cbe9ca' before making global git config changes
+2026-06-15T23:20:36.7026498Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-15T23:20:36.7031594Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/elogistix/elogistix
+2026-06-15T23:20:36.7085421Z Deleting the contents of '/home/runner/work/elogistix/elogistix'
+2026-06-15T23:20:36.7089520Z ##[group]Determining repository object format
+2026-06-15T23:20:36.7091778Z ##[endgroup]
+2026-06-15T23:20:36.7092338Z ##[group]Initializing the repository
+2026-06-15T23:20:36.7096277Z [command]/usr/bin/git init /home/runner/work/elogistix/elogistix
+2026-06-15T23:20:36.7188175Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-15T23:20:36.7189027Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-15T23:20:36.7189823Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-15T23:20:36.7190430Z hint: call:
+2026-06-15T23:20:36.7190717Z hint:
+2026-06-15T23:20:36.7191119Z hint: 	git config --global init.defaultBranch <name>
+2026-06-15T23:20:36.7191570Z hint:
+2026-06-15T23:20:36.7191870Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-15T23:20:36.7192394Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-15T23:20:36.7192787Z hint:
+2026-06-15T23:20:36.7193003Z hint: 	git branch -m <name>
+2026-06-15T23:20:36.7193349Z hint:
+2026-06-15T23:20:36.7193670Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-15T23:20:36.7196147Z Initialized empty Git repository in /home/runner/work/elogistix/elogistix/.git/
+2026-06-15T23:20:36.7207475Z [command]/usr/bin/git remote add origin https://github.com/jfcaicedoobando-arch/elogistix
+2026-06-15T23:20:36.7252946Z ##[endgroup]
+2026-06-15T23:20:36.7253368Z ##[group]Disabling automatic garbage collection
+2026-06-15T23:20:36.7257222Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-15T23:20:36.7286883Z ##[endgroup]
+2026-06-15T23:20:36.7287801Z ##[group]Setting up auth
+2026-06-15T23:20:36.7288606Z Removing SSH command configuration
+2026-06-15T23:20:36.7294379Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-15T23:20:36.7329846Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-15T23:20:36.7680925Z Removing HTTP extra header
+2026-06-15T23:20:36.7686284Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-15T23:20:36.7718647Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-15T23:20:36.7947210Z Removing includeIf entries pointing to credentials config files
+2026-06-15T23:20:36.7954077Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-15T23:20:36.7987888Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-15T23:20:36.8221476Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-235aa59e-2e06-4605-b07e-28d2cbb2940e.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-15T23:20:36.8258263Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/elogistix/elogistix/.git.path /home/runner/work/_temp/git-credentials-235aa59e-2e06-4605-b07e-28d2cbb2940e.config
+2026-06-15T23:20:36.8288663Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/elogistix/elogistix/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-235aa59e-2e06-4605-b07e-28d2cbb2940e.config
+2026-06-15T23:20:36.8321901Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-235aa59e-2e06-4605-b07e-28d2cbb2940e.config
+2026-06-15T23:20:36.8353666Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-235aa59e-2e06-4605-b07e-28d2cbb2940e.config
+2026-06-15T23:20:36.8379745Z ##[endgroup]
+2026-06-15T23:20:36.8380636Z ##[group]Fetching the repository
+2026-06-15T23:20:36.8388999Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a0a28fa58d3a9f2a557af991cb172b027e5bd958:refs/remotes/origin/main
+2026-06-15T23:20:37.2070823Z From https://github.com/jfcaicedoobando-arch/elogistix
+2026-06-15T23:20:37.2071863Z  * [new ref]         a0a28fa58d3a9f2a557af991cb172b027e5bd958 -> origin/main
+2026-06-15T23:20:37.2119152Z [command]/usr/bin/git branch --list --remote origin/main
+2026-06-15T23:20:37.2219307Z   origin/main
+2026-06-15T23:20:37.2228530Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-06-15T23:20:37.2254213Z a0a28fa58d3a9f2a557af991cb172b027e5bd958
+2026-06-15T23:20:37.2263689Z ##[endgroup]
+2026-06-15T23:20:37.2264194Z ##[group]Determining the checkout info
+2026-06-15T23:20:37.2264809Z ##[endgroup]
+2026-06-15T23:20:37.2272264Z [command]/usr/bin/git sparse-checkout disable
+2026-06-15T23:20:37.2315935Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-15T23:20:37.2346369Z ##[group]Checking out the ref
+2026-06-15T23:20:37.2352131Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-15T23:20:37.3547306Z Switched to a new branch 'main'
+2026-06-15T23:20:37.3549493Z branch 'main' set up to track 'origin/main'.
+2026-06-15T23:20:37.3559426Z ##[endgroup]
+2026-06-15T23:20:37.3615199Z [command]/usr/bin/git log -1 --format=%H
+2026-06-15T23:20:37.3645063Z a0a28fa58d3a9f2a557af991cb172b027e5bd958

@@ -1,0 +1,29 @@
+﻿2026-06-15T23:20:31.8544356Z ##[group]Run actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+2026-06-15T23:20:31.8544789Z with:
+2026-06-15T23:20:31.8545001Z   name: rls-db-snapshot
+2026-06-15T23:20:31.8545260Z   path: .rls-snapshot/
+2026-06-15T23:20:31.8545500Z   merge-multiple: false
+2026-06-15T23:20:31.8545761Z   repository: jfcaicedoobando-arch/elogistix
+2026-06-15T23:20:31.8546051Z   run-id: 27582829780
+2026-06-15T23:20:31.8546271Z   skip-decompress: false
+2026-06-15T23:20:31.8546504Z   digest-mismatch: error
+2026-06-15T23:20:31.8546720Z env:
+2026-06-15T23:20:31.8547120Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:20:31.8547605Z   PGHOST: localhost
+2026-06-15T23:20:31.8547817Z   PGPORT: 5432
+2026-06-15T23:20:31.8548020Z   PGUSER: postgres
+2026-06-15T23:20:31.8548232Z   PGPASSWORD: postgres
+2026-06-15T23:20:31.8548448Z   PGDATABASE: postgres
+2026-06-15T23:20:31.8548685Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:20:31.8548961Z ##[endgroup]
+2026-06-15T23:20:31.9838001Z Downloading single artifact
+2026-06-15T23:20:32.2115883Z Preparing to download the following artifacts:
+2026-06-15T23:20:32.2117002Z - rls-db-snapshot (ID: 7653324183, Size: 109665, Expected Digest: sha256:37f79205b98385ab2b6f3b295dc4978c453dbc053b349f970334ad2ad9385010)
+2026-06-15T23:20:32.6662017Z Redirecting to blob download url: https://productionresultssa19.blob.core.windows.net/actions-results/9b0f1ac7-985f-4871-882c-77d835b94caa/workflow-job-run-d63c271f-14fa-5677-969a-e9549a6ec664/artifacts/c30f24d1ddb4ef2af83be339d9ec5ddd997e06ccc7f3558b5c9deab3f69392e8.zip
+2026-06-15T23:20:32.6663417Z Starting download of artifact to: /home/runner/work/elogistix/elogistix/.rls-snapshot
+2026-06-15T23:20:32.8672583Z (node:2711) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-06-15T23:20:32.8674130Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-15T23:20:32.9585415Z SHA256 digest of downloaded artifact is 37f79205b98385ab2b6f3b295dc4978c453dbc053b349f970334ad2ad9385010
+2026-06-15T23:20:32.9586663Z Artifact download completed successfully.
+2026-06-15T23:20:32.9587141Z Total of 1 artifact(s) downloaded
+2026-06-15T23:20:32.9591405Z Download artifact has finished successfully

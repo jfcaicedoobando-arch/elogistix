@@ -1,0 +1,877 @@
+﻿2026-06-15T23:20:32.9710822Z ##[group]Run # pg_restore es ~10x más rápido que rehacer bootstrap+migrations.
+2026-06-15T23:20:32.9711769Z [36;1m# pg_restore es ~10x más rápido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:20:32.9712293Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:20:32.9712674Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:20:32.9749069Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:20:32.9749358Z env:
+2026-06-15T23:20:32.9749789Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:20:32.9750284Z   PGHOST: localhost
+2026-06-15T23:20:32.9750514Z   PGPORT: 5432
+2026-06-15T23:20:32.9750728Z   PGUSER: postgres
+2026-06-15T23:20:32.9750951Z   PGPASSWORD: postgres
+2026-06-15T23:20:32.9751482Z   PGDATABASE: postgres
+2026-06-15T23:20:32.9751748Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:20:32.9752030Z ##[endgroup]
+2026-06-15T23:20:33.6730696Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6739009Z Command was: CREATE POLICY "Admins CRUD navieras" ON public.navieras TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+2026-06-15T23:20:33.6740283Z 
+2026-06-15T23:20:33.6740310Z 
+2026-06-15T23:20:33.6740707Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6742399Z Command was: CREATE POLICY "Admins CRUD puertos" ON public.puertos TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+2026-06-15T23:20:33.6743447Z 
+2026-06-15T23:20:33.6743455Z 
+2026-06-15T23:20:33.6743812Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6745469Z Command was: CREATE POLICY "Admins CRUD tipos_contenedor" ON public.tipos_contenedor TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+2026-06-15T23:20:33.6746543Z 
+2026-06-15T23:20:33.6746550Z 
+2026-06-15T23:20:33.6746872Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6747957Z Command was: CREATE POLICY "Autenticados pueden leer navieras" ON public.navieras FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:33.6748607Z 
+2026-06-15T23:20:33.6748614Z 
+2026-06-15T23:20:33.6748958Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6750028Z Command was: CREATE POLICY "Autenticados pueden leer puertos" ON public.puertos FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:33.6750563Z 
+2026-06-15T23:20:33.6750579Z 
+2026-06-15T23:20:33.6750954Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6752264Z Command was: CREATE POLICY "Autenticados pueden leer tipos_contenedor" ON public.tipos_contenedor FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:33.6752925Z 
+2026-06-15T23:20:33.6752932Z 
+2026-06-15T23:20:33.6753310Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6754264Z Command was: CREATE POLICY "Authenticated read planes" ON public.planes FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:33.6754808Z 
+2026-06-15T23:20:33.6754814Z 
+2026-06-15T23:20:33.6755153Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6757255Z Command was: CREATE POLICY "Author update crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR UPDATE TO authenticated USING (((autor_id = auth.uid()) AND (organization_id = public.current_user_org_id()))) WITH CHECK (((autor_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:33.6759138Z 
+2026-06-15T23:20:33.6759149Z 
+2026-06-15T23:20:33.6759545Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6761295Z Command was: CREATE POLICY "Client read own client_users" ON public.client_users FOR SELECT TO authenticated USING ((user_id = auth.uid()));
+2026-06-15T23:20:33.6762120Z 
+2026-06-15T23:20:33.6762131Z 
+2026-06-15T23:20:33.6762502Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6764135Z Command was: CREATE POLICY "Client read own org" ON public.organizations FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (id IN ( SELECT client_users.organization_id
+2026-06-15T23:20:33.6765417Z    FROM public.client_users
+2026-06-15T23:20:33.6765876Z   WHERE (client_users.user_id = auth.uid())))));
+2026-06-15T23:20:33.6766231Z 
+2026-06-15T23:20:33.6766239Z 
+2026-06-15T23:20:33.6766608Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6768538Z Command was: CREATE POLICY "Cliente lee sus notificaciones" ON public.notificaciones_cliente FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:33.6769966Z 
+2026-06-15T23:20:33.6769977Z 
+2026-06-15T23:20:33.6770350Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6773124Z Command was: CREATE POLICY "Cliente marca leida su notificacion" ON public.notificaciones_cliente FOR UPDATE TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))) WITH CHECK ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:33.6775458Z 
+2026-06-15T23:20:33.6775470Z 
+2026-06-15T23:20:33.6775863Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6777523Z Command was: CREATE POLICY "Cliente read own clientes" ON public.clientes FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:33.6778824Z 
+2026-06-15T23:20:33.6778835Z 
+2026-06-15T23:20:33.6779141Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6780689Z Command was: CREATE POLICY "Cliente read own conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:33.6782125Z    FROM public.embarques
+2026-06-15T23:20:33.6782859Z   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6783427Z 
+2026-06-15T23:20:33.6783446Z 
+2026-06-15T23:20:33.6783861Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6787401Z Command was: CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)) AND (estado = ANY (ARRAY['Enviada'::public.estado_cotizacion, 'Aceptada'::public.estado_cotizacion, 'Rechazada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion]))));
+2026-06-15T23:20:33.6789716Z 
+2026-06-15T23:20:33.6789730Z 
+2026-06-15T23:20:33.6790115Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6792157Z Command was: CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:33.6793794Z    FROM public.embarques
+2026-06-15T23:20:33.6794524Z   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6795158Z 
+2026-06-15T23:20:33.6795166Z 
+2026-06-15T23:20:33.6795543Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6797098Z Command was: CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT e.id
+2026-06-15T23:20:33.6798415Z    FROM public.embarques e
+2026-06-15T23:20:33.6798991Z   WHERE (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6799585Z 
+2026-06-15T23:20:33.6799592Z 
+2026-06-15T23:20:33.6799950Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6801878Z Command was: CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:33.6803284Z 
+2026-06-15T23:20:33.6803296Z 
+2026-06-15T23:20:33.6803701Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6805251Z Command was: CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:33.6806508Z    FROM public.embarques
+2026-06-15T23:20:33.6807265Z   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6807893Z 
+2026-06-15T23:20:33.6807899Z 
+2026-06-15T23:20:33.6808142Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6809530Z Command was: CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (factura_id IN ( SELECT f.id
+2026-06-15T23:20:33.6810895Z    FROM public.facturas f
+2026-06-15T23:20:33.6811724Z   WHERE (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6812336Z 
+2026-06-15T23:20:33.6812345Z 
+2026-06-15T23:20:33.6812716Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6814469Z Command was: CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:33.6815889Z 
+2026-06-15T23:20:33.6815901Z 
+2026-06-15T23:20:33.6816328Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6818322Z Command was: CREATE POLICY "Cliente read own notas" ON public.notas_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (tipo = ANY (ARRAY['nota'::public.tipo_nota, 'cambio_estado'::public.tipo_nota])) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:33.6820129Z    FROM public.embarques
+2026-06-15T23:20:33.6820888Z   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6821687Z 
+2026-06-15T23:20:33.6821696Z 
+2026-06-15T23:20:33.6822126Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6823656Z Command was: CREATE POLICY "Cliente read own pagos_factura" ON public.pagos_factura FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (factura_id IN ( SELECT f.id
+2026-06-15T23:20:33.6825439Z    FROM public.facturas f
+2026-06-15T23:20:33.6826121Z   WHERE (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6826718Z 
+2026-06-15T23:20:33.6826726Z 
+2026-06-15T23:20:33.6827073Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6828715Z Command was: CREATE POLICY "Cliente read own pcc" ON public.proforma_conceptos_consolidados FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (proforma_id IN ( SELECT proformas.id
+2026-06-15T23:20:33.6830166Z    FROM public.proformas
+2026-06-15T23:20:33.6830897Z   WHERE (proformas.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:33.6831742Z 
+2026-06-15T23:20:33.6831753Z 
+2026-06-15T23:20:33.6832115Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6833960Z Command was: CREATE POLICY "Cliente read own proformas" ON public.proformas FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:33.6835390Z 
+2026-06-15T23:20:33.6835400Z 
+2026-06-15T23:20:33.6835758Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6836995Z Command was: CREATE POLICY "Hide soft deleted clientes" ON public.clientes AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6837917Z 
+2026-06-15T23:20:33.6837927Z 
+2026-06-15T23:20:33.6838291Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6839660Z Command was: CREATE POLICY "Hide soft deleted conceptos_costo" ON public.conceptos_costo AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6840623Z 
+2026-06-15T23:20:33.6840630Z 
+2026-06-15T23:20:33.6840963Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6842476Z Command was: CREATE POLICY "Hide soft deleted conceptos_factura" ON public.conceptos_factura AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6843412Z 
+2026-06-15T23:20:33.6843419Z 
+2026-06-15T23:20:33.6843809Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6845218Z Command was: CREATE POLICY "Hide soft deleted conceptos_venta" ON public.conceptos_venta AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6846177Z 
+2026-06-15T23:20:33.6846185Z 
+2026-06-15T23:20:33.6846553Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6847899Z Command was: CREATE POLICY "Hide soft deleted contactos_cliente" ON public.contactos_cliente AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6848905Z 
+2026-06-15T23:20:33.6848915Z 
+2026-06-15T23:20:33.6849275Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6850629Z Command was: CREATE POLICY "Hide soft deleted cotizacion_costos" ON public.cotizacion_costos AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6851728Z 
+2026-06-15T23:20:33.6851738Z 
+2026-06-15T23:20:33.6852094Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6853394Z Command was: CREATE POLICY "Hide soft deleted cotizaciones" ON public.cotizaciones AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6854337Z 
+2026-06-15T23:20:33.6854344Z 
+2026-06-15T23:20:33.6854709Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6856066Z Command was: CREATE POLICY "Hide soft deleted crm_actividades" ON public.crm_actividades AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6857229Z 
+2026-06-15T23:20:33.6857240Z 
+2026-06-15T23:20:33.6857595Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6858846Z Command was: CREATE POLICY "Hide soft deleted crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6859834Z 
+2026-06-15T23:20:33.6859841Z 
+2026-06-15T23:20:33.6860189Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6861651Z Command was: CREATE POLICY "Hide soft deleted crm_etapas_pipeline" ON public.crm_etapas_pipeline AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6862631Z 
+2026-06-15T23:20:33.6862638Z 
+2026-06-15T23:20:33.6862983Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6863969Z Command was: CREATE POLICY "Hide soft deleted crm_leads" ON public.crm_leads AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6864679Z 
+2026-06-15T23:20:33.6864687Z 
+2026-06-15T23:20:33.6864993Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6866279Z Command was: CREATE POLICY "Hide soft deleted crm_motivos_perdida" ON public.crm_motivos_perdida AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6867262Z 
+2026-06-15T23:20:33.6867272Z 
+2026-06-15T23:20:33.6867550Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6868779Z Command was: CREATE POLICY "Hide soft deleted crm_oportunidades" ON public.crm_oportunidades AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6869756Z 
+2026-06-15T23:20:33.6869766Z 
+2026-06-15T23:20:33.6870129Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6871593Z Command was: CREATE POLICY "Hide soft deleted crm_plantillas_mensaje" ON public.crm_plantillas_mensaje AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6872603Z 
+2026-06-15T23:20:33.6872622Z 
+2026-06-15T23:20:33.6872969Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6874203Z Command was: CREATE POLICY "Hide soft deleted cuentas_bancarias" ON public.cuentas_bancarias AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6875188Z 
+2026-06-15T23:20:33.6875200Z 
+2026-06-15T23:20:33.6875564Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6876917Z Command was: CREATE POLICY "Hide soft deleted documentos_embarque" ON public.documentos_embarque AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6877794Z 
+2026-06-15T23:20:33.6877804Z 
+2026-06-15T23:20:33.6878156Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6879549Z Command was: CREATE POLICY "Hide soft deleted embarque_contenedores" ON public.embarque_contenedores AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6880448Z 
+2026-06-15T23:20:33.6880454Z 
+2026-06-15T23:20:33.6880802Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6882261Z Command was: CREATE POLICY "Hide soft deleted embarques" ON public.embarques AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6883427Z 
+2026-06-15T23:20:33.6883436Z 
+2026-06-15T23:20:33.6883724Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6885231Z Command was: CREATE POLICY "Hide soft deleted eventos_embarque" ON public.eventos_embarque AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6886210Z 
+2026-06-15T23:20:33.6886221Z 
+2026-06-15T23:20:33.6886572Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6887862Z Command was: CREATE POLICY "Hide soft deleted factura_notas_credito" ON public.factura_notas_credito AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6888854Z 
+2026-06-15T23:20:33.6888865Z 
+2026-06-15T23:20:33.6889222Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6890474Z Command was: CREATE POLICY "Hide soft deleted facturas" ON public.facturas AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6891363Z 
+2026-06-15T23:20:33.6891384Z 
+2026-06-15T23:20:33.6891753Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6893050Z Command was: CREATE POLICY "Hide soft deleted notas_embarque" ON public.notas_embarque AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6894012Z 
+2026-06-15T23:20:33.6894021Z 
+2026-06-15T23:20:33.6894357Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6895639Z Command was: CREATE POLICY "Hide soft deleted pagos_factura" ON public.pagos_factura AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6896564Z 
+2026-06-15T23:20:33.6896574Z 
+2026-06-15T23:20:33.6896954Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6898149Z Command was: CREATE POLICY "Hide soft deleted pagos_proveedor" ON public.pagos_proveedor AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6899087Z 
+2026-06-15T23:20:33.6899129Z 
+2026-06-15T23:20:33.6899499Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6901009Z Command was: CREATE POLICY "Hide soft deleted proforma_conceptos_consolidados" ON public.proforma_conceptos_consolidados AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6902228Z 
+2026-06-15T23:20:33.6902238Z 
+2026-06-15T23:20:33.6902586Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6903814Z Command was: CREATE POLICY "Hide soft deleted proformas" ON public.proformas AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6904616Z 
+2026-06-15T23:20:33.6904652Z 
+2026-06-15T23:20:33.6905015Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6906377Z Command was: CREATE POLICY "Hide soft deleted proveedor_facturas" ON public.proveedor_facturas AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6907360Z 
+2026-06-15T23:20:33.6907369Z 
+2026-06-15T23:20:33.6907705Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6909052Z Command was: CREATE POLICY "Hide soft deleted proveedor_notas_credito" ON public.proveedor_notas_credito AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:33.6910117Z 
+2026-06-15T23:20:33.6910124Z 
+2026-06-15T23:20:33.6910491Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6912980Z Command was: CREATE POLICY "Internal roles read configuracion_global" ON public.configuracion_global FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.6915072Z 
+2026-06-15T23:20:33.6915086Z 
+2026-06-15T23:20:33.6915455Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6917211Z Command was: CREATE POLICY "Members can read own org" ON public.organizations FOR SELECT TO authenticated USING (((id IN ( SELECT public.get_user_org_ids(auth.uid()) AS get_user_org_ids)) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.6918569Z 
+2026-06-15T23:20:33.6918582Z 
+2026-06-15T23:20:33.6918974Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6921282Z Command was: CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.is_org_admin(auth.uid(), organization_id) OR public.has_role(auth.uid(), 'admin'::public.app_role)))));
+2026-06-15T23:20:33.6922966Z 
+2026-06-15T23:20:33.6922981Z 
+2026-06-15T23:20:33.6923362Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6925010Z Command was: CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(auth.uid(), organization_id)) WITH CHECK (public.is_org_admin(auth.uid(), organization_id));
+2026-06-15T23:20:33.6926281Z 
+2026-06-15T23:20:33.6926292Z 
+2026-06-15T23:20:33.6926650Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6930402Z Command was: CREATE POLICY "Org staff manage client_users" ON public.client_users TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.6934040Z 
+2026-06-15T23:20:33.6934057Z 
+2026-06-15T23:20:33.6934453Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6938942Z Command was: CREATE POLICY "Org staff manage tracking_links" ON public.tracking_links TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR public.is_org_admin(auth.uid(), organization_id)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR public.is_org_admin(auth.uid(), organization_id))));
+2026-06-15T23:20:33.6943187Z 
+2026-06-15T23:20:33.6943205Z 
+2026-06-15T23:20:33.6943636Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6947441Z Command was: CREATE POLICY "Staff CRUD crm_actividades" ON public.crm_actividades TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.6951313Z 
+2026-06-15T23:20:33.6951333Z 
+2026-06-15T23:20:33.6951722Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6955584Z Command was: CREATE POLICY "Staff CRUD crm_leads" ON public.crm_leads TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.6958995Z 
+2026-06-15T23:20:33.6959010Z 
+2026-06-15T23:20:33.6959404Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6963090Z Command was: CREATE POLICY "Staff CRUD crm_oportunidades" ON public.crm_oportunidades TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.6966649Z 
+2026-06-15T23:20:33.6966668Z 
+2026-06-15T23:20:33.6967061Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6969250Z Command was: CREATE POLICY "Staff insert tracking_intentos" ON public.tracking_intentos FOR INSERT TO authenticated WITH CHECK ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:33.6971342Z 
+2026-06-15T23:20:33.6971352Z 
+2026-06-15T23:20:33.6971705Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6974259Z Command was: CREATE POLICY "Staff inserta notificaciones org" ON public.crm_notificaciones FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'vendedor'::public.app_role))) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.6976331Z 
+2026-06-15T23:20:33.6976341Z 
+2026-06-15T23:20:33.6976698Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6978996Z Command was: CREATE POLICY "Staff read auditoria_comentarios" ON public.auditoria_comentarios FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:33.6981297Z 
+2026-06-15T23:20:33.6981357Z 
+2026-06-15T23:20:33.6981741Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6984079Z Command was: CREATE POLICY "Staff read auditoria_snapshots" ON public.auditoria_snapshots FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:33.6986006Z 
+2026-06-15T23:20:33.6986020Z 
+2026-06-15T23:20:33.6986387Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6988595Z Command was: CREATE POLICY "Staff read tracking_intentos" ON public.tracking_intentos FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:33.6990479Z 
+2026-06-15T23:20:33.6990488Z 
+2026-06-15T23:20:33.6990736Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6992604Z Command was: CREATE POLICY "Staff write crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (autor_id = auth.uid()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (EXISTS ( SELECT 1
+2026-06-15T23:20:33.6994205Z    FROM public.crm_oportunidades o
+2026-06-15T23:20:33.6994844Z   WHERE ((o.id = crm_comentarios_oportunidad.oportunidad_id) AND (o.vendedor_id = auth.uid()) AND (o.organization_id = public.current_user_org_id()))))))));
+2026-06-15T23:20:33.6995370Z 
+2026-06-15T23:20:33.6995375Z 
+2026-06-15T23:20:33.6995621Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.6996974Z Command was: CREATE POLICY "Super admin CRUD configuracion_global" ON public.configuracion_global TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.6998163Z 
+2026-06-15T23:20:33.6998170Z 
+2026-06-15T23:20:33.6998453Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7000081Z Command was: CREATE POLICY "Super admin CRUD navieras" ON public.navieras TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7001454Z 
+2026-06-15T23:20:33.7001464Z 
+2026-06-15T23:20:33.7001845Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7002912Z Command was: CREATE POLICY "Super admin CRUD planes" ON public.planes TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7003636Z 
+2026-06-15T23:20:33.7003642Z 
+2026-06-15T23:20:33.7003871Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7004823Z Command was: CREATE POLICY "Super admin CRUD puertos" ON public.puertos TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7005550Z 
+2026-06-15T23:20:33.7005554Z 
+2026-06-15T23:20:33.7005774Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7007214Z Command was: CREATE POLICY "Super admin CRUD tipos_contenedor" ON public.tipos_contenedor TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7008143Z 
+2026-06-15T23:20:33.7008148Z 
+2026-06-15T23:20:33.7008362Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7009231Z Command was: CREATE POLICY "Super admin lee todas notificaciones" ON public.crm_notificaciones FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7009865Z 
+2026-06-15T23:20:33.7009869Z 
+2026-06-15T23:20:33.7010085Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7011381Z Command was: CREATE POLICY "Super admin read backup embarques" ON public._backup_merge_embarques_20260602 FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7012127Z 
+2026-06-15T23:20:33.7012132Z 
+2026-06-15T23:20:33.7012350Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7013224Z Command was: CREATE POLICY "Super admin read backup fk remap" ON public._backup_merge_fk_remap_20260602 FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7013865Z 
+2026-06-15T23:20:33.7013870Z 
+2026-06-15T23:20:33.7014077Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7015179Z Command was: CREATE POLICY "Super admins manage all roles" ON public.user_roles TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7016059Z 
+2026-06-15T23:20:33.7016068Z 
+2026-06-15T23:20:33.7016297Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7017318Z Command was: CREATE POLICY "Super admins manage members" ON public.organization_members TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7018107Z 
+2026-06-15T23:20:33.7018112Z 
+2026-06-15T23:20:33.7018360Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7019476Z Command was: CREATE POLICY "Super admins manage organizations" ON public.organizations TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7020467Z 
+2026-06-15T23:20:33.7020473Z 
+2026-06-15T23:20:33.7020817Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7024085Z Command was: CREATE POLICY "Tenant CRUD bbva_movimientos" ON public.bbva_movimientos TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7026951Z 
+2026-06-15T23:20:33.7026968Z 
+2026-06-15T23:20:33.7027350Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7031293Z Command was: CREATE POLICY "Tenant CRUD clientes" ON public.clientes TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7035050Z 
+2026-06-15T23:20:33.7035068Z 
+2026-06-15T23:20:33.7035499Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7039154Z Command was: CREATE POLICY "Tenant CRUD conceptos_costo" ON public.conceptos_costo TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7042850Z 
+2026-06-15T23:20:33.7042866Z 
+2026-06-15T23:20:33.7043255Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7047037Z Command was: CREATE POLICY "Tenant CRUD conceptos_factura" ON public.conceptos_factura TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7050548Z 
+2026-06-15T23:20:33.7050563Z 
+2026-06-15T23:20:33.7050952Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7085313Z Command was: CREATE POLICY "Tenant CRUD conceptos_venta" ON public.conceptos_venta TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7089594Z 
+2026-06-15T23:20:33.7089614Z 
+2026-06-15T23:20:33.7089999Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7094186Z Command was: CREATE POLICY "Tenant CRUD contactos_cliente" ON public.contactos_cliente TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7098061Z 
+2026-06-15T23:20:33.7098077Z 
+2026-06-15T23:20:33.7098447Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7102579Z Command was: CREATE POLICY "Tenant CRUD cotizacion_costos" ON public.cotizacion_costos TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7105999Z 
+2026-06-15T23:20:33.7106011Z 
+2026-06-15T23:20:33.7106390Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7110048Z Command was: CREATE POLICY "Tenant CRUD cotizaciones" ON public.cotizaciones TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7113423Z 
+2026-06-15T23:20:33.7113433Z 
+2026-06-15T23:20:33.7113798Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7117113Z Command was: CREATE POLICY "Tenant CRUD cuentas_bancarias" ON public.cuentas_bancarias TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7120047Z 
+2026-06-15T23:20:33.7120057Z 
+2026-06-15T23:20:33.7120458Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7122868Z Command was: CREATE POLICY "Tenant CRUD demoras venta" ON public.costeo_demoras_venta_tarifa TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7124441Z 
+2026-06-15T23:20:33.7124447Z 
+2026-06-15T23:20:33.7124690Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7127062Z Command was: CREATE POLICY "Tenant CRUD documentos_embarque" ON public.documentos_embarque TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7129854Z 
+2026-06-15T23:20:33.7130091Z 
+2026-06-15T23:20:33.7130482Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7134563Z Command was: CREATE POLICY "Tenant CRUD embarque_contenedores" ON public.embarque_contenedores TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7138097Z 
+2026-06-15T23:20:33.7138107Z 
+2026-06-15T23:20:33.7138470Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7142396Z Command was: CREATE POLICY "Tenant CRUD embarques" ON public.embarques TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7145806Z 
+2026-06-15T23:20:33.7145814Z 
+2026-06-15T23:20:33.7146169Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7150049Z Command was: CREATE POLICY "Tenant CRUD eventos_embarque" ON public.eventos_embarque TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7153631Z 
+2026-06-15T23:20:33.7153640Z 
+2026-06-15T23:20:33.7153995Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7156595Z Command was: CREATE POLICY "Tenant CRUD facturas" ON public.facturas TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7158862Z 
+2026-06-15T23:20:33.7158869Z 
+2026-06-15T23:20:33.7159113Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7163432Z Command was: CREATE POLICY "Tenant CRUD garantias" ON public.embarque_garantias_contenedor TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7165996Z 
+2026-06-15T23:20:33.7166003Z 
+2026-06-15T23:20:33.7166241Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7169498Z Command was: CREATE POLICY "Tenant CRUD notas_embarque" ON public.notas_embarque TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7173108Z 
+2026-06-15T23:20:33.7173116Z 
+2026-06-15T23:20:33.7173428Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7175840Z Command was: CREATE POLICY "Tenant CRUD pagos_factura" ON public.pagos_factura TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7177960Z 
+2026-06-15T23:20:33.7177966Z 
+2026-06-15T23:20:33.7178194Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7180778Z Command was: CREATE POLICY "Tenant CRUD pcc" ON public.proforma_conceptos_consolidados TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7183183Z 
+2026-06-15T23:20:33.7183190Z 
+2026-06-15T23:20:33.7183422Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7185875Z Command was: CREATE POLICY "Tenant CRUD proformas" ON public.proformas TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7188373Z 
+2026-06-15T23:20:33.7188380Z 
+2026-06-15T23:20:33.7188676Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7190716Z Command was: CREATE POLICY "Tenant admin configuracion" ON public.configuracion TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7193441Z 
+2026-06-15T23:20:33.7193454Z 
+2026-06-15T23:20:33.7193804Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7196905Z Command was: CREATE POLICY "Tenant admin crm_cuotas_vendedor" ON public.crm_cuotas_vendedor TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7198889Z 
+2026-06-15T23:20:33.7198895Z 
+2026-06-15T23:20:33.7199157Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7201368Z Command was: CREATE POLICY "Tenant admin crm_etapas_pipeline" ON public.crm_etapas_pipeline TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7203283Z 
+2026-06-15T23:20:33.7203288Z 
+2026-06-15T23:20:33.7203522Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7205756Z Command was: CREATE POLICY "Tenant admin crm_motivos_perdida" ON public.crm_motivos_perdida TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7207504Z 
+2026-06-15T23:20:33.7207510Z 
+2026-06-15T23:20:33.7207845Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7209994Z Command was: CREATE POLICY "Tenant admin crm_plantillas_mensaje" ON public.crm_plantillas_mensaje TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7212375Z 
+2026-06-15T23:20:33.7212382Z 
+2026-06-15T23:20:33.7212615Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7213823Z Command was: CREATE POLICY "Tenant insert bitacora" ON public.bitacora_actividad FOR INSERT TO authenticated WITH CHECK (((usuario_id = auth.uid()) AND ((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7214788Z 
+2026-06-15T23:20:33.7214794Z 
+2026-06-15T23:20:33.7215026Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7215792Z Command was: CREATE POLICY "Tenant insert own idempotency_keys" ON public.idempotency_keys FOR INSERT TO authenticated WITH CHECK ((user_id = auth.uid()));
+2026-06-15T23:20:33.7216443Z 
+2026-06-15T23:20:33.7216448Z 
+2026-06-15T23:20:33.7216666Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7219252Z Command was: CREATE POLICY "Tenant manage factura_notas_credito" ON public.factura_notas_credito TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7222395Z 
+2026-06-15T23:20:33.7222413Z 
+2026-06-15T23:20:33.7222744Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7225938Z Command was: CREATE POLICY "Tenant manage factura_series" ON public.factura_series TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7228350Z 
+2026-06-15T23:20:33.7228359Z 
+2026-06-15T23:20:33.7228605Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7230222Z Command was: CREATE POLICY "Tenant read configuracion" ON public.configuracion FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7231514Z 
+2026-06-15T23:20:33.7231524Z 
+2026-06-15T23:20:33.7231889Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7233666Z Command was: CREATE POLICY "Tenant read crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7234916Z 
+2026-06-15T23:20:33.7234923Z 
+2026-06-15T23:20:33.7235280Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7236856Z Command was: CREATE POLICY "Tenant read crm_cuotas_vendedor" ON public.crm_cuotas_vendedor FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7238030Z 
+2026-06-15T23:20:33.7238035Z 
+2026-06-15T23:20:33.7238383Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7239956Z Command was: CREATE POLICY "Tenant read crm_etapas_pipeline" ON public.crm_etapas_pipeline FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7241414Z 
+2026-06-15T23:20:33.7241425Z 
+2026-06-15T23:20:33.7241782Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7243093Z Command was: CREATE POLICY "Tenant read crm_motivos_perdida" ON public.crm_motivos_perdida FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7244143Z 
+2026-06-15T23:20:33.7244150Z 
+2026-06-15T23:20:33.7244514Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7246234Z Command was: CREATE POLICY "Tenant read crm_plantillas_mensaje" ON public.crm_plantillas_mensaje FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7247654Z 
+2026-06-15T23:20:33.7247666Z 
+2026-06-15T23:20:33.7248043Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7249804Z Command was: CREATE POLICY "Tenant read factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7250992Z 
+2026-06-15T23:20:33.7251002Z 
+2026-06-15T23:20:33.7251514Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7252984Z Command was: CREATE POLICY "Tenant read factura_series" ON public.factura_series FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7254268Z 
+2026-06-15T23:20:33.7254277Z 
+2026-06-15T23:20:33.7254630Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7256130Z Command was: CREATE POLICY "Tenant read own idempotency_keys" ON public.idempotency_keys FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7257254Z 
+2026-06-15T23:20:33.7257263Z 
+2026-06-15T23:20:33.7257621Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7260225Z Command was: CREATE POLICY "Tenant staff inserta notificaciones" ON public.notificaciones_cliente FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7261755Z 
+2026-06-15T23:20:33.7261760Z 
+2026-06-15T23:20:33.7261991Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7263528Z Command was: CREATE POLICY "Tenant staff lee notificaciones" ON public.notificaciones_cliente FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7265466Z 
+2026-06-15T23:20:33.7265477Z 
+2026-06-15T23:20:33.7265826Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7267265Z Command was: CREATE POLICY "Tenant user own bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:33.7268545Z 
+2026-06-15T23:20:33.7268552Z 
+2026-06-15T23:20:33.7268912Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7270757Z Command was: CREATE POLICY "Tenant viewer clientes" ON public.clientes FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7272236Z 
+2026-06-15T23:20:33.7272244Z 
+2026-06-15T23:20:33.7272473Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7273627Z Command was: CREATE POLICY "Tenant viewer conceptos_costo" ON public.conceptos_costo FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7274545Z 
+2026-06-15T23:20:33.7274549Z 
+2026-06-15T23:20:33.7274759Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7275911Z Command was: CREATE POLICY "Tenant viewer conceptos_factura" ON public.conceptos_factura FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7276826Z 
+2026-06-15T23:20:33.7276829Z 
+2026-06-15T23:20:33.7277047Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7278171Z Command was: CREATE POLICY "Tenant viewer conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7279082Z 
+2026-06-15T23:20:33.7279086Z 
+2026-06-15T23:20:33.7279300Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7280463Z Command was: CREATE POLICY "Tenant viewer contactos_cliente" ON public.contactos_cliente FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7281535Z 
+2026-06-15T23:20:33.7281542Z 
+2026-06-15T23:20:33.7281758Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7282928Z Command was: CREATE POLICY "Tenant viewer cotizacion_costos" ON public.cotizacion_costos FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7283865Z 
+2026-06-15T23:20:33.7283869Z 
+2026-06-15T23:20:33.7284078Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7285200Z Command was: CREATE POLICY "Tenant viewer cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7286335Z 
+2026-06-15T23:20:33.7286340Z 
+2026-06-15T23:20:33.7286555Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7287858Z Command was: CREATE POLICY "Tenant viewer crm_actividades" ON public.crm_actividades FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7289093Z 
+2026-06-15T23:20:33.7289098Z 
+2026-06-15T23:20:33.7289329Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7290439Z Command was: CREATE POLICY "Tenant viewer crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7291568Z 
+2026-06-15T23:20:33.7291572Z 
+2026-06-15T23:20:33.7291792Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7293092Z Command was: CREATE POLICY "Tenant viewer crm_oportunidades" ON public.crm_oportunidades FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7294028Z 
+2026-06-15T23:20:33.7294032Z 
+2026-06-15T23:20:33.7294311Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7295688Z Command was: CREATE POLICY "Tenant viewer documentos_embarque" ON public.documentos_embarque FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7296636Z 
+2026-06-15T23:20:33.7296641Z 
+2026-06-15T23:20:33.7296870Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7298290Z Command was: CREATE POLICY "Tenant viewer embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7299257Z 
+2026-06-15T23:20:33.7299262Z 
+2026-06-15T23:20:33.7299480Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7300796Z Command was: CREATE POLICY "Tenant viewer embarques" ON public.embarques FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7301824Z 
+2026-06-15T23:20:33.7301830Z 
+2026-06-15T23:20:33.7302047Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7303302Z Command was: CREATE POLICY "Tenant viewer eventos_embarque" ON public.eventos_embarque FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7304358Z 
+2026-06-15T23:20:33.7304363Z 
+2026-06-15T23:20:33.7304587Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7305782Z Command was: CREATE POLICY "Tenant viewer facturas" ON public.facturas FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7306772Z 
+2026-06-15T23:20:33.7306777Z 
+2026-06-15T23:20:33.7307015Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7308268Z Command was: CREATE POLICY "Tenant viewer garantias" ON public.embarque_garantias_contenedor FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7309621Z 
+2026-06-15T23:20:33.7309626Z 
+2026-06-15T23:20:33.7309848Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7311073Z Command was: CREATE POLICY "Tenant viewer notas_embarque" ON public.notas_embarque FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7312270Z 
+2026-06-15T23:20:33.7312274Z 
+2026-06-15T23:20:33.7312510Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7313646Z Command was: CREATE POLICY "Tenant viewer pagos_factura" ON public.pagos_factura FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7314765Z 
+2026-06-15T23:20:33.7314771Z 
+2026-06-15T23:20:33.7315011Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7316186Z Command was: CREATE POLICY "Tenant viewer pcc" ON public.proforma_conceptos_consolidados FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7317225Z 
+2026-06-15T23:20:33.7317230Z 
+2026-06-15T23:20:33.7317491Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7318681Z Command was: CREATE POLICY "Tenant viewer proformas" ON public.proformas FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7319668Z 
+2026-06-15T23:20:33.7319676Z 
+2026-06-15T23:20:33.7319897Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7321304Z Command was: CREATE POLICY "Tenant viewer proveedor_facturas" ON public.proveedor_facturas FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7322244Z 
+2026-06-15T23:20:33.7322249Z 
+2026-06-15T23:20:33.7322469Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7323773Z Command was: CREATE POLICY "Tenant viewer proveedores" ON public.proveedores FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:33.7324699Z 
+2026-06-15T23:20:33.7324704Z 
+2026-06-15T23:20:33.7324928Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7326927Z Command was: CREATE POLICY "Tenant write auditoria_comentarios" ON public.auditoria_comentarios TO authenticated USING ((((organization_id = public.current_user_org_id()) AND (public.has_org_role(auth.uid(), organization_id, 'admin'::public.app_role) OR public.has_org_role(auth.uid(), organization_id, 'operador'::public.app_role))) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK ((((organization_id = public.current_user_org_id()) AND (autor_id = auth.uid())) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7328676Z 
+2026-06-15T23:20:33.7328681Z 
+2026-06-15T23:20:33.7328939Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7331051Z Command was: CREATE POLICY "Tenant write auditoria_snapshots" ON public.auditoria_snapshots TO authenticated USING ((((organization_id = public.current_user_org_id()) AND (public.has_org_role(auth.uid(), organization_id, 'admin'::public.app_role) OR public.has_org_role(auth.uid(), organization_id, 'operador'::public.app_role))) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7333100Z 
+2026-06-15T23:20:33.7333106Z 
+2026-06-15T23:20:33.7333341Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7334481Z Command was: CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (public.has_role(auth.uid(), 'admin'::public.app_role) AND (EXISTS ( SELECT 1
+2026-06-15T23:20:33.7335632Z    FROM (public.organization_members om_self
+2026-06-15T23:20:33.7336151Z      JOIN public.organization_members om_target ON ((om_target.organization_id = om_self.organization_id)))
+2026-06-15T23:20:33.7336790Z   WHERE ((om_self.user_id = auth.uid()) AND (om_target.user_id = user_roles.user_id)))))));
+2026-06-15T23:20:33.7337106Z 
+2026-06-15T23:20:33.7337111Z 
+2026-06-15T23:20:33.7337348Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7338492Z Command was: CREATE POLICY "Users read own memberships" ON public.organization_members FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7339198Z 
+2026-06-15T23:20:33.7339202Z 
+2026-06-15T23:20:33.7339426Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7340489Z Command was: CREATE POLICY "Users read own notifications" ON public.notificaciones_internas FOR SELECT TO authenticated USING (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:33.7341412Z 
+2026-06-15T23:20:33.7341416Z 
+2026-06-15T23:20:33.7341640Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7343451Z Command was: CREATE POLICY "Users update own notifications" ON public.notificaciones_internas FOR UPDATE TO authenticated USING (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id()))) WITH CHECK (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:33.7345021Z 
+2026-06-15T23:20:33.7345032Z 
+2026-06-15T23:20:33.7345390Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7346704Z Command was: CREATE POLICY "Usuario lee sus notificaciones" ON public.crm_notificaciones FOR SELECT TO authenticated USING (((user_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:33.7347419Z 
+2026-06-15T23:20:33.7347432Z 
+2026-06-15T23:20:33.7347662Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7349272Z Command was: CREATE POLICY "Usuario marca leida su notificacion" ON public.crm_notificaciones FOR UPDATE TO authenticated USING (((user_id = auth.uid()) AND (organization_id = public.current_user_org_id()))) WITH CHECK (((user_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:33.7350205Z 
+2026-06-15T23:20:33.7350210Z 
+2026-06-15T23:20:33.7350437Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7352494Z Command was: CREATE POLICY "Vendedor own crm_actividades" ON public.crm_actividades TO authenticated USING (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (responsable_id = auth.uid()))) WITH CHECK (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (responsable_id = auth.uid())));
+2026-06-15T23:20:33.7354196Z 
+2026-06-15T23:20:33.7354202Z 
+2026-06-15T23:20:33.7354530Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7356156Z Command was: CREATE POLICY "Vendedor own crm_leads" ON public.crm_leads TO authenticated USING (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid()))) WITH CHECK (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid())));
+2026-06-15T23:20:33.7357676Z 
+2026-06-15T23:20:33.7357683Z 
+2026-06-15T23:20:33.7357952Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7359540Z Command was: CREATE POLICY "Vendedor own crm_oportunidades" ON public.crm_oportunidades TO authenticated USING (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid()))) WITH CHECK (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid())));
+2026-06-15T23:20:33.7361493Z 
+2026-06-15T23:20:33.7361503Z 
+2026-06-15T23:20:33.7361867Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7362921Z Command was: CREATE POLICY _ci_stub_deny_all ON public.tracking_externo TO authenticated USING (false) WITH CHECK (false);
+2026-06-15T23:20:33.7363635Z 
+2026-06-15T23:20:33.7363642Z 
+2026-06-15T23:20:33.7363996Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7365253Z Command was: CREATE POLICY "app_logs insert authenticated" ON public.app_logs FOR INSERT TO authenticated WITH CHECK (((user_id IS NULL) OR (user_id = auth.uid())));
+2026-06-15T23:20:33.7366192Z 
+2026-06-15T23:20:33.7366204Z 
+2026-06-15T23:20:33.7366486Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7368475Z Command was: CREATE POLICY com_dev_admin_full ON public.comisiones_devengadas TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7370195Z 
+2026-06-15T23:20:33.7370200Z 
+2026-06-15T23:20:33.7370416Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7371500Z Command was: CREATE POLICY com_dev_self_read ON public.comisiones_devengadas FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (vendedora_id = auth.uid())));
+2026-06-15T23:20:33.7372163Z 
+2026-06-15T23:20:33.7372167Z 
+2026-06-15T23:20:33.7372379Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7373061Z Command was: CREATE POLICY costeo_agentes_select_org ON public.costeo_agentes FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7373633Z    FROM public.organization_members m
+2026-06-15T23:20:33.7374084Z   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7374440Z 
+2026-06-15T23:20:33.7374444Z 
+2026-06-15T23:20:33.7374658Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7375286Z Command was: CREATE POLICY costeo_agentes_write_org ON public.costeo_agentes TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7375981Z    FROM public.organization_members m
+2026-06-15T23:20:33.7376543Z   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7377194Z    FROM public.organization_members m
+2026-06-15T23:20:33.7377623Z   WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7377956Z 
+2026-06-15T23:20:33.7377961Z 
+2026-06-15T23:20:33.7378178Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7378977Z Command was: CREATE POLICY costeo_demoras_select_org ON public.costeo_naviera_demoras_tarifa FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7379908Z    FROM (public.costeo_navieras_condiciones c
+2026-06-15T23:20:33.7380359Z      JOIN public.organization_members m ON ((m.organization_id = c.organization_id)))
+2026-06-15T23:20:33.7380963Z   WHERE ((c.id = costeo_naviera_demoras_tarifa.naviera_condicion_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7381448Z 
+2026-06-15T23:20:33.7381461Z 
+2026-06-15T23:20:33.7381675Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7382480Z Command was: CREATE POLICY costeo_demoras_write_org ON public.costeo_naviera_demoras_tarifa TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7383248Z    FROM (public.costeo_navieras_condiciones c
+2026-06-15T23:20:33.7383908Z      JOIN public.organization_members m ON ((m.organization_id = c.organization_id)))
+2026-06-15T23:20:33.7384766Z   WHERE ((c.id = costeo_naviera_demoras_tarifa.naviera_condicion_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7385721Z    FROM (public.costeo_navieras_condiciones c
+2026-06-15T23:20:33.7386421Z      JOIN public.organization_members m ON ((m.organization_id = c.organization_id)))
+2026-06-15T23:20:33.7387350Z   WHERE ((c.id = costeo_naviera_demoras_tarifa.naviera_condicion_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7387823Z 
+2026-06-15T23:20:33.7387842Z 
+2026-06-15T23:20:33.7388201Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7389434Z Command was: CREATE POLICY costeo_nav_cond_select_org ON public.costeo_navieras_condiciones FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7390460Z    FROM public.organization_members m
+2026-06-15T23:20:33.7391386Z   WHERE ((m.organization_id = costeo_navieras_condiciones.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7391840Z 
+2026-06-15T23:20:33.7391846Z 
+2026-06-15T23:20:33.7392072Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7392774Z Command was: CREATE POLICY costeo_nav_cond_write_org ON public.costeo_navieras_condiciones TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7393355Z    FROM public.organization_members m
+2026-06-15T23:20:33.7394039Z   WHERE ((m.organization_id = costeo_navieras_condiciones.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7394706Z    FROM public.organization_members m
+2026-06-15T23:20:33.7395446Z   WHERE ((m.organization_id = costeo_navieras_condiciones.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7396071Z 
+2026-06-15T23:20:33.7396079Z 
+2026-06-15T23:20:33.7396438Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7397632Z Command was: CREATE POLICY costeo_recargos_select_org ON public.costeo_tarifa_recargos FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7398600Z    FROM (public.costeo_tarifas t
+2026-06-15T23:20:33.7399230Z      JOIN public.organization_members m ON ((m.organization_id = t.organization_id)))
+2026-06-15T23:20:33.7400310Z   WHERE ((t.id = costeo_tarifa_recargos.tarifa_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7400804Z 
+2026-06-15T23:20:33.7400811Z 
+2026-06-15T23:20:33.7401321Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7402586Z Command was: CREATE POLICY costeo_recargos_write_org ON public.costeo_tarifa_recargos TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7403519Z    FROM (public.costeo_tarifas t
+2026-06-15T23:20:33.7404149Z      JOIN public.organization_members m ON ((m.organization_id = t.organization_id)))
+2026-06-15T23:20:33.7404792Z   WHERE ((t.id = costeo_tarifa_recargos.tarifa_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7405282Z    FROM (public.costeo_tarifas t
+2026-06-15T23:20:33.7405714Z      JOIN public.organization_members m ON ((m.organization_id = t.organization_id)))
+2026-06-15T23:20:33.7406538Z   WHERE ((t.id = costeo_tarifa_recargos.tarifa_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7406925Z 
+2026-06-15T23:20:33.7406930Z 
+2026-06-15T23:20:33.7407160Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7407832Z Command was: CREATE POLICY costeo_rutas_select_org ON public.costeo_rutas FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7408403Z    FROM public.organization_members m
+2026-06-15T23:20:33.7408837Z   WHERE ((m.organization_id = costeo_rutas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7409217Z 
+2026-06-15T23:20:33.7409223Z 
+2026-06-15T23:20:33.7409595Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7410432Z Command was: CREATE POLICY costeo_rutas_write_org ON public.costeo_rutas TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7410982Z    FROM public.organization_members m
+2026-06-15T23:20:33.7411633Z   WHERE ((m.organization_id = costeo_rutas.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7412171Z    FROM public.organization_members m
+2026-06-15T23:20:33.7412593Z   WHERE ((m.organization_id = costeo_rutas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7413050Z 
+2026-06-15T23:20:33.7413057Z 
+2026-06-15T23:20:33.7413384Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7414274Z Command was: CREATE POLICY costeo_tarifas_select_org ON public.costeo_tarifas FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7414839Z    FROM public.organization_members m
+2026-06-15T23:20:33.7415278Z   WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7415629Z 
+2026-06-15T23:20:33.7415634Z 
+2026-06-15T23:20:33.7415916Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7416860Z Command was: CREATE POLICY costeo_tarifas_write_org ON public.costeo_tarifas TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7417403Z    FROM public.organization_members m
+2026-06-15T23:20:33.7417911Z   WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:33.7418456Z    FROM public.organization_members m
+2026-06-15T23:20:33.7419051Z   WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:33.7419559Z 
+2026-06-15T23:20:33.7419567Z 
+2026-06-15T23:20:33.7419794Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7422054Z Command was: CREATE POLICY liq_admin_full ON public.liquidaciones_comision TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7424419Z 
+2026-06-15T23:20:33.7424427Z 
+2026-06-15T23:20:33.7424707Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7425932Z Command was: CREATE POLICY liq_self_read ON public.liquidaciones_comision FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (vendedora_id = auth.uid())));
+2026-06-15T23:20:33.7426592Z 
+2026-06-15T23:20:33.7426597Z 
+2026-06-15T23:20:33.7426829Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7427697Z Command was: CREATE POLICY "org admin lee logs de su org" ON public.app_logs FOR SELECT TO authenticated USING (((organization_id IS NOT NULL) AND public.is_org_admin(auth.uid(), organization_id)));
+2026-06-15T23:20:33.7428681Z 
+2026-06-15T23:20:33.7428688Z 
+2026-06-15T23:20:33.7428955Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7431289Z Command was: CREATE POLICY presupuesto_categorias_admin_delete ON public.presupuesto_categorias FOR DELETE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7433240Z 
+2026-06-15T23:20:33.7433247Z 
+2026-06-15T23:20:33.7433603Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7435864Z Command was: CREATE POLICY presupuesto_categorias_admin_insert ON public.presupuesto_categorias FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7437042Z 
+2026-06-15T23:20:33.7437051Z 
+2026-06-15T23:20:33.7437272Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7438644Z Command was: CREATE POLICY presupuesto_categorias_admin_update ON public.presupuesto_categorias FOR UPDATE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7439775Z 
+2026-06-15T23:20:33.7439779Z 
+2026-06-15T23:20:33.7439993Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7441007Z Command was: CREATE POLICY presupuesto_categorias_select ON public.presupuesto_categorias FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7442049Z 
+2026-06-15T23:20:33.7442074Z 
+2026-06-15T23:20:33.7442316Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7443678Z Command was: CREATE POLICY presupuesto_mensual_admin_delete ON public.presupuesto_mensual FOR DELETE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7444918Z 
+2026-06-15T23:20:33.7444924Z 
+2026-06-15T23:20:33.7445156Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7446622Z Command was: CREATE POLICY presupuesto_mensual_admin_insert ON public.presupuesto_mensual FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7448275Z 
+2026-06-15T23:20:33.7448283Z 
+2026-06-15T23:20:33.7448520Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7449868Z Command was: CREATE POLICY presupuesto_mensual_admin_update ON public.presupuesto_mensual FOR UPDATE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7451323Z 
+2026-06-15T23:20:33.7451329Z 
+2026-06-15T23:20:33.7451550Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7452567Z Command was: CREATE POLICY presupuesto_mensual_select ON public.presupuesto_mensual FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:33.7453348Z 
+2026-06-15T23:20:33.7453365Z 
+2026-06-15T23:20:33.7453690Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7454860Z Command was: CREATE POLICY "super_admin actualiza alertas" ON public.alertas_sistema FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7455691Z 
+2026-06-15T23:20:33.7455695Z 
+2026-06-15T23:20:33.7455927Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7456863Z Command was: CREATE POLICY "super_admin lee alertas" ON public.alertas_sistema FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7457573Z 
+2026-06-15T23:20:33.7457578Z 
+2026-06-15T23:20:33.7457913Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7459286Z Command was: CREATE POLICY "super_admin lee todos los logs" ON public.app_logs FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:33.7460269Z 
+2026-06-15T23:20:33.7460277Z 
+2026-06-15T23:20:33.7460652Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7464165Z Command was: CREATE POLICY vendedora_config_admin_full ON public.vendedora_config TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7467076Z 
+2026-06-15T23:20:33.7467099Z 
+2026-06-15T23:20:33.7467501Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7468966Z Command was: CREATE POLICY vendedora_config_self_read ON public.vendedora_config FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (user_id = auth.uid())));
+2026-06-15T23:20:33.7470067Z 
+2026-06-15T23:20:33.7470077Z 
+2026-06-15T23:20:33.7470500Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7472154Z Command was: CREATE POLICY "Admin/operador delete documentos" ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name)));
+2026-06-15T23:20:33.7473516Z 
+2026-06-15T23:20:33.7473523Z 
+2026-06-15T23:20:33.7473919Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7476262Z Command was: CREATE POLICY "Admin/operador update documentos" ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name))) WITH CHECK (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name)));
+2026-06-15T23:20:33.7478034Z 
+2026-06-15T23:20:33.7478042Z 
+2026-06-15T23:20:33.7478413Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7479900Z Command was: CREATE POLICY "Admin/operador upload documentos" ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name)));
+2026-06-15T23:20:33.7481248Z 
+2026-06-15T23:20:33.7481259Z 
+2026-06-15T23:20:33.7481516Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7483036Z Command was: CREATE POLICY "Cliente read own factura files" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'facturas'::text) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (EXISTS ( SELECT 1
+2026-06-15T23:20:33.7484441Z    FROM public.facturas f
+2026-06-15T23:20:33.7485392Z   WHERE (((f.id)::text = (storage.foldername(objects.name))[2]) AND (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
+2026-06-15T23:20:33.7486187Z 
+2026-06-15T23:20:33.7486192Z 
+2026-06-15T23:20:33.7486504Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7488357Z Command was: CREATE POLICY "Org members read facturas" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'facturas'::text) AND (public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((storage.foldername(name))[1] = (public.current_user_org_id())::text))));
+2026-06-15T23:20:33.7489851Z 
+2026-06-15T23:20:33.7489864Z 
+2026-06-15T23:20:33.7490221Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7492039Z Command was: CREATE POLICY "Org staff delete facturas" ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'facturas'::text) AND ((storage.foldername(name))[1] = (public.current_user_org_id())::text) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7493658Z 
+2026-06-15T23:20:33.7493672Z 
+2026-06-15T23:20:33.7494038Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7496372Z Command was: CREATE POLICY "Org staff update facturas" ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'facturas'::text) AND ((storage.foldername(name))[1] = (public.current_user_org_id())::text) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7498002Z 
+2026-06-15T23:20:33.7498011Z 
+2026-06-15T23:20:33.7498385Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7500676Z Command was: CREATE POLICY "Org staff upload facturas" ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'facturas'::text) AND ((storage.foldername(name))[1] = (public.current_user_org_id())::text) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7502854Z 
+2026-06-15T23:20:33.7502867Z 
+2026-06-15T23:20:33.7503411Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7504940Z Command was: CREATE POLICY "Tenant scoped read documentos" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'documentos'::text) AND (public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
+2026-06-15T23:20:33.7506440Z    FROM (public.documentos_embarque d
+2026-06-15T23:20:33.7506913Z      JOIN public.embarques e ON ((e.id = d.embarque_id)))
+2026-06-15T23:20:33.7508001Z   WHERE ((d.archivo = objects.name) AND (d.organization_id = public.current_user_org_id()) AND (e.organization_id = public.current_user_org_id())))) OR (EXISTS ( SELECT 1
+2026-06-15T23:20:33.7509064Z    FROM (public.documentos_embarque d
+2026-06-15T23:20:33.7509578Z      JOIN public.embarques e ON ((e.id = d.embarque_id)))
+2026-06-15T23:20:33.7510669Z   WHERE ((d.archivo = objects.name) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))))));
+2026-06-15T23:20:33.7511857Z 
+2026-06-15T23:20:33.7511865Z 
+2026-06-15T23:20:33.7512221Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7514865Z Command was: CREATE POLICY "Usuario borra sus imágenes feedback" ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'reportes-feedback'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7516815Z 
+2026-06-15T23:20:33.7516843Z 
+2026-06-15T23:20:33.7517207Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7519547Z Command was: CREATE POLICY "Usuario lee sus imágenes feedback" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'reportes-feedback'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:33.7521619Z 
+2026-06-15T23:20:33.7521647Z 
+2026-06-15T23:20:33.7522096Z pg_restore: error: could not execute query: ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:33.7524412Z Command was: CREATE POLICY "Usuario sube sus imágenes feedback" ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'reportes-feedback'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));
+2026-06-15T23:20:33.7525751Z 
+2026-06-15T23:20:33.7525758Z 
+2026-06-15T23:20:33.7526052Z pg_restore: warning: errors ignored on restore: 197
+2026-06-15T23:20:33.7549515Z ##[error]Process completed with exit code 1.

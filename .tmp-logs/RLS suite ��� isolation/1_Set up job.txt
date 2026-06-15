@@ -1,0 +1,31 @@
+﻿2026-06-15T23:20:17.0343935Z Current runner version: '2.335.1'
+2026-06-15T23:20:17.0370478Z ##[group]Runner Image Provisioner
+2026-06-15T23:20:17.0371493Z Hosted Compute Agent
+2026-06-15T23:20:17.0372105Z Version: 20260527.539
+2026-06-15T23:20:17.0372739Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-15T23:20:17.0373559Z Build Date: 2026-05-27T21:39:57Z
+2026-06-15T23:20:17.0374297Z Worker ID: {e133b31a-34fe-4394-8d27-a77a84dbefe0}
+2026-06-15T23:20:17.0375124Z Azure Region: westus
+2026-06-15T23:20:17.0375710Z ##[endgroup]
+2026-06-15T23:20:17.0377170Z ##[group]Operating System
+2026-06-15T23:20:17.0377939Z Ubuntu
+2026-06-15T23:20:17.0378525Z 24.04.4
+2026-06-15T23:20:17.0379122Z LTS
+2026-06-15T23:20:17.0379667Z ##[endgroup]
+2026-06-15T23:20:17.0380228Z ##[group]Runner Image
+2026-06-15T23:20:17.0381117Z Image: ubuntu-24.04
+2026-06-15T23:20:17.0381751Z Version: 20260607.184.1
+2026-06-15T23:20:17.0382823Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-15T23:20:17.0384660Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-15T23:20:17.0385742Z ##[endgroup]
+2026-06-15T23:20:17.0386907Z ##[group]GITHUB_TOKEN Permissions
+2026-06-15T23:20:17.0388826Z Contents: read
+2026-06-15T23:20:17.0389473Z Metadata: read
+2026-06-15T23:20:17.0390060Z ##[endgroup]
+2026-06-15T23:20:17.0392525Z Secret source: Actions
+2026-06-15T23:20:17.0393378Z Prepare workflow directory
+2026-06-15T23:20:17.0867256Z Prepare all required actions
+2026-06-15T23:20:17.0906184Z Getting action download info
+2026-06-15T23:20:17.4704202Z Download action repository 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-15T23:20:17.9047118Z Download action repository 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-06-15T23:20:18.5859074Z Complete job name: RLS suite — isolation

@@ -1,0 +1,1122 @@
+﻿2026-06-15T23:20:37.5822002Z Print service container logs: 5eb634ee6d764ec7b0462f2f351cc73f_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_6ac23f
+2026-06-15T23:20:37.5829893Z ##[command]/usr/bin/docker logs --details 7d78154583b67e55e3b6e5f2d966b6f564aa86fceb1a46313f8b1e39202f2fa4
+2026-06-15T23:20:37.5990931Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:20:37.5992291Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:20:37.5994383Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:20:37.5996108Z  This user must also own the server process.
+2026-06-15T23:20:37.5998235Z  2026-06-15 23:20:28.359 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:20:37.5999744Z  
+2026-06-15T23:20:37.6000851Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:20:37.6001903Z  2026-06-15 23:20:28.360 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:20:37.6002751Z  2026-06-15 23:20:28.360 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:20:37.6003682Z  2026-06-15 23:20:28.361 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:20:37.6005021Z  2026-06-15 23:20:28.364 UTC [62] LOG:  database system was shut down at 2026-06-15 23:20:28 UTC
+2026-06-15T23:20:37.6005922Z  2026-06-15 23:20:28.368 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:20:37.6006746Z  2026-06-15 23:20:37.254 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6008565Z  2026-06-15 23:20:37.254 UTC [74] STATEMENT:  CREATE POLICY "Admins CRUD navieras" ON public.navieras TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+2026-06-15T23:20:37.6010505Z  	
+2026-06-15T23:20:37.6010848Z  	
+2026-06-15T23:20:37.6011150Z  	
+2026-06-15T23:20:37.6011618Z  2026-06-15 23:20:37.254 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6013385Z  2026-06-15 23:20:37.254 UTC [74] STATEMENT:  CREATE POLICY "Admins CRUD puertos" ON public.puertos TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+2026-06-15T23:20:37.6014995Z  	
+2026-06-15T23:20:37.6015281Z  	
+2026-06-15T23:20:37.6015560Z  	
+2026-06-15T23:20:37.6016022Z  2026-06-15 23:20:37.254 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6017917Z  2026-06-15 23:20:37.254 UTC [74] STATEMENT:  CREATE POLICY "Admins CRUD tipos_contenedor" ON public.tipos_contenedor TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+2026-06-15T23:20:37.6019349Z  	
+2026-06-15T23:20:37.6019535Z  	
+2026-06-15T23:20:37.6019708Z  	
+2026-06-15T23:20:37.6019985Z  2026-06-15 23:20:37.254 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6022870Z  2026-06-15 23:20:37.254 UTC [74] STATEMENT:  CREATE POLICY "Autenticados pueden leer navieras" ON public.navieras FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:37.6023665Z  	
+2026-06-15T23:20:37.6023989Z  	
+2026-06-15T23:20:37.6024260Z  	
+2026-06-15T23:20:37.6024710Z  2026-06-15 23:20:37.255 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6025901Z  2026-06-15 23:20:37.255 UTC [74] STATEMENT:  CREATE POLICY "Autenticados pueden leer puertos" ON public.puertos FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:37.6026999Z  	
+2026-06-15T23:20:37.6027281Z  	
+2026-06-15T23:20:37.6027559Z  	
+2026-06-15T23:20:37.6028021Z  2026-06-15 23:20:37.255 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6029855Z  2026-06-15 23:20:37.255 UTC [74] STATEMENT:  CREATE POLICY "Autenticados pueden leer tipos_contenedor" ON public.tipos_contenedor FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:37.6032105Z  	
+2026-06-15T23:20:37.6032683Z  	
+2026-06-15T23:20:37.6032982Z  	
+2026-06-15T23:20:37.6033695Z  2026-06-15 23:20:37.255 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6035141Z  2026-06-15 23:20:37.255 UTC [74] STATEMENT:  CREATE POLICY "Authenticated read planes" ON public.planes FOR SELECT TO authenticated USING (true);
+2026-06-15T23:20:37.6036470Z  	
+2026-06-15T23:20:37.6036936Z  	
+2026-06-15T23:20:37.6037606Z  	
+2026-06-15T23:20:37.6038078Z  2026-06-15 23:20:37.255 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6041720Z  2026-06-15 23:20:37.255 UTC [74] STATEMENT:  CREATE POLICY "Author update crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR UPDATE TO authenticated USING (((autor_id = auth.uid()) AND (organization_id = public.current_user_org_id()))) WITH CHECK (((autor_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:37.6057755Z  	
+2026-06-15T23:20:37.6058338Z  	
+2026-06-15T23:20:37.6058816Z  	
+2026-06-15T23:20:37.6059677Z  2026-06-15 23:20:37.256 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6063470Z  2026-06-15 23:20:37.256 UTC [74] STATEMENT:  CREATE POLICY "Client read own client_users" ON public.client_users FOR SELECT TO authenticated USING ((user_id = auth.uid()));
+2026-06-15T23:20:37.6065305Z  	
+2026-06-15T23:20:37.6065893Z  	
+2026-06-15T23:20:37.6066694Z  	
+2026-06-15T23:20:37.6071132Z  2026-06-15 23:20:37.256 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6072654Z  2026-06-15 23:20:37.256 UTC [74] STATEMENT:  CREATE POLICY "Client read own org" ON public.organizations FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (id IN ( SELECT client_users.organization_id
+2026-06-15T23:20:37.6079961Z  	   FROM public.client_users
+2026-06-15T23:20:37.6080812Z  	  WHERE (client_users.user_id = auth.uid())))));
+2026-06-15T23:20:37.6081431Z  	
+2026-06-15T23:20:37.6082045Z  	
+2026-06-15T23:20:37.6082330Z  	
+2026-06-15T23:20:37.6083057Z  2026-06-15 23:20:37.256 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6087462Z  2026-06-15 23:20:37.256 UTC [74] STATEMENT:  CREATE POLICY "Cliente lee sus notificaciones" ON public.notificaciones_cliente FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:37.6089320Z  	
+2026-06-15T23:20:37.6089795Z  	
+2026-06-15T23:20:37.6090150Z  	
+2026-06-15T23:20:37.6090720Z  2026-06-15 23:20:37.256 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6107875Z  2026-06-15 23:20:37.256 UTC [74] STATEMENT:  CREATE POLICY "Cliente marca leida su notificacion" ON public.notificaciones_cliente FOR UPDATE TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))) WITH CHECK ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:37.6109502Z  	
+2026-06-15T23:20:37.6109678Z  	
+2026-06-15T23:20:37.6109857Z  	
+2026-06-15T23:20:37.6110131Z  2026-06-15 23:20:37.257 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6111685Z  2026-06-15 23:20:37.257 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own clientes" ON public.clientes FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:37.6112702Z  	
+2026-06-15T23:20:37.6112870Z  	
+2026-06-15T23:20:37.6113034Z  	
+2026-06-15T23:20:37.6113305Z  2026-06-15 23:20:37.258 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6114321Z  2026-06-15 23:20:37.258 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:37.6115492Z  	   FROM public.embarques
+2026-06-15T23:20:37.6115963Z  	  WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6116460Z  	
+2026-06-15T23:20:37.6116630Z  	
+2026-06-15T23:20:37.6116796Z  	
+2026-06-15T23:20:37.6117069Z  2026-06-15 23:20:37.258 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6118833Z  2026-06-15 23:20:37.258 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)) AND (estado = ANY (ARRAY['Enviada'::public.estado_cotizacion, 'Aceptada'::public.estado_cotizacion, 'Rechazada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion]))));
+2026-06-15T23:20:37.6120768Z  	
+2026-06-15T23:20:37.6120943Z  	
+2026-06-15T23:20:37.6121109Z  	
+2026-06-15T23:20:37.6121372Z  2026-06-15 23:20:37.258 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6122384Z  2026-06-15 23:20:37.258 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:37.6123516Z  	   FROM public.embarques
+2026-06-15T23:20:37.6123990Z  	  WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6124474Z  	
+2026-06-15T23:20:37.6124640Z  	
+2026-06-15T23:20:37.6124810Z  	
+2026-06-15T23:20:37.6125077Z  2026-06-15 23:20:37.259 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6126131Z  2026-06-15 23:20:37.259 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT e.id
+2026-06-15T23:20:37.6127123Z  	   FROM public.embarques e
+2026-06-15T23:20:37.6127557Z  	  WHERE (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6128015Z  	
+2026-06-15T23:20:37.6128179Z  	
+2026-06-15T23:20:37.6128344Z  	
+2026-06-15T23:20:37.6128603Z  2026-06-15 23:20:37.259 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6129754Z  2026-06-15 23:20:37.259 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:37.6131103Z  	
+2026-06-15T23:20:37.6131272Z  	
+2026-06-15T23:20:37.6131444Z  	
+2026-06-15T23:20:37.6131697Z  2026-06-15 23:20:37.259 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6132668Z  2026-06-15 23:20:37.259 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:37.6133591Z  	   FROM public.embarques
+2026-06-15T23:20:37.6134034Z  	  WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6134518Z  	
+2026-06-15T23:20:37.6134684Z  	
+2026-06-15T23:20:37.6134854Z  	
+2026-06-15T23:20:37.6135118Z  2026-06-15 23:20:37.260 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6136148Z  2026-06-15 23:20:37.260 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (factura_id IN ( SELECT f.id
+2026-06-15T23:20:37.6137241Z  	   FROM public.facturas f
+2026-06-15T23:20:37.6137681Z  	  WHERE (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6138133Z  	
+2026-06-15T23:20:37.6138302Z  	
+2026-06-15T23:20:37.6138479Z  	
+2026-06-15T23:20:37.6138746Z  2026-06-15 23:20:37.260 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6139869Z  2026-06-15 23:20:37.260 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:37.6141129Z  	
+2026-06-15T23:20:37.6141306Z  	
+2026-06-15T23:20:37.6141478Z  	
+2026-06-15T23:20:37.6141742Z  2026-06-15 23:20:37.260 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6142978Z  2026-06-15 23:20:37.260 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own notas" ON public.notas_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (tipo = ANY (ARRAY['nota'::public.tipo_nota, 'cambio_estado'::public.tipo_nota])) AND (embarque_id IN ( SELECT embarques.id
+2026-06-15T23:20:37.6144262Z  	   FROM public.embarques
+2026-06-15T23:20:37.6144714Z  	  WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6145193Z  	
+2026-06-15T23:20:37.6145359Z  	
+2026-06-15T23:20:37.6145523Z  	
+2026-06-15T23:20:37.6145784Z  2026-06-15 23:20:37.260 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6146750Z  2026-06-15 23:20:37.260 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own pagos_factura" ON public.pagos_factura FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (factura_id IN ( SELECT f.id
+2026-06-15T23:20:37.6147636Z  	   FROM public.facturas f
+2026-06-15T23:20:37.6148054Z  	  WHERE (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6148500Z  	
+2026-06-15T23:20:37.6148662Z  	
+2026-06-15T23:20:37.6148825Z  	
+2026-06-15T23:20:37.6149084Z  2026-06-15 23:20:37.261 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6150116Z  2026-06-15 23:20:37.261 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own pcc" ON public.proforma_conceptos_consolidados FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (proforma_id IN ( SELECT proformas.id
+2026-06-15T23:20:37.6151315Z  	   FROM public.proformas
+2026-06-15T23:20:37.6151771Z  	  WHERE (proformas.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+2026-06-15T23:20:37.6152254Z  	
+2026-06-15T23:20:37.6152416Z  	
+2026-06-15T23:20:37.6152576Z  	
+2026-06-15T23:20:37.6152835Z  2026-06-15 23:20:37.261 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6153958Z  2026-06-15 23:20:37.261 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own proformas" ON public.proformas FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+2026-06-15T23:20:37.6155004Z  	
+2026-06-15T23:20:37.6155265Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:20:37.6155694Z  The default text search configuration will be set to "english".
+2026-06-15T23:20:37.6156017Z  
+2026-06-15T23:20:37.6156206Z  Data page checksums are disabled.
+2026-06-15T23:20:37.6156448Z  
+2026-06-15T23:20:37.6156734Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:20:37.6157119Z  creating subdirectories ... ok
+2026-06-15T23:20:37.6157431Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:20:37.6157780Z  selecting default max_connections ... 100
+2026-06-15T23:20:37.6158231Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:20:37.6158519Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:20:37.6158799Z  creating configuration files ... ok
+2026-06-15T23:20:37.6159074Z  running bootstrap script ... ok
+2026-06-15T23:20:37.6159363Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:20:37.6159673Z  syncing data to disk ... ok
+2026-06-15T23:20:37.6159908Z  
+2026-06-15T23:20:37.6160078Z  
+2026-06-15T23:20:37.6160526Z  Success. You can now start the database server using:
+2026-06-15T23:20:37.6160832Z  
+2026-06-15T23:20:37.6161079Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:20:37.6161377Z  
+2026-06-15T23:20:37.6162007Z  waiting for server to start....2026-06-15 23:20:28.120 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:20:37.6162878Z  2026-06-15 23:20:28.121 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:20:37.6163461Z  2026-06-15 23:20:28.124 UTC [51] LOG:  database system was shut down at 2026-06-15 23:20:28 UTC
+2026-06-15T23:20:37.6163987Z  2026-06-15 23:20:28.128 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:20:37.6164361Z   done
+2026-06-15T23:20:37.6164677Z  server started
+2026-06-15T23:20:37.6164869Z  
+2026-06-15T23:20:37.6165183Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:20:37.6165573Z  
+2026-06-15T23:20:37.6165832Z  2026-06-15 23:20:28.238 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:20:37.6166353Z  waiting for server to shut down....2026-06-15 23:20:28.239 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:20:37.6167034Z  2026-06-15 23:20:28.241 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:20:37.6167572Z  2026-06-15 23:20:28.241 UTC [49] LOG:  shutting down
+2026-06-15T23:20:37.6167960Z  2026-06-15 23:20:28.241 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:20:37.6168907Z  2026-06-15 23:20:28.244 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:20:37.6169826Z  2026-06-15 23:20:28.247 UTC [48] LOG:  database system is shut down
+2026-06-15T23:20:37.6170148Z   done
+2026-06-15T23:20:37.6170553Z  server stopped
+2026-06-15T23:20:37.6170755Z  
+2026-06-15T23:20:37.6171004Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:20:37.6171304Z  
+2026-06-15T23:20:37.6171594Z  	
+2026-06-15T23:20:37.6171796Z  	
+2026-06-15T23:20:37.6172095Z  2026-06-15 23:20:37.261 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6172903Z  2026-06-15 23:20:37.261 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted clientes" ON public.clientes AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6173620Z  	
+2026-06-15T23:20:37.6173783Z  	
+2026-06-15T23:20:37.6173945Z  	
+2026-06-15T23:20:37.6174203Z  2026-06-15 23:20:37.261 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6175053Z  2026-06-15 23:20:37.261 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted conceptos_costo" ON public.conceptos_costo AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6175806Z  	
+2026-06-15T23:20:37.6175973Z  	
+2026-06-15T23:20:37.6176138Z  	
+2026-06-15T23:20:37.6176401Z  2026-06-15 23:20:37.262 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6177250Z  2026-06-15 23:20:37.262 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted conceptos_factura" ON public.conceptos_factura AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6178009Z  	
+2026-06-15T23:20:37.6178181Z  	
+2026-06-15T23:20:37.6178473Z  	
+2026-06-15T23:20:37.6178729Z  2026-06-15 23:20:37.262 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6179562Z  2026-06-15 23:20:37.262 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted conceptos_venta" ON public.conceptos_venta AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6180584Z  	
+2026-06-15T23:20:37.6180759Z  	
+2026-06-15T23:20:37.6180923Z  	
+2026-06-15T23:20:37.6181200Z  2026-06-15 23:20:37.262 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6182061Z  2026-06-15 23:20:37.262 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted contactos_cliente" ON public.contactos_cliente AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6182820Z  	
+2026-06-15T23:20:37.6182993Z  	
+2026-06-15T23:20:37.6183159Z  	
+2026-06-15T23:20:37.6183422Z  2026-06-15 23:20:37.262 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6184292Z  2026-06-15 23:20:37.262 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted cotizacion_costos" ON public.cotizacion_costos AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6185061Z  	
+2026-06-15T23:20:37.6185228Z  	
+2026-06-15T23:20:37.6185395Z  	
+2026-06-15T23:20:37.6185658Z  2026-06-15 23:20:37.263 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6186663Z  2026-06-15 23:20:37.263 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted cotizaciones" ON public.cotizaciones AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6187391Z  	
+2026-06-15T23:20:37.6187556Z  	
+2026-06-15T23:20:37.6187728Z  	
+2026-06-15T23:20:37.6187988Z  2026-06-15 23:20:37.263 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6188827Z  2026-06-15 23:20:37.263 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_actividades" ON public.crm_actividades AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6189574Z  	
+2026-06-15T23:20:37.6189746Z  	
+2026-06-15T23:20:37.6189912Z  	
+2026-06-15T23:20:37.6190169Z  2026-06-15 23:20:37.263 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6191332Z  2026-06-15 23:20:37.263 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6192177Z  	
+2026-06-15T23:20:37.6192342Z  	
+2026-06-15T23:20:37.6192505Z  	
+2026-06-15T23:20:37.6192766Z  2026-06-15 23:20:37.264 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6193625Z  2026-06-15 23:20:37.264 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_etapas_pipeline" ON public.crm_etapas_pipeline AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6194390Z  	
+2026-06-15T23:20:37.6194558Z  	
+2026-06-15T23:20:37.6194728Z  	
+2026-06-15T23:20:37.6194982Z  2026-06-15 23:20:37.264 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6195768Z  2026-06-15 23:20:37.264 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_leads" ON public.crm_leads AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6196477Z  	
+2026-06-15T23:20:37.6196642Z  	
+2026-06-15T23:20:37.6196806Z  	
+2026-06-15T23:20:37.6197059Z  2026-06-15 23:20:37.264 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6197913Z  2026-06-15 23:20:37.264 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_motivos_perdida" ON public.crm_motivos_perdida AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6198676Z  	
+2026-06-15T23:20:37.6198840Z  	
+2026-06-15T23:20:37.6199010Z  	
+2026-06-15T23:20:37.6199264Z  2026-06-15 23:20:37.264 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6200440Z  2026-06-15 23:20:37.264 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_oportunidades" ON public.crm_oportunidades AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6201270Z  	
+2026-06-15T23:20:37.6201434Z  	
+2026-06-15T23:20:37.6201606Z  	
+2026-06-15T23:20:37.6201863Z  2026-06-15 23:20:37.265 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6202762Z  2026-06-15 23:20:37.265 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted crm_plantillas_mensaje" ON public.crm_plantillas_mensaje AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6203550Z  	
+2026-06-15T23:20:37.6203714Z  	
+2026-06-15T23:20:37.6203884Z  	
+2026-06-15T23:20:37.6204137Z  2026-06-15 23:20:37.265 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6204982Z  2026-06-15 23:20:37.265 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted cuentas_bancarias" ON public.cuentas_bancarias AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6205746Z  	
+2026-06-15T23:20:37.6205918Z  	
+2026-06-15T23:20:37.6206082Z  	
+2026-06-15T23:20:37.6206343Z  2026-06-15 23:20:37.265 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6207212Z  2026-06-15 23:20:37.265 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted documentos_embarque" ON public.documentos_embarque AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6208123Z  	
+2026-06-15T23:20:37.6208288Z  	
+2026-06-15T23:20:37.6208446Z  	
+2026-06-15T23:20:37.6208697Z  2026-06-15 23:20:37.265 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6209573Z  2026-06-15 23:20:37.265 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted embarque_contenedores" ON public.embarque_contenedores AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6210554Z  	
+2026-06-15T23:20:37.6210726Z  	
+2026-06-15T23:20:37.6210892Z  	
+2026-06-15T23:20:37.6211147Z  2026-06-15 23:20:37.266 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6211942Z  2026-06-15 23:20:37.266 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted embarques" ON public.embarques AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6212660Z  	
+2026-06-15T23:20:37.6212820Z  	
+2026-06-15T23:20:37.6212977Z  	
+2026-06-15T23:20:37.6213227Z  2026-06-15 23:20:37.266 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6214060Z  2026-06-15 23:20:37.266 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted eventos_embarque" ON public.eventos_embarque AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6214811Z  	
+2026-06-15T23:20:37.6214968Z  	
+2026-06-15T23:20:37.6215138Z  	
+2026-06-15T23:20:37.6215394Z  2026-06-15 23:20:37.266 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6216271Z  2026-06-15 23:20:37.266 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted factura_notas_credito" ON public.factura_notas_credito AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6217057Z  	
+2026-06-15T23:20:37.6217221Z  	
+2026-06-15T23:20:37.6217388Z  	
+2026-06-15T23:20:37.6217642Z  2026-06-15 23:20:37.267 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6218458Z  2026-06-15 23:20:37.267 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted facturas" ON public.facturas AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6219169Z  	
+2026-06-15T23:20:37.6219334Z  	
+2026-06-15T23:20:37.6219497Z  	
+2026-06-15T23:20:37.6219758Z  2026-06-15 23:20:37.267 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6220791Z  2026-06-15 23:20:37.267 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted notas_embarque" ON public.notas_embarque AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6221674Z  	
+2026-06-15T23:20:37.6221848Z  	
+2026-06-15T23:20:37.6222008Z  	
+2026-06-15T23:20:37.6222261Z  2026-06-15 23:20:37.267 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6223080Z  2026-06-15 23:20:37.267 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted pagos_factura" ON public.pagos_factura AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6223821Z  	
+2026-06-15T23:20:37.6223985Z  	
+2026-06-15T23:20:37.6224150Z  	
+2026-06-15T23:20:37.6224405Z  2026-06-15 23:20:37.267 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6225254Z  2026-06-15 23:20:37.267 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted pagos_proveedor" ON public.pagos_proveedor AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6226001Z  	
+2026-06-15T23:20:37.6226163Z  	
+2026-06-15T23:20:37.6226368Z  	
+2026-06-15T23:20:37.6226631Z  2026-06-15 23:20:37.268 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6227584Z  2026-06-15 23:20:37.268 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted proforma_conceptos_consolidados" ON public.proforma_conceptos_consolidados AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6228576Z  	
+2026-06-15T23:20:37.6228737Z  	
+2026-06-15T23:20:37.6228900Z  	
+2026-06-15T23:20:37.6229156Z  2026-06-15 23:20:37.268 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6229954Z  2026-06-15 23:20:37.268 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted proformas" ON public.proformas AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6230882Z  	
+2026-06-15T23:20:37.6231051Z  	
+2026-06-15T23:20:37.6231213Z  	
+2026-06-15T23:20:37.6231478Z  2026-06-15 23:20:37.268 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6232345Z  2026-06-15 23:20:37.268 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted proveedor_facturas" ON public.proveedor_facturas AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6233127Z  	
+2026-06-15T23:20:37.6233298Z  	
+2026-06-15T23:20:37.6233460Z  	
+2026-06-15T23:20:37.6233706Z  2026-06-15 23:20:37.268 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6234601Z  2026-06-15 23:20:37.268 UTC [74] STATEMENT:  CREATE POLICY "Hide soft deleted proveedor_notas_credito" ON public.proveedor_notas_credito AS RESTRICTIVE TO authenticated USING ((deleted_at IS NULL)) WITH CHECK (true);
+2026-06-15T23:20:37.6235400Z  	
+2026-06-15T23:20:37.6235557Z  	
+2026-06-15T23:20:37.6235714Z  	
+2026-06-15T23:20:37.6235963Z  2026-06-15 23:20:37.269 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6237427Z  2026-06-15 23:20:37.269 UTC [74] STATEMENT:  CREATE POLICY "Internal roles read configuracion_global" ON public.configuracion_global FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6238808Z  	
+2026-06-15T23:20:37.6238979Z  	
+2026-06-15T23:20:37.6239142Z  	
+2026-06-15T23:20:37.6239405Z  2026-06-15 23:20:37.269 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6240742Z  2026-06-15 23:20:37.269 UTC [74] STATEMENT:  CREATE POLICY "Members can read own org" ON public.organizations FOR SELECT TO authenticated USING (((id IN ( SELECT public.get_user_org_ids(auth.uid()) AS get_user_org_ids)) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6241740Z  	
+2026-06-15T23:20:37.6241912Z  	
+2026-06-15T23:20:37.6242082Z  	
+2026-06-15T23:20:37.6242347Z  2026-06-15 23:20:37.269 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6243740Z  2026-06-15 23:20:37.269 UTC [74] STATEMENT:  CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.is_org_admin(auth.uid(), organization_id) OR public.has_role(auth.uid(), 'admin'::public.app_role)))));
+2026-06-15T23:20:37.6245226Z  	
+2026-06-15T23:20:37.6245400Z  	
+2026-06-15T23:20:37.6245567Z  	
+2026-06-15T23:20:37.6245827Z  2026-06-15 23:20:37.270 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6246856Z  2026-06-15 23:20:37.270 UTC [74] STATEMENT:  CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(auth.uid(), organization_id)) WITH CHECK (public.is_org_admin(auth.uid(), organization_id));
+2026-06-15T23:20:37.6247808Z  	
+2026-06-15T23:20:37.6247972Z  	
+2026-06-15T23:20:37.6248137Z  	
+2026-06-15T23:20:37.6248399Z  2026-06-15 23:20:37.270 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6251129Z  2026-06-15 23:20:37.270 UTC [74] STATEMENT:  CREATE POLICY "Org staff manage client_users" ON public.client_users TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6253672Z  	
+2026-06-15T23:20:37.6253838Z  	
+2026-06-15T23:20:37.6254018Z  	
+2026-06-15T23:20:37.6254275Z  2026-06-15 23:20:37.270 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6257075Z  2026-06-15 23:20:37.270 UTC [74] STATEMENT:  CREATE POLICY "Org staff manage tracking_links" ON public.tracking_links TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR public.is_org_admin(auth.uid(), organization_id)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR public.is_org_admin(auth.uid(), organization_id))));
+2026-06-15T23:20:37.6259785Z  	
+2026-06-15T23:20:37.6259947Z  	
+2026-06-15T23:20:37.6260111Z  	
+2026-06-15T23:20:37.6260485Z  2026-06-15 23:20:37.274 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6262980Z  2026-06-15 23:20:37.274 UTC [74] STATEMENT:  CREATE POLICY "Staff CRUD crm_actividades" ON public.crm_actividades TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6265363Z  	
+2026-06-15T23:20:37.6265532Z  	
+2026-06-15T23:20:37.6265694Z  	
+2026-06-15T23:20:37.6265950Z  2026-06-15 23:20:37.274 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6268494Z  2026-06-15 23:20:37.274 UTC [74] STATEMENT:  CREATE POLICY "Staff CRUD crm_leads" ON public.crm_leads TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6270950Z  	
+2026-06-15T23:20:37.6271117Z  	
+2026-06-15T23:20:37.6271287Z  	
+2026-06-15T23:20:37.6271546Z  2026-06-15 23:20:37.275 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6274030Z  2026-06-15 23:20:37.275 UTC [74] STATEMENT:  CREATE POLICY "Staff CRUD crm_oportunidades" ON public.crm_oportunidades TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6276563Z  	
+2026-06-15T23:20:37.6276729Z  	
+2026-06-15T23:20:37.6276900Z  	
+2026-06-15T23:20:37.6277157Z  2026-06-15 23:20:37.275 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6278596Z  2026-06-15 23:20:37.275 UTC [74] STATEMENT:  CREATE POLICY "Staff insert tracking_intentos" ON public.tracking_intentos FOR INSERT TO authenticated WITH CHECK ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:37.6279954Z  	
+2026-06-15T23:20:37.6280120Z  	
+2026-06-15T23:20:37.6280398Z  	
+2026-06-15T23:20:37.6280660Z  2026-06-15 23:20:37.275 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6282287Z  2026-06-15 23:20:37.275 UTC [74] STATEMENT:  CREATE POLICY "Staff inserta notificaciones org" ON public.crm_notificaciones FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'vendedor'::public.app_role))) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6283824Z  	
+2026-06-15T23:20:37.6283989Z  	
+2026-06-15T23:20:37.6284160Z  	
+2026-06-15T23:20:37.6284415Z  2026-06-15 23:20:37.276 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6285861Z  2026-06-15 23:20:37.276 UTC [74] STATEMENT:  CREATE POLICY "Staff read auditoria_comentarios" ON public.auditoria_comentarios FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:37.6287233Z  	
+2026-06-15T23:20:37.6287397Z  	
+2026-06-15T23:20:37.6287564Z  	
+2026-06-15T23:20:37.6287829Z  2026-06-15 23:20:37.276 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6289262Z  2026-06-15 23:20:37.276 UTC [74] STATEMENT:  CREATE POLICY "Staff read auditoria_snapshots" ON public.auditoria_snapshots FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:37.6290978Z  	
+2026-06-15T23:20:37.6291163Z  	
+2026-06-15T23:20:37.6291331Z  	
+2026-06-15T23:20:37.6291599Z  2026-06-15 23:20:37.277 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6293017Z  2026-06-15 23:20:37.277 UTC [74] STATEMENT:  CREATE POLICY "Staff read tracking_intentos" ON public.tracking_intentos FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role)))));
+2026-06-15T23:20:37.6294364Z  	
+2026-06-15T23:20:37.6294535Z  	
+2026-06-15T23:20:37.6294698Z  	
+2026-06-15T23:20:37.6294967Z  2026-06-15 23:20:37.277 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6296784Z  2026-06-15 23:20:37.277 UTC [74] STATEMENT:  CREATE POLICY "Staff write crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (autor_id = auth.uid()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (EXISTS ( SELECT 1
+2026-06-15T23:20:37.6298677Z  	   FROM public.crm_oportunidades o
+2026-06-15T23:20:37.6299299Z  	  WHERE ((o.id = crm_comentarios_oportunidad.oportunidad_id) AND (o.vendedor_id = auth.uid()) AND (o.organization_id = public.current_user_org_id()))))))));
+2026-06-15T23:20:37.6299914Z  	
+2026-06-15T23:20:37.6300081Z  	
+2026-06-15T23:20:37.6300252Z  	
+2026-06-15T23:20:37.6300771Z  2026-06-15 23:20:37.277 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6301922Z  2026-06-15 23:20:37.277 UTC [74] STATEMENT:  CREATE POLICY "Super admin CRUD configuracion_global" ON public.configuracion_global TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6302969Z  	
+2026-06-15T23:20:37.6303133Z  	
+2026-06-15T23:20:37.6303300Z  	
+2026-06-15T23:20:37.6303557Z  2026-06-15 23:20:37.277 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6304594Z  2026-06-15 23:20:37.277 UTC [74] STATEMENT:  CREATE POLICY "Super admin CRUD navieras" ON public.navieras TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6305546Z  	
+2026-06-15T23:20:37.6305708Z  	
+2026-06-15T23:20:37.6305877Z  	
+2026-06-15T23:20:37.6306133Z  2026-06-15 23:20:37.278 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6307159Z  2026-06-15 23:20:37.278 UTC [74] STATEMENT:  CREATE POLICY "Super admin CRUD planes" ON public.planes TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6308093Z  	
+2026-06-15T23:20:37.6308267Z  	
+2026-06-15T23:20:37.6308437Z  	
+2026-06-15T23:20:37.6308694Z  2026-06-15 23:20:37.278 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6309726Z  2026-06-15 23:20:37.278 UTC [74] STATEMENT:  CREATE POLICY "Super admin CRUD puertos" ON public.puertos TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6310779Z  	
+2026-06-15T23:20:37.6310947Z  	
+2026-06-15T23:20:37.6311119Z  	
+2026-06-15T23:20:37.6311373Z  2026-06-15 23:20:37.278 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6312585Z  2026-06-15 23:20:37.278 UTC [74] STATEMENT:  CREATE POLICY "Super admin CRUD tipos_contenedor" ON public.tipos_contenedor TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6313580Z  	
+2026-06-15T23:20:37.6313754Z  	
+2026-06-15T23:20:37.6313917Z  	
+2026-06-15T23:20:37.6314167Z  2026-06-15 23:20:37.278 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6315093Z  2026-06-15 23:20:37.278 UTC [74] STATEMENT:  CREATE POLICY "Super admin lee todas notificaciones" ON public.crm_notificaciones FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6315917Z  	
+2026-06-15T23:20:37.6316080Z  	
+2026-06-15T23:20:37.6316243Z  	
+2026-06-15T23:20:37.6316499Z  2026-06-15 23:20:37.278 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6317443Z  2026-06-15 23:20:37.278 UTC [74] STATEMENT:  CREATE POLICY "Super admin read backup embarques" ON public._backup_merge_embarques_20260602 FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6318308Z  	
+2026-06-15T23:20:37.6318477Z  	
+2026-06-15T23:20:37.6318640Z  	
+2026-06-15T23:20:37.6318896Z  2026-06-15 23:20:37.279 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6319944Z  2026-06-15 23:20:37.279 UTC [74] STATEMENT:  CREATE POLICY "Super admin read backup fk remap" ON public._backup_merge_fk_remap_20260602 FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6320913Z  	
+2026-06-15T23:20:37.6321079Z  	
+2026-06-15T23:20:37.6321245Z  	
+2026-06-15T23:20:37.6321506Z  2026-06-15 23:20:37.279 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6322554Z  2026-06-15 23:20:37.279 UTC [74] STATEMENT:  CREATE POLICY "Super admins manage all roles" ON public.user_roles TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6323517Z  	
+2026-06-15T23:20:37.6323689Z  	
+2026-06-15T23:20:37.6323856Z  	
+2026-06-15T23:20:37.6324111Z  2026-06-15 23:20:37.279 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6325199Z  2026-06-15 23:20:37.279 UTC [74] STATEMENT:  CREATE POLICY "Super admins manage members" ON public.organization_members TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6326226Z  	
+2026-06-15T23:20:37.6326392Z  	
+2026-06-15T23:20:37.6326556Z  	
+2026-06-15T23:20:37.6326813Z  2026-06-15 23:20:37.279 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6327900Z  2026-06-15 23:20:37.279 UTC [74] STATEMENT:  CREATE POLICY "Super admins manage organizations" ON public.organizations TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6328897Z  	
+2026-06-15T23:20:37.6329070Z  	
+2026-06-15T23:20:37.6329243Z  	
+2026-06-15T23:20:37.6329499Z  2026-06-15 23:20:37.280 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6331859Z  2026-06-15 23:20:37.280 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD bbva_movimientos" ON public.bbva_movimientos TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6334063Z  	
+2026-06-15T23:20:37.6334232Z  	
+2026-06-15T23:20:37.6334395Z  	
+2026-06-15T23:20:37.6334661Z  2026-06-15 23:20:37.280 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6337084Z  2026-06-15 23:20:37.280 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD clientes" ON public.clientes TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6339421Z  	
+2026-06-15T23:20:37.6339588Z  	
+2026-06-15T23:20:37.6339748Z  	
+2026-06-15T23:20:37.6340002Z  2026-06-15 23:20:37.280 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6342665Z  2026-06-15 23:20:37.280 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD conceptos_costo" ON public.conceptos_costo TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6345187Z  	
+2026-06-15T23:20:37.6345352Z  	
+2026-06-15T23:20:37.6345520Z  	
+2026-06-15T23:20:37.6345777Z  2026-06-15 23:20:37.280 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6348261Z  2026-06-15 23:20:37.280 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD conceptos_factura" ON public.conceptos_factura TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6350779Z  	
+2026-06-15T23:20:37.6350953Z  	
+2026-06-15T23:20:37.6351116Z  	
+2026-06-15T23:20:37.6351378Z  2026-06-15 23:20:37.281 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6353847Z  2026-06-15 23:20:37.281 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD conceptos_venta" ON public.conceptos_venta TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6356242Z  	
+2026-06-15T23:20:37.6356410Z  	
+2026-06-15T23:20:37.6356586Z  	
+2026-06-15T23:20:37.6356842Z  2026-06-15 23:20:37.281 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6359457Z  2026-06-15 23:20:37.281 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD contactos_cliente" ON public.contactos_cliente TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6361983Z  	
+2026-06-15T23:20:37.6362149Z  	
+2026-06-15T23:20:37.6362318Z  	
+2026-06-15T23:20:37.6362572Z  2026-06-15 23:20:37.281 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6365059Z  2026-06-15 23:20:37.281 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD cotizacion_costos" ON public.cotizacion_costos TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6367654Z  	
+2026-06-15T23:20:37.6367824Z  	
+2026-06-15T23:20:37.6367990Z  	
+2026-06-15T23:20:37.6368251Z  2026-06-15 23:20:37.281 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6370819Z  2026-06-15 23:20:37.281 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD cotizaciones" ON public.cotizaciones TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6373201Z  	
+2026-06-15T23:20:37.6373366Z  	
+2026-06-15T23:20:37.6373531Z  	
+2026-06-15T23:20:37.6373785Z  2026-06-15 23:20:37.282 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6375920Z  2026-06-15 23:20:37.282 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD cuentas_bancarias" ON public.cuentas_bancarias TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6377973Z  	
+2026-06-15T23:20:37.6378149Z  	
+2026-06-15T23:20:37.6378309Z  	
+2026-06-15T23:20:37.6378562Z  2026-06-15 23:20:37.282 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6379973Z  2026-06-15 23:20:37.282 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD demoras venta" ON public.costeo_demoras_venta_tarifa TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6381549Z  	
+2026-06-15T23:20:37.6381713Z  	
+2026-06-15T23:20:37.6381874Z  	
+2026-06-15T23:20:37.6382136Z  2026-06-15 23:20:37.282 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6384647Z  2026-06-15 23:20:37.282 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD documentos_embarque" ON public.documentos_embarque TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6387064Z  	
+2026-06-15T23:20:37.6387230Z  	
+2026-06-15T23:20:37.6387395Z  	
+2026-06-15T23:20:37.6387658Z  2026-06-15 23:20:37.282 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6390405Z  2026-06-15 23:20:37.282 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD embarque_contenedores" ON public.embarque_contenedores TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6392860Z  	
+2026-06-15T23:20:37.6393024Z  	
+2026-06-15T23:20:37.6393189Z  	
+2026-06-15T23:20:37.6393445Z  2026-06-15 23:20:37.282 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6395889Z  2026-06-15 23:20:37.282 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD embarques" ON public.embarques TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6398230Z  	
+2026-06-15T23:20:37.6398405Z  	
+2026-06-15T23:20:37.6398571Z  	
+2026-06-15T23:20:37.6398830Z  2026-06-15 23:20:37.283 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6401428Z  2026-06-15 23:20:37.283 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD eventos_embarque" ON public.eventos_embarque TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6403966Z  	
+2026-06-15T23:20:37.6404140Z  	
+2026-06-15T23:20:37.6404312Z  	
+2026-06-15T23:20:37.6404579Z  2026-06-15 23:20:37.283 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6407029Z  2026-06-15 23:20:37.283 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD facturas" ON public.facturas TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6409395Z  	
+2026-06-15T23:20:37.6409569Z  	
+2026-06-15T23:20:37.6409745Z  	
+2026-06-15T23:20:37.6410008Z  2026-06-15 23:20:37.283 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6412638Z  2026-06-15 23:20:37.283 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD garantias" ON public.embarque_garantias_contenedor TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6415199Z  	
+2026-06-15T23:20:37.6415368Z  	
+2026-06-15T23:20:37.6415528Z  	
+2026-06-15T23:20:37.6415795Z  2026-06-15 23:20:37.283 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6418255Z  2026-06-15 23:20:37.283 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD notas_embarque" ON public.notas_embarque TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6420755Z  	
+2026-06-15T23:20:37.6420920Z  	
+2026-06-15T23:20:37.6421089Z  	
+2026-06-15T23:20:37.6421346Z  2026-06-15 23:20:37.284 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6423808Z  2026-06-15 23:20:37.284 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD pagos_factura" ON public.pagos_factura TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6426196Z  	
+2026-06-15T23:20:37.6426394Z  	
+2026-06-15T23:20:37.6426559Z  	
+2026-06-15T23:20:37.6426940Z  2026-06-15 23:20:37.285 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6429431Z  2026-06-15 23:20:37.285 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD pcc" ON public.proforma_conceptos_consolidados TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6431955Z  	
+2026-06-15T23:20:37.6432127Z  	
+2026-06-15T23:20:37.6432287Z  	
+2026-06-15T23:20:37.6432547Z  2026-06-15 23:20:37.285 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6434996Z  2026-06-15 23:20:37.285 UTC [74] STATEMENT:  CREATE POLICY "Tenant CRUD proformas" ON public.proformas TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6437469Z  	
+2026-06-15T23:20:37.6437636Z  	
+2026-06-15T23:20:37.6437808Z  	
+2026-06-15T23:20:37.6438066Z  2026-06-15 23:20:37.287 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6440180Z  2026-06-15 23:20:37.287 UTC [74] STATEMENT:  CREATE POLICY "Tenant admin configuracion" ON public.configuracion TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6442343Z  	
+2026-06-15T23:20:37.6442510Z  	
+2026-06-15T23:20:37.6442673Z  	
+2026-06-15T23:20:37.6442934Z  2026-06-15 23:20:37.288 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6445071Z  2026-06-15 23:20:37.288 UTC [74] STATEMENT:  CREATE POLICY "Tenant admin crm_cuotas_vendedor" ON public.crm_cuotas_vendedor TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6447145Z  	
+2026-06-15T23:20:37.6447312Z  	
+2026-06-15T23:20:37.6447482Z  	
+2026-06-15T23:20:37.6447740Z  2026-06-15 23:20:37.288 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6449890Z  2026-06-15 23:20:37.288 UTC [74] STATEMENT:  CREATE POLICY "Tenant admin crm_etapas_pipeline" ON public.crm_etapas_pipeline TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6452201Z  	
+2026-06-15T23:20:37.6452375Z  	
+2026-06-15T23:20:37.6452541Z  	
+2026-06-15T23:20:37.6452801Z  2026-06-15 23:20:37.288 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6454949Z  2026-06-15 23:20:37.288 UTC [74] STATEMENT:  CREATE POLICY "Tenant admin crm_motivos_perdida" ON public.crm_motivos_perdida TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6457013Z  	
+2026-06-15T23:20:37.6457175Z  	
+2026-06-15T23:20:37.6457347Z  	
+2026-06-15T23:20:37.6457609Z  2026-06-15 23:20:37.288 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6459889Z  2026-06-15 23:20:37.288 UTC [74] STATEMENT:  CREATE POLICY "Tenant admin crm_plantillas_mensaje" ON public.crm_plantillas_mensaje TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6462090Z  	
+2026-06-15T23:20:37.6462254Z  	
+2026-06-15T23:20:37.6462417Z  	
+2026-06-15T23:20:37.6462676Z  2026-06-15 23:20:37.288 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6463820Z  2026-06-15 23:20:37.288 UTC [74] STATEMENT:  CREATE POLICY "Tenant insert bitacora" ON public.bitacora_actividad FOR INSERT TO authenticated WITH CHECK (((usuario_id = auth.uid()) AND ((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6464881Z  	
+2026-06-15T23:20:37.6465053Z  	
+2026-06-15T23:20:37.6465219Z  	
+2026-06-15T23:20:37.6465477Z  2026-06-15 23:20:37.289 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6466282Z  2026-06-15 23:20:37.289 UTC [74] STATEMENT:  CREATE POLICY "Tenant insert own idempotency_keys" ON public.idempotency_keys FOR INSERT TO authenticated WITH CHECK ((user_id = auth.uid()));
+2026-06-15T23:20:37.6467007Z  	
+2026-06-15T23:20:37.6467173Z  	
+2026-06-15T23:20:37.6467338Z  	
+2026-06-15T23:20:37.6467593Z  2026-06-15 23:20:37.289 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6470129Z  2026-06-15 23:20:37.289 UTC [74] STATEMENT:  CREATE POLICY "Tenant manage factura_notas_credito" ON public.factura_notas_credito TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6472825Z  	
+2026-06-15T23:20:37.6472991Z  	
+2026-06-15T23:20:37.6473153Z  	
+2026-06-15T23:20:37.6473409Z  2026-06-15 23:20:37.289 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6475523Z  2026-06-15 23:20:37.289 UTC [74] STATEMENT:  CREATE POLICY "Tenant manage factura_series" ON public.factura_series TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6477554Z  	
+2026-06-15T23:20:37.6477727Z  	
+2026-06-15T23:20:37.6477887Z  	
+2026-06-15T23:20:37.6478145Z  2026-06-15 23:20:37.289 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6479188Z  2026-06-15 23:20:37.289 UTC [74] STATEMENT:  CREATE POLICY "Tenant read configuracion" ON public.configuracion FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6480138Z  	
+2026-06-15T23:20:37.6480546Z  	
+2026-06-15T23:20:37.6480711Z  	
+2026-06-15T23:20:37.6480970Z  2026-06-15 23:20:37.289 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6482101Z  2026-06-15 23:20:37.289 UTC [74] STATEMENT:  CREATE POLICY "Tenant read crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6483135Z  	
+2026-06-15T23:20:37.6483299Z  	
+2026-06-15T23:20:37.6483472Z  	
+2026-06-15T23:20:37.6483740Z  2026-06-15 23:20:37.290 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6484838Z  2026-06-15 23:20:37.290 UTC [74] STATEMENT:  CREATE POLICY "Tenant read crm_cuotas_vendedor" ON public.crm_cuotas_vendedor FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6485815Z  	
+2026-06-15T23:20:37.6485987Z  	
+2026-06-15T23:20:37.6486150Z  	
+2026-06-15T23:20:37.6486406Z  2026-06-15 23:20:37.290 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6487588Z  2026-06-15 23:20:37.290 UTC [74] STATEMENT:  CREATE POLICY "Tenant read crm_etapas_pipeline" ON public.crm_etapas_pipeline FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6488564Z  	
+2026-06-15T23:20:37.6488730Z  	
+2026-06-15T23:20:37.6488901Z  	
+2026-06-15T23:20:37.6489155Z  2026-06-15 23:20:37.290 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6490212Z  2026-06-15 23:20:37.290 UTC [74] STATEMENT:  CREATE POLICY "Tenant read crm_motivos_perdida" ON public.crm_motivos_perdida FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6491294Z  	
+2026-06-15T23:20:37.6491458Z  	
+2026-06-15T23:20:37.6491633Z  	
+2026-06-15T23:20:37.6491888Z  2026-06-15 23:20:37.290 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6492971Z  2026-06-15 23:20:37.290 UTC [74] STATEMENT:  CREATE POLICY "Tenant read crm_plantillas_mensaje" ON public.crm_plantillas_mensaje FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6493963Z  	
+2026-06-15T23:20:37.6494128Z  	
+2026-06-15T23:20:37.6494296Z  	
+2026-06-15T23:20:37.6494553Z  2026-06-15 23:20:37.290 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6495762Z  2026-06-15 23:20:37.290 UTC [74] STATEMENT:  CREATE POLICY "Tenant read factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6496752Z  	
+2026-06-15T23:20:37.6496918Z  	
+2026-06-15T23:20:37.6497086Z  	
+2026-06-15T23:20:37.6497342Z  2026-06-15 23:20:37.291 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6498370Z  2026-06-15 23:20:37.291 UTC [74] STATEMENT:  CREATE POLICY "Tenant read factura_series" ON public.factura_series FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6499303Z  	
+2026-06-15T23:20:37.6499469Z  	
+2026-06-15T23:20:37.6499636Z  	
+2026-06-15T23:20:37.6499896Z  2026-06-15 23:20:37.291 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6500989Z  2026-06-15 23:20:37.291 UTC [74] STATEMENT:  CREATE POLICY "Tenant read own idempotency_keys" ON public.idempotency_keys FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6501866Z  	
+2026-06-15T23:20:37.6502038Z  	
+2026-06-15T23:20:37.6502200Z  	
+2026-06-15T23:20:37.6502579Z  2026-06-15 23:20:37.291 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6504250Z  2026-06-15 23:20:37.291 UTC [74] STATEMENT:  CREATE POLICY "Tenant staff inserta notificaciones" ON public.notificaciones_cliente FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6505832Z  	
+2026-06-15T23:20:37.6506002Z  	
+2026-06-15T23:20:37.6506171Z  	
+2026-06-15T23:20:37.6506424Z  2026-06-15 23:20:37.291 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6508055Z  2026-06-15 23:20:37.291 UTC [74] STATEMENT:  CREATE POLICY "Tenant staff lee notificaciones" ON public.notificaciones_cliente FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6509604Z  	
+2026-06-15T23:20:37.6509768Z  	
+2026-06-15T23:20:37.6509929Z  	
+2026-06-15T23:20:37.6510184Z  2026-06-15 23:20:37.291 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6511412Z  2026-06-15 23:20:37.291 UTC [74] STATEMENT:  CREATE POLICY "Tenant user own bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:37.6512456Z  	
+2026-06-15T23:20:37.6512703Z  	
+2026-06-15T23:20:37.6513038Z  	
+2026-06-15T23:20:37.6513427Z  2026-06-15 23:20:37.292 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6514786Z  2026-06-15 23:20:37.292 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer clientes" ON public.clientes FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6515988Z  	
+2026-06-15T23:20:37.6516322Z  	
+2026-06-15T23:20:37.6516604Z  	
+2026-06-15T23:20:37.6516961Z  2026-06-15 23:20:37.292 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6518364Z  2026-06-15 23:20:37.292 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer conceptos_costo" ON public.conceptos_costo FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6519781Z  	
+2026-06-15T23:20:37.6520084Z  	
+2026-06-15T23:20:37.6520550Z  	
+2026-06-15T23:20:37.6520932Z  2026-06-15 23:20:37.292 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6534136Z  2026-06-15 23:20:37.292 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer conceptos_factura" ON public.conceptos_factura FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6535324Z  	
+2026-06-15T23:20:37.6535507Z  	
+2026-06-15T23:20:37.6535673Z  	
+2026-06-15T23:20:37.6535952Z  2026-06-15 23:20:37.292 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6537195Z  2026-06-15 23:20:37.292 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6538339Z  	
+2026-06-15T23:20:37.6538514Z  	
+2026-06-15T23:20:37.6538681Z  	
+2026-06-15T23:20:37.6539141Z  2026-06-15 23:20:37.292 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6540559Z  2026-06-15 23:20:37.292 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer contactos_cliente" ON public.contactos_cliente FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6541735Z  	
+2026-06-15T23:20:37.6541908Z  	
+2026-06-15T23:20:37.6542072Z  	
+2026-06-15T23:20:37.6542337Z  2026-06-15 23:20:37.293 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6543586Z  2026-06-15 23:20:37.293 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer cotizacion_costos" ON public.cotizacion_costos FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6544735Z  	
+2026-06-15T23:20:37.6544905Z  	
+2026-06-15T23:20:37.6545073Z  	
+2026-06-15T23:20:37.6545346Z  2026-06-15 23:20:37.293 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6546553Z  2026-06-15 23:20:37.293 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6547661Z  	
+2026-06-15T23:20:37.6547833Z  	
+2026-06-15T23:20:37.6548004Z  	
+2026-06-15T23:20:37.6548269Z  2026-06-15 23:20:37.293 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6549482Z  2026-06-15 23:20:37.293 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer crm_actividades" ON public.crm_actividades FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6551018Z  	
+2026-06-15T23:20:37.6551195Z  	
+2026-06-15T23:20:37.6551357Z  	
+2026-06-15T23:20:37.6551633Z  2026-06-15 23:20:37.293 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6552825Z  2026-06-15 23:20:37.293 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6554057Z  	
+2026-06-15T23:20:37.6554225Z  	
+2026-06-15T23:20:37.6554387Z  	
+2026-06-15T23:20:37.6554644Z  2026-06-15 23:20:37.294 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6555868Z  2026-06-15 23:20:37.294 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer crm_oportunidades" ON public.crm_oportunidades FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6557014Z  	
+2026-06-15T23:20:37.6557177Z  	
+2026-06-15T23:20:37.6557342Z  	
+2026-06-15T23:20:37.6557601Z  2026-06-15 23:20:37.294 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6558842Z  2026-06-15 23:20:37.294 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer documentos_embarque" ON public.documentos_embarque FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6560008Z  	
+2026-06-15T23:20:37.6560182Z  	
+2026-06-15T23:20:37.6560557Z  	
+2026-06-15T23:20:37.6560821Z  2026-06-15 23:20:37.294 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6562083Z  2026-06-15 23:20:37.294 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6563394Z  	
+2026-06-15T23:20:37.6563560Z  	
+2026-06-15T23:20:37.6563725Z  	
+2026-06-15T23:20:37.6563984Z  2026-06-15 23:20:37.294 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6565158Z  2026-06-15 23:20:37.294 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer embarques" ON public.embarques FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6566244Z  	
+2026-06-15T23:20:37.6566412Z  	
+2026-06-15T23:20:37.6566577Z  	
+2026-06-15T23:20:37.6566830Z  2026-06-15 23:20:37.294 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6568057Z  2026-06-15 23:20:37.294 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer eventos_embarque" ON public.eventos_embarque FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6569199Z  	
+2026-06-15T23:20:37.6569373Z  	
+2026-06-15T23:20:37.6569540Z  	
+2026-06-15T23:20:37.6569802Z  2026-06-15 23:20:37.295 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6571102Z  2026-06-15 23:20:37.295 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer facturas" ON public.facturas FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6572189Z  	
+2026-06-15T23:20:37.6572360Z  	
+2026-06-15T23:20:37.6572528Z  	
+2026-06-15T23:20:37.6572781Z  2026-06-15 23:20:37.295 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6574026Z  2026-06-15 23:20:37.295 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer garantias" ON public.embarque_garantias_contenedor FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6575188Z  	
+2026-06-15T23:20:37.6575350Z  	
+2026-06-15T23:20:37.6575512Z  	
+2026-06-15T23:20:37.6575771Z  2026-06-15 23:20:37.295 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6577095Z  2026-06-15 23:20:37.295 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer notas_embarque" ON public.notas_embarque FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6578217Z  	
+2026-06-15T23:20:37.6578383Z  	
+2026-06-15T23:20:37.6578544Z  	
+2026-06-15T23:20:37.6578797Z  2026-06-15 23:20:37.295 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6579997Z  2026-06-15 23:20:37.295 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer pagos_factura" ON public.pagos_factura FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6581233Z  	
+2026-06-15T23:20:37.6581405Z  	
+2026-06-15T23:20:37.6581569Z  	
+2026-06-15T23:20:37.6581827Z  2026-06-15 23:20:37.295 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6583050Z  2026-06-15 23:20:37.295 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer pcc" ON public.proforma_conceptos_consolidados FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6584317Z  	
+2026-06-15T23:20:37.6584484Z  	
+2026-06-15T23:20:37.6584648Z  	
+2026-06-15T23:20:37.6584900Z  2026-06-15 23:20:37.296 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6586078Z  2026-06-15 23:20:37.296 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer proformas" ON public.proformas FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6587171Z  	
+2026-06-15T23:20:37.6587336Z  	
+2026-06-15T23:20:37.6587501Z  	
+2026-06-15T23:20:37.6587761Z  2026-06-15 23:20:37.296 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6588991Z  2026-06-15 23:20:37.296 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer proveedor_facturas" ON public.proveedor_facturas FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6590149Z  	
+2026-06-15T23:20:37.6590483Z  	
+2026-06-15T23:20:37.6590650Z  	
+2026-06-15T23:20:37.6590907Z  2026-06-15 23:20:37.296 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6592100Z  2026-06-15 23:20:37.296 UTC [74] STATEMENT:  CREATE POLICY "Tenant viewer proveedores" ON public.proveedores FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND public.has_role(auth.uid(), 'viewer'::public.app_role)));
+2026-06-15T23:20:37.6593212Z  	
+2026-06-15T23:20:37.6593391Z  	
+2026-06-15T23:20:37.6593556Z  	
+2026-06-15T23:20:37.6593817Z  2026-06-15 23:20:37.296 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6595810Z  2026-06-15 23:20:37.296 UTC [74] STATEMENT:  CREATE POLICY "Tenant write auditoria_comentarios" ON public.auditoria_comentarios TO authenticated USING ((((organization_id = public.current_user_org_id()) AND (public.has_org_role(auth.uid(), organization_id, 'admin'::public.app_role) OR public.has_org_role(auth.uid(), organization_id, 'operador'::public.app_role))) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK ((((organization_id = public.current_user_org_id()) AND (autor_id = auth.uid())) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6597724Z  	
+2026-06-15T23:20:37.6597889Z  	
+2026-06-15T23:20:37.6598179Z  	
+2026-06-15T23:20:37.6598432Z  2026-06-15 23:20:37.297 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6600495Z  2026-06-15 23:20:37.297 UTC [74] STATEMENT:  CREATE POLICY "Tenant write auditoria_snapshots" ON public.auditoria_snapshots TO authenticated USING ((((organization_id = public.current_user_org_id()) AND (public.has_org_role(auth.uid(), organization_id, 'admin'::public.app_role) OR public.has_org_role(auth.uid(), organization_id, 'operador'::public.app_role))) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))) WITH CHECK (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6602314Z  	
+2026-06-15T23:20:37.6602480Z  	
+2026-06-15T23:20:37.6602642Z  	
+2026-06-15T23:20:37.6602898Z  2026-06-15 23:20:37.297 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6604026Z  2026-06-15 23:20:37.297 UTC [74] STATEMENT:  CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (public.has_role(auth.uid(), 'admin'::public.app_role) AND (EXISTS ( SELECT 1
+2026-06-15T23:20:37.6605240Z  	   FROM (public.organization_members om_self
+2026-06-15T23:20:37.6605945Z  	     JOIN public.organization_members om_target ON ((om_target.organization_id = om_self.organization_id)))
+2026-06-15T23:20:37.6607062Z  	  WHERE ((om_self.user_id = auth.uid()) AND (om_target.user_id = user_roles.user_id)))))));
+2026-06-15T23:20:37.6607480Z  	
+2026-06-15T23:20:37.6607654Z  	
+2026-06-15T23:20:37.6607817Z  	
+2026-06-15T23:20:37.6608096Z  2026-06-15 23:20:37.297 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6609100Z  2026-06-15 23:20:37.297 UTC [74] STATEMENT:  CREATE POLICY "Users read own memberships" ON public.organization_members FOR SELECT TO authenticated USING (((user_id = auth.uid()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6609984Z  	
+2026-06-15T23:20:37.6610154Z  	
+2026-06-15T23:20:37.6610599Z  	
+2026-06-15T23:20:37.6610910Z  2026-06-15 23:20:37.298 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6611879Z  2026-06-15 23:20:37.298 UTC [74] STATEMENT:  CREATE POLICY "Users read own notifications" ON public.notificaciones_internas FOR SELECT TO authenticated USING (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:37.6612753Z  	
+2026-06-15T23:20:37.6612925Z  	
+2026-06-15T23:20:37.6613090Z  	
+2026-06-15T23:20:37.6613351Z  2026-06-15 23:20:37.298 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6614585Z  2026-06-15 23:20:37.298 UTC [74] STATEMENT:  CREATE POLICY "Users update own notifications" ON public.notificaciones_internas FOR UPDATE TO authenticated USING (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id()))) WITH CHECK (((usuario_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:37.6615748Z  	
+2026-06-15T23:20:37.6615925Z  	
+2026-06-15T23:20:37.6616123Z  	
+2026-06-15T23:20:37.6616412Z  2026-06-15 23:20:37.298 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6617353Z  2026-06-15 23:20:37.298 UTC [74] STATEMENT:  CREATE POLICY "Usuario lee sus notificaciones" ON public.crm_notificaciones FOR SELECT TO authenticated USING (((user_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:37.6618212Z  	
+2026-06-15T23:20:37.6618380Z  	
+2026-06-15T23:20:37.6618557Z  	
+2026-06-15T23:20:37.6618832Z  2026-06-15 23:20:37.298 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6620040Z  2026-06-15 23:20:37.298 UTC [74] STATEMENT:  CREATE POLICY "Usuario marca leida su notificacion" ON public.crm_notificaciones FOR UPDATE TO authenticated USING (((user_id = auth.uid()) AND (organization_id = public.current_user_org_id()))) WITH CHECK (((user_id = auth.uid()) AND (organization_id = public.current_user_org_id())));
+2026-06-15T23:20:37.6621477Z  	
+2026-06-15T23:20:37.6621643Z  	
+2026-06-15T23:20:37.6621804Z  	
+2026-06-15T23:20:37.6622059Z  2026-06-15 23:20:37.299 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6623637Z  2026-06-15 23:20:37.299 UTC [74] STATEMENT:  CREATE POLICY "Vendedor own crm_actividades" ON public.crm_actividades TO authenticated USING (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (responsable_id = auth.uid()))) WITH CHECK (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (responsable_id = auth.uid())));
+2026-06-15T23:20:37.6625118Z  	
+2026-06-15T23:20:37.6625290Z  	
+2026-06-15T23:20:37.6625451Z  	
+2026-06-15T23:20:37.6625705Z  2026-06-15 23:20:37.299 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6627236Z  2026-06-15 23:20:37.299 UTC [74] STATEMENT:  CREATE POLICY "Vendedor own crm_leads" ON public.crm_leads TO authenticated USING (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid()))) WITH CHECK (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid())));
+2026-06-15T23:20:37.6628785Z  	
+2026-06-15T23:20:37.6628951Z  	
+2026-06-15T23:20:37.6629112Z  	
+2026-06-15T23:20:37.6629371Z  2026-06-15 23:20:37.299 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6631484Z  2026-06-15 23:20:37.299 UTC [74] STATEMENT:  CREATE POLICY "Vendedor own crm_oportunidades" ON public.crm_oportunidades TO authenticated USING (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid()))) WITH CHECK (((organization_id = public.current_user_org_id()) AND public.has_role(auth.uid(), 'vendedor'::public.app_role) AND (vendedor_id = auth.uid())));
+2026-06-15T23:20:37.6632987Z  	
+2026-06-15T23:20:37.6633163Z  	
+2026-06-15T23:20:37.6633328Z  	
+2026-06-15T23:20:37.6633593Z  2026-06-15 23:20:37.300 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6634294Z  2026-06-15 23:20:37.300 UTC [74] STATEMENT:  CREATE POLICY _ci_stub_deny_all ON public.tracking_externo TO authenticated USING (false) WITH CHECK (false);
+2026-06-15T23:20:37.6634890Z  	
+2026-06-15T23:20:37.6635055Z  	
+2026-06-15T23:20:37.6635219Z  	
+2026-06-15T23:20:37.6635488Z  2026-06-15 23:20:37.301 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6636309Z  2026-06-15 23:20:37.301 UTC [74] STATEMENT:  CREATE POLICY "app_logs insert authenticated" ON public.app_logs FOR INSERT TO authenticated WITH CHECK (((user_id IS NULL) OR (user_id = auth.uid())));
+2026-06-15T23:20:37.6637029Z  	
+2026-06-15T23:20:37.6637197Z  	
+2026-06-15T23:20:37.6637355Z  	
+2026-06-15T23:20:37.6637611Z  2026-06-15 23:20:37.304 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6639708Z  2026-06-15 23:20:37.304 UTC [74] STATEMENT:  CREATE POLICY com_dev_admin_full ON public.comisiones_devengadas TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6641895Z  	
+2026-06-15T23:20:37.6642059Z  	
+2026-06-15T23:20:37.6642224Z  	
+2026-06-15T23:20:37.6642477Z  2026-06-15 23:20:37.304 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6643400Z  2026-06-15 23:20:37.304 UTC [74] STATEMENT:  CREATE POLICY com_dev_self_read ON public.comisiones_devengadas FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (vendedora_id = auth.uid())));
+2026-06-15T23:20:37.6644374Z  	
+2026-06-15T23:20:37.6644545Z  	
+2026-06-15T23:20:37.6644708Z  	
+2026-06-15T23:20:37.6644961Z  2026-06-15 23:20:37.307 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6645673Z  2026-06-15 23:20:37.307 UTC [74] STATEMENT:  CREATE POLICY costeo_agentes_select_org ON public.costeo_agentes FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6646334Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6646782Z  	  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6647210Z  	
+2026-06-15T23:20:37.6647382Z  	
+2026-06-15T23:20:37.6647543Z  	
+2026-06-15T23:20:37.6647804Z  2026-06-15 23:20:37.308 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6648482Z  2026-06-15 23:20:37.308 UTC [74] STATEMENT:  CREATE POLICY costeo_agentes_write_org ON public.costeo_agentes TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6649096Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6649620Z  	  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6650158Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6650873Z  	  WHERE ((m.organization_id = costeo_agentes.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6651300Z  	
+2026-06-15T23:20:37.6651465Z  	
+2026-06-15T23:20:37.6651627Z  	
+2026-06-15T23:20:37.6651898Z  2026-06-15 23:20:37.308 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6652672Z  2026-06-15 23:20:37.308 UTC [74] STATEMENT:  CREATE POLICY costeo_demoras_select_org ON public.costeo_naviera_demoras_tarifa FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6653397Z  	   FROM (public.costeo_navieras_condiciones c
+2026-06-15T23:20:37.6653840Z  	     JOIN public.organization_members m ON ((m.organization_id = c.organization_id)))
+2026-06-15T23:20:37.6654453Z  	  WHERE ((c.id = costeo_naviera_demoras_tarifa.naviera_condicion_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6654899Z  	
+2026-06-15T23:20:37.6655069Z  	
+2026-06-15T23:20:37.6655234Z  	
+2026-06-15T23:20:37.6655492Z  2026-06-15 23:20:37.308 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6656228Z  2026-06-15 23:20:37.308 UTC [74] STATEMENT:  CREATE POLICY costeo_demoras_write_org ON public.costeo_naviera_demoras_tarifa TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6656908Z  	   FROM (public.costeo_navieras_condiciones c
+2026-06-15T23:20:37.6657331Z  	     JOIN public.organization_members m ON ((m.organization_id = c.organization_id)))
+2026-06-15T23:20:37.6658010Z  	  WHERE ((c.id = costeo_naviera_demoras_tarifa.naviera_condicion_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6658584Z  	   FROM (public.costeo_navieras_condiciones c
+2026-06-15T23:20:37.6659002Z  	     JOIN public.organization_members m ON ((m.organization_id = c.organization_id)))
+2026-06-15T23:20:37.6659588Z  	  WHERE ((c.id = costeo_naviera_demoras_tarifa.naviera_condicion_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6660028Z  	
+2026-06-15T23:20:37.6660198Z  	
+2026-06-15T23:20:37.6660487Z  	
+2026-06-15T23:20:37.6660754Z  2026-06-15 23:20:37.309 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6661530Z  2026-06-15 23:20:37.309 UTC [74] STATEMENT:  CREATE POLICY costeo_nav_cond_select_org ON public.costeo_navieras_condiciones FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6662225Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6662706Z  	  WHERE ((m.organization_id = costeo_navieras_condiciones.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6663182Z  	
+2026-06-15T23:20:37.6663351Z  	
+2026-06-15T23:20:37.6663514Z  	
+2026-06-15T23:20:37.6663772Z  2026-06-15 23:20:37.309 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6664621Z  2026-06-15 23:20:37.309 UTC [74] STATEMENT:  CREATE POLICY costeo_nav_cond_write_org ON public.costeo_navieras_condiciones TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6665266Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6665831Z  	  WHERE ((m.organization_id = costeo_navieras_condiciones.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6666415Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6666889Z  	  WHERE ((m.organization_id = costeo_navieras_condiciones.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6667354Z  	
+2026-06-15T23:20:37.6667517Z  	
+2026-06-15T23:20:37.6667687Z  	
+2026-06-15T23:20:37.6667948Z  2026-06-15 23:20:37.310 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6668690Z  2026-06-15 23:20:37.310 UTC [74] STATEMENT:  CREATE POLICY costeo_recargos_select_org ON public.costeo_tarifa_recargos FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6669366Z  	   FROM (public.costeo_tarifas t
+2026-06-15T23:20:37.6669766Z  	     JOIN public.organization_members m ON ((m.organization_id = t.organization_id)))
+2026-06-15T23:20:37.6670415Z  	  WHERE ((t.id = costeo_tarifa_recargos.tarifa_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6670929Z  	
+2026-06-15T23:20:37.6671098Z  	
+2026-06-15T23:20:37.6671263Z  	
+2026-06-15T23:20:37.6671520Z  2026-06-15 23:20:37.310 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6672222Z  2026-06-15 23:20:37.310 UTC [74] STATEMENT:  CREATE POLICY costeo_recargos_write_org ON public.costeo_tarifa_recargos TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6672866Z  	   FROM (public.costeo_tarifas t
+2026-06-15T23:20:37.6673250Z  	     JOIN public.organization_members m ON ((m.organization_id = t.organization_id)))
+2026-06-15T23:20:37.6673860Z  	  WHERE ((t.id = costeo_tarifa_recargos.tarifa_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6674359Z  	   FROM (public.costeo_tarifas t
+2026-06-15T23:20:37.6674736Z  	     JOIN public.organization_members m ON ((m.organization_id = t.organization_id)))
+2026-06-15T23:20:37.6675258Z  	  WHERE ((t.id = costeo_tarifa_recargos.tarifa_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6675641Z  	
+2026-06-15T23:20:37.6675803Z  	
+2026-06-15T23:20:37.6675964Z  	
+2026-06-15T23:20:37.6676220Z  2026-06-15 23:20:37.311 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6676920Z  2026-06-15 23:20:37.311 UTC [74] STATEMENT:  CREATE POLICY costeo_rutas_select_org ON public.costeo_rutas FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6677543Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6677971Z  	  WHERE ((m.organization_id = costeo_rutas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6678391Z  	
+2026-06-15T23:20:37.6678567Z  	
+2026-06-15T23:20:37.6678730Z  	
+2026-06-15T23:20:37.6678986Z  2026-06-15 23:20:37.311 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6679657Z  2026-06-15 23:20:37.311 UTC [74] STATEMENT:  CREATE POLICY costeo_rutas_write_org ON public.costeo_rutas TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6680412Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6680937Z  	  WHERE ((m.organization_id = costeo_rutas.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6681463Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6681885Z  	  WHERE ((m.organization_id = costeo_rutas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6682300Z  	
+2026-06-15T23:20:37.6682466Z  	
+2026-06-15T23:20:37.6682634Z  	
+2026-06-15T23:20:37.6682897Z  2026-06-15 23:20:37.313 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6683613Z  2026-06-15 23:20:37.313 UTC [74] STATEMENT:  CREATE POLICY costeo_tarifas_select_org ON public.costeo_tarifas FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6684394Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6684827Z  	  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6685247Z  	
+2026-06-15T23:20:37.6685415Z  	
+2026-06-15T23:20:37.6685579Z  	
+2026-06-15T23:20:37.6685847Z  2026-06-15 23:20:37.313 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6686523Z  2026-06-15 23:20:37.313 UTC [74] STATEMENT:  CREATE POLICY costeo_tarifas_write_org ON public.costeo_tarifas TO authenticated USING ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6687131Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6687656Z  	  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+2026-06-15T23:20:37.6688202Z  	   FROM public.organization_members m
+2026-06-15T23:20:37.6688646Z  	  WHERE ((m.organization_id = costeo_tarifas.organization_id) AND (m.user_id = auth.uid())))));
+2026-06-15T23:20:37.6689075Z  	
+2026-06-15T23:20:37.6689240Z  	
+2026-06-15T23:20:37.6689405Z  	
+2026-06-15T23:20:37.6689663Z  2026-06-15 23:20:37.321 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6691906Z  2026-06-15 23:20:37.321 UTC [74] STATEMENT:  CREATE POLICY liq_admin_full ON public.liquidaciones_comision TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6694030Z  	
+2026-06-15T23:20:37.6694210Z  	
+2026-06-15T23:20:37.6694374Z  	
+2026-06-15T23:20:37.6694631Z  2026-06-15 23:20:37.322 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6695548Z  2026-06-15 23:20:37.322 UTC [74] STATEMENT:  CREATE POLICY liq_self_read ON public.liquidaciones_comision FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (vendedora_id = auth.uid())));
+2026-06-15T23:20:37.6696382Z  	
+2026-06-15T23:20:37.6696545Z  	
+2026-06-15T23:20:37.6696708Z  	
+2026-06-15T23:20:37.6696965Z  2026-06-15 23:20:37.324 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6697875Z  2026-06-15 23:20:37.324 UTC [74] STATEMENT:  CREATE POLICY "org admin lee logs de su org" ON public.app_logs FOR SELECT TO authenticated USING (((organization_id IS NOT NULL) AND public.is_org_admin(auth.uid(), organization_id)));
+2026-06-15T23:20:37.6698699Z  	
+2026-06-15T23:20:37.6698861Z  	
+2026-06-15T23:20:37.6699029Z  	
+2026-06-15T23:20:37.6699286Z  2026-06-15 23:20:37.326 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6700877Z  2026-06-15 23:20:37.326 UTC [74] STATEMENT:  CREATE POLICY presupuesto_categorias_admin_delete ON public.presupuesto_categorias FOR DELETE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6702256Z  	
+2026-06-15T23:20:37.6702420Z  	
+2026-06-15T23:20:37.6702582Z  	
+2026-06-15T23:20:37.6702841Z  2026-06-15 23:20:37.326 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6704315Z  2026-06-15 23:20:37.326 UTC [74] STATEMENT:  CREATE POLICY presupuesto_categorias_admin_insert ON public.presupuesto_categorias FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6705867Z  	
+2026-06-15T23:20:37.6706037Z  	
+2026-06-15T23:20:37.6706200Z  	
+2026-06-15T23:20:37.6706456Z  2026-06-15 23:20:37.327 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6707912Z  2026-06-15 23:20:37.327 UTC [74] STATEMENT:  CREATE POLICY presupuesto_categorias_admin_update ON public.presupuesto_categorias FOR UPDATE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6709292Z  	
+2026-06-15T23:20:37.6709363Z  	
+2026-06-15T23:20:37.6709439Z  	
+2026-06-15T23:20:37.6709611Z  2026-06-15 23:20:37.327 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6710756Z  2026-06-15 23:20:37.327 UTC [74] STATEMENT:  CREATE POLICY presupuesto_categorias_select ON public.presupuesto_categorias FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6710891Z  	
+2026-06-15T23:20:37.6711007Z  	
+2026-06-15T23:20:37.6711116Z  	
+2026-06-15T23:20:37.6711417Z  2026-06-15 23:20:37.328 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6712786Z  2026-06-15 23:20:37.328 UTC [74] STATEMENT:  CREATE POLICY presupuesto_mensual_admin_delete ON public.presupuesto_mensual FOR DELETE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6712867Z  	
+2026-06-15T23:20:37.6712939Z  	
+2026-06-15T23:20:37.6713015Z  	
+2026-06-15T23:20:37.6713179Z  2026-06-15 23:20:37.328 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6714373Z  2026-06-15 23:20:37.328 UTC [74] STATEMENT:  CREATE POLICY presupuesto_mensual_admin_insert ON public.presupuesto_mensual FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6714458Z  	
+2026-06-15T23:20:37.6714535Z  	
+2026-06-15T23:20:37.6714607Z  	
+2026-06-15T23:20:37.6714778Z  2026-06-15 23:20:37.328 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6715949Z  2026-06-15 23:20:37.328 UTC [74] STATEMENT:  CREATE POLICY presupuesto_mensual_admin_update ON public.presupuesto_mensual FOR UPDATE TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6716026Z  	
+2026-06-15T23:20:37.6716104Z  	
+2026-06-15T23:20:37.6716183Z  	
+2026-06-15T23:20:37.6716349Z  2026-06-15 23:20:37.328 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6717137Z  2026-06-15 23:20:37.328 UTC [74] STATEMENT:  CREATE POLICY presupuesto_mensual_select ON public.presupuesto_mensual FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)));
+2026-06-15T23:20:37.6717223Z  	
+2026-06-15T23:20:37.6717294Z  	
+2026-06-15T23:20:37.6717374Z  	
+2026-06-15T23:20:37.6717540Z  2026-06-15 23:20:37.332 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6718368Z  2026-06-15 23:20:37.332 UTC [74] STATEMENT:  CREATE POLICY "super_admin actualiza alertas" ON public.alertas_sistema FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6718563Z  	
+2026-06-15T23:20:37.6718639Z  	
+2026-06-15T23:20:37.6718709Z  	
+2026-06-15T23:20:37.6718877Z  2026-06-15 23:20:37.332 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6719471Z  2026-06-15 23:20:37.332 UTC [74] STATEMENT:  CREATE POLICY "super_admin lee alertas" ON public.alertas_sistema FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6719548Z  	
+2026-06-15T23:20:37.6719626Z  	
+2026-06-15T23:20:37.6719702Z  	
+2026-06-15T23:20:37.6719864Z  2026-06-15 23:20:37.332 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6720595Z  2026-06-15 23:20:37.332 UTC [74] STATEMENT:  CREATE POLICY "super_admin lee todos los logs" ON public.app_logs FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'::public.app_role));
+2026-06-15T23:20:37.6720678Z  	
+2026-06-15T23:20:37.6720748Z  	
+2026-06-15T23:20:37.6720830Z  	
+2026-06-15T23:20:37.6720993Z  2026-06-15 23:20:37.335 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6722837Z  2026-06-15 23:20:37.335 UTC [74] STATEMENT:  CREATE POLICY vendedora_config_admin_full ON public.vendedora_config TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6723101Z  	
+2026-06-15T23:20:37.6723176Z  	
+2026-06-15T23:20:37.6723247Z  	
+2026-06-15T23:20:37.6723414Z  2026-06-15 23:20:37.335 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6724069Z  2026-06-15 23:20:37.335 UTC [74] STATEMENT:  CREATE POLICY vendedora_config_self_read ON public.vendedora_config FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (user_id = auth.uid())));
+2026-06-15T23:20:37.6724146Z  	
+2026-06-15T23:20:37.6724222Z  	
+2026-06-15T23:20:37.6724297Z  	
+2026-06-15T23:20:37.6724460Z  2026-06-15 23:20:37.335 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6725204Z  2026-06-15 23:20:37.335 UTC [74] STATEMENT:  CREATE POLICY "Admin/operador delete documentos" ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name)));
+2026-06-15T23:20:37.6725283Z  	
+2026-06-15T23:20:37.6725355Z  	
+2026-06-15T23:20:37.6725432Z  	
+2026-06-15T23:20:37.6725603Z  2026-06-15 23:20:37.336 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6726721Z  2026-06-15 23:20:37.336 UTC [74] STATEMENT:  CREATE POLICY "Admin/operador update documentos" ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name))) WITH CHECK (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name)));
+2026-06-15T23:20:37.6726804Z  	
+2026-06-15T23:20:37.6726881Z  	
+2026-06-15T23:20:37.6726958Z  	
+2026-06-15T23:20:37.6727125Z  2026-06-15 23:20:37.336 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6727872Z  2026-06-15 23:20:37.336 UTC [74] STATEMENT:  CREATE POLICY "Admin/operador upload documentos" ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'documentos'::text) AND (auth.uid() IS NOT NULL) AND public.can_manage_document_object(name)));
+2026-06-15T23:20:37.6727945Z  	
+2026-06-15T23:20:37.6728022Z  	
+2026-06-15T23:20:37.6728097Z  	
+2026-06-15T23:20:37.6728259Z  2026-06-15 23:20:37.336 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6729113Z  2026-06-15 23:20:37.336 UTC [74] STATEMENT:  CREATE POLICY "Cliente read own factura files" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'facturas'::text) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (EXISTS ( SELECT 1
+2026-06-15T23:20:37.6729213Z  	   FROM public.facturas f
+2026-06-15T23:20:37.6729668Z  	  WHERE (((f.id)::text = (storage.foldername(objects.name))[2]) AND (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
+2026-06-15T23:20:37.6729754Z  	
+2026-06-15T23:20:37.6729830Z  	
+2026-06-15T23:20:37.6729901Z  	
+2026-06-15T23:20:37.6730072Z  2026-06-15 23:20:37.337 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6731106Z  2026-06-15 23:20:37.337 UTC [74] STATEMENT:  CREATE POLICY "Org members read facturas" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'facturas'::text) AND (public.has_role(auth.uid(), 'super_admin'::public.app_role) OR ((storage.foldername(name))[1] = (public.current_user_org_id())::text))));
+2026-06-15T23:20:37.6731185Z  	
+2026-06-15T23:20:37.6731261Z  	
+2026-06-15T23:20:37.6731340Z  	
+2026-06-15T23:20:37.6731517Z  2026-06-15 23:20:37.337 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6732598Z  2026-06-15 23:20:37.337 UTC [74] STATEMENT:  CREATE POLICY "Org staff delete facturas" ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'facturas'::text) AND ((storage.foldername(name))[1] = (public.current_user_org_id())::text) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6732801Z  	
+2026-06-15T23:20:37.6732874Z  	
+2026-06-15T23:20:37.6732952Z  	
+2026-06-15T23:20:37.6733131Z  2026-06-15 23:20:37.337 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6734375Z  2026-06-15 23:20:37.337 UTC [74] STATEMENT:  CREATE POLICY "Org staff update facturas" ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'facturas'::text) AND ((storage.foldername(name))[1] = (public.current_user_org_id())::text) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6734462Z  	
+2026-06-15T23:20:37.6734542Z  	
+2026-06-15T23:20:37.6734625Z  	
+2026-06-15T23:20:37.6734791Z  2026-06-15 23:20:37.338 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6736049Z  2026-06-15 23:20:37.338 UTC [74] STATEMENT:  CREATE POLICY "Org staff upload facturas" ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'facturas'::text) AND ((storage.foldername(name))[1] = (public.current_user_org_id())::text) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6736130Z  	
+2026-06-15T23:20:37.6736202Z  	
+2026-06-15T23:20:37.6736286Z  	
+2026-06-15T23:20:37.6736455Z  2026-06-15 23:20:37.338 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6737212Z  2026-06-15 23:20:37.338 UTC [74] STATEMENT:  CREATE POLICY "Tenant scoped read documentos" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'documentos'::text) AND (public.has_role(auth.uid(), 'super_admin'::public.app_role) OR (EXISTS ( SELECT 1
+2026-06-15T23:20:37.6737329Z  	   FROM (public.documentos_embarque d
+2026-06-15T23:20:37.6737479Z  	     JOIN public.embarques e ON ((e.id = d.embarque_id)))
+2026-06-15T23:20:37.6737962Z  	  WHERE ((d.archivo = objects.name) AND (d.organization_id = public.current_user_org_id()) AND (e.organization_id = public.current_user_org_id())))) OR (EXISTS ( SELECT 1
+2026-06-15T23:20:37.6738068Z  	   FROM (public.documentos_embarque d
+2026-06-15T23:20:37.6738205Z  	     JOIN public.embarques e ON ((e.id = d.embarque_id)))
+2026-06-15T23:20:37.6738758Z  	  WHERE ((d.archivo = objects.name) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))))));
+2026-06-15T23:20:37.6738953Z  	
+2026-06-15T23:20:37.6739029Z  	
+2026-06-15T23:20:37.6739101Z  	
+2026-06-15T23:20:37.6739276Z  2026-06-15 23:20:37.338 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6740376Z  2026-06-15 23:20:37.338 UTC [74] STATEMENT:  CREATE POLICY "Usuario borra sus imágenes feedback" ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'reportes-feedback'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6740454Z  	
+2026-06-15T23:20:37.6740532Z  	
+2026-06-15T23:20:37.6740608Z  	
+2026-06-15T23:20:37.6740782Z  2026-06-15 23:20:37.338 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6741709Z  2026-06-15 23:20:37.338 UTC [74] STATEMENT:  CREATE POLICY "Usuario lee sus imágenes feedback" ON storage.objects FOR SELECT TO authenticated USING (((bucket_id = 'reportes-feedback'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
+2026-06-15T23:20:37.6741796Z  	
+2026-06-15T23:20:37.6741866Z  	
+2026-06-15T23:20:37.6741947Z  	
+2026-06-15T23:20:37.6742116Z  2026-06-15 23:20:37.338 UTC [74] ERROR:  role "authenticated" does not exist
+2026-06-15T23:20:37.6742999Z  2026-06-15 23:20:37.338 UTC [74] STATEMENT:  CREATE POLICY "Usuario sube sus imágenes feedback" ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'reportes-feedback'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)));
+2026-06-15T23:20:37.6743078Z  	
+2026-06-15T23:20:37.6743154Z  	
+2026-06-15T23:20:37.6743226Z  	
+2026-06-15T23:20:37.6743463Z  2026-06-15 23:20:37.339 UTC [74] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:20:37.6743695Z  2026-06-15 23:20:37.339 UTC [74] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:20:37.6751210Z Stop and remove container: 5eb634ee6d764ec7b0462f2f351cc73f_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_6ac23f
+2026-06-15T23:20:37.6755905Z ##[command]/usr/bin/docker rm --force 7d78154583b67e55e3b6e5f2d966b6f564aa86fceb1a46313f8b1e39202f2fa4
+2026-06-15T23:20:37.8272131Z 7d78154583b67e55e3b6e5f2d966b6f564aa86fceb1a46313f8b1e39202f2fa4
+2026-06-15T23:20:37.8301015Z Remove container network: github_network_651d1431f94f4573953f61d04eb2730c
+2026-06-15T23:20:37.8306337Z ##[command]/usr/bin/docker network rm github_network_651d1431f94f4573953f61d04eb2730c
+2026-06-15T23:20:37.9425677Z github_network_651d1431f94f4573953f61d04eb2730c

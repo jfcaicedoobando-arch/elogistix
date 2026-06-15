@@ -1,0 +1,31 @@
+﻿2026-06-15T23:20:15.8808618Z Current runner version: '2.335.1'
+2026-06-15T23:20:15.8834139Z ##[group]Runner Image Provisioner
+2026-06-15T23:20:15.8835043Z Hosted Compute Agent
+2026-06-15T23:20:15.8835645Z Version: 20260527.539
+2026-06-15T23:20:15.8836409Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-15T23:20:15.8837198Z Build Date: 2026-05-27T21:39:57Z
+2026-06-15T23:20:15.8837980Z Worker ID: {ba240f69-9acf-49b6-b463-dc19c4c826de}
+2026-06-15T23:20:15.8838791Z Azure Region: westcentralus
+2026-06-15T23:20:15.8839411Z ##[endgroup]
+2026-06-15T23:20:15.8840786Z ##[group]Operating System
+2026-06-15T23:20:15.8841649Z Ubuntu
+2026-06-15T23:20:15.8842298Z 24.04.4
+2026-06-15T23:20:15.8842864Z LTS
+2026-06-15T23:20:15.8843407Z ##[endgroup]
+2026-06-15T23:20:15.8844038Z ##[group]Runner Image
+2026-06-15T23:20:15.8844668Z Image: ubuntu-24.04
+2026-06-15T23:20:15.8845279Z Version: 20260607.184.1
+2026-06-15T23:20:15.8846469Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-15T23:20:15.8848291Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-15T23:20:15.8849327Z ##[endgroup]
+2026-06-15T23:20:15.8850569Z ##[group]GITHUB_TOKEN Permissions
+2026-06-15T23:20:15.8852559Z Contents: read
+2026-06-15T23:20:15.8853183Z Metadata: read
+2026-06-15T23:20:15.8853891Z ##[endgroup]
+2026-06-15T23:20:15.8855986Z Secret source: Actions
+2026-06-15T23:20:15.8856810Z Prepare workflow directory
+2026-06-15T23:20:15.9296617Z Prepare all required actions
+2026-06-15T23:20:15.9334736Z Getting action download info
+2026-06-15T23:20:16.3886780Z Download action repository 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-15T23:20:17.0225857Z Download action repository 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' (SHA:3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c)
+2026-06-15T23:20:17.9336430Z Complete job name: RLS suite — crm_operacional

@@ -1,0 +1,66 @@
+﻿2026-06-15T23:20:08.0709518Z Print service container logs: def2f207c4eb49a0ba49993bd07c7b57_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_4596d2
+2026-06-15T23:20:08.0714992Z ##[command]/usr/bin/docker logs --details 444a283bd4f7a94ee62e79ee6fbce308a14a090c619118a683c9640079ebf2b4
+2026-06-15T23:20:08.0851787Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-15T23:20:08.0852567Z  This user must also own the server process.
+2026-06-15T23:20:08.0853351Z  
+2026-06-15T23:20:08.0853908Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-15T23:20:08.0855764Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-15T23:20:08.0856565Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-15T23:20:08.0857614Z  2026-06-15 23:19:48.274 UTC [1] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:20:08.0858443Z  2026-06-15 23:19:48.274 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-15T23:20:08.0858964Z  2026-06-15 23:19:48.274 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-15T23:20:08.0859515Z  2026-06-15 23:19:48.275 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:20:08.0860095Z  2026-06-15 23:19:48.277 UTC [62] LOG:  database system was shut down at 2026-06-15 23:19:48 UTC
+2026-06-15T23:20:08.0860622Z  2026-06-15 23:19:48.281 UTC [1] LOG:  database system is ready to accept connections
+2026-06-15T23:20:08.0861567Z  2026-06-15 23:19:55.315 UTC [75] WARNING:  wal_level is insufficient to publish logical changes
+2026-06-15T23:20:08.0862168Z  2026-06-15 23:19:55.315 UTC [75] HINT:  Set wal_level to "logical" before creating subscriptions.
+2026-06-15T23:20:08.0862761Z  2026-06-15 23:19:55.315 UTC [75] CONTEXT:  SQL statement "CREATE PUBLICATION supabase_realtime"
+2026-06-15T23:20:08.0863291Z  	PL/pgSQL function inline_code_block line 4 at SQL statement
+2026-06-15T23:20:08.0863738Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-15T23:20:08.0864178Z  The default text search configuration will be set to "english".
+2026-06-15T23:20:08.0864514Z  
+2026-06-15T23:20:08.0864725Z  Data page checksums are disabled.
+2026-06-15T23:20:08.0864980Z  
+2026-06-15T23:20:08.0865282Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-15T23:20:08.0865691Z  creating subdirectories ... ok
+2026-06-15T23:20:08.0866015Z  selecting dynamic shared memory implementation ... posix
+2026-06-15T23:20:08.0866367Z  selecting default max_connections ... 100
+2026-06-15T23:20:08.0866665Z  selecting default shared_buffers ... 128MB
+2026-06-15T23:20:08.0866966Z  selecting default time zone ... Etc/UTC
+2026-06-15T23:20:08.0867257Z  creating configuration files ... ok
+2026-06-15T23:20:08.0867530Z  running bootstrap script ... ok
+2026-06-15T23:20:08.0867825Z  performing post-bootstrap initialization ... ok
+2026-06-15T23:20:08.0868148Z  syncing data to disk ... ok
+2026-06-15T23:20:08.0868375Z  
+2026-06-15T23:20:08.0868540Z  
+2026-06-15T23:20:08.0868769Z  Success. You can now start the database server using:
+2026-06-15T23:20:08.0869074Z  
+2026-06-15T23:20:08.0869307Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-15T23:20:08.0869609Z  
+2026-06-15T23:20:08.0870257Z  waiting for server to start....2026-06-15 23:19:48.034 UTC [48] LOG:  starting PostgreSQL 15.8 (Debian 15.8-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2026-06-15T23:20:08.0871557Z  2026-06-15 23:19:48.035 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-15T23:20:08.0872477Z  2026-06-15 23:19:48.040 UTC [51] LOG:  database system was shut down at 2026-06-15 23:19:47 UTC
+2026-06-15T23:20:08.0873349Z  2026-06-15 23:19:48.044 UTC [48] LOG:  database system is ready to accept connections
+2026-06-15T23:20:08.0873752Z   done
+2026-06-15T23:20:08.0874126Z  server started
+2026-06-15T23:20:08.0874324Z  
+2026-06-15T23:20:08.0874650Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-15T23:20:08.0875056Z  
+2026-06-15T23:20:08.0875316Z  2026-06-15 23:19:48.153 UTC [48] LOG:  received fast shutdown request
+2026-06-15T23:20:08.0875858Z  waiting for server to shut down....2026-06-15 23:19:48.153 UTC [48] LOG:  aborting any active transactions
+2026-06-15T23:20:08.0876578Z  2026-06-15 23:19:48.155 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-15T23:20:08.0877140Z  2026-06-15 23:19:48.156 UTC [49] LOG:  shutting down
+2026-06-15T23:20:08.0877539Z  2026-06-15 23:19:48.156 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-15T23:20:08.0878520Z  2026-06-15 23:19:48.159 UTC [49] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+2026-06-15T23:20:08.0879525Z  2026-06-15 23:19:48.162 UTC [48] LOG:  database system is shut down
+2026-06-15T23:20:08.0879864Z   done
+2026-06-15T23:20:08.0880056Z  server stopped
+2026-06-15T23:20:08.0880272Z  
+2026-06-15T23:20:08.0880518Z  PostgreSQL init process complete; ready for start up.
+2026-06-15T23:20:08.0880833Z  
+2026-06-15T23:20:08.0899483Z Stop and remove container: def2f207c4eb49a0ba49993bd07c7b57_postgressha2562c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb_4596d2
+2026-06-15T23:20:08.0905547Z ##[command]/usr/bin/docker rm --force 444a283bd4f7a94ee62e79ee6fbce308a14a090c619118a683c9640079ebf2b4
+2026-06-15T23:20:08.2761680Z 444a283bd4f7a94ee62e79ee6fbce308a14a090c619118a683c9640079ebf2b4
+2026-06-15T23:20:08.2789414Z Remove container network: github_network_1a55a247d4074bf79efb4c2085243fe7
+2026-06-15T23:20:08.2794377Z ##[command]/usr/bin/docker network rm github_network_1a55a247d4074bf79efb4c2085243fe7
+2026-06-15T23:20:08.3767397Z github_network_1a55a247d4074bf79efb4c2085243fe7

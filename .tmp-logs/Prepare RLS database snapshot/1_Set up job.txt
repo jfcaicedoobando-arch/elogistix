@@ -1,0 +1,31 @@
+﻿2026-06-15T23:19:37.3959853Z Current runner version: '2.335.1'
+2026-06-15T23:19:37.3988204Z ##[group]Runner Image Provisioner
+2026-06-15T23:19:37.3989202Z Hosted Compute Agent
+2026-06-15T23:19:37.3989859Z Version: 20260527.539
+2026-06-15T23:19:37.3990505Z Commit: a891dd388383b896fa6ac04a82c0b75cec981078
+2026-06-15T23:19:37.3991541Z Build Date: 2026-05-27T21:39:57Z
+2026-06-15T23:19:37.3992254Z Worker ID: {407dd694-1104-40e6-9fa1-cff8f3246101}
+2026-06-15T23:19:37.3992955Z Azure Region: westus
+2026-06-15T23:19:37.3993624Z ##[endgroup]
+2026-06-15T23:19:37.3995123Z ##[group]Operating System
+2026-06-15T23:19:37.3995853Z Ubuntu
+2026-06-15T23:19:37.3996392Z 24.04.4
+2026-06-15T23:19:37.3996898Z LTS
+2026-06-15T23:19:37.3997492Z ##[endgroup]
+2026-06-15T23:19:37.3998041Z ##[group]Runner Image
+2026-06-15T23:19:37.3998646Z Image: ubuntu-24.04
+2026-06-15T23:19:37.3999285Z Version: 20260607.184.1
+2026-06-15T23:19:37.4000409Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260607.184/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-15T23:19:37.4002605Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260607.184
+2026-06-15T23:19:37.4003587Z ##[endgroup]
+2026-06-15T23:19:37.4004830Z ##[group]GITHUB_TOKEN Permissions
+2026-06-15T23:19:37.4006747Z Contents: read
+2026-06-15T23:19:37.4007518Z Metadata: read
+2026-06-15T23:19:37.4008089Z ##[endgroup]
+2026-06-15T23:19:37.4010416Z Secret source: Actions
+2026-06-15T23:19:37.4011615Z Prepare workflow directory
+2026-06-15T23:19:37.4530907Z Prepare all required actions
+2026-06-15T23:19:37.4570256Z Getting action download info
+2026-06-15T23:19:37.8334397Z Download action repository 'actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-15T23:19:38.2187428Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-06-15T23:19:38.4212382Z Complete job name: Prepare RLS database snapshot
