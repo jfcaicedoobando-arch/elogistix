@@ -80,7 +80,7 @@ export interface AuditoriaRevision {
    * para calcular MTTR — `updated_at` cambia con cualquier modificación
    * (comentarios, snooze, reasignación) y distorsiona la métrica.
    */
-  revisado_at: string | null;
+  revisado_at?: string | null;
   created_at: string;
   updated_at: string;
 }
