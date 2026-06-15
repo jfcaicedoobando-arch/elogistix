@@ -46,6 +46,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   }
 
   // Atención a clientes (antes "viewer"): solo lectura operativa.
+  // Por decisión de producto (13.21.26) viewer SÍ ve "Auditoría operativa".
   if (effectiveRole === "customer_service" || effectiveRole === "viewer") {
     const gestionCS = SIDEBAR_GESTION_ITEMS.filter((it) =>
       ["/cotizaciones", "/embarques"].includes(it.url),
@@ -54,7 +55,7 @@ export function useAppSidebarSections(): SidebarSection[] {
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
       { label: "Gestión", items: gestionCS },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
+      { label: "Sistema", items: sistemaItems.filter((it) => ["/auditoria", "/ayuda"].includes(it.url)) },
     ];
   }
 
@@ -105,6 +106,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   }
 
   // Gerente de operaciones: todo lectura + edición operativa, sin admin.
+  // No incluye "Auditoría operativa" (decisión 13.21.26: solo admin + viewer).
   if (effectiveRole === "gerente_operaciones") {
     return [
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
@@ -113,7 +115,7 @@ export function useAppSidebarSections(): SidebarSection[] {
       { label: "CRM", items: crmItems },
       { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-      { label: "Sistema", items: sistemaItems },
+      { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
     ];
   }
 
