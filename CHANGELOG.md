@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.25] - 2026-06-15
+- **fix(auditoria/bloque-4)**: Hardening y observabilidad del módulo Auditoría Operativa:
+  - **M-4 · Sentry por organización** (`auditoria-snapshot-daily/index.ts`): el loop por-org ahora llama a `captureEdgeException` cuando `auditoria_capturar_snapshot` falla, con tag `organization_id` y `extra.organization_nombre`. Antes solo el catch global enviaba a Sentry y un fallo en una org individual quedaba invisible.
+  - **M-5 · `organization_id` explícito en cliente** (`services/snapshots.ts`, `hooks/useAuditoriaSnapshots.ts`): `fetchAuditoriaSnapshots` acepta `{ dias, organizationId }` y aplica `.eq("organization_id", ...)` cuando viene; el hook lo lee del `OrganizationContext` y lo incluye en la `queryKey`. Defensa en profundidad sobre RLS (si una sesión service-role se filtra, no devuelve snapshots cruzados de otras orgs). Firma retrocompatible: `fetchAuditoriaSnapshots(30)` sigue funcionando.
+  - **L-4 · Test de consistencia** (`domain/__tests__/reglaLabels.test.ts`): nuevo caso que itera todas las reglas y verifica `REGLA_INFO[r].shortLabel === reglaShortLabel(r)` — si alguien renombra una sola en `auditoriaConfig.ts` sin tocar `reglaLabels.ts`, el test rompe en CI.
+  - **L-3 (bloque 2)**: `useAuditoriaCount` ya expone `isError`/`error`; el SAFE-CAST sigue documentado con el guard defensivo que cubre cambios de shape del RPC.
+  - **Tests**: 123/123 en verde.
+
+  **Nota MVP**: L-1 (tests integración del flujo principal de las edge functions auditoria-snapshot-daily / weekly-digest) se deja fuera de este bloque — requeriría mocking del gateway de Resend y del SDK admin de Supabase. El catch global + Sentry por-org + la suite actual de helpers cubren los modos de fallo críticos. Se documenta como deuda técnica.
+
 ## [13.21.24] - 2026-06-15
 - **fix(auditoria/bloque-3)**: Calidad de métricas del tablero ejecutivo:
   - **M-3 · MTTR usa `revisado_at` real** (migración + `domain/ejecutivoAgregados.ts`): nueva columna `auditoria_revisiones.revisado_at` + trigger `set_auditoria_revisado_at` que la llena automáticamente cuando `estado_revision` pasa a 'revisado'. Backfill: revisiones ya marcadas reciben `updated_at` como aproximación. El cálculo de MTTR ahora usa `revisado_at` en lugar de `updated_at`, así comentarios o reasignaciones posteriores no distorsionan la métrica. **Nota**: valores históricos de MTTR pueden cambiar ligeramente al recalcularse.
