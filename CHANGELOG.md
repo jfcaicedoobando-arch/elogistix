@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.22.4] - 2026-06-15
+- **fix(auditoria/docs)**: Hallazgos críticos falsos por documentos "Pendiente" fantasma en `/auditoria`. Causa: `documentos_embarque` tenía filas duplicadas por `(embarque_id, nombre)` — la UI mostraba la versión "No aplica" pero la regla `docs_pendientes_avanzado` contaba la copia "Pendiente". Se eliminaron los duplicados conservando la mejor fila (Recibido > No aplica > Pendiente, con archivo, más reciente) y se agregó índice único parcial `documentos_embarque_unico_por_nombre` que bloquea reincidencia. ELIMP00216 ya no aparece como crítico.
+- **fix(auditoria/explicar-ia)**: La explicación con IA ahora incluye la lista real de documentos del embarque con su estado y marca duplicados explícitamente. El system prompt fuerza a Gemini a analizar la tabla de documentos cuando la regla es `docs_*` en lugar de divagar sobre backfill/facturación. Edge function `auditoria-explicar-hallazgo` redeployada.
+
 ## [13.22.3] - 2026-06-15
 - **fix(auditoria/backfill-legacy)**: Corregido el tercer bloqueo del botón "Ejecutar backfill" en `/admin/auditoria`. La validación de `conceptos_venta.estado_facturacion` ahora acepta `facturado` y el trigger que protege embarques `Cerrado` permite exclusivamente este cambio administrativo del backfill, sin abrir edición manual de conceptos. Validado con la sesión `super_admin`: el RPC completo devuelve `113` conceptos, `22` embarques y `151` proformas en una transacción reversible.
 
