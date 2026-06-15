@@ -17,8 +17,9 @@ import { useDescargarProformaPdf } from "@/features/embarques/hooks";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
-import { HistorialProformas } from "./facturacion/HistorialProformas";
+import { HistorialProformas, esBorradorVacio } from "./facturacion/HistorialProformas";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
+import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
