@@ -122,6 +122,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
           data={proformas}
           rowKey={(p) => p.id}
           density="compact"
+          onRowClick={(p) => navigate(`/proformas/${p.id}`)}
           emptyState={<EmptyStateInline icon={Receipt} message="No hay proformas generadas para este embarque." />}
         />
       </CardContent>
