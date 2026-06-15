@@ -1,0 +1,222 @@
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö crm_operacional/6_Restore database snapshot.txt =====
+ï»¿2026-06-15T23:28:38.3433191Z ##[group]Run # pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.
+2026-06-15T23:28:38.3433827Z [36;1m# pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:38.3434326Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:38.3434712Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:38.3469027Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:38.3469295Z env:
+2026-06-15T23:28:38.3469703Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:38.3470181Z   PGHOST: localhost
+2026-06-15T23:28:38.3470412Z   PGPORT: 5432
+2026-06-15T23:28:38.3470623Z   PGUSER: postgres
+2026-06-15T23:28:38.3470849Z   PGPASSWORD: postgres
+2026-06-15T23:28:38.3471076Z   PGDATABASE: postgres
+2026-06-15T23:28:38.3471316Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:38.3471628Z ##[endgroup]
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö financiero/6_Restore database snapshot.txt =====
+ï»¿2026-06-15T23:28:39.9883016Z ##[group]Run # pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.
+2026-06-15T23:28:39.9883651Z [36;1m# pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:39.9884167Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:39.9884568Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:39.9916432Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:39.9916693Z env:
+2026-06-15T23:28:39.9917101Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:39.9917598Z   PGHOST: localhost
+2026-06-15T23:28:39.9917812Z   PGPORT: 5432
+2026-06-15T23:28:39.9918009Z   PGUSER: postgres
+2026-06-15T23:28:39.9918221Z   PGPASSWORD: postgres
+2026-06-15T23:28:39.9918445Z   PGDATABASE: postgres
+2026-06-15T23:28:39.9918681Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:39.9918950Z ##[endgroup]
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö financiero_critico/6_Restore database snapshot.txt =====
+ï»¿2026-06-15T23:28:31.7238376Z ##[group]Run # pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.
+2026-06-15T23:28:31.7239021Z [36;1m# pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:31.7239532Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:31.7239922Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:31.7274290Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:31.7274564Z env:
+2026-06-15T23:28:31.7275225Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:31.7275724Z   PGHOST: localhost
+2026-06-15T23:28:31.7275979Z   PGPORT: 5432
+2026-06-15T23:28:31.7276191Z   PGUSER: postgres
+2026-06-15T23:28:31.7276419Z   PGPASSWORD: postgres
+2026-06-15T23:28:31.7276661Z   PGDATABASE: postgres
+2026-06-15T23:28:31.7276907Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:31.7277199Z ##[endgroup]
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö isolation/6_Restore database snapshot.txt =====
+ï»¿2026-06-15T23:28:41.9281124Z ##[group]Run # pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.
+2026-06-15T23:28:41.9281749Z [36;1m# pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:41.9282251Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:41.9282629Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:41.9311755Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:41.9312011Z env:
+2026-06-15T23:28:41.9312415Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:41.9312909Z   PGHOST: localhost
+2026-06-15T23:28:41.9313124Z   PGPORT: 5432
+2026-06-15T23:28:41.9313324Z   PGUSER: postgres
+2026-06-15T23:28:41.9313546Z   PGPASSWORD: postgres
+2026-06-15T23:28:41.9313768Z   PGDATABASE: postgres
+2026-06-15T23:28:41.9314007Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:41.9314276Z ##[endgroup]
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö operaciones/6_Restore database snapshot.txt =====
+ï»¿2026-06-15T23:28:34.6305395Z ##[group]Run # pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.
+2026-06-15T23:28:34.6306043Z [36;1m# pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:34.6306562Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:34.6306950Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:34.6339384Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:34.6339651Z env:
+2026-06-15T23:28:34.6340062Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:34.6340563Z   PGHOST: localhost
+2026-06-15T23:28:34.6340788Z   PGPORT: 5432
+2026-06-15T23:28:34.6340987Z   PGUSER: postgres
+2026-06-15T23:28:34.6341195Z   PGPASSWORD: postgres
+2026-06-15T23:28:34.6341412Z   PGDATABASE: postgres
+2026-06-15T23:28:34.6341642Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:34.6341934Z ##[endgroup]
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö tarifas_y_costeo/6_Restore database snapshot.txt =====
+ï»¿2026-06-15T23:28:34.5765035Z ##[group]Run # pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.
+2026-06-15T23:28:34.5765549Z [36;1m# pg_restore es ~10x mÃ¡s rÃ¡pido que rehacer bootstrap+migrations.[0m
+2026-06-15T23:28:34.5765944Z [36;1mpg_restore --no-owner --no-privileges --dbname=postgres \[0m
+2026-06-15T23:28:34.5766263Z [36;1m  .rls-snapshot/db.dump[0m
+2026-06-15T23:28:34.5791971Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:34.5792213Z env:
+2026-06-15T23:28:34.5792539Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:34.5792918Z   PGHOST: localhost
+2026-06-15T23:28:34.5793098Z   PGPORT: 5432
+2026-06-15T23:28:34.5793276Z   PGUSER: postgres
+2026-06-15T23:28:34.5793455Z   PGPASSWORD: postgres
+2026-06-15T23:28:34.5793643Z   PGDATABASE: postgres
+2026-06-15T23:28:34.5793834Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:34.5794057Z ##[endgroup]
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö crm_operacional/7_Run RLS suite ÔÇö crm_operacional.txt =====
+ï»¿2026-06-15T23:28:39.0715162Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_crm_operacional.sql
+2026-06-15T23:28:39.0715695Z [36;1m$PSQL -f supabase/tests/rls/test_rls_crm_operacional.sql[0m
+2026-06-15T23:28:39.0749793Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:39.0750064Z env:
+2026-06-15T23:28:39.0750471Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:39.0750952Z   PGHOST: localhost
+2026-06-15T23:28:39.0751364Z   PGPORT: 5432
+2026-06-15T23:28:39.0751578Z   PGUSER: postgres
+2026-06-15T23:28:39.0751802Z   PGPASSWORD: postgres
+2026-06-15T23:28:39.0752031Z   PGDATABASE: postgres
+2026-06-15T23:28:39.0752282Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:39.0752581Z ##[endgroup]
+2026-06-15T23:28:39.1346266Z psql:supabase/tests/rls/test_rls_crm_operacional.sql:163: ERROR:  invalid input value for enum crm_lead_fuente: "web"
+2026-06-15T23:28:39.1347692Z LINE 5: ..., 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'Ma...
+2026-06-15T23:28:39.1348400Z                                                              ^
+2026-06-15T23:28:39.1349160Z QUERY:  INSERT INTO public.crm_leads(
+2026-06-15T23:28:39.1349852Z     id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
+2026-06-15T23:28:39.1350631Z     fuente, interes_modo, score, estado, vendedor_email, notas
+2026-06-15T23:28:39.1351124Z   ) VALUES
+2026-06-15T23:28:39.1352370Z     (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'web', 'MarÃ­timo', 50, 'Nuevo', 'v@a.mx', ''),
+2026-06-15T23:28:39.1353829Z     (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'web', 'AÃ©reo', 50, 'Nuevo', 'v@b.mx', '')
+2026-06-15T23:28:39.1354772Z CONTEXT:  PL/pgSQL function inline_code_block line 50 at SQL statement
+2026-06-15T23:28:39.1375309Z ##[error]Process completed with exit code 3.
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö financiero/7_Run RLS suite ÔÇö financiero.txt =====
+ï»¿2026-06-15T23:28:40.8862351Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_financiero.sql
+2026-06-15T23:28:40.8862881Z [36;1m$PSQL -f supabase/tests/rls/test_rls_financiero.sql[0m
+2026-06-15T23:28:40.8893181Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:40.8893445Z env:
+2026-06-15T23:28:40.8893852Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:40.8894511Z   PGHOST: localhost
+2026-06-15T23:28:40.8894725Z   PGPORT: 5432
+2026-06-15T23:28:40.8894932Z   PGUSER: postgres
+2026-06-15T23:28:40.8895143Z   PGPASSWORD: postgres
+2026-06-15T23:28:40.8895363Z   PGDATABASE: postgres
+2026-06-15T23:28:40.8895597Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:40.8895868Z ##[endgroup]
+2026-06-15T23:28:40.9372683Z psql:supabase/tests/rls/test_rls_financiero.sql:135: ERROR:  column "saldo" of relation "facturas" does not exist
+2026-06-15T23:28:40.9374136Z LINE 3: ... fecha_vencimiento, moneda, subtotal, iva, total, saldo, est...
+2026-06-15T23:28:40.9376750Z                                                              ^
+2026-06-15T23:28:40.9378809Z QUERY:  INSERT INTO public.facturas(
+2026-06-15T23:28:40.9380169Z     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+2026-06-15T23:28:40.9381220Z     fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+2026-06-15T23:28:40.9381972Z   ) VALUES
+2026-06-15T23:28:40.9382409Z     (fac_a, org_a, cli_a, 'Cliente Fin A', emb_a, 'FA-001',
+2026-06-15T23:28:40.9383132Z       CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'),
+2026-06-15T23:28:40.9383866Z     (fac_b, org_b, cli_b, 'Cliente Fin B', emb_b, 'FB-001',
+2026-06-15T23:28:40.9384629Z       CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 2320, 'Pendiente')
+2026-06-15T23:28:40.9385457Z CONTEXT:  PL/pgSQL function inline_code_block line 36 at SQL statement
+2026-06-15T23:28:40.9397503Z ##[error]Process completed with exit code 3.
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö financiero_critico/7_Run RLS suite ÔÇö financiero_critico.txt =====
+ï»¿2026-06-15T23:28:32.4801077Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_financiero_critico.sql
+2026-06-15T23:28:32.4801654Z [36;1m$PSQL -f supabase/tests/rls/test_rls_financiero_critico.sql[0m
+2026-06-15T23:28:32.4835477Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:32.4835753Z env:
+2026-06-15T23:28:32.4836174Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:32.4836876Z   PGHOST: localhost
+2026-06-15T23:28:32.4837117Z   PGPORT: 5432
+2026-06-15T23:28:32.4837341Z   PGUSER: postgres
+2026-06-15T23:28:32.4837569Z   PGPASSWORD: postgres
+2026-06-15T23:28:32.4837805Z   PGDATABASE: postgres
+2026-06-15T23:28:32.4838056Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:32.4838343Z ##[endgroup]
+2026-06-15T23:28:32.5326155Z psql:supabase/tests/rls/test_rls_financiero_critico.sql:274: ERROR:  new row for relation "proveedores" violates check constraint "proveedores_categoria_check"
+2026-06-15T23:28:32.5328625Z DETAIL:  Failing row contains (645440c1-dc37-490a-915e-81e233768ffe, ProvFC A, null, null, , , , , MXN, null, 2026-06-15 23:28:32.522942+00, 2026-06-15 23:28:32.522942+00, 9a1a0ed9-4f28-4a3a-aa10-18a0c5e47299, Logistico, null, null, null, null, null, null, null, null).
+2026-06-15T23:28:32.5330406Z CONTEXT:  SQL statement "INSERT INTO public.proveedores(id, nombre, organization_id)
+2026-06-15T23:28:32.5331340Z     VALUES (prov_a, 'ProvFC A', org_a), (prov_b, 'ProvFC B', org_b)"
+2026-06-15T23:28:32.5332165Z PL/pgSQL function inline_code_block line 44 at SQL statement
+2026-06-15T23:28:32.5356689Z ##[error]Process completed with exit code 3.
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö isolation/7_Run RLS suite ÔÇö isolation.txt =====
+ï»¿2026-06-15T23:28:42.7813701Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_isolation.sql
+2026-06-15T23:28:42.7814207Z [36;1m$PSQL -f supabase/tests/rls/test_rls_isolation.sql[0m
+2026-06-15T23:28:42.7844166Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:42.7844425Z env:
+2026-06-15T23:28:42.7844833Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:42.7845621Z   PGHOST: localhost
+2026-06-15T23:28:42.7845842Z   PGPORT: 5432
+2026-06-15T23:28:42.7846041Z   PGUSER: postgres
+2026-06-15T23:28:42.7846264Z   PGPASSWORD: postgres
+2026-06-15T23:28:42.7846660Z   PGDATABASE: postgres
+2026-06-15T23:28:42.7846900Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:42.7847172Z ##[endgroup]
+2026-06-15T23:28:42.8328519Z psql:supabase/tests/rls/test_rls_isolation.sql:187: ERROR:  permission denied for table clientes
+2026-06-15T23:28:42.8332763Z CONTEXT:  SQL statement "SELECT COUNT(*)                    FROM public.clientes WHERE nombre LIKE 'Cliente %'"
+2026-06-15T23:28:42.8335951Z PL/pgSQL function inline_code_block line 43 at SQL statement
+2026-06-15T23:28:42.8358793Z ##[error]Process completed with exit code 3.
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö operaciones/7_Run RLS suite ÔÇö operaciones.txt =====
+ï»¿2026-06-15T23:28:35.4893350Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_operaciones.sql
+2026-06-15T23:28:35.4893903Z [36;1m$PSQL -f supabase/tests/rls/test_rls_operaciones.sql[0m
+2026-06-15T23:28:35.4924738Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:35.4925007Z env:
+2026-06-15T23:28:35.4925424Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:35.4926088Z   PGHOST: localhost
+2026-06-15T23:28:35.4926305Z   PGPORT: 5432
+2026-06-15T23:28:35.4926511Z   PGUSER: postgres
+2026-06-15T23:28:35.4926725Z   PGPASSWORD: postgres
+2026-06-15T23:28:35.4926951Z   PGDATABASE: postgres
+2026-06-15T23:28:35.4927187Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:35.4927459Z ##[endgroup]
+2026-06-15T23:28:35.5528718Z psql:supabase/tests/rls/test_rls_operaciones.sql:190: ERROR:  invalid input value for enum categoria_proveedor: "Naviera"
+2026-06-15T23:28:35.5539077Z LINE 4: ...'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera')...
+2026-06-15T23:28:35.5539962Z                                                              ^
+2026-06-15T23:28:35.5540949Z QUERY:  INSERT INTO public.proveedores(
+2026-06-15T23:28:35.5546069Z     id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, categoria
+2026-06-15T23:28:35.5547040Z   ) VALUES
+2026-06-15T23:28:35.5547980Z     (prov_a, 'Prov A', 'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera'),
+2026-06-15T23:28:35.5549035Z     (prov_b, 'Prov B', 'RFCB010101BBB', 'C', 'b@b', '555', 'MXN', org_b, 'Naviera')
+2026-06-15T23:28:35.5550049Z CONTEXT:  PL/pgSQL function inline_code_block line 46 at SQL statement
+2026-06-15T23:28:35.5562592Z ##[error]Process completed with exit code 3.
+===== /tmp/tmp.7XBgQPfT6C/RLS suite ÔÇö tarifas_y_costeo/7_Run RLS suite ÔÇö tarifas_y_costeo.txt =====
+ï»¿2026-06-15T23:28:35.9221815Z ##[group]Run $PSQL -f supabase/tests/rls/test_rls_tarifas_y_costeo.sql
+2026-06-15T23:28:35.9222272Z [36;1m$PSQL -f supabase/tests/rls/test_rls_tarifas_y_costeo.sql[0m
+2026-06-15T23:28:35.9248844Z shell: /usr/bin/bash -e {0}
+2026-06-15T23:28:35.9249060Z env:
+2026-06-15T23:28:35.9249388Z   POSTGRES_IMAGE: postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb
+2026-06-15T23:28:35.9249931Z   PGHOST: localhost
+2026-06-15T23:28:35.9250110Z   PGPORT: 5432
+2026-06-15T23:28:35.9250280Z   PGUSER: postgres
+2026-06-15T23:28:35.9250455Z   PGPASSWORD: postgres
+2026-06-15T23:28:35.9250637Z   PGDATABASE: postgres
+2026-06-15T23:28:35.9250843Z   PSQL: psql -v ON_ERROR_STOP=1 -X -q
+2026-06-15T23:28:35.9251089Z ##[endgroup]
+2026-06-15T23:28:35.9637812Z psql:supabase/tests/rls/test_rls_tarifas_y_costeo.sql:188: ERROR:  invalid input value for enum categoria_proveedor: "Agente"
+2026-06-15T23:28:35.9638904Z LINE 4: ... 'RTA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Agente'),
+2026-06-15T23:28:35.9639802Z                                                              ^
+2026-06-15T23:28:35.9640417Z QUERY:  INSERT INTO public.proveedores(
+2026-06-15T23:28:35.9640999Z     id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, categoria
+2026-06-15T23:28:35.9641631Z   ) VALUES
+2026-06-15T23:28:35.9641993Z     (prov_a, 'Prov TAR A', 'RTA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Agente'),
+2026-06-15T23:28:35.9642564Z     (prov_b, 'Prov TAR B', 'RTB010101BBB', 'C', 'b@b', '555', 'USD', org_b, 'Agente')
+2026-06-15T23:28:35.9643141Z CONTEXT:  PL/pgSQL function inline_code_block line 60 at SQL statement
+2026-06-15T23:28:35.9671941Z ##[error]Process completed with exit code 3.
