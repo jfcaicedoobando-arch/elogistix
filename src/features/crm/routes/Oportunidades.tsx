@@ -15,48 +15,16 @@ import {
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import SearchInput from "@/components/selects/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { useDebounce } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
+import { DataTable } from "@/components/shared/DataTable";
+import { useDebounce, useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersBar from "@/features/crm/components/OportunidadesFiltersBar";
-import {
-  FILTROS_DEFAULT,
-  type OportunidadesFiltros,
-} from "@/features/crm/components/oportunidadesFiltersTypes";
-import {
-  useOportunidades,
-  type CrmOportunidadRow,
-} from "@/features/crm/hooks";
-import { useMoverEtapaConAutomatizacion } from "@/features/crm/hooks";
-import { useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
+import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
+import { useOportunidades, useMoverEtapaConAutomatizacion, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useUsuarios } from "@/hooks/usuario";
-
-const columns: ColumnDef<CrmOportunidadRow, unknown>[] = defineColumns<CrmOportunidadRow>([
-  { id: "nombre", header: "Oportunidad", meta: { className: "font-medium" }, cell: ({ row }) => row.original.nombre },
-  { id: "cliente", header: "Cliente", cell: ({ row }) => row.original.cliente_nombre || "—" },
-  {
-    id: "monto",
-    header: "Monto",
-    meta: { className: "text-right tabular-nums text-xs" },
-    cell: ({ row }) => formatCurrencyCompact(Number(row.original.monto_estimado ?? 0), row.original.moneda),
-  },
-  { id: "prob", header: "Prob", meta: { className: "text-center text-xs" }, cell: ({ row }) => `${row.original.probabilidad}%` },
-  { id: "fecha", header: "Cierre est.", meta: { className: "text-xs" }, cell: ({ row }) => row.original.fecha_estimada_cierre || "—" },
-  { id: "vendedor", header: "Vendedor", meta: { className: "text-xs" }, cell: ({ row }) => row.original.vendedor_email || "—" },
-]);
-
-function activosFiltros(f: OportunidadesFiltros): number {
-  let n = 0;
-  if (f.etapaId !== "todas") n++;
-  if (f.vendedorId !== "todos") n++;
-  if (f.cierreDesde) n++;
-  if (f.cierreHasta) n++;
-  if (f.montoMin) n++;
-  return n;
-}
+import { oportunidadesColumns, activosFiltros } from "./oportunidadesTable";
 
 export default function Oportunidades() {
   const navigate = useNavigate();
