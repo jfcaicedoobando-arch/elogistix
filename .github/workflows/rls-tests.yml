@@ -54,57 +54,22 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - name: Wait for Postgres
-        run: |
-          for _ in $(seq 1 30); do
-            pg_isready -h localhost -p 5432 -U postgres && exit 0
-            sleep 1
-          done
-          echo "::error::Postgres no respondió en 30s"; exit 1
+      # Nota: el service `postgres` con --health-cmd ya garantiza readiness
+      # antes de que arranque el primer step, así que no necesitamos "Wait for".
 
-      - name: Bootstrap (stubs auth.*)
+      - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
+
+      - name: Drift fixes (tablas/columnas creadas manualmente en prod)
+        run: $PSQL -f supabase/tests/rls/_ci_drift.sql
 
       - name: Apply migrations
         run: |
           shopt -s nullglob
-          for f in supabase/migrations/*.sql; do
+          # Orden determinístico: aunque el glob ya ordena lexicográficamente
+          # con timestamps YYYYMMDDHHMMSS_, forzamos LC_ALL=C por defensa.
+          for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
-            # Drift fix: la columna es_consolidada se añadió manualmente en prod
-            # y nunca tuvo migración de creación; la inyectamos antes de la
-            # migración que asume su existencia para que CI (DB limpia) no rompa.
-            if [ "$base" = "20260424231755_3f492847-dfdc-44cc-b159-ee9c97b3731d.sql" ]; then
-              echo "▶ drift-fix: ensure public.proformas.es_consolidada"
-              $PSQL -c "ALTER TABLE public.proformas ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false;"
-            fi
-            # Drift fix: public.tracking_intentos se creó manualmente en prod;
-            # esta migración sólo redefine sus policies. Creamos un stub mínimo.
-            if [ "$base" = "20260527061320_4cb9567e-3bbe-4452-8513-f38a418df7f9.sql" ]; then
-              echo "▶ drift-fix: ensure public.tracking_intentos"
-              $PSQL <<'SQL'
-CREATE TABLE IF NOT EXISTS public.tracking_intentos (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL,
-  embarque_id uuid NOT NULL,
-  provider text NOT NULL DEFAULT 'unknown',
-  accion text NOT NULL DEFAULT 'request',
-  resultado text NOT NULL,
-  http_status integer,
-  mensaje text,
-  detalle jsonb,
-  request_type text,
-  request_number text,
-  scac text,
-  tracking_request_id uuid,
-  usuario_id uuid,
-  usuario_email text,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.tracking_intentos TO authenticated;
-GRANT ALL ON public.tracking_intentos TO service_role;
-ALTER TABLE public.tracking_intentos ENABLE ROW LEVEL SECURITY;
-SQL
-            fi
             echo "▶ $base"
             # CI no tiene pg_cron / pg_net / pgmq / supabase_vault (sólo existen
             # en Supabase managed Postgres). Reemplazamos los CREATE EXTENSION
@@ -116,27 +81,68 @@ SQL
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
               "$f" | $PSQL
-
           done
 
       - name: Post-migrate (drop auth.users FKs para CI)
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
 
-      - name: Run RLS suite — isolation
-        run: $PSQL -f supabase/tests/rls/test_rls_isolation.sql
+      - name: Verify RLS coverage
+        run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
 
-      - name: Run RLS suite — financiero
-        run: $PSQL -f supabase/tests/rls/test_rls_financiero.sql
+  rls-suites:
+    runs-on: ubuntu-latest
+    needs: rls
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - isolation
+          - financiero
+          - financiero_critico
+          - crm_operacional
+          - operaciones
+          - tarifas_y_costeo
 
-      - name: Run RLS suite — financiero crítico
-        run: $PSQL -f supabase/tests/rls/test_rls_financiero_critico.sql
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
 
-      - name: Run RLS suite — CRM operacional
-        run: $PSQL -f supabase/tests/rls/test_rls_crm_operacional.sql
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      PSQL: psql -v ON_ERROR_STOP=1 -X -q
 
-      - name: Run RLS suite — operaciones
-        run: $PSQL -f supabase/tests/rls/test_rls_operaciones.sql
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - name: Run RLS suite — tarifas y costeo
-        run: $PSQL -f supabase/tests/rls/test_rls_tarifas_y_costeo.sql
+      - name: Bootstrap + drift + migrations
+        run: |
+          $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
+          $PSQL -f supabase/tests/rls/_ci_drift.sql
+          shopt -s nullglob
+          for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
+            sed -E \
+              -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
+              -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
+              "$f" | $PSQL
+          done
+          $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
+
+      - name: Run RLS suite — ${{ matrix.suite }}
+        run: $PSQL -f supabase/tests/rls/test_rls_${{ matrix.suite }}.sql
+
 
