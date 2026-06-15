@@ -1,4 +1,5 @@
 import { Download, Loader2, Receipt, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
