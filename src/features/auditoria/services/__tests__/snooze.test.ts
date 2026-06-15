@@ -16,6 +16,7 @@ describe('auditoria/snooze', () => {
 
   it('snoozeRevision hace upsert con onConflict correcto', async () => {
     const input = {
+      organization_id: 'org-1',
       embarque_id: '1', regla: 'sin_tracking', detalle_hash: 'h',
       detalle: 'd', snoozed_until: '2099-12-31', snooze_motivo: 'cliente espera',
     } as any;
@@ -25,6 +26,7 @@ describe('auditoria/snooze', () => {
     expect(mockSupabase.current.from).toHaveBeenCalledWith('auditoria_revisiones');
     const [payload, opts] = mockSupabase.current.upsert.mock.calls[0];
     expect(payload).toMatchObject({
+      organization_id: 'org-1',
       embarque_id: '1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
       snoozed_until: '2099-12-31', snooze_motivo: 'cliente espera',
     });
@@ -33,10 +35,21 @@ describe('auditoria/snooze', () => {
     expect(result).toEqual(created);
   });
 
+  it('snoozeRevision rechaza si falta organization_id', async () => {
+    mockSupabase.current = createSupabaseChainMock({});
+    await expect(
+      snoozeRevision({
+        organization_id: '', embarque_id: '1', regla: 'sin_tracking', detalle_hash: 'h',
+        detalle: 'd', snoozed_until: '2099-01-01', snooze_motivo: 'x',
+      } as any),
+    ).rejects.toThrow(/organization_id/);
+  });
+
   it('snoozeRevision propaga errores', async () => {
     mockSupabase.current = createSupabaseChainMock(null, { message: 'rls' });
     await expect(
       snoozeRevision({
+        organization_id: 'org-1',
         embarque_id: '1', regla: 'sin_tracking', detalle_hash: 'h',
         detalle: 'd', snoozed_until: '2099-01-01', snooze_motivo: 'x',
       } as any),
