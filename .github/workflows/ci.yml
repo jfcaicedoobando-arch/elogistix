@@ -33,8 +33,8 @@ jobs:
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
 
-      - name: ESLint
-        run: bun run lint
+      - name: ESLint (max-warnings 0)
+        run: bun run lint -- --max-warnings 0
 
       - name: TypeScript typecheck
         run: bun run typecheck
