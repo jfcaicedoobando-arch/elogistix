@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.14] - 2026-06-15
+- **fix(ci/rls-tests)**: Bootstrap del Postgres efímero ahora también stubea el schema `storage` (tablas `storage.buckets` y `storage.objects` + helper `storage.foldername`). Antes la migración `20260301192552` (`INSERT INTO storage.buckets`) abortaba el workflow `rls-tests` con `ERROR: relation "storage.buckets" does not exist`.
+
 ## [13.21.13] - 2026-06-15
 - **ci(mvp-fit)**: Pineadas por SHA todas las acciones oficiales (`actions/checkout` v6.0.3, `actions/cache` v5.0.5, `actions/upload-artifact` v7.0.1, `actions/download-artifact` v8.0.1, `actions/github-script` v7.1.0). Nuevo `CONTRIBUTING.md` con la lista de status checks requeridos para branch protection. **Cleanup MVP**: eliminados `sql-lint.yml`+`.sqlfluff` (poco valor en migraciones Supabase), `bundle-budget.json`+`check-bundle-budget.mjs` (duplicaba el gate `.sh`), comentario duplicado de coverage en PR (ya está el summary), y nightly diario de E2E (vuelve a weekly). Workflows ahora dimensionados a un MVP, manteniendo lo crítico: CI, CodeQL, Gitleaks, Dependabot, smoke prod, RLS tests, E2E weekly.
 
