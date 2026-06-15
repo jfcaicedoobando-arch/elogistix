@@ -94,6 +94,15 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         }}
       />
 
+      {borradorVacio && (
+        <ProformaInconsistenteAlert
+          proformaBorrador={borradorVacio}
+          conceptosPendientes={conceptosHuerfanos}
+          embarqueId={embarque.id}
+          onEliminarBorrador={() => setProformaAEliminar({ id: borradorVacio.id, numero: borradorVacio.numero })}
+        />
+      )}
+
       <HistorialProformas
         proformas={proformas}
         canEdit={canEdit}
