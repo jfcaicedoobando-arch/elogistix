@@ -33,7 +33,7 @@ export interface SubmitProformaParams {
   totales: TotalesProforma;
   tasaIva: number;
   crearProformaMutateAsync: (args: CrearProformaArgs) => Promise<Tables<"proformas">>;
-  fetchClienteParaPdfCached: ReturnType<typeof useFetchClienteParaPdf>;
+  fetchClienteParaPdfCached: (clienteId: string) => Promise<ClienteParaPdf>;
 }
 
 function construirNotasFinales(
