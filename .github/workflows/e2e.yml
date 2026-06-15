@@ -2,12 +2,14 @@ name: E2E (Playwright)
 
 # Smoke E2E para los 5 flujos críticos. Se ejecuta:
 #  - manualmente (workflow_dispatch)
-#  - semanalmente, lunes 09:00 UTC (03:00 CDMX)
+#  - nightly diario 06:00 UTC (00:00 CDMX)
+#  - semanalmente, lunes 09:00 UTC (03:00 CDMX) — kept para histórico semanal
 # No bloquea PRs. Si faltan secrets, el job se marca como skipped.
 
 on:
   workflow_dispatch:
   schedule:
+    - cron: "0 6 * * *"
     - cron: "0 9 * * 1"
 
 permissions:

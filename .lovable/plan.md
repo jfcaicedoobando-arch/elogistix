@@ -1,76 +1,60 @@
-# Paso 2: Mejoras de CI/CD (esta semana + siguiente iteración)
 
-Aplicar el resto del hardening recomendado en la auditoría, agrupado en dos bloques.
+# Step 3 — 8 mejoras pendientes de GitHub Actions
 
-## Bloque A — Esta semana
+Bump: `APP_VERSION` → `13.21.12` + entrada en `CHANGELOG.md`.
 
-### A1. Pinning por SHA de acciones de terceros
-Reemplazar tags móviles por SHA completo con comentario de versión. Archivos afectados:
-- `.github/actions/setup-bun/action.yml`: `oven-sh/setup-bun@v2` → SHA + `# v2.x.x`
-- `.github/workflows/post-deploy-smoke.yml`: `denoland/setup-deno@v2` → SHA
-- `.github/workflows/ci.yml` y `e2e.yml`: revisar y pinear `codecov/codecov-action@v7`, `actions/checkout@v6`, `actions/cache@v5`, `actions/upload-artifact`, `actions/download-artifact` (las de `actions/*` son first-party de GitHub, opcional pinearlas — las dejaremos como están para reducir ruido de Dependabot).
-- Solo pinear third-party: `oven-sh/setup-bun`, `denoland/setup-deno`, `codecov/codecov-action`.
+## Bloque C — Seguridad de supply chain
 
-Los SHAs se obtienen con `gh api repos/<owner>/<repo>/git/refs/tags/<tag>` o desde la página de releases.
+### C1. Dependency Review en PRs (item #5)
+Nuevo workflow `.github/workflows/dependency-review.yml`:
+- Trigger: `pull_request` sobre `main`.
+- `actions/dependency-review-action` SHA-pinneado.
+- `fail-on-severity: high`, `comment-summary-in-pr: on-failure`.
+- `permissions: contents: read, pull-requests: write`.
 
-### A2. Dependabot para GitHub Actions
-Nuevo archivo `.github/dependabot.yml`:
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
-    groups:
-      actions-minor:
-        update-types: ["minor", "patch"]
-    commit-message:
-      prefix: "ci"
-```
-Esto generará PRs semanales con bumps de SHA + tag — compatible con el pinning de A1.
+### C2. `--ignore-scripts` en bun install (item #10)
+Editar `.github/actions/setup-bun/action.yml` (composite) para correr `bun install --frozen-lockfile --ignore-scripts` por defecto. Protege contra postinstall maliciosos en dependencias.
 
-### A3. Workflow de `actionlint`
-Nuevo `.github/workflows/actionlint.yml` que corre en PRs que tocan `.github/workflows/**`:
-- `runs-on: ubuntu-latest`, `timeout-minutes: 5`
-- `permissions: contents: read`
-- Usa `rhysd/actionlint` (descarga el binario, sin Docker) y falla si encuentra issues de sintaxis/shellcheck en los YAML.
+## Bloque D — Calidad y feedback
 
-## Bloque B — Siguiente iteración (seguridad + observabilidad)
+### D1. ESLint `--max-warnings 0` explícito (item #11)
+En `.github/workflows/ci.yml`, paso de lint: `bun run lint -- --max-warnings 0` (sin tocar `package.json`).
 
-### B1. CodeQL semanal
-Nuevo `.github/workflows/codeql.yml`:
-- Triggers: `push` a `main`, `pull_request` a `main`, `schedule` lunes 06:00 UTC.
-- Lenguajes: `javascript-typescript`.
-- `permissions: security-events: write, contents: read, actions: read`.
-- Pasos estándar `github/codeql-action/init` → `analyze`.
+### D2. E2E nightly (item #12)
+Editar `.github/workflows/e2e.yml`: añadir `schedule: cron '0 6 * * *'` (06:00 UTC diario ≈ 00:00 CDMX) además del lunes existente. Mantener `concurrency` para evitar duplicados.
 
-### B2. Gitleaks en PR
-Nuevo `.github/workflows/gitleaks.yml`:
-- Trigger: `pull_request`.
-- `permissions: contents: read, pull-requests: read`.
-- `gitleaks/gitleaks-action@v2` (pineado por SHA) con `fail` en findings.
-- Reglas: configuración default + `.gitleaks.toml` mínimo permitiendo el `ANON_KEY` público que ya vive en workflows.
+### D3. Comentario de cobertura en PR cuando falla (item #14)
+En `ci.yml` job de tests: añadir step condicional `if: failure()` que use `actions/github-script` para postear comentario con link al run y resumen del coverage report (si existe `coverage/coverage-summary.json`). `permissions: pull-requests: write` solo en ese job.
 
-### B3. Notificación de fallo de smoke
-En `post-deploy-smoke.yml`, agregar un job `notify` con `needs: [user-management-smoke, exchange-rates-smoke, tracking-public-smoke]` y `if: failure()` que:
-- Crea/actualiza un GitHub Issue con label `smoke-failure` (vía `actions/github-script`), incluyendo link al run.
-- Requiere `permissions: issues: write` solo en ese job.
-- Sin webhooks externos para no introducir secrets nuevos.
+## Bloque E — Validaciones y performance
 
-## Verificación
-- `actionlint` local (o vía el workflow nuevo) sobre los 6 workflows resultantes.
-- Confirmar que `dependabot.yml` valida (sintaxis YAML correcta, no se ejecuta hasta merge).
-- No tocar lógica de jobs existentes ni triggers; solo agregados.
+### E1. Lint de migraciones SQL (item #15)
+Nuevo workflow `.github/workflows/sql-lint.yml`:
+- Trigger: PRs que tocan `supabase/migrations/**`.
+- Usa `sqlfluff` (Python, dialect `postgres`) con config mínima `.sqlfluff` permisiva (solo errores de parsing y reglas críticas L010/L030/L048).
+- `permissions: contents: read`.
 
-## Metadata
-- `APP_VERSION` → `13.21.11`
-- `CHANGELOG.md` → entrada `## [13.21.11] - 2026-06-15` listando: pin por SHA de terceros, `dependabot.yml`, workflow `actionlint`, workflow `codeql`, workflow `gitleaks`, y notificación de fallo de smoke vía issue.
+### E2. Bundle budget por chunk versionado (item #16)
+Nuevo archivo `.github/bundle-budget.json` con límites en KB por chunk principal (`index`, `vendor-react`, `vendor-supabase`, `vendor-charts`, etc.). Nuevo step en `ci.yml` después del build: script `scripts/check-bundle-budget.mjs` que lee `dist/assets/*.js` (gzipped) y compara contra el JSON; falla si excede.
+
+### E3. Cache de Vite/Vitest (item #17)
+En `ci.yml`, añadir `actions/cache` (SHA-pinneado) para:
+- `node_modules/.vite`
+- `node_modules/.vitest`
+- `.vitest-reports`
+Key basado en `bun.lockb` + hash de `vite.config.ts`/`vitest.config.ts`.
+
+## Detalles técnicos
+
+- Todas las acciones de terceros SHA-pinneadas con comentario de versión (consistente con Step 2).
+- Permisos mínimos por job (default `contents: read`, elevar solo donde se requiera).
+- Sin tocar `rls-tests.yml` ni `post-deploy-smoke.yml`.
+- `sqlfluff` corre vía `pip install sqlfluff==3.x` en un job Ubuntu con `actions/setup-python` SHA-pinneado.
+- `bundle-budget.json` con valores iniciales calibrados al build actual + 10% de margen.
 
 ## Fuera de alcance
-- Reusable workflows / composite actions adicionales (más allá de `setup-bun`).
-- Build provenance / SLSA attestation.
-- Bundle budget por chunk (ya existe `scripts/check-bundle-size.sh`, lo dejamos como está).
-- Cambios a `ci.yml`, `e2e.yml`, `rls-tests.yml` más allá del pinning de A1.
+
+- Reusable workflows / composite refactor mayor.
+- SLSA / build provenance.
+- Cambios a `package.json` scripts.
+- Renovate (ya hay Dependabot).
