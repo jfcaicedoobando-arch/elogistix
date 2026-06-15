@@ -12,6 +12,7 @@
 import { ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BackfillLegacyCard } from "./BackfillLegacyCard";
 
 const KPIS_PREVISTOS = [
   "Uso por organización (embarques, cotizaciones, usuarios activos).",
@@ -49,6 +50,8 @@ export default function AdminAuditoriaPlataforma() {
           </ul>
         </CardContent>
       </Card>
+
+      <BackfillLegacyCard />
     </div>
   );
 }

@@ -4912,6 +4912,21 @@ export type Database = {
         }
         Returns: Json
       }
+      backfill_conceptos_venta_facturados: {
+        Args: never
+        Returns: {
+          conceptos_actualizados: number
+          embarques_afectados: number
+          organization_id: string
+        }[]
+      }
+      backfill_proformas_aceptadas: {
+        Args: never
+        Returns: {
+          organization_id: string
+          proformas_actualizadas: number
+        }[]
+      }
       busqueda_global: {
         Args: { limite?: number; termino: string }
         Returns: {
@@ -5561,6 +5576,7 @@ export type Database = {
         Args: { _id: string; _table: string }
         Returns: undefined
       }
+      run_auditoria_backfill_legacy: { Args: never; Returns: Json }
       seed_demo_organization: { Args: never; Returns: undefined }
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
