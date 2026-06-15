@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.20] - 2026-06-15
+- **chore(ci/rls-tests)**: Hardening de la suite de RLS según auditoría:
+  - **Cobertura RLS** (`_ci_verify_rls.sql`): nuevo verificador que aborta CI si encuentra tablas en `public` con RLS habilitado pero **cero policies** (falso verde: los tests de "no debe ver X" pasaban trivialmente con count=0), o tablas sin RLS fuera del whitelist (`ratelimit_buckets`, `_backup_*`).
+  - **WITH CHECK** (`test_rls_financiero_critico.sql`): añadido TEST 10 con `assert_insert_blocked()` para validar que `cuentas_bancarias`, `proveedor_facturas` y `cotizacion_costos` rechazan INSERT con `organization_id` ajeno. Antes sólo se probaba SELECT, una policy sin WITH CHECK pasaba desapercibida.
+  - **Drift consolidado** (`_ci_drift.sql`): movidos los `ALTER TABLE ... ADD COLUMN IF NOT EXISTS es_consolidada` y `CREATE TABLE IF NOT EXISTS tracking_intentos` del workflow YAML a un archivo SQL único versionado. Próximos drift fixes van aquí.
+  - **Helpers compartidos** (`_helpers.sql`): extraídas `pg_temp.as_user`, `pg_temp.assert`, nueva `pg_temp.as_postgres` (limpia `request.jwt.claims` además de `RESET ROLE` — antes el siguiente INSERT seguía corriendo con el JWT del usuario simulado y RLS activo) y `pg_temp.assert_insert_blocked`. Las 6 suites ahora hacen `\i supabase/tests/rls/_helpers.sql` en lugar de duplicar 20 líneas cada una.
+  - **Matrix paralela**: las 6 suites SQL ahora corren en paralelo (`strategy.matrix.suite` con `fail-fast: false`), separadas del job `rls` que aplica migraciones + verifica cobertura. Diagnóstico inmediato si falla una suite.
+  - **Cleanup**: removido el step `Wait for Postgres` (el `--health-cmd` del service ya lo cubre), añadido `LC_ALL=C sort` defensivo al loop de migraciones.
+
 ## [13.21.19] - 2026-06-15
 - **fix(ci/rls-tests)**: Drift-fix adicional para `public.tracking_intentos`: la tabla se creó manualmente en prod y la migración `20260527061320` sólo redefine sus policies, así que CI rompía con `ERROR: relation "public.tracking_intentos" does not exist`. Añadido `CREATE TABLE IF NOT EXISTS` (stub mínimo con `organization_id`, `embarque_id`, `resultado`, etc. + GRANTs + RLS) justo antes de aplicar esa migración.
 
