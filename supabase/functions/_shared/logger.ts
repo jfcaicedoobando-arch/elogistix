@@ -99,12 +99,14 @@ async function writeLog(
  * Crea un logger atado al request actual. El `user_id` queda en `null` hasta
  * que el handler llame `setUserId()` con el sub verificado por `authenticate()`.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function createLogger(req: Request, fn: string): Logger {
   const t0 = performance.now();
+  const headerReqId =
+    req.headers.get("x-request-id") ?? req.headers.get("x-correlation-id");
   const requestId =
-    req.headers.get("x-request-id") ??
-    req.headers.get("x-correlation-id") ??
-    crypto.randomUUID();
+    headerReqId && UUID_RE.test(headerReqId) ? headerReqId : crypto.randomUUID();
   const base: LogContext = { request_id: requestId, user_id: null };
 
   return {
