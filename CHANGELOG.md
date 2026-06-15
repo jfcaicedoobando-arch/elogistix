@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.25.0] - 2026-06-15
+- **feat(embarques/candado-docs)**: Candado mixto al avanzar estado. Estados avanzados (`En Aduana`, `Llegada`, `Arribo`, `Entregado`, `EIR`, `Cerrado`) ahora **bloquean** el avance si faltan documentos mínimos (botón "Avanzar" deshabilitado con tooltip + RPC `avanzar_estado_embarque` rechaza con `documentos_faltantes: ...`). Estados tempranos (`Confirmado`, `En Tránsito`) muestran confirmación suave. "No aplica" satisface el requisito (consistente con auditoría).
+- **feat(backend)**: Nueva función helper inmutable `_docs_requeridos_por_estado(modo, estado)` como fuente única para la matriz de documentos. Nueva RPC `embarque_docs_faltantes(embarque_id, estado_destino)` consumida por el frontend.
+
 ## [13.24.1] - 2026-06-15
 - **fix(auditoría/docs_faltantes)**: La matriz de documentos exigidos por estado ahora distingue **Terrestre** (Carta Porte, Factura, Lista de Empaque) además de Aéreo y Marítimo/Multimodal. Antes el modo Terrestre caía en el `ELSE` y se le exigían BL Master/House, Certificado de Origen y Ficha Técnica que el wizard nunca crea, dejando hallazgos "alto" imposibles de cerrar (caso ELNAC00237).
 

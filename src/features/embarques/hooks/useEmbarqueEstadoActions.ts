@@ -11,6 +11,7 @@ import {
   type EmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqueQueries";
+import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFaltantesParaEstado";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useEffect, useState, useCallback } from "react";
 
@@ -24,11 +25,12 @@ export function getSiguienteEstado(estadoActual: string) {
  * Hook focalizado en la sincronización + avance de estado del embarque.
  * Separado de la gestión de documentos para mantener responsabilidades únicas.
  *
- * Incluye:
- * - Auto-sync de estado calculado (ETD/ETA → estado visible).
- * - Avance manual de estado con advertencia soft al cerrar si hay conceptos
- *   de venta sin proforma (el usuario decide si confirma o cancela).
- * - Reapertura de embarques cerrados (solo admin, validado en backend).
+ * Candado de documentos al avanzar:
+ *  - Estados bloqueantes (En Aduana, Llegada, Arribo, Entregado, EIR, Cerrado):
+ *    si faltan documentos, abre BlockDocsDialog y NO avanza (el backend también rechaza).
+ *  - Estados soft (Confirmado, En Tránsito): si faltan documentos, abre WarnDocsDialog
+ *    y deja al usuario confirmar el avance.
+ *  - Cierre con conceptos sin proforma: confirmación suave existente.
  */
 export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: string | undefined) {
   const { toast } = useToast();
@@ -38,6 +40,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const reabrirEmbarque = useReabrirEmbarque();
   const syncEstado = useSyncEstadoEmbarque();
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
+
+  const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
+  const { faltantes: docsFaltantes, bloqueante: docsBloqueantes } =
+    useDocsFaltantesParaEstado(id, siguienteEstado);
 
   // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
   const embarqueId = embarque?.id;
@@ -56,14 +62,13 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     }
   }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email]);
 
-  // Cantidad de conceptos de venta aún no incluidos en una proforma.
-  // Se usa para mostrar advertencia soft al cerrar el embarque.
   const conceptosSinProforma = conceptosVenta.filter(
     (c) => c.estado_facturacion !== "en_proforma",
   ).length;
 
-  // Estado del AlertDialog de advertencia al pasar a Cerrado sin proforma.
   const [warnCierreOpen, setWarnCierreOpen] = useState(false);
+  const [warnDocsOpen, setWarnDocsOpen] = useState(false);
+  const [blockDocsOpen, setBlockDocsOpen] = useState(false);
 
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
@@ -80,7 +85,13 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       });
       notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al cambiar estado", description: getErrorMessage(err), error: err, method: "HANDLE_AVANZAR_ESTADO" });
+      const msg = getErrorMessage(err);
+      // El backend devuelve "documentos_faltantes: ...": mostramos block dialog.
+      if (msg.includes("documentos_faltantes")) {
+        setBlockDocsOpen(true);
+        return;
+      }
+      notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
     }
   }, [embarque, id, avanzarEstado, user?.email, registrarActividad, toast]);
 
@@ -88,7 +99,18 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!embarque || !id) return;
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
-    // Soft warning: si cierra con conceptos pendientes de proforma, pide confirmación extra.
+
+    // 1) Candado HARD: faltan documentos para estado avanzado.
+    if (docsBloqueantes && docsFaltantes.length > 0) {
+      setBlockDocsOpen(true);
+      return;
+    }
+    // 2) Candado SOFT por documentos: Confirmado / En Tránsito.
+    if (!docsBloqueantes && docsFaltantes.length > 0) {
+      setWarnDocsOpen(true);
+      return;
+    }
+    // 3) Soft warning de cierre sin proforma (preserva comportamiento previo).
     if (siguiente === "Cerrado" && conceptosSinProforma > 0) {
       setWarnCierreOpen(true);
       return;
@@ -100,6 +122,15 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     setWarnCierreOpen(false);
     await ejecutarAvance("Cerrado");
   }, [ejecutarAvance]);
+
+  const confirmarAvanceConDocsPendientes = useCallback(async () => {
+    setWarnDocsOpen(false);
+    if (!embarque) return;
+    const siguiente = getSiguienteEstado(embarque.estado);
+    if (!siguiente) return;
+    // Si después de docs queda el cierre sin proforma, ejecuta directo (ya advertimos docs).
+    await ejecutarAvance(siguiente);
+  }, [embarque, ejecutarAvance]);
 
   const handleReabrir = async () => {
     if (!embarque || !id) return;
@@ -128,5 +159,14 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     setWarnCierreOpen,
     confirmarCierreSinProforma,
     conceptosSinProforma,
+    // Candado de documentos
+    docsFaltantes,
+    docsBloqueantes,
+    warnDocsOpen,
+    setWarnDocsOpen,
+    blockDocsOpen,
+    setBlockDocsOpen,
+    confirmarAvanceConDocsPendientes,
+    siguienteEstado,
   };
 }
