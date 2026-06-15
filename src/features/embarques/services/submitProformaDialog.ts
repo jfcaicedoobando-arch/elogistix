@@ -8,7 +8,11 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { calcularTotalesProforma } from "@/lib/domain/proforma";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
-import type { useFetchClienteParaPdf } from "@/features/embarques/hooks/useProformaDialog";
+
+type ClienteParaPdf = Pick<
+  Tables<"clientes">,
+  "nombre" | "rfc" | "direccion" | "ciudad" | "estado" | "cp"
+> | null;
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 type EmbarqueRow = Tables<"embarques">;
