@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.9] - 2026-06-15
+- **data(backfill)**: Restaurado desglose financiero del embarque ELIMP00058. Se insertaron 2 conceptos de venta (USD 585 y MXN 8,500, estado `en_proforma`, ligados a PRO-2026-0024), 2 consolidados de proforma (con IVA 37.60 USD y 1,360 MXN preservados) y 2 conceptos de factura (folio externo 821 USD/MXN). Embarque reabierto temporalmente a Confirmado durante el backfill y devuelto a Cerrado. Cabeceras de proforma y facturas intactas. Registrado en bitácora con `accion=backfill_conceptos`.
+
 ## [13.21.8] - 2026-06-15
 - **chore(cleanup)**: Knip limpio. Eliminados archivo `src/constants/queryStaleTime.ts` y exports sin uso (`requiereTresPuntos`, `ModalidadEquipoTerrestre`, `labelCategoria`, `MetodoPagoProveedor`, `OrigenProveedor` del constants central). Ajustado `knip.json`: removidos entries redundantes (`main.tsx`, `vite/vitest/tailwind/postcss/eslint config`), `ignore` de `supabase/**`, `docs/**` y `supabase/client.ts`, e `ignoreDependencies` para `tailwindcss-animate` y `@tailwindcss/typography`.
 
