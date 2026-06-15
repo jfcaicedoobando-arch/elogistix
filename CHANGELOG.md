@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.18] - 2026-06-15
+- **fix(ci/rls-tests)**: Añadidos roles managed-only de Supabase al bootstrap (`supabase_auth_admin`, `supabase_storage_admin`, `authenticator`). La migración `20260518225551` hacía `GRANT ... TO supabase_storage_admin` y rompía CI con `ERROR: role "supabase_storage_admin" does not exist`.
+
 ## [13.21.17] - 2026-06-15
 - **fix(ci/rls-tests)**: El Postgres vanilla de CI no trae las extensiones managed-only de Supabase (`pg_cron`, `pg_net`, `pgmq`, `supabase_vault`), por lo que la migración `20260517020910` rompía con `ERROR: extension "pg_cron" is not available`. Solución en dos partes: (1) `_ci_bootstrap.sql` ahora crea schemas `cron`, `net`, `pgmq`, `vault` con funciones no-op (`cron.schedule/unschedule`, `net.http_post`, `pgmq.create/send/read/delete`); (2) el step `Apply migrations` filtra cada archivo con `sed` para reemplazar las líneas `CREATE EXTENSION pg_cron|pg_net|pgmq|supabase_vault` por `SELECT 1;` (top-level) o `PERFORM 1;` (dentro de bloques `DO`) — evita que PL/pgSQL termine con un `THEN` vacío en `20260604052500_email_infra.sql`.
 
