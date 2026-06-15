@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.24.1] - 2026-06-15
+- **fix(auditoría/docs_faltantes)**: La matriz de documentos exigidos por estado ahora distingue **Terrestre** (Carta Porte, Factura, Lista de Empaque) además de Aéreo y Marítimo/Multimodal. Antes el modo Terrestre caía en el `ELSE` y se le exigían BL Master/House, Certificado de Origen y Ficha Técnica que el wizard nunca crea, dejando hallazgos "alto" imposibles de cerrar (caso ELNAC00237).
+
 ## [13.24.0] - 2026-06-15
 - **feat(auditoría/proformas)**: Endurecida la regla `proforma_vencida` para que solo aplique a proformas reales (excluye borradores, total cero y proformas sin conceptos vinculados).
 - **feat(auditoría/proformas)**: Nuevos hallazgos `proforma_borrador_abandonada` (severidad media, umbral configurable `dias_borrador_abandonado` con default 15) y `proforma_inconsistente` (severidad alta) cuando un borrador vacío coexiste con conceptos pendientes en el mismo embarque.
