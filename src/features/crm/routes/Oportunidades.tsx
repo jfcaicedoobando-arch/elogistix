@@ -160,7 +160,7 @@ export default function Oportunidades() {
           <Card>
             <CardContent className="p-0">
               <DataTable
-                columns={columns}
+                columns={oportunidadesColumns}
                 data={ops}
                 isLoading={isLoading}
                 emptyMessage="No hay oportunidades"
