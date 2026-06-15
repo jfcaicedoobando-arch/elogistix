@@ -30,7 +30,11 @@ export interface MatchCtx {
 }
 
 const BASE_PREDICATES: Array<(h: HallazgoAuditoria, c: MatchCtx) => boolean> = [
-  (h, c) => !c.q || !!h.expediente?.toLowerCase().includes(c.q),
+  (h, c) => {
+    if (!c.q) return true;
+    const campos = [h.expediente, h.cliente_nombre, h.detalle];
+    return campos.some((f) => f?.toLowerCase().includes(c.q));
+  },
   (h, c) => c.filtroRegla === "todas" || h.regla === c.filtroRegla,
   (h, c) => c.filtroSev === "todas" || h.severidad === c.filtroSev,
   (h, c) => c.filtroCliente === "todos" || h.cliente_nombre === c.filtroCliente,

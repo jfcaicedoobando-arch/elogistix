@@ -59,6 +59,18 @@ Deno.serve(async (req) => {
       const { error } = await admin.rpc("auditoria_capturar_snapshot", {
         p_organization_id: org.id,
       });
+      if (error) {
+        // M-4: registra el fallo por-org en Sentry con organization_id.
+        // Antes solo el catch global enviaba a Sentry, así que un fallo en
+        // una org individual quedaba invisible en monitoreo.
+        console.error(`[auditoria-snapshot-daily] org=${org.id} failed:`, error);
+        await captureEdgeException(error, {
+          fn: "auditoria-snapshot-daily",
+          status_code: 500,
+          organization_id: org.id,
+          extra: { organization_nombre: org.nombre },
+        });
+      }
       resultados.push({
         org: org.nombre,
         ok: !error,

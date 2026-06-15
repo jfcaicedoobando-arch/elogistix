@@ -358,6 +358,7 @@ export type Database = {
           regla: string
           responsable_email: string
           responsable_id: string | null
+          revisado_at: string | null
           revisado_por: string | null
           revisado_por_email: string | null
           snooze_motivo: string | null
@@ -380,6 +381,7 @@ export type Database = {
           regla: string
           responsable_email?: string
           responsable_id?: string | null
+          revisado_at?: string | null
           revisado_por?: string | null
           revisado_por_email?: string | null
           snooze_motivo?: string | null
@@ -402,6 +404,7 @@ export type Database = {
           regla?: string
           responsable_email?: string
           responsable_id?: string | null
+          revisado_at?: string | null
           revisado_por?: string | null
           revisado_por_email?: string | null
           snooze_motivo?: string | null

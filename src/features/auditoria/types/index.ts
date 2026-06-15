@@ -73,6 +73,14 @@ export interface AuditoriaRevision {
   /** Snooze: fecha hasta la que el hallazgo se oculta de pendientes. */
   snoozed_until: string | null;
   snooze_motivo: string | null;
+  /**
+   * Momento exacto en que el hallazgo se marcó como revisado. Llenado
+   * automáticamente por el trigger `set_auditoria_revisado_at` cuando
+   * `estado_revision` pasa a 'revisado'. Usar este campo (NO `updated_at`)
+   * para calcular MTTR — `updated_at` cambia con cualquier modificación
+   * (comentarios, snooze, reasignación) y distorsiona la métrica.
+   */
+  revisado_at?: string | null;
   created_at: string;
   updated_at: string;
 }

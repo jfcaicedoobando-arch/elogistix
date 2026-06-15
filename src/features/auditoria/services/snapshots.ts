@@ -1,18 +1,34 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 
+export interface FetchSnapshotsOpts {
+  dias?: number;
+  /** Defensa en profundidad: filtra por organización en cliente además de RLS. */
+  organizationId?: string | null;
+}
+
+/**
+ * Lista snapshots de auditoría de los últimos `dias` (UTC).
+ * El cálculo del rango usa aritmética sobre `Date.now()` (UTC) para evitar
+ * drift en runtimes con TZ local (ej. CDMX cerca de medianoche).
+ */
 export async function fetchAuditoriaSnapshots(
-  dias = 30,
+  diasOrOpts: number | FetchSnapshotsOpts = 30,
 ): Promise<AuditoriaSnapshot[]> {
-  const desde = new Date();
-  desde.setDate(desde.getDate() - dias);
-  const desdeIso = desde.toISOString().slice(0, 10);
-  const { data, error } = await supabase
+  const opts: FetchSnapshotsOpts =
+    typeof diasOrOpts === "number" ? { dias: diasOrOpts } : diasOrOpts;
+  const dias = opts.dias ?? 30;
+  const desdeIso = new Date(Date.now() - dias * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  let q = supabase
     .from("auditoria_snapshots")
     .select("*")
     .gte("fecha", desdeIso)
     .order("fecha", { ascending: true })
     .limit(2000); // defensivo: cap por org (snapshots diarios → años de margen)
+  if (opts.organizationId) q = q.eq("organization_id", opts.organizationId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as AuditoriaSnapshot[];
 }

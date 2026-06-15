@@ -219,15 +219,15 @@ describe("useAuditoriaEjecutivo", () => {
     };
     map.set("k1", {
       ...baseRev, id: "1", estado_revision: "revisado", responsable_email: "op1@x.mx",
-      asignado_at: "2026-05-01T00:00:00Z", updated_at: "2026-05-01T10:00:00Z", // 10h
+      asignado_at: "2026-05-01T00:00:00Z", revisado_at: "2026-05-01T10:00:00Z", updated_at: "2026-05-01T10:00:00Z", // 10h
     });
     map.set("k2", {
       ...baseRev, id: "2", estado_revision: "revisado", responsable_email: "op1@x.mx",
-      asignado_at: "2026-05-02T00:00:00Z", updated_at: "2026-05-02T20:00:00Z", // 20h
+      asignado_at: "2026-05-02T00:00:00Z", revisado_at: "2026-05-02T20:00:00Z", updated_at: "2026-05-02T20:00:00Z", // 20h
     });
     map.set("k3", {
       ...baseRev, id: "3", estado_revision: "pendiente", responsable_email: "op2@x.mx",
-      asignado_at: null, updated_at: "2026-05-01T00:00:00Z",
+      asignado_at: null, revisado_at: null, updated_at: "2026-05-01T00:00:00Z",
     });
     setMocks([], map);
     const { result } = renderHook(() => useAuditoriaEjecutivo());

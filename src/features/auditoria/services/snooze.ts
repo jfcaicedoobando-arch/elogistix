@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 
 export interface SnoozeRevisionInput {
+  organization_id: string;
   embarque_id: string;
   regla: HallazgoAuditoria["regla"];
   detalle_hash: string;
@@ -13,10 +14,14 @@ export interface SnoozeRevisionInput {
 export async function snoozeRevision(
   input: SnoozeRevisionInput,
 ): Promise<AuditoriaRevision> {
+  if (!input.organization_id) {
+    throw new Error("organization_id requerido para snooze");
+  }
   const { data, error } = await supabase
     .from("auditoria_revisiones")
     .upsert(
       {
+        organization_id: input.organization_id,
         embarque_id: input.embarque_id,
         regla: input.regla,
         detalle_hash: input.detalle_hash,

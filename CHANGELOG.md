@@ -6,6 +6,41 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.25] - 2026-06-15
+- **fix(auditoria/bloque-4)**: Hardening y observabilidad del módulo Auditoría Operativa:
+  - **M-4 · Sentry por organización** (`auditoria-snapshot-daily/index.ts`): el loop por-org ahora llama a `captureEdgeException` cuando `auditoria_capturar_snapshot` falla, con tag `organization_id` y `extra.organization_nombre`. Antes solo el catch global enviaba a Sentry y un fallo en una org individual quedaba invisible.
+  - **M-5 · `organization_id` explícito en cliente** (`services/snapshots.ts`, `hooks/useAuditoriaSnapshots.ts`): `fetchAuditoriaSnapshots` acepta `{ dias, organizationId }` y aplica `.eq("organization_id", ...)` cuando viene; el hook lo lee del `OrganizationContext` y lo incluye en la `queryKey`. Defensa en profundidad sobre RLS (si una sesión service-role se filtra, no devuelve snapshots cruzados de otras orgs). Firma retrocompatible: `fetchAuditoriaSnapshots(30)` sigue funcionando.
+  - **L-4 · Test de consistencia** (`domain/__tests__/reglaLabels.test.ts`): nuevo caso que itera todas las reglas y verifica `REGLA_INFO[r].shortLabel === reglaShortLabel(r)` — si alguien renombra una sola en `auditoriaConfig.ts` sin tocar `reglaLabels.ts`, el test rompe en CI.
+  - **L-3 (bloque 2)**: `useAuditoriaCount` ya expone `isError`/`error`; el SAFE-CAST sigue documentado con el guard defensivo que cubre cambios de shape del RPC.
+  - **Tests**: 123/123 en verde.
+
+  **Nota MVP**: L-1 (tests integración del flujo principal de las edge functions auditoria-snapshot-daily / weekly-digest) se deja fuera de este bloque — requeriría mocking del gateway de Resend y del SDK admin de Supabase. El catch global + Sentry por-org + la suite actual de helpers cubren los modos de fallo críticos. Se documenta como deuda técnica.
+
+## [13.21.24] - 2026-06-15
+- **fix(auditoria/bloque-3)**: Calidad de métricas del tablero ejecutivo:
+  - **M-3 · MTTR usa `revisado_at` real** (migración + `domain/ejecutivoAgregados.ts`): nueva columna `auditoria_revisiones.revisado_at` + trigger `set_auditoria_revisado_at` que la llena automáticamente cuando `estado_revision` pasa a 'revisado'. Backfill: revisiones ya marcadas reciben `updated_at` como aproximación. El cálculo de MTTR ahora usa `revisado_at` en lugar de `updated_at`, así comentarios o reasignaciones posteriores no distorsionan la métrica. **Nota**: valores históricos de MTTR pueden cambiar ligeramente al recalcularse.
+  - **M-2 · Ranking dual responsables/revisores** (`domain/ejecutivoAgregados.ts`, `AuditoriaOperadoresCard.tsx`, `useAuditoriaEjecutivo.ts`): antes se mezclaban `responsable_email` y `revisado_por_email` bajo una sola clave produciendo métricas ambiguas (si A asignaba y B resolvía, contaba bajo A). Ahora hay dos rankings independientes mostrados en tabs:
+    - **Responsables**: carga de trabajo (pendientes + vencidos + resueltos por quien tiene asignado).
+    - **Revisores**: productividad de resolución (quién marcó "revisado" cada hallazgo).
+    Se mantiene alias `rankingOperadores` → `rankingResponsables` para compatibilidad.
+  - **Tests**: 122/122 en verde. Test de ranking actualizado para validar split + uso de `revisado_at` (con `updated_at` movido a +5d para verificar que NO contamina el MTTR).
+
+## [13.21.23] - 2026-06-15
+- **fix(auditoria/bloque-2)**: Consistencia UI del módulo Auditoría Operativa según auditoría:
+  - **H-2 · QueryFn única para revisiones** (`hooks/revisiones/query.ts`, `useAuditoria.ts`): extraída `buildRevisionesMap()` exportada y reutilizada por `useAuditoriaRevisiones` y `useAuditoriaCount`. React Query usa la primera queryFn registrada por key, así que tener dos definiciones distintas era un bug latente dependiente del orden de montaje. Ahora ambos hooks producen exactamente el mismo Map.
+  - **H-3 · Búsqueda extendida** (`hooks/hallazgosTablaFilters.ts`): el predicado `q` ya no solo busca en `expediente`, también cubre `cliente_nombre` y `detalle`. Resuelve la UX rota donde buscar "Acme" o "factura vencida" no devolvía resultados.
+  - **H-5 · Toggle "Ver revisados" sí afecta la tabla** (`AuditoriaHallazgosTab.tsx`): la tabla recibe `hallazgosFiltrados` (subset ya filtrado por severidad/modo del tab) en lugar de `hallazgos` crudos, y el `key` incluye el flag `mostrarRevisados` para forzar reset del `defaultRevision` interno cuando el usuario alterna. Antes, los KPIs decían "20 hallazgos" pero la tabla mostraba 12 sin explicación.
+  - **M-6 · `useAuditoriaCount` expone `isError`/`error`**: el badge del sidebar ahora puede distinguir "0 hallazgos" de "fallo de red" en lugar de mostrar siempre cero ante errores.
+  - **Tests**: 122/122 en verde (incluye los nuevos casos de `organization_id` requerido del bloque 1).
+
+## [13.21.22] - 2026-06-15
+- **fix(auditoria/bloque-1)**: Correctness crítico del módulo Auditoría Operativa según auditoría:
+  - **C-1 · Paginación servidor** (`services/revisiones.ts`): `fetchAuditoriaRevisiones()` ahora aplica `.limit(5000)` defensivo + `.gte("created_at", desdeIso)` con ventana por defecto de 90 días (cubre snooze máx + revisados recientes). Parámetro `{ desdeIso }` opcional para casos especiales. Cierra la regla de paginación servidor del proyecto.
+  - **C-2/H · `organization_id` explícito en upserts** (`services/revisiones.ts`, `services/snooze.ts`): los 3 upserts (`upsertAuditoriaRevision`, `asignarResponsableHallazgo`, `snoozeRevision`) ahora reciben `organization_id` como campo requerido y lanzan si falta. Hooks (`useMarcarRevisado`, `useAsignarResponsable`, `useSnoozeHallazgo`) lo leen de `useAuth().organizationId`. El `DEFAULT current_user_org_id()` de la BD queda como red de seguridad, no como mecanismo primario.
+  - **H-1 · Drift UTC** (`domain/ejecutivoAgregados.ts`, `services/snapshots.ts`): reemplazado `setDate/getDate` locales por aritmética `Date.now() ± n * 86_400_000` consistente con el contrato UTC declarado en `core.ts`. Evita conteos erróneos de "urgentes por ETA" y rangos de snapshots en CDMX cerca de medianoche.
+  - **H-4 · Edge `weekly-digest` silenciaba errores RPC** (`auditoria-weekly-digest/index.ts`): el destructuring ahora captura `error` del RPC `auditoria_embarques_org`; si falla loggea a consola y marca la org como `error: "RPC: <msg>"` en lugar de enviar un email con `total_hallazgos: 0` falso positivo.
+  - **Tests**: actualizados `revisiones.test.ts` y `snooze.test.ts` para validar payload con `organization_id` + 2 nuevos casos que verifican que se rechaza el upsert sin org_id. 85/85 tests del módulo en verde.
+
 ## [13.21.21] - 2026-06-15
 - **chore(ci)**: Aplicadas 3 recomendaciones de la auditoría de GitHub Actions:
   - **Aggregator `ci-success`** (`ci.yml`): nuevo job final que depende de `quality`, `edge-functions`, `tests` y `coverage`, y falla si cualquiera no terminó en `success`. Permite usarlo como único required check en branch protection sin tener que listar los 8 shards de tests uno por uno.

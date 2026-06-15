@@ -88,6 +88,7 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
       <AuditoriaOperadoresCard
         mttrHoras={data.mttrHoras}
         ranking={data.rankingOperadores}
+        rankingRevisores={data.rankingRevisores}
       />
 
       <EjecutivoDistribucionRow

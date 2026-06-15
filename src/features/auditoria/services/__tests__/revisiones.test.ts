@@ -35,6 +35,7 @@ describe('auditoria/revisiones', () => {
 
   it('upsertAuditoriaRevision usa onConflict correcto y marca estado=revisado', async () => {
     const input = {
+      organization_id: 'org-1',
       embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h',
       detalle: 'd', accion_tomada: 'a', revisado_por: 'u', revisado_por_email: 'u@e',
     } as any;
@@ -44,13 +45,25 @@ describe('auditoria/revisiones', () => {
     expect(mockSupabase.current.upsert).toHaveBeenCalledTimes(1);
     const [payload, opts] = mockSupabase.current.upsert.mock.calls[0];
     expect(payload).toMatchObject({ ...input, estado_revision: 'revisado' });
+    expect(payload.organization_id).toBe('org-1');
     expect(payload.updated_at).toEqual(expect.any(String));
     expect(opts).toEqual({ onConflict: 'organization_id,embarque_id,regla,detalle_hash' });
     expect(result).toEqual(created);
   });
 
+  it('upsertAuditoriaRevision rechaza si falta organization_id', async () => {
+    mockSupabase.current = createSupabaseChainMock({});
+    await expect(
+      upsertAuditoriaRevision({
+        organization_id: '', embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h',
+        detalle: 'd', accion_tomada: 'a', revisado_por: 'u', revisado_por_email: 'u@e',
+      } as any),
+    ).rejects.toThrow(/organization_id/);
+  });
+
   it('asignarResponsableHallazgo construye payload con estado_revision default=pendiente', async () => {
     const input = {
+      organization_id: 'org-1',
       embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
       responsable_id: 'r1', responsable_email: 'r@e', asignado_por: 'u',
       asignado_por_email: 'u@e', fecha_limite: null,
@@ -60,11 +73,13 @@ describe('auditoria/revisiones', () => {
     const [payload] = mockSupabase.current.upsert.mock.calls[0];
     expect(payload.estado_revision).toBe('pendiente');
     expect(payload.responsable_id).toBe('r1');
+    expect(payload.organization_id).toBe('org-1');
     expect(payload.asignado_at).toEqual(expect.any(String));
   });
 
   it('asignarResponsableHallazgo respeta estado_revision explícito', async () => {
     const input = {
+      organization_id: 'org-1',
       embarque_id: 'e1', regla: 'sin_tracking', detalle_hash: 'h', detalle: 'd',
       responsable_id: 'r1', responsable_email: 'r@e', asignado_por: 'u',
       asignado_por_email: 'u@e', fecha_limite: null,

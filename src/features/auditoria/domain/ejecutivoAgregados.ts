@@ -116,10 +116,10 @@ export function agruparPorEtapaYCliente(pendientes: HallazgoAuditoria[]) {
 }
 
 export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
-  const hoyIso = new Date().toISOString().slice(0, 10);
-  const en3dias = new Date();
-  en3dias.setDate(en3dias.getDate() + 3);
-  const en3DiasIso = en3dias.toISOString().slice(0, 10);
+  // UTC-only: evita drift por TZ local (ver banner core.ts).
+  const nowMs = Date.now();
+  const hoyIso = new Date(nowMs).toISOString().slice(0, 10);
+  const en3DiasIso = new Date(nowMs + 3 * 86_400_000).toISOString().slice(0, 10);
   let pendientesVencidos = 0;
   let pendientesUrgentesPorEta = 0;
   let sumaDias = 0;
@@ -128,7 +128,7 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
     if (!h.eta) continue;
     if (h.eta < hoyIso) {
       pendientesVencidos++;
-      const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / (1000 * 60 * 60 * 24));
+      const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / 86_400_000);
       sumaDias += dias;
       countDias++;
     } else if (h.eta <= en3DiasIso) {
@@ -139,6 +139,11 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
   return { hoyIso, pendientesVencidos, pendientesUrgentesPorEta, edadPromediaPendientesDias };
 }
 
+/**
+ * Acumula la revisión en el ranking de un email particular y en el accumulator
+ * de MTTR. Usa `revisado_at` (no `updated_at`) para que comentarios o
+ * reasignaciones posteriores no distorsionen la métrica.
+ */
 function procesarRevisionEnOperador(
   r: AuditoriaRevision,
   cur: OperadorRanking,
@@ -147,8 +152,8 @@ function procesarRevisionEnOperador(
 ): void {
   if (r.estado_revision === "revisado") {
     cur.resueltos++;
-    if (r.asignado_at) {
-      const horas = diffHoras(r.asignado_at, r.updated_at);
+    if (r.asignado_at && r.revisado_at) {
+      const horas = diffHoras(r.asignado_at, r.revisado_at);
       if (horas >= 0 && horas < 24 * 90) {
         acc.suma += horas;
         acc.count++;
@@ -160,24 +165,57 @@ function procesarRevisionEnOperador(
   }
 }
 
+export interface RankingResultado {
+  mttrHoras: number | null;
+  rankingResponsables: OperadorRanking[];
+  rankingRevisores: OperadorRanking[];
+  /** Alias retrocompatible — usar `rankingResponsables` en código nuevo. */
+  rankingOperadores: OperadorRanking[];
+}
+
+/**
+ * Calcula MTTR + dos rankings independientes:
+ *  - `rankingResponsables`: por `responsable_email` (quién tiene asignado el hallazgo)
+ *  - `rankingRevisores`: por `revisado_por_email` (quién marcó "revisado")
+ *
+ * Antes se mezclaban en una sola clave (`responsable_email || revisado_por_email`)
+ * y producía métricas ambiguas cuando A asignaba y B resolvía.
+ */
 export function calcularRanking(
   revisiones: Map<string, AuditoriaRevision> | undefined,
   hoyIso: string,
-) {
-  const opMap = new Map<string, OperadorRanking>();
+): RankingResultado {
+  const responsablesMap = new Map<string, OperadorRanking>();
+  const revisoresMap = new Map<string, OperadorRanking>();
   const mttrAcc = { suma: 0, count: 0 };
   if (revisiones) {
     for (const r of revisiones.values()) {
-      const email = r.responsable_email || r.revisado_por_email || "Sin asignar";
-      const cur = opMap.get(email) ?? { email, resueltos: 0, pendientes: 0, vencidos: 0 };
-      procesarRevisionEnOperador(r, cur, hoyIso, mttrAcc);
-      opMap.set(email, cur);
+      const respEmail = r.responsable_email || "Sin asignar";
+      const resp = responsablesMap.get(respEmail) ?? { email: respEmail, resueltos: 0, pendientes: 0, vencidos: 0 };
+      procesarRevisionEnOperador(r, resp, hoyIso, mttrAcc);
+      responsablesMap.set(respEmail, resp);
+
+      if (r.estado_revision === "revisado" && r.revisado_por_email) {
+        const rev = revisoresMap.get(r.revisado_por_email) ?? {
+          email: r.revisado_por_email, resueltos: 0, pendientes: 0, vencidos: 0,
+        };
+        rev.resueltos++;
+        revisoresMap.set(r.revisado_por_email, rev);
+      }
     }
   }
   const mttrHoras = mttrAcc.count > 0 ? Math.round(mttrAcc.suma / mttrAcc.count) : null;
-  const rankingOperadores = Array.from(opMap.values())
+  const rankingResponsables = Array.from(responsablesMap.values())
     .filter((o) => o.email !== "Sin asignar" || o.pendientes > 0)
     .sort((a, b) => b.resueltos - a.resueltos || b.pendientes - a.pendientes)
     .slice(0, TOP_N);
-  return { mttrHoras, rankingOperadores };
+  const rankingRevisores = Array.from(revisoresMap.values())
+    .sort((a, b) => b.resueltos - a.resueltos)
+    .slice(0, TOP_N);
+  return {
+    mttrHoras,
+    rankingResponsables,
+    rankingRevisores,
+    rankingOperadores: rankingResponsables, // alias retrocompatible
+  };
 }

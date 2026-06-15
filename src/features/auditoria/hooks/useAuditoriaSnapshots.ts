@@ -11,12 +11,15 @@ import {
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 
 export function useAuditoriaSnapshots(dias = 30) {
+  const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: queryKeys.auditoria.snapshots(dias),
-    queryFn: (): Promise<AuditoriaSnapshot[]> => fetchAuditoriaSnapshots(dias),
+    queryKey: [...queryKeys.auditoria.snapshots(dias), organizationId ?? "global"],
+    queryFn: (): Promise<AuditoriaSnapshot[]> =>
+      fetchAuditoriaSnapshots({ dias, organizationId }),
     staleTime: 5 * 60_000,
   });
 }

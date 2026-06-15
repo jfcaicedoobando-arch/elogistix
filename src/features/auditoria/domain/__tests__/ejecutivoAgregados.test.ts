@@ -73,16 +73,30 @@ describe("ejecutivoAgregados", () => {
     expect(r.pendientesUrgentesPorEta).toBe(1);
   });
 
-  it("calcularRanking agrupa por responsable y calcula MTTR", () => {
+  it("calcularRanking separa responsables y revisores, usa revisado_at para MTTR", () => {
     const rev = (over: Partial<AuditoriaRevision>) =>
-      ({ estado_revision: "pendiente", responsable_email: "op@x.com", revisado_por_email: "", asignado_at: null, updated_at: "", fecha_limite: null, ...over } as AuditoriaRevision);
+      ({ estado_revision: "pendiente", responsable_email: "op@x.com", revisado_por_email: "", asignado_at: null, updated_at: "", revisado_at: null, fecha_limite: null, ...over } as AuditoriaRevision);
     const map = new Map<string, AuditoriaRevision>([
-      ["k1", rev({ estado_revision: "revisado", asignado_at: "2026-05-01T00:00:00Z", updated_at: "2026-05-01T10:00:00Z" })],
-      ["k2", rev({ estado_revision: "pendiente" })],
+      // resuelto: asignado a A, marcado revisado por B. MTTR = 10h (asignado→revisado_at).
+      // updated_at se mueve a +5d por un comentario posterior; NO debe contar.
+      ["k1", rev({
+        estado_revision: "revisado",
+        responsable_email: "alice@x.com",
+        revisado_por_email: "bob@x.com",
+        asignado_at: "2026-05-01T00:00:00Z",
+        revisado_at: "2026-05-01T10:00:00Z",
+        updated_at: "2026-05-06T15:00:00Z",
+      })],
+      ["k2", rev({ responsable_email: "alice@x.com" })],
     ]);
     const out = calcularRanking(map, "2026-05-25");
-    expect(out.mttrHoras).toBe(10);
-    expect(out.rankingOperadores[0].resueltos).toBe(1);
-    expect(out.rankingOperadores[0].pendientes).toBe(1);
+    expect(out.mttrHoras).toBe(10); // usa revisado_at, no updated_at (que daría 5d)
+    expect(out.rankingResponsables[0].email).toBe("alice@x.com");
+    expect(out.rankingResponsables[0].resueltos).toBe(1);
+    expect(out.rankingResponsables[0].pendientes).toBe(1);
+    expect(out.rankingRevisores[0].email).toBe("bob@x.com");
+    expect(out.rankingRevisores[0].resueltos).toBe(1);
+    // Alias retrocompatible
+    expect(out.rankingOperadores).toBe(out.rankingResponsables);
   });
 });
