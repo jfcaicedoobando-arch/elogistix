@@ -1,44 +1,27 @@
+## Objetivo
+Hacer que el botón **Ejecutar backfill** vuelva a correr correctamente en `/admin/auditoria` sin cambiar el alcance funcional.
+
 ## Diagnóstico
+El error actual viene de la función `backfill_conceptos_venta_facturados()`: intenta actualizar `conceptos_venta.factura_id`, pero esa columna **no existe** en `conceptos_venta`. La columna `factura_id` existe en `proformas`, no en conceptos de venta.
 
-El backfill falla porque las funciones SQL referencian columnas y valores de enum que no existen en la BD real:
+Además, al validar la consulta de proformas apareció una señal de permisos en lectura directa, por lo que conviene dejar explícitos los `GRANT EXECUTE` de las funciones RPC en la nueva migración.
 
-**1. `backfill_proformas_aceptadas` — rompe primero (column does not exist)**
-- Usa `p.estado` → la columna real es `p.estado_proforma`.
-- Filtra por `('borrador','enviada','aceptada')` → valores reales son `'pendiente'`, `'facturada'`.
-- Setea `estado = 'facturada'` → debe ser `estado_proforma = 'facturada'`.
-
-**2. `backfill_conceptos_venta_facturados` — fallaría después**
-- Filtra `facturas.estado IN ('emitida','pagada','parcial','timbrada')` en minúsculas.
-- El enum `estado_factura` real es: `'Borrador','Emitida','Pagada','Vencida','Cancelada','Parcialmente pagada'` (capitalizado, sin `'parcial'` ni `'timbrada'`).
-
-Esto explica el error al ejecutar y también por qué la regla `ventas_sin_facturar` siguió dando falsos positivos en embarques viejos: el backfill nunca matcheó nada.
-
-## Cambios
-
-Una sola migración SQL que reemplaza ambas funciones con los nombres/valores correctos:
-
-```text
-backfill_conceptos_venta_facturados()
-  - facturas.estado IN ('Emitida','Pagada','Parcialmente pagada')
-  - (sin cambios en lógica de UPDATE)
-
-backfill_proformas_aceptadas()
-  - WHERE p.estado_proforma = 'pendiente'
-  - AND EXISTS (factura con estado IN ('Emitida','Pagada','Parcialmente pagada'))
-  - SET estado_proforma = 'facturada'
-```
-
-`run_auditoria_backfill_legacy()` no cambia — sigue orquestando las dos.
-
-## Validación
-
-1. Antes de ejecutar en prod, query de conteo:
-   - `SELECT COUNT(*) FROM conceptos_venta cv JOIN embarques e ON e.id=cv.embarque_id WHERE cv.estado_facturacion='pendiente' AND e.estado IN ('Entregado','Cerrado') AND EXISTS (SELECT 1 FROM facturas f WHERE f.embarque_id=cv.embarque_id AND f.estado IN ('Emitida','Pagada','Parcialmente pagada'));`
-   - Mismo para proformas.
-2. Ejecutar el botón en `/admin/auditoria` — debe devolver totales > 0 y eliminar los falsos positivos en expediente 00062.
+## Plan de implementación
+1. Crear una migración SQL que reemplace `public.backfill_conceptos_venta_facturados()` para que sólo actualice:
+   - `estado_facturacion = 'facturado'`
+   - sin tocar `factura_id`.
+2. Mantener el criterio de candidatos:
+   - conceptos pendientes,
+   - embarques `Entregado` o `Cerrado`,
+   - con factura existente en estado `Emitida`, `Pagada` o `Parcialmente pagada`.
+3. Re-publicar `GRANT EXECUTE` para:
+   - `run_auditoria_backfill_legacy()`
+   - `backfill_conceptos_venta_facturados()`
+   - `backfill_proformas_aceptadas()`
+4. Actualizar `APP_VERSION` y `CHANGELOG.md` como requiere el proyecto.
+5. Validar sin modificar datos que la nueva definición ya no referencia columnas inexistentes, y luego podrás volver a ejecutar el botón.
 
 ## Fuera de alcance
-
-- Backfill de `docs_pendientes_avanzado` / `fechas` (requieren intervención humana).
-- Cambios en la UI (`BackfillLegacyCard`) — el contrato JSON de respuesta no cambia.
-- `CHANGELOG.md` + bump `APP_VERSION` patch (`13.22.1`) post-implementación.
+- No cambiar UI.
+- No ampliar reglas de auditoría.
+- No hacer backfill de documentos, fechas ni otros módulos.

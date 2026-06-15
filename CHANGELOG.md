@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.22.2] - 2026-06-15
+- **fix(auditoria/backfill-legacy)**: `backfill_conceptos_venta_facturados` ya no intenta escribir en `conceptos_venta.factura_id` (columna inexistente) — sólo actualiza `estado_facturacion = 'facturado'`. Era el error que rompía la ejecución del botón "Ejecutar backfill" en `/admin/auditoria`. Se re-publican `GRANT EXECUTE` de las tres funciones del backfill a `authenticated` y `service_role`.
+
 ## [13.22.1] - 2026-06-15
 - **fix(auditoria/backfill-legacy)**: Corregidas las funciones `backfill_conceptos_venta_facturados` y `backfill_proformas_aceptadas` que fallaban al ejecutarse. Usaban la columna inexistente `proformas.estado` (la real es `estado_proforma`) y valores de enum equivocados para `facturas.estado` (`'emitida'`, `'parcial'`, `'timbrada'` en minúsculas; los reales son `'Emitida'`, `'Pagada'`, `'Parcialmente pagada'`). Ahora el botón "Ejecutar backfill" en `/admin/auditoria` repara correctamente los conceptos y proformas legacy.
 
