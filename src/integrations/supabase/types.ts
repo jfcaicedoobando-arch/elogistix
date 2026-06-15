@@ -4853,6 +4853,10 @@ export type Database = {
     Functions: {
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
+      _docs_requeridos_por_estado: {
+        Args: { p_estado: string; p_modo: string }
+        Returns: string[]
+      }
       actualizar_cotizacion_costos: {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
@@ -5227,6 +5231,10 @@ export type Database = {
       eliminar_embarque_completo: {
         Args: { p_embarque_id: string }
         Returns: undefined
+      }
+      embarque_docs_faltantes: {
+        Args: { p_embarque_id: string; p_estado_destino: string }
+        Returns: string[]
       }
       embarques_list_extras: {
         Args: { p_ids: string[] }
