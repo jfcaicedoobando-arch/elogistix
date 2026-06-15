@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.17] - 2026-06-15
+- **fix(ci/rls-tests)**: El Postgres vanilla de CI no trae las extensiones managed-only de Supabase (`pg_cron`, `pg_net`, `pgmq`, `supabase_vault`), por lo que la migración `20260517020910` rompía con `ERROR: extension "pg_cron" is not available`. Solución en dos partes: (1) `_ci_bootstrap.sql` ahora crea schemas `cron`, `net`, `pgmq`, `vault` con funciones no-op (`cron.schedule/unschedule`, `net.http_post`, `pgmq.create/send/read/delete`); (2) el step `Apply migrations` filtra cada archivo con `sed` para reemplazar las líneas `CREATE EXTENSION pg_cron|pg_net|pgmq|supabase_vault` por `SELECT 1;` (top-level) o `PERFORM 1;` (dentro de bloques `DO`) — evita que PL/pgSQL termine con un `THEN` vacío en `20260604052500_email_infra.sql`.
+
 ## [13.21.16] - 2026-06-15
 - **fix(ci/rls-tests)**: La migración `20260424231755` asumía que `public.proformas.es_consolidada` ya existía (se había añadido manualmente en prod, nunca vía migración) y rompía CI con `ERROR: column "es_consolidada" does not exist`. Añadido drift-fix en el step `Apply migrations` que ejecuta `ALTER TABLE ... ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false` justo antes de aplicar esa migración.
 

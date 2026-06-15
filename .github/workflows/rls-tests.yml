@@ -78,7 +78,17 @@ jobs:
               $PSQL -c "ALTER TABLE public.proformas ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false;"
             fi
             echo "▶ $base"
-            $PSQL -f "$f"
+            # CI no tiene pg_cron / pg_net / pgmq / supabase_vault (sólo existen
+            # en Supabase managed Postgres). Reemplazamos los CREATE EXTENSION
+            # on-the-fly: en top-level por `SELECT 1;`, dentro de bloques DO
+            # (líneas indentadas) por `PERFORM 1;` para que PL/pgSQL no quede
+            # con un THEN vacío. Los stubs de cron/net/pgmq en el bootstrap se
+            # encargan de que las llamadas posteriores ejecuten como no-op.
+            sed -E \
+              -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
+              -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
+              "$f" | $PSQL
+
           done
 
       - name: Post-migrate (drop auth.users FKs para CI)

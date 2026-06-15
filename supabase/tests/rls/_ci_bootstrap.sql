@@ -96,3 +96,40 @@ GRANT ALL ON storage.buckets TO service_role;
 GRANT ALL ON storage.objects TO service_role;
 GRANT SELECT ON storage.buckets TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON storage.objects TO authenticated;
+
+-- ============================================================================
+-- STUBS de extensiones managed-only de Supabase (pg_cron, pg_net, pgmq, vault).
+-- Las migraciones de prod hacen CREATE EXTENSION + invocan funciones de esos
+-- schemas. En el Postgres vanilla de CI no existen; el workflow filtra los
+-- CREATE EXTENSION via sed y aquí dejamos las funciones como no-ops para que
+-- los SELECT cron.schedule(...) / PERFORM pgmq.create(...) ejecuten sin error.
+-- ============================================================================
+CREATE SCHEMA IF NOT EXISTS cron;
+CREATE SCHEMA IF NOT EXISTS net;
+CREATE SCHEMA IF NOT EXISTS pgmq;
+CREATE SCHEMA IF NOT EXISTS vault;
+
+CREATE OR REPLACE FUNCTION cron.schedule(job_name text, schedule text, command text)
+RETURNS bigint LANGUAGE sql AS $$ SELECT 0::bigint $$;
+
+CREATE OR REPLACE FUNCTION cron.unschedule(job_name text)
+RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
+
+CREATE OR REPLACE FUNCTION net.http_post(url text, body jsonb DEFAULT '{}'::jsonb, headers jsonb DEFAULT '{}'::jsonb)
+RETURNS bigint LANGUAGE sql AS $$ SELECT 0::bigint $$;
+
+CREATE OR REPLACE FUNCTION pgmq.create(queue_name text)
+RETURNS void LANGUAGE sql AS $$ SELECT $1::void WHERE false; $$;
+
+CREATE OR REPLACE FUNCTION pgmq.send(queue_name text, msg jsonb)
+RETURNS bigint LANGUAGE sql AS $$ SELECT 0::bigint $$;
+
+CREATE OR REPLACE FUNCTION pgmq.read(queue_name text, vt integer, qty integer)
+RETURNS TABLE(msg_id bigint, read_ct integer, enqueued_at timestamptz, vt timestamptz, message jsonb)
+LANGUAGE sql AS $$ SELECT NULL::bigint, NULL::integer, NULL::timestamptz, NULL::timestamptz, NULL::jsonb WHERE false $$;
+
+CREATE OR REPLACE FUNCTION pgmq.delete(queue_name text, msg_id bigint)
+RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
+
+GRANT USAGE ON SCHEMA cron, net, pgmq, vault TO anon, authenticated, service_role;
+
