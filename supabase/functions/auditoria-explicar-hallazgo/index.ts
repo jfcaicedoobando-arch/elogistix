@@ -191,6 +191,26 @@ function buildUserPrompt(regla: string, detalle: string, ctx: Awaited<ReturnType
   ].join("\n");
 }
 
+async function invocarGateway(
+  ctx: Awaited<ReturnType<typeof buildContexto>>,
+  regla: string,
+  detalle: string,
+  log: ReturnType<typeof createLogger>,
+  cors: HeadersInit,
+): Promise<{ ok: true; content: string } | { ok: false; response: Response }> {
+  const apiKey = env("LOVABLE_API_KEY");
+  if (!apiKey) {
+    log.error("LOVABLE_API_KEY missing", { status_code: 500 });
+    return { ok: false, response: errorResponse("Configuración de IA no disponible", 500, cors) };
+  }
+  const resp = await callGateway(apiKey, buildUserPrompt(regla, detalle, ctx));
+  if (!resp.ok) return { ok: false, response: handleGatewayError(resp.status, log, cors) };
+  const data = await resp.json();
+  const content = data?.choices?.[0]?.message?.content ?? "";
+  if (!content) return { ok: false, response: errorResponse("Respuesta IA vacía", 422, cors) };
+  return { ok: true, content };
+}
+
 async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>): Promise<Response> {
   const auth = await authenticate(req, log);
   const body = await req.json().catch(() => null) as { embarque_id?: string; regla?: string; detalle?: string } | null;
@@ -204,22 +224,13 @@ async function processRequest(req: Request, cors: HeadersInit, log: ReturnType<t
   const ctx = await buildContexto(auth.adminClient, body.embarque_id);
   if (!ctx) return errorResponse("No se pudo cargar el contexto", 404, cors);
 
-  const apiKey = env("LOVABLE_API_KEY");
-  if (!apiKey) {
-    log.error("LOVABLE_API_KEY missing", { status_code: 500 });
-    return errorResponse("Configuración de IA no disponible", 500, cors);
-  }
-
-  const resp = await callGateway(apiKey, buildUserPrompt(body.regla, body.detalle, ctx));
-  if (!resp.ok) return handleGatewayError(resp.status, log, cors);
-
-  const data = await resp.json();
-  const content = data?.choices?.[0]?.message?.content ?? "";
-  if (!content) return errorResponse("Respuesta IA vacía", 422, cors);
+  const result = await invocarGateway(ctx, body.regla, body.detalle, log, cors);
+  if (!result.ok) return result.response;
 
   log.finish(200, "hallazgo explicado");
-  return jsonResponse({ explicacion: content, modelo: "google/gemini-3-flash-preview" }, 200, cors);
+  return jsonResponse({ explicacion: result.content, modelo: "google/gemini-3-flash-preview" }, 200, cors);
 }
+
 
 
 serve(async (req) => {
