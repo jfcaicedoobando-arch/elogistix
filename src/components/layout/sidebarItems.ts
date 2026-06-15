@@ -65,7 +65,7 @@ export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
-  { title: "Auditoría", url: "/auditoria", icon: ShieldAlert },
+  { title: "Auditoría operativa", url: "/auditoria", icon: ShieldAlert },
   { title: "Bitácora", url: "/bitacora", icon: ScrollText },
   { title: "Sentry", url: "/sentry", icon: Bug },
   { title: "Ayuda", url: "/ayuda", icon: HelpCircle },
