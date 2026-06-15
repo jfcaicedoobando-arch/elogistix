@@ -18,6 +18,7 @@ interface Props {
 }
 
 export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar, onEliminar }: Props) {
+  const navigate = useNavigate();
   const renderEstado = (p: ProformaConFactura) => {
     const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
     const rev = p.estado_revision ?? "aprobada";
