@@ -94,10 +94,11 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const headerReqId =
+    req.headers.get("x-request-id") ?? req.headers.get("x-correlation-id");
   const requestId =
-    req.headers.get("x-request-id") ??
-    req.headers.get("x-correlation-id") ??
-    crypto.randomUUID();
+    headerReqId && UUID_RE.test(headerReqId) ? headerReqId : crypto.randomUUID();
 
   const { error } = await client.rpc("log_client_error_v1", {
     p_message: truncate(body.message, 1000) ?? "(sin mensaje)",
