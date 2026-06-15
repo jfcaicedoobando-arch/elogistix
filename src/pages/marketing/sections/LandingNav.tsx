@@ -21,7 +21,7 @@ export function LandingNav() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Libre Carga">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-border/40 shadow-sm">
-            <img src="/librecarga-logo.svg" alt="" className="h-full w-full object-contain" />
+            <img src="/librecarga-logo.png" alt="" className="h-full w-full object-contain" />
           </span>
           <span className="whitespace-nowrap text-lg font-semibold tracking-tight text-foreground">
             Libre Carga

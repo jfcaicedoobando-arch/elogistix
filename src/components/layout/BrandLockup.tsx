@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { BRAND } from "@/components/shared/utils/brand";
 
 // Servido desde public/ — evita duplicar 157 KB en el bundle.
-const librecargaLogo = "/librecarga-logo.svg";
+const librecargaLogo = "/librecarga-logo.png";
 
 type Variant = "icon" | "horizontal" | "stacked";
 type Size = "sm" | "md" | "lg";
