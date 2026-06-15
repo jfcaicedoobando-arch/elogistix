@@ -17,6 +17,13 @@ on:
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: rls-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   rls:
     runs-on: ubuntu-latest

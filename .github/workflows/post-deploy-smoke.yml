@@ -13,6 +13,13 @@ on:
     - cron: "0 13 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: post-deploy-smoke
+  cancel-in-progress: false
+
 env:
   SUPABASE_URL: https://eorqadkulqtneqjbsblk.supabase.co
   # anon key — pública (rol anon), no es un secreto
