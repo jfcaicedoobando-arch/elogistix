@@ -13,8 +13,38 @@
 
 -- ---------------------------------------------------------------------------
 -- public.proformas.es_consolidada
--- Añadida manualmente en prod; migración 20260424231755 asume que existe.
+-- Añadida manualmente en prod; la migración 20260424231755 hace UPDATE sobre
+-- esta columna pero la tabla se DROP+CREATE en 20260424164231 sin incluirla.
+-- Usamos un EVENT TRIGGER que añade la columna automáticamente cada vez que
+-- se cree (o recree) la tabla `public.proformas` durante el loop de migraciones.
 -- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public._ci_ensure_proformas_es_consolidada()
+RETURNS event_trigger
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  r record;
+BEGIN
+  FOR r IN
+    SELECT objid::regclass::text AS rel
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag = 'CREATE TABLE'
+  LOOP
+    IF r.rel = 'proformas' OR r.rel = 'public.proformas' THEN
+      EXECUTE 'ALTER TABLE public.proformas
+               ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false';
+    END IF;
+  END LOOP;
+END;
+$fn$;
+
+DROP EVENT TRIGGER IF EXISTS _ci_proformas_es_consolidada_trg;
+CREATE EVENT TRIGGER _ci_proformas_es_consolidada_trg
+  ON ddl_command_end
+  WHEN TAG IN ('CREATE TABLE')
+  EXECUTE FUNCTION public._ci_ensure_proformas_es_consolidada();
+
+-- Por si la tabla ya existe en este momento (no debería en CI, sí en prod):
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables
