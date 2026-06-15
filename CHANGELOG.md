@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.22.0] - 2026-06-15
+- **feat(auditoria/IA-explicativa)**: Nuevo botón ✨ "Explicar con IA" en cada fila de hallazgos de auditoría. Llama a la edge function `auditoria-explicar-hallazgo` (Lovable AI Gateway con `google/gemini-3-flash-preview`), que arma un contexto compacto del embarque (facturas, proformas, conceptos, fechas) y devuelve análisis estructurado: qué significa el hallazgo, posibles causas (incluyendo backfill/datos legacy si el contexto contradice la regla) y pasos sugeridos. Resultado cacheado en `react-query` por hash del hallazgo. Manejo explícito de 429/402 (sin créditos / rate limit).
+- **feat(auditoria/backfill-legacy)**: Migración que añade `backfill_conceptos_venta_facturados()`, `backfill_proformas_aceptadas()` y orquestador `run_auditoria_backfill_legacy()` (SECURITY DEFINER, guard `has_role(super_admin)`). Marcan como `facturado`/`facturada` los conceptos/proformas de embarques antiguos (previos al módulo de facturación) que ya tienen factura emitida — eliminan falsos positivos crónicos de la regla `ventas_sin_facturar`. Nueva tarjeta "Backfill de datos legacy" en `/admin/auditoria` con doble confirmación (escribir EJECUTAR) y resumen de totales post-ejecución.
+- **chore(deps)**: Añadida dependencia `react-markdown` para renderizar la explicación IA del hallazgo.
+
 ## [13.21.26] - 2026-06-15
 - **feat(auditoria/separación-módulos)**: Se distingue conceptualmente entre dos módulos de auditoría:
   - `/auditoria` → **Auditoría operativa** (clientes/tenants). Título y descripción del `PageHeader` aclaran que es por organización. Acceso restringido vía `ProtectedRoute` a `admin`, `admin_org`, `viewer` y `customer_service`; operador / coordinador logístico / gerente de operaciones / pricing dejan de verla.
