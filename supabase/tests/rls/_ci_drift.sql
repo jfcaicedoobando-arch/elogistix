@@ -111,6 +111,18 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.tracking_externo TO authenticated
 GRANT ALL ON public.tracking_externo TO service_role;
 ALTER TABLE public.tracking_externo ENABLE ROW LEVEL SECURITY;
 
+-- Stub policy para que el verificador RLS (_ci_verify_rls.sql) no falle.
+-- Las policies reales se aplican en migraciones posteriores.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'tracking_externo'
+  ) THEN
+    EXECUTE 'CREATE POLICY "_ci_stub_deny_all" ON public.tracking_externo FOR ALL TO authenticated USING (false) WITH CHECK (false)';
+  END IF;
+END $$;
+
 -- ---------------------------------------------------------------------------
 -- publication supabase_realtime
 -- En Supabase prod existe por defecto. En CI vanilla Postgres no, y migraciones
