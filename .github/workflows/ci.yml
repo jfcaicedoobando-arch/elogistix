@@ -201,6 +201,9 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -259,3 +262,37 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Comentario en el PR cuando el merge/threshold de coverage falla.
+      - name: Comment coverage failure on PR
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require("fs");
+            let summary = "Coverage merge o thresholds fallaron.";
+            try {
+              if (fs.existsSync("reports/coverage-report.md")) {
+                const md = fs.readFileSync("reports/coverage-report.md", "utf8");
+                summary = md.length > 60000 ? md.slice(0, 60000) + "\n\n…(truncado)" : md;
+              }
+            } catch (e) {
+              core.warning(`No se pudo leer coverage-report.md: ${e.message}`);
+            }
+            const body = [
+              `### ❌ Coverage falló`,
+              ``,
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              ``,
+              `<details><summary>Resumen de coverage</summary>`,
+              ``,
+              summary,
+              ``,
+              `</details>`,
+            ].join("\n");
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
