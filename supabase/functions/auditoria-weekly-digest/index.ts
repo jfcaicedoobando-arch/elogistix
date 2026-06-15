@@ -120,7 +120,11 @@ async function sendDigest({ org, emails, html, lovableKey, resendKey }: SendDige
 }
 
 async function processOrg(admin: SupabaseClient, org: OrgRow, lovableKey: string | undefined, resendKey: string | undefined): Promise<ProcessResult> {
-  const { data: reporte } = await admin.rpc("auditoria_embarques_org", { p_organization_id: org.id });
+  const { data: reporte, error: rpcErr } = await admin.rpc("auditoria_embarques_org", { p_organization_id: org.id });
+  if (rpcErr) {
+    console.error(`[auditoria-weekly-digest] RPC error org=${org.id}:`, rpcErr);
+    return { org: org.nombre, destinatarios: 0, enviado: false, error: `RPC: ${rpcErr.message}` };
+  }
   const emails = await resolveAdminEmails(admin, org.id);
   if (emails.length === 0) return { org: org.nombre, destinatarios: 0, enviado: false };
   const html = buildHtml(org.nombre, (reporte ?? {}) as ReporteRow);

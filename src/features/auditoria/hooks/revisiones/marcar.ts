@@ -11,7 +11,7 @@ import { queryKeys } from "@/lib/query";
 
 export function useMarcarRevisado() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
 
   return useMutation({
     mutationFn: async (params: {
@@ -21,8 +21,10 @@ export function useMarcarRevisado() {
       const { hallazgo, accionTomada } = params;
       const detalleHash = hallazgoHash(hallazgo);
       const u = await resolveAuthUser(user);
+      if (!organizationId) throw new Error("Organización no resuelta");
 
       const data = await upsertAuditoriaRevision({
+        organization_id: organizationId,
         embarque_id: hallazgo.embarque_id,
         regla: hallazgo.regla,
         detalle_hash: detalleHash,

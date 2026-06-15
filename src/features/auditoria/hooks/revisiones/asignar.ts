@@ -16,7 +16,7 @@ import { queryKeys } from "@/lib/query";
  */
 export function useAsignarResponsable() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
 
   return useMutation({
     mutationFn: async (params: {
@@ -27,10 +27,12 @@ export function useAsignarResponsable() {
       tomar?: boolean;
     }) => {
       const u = await resolveAuthUser(user);
+      if (!organizationId) throw new Error("Organización no resuelta");
       const { hallazgo, responsableId, responsableEmail, fechaLimite, tomar } = params;
       const detalleHash = hallazgoHash(hallazgo);
 
       const data = await asignarResponsableHallazgo({
+        organization_id: organizationId,
         embarque_id: hallazgo.embarque_id,
         regla: hallazgo.regla,
         detalle_hash: detalleHash,
