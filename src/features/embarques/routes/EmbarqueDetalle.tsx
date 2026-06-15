@@ -52,6 +52,9 @@ export default function EmbarqueDetalle() {
     handleUpload, handleDeleteDoc, handleDownload, handleToggleNoAplica, handleAvanzarEstado,
     handleReabrir, reabrirEmbarque,
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
+    docsFaltantes, docsBloqueantes,
+    warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
+    confirmarAvanceConDocsPendientes,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
@@ -88,7 +91,16 @@ export default function EmbarqueDetalle() {
         onWarnCierreOpenChange={setWarnCierreOpen}
         onConfirmarCierreSinProforma={confirmarCierreSinProforma}
         conceptosSinProforma={conceptosSinProforma}
+        docsFaltantes={docsFaltantes}
+        docsBloqueantes={docsBloqueantes}
+        warnDocsOpen={warnDocsOpen}
+        onWarnDocsOpenChange={setWarnDocsOpen}
+        blockDocsOpen={blockDocsOpen}
+        onBlockDocsOpenChange={setBlockDocsOpen}
+        onConfirmarAvanceConDocsPendientes={confirmarAvanceConDocsPendientes}
+        onIrADocumentos={() => { setBlockDocsOpen(false); setActiveTab("documentos"); }}
       />
+
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
