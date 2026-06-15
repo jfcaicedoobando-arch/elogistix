@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.21.7] - 2026-06-15
+- **fix(architecture)**: Elimina import prohibido de `hooks/` en `features/embarques/services/submitProformaDialog.ts`. Se reemplaza `ReturnType<typeof useFetchClienteParaPdf>` por un tipo inline `ClienteParaPdf` derivado de `Tables<"clientes">` para respetar la regla de capas (services no importa de hooks).
+
 ## [13.21.6] - 2026-06-15
 - **refactor(power-of-10)**: Dividir `Oportunidades.tsx` (209→177) y `Cotizaciones.tsx` (200→175) extrayendo `oportunidadesTable.ts` y `CotizacionesFilterSelects.tsx`. Baseline de tamaño verde.
 
