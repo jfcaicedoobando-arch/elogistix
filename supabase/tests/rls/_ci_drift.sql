@@ -84,6 +84,34 @@ GRANT ALL ON public.tracking_intentos TO service_role;
 ALTER TABLE public.tracking_intentos ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
+-- public.tracking_externo (tabla completa)
+-- Añadida manualmente en prod; migración 20260602213410 (merge embarques) hace
+-- INSERT ... FROM public.tracking_externo y falla si la tabla no existe.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.tracking_externo (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  embarque_id uuid NOT NULL,
+  organization_id uuid NOT NULL,
+  provider text NOT NULL DEFAULT 'unknown',
+  tracking_request_id text,
+  shipment_id text,
+  request_number text NOT NULL DEFAULT '',
+  request_type text NOT NULL DEFAULT 'unknown',
+  scac text NOT NULL DEFAULT '',
+  status text NOT NULL DEFAULT 'pending',
+  failed_reason text,
+  last_event_at timestamptz,
+  last_synced_at timestamptz,
+  raw_payload jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.tracking_externo TO authenticated;
+GRANT ALL ON public.tracking_externo TO service_role;
+ALTER TABLE public.tracking_externo ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
 -- publication supabase_realtime
 -- En Supabase prod existe por defecto. En CI vanilla Postgres no, y migraciones
 -- posteriores hacen `ALTER PUBLICATION supabase_realtime ADD TABLE ...`.
