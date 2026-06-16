@@ -1,52 +1,49 @@
-## Problema
+## Diagnóstico CI – Suite RLS (7 jobs en rojo)
 
-El CI ya pasa todos los jobs de tests, lint, typecheck, build y edge functions. **Sólo falla `Coverage merge & report**`:
+Análisis del zip `logs_74453342868.zip`. Cada job RLS aborta en el primer `DO $$ … $$` por uno de estos cinco síntomas:
 
-```
-Statements: 34.89% (19519/55932) — threshold 35%
-Lines:      34.89% (19519/55932) — threshold 35%
-```
+| # | Suite | Causa raíz | Tipo |
+|---|---|---|---|
+| 1 | `isolation` | `ERROR: permission denied for table clientes` | **Bug app**: falta `GRANT … ON public.clientes TO authenticated` |
+| 2 | `operaciones` | `permission denied for table proveedores` | **Bug app**: falta GRANT en `public.proveedores` |
+| 3 | `financiero_critico` | `permission denied for table cuentas_bancarias` | **Bug app**: revisar si un REVOKE posterior eliminó el grant (la migración original sí lo tiene) |
+| 4 | `tarifas_y_costeo` | FK `costeo_rutas_puerto_origen_id_fkey` | **Bug test**: falta seed de puerto en el bloque DO |
+| 5 | `crm_operacional` | CHECK `crm_leads_score_check` (rango 1‑5) | **Bug test**: score fuera de rango |
+| 6 | `roles_no_admin` | enum `estado_factura` no acepta `'Pendiente'` | **Bug test**: valor inexistente (válidos: Borrador / Emitida / Pagada / Vencida / Cancelada / Parcialmente pagada) |
+| 7 | `financiero` | Mismo enum `estado_factura: 'Pendiente'` | **Bug test** |
 
-Faltan **~57 statements cubiertos** para cruzar el piso de 35% (35% × 55 932 = 19 576).
+---
 
-## Causa
+## Plan de remediación
 
-En iteraciones previas se eliminaron `src/features/comisiones/services/__tests__/index.test.ts` y `src/features/tesoreria/services/__tests__/index.test.ts` (test-hygiene), lo cual restó cobertura. Los nuevos tests puros añadidos cubren código que ya estaba contado, así que el neto bajó marginalmente.
+### 1. Nueva migración `…_rls_grants_missing.sql`
+- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.clientes TO authenticated;`
+- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.proveedores TO authenticated;`
+- `GRANT ALL ON public.clientes, public.proveedores TO service_role;`
+- Re-aplicar `GRANT … ON public.cuentas_bancarias` por idempotencia (cubre el caso 3 sin necesidad de auditar línea por línea quién revocó).
+- Recorrer `supabase/tests/rls/_ci_verify_rls.sql` y, si existe el chequeo, extenderlo para fallar cuando una tabla pública con RLS no tenga grants a `authenticated`.
 
-## Estrategia
+### 2. Fix de los tests SQL (sólo datos de seed)
+- `test_rls_crm_operacional.sql`: cambiar `score = 10` (o el valor inválido) por un entero en `[1,5]`.
+- `test_rls_roles_no_admin.sql` y `test_rls_financiero.sql`: reemplazar `'Pendiente'` → `'Emitida'` en todos los INSERT/UPDATE/SELECT sobre `facturas.estado`.
+- `test_rls_tarifas_y_costeo.sql`: antes del INSERT de `costeo_rutas` insertar un puerto de prueba (`INSERT INTO public.puertos(...) RETURNING id INTO puerto_x`) o usar un puerto existente del seed; pasar ese `id` a `puerto_origen_id` y `puerto_destino_id`.
 
-En vez de bajar el umbral (rompe la política de "el piso sólo sube"), añadimos **un único archivo de tests de smoke sobre constantes puras** que hoy reportan 0% de cobertura. Son módulos de sólo datos (arrays/objetos congelados) sin lógica — el test simplemente los importa, valida shape mínimo y comprueba invariantes triviales. Aporta ~160 statements cubiertos, con margen sobrado sobre los 57 necesarios.
+### 3. Validación local previa al push
+- Reproducir cada suite con el snapshot:
+  ```text
+  psql … -f supabase/tests/rls/_helpers.sql -f supabase/tests/rls/test_rls_isolation.sql
+  ```
+- Confirmar que todas las suites imprimen su `RAISE NOTICE '✓ … aserciones OK'`.
 
-## Archivos objetivo (todos 0% hoy)
+### 4. Changelog
+- Bump `APP_VERSION` (parche) en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` (root) con la fecha de hoy listando los 5 fixes (3 grants + 4 seeds de test).
 
+### Detalles técnicos (referencia)
+- Los grants faltantes son **regresión real**: PostgREST/Data API no expone tablas sin grant explícito; aunque las políticas RLS estuvieran bien, cualquier cliente con rol `authenticated` recibe `permission denied`.
+- El ID exacto de línea reportado por psql (`:187`, `:276`, …) corresponde al cierre `$$;` del bloque DO; el `SELECT count(*) FROM public.clientes` que dispara el error está antes (línea 69 / 77 / 87 según suite).
+- Mantengo el RPC `has_role` y demás policies intactas — el fix es estrictamente perimetral (grants) + corrección de fixtures.
 
-| Archivo                                  | Líneas |
-| ---------------------------------------- | ------ |
-| `src/constants/bancosMexico.ts`          | 46     |
-| `src/constants/regimenFiscalSAT.ts`      | 31     |
-| `src/constants/cache.ts`                 | 45     |
-| `src/constants/cotizacionInformativa.ts` | 15     |
-| `src/constants/cotizacionTerrestre.ts`   | 15     |
-| `src/constants/externalUrls.ts`          | 14     |
-| `src/constants/reportes.ts`              | 9      |
-
-
-## Cambios
-
-1. **Crear** `src/constants/__tests__/constantsSmoke.test.ts` con un `describe` por módulo. Cada bloque:
-  - Importa el módulo.
-  - Verifica que los exports principales existan y tengan el tipo esperado (`Array.isArray`, `typeof === "object"`, claves no vacías).
-  - Para catálogos (bancos, régimen fiscal): valida que no haya duplicados de clave/código y que ningún elemento tenga campos vacíos.
-  - Para `cache.ts`: verifica que las TTL exportadas sean números > 0.
-  - Para URLs externas: que cada valor sea string `https://…`.
-2. **Verificación local**: correr `bunx vitest run src/constants/__tests__/constantsSmoke.test.ts` para asegurar verde, y confirmar que las constantes no se excluyen del coverage (revisar `vitest.config.ts` → la exclusión `src/types/**` no afecta a `src/constants/**`, ya verificado).
-3. **Bump** `APP_VERSION` → `13.44.16` y entrada en `CHANGELOG.md` describiendo: cobertura recuperada por debajo del umbral, archivo de smoke añadido, sin cambios en lógica de la app.
-
-## Notas
-
-- No se toca `vitest.config.ts` ni el umbral — la política "ratchet sólo sube" se respeta.
-- No hay cambios en código de producción.
-
-&nbsp;
-
-Genera mas tests, para intentar quedar 3% por encima del umbral.
+### Fuera de alcance
+- Subir umbral de cobertura.
+- Reordenar suites o paralelización del workflow.
