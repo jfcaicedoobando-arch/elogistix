@@ -192,7 +192,9 @@ jobs:
       - name: Restore database snapshot
         run: |
           # pg_restore es ~10x más rápido que rehacer bootstrap+migrations.
-          pg_restore --no-owner --no-privileges --dbname=postgres \
+          # Restauramos GRANTs (sin --no-privileges) para que SET ROLE
+          # authenticated en las suites pueda leer/escribir sus tablas.
+          pg_restore --no-owner --dbname=postgres \
             .rls-snapshot/db.dump
 
       - name: Run RLS suite — ${{ matrix.suite }}
