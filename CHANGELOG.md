@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.28.0] - 2026-06-16
+- **feat(cotizaciones/wizard-orden)**: Paso 1 reordenado en flujo conversacional: Cliente → Operación → Ruta → Mercancía → Tarifa → Cierre (# embarques + Notas). Los acordeones de cierre abren por default para no requerir clic extra.
+- **feat(embarques/precarga-ampliada)**: `buildVincularCotizacionUpdates` ahora dirige el origen/destino al campo correcto del embarque según `modo` (Marítimo → puertos, Aéreo → aeropuertos, Terrestre → ciudades) y propaga `msdsArchivo` cuando la cotización lo trae cargado. `buildDesvincularCotizacionUpdates` limpia el superset completo de rutas para evitar residuos al cambiar de modo.
+- **feat(embarques/desvincular)**: Nuevo `DesvincularCotizacionDialog` con 3 opciones — Conservar datos / Limpiar sólo conceptos / Limpiar todo lo heredado — disparado desde el botón X del badge de vinculación en `BloqueVinculacion`. `useNuevoEmbarqueCotVinculada` y `useEmbarqueForm.desvincularCotizacion` aceptan el modo para aplicar la opción elegida.
+- **feat(ui/heredado-badge)**: Componente reutilizable `HeredadoBadge` (con tooltip) para marcar campos pre-llenados desde otra entidad (cotización, tarifa, plantilla).
+
 ## [13.27.0] - 2026-06-16
 - **feat(cotizaciones/sin-desglose)**: Nuevo atajo "Cotizar sin desglose" en Paso 1 del wizard, con modal destructivo + checkbox obligatorio que advierte de las consecuencias. Al confirmar, se marca `cotizaciones.sin_desglose_costos = true`, se salta al Paso 3 y se registra `cotizacion_sin_desglose_creada` en bitácora. En Paso 3/4 y en el detalle de la cotización aparece un banner amarillo persistente "Cotización sin desglose de costos" con CTA "Cargar costos". **Candado duro**: los handlers `handleGenerarEmbarques` y `handleCrearBorrador` validan la existencia de filas en `cotizacion_costos` antes de proceder; si está vacío, abren `BloqueoEmbarqueSinCostosDialog`, registran `embarque_bloqueado_sin_costos` y redirigen al editor de la cotización. La regla de bloqueo se basa en datos reales, no en el flag, para no bloquear cotizaciones a las que ya se les cargaron costos posteriormente.
 
