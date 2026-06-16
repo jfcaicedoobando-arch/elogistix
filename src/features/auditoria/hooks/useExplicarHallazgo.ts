@@ -27,7 +27,3 @@ export function useExplicarHallazgo() {
     },
   });
 }
-
-export function getExplicacionCached(qc: ReturnType<typeof useQueryClient>, h: HallazgoAuditoria) {
-  return qc.getQueryData<ExplicacionHallazgo>(cacheKey(h));
-}

@@ -18,10 +18,8 @@
  *   ```
  */
 
-import { createContext, useContext, useCallback, type ReactNode } from "react";
-import { useFormContext } from "react-hook-form";
+import { createContext, useContext, type ReactNode } from "react";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
-import type { EmbarqueFormValues } from "@/lib/mappers/embarque";
 
 interface Ctx {
   cotizacion: CotizacionRow | null;
@@ -46,28 +44,4 @@ export function useCotizacionVinculada(): CotizacionRow | null {
   return useContext(CotizacionVinculadaContext).cotizacion;
 }
 
-type CotValueGetter = (cot: CotizacionRow) => unknown;
 
-/**
- * Devuelve una función predicado `(field, getter) => boolean` que indica si
- * el valor actual del formulario coincide con el de la cotización heredada.
- */
-export function useHeredadoCotizacion() {
-  const cot = useCotizacionVinculada();
-  const { getValues } = useFormContext<EmbarqueFormValues>();
-
-  return useCallback(
-    (field: keyof EmbarqueFormValues, getter: CotValueGetter): boolean => {
-      if (!cot) return false;
-      const original = getter(cot);
-      // Si la cotización no aportó valor para este campo, NO es heredado
-      // (evita falsos positivos en campos vacíos en ambos lados).
-      if (original === null || original === undefined || original === "") return false;
-      const current = getValues(field);
-      if (current === null || current === undefined || current === "") return false;
-      // Normalizamos a string para comparar booleanos, números y nulls.
-      return String(current) === String(original);
-    },
-    [cot, getValues],
-  );
-}
