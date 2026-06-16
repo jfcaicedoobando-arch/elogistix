@@ -40,7 +40,7 @@ export default function CotizacionWizardLayout({
   onBack,
   saveLabel,
 }: CotizacionWizardLayoutProps) {
-  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, currentStep, isPending } = w;
+  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, isPending } = w;
   const contentRef = useRef<HTMLFormElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSinDesglose, setShowSinDesglose] = useState(false);
