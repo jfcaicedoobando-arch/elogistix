@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
+import { useCallback, useRef, useState, KeyboardEvent } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default function CotizacionWizardLayout({
   onBack,
   saveLabel,
 }: CotizacionWizardLayoutProps) {
-  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, currentStep, isPending } = w;
+  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, isPending } = w;
   const contentRef = useRef<HTMLFormElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSinDesglose, setShowSinDesglose] = useState(false);
@@ -78,19 +78,9 @@ export default function CotizacionWizardLayout({
     setShowSinDesglose(true);
   }, [canCotizarSinDesglose]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const root = contentRef.current;
-      if (!root || !root.isConnected) return;
-      const el = root.querySelector<HTMLElement>(
-        'input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="combobox"]:not([disabled])',
-      );
-      if (el && el.isConnected) {
-        try { el.focus({ preventScroll: true }); } catch { /* noop */ }
-      }
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [currentStep]);
+  // Auto-focus removido (v13.33.8): el setTimeout chocaba con la fase de
+  // mutación de React (Strict Mode + datos resolviendo en paralelo) y producía
+  // `removeChild` en el primer mount del wizard.
 
   const irACargarCostos = useCallback(() => {
     if (!isBusy) wHandleBack();
