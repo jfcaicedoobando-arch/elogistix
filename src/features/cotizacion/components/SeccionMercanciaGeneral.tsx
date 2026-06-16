@@ -16,8 +16,9 @@ export default function SeccionMercanciaGeneral({ msdsFile, setMsdsFile }: Props
     <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div>
-          <Label>Tipo de Unidad</Label>
+          <Label htmlFor="cot-tipo-unidad">Tipo de Unidad</Label>
           <Input
+            id="cot-tipo-unidad"
             type="text"
             value={watch("tipoUnidad")}
             onChange={e => setValue("tipoUnidad", e.target.value)}
@@ -25,16 +26,16 @@ export default function SeccionMercanciaGeneral({ msdsFile, setMsdsFile }: Props
           />
         </div>
         <div>
-          <Label>Peso (kg)</Label>
-          <Input type="number" min={0} value={watch("pesoKg")} onChange={e => setValue("pesoKg", Number(e.target.value))} />
+          <Label htmlFor="cot-peso-kg">Peso (kg)</Label>
+          <Input id="cot-peso-kg" type="number" min={0} value={watch("pesoKg")} onChange={e => setValue("pesoKg", Number(e.target.value))} />
         </div>
         <div>
-          <Label>Volumen (m³)</Label>
-          <Input type="number" min={0} step={0.01} value={watch("volumenM3")} onChange={e => setValue("volumenM3", Number(e.target.value))} />
+          <Label htmlFor="cot-volumen-m3">Volumen (m³)</Label>
+          <Input id="cot-volumen-m3" type="number" min={0} step={0.01} value={watch("volumenM3")} onChange={e => setValue("volumenM3", Number(e.target.value))} />
         </div>
         <div>
-          <Label>Piezas</Label>
-          <Input type="number" min={0} value={watch("piezas")} onChange={e => setValue("piezas", Number(e.target.value))} />
+          <Label htmlFor="cot-piezas">Piezas</Label>
+          <Input id="cot-piezas" type="number" min={0} value={watch("piezas")} onChange={e => setValue("piezas", Number(e.target.value))} />
         </div>
       </div>
     </SeccionMercanciaWrapper>

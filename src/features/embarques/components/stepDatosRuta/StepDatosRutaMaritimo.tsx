@@ -63,9 +63,9 @@ export function StepDatosRutaMaritimo({ errors }: Props) {
         )} />
         {errors.naviera && <p className={errClass}>{errors.naviera}</p>}
       </div>
-      <div className="space-y-2"><Label>Agente</Label><Input placeholder="Nombre del agente" {...register('agente')} /></div>
-      <div className="space-y-2"><Label># BL Master</Label><Input placeholder="Número de BL" {...register('blMaster')} /></div>
-      <div className="space-y-2"><Label># BL House</Label><Input {...register('blHouse')} /></div>
+      <div className="space-y-2"><Label htmlFor="emb-agente">Agente</Label><Input id="emb-agente" placeholder="Nombre del agente" {...register('agente')} /></div>
+      <div className="space-y-2"><Label htmlFor="emb-bl-master"># BL Master</Label><Input id="emb-bl-master" placeholder="Número de BL" {...register('blMaster')} /></div>
+      <div className="space-y-2"><Label htmlFor="emb-bl-house"># BL House</Label><Input id="emb-bl-house" {...register('blHouse')} /></div>
       <div className="space-y-2">
         <Label>Tipo de Servicio *</Label>
         <Controller name="tipoServicio" render={({ field }) => (

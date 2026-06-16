@@ -16,12 +16,12 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
   return (
     <>
       <div className="space-y-2">
-        <Label>ETD (Fecha Salida) *</Label>
-        <Input type="date" {...register('etd')} />
+        <Label htmlFor="emb-etd">ETD (Fecha Salida) *</Label>
+        <Input id="emb-etd" type="date" {...register('etd')} />
         {errors.etd && <p className={errClass}>{errors.etd}</p>}
       </div>
       <div className="space-y-2">
-        <Label>
+        <Label htmlFor="emb-eta">
           ETA (Fecha Llegada Estimada) *
           {diasTransitoSugerencia && diasTransitoSugerencia > 0 && (
             <span className="text-xs text-muted-foreground ml-2">
@@ -29,7 +29,7 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
             </span>
           )}
         </Label>
-        <Input type="date" {...register('eta')} />
+        <Input id="emb-eta" type="date" {...register('eta')} />
         {errors.eta && <p className={errClass}>{errors.eta}</p>}
       </div>
     </>

@@ -113,8 +113,9 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
               </span>
             </AccordionTrigger>
             <AccordionContent className="pt-2">
-              <Label>Número de contenedores</Label>
+              <Label htmlFor="cot-num-contenedores">Número de contenedores</Label>
               <Input
+                id="cot-num-contenedores"
                 type="number" min={1}
                 value={form.watch("numContenedores")}
                 onChange={(e) => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
@@ -130,8 +131,9 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
               </span>
             </AccordionTrigger>
             <AccordionContent className="pt-2">
-              <Label>Notas</Label>
+              <Label htmlFor="cot-notas">Notas</Label>
               <Textarea
+                id="cot-notas"
                 value={form.watch("notas")}
                 onChange={(e) => form.setValue("notas", e.target.value)}
                 placeholder="Observaciones o condiciones..."

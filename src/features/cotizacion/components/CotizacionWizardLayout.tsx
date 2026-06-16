@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ export default function CotizacionWizardLayout({
   saveLabel,
 }: CotizacionWizardLayoutProps) {
   const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, currentStep, isPending } = w;
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLFormElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSinDesglose, setShowSinDesglose] = useState(false);
   const isBusy = isProcessing || isPending;
@@ -92,6 +92,20 @@ export default function CotizacionWizardLayout({
     if (!isBusy) wHandleBack();
   }, [isBusy, wHandleBack]);
 
+  // Enter avanza paso (paridad con EmbarqueWizardLayout).
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isBusy) handleNext();
+  }, [handleNext, isBusy]);
+
+  const handleFormKeyDown = useCallback((e: KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== 'Enter') return;
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'TEXTAREA') return;
+    if (target.tagName === 'BUTTON') return;
+    if (target.getAttribute('aria-expanded') === 'true') return;
+  }, []);
+
   return (
     <FormProvider {...form}>
       <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
@@ -112,7 +126,7 @@ export default function CotizacionWizardLayout({
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4" ref={contentRef}>
+        <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="flex-1 overflow-y-auto p-4" ref={contentRef}>
           <div className="max-w-6xl mx-auto">
             {w.currentStep === 1 ? (
               <div className="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
@@ -184,7 +198,8 @@ export default function CotizacionWizardLayout({
               </div>
             )}
           </div>
-        </div>
+          <button type="submit" className="sr-only" tabIndex={-1} aria-hidden>Siguiente</button>
+        </form>
 
         <CotizacionWizardFooter
           currentStep={w.currentStep}
