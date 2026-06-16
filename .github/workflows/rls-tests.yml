@@ -93,8 +93,11 @@ jobs:
       - name: Dump prepared database
         run: |
           mkdir -p .rls-snapshot
-          # --clean + --if-exists permite restaurar sobre una BD vacía sin colisiones.
-          pg_dump --format=custom --no-owner --no-privileges \
+          # Mantenemos GRANTs (sin --no-privileges) porque las suites RLS
+          # ejecutan SELECT/INSERT con `SET ROLE authenticated`; sin grants
+          # PostgREST-style en el destino el primer SELECT lanza
+          # "permission denied for table …" antes de evaluar las policies.
+          pg_dump --format=custom --no-owner \
             --file=.rls-snapshot/db.dump postgres
           ls -lh .rls-snapshot/
 
@@ -189,7 +192,9 @@ jobs:
       - name: Restore database snapshot
         run: |
           # pg_restore es ~10x más rápido que rehacer bootstrap+migrations.
-          pg_restore --no-owner --no-privileges --dbname=postgres \
+          # Restauramos GRANTs (sin --no-privileges) para que SET ROLE
+          # authenticated en las suites pueda leer/escribir sus tablas.
+          pg_restore --no-owner --dbname=postgres \
             .rls-snapshot/db.dump
 
       - name: Run RLS suite — ${{ matrix.suite }}
