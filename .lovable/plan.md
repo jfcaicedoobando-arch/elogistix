@@ -1,26 +1,21 @@
-## Reordenar dropdown de Tipo de Contenedor en Paso 1 del wizard de cotización
+# Precargar tipo de contenedor en Buscar tarifa marítima
 
-**Problema:** El dropdown "Tipo de Contenedor" en `SeccionMercanciaMaritimaFCL.tsx` usa un array hardcodeado (`CONTENEDORES_FCL`) cuyo orden no sigue una secuencia lógica para el usuario (mezcla tamaños y tipos).
+## Problema
+`BuscarTarifaDialog` ya acepta un prop `initial` con `tipoContenedorId`, pero `TarifaVinculadaPanel` (Paso 1) abre el modal **sin** pasarlo, por lo que el usuario debe volver a elegir el tipo de contenedor que ya seleccionó arriba.
 
-**Solución:** Reordenar el array estático de forma coherente: primero por tamaño de contenedor (`20'`, `40'`, `45'`) y dentro de cada tamaño por tipo (`GP/Dry`, `High Cube`, `Reefer`, `Open Top`, `Flat Rack`).
+Complicación: el campo `tipoContenedor` del formulario guarda una etiqueta hardcodeada (ej. `"20' GP"`, `"40' High Cube"`), mientras que el modal espera el `id` (UUID) del catálogo `tipos_contenedor`.
 
-**Cambios:**
-1. `src/features/cotizacion/components/SeccionMercanciaMaritimaFCL.tsx` — Reordenar `CONTENEDORES_FCL`.
-2. `src/constants/appVersion.ts` — Bump de versión patch (ej. `13.26.1`).
-3. `CHANGELOG.md` — Registrar cambio con fecha de hoy.
+## Cambios
 
-**Orden propuesto:**
-- `20' GP`
-- `20' Dry`
-- `20' High Cube`
-- `20' Reefer`
-- `20' Open Top`
-- `20' Flat Rack`
-- `40' Dry`
-- `40' High Cube`
-- `40' Reefer`
-- `40' Open Top`
-- `40' Flat Rack`
-- `45' High Cube`
+**1. `src/features/cotizacion/components/TarifaVinculadaPanel.tsx`**
+- Cargar el catálogo con `useTiposContenedor()`.
+- Resolver el `id` del catálogo a partir de la etiqueta del Paso 1 con un match normalizado (lowercase, sin apóstrofes ni espacios extra) contra `tipo.name`.
+- Pasar `initial={{ tipoContenedorId }}` al `<BuscarTarifaDialog>`. Si no hay match, pasar `undefined` (comportamiento actual).
 
-**Out of scope:** No se migra al catálogo dinámico de BD; eso requiere un diseño mayor de integración con tarifas y valores legacy.
+**2. Metadata**
+- `APP_VERSION` → `13.26.2`
+- `CHANGELOG.md`: nueva entrada `[13.26.2]` — "El modal Buscar tarifa marítima precarga el tipo de contenedor elegido en el Paso 1 del wizard de cotización."
+
+## Fuera de alcance
+- Precargar puertos origen/destino (los campos del Paso 1 son texto libre, no IDs de `puertos`). Requiere migración mayor, no parte de este cambio.
+- Migrar `tipoContenedor` de string hardcodeado a FK del catálogo (cambio mayor ya discutido).

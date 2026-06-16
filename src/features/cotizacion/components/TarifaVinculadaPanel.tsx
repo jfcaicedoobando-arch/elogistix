@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import CartaGarantiaBadge from "./CartaGarantiaBadge";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
@@ -20,8 +21,12 @@ import type { TopTarifaRow } from "@/features/costeo/types";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
+const normalizarNombreContenedor = (s: string) =>
+  s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
+
 export default function TarifaVinculadaPanel() {
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
+  const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
 
   const modo = watch("modo");
@@ -30,6 +35,18 @@ export default function TarifaVinculadaPanel() {
   const tipoContenedorActual = watch("tipoContenedor");
 
   const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
+
+  // El Paso 1 guarda la etiqueta del tipo de contenedor (ej. "40' High Cube"),
+  // pero el modal Buscar tarifa espera el id del catálogo. Resolvemos por nombre
+  // normalizado para precargar el campo cuando el usuario abre el modal.
+  const tipoContenedorIdInicial = (() => {
+    if (!tipoContenedorActual) return undefined;
+    if (tiposContenedor.some((t) => t.id === tipoContenedorActual)) {
+      return tipoContenedorActual;
+    }
+    const objetivo = normalizarNombreContenedor(tipoContenedorActual);
+    return tiposContenedor.find((t) => normalizarNombreContenedor(t.name) === objetivo)?.id;
+  })();
 
   if (modo !== "Marítimo") return null;
 
@@ -136,6 +153,7 @@ export default function TarifaVinculadaPanel() {
         onOpenChange={setOpen}
         onElegir={aplicarTarifa}
         selectLabel="Usar esta tarifa"
+        initial={{ tipoContenedorId: tipoContenedorIdInicial }}
       />
     </WizardSection>
   );
