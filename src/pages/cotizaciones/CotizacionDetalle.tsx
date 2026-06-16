@@ -140,19 +140,7 @@ export default function CotizacionDetalle() {
         isPending={convertirProspecto.isPending}
       />
 
-      <DialogGenerarEmbarques
-        open={showConfirmarConvertir}
-        onOpenChange={setShowConfirmarConvertir}
-        numContenedores={cotizacion.num_contenedores}
-        isPending={convertirAEmbarques.isPending}
-        onConfirmar={handleGenerarEmbarques}
-      />
-
-      <BloqueoEmbarqueSinCostosDialog
-        open={showBloqueoSinCostos}
-        onOpenChange={setShowBloqueoSinCostos}
-        onIrACargarCostos={irACargarCostos}
-      />
     </div>
   );
 }
+
