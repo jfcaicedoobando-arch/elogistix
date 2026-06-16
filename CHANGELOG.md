@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.46.5] - 2026-06-16
+- **fix(ci/rls-snapshot)**: La migración que crea `tracking_webhook_log` tenía timestamp posterior a la migración 233650 que le hacía `GRANT`, así que el snapshot RLS seguía fallando con `relation does not exist`. Se renombra la migración a timestamp 233649 (un segundo antes) para que la tabla exista cuando se ejecutan los GRANTs.
+
 ## [13.46.4] - 2026-06-16
 - **fix(ci/rls-snapshot)**: La suite RLS de CI fallaba con `relation "public.tracking_webhook_log" does not exist` porque la tabla existía sólo en producción y nunca fue creada por una migración. Se añade migración idempotente que crea la tabla (con sus índices, GRANTs, RLS y policy `Super admin read webhook log`) si falta, para que el snapshot de pruebas pueda replicarla.
 
