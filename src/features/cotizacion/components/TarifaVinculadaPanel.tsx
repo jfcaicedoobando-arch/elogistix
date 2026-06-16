@@ -19,15 +19,12 @@ import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVincula
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
-const OPTS = { shouldValidate: true, shouldDirty: true } as const;
-
 const normalizarNombreContenedor = (s: string) =>
   s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
 
-const OPTS = { shouldValidate: true, shouldDirty: true } as const;
-
 export default function TarifaVinculadaPanel() {
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
+  const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
 
   const modo = watch("modo");
