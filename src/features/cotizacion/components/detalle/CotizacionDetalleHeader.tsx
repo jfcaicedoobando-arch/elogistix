@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, FileDown } from "lucide-react";
+import { ArrowLeft, FileDown, Mail } from "lucide-react";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { toTitleCase, formatDate } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
@@ -10,9 +10,11 @@ interface Props {
   nombreDestinatario: string;
   onBack: () => void;
   onExportarPdf: () => void;
+  onEnviarEmail?: () => void;
+  yaEnviada?: boolean;
 }
 
-export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onBack, onExportarPdf }: Props) {
+export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onBack, onExportarPdf, onEnviarEmail, yaEnviada }: Props) {
   return (
     <div className="flex items-center gap-3">
       <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver a cotizaciones">
@@ -38,6 +40,12 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onBack
       <Button variant="outline" size="sm" onClick={onExportarPdf}>
         <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
       </Button>
+      {onEnviarEmail && !cotizacion.es_prospecto && (
+        <Button variant="default" size="sm" onClick={onEnviarEmail}>
+          <Mail className="h-4 w-4 mr-1" /> {yaEnviada ? "Reenviar" : "Enviar por correo"}
+        </Button>
+      )}
     </div>
   );
 }
+

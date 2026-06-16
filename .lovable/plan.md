@@ -1,84 +1,132 @@
+## Objetivo
 
-# Ciclo de vida de cotizaciones (housekeeping automático)
+Permitir enviar una cotización por correo desde su detalle: el cliente recibe un email branded con dos botones — **Ver en el portal** y **Descargar PDF** — y la cotización pasa automáticamente a estado **Enviada**. Reenvíos permitidos, CC manual y CC fijo al ejecutivo asignado.
 
-Mantener la BD limpia sin perder historia: expirar por edad, archivar después, purgar opcional manual.
+## Versión
 
-## 1. Modelo de estados
+`13.41.0` — entrada en `CHANGELOG.md`.
 
-Estados actuales que se mantienen: `borrador`, `enviada`, `aceptada`, `rechazada`, etc.
+## 1. Infraestructura de email (Lovable Cloud)
 
-Se agregan dos nuevos:
-- **`expirada`** — caducó por inactividad/vigencia (NO es rechazo del cliente; no contamina tasa de cierre).
-- **`archivada`** — oculta de listados, conservada en BD.
+El dominio `notify.librecarga.com` ya está verificado. Falta la capa transaccional:
 
-Reglas de transición automática (job nocturno):
+1. Ejecutar `setup_email_infra` (crea queues pgmq `transactional_emails`, RPCs, `process-email-queue` cron, `email_send_log`, `suppressed_emails`, `email_unsubscribe_tokens`).
+2. Ejecutar `scaffold_transactional_email` (crea `send-transactional-email`, `handle-email-unsubscribe`, `handle-email-suppression`, `registry.ts`, página de desuscripción).
+3. Aplicar branding Libre Carga (#1B2B4B / #2563EB, Inter) a los templates scaffold.
 
-| Origen | Condición | Nuevo estado |
-|---|---|---|
-| `borrador` | `updated_at` > 7 días | `expirada` |
-| `enviada` | `fecha_validez < CURRENT_DATE` | `expirada` |
-| `expirada` | `updated_at` > 90 días | `archivada` |
+## 2. Storage de PDFs
 
-No se aplica a cotizaciones con: `aceptada`, `rechazada`, embarque vinculado, o flag `congelada` (futura).
+Crear bucket privado `cotizaciones-pdf` con RLS:
 
-## 2. Migración (BD)
+- INSERT/SELECT/DELETE solo para miembros de la `organization_id` dueña de la cotización (path `{organization_id}/{cotizacion_id}/{folio}-{timestamp}.pdf`).
+- El correo lleva **link firmado** (válido 30 días, renovable) generado por la edge function al enviar.
 
-**a) Ampliar enum / CHECK** del estado de `cotizaciones` para incluir `expirada` y `archivada`.
+## 3. Template de email
 
-**b) Asegurar columna** `fecha_validez date` (revisar si ya existe; si no, agregarla con default `CURRENT_DATE + INTERVAL '15 days'` para nuevas filas y backfill `created_at + 15d` para las existentes enviadas).
+Crear `supabase/functions/_shared/transactional-email-templates/cotizacion-enviada.tsx` y registrarlo como `'cotizacion-enviada'` en `registry.ts`.
 
-**c) Columna auxiliar** `estado_anterior text` (para auditoría de quién pasó a expirada/archivada y poder revertir).
+Contenido:
+- Logo + saludo personalizado al contacto.
+- Datos clave: folio, origen→destino, incoterm, vigencia, vendedor.
+- Bloque resumen: total MXN + total USD (si aplica).
+- Dos CTAs apilados: **Ver cotización en el portal** y **Descargar PDF**.
+- Mensaje opcional del remitente (texto libre del diálogo).
+- Footer con datos del ejecutivo asignado.
 
-**d) Habilitar extensión** `pg_cron` (ya disponible en Lovable Cloud).
+El template existente `cotizacion-respuesta.tsx` (Aceptada/Rechazada desde portal) se registra también ya que ya está listo.
 
-**e) Función SECURITY DEFINER** `public.expirar_cotizaciones_job()`:
-1. UPDATE borradores >7d → `expirada` (registra `estado_anterior='borrador'`, escribe en `bitacora_actividad` como sistema).
-2. UPDATE enviadas con `fecha_validez < CURRENT_DATE` → `expirada`.
-3. UPDATE expiradas >90d (por `updated_at`) → `archivada`.
-4. Excluye filas con embarque vinculado o estado terminal.
-5. Devuelve conteos por categoría para logging.
+## 4. Edge Function `enviar-cotizacion-email`
 
-**f) Programar pg_cron**: ejecución diaria 03:00 America/Mexico_City llamando al job. Registrar resultado en `app_logs`.
+Nueva función dedicada que orquesta el envío (la `send-transactional-email` genérica no genera PDF). Responsabilidades:
 
-## 3. UI
+1. Validar JWT + permisos (`puede_editar_cotizacion`).
+2. Leer cotización + contactos + ejecutivo + organización.
+3. Generar PDF server-side reutilizando la misma fuente que el cliente. Como `cotizacionPdf.tsx` corre con `@react-pdf/renderer` en el browser, generamos en el servidor con la **misma plantilla** importada vía bundler-compatible (`renderToBuffer`). Si no es viable en Deno, fallback: el cliente sube el blob a Storage vía signed URL y la función solo manda el correo. **Plan elegido**: cliente genera el PDF (ya existe), lo sube a `cotizaciones-pdf` con signed upload URL devuelto por la función, y luego dispara el envío.
+4. Generar link firmado de 30 días al PDF.
+5. Por cada destinatario: invocar `send-transactional-email` (`templateName: 'cotizacion-enviada'`, `idempotencyKey: cot-{id}-{timestamp}-{email}`).
+6. Insertar fila en `cotizacion_envios` (ver §5).
+7. Transicionar estado a `Enviada` si estaba en `Borrador` y setear `fecha_envio`.
+8. Registrar en `bitacora_actividad` (`accion: 'cotizacion_enviada_email'`).
 
-**a) Listado de cotizaciones** (`/cotizaciones`):
-- Filtro de estado por defecto excluye `expirada` y `archivada`.
-- Agregar chips/checkbox "Incluir expiradas" e "Incluir archivadas" en la barra de filtros.
-- Badge gris para `expirada`, badge tenue para `archivada`.
+CC fijo: ejecutivo asignado (resuelto desde `vendedor_id`).
+CC manual: array opcional `cc_emails`.
 
-**b) Detalle de cotización expirada**:
-- Banner informativo: "Esta cotización expiró el DD/MM/YYYY. Las tarifas pueden estar desactualizadas."
-- Botón **"Reactivar"** (solo admin/gerencia/ejecutivo dueño) → vuelve a `estado_anterior` y refresca `updated_at`. Registra en bitácora.
-- Botón **"Duplicar como nueva"** (cualquier rol con permiso de crear).
+## 5. Migración SQL
 
-**c) Aviso preventivo** (no bloqueante en esta entrega; preparar el campo):
-- Calcular `días_para_expirar` en el listado; mostrar tooltip naranja cuando ≤2 días en borrador. (Notificación por email queda fuera de alcance de este plan.)
+Nueva tabla `public.cotizacion_envios`:
 
-## 4. Configuración (futuro, no en esta entrega)
+```text
+id uuid pk
+cotizacion_id uuid fk -> cotizaciones(id) on delete cascade
+organization_id uuid not null
+enviado_por uuid -> auth.users(id)
+destinatarios jsonb            -- [{email, nombre, contacto_id?}]
+cc jsonb                       -- {ejecutivo_email, manual:[...]}
+mensaje text
+pdf_storage_path text
+pdf_link_publico text           -- signed URL (referencia)
+estado text default 'enviado'   -- enviado|fallido|parcial
+error text
+created_at timestamptz default now()
+```
 
-Dejar el plazo de 7 días como **constante exportada** en `src/features/cotizacion/domain/lifecycle.ts` (`DIAS_EXPIRACION_BORRADOR = 7`) para que cuando se quiera hacer configurable por organización, solo se mueva a `configuracion_global`.
++ GRANTs estándar (`authenticated`, `service_role`), RLS por `organization_id`, índice `(cotizacion_id, created_at desc)`.
 
-## 5. Cambios técnicos resumidos
+Trigger/UPDATE en `cotizaciones`: añadir `fecha_envio timestamptz` si no existe (verificar; ya hay `fecha_creacion`/`fecha_validez`).
 
-- **Migración SQL**: enum, columnas, función, pg_cron.
-- **Frontend**:
-  - `src/features/cotizacion/services/queries.ts` — filtro por defecto excluye estados inactivos.
-  - `src/features/cotizacion/components/CotizacionesFiltros.tsx` — toggles nuevos.
-  - `src/features/cotizacion/components/CotizacionDetalleHeader.tsx` — banner + botón reactivar.
-  - `src/features/cotizacion/domain/lifecycle.ts` — constantes y helpers `puedeReactivar()`, `estaInactiva()`.
-  - Badge component — colores nuevos.
-- **Bitácora**: cada transición automática se registra con `usuario_id = NULL` y `accion = 'cotizacion_expirada_auto'` / `'cotizacion_archivada_auto'`.
-- **`APP_VERSION`** → `13.40.0`.
-- **`CHANGELOG.md`** → entrada nueva.
+## 6. UI — Diálogo de envío
 
-## 6. Backfill al desplegar
+Nuevo botón **Enviar por correo** en `CotizacionDetalleHeader.tsx` (visible para roles con `puede_editar_cotizacion`; label cambia a **Reenviar** si ya hay envíos previos).
 
-Una sola corrida manual del job tras la migración para clasificar el histórico actual. Se reporta al usuario cuántas filas pasaron a `expirada` / `archivada` antes de habilitar el cron.
+Componente nuevo `EnviarCotizacionDialog.tsx`:
 
-## 7. Lo que NO se hace
+- **Destinatarios**: multiselect de `contactos_cliente` del cliente (muestra nombre + email + puesto). Default: contactos marcados como principal/cotizaciones. Botón "Agregar email manual".
+- **CC**: muestra chip readonly del ejecutivo asignado + input para CC manual (coma-separados, validados).
+- **Asunto**: prellenado `Cotización {folio} — {origen} → {destino}` (editable).
+- **Mensaje**: textarea opcional.
+- **Vista previa**: link "Ver PDF" que abre el PDF generado en el cliente antes de enviar.
+- Footer: checkbox "Marcar como Enviada" (default ON, deshabilitado si ya está en Enviada/posterior), botón **Enviar**.
 
-- No se borra nada de la BD.
-- No se tocan cotizaciones `aceptada`/`rechazada` ni las que ya generaron embarque.
-- No se envían emails al ejecutivo (queda como mejora futura).
-- No se configura por organización todavía (constante centralizada lista para migrar).
+Estados: loading, success (toast + cierre + refetch), error (toast con motivo).
+
+Sub-tab nuevo en el detalle: **Historial de envíos** con tabla (fecha, destinatarios, enviado por, estado, link al PDF de ese envío).
+
+## 7. Hooks y servicios
+
+- `src/features/cotizacion/services/mutations/enviarPorEmail.ts` — orquesta: genera PDF (`generarPdfCotizacion`), pide signed upload URL, sube, llama función `enviar-cotizacion-email`.
+- `src/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail.ts` — wrapper con React Query + invalidaciones.
+- `src/features/cotizacion/services/queries/historialEnvios.ts` — lista envíos para el sub-tab.
+
+## 8. Reglas / casos borde
+
+- Bloquear envío si la cotización está en `Archivada` o `Vencida` sin reactivar primero (mostrar banner).
+- Bloquear envío si no hay al menos un costo de venta y un destinatario válido.
+- Si el contacto no tiene email, se oculta de la lista y se sugiere editarlo.
+- Idempotency key incluye timestamp → reenvíos no se deduplican (es lo deseado).
+- Respetar `suppressed_emails`: si un destinatario está suprimido, marcar fila como parcial y avisar en UI.
+
+## 9. Bitácora
+
+Cada envío exitoso: `accion: 'cotizacion_enviada_email'`, payload con destinatarios y `envio_id`.
+Cada fallo: `accion: 'cotizacion_envio_email_fallido'`.
+
+## 10. Pruebas
+
+- Unit: `enviarPorEmail.ts` mockeando supabase (cadena thenable per mem).
+- Domain: validador de destinatarios (al menos uno, formato email, no duplicados con CC).
+- Integration manual: enviar a cuenta de prueba desde una cotización en Borrador → verificar estado pasa a Enviada, fila en `cotizacion_envios`, bitácora, correo recibido con ambos botones funcionales.
+
+## Detalles técnicos (resumen para implementación)
+
+- Generación de PDF: client-side con la plantilla actual `cotizacionPdf.tsx` para evitar duplicar el renderer en Deno; el servidor solo recibe el path ya subido.
+- Signed upload URL via `supabase.storage.from('cotizaciones-pdf').createSignedUploadUrl(path)` desde la edge function (con service role).
+- Signed download URL: `createSignedUrl(path, 60*60*24*30)`.
+- Deploy de funciones: `enviar-cotizacion-email`, `send-transactional-email`, `handle-email-unsubscribe`, `handle-email-suppression`, `process-email-queue`.
+- No tocar `src/integrations/supabase/client.ts` ni `types.ts` (autogen).
+
+## Fuera de alcance
+
+- Tracking de aperturas/clicks (no soportado por la infra actual).
+- Plantillas personalizables por tenant (futuro).
+- Envío programado o recordatorios automáticos.
+- Adjuntar PDF al correo (Lovable no soporta adjuntos — por eso usamos link).
