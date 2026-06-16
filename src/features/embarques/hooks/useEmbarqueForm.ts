@@ -121,13 +121,16 @@ export function useEmbarqueForm() {
     [methods],
   );
 
-  const desvincularCotizacion = useCallback(() => {
-    const opts = { shouldValidate: true, shouldDirty: true } as const;
-    for (const [field, value] of buildDesvincularCotizacionUpdates()) {
-      methods.setValue(field, value, opts);
-    }
-    methods.trigger();
-  }, [methods]);
+  const desvincularCotizacion = useCallback(
+    (modo: "limpiar" | "conservar" | "solo-conceptos" = "limpiar") => {
+      const opts = { shouldValidate: true, shouldDirty: true } as const;
+      for (const [field, value] of buildDesvincularCotizacionUpdates(modo)) {
+        methods.setValue(field, value, opts);
+      }
+      methods.trigger();
+    },
+    [methods],
+  );
 
   return {
     methods,
