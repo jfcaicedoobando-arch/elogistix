@@ -126,8 +126,8 @@ BEGIN
   -- =========================================================================
   -- TEST 4: cotizacion_costos aislamiento (markups internos)
   -- =========================================================================
-  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, modo, tipo, incoterm, estado)
-    VALUES (cot_a, org_a, cli_a, 'CliFinC A', 'Marítimo', 'Importación', 'FOB', 'Cotizada');
+  INSERT INTO public.cotizaciones(id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado)
+    VALUES (cot_a, org_a, cli_a, 'CliFinC A', 'COT-RLS-FC-A', 'Marítimo', 'Importación', 'FOB', 'Enviada');
 
   INSERT INTO public.cotizacion_costos(
     id, cotizacion_id, concepto, moneda, proveedor, cantidad, costo_unitario, precio_venta,
