@@ -25,12 +25,14 @@ import { useCotizacionesAceptadas } from "@/features/cotizacion/hooks";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useNuevoEmbarqueWizard() {
   const { toast } = useToast();
+  const { canCrearEmbarqueLibre } = usePermissions();
 
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
@@ -69,6 +71,8 @@ export function useNuevoEmbarqueWizard() {
         documentosArchivos: form.documentosArchivos,
         conceptosVenta: conceptos.conceptosVenta,
         conceptosCosto: conceptos.conceptosCosto,
+        requiereCotizacion: !canCrearEmbarqueLibre,
+        cotizacionVinculadaId: cotVinc.cotizacionVinculada?.id ?? null,
       });
 
       setValidationErrors((prev) => ({ ...prev, [step]: errors }));
@@ -79,7 +83,7 @@ export function useNuevoEmbarqueWizard() {
       }
       return true;
     },
-    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, toast],
+    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, toast, canCrearEmbarqueLibre, cotVinc.cotizacionVinculada],
   );
 
   // Compatibilidad con consumidores antiguos
