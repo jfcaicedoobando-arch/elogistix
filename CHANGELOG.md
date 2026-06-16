@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.26] - 2026-06-16
+- **fix(ci/rls)**: `cotizaciones.folio` es NOT NULL. Añadido `folio='COT-RLS-A'` al INSERT del test de aislamiento de cotizaciones.
+
 ## [13.44.25] - 2026-06-16
 - **fix(ci/rls)**: `test_rls_financiero.sql` insertaba `cotizaciones.estado='Cotizada'`, valor inexistente en el enum `estado_cotizacion` (válidos: `Borrador|Enviada|Aceptada|Rechazada|Vencida|En operación`). Cambiado a `'Enviada'`.
 

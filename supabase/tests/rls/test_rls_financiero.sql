@@ -93,9 +93,9 @@ BEGIN
   -- TEST 3: cotizaciones aislamiento
   -- =========================================================================
   INSERT INTO public.cotizaciones(
-    id, organization_id, cliente_id, cliente_nombre, modo, tipo, incoterm, estado
+    id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado
   ) VALUES
-    (cot_a, org_a, cli_a, 'Cliente Fin A', 'Marítimo', 'Importación', 'FOB', 'Enviada');
+    (cot_a, org_a, cli_a, 'Cliente Fin A', 'COT-RLS-A', 'Marítimo', 'Importación', 'FOB', 'Enviada');
 
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.cotizaciones WHERE id = cot_a;
