@@ -2,12 +2,10 @@
  * Label que muestra un `HeredadoBadge` cuando el campo proviene
  * de la cotización vinculada (Pack B+ v13.33.0).
  */
+import { useWatch, useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { HeredadoBadge } from "@/components/shared/HeredadoBadge";
-import {
-  useCotizacionVinculada,
-  useHeredadoCotizacion,
-} from "@/features/embarques/hooks/useHeredadoCotizacion";
+import { useCotizacionVinculada } from "@/features/embarques/hooks/useHeredadoCotizacion";
 import type { EmbarqueFormValues } from "@/lib/mappers/embarque";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 
@@ -23,8 +21,19 @@ interface Props {
 
 export function LabelHeredable({ children, field, getter, className }: Props) {
   const cot = useCotizacionVinculada();
-  const isHeredado = useHeredadoCotizacion();
-  const heredado = isHeredado(field, getter);
+  const { control } = useFormContext<EmbarqueFormValues>();
+  // useWatch garantiza re-render cuando el usuario edita el campo,
+  // para que el badge desaparezca en tiempo real.
+  const current = useWatch({ control, name: field });
+
+  let heredado = false;
+  if (cot) {
+    const original = getter(cot);
+    const originalEmpty = original === null || original === undefined || original === "";
+    const currentEmpty = current === null || current === undefined || current === "";
+    heredado = !originalEmpty && !currentEmpty && String(current) === String(original);
+  }
+
   return (
     <div className={`flex items-center gap-2 ${className ?? ""}`}>
       <Label>{children}</Label>
