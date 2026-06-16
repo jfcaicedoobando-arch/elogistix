@@ -38,6 +38,7 @@ export const FIELD_LABELS = {
   modo: "Modo de transporte",
   tipo: "Tipo de operación",
   cliente: "Cliente",
+  incoterm: "Incoterm",
   descripcion: "Descripción de mercancía",
   etd: "ETD",
   eta: "ETA",
