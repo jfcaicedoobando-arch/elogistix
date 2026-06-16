@@ -86,6 +86,7 @@ export function StepDatosGenerales({
           errors={errors}
         />
         <BloqueMercancia errors={errors} onMsdsUpload={onMsdsUpload} />
+        <ResumenHerenciaCotizacion />
       </CardContent>
     </Card>
   );
