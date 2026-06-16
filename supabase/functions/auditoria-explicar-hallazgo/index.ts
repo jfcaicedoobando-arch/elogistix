@@ -43,28 +43,6 @@ Tu trabajo:
 
 Máximo 220 palabras totales. No inventes datos que no estén en el contexto. Usa formato markdown simple (## títulos, - bullets).`;
 
-interface DocumentoCtx {
-  nombre: string;
-  estado: string;
-  tiene_archivo: boolean;
-}
-
-interface ContextoEmbarque {
-  expediente: string;
-  estado: string;
-  modo: string;
-  cliente: string;
-  etd: string | null;
-  eta: string | null;
-  fecha_llegada_real: string | null;
-  conceptos_venta_total: number;
-  conceptos_venta_pendientes: number;
-  conceptos_venta_facturados: number;
-  conceptos_costo_total: number;
-  facturas: Array<{ folio: string; estado: string; total: number; moneda: string }>;
-  proformas: Array<{ folio: string; estado: string }>;
-  documentos: DocumentoCtx[];
-}
 
 async function buildContexto(adminClient: ReturnType<typeof authenticate> extends Promise<infer T> ? (T extends { adminClient: infer C } ? C : never) : never, embarqueId: string): Promise<ContextoEmbarque | null> {
   // @ts-expect-error supabase chain
