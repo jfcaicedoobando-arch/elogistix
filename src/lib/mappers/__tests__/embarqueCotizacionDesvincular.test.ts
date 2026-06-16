@@ -13,7 +13,7 @@ import { buildDesvincularCotizacionUpdates } from "../embarqueCotizacionDesvincu
 import type { VincularSnapshot } from "../embarqueCotizacion";
 import type { EmbarqueFormValues } from "../embarqueFromDb";
 
-describe("buildDesvincularCotizacionUpdates", () => {
+describe("buildDesvincularCotizacionUpdates — pure unit", () => {
   it("modo 'conservar' → array vacío (no se toca nada)", () => {
     expect(buildDesvincularCotizacionUpdates("conservar")).toEqual([]);
   });
