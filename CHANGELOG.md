@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.39.1] - 2026-06-16
+- **refactor(arquitectura)**: cierre del baseline de CI tras el split de archivos.
+  - `OVERSIZED_BASELINE` queda vacío (los 2 archivos pendientes ya están bajo 200 líneas).
+  - `useCotizacionDetalleHandlers` deja de importar `supabase/client`: `tieneCostosCargados` se mueve a `services/candadoCostos`.
+  - `handlePaso1Crm` deja de importar `supabase/client`: `logBloqueoSinTarifa` se mueve a `services/wizard/paso1Crm` como `registrarBloqueoSinTarifa`.
+  - Marcador `// SAFE-CAST:` agregado al doble cast de `services/queries.ts:49` (join virtual `cotizacion_costos(count)`) y al de `lib/mappers/embarqueFromDb.ts:151` (columnas Pack B opcionales).
+
 ## [13.39.0] - 2026-06-16
 - **feat(permisos)**: el wizard de Nuevo Embarque ahora exige cotización Aceptada vinculada para los roles `coordinador_logistico`, `operador` y `ejecutivo_pricing`. Solo `super_admin`, `admin_org`, `admin` y `gerente_operaciones` pueden seguir creando embarques "libres". Se agrega capacidad `canCrearEmbarqueLibre` en `usePermissions`, el `validateWizardStep(1)` inyecta el error `cotizacion` cuando aplica, y el Paso 1 muestra un `Alert` explicando la restricción mientras no haya cotización vinculada.
 
