@@ -1748,6 +1748,7 @@ export type Database = {
           ruta_texto: string
           sector_economico: string
           seguro: boolean
+          sin_desglose_costos: boolean
           subtotal: number
           tarifa_id: string | null
           tarifa_override: Json
@@ -1815,6 +1816,7 @@ export type Database = {
           ruta_texto?: string
           sector_economico?: string
           seguro?: boolean
+          sin_desglose_costos?: boolean
           subtotal?: number
           tarifa_id?: string | null
           tarifa_override?: Json
@@ -1882,6 +1884,7 @@ export type Database = {
           ruta_texto?: string
           sector_economico?: string
           seguro?: boolean
+          sin_desglose_costos?: boolean
           subtotal?: number
           tarifa_id?: string | null
           tarifa_override?: Json
