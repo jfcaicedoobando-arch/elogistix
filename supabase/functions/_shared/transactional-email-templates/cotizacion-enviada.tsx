@@ -28,77 +28,73 @@ interface Props {
   ejecutivoTelefono?: string;
 }
 
-const CotizacionEnviadaEmail = ({
-  folio = 'COT-XXXX',
-  cliente = 'Cliente',
-  contacto,
-  origen = '',
-  destino = '',
-  incoterm = '',
-  modo = '',
-  vigencia,
-  totalMxn,
-  totalUsd,
-  mensaje,
-  enlacePortal,
-  enlacePdf,
-  ejecutivoNombre,
-  ejecutivoEmail,
-  ejecutivoTelefono,
-}: Props) => (
-  <Html lang="es" dir="ltr">
-    <Head />
-    <Preview>{`Cotización ${folio} — ${origen} → ${destino}`}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Cotización {folio}</Heading>
-        <Text style={lead}>
-          {contacto ? `Hola ${contacto},` : 'Hola,'} adjuntamos la cotización solicitada para <strong>{cliente}</strong>.
-        </Text>
-
-        <Section style={card}>
-          <Row label="Ruta" value={`${origen} → ${destino}`} />
-          {modo && <Row label="Modo" value={modo} />}
-          {incoterm && <Row label="Incoterm" value={incoterm} />}
-          {vigencia && <Row label="Vigencia" value={vigencia} />}
-          {totalMxn && <Row label="Total MXN" value={totalMxn} highlight />}
-          {totalUsd && <Row label="Total USD" value={totalUsd} highlight />}
-        </Section>
-
-        {mensaje && (
-          <Section style={mensajeBox}>
-            <Text style={mensajeLabel}>Mensaje</Text>
-            <Text style={mensajeText}>{mensaje}</Text>
-          </Section>
-        )}
-
-        <Section style={{ textAlign: 'center', marginTop: '28px' }}>
-          {enlacePortal && (
-            <Button href={enlacePortal} style={btnPrimary}>Ver cotización en el portal</Button>
-          )}
-          {enlacePdf && (
-            <div style={{ marginTop: '12px' }}>
-              <Button href={enlacePdf} style={btnSecondary}>Descargar PDF</Button>
-            </div>
-          )}
-        </Section>
-
-        <Hr style={hr} />
-
-        {ejecutivoNombre && (
-          <Section>
-            <Text style={firmaLabel}>Tu ejecutivo de cuenta</Text>
-            <Text style={firmaNombre}>{ejecutivoNombre}</Text>
-            {ejecutivoEmail && <Text style={firmaLinea}>{ejecutivoEmail}</Text>}
-            {ejecutivoTelefono && <Text style={firmaLinea}>{ejecutivoTelefono}</Text>}
-          </Section>
-        )}
-
-        <Text style={footer}>{SITE_NAME} · Esta cotización se generó automáticamente desde nuestro sistema.</Text>
-      </Container>
-    </Body>
-  </Html>
+const InfoCard = ({ origen, destino, modo, incoterm, vigencia, totalMxn, totalUsd }: Props) => (
+  <Section style={card}>
+    <Row label="Ruta" value={`${origen ?? ''} → ${destino ?? ''}`} />
+    {modo && <Row label="Modo" value={modo} />}
+    {incoterm && <Row label="Incoterm" value={incoterm} />}
+    {vigencia && <Row label="Vigencia" value={vigencia} />}
+    {totalMxn && <Row label="Total MXN" value={totalMxn} highlight />}
+    {totalUsd && <Row label="Total USD" value={totalUsd} highlight />}
+  </Section>
 );
+
+const MensajeBlock = ({ mensaje }: { mensaje: string }) => (
+  <Section style={mensajeBox}>
+    <Text style={mensajeLabel}>Mensaje</Text>
+    <Text style={mensajeText}>{mensaje}</Text>
+  </Section>
+);
+
+const CtaBlock = ({ enlacePortal, enlacePdf }: { enlacePortal?: string; enlacePdf?: string }) => (
+  <Section style={{ textAlign: 'center', marginTop: '28px' }}>
+    {enlacePortal && <Button href={enlacePortal} style={btnPrimary}>Ver cotización en el portal</Button>}
+    {enlacePdf && (
+      <div style={{ marginTop: '12px' }}>
+        <Button href={enlacePdf} style={btnSecondary}>Descargar PDF</Button>
+      </div>
+    )}
+  </Section>
+);
+
+const Firma = ({ ejecutivoNombre, ejecutivoEmail, ejecutivoTelefono }: Props) => {
+  if (!ejecutivoNombre) return null;
+  return (
+    <Section>
+      <Text style={firmaLabel}>Tu ejecutivo de cuenta</Text>
+      <Text style={firmaNombre}>{ejecutivoNombre}</Text>
+      {ejecutivoEmail && <Text style={firmaLinea}>{ejecutivoEmail}</Text>}
+      {ejecutivoTelefono && <Text style={firmaLinea}>{ejecutivoTelefono}</Text>}
+    </Section>
+  );
+};
+
+const CotizacionEnviadaEmail = (props: Props) => {
+  const { folio = 'COT-XXXX', cliente = 'Cliente', contacto, origen = '', destino = '', mensaje, enlacePortal, enlacePdf } = props;
+  return (
+    <Html lang="es" dir="ltr">
+      <Head />
+      <Preview>{`Cotización ${folio} — ${origen} → ${destino}`}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Heading style={h1}>Cotización {folio}</Heading>
+          <Text style={lead}>
+            {contacto ? `Hola ${contacto},` : 'Hola,'} adjuntamos la cotización solicitada para <strong>{cliente}</strong>.
+          </Text>
+
+          <InfoCard {...props} />
+          {mensaje && <MensajeBlock mensaje={mensaje} />}
+          <CtaBlock enlacePortal={enlacePortal} enlacePdf={enlacePdf} />
+
+          <Hr style={hr} />
+          <Firma {...props} />
+
+          <Text style={footer}>{SITE_NAME} · Esta cotización se generó automáticamente desde nuestro sistema.</Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+};
 
 const Row = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => (
   <div style={{ marginBottom: '10px' }}>
