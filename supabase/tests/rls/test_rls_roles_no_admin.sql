@@ -68,9 +68,9 @@ BEGIN
     fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
   ) VALUES
     (fac_a, org_a, cli_a, 'Cliente NA A', emb_a, 'NA-A-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Pendiente'),
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida'),
     (fac_b, org_b, cli_b, 'Cliente NA B', emb_b, 'NA-B-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 'Pendiente');
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 'Emitida');
 
   INSERT INTO public.pagos_factura(
     id, organization_id, factura_id, monto, moneda, fecha_pago, metodo_pago

@@ -75,8 +75,8 @@ BEGIN
     id, organization_id, empresa, contacto, email, telefono, pais, ciudad,
     fuente, interes_modo, score, estado, vendedor_email, notas
   ) VALUES
-    (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'Web', 'Marítimo', 50, 'Nuevo', 'v@a.mx', ''),
-    (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'Web', 'Aéreo', 50, 'Nuevo', 'v@b.mx', '');
+    (lead_a, org_a, 'Lead A', 'Ana', 'a@a.mx', '555', 'MX', 'CDMX', 'Web', 'Marítimo', 5, 'Nuevo', 'v@a.mx', ''),
+    (lead_b, org_b, 'Lead B', 'Beto', 'b@b.mx', '555', 'MX', 'MTY', 'Web', 'Aéreo', 5, 'Nuevo', 'v@b.mx', '');
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.crm_leads WHERE id IN (lead_a, lead_b);
