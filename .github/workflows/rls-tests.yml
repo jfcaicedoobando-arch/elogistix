@@ -66,6 +66,35 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
+      - name: Validate matrix covers every test_rls_*.sql
+        # Si alguien añade supabase/tests/rls/test_rls_<nuevo>.sql y olvida
+        # registrarlo en `matrix.suite`, la suite no se ejecuta y CI pasa en
+        # verde. Aquí fallamos explícitamente si hay drift entre archivos y
+        # la matriz declarada en este workflow.
+        run: |
+          set -euo pipefail
+          expected=$(ls supabase/tests/rls/test_rls_*.sql \
+            | sed -E 's|.*/test_rls_||; s|\.sql$||' \
+            | LC_ALL=C sort)
+          declared=$(printf '%s\n' \
+            isolation \
+            financiero \
+            financiero_critico \
+            crm_operacional \
+            operaciones \
+            tarifas_y_costeo \
+            roles_no_admin \
+            | LC_ALL=C sort)
+          if ! diff <(echo "$expected") <(echo "$declared") >/dev/null; then
+            echo "::error::matrix.suite está desincronizada con los archivos test_rls_*.sql"
+            echo "--- esperados (archivos en disco) ---"
+            echo "$expected"
+            echo "--- declarados (matrix.suite) ---"
+            echo "$declared"
+            exit 1
+          fi
+          echo "✓ matrix.suite cubre $(echo "$expected" | wc -l) suites"
+
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
 
