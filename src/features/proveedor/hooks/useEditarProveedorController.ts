@@ -18,14 +18,34 @@ export function useEditarProveedorController(
   onSave: (id: string, data: TablesUpdate<"proveedores">) => void,
   onClose: () => void,
 ) {
-  const [form, setForm] = useState<Proveedor>({ ...proveedor });
+  // Normaliza nulls a "" en campos string para que los inputs/selects
+  // permanezcan controlados y muestren toda la info cargada del proveedor.
+  const normalizar = (p: Proveedor): Proveedor => ({
+    ...p,
+    nombre: p.nombre ?? "",
+    rfc: p.rfc ?? "",
+    contacto: p.contacto ?? "",
+    email: p.email ?? "",
+    telefono: p.telefono ?? "",
+    pais: p.pais ?? "",
+    cp: p.cp ?? "",
+    direccion: p.direccion ?? "",
+    ciudad: p.ciudad ?? "",
+    estado: p.estado ?? "",
+    regimen_fiscal: p.regimen_fiscal ?? "",
+    banco: p.banco ?? "",
+    clabe: p.clabe ?? "",
+  });
+
+  const [form, setForm] = useState<Proveedor>(() => normalizar(proveedor));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (open) {
-      setForm({ ...proveedor });
+      setForm(normalizar(proveedor));
       setTouched({});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, proveedor]);
 
   const isLogistico = form.categoria === "Logistico";
