@@ -72,11 +72,10 @@ function buildContenedoresPlaceholder(cot: CotizacionParaVincular): ContenedorBo
   }));
 }
 
-/** Devuelve los pares [campo, valor] para aplicar a un formulario al vincular cotización. */
-export function buildVincularCotizacionUpdates(
-  cot: CotizacionParaVincular,
-): Array<FieldUpdate> {
-  const base: FieldUpdate[] = [
+// ── Sub-builders ─────────────────────────────────────────────────────────────
+
+export function buildMercanciaUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
+  return [
     ["clienteId", cot.cliente_id || ""],
     ["modo", cot.modo],
     ["tipo", cot.tipo],
@@ -88,27 +87,28 @@ export function buildVincularCotizacionUpdates(
     ["volumenM3", String(cot.volumen_m3 || "")],
     ["piezas", String(cot.piezas || "")],
   ];
+}
 
-  // Rutas dirigidas al campo correcto según modo de transporte.
+export function buildRutaUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
   if (esModoMaritimo(cot.modo)) {
-    base.push(["puertoOrigen", cot.origen || ""], ["puertoDestino", cot.destino || ""]);
-  } else if (esModoAereo(cot.modo)) {
-    base.push(["aeropuertoOrigen", cot.origen || ""], ["aeropuertoDestino", cot.destino || ""]);
-  } else {
-    base.push(["ciudadOrigen", cot.origen || ""], ["ciudadDestino", cot.destino || ""]);
+    return [["puertoOrigen", cot.origen || ""], ["puertoDestino", cot.destino || ""]];
   }
-
-  if (cot.msds_archivo) {
-    base.push(["msdsArchivo", cot.msds_archivo]);
+  if (esModoAereo(cot.modo)) {
+    return [["aeropuertoOrigen", cot.origen || ""], ["aeropuertoDestino", cot.destino || ""]];
   }
+  return [["ciudadOrigen", cot.origen || ""], ["ciudadDestino", cot.destino || ""]];
+}
 
+export function buildOpcionalUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
+  const updates: FieldUpdate[] = [];
+  if (cot.msds_archivo) updates.push(["msdsArchivo", cot.msds_archivo]);
   const contenedores = buildContenedoresPlaceholder(cot);
-  if (contenedores.length > 0) {
-    base.push(["contenedores", contenedores]);
-  }
+  if (contenedores.length > 0) updates.push(["contenedores", contenedores]);
+  return updates;
+}
 
-  // ── Pack B+ (v13.33.0): herencia ampliada ──────────────────────────────
-  base.push(
+export function buildPackBUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
+  return [
     ["tarifaId", cot.tarifa_id ?? ""],
     ["cartaGarantia", Boolean(cot.carta_garantia)],
     ["diasLibresDestino", String(cot.dias_libres_destino ?? 0)],
@@ -116,9 +116,21 @@ export function buildVincularCotizacionUpdates(
     ["seguro", Boolean(cot.seguro)],
     ["valorSeguroUsd", cot.valor_seguro_usd != null ? String(cot.valor_seguro_usd) : ""],
     ["notas", cot.notas ?? ""],
-  );
+  ];
+}
 
-  return base;
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/** Devuelve los pares [campo, valor] para aplicar a un formulario al vincular cotización. */
+export function buildVincularCotizacionUpdates(
+  cot: CotizacionParaVincular,
+): Array<FieldUpdate> {
+  return [
+    ...buildMercanciaUpdates(cot),
+    ...buildRutaUpdates(cot),
+    ...buildOpcionalUpdates(cot),
+    ...buildPackBUpdates(cot),
+  ];
 }
 
 /**

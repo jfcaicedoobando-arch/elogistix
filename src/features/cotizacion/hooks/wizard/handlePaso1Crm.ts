@@ -20,34 +20,49 @@ interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
 }
 
-export function validatePaso1(v: CotizacionFormValues): string | null {
+// ── Pure sub-validators ──────────────────────────────────────────────────────
+
+export function validateCliente(v: CotizacionFormValues): string | null {
   if (!v.esProspecto && !v.clienteId) return "Selecciona un cliente";
-  if (v.esProspecto) {
-    if (v.prospectoModo === "vincular" && !v.oportunidadId && !v.leadId) {
-      return "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'";
-    }
-    if (!v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
-    if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
-      return "Ingresa el nombre del contacto del prospecto";
-    }
+  return null;
+}
+
+export function validateProspecto(v: CotizacionFormValues): string | null {
+  if (!v.esProspecto) return null;
+  if (v.prospectoModo === "vincular" && !v.oportunidadId && !v.leadId) {
+    return "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'";
   }
-  if (v.modo === "Terrestre") {
-    if (!v.modalidadEquipo?.trim()) return "Selecciona la modalidad de equipo";
-    if (v.modalidadEquipo === "Porta Contenedor" && !v.puntoIntermedio?.trim()) {
-      return "Captura el punto de carga/descarga";
-    }
-  }
-  // v13.35.0 — Política tarifa-first: marítimo requiere tarifa vinculada.
-  if (v.modo === "Marítimo" && !v.tarifaId) {
-    void registrarBloqueoSinTarifa({
-      entidadNombre: v.esProspecto ? v.prospectoEmpresa : (v.clienteId ?? ""),
-      origen: v.origen ?? null,
-      destino: v.destino ?? null,
-      tipoContenedor: v.tipoContenedor ?? null,
-    });
-    return "Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada).";
+  if (!v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
+  if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
+    return "Ingresa el nombre del contacto del prospecto";
   }
   return null;
+}
+
+export function validateTerrestre(v: CotizacionFormValues): string | null {
+  if (v.modo !== "Terrestre") return null;
+  if (!v.modalidadEquipo?.trim()) return "Selecciona la modalidad de equipo";
+  if (v.modalidadEquipo === "Porta Contenedor" && !v.puntoIntermedio?.trim()) {
+    return "Captura el punto de carga/descarga";
+  }
+  return null;
+}
+
+export function validateMaritimo(v: CotizacionFormValues): string | null {
+  if (v.modo !== "Marítimo" || v.tarifaId) return null;
+  void registrarBloqueoSinTarifa({
+    entidadNombre: v.esProspecto ? v.prospectoEmpresa : (v.clienteId ?? ""),
+    origen: v.origen ?? null,
+    destino: v.destino ?? null,
+    tipoContenedor: v.tipoContenedor ?? null,
+  });
+  return "Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada).";
+}
+
+// ── Combined validator (public API) ─────────────────────────────────────────
+
+export function validatePaso1(v: CotizacionFormValues): string | null {
+  return validateCliente(v) ?? validateProspecto(v) ?? validateTerrestre(v) ?? validateMaritimo(v);
 }
 
 /**
