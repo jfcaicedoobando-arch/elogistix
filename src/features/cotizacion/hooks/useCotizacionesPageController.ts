@@ -125,7 +125,7 @@ export function useCotizacionesPageController() {
     kpis,
     canEdit,
     // estado de listado
-    search, filterEstado, filterCliente,
+    search, filterEstado, filterCliente, filterSinCostos,
     page, pageSize, totalPages,
     setSearch, setFilter, setPage, setPageSize,
     // acciones
