@@ -32,6 +32,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
 import { useCosteoRutas, useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 
 export default function CosteoRutas() {
   const { data: rutas = [], isLoading } = useCosteoRutas();
@@ -40,6 +41,8 @@ export default function CosteoRutas() {
   const [open, setOpen] = useState(false);
   const [origenId, setOrigenId] = useState<string>("");
   const [destinoId, setDestinoId] = useState<string>("");
+  const [aEliminar, setAEliminar] = useState<string | null>(null);
+  const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   const puertosCN = useMemo(
     () => puertos.filter((p) => ["china", "cn"].includes((p.country ?? "").trim().toLowerCase())),
@@ -50,20 +53,26 @@ export default function CosteoRutas() {
     [puertos],
   );
 
-  const handleGuardar = async () => {
+  const handleGuardar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIntentoEnvio(true);
     if (!origenId || !destinoId) return;
     await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
     setOrigenId("");
     setDestinoId("");
+    setIntentoEnvio(false);
     setOpen(false);
   };
+
+  const origenInvalido = intentoEnvio && !origenId;
+  const destinoInvalido = intentoEnvio && !destinoId;
 
   return (
     <div className="p-6 space-y-4">
       <PageHeader
         title="Rutas marítimas"
         description="Pares puerto China → puerto México disponibles para tarificar."
-        actions={<Button onClick={() => setOpen(true)}><Plus className="size-4 mr-2" />Nueva ruta</Button>}
+        actions={<Button onClick={() => { setIntentoEnvio(false); setOpen(true); }}><Plus className="size-4 mr-2" />Nueva ruta</Button>}
       />
 
       <Card>
@@ -100,9 +109,7 @@ export default function CosteoRutas() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => {
-                      if (confirm("¿Eliminar esta ruta?")) eliminar.mutate(r.id);
-                    }}
+                    onClick={() => setAEliminar(r.id)}
                     aria-label="Eliminar ruta"
                   >
                     <Trash2 className="size-4 text-destructive" />
@@ -120,11 +127,15 @@ export default function CosteoRutas() {
             <DialogTitle>Nueva ruta CN → MX</DialogTitle>
             <DialogDescription>Agrega una nueva ruta de origen en China a destino en México.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <form onSubmit={handleGuardar} className="space-y-3">
             <div>
-              <Label>Puerto de origen (China)</Label>
+              <Label htmlFor="ruta-origen">Puerto de origen (China) *</Label>
               <Select value={origenId} onValueChange={setOrigenId}>
-                <SelectTrigger>
+                <SelectTrigger
+                  id="ruta-origen"
+                  aria-invalid={origenInvalido || undefined}
+                  className={origenInvalido ? "border-destructive" : undefined}
+                >
                   <SelectValue placeholder="Selecciona puerto chino" />
                 </SelectTrigger>
                 <SelectContent>
@@ -137,9 +148,13 @@ export default function CosteoRutas() {
               </Select>
             </div>
             <div>
-              <Label>Puerto de destino (México)</Label>
+              <Label htmlFor="ruta-destino">Puerto de destino (México) *</Label>
               <Select value={destinoId} onValueChange={setDestinoId}>
-                <SelectTrigger>
+                <SelectTrigger
+                  id="ruta-destino"
+                  aria-invalid={destinoInvalido || undefined}
+                  className={destinoInvalido ? "border-destructive" : undefined}
+                >
                   <SelectValue placeholder="Selecciona puerto mexicano" />
                 </SelectTrigger>
                 <SelectContent>
@@ -151,17 +166,30 @@ export default function CosteoRutas() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleGuardar} disabled={!origenId || !destinoId || crear.isPending}>
-              Guardar
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={crear.isPending}>
+                Guardar
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteAlert
+        open={!!aEliminar}
+        onOpenChange={(o) => !o && setAEliminar(null)}
+        title="¿Eliminar esta ruta?"
+        description="Esta acción no se puede deshacer."
+        pending={eliminar.isPending}
+        onConfirm={() => {
+          if (aEliminar) {
+            eliminar.mutate(aEliminar, { onSuccess: () => setAEliminar(null) });
+          }
+        }}
+      />
     </div>
   );
 }

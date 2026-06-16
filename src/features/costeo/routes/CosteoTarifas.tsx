@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -18,6 +19,7 @@ import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { TarifaEstadoBadge } from "@/features/costeo/components/TarifaEstadoBadge";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
 import { PageHeader } from "@/components/shared/PageHeader";
