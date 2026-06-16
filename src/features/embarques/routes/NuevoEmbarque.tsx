@@ -6,6 +6,7 @@ import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
 import { StepDocumentos } from "@/features/embarques/components/StepDocumentos";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
 import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
+import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
 
 const steps = [
   { title: "Datos Generales", num: 1 },
