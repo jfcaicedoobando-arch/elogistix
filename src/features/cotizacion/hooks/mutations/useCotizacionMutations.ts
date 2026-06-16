@@ -6,6 +6,7 @@ import {
   updateCotizacion as svcUpdate,
   deleteCotizacion as svcDelete,
   updateEstadoCotizacion as svcUpdateEstado,
+  reactivarCotizacion as svcReactivar,
 } from '@/features/cotizacion/services';
 
 export function useCreateCotizacion() {
