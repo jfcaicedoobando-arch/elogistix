@@ -1,62 +1,74 @@
-# Pack D — Sidebar sticky de progreso + Role gate
+# Pack B Extendido — Herencia ampliada cotización → embarque
 
-Cierre del roadmap del wizard de cotización: hacer visible el avance del Paso 1 mientras el usuario hace scroll, y blindar el atajo destructivo "Cotizar sin desglose" para que sólo los roles autorizados puedan dispararlo.
+Extiende el mapper de vinculación para que al crear un embarque desde una cotización se hereden 7 campos adicionales (tarifa, garantías, demoras, almacenaje, seguro, notas), y se muestre un `HeredadoBadge` en todos los campos del wizard de embarque que vienen de la cotización.
 
-## D1 — Sidebar sticky de progreso (Paso 1)
+## Alcance funcional
 
-### Funcional
-- Columna vertical fija a la izquierda del contenido del Paso 1 (desktop ≥ `lg`), `w-56`, sticky `top-4`.
-- Lista las 6 secciones (Cliente, Operación, Ruta, Mercancía, Tarifa, Cierre) con icono de estado:
-  - **Verde + check**: completa (`usePaso1SectionStatus` ya lo calcula).
-  - **Gris + círculo vacío**: pendiente.
-  - **Azul + punto activo**: sección actualmente visible en viewport (detectada con `IntersectionObserver`).
-- Click en una sección → `scrollIntoView({ behavior: "smooth", block: "start" })` sobre el `WizardSection` correspondiente.
-- Footer del sidebar: contador `"3 de 6 completas"` y barra de progreso fina (`Progress` de shadcn).
-- En mobile/tablet (`< lg`) se oculta (los checks por sección que ya existen cubren el feedback).
-- En Pasos 2, 3, 4 no se renderiza.
+Al vincular cotización → embarque, además de lo ya heredado se traerán:
 
-### Técnico
-- Nuevo `src/features/cotizacion/components/wizard/Paso1ProgressSidebar.tsx` (~120 líneas).
-  - Consume `usePaso1SectionStatus()` y un nuevo hook `useActiveSection(ids: string[])` que devuelve el id de la sección actualmente visible (basado en `IntersectionObserver`, cleanup en useEffect).
-- `WizardSection` ya existe; añadir prop opcional `id?: string` que se proyecta al `section` raíz para que el observer y el scroll funcionen.
-- `PasoDatosGenerales.tsx` pasa ids estables (`cliente`, `operacion`, `ruta`, `mercancia`, `tarifa`, `cierre`) a cada `WizardSection`.
-- `CotizacionWizardLayout.tsx`: cuando `currentStep === 1`, envuelve el contenido del paso en un grid `lg:grid-cols-[14rem_1fr] gap-6` y monta `<Paso1ProgressSidebar />` en la columna izquierda.
+| Campo cotización | Campo embarque (nuevo) | Tipo |
+|---|---|---|
+| `tarifa_id` | `tarifa_id` | uuid FK → `costeo_tarifas` |
+| `carta_garantia` | `carta_garantia` | boolean |
+| `dias_libres_destino` | `dias_libres_destino` | integer |
+| `dias_almacenaje` | `dias_almacenaje` | integer |
+| `seguro` | `seguro` | boolean |
+| `valor_seguro_usd` | `valor_seguro_usd` | numeric |
+| `notas` | `notas` | text |
 
-### Tests
-- `usePaso1SectionStatus.test.ts` ya existe; añadir 1 caso de cómputo del contador "completas".
-- Smoke manual: scroll por las 6 secciones → indicador azul sigue al viewport; click en "Mercancía" → salta a esa sección.
+Al **desvincular** la cotización, estos campos se limpian a su default (igual que el patrón actual en `DESVINCULAR_DEFAULTS`).
 
-## D2 — Role gate "Cotizar sin desglose"
+## Cambios técnicos
 
-### Funcional
-- El botón **"Cotizar sin desglose"** (atajo destructivo del Paso 1) deja de mostrarse para roles operativos sin autoridad para tomar la decisión.
-- Roles autorizados: `super_admin`, `admin_org`, `admin`, `gerente_operaciones`.
-- Roles bloqueados: `coordinador_logistico`, `operador`, `vendedor`, `ejecutivo_pricing`, `contador`, `tesorero`, `gerente_visor`, cualquier otro.
-- Si un usuario no autorizado intenta el atajo por URL/teclado, el handler en el wizard también lo bloquea y muestra toast `"Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin."`.
+### 1. Migración DB
+Una sola migración que añade 7 columnas a `public.embarques`:
+- `tarifa_id uuid NULL REFERENCES public.costeo_tarifas(id) ON DELETE SET NULL`
+- `carta_garantia boolean NOT NULL DEFAULT false`
+- `dias_libres_destino integer NOT NULL DEFAULT 0`
+- `dias_almacenaje integer NOT NULL DEFAULT 0`
+- `seguro boolean NOT NULL DEFAULT false`
+- `valor_seguro_usd numeric(14,2) NULL`
+- `notas text NULL`
 
-### Técnico
-- `src/hooks/shared/usePermissions.ts`: añadir capability derivada:
-  ```ts
-  const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
-    "super_admin", "admin_org", "admin", "gerente_operaciones",
-  ];
-  // ...
-  canCotizarSinDesglose: has(COTIZAR_SIN_DESGLOSE, roleStr),
-  ```
-- `CotizacionWizardFooter.tsx`: nueva prop `canSkipCostos?: boolean`. Render del botón gated por `showSinDesglose && canSkipCostos`.
-- `CotizacionWizardLayout.tsx`: consume `usePermissions().canCotizarSinDesglose`, lo pasa al footer y también al guard en `handleConfirmSinDesglose` (defensa en profundidad). Si gate falla, toast destructivo.
-- `usePermissions.test.tsx`: añadir 2 casos (`gerente_operaciones` → true; `vendedor` → false).
+No requiere cambios de RLS (políticas existentes ya cubren todas las columnas).
+
+### 2. Tipos y mapper
+- `CotizacionParaVincular` (`src/lib/mappers/embarqueCotizacion.ts`): añadir los 7 campos opcionales.
+- `buildVincularCotizacionUpdates`: emitir nuevos `FieldUpdate` para cada campo.
+- `DESVINCULAR_DEFAULTS`: agregar defaults de limpieza.
+- Tests en `embarqueCotizacion.test.ts`: cubrir vincular y desvincular para cada campo nuevo.
+
+### 3. Form values
+- `EmbarqueFormValues` (`src/lib/mappers/embarqueFromDb.ts`): agregar `tarifaId`, `cartaGarantia`, `diasLibresDestino`, `diasAlmacenaje`, `seguro`, `valorSeguroUsd`, `notas`.
+- `mapEmbarqueRowToFormValues`: leer desde la row.
+- `embarqueToDb.ts`: serializar al payload de insert/update.
+- `useEmbarqueForm.ts`: defaults vacíos y `vincularCotizacion` propagando los nuevos campos vía `setValue({shouldValidate, shouldDirty})` + `trigger()`.
+
+### 4. UI wizard de embarque + HeredadoBadge
+- Detectar herencia: un campo se considera heredado si `cotizacion_id` está presente y el valor actual coincide con el de la cotización original (mismo patrón que ya usa `TarifaFields`).
+- Hook utilitario `useHeredadoCotizacion(field)` en `src/features/embarques/hooks/` para centralizar la comparación y evitar duplicación.
+- Agregar `<HeredadoBadge />` junto a los labels de los campos heredados en las secciones del wizard de embarque:
+  - Datos generales: cliente, modo, tipo, incoterm, tipo_carga, tipo_contenedor
+  - Mercancía: descripción, peso, volumen, piezas, seguro, valor seguro, notas
+  - Ruta: puerto/aeropuerto/ciudad origen y destino
+  - Tarifa/condiciones: tarifa marítima, carta garantía, días libres, días almacenaje
+  - MSDS
+
+### 5. Auto-cálculos derivados
+Como `tarifa_id`, `carta_garantia` y `dias_libres_destino` ya alimentan a los hooks de garantías y demoras existentes (ver mem://features/garantias-demoras), heredarlos hará que esos cálculos se activen automáticamente en el nuevo embarque sin código extra.
+
+### 6. Metadata
+- Bump `APP_VERSION` → `13.33.0`.
+- Entrada en `CHANGELOG.md` (root) con bullet breve.
 
 ## Fuera de alcance
-- Gate del botón "Generar embarques" (ya cubierto por RLS y validación de costos del Pack v13.27.0).
-- Sticky de progreso para Pasos 2/3/4 (esas pantallas son lineales sin sub-secciones).
-- Personalización de columnas/ancho del sidebar por usuario.
+- `tarifa_demoras_venta_id` (no existe en `cotizaciones`).
+- `dimensiones_lcl` / `dimensiones_aereas` (estructuras JSON complejas, requieren UI dedicada; se proponen para un pack futuro).
+- Refactor de campos existentes ya heredados sin badge previo — se agrega badge pero no se reescribe lógica.
 
-## Versionado
-- Bump `APP_VERSION` a `13.32.0`.
-- Entrada en `CHANGELOG.md` bajo `## [13.32.0] - 2026-06-16` con 2 bullets (sidebar + role gate).
-
-## Pregunta de decisión
-Para el role gate, ¿quieres **ocultar** el botón a los roles no autorizados (más limpio, recomendado) u **mostrarlo deshabilitado** con tooltip explicativo (más educativo pero ruidoso)?
-- **A.** Ocultar (recomendado).
-- **B.** Mostrar deshabilitado con tooltip "Requiere rol de gerencia o admin".
+## Orden de ejecución
+1. Migración DB (espera aprobación).
+2. Tipos regenerados → mapper + form values + serialización.
+3. Hook `useHeredadoCotizacion` + badges en UI.
+4. Tests del mapper.
+5. Bump versión + changelog.

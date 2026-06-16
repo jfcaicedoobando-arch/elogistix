@@ -2777,6 +2777,7 @@ export type Database = {
           agente: string | null
           bl_house: string | null
           bl_master: string | null
+          carta_garantia: boolean
           carta_porte: string | null
           ciudad_destino: string | null
           ciudad_origen: string | null
@@ -2791,6 +2792,8 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           descripcion_mercancia: string
+          dias_almacenaje: number
+          dias_libres_destino: number
           estado: Database["public"]["Enums"]["estado_embarque"]
           eta: string | null
           eta_original: string | null
@@ -2806,13 +2809,16 @@ export type Database = {
           modo: Database["public"]["Enums"]["modo_transporte"]
           msds_archivo: string | null
           naviera: string | null
+          notas: string | null
           operador: string
           organization_id: string
           peso_kg: number
           piezas: number
           puerto_destino: string | null
           puerto_origen: string | null
+          seguro: boolean
           shipper: string
+          tarifa_id: string | null
           tiene_proforma: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur: number
@@ -2824,6 +2830,7 @@ export type Database = {
             | null
           transportista: string | null
           updated_at: string
+          valor_seguro_usd: number | null
           vendedora_id: string | null
           volumen_m3: number
         }
@@ -2834,6 +2841,7 @@ export type Database = {
           agente?: string | null
           bl_house?: string | null
           bl_master?: string | null
+          carta_garantia?: boolean
           carta_porte?: string | null
           ciudad_destino?: string | null
           ciudad_origen?: string | null
@@ -2848,6 +2856,8 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion_mercancia?: string
+          dias_almacenaje?: number
+          dias_libres_destino?: number
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
           eta_original?: string | null
@@ -2863,13 +2873,16 @@ export type Database = {
           modo: Database["public"]["Enums"]["modo_transporte"]
           msds_archivo?: string | null
           naviera?: string | null
+          notas?: string | null
           operador?: string
           organization_id?: string
           peso_kg?: number
           piezas?: number
           puerto_destino?: string | null
           puerto_origen?: string | null
+          seguro?: boolean
           shipper?: string
+          tarifa_id?: string | null
           tiene_proforma?: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
@@ -2881,6 +2894,7 @@ export type Database = {
             | null
           transportista?: string | null
           updated_at?: string
+          valor_seguro_usd?: number | null
           vendedora_id?: string | null
           volumen_m3?: number
         }
@@ -2891,6 +2905,7 @@ export type Database = {
           agente?: string | null
           bl_house?: string | null
           bl_master?: string | null
+          carta_garantia?: boolean
           carta_porte?: string | null
           ciudad_destino?: string | null
           ciudad_origen?: string | null
@@ -2905,6 +2920,8 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion_mercancia?: string
+          dias_almacenaje?: number
+          dias_libres_destino?: number
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
           eta_original?: string | null
@@ -2920,13 +2937,16 @@ export type Database = {
           modo?: Database["public"]["Enums"]["modo_transporte"]
           msds_archivo?: string | null
           naviera?: string | null
+          notas?: string | null
           operador?: string
           organization_id?: string
           peso_kg?: number
           piezas?: number
           puerto_destino?: string | null
           puerto_origen?: string | null
+          seguro?: boolean
           shipper?: string
+          tarifa_id?: string | null
           tiene_proforma?: boolean
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
@@ -2938,6 +2958,7 @@ export type Database = {
             | null
           transportista?: string | null
           updated_at?: string
+          valor_seguro_usd?: number | null
           vendedora_id?: string | null
           volumen_m3?: number
         }
@@ -2961,6 +2982,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
             referencedColumns: ["id"]
           },
         ]
