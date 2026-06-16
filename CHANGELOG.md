@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.12] - 2026-06-16
+- **test(rls)**: nueva suite `supabase/tests/rls/test_rls_roles_no_admin.sql` (15 aserciones) cubre la matriz `{viewer, operador, cliente}` × `{SELECT, INSERT, UPDATE, DELETE}` sobre `facturas`, `pagos_factura`, `embarques`, `cotizaciones`. Cierra el gap **CRÍTICO** detectado en la auditoría ("todas las suites RLS previas solo probaban `admin`"). Casos clave: viewer puede leer pero no insertar/actualizar/borrar; operador con CRUD bloqueado en org ajena; cliente del portal solo ve sus propias facturas y no puede mutar nada. Agregada al workflow `.github/workflows/rls-tests.yml` como matrix `suite: roles_no_admin` y documentada en `supabase/tests/rls/README.md`.
+
 ## [13.44.11] - 2026-06-16
 - **test(edge functions)**: cubre las 2 edge functions de email que quedaban sin tests (Fase 1 del plan completada para email). (a) `handle-email-suppression/helpers_test.ts` — 10 tests para `parseSuppressionPayload` (válido, sin `data`, sin email/reason, JSON inválido), `mapReasonToStatus` (bounce→bounced, complaint→complained, fallback suppressed), `mapReasonToMessage` (4 ramas) y `redactEmail` (`j***@dominio.com`, fallback `***`). (b) `preview-transactional-email/helpers_test.ts` — 7 tests para `isAuthorized` (Bearer case-insensitive, apiKey vacío bloquea, header nulo) y `resolveSubject` (string vs función con previewData). Refactor: helpers puros extraídos a `helpers.ts` en ambas functions y reutilizados desde `index.ts` (sin duplicación). Total acumulado Fase 1 edge functions email: 32 tests verdes (11 auditoría + 15 email Fase 1.2.a + 17 esta entrega).
 
