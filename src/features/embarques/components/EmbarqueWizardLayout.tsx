@@ -46,20 +46,9 @@ export function EmbarqueWizardLayout({
     else onFinish();
   }, [validateStep, currentStep, totalSteps, setCurrentStep, onFinish]);
 
-  // #3 — Auto-foco al primer control al cambiar de paso (paridad con CotizacionWizardLayout).
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const root = contentRef.current;
-      if (!root || !root.isConnected) return;
-      const el = root.querySelector<HTMLElement>(
-        'input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="combobox"]:not([disabled])',
-      );
-      if (el && el.isConnected) {
-        try { el.focus({ preventScroll: true }); } catch { /* noop */ }
-      }
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [currentStep]);
+  // Auto-focus removido: el setTimeout chocaba con la fase de mutación de React
+  // (Strict Mode + datos resolviendo en paralelo) y producía `removeChild` en el
+  // primer mount. El primer input usa `autoFocus` nativo cuando aplica.
 
   // #4 — Enter avanza al siguiente paso desde cualquier input (excepto textarea / combobox abierto).
   const handleSubmit = useCallback((e: React.FormEvent) => {
