@@ -38,7 +38,7 @@ export function EmbarqueWizardLayout({
   validateStep,
   children,
 }: EmbarqueWizardLayoutProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLFormElement>(null);
 
   const handleNext = useCallback(() => {
     if (validateStep && !validateStep(currentStep)) return;
