@@ -127,6 +127,7 @@ export default function Cotizaciones() {
             />
             {estadoSelect}
             {clienteSelect}
+            {sinCostosToggle}
           </div>
         </CardContent>
       </Card>
