@@ -14,6 +14,7 @@ import SeccionMercanciaMaritimaFCL from "@/features/cotizacion/components/Seccio
 import SeccionMercanciaMaritimaLCL from "@/features/cotizacion/components/SeccionMercanciaMaritimaLCL";
 import SeccionMercanciaGeneral from "@/features/cotizacion/components/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/features/cotizacion/components/SeccionMercanciaAerea";
+import TarifaVinculadaPanel from "@/features/cotizacion/components/TarifaVinculadaPanel";
 
 import type { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 
@@ -63,6 +64,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
           <SeccionMercanciaGeneral msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
         )}
       </WizardSection>
+      <TarifaVinculadaPanel />
       <SeccionRutaCotizacion />
 
       <Accordion type="multiple" className="w-full">
