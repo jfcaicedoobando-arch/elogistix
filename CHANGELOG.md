@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.10] - 2026-06-16
+- **test(edge functions)**: cubre 3 edge functions críticas de email que estaban sin tests (Fase 1 del plan). (a) `handle-email-unsubscribe/tokenExtractor_test.ts` — 6 tests para `extractToken` (GET query, POST JSON, POST form RFC 8058 con `List-Unsubscribe`, fallback ante JSON inválido). (b) `send-transactional-email/validation_test.ts` — 7 tests para `parseRequest` y `corsResponse` (400 ante JSON inválido o `templateName` faltante, soporte camelCase/snake_case, `idempotencyKey` por defecto = `messageId`, `templateData` no-objeto se descarta). (c) `enviar-cotizacion-email/emailValidation_test.ts` — 7 casos para `isEmail` (helper `isEmail` extraído a `emailValidation.ts` para tests aislados sin disparar type-check del cliente Supabase con tablas no tipadas). Total: 15 tests verdes en `supabase--test_edge_functions`.
+
 ## [13.44.9] - 2026-06-16
 - **test(auditoría)**: nuevo `supabase/functions/auditoria-explicar-hallazgo/helpers_test.ts` (11 tests verdes) cubre `formatDocumentos`, `buildUserPrompt` y `mapGatewayStatus`. Se extrajeron helpers puros a `helpers.ts` (sin side effects de `Deno.serve`/Sentry) y se eliminó duplicación con `index.ts`. Cierra el gap "edge function de mayor riesgo (251 líneas IA + auth org) sin ningún test" reportado en la auditoría.
 - **chore(test)**: eliminados barrel smoke tests inútiles `comisiones/services/__tests__/index.test.ts` y `tesoreria/services/__tests__/index.test.ts` (solo verificaban `toBeDefined()` de re-exports — las funciones ya están cubiertas por tests dedicados como `devengadas.test.ts`, `liquidaciones.test.ts`, `vendedoras.test.ts`, `cuentas.test.ts`, `conciliacion.test.ts`, `resumen.test.ts`).
