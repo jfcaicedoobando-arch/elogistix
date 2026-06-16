@@ -6,6 +6,7 @@ import {
   updateCotizacion as svcUpdate,
   deleteCotizacion as svcDelete,
   updateEstadoCotizacion as svcUpdateEstado,
+  reactivarCotizacion as svcReactivar,
 } from '@/features/cotizacion/services';
 
 export function useCreateCotizacion() {
@@ -47,6 +48,17 @@ export function useUpdateEstadoCotizacion() {
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
+    },
+  });
+}
+
+export function useReactivarCotizacion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => svcReactivar(id),
+    onSuccess: (_r, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(id) });
     },
   });
 }

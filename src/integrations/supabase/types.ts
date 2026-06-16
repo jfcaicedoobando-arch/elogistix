@@ -1721,6 +1721,9 @@ export type Database = {
           embarque_id: string | null
           es_prospecto: boolean
           estado: Database["public"]["Enums"]["estado_cotizacion"]
+          estado_anterior:
+            | Database["public"]["Enums"]["estado_cotizacion"]
+            | null
           fecha_aceptacion: string | null
           fecha_rechazo: string | null
           fecha_vigencia: string | null
@@ -1789,6 +1792,9 @@ export type Database = {
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
+          estado_anterior?:
+            | Database["public"]["Enums"]["estado_cotizacion"]
+            | null
           fecha_aceptacion?: string | null
           fecha_rechazo?: string | null
           fecha_vigencia?: string | null
@@ -1857,6 +1863,9 @@ export type Database = {
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
+          estado_anterior?:
+            | Database["public"]["Enums"]["estado_cotizacion"]
+            | null
           fecha_aceptacion?: string | null
           fecha_rechazo?: string | null
           fecha_vigencia?: string | null
@@ -5356,6 +5365,7 @@ export type Database = {
         Returns: number
       }
       ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
+      expirar_cotizaciones_job: { Args: never; Returns: Json }
       facturas_listado: {
         Args: {
           p_estado?: string
@@ -5776,6 +5786,7 @@ export type Database = {
         | "Rechazada"
         | "Vencida"
         | "En operación"
+        | "Archivada"
       estado_documento: "Pendiente" | "Recibido" | "Validado" | "No aplica"
       estado_embarque:
         | "Cotización"
@@ -6048,6 +6059,7 @@ export const Constants = {
         "Rechazada",
         "Vencida",
         "En operación",
+        "Archivada",
       ],
       estado_documento: ["Pendiente", "Recibido", "Validado", "No aplica"],
       estado_embarque: [

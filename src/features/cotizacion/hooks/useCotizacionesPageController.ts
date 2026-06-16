@@ -9,6 +9,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { ESTADOS_INACTIVOS } from "@/features/cotizacion/domain/lifecycle";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
@@ -16,8 +17,10 @@ export const ESTADOS_COTIZACION = [
   "Aceptada",
   "Rechazada",
   "Vencida",
+  "Archivada",
   "En operación",
 ];
+
 
 export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>["data"]>[number];
 
@@ -41,11 +44,12 @@ export function useCotizacionesPageController() {
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState({ estado: "todos", cliente: "todos", sinCostos: "no" });
+  } = useListPageState({ estado: "todos", cliente: "todos", sinCostos: "no", incluirInactivas: "no" });
 
   const filterEstado = filters.estado;
   const filterCliente = filters.cliente;
   const filterSinCostos = filters.sinCostos === "si";
+  const incluirInactivas = filters.incluirInactivas === "si";
 
   const filtered = useMemo(() => {
     return cotizaciones.filter((c) => {
@@ -58,9 +62,17 @@ export function useCotizacionesPageController() {
       // Estado real: sin_desglose_costos = true Y sin filas en cotizacion_costos.
       const matchSinCostos = !filterSinCostos ||
         (!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0));
-      return matchSearch && matchEstado && matchCliente && matchSinCostos;
+      // Por defecto ocultamos Vencidas y Archivadas (housekeeping). Si el
+      // usuario seleccionó explícitamente uno de esos estados en el dropdown
+      // o activó el toggle "incluir inactivas", las dejamos pasar.
+      const esInactiva = (ESTADOS_INACTIVOS as readonly string[]).includes(c.estado ?? "");
+      const matchInactivas =
+        !esInactiva ||
+        incluirInactivas ||
+        (filterEstado !== "todos" && filterEstado === c.estado);
+      return matchSearch && matchEstado && matchCliente && matchSinCostos && matchInactivas;
     });
-  }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos]);
+  }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos, incluirInactivas]);
 
   const { items: paginated, totalPages } = paginate(filtered);
 
@@ -125,7 +137,7 @@ export function useCotizacionesPageController() {
     kpis,
     canEdit,
     // estado de listado
-    search, filterEstado, filterCliente, filterSinCostos,
+    search, filterEstado, filterCliente, filterSinCostos, incluirInactivas,
     page, pageSize, totalPages,
     setSearch, setFilter, setPage, setPageSize,
     // acciones

@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.40.0] - 2026-06-16
+- **feat(cotizaciones)**: ciclo de vida automático para mantener la BD limpia.
+  - Nuevo estado **Archivada** y reutilización de **Vencida** como estado de housekeeping.
+  - Función `public.expirar_cotizaciones_job()` + `pg_cron` diario (09:00 UTC): borradores >7d → Vencida, enviadas con `fecha_vigencia` pasada → Vencida, Vencidas >90d → Archivada. Nunca toca Aceptadas/Rechazadas/En operación/eliminadas/con embarque.
+  - Columna `cotizaciones.estado_anterior` para poder reactivar (banner + botón "Reactivar" en el detalle).
+  - Listado oculta Vencidas/Archivadas por defecto; nuevo toggle "Incluir vencidas/archivadas" y opciones explícitas en el dropdown de estado.
+  - Backfill inicial: 15 borradores y 12 enviadas reclasificadas al desplegar.
+  - Constantes centralizadas en `src/features/cotizacion/domain/lifecycle.ts` (`DIAS_EXPIRACION_BORRADOR=7`, `DIAS_PARA_ARCHIVAR=90`) listas para volverse configurables por organización en el futuro.
+
 ## [13.39.1] - 2026-06-16
 - **refactor(arquitectura)**: cierre del baseline de CI tras el split de archivos.
   - `OVERSIZED_BASELINE` queda vacío (los 2 archivos pendientes ya están bajo 200 líneas).

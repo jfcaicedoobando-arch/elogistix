@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Plus, MoreHorizontal, Download, TrendingUp,
-  CheckCircle, XCircle, BarChart3, AlertTriangle,
+  CheckCircle, XCircle, BarChart3, AlertTriangle, Archive,
 } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
@@ -40,11 +40,13 @@ export default function Cotizaciones() {
   const activeFilterCount =
     (c.filterEstado && c.filterEstado !== "todos" ? 1 : 0) +
     (c.filterCliente && c.filterCliente !== "todos" ? 1 : 0) +
-    (c.filterSinCostos ? 1 : 0);
+    (c.filterSinCostos ? 1 : 0) +
+    (c.incluirInactivas ? 1 : 0);
   const clearAllFilters = () => {
     c.setFilter("estado", "todos");
     c.setFilter("cliente", "todos");
     c.setFilter("sinCostos", "no");
+    c.setFilter("incluirInactivas", "no");
   };
 
   const estadoSelect = <EstadoSelect value={c.filterEstado} onChange={(v) => c.setFilter("estado", v)} />;
@@ -60,6 +62,20 @@ export default function Cotizaciones() {
     >
       <AlertTriangle className="h-4 w-4" />
       Sólo sin costos
+    </Button>
+  );
+  const incluirInactivasToggle = (
+    <Button
+      type="button"
+      variant={c.incluirInactivas ? "default" : "outline"}
+      size="sm"
+      aria-pressed={c.incluirInactivas}
+      onClick={() => c.setFilter("incluirInactivas", c.incluirInactivas ? "no" : "si")}
+      className="gap-2"
+      title="Por defecto se ocultan las cotizaciones Vencidas y Archivadas"
+    >
+      <Archive className="h-4 w-4" />
+      Incluir vencidas/archivadas
     </Button>
   );
 
@@ -128,6 +144,7 @@ export default function Cotizaciones() {
             {estadoSelect}
             {clienteSelect}
             {sinCostosToggle}
+            {incluirInactivasToggle}
           </div>
         </CardContent>
       </Card>

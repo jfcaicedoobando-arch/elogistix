@@ -6,3 +6,4 @@ export { crearCotizacion } from "./crear";
 export { updateCotizacion } from "./update";
 export { deleteCotizacion } from "./delete";
 export { updateEstadoCotizacion } from "./estado";
+export { reactivarCotizacion } from "./reactivar";
