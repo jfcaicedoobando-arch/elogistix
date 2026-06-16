@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.26.0] - 2026-06-16
+- **feat(cotizaciones/tarifa-vinculada)**: La tarifa marítima del módulo Costeo ahora es la fuente de verdad. En Paso 1 del wizard hay un panel "Tarifa marítima vinculada" que al elegir tarifa autollena tránsito, días libres y estado de carta garantía (badge real: vigente / por vencer / vencida / sin carta). Los campos quedan en modo lectura con badge "Tarifa"; si el vendedor los edita manualmente, se registra en `cotizaciones.tarifa_override` (jsonb) y se muestra banner con opción "Restaurar desde tarifa". En Paso 2 se quitó el botón "Buscar tarifa" y los costos se precargan automáticamente desde la tarifa vinculada. Nueva columna `cotizaciones.tarifa_id` (FK a `costeo_tarifas`, ON DELETE SET NULL).
+
 ## [13.25.2] - 2026-06-15
 - **fix(ci/rls)**: El snapshot de RLS en CI fallaba con `RLS COVERAGE FAIL` porque el stub de `public.tracking_externo` (creado en `_ci_drift.sql`) habilitaba RLS sin policy. Se añade una policy de respaldo `_ci_stub_deny_all` (deny-all) sólo en CI; las policies reales viven en migraciones posteriores.
 - **chore(lint)**: ESLint con `--max-warnings 0` ahora pasa. Se mueve `esBorradorVacio` a su propio archivo (regla `react-refresh/only-export-components`) y se reduce la complejidad ciclomática de `ProformaDetalle` (extrae `TotalesCard`) y de `auditoria-explicar-hallazgo/processRequest` (extrae `authorizeEmbarque`, `buildUserPrompt` e `invocarGateway`).
