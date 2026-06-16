@@ -25,5 +25,6 @@ export interface EmbarqueValidationErrors {
   modo?: string;
   tipo?: string;
   clienteId?: string;
+  incoterm?: string;
   descripcionMercancia?: string;
 }
