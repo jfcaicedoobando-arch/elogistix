@@ -10,13 +10,15 @@ interface PortSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
+  "aria-invalid"?: boolean | undefined;
 }
 
 function formatPort(port: { code: string; name: string; country: string }) {
   return `${port.name}, ${port.country} (${port.code})`;
 }
 
-export default function PortSelect({ value, onValueChange, placeholder = "Seleccionar puerto" }: PortSelectProps) {
+export default function PortSelect({ value, onValueChange, placeholder = "Seleccionar puerto", className, "aria-invalid": ariaInvalid }: PortSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { data: ports = [] } = usePuertos();
@@ -24,7 +26,13 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          aria-invalid={ariaInvalid}
+          className={cn("w-full justify-between font-normal", className)}
+        >
           {value ? <span className="truncate">{value}</span> : <span className="text-muted-foreground">{placeholder}</span>}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
