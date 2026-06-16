@@ -17,6 +17,13 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import {
+  formatDocumentos,
+  buildUserPrompt,
+  mapGatewayStatus,
+  type DocumentoCtx,
+  type ContextoEmbarque,
+} from "./helpers.ts";
 
 initSentryEdge("auditoria-explicar-hallazgo");
 
