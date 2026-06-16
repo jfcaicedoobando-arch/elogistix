@@ -30,3 +30,4 @@ export * from './useTrackingLinks';
 export * from './useActividadEmbarque';
 export * from './useReconciliacionEmbarque';
 export * from './useHeredadoCotizacion';
+export * from './useCotizacionVinculada';
