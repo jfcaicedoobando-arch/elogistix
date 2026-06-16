@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.12] - 2026-06-16
+- **fix(mobile/dvh)**: Reemplazado `h-screen` por `h-dvh` en `ProtectedRoute.tsx` y `PortalProtectedRoute.tsx`; `h-screen w-screen` por `h-dvh w-dvw` en `PdfPreviewCotizacion.tsx`. Reemplazado `h-[calc(100vh-4rem)]` por `h-[calc(100dvh-4rem)]` en `EmbarqueWizardLayout.tsx` y `CotizacionWizardLayout.tsx` para soporte correcto de mobile viewport.
+- **skip(a11y/wizard-footer)**: Footers de ambos wizards ya tienen alineación horizontal y `gap-2` correctos — sin cambios.
+- **skip(a11y/focus-visible)**: `EmbarquesFiltrosChips` y `CotizacionesFiltrosChips` ya usan `focus-visible:` — sin cambios.
+- **skip(a11y/icon-buttons)**: Todos los `size="icon"` en embarques/cotización ya cuentan con `aria-label` — sin cambios.
+- **skip(ui/MoreVertical)**: No se encontró ninguna ocurrencia de `MoreVertical` en dropdowns de tabla — ya migrado.
+- **skip(microcopy)**: Sin inglés residual, mezcla de tratamiento ni mayúsculas inconsistentes detectadas en toasts/placeholders de módulos principales.
+
 ## [13.33.11] - 2026-06-16
 - **fix(ui/dialog-description-y-tokens)**: (A) Agregado `DialogDescription` (visible o `sr-only`) a 18 diálogos que sólo tenían `DialogTitle`, cerrando los warnings de accesibilidad de Radix. (B) Reemplazadas 37 ocurrencias de colores hardcodeados en 22 archivos (`amber-*`, `blue-600`, `emerald-*`) por tokens semánticos del design system (`warning`, `info`, `success`) para respetar dark mode. Fix puntual: import de `DialogDescription` faltante en `CosteoAgentes.tsx`.
 

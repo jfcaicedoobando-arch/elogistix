@@ -100,7 +100,7 @@ export default function CotizacionWizardLayout({
 
   return (
     <FormProvider {...form}>
-      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
+      <div className="flex flex-col h-[calc(100dvh-4rem)] -m-6">
         <div className="flex-none border-b bg-background p-4 space-y-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={handleTopBack} aria-label="Volver" disabled={isBusy}>

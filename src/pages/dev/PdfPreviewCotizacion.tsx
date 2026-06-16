@@ -31,7 +31,7 @@ export default function PdfPreviewCotizacionPage() {
   if (!data) return <div className="p-6">Cotización no encontrada.</div>;
 
   return (
-    <div className="h-screen w-screen bg-muted/30">
+    <div className="h-dvh w-dvw bg-muted/30">
       <PdfPreview
         doc={<CotizacionDocument cotizacion={data} tasaIva={tasaIva} emisor={emisor} />}
         height="100vh"
