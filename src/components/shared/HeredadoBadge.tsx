@@ -42,4 +42,3 @@ export function HeredadoBadge({
   );
 }
 
-export default HeredadoBadge;
