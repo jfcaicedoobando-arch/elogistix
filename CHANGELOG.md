@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.4] - 2026-06-16
+- **fix(ci/lint)**: estabiliza CI tras el alta del Gerente Comercial. (a) Reduce complejidad ciclomática de `useAppSidebarSections` (17 → 16) extrayendo el branch `gerente_comercial` a `buildGerenteComercialSections`. (b) Elimina exports/archivos huérfanos detectados por `knip --strict`: `BloqueoEmbarqueSinCostosDialog.tsx`, `detalle/DialogGenerarEmbarques.tsx`, `getExplicacionCached`, `DIAS_EXPIRACION_BORRADOR`, `DIAS_PARA_ARCHIVAR`, `EstadoInactivo` y la función `useHeredadoCotizacion` (se conservan `CotizacionVinculadaProvider` y `useCotizacionVinculada` que sí están en uso).
+
 ## [13.44.3] - 2026-06-16
 - **fix(pdf/tarifario)**: el PDF del Tarifario Informativo ahora carga los datos del emisor (razón social, RFC, dirección, contacto) desde `configuracion.empresa` — antes mostraba el placeholder "Empresa" porque `CotizacionInformativaDetalle` no pasaba `emisor` a `TarifarioDocument`. Además se amplía la columna **Precio** (`cellNum` 65pt → `cellNumWide` 80pt) y se reduce **Notas** (110pt → 95pt) para que importes con código de moneda (`USD 28,500.00`, `MXN 28,500.00`) no se recorten. Validado visualmente rasterizando el PDF.
 
