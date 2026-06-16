@@ -22,6 +22,7 @@ import { useCosteoAgentes, useCosteoAgenteMutations } from "@/features/costeo/ho
 import { useProveedoresAgente } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { CosteoAgenteInput } from "@/features/costeo/services/agentes";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 
 const EMPTY: CosteoAgenteInput = {
   nombre: "",
@@ -39,22 +40,30 @@ export default function CosteoAgentes() {
   const { data: proveedores = [] } = useProveedoresAgente();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CosteoAgenteInput>(EMPTY);
+  const [aEliminar, setAEliminar] = useState<{ id: string; nombre: string } | null>(null);
+  const [intentoEnvio, setIntentoEnvio] = useState(false);
 
-  const handleGuardar = async () => {
-    if (!form.nombre.trim() || !form.proveedor_id) return;
+  const valido = form.nombre.trim().length > 0 && form.proveedor_id.length > 0;
+
+  const handleGuardar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIntentoEnvio(true);
+    if (!valido) return;
     await crear.mutateAsync(form);
     setForm(EMPTY);
+    setIntentoEnvio(false);
     setOpen(false);
   };
 
-  const valido = form.nombre.trim().length > 0 && form.proveedor_id.length > 0;
+  const proveedorInvalido = intentoEnvio && !form.proveedor_id;
+  const nombreInvalido = intentoEnvio && !form.nombre.trim();
 
   return (
     <div className="p-6 space-y-4">
       <PageHeader
         title="Agentes de costeo"
         description="Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito se usan como criterio principal de desempate."
-        actions={<Button onClick={() => setOpen(true)}>
+        actions={<Button onClick={() => { setIntentoEnvio(false); setOpen(true); }}>
           <Plus className="size-4 mr-2" />
           Nuevo agente
         </Button>}
@@ -96,10 +105,8 @@ export default function CosteoAgentes() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => {
-                      if (confirm(`¿Eliminar agente "${a.nombre}"?`)) eliminar.mutate(a.id);
-                    }}
-                    aria-label="Eliminar agente"
+                    onClick={() => setAEliminar({ id: a.id, nombre: a.nombre })}
+                    aria-label={`Eliminar agente ${a.nombre}`}
                   >
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
@@ -116,9 +123,9 @@ export default function CosteoAgentes() {
             <DialogTitle>Nuevo agente</DialogTitle>
             <DialogDescription>Registra un nuevo agente de carga con sus datos de contacto.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <form onSubmit={handleGuardar} className="space-y-3">
             <div>
-              <Label htmlFor="proveedor">Proveedor (Agente de Carga) *</Label>
+              <Label htmlFor="agente-proveedor">Proveedor (Agente de Carga) *</Label>
               <Select
                 value={form.proveedor_id}
                 onValueChange={(v) => {
@@ -131,7 +138,13 @@ export default function CosteoAgentes() {
                   });
                 }}
               >
-                <SelectTrigger><SelectValue placeholder="Selecciona proveedor" /></SelectTrigger>
+                <SelectTrigger
+                  id="agente-proveedor"
+                  aria-invalid={proveedorInvalido || undefined}
+                  className={proveedorInvalido ? "border-destructive" : undefined}
+                >
+                  <SelectValue placeholder="Selecciona proveedor" />
+                </SelectTrigger>
                 <SelectContent>
                   {proveedores.length === 0 && (
                     <SelectItem value="__empty" disabled>
@@ -147,46 +160,64 @@ export default function CosteoAgentes() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="nombre">Nombre comercial *</Label>
-              <Input id="nombre" value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+              <Label htmlFor="agente-nombre">Nombre comercial *</Label>
+              <Input
+                id="agente-nombre"
+                value={form.nombre}
+                aria-invalid={nombreInvalido || undefined}
+                className={nombreInvalido ? "border-destructive" : undefined}
+                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="pais">País</Label>
-                <Input id="pais" value={form.pais ?? "CN"}
+                <Label htmlFor="agente-pais">País</Label>
+                <Input id="agente-pais" value={form.pais ?? "CN"}
                   onChange={(e) => setForm({ ...form, pais: e.target.value })} />
               </div>
               <div>
-                <Label htmlFor="dias">Días de crédito</Label>
-                <Input id="dias" type="number" min={0} value={form.dias_credito}
+                <Label htmlFor="agente-dias">Días de crédito</Label>
+                <Input id="agente-dias" type="number" min={0} value={form.dias_credito}
                   onChange={(e) => setForm({ ...form, dias_credito: Number(e.target.value) || 0 })} />
               </div>
             </div>
             <div>
-              <Label htmlFor="contacto">Contacto</Label>
-              <Input id="contacto" value={form.contacto_tarifario ?? ""}
+              <Label htmlFor="agente-contacto">Contacto</Label>
+              <Input id="agente-contacto" value={form.contacto_tarifario ?? ""}
                 onChange={(e) => setForm({ ...form, contacto_tarifario: e.target.value })} />
             </div>
             <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email ?? ""}
+              <Label htmlFor="agente-email">Email</Label>
+              <Input id="agente-email" type="email" value={form.email ?? ""}
                 onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="flex items-center gap-2">
-              <Switch id="activo" checked={form.activo ?? true}
+              <Switch id="agente-activo" checked={form.activo ?? true}
                 onCheckedChange={(v) => setForm({ ...form, activo: v })} />
-              <Label htmlFor="activo">Activo</Label>
+              <Label htmlFor="agente-activo">Activo</Label>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={handleGuardar} disabled={crear.isPending || !valido}>
-              Guardar
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={crear.isPending}>
+                Guardar
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteAlert
+        open={!!aEliminar}
+        onOpenChange={(o) => !o && setAEliminar(null)}
+        title={aEliminar ? `¿Eliminar agente "${aEliminar.nombre}"?` : ""}
+        description="Esta acción no se puede deshacer."
+        pending={eliminar.isPending}
+        onConfirm={() => {
+          if (aEliminar) {
+            eliminar.mutate(aEliminar.id, { onSuccess: () => setAEliminar(null) });
+          }
+        }}
+      />
     </div>
   );
 }

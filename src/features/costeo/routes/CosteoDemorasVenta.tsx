@@ -16,6 +16,7 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const EMPTY: DemoraVentaTarifaInput = {
@@ -34,21 +35,29 @@ export default function CosteoDemorasVenta() {
   const { data: tipos = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<DemoraVentaTarifaInput>(EMPTY);
+  const [aEliminar, setAEliminar] = useState<string | null>(null);
+  const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   const tipoMap = new Map(tipos.map(t => [t.id, t.code || t.name]));
 
-  const handleGuardar = async () => {
+  const handleGuardar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIntentoEnvio(true);
     if (!form.tipo_contenedor_id || form.monto_por_dia_usd < 0) return;
     await crear.mutateAsync(form);
-    setForm(EMPTY); setOpen(false);
+    setForm(EMPTY);
+    setIntentoEnvio(false);
+    setOpen(false);
   };
+
+  const tipoInvalido = intentoEnvio && !form.tipo_contenedor_id;
 
   return (
     <div className="p-6 space-y-4">
       <PageHeader
         title="Tarifa demoras (venta)"
         description="Tabulador escalonado en USD que se le cobra al cliente por días excedidos. Independiente del costo de la naviera."
-        actions={<Button onClick={() => setOpen(true)}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
+        actions={<Button onClick={() => { setIntentoEnvio(false); setOpen(true); }}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
       />
 
       <Card>
@@ -73,12 +82,19 @@ export default function CosteoDemorasVenta() {
               <TableRow key={t.id}>
                 <TableCell>{tipoMap.get(t.tipo_contenedor_id) ?? '—'}</TableCell>
                 <TableCell className="text-right tabular-nums">{t.desde_dia}</TableCell>
-                <TableCell className="text-right tabular-nums">{t.hasta_dia ?? '∞'}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {t.hasta_dia ?? <span aria-label="sin límite">∞</span>}
+                </TableCell>
                 <TableCell className="text-right tabular-nums font-medium">{formatCurrency(Number(t.monto_por_dia_usd), 'USD')}</TableCell>
                 <TableCell className="text-xs">{formatDate(t.vigente_desde)}</TableCell>
                 <TableCell className="text-xs">{t.vigente_hasta ? formatDate(t.vigente_hasta) : '—'}</TableCell>
                 <TableCell>
-                  <Button size="icon" variant="ghost" onClick={() => eliminar.mutate(t.id)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setAEliminar(t.id)}
+                    aria-label="Eliminar tarifa de demoras"
+                  >
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </TableCell>
@@ -90,12 +106,21 @@ export default function CosteoDemorasVenta() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nueva tarifa de venta</DialogTitle><DialogDescription>Define una nueva tarifa de venta por demoras aplicable a los embarques.</DialogDescription></DialogHeader>
-          <div className="space-y-3">
+          <DialogHeader>
+            <DialogTitle>Nueva tarifa de venta</DialogTitle>
+            <DialogDescription>Define una nueva tarifa de venta por demoras aplicable a los embarques.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleGuardar} className="space-y-3">
             <div>
-              <Label>Tipo de contenedor</Label>
+              <Label htmlFor="dem-tipo">Tipo de contenedor *</Label>
               <Select value={form.tipo_contenedor_id} onValueChange={(v) => setForm({ ...form, tipo_contenedor_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                <SelectTrigger
+                  id="dem-tipo"
+                  aria-invalid={tipoInvalido || undefined}
+                  className={tipoInvalido ? "border-destructive" : undefined}
+                >
+                  <SelectValue placeholder="Selecciona…" />
+                </SelectTrigger>
                 <SelectContent>
                   {tipos.map(t => <SelectItem key={t.id} value={t.id}>{t.code || t.name}</SelectItem>)}
                 </SelectContent>
@@ -103,40 +128,53 @@ export default function CosteoDemorasVenta() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Desde día</Label>
-                <Input type="number" min={1} value={form.desde_dia}
+                <Label htmlFor="dem-desde">Desde día</Label>
+                <Input id="dem-desde" type="number" min={1} value={form.desde_dia}
                   onChange={(e) => setForm({ ...form, desde_dia: Number(e.target.value) })} />
               </div>
               <div>
-                <Label>Hasta día (vacío = ∞)</Label>
-                <Input type="number" value={form.hasta_dia ?? ''}
+                <Label htmlFor="dem-hasta">Hasta día (vacío = ∞)</Label>
+                <Input id="dem-hasta" type="number" value={form.hasta_dia ?? ''}
                   onChange={(e) => setForm({ ...form, hasta_dia: e.target.value ? Number(e.target.value) : null })} />
               </div>
             </div>
             <div>
-              <Label>Monto por día (USD)</Label>
-              <Input type="number" step="0.01" min={0} value={form.monto_por_dia_usd}
+              <Label htmlFor="dem-monto">Monto por día (USD)</Label>
+              <Input id="dem-monto" type="number" step="0.01" min={0} value={form.monto_por_dia_usd}
                 onChange={(e) => setForm({ ...form, monto_por_dia_usd: Number(e.target.value) })} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Vigente desde</Label>
-                <Input type="date" value={form.vigente_desde}
+                <Label htmlFor="dem-vig-desde">Vigente desde</Label>
+                <Input id="dem-vig-desde" type="date" value={form.vigente_desde}
                   onChange={(e) => setForm({ ...form, vigente_desde: e.target.value })} />
               </div>
               <div>
-                <Label>Vigente hasta</Label>
-                <Input type="date" value={form.vigente_hasta ?? ''}
+                <Label htmlFor="dem-vig-hasta">Vigente hasta</Label>
+                <Input id="dem-vig-hasta" type="date" value={form.vigente_hasta ?? ''}
                   onChange={(e) => setForm({ ...form, vigente_hasta: e.target.value || null })} />
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={handleGuardar} disabled={!form.tipo_contenedor_id || crear.isPending}>Guardar</Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={crear.isPending}>Guardar</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteAlert
+        open={!!aEliminar}
+        onOpenChange={(o) => !o && setAEliminar(null)}
+        title="¿Eliminar tarifa de demoras?"
+        description="Esta acción no se puede deshacer."
+        pending={eliminar.isPending}
+        onConfirm={() => {
+          if (aEliminar) {
+            eliminar.mutate(aEliminar, { onSuccess: () => setAEliminar(null) });
+          }
+        }}
+      />
     </div>
   );
 }

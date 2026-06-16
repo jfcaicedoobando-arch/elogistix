@@ -32,6 +32,18 @@ interface Props {
   tarifaId?: string;
 }
 
+function calcularErrores(form: TarifaInput): Record<string, boolean> {
+  return {
+    agente_id: !form.agente_id,
+    naviera_id: !form.naviera_id,
+    ruta_id: !form.ruta_id,
+    tipo_contenedor_id: !form.tipo_contenedor_id,
+    flete_base: !(Number(form.flete_base) > 0),
+    vigente_desde: !form.vigente_desde,
+    vigente_hasta: !form.vigente_hasta,
+  };
+}
+
 export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: rutas = [] } = useCosteoRutas();
@@ -40,17 +52,24 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
   const { crear, actualizar } = useCosteoTarifaMutations();
 
   const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
+  const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(buildInitialForm(initial));
+    if (open) {
+      setForm(buildInitialForm(initial));
+      setIntentoEnvio(false);
+    }
   }, [open, initial]);
 
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
   const esEdicion = Boolean(tarifaId);
   const pendiente = crear.isPending || actualizar.isPending;
+  const errores = intentoEnvio ? calcularErrores(form) : undefined;
 
-  const guardar = () => {
+  const guardar = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIntentoEnvio(true);
     if (!valido) return;
     if (esEdicion && tarifaId) {
       actualizar.mutate(
@@ -72,11 +91,11 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
           <DialogDescription>Captura o edita la tarifa marítima con sus costos y condiciones.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} />
-          <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} />
-          <NumerosFields form={form} setForm={setForm} />
-          <VigenciaFields form={form} setForm={setForm} />
+        <form onSubmit={guardar} className="space-y-3">
+          <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} />
+          <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} errores={errores} />
+          <NumerosFields form={form} setForm={setForm} errores={errores} />
+          <VigenciaFields form={form} setForm={setForm} errores={errores} />
 
           <TarifaRecargosEditor
             value={form.recargos}
@@ -84,24 +103,27 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
           />
 
           <div>
-            <Label>Notas</Label>
-            <Textarea value={form.notas ?? ""}
+            <Label htmlFor="tarifa-notas">Notas</Label>
+            <Textarea
+              id="tarifa-notas"
+              value={form.notas ?? ""}
               onChange={(e) => setForm({ ...form, notas: e.target.value })}
-              placeholder="Condiciones, restricciones, comentarios del agente…" />
+              placeholder="Condiciones, restricciones, comentarios del agente…"
+            />
           </div>
 
           <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border">
             <span className="text-sm text-muted-foreground">Total comparable (flete + recargos)</span>
             <span className="text-lg font-semibold text-foreground">{usdFormatter(total)}</span>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={guardar} disabled={!valido || pendiente}>
-            {pendiente ? "Guardando…" : esEdicion ? "Guardar cambios" : "Guardar tarifa"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button type="submit" disabled={pendiente}>
+              {pendiente ? "Guardando…" : esEdicion ? "Guardar cambios" : "Guardar tarifa"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

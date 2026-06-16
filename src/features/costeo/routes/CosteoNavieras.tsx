@@ -108,7 +108,11 @@ export default function CosteoNavieras() {
             <Tabs defaultValue="condiciones">
               <TabsList>
                 <TabsTrigger value="condiciones">Condiciones</TabsTrigger>
-                <TabsTrigger value="demoras" disabled={!seleccion.condicion}>
+                <TabsTrigger
+                  value="demoras"
+                  disabled={!seleccion.condicion}
+                  title={!seleccion.condicion ? "Primero guarda las condiciones generales para habilitar el tabulador" : undefined}
+                >
                   Tabulador de demoras
                 </TabsTrigger>
               </TabsList>

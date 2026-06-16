@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -18,6 +19,7 @@ import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { TarifaEstadoBadge } from "@/features/costeo/components/TarifaEstadoBadge";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -29,6 +31,7 @@ export default function CosteoTarifas() {
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<Partial<TarifaInput> | undefined>();
   const [editId, setEditId] = useState<string | undefined>();
+  const [aEliminar, setAEliminar] = useState<string | null>(null);
 
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
@@ -70,8 +73,9 @@ export default function CosteoTarifas() {
 
       <Card className="p-4 flex flex-wrap gap-3">
         <div className="min-w-[140px]">
+          <Label htmlFor="filtro-estado" className="sr-only">Estado</Label>
           <Select value={estado} onValueChange={(v) => setEstado(v as EstadoFiltro)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="filtro-estado" aria-label="Filtrar por estado"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="vigente">Vigentes</SelectItem>
               <SelectItem value="vencida">Vencidas</SelectItem>
@@ -81,8 +85,9 @@ export default function CosteoTarifas() {
           </Select>
         </div>
         <div className="min-w-[180px]">
+          <Label htmlFor="filtro-agente" className="sr-only">Agente</Label>
           <Select value={agenteId} onValueChange={setAgenteId}>
-            <SelectTrigger><SelectValue placeholder="Agente" /></SelectTrigger>
+            <SelectTrigger id="filtro-agente" aria-label="Filtrar por agente"><SelectValue placeholder="Agente" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos los agentes</SelectItem>
               {agentes.map((a) => (
@@ -92,8 +97,9 @@ export default function CosteoTarifas() {
           </Select>
         </div>
         <div className="min-w-[160px]">
+          <Label htmlFor="filtro-tipo" className="sr-only">Tipo de contenedor</Label>
           <Select value={tipoId} onValueChange={setTipoId}>
-            <SelectTrigger><SelectValue placeholder="Contenedor" /></SelectTrigger>
+            <SelectTrigger id="filtro-tipo" aria-label="Filtrar por tipo de contenedor"><SelectValue placeholder="Contenedor" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos los tipos</SelectItem>
               {tipos.map((t) => (
@@ -128,7 +134,7 @@ export default function CosteoTarifas() {
               <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground">Sin tarifas para los filtros aplicados.</TableCell></TableRow>
             )}
             {tarifas.map((t) => (
-              <TableRow key={t.id} className="hover:bg-muted/30">
+              <TableRow key={t.id}>
                 <TableCell className="text-sm">
                   {t.puerto_origen_nombre} → {t.puerto_destino_nombre}
                 </TableCell>
@@ -146,17 +152,17 @@ export default function CosteoTarifas() {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1 justify-end">
-                    <Button size="icon" variant="ghost" onClick={() => editar(t.id)} aria-label="Editar">
+                    <Button size="icon" variant="ghost" onClick={() => editar(t.id)} aria-label="Editar tarifa">
                       <Pencil className="size-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => duplicar(t.id)} aria-label="Duplicar">
+                    <Button size="icon" variant="ghost" onClick={() => duplicar(t.id)} aria-label="Duplicar tarifa">
                       <Copy className="size-4" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => { if (confirm("¿Eliminar esta tarifa?")) eliminar.mutate(t.id); }}
-                      aria-label="Eliminar"
+                      onClick={() => setAEliminar(t.id)}
+                      aria-label="Eliminar tarifa"
                     >
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
@@ -169,6 +175,19 @@ export default function CosteoTarifas() {
       </Card>
 
       <TarifaForm open={open} onOpenChange={setOpen} initial={initial} tarifaId={editId} />
+
+      <ConfirmDeleteAlert
+        open={!!aEliminar}
+        onOpenChange={(o) => !o && setAEliminar(null)}
+        title="¿Eliminar esta tarifa?"
+        description="La tarifa se eliminará permanentemente."
+        pending={eliminar.isPending}
+        onConfirm={() => {
+          if (aEliminar) {
+            eliminar.mutate(aEliminar, { onSuccess: () => setAEliminar(null) });
+          }
+        }}
+      />
     </div>
   );
 }
