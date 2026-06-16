@@ -1,0 +1,147 @@
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+export interface Contacto {
+  id: string;
+  nombre: string;
+  contacto: string;
+  email: string;
+  tipo: string | null;
+}
+
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export interface EnvioFormState {
+  contactos: Contacto[];
+  loadingContactos: boolean;
+  seleccionados: Record<string, boolean>;
+  setSeleccionados: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  emailManual: string;
+  setEmailManual: (v: string) => void;
+  emailsManualesAgregados: string[];
+  agregarManual: () => void;
+  quitarManual: (e: string) => void;
+  ccManual: string;
+  setCcManual: (v: string) => void;
+  asunto: string;
+  setAsunto: (v: string) => void;
+  mensaje: string;
+  setMensaje: (v: string) => void;
+  marcarEnviada: boolean;
+  setMarcarEnviada: (v: boolean) => void;
+  destinatarios: Array<{ email: string; nombre?: string; contacto_id?: string }>;
+  ccEmails: string[];
+  userEmail: string | null;
+}
+
+export function useEnvioCotizacionForm(
+  open: boolean,
+  clienteId: string | null,
+  folio: string,
+  origen: string,
+  destino: string,
+): EnvioFormState {
+  const { user } = useAuth();
+
+  const { data: contactos = [], isLoading: loadingContactos } = useQuery({
+    queryKey: ["contactos-cliente", clienteId],
+    enabled: !!clienteId && open,
+    queryFn: async (): Promise<Contacto[]> => {
+      const { data, error } = await supabase
+        .from("contactos_cliente")
+        .select("id, nombre, contacto, email, tipo")
+        .eq("cliente_id", clienteId!)
+        .is("deleted_at", null);
+      if (error) throw error;
+      return (data ?? []).filter((c) => c.email && EMAIL_RE.test(c.email));
+    },
+  });
+
+  const [seleccionados, setSeleccionados] = useState<Record<string, boolean>>({});
+  const [emailManual, setEmailManual] = useState("");
+  const [emailsManualesAgregados, setEmailsManualesAgregados] = useState<string[]>([]);
+  const [ccManual, setCcManual] = useState("");
+  const [asunto, setAsunto] = useState("");
+  const [mensaje, setMensaje] = useState("");
+  const [marcarEnviada, setMarcarEnviada] = useState(true);
+
+  useEffect(() => {
+    if (!open) return;
+    setAsunto(`Cotización ${folio} — ${origen} → ${destino}`);
+    setMensaje("");
+    setEmailManual("");
+    setEmailsManualesAgregados([]);
+    setCcManual("");
+    const pre: Record<string, boolean> = {};
+    const prioridad = contactos.find((c) => (c.tipo ?? "").toLowerCase().includes("cotiz"));
+    if (prioridad) pre[prioridad.id] = true;
+    else if (contactos[0]) pre[contactos[0].id] = true;
+    setSeleccionados(pre);
+  }, [open, contactos, folio, origen, destino]);
+
+  const agregarManual = () => {
+    const v = emailManual.trim();
+    if (!EMAIL_RE.test(v) || emailsManualesAgregados.includes(v)) {
+      setEmailManual("");
+      return;
+    }
+    setEmailsManualesAgregados((arr) => [...arr, v]);
+    setEmailManual("");
+  };
+  const quitarManual = (e: string) =>
+    setEmailsManualesAgregados((arr) => arr.filter((x) => x !== e));
+
+  const destinatarios = useMemo(() => {
+    const fromContactos = contactos
+      .filter((c) => seleccionados[c.id])
+      .map((c) => ({ email: c.email, nombre: c.contacto || c.nombre, contacto_id: c.id }));
+    const fromManual = emailsManualesAgregados.map((e) => ({ email: e }));
+    const seen = new Set<string>();
+    return [...fromContactos, ...fromManual].filter((d) => {
+      const k = d.email.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [contactos, seleccionados, emailsManualesAgregados]);
+
+  const ccEmails = useMemo(() => {
+    const base = user?.email ? [user.email] : [];
+    const extra = ccManual.split(/[,;\s]+/).map((e) => e.trim()).filter((e) => EMAIL_RE.test(e));
+    const recipientSet = new Set(destinatarios.map((d) => d.email.toLowerCase()));
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const e of [...base, ...extra]) {
+      const k = e.toLowerCase();
+      if (seen.has(k) || recipientSet.has(k)) continue;
+      seen.add(k);
+      out.push(e);
+    }
+    return out;
+  }, [user?.email, ccManual, destinatarios]);
+
+  return {
+    contactos,
+    loadingContactos,
+    seleccionados,
+    setSeleccionados,
+    emailManual,
+    setEmailManual,
+    emailsManualesAgregados,
+    agregarManual,
+    quitarManual,
+    ccManual,
+    setCcManual,
+    asunto,
+    setAsunto,
+    mensaje,
+    setMensaje,
+    marcarEnviada,
+    setMarcarEnviada,
+    destinatarios,
+    ccEmails,
+    userEmail: user?.email ?? null,
+  };
+}
