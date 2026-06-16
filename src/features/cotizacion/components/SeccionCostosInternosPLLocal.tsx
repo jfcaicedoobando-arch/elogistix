@@ -24,7 +24,9 @@ interface Props {
 export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props) {
   const { watch } = useFormContext<CotizacionFormValues>();
   const tarifaId = watch("tarifaId");
+  const numContenedores = watch("numContenedores") ?? 1;
   const { data: tarifa } = useTarifaVinculada(tarifaId);
+  const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
@@ -41,12 +43,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       if (cancelado || !row) return;
       const recargos = await fetchRecargosDeTarifa(row.id);
       if (cancelado) return;
-      const nuevas = construirFilasDesdeTarifa(row, recargos);
+      const nuevas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad: numContenedores });
       setFilas(prev => (prev.length > 0 ? prev : nuevas));
       precargadaRef.current = tarifaId;
     })();
     return () => { cancelado = true; };
-  }, [tarifaId, filas.length, setFilas]);
+  }, [tarifaId, filas.length, setFilas, markup, numContenedores]);
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
@@ -106,35 +108,4 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   );
 }
 
-function construirFilasDesdeTarifa(
-  row: TopTarifaRow,
-  recargos: Awaited<ReturnType<typeof fetchRecargosDeTarifa>>,
-): FilaCostoLocal[] {
-  return [
-    {
-      concepto: `Flete marítimo ${row.puerto_origen_nombre} → ${row.puerto_destino_nombre} (${row.tipo_contenedor_nombre})`,
-      moneda: "USD",
-      proveedor: row.agente_nombre,
-      cantidad: 1,
-      costo_unitario: Number(row.flete_base),
-      precio_venta: Number(row.flete_base),
-      unidad_medida: "contenedor",
-      aplica_iva: false,
-      notas: `Costeo · vigente hasta ${row.vigente_hasta}`,
-    },
-    ...recargos
-      .filter(r => r.incluido_en_total)
-      .map<FilaCostoLocal>(r => ({
-        concepto: `${r.concepto} (${r.lado})`,
-        moneda: "USD",
-        proveedor: row.agente_nombre,
-        cantidad: 1,
-        costo_unitario: Number(r.monto),
-        precio_venta: Number(r.monto),
-        unidad_medida: "contenedor",
-        aplica_iva: false,
-        notas: `Costeo · tarifa ${row.id.slice(0, 8)}`,
-      })),
-  ];
-}
 
