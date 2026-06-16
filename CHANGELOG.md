@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.38.1] - 2026-06-16
+- **refactor(power-of-10)**: división de archivos > 200 líneas para volver verde el baseline de arquitectura.
+  - `CosteoAgentes.tsx` (270 → 121) se separa en `CosteoAgentesTable.tsx` (97) y `CosteoAgenteFormDialog.tsx` (154).
+  - `CotizacionWizardLayout.tsx` (217 → 149) extrae el cuerpo de pasos a `CotizacionWizardSteps.tsx` (99).
+
 ## [13.38.0] - 2026-06-16
 - **ux(cotizacion→embarque)**: eliminados los atajos de "un clic" en el detalle de cotización. Cotización Aceptada sin embarque vinculado ahora muestra un único botón `Crear embarque` (con badge cuando `num_contenedores > 1`) que abre el wizard de Nuevo Embarque con la cotización pre-vinculada, obligando al operador a completar los 4 pasos antes de guardar. Se desmonta el `DialogGenerarEmbarques` y el `BloqueoEmbarqueSinCostosDialog` del flujo del detalle; las RPC y servicios subyacentes (`convertirCotizacionAEmbarques`, `crearEmbarqueBorradorDesdeCotizacion`) se conservan para soporte.
 
