@@ -3,8 +3,18 @@
  * documentos de embarque. Verifican determinismo, formato UUID v4-like
  * y estabilidad ante el mismo contenido.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { sha256Hex, hexToUuid } from "../idempotencyHash";
+
+// jsdom no implementa File.arrayBuffer; lo polyfilleamos vía Response.
+beforeAll(() => {
+  if (!File.prototype.arrayBuffer) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (File.prototype as any).arrayBuffer = function () {
+      return new Response(this as Blob).arrayBuffer();
+    };
+  }
+});
 
 describe("sha256Hex", () => {
   it("devuelve 64 hex chars en minúsculas", async () => {
