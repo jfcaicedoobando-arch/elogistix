@@ -23,14 +23,29 @@ interface Props {
   clientes: { id: string; nombre: string }[];
 }
 
+/**
+ * Paso 1 del wizard de cotización. Orden conversacional v13.28.0:
+ *   1. Cliente → 2. Operación → 3. Ruta → 4. Mercancía → 5. Tarifa → 6. Cierre.
+ * Sigue cómo piensa un ejecutivo: primero quién y qué tipo de servicio,
+ * después por dónde, después qué se mueve, después con qué tarifa, y al final
+ * los detalles administrativos (# contenedores + notas).
+ */
 export default function PasoDatosGenerales({ w, clientes }: Props) {
   const { form } = w;
   const tipoEmbarque = form.watch("tipoEmbarque");
 
   return (
     <>
+      {/* 1. Cliente */}
       <SeccionDestinatario clientes={clientes} />
+
+      {/* 2. Operación: modo / tipo / incoterm */}
       <SeccionDatosGeneralesCotizacion />
+
+      {/* 3. Ruta */}
+      <SeccionRutaCotizacion />
+
+      {/* 4. Mercancía */}
       <WizardSection title="Mercancía">
         {w.esMaritimo ? (
           <div className="space-y-4">
@@ -64,10 +79,12 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
           <SeccionMercanciaGeneral msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
         )}
       </WizardSection>
-      <TarifaVinculadaPanel />
-      <SeccionRutaCotizacion />
 
-      <Accordion type="multiple" className="w-full">
+      {/* 5. Tarifa vinculada (sólo marítimo) */}
+      <TarifaVinculadaPanel />
+
+      {/* 6. Cierre */}
+      <Accordion type="multiple" defaultValue={["num-embarques", "notas"]} className="w-full">
         <AccordionItem value="num-embarques">
           <AccordionTrigger className="text-base font-semibold hover:no-underline">
             <span className="flex items-center gap-2">
