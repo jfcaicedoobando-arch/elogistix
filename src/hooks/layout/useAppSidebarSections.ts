@@ -129,7 +129,6 @@ export function useAppSidebarSections(): SidebarSection[] {
   if (effectiveRole === "gerente_comercial") {
     return buildGerenteComercialSections(crmItems, sistemaItems);
   }
-  }
 
   // Gerente de operaciones: todo lectura + edición operativa, sin admin.
   // No incluye "Auditoría operativa" (decisión 13.21.26: solo admin + viewer).
