@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.36.0] - 2026-06-16
+- **test(cotizacion/tarifa-first)**: cobertura unitaria de la política tarifa-first y la auto-carga de costos desde sugerencias.
+  - `validatePaso1.tarifaFirst.test.ts`: bloqueo en modo Marítimo sin `tarifaId`, registro en `bitacora_actividad` (`cotizacion_bloqueada_sin_tarifa`), avance OK con tarifa vinculada y no aplicación del bloqueo en Aéreo/Terrestre.
+  - `buildCostosDesdeTarifa.test.ts`: flete base + filas por recargo, markup configurable, redondeo a centavos, moneda USD y omisión de montos no positivos.
+  - `aplicarTarifa.test.ts`: seteo de `tarifaId` + transit time + carta garantía con `shouldValidate/shouldDirty`, `trigger()` de validación, auto-carga de costos con markup, fallo silencioso si `fetchRecargosDeTarifa` falla y no I/O cuando no se pide auto-carga.
+
 ## [13.35.0] - 2026-06-16
 - **feat(cotizacion/tarifa-first)**: Reordenamiento del Paso 1 del wizard de cotización marítima para incentivar el flujo "tarifa primero, cotización después".
   - **Nuevo orden (marítimo)**: Cliente → Operación → Ruta → **Tarifa (guardián)** → Mercancía → Cierre. Aéreo/Terrestre/General conservan su orden actual.
