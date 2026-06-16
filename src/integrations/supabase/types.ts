@@ -1749,6 +1749,8 @@ export type Database = {
           sector_economico: string
           seguro: boolean
           subtotal: number
+          tarifa_id: string | null
+          tarifa_override: Json
           tarifas_informativas: Json
           tiempo_transito_dias: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
@@ -1814,6 +1816,8 @@ export type Database = {
           sector_economico?: string
           seguro?: boolean
           subtotal?: number
+          tarifa_id?: string | null
+          tarifa_override?: Json
           tarifas_informativas?: Json
           tiempo_transito_dias?: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
@@ -1879,6 +1883,8 @@ export type Database = {
           sector_economico?: string
           seguro?: boolean
           subtotal?: number
+          tarifa_id?: string | null
+          tarifa_override?: Json
           tarifas_informativas?: Json
           tiempo_transito_dias?: number | null
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
@@ -1917,6 +1923,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_tarifa_id_fkey"
+            columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
             referencedColumns: ["id"]
           },
         ]
