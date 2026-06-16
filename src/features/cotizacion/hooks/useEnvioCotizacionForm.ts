@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchContactosClienteConEmail,
+  type ContactoClienteEmail,
+} from "@/features/cotizacion/services/envios";
 
-export interface Contacto {
-  id: string;
-  nombre: string;
-  contacto: string;
-  email: string;
-  tipo: string | null;
-}
+export type Contacto = ContactoClienteEmail;
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -48,15 +45,7 @@ export function useEnvioCotizacionForm(
   const { data: contactos = [], isLoading: loadingContactos } = useQuery({
     queryKey: ["contactos-cliente", clienteId],
     enabled: !!clienteId && open,
-    queryFn: async (): Promise<Contacto[]> => {
-      const { data, error } = await supabase
-        .from("contactos_cliente")
-        .select("id, nombre, contacto, email, tipo")
-        .eq("cliente_id", clienteId!)
-        .is("deleted_at", null);
-      if (error) throw error;
-      return (data ?? []).filter((c) => c.email && EMAIL_RE.test(c.email));
-    },
+    queryFn: () => fetchContactosClienteConEmail(clienteId!),
   });
 
   const [seleccionados, setSeleccionados] = useState<Record<string, boolean>>({});
