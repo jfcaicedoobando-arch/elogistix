@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.29.0] - 2026-06-16
+- **feat(cotizaciones/wizard-validacion-inline)**: Cada sección del Paso 1 (Cliente, Operación, Ruta, Mercancía, Tarifa, Cierre) muestra un check verde cuando sus campos requeridos están completos. Nuevo hook puro `usePaso1SectionStatus` y prop opcional `complete` en `WizardSection`. Sin nuevos validadores Zod.
+- **feat(cotizaciones/heredado-badge)**: Reemplazado el badge inline "Tarifa" en `TarifaFields` por el `HeredadoBadge` estándar con tooltip ("Pre-llenado desde tarifa vinculada").
+- **feat(cotizaciones/listado-sin-costos)**: El listado ahora trae el conteo real de filas en `cotizacion_costos` (vía `cotizacion_costos(count)`). En la celda "Estado" se renderiza un badge amarillo "Sin costos" cuando `sin_desglose_costos = true` y no hay costos cargados. El badge desaparece automáticamente al cargar costos (regla canónica = conteo real, no flag).
+- **feat(cotizaciones/filtro-sin-costos)**: Nuevo toggle "Sólo sin costos" en la toolbar del listado para filtrar rápidamente las cotizaciones que requieren carga de costos antes de poder convertirse a embarque.
+
 ## [13.28.0] - 2026-06-16
 - **feat(cotizaciones/wizard-orden)**: Paso 1 reordenado en flujo conversacional: Cliente → Operación → Ruta → Mercancía → Tarifa → Cierre (# embarques + Notas). Los acordeones de cierre abren por default para no requerir clic extra.
 - **feat(embarques/precarga-ampliada)**: `buildVincularCotizacionUpdates` ahora dirige el origen/destino al campo correcto del embarque según `modo` (Marítimo → puertos, Aéreo → aeropuertos, Terrestre → ciudades) y propaga `msdsArchivo` cuando la cotización lo trae cargado. `buildDesvincularCotizacionUpdates` limpia el superset completo de rutas para evitar residuos al cambiar de modo.
