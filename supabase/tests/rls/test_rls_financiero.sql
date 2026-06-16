@@ -79,7 +79,7 @@ BEGIN
   INSERT INTO public.proformas(
     id, organization_id, embarque_id, cliente_id, cliente_nombre, expediente,
     numero, fecha_emision, subtotal_usd, iva_usd, total_usd,
-    subtotal_mxn, iva_mxn, total_mxn, estado
+    subtotal_mxn, iva_mxn, total_mxn, estado_proforma
   ) VALUES
     (prof_a, org_a, emb_a, cli_a, 'Cliente Fin A', 'EXP-FIN-A',
       'PA-001', CURRENT_DATE, 100, 16, 116, 0, 0, 0, 'Borrador');

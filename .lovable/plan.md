@@ -1,71 +1,60 @@
-# Revisión de `.github/workflows/rls-tests.yml`
+# Fix de las 6 suites RLS que siguen rojas
 
-## Veredicto general
+Logs decodificados (`logs_74463336657.zip`): `isolation` pasa ✓. Las otras 6 fallan por **enums/columnas inválidas en los fixtures**, no por problemas de RLS ni de workflow. La infra (cache, matrix guard, aggregator, GRANTs) funciona — el dump se restaura, `SET ROLE authenticated` ya no truena. Los errores ahora son del SQL de los tests contra el esquema real.
 
-**Sí, está bien hecho.** Es un workflow sólido y por encima del promedio:
+## Hallazgos exactos por suite
 
-- Imagen Postgres pinneada por **digest SHA256** (reproducible, sin drift).
-- Actions pinneadas por SHA (`checkout`, `upload/download-artifact`) — buena práctica de supply-chain.
-- `permissions: contents: read` (mínimo privilegio).
-- `concurrency` con `cancel-in-progress` para no apilar runs.
-- `timeout-minutes` en ambos jobs (evita runners colgados).
-- Patrón **prepare-once + matrix-restore** vía `pg_dump`/`pg_restore` — ahorra ~10x vs re-bootstrap por suite.
-- `fail-fast: false` en la matriz para ver todas las suites rojas en un solo run.
-- `psql -v ON_ERROR_STOP=1 -X -q` (falla rápido, sin `.psqlrc`).
-- Filtros `paths:` correctos en triggers.
-- Roles Supabase (`anon`, `authenticated`, `service_role`, …) creados antes del restore — corrige el problema clásico de "role does not exist".
-- Comentarios explicando *por qué* se mantienen los GRANTs (lección aprendida del bug reciente).
+| # | Suite | Línea | Error |
+|---|---|---|---|
+| 1 | `crm_operacional` | 163 | `invalid input value for enum crm_actividad_tipo: "correo"` |
+| 2 | `financiero_critico` | 276 | `invalid input value for enum estado_conciliacion: "pendiente"` |
+| 3 | `financiero` | 135 | `column "estado" of relation "proformas" does not exist` |
+| 4 | `roles_no_admin` | 207 | `column "tipo_cambio" does not exist` (en `pagos_factura`) |
+| 5 | `operaciones` | 190 | `column "saldo" of relation "facturas" does not exist` |
+| 6 | `tarifas_y_costeo` | 189 | `new row for relation "costeo_tarifas" violates check constraint "costeo_tarifas_estado_check"` |
 
-## Mejoras propuestas (ordenadas por impacto)
+> Ironía del lote previo: en 13.44.19 "arreglé" `pagos_factura` añadiendo `tipo_cambio` porque era NOT NULL en el esquema que asumí; el esquema real no tiene esa columna. Por eso es indispensable mirar las migraciones, no el resultado anterior.
 
-### 1. Cachear el snapshot por hash de migraciones (alto impacto)
-Hoy el job `rls` corre en **cada** PR aunque las migraciones no cambien. Añadir `actions/cache` con key derivada de `hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql')` y saltar bootstrap+migrations si hay hit. Ahorra 1–3 min por PR.
+## Pasos
 
-### 2. Reportar resultados de cada suite en el PR
-Hoy hay que abrir los logs. Capturar el stdout de cada suite a un archivo y publicarlo con `actions/github-script` o `dorny/test-reporter` como check summary. Mínimo, hacer `tee` a `suite-${{ matrix.suite }}.log` y subirlo como artifact con `if: always()`.
+1. **Inspeccionar esquema real** en `supabase/migrations/`:
+   - `grep -rn "CREATE TYPE crm_actividad_tipo\|ALTER TYPE crm_actividad_tipo"` → ver valores válidos del enum (probablemente `email` en lugar de `correo`, o `llamada/reunion/...`).
+   - `grep -rn "CREATE TYPE estado_conciliacion"` → valores válidos (probablemente `Pendiente` capitalizado, o `conciliada/no_conciliada`).
+   - `grep -rn "CREATE TABLE public.proformas\|ALTER TABLE public.proformas"` → nombre real de la columna estado (probablemente `estado_proforma`).
+   - `grep -rn "CREATE TABLE public.pagos_factura\|ALTER TABLE public.pagos_factura"` → columnas reales (revisar si `tipo_cambio` debe omitirse o reemplazarse por otra).
+   - `grep -rn "CREATE TABLE public.facturas\|ALTER TABLE public.facturas"` → confirmar que `saldo` no existe; muy probable que sea columna generada/eliminada y la suite debe calcular `total - pagado` o usar otra columna.
+   - `grep -rn "costeo_tarifas_estado_check\|CREATE TABLE public.costeo_tarifas"` → valores permitidos por el CHECK.
 
-### 3. Validar que la matriz cubre **todos** los archivos `test_rls_*.sql`
-Riesgo actual: si alguien agrega `supabase/tests/rls/test_rls_nuevo.sql` y olvida añadirlo a `matrix.suite`, **no se ejecuta y CI pasa en verde**. Añadir un step en el job `rls` que liste los archivos y falle si hay alguno no listado en la matriz (o generar la matriz dinámicamente con `outputs` + `fromJSON`).
+2. **Editar cada suite** con los valores correctos:
+   - `test_rls_crm_operacional.sql` línea 163: reemplazar `'correo'` por el valor enum válido.
+   - `test_rls_financiero_critico.sql` línea 276: reemplazar `'pendiente'` por el valor enum válido (probable `'Pendiente'` con capitalización exacta).
+   - `test_rls_financiero.sql` línea 135: renombrar `estado` → nombre real de la columna en `proformas`.
+   - `test_rls_roles_no_admin.sql` línea 207: quitar `tipo_cambio` del INSERT (o reemplazar por la columna correcta — posiblemente `tasa_cambio` o no existe del todo).
+   - `test_rls_operaciones.sql` línea 190: reemplazar `saldo` por la columna correcta (probable `total - SUM(pagos)` o `monto_pendiente`).
+   - `test_rls_tarifas_y_costeo.sql` línea 189: usar un valor permitido por `costeo_tarifas_estado_check`.
 
-### 4. Ejecutar cada suite en transacción + ROLLBACK
-Envolver cada `test_rls_*.sql` con `BEGIN; … ROLLBACK;` (o usar `psql --single-transaction`) para garantizar que una suite no contamine a otra si en el futuro se reutiliza la BD. Hoy cada suite tiene su Postgres efímero así que no es crítico, pero protege contra regresiones de diseño.
+3. **Validar en local** (no factible aquí sin Postgres) — confiar en `grep` del esquema. En CI, el cache de snapshot del workflow funciona; el job `rls` no re-corre.
 
-### 5. `--single-transaction` en la aplicación de migraciones
-En el step "Apply migrations", correr cada `.sql` con `psql --single-transaction` para evitar bases a medio aplicar si una migración rompe a mitad. Hoy ya tienes `ON_ERROR_STOP=1` pero sin transacción quedan objetos parciales.
+4. **Bump versión + changelog**: `APP_VERSION = 13.44.22`, entrada en `CHANGELOG.md`.
 
-### 6. Reducir privilegios del runner del job `rls-suites`
-Usar `SET ROLE authenticated` ya está bien, pero conectar como un usuario no-superuser (no `postgres`) en las suites detectaría GRANTs faltantes más temprano. Crear `ci_runner` con `NOINHERIT` + `GRANT authenticated, anon TO ci_runner`.
+## Por qué falló mi fix anterior (lección)
 
-### 7. Job final "all green" para branch protection
-Añadir un job `rls-tests-result` con `needs: [rls-suites]` y `if: always()` que verifique `needs.rls-suites.result == 'success'`. Permite proteger main con **un único required check** en vez de 7.
-
-### 8. Pequeños detalles
-- `retention-days: 1` está bien para el snapshot; añadir `compression-level: 9` reduce ~40% del tamaño.
-- Considerar `services.postgres.options` con `shm_size=256m` si alguna migración usa índices grandes.
-- Renombrar `PSQL` env a algo no-reservado (no hay colisión real, pero es confuso porque `psql` también es comando).
-- Triggerar también en cambios a `.github/workflows/rls-tests.yml` ✅ (ya está) y considerar `schedule:` semanal para detectar drift de la imagen Postgres aunque no haya PRs.
+En 13.44.19 inferí columnas/enums por error message en lugar de mirar el `CREATE TABLE`/`CREATE TYPE` real. Resultado: introduje regresiones nuevas (`tipo_cambio` inexistente). Esta vez: **leer el DDL real de cada tabla/enum antes de editar el fixture**, sin asumir.
 
 ## Detalles técnicos
 
-```text
-Mejora #1 — cache key sugerida:
-  key: rls-snapshot-${{ runner.os }}-pg15.8-${{ hashFiles(
-        'supabase/migrations/**',
-        'supabase/tests/rls/_ci_*.sql'
-      ) }}
-  path: .rls-snapshot/db.dump
+Archivos a tocar (solo las líneas indicadas, no lógica completa):
+```
+supabase/tests/rls/test_rls_crm_operacional.sql      L163
+supabase/tests/rls/test_rls_financiero_critico.sql   L276
+supabase/tests/rls/test_rls_financiero.sql           L135
+supabase/tests/rls/test_rls_roles_no_admin.sql       L207
+supabase/tests/rls/test_rls_operaciones.sql          L190
+supabase/tests/rls/test_rls_tarifas_y_costeo.sql     L189
+src/constants/appVersion.ts                          13.44.22
+CHANGELOG.md                                         entrada nueva arriba
 ```
 
-```text
-Mejora #3 — guardia de matriz (pseudo):
-  expected=$(ls supabase/tests/rls/test_rls_*.sql | sed 's|.*test_rls_||;s|\.sql$||' | sort)
-  declared="isolation financiero financiero_critico crm_operacional
-            operaciones tarifas_y_costeo roles_no_admin" | tr ' ' '\n' | sort
-  diff <(echo "$expected") <(echo "$declared") || exit 1
-```
+## Confirmación
 
-## Qué haría yo primero
-
-Si solo eliges 3: **#3 (guardia de matriz)**, **#2 (logs por suite como artifact)** y **#7 (job all-green para branch protection)**. Son baratas, no tocan la lógica de tests, y cierran agujeros reales.
-
-¿Quieres que implemente alguna(s) de estas mejoras? Indícame los números.
+¿Procedo? Implementaré las 6 ediciones después de confirmar valores válidos contra las migraciones reales (1 lectura por enum/tabla, en paralelo).

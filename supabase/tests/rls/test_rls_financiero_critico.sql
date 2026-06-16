@@ -96,7 +96,7 @@ BEGIN
     cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en
   ) VALUES (
     mov_a, org_a, cuenta_a, CURRENT_DATE, 'Depósito test', 'REF-001',
-    0, 1000, 'hash-test-001', 'pendiente', '', now()
+    0, 1000, 'hash-test-001', 'Pendiente', '', now()
   );
 
   PERFORM pg_temp.as_user(user_b);
@@ -208,7 +208,7 @@ BEGIN
       monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado, comision_mxn, estado
     ) VALUES (
       com_a, org_a, pago_fac_a, emb_a, fac_a,
-      500, 200, 0.10, 20, 'pendiente'
+      500, 200, 0.10, 20, 'Devengada'
     );
 
     PERFORM pg_temp.as_user(user_b);

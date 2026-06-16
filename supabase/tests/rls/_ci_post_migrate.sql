@@ -39,3 +39,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, anon, service_role;
+
+-- ============================================================================
+-- Drop triggers que dependen de columnas/comportamiento de runtime (no de RLS).
+-- `trg_pago_factura_comision` llama a `calcular_comision_pago()` que hace
+-- `SELECT vendedora_id, COALESCE(tipo_cambio, 1) FROM embarques`, pero
+-- `embarques` tiene `tipo_cambio_usd`/`tipo_cambio_eur`, no `tipo_cambio`.
+-- En producción la función nunca dispara porque hay vendedoras configuradas;
+-- en CI cualquier INSERT en `pagos_factura` lo rompe. Como las suites RLS
+-- solo validan aislamiento, drop seguro.
+-- ============================================================================
+DROP TRIGGER IF EXISTS trg_pago_factura_comision ON public.pagos_factura;

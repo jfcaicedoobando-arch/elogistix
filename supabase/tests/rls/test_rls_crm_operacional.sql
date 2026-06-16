@@ -117,7 +117,7 @@ BEGIN
     resultado, responsable_email
   ) VALUES
     (act_a, org_a, 'llamada', 'Asunto A', 'desc', 'lead', lead_a, 'pendiente', 'v@a.mx'),
-    (act_b, org_b, 'correo', 'Asunto B', 'desc', 'lead', lead_b, 'pendiente', 'v@b.mx');
+    (act_b, org_b, 'email', 'Asunto B', 'desc', 'lead', lead_b, 'pendiente', 'v@b.mx');
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.crm_actividades WHERE id IN (act_a, act_b);
