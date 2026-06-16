@@ -216,9 +216,11 @@ Deno.serve(async (req) => {
   await admin.from('bitacora_actividad').insert({
     organization_id: cot.organization_id,
     usuario_id: userId,
+    usuario_email: userData.user.email ?? '',
+    modulo: 'cotizaciones',
     accion: anyOk ? 'cotizacion_enviada_email' : 'cotizacion_envio_email_fallido',
-    entidad: 'cotizacion',
     entidad_id: cot.id,
+    entidad_nombre: cot.folio,
     detalles: {
       envio_id: envio?.id ?? null,
       destinatarios: validRecipients.map((d) => d.email),
