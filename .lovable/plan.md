@@ -1,78 +1,81 @@
-# Plan — Continuación optimización cotizaciones
+# Plan — Pack A: UX pulido cotizaciones (bajo riesgo)
 
-Bloque 2 (cotizar sin desglose + candado embarque) ya quedó implementado en v13.27.0. Este plan cubre los dos bloques restantes.
-
----
-
-## Bloque 1 — Reordenar Paso 1 del wizard (UX conversacional)
-
-**Objetivo:** que el llenado siga el orden natural en que un ejecutivo piensa la cotización, con validación inline y resumen sticky.
-
-### Nuevo orden de secciones (acordeones)
-```text
-1. Cliente            (cliente + contacto + vendedor)
-2. Operación          (modo transporte, tipo operación, incoterm)
-3. Ruta               (origen, destino, tránsito sugerido)
-4. Mercancía          (FCL/LCL, contenedor, # piezas, peso, vol, dims, MSDS/peligroso)
-5. Tarifa vinculada   (sólo marítimo, botón "Sugerir tarifa" usando ruta+contenedor)
-6. Condiciones        (días libres, almacenaje, seguro, carta garantía)
-7. Cierre             (# embarques estimados + Notas)  ← acordeón abierto por default
-```
-
-### Tácticas UX
-- Sidebar sticky derecho con resumen vivo (cliente, ruta, contenedor, tarifa) y CTA "Continuar a costos".
-- Validación inline por sección (no esperar al submit).
-- Badge "Heredado de tarifa" en campos que se autocompletan al elegir tarifa marítima.
-- Botón "Sugerir tarifa" en sección 5 que filtra `costeo_tarifas` por ruta + contenedor y muestra Top 3.
-- Cada acordeón muestra check verde cuando sus campos requeridos están completos.
-
-### Archivos a tocar
-- `src/features/cotizacion/components/wizard/Paso1Datos.tsx` (reordenar secciones, agregar acordeones con estado de validez).
-- `src/features/cotizacion/components/wizard/CotizacionWizardLayout.tsx` (sidebar resumen sticky).
-- Nuevo: `src/features/cotizacion/components/wizard/ResumenStickyCotizacion.tsx`.
-- Nuevo: `src/features/cotizacion/components/wizard/SugerirTarifaButton.tsx` (consulta a `costeo_tarifas`).
-- Nuevo: `src/features/cotizacion/components/wizard/HeredadoBadge.tsx` (reutilizable también en Bloque 3).
-
-**Fuera de alcance:** no se cambian validaciones de negocio, ni Paso 2/3, ni el schema.
+Atacamos los 4 puntos visuales/UX que sobraban del plan, sin tocar schema ni el wizard de embarques.
 
 ---
 
-## Bloque 3 — Precarga ampliada cotización → embarque
+## A1 — Check verde por sección en Paso 1 (validación inline)
 
-Hoy `mapConceptosVentaFromCotizacion` y `mapConceptosCostoFromCotizacion` ya copian conceptos. Falta heredar el resto del contexto operativo.
+Cada bloque del Paso 1 muestra un check verde cuando sus campos requeridos están completos. Sirve de progreso visual sin agregar nuevos validadores.
 
-### Campos adicionales a precargar
-- **Ruta:** origen, destino, tránsito.
-- **Mercancía:** `tipo_carga`, `tipo_embarque`, `tipo_contenedor`, # contenedores, peso, volumen, piezas, dimensiones.
-- **MSDS / peligrosos:** flag + clase IMO + UN number.
-- **Condiciones:** días libres demoras, almacenaje, seguro, carta garantía.
-- **Tarifa marítima:** se pasa como `tarifa_id` (referencia, no copia de valores).
-- **Notas internas / cliente.**
+**Reglas de "completo" por sección:**
+| Sección       | Requeridos para check verde                                              |
+| ------------- | ------------------------------------------------------------------------ |
+| Cliente       | `clienteId` (o prospecto con empresa) + contacto                         |
+| Operación     | `modo`, `tipo`, `incoterm`                                               |
+| Ruta          | `origen`, `destino`                                                      |
+| Mercancía     | `descripcionMercancia` + (peso o piezas) según modo                      |
+| Tarifa        | sólo aplica si `modo = Marítimo`; verde si `tarifaId` existe (opcional)  |
+| Cierre        | `numContenedores >= 1` (notas opcional)                                  |
 
-### Reglas
-- Cada campo heredado lleva badge "Heredado de cotización FOLIO-XXX" (componente `HeredadoBadge` compartido con Bloque 1).
-- Cambios en el embarque **no** modifican la cotización origen.
-- Al desvincular cotización del embarque: modal con 3 opciones — conservar datos, limpiar sólo conceptos, limpiar todo lo heredado.
-
-### Archivos a tocar
-- `src/lib/mappers/embarqueWizard.ts` (extender mapper actual con los nuevos campos).
-- `src/features/embarques/hooks/useNuevoEmbarqueCotVinculada.ts` (consumir el mapper extendido).
-- `src/features/embarques/components/wizard/*` (mostrar badge "Heredado" en campos precargados).
-- Nuevo: `src/features/embarques/components/DesvincularCotizacionDialog.tsx`.
-
-**Fuera de alcance:** no se cambia el wizard de embarques (sólo recibe más campos pre-llenados), ni se altera el cálculo de margen.
+**Implementación:**
+- Nuevo `src/features/cotizacion/hooks/usePaso1SectionStatus.ts` que devuelve `{ cliente, operacion, ruta, mercancia, tarifa, cierre }` con boolean cada uno. Hook puro basado en `form.watch`.
+- `WizardSection` (ya existe en `components/shared/`) recibe prop opcional `complete?: boolean` y muestra un `Check` verde a la derecha del título.
+- `PasoDatosGenerales.tsx` consume el hook y pasa el flag a cada sección. Acordeón de cierre también muestra el check.
 
 ---
 
-## Preguntas antes de implementar
+## A2 — `HeredadoBadge` en campos auto-completados por tarifa
 
-1. ¿Default en desvinculación: **"Conservar datos"** o **"Limpiar sólo conceptos"**?
-2. ¿"Sugerir tarifa" debe ser botón manual o auto-trigger en cuanto ruta + contenedor estén llenos?
-3. ¿El sidebar sticky de resumen lo quieres también en Paso 2 y Paso 3, o sólo Paso 1?
+El componente ya existe (v13.28.0) pero no está montado. Lo agregamos donde la tarifa marítima pisa valores manuales.
+
+**Campos a marcar (sólo si `tarifaId` está set):**
+- Tiempo de tránsito → `SeccionRutaCotizacion/seccionRuta/TarifaFields`
+- Días libres destino → mismo bloque
+- Carta garantía → ya muestra `CartaGarantiaBadge`; agregamos `HeredadoBadge` al lado cuando proviene de tarifa
+- Tipo de contenedor (cuando se eligió desde el modal de tarifa)
+
+**Implementación:**
+- En cada uno de esos labels, renderizar `<HeredadoBadge tipoOrigen="tarifa" origen={tarifa.nombre || tarifa.codigo} />` cuando `tarifaOverride[campo] !== true` (es decir, el usuario aún no editó manualmente).
+- Si el usuario edita y `tarifaOverride[campo] = true`, se oculta el badge (el valor ya no es heredado).
+
+---
+
+## A3 — Filtro rápido "Sin costos" en toolbar del listado
+
+Añadimos un toggle/checkbox en `CotizacionesFilterSelects` que filtra cotizaciones donde `sin_desglose_costos = true` **Y** no tienen filas en `cotizacion_costos`.
+
+**Implementación:**
+- Toolbar: agregar un toggle "Sólo sin costos" (icono `AlertTriangle` amarillo) junto a los demás filtros.
+- Query: enriquecer `useCotizaciones` para aceptar `filtroSinCostos: boolean`. Cuando true, agregar al select un `cotizacion_costos!left(id)` con `head: true` y filtrar en cliente por `cotizacion_costos.length === 0`.
+  - Alternativa simple y suficiente para MVP: filtrar sólo por `sin_desglose_costos = true` en server y dejar que el badge del listado (A4) refleje el estado real.
+- Persistir el toggle en URL search params (mantener convenio del listado).
+
+---
+
+## A4 — Badge "Sin costos" en la columna de estado del listado
+
+Cuando una cotización tiene `sin_desglose_costos = true` y `cotizacion_costos.length === 0`, mostrar un badge amarillo "Sin costos" junto al badge de estado actual (aceptada/enviada/etc.).
+
+**Implementación:**
+- Extender el select de `useCotizaciones` para traer `cotizacion_costos(count)` agregado (o `cotizacion_costos!left(id).count`).
+- En la columna "Estado" del listado (`src/pages/cotizaciones/Cotizaciones.tsx` o sus `columnsParts`), si `(cot.sin_desglose_costos && (cot.cotizacion_costos_count ?? 0) === 0)`, renderizar `<Badge variant="warning" className="ml-2">Sin costos</Badge>`.
+- El badge desaparece automáticamente si el vendedor carga costos después (la regla canónica es el conteo real, no el flag).
 
 ---
 
 ## Entregables
-- Bump `APP_VERSION` a `13.28.0` y entrada en `CHANGELOG.md`.
-- Sin migraciones nuevas (todo el schema ya existe).
-- Tests: actualizar `embarqueWizard.test.ts` con los campos nuevos.
+
+- Bump `APP_VERSION` a `13.29.0` y entrada en `CHANGELOG.md`.
+- Sin migraciones.
+- Tests:
+  - `usePaso1SectionStatus.test.ts` (3-4 casos: vacío, parcial, completo).
+  - Smoke en listado para asegurar que el badge se renderiza cuando corresponde.
+
+**Fuera de alcance:** sidebar sticky (Pack D), Sugerir Tarifa Top 3 (Pack C), precarga ampliada al embarque (Pack B), role gate (Pack D).
+
+---
+
+## Pregunta única
+
+Para el filtro "Sin costos" (A3), ¿prefieres que filtre por el **flag** `sin_desglose_costos` (rápido, server-side, captura intención) o por el **estado real** "no tiene filas en `cotizacion_costos`" (más estricto, requiere conteo, captura riesgo real)? Mi recomendación: **estado real**, alineado con la regla canónica del candado.

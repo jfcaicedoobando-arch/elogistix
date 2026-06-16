@@ -10,7 +10,7 @@ import {
 } from "@/constants/cotizacionTerrestre";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 
-export default function SeccionDatosGeneralesCotizacion() {
+export default function SeccionDatosGeneralesCotizacion({ complete }: { complete?: boolean } = {}) {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
   const modo = watch("modo");
   const tipo = watch("tipo");
@@ -37,7 +37,7 @@ export default function SeccionDatosGeneralesCotizacion() {
 
   // Layout: 3 columnas estándar; en terrestre quitamos Incoterm y agregamos Modalidad.
   return (
-    <WizardSection title="Datos Generales" columns={3}>
+    <WizardSection title="Datos Generales" columns={3} complete={complete}>
       <FormField label="Modo de Transporte" required>
         <Select value={modo} onValueChange={v => setValue("modo", v, { shouldValidate: true, shouldDirty: true })}>
           <SelectTrigger><SelectValue /></SelectTrigger>

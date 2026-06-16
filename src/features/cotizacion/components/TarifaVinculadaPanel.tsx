@@ -24,7 +24,7 @@ const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 const normalizarNombreContenedor = (s: string) =>
   s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
 
-export default function TarifaVinculadaPanel() {
+export default function TarifaVinculadaPanel({ complete }: { complete?: boolean } = {}) {
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
   const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
@@ -73,7 +73,7 @@ export default function TarifaVinculadaPanel() {
     !!tarifa && !!tipoContenedorActual && tipoContenedorActual !== tarifa.tipo_contenedor_id;
 
   return (
-    <WizardSection title="Tarifa marítima vinculada">
+    <WizardSection title="Tarifa marítima vinculada" complete={complete}>
       <div className="space-y-3">
         {!tarifaId && (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-dashed p-3">

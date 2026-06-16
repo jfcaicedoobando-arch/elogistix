@@ -37,14 +37,27 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
     }
   }
 
+  // Badge "Sin costos" cuando la cotización se creó sin desglose y aún no
+  // tiene filas en `cotizacion_costos` (v13.29.0). La regla canónica es el
+  // conteo real, no el flag, así desaparece automáticamente al cargar costos.
+  const sinCostos =
+    !!r.sin_desglose_costos && ((r.cotizacion_costos_count ?? 0) === 0);
+
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
-      <Badge
-        variant="secondary"
-        className={`w-fit text-xs whitespace-nowrap ${getEstadoColor(estado)}`}
-      >
-        {estado}
-      </Badge>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Badge
+          variant="secondary"
+          className={`w-fit text-xs whitespace-nowrap ${getEstadoColor(estado)}`}
+        >
+          {estado}
+        </Badge>
+        {sinCostos && (
+          <Badge variant="warning" className="w-fit text-[10px] whitespace-nowrap">
+            Sin costos
+          </Badge>
+        )}
+      </div>
       {vigenciaNode && <span className="text-[10px] whitespace-nowrap">{vigenciaNode}</span>}
     </div>
   );

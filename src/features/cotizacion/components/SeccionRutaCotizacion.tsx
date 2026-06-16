@@ -16,7 +16,7 @@ import BannerOverride from "./seccionRuta/BannerOverride";
 import type { TarifaCtx } from "./seccionRuta/overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 
-export default function SeccionRutaCotizacion() {
+export default function SeccionRutaCotizacion({ complete }: { complete?: boolean } = {}) {
   const ctx = useFormContext<CotizacionFormValues>();
   const { watch, setValue } = ctx;
 
@@ -42,7 +42,7 @@ export default function SeccionRutaCotizacion() {
   };
 
   return (
-    <WizardSection title="Ruta">
+    <WizardSection title="Ruta" complete={complete}>
       <BannerOverride ctx={ctx} />
       <div className={`grid grid-cols-1 gap-4 ${conPuntoIntermedio ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <OrigenDestinoBlock ctx={ctx} usarPortSelect={usarPortSelect} esTerrestre={esTerrestre} conPuntoIntermedio={conPuntoIntermedio} />

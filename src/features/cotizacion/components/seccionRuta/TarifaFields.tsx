@@ -1,8 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Link2 } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
+import { HeredadoBadge } from "@/components/shared/HeredadoBadge";
 import CartaGarantiaBadge from "@/features/cotizacion/components/CartaGarantiaBadge";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import { OPTS, marcarOverride, type Ctx, type TarifaCtx } from "./overrideHelpers";
@@ -23,9 +22,7 @@ export function TransitoField({ ctx, tarifaCtx }: { ctx: Ctx; tarifaCtx: TarifaC
           className={locked ? "bg-muted/40" : undefined}
         />
         {tarifaCtx.tieneTarifa && tarifaCtx.hasTransito && (
-          <Badge variant="outline" className="gap-1 shrink-0">
-            <Link2 className="h-3 w-3" /> Tarifa
-          </Badge>
+          <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
         )}
       </div>
     </FormField>
@@ -75,7 +72,7 @@ export function FclLclFields({ ctx, tipoEmbarque, tarifaCtx }: { ctx: Ctx; tipoE
               className={tarifaCtx.hasDiasLibres ? "bg-muted/40" : undefined}
             />
             {tarifaCtx.tieneTarifa && tarifaCtx.hasDiasLibres && (
-              <Badge variant="outline" className="gap-1 shrink-0"><Link2 className="h-3 w-3" /> Tarifa</Badge>
+              <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
             )}
           </div>
         </FormField>

@@ -6,8 +6,11 @@ import type { CotizacionRow } from "@/features/cotizacion/types";
 import { fromDb } from "@/lib/supabase/cast";
 
 // ─── Columnas reutilizables ─────────────────────────────────────────────────
+// `cotizacion_costos(count)` agrega el conteo de filas relacionadas, que
+// usamos para decidir si una cotización tiene costos cargados o sigue
+// "Sin costos" (v13.29.0).
 export const COTIZACION_LIST_COLUMNS =
-  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos" as const;
+  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, cotizacion_costos(count)" as const;
 
 export const COTIZACION_ACEPTADA_COLUMNS =
   "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas" as const;
@@ -40,7 +43,14 @@ export async function fetchCotizaciones(organizationId: string | null) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return fromDb<CotizacionRow[]>(data);
+  // Aplanamos `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N`
+  // para consumir más cómodo en el listado.
+  type RawRow = Record<string, unknown> & { cotizacion_costos?: Array<{ count: number }> };
+  const flattened = (data as unknown as RawRow[] | null ?? []).map((r) => ({
+    ...r,
+    cotizacion_costos_count: r.cotizacion_costos?.[0]?.count ?? 0,
+  }));
+  return fromDb<Array<CotizacionRow & { cotizacion_costos_count: number }>>(flattened);
 }
 
 export async function fetchCotizacionesAceptadas(organizationId: string | null) {
