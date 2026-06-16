@@ -135,9 +135,10 @@ export function buildEmbarquePayload(
     ...partesAereo(values),
     ...partesTerrestre(values),
     ...partesFinancieras(values),
+    ...partesHerencia(values),
     ...totalesDesdeContenedores(values),
     operador,
-  };
+  } as EmbarqueInsert;
 }
 
 
