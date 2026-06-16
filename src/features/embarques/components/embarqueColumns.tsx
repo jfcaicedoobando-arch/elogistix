@@ -10,7 +10,8 @@ import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { sortByString, sortByDate, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
 
 export interface DocsInfo { pendientes: number; total: number }
 
