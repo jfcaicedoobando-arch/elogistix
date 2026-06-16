@@ -45,7 +45,6 @@ export function useEditarProveedorController(
       setForm(normalizar(proveedor));
       setTouched({});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, proveedor]);
 
   const isLogistico = form.categoria === "Logistico";
