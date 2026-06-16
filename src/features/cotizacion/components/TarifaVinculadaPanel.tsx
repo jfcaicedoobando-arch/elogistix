@@ -96,7 +96,34 @@ export default function TarifaVinculadaPanel({
   return (
     <WizardSection title="Tarifa marítima vinculada" complete={complete}>
       <div className="space-y-3">
-        {!tarifaId && <SugerenciasTarifaInline />}
+        {!tarifaId && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="size-4 text-primary mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-foreground">Tarifa requerida para continuar</p>
+                <p className="text-muted-foreground">
+                  Vincula una tarifa marítima vigente. Esto fija el costo real y
+                  acelera la cotización auto-cargando flete y recargos al Paso 2.
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={irACrearTarifa}
+                className="shrink-0"
+              >
+                <Plus className="size-4 mr-1" /> Crear tarifa
+              </Button>
+            </div>
+            <SugerenciasTarifaInline
+              onAutocargaCostos={onAutocargaCostos}
+              markup={markup}
+              cantidad={cantidad}
+            />
+          </div>
+        )}
 
 
         {tarifaId && isLoading && (
