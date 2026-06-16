@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.46.4] - 2026-06-16
+- **fix(ci/rls-snapshot)**: La suite RLS de CI fallaba con `relation "public.tracking_webhook_log" does not exist` porque la tabla existía sólo en producción y nunca fue creada por una migración. Se añade migración idempotente que crea la tabla (con sus índices, GRANTs, RLS y policy `Super admin read webhook log`) si falta, para que el snapshot de pruebas pueda replicarla.
+
 ## [13.46.3] - 2026-06-16
 - **fix(rls/contador)**: El rol `contador` estaba bloqueado por RLS al crear/editar `clientes`, `contactos_cliente`, `conceptos_factura`, `conceptos_venta`, `conceptos_costo`, `facturas` y `pagos_factura` (error `42501`). Se recrean las políticas `Tenant CRUD` agregando `contador` a la lista de roles permitidos. `proveedores`, `proveedor_facturas` y `pagos_proveedor` ya lo incluían — sin cambios.
 
