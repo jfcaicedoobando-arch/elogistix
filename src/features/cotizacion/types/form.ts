@@ -50,6 +50,10 @@ export interface CotizacionFormValues {
   modalidadEquipo: string;
   /** Punto intermedio de carga/descarga (terrestre Porta Contenedor). */
   puntoIntermedio: string;
+  /** Tarifa marítima del módulo Costeo vinculada (fuente de verdad). */
+  tarifaId: string | null;
+  /** Campos editados manualmente tras elegir tarifa (para auditoría). */
+  tarifaOverride: Record<string, boolean>;
 }
 
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
@@ -93,6 +97,8 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   numContenedores: 1,
   modalidadEquipo: "",
   puntoIntermedio: "",
+  tarifaId: null,
+  tarifaOverride: {},
 };
 
 export interface CotizacionInitialData {
@@ -138,6 +144,8 @@ export interface CotizacionInitialData {
   msds_archivo: string | null;
   modalidad_equipo?: string | null;
   punto_intermedio?: string | null;
+  tarifa_id?: string | null;
+  tarifa_override?: unknown;
 }
 
 export interface CotizacionInitialCosto {

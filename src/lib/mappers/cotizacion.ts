@@ -111,5 +111,7 @@ export function buildPaso1Data(
     vigencia_dias: vigenciaDias(values.validezPropuesta),
     notas: values.notas,
     operador: userEmail,
+    tarifa_id: values.tarifaId ?? null,
+    tarifa_override: values.tarifaOverride ?? {},
   };
 }
