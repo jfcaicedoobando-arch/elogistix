@@ -1,58 +1,62 @@
-# Pack C — Sugerir Tarifa Top 3 inline en el wizard
+# Pack D — Sidebar sticky de progreso + Role gate
 
-Objetivo: cuando el usuario captura ruta + tipo de contenedor en el Paso 1 (modo Marítimo) y todavía no ha vinculado tarifa, el wizard muestra **proactivamente las 3 mejores tarifas vigentes** en cards compactas, sin necesidad de abrir el modal "Buscar tarifa". Un clic en "Elegir" la vincula con la lógica existente.
+Cierre del roadmap del wizard de cotización: hacer visible el avance del Paso 1 mientras el usuario hace scroll, y blindar el atajo destructivo "Cotizar sin desglose" para que sólo los roles autorizados puedan dispararlo.
 
-## Alcance funcional
+## D1 — Sidebar sticky de progreso (Paso 1)
 
-### C1 — Sugerencias inline
-- Cuando `modo === "Marítimo"` y hay `origen` + `destino` + `tipoContenedor` resueltos a IDs del catálogo y `tarifaId` está vacío → render automático de hasta 3 cards Top con la misma `TarifaResultCard` que usa el modal.
-- Heading: `"Tarifas sugeridas para esta ruta"` + contador `"3 vigentes"`.
-- Botón secundario `"Ver todas / cambiar filtros"` abre el `BuscarTarifaDialog` existente (con `initial` precargado), por si el usuario quiere ajustar fecha u otra combinación.
+### Funcional
+- Columna vertical fija a la izquierda del contenido del Paso 1 (desktop ≥ `lg`), `w-56`, sticky `top-4`.
+- Lista las 6 secciones (Cliente, Operación, Ruta, Mercancía, Tarifa, Cierre) con icono de estado:
+  - **Verde + check**: completa (`usePaso1SectionStatus` ya lo calcula).
+  - **Gris + círculo vacío**: pendiente.
+  - **Azul + punto activo**: sección actualmente visible en viewport (detectada con `IntersectionObserver`).
+- Click en una sección → `scrollIntoView({ behavior: "smooth", block: "start" })` sobre el `WizardSection` correspondiente.
+- Footer del sidebar: contador `"3 de 6 completas"` y barra de progreso fina (`Progress` de shadcn).
+- En mobile/tablet (`< lg`) se oculta (los checks por sección que ya existen cubren el feedback).
+- En Pasos 2, 3, 4 no se renderiza.
 
-### C2 — Estados auxiliares
-- **Resolviendo IDs**: si origen/destino vienen como texto libre (PortSelect guarda `"Shanghai, China (CNSHA)"`), resolver buscando en `usePuertos()` por coincidencia de nombre (mismo patrón que ya usa `TarifaVinculadaPanel` para `tipoContenedor`).
-- **Sin coincidencia** (origen/destino libres o no en catálogo): mensaje suave `"Selecciona puertos del catálogo para ver sugerencias."` con el botón "Buscar tarifa" actual como fallback.
-- **Sin resultados vigentes**: mensaje informativo `"No hay tarifas vigentes para esta combinación. Cotiza manualmente o captura una en Tarifas marítimas."`.
-- **Loading**: skeleton de 3 cards.
+### Técnico
+- Nuevo `src/features/cotizacion/components/wizard/Paso1ProgressSidebar.tsx` (~120 líneas).
+  - Consume `usePaso1SectionStatus()` y un nuevo hook `useActiveSection(ids: string[])` que devuelve el id de la sección actualmente visible (basado en `IntersectionObserver`, cleanup en useEffect).
+- `WizardSection` ya existe; añadir prop opcional `id?: string` que se proyecta al `section` raíz para que el observer y el scroll funcionen.
+- `PasoDatosGenerales.tsx` pasa ids estables (`cliente`, `operacion`, `ruta`, `mercancia`, `tarifa`, `cierre`) a cada `WizardSection`.
+- `CotizacionWizardLayout.tsx`: cuando `currentStep === 1`, envuelve el contenido del paso en un grid `lg:grid-cols-[14rem_1fr] gap-6` y monta `<Paso1ProgressSidebar />` en la columna izquierda.
 
-### C3 — Cambio de combinación
-- Si el usuario cambia origen/destino/tipo después de vincular, mostrar inline `"La combinación cambió — ¿re-sugerir tarifas?"` con botón que limpia el vínculo y re-dispara la sugerencia (no rompe el override automáticamente; sólo quita el binding de tarifa, los campos manuales se conservan).
+### Tests
+- `usePaso1SectionStatus.test.ts` ya existe; añadir 1 caso de cómputo del contador "completas".
+- Smoke manual: scroll por las 6 secciones → indicador azul sigue al viewport; click en "Mercancía" → salta a esa sección.
 
-### C4 — Telemetría
-- Registrar evento `tarifa_sugerida_aplicada` en `bitacora_actividad` cuando el usuario elige una sugerencia inline (vs abrir el modal), para medir adopción del Top 3 proactivo. Campos: `tarifa_id`, `ranking` (1/2/3), `cotizacion_id` o `borrador=true`.
+## D2 — Role gate "Cotizar sin desglose"
+
+### Funcional
+- El botón **"Cotizar sin desglose"** (atajo destructivo del Paso 1) deja de mostrarse para roles operativos sin autoridad para tomar la decisión.
+- Roles autorizados: `super_admin`, `admin_org`, `admin`, `gerente_operaciones`.
+- Roles bloqueados: `coordinador_logistico`, `operador`, `vendedor`, `ejecutivo_pricing`, `contador`, `tesorero`, `gerente_visor`, cualquier otro.
+- Si un usuario no autorizado intenta el atajo por URL/teclado, el handler en el wizard también lo bloquea y muestra toast `"Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin."`.
+
+### Técnico
+- `src/hooks/shared/usePermissions.ts`: añadir capability derivada:
+  ```ts
+  const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
+    "super_admin", "admin_org", "admin", "gerente_operaciones",
+  ];
+  // ...
+  canCotizarSinDesglose: has(COTIZAR_SIN_DESGLOSE, roleStr),
+  ```
+- `CotizacionWizardFooter.tsx`: nueva prop `canSkipCostos?: boolean`. Render del botón gated por `showSinDesglose && canSkipCostos`.
+- `CotizacionWizardLayout.tsx`: consume `usePermissions().canCotizarSinDesglose`, lo pasa al footer y también al guard en `handleConfirmSinDesglose` (defensa en profundidad). Si gate falla, toast destructivo.
+- `usePermissions.test.tsx`: añadir 2 casos (`gerente_operaciones` → true; `vendedor` → false).
 
 ## Fuera de alcance
-- Re-ranking por preferencias del cliente (último naviera usado, etc.) — el algoritmo Top 3 actual ya prioriza precio + tránsito + carta garantía; no se toca.
-- Sugerencias para modos no marítimos.
-- Notificación push cuando aparezca una tarifa mejor después de vincular.
+- Gate del botón "Generar embarques" (ya cubierto por RLS y validación de costos del Pack v13.27.0).
+- Sticky de progreso para Pasos 2/3/4 (esas pantallas son lineales sin sub-secciones).
+- Personalización de columnas/ancho del sidebar por usuario.
 
-## Detalles técnicos
-
-### Archivos nuevos
-- `src/features/cotizacion/components/seccionRuta/SugerenciasTarifaInline.tsx` (~150 líneas) — componente que:
-  - Consume `useFormContext<CotizacionFormValues>` para `origen`, `destino`, `tipoContenedor`, `tarifaId`.
-  - Consume `usePuertos()` y `useTiposContenedor()` para resolver IDs.
-  - Consume `useTopTarifas({ puertoOrigenId, puertoDestinoId, tipoContenedorId, fecha: hoy })`.
-  - Renderiza 3 `TarifaResultCard` con `onElegir` que aplica la tarifa (misma función `aplicarTarifa` que vive en `TarifaVinculadaPanel`, extraída a un helper compartido).
-- `src/features/cotizacion/components/seccionRuta/aplicarTarifa.ts` — helper puro `aplicarTarifaAlForm(setValue, trigger, row, opts)` extraído de `TarifaVinculadaPanel`.
-- `src/features/cotizacion/components/seccionRuta/__tests__/SugerenciasTarifaInline.test.tsx` — 3 casos: resuelve IDs por nombre, render Top 3, mensaje "sin coincidencia".
-
-### Archivos a tocar
-- `src/features/cotizacion/components/TarifaVinculadaPanel.tsx` — sustituir el bloque `!tarifaId` actual por `<SugerenciasTarifaInline />`; usar el helper compartido `aplicarTarifaAlForm`.
-- `src/lib/services/bitacora.ts` (o equivalente existente) — añadir helper `logTarifaSugeridaAplicada({ tarifaId, ranking, cotizacionId? })`.
-
-### Sin migración
-La RPC `top_tarifas` ya existe y se consume vía `fetchTopTarifas` / `useTopTarifas`. No hay cambios en BD.
-
-### Versionado
-- Bump `APP_VERSION` a `13.31.0`.
-- Entrada en `CHANGELOG.md` bajo `## [13.31.0] - 2026-06-16`.
-
-## Tests
-- Unit: 3 casos en `SugerenciasTarifaInline.test.tsx` (mock de `useTopTarifas`, `usePuertos`, `useTiposContenedor`).
-- Smoke manual: nueva cotización marítima → seleccionar Shanghai/Manzanillo/40HC en Paso 1 → ver 3 cards bajo "Tarifa" → click "Elegir #2" → verifica que campos se autollenan y badge "Heredado de tarifa" aparece.
+## Versionado
+- Bump `APP_VERSION` a `13.32.0`.
+- Entrada en `CHANGELOG.md` bajo `## [13.32.0] - 2026-06-16` con 2 bullets (sidebar + role gate).
 
 ## Pregunta de decisión
-Cuando el usuario YA tiene una tarifa vinculada y cambia origen/destino/tipo, ¿qué hacemos?
-- **A.** Mantener la tarifa vinculada y mostrar warning amarillo "Combinación cambió" con botón manual "Re-sugerir". **Recomendado** (no pisar trabajo del usuario).
-- **B.** Auto-desvincular y volver a mostrar las sugerencias inline inmediatamente.
+Para el role gate, ¿quieres **ocultar** el botón a los roles no autorizados (más limpio, recomendado) u **mostrarlo deshabilitado** con tooltip explicativo (más educativo pero ruidoso)?
+- **A.** Ocultar (recomendado).
+- **B.** Mostrar deshabilitado con tooltip "Requiere rol de gerencia o admin".
