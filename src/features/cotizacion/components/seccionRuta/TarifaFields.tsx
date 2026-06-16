@@ -72,7 +72,7 @@ export function FclLclFields({ ctx, tipoEmbarque, tarifaCtx }: { ctx: Ctx; tipoE
               className={tarifaCtx.hasDiasLibres ? "bg-muted/40" : undefined}
             />
             {tarifaCtx.tieneTarifa && tarifaCtx.hasDiasLibres && (
-              <Badge variant="outline" className="gap-1 shrink-0"><Link2 className="h-3 w-3" /> Tarifa</Badge>
+              <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
             )}
           </div>
         </FormField>
