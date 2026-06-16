@@ -85,7 +85,7 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
   ]);
 
   const cvList = (cv ?? []) as Array<{ estado_facturacion: string }>;
-  const docList = ((docs ?? []) as Array<{ nombre: string; estado: string; archivo: string | null }>).map((d) => ({
+  const docList: DocumentoCtx[] = ((docs ?? []) as Array<{ nombre: string; estado: string; archivo: string | null }>).map((d) => ({
     nombre: d.nombre,
     estado: d.estado,
     tiene_archivo: Boolean(d.archivo),
@@ -108,28 +108,6 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
     proformas: ((proformas ?? []) as Array<{ folio: string; estado: string }>).map((p) => ({ folio: p.folio, estado: p.estado })),
     documentos: docList,
   };
-}
-
-/** Agrupa documentos por nombre y marca duplicados explícitamente. */
-function formatDocumentos(docs: DocumentoCtx[]): string {
-  if (docs.length === 0) return "—";
-  const byName = new Map<string, DocumentoCtx[]>();
-  for (const d of docs) {
-    const arr = byName.get(d.nombre) ?? [];
-    arr.push(d);
-    byName.set(d.nombre, arr);
-  }
-  const lines: string[] = [];
-  for (const [nombre, rows] of byName) {
-    if (rows.length === 1) {
-      const r = rows[0];
-      lines.push(`- ${nombre}: ${r.estado}${r.tiene_archivo ? " (con archivo)" : ""}`);
-    } else {
-      const estados = rows.map((r) => `${r.estado}${r.tiene_archivo ? "+archivo" : ""}`).join(", ");
-      lines.push(`- ${nombre}: [${estados}] ← DUPLICADO (${rows.length} filas)`);
-    }
-  }
-  return lines.join("\n");
 }
 
 async function callGateway(apiKey: string, userPrompt: string): Promise<Response> {
