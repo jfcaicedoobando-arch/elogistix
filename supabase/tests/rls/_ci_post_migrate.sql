@@ -26,19 +26,3 @@ BEGIN
     );
   END LOOP;
 END $$;
-
--- ============================================================================
--- GRANTs CI-only. En Supabase managed, los roles `authenticated`, `anon` y
--- `service_role` reciben privilegios por default sobre el schema `public` vía
--- la configuración de la plataforma. En CI corremos un Postgres vainilla, así
--- que replicamos esa concesión para que las pruebas RLS puedan ejercitar las
--- policies (de otro modo fallan con "permission denied" antes de evaluar RLS).
--- Esto NO se aplica a producción — vive sólo en este script de CI.
--- ============================================================================
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
-

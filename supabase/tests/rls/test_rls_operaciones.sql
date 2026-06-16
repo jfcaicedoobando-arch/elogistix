@@ -68,10 +68,10 @@ BEGIN
   -- TEST 1: proveedores — aislamiento
   -- =========================================================================
   INSERT INTO public.proveedores(
-    id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, tipo, categoria
+    id, nombre, rfc, contacto, email, telefono, moneda_preferida, organization_id, categoria
   ) VALUES
-    (prov_a, 'Prov A', 'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor),
-    (prov_b, 'Prov B', 'RFCB010101BBB', 'C', 'b@b', '555', 'MXN', org_b, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor);
+    (prov_a, 'Prov A', 'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera'),
+    (prov_b, 'Prov B', 'RFCB010101BBB', 'C', 'b@b', '555', 'MXN', org_b, 'Naviera');
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.proveedores WHERE id IN (prov_a, prov_b);
