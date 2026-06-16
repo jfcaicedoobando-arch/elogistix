@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useCallback, KeyboardEvent } from "react";
+import { ReactNode, useRef, useCallback, KeyboardEvent } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/features/embarques/components/StepIndicator";
