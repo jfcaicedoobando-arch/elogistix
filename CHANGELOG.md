@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.27] - 2026-06-16
+- **fix(db)**: `calcular_comision_pago` leía `embarques.tipo_cambio` (columna inexistente; la real es `tipo_cambio_usd`). Rompía cualquier INSERT/UPDATE en `pagos_factura`. Corregido vía migración.
+- **fix(ci/rls)**: 
+  - `test_rls_operaciones.sql` L164-165: enum `tipo_evento_tracking` no acepta `'Confirmado'` → `'Zarpe'`.
+  - `test_rls_financiero_critico.sql` L130: `'Cotizada'` no existe en enum → `'Enviada'` + folio.
+  - `test_rls_roles_no_admin.sql` L84: misma corrección de enum + folio.
+
 ## [13.44.26] - 2026-06-16
 - **fix(ci/rls)**: `cotizaciones.folio` es NOT NULL. Añadido `folio='COT-RLS-A'` al INSERT del test de aislamiento de cotizaciones.
 
