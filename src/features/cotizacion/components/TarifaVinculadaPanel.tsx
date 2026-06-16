@@ -8,7 +8,8 @@
  */
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { Link2, Unlink, RefreshCcw, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Link2, Unlink, RefreshCcw, AlertTriangle, Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardSection } from "@/components/shared/WizardSection";
@@ -17,16 +18,28 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import CartaGarantiaBadge from "./CartaGarantiaBadge";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
-import { aplicarTarifaAlForm } from "./seccionRuta/aplicarTarifa";
+import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
 const normalizarNombreContenedor = (s: string) =>
   s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
 
-export default function TarifaVinculadaPanel({ complete }: { complete?: boolean } = {}) {
+interface Props {
+  complete?: boolean;
+  /** Si se provee, los recargos+flete de la tarifa elegida se inyectan como filas de costo. */
+  onAutocargaCostos?: (filas: FilaCostoLocal[]) => void;
+  markup?: number;
+  cantidad?: number;
+}
+
+export default function TarifaVinculadaPanel({
+  complete, onAutocargaCostos, markup, cantidad,
+}: Props = {}) {
+  const navigate = useNavigate();
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
   const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
@@ -35,12 +48,11 @@ export default function TarifaVinculadaPanel({ complete }: { complete?: boolean 
   const tarifaId = watch("tarifaId");
   const validez = watch("validezPropuesta");
   const tipoContenedorActual = watch("tipoContenedor");
+  const origen = watch("origen");
+  const destino = watch("destino");
 
   const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
 
-  // El Paso 1 guarda la etiqueta del tipo de contenedor (ej. "40' High Cube"),
-  // pero el modal Buscar tarifa espera el id del catálogo. Resolvemos por nombre
-  // normalizado para precargar el campo cuando el usuario abre el modal.
   const tipoContenedorIdInicial = (() => {
     if (!tipoContenedorActual) return undefined;
     if (tiposContenedor.some((t) => t.id === tipoContenedorActual)) {
@@ -52,13 +64,28 @@ export default function TarifaVinculadaPanel({ complete }: { complete?: boolean 
 
   if (modo !== "Marítimo") return null;
 
+  const aplicarOptions: AplicarTarifaOptions = {
+    onAutocargaCostos,
+    markup,
+    cantidad,
+  };
+
   const aplicarTarifa = (row: TopTarifaRow) => {
-    aplicarTarifaAlForm(setValue, trigger, row);
+    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions);
   };
 
   const quitarVinculo = () => {
     setValue("tarifaId", null, OPTS);
     setValue("tarifaOverride", {}, OPTS);
+  };
+
+  const irACrearTarifa = () => {
+    const qs = new URLSearchParams();
+    if (origen) qs.set("origen", origen);
+    if (destino) qs.set("destino", destino);
+    if (tipoContenedorIdInicial) qs.set("tipoContenedor", tipoContenedorIdInicial);
+    qs.set("returnTo", "/cotizaciones/nueva");
+    navigate(`/costeo/tarifas?${qs.toString()}`);
   };
 
   const vencidaAntesDeValidez =
@@ -69,7 +96,34 @@ export default function TarifaVinculadaPanel({ complete }: { complete?: boolean 
   return (
     <WizardSection title="Tarifa marítima vinculada" complete={complete}>
       <div className="space-y-3">
-        {!tarifaId && <SugerenciasTarifaInline />}
+        {!tarifaId && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="size-4 text-primary mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-foreground">Tarifa requerida para continuar</p>
+                <p className="text-muted-foreground">
+                  Vincula una tarifa marítima vigente. Esto fija el costo real y
+                  acelera la cotización auto-cargando flete y recargos al Paso 2.
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={irACrearTarifa}
+                className="shrink-0"
+              >
+                <Plus className="size-4 mr-1" /> Crear tarifa
+              </Button>
+            </div>
+            <SugerenciasTarifaInline
+              onAutocargaCostos={onAutocargaCostos}
+              markup={markup}
+              cantidad={cantidad}
+            />
+          </div>
+        )}
 
 
         {tarifaId && isLoading && (

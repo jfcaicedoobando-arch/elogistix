@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.35.0] - 2026-06-16
+- **feat(cotizacion/tarifa-first)**: Reordenamiento del Paso 1 del wizard de cotización marítima para incentivar el flujo "tarifa primero, cotización después".
+  - **Nuevo orden (marítimo)**: Cliente → Operación → Ruta → **Tarifa (guardián)** → Mercancía → Cierre. Aéreo/Terrestre/General conservan su orden actual.
+  - **Bloqueo duro**: `validatePaso1` ahora detiene el avance si `modo === "Marítimo"` y no hay `tarifaId` vinculada. Mensaje claro indicando ir a la sección Tarifa.
+  - **Guardián visible**: el bloque "Sin tarifa" en `TarifaVinculadaPanel` se rediseñó con borde y fondo `primary/5`, ícono `AlertCircle` y texto "Tarifa requerida para continuar".
+  - **CTA "Crear tarifa"**: nuevo botón que navega a `/costeo/tarifas?origen=...&destino=...&tipoContenedor=...&returnTo=/cotizaciones/nueva` para crear la tarifa faltante sin perder contexto.
+  - **Auto-carga de costos**: al vincular tarifa (sugerencias o diálogo), se descargan los recargos de `costeo_tarifa_recargos` y se inyectan filas en Costos & P&L con `costo_unitario = monto` y `precio_venta = costo × (1 + markup)`. Markup leído de `configuracion.markup_default_maritimo` (fallback 0.15 = 15%). Las filas auto-cargadas llevan `notas = "Auto-cargado desde tarifa marítima"`; cambiar de tarifa reemplaza esas filas pero conserva las manuales.
+  - **Sidebar de progreso**: reordenado para mostrar Tarifa antes de Mercancía cuando el modo es marítimo.
+  - **Bitácora**: nuevo evento `cotizacion_bloqueada_sin_tarifa` registrado en `bitacora_actividad` cada vez que el guardián frena el avance, para medir adopción.
+
 ## [13.34.1] - 2026-06-16
 - **feat(costeo/ux)**: Fase 3 de pulido visual del módulo Costeo.
   - **Fechas localizadas**: `TarifaResultCard` ahora muestra "Vigente hasta" en formato `DD/MM/YYYY` (es-MX) en lugar del ISO crudo.

@@ -1,0 +1,77 @@
+/**
+ * Construye filas de costos internos (P&L) a partir de una tarifa marítima
+ * vinculada. v13.35.0 — política tarifa-first.
+ *
+ *  - Genera 1 fila por flete base (concepto "Flete marítimo").
+ *  - Genera 1 fila por recargo (BAF, LSS, ISPS, Cargos en Origen/Destino, etc.).
+ *  - Aplica un markup configurable a `precio_venta` (default 15%).
+ *  - Moneda fija USD (las tarifas se cotizan en USD).
+ *
+ * No hace I/O. Sólo transforma datos. El llamador decide si remplaza o
+ * agrega a `costosInternos`.
+ */
+import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import type { TopTarifaRow, CosteoTarifaRecargo } from "@/features/costeo/types";
+
+export interface BuildCostosDesdeTarifaArgs {
+  tarifa: Pick<
+    TopTarifaRow,
+    "flete_base" | "naviera_nombre" | "tipo_contenedor_nombre"
+  >;
+  recargos: CosteoTarifaRecargo[];
+  /** Markup decimal aplicado a costo para sugerir precio_venta (0.15 = 15%). */
+  markup: number;
+  /** Cantidad por defecto, normalmente número de contenedores. */
+  cantidad?: number;
+}
+
+const aplicarMarkup = (costo: number, markup: number): number => {
+  if (!Number.isFinite(costo) || costo <= 0) return 0;
+  const factor = 1 + (Number.isFinite(markup) && markup >= 0 ? markup : 0);
+  return Math.round(costo * factor * 100) / 100;
+};
+
+export function buildCostosDesdeTarifa({
+  tarifa,
+  recargos,
+  markup,
+  cantidad = 1,
+}: BuildCostosDesdeTarifaArgs): FilaCostoLocal[] {
+  const filas: FilaCostoLocal[] = [];
+  const proveedor = tarifa.naviera_nombre ?? "";
+  const unidad = "contenedor";
+
+  const fleteBase = Number(tarifa.flete_base ?? 0);
+  if (fleteBase > 0) {
+    filas.push({
+      concepto: `Flete marítimo (${tarifa.tipo_contenedor_nombre ?? ""})`.trim(),
+      moneda: "USD",
+      proveedor,
+      cantidad,
+      costo_unitario: fleteBase,
+      precio_venta: aplicarMarkup(fleteBase, markup),
+      unidad_medida: unidad,
+      aplica_iva: false,
+      notas: "Auto-cargado desde tarifa marítima",
+    });
+  }
+
+  for (const r of recargos) {
+    const monto = Number(r.monto ?? 0);
+    if (monto <= 0) continue;
+    const ladoTxt = r.lado ? ` (${r.lado})` : "";
+    filas.push({
+      concepto: `${r.concepto}${ladoTxt}`,
+      moneda: "USD",
+      proveedor,
+      cantidad,
+      costo_unitario: monto,
+      precio_venta: aplicarMarkup(monto, markup),
+      unidad_medida: unidad,
+      aplica_iva: false,
+      notas: "Auto-cargado desde tarifa marítima",
+    });
+  }
+
+  return filas;
+}

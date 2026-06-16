@@ -9,15 +9,31 @@
 import type { UseFormSetValue, UseFormTrigger } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toDbJson } from "@/lib/supabase/cast";
+import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
+import { buildCostosDesdeTarifa } from "./buildCostosDesdeTarifa";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
+
+export interface AplicarTarifaOptions {
+  /**
+   * Si se provee, se descargan los recargos y se construyen filas de costo
+   * para auto-cargar la sección Costos & P&L con markup aplicado.
+   */
+  onAutocargaCostos?: (filas: FilaCostoLocal[]) => void;
+  /** Markup decimal (0.15 = 15%) aplicado al precio de venta sugerido. */
+  markup?: number;
+  /** Cantidad por defecto (normalmente nº de contenedores). */
+  cantidad?: number;
+}
 
 export function aplicarTarifaAlForm(
   setValue: UseFormSetValue<CotizacionFormValues>,
   trigger: UseFormTrigger<CotizacionFormValues>,
   row: TopTarifaRow,
+  options: AplicarTarifaOptions = {},
 ): void {
   setValue("tarifaId", row.id, OPTS);
   setValue("tarifaOverride", {}, OPTS);
@@ -33,6 +49,21 @@ export function aplicarTarifaAlForm(
     "cartaGarantia",
     "tipoContenedor",
   ]);
+
+  // Auto-carga de costos (best-effort, no bloquea el flujo si falla).
+  if (options.onAutocargaCostos) {
+    const cb = options.onAutocargaCostos;
+    const markup = options.markup ?? 0.15;
+    const cantidad = options.cantidad ?? 1;
+    void fetchRecargosDeTarifa(row.id)
+      .then((recargos) => {
+        const filas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad });
+        if (filas.length > 0) cb(filas);
+      })
+      .catch(() => {
+        // Silencioso: el usuario siempre puede capturar manualmente.
+      });
+  }
 }
 
 /**
