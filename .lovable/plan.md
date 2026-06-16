@@ -1,49 +1,71 @@
-## Diagnóstico CI – Suite RLS (7 jobs en rojo)
+# Revisión de `.github/workflows/rls-tests.yml`
 
-Análisis del zip `logs_74453342868.zip`. Cada job RLS aborta en el primer `DO $$ … $$` por uno de estos cinco síntomas:
+## Veredicto general
 
-| # | Suite | Causa raíz | Tipo |
-|---|---|---|---|
-| 1 | `isolation` | `ERROR: permission denied for table clientes` | **Bug app**: falta `GRANT … ON public.clientes TO authenticated` |
-| 2 | `operaciones` | `permission denied for table proveedores` | **Bug app**: falta GRANT en `public.proveedores` |
-| 3 | `financiero_critico` | `permission denied for table cuentas_bancarias` | **Bug app**: revisar si un REVOKE posterior eliminó el grant (la migración original sí lo tiene) |
-| 4 | `tarifas_y_costeo` | FK `costeo_rutas_puerto_origen_id_fkey` | **Bug test**: falta seed de puerto en el bloque DO |
-| 5 | `crm_operacional` | CHECK `crm_leads_score_check` (rango 1‑5) | **Bug test**: score fuera de rango |
-| 6 | `roles_no_admin` | enum `estado_factura` no acepta `'Pendiente'` | **Bug test**: valor inexistente (válidos: Borrador / Emitida / Pagada / Vencida / Cancelada / Parcialmente pagada) |
-| 7 | `financiero` | Mismo enum `estado_factura: 'Pendiente'` | **Bug test** |
+**Sí, está bien hecho.** Es un workflow sólido y por encima del promedio:
 
----
+- Imagen Postgres pinneada por **digest SHA256** (reproducible, sin drift).
+- Actions pinneadas por SHA (`checkout`, `upload/download-artifact`) — buena práctica de supply-chain.
+- `permissions: contents: read` (mínimo privilegio).
+- `concurrency` con `cancel-in-progress` para no apilar runs.
+- `timeout-minutes` en ambos jobs (evita runners colgados).
+- Patrón **prepare-once + matrix-restore** vía `pg_dump`/`pg_restore` — ahorra ~10x vs re-bootstrap por suite.
+- `fail-fast: false` en la matriz para ver todas las suites rojas en un solo run.
+- `psql -v ON_ERROR_STOP=1 -X -q` (falla rápido, sin `.psqlrc`).
+- Filtros `paths:` correctos en triggers.
+- Roles Supabase (`anon`, `authenticated`, `service_role`, …) creados antes del restore — corrige el problema clásico de "role does not exist".
+- Comentarios explicando *por qué* se mantienen los GRANTs (lección aprendida del bug reciente).
 
-## Plan de remediación
+## Mejoras propuestas (ordenadas por impacto)
 
-### 1. Nueva migración `…_rls_grants_missing.sql`
-- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.clientes TO authenticated;`
-- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.proveedores TO authenticated;`
-- `GRANT ALL ON public.clientes, public.proveedores TO service_role;`
-- Re-aplicar `GRANT … ON public.cuentas_bancarias` por idempotencia (cubre el caso 3 sin necesidad de auditar línea por línea quién revocó).
-- Recorrer `supabase/tests/rls/_ci_verify_rls.sql` y, si existe el chequeo, extenderlo para fallar cuando una tabla pública con RLS no tenga grants a `authenticated`.
+### 1. Cachear el snapshot por hash de migraciones (alto impacto)
+Hoy el job `rls` corre en **cada** PR aunque las migraciones no cambien. Añadir `actions/cache` con key derivada de `hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql')` y saltar bootstrap+migrations si hay hit. Ahorra 1–3 min por PR.
 
-### 2. Fix de los tests SQL (sólo datos de seed)
-- `test_rls_crm_operacional.sql`: cambiar `score = 10` (o el valor inválido) por un entero en `[1,5]`.
-- `test_rls_roles_no_admin.sql` y `test_rls_financiero.sql`: reemplazar `'Pendiente'` → `'Emitida'` en todos los INSERT/UPDATE/SELECT sobre `facturas.estado`.
-- `test_rls_tarifas_y_costeo.sql`: antes del INSERT de `costeo_rutas` insertar un puerto de prueba (`INSERT INTO public.puertos(...) RETURNING id INTO puerto_x`) o usar un puerto existente del seed; pasar ese `id` a `puerto_origen_id` y `puerto_destino_id`.
+### 2. Reportar resultados de cada suite en el PR
+Hoy hay que abrir los logs. Capturar el stdout de cada suite a un archivo y publicarlo con `actions/github-script` o `dorny/test-reporter` como check summary. Mínimo, hacer `tee` a `suite-${{ matrix.suite }}.log` y subirlo como artifact con `if: always()`.
 
-### 3. Validación local previa al push
-- Reproducir cada suite con el snapshot:
-  ```text
-  psql … -f supabase/tests/rls/_helpers.sql -f supabase/tests/rls/test_rls_isolation.sql
-  ```
-- Confirmar que todas las suites imprimen su `RAISE NOTICE '✓ … aserciones OK'`.
+### 3. Validar que la matriz cubre **todos** los archivos `test_rls_*.sql`
+Riesgo actual: si alguien agrega `supabase/tests/rls/test_rls_nuevo.sql` y olvida añadirlo a `matrix.suite`, **no se ejecuta y CI pasa en verde**. Añadir un step en el job `rls` que liste los archivos y falle si hay alguno no listado en la matriz (o generar la matriz dinámicamente con `outputs` + `fromJSON`).
 
-### 4. Changelog
-- Bump `APP_VERSION` (parche) en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md` (root) con la fecha de hoy listando los 5 fixes (3 grants + 4 seeds de test).
+### 4. Ejecutar cada suite en transacción + ROLLBACK
+Envolver cada `test_rls_*.sql` con `BEGIN; … ROLLBACK;` (o usar `psql --single-transaction`) para garantizar que una suite no contamine a otra si en el futuro se reutiliza la BD. Hoy cada suite tiene su Postgres efímero así que no es crítico, pero protege contra regresiones de diseño.
 
-### Detalles técnicos (referencia)
-- Los grants faltantes son **regresión real**: PostgREST/Data API no expone tablas sin grant explícito; aunque las políticas RLS estuvieran bien, cualquier cliente con rol `authenticated` recibe `permission denied`.
-- El ID exacto de línea reportado por psql (`:187`, `:276`, …) corresponde al cierre `$$;` del bloque DO; el `SELECT count(*) FROM public.clientes` que dispara el error está antes (línea 69 / 77 / 87 según suite).
-- Mantengo el RPC `has_role` y demás policies intactas — el fix es estrictamente perimetral (grants) + corrección de fixtures.
+### 5. `--single-transaction` en la aplicación de migraciones
+En el step "Apply migrations", correr cada `.sql` con `psql --single-transaction` para evitar bases a medio aplicar si una migración rompe a mitad. Hoy ya tienes `ON_ERROR_STOP=1` pero sin transacción quedan objetos parciales.
 
-### Fuera de alcance
-- Subir umbral de cobertura.
-- Reordenar suites o paralelización del workflow.
+### 6. Reducir privilegios del runner del job `rls-suites`
+Usar `SET ROLE authenticated` ya está bien, pero conectar como un usuario no-superuser (no `postgres`) en las suites detectaría GRANTs faltantes más temprano. Crear `ci_runner` con `NOINHERIT` + `GRANT authenticated, anon TO ci_runner`.
+
+### 7. Job final "all green" para branch protection
+Añadir un job `rls-tests-result` con `needs: [rls-suites]` y `if: always()` que verifique `needs.rls-suites.result == 'success'`. Permite proteger main con **un único required check** en vez de 7.
+
+### 8. Pequeños detalles
+- `retention-days: 1` está bien para el snapshot; añadir `compression-level: 9` reduce ~40% del tamaño.
+- Considerar `services.postgres.options` con `shm_size=256m` si alguna migración usa índices grandes.
+- Renombrar `PSQL` env a algo no-reservado (no hay colisión real, pero es confuso porque `psql` también es comando).
+- Triggerar también en cambios a `.github/workflows/rls-tests.yml` ✅ (ya está) y considerar `schedule:` semanal para detectar drift de la imagen Postgres aunque no haya PRs.
+
+## Detalles técnicos
+
+```text
+Mejora #1 — cache key sugerida:
+  key: rls-snapshot-${{ runner.os }}-pg15.8-${{ hashFiles(
+        'supabase/migrations/**',
+        'supabase/tests/rls/_ci_*.sql'
+      ) }}
+  path: .rls-snapshot/db.dump
+```
+
+```text
+Mejora #3 — guardia de matriz (pseudo):
+  expected=$(ls supabase/tests/rls/test_rls_*.sql | sed 's|.*test_rls_||;s|\.sql$||' | sort)
+  declared="isolation financiero financiero_critico crm_operacional
+            operaciones tarifas_y_costeo roles_no_admin" | tr ' ' '\n' | sort
+  diff <(echo "$expected") <(echo "$declared") || exit 1
+```
+
+## Qué haría yo primero
+
+Si solo eliges 3: **#3 (guardia de matriz)**, **#2 (logs por suite como artifact)** y **#7 (job all-green para branch protection)**. Son baratas, no tocan la lógica de tests, y cierran agujeros reales.
+
+¿Quieres que implemente alguna(s) de estas mejoras? Indícame los números.
