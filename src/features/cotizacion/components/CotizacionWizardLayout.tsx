@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormProvider } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Info } from "lucide-react";
 import { StepIndicator } from "@/features/embarques/components/StepIndicator";
@@ -7,9 +8,11 @@ import SeccionConceptosVentaCotizacion from "@/features/cotizacion/components/Se
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/features/cotizacion/components/PasoResumenCotizacion";
 import PasoDatosGenerales from "@/features/cotizacion/components/wizard/PasoDatosGenerales";
+import Paso1ProgressSidebar from "@/features/cotizacion/components/wizard/Paso1ProgressSidebar";
 import { CotizacionWizardFooter } from "@/features/cotizacion/components/wizard/CotizacionWizardFooter";
 import { ConfirmSinDesgloseDialog } from "@/features/cotizacion/components/ConfirmSinDesgloseDialog";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
+import { usePermissions } from "@/hooks/shared";
 
 const WIZARD_STEPS = [
   { num: 1, title: "Datos Generales" },
@@ -43,6 +46,9 @@ export default function CotizacionWizardLayout({
   const [showSinDesglose, setShowSinDesglose] = useState(false);
   const isBusy = isProcessing || isPending;
   const sinDesgloseFlag = !!form.watch("sinDesgloseCostos");
+  const modoActual = (form.watch("modo") || "").toString().toLowerCase();
+  const esMaritimo = modoActual.startsWith("mar");
+  const { canCotizarSinDesglose } = usePermissions();
 
   const runProcessing = useCallback(async (fn: () => unknown | Promise<unknown>) => {
     if (isBusy) return;
@@ -55,9 +61,22 @@ export default function CotizacionWizardLayout({
   const handleBack = useCallback(() => { if (!isBusy) wHandleBack(); }, [isBusy, wHandleBack]);
   const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
   const handleConfirmSinDesglose = useCallback(() => {
+    if (!canCotizarSinDesglose) {
+      toast.error("Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.");
+      setShowSinDesglose(false);
+      return;
+    }
     setShowSinDesglose(false);
     void runProcessing(handleCotizarSinDesglose);
-  }, [runProcessing, handleCotizarSinDesglose]);
+  }, [runProcessing, handleCotizarSinDesglose, canCotizarSinDesglose]);
+
+  const handleOpenSinDesglose = useCallback(() => {
+    if (!canCotizarSinDesglose) {
+      toast.error("Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.");
+      return;
+    }
+    setShowSinDesglose(true);
+  }, [canCotizarSinDesglose]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
