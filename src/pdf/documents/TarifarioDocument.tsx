@@ -32,8 +32,8 @@ function columnas(): PdfColumn<TarifaInformativa>[] {
       render: (r) => r.modalidad_equipo || r.tipo_contenedor || "—" },
     { key: "ruta", title: "Ruta", cellStyle: styles.cellDesc, render: (r) => rutaDe(r) },
     { key: "unidad", title: "Unidad", cellStyle: { width: 70, fontSize: 9 } as never, render: (r) => r.unidad_medida },
-    { key: "precio", title: "Precio", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.precio, r.moneda) },
-    { key: "notas", title: "Notas", cellStyle: { width: 110, fontSize: 9 } as never, render: (r) => r.notas || "—" },
+    { key: "precio", title: "Precio", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.precio, r.moneda) },
+    { key: "notas", title: "Notas", cellStyle: { width: 95, fontSize: 9 } as never, render: (r) => r.notas || "—" },
   ];
 }
 
