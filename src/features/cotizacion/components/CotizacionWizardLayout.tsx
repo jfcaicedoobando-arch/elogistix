@@ -80,11 +80,15 @@ export default function CotizacionWizardLayout({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const el = contentRef.current?.querySelector<HTMLElement>(
-        'input:not([type="hidden"]):not([readonly]), select, textarea, [role="combobox"]',
+      const root = contentRef.current;
+      if (!root || !root.isConnected) return;
+      const el = root.querySelector<HTMLElement>(
+        'input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="combobox"]:not([disabled])',
       );
-      el?.focus();
-    }, 100);
+      if (el && el.isConnected) {
+        try { el.focus({ preventScroll: true }); } catch { /* noop */ }
+      }
+    }, 150);
     return () => clearTimeout(timer);
   }, [currentStep]);
 
