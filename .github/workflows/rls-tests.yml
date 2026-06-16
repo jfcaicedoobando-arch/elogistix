@@ -22,6 +22,10 @@ on:
       - "supabase/tests/rls/**"
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
+  schedule:
+    # Lunes 06:00 UTC — corre la suite contra `main` aunque no haya PRs
+    # para detectar drift de la imagen Postgres o de catálogos seed.
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -54,6 +58,7 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
+          --shm-size=256m
 
     env:
       PGHOST: localhost
@@ -95,38 +100,59 @@ jobs:
           fi
           echo "✓ matrix.suite cubre $(echo "$expected" | wc -l) suites"
 
+      - name: Restore cached snapshot (if any)
+        id: snapshot-cache
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: .rls-snapshot/db.dump
+          # Invalidamos cache cuando cambian migraciones, helpers CI o el
+          # propio workflow (pinneo de imagen Postgres incluido).
+          key: rls-snapshot-pg15.8-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', '.github/workflows/rls-tests.yml') }}
+
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
 
       - name: Drift fixes (tablas/columnas creadas manualmente en prod)
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_drift.sql
 
       - name: Apply migrations
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
           shopt -s nullglob
+          # --single-transaction: si una migración falla a la mitad, hace
+          # rollback completo del archivo y aborta el loop (ON_ERROR_STOP=1).
+          # Evita estado parcial de objetos creados antes del error.
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
             echo "▶ $base"
             sed -E \
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
-              "$f" | $PSQL
+              "$f" | $PSQL --single-transaction
           done
 
+
+
       - name: Post-migrate (drop auth.users FKs para CI)
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
 
       - name: Verify RLS coverage
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
 
       - name: Dump prepared database
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p .rls-snapshot
           # Mantenemos GRANTs (sin --no-privileges) porque las suites RLS
           # ejecutan SELECT/INSERT con `SET ROLE authenticated`; sin grants
           # PostgREST-style en el destino el primer SELECT lanza
           # "permission denied for table …" antes de evaluar las policies.
-          pg_dump --format=custom --no-owner \
+          # -Z 9: máxima compresión del custom format (~40% menos peso).
+          pg_dump --format=custom --no-owner -Z 9 \
             --file=.rls-snapshot/db.dump postgres
           ls -lh .rls-snapshot/
 
@@ -137,6 +163,7 @@ jobs:
           path: .rls-snapshot/db.dump
           if-no-files-found: error
           retention-days: 1
+          compression-level: 9
 
   rls-suites:
     name: RLS suite — ${{ matrix.suite }}
@@ -168,6 +195,7 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
+          --shm-size=256m
 
     env:
       PGHOST: localhost
