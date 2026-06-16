@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.46.3] - 2026-06-16
+- **fix(rls/contador)**: El rol `contador` estaba bloqueado por RLS al crear/editar `clientes`, `contactos_cliente`, `conceptos_factura`, `conceptos_venta`, `conceptos_costo`, `facturas` y `pagos_factura` (error `42501`). Se recrean las políticas `Tenant CRUD` agregando `contador` a la lista de roles permitidos. `proveedores`, `proveedor_facturas` y `pagos_proveedor` ya lo incluían — sin cambios.
+
 ## [13.46.2] - 2026-06-16
 - **feat(cotizaciones/kpis)**: Las 4 tarjetas KPI (Total, Aceptadas, Rechazadas, Tasa de conversión) ahora se calculan solo sobre cotizaciones creadas en los últimos 30 días, independientes de los filtros de la tabla. Se añade subtítulo "KPIs · Últimos 30 días" para hacerlo explícito.
 
