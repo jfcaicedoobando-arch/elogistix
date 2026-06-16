@@ -43,7 +43,14 @@ export async function fetchCotizaciones(organizationId: string | null) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return fromDb<CotizacionRow[]>(data);
+  // Aplanamos `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N`
+  // para consumir más cómodo en el listado.
+  type RawRow = Record<string, unknown> & { cotizacion_costos?: Array<{ count: number }> };
+  const flattened = (data as unknown as RawRow[] | null ?? []).map((r) => ({
+    ...r,
+    cotizacion_costos_count: r.cotizacion_costos?.[0]?.count ?? 0,
+  }));
+  return fromDb<Array<CotizacionRow & { cotizacion_costos_count: number }>>(flattened);
 }
 
 export async function fetchCotizacionesAceptadas(organizationId: string | null) {
