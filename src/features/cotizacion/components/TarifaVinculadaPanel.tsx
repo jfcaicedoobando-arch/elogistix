@@ -8,7 +8,7 @@
  */
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { Search, Link2, Unlink, RefreshCcw, AlertTriangle } from "lucide-react";
+import { Link2, Unlink, RefreshCcw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardSection } from "@/components/shared/WizardSection";
@@ -16,6 +16,8 @@ import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDia
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import CartaGarantiaBadge from "./CartaGarantiaBadge";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
+import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
+import { aplicarTarifaAlForm } from "./seccionRuta/aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
@@ -51,15 +53,7 @@ export default function TarifaVinculadaPanel({ complete }: { complete?: boolean 
   if (modo !== "Marítimo") return null;
 
   const aplicarTarifa = (row: TopTarifaRow) => {
-    setValue("tarifaId", row.id, OPTS);
-    setValue("tarifaOverride", {}, OPTS);
-    setValue("tiempoTransitoDias", row.transit_time_dias ?? undefined, OPTS);
-    setValue("diasLibresDestino", row.dias_libres_demoras ?? 0, OPTS);
-    setValue("cartaGarantia", !!row.naviera_carta_garantia_activa, OPTS);
-    if (row.tipo_contenedor_id) {
-      setValue("tipoContenedor", row.tipo_contenedor_id, OPTS);
-    }
-    void trigger(["tiempoTransitoDias", "diasLibresDestino", "cartaGarantia", "tipoContenedor"]);
+    aplicarTarifaAlForm(setValue, trigger, row);
   };
 
   const quitarVinculo = () => {
@@ -75,17 +69,8 @@ export default function TarifaVinculadaPanel({ complete }: { complete?: boolean 
   return (
     <WizardSection title="Tarifa marítima vinculada" complete={complete}>
       <div className="space-y-3">
-        {!tarifaId && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-dashed p-3">
-            <p className="text-sm text-muted-foreground">
-              Vincula una tarifa del módulo Costeo para autollenar tránsito, días libres y carta garantía,
-              y precargar los costos en el siguiente paso.
-            </p>
-            <Button type="button" size="sm" variant="default" onClick={() => setOpen(true)}>
-              <Search className="size-4 mr-2" /> Buscar tarifa
-            </Button>
-          </div>
-        )}
+        {!tarifaId && <SugerenciasTarifaInline />}
+
 
         {tarifaId && isLoading && (
           <p className="text-sm text-muted-foreground">Cargando tarifa…</p>

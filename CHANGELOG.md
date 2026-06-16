@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.31.0] - 2026-06-16
+- **feat(cotizaciones/sugerencias-tarifa-inline)**: Pack C. Cuando el Paso 1 está en modo Marítimo con origen+destino+tipo de contenedor resueltos a IDs del catálogo y aún no hay tarifa vinculada, el wizard muestra automáticamente las **Top 3 tarifas vigentes** en cards compactas con botón "Elegir esta", sin necesidad de abrir el modal "Buscar tarifa". Resolución de IDs por coincidencia de nombre (PortSelect guarda texto formateado). Skeleton durante carga y mensaje suave cuando no hay vigentes o cuando los campos no resuelven a IDs.
+- **refactor(cotizaciones/aplicar-tarifa)**: Lógica de aplicar tarifa al formulario extraída a helper compartido `aplicarTarifaAlForm` consumido tanto por el modal `BuscarTarifaDialog` como por las sugerencias inline, garantizando paridad de seteo (transit time, días libres, carta garantía, tipo contenedor) y reset de `tarifaOverride`.
+- **feat(bitacora/tarifa-sugerida)**: Nuevo evento `tarifa_sugerida_aplicada` registrado en `bitacora_actividad` cuando el usuario aplica una sugerencia inline (con ranking 1/2/3 y flag `borrador` si la cotización aún no está persistida) para medir adopción del Top 3 proactivo. Best-effort: si falla la inserción no rompe el flujo del usuario.
+
 ## [13.30.0] - 2026-06-16
 - **feat(embarques/precarga-contenedores)**: `buildVincularCotizacionUpdates` ahora siembra N placeholders de `contenedores` cuando la cotización vinculada es FCL marítima y trae `num_contenedores > 0`. Cada placeholder hereda el `tipo_contenedor` de la cotización; el usuario sólo captura número de contenedor, BL house y pesos.
 - **feat(embarques/desvincular-respeta-overrides)**: Al desvincular con la opción "Limpiar todo lo heredado", el mapper compara el snapshot original sembrado por la cotización contra el valor actual del formulario; los campos que el usuario editó manualmente se preservan y sólo se limpian los que siguen intactos (Opción A — respetar trabajo del usuario). Implementado con un `vincularSnapshotRef` interno en `useEmbarqueForm`, sin cambios en componentes consumidores.
