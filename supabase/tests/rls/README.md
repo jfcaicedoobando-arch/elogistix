@@ -22,6 +22,7 @@ Suites adicionales:
 - `test_rls_crm_operacional.sql` — `crm_leads`, `crm_oportunidades`, `crm_actividades`, `documentos_embarque`, `presupuesto_mensual` (8 aserciones).
 - `test_rls_operaciones.sql` — `proveedores`, `conceptos_venta`, `conceptos_costo`, `conceptos_factura`, `embarque_contenedores`, `eventos_embarque`, `tracking_externo` (9 aserciones).
 - `test_rls_tarifas_y_costeo.sql` — `costeo_rutas`, `costeo_tarifas` (incluye intento de UPDATE cruzado bloqueado y verificación de no fuga de `flete_base`), `proveedor_notas_credito` (monto contable nunca visible), `auditoria_revisiones` (detalle de cumplimiento aislado) (8 aserciones).
+- `test_rls_roles_no_admin.sql` — matriz `{viewer, operador, cliente}` × `{SELECT, INSERT, UPDATE, DELETE}` sobre `facturas`, `pagos_factura`, `embarques`, `cotizaciones` (15 aserciones). Cubre el gap "todas las suites previas solo probaban `admin`".
 
 ## CI automatizado
 
