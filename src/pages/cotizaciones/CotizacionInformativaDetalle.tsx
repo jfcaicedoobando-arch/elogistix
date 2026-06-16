@@ -17,12 +17,14 @@ interface Props {
 }
 
 async function descargarTarifario(cotizacion: CotizacionRow) {
-  const [{ TarifarioDocument }, { descargarPdf }] = await Promise.all([
+  const [{ TarifarioDocument }, { descargarPdf }, { cargarEmisorEmpresa }] = await Promise.all([
     import("@/pdf/documents/TarifarioDocument"),
     import("@/pdf/render/descargarPdf"),
+    import("@/pdf/emisor"),
   ]);
+  const emisor = await cargarEmisorEmpresa();
   await descargarPdf(
-    <TarifarioDocument cotizacion={cotizacion} />,
+    <TarifarioDocument cotizacion={cotizacion} emisor={emisor} />,
     `tarifario-${cotizacion.folio}`,
   );
 }
