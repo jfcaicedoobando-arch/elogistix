@@ -30,4 +30,16 @@ describe("usePermissions", () => {
     expect(result.current.canEdit).toBe(false);
     expect(result.current.isAdmin).toBe(false);
   });
+
+  it("gerente_operaciones → canCotizarSinDesglose true", () => {
+    mockUseAuth.mockReturnValue({ role: "gerente_operaciones", effectiveRole: "gerente_operaciones" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canCotizarSinDesglose).toBe(true);
+  });
+
+  it("vendedor → canCotizarSinDesglose false", () => {
+    mockUseAuth.mockReturnValue({ role: "vendedor", effectiveRole: "vendedor" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canCotizarSinDesglose).toBe(false);
+  });
 });

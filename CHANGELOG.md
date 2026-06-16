@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.32.0] - 2026-06-16
+- **feat(cotizaciones/sidebar-progreso)**: Pack D. Nuevo sidebar sticky `Paso1ProgressSidebar` en el Paso 1 del wizard (desktop ≥ lg) que lista las secciones (Cliente, Operación, Ruta, Mercancía, Tarifa sólo marítimo, Cierre) con check verde si están completas, punto azul en la sección visible (detectada con `IntersectionObserver` con cleanup) y barra de progreso `"N de M completas"`. Click en una sección hace scroll suave a su contenedor (`id="seccion-..."`). En mobile/tablet se oculta porque los checks por sección ya cubren el feedback.
+- **feat(cotizaciones/role-gate-sin-desglose)**: El atajo destructivo "Cotizar sin desglose" del Paso 1 sólo se muestra para roles autorizados (`super_admin`, `admin_org`, `admin`, `gerente_operaciones`). Nueva capability `canCotizarSinDesglose` en `usePermissions`. Defensa en profundidad: el handler bloquea y muestra toast destructivo si un usuario no autorizado dispara el flujo por teclado o URL.
+
 ## [13.31.0] - 2026-06-16
 - **feat(cotizaciones/sugerencias-tarifa-inline)**: Pack C. Cuando el Paso 1 está en modo Marítimo con origen+destino+tipo de contenedor resueltos a IDs del catálogo y aún no hay tarifa vinculada, el wizard muestra automáticamente las **Top 3 tarifas vigentes** en cards compactas con botón "Elegir esta", sin necesidad de abrir el modal "Buscar tarifa". Resolución de IDs por coincidencia de nombre (PortSelect guarda texto formateado). Skeleton durante carga y mensaje suave cuando no hay vigentes o cuando los campos no resuelven a IDs.
 - **refactor(cotizaciones/aplicar-tarifa)**: Lógica de aplicar tarifa al formulario extraída a helper compartido `aplicarTarifaAlForm` consumido tanto por el modal `BuscarTarifaDialog` como por las sugerencias inline, garantizando paridad de seteo (transit time, días libres, carta garantía, tipo contenedor) y reset de `tarifaOverride`.
