@@ -7,7 +7,8 @@ import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
 import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
 import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVinculada";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
-import type { TopTarifaRow } from "@/features/costeo/types";
+import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
+import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 interface Props {
