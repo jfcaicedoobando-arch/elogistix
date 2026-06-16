@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.13] - 2026-06-16
+- **test(lógica)**: 18 tests nuevos sobre lógica pura del frontend (arranca Fase 2 del plan). (a) `embarqueCotizacionDesvincular.test.ts` — 8 casos para `buildDesvincularCotizacionUpdates`: modos `conservar`/`solo-conceptos` no tocan nada, `limpiar` sin snapshot reset completo, Opción A que respeta campos editados por el usuario, arrays con longitud distinta no se limpian, coerción `null/undefined/""` al comparar. (b) `idempotencyHash.test.ts` — 7 casos para `sha256Hex` (64 hex, determinístico, hash conocido del archivo vacío `e3b0c44…`) y `hexToUuid` (formato UUID v4-like, trunca >32 chars). Polyfill local de `File.arrayBuffer` porque jsdom no implementa `Blob.stream()` funcional. (c) `useOrgFilter.test.ts` — 3 casos: propaga `organizationId`, `null` y `undefined` desde `OrganizationContext` sin lanzar.
+
 ## [13.44.12] - 2026-06-16
 - **test(rls)**: nueva suite `supabase/tests/rls/test_rls_roles_no_admin.sql` (15 aserciones) cubre la matriz `{viewer, operador, cliente}` × `{SELECT, INSERT, UPDATE, DELETE}` sobre `facturas`, `pagos_factura`, `embarques`, `cotizaciones`. Cierra el gap **CRÍTICO** detectado en la auditoría ("todas las suites RLS previas solo probaban `admin`"). Casos clave: viewer puede leer pero no insertar/actualizar/borrar; operador con CRUD bloqueado en org ajena; cliente del portal solo ve sus propias facturas y no puede mutar nada. Agregada al workflow `.github/workflows/rls-tests.yml` como matrix `suite: roles_no_admin` y documentada en `supabase/tests/rls/README.md`.
 
