@@ -227,4 +227,36 @@ jobs:
             .rls-snapshot/db.dump
 
       - name: Run RLS suite — ${{ matrix.suite }}
-        run: $PSQL -f supabase/tests/rls/test_rls_${{ matrix.suite }}.sql
+        run: |
+          mkdir -p .rls-logs
+          set -o pipefail
+          $PSQL -f supabase/tests/rls/test_rls_${{ matrix.suite }}.sql \
+            2>&1 | tee ".rls-logs/suite-${{ matrix.suite }}.log"
+
+      - name: Upload suite log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rls-suite-log-${{ matrix.suite }}
+          path: .rls-logs/suite-${{ matrix.suite }}.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  rls-tests-result:
+    name: RLS tests result
+    runs-on: ubuntu-latest
+    needs: rls-suites
+    if: always()
+    steps:
+      - name: Aggregate matrix result
+        # Job único para usar como required check en branch protection,
+        # evitando tener que listar las 7 suites individualmente.
+        run: |
+          result="${{ needs.rls-suites.result }}"
+          echo "rls-suites result: $result"
+          if [ "$result" != "success" ]; then
+            echo "::error::Una o más suites RLS fallaron (resultado: $result)"
+            exit 1
+          fi
+          echo "✓ Todas las suites RLS pasaron"
+
