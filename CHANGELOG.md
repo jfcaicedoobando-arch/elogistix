@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.38.2] - 2026-06-16
+- **refactor(power-of-10)**: baseline de arquitectura 100% verde (0 archivos > 200 líneas).
+  - `ProformaDetalle.tsx` (224 → 180) extrae `EstadoBadges` y `TotalesCard` a `ProformaDetalleCards.tsx` (52).
+  - `ejecutivoAgregados.ts` (223 → 137) separa `calcularRanking` + tipos `OperadorRanking`/`RankingResultado` en `ejecutivoRanking.ts` (91), re-exportados para retrocompatibilidad.
+
 ## [13.38.1] - 2026-06-16
 - **refactor(power-of-10)**: división de archivos > 200 líneas para volver verde el baseline de arquitectura.
   - `CosteoAgentes.tsx` (270 → 121) se separa en `CosteoAgentesTable.tsx` (97) y `CosteoAgenteFormDialog.tsx` (154).
