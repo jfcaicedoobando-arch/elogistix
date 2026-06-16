@@ -22,9 +22,7 @@ export function TransitoField({ ctx, tarifaCtx }: { ctx: Ctx; tarifaCtx: TarifaC
           className={locked ? "bg-muted/40" : undefined}
         />
         {tarifaCtx.tieneTarifa && tarifaCtx.hasTransito && (
-          <Badge variant="outline" className="gap-1 shrink-0">
-            <Link2 className="h-3 w-3" /> Tarifa
-          </Badge>
+          <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
         )}
       </div>
     </FormField>
