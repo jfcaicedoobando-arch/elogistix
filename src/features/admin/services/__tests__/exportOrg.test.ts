@@ -44,7 +44,7 @@ beforeEach(() => {
 describe("buildExportManifest", () => {
   it("incluye id, nombre, tablas y formato; es JSON válido indentado", () => {
     const json = buildExportManifest("org-1", "Acme");
-    expect(json).toMatch(/\n  /); // indent 2 spaces
+    expect(json).toMatch(/\n {2}/); // indent 2 spaces
     const parsed = JSON.parse(json);
     expect(parsed.organization_id).toBe("org-1");
     expect(parsed.organization_nombre).toBe("Acme");
