@@ -1,17 +1,13 @@
 /**
  * Mappers para vincular/desvincular una cotización a un formulario de embarque.
  *
- * v13.30.0 — Pack B: contenedores placeholder + respect-overrides en desvincular.
- *  - `buildVincularCotizacionUpdates` ahora puede devolver placeholders de
- *    `contenedores` (FCL) cuando la cotización trae `num_contenedores`.
- *  - `buildDesvincularCotizacionUpdates` acepta un snapshot opcional para
- *    respetar los campos que el usuario editó manualmente (Opción A).
+ * v13.33.0 — Pack B extendido: hereda 7 campos adicionales de la cotización
+ *  (tarifa, carta garantía, días libres demoras/almacenaje, seguro, valor
+ *  seguro y notas). Las nuevas columnas existen en `embarques` desde la
+ *  migración 2026-06-16.
  *
- * v13.28.0 — Precarga ampliada:
- *  - Rutas dirigidas al campo correcto del embarque según `modo`.
- *  - Se incluye `msdsArchivo` cuando la cotización trae MSDS cargado.
- *  - `buildDesvincularCotizacionUpdates` ahora acepta un modo
- *    (`limpiar` | `conservar` | `solo-conceptos`).
+ * v13.30.0 — Pack B: contenedores placeholder + respect-overrides en desvincular.
+ * v13.28.0 — Precarga ampliada (rutas, MSDS, modo dirigido).
  */
 
 import type { EmbarqueFormValues } from "./embarqueFromDb";
@@ -36,6 +32,14 @@ export interface CotizacionParaVincular {
   msds_archivo?: string | null;
   num_contenedores?: number | null;
   tipo_embarque?: string | null;
+  // Pack B+ (v13.33.0)
+  tarifa_id?: string | null;
+  carta_garantia?: boolean | null;
+  dias_libres_destino?: number | null;
+  dias_almacenaje?: number | null;
+  seguro?: boolean | null;
+  valor_seguro_usd?: number | null;
+  notas?: string | null;
 }
 
 export type DesvincularModo = "limpiar" | "conservar" | "solo-conceptos";
@@ -103,6 +107,17 @@ export function buildVincularCotizacionUpdates(
     base.push(["contenedores", contenedores]);
   }
 
+  // ── Pack B+ (v13.33.0): herencia ampliada ──────────────────────────────
+  base.push(
+    ["tarifaId", cot.tarifa_id ?? ""],
+    ["cartaGarantia", Boolean(cot.carta_garantia)],
+    ["diasLibresDestino", String(cot.dias_libres_destino ?? 0)],
+    ["diasAlmacenaje", String(cot.dias_almacenaje ?? 0)],
+    ["seguro", Boolean(cot.seguro)],
+    ["valorSeguroUsd", cot.valor_seguro_usd != null ? String(cot.valor_seguro_usd) : ""],
+    ["notas", cot.notas ?? ""],
+  );
+
   return base;
 }
 
@@ -137,6 +152,14 @@ const DESVINCULAR_DEFAULTS: Array<FieldUpdate> = [
   ["ciudadDestino", ""],
   ["msdsArchivo", ""],
   ["contenedores", []],
+  // Pack B+ defaults
+  ["tarifaId", ""],
+  ["cartaGarantia", false],
+  ["diasLibresDestino", "0"],
+  ["diasAlmacenaje", "0"],
+  ["seguro", false],
+  ["valorSeguroUsd", ""],
+  ["notas", ""],
 ];
 
 /**

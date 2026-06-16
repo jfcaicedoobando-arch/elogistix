@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
+import { LabelHeredable } from "./LabelHeredable";
 
 interface Props {
   errors: EmbarqueValidationErrors;
@@ -22,12 +23,14 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2 md:col-span-2">
-        <Label>Descripción de la Mercancía *</Label>
+        <LabelHeredable field="descripcionMercancia" getter={(c) => c.descripcion_mercancia}>
+          Descripción de la Mercancía *
+        </LabelHeredable>
         <Input className={errors.descripcionMercancia ? 'border-destructive' : ''} placeholder="Descripción detallada" {...register('descripcionMercancia')} />
         {errors.descripcionMercancia && <p className="text-xs text-destructive">{errors.descripcionMercancia}</p>}
       </div>
       <div className="space-y-2">
-        <Label>Tipo de Carga *</Label>
+        <LabelHeredable field="tipoCarga" getter={(c) => c.tipo_carga}>Tipo de Carga *</LabelHeredable>
         <Controller name="tipoCarga" render={({ field }) => (
           <Select value={field.value} onValueChange={field.onChange}>
             <SelectTrigger><SelectValue placeholder="Seleccionar tipo de carga" /></SelectTrigger>
@@ -58,15 +61,15 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
         </div>
       )}
       <div className="space-y-2">
-        <Label>Peso (kg) *</Label>
+        <LabelHeredable field="pesoKg" getter={(c) => String(c.peso_kg || "")}>Peso (kg) *</LabelHeredable>
         <Input type="number" placeholder="0" {...register('pesoKg')} />
       </div>
       <div className="space-y-2">
-        <Label>Volumen (m³) *</Label>
+        <LabelHeredable field="volumenM3" getter={(c) => String(c.volumen_m3 || "")}>Volumen (m³) *</LabelHeredable>
         <Input type="number" placeholder="0" {...register('volumenM3')} />
       </div>
       <div className="space-y-2">
-        <Label>Piezas *</Label>
+        <LabelHeredable field="piezas" getter={(c) => String(c.piezas || "")}>Piezas *</LabelHeredable>
         <Input type="number" placeholder="0" {...register('piezas')} />
       </div>
     </div>

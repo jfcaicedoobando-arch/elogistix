@@ -151,4 +151,50 @@ describe("embarqueCotizacion mapper", () => {
     const full = buildDesvincularCotizacionUpdates("limpiar");
     expect(full.length).toBeGreaterThan(10);
   });
+
+  // ─── Pack B+ v13.33.0 — herencia ampliada ──────────────────────────────
+  it("vincular hereda tarifa, garantía, días libres, almacenaje, seguro y notas", () => {
+    const updates = buildVincularCotizacionUpdates({
+      ...base,
+      tarifa_id: "tar-123",
+      carta_garantia: true,
+      dias_libres_destino: 14,
+      dias_almacenaje: 7,
+      seguro: true,
+      valor_seguro_usd: 12500.5,
+      notas: "Cliente solicita inspección previa",
+    });
+    const map = asMap(updates);
+    expect(map.tarifaId).toBe("tar-123");
+    expect(map.cartaGarantia).toBe(true);
+    expect(map.diasLibresDestino).toBe("14");
+    expect(map.diasAlmacenaje).toBe("7");
+    expect(map.seguro).toBe(true);
+    expect(map.valorSeguroUsd).toBe("12500.5");
+    expect(map.notas).toBe("Cliente solicita inspección previa");
+  });
+
+  it("vincular con campos heredados null/undefined aplica defaults seguros", () => {
+    const updates = buildVincularCotizacionUpdates(base);
+    const map = asMap(updates);
+    expect(map.tarifaId).toBe("");
+    expect(map.cartaGarantia).toBe(false);
+    expect(map.diasLibresDestino).toBe("0");
+    expect(map.diasAlmacenaje).toBe("0");
+    expect(map.seguro).toBe(false);
+    expect(map.valorSeguroUsd).toBe("");
+    expect(map.notas).toBe("");
+  });
+
+  it("desvincular limpia los nuevos campos heredados de Pack B+", () => {
+    const updates = buildDesvincularCotizacionUpdates();
+    const map = asMap(updates);
+    expect(map.tarifaId).toBe("");
+    expect(map.cartaGarantia).toBe(false);
+    expect(map.diasLibresDestino).toBe("0");
+    expect(map.diasAlmacenaje).toBe("0");
+    expect(map.seguro).toBe(false);
+    expect(map.valorSeguroUsd).toBe("");
+    expect(map.notas).toBe("");
+  });
 });
