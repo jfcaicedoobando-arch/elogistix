@@ -114,8 +114,8 @@ BEGIN
     id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
     moneda, flete_base, dias_libres_demoras, vigente_desde, vigente_hasta, estado
   ) VALUES
-    (tar_a, org_a, ag_a, naviera_x, ruta_a, tipo_cont, 'USD', 1500, 14, CURRENT_DATE, CURRENT_DATE + 90, 'activa'),
-    (tar_b, org_b, ag_b, naviera_x, ruta_b, tipo_cont, 'USD', 9876, 14, CURRENT_DATE, CURRENT_DATE + 90, 'activa');
+    (tar_a, org_a, ag_a, naviera_x, ruta_a, tipo_cont, 'USD', 1500, 14, CURRENT_DATE, CURRENT_DATE + 90, 'vigente'),
+    (tar_b, org_b, ag_b, naviera_x, ruta_b, tipo_cont, 'USD', 9876, 14, CURRENT_DATE, CURRENT_DATE + 90, 'vigente');
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.costeo_tarifas WHERE id IN (tar_a, tar_b);

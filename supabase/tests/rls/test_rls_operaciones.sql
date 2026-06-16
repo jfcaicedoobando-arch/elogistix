@@ -125,10 +125,10 @@ BEGIN
   RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
   INSERT INTO public.facturas(
     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
-    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
   ) VALUES
-    (fac_a, org_a, cli_a, 'Cli OPS A', emb_a, 'F-OPS-A', CURRENT_DATE, CURRENT_DATE+30, 'MXN', 1000, 160, 1160, 1160, 'Emitida'),
-    (fac_b, org_b, cli_b, 'Cli OPS B', emb_b, 'F-OPS-B', CURRENT_DATE, CURRENT_DATE+30, 'MXN', 5000, 800, 5800, 5800, 'Emitida');
+    (fac_a, org_a, cli_a, 'Cli OPS A', emb_a, 'F-OPS-A', CURRENT_DATE, CURRENT_DATE+30, 'MXN', 1000, 160, 1160, 'Emitida'),
+    (fac_b, org_b, cli_b, 'Cli OPS B', emb_b, 'F-OPS-B', CURRENT_DATE, CURRENT_DATE+30, 'MXN', 5000, 800, 5800, 'Emitida');
   INSERT INTO public.conceptos_factura(id, factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id) VALUES
     (cf_a, fac_a, 'Servicio', 1, 1000, 'MXN', 1000, org_a),
     (cf_b, fac_b, 'Servicio', 1, 5000, 'MXN', 5000, org_b);
