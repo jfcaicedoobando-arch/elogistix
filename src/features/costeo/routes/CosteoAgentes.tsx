@@ -37,24 +37,53 @@ const EMPTY: CosteoAgenteInput = {
 
 export default function CosteoAgentes() {
   const { data: agentes = [], isLoading } = useCosteoAgentes();
-  const { crear, eliminar } = useCosteoAgenteMutations();
+  const { crear, actualizar, eliminar } = useCosteoAgenteMutations();
   const { data: proveedores = [] } = useProveedoresAgente();
   const [open, setOpen] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState<CosteoAgenteInput>(EMPTY);
   const [aEliminar, setAEliminar] = useState<{ id: string; nombre: string } | null>(null);
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   const valido = form.nombre.trim().length > 0 && form.proveedor_id.length > 0;
 
+  const abrirNuevo = () => {
+    setEditandoId(null);
+    setForm(EMPTY);
+    setIntentoEnvio(false);
+    setOpen(true);
+  };
+
+  const abrirEditar = (a: typeof agentes[number]) => {
+    setEditandoId(a.id);
+    setForm({
+      nombre: a.nombre,
+      proveedor_id: a.proveedor_id ?? "",
+      pais: a.pais ?? "CN",
+      dias_credito: a.dias_credito ?? 0,
+      contacto_tarifario: a.contacto_tarifario ?? "",
+      email: a.email ?? "",
+      activo: a.activo ?? true,
+    });
+    setIntentoEnvio(false);
+    setOpen(true);
+  };
+
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!valido) return;
-    await crear.mutateAsync(form);
+    if (editandoId) {
+      await actualizar.mutateAsync({ id: editandoId, patch: form });
+    } else {
+      await crear.mutateAsync(form);
+    }
     setForm(EMPTY);
+    setEditandoId(null);
     setIntentoEnvio(false);
     setOpen(false);
   };
+
 
   const proveedorInvalido = intentoEnvio && !form.proveedor_id;
   const nombreInvalido = intentoEnvio && !form.nombre.trim();
