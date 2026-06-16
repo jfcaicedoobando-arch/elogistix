@@ -38,7 +38,7 @@ export function EmbarqueWizardLayout({
   validateStep,
   children,
 }: EmbarqueWizardLayoutProps) {
-  const contentRef = useRef<HTMLFormElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleNext = useCallback(() => {
     if (validateStep && !validateStep(currentStep)) return;
@@ -46,29 +46,24 @@ export function EmbarqueWizardLayout({
     else onFinish();
   }, [validateStep, currentStep, totalSteps, setCurrentStep, onFinish]);
 
-  // Auto-focus removido: el setTimeout chocaba con la fase de mutación de React
-  // (Strict Mode + datos resolviendo en paralelo) y producía `removeChild` en el
-  // primer mount. El primer input usa `autoFocus` nativo cuando aplica.
-
-  // #4 — Enter avanza al siguiente paso desde cualquier input (excepto textarea / combobox abierto).
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  // IMPORTANTE: NO envolver el contenido en <form>. Radix Select detecta el
+  // form ancestro y monta `SelectBubbleInput`, que entra en conflicto con la
+  // fase de mutación de React Hook Form (Controller) y produce `removeChild`
+  // en el primer mount. Manejamos Enter manualmente a nivel de keydown.
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter') return;
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'TEXTAREA') return;
+    if (target.tagName === 'BUTTON') return;
+    if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'button') return;
+    if (target.getAttribute('aria-expanded') === 'true') return;
+    if (target.tagName !== 'INPUT' && target.tagName !== 'SELECT') return;
     e.preventDefault();
     if (!isPending) handleNext();
   }, [handleNext, isPending]);
 
-  const handleFormKeyDown = useCallback((e: KeyboardEvent<HTMLFormElement>) => {
-    if (e.key !== 'Enter') return;
-    const target = e.target as HTMLElement;
-    // Permitir Enter natural en textarea y en buttons (que ya lo manejan).
-    if (target.tagName === 'TEXTAREA') return;
-    if (target.tagName === 'BUTTON') return;
-    // Si un Radix combobox/listbox está abierto, no interceptamos.
-    if (target.getAttribute('aria-expanded') === 'true') return;
-  }, []);
-
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
-      {/* Header fijo */}
       <div className="flex-none border-b bg-background p-4 space-y-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver">
@@ -86,16 +81,12 @@ export function EmbarqueWizardLayout({
         />
       </div>
 
-      {/* Contenido scrolleable. <form> habilita Enter→Siguiente. */}
-      <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="flex-1 overflow-y-auto p-4" ref={contentRef}>
+      <div onKeyDown={handleKeyDown} className="flex-1 overflow-y-auto p-4" ref={contentRef}>
         <div className="max-w-4xl mx-auto space-y-6">
           {children}
         </div>
-        {/* Submit oculto para que el form responda a Enter sin un botón visible adicional. */}
-        <button type="submit" className="sr-only" tabIndex={-1} aria-hidden>Siguiente</button>
-      </form>
+      </div>
 
-      {/* Footer fijo */}
       <div className="flex-none border-t bg-background p-4">
         <div className="max-w-4xl mx-auto flex justify-between">
           <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep((p: number) => p - 1) : onBack()}>

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.8] - 2026-06-16
+- **fix(wizards/crash-removeChild-DEFINITIVO)**: Eliminado el crash `NotFoundError: Failed to execute 'removeChild' on 'Node'` que rompía el primer mount de `/embarques/nuevo` y `/cotizaciones/nueva`. Causa raíz: el contenido del wizard estaba envuelto en `<form>` para habilitar Enter→Siguiente; Radix Select detectaba el form ancestro y montaba `SelectBubbleInput` (input oculto para submit nativo) que colisionaba con la fase de mutación de React Hook Form (`Controller`) en el primer commit. Solución: se reemplaza el `<form>` por un `<div onKeyDown>` en `EmbarqueWizardLayout` y `CotizacionWizardLayout`, manejando Enter manualmente (sólo dispara "Siguiente" desde `<input>`/`<select>`, excluye textarea/botones/combobox abiertos). Se conserva el feature Enter→Siguiente sin generar bubble inputs. Verificado en preview: ambos wizards renderizan limpio sin disparar el ErrorBoundary.
+
 ## [13.33.7] - 2026-06-16
 - **fix(ui/iconografia-dropdown)**: `EmbarquesHeaderActions` ahora usa `MoreHorizontal` (mismo ícono que el resto de menús "Más acciones" en tablas y headers de Cotizaciones, Proveedores, CxP y Admin) en lugar de `MoreVertical`, con tamaño `h-4 w-4` consistente. Cierra el último Bajo de iconografía del audit visual.
 
