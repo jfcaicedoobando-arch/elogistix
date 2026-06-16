@@ -10,6 +10,7 @@ import { ActividadesHoyCard } from "@/features/crm/components/crmDashboard/Activ
 import { CerrandoSemanaCard, LeadsSinContactarCard } from "@/features/crm/components/crmDashboard/DealsCards";
 import { NextBestActionsCard } from "@/features/crm/components/crmDashboard/NextBestActionsCard";
 import { CotizacionesSinRespuestaCard } from "@/features/crm/components/crmDashboard/CotizacionesSinRespuestaCard";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 function Stat({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
@@ -33,6 +34,10 @@ export default function MiDia() {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
+      <PageHeader
+        title="Mi día"
+        description="Actividades y seguimientos pendientes para hoy"
+      />
       <CrmSubheader context={`Mi día · ${hoy}`} />
 
       <section className="space-y-3">

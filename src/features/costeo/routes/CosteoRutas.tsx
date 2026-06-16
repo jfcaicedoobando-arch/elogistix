@@ -25,11 +25,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
 import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
 import { useCosteoRutas, useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoRutas() {
   const { data: rutas = [], isLoading } = useCosteoRutas();
@@ -58,18 +60,11 @@ export default function CosteoRutas() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Rutas marítimas</h1>
-          <p className="text-sm text-muted-foreground">
-            Pares puerto China → puerto México disponibles para tarificar.
-          </p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="size-4 mr-2" />
-          Nueva ruta
-        </Button>
-      </div>
+      <PageHeader
+        title="Rutas marítimas"
+        description="Pares puerto China → puerto México disponibles para tarificar."
+        actions={<Button onClick={() => setOpen(true)}><Plus className="size-4 mr-2" />Nueva ruta</Button>}
+      />
 
       <Card>
         <Table>
@@ -123,6 +118,7 @@ export default function CosteoRutas() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nueva ruta CN → MX</DialogTitle>
+            <DialogDescription>Agrega una nueva ruta de origen en China a destino en México.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>

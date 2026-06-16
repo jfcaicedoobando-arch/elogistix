@@ -91,7 +91,7 @@ export default function Idempotencia() {
       header: "Reintentos",
       meta: { align: "right" },
       cell: ({ row }) => (
-        <span className={`text-sm tabular-nums ${row.original.hits > 0 ? "font-semibold text-amber-600" : "text-muted-foreground"}`}>
+        <span className={`text-sm tabular-nums ${row.original.hits > 0 ? "font-semibold text-warning" : "text-muted-foreground"}`}>
           {row.original.hits}
         </span>
       ),

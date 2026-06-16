@@ -27,4 +27,10 @@ export interface EmbarqueValidationErrors {
   clienteId?: string;
   incoterm?: string;
   descripcionMercancia?: string;
+  tipoCarga?: string;
+  pesoKg?: string;
+  volumenM3?: string;
+  piezas?: string;
+  shipper?: string;
+  consignatario?: string;
 }

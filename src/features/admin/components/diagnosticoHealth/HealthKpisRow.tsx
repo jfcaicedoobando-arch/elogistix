@@ -16,7 +16,7 @@ interface KpiCardProps {
 function KpiCard({ icon, label, value, hint, tone }: KpiCardProps) {
   const toneCls =
     tone === "error" ? "text-destructive"
-    : tone === "warn" ? "text-amber-600"
+    : tone === "warn" ? "text-warning"
     : "text-foreground";
   return (
     <Card>

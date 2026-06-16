@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const EMPTY: DemoraVentaTarifaInput = {
@@ -44,15 +45,11 @@ export default function CosteoDemorasVenta() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Tarifa demoras (venta)</h1>
-          <p className="text-sm text-muted-foreground">
-            Tabulador escalonado en USD que se le cobra al cliente por días excedidos. Independiente del costo de la naviera.
-          </p>
-        </div>
-        <Button onClick={() => setOpen(true)}><Plus className="size-4 mr-2" />Nueva tarifa</Button>
-      </div>
+      <PageHeader
+        title="Tarifa demoras (venta)"
+        description="Tabulador escalonado en USD que se le cobra al cliente por días excedidos. Independiente del costo de la naviera."
+        actions={<Button onClick={() => setOpen(true)}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
+      />
 
       <Card>
         <Table>
@@ -93,7 +90,7 @@ export default function CosteoDemorasVenta() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nueva tarifa de venta</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nueva tarifa de venta</DialogTitle><DialogDescription>Define una nueva tarifa de venta por demoras aplicable a los embarques.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Tipo de contenedor</Label>

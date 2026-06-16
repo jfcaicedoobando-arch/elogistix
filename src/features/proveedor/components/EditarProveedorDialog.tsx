@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
       <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Editar Proveedor</DialogTitle>
+        <DialogDescription>Modifica la información fiscal y de contacto del proveedor.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">

@@ -5,7 +5,7 @@
  */
 import { Upload, Loader2 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useImportarLeadsCsv } from "@/features/crm/hooks";
@@ -30,6 +30,7 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Importar leads desde CSV</DialogTitle>
+          <DialogDescription>Importa múltiples leads de forma masiva desde un archivo CSV.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">

@@ -12,7 +12,7 @@ import type { Tables } from "@/types/db";
 type Doc = Tables<"documentos_embarque">;
 
 const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {
-  Pendiente: { icon: FileX, color: "text-amber-500" },
+  Pendiente: { icon: FileX, color: "text-warning" },
   Recibido: { icon: FileCheck, color: "text-accent" },
   Validado: { icon: FileCheck, color: "text-success" },
 };

@@ -26,7 +26,7 @@ interface Props {
 
 const severidadConfig: Record<SeveridadAuditoria, { label: string; className: string }> = {
   critico: { label: "Crítico", className: "bg-destructive/15 text-destructive border-destructive/30" },
-  alto: { label: "Alto", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  alto: { label: "Alto", className: "bg-warning/10 text-warning border-warning/30" },
   medio: { label: "Medio", className: "bg-primary/15 text-primary border-primary/30" },
 };
 

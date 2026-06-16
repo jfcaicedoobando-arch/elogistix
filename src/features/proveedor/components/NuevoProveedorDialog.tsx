@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
       <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Nuevo Proveedor — Paso {c.step} de 2</DialogTitle>
+        <DialogDescription>Registra los datos fiscales y de contacto del nuevo proveedor.</DialogDescription>
         </DialogHeader>
 
         {c.step === 1 && <NuevoProveedorStep1 c={c} />}

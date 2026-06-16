@@ -1,4 +1,5 @@
 import { useFormContext, Controller } from "react-hook-form";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,7 +39,12 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           <LabelHeredable field="modo" getter={(c) => c.modo}>Modo de Transporte *</LabelHeredable>
           <Controller name="modo" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={errors.modo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar modo" /></SelectTrigger>
+              <SelectTrigger
+                aria-invalid={errors.modo ? true : undefined}
+                className={cn(errors.modo && 'border-destructive')}
+              >
+                <SelectValue placeholder="Seleccionar modo" />
+              </SelectTrigger>
               <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select>
           )} />
@@ -48,7 +54,12 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           <LabelHeredable field="tipo" getter={(c) => c.tipo}>Tipo de Operación *</LabelHeredable>
           <Controller name="tipo" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+              <SelectTrigger
+                aria-invalid={errors.tipo ? true : undefined}
+                className={cn(errors.tipo && 'border-destructive')}
+              >
+                <SelectValue placeholder="Seleccionar tipo" />
+              </SelectTrigger>
               <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           )} />
@@ -58,7 +69,12 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           <LabelHeredable field="clienteId" getter={(c) => c.cliente_id}>Cliente *</LabelHeredable>
           <Controller name="clienteId" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={errors.clienteId ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
+              <SelectTrigger
+                aria-invalid={errors.clienteId ? true : undefined}
+                className={cn(errors.clienteId && 'border-destructive')}
+              >
+                <SelectValue placeholder="Seleccionar cliente" />
+              </SelectTrigger>
               <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
             </Select>
           )} />
@@ -70,7 +86,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger
                 aria-invalid={errors.incoterm ? true : undefined}
-                className={errors.incoterm ? 'border-destructive' : ''}
+                className={cn(errors.incoterm && 'border-destructive')}
               >
                 <SelectValue placeholder="Seleccionar" />
               </SelectTrigger>
@@ -85,20 +101,33 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
         <Label htmlFor="emb-shipper">Shipper (Exportador) *</Label>
         <Controller name="shipper" render={({ field }) => (
           <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v !== '__otro__') setValue('shipperManual', ''); }}>
-            <SelectTrigger id="emb-shipper"><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
+            <SelectTrigger
+              id="emb-shipper"
+              aria-invalid={errors.shipper ? true : undefined}
+              className={cn(errors.shipper && 'border-destructive')}
+            >
+              <SelectValue placeholder="Seleccionar shipper" />
+            </SelectTrigger>
             <SelectContent>
               {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
               <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
             </SelectContent>
           </Select>
         )} />
+        {errors.shipper && <p className="text-xs text-destructive">{errors.shipper}</p>}
         {shipper === '__otro__' && <Input aria-label="Nombre del exportador" placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
       </div>
       <div className="space-y-2">
         <Label htmlFor="emb-consignatario">Consignatario *</Label>
         <Controller name="consignatario" render={({ field }) => (
           <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v !== '__otro__') setValue('consignatarioManual', ''); }}>
-            <SelectTrigger id="emb-consignatario"><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
+            <SelectTrigger
+              id="emb-consignatario"
+              aria-invalid={errors.consignatario ? true : undefined}
+              className={cn(errors.consignatario && 'border-destructive')}
+            >
+              <SelectValue placeholder="Seleccionar consignatario" />
+            </SelectTrigger>
             <SelectContent>
               {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
               {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
@@ -106,6 +135,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
             </SelectContent>
           </Select>
         )} />
+        {errors.consignatario && <p className="text-xs text-destructive">{errors.consignatario}</p>}
         {consignatario === '__otro__' && <Input aria-label="Nombre del consignatario" placeholder="Nombre del consignatario" {...register('consignatarioManual')} className="mt-2" />}
       </div>
     </>

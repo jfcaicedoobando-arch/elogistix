@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, X } from "lucide-react";
 import { useErrorReport, closeErrorReport } from "@/components/shared/utils/errorDetailsStore";
@@ -35,6 +35,7 @@ export function ErrorDetailsDialog() {
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Detalles del error</DialogTitle>
+          <DialogDescription>Muestra el detalle técnico del error ocurrido para facilitar su diagnóstico.</DialogDescription>
         </DialogHeader>
 
         {report && (

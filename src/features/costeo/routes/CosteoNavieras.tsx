@@ -22,6 +22,7 @@ import { NavieraCondicionForm } from "@/features/costeo/components/NavieraCondic
 import { DemorasTarifaEditor } from "@/features/costeo/components/DemorasTarifaEditor";
 import { CartaGarantiaBadge } from "@/features/costeo/components/CartaGarantiaBadge";
 import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -47,12 +48,10 @@ export default function CosteoNavieras() {
 
   return (
     <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Condiciones por naviera</h1>
-        <p className="text-sm text-muted-foreground">
-          Carta garantía, días libres y tabulador escalonado de demoras por tipo de contenedor.
-        </p>
-      </div>
+      <PageHeader
+        title="Condiciones por naviera"
+        description="Carta garantía, días libres y tabulador escalonado de demoras por tipo de contenedor."
+      />
 
       <Card>
         <Table>

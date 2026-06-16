@@ -6,6 +6,23 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.12] - 2026-06-16
+- **fix(mobile/dvh)**: Reemplazado `h-screen` por `h-dvh` en `ProtectedRoute.tsx` y `PortalProtectedRoute.tsx`; `h-screen w-screen` por `h-dvh w-dvw` en `PdfPreviewCotizacion.tsx`. Reemplazado `h-[calc(100vh-4rem)]` por `h-[calc(100dvh-4rem)]` en `EmbarqueWizardLayout.tsx` y `CotizacionWizardLayout.tsx` para soporte correcto de mobile viewport.
+- **skip(a11y/wizard-footer)**: Footers de ambos wizards ya tienen alineación horizontal y `gap-2` correctos — sin cambios.
+- **skip(a11y/focus-visible)**: `EmbarquesFiltrosChips` y `CotizacionesFiltrosChips` ya usan `focus-visible:` — sin cambios.
+- **skip(a11y/icon-buttons)**: Todos los `size="icon"` en embarques/cotización ya cuentan con `aria-label` — sin cambios.
+- **skip(ui/MoreVertical)**: No se encontró ninguna ocurrencia de `MoreVertical` en dropdowns de tabla — ya migrado.
+- **skip(microcopy)**: Sin inglés residual, mezcla de tratamiento ni mayúsculas inconsistentes detectadas en toasts/placeholders de módulos principales.
+
+## [13.33.11] - 2026-06-16
+- **fix(ui/dialog-description-y-tokens)**: (A) Agregado `DialogDescription` (visible o `sr-only`) a 18 diálogos que sólo tenían `DialogTitle`, cerrando los warnings de accesibilidad de Radix. (B) Reemplazadas 37 ocurrencias de colores hardcodeados en 22 archivos (`amber-*`, `blue-600`, `emerald-*`) por tokens semánticos del design system (`warning`, `info`, `success`) para respetar dark mode. Fix puntual: import de `DialogDescription` faltante en `CosteoAgentes.tsx`.
+
+## [13.33.10] - 2026-06-16
+- **feat(crm,costeo/page-header)**: Las 12 rutas que mostraban `<h1>` + `<p>` inline ahora usan el componente `PageHeader` estándar para coherencia visual con el resto de la app. CRM (6): `Leads`, `Actividades`, `Oportunidades`, `CrmDashboard`, `MiDia`, `Analitica`. Costeo (6): `CosteoTarifas`, `CosteoBuscar`, `CosteoRutas`, `CosteoAgentes`, `CosteoNavieras`, `CosteoDemorasVenta`. Acciones existentes se conservan vía la prop `actions`. Sin cambios de lógica.
+
+## [13.33.9] - 2026-06-16
+- **fix(wizards/validacion-visual)**: Aplicados indicadores visuales de error en todos los campos obligatorios del wizard de Embarques que carecían de `border-destructive` y `aria-invalid`. `BloqueMercancia`: peso (kg), volumen (m³), piezas, descripciónMercancía y tipoCarga reciben `aria-invalid={error ? true : undefined}`, `className={cn(error && "border-destructive")}` y `<p className="text-xs text-destructive">` reactivo. `BloqueClienteContactos`: `SelectTrigger` de shipper y consignatario añaden los mismos atributos reactivos. `StepDatosRutaAereo`: aeropuertoOrigen, aeropuertoDestino y mawb. `StepDatosRutaTerrestre`: ciudadOrigen, ciudadDestino y transportista. `StepDatosRutaMaritimo`: tipoServicio SelectTrigger; PortSelect y NavieraSelect extendidos con props className y aria-invalid. `EmbarqueValidationErrors` extendido con tipoCarga, pesoKg, volumenM3, piezas, shipper y consignatario. No se modificó ningún schema Zod ni lógica de validación.
+
 ## [13.33.8] - 2026-06-16
 - **fix(wizards/crash-removeChild-DEFINITIVO)**: Eliminado el crash `NotFoundError: Failed to execute 'removeChild' on 'Node'` que rompía el primer mount de `/embarques/nuevo` y `/cotizaciones/nueva`. Causa raíz: el contenido del wizard estaba envuelto en `<form>` para habilitar Enter→Siguiente; Radix Select detectaba el form ancestro y montaba `SelectBubbleInput` (input oculto para submit nativo) que colisionaba con la fase de mutación de React Hook Form (`Controller`) en el primer commit. Solución: se reemplaza el `<form>` por un `<div onKeyDown>` en `EmbarqueWizardLayout` y `CotizacionWizardLayout`, manejando Enter manualmente (sólo dispara "Siguiente" desde `<input>`/`<select>`, excluye textarea/botones/combobox abiertos). Se conserva el feature Enter→Siguiente sin generar bubble inputs. Verificado en preview: ambos wizards renderizan limpio sin disparar el ErrorBoundary.
 

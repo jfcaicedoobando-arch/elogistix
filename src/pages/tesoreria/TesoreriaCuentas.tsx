@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -67,7 +67,7 @@ export default function TesoreriaCuentas() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nueva cuenta bancaria</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nueva cuenta bancaria</DialogTitle><DialogDescription>Captura los datos de la nueva cuenta bancaria para conciliación.</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Banco</Label>

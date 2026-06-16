@@ -56,12 +56,12 @@ export function ProformaInconsistenteAlert({
   const n = conceptosPendientes.length;
 
   return (
-    <Alert className="border-amber-500/40 bg-amber-500/10">
-      <AlertTriangle className="h-4 w-4 text-amber-600" />
-      <AlertTitle className="text-amber-900 dark:text-amber-200">
+    <Alert className="border-warning/40 bg-warning/10">
+      <AlertTriangle className="h-4 w-4 text-warning" />
+      <AlertTitle className="text-warning">
         Proforma {proformaBorrador.numero} está vacía
       </AlertTitle>
-      <AlertDescription className="text-amber-900/90 dark:text-amber-200/90">
+      <AlertDescription className="text-warning/90">
         <p className="mb-3">
           Hay {n} concepto{n !== 1 ? "s" : ""} de venta pendiente{n !== 1 ? "s" : ""} sin
           asignar y este borrador no tiene conceptos. Asígnalos a esta proforma o

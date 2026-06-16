@@ -61,13 +61,13 @@ export function FilaCostoPrecio({
         <Input
           readOnly
           value={formatCurrency(totalUSD, 'USD')}
-          className={`text-sm bg-muted font-semibold ${esMixta ? 'text-amber-600 border-amber-400' : ''}`}
+          className={`text-sm bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
           data-testid={esMixta ? 'fila-mixta-costo' : undefined}
         />
         {esMixta && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" aria-label="Conversión FX aplicada" />
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-label="Conversión FX aplicada" />
             </TooltipTrigger>
             <TooltipContent>
               Conv. {costo.moneda}→USD @ TC {costo.moneda === 'EUR' ? tcEUR : tcUSD}

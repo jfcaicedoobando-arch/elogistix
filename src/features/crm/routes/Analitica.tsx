@@ -11,6 +11,7 @@ import { formatCurrencyCompact } from "@/lib/formatters";
 import { useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { usePermissions } from "@/hooks/shared";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
@@ -130,6 +131,10 @@ export default function Analitica() {
   const { canEdit } = usePermissions();
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <PageHeader
+        title="Analítica CRM"
+        description="Forecast, embudo de conversión y rendimiento por vendedor"
+      />
       <CrmSubheader context="Forecast · Embudo · Pérdidas · Vendedores" />
       <ForecastPanel />
       <EmbudoYPerdidas />

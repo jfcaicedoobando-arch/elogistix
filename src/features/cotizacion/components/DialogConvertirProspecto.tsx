@@ -4,7 +4,7 @@ import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTo
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 
 import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
@@ -26,6 +26,7 @@ export default function DialogConvertirProspecto({
       <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Convertir Prospecto a Cliente</DialogTitle>
+        <DialogDescription>Convierte el prospecto en cliente registrado para habilitar la generación de embarques.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2"><Label>Nombre / Empresa *</Label><Input value={clienteForm.nombre} onChange={e => setClienteForm(p => ({ ...p, nombre: e.target.value }))} /></div>

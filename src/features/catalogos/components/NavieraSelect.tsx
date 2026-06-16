@@ -10,9 +10,11 @@ interface NavieraSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
+  "aria-invalid"?: boolean | undefined;
 }
 
-export default function NavieraSelect({ value, onValueChange, placeholder = "Seleccionar naviera" }: NavieraSelectProps) {
+export default function NavieraSelect({ value, onValueChange, placeholder = "Seleccionar naviera", className, "aria-invalid": ariaInvalid }: NavieraSelectProps) {
   const [open, setOpen] = useState(false);
   const { data: navieras = [] } = useNavieras();
 
@@ -22,7 +24,13 @@ export default function NavieraSelect({ value, onValueChange, placeholder = "Sel
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          aria-invalid={ariaInvalid}
+          className={cn("w-full justify-between font-normal", className)}
+        >
           {label || <span className="text-muted-foreground">{placeholder}</span>}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

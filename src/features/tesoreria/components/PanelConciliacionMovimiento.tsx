@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,7 +133,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
 
       <Dialog open={openIgnorar} onOpenChange={setOpenIgnorar}>
         <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
-          <DialogHeader><DialogTitle>Ignorar movimiento</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Ignorar movimiento</DialogTitle><DialogDescription>Confirma que el movimiento será ignorado en la conciliación.</DialogDescription></DialogHeader>
           <Label>Motivo</Label>
           <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno..." />
           <DialogFooter>

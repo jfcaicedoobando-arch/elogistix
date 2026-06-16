@@ -20,6 +20,7 @@ import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { TarifaEstadoBadge } from "@/features/costeo/components/TarifaEstadoBadge";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoTarifas() {
   const [estado, setEstado] = useState<EstadoFiltro>("vigente");
@@ -61,17 +62,11 @@ export default function CosteoTarifas() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Tarifas marítimas (USD)</h1>
-          <p className="text-sm text-muted-foreground">
-            Matriz CN → MX por agente, naviera, ruta y tipo de contenedor. El total comparable suma flete + recargos.
-          </p>
-        </div>
-        <Button onClick={nuevo}>
-          <Plus className="size-4 mr-2" /> Nueva tarifa
-        </Button>
-      </div>
+      <PageHeader
+        title="Tarifas marítimas (USD)"
+        description="Matriz CN → MX por agente, naviera, ruta y tipo de contenedor. El total comparable suma flete + recargos."
+        actions={<Button onClick={nuevo}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
+      />
 
       <Card className="p-4 flex flex-wrap gap-3">
         <div className="min-w-[140px]">

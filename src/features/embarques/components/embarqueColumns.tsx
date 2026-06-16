@@ -53,7 +53,7 @@ function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCellProps)
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500 text-amber-600">Datos pendientes</Badge>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-warning text-warning">Datos pendientes</Badge>
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">{pendientesTitle}</p>
@@ -93,7 +93,7 @@ export function buildEmbarqueColumns({
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-warning flex-shrink-0" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">{docInfo.pendientes} doc(s) pendientes</p>

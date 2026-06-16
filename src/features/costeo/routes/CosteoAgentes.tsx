@@ -12,7 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -21,6 +21,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useCosteoAgentes, useCosteoAgenteMutations } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useProveedoresAgente } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { CosteoAgenteInput } from "@/features/costeo/services/agentes";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const EMPTY: CosteoAgenteInput = {
   nombre: "",
@@ -50,18 +51,14 @@ export default function CosteoAgentes() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Agentes de costeo</h1>
-          <p className="text-sm text-muted-foreground">
-            Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito se usan como criterio principal de desempate.
-          </p>
-        </div>
-        <Button onClick={() => setOpen(true)}>
+      <PageHeader
+        title="Agentes de costeo"
+        description="Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito se usan como criterio principal de desempate."
+        actions={<Button onClick={() => setOpen(true)}>
           <Plus className="size-4 mr-2" />
           Nuevo agente
-        </Button>
-      </div>
+        </Button>}
+      />
 
       <Card>
         <Table>
@@ -117,6 +114,7 @@ export default function CosteoAgentes() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nuevo agente</DialogTitle>
+            <DialogDescription>Registra un nuevo agente de carga con sus datos de contacto.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>

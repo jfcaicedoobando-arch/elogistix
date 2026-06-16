@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -109,6 +109,7 @@ export function BuscarTarifaDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Buscar tarifa marítima (Top 3)</DialogTitle>
+        <DialogDescription>Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">

@@ -12,6 +12,7 @@ import { NextBestActionsCard } from "@/features/crm/components/crmDashboard/Next
 import { CotizacionesSinRespuestaCard } from "@/features/crm/components/crmDashboard/CotizacionesSinRespuestaCard";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 function StatStripItem({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
@@ -33,6 +34,10 @@ export default function CrmDashboard() {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
+      <PageHeader
+        title="Inicio CRM"
+        description="Resumen ejecutivo y acciones prioritarias del día"
+      />
       <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

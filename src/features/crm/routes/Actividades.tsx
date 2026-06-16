@@ -21,6 +21,7 @@ import {
 } from "@/features/crm/hooks";
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import { usePermissions } from "@/hooks/shared";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
@@ -83,6 +84,10 @@ export default function Actividades() {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
+      <PageHeader
+        title="Actividades"
+        description="Registro de llamadas, reuniones y tareas de seguimiento CRM"
+      />
       <CrmSubheader
         context={`${data?.count ?? 0} actividades`}
         actions={vencidasOnly ? (

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +58,7 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
               {total}
             </Badge>
           </DialogTitle>
+          <DialogDescription>Consulta el historial de cambios de estado del embarque seleccionado.</DialogDescription>
         </DialogHeader>
 
         <div className="relative">
