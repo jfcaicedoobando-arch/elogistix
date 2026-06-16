@@ -38,6 +38,7 @@ export function BloqueVinculacion({
 }: Props) {
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [expedienteComboOpen, setExpedienteComboOpen] = useState(false);
+  const [desvincularOpen, setDesvincularOpen] = useState(false);
   const tieneExpedientes = expedientesCliente.length > 0;
 
   return (
@@ -49,7 +50,7 @@ export function BloqueVinculacion({
             <Badge variant="success" className="px-3 py-1.5 text-sm">
               ✓ Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
             </Badge>
-            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onDesvincularCotizacion} aria-label="Desvincular cotización">
+            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDesvincularOpen(true)} aria-label="Desvincular cotización">
               <X className="h-4 w-4" />
             </Button>
           </div>
