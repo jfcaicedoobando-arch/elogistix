@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.46.1] - 2026-06-16
+- **fix(db/grants)**: Faltaban GRANTs a `authenticated`/`service_role` en las tablas `tracking_externo`, `tracking_intentos`, `tracking_links`, `tracking_webhook_log`. Sin permisos, RLS nunca evaluaba y los SELECT regresaban 0 filas para usuarios admin (detectado por `test_rls_operaciones`, TEST 8).
+- **fix(db/trigger)**: `recalcular_estado_factura()` escribía en `facturas.fecha_pago` (columna inexistente), rompiendo cualquier alta/edición de `pagos_factura`. Eliminado del UPDATE.
+- **fix(ci/rls)**: `test_rls_financiero_critico.sql` INSERTaba `facturas.saldo` (columna inexistente). Removida de la lista de columnas y valores.
+
 ## [13.46.0] - 2026-06-16
 - **feat(auth/onboarding)**: Onboarding inicial post-registro en `/onboarding`. Captura RFC (12-13 chars), dirección fiscal y moneda preferida (MXN/USD/EUR) antes de entrar a `/inicio`.
 - Nuevas columnas en `organizations`: `direccion`, `moneda_preferida` (default `MXN`, CHECK MXN/USD/EUR), `onboarding_completado` (default `false`). Las organizaciones existentes se marcan como completadas para no interrumpir flujos vigentes.
