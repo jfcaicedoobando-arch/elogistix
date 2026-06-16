@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.39.0] - 2026-06-16
+- **feat(permisos)**: el wizard de Nuevo Embarque ahora exige cotización Aceptada vinculada para los roles `coordinador_logistico`, `operador` y `ejecutivo_pricing`. Solo `super_admin`, `admin_org`, `admin` y `gerente_operaciones` pueden seguir creando embarques "libres". Se agrega capacidad `canCrearEmbarqueLibre` en `usePermissions`, el `validateWizardStep(1)` inyecta el error `cotizacion` cuando aplica, y el Paso 1 muestra un `Alert` explicando la restricción mientras no haya cotización vinculada.
+
 ## [13.38.2] - 2026-06-16
 - **refactor(power-of-10)**: baseline de arquitectura 100% verde (0 archivos > 200 líneas).
   - `ProformaDetalle.tsx` (224 → 180) extrae `EstadoBadges` y `TotalesCard` a `ProformaDetalleCards.tsx` (52).

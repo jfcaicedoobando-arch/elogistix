@@ -64,4 +64,49 @@ describe("validateWizardStep", () => {
     });
     expect(errors).toEqual({});
   });
+
+  // v13.39.0: guard de cotización para roles operativos sin permiso libre.
+  const baseStep1Values = {
+    modo: "Marítimo", tipo: "Importación", clienteId: "c1",
+    incoterm: "FOB", descripcionMercancia: "Carga seca",
+  };
+
+  it("step 1: requiereCotizacion + sin cotización vinculada inyecta error 'cotizacion'", () => {
+    const errors = validateWizardStep({
+      step: 1,
+      values: baseStep1Values,
+      documentosArchivos: {},
+      conceptosVenta: [],
+      conceptosCosto: [],
+      requiereCotizacion: true,
+      cotizacionVinculadaId: null,
+    });
+    expect(errors.cotizacion).toBeTruthy();
+  });
+
+  it("step 1: requiereCotizacion + cotización vinculada no inyecta error 'cotizacion'", () => {
+    const errors = validateWizardStep({
+      step: 1,
+      values: baseStep1Values,
+      documentosArchivos: {},
+      conceptosVenta: [],
+      conceptosCosto: [],
+      requiereCotizacion: true,
+      cotizacionVinculadaId: "cot-123",
+    });
+    expect(errors).toEqual({});
+  });
+
+  it("step 1: requiereCotizacion=false (admin) no exige cotización", () => {
+    const errors = validateWizardStep({
+      step: 1,
+      values: baseStep1Values,
+      documentosArchivos: {},
+      conceptosVenta: [],
+      conceptosCosto: [],
+      requiereCotizacion: false,
+      cotizacionVinculadaId: null,
+    });
+    expect(errors).toEqual({});
+  });
 });
