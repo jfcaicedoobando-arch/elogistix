@@ -20,9 +20,10 @@ import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
-import { aplicarTarifaAlForm, logTarifaSugeridaAplicada } from "./aplicarTarifa";
+import { aplicarTarifaAlForm, logTarifaSugeridaAplicada, type AplicarTarifaOptions } from "./aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const norm = (s: string) =>
   s.toLowerCase().replace(/['"’`()]/g, "").replace(/\s+/g, " ").trim();
@@ -64,10 +65,17 @@ function resolverTipoId(
 interface SugerenciasTarifaInlineProps {
   /** Si la cotización ya está persistida, se pasa para bitácora. */
   cotizacionId?: string | null;
+  /** Callback para auto-cargar costos al elegir una tarifa. */
+  onAutocargaCostos?: (filas: FilaCostoLocal[]) => void;
+  markup?: number;
+  cantidad?: number;
 }
 
 export default function SugerenciasTarifaInline({
   cotizacionId,
+  onAutocargaCostos,
+  markup,
+  cantidad,
 }: SugerenciasTarifaInlineProps) {
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
   const { data: puertos = [] } = usePuertos();
@@ -98,9 +106,11 @@ export default function SugerenciasTarifaInline({
     fecha: new Date().toISOString().slice(0, 10),
   });
 
+  const aplicarOptions: AplicarTarifaOptions = { onAutocargaCostos, markup, cantidad };
+
   const handleElegir = (row: TopTarifaRow) => {
     const rank = (tarifas.findIndex((t) => t.id === row.id) + 1) as 1 | 2 | 3;
-    aplicarTarifaAlForm(setValue, trigger, row);
+    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions);
     void logTarifaSugeridaAplicada({
       tarifaId: row.id,
       ranking: rank,
