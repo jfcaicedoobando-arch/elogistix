@@ -106,58 +106,60 @@ export function BuscarTarifaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Buscar tarifa marítima (Top 3)</DialogTitle>
-        <DialogDescription>Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada.</DialogDescription>
+          <DialogDescription>Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada.</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div>
-            <Label>Puerto origen (CN)</Label>
-            <Select value={origen} onValueChange={setOrigen}>
-              <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-              <SelectContent>
-                {puertosOrigenList.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="overflow-y-auto px-6 pb-6 space-y-4">
+          <div role="search" aria-label="Filtros de búsqueda de tarifa" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <Label htmlFor="td-origen">Puerto origen (CN)</Label>
+              <Select value={origen} onValueChange={setOrigen}>
+                <SelectTrigger id="td-origen"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                <SelectContent>
+                  {puertosOrigenList.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="td-destino">Puerto destino (MX)</Label>
+              <Select value={destino} onValueChange={setDestino}>
+                <SelectTrigger id="td-destino"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                <SelectContent>
+                  {puertosDestinoList.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="td-tipo">Tipo contenedor</Label>
+              <Select value={tipo} onValueChange={setTipo}>
+                <SelectTrigger id="td-tipo"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                <SelectContent>
+                  {tipos.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="td-fecha">Fecha</Label>
+              <Input id="td-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            </div>
           </div>
-          <div>
-            <Label>Puerto destino (MX)</Label>
-            <Select value={destino} onValueChange={setDestino}>
-              <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-              <SelectContent>
-                {puertosDestinoList.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Tipo contenedor</Label>
-            <Select value={tipo} onValueChange={setTipo}>
-              <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-              <SelectContent>
-                {tipos.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Fecha</Label>
-            <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-          </div>
-        </div>
 
-        <ResultadosBody
-          origen={origen} destino={destino} tipo={tipo}
-          isFetching={isFetching} tarifas={tarifas}
-          onElegir={onElegir} onOpenChange={onOpenChange}
-          selectLabel={selectLabel}
-        />
+          <ResultadosBody
+            origen={origen} destino={destino} tipo={tipo}
+            isFetching={isFetching} tarifas={tarifas}
+            onElegir={onElegir} onOpenChange={onOpenChange}
+            selectLabel={selectLabel}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

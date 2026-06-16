@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -86,8 +87,11 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <div className="w-64">
+          <Label htmlFor="demoras-tipo" className="sr-only">Tipo de contenedor</Label>
           <Select value={tipoSel} onValueChange={setTipoSel}>
-            <SelectTrigger><SelectValue placeholder="Tipo de contenedor" /></SelectTrigger>
+            <SelectTrigger id="demoras-tipo" aria-label="Tipo de contenedor del tabulador">
+              <SelectValue placeholder="Tipo de contenedor" />
+            </SelectTrigger>
             <SelectContent>
               {tipos.map((t) => (
                 <SelectItem key={t.id} value={t.id}>{t.code} — {t.name}</SelectItem>
@@ -121,27 +125,36 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
               </TableCell>
             </TableRow>
           )}
-          {rows.map((r) => (
+          {rows.map((r, idx) => (
             <TableRow key={r._key}>
               <TableCell>
-                <Input type="number" min={1} value={r.desde_dia}
-                  onChange={(e) => update(r._key, { desde_dia: Number(e.target.value) || 1 })} />
+                <Input
+                  type="number" min={1} value={r.desde_dia}
+                  aria-label={`Desde día del tramo ${idx + 1}`}
+                  onChange={(e) => update(r._key, { desde_dia: Number(e.target.value) || 1 })}
+                />
               </TableCell>
               <TableCell>
-                <Input type="number" min={r.desde_dia}
+                <Input
+                  type="number" min={r.desde_dia}
                   placeholder="∞"
                   value={r.hasta_dia ?? ""}
+                  aria-label={`Hasta día del tramo ${idx + 1} (vacío para sin límite)`}
                   onChange={(e) =>
                     update(r._key, { hasta_dia: e.target.value === "" ? null : Number(e.target.value) })
-                  } />
+                  }
+                />
               </TableCell>
               <TableCell>
-                <Input type="number" min={0} step="0.01" value={r.monto_por_dia}
-                  onChange={(e) => update(r._key, { monto_por_dia: Number(e.target.value) || 0 })} />
+                <Input
+                  type="number" min={0} step="0.01" value={r.monto_por_dia}
+                  aria-label={`Monto por día del tramo ${idx + 1}`}
+                  onChange={(e) => update(r._key, { monto_por_dia: Number(e.target.value) || 0 })}
+                />
               </TableCell>
               <TableCell>
                 <Select value={r.moneda} onValueChange={(v) => update(r._key, { moneda: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label={`Moneda del tramo ${idx + 1}`}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="USD">USD</SelectItem>
                     <SelectItem value="MXN">MXN</SelectItem>
@@ -150,7 +163,12 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
                 </Select>
               </TableCell>
               <TableCell>
-                <Button size="icon" variant="ghost" onClick={() => remove(r._key)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => remove(r._key)}
+                  aria-label={`Quitar tramo ${idx + 1}`}
+                >
                   <Trash2 className="size-4 text-destructive" />
                 </Button>
               </TableCell>

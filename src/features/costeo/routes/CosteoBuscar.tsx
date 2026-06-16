@@ -38,43 +38,45 @@ export default function CosteoBuscar() {
         description="Top 3 tarifas vigentes ordenadas por precio total, días de crédito y días libres de demoras."
       />
 
-      <Card className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div>
-          <Label>Puerto origen (CN)</Label>
-          <Select value={origen} onValueChange={setOrigen}>
-            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {(puertosCN.length ? puertosCN : puertos).map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Puerto destino (MX)</Label>
-          <Select value={destino} onValueChange={setDestino}>
-            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {(puertosMX.length ? puertosMX : puertos).map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Tipo contenedor</Label>
-          <Select value={tipo} onValueChange={setTipo}>
-            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {tipos.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Fecha</Label>
-          <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+      <Card className="p-4" role="search" aria-label="Filtros de búsqueda de tarifa">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <Label htmlFor="buscar-origen">Puerto origen (CN)</Label>
+            <Select value={origen} onValueChange={setOrigen}>
+              <SelectTrigger id="buscar-origen"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+              <SelectContent>
+                {(puertosCN.length ? puertosCN : puertos).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="buscar-destino">Puerto destino (MX)</Label>
+            <Select value={destino} onValueChange={setDestino}>
+              <SelectTrigger id="buscar-destino"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+              <SelectContent>
+                {(puertosMX.length ? puertosMX : puertos).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="buscar-tipo">Tipo contenedor</Label>
+            <Select value={tipo} onValueChange={setTipo}>
+              <SelectTrigger id="buscar-tipo"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+              <SelectContent>
+                {tipos.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="buscar-fecha">Fecha</Label>
+            <Input id="buscar-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          </div>
         </div>
       </Card>
 

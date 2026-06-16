@@ -74,16 +74,14 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
   };
 
   return (
-    <div className="space-y-4">
+    <form
+      onSubmit={(e) => { e.preventDefault(); submit(); }}
+      className="space-y-4"
+    >
       <div>
-        <p className="text-sm text-muted-foreground">Naviera</p>
-        <p className="font-medium">{navieraNombre}</p>
-      </div>
-
-      <div>
-        <Label>Proveedor vinculado *</Label>
+        <Label htmlFor="nav-proveedor">Proveedor vinculado *</Label>
         <Select value={form.proveedor_id} onValueChange={(v) => setForm({ ...form, proveedor_id: v })}>
-          <SelectTrigger><SelectValue placeholder="Selecciona proveedor tipo 'Naviera'" /></SelectTrigger>
+          <SelectTrigger id="nav-proveedor"><SelectValue placeholder="Selecciona proveedor tipo 'Naviera'" /></SelectTrigger>
           <SelectContent>
             {proveedores.length === 0 && (
               <SelectItem value="__empty" disabled>
@@ -97,7 +95,8 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
         </Select>
       </div>
 
-      <div className="rounded-md border p-3 space-y-3">
+      <fieldset className="rounded-md border p-3 space-y-3">
+        <legend className="text-sm font-medium px-1">Carta Garantía</legend>
         <div className="flex items-center gap-2">
           <Switch
             id="carta"
@@ -109,8 +108,9 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
         {form.tiene_carta_garantia && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Vigente hasta *</Label>
+              <Label htmlFor="carta-vigente">Vigente hasta *</Label>
               <Input
+                id="carta-vigente"
                 type="date"
                 value={form.carta_garantia_vigente_hasta ?? ""}
                 onChange={(e) =>
@@ -119,15 +119,17 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
               />
             </div>
             <div>
-              <Label>Folio / referencia</Label>
+              <Label htmlFor="carta-folio">Folio / referencia</Label>
               <Input
+                id="carta-folio"
                 value={form.carta_garantia_folio ?? ""}
                 onChange={(e) => setForm({ ...form, carta_garantia_folio: e.target.value || null })}
               />
             </div>
             <div className="col-span-2">
-              <Label>Notas de la carta</Label>
+              <Label htmlFor="carta-notas">Notas de la carta</Label>
               <Textarea
+                id="carta-notas"
                 rows={2}
                 value={form.carta_garantia_notas ?? ""}
                 onChange={(e) => setForm({ ...form, carta_garantia_notas: e.target.value || null })}
@@ -135,12 +137,13 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
             </div>
           </div>
         )}
-      </div>
+      </fieldset>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label>Días libres de demoras (estándar)</Label>
+          <Label htmlFor="nav-dias-libres">Días libres de demoras (estándar)</Label>
           <Input
+            id="nav-dias-libres"
             type="number"
             min={0}
             value={form.dias_libres_demoras_default}
@@ -150,12 +153,12 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
           />
         </div>
         <div>
-          <Label>Moneda de demoras</Label>
+          <Label htmlFor="nav-moneda">Moneda de demoras</Label>
           <Select
             value={form.moneda_demoras}
             onValueChange={(v) => setForm({ ...form, moneda_demoras: v })}
           >
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="nav-moneda"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="USD">USD</SelectItem>
               <SelectItem value="MXN">MXN</SelectItem>
@@ -166,8 +169,9 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
       </div>
 
       <div>
-        <Label>Notas generales</Label>
+        <Label htmlFor="nav-notas">Notas generales</Label>
         <Textarea
+          id="nav-notas"
           rows={2}
           value={form.notas ?? ""}
           onChange={(e) => setForm({ ...form, notas: e.target.value || null })}
@@ -175,10 +179,10 @@ export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSa
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={submit} disabled={!valido || guardar.isPending}>
+        <Button type="submit" disabled={!valido || guardar.isPending}>
           {existente ? "Actualizar" : "Crear"} condiciones
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
