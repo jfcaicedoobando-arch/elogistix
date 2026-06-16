@@ -26,8 +26,8 @@ describe("sha256Hex", () => {
   });
 
   it("es determinístico: mismo contenido → mismo hash", async () => {
-    const a = await sha256Hex(makeFile("contenido idéntico", "a.txt"));
-    const b = await sha256Hex(makeFile("contenido idéntico", "b.txt"));
+    const a = await sha256Hex(makeFile("contenido idéntico"));
+    const b = await sha256Hex(makeFile("contenido idéntico"));
     expect(a).toBe(b);
   });
 
