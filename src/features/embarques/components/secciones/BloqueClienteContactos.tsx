@@ -35,7 +35,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Modo de Transporte *</Label>
+          <LabelHeredable field="modo" getter={(c) => c.modo}>Modo de Transporte *</LabelHeredable>
           <Controller name="modo" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className={errors.modo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar modo" /></SelectTrigger>
@@ -45,7 +45,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           {errors.modo && <p className="text-xs text-destructive">{errors.modo}</p>}
         </div>
         <div className="space-y-2">
-          <Label>Tipo de Operación *</Label>
+          <LabelHeredable field="tipo" getter={(c) => c.tipo}>Tipo de Operación *</LabelHeredable>
           <Controller name="tipo" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
@@ -55,7 +55,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           {errors.tipo && <p className="text-xs text-destructive">{errors.tipo}</p>}
         </div>
         <div className="space-y-2">
-          <Label>Cliente *</Label>
+          <LabelHeredable field="clienteId" getter={(c) => c.cliente_id}>Cliente *</LabelHeredable>
           <Controller name="clienteId" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className={errors.clienteId ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
@@ -65,7 +65,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           {errors.clienteId && <p className="text-xs text-destructive">{errors.clienteId}</p>}
         </div>
         <div className="space-y-2">
-          <Label>Incoterm *</Label>
+          <LabelHeredable field="incoterm" getter={(c) => c.incoterm}>Incoterm *</LabelHeredable>
           <Controller name="incoterm" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
