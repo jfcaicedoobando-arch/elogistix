@@ -10,7 +10,7 @@ import {
 import type { AppRole } from "@/types/appRole";
 
 const ALL_ROLES: AppRole[] = [
-  "super_admin", "admin_org", "gerente_operaciones", "gerente_visor",
+  "super_admin", "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial",
   "coordinador_logistico", "ejecutivo_pricing", "contador", "tesorero",
   "vendedor", "customer_service", "cliente", "admin", "operador", "viewer",
 ];

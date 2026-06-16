@@ -38,11 +38,19 @@ describe("roleSatisfies", () => {
     expect(roleSatisfies("viewer", "cliente")).toBe(false);
   });
 
-  it("vendedor agrupa con admin_org y super_admin", () => {
+  it("vendedor agrupa con gerente_comercial, admin_org y super_admin", () => {
     expect(roleSatisfies("vendedor", "admin_org")).toBe(true);
     expect(roleSatisfies("vendedor", "super_admin")).toBe(true);
     expect(roleSatisfies("vendedor", "vendedor")).toBe(true);
+    expect(roleSatisfies("vendedor", "gerente_comercial")).toBe(true);
     expect(roleSatisfies("vendedor", "contador")).toBe(false);
+  });
+
+  it("gerente_comercial satisface viewer pero no operador ni admin_org", () => {
+    expect(roleSatisfies("viewer", "gerente_comercial")).toBe(true);
+    expect(roleSatisfies("operador", "gerente_comercial")).toBe(false);
+    expect(roleSatisfies("admin_org", "gerente_comercial")).toBe(false);
+    expect(roleSatisfies("admin", "gerente_comercial")).toBe(false);
   });
 });
 
