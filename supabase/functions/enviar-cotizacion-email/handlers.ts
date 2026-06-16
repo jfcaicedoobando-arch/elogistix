@@ -109,52 +109,55 @@ export interface SendParams {
   timestamp: number;
 }
 
-export async function handleSend(params: SendParams): Promise<Response> {
-  const { admin, supabaseUrl, supabaseServiceKey, cot, userId, userEmail, body, timestamp } = params;
+interface SendBodyParsed {
+  destinatarios: Destinatario[];
+  validRecipients: Destinatario[];
+  ccEmails: string[];
+  mensaje: string;
+  asunto: string;
+  pdfStoragePath: string;
+  marcarEnviada: boolean;
+  totales: { mxn?: string; usd?: string };
+  ejecutivo: { nombre?: string; email?: string; telefono?: string };
+}
 
+function parseSendBody(body: Record<string, unknown>): SendBodyParsed {
   const destinatarios = Array.isArray(body.destinatarios) ? (body.destinatarios as Destinatario[]) : [];
   const ccEmails = Array.isArray(body.cc) ? (body.cc as string[]).filter(isEmail) : [];
-  const mensaje = typeof body.mensaje === 'string' ? body.mensaje : '';
-  const asunto = typeof body.asunto === 'string' ? body.asunto : '';
-  const pdfStoragePath = typeof body.pdf_path === 'string' ? body.pdf_path : '';
-  const marcarEnviada = body.marcar_enviada !== false;
-  const totales = (body.totales ?? {}) as { mxn?: string; usd?: string };
-  const ejecutivo = (body.ejecutivo ?? {}) as { nombre?: string; email?: string; telefono?: string };
-
-  const validRecipients = destinatarios.filter((d) => d?.email && isEmail(d.email));
-  if (validRecipients.length === 0) return json({ error: 'Al menos un destinatario válido es requerido' }, 400);
-  if (!pdfStoragePath) return json({ error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
-
-  const { data: signed, error: signErr } = await admin
-    .storage.from('cotizaciones-pdf')
-    .createSignedUrl(pdfStoragePath, SIGNED_URL_TTL);
-  if (signErr || !signed) return json({ error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
-
-  const pdfLink = signed.signedUrl;
-  const enlacePortal = `${APP_URL}/cotizaciones/${cot.id}`;
-  const templateData = {
-    folio: cot.folio, cliente: cot.cliente_nombre, origen: cot.origen, destino: cot.destino,
-    incoterm: cot.incoterm, modo: cot.modo, vigencia: cot.fecha_vigencia ?? undefined,
-    totalMxn: totales.mxn, totalUsd: totales.usd, mensaje, enlacePortal, enlacePdf: pdfLink,
-    ejecutivoNombre: ejecutivo.nombre, ejecutivoEmail: ejecutivo.email, ejecutivoTelefono: ejecutivo.telefono,
+  return {
+    destinatarios,
+    validRecipients: destinatarios.filter((d) => d?.email && isEmail(d.email)),
+    ccEmails,
+    mensaje: typeof body.mensaje === 'string' ? body.mensaje : '',
+    asunto: typeof body.asunto === 'string' ? body.asunto : '',
+    pdfStoragePath: typeof body.pdf_path === 'string' ? body.pdf_path : '',
+    marcarEnviada: body.marcar_enviada !== false,
+    totales: (body.totales ?? {}) as { mxn?: string; usd?: string },
+    ejecutivo: (body.ejecutivo ?? {}) as { nombre?: string; email?: string; telefono?: string },
   };
+}
 
-  const allRecipients = [
-    ...validRecipients.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
-    ...ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
-  ];
+interface PersistParams {
+  admin: ReturnType<typeof createClient>;
+  cot: Cotizacion;
+  userId: string;
+  userEmail: string;
+  parsed: SendBodyParsed;
+  pdfLink: string;
+  resultados: { email: string; tipo: string; ok: boolean; error?: string }[];
+  estadoEnvio: string;
+  anyOk: boolean;
+  anyFail: boolean;
+}
 
-  const resultados = await sendEmailsToRecipients(supabaseUrl, supabaseServiceKey, allRecipients, templateData, cot.id, timestamp);
-  const anyOk = resultados.some((r) => r.ok);
-  const anyFail = resultados.some((r) => !r.ok);
-  const estadoEnvio = buildEstadoEnvio(anyOk, anyFail);
-
+async function persistEnvioAndLog(params: PersistParams): Promise<string | null> {
+  const { admin, cot, userId, userEmail, parsed, pdfLink, resultados, estadoEnvio, anyOk, anyFail } = params;
   const { data: envio, error: envioErr } = await admin
     .from('cotizacion_envios')
     .insert({
       cotizacion_id: cot.id, organization_id: cot.organization_id, enviado_por: userId,
-      destinatarios: validRecipients, cc: ccEmails, asunto, mensaje,
-      pdf_storage_path: pdfStoragePath, pdf_link_publico: pdfLink, estado: estadoEnvio,
+      destinatarios: parsed.validRecipients, cc: parsed.ccEmails, asunto: parsed.asunto, mensaje: parsed.mensaje,
+      pdf_storage_path: parsed.pdfStoragePath, pdf_link_publico: pdfLink, estado: estadoEnvio,
       error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
     })
     .select('id').single();
@@ -166,10 +169,57 @@ export async function handleSend(params: SendParams): Promise<Response> {
     modulo: 'cotizaciones',
     accion: anyOk ? 'cotizacion_enviada_email' : 'cotizacion_envio_email_fallido',
     entidad_id: cot.id, entidad_nombre: cot.folio,
-    detalles: { envio_id: envio?.id ?? null, destinatarios: validRecipients.map((d) => d.email), cc: ccEmails, resultados },
+    detalles: { envio_id: envio?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
   }).then(() => null, () => null);
 
-  await updateCotizacionEstado(admin, cot, anyOk, marcarEnviada);
+  return envio?.id ?? null;
+}
 
-  return json({ success: anyOk, estado: estadoEnvio, envio_id: envio?.id ?? null, resultados, pdf_link: pdfLink });
+function buildTemplateData(cot: Cotizacion, parsed: SendBodyParsed, pdfLink: string, enlacePortal: string) {
+  return {
+    folio: cot.folio, cliente: cot.cliente_nombre, origen: cot.origen, destino: cot.destino,
+    incoterm: cot.incoterm, modo: cot.modo, vigencia: cot.fecha_vigencia ?? undefined,
+    totalMxn: parsed.totales.mxn, totalUsd: parsed.totales.usd,
+    mensaje: parsed.mensaje, enlacePortal, enlacePdf: pdfLink,
+    ejecutivoNombre: parsed.ejecutivo.nombre,
+    ejecutivoEmail: parsed.ejecutivo.email,
+    ejecutivoTelefono: parsed.ejecutivo.telefono,
+  };
+}
+
+export async function handleSend(params: SendParams): Promise<Response> {
+  const { admin, supabaseUrl, supabaseServiceKey, cot, userId, userEmail, body, timestamp } = params;
+
+  const parsed = parseSendBody(body);
+  if (parsed.validRecipients.length === 0) return json({ error: 'Al menos un destinatario válido es requerido' }, 400);
+  if (!parsed.pdfStoragePath) return json({ error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
+
+  const { data: signed, error: signErr } = await admin
+    .storage.from('cotizaciones-pdf')
+    .createSignedUrl(parsed.pdfStoragePath, SIGNED_URL_TTL);
+  if (signErr || !signed) return json({ error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
+
+  const pdfLink = signed.signedUrl;
+  const enlacePortal = `${APP_URL}/cotizaciones/${cot.id}`;
+  const templateData = buildTemplateData(cot, parsed, pdfLink, enlacePortal);
+
+  const recipients = [
+    ...parsed.validRecipients.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
+    ...parsed.ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
+  ];
+
+  const resultados = await sendEmailsToRecipients({
+    supabaseUrl, supabaseServiceKey, recipients, templateData, cotId: cot.id, timestamp,
+  });
+  const anyOk = resultados.some((r) => r.ok);
+  const anyFail = resultados.some((r) => !r.ok);
+  const estadoEnvio = buildEstadoEnvio(anyOk, anyFail);
+
+  const envioId = await persistEnvioAndLog({
+    admin, cot, userId, userEmail, parsed, pdfLink, resultados, estadoEnvio, anyOk, anyFail,
+  });
+
+  await updateCotizacionEstado(admin, cot, anyOk, parsed.marcarEnviada);
+
+  return json({ success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados, pdf_link: pdfLink });
 }
