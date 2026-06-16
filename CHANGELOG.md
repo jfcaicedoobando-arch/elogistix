@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.23] - 2026-06-16
+- **fix(lint)**: Regex `no-regex-spaces` en `exportOrg.test.ts` línea 47. Reemplazado `/\n  /` por `/\n {2}/` para que `bun run lint --max-warnings 0` pase en CI.
+
 ## [13.44.22] - 2026-06-16
 - **fix(ci/rls)**: 6 suites RLS rojas (solo `isolation` pasaba). Causas reales identificadas leyendo el DDL real (no inferidas del error):
   - `crm_operacional` L120 — enum `crm_actividad_tipo` valida `llamada/email/reunion/tarea/nota`; `'correo'` → `'email'`.
