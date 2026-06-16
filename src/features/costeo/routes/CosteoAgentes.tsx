@@ -109,7 +109,7 @@ export default function CosteoAgentes() {
               <TableHead>Contacto</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Activo</TableHead>
-              <TableHead className="w-12" />
+              <TableHead className="w-24 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
