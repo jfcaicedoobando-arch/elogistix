@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
+import { HistorialEnviosCard } from "@/features/cotizacion/components/detalle/HistorialEnviosCard";
+import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
 import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/features/cotizacion/components/ResumenTotalesCotizacion";
@@ -37,6 +41,9 @@ export default function CotizacionDetalle() {
     convertirProspecto, navigate,
   } = useCotizacionDetalleState(id);
 
+  const [enviarOpen, setEnviarOpen] = useState(false);
+  const { data: envios = [] } = useHistorialEnviosCotizacion(cotizacion?.id);
+
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
   if (isLoading) {
@@ -58,6 +65,8 @@ export default function CotizacionDetalle() {
         nombreDestinatario={nombreDestinatario}
         onBack={() => navigate("/cotizaciones")}
         onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
+        onEnviarEmail={canEdit ? () => setEnviarOpen(true) : undefined}
+        yaEnviada={envios.length > 0}
       />
 
       <CotizacionInactivaBanner
@@ -139,6 +148,8 @@ export default function CotizacionDetalle() {
         cotizacionEstado={cotizacion.estado}
       />
 
+      <HistorialEnviosCard envios={envios} />
+
       <DialogConvertirProspecto
         open={showConvertir}
         onOpenChange={setShowConvertir}
@@ -146,6 +157,16 @@ export default function CotizacionDetalle() {
         setClienteForm={setClienteForm}
         onConvertir={handleConvertir}
         isPending={convertirProspecto.isPending}
+      />
+
+      <EnviarCotizacionDialog
+        open={enviarOpen}
+        onOpenChange={setEnviarOpen}
+        cotizacion={cotizacion}
+        totalMxn={totalMXN}
+        totalUsd={totalUSD}
+        tasaIva={tasaIva}
+        envioPrevio={envios[0]}
       />
 
     </div>
