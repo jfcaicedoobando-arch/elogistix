@@ -1701,6 +1701,62 @@ export type Database = {
           },
         ]
       }
+      cotizacion_envios: {
+        Row: {
+          asunto: string | null
+          cc: Json
+          cotizacion_id: string
+          created_at: string
+          destinatarios: Json
+          enviado_por: string | null
+          error: string | null
+          estado: string
+          id: string
+          mensaje: string | null
+          organization_id: string
+          pdf_link_publico: string | null
+          pdf_storage_path: string | null
+        }
+        Insert: {
+          asunto?: string | null
+          cc?: Json
+          cotizacion_id: string
+          created_at?: string
+          destinatarios?: Json
+          enviado_por?: string | null
+          error?: string | null
+          estado?: string
+          id?: string
+          mensaje?: string | null
+          organization_id: string
+          pdf_link_publico?: string | null
+          pdf_storage_path?: string | null
+        }
+        Update: {
+          asunto?: string | null
+          cc?: Json
+          cotizacion_id?: string
+          created_at?: string
+          destinatarios?: Json
+          enviado_por?: string | null
+          error?: string | null
+          estado?: string
+          id?: string
+          mensaje?: string | null
+          organization_id?: string
+          pdf_link_publico?: string | null
+          pdf_storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_envios_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           carta_garantia: boolean
@@ -1725,6 +1781,7 @@ export type Database = {
             | Database["public"]["Enums"]["estado_cotizacion"]
             | null
           fecha_aceptacion: string | null
+          fecha_envio: string | null
           fecha_rechazo: string | null
           fecha_vigencia: string | null
           folio: string
@@ -1796,6 +1853,7 @@ export type Database = {
             | Database["public"]["Enums"]["estado_cotizacion"]
             | null
           fecha_aceptacion?: string | null
+          fecha_envio?: string | null
           fecha_rechazo?: string | null
           fecha_vigencia?: string | null
           folio: string
@@ -1867,6 +1925,7 @@ export type Database = {
             | Database["public"]["Enums"]["estado_cotizacion"]
             | null
           fecha_aceptacion?: string | null
+          fecha_envio?: string | null
           fecha_rechazo?: string | null
           fecha_vigencia?: string | null
           folio?: string
