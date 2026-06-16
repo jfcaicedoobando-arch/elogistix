@@ -32,7 +32,7 @@ interface Props {
   cotizacionesAceptadas?: CotizacionRow[];
   cotizacionVinculada?: CotizacionRow | null;
   onVincularCotizacion?: (cot: CotizacionRow) => void;
-  onDesvincularCotizacion?: () => void;
+  onDesvincularCotizacion?: (opcion?: "limpiar" | "conservar" | "solo-conceptos") => void;
   modoExpediente?: 'nuevo' | 'existente';
   onModoExpedienteChange?: (modo: 'nuevo' | 'existente') => void;
   expedienteSeleccionado?: ExpedienteCliente | null;

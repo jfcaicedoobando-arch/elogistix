@@ -6,11 +6,12 @@ import {
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
 } from "@/features/embarques/domain/embarqueWizard";
+import type { DesvincularOpcion } from "@/features/embarques/components/DesvincularCotizacionDialog";
 
 interface Params {
   form: {
     vincularCotizacion: (cot: CotizacionRow) => void;
-    desvincularCotizacion: () => void;
+    desvincularCotizacion: (modo?: "limpiar" | "conservar" | "solo-conceptos") => void;
   };
   setConceptosVenta: (v: ReturnType<typeof mapConceptosVentaFromCotizacion>) => void;
   setConceptosCosto: (v: ReturnType<typeof mapConceptosCostoFromCotizacion>) => void;
@@ -21,6 +22,9 @@ interface Params {
 /**
  * Encapsula vinculación + hidratación de conceptos desde una cotización
  * para el wizard "Nuevo embarque".
+ *
+ * v13.28.0 — Soporta desvinculación con 3 modos (conservar / solo-conceptos /
+ * limpiar) para alimentar al `DesvincularCotizacionDialog`.
  */
 export function useNuevoEmbarqueCotVinculada({
   form,
@@ -53,11 +57,20 @@ export function useNuevoEmbarqueCotVinculada({
     [form, hidratarConceptosDesdeCotizacion],
   );
 
-  const handleDesvincularCotizacion = useCallback(() => {
-    setCotizacionVinculada(null);
-    form.desvincularCotizacion();
-    onClearExpediente();
-  }, [form, onClearExpediente]);
+  const handleDesvincularCotizacion = useCallback(
+    (opcion: DesvincularOpcion = "limpiar") => {
+      setCotizacionVinculada(null);
+      form.desvincularCotizacion(opcion);
+      if (opcion === "limpiar" || opcion === "solo-conceptos") {
+        setConceptosVenta([]);
+        setConceptosCosto([]);
+      }
+      if (opcion === "limpiar") {
+        onClearExpediente();
+      }
+    },
+    [form, onClearExpediente, setConceptosVenta, setConceptosCosto],
+  );
 
   useCotizacionHydration({ onPrevincular: handleVincularCotizacion });
 
