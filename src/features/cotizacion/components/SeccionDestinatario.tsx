@@ -62,7 +62,7 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
   };
 
   return (
-    <WizardSection title="Destinatario">
+    <WizardSection title="Destinatario" complete={complete}>
       <RadioGroup
         value={esProspecto ? "prospecto" : "cliente"}
         onValueChange={(v) => setValue("esProspecto", v === "prospecto")}
