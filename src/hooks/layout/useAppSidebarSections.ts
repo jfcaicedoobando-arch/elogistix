@@ -20,22 +20,112 @@ export interface SidebarSection {
   items: typeof SIDEBAR_DASHBOARD_ITEMS;
 }
 
-function buildGerenteComercialSections(
-  crmItems: typeof SIDEBAR_CRM_ITEMS,
-  sistemaItems: typeof SIDEBAR_SISTEMA_ITEMS,
-): SidebarSection[] {
-  const gestionGC = SIDEBAR_GESTION_ITEMS.filter((it) =>
-    ["/cotizaciones", "/embarques", "/comisiones"].includes(it.url),
-  );
+interface BuilderDeps {
+  crmItems: typeof SIDEBAR_CRM_ITEMS;
+  sistemaItems: typeof SIDEBAR_SISTEMA_ITEMS;
+}
+
+type Builder = (deps: BuilderDeps) => SidebarSection[];
+
+const filterGestion = (urls: string[]) =>
+  SIDEBAR_GESTION_ITEMS.filter((it) => urls.includes(it.url));
+const filterSistema = (sistemaItems: typeof SIDEBAR_SISTEMA_ITEMS, urls: string[]) =>
+  sistemaItems.filter((it) => urls.includes(it.url));
+const filterDirectorio = (urls: string[]) =>
+  SIDEBAR_DIRECTORIO_ITEMS.filter((it) => urls.includes(it.url));
+
+const buildVendedor: Builder = ({ crmItems, sistemaItems }) => [
+  { label: "CRM", items: crmItems },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
+];
+
+const buildCustomerService: Builder = ({ sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques"]) },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/auditoria", "/ayuda"]) },
+];
+
+const buildCoordinador: Builder = ({ sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques", "/facturacion"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
+];
+
+const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
+];
+
+const buildContador: Builder = ({ sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: filterGestion(["/facturacion", "/cxp", "/tesoreria", "/comisiones"]) },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
+];
+
+const buildTesorero: Builder = ({ sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: filterGestion(["/cxp", "/tesoreria", "/comisiones"]) },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
+];
+
+const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques", "/comisiones"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+  { label: "CRM", items: crmItems },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
+];
+
+const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+  { label: "CRM", items: crmItems },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
+];
+
+const ROLE_BUILDERS: Record<string, Builder> = {
+  vendedor: buildVendedor,
+  customer_service: buildCustomerService,
+  viewer: buildCustomerService,
+  operador: buildCoordinador,
+  coordinador_logistico: buildCoordinador,
+  ejecutivo_pricing: buildEjecutivoPricing,
+  contador: buildContador,
+  tesorero: buildTesorero,
+  gerente_comercial: buildGerenteComercial,
+  gerente_operaciones: buildGerenteOperaciones,
+};
+
+function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
   return [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-    { label: "Gestión", items: gestionGC },
+    { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
     { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
     { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-    { label: "CRM", items: crmItems },
+    { label: "CRM", items: deps.crmItems },
     { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
     { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-    { label: "Sistema", items: sistemaItems.filter((it) => ["/ayuda", "/bitacora"].includes(it.url)) },
+    { label: "Sistema", items: deps.sistemaItems },
   ];
 }
 
@@ -55,110 +145,13 @@ export function useAppSidebarSections(): SidebarSection[] {
     it.url === "/crm" ? { ...it, badgeCount: crmVencidas } : it,
   );
 
-  // El rol "vendedor" tiene una vista enfocada: sólo CRM + Directorio (clientes) + ayuda.
-  if (effectiveRole === "vendedor") {
-    return [
-      { label: "CRM", items: crmItems },
-      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
-    ];
-  }
+  const deps: BuilderDeps = { crmItems, sistemaItems };
+  const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
+  if (builder) return builder(deps);
 
-  // Atención a clientes (antes "viewer"): solo lectura operativa.
-  // Por decisión de producto (13.21.26) viewer SÍ ve "Auditoría operativa".
-  if (effectiveRole === "customer_service" || effectiveRole === "viewer") {
-    const gestionCS = SIDEBAR_GESTION_ITEMS.filter((it) =>
-      ["/cotizaciones", "/embarques"].includes(it.url),
-    );
-    return [
-      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-      { label: "Gestión", items: gestionCS },
-      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
-      { label: "Sistema", items: sistemaItems.filter((it) => ["/auditoria", "/ayuda"].includes(it.url)) },
-    ];
-  }
-
-  // Coordinador logístico (antes "operador"): operación diaria sin finanzas.
-  if (effectiveRole === "operador" || effectiveRole === "coordinador_logistico") {
-    const gestionOperador = SIDEBAR_GESTION_ITEMS.filter((it) =>
-      ["/cotizaciones", "/embarques", "/facturacion"].includes(it.url),
-    );
-    return [
-      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-      { label: "Gestión", items: gestionOperador },
-      { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
-    ];
-  }
-
-  // Ejecutivo de pricing: cotizaciones, embarques (lectura), reportes y directorio.
-  if (effectiveRole === "ejecutivo_pricing") {
-    const gestionPricing = SIDEBAR_GESTION_ITEMS.filter((it) =>
-      ["/cotizaciones", "/embarques"].includes(it.url),
-    );
-    return [
-      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-      { label: "Gestión", items: gestionPricing },
-      { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
-    ];
-  }
-
-  // Contador / Tesorero: foco financiero. Sin CRM ni edición operativa.
-  if (effectiveRole === "contador" || effectiveRole === "tesorero") {
-    const gestionFin = SIDEBAR_GESTION_ITEMS.filter((it) =>
-      effectiveRole === "tesorero"
-        ? ["/cxp", "/tesoreria", "/comisiones"].includes(it.url)
-        : ["/facturacion", "/cxp", "/tesoreria", "/comisiones"].includes(it.url),
-    );
-    return [
-      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-      { label: "Gestión", items: gestionFin },
-      { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-      { label: "Sistema", items: sistemaItems.filter((it) => ["/ayuda", "/bitacora"].includes(it.url)) },
-    ];
-  }
-
-  // Gerente comercial: supervisa equipo de ventas. CRM completo, cotizaciones con márgenes,
-  // embarques (lectura), comisiones (lectura), clientes y reportes. Sin config/admin.
-  if (effectiveRole === "gerente_comercial") {
-    return buildGerenteComercialSections(crmItems, sistemaItems);
-  }
-
-  // Gerente de operaciones: todo lectura + edición operativa, sin admin.
-  // No incluye "Auditoría operativa" (decisión 13.21.26: solo admin + viewer).
-  if (effectiveRole === "gerente_operaciones") {
-    return [
-      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-      { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
-      { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-      { label: "CRM", items: crmItems },
-      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
-    ];
-  }
-
-  const sections: SidebarSection[] = [
-    { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-    { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
-    { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-    { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-    { label: "CRM", items: crmItems },
-    { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-    { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-    { label: "Sistema", items: sistemaItems },
-  ];
-  if (effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin") {
-    sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
-  }
-  if (role === "super_admin") {
-    sections.push({ label: "Super Admin", items: superAdminItems });
-  }
+  const sections = buildDefaultSections(deps);
+  const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
+  if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
+  if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
   return sections;
 }
