@@ -148,6 +148,8 @@ function mapFechasFinancieras(e: EmbarqueRow) {
 function mapHerencia(e: EmbarqueRow) {
   // Pack B+ (v13.33.0). Columnas nuevas en `embarques`; pueden faltar en filas
   // antiguas hasta que se regeneren los tipos — accedemos como `unknown`.
+  // SAFE-CAST: doble cast intencional para leer columnas opcionales de Pack B
+  // que aún no aparecen en los tipos generados por Supabase.
   const row = e as unknown as Record<string, unknown>;
   return {
     tarifaId: (row.tarifa_id as string | null) ?? "",

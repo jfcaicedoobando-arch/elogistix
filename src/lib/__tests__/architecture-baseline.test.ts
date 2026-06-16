@@ -34,11 +34,8 @@ const BASELINE: ReadonlySet<string> = new Set<string>([
 const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 // Allowlist temporal para archivos > 200 líneas pendientes de split.
-// 13.25.x — deuda preexistente detectada al añadir guardrails al header de embarque.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/features/auditoria/domain/ejecutivoAgregados.ts",
-  "src/features/proformas/routes/ProformaDetalle.tsx",
-]);
+// 13.38.2 — VACÍO: toda la deuda histórica de tamaño dividida.
+const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 
 function walk(dir: string, out: string[] = []): string[] {
