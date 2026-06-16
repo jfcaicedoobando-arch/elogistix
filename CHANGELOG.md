@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.45.0] - 2026-06-16
+- **feat(auth/onboarding)**: Self-service signup completo. Al registrarse, el usuario ahora ingresa "Nombre de empresa", y al confirmar:
+  - Se crea automáticamente una nueva `organizations` con ese nombre (plan `basic`).
+  - Se crea su fila en `organization_members` con rol **`admin`**.
+  - Se asigna `user_roles` global (`super_admin` si es el primer usuario, `admin` para el resto).
+- Implementado vía trigger `handle_new_user_signup` (SECURITY DEFINER) sobre `auth.users`, reemplazando el viejo `handle_first_user_role`.
+- Idempotente: ON CONFLICT DO NOTHING en `organization_members` y `user_roles`.
+
 ## [13.44.27] - 2026-06-16
 - **fix(db)**: `calcular_comision_pago` leía `embarques.tipo_cambio` (columna inexistente; la real es `tipo_cambio_usd`). Rompía cualquier INSERT/UPDATE en `pagos_factura`. Corregido vía migración.
 - **fix(ci/rls)**: 

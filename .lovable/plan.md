@@ -1,60 +1,78 @@
-# Fix de las 6 suites RLS que siguen rojas
+## Objetivo
 
-Logs decodificados (`logs_74463336657.zip`): `isolation` pasa ✓. Las otras 6 fallan por **enums/columnas inválidas en los fixtures**, no por problemas de RLS ni de workflow. La infra (cache, matrix guard, aggregator, GRANTs) funciona — el dump se restaura, `SET ROLE authenticated` ya no truena. Los errores ahora son del SQL de los tests contra el esquema real.
+Al confirmar el registro, el nuevo usuario debe quedar listo para operar:
+- Una **organización** recién creada (con el nombre de empresa que ingresó).
+- Una fila en **`organization_members`** con rol **`admin`** vinculándolo a esa organización.
+- Su rol global en **`user_roles`** queda en `admin` (ya cubierto por el trigger existente para usuarios no-primero, lo ajustamos).
 
-## Hallazgos exactos por suite
+Así, al entrar a `/inicio` por primera vez, el `AuthContext` resuelve organización efectiva y permite usar la app sin intervención manual.
 
-| # | Suite | Línea | Error |
-|---|---|---|---|
-| 1 | `crm_operacional` | 163 | `invalid input value for enum crm_actividad_tipo: "correo"` |
-| 2 | `financiero_critico` | 276 | `invalid input value for enum estado_conciliacion: "pendiente"` |
-| 3 | `financiero` | 135 | `column "estado" of relation "proformas" does not exist` |
-| 4 | `roles_no_admin` | 207 | `column "tipo_cambio" does not exist` (en `pagos_factura`) |
-| 5 | `operaciones` | 190 | `column "saldo" of relation "facturas" does not exist` |
-| 6 | `tarifas_y_costeo` | 189 | `new row for relation "costeo_tarifas" violates check constraint "costeo_tarifas_estado_check"` |
+## Cambios
 
-> Ironía del lote previo: en 13.44.19 "arreglé" `pagos_factura` añadiendo `tipo_cambio` porque era NOT NULL en el esquema que asumí; el esquema real no tiene esa columna. Por eso es indispensable mirar las migraciones, no el resultado anterior.
+### 1. UI de registro (`src/pages/auth/components/SignupForm.tsx`)
+- Nuevo campo obligatorio **"Nombre de empresa"** (entre "Nombre completo" y "Email").
+- Validación: `trim`, 2-120 caracteres.
+- Se envía en el metadata del signup como `company_name`, junto con `full_name`.
 
-## Pasos
+### 2. Servicio (`src/services/auth/index.ts`)
+- `SignUpInput` agrega `companyName: string`.
+- `signUpWithEmail` lo pasa a `options.data.company_name`.
 
-1. **Inspeccionar esquema real** en `supabase/migrations/`:
-   - `grep -rn "CREATE TYPE crm_actividad_tipo\|ALTER TYPE crm_actividad_tipo"` → ver valores válidos del enum (probablemente `email` en lugar de `correo`, o `llamada/reunion/...`).
-   - `grep -rn "CREATE TYPE estado_conciliacion"` → valores válidos (probablemente `Pendiente` capitalizado, o `conciliada/no_conciliada`).
-   - `grep -rn "CREATE TABLE public.proformas\|ALTER TABLE public.proformas"` → nombre real de la columna estado (probablemente `estado_proforma`).
-   - `grep -rn "CREATE TABLE public.pagos_factura\|ALTER TABLE public.pagos_factura"` → columnas reales (revisar si `tipo_cambio` debe omitirse o reemplazarse por otra).
-   - `grep -rn "CREATE TABLE public.facturas\|ALTER TABLE public.facturas"` → confirmar que `saldo` no existe; muy probable que sea columna generada/eliminada y la suite debe calcular `total - pagado` o usar otra columna.
-   - `grep -rn "costeo_tarifas_estado_check\|CREATE TABLE public.costeo_tarifas"` → valores permitidos por el CHECK.
+### 3. Migración SQL (nueva)
+Reemplazar la función `public.handle_first_user_role` por **`public.handle_new_user_signup`** (SECURITY DEFINER, `search_path=public`) que en un solo `AFTER INSERT ON auth.users`:
 
-2. **Editar cada suite** con los valores correctos:
-   - `test_rls_crm_operacional.sql` línea 163: reemplazar `'correo'` por el valor enum válido.
-   - `test_rls_financiero_critico.sql` línea 276: reemplazar `'pendiente'` por el valor enum válido (probable `'Pendiente'` con capitalización exacta).
-   - `test_rls_financiero.sql` línea 135: renombrar `estado` → nombre real de la columna en `proformas`.
-   - `test_rls_roles_no_admin.sql` línea 207: quitar `tipo_cambio` del INSERT (o reemplazar por la columna correcta — posiblemente `tasa_cambio` o no existe del todo).
-   - `test_rls_operaciones.sql` línea 190: reemplazar `saldo` por la columna correcta (probable `total - SUM(pagos)` o `monto_pendiente`).
-   - `test_rls_tarifas_y_costeo.sql` línea 189: usar un valor permitido por `costeo_tarifas_estado_check`.
+1. Lee `NEW.raw_user_meta_data->>'company_name'` (fallback: `'Mi organización'`).
+2. Inserta en `public.organizations` (nombre = company_name, plan='basic'), devolviendo `new_org_id`.
+3. Inserta en `public.organization_members` (organization_id=new_org_id, user_id=NEW.id, role='admin').
+4. Inserta en `public.user_roles`:
+   - Si es el primer usuario global → `super_admin`.
+   - En cualquier otro caso → `admin` (admin de su propia org, no global).
+5. Todo con `ON CONFLICT DO NOTHING` para idempotencia (el trigger es AFTER INSERT pero si Supabase reintenta, evitamos doble inserción).
 
-3. **Validar en local** (no factible aquí sin Postgres) — confiar en `grep` del esquema. En CI, el cache de snapshot del workflow funciona; el job `rls` no re-corre.
+Reemplaza el trigger `on_auth_user_created` para apuntar a la nueva función. Se mantiene `handle_first_user_role` por compatibilidad (no se borra; solo deja de usarse) — opcional, podemos `DROP FUNCTION` también.
 
-4. **Bump versión + changelog**: `APP_VERSION = 13.44.22`, entrada en `CHANGELOG.md`.
-
-## Por qué falló mi fix anterior (lección)
-
-En 13.44.19 inferí columnas/enums por error message en lugar de mirar el `CREATE TABLE`/`CREATE TYPE` real. Resultado: introduje regresiones nuevas (`tipo_cambio` inexistente). Esta vez: **leer el DDL real de cada tabla/enum antes de editar el fixture**, sin asumir.
+### 4. Bump de versión + CHANGELOG
+`APP_VERSION = 13.45.0` (feature, no patch) y entrada nueva en `CHANGELOG.md` raíz.
 
 ## Detalles técnicos
 
-Archivos a tocar (solo las líneas indicadas, no lógica completa):
-```
-supabase/tests/rls/test_rls_crm_operacional.sql      L163
-supabase/tests/rls/test_rls_financiero_critico.sql   L276
-supabase/tests/rls/test_rls_financiero.sql           L135
-supabase/tests/rls/test_rls_roles_no_admin.sql       L207
-supabase/tests/rls/test_rls_operaciones.sql          L190
-supabase/tests/rls/test_rls_tarifas_y_costeo.sql     L189
-src/constants/appVersion.ts                          13.44.22
-CHANGELOG.md                                         entrada nueva arriba
+- **No tocamos** `src/integrations/supabase/client.ts`, `types.ts`, `supabase/config.toml`.
+- **Roles del catálogo** (`app_role`): se asume que `'admin'` y `'super_admin'` ya existen en el enum (lo confirmaré antes de la migración con un `\dT+ public.app_role`).
+- **RLS**: el trigger corre como SECURITY DEFINER, por lo que bypassa RLS para crear `organizations` y `organization_members`. Sin esto el INSERT fallaría porque el usuario aún no es miembro de ninguna org.
+- **Confirmación de email**: el trigger dispara en el `INSERT` (antes de confirmar). Esto es correcto: la organización ya existe cuando el usuario abre el link de confirmación e inicia sesión.
+- **Validación servidor**: el campo `company_name` se trimea y se acota a 120 chars dentro de la función plpgsql para defensa en profundidad.
+- **No rompe usuarios actuales**: la migración solo afecta nuevos INSERT en `auth.users`. Usuarios ya creados (incluidos los de `seguridad-y-roles`) no se tocan.
+
+## Estructura del flujo nuevo
+
+```text
+Usuario llena formulario (nombre + empresa + email + pass)
+        ↓
+supabase.auth.signUp(metadata={full_name, company_name})
+        ↓ INSERT en auth.users
+TRIGGER on_auth_user_created → handle_new_user_signup()
+        ├── crea public.organizations
+        ├── crea public.organization_members (role=admin)
+        └── crea public.user_roles  (role=super_admin si primero, sino admin)
+        ↓
+Email de confirmación → Usuario lo abre → /inicio
+        ↓
+AuthContext + OrganizationContext detectan la org → acceso operativo
 ```
 
-## Confirmación
+## Archivos a tocar
 
-¿Procedo? Implementaré las 6 ediciones después de confirmar valores válidos contra las migraciones reales (1 lectura por enum/tabla, en paralelo).
+- `src/pages/auth/components/SignupForm.tsx` (campo + estado + submit)
+- `src/services/auth/index.ts` (firma + metadata)
+- Nueva migración SQL (función + trigger)
+- `src/constants/appVersion.ts` → `13.45.0`
+- `CHANGELOG.md` → entrada nueva arriba
+
+## Fuera de alcance (lo dejamos para después si lo quieres)
+
+- Captura de RFC, dirección fiscal o logo en el wizard de signup.
+- Onboarding multi-paso (tour, configuración inicial guiada).
+- Auto-asignación por dominio de email (que dos usuarios `@acme.com` caigan en la misma org).
+- Sign-in con Google.
+
+¿Procedo con esta implementación?
