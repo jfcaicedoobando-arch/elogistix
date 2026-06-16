@@ -40,7 +40,7 @@ const empty = (navieraId: string): NavieraCondicionInput => ({
   notas: null,
 });
 
-export function NavieraCondicionForm({ navieraId, navieraNombre, existente, onSaved }: Props) {
+export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
   const { data: proveedores = [] } = useProveedoresNaviera();
   const { guardar } = useCondicionNavieraMutations();
   const [form, setForm] = useState<NavieraCondicionInput>(empty(navieraId));
