@@ -1,9 +1,11 @@
 /**
  * Tests puros para `parseCsv.helpers.ts` — sin I/O, sin mocks.
+ * `normalizeHeader` ya está cubierto por `parseCsv.test.ts`; aquí cubrimos
+ * el resto de helpers (detector de delimitador, builder de headers efectivos,
+ * tokenizer RFC-4180, alias map y mapeo de filas).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
-  normalizeHeader,
   detectDelimiter,
   buildEffectiveHeaders,
   tokenize,
@@ -11,24 +13,7 @@ import {
   rowsFromRecords,
 } from "@/lib/csv/parseCsv.helpers";
 
-describe("normalizeHeader", () => {
-  it("baja a minúsculas y reemplaza espacios por _", () => {
-    expect(normalizeHeader(" Nombre del Cliente ")).toBe("nombre_del_cliente");
-  });
-  it("quita acentos y diacríticos", () => {
-    expect(normalizeHeader("Razón Social")).toBe("razon_social");
-    expect(normalizeHeader("Año")).toBe("ano");
-  });
-  it("quita zero-width, NBSP y controles", () => {
-    expect(normalizeHeader("RFC\u200B\u00A0Cliente")).toBe("rfc_cliente");
-    expect(normalizeHeader("col\u0001umna")).toBe("columna");
-  });
-  it("descarta caracteres no alfanuméricos", () => {
-    expect(normalizeHeader("Tel.#1 (móvil)")).toBe("tel1_movil");
-  });
-});
-
-describe("detectDelimiter", () => {
+describe("detectDelimiter — heurística coma vs punto-y-coma", () => {
   it("detecta coma cuando predomina", () => {
     expect(detectDelimiter("a,b,c,d")).toBe(",");
   });
@@ -41,13 +26,13 @@ describe("detectDelimiter", () => {
   });
 });
 
-describe("buildEffectiveHeaders", () => {
+describe("buildEffectiveHeaders — alias, duplicados, vacíos", () => {
   it("aplica alias y deja unique sin vacíos", () => {
     const r = buildEffectiveHeaders(["Nombre", "Razón Social", ""], { razon_social: "rfc" });
     expect(r.effective).toEqual(["nombre", "rfc", ""]);
     expect(r.unique).toEqual(["nombre", "rfc"]);
   });
-  it("renombra duplicados con sufijo _N", () => {
+  it("renombra duplicados con sufijo _N y avisa", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const r = buildEffectiveHeaders(["email", "email", "email"], {});
     expect(r.effective).toEqual(["email", "email_2", "email_3"]);
@@ -56,8 +41,8 @@ describe("buildEffectiveHeaders", () => {
   });
 });
 
-describe("tokenize", () => {
-  it("parsea filas simples", () => {
+describe("tokenize — state machine RFC 4180", () => {
+  it("parsea filas separadas por coma", () => {
     expect(tokenize("a,b,c\n1,2,3\n", ",")).toEqual([
       ["a", "b", "c"],
       ["1", "2", "3"],
@@ -66,12 +51,12 @@ describe("tokenize", () => {
   it("respeta comillas y comillas dobles escapadas", () => {
     expect(tokenize('a,"b,c","d""e"\n', ",")).toEqual([["a", "b,c", 'd"e']]);
   });
-  it("acepta punto y coma", () => {
+  it("acepta punto y coma como delimitador", () => {
     expect(tokenize("a;b\n1;2", ";")).toEqual([["a", "b"], ["1", "2"]]);
   });
 });
 
-describe("buildAliasMap", () => {
+describe("buildAliasMap — normaliza claves y valores", () => {
   it("normaliza claves y valores; salta claves vacías", () => {
     const m = buildAliasMap({ "Razón Social": "RFC", "  ": "ignored" });
     expect(m).toEqual({ razon_social: "rfc" });
@@ -81,7 +66,7 @@ describe("buildAliasMap", () => {
   });
 });
 
-describe("rowsFromRecords", () => {
+describe("rowsFromRecords — ignora header y filas vacías", () => {
   let warn: ReturnType<typeof vi.spyOn>;
   beforeEach(() => { warn = vi.spyOn(console, "warn").mockImplementation(() => {}); });
   afterEach(() => warn.mockRestore());
@@ -89,7 +74,7 @@ describe("rowsFromRecords", () => {
     const recs = [
       ["nombre", "rfc"],
       ["Acme", "ACM010101AAA"],
-      ["", ""], // fila vacía
+      ["", ""],
       ["Beta", "BTA020202BBB"],
     ];
     expect(rowsFromRecords(recs, ["nombre", "rfc"])).toEqual([
