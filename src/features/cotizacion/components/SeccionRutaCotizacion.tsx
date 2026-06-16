@@ -42,7 +42,7 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
   };
 
   return (
-    <WizardSection title="Ruta">
+    <WizardSection title="Ruta" complete={complete}>
       <BannerOverride ctx={ctx} />
       <div className={`grid grid-cols-1 gap-4 ${conPuntoIntermedio ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <OrigenDestinoBlock ctx={ctx} usarPortSelect={usarPortSelect} esTerrestre={esTerrestre} conPuntoIntermedio={conPuntoIntermedio} />
