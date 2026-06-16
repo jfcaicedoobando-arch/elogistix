@@ -15,9 +15,11 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 vi.mock("@/lib/supabase/cast", () => ({ toDbJson: <T,>(x: T) => x }));
+const registrarBloqueoSpy = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/features/cotizacion/services/wizard/paso1Crm", () => ({
   obtenerUsuarioActual: vi.fn(),
   fetchCotizacionFolio: vi.fn(),
+  registrarBloqueoSinTarifa: (...args: unknown[]) => registrarBloqueoSpy(...args),
 }));
 vi.mock("@/features/crm/services/vincularCotizacion", () => ({
   vincularOCrearOportunidadParaCotizacion: vi.fn(),
@@ -55,11 +57,10 @@ describe("validatePaso1 — política tarifa-first (Marítimo)", () => {
 
   it("registra el bloqueo en bitácora (best-effort)", async () => {
     validatePaso1(base({ tarifaId: "" }));
-    // logBloqueoSinTarifa se dispara con `void`; esperamos al microtask.
+    // registrarBloqueoSinTarifa se dispara con `void`; esperamos al microtask.
     await new Promise((r) => setTimeout(r, 0));
-    expect(fromSpy).toHaveBeenCalledWith("bitacora_actividad");
-    expect(insertSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ accion: "cotizacion_bloqueada_sin_tarifa" }),
+    expect(registrarBloqueoSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ origen: "MXVER", destino: "CNSHA" }),
     );
   });
 
