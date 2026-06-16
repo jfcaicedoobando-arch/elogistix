@@ -17,6 +17,12 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import {
+  buildUserPrompt,
+  mapGatewayStatus,
+  type DocumentoCtx,
+  type ContextoEmbarque,
+} from "./helpers.ts";
 
 initSentryEdge("auditoria-explicar-hallazgo");
 
@@ -36,28 +42,6 @@ Tu trabajo:
 
 Máximo 220 palabras totales. No inventes datos que no estén en el contexto. Usa formato markdown simple (## títulos, - bullets).`;
 
-interface DocumentoCtx {
-  nombre: string;
-  estado: string;
-  tiene_archivo: boolean;
-}
-
-interface ContextoEmbarque {
-  expediente: string;
-  estado: string;
-  modo: string;
-  cliente: string;
-  etd: string | null;
-  eta: string | null;
-  fecha_llegada_real: string | null;
-  conceptos_venta_total: number;
-  conceptos_venta_pendientes: number;
-  conceptos_venta_facturados: number;
-  conceptos_costo_total: number;
-  facturas: Array<{ folio: string; estado: string; total: number; moneda: string }>;
-  proformas: Array<{ folio: string; estado: string }>;
-  documentos: DocumentoCtx[];
-}
 
 async function buildContexto(adminClient: ReturnType<typeof authenticate> extends Promise<infer T> ? (T extends { adminClient: infer C } ? C : never) : never, embarqueId: string): Promise<ContextoEmbarque | null> {
   // @ts-expect-error supabase chain
@@ -78,7 +62,7 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
   ]);
 
   const cvList = (cv ?? []) as Array<{ estado_facturacion: string }>;
-  const docList = ((docs ?? []) as Array<{ nombre: string; estado: string; archivo: string | null }>).map((d) => ({
+  const docList: DocumentoCtx[] = ((docs ?? []) as Array<{ nombre: string; estado: string; archivo: string | null }>).map((d) => ({
     nombre: d.nombre,
     estado: d.estado,
     tiene_archivo: Boolean(d.archivo),
@@ -103,28 +87,6 @@ async function buildContexto(adminClient: ReturnType<typeof authenticate> extend
   };
 }
 
-/** Agrupa documentos por nombre y marca duplicados explícitamente. */
-function formatDocumentos(docs: DocumentoCtx[]): string {
-  if (docs.length === 0) return "—";
-  const byName = new Map<string, DocumentoCtx[]>();
-  for (const d of docs) {
-    const arr = byName.get(d.nombre) ?? [];
-    arr.push(d);
-    byName.set(d.nombre, arr);
-  }
-  const lines: string[] = [];
-  for (const [nombre, rows] of byName) {
-    if (rows.length === 1) {
-      const r = rows[0];
-      lines.push(`- ${nombre}: ${r.estado}${r.tiene_archivo ? " (con archivo)" : ""}`);
-    } else {
-      const estados = rows.map((r) => `${r.estado}${r.tiene_archivo ? "+archivo" : ""}`).join(", ");
-      lines.push(`- ${nombre}: [${estados}] ← DUPLICADO (${rows.length} filas)`);
-    }
-  }
-  return lines.join("\n");
-}
-
 async function callGateway(apiKey: string, userPrompt: string): Promise<Response> {
   return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -140,10 +102,9 @@ async function callGateway(apiKey: string, userPrompt: string): Promise<Response
 }
 
 function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: HeadersInit) {
-  if (status === 429) return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
-  if (status === 402) return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
-  log.error("AI gateway error", { status_code: status });
-  return errorResponse("Error al generar la explicación", 500, cors);
+  const { status: mappedStatus, message } = mapGatewayStatus(status);
+  if (mappedStatus === 500) log.error("AI gateway error", { status_code: status });
+  return errorResponse(message, mappedStatus, cors);
 }
 
 async function authorizeEmbarque(
@@ -170,26 +131,6 @@ async function authorizeEmbarque(
   return { ok: false, status: 403, message: "No autorizado para este embarque" };
 }
 
-function buildUserPrompt(regla: string, detalle: string, ctx: Awaited<ReturnType<typeof buildContexto>>): string {
-  if (!ctx) return "";
-  return [
-    `**Hallazgo**`,
-    `Regla: ${regla}`,
-    `Detalle: ${detalle}`,
-    ``,
-    `**Contexto real del embarque**`,
-    `Expediente: ${ctx.expediente} | Estado: ${ctx.estado} | Modo: ${ctx.modo}`,
-    `Cliente: ${ctx.cliente}`,
-    `ETD: ${ctx.etd ?? "—"} | ETA: ${ctx.eta ?? "—"} | Llegada real: ${ctx.fecha_llegada_real ?? "—"}`,
-    `Conceptos venta: ${ctx.conceptos_venta_total} (pendientes: ${ctx.conceptos_venta_pendientes}, facturados: ${ctx.conceptos_venta_facturados})`,
-    `Conceptos costo: ${ctx.conceptos_costo_total}`,
-    `Facturas (${ctx.facturas.length}): ${ctx.facturas.map((f) => `${f.folio} [${f.estado}] ${f.total} ${f.moneda}`).join("; ") || "—"}`,
-    `Proformas (${ctx.proformas.length}): ${ctx.proformas.map((p) => `${p.folio} [${p.estado}]`).join("; ") || "—"}`,
-    ``,
-    `**Documentos (${ctx.documentos.length} filas vivas)**`,
-    formatDocumentos(ctx.documentos),
-  ].join("\n");
-}
 
 async function invocarGateway(
   ctx: Awaited<ReturnType<typeof buildContexto>>,
