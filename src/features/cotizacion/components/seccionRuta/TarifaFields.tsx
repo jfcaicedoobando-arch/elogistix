@@ -1,8 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Link2 } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
+import { HeredadoBadge } from "@/components/shared/HeredadoBadge";
 import CartaGarantiaBadge from "@/features/cotizacion/components/CartaGarantiaBadge";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import { OPTS, marcarOverride, type Ctx, type TarifaCtx } from "./overrideHelpers";
