@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -37,6 +38,7 @@ export function NuevaOrganizacionDialog({
       <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Nueva Organización</DialogTitle>
+        <DialogDescription>Crea una nueva organización en el sistema con su configuración inicial.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>

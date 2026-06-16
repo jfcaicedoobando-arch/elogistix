@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -39,6 +39,7 @@ export function DialogRegistrarPagoLiquidacion({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Registrar pago de liquidación · {liq.periodo}</DialogTitle>
+          <DialogDescription>Registra el pago de la liquidación de comisiones del período seleccionado.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <p className="text-sm text-muted-foreground">

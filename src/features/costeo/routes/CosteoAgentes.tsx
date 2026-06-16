@@ -114,6 +114,7 @@ export default function CosteoAgentes() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nuevo agente</DialogTitle>
+            <DialogDescription>Registra un nuevo agente de carga con sus datos de contacto.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>

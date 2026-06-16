@@ -25,6 +25,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
@@ -117,6 +118,7 @@ export default function CosteoRutas() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nueva ruta CN → MX</DialogTitle>
+            <DialogDescription>Agrega una nueva ruta de origen en China a destino en México.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>

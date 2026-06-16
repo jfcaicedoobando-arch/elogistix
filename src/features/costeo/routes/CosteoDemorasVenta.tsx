@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
@@ -90,7 +90,7 @@ export default function CosteoDemorasVenta() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nueva tarifa de venta</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nueva tarifa de venta</DialogTitle><DialogDescription>Define una nueva tarifa de venta por demoras aplicable a los embarques.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Tipo de contenedor</Label>

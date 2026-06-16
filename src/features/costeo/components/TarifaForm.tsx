@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
@@ -69,6 +69,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
           <DialogTitle>
             {esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)"}
           </DialogTitle>
+          <DialogDescription>Captura o edita la tarifa marítima con sus costos y condiciones.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">

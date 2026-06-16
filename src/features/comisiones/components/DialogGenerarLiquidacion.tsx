@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -37,7 +37,7 @@ export function DialogGenerarLiquidacion({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Generar liquidación de comisiones</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Generar liquidación de comisiones</DialogTitle><DialogDescription>Genera la liquidación de comisiones para los agentes en el período indicado.</DialogDescription></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1">
             <Label>Vendedora</Label>

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -66,6 +67,7 @@ export default function PortalInviteDialog({
       <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Invitar Cliente al Portal</DialogTitle>
+          <DialogDescription>Envía una invitación al cliente para acceder al portal de seguimiento.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
