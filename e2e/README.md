@@ -50,6 +50,7 @@ Resultados HTML quedan en `playwright-report/`.
 | 03 | `03-factura.spec.ts` | Listado de facturación carga, tabs principales visibles. |
 | 04 | `04-conciliacion.spec.ts` | Vista de conciliación / proformas con datos. |
 | 05 | `05-portal.spec.ts` | Login portal cliente → dashboard portal. |
+| 07 | `07-wizard-embarque-teclado.spec.ts` | Wizard Nuevo Embarque navegado sólo con teclado: combobox cotización (Tab+Enter), badges HEREDADO aparecen/desaparecen, Enter en input no rompe el form, StepIndicator expone `role=list`. Requiere `E2E_HAS_SEED=1`. |
 
 Estos specs son **smoke**: validan que la app navega sin crashear y los
 componentes clave montan. Cuando se estabilicen los selectores se pueden
