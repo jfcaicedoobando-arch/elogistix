@@ -37,16 +37,21 @@ interface Cotizacion {
   fecha_vigencia: string | null; estado: string;
 }
 
+interface SendBatchParams {
+  supabaseUrl: string;
+  supabaseServiceKey: string;
+  recipients: { email: string; nombre?: string; tipo: 'to' | 'cc' }[];
+  templateData: Record<string, unknown>;
+  cotId: string;
+  timestamp: number;
+}
+
 async function sendEmailsToRecipients(
-  supabaseUrl: string,
-  supabaseServiceKey: string,
-  allRecipients: { email: string; nombre?: string; tipo: 'to' | 'cc' }[],
-  templateData: Record<string, unknown>,
-  cotId: string,
-  timestamp: number
+  params: SendBatchParams,
 ): Promise<{ email: string; tipo: string; ok: boolean; error?: string }[]> {
+  const { supabaseUrl, supabaseServiceKey, recipients, templateData, cotId, timestamp } = params;
   const resultados: { email: string; tipo: string; ok: boolean; error?: string }[] = [];
-  for (const r of allRecipients) {
+  for (const r of recipients) {
     const idem = `cot-${cotId}-${timestamp}-${r.email}`;
     try {
       const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
