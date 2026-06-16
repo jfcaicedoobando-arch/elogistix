@@ -1,8 +1,19 @@
 /**
  * Editor de lista dinámica de contenedores. Reutilizable en wizard y vista detalle.
  */
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import {
   crearContenedorVacio,
@@ -26,16 +37,19 @@ export function ListaContenedoresEditable({
   minRows = 1,
 }: Props) {
   const { data: tiposContenedor = [] } = useTiposContenedor();
+  const [confirmSoftCap, setConfirmSoftCap] = useState(false);
+
+  const appendRow = () => {
+    const next = [...value, crearContenedorVacio(value.length + 1)];
+    onChange(next);
+  };
 
   const handleAgregar = () => {
     if (value.length >= SOFT_CAP) {
-      const ok = window.confirm(
-        `Ya tienes ${value.length} contenedores. ¿Seguro que quieres agregar más?`,
-      );
-      if (!ok) return;
+      setConfirmSoftCap(true);
+      return;
     }
-    const next = [...value, crearContenedorVacio(value.length + 1)];
-    onChange(next);
+    appendRow();
   };
 
   const handleCambio = (
@@ -84,6 +98,28 @@ export function ListaContenedoresEditable({
         <Plus className="h-4 w-4 mr-1" />
         Agregar contenedor
       </Button>
+
+      <AlertDialog open={confirmSoftCap} onOpenChange={setConfirmSoftCap}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Agregar otro contenedor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ya tienes {value.length} contenedores en este embarque. Asegúrate de que sea correcto antes de continuar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmSoftCap(false);
+                appendRow();
+              }}
+            >
+              Sí, agregar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

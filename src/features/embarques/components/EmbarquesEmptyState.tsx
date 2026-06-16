@@ -11,15 +11,13 @@ export function EmbarquesEmptyState({ canEdit, onCreate }: Props) {
   return (
     <Card className="shadow-md">
       <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <img
-          src="/placeholder.svg"
-          alt="Sin embarques"
-          className="h-40 w-40 opacity-80 mb-6"
-        />
-        <div className="flex items-center gap-2 mb-2">
-          <Ship className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold text-foreground">Aún no tienes embarques</h2>
+        <div
+          aria-hidden="true"
+          className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10"
+        >
+          <Ship className="h-12 w-12 text-primary" />
         </div>
+        <h2 className="mb-2 text-xl font-semibold text-foreground">Aún no tienes embarques</h2>
         <p className="text-sm text-muted-foreground max-w-md mb-6">
           Comienza registrando tu primer embarque para dar seguimiento a tus operaciones de importación, exportación y más.
         </p>

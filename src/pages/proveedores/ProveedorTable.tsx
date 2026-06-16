@@ -78,8 +78,8 @@ export function ProveedorTable({ categoria, tipo, subtipoGasto, search, origen, 
             onPageChange: setPage,
             pageSize,
             onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
-            pageSizeOptions: [100, 999999],
-            pageSizeLabels: { 999999: "Todos" },
+            pageSizeOptions: [50, 100, 200, 500],
+            pageSizeLabels: { 500: "500" },
           }}
         />
       </CardContent>

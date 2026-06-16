@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.5] - 2026-06-16
+- **fix(wizards/crash-removeChild)**: Hardening del auto-focus de los wizards de Cotización y Embarque para eliminar el crash `removeChild` reportado en el primer mount. Se valida `contentRef.isConnected` antes de hacer focus, se excluye `[disabled]` del selector, se usa `el.focus({ preventScroll: true })` envuelto en try/catch y se eleva el delay a 150 ms para coexistir con Suspense.
+- **fix(a11y/native-confirm)**: `ListaContenedoresEditable` ya no usa `window.confirm` al rebasar el soft-cap de 50 contenedores; ahora abre un `AlertDialog` accesible y temable.
+- **fix(theme/amber-hardcoded)**: `SeccionConceptosVentaCotizacion` y `StepCostosPreciosCards` migran sus avisos de color `amber-*` a tokens semánticos (`text-warning`, `bg-warning/10`, `border-warning/40`) para respetar dark mode.
+- **fix(ui/empty-state-placeholder)**: `EmbarquesEmptyState` reemplaza `/placeholder.svg` por un círculo con ícono `Ship` sobre `bg-primary/10`, en línea con el resto de empty states.
+- **fix(perf/pagination-unsafe-limit)**: Se elimina el page-size 999999 ("Todos") en tablas de proveedores, clientes, cotizaciones, embarques, leads, actividades CRM, proformas y facturas emitidas; nueva escala segura `[50, 100, 200, 500]`.
+
 ## [13.33.4] - 2026-06-16
 - **fix(a11y/wizards-labels-form)**: Segunda pasada de auditoría visual y de teclado a los wizards de Cotización y Nuevo Embarque. (1) Asociación `label↔control` completada con `htmlFor`/`id` en los campos restantes: cotización — número de contenedores, notas, tipo de unidad, peso, volumen, piezas y switch de seguro; embarque — shipper, consignatario, agente, BL master/house, aeropuerto origen/destino, aerolínea, MAWB, HAWB, ciudad origen/destino, transportista, carta porte, ETD y ETA. (2) `FilaContenedor` usa `useId()` para garantizar ids únicos por fila (sin colisiones cuando hay múltiples contenedores). (3) `CotizacionWizardLayout` ahora envuelve el contenido en `<form onSubmit>` con submit `sr-only`, en paridad con `EmbarqueWizardLayout`: Enter avanza al siguiente paso desde cualquier input (excluye textarea, botones y combobox abiertos). (4) Chip de filtro en `EmbarquesFiltrosChips` usa `focus-visible:` en lugar de `focus:` para no mostrar anillo al hacer click con mouse.
 
