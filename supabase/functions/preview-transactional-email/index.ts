@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { isAuthorized, resolveSubject } from './helpers.ts'
 
 // Renders all registered templates with their previewData.
 // Gated by LOVABLE_API_KEY — only the Go API calls this.
@@ -23,9 +24,7 @@ Deno.serve(async (req) => {
   }
 
   // Verify the caller is authorized with LOVABLE_API_KEY
-  const authHeader = req.headers.get('Authorization')
-  const token = authHeader?.replace(/^Bearer\s+/i, '')
-  if (token !== apiKey) {
+  if (!isAuthorized(req.headers.get('Authorization'), apiKey)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -61,10 +60,7 @@ Deno.serve(async (req) => {
       const html = await renderAsync(
         React.createElement(entry.component, entry.previewData)
       )
-      const resolvedSubject =
-        typeof entry.subject === 'function'
-          ? entry.subject(entry.previewData)
-          : entry.subject
+      const resolvedSubject = resolveSubject(entry.subject, entry.previewData)
 
       results.push({
         templateName: name,

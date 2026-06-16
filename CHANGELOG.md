@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.11] - 2026-06-16
+- **test(edge functions)**: cubre las 2 edge functions de email que quedaban sin tests (Fase 1 del plan completada para email). (a) `handle-email-suppression/helpers_test.ts` — 10 tests para `parseSuppressionPayload` (válido, sin `data`, sin email/reason, JSON inválido), `mapReasonToStatus` (bounce→bounced, complaint→complained, fallback suppressed), `mapReasonToMessage` (4 ramas) y `redactEmail` (`j***@dominio.com`, fallback `***`). (b) `preview-transactional-email/helpers_test.ts` — 7 tests para `isAuthorized` (Bearer case-insensitive, apiKey vacío bloquea, header nulo) y `resolveSubject` (string vs función con previewData). Refactor: helpers puros extraídos a `helpers.ts` en ambas functions y reutilizados desde `index.ts` (sin duplicación). Total acumulado Fase 1 edge functions email: 32 tests verdes (11 auditoría + 15 email Fase 1.2.a + 17 esta entrega).
+
 ## [13.44.10] - 2026-06-16
 - **test(edge functions)**: cubre 3 edge functions críticas de email que estaban sin tests (Fase 1 del plan). (a) `handle-email-unsubscribe/tokenExtractor_test.ts` — 6 tests para `extractToken` (GET query, POST JSON, POST form RFC 8058 con `List-Unsubscribe`, fallback ante JSON inválido). (b) `send-transactional-email/validation_test.ts` — 7 tests para `parseRequest` y `corsResponse` (400 ante JSON inválido o `templateName` faltante, soporte camelCase/snake_case, `idempotencyKey` por defecto = `messageId`, `templateData` no-objeto se descarta). (c) `enviar-cotizacion-email/emailValidation_test.ts` — 7 casos para `isEmail` (helper `isEmail` extraído a `emailValidation.ts` para tests aislados sin disparar type-check del cliente Supabase con tablas no tipadas). Total: 15 tests verdes en `supabase--test_edge_functions`.
 
