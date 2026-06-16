@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Download, Ship, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -17,51 +16,9 @@ import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargar
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { calcularTotalesProforma } from "@/lib/domain/proforma";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
+import { EstadoBadges, TotalesCard } from "@/features/proformas/components/ProformaDetalleCards";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
 
-function EstadoBadges({ estadoRev, facturada }: { estadoRev: string; facturada: boolean }) {
-  return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {estadoRev === "pendiente" && <Badge variant="warning">Pendiente de revisión</Badge>}
-      {estadoRev === "aprobada" && <Badge variant="success">Aprobada</Badge>}
-      {estadoRev === "consolidada" && <Badge variant="info">Consolidada</Badge>}
-      {facturada
-        ? <Badge variant="success">Facturada</Badge>
-        : <Badge variant="warning">Pago pendiente</Badge>}
-    </div>
-  );
-}
-
-type Totales = ReturnType<typeof calcularTotalesProforma>;
-
-function TotalesCard({ totales }: { totales: Totales }) {
-  const hasUsd = totales.subtotal_usd > 0;
-  const hasMxn = totales.subtotal_mxn > 0;
-  if (!hasUsd && !hasMxn) return null;
-  return (
-    <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Totales</CardTitle></CardHeader>
-      <CardContent className="grid grid-cols-2 gap-6 text-sm">
-        {hasUsd && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">USD</p>
-            <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(totales.subtotal_usd, "USD")}</span></div>
-            <div className="flex justify-between"><span>IVA</span><span className="tabular-nums">{formatCurrency(totales.iva_usd, "USD")}</span></div>
-            <div className="flex justify-between font-bold border-t pt-1"><span>Total</span><span className="tabular-nums text-accent">{formatCurrency(totales.total_usd, "USD")}</span></div>
-          </div>
-        )}
-        {hasMxn && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">MXN</p>
-            <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{formatCurrency(totales.subtotal_mxn, "MXN")}</span></div>
-            <div className="flex justify-between"><span>IVA</span><span className="tabular-nums">{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
-            <div className="flex justify-between font-bold border-t pt-1"><span>Total</span><span className="tabular-nums text-accent">{formatCurrency(totales.total_mxn, "MXN")}</span></div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 
 export default function ProformaDetalle() {
