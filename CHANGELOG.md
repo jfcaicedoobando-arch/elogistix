@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.4] - 2026-06-16
+- **fix(a11y/wizards-labels-form)**: Segunda pasada de auditoría visual y de teclado a los wizards de Cotización y Nuevo Embarque. (1) Asociación `label↔control` completada con `htmlFor`/`id` en los campos restantes: cotización — número de contenedores, notas, tipo de unidad, peso, volumen, piezas y switch de seguro; embarque — shipper, consignatario, agente, BL master/house, aeropuerto origen/destino, aerolínea, MAWB, HAWB, ciudad origen/destino, transportista, carta porte, ETD y ETA. (2) `FilaContenedor` usa `useId()` para garantizar ids únicos por fila (sin colisiones cuando hay múltiples contenedores). (3) `CotizacionWizardLayout` ahora envuelve el contenido en `<form onSubmit>` con submit `sr-only`, en paridad con `EmbarqueWizardLayout`: Enter avanza al siguiente paso desde cualquier input (excluye textarea, botones y combobox abiertos). (4) Chip de filtro en `EmbarquesFiltrosChips` usa `focus-visible:` en lugar de `focus:` para no mostrar anillo al hacer click con mouse.
+
 ## [13.33.3] - 2026-06-16
 - **test(e2e/wizard-teclado)**: Nuevo spec Playwright `07-wizard-embarque-teclado.spec.ts` que recorre el wizard de Nuevo Embarque con sólo Tab/Enter/flechas y previene regresiones de la auditoría de accesibilidad: foco directo al combobox de cotización, apertura con Enter, selección con `ArrowDown` + Enter, aparición de la píldora "Vinculada a COT-..." y de ≥3 badges `HEREDADO`, desaparición reactiva del badge al editar la descripción (vía `id="emb-descripcion-mercancia"`), Enter dentro de un input no rompe el form (verifica que seguimos en `/embarques/nuevo`) y `StepIndicator` se expone con `role="list"` accesible. Se salta automáticamente si no hay `E2E_HAS_SEED=1`.
 
