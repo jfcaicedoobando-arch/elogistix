@@ -55,7 +55,7 @@ export default function SeccionConceptosVentaCotizacion({
           {mixtasUSD.length > 0 && (
             <div
               data-testid="bucket-mixed-warning-usd"
-              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground dark:text-warning"
+              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
@@ -101,7 +101,7 @@ export default function SeccionConceptosVentaCotizacion({
           {mixtasMXN.length > 0 && (
             <div
               data-testid="bucket-mixed-warning-mxn"
-              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground dark:text-warning"
+              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
