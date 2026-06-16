@@ -4,7 +4,7 @@ import { DollarSign, Banknote, Link2 } from "lucide-react";
 import ResumenPL from "./ResumenPL";
 import TablaCostosLocal from "./TablaCostosLocal";
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
-import { fetchRecargosDeTarifa, fetchTopTarifas } from "@/features/costeo/services/topTarifas";
+import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
 import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVinculada";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -137,5 +137,3 @@ function construirFilasDesdeTarifa(
   ];
 }
 
-// Mantengo el import de fetchTopTarifas para evitar romper otras refs accidentales.
-void fetchTopTarifas;
