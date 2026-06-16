@@ -70,8 +70,8 @@ export default function CotizacionWizardLayout({
   }, [currentStep]);
 
   const irACargarCostos = useCallback(() => {
-    w.setCurrentStep?.(2);
-  }, [w]);
+    if (!isBusy) wHandleBack();
+  }, [isBusy, wHandleBack]);
 
   return (
     <FormProvider {...form}>
