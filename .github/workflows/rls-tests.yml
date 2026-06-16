@@ -121,6 +121,7 @@ jobs:
           - crm_operacional
           - operaciones
           - tarifas_y_costeo
+          - roles_no_admin
 
     services:
       postgres:
