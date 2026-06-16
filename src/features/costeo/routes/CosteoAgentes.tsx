@@ -244,8 +244,8 @@ export default function CosteoAgentes() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={crear.isPending}>
-                Guardar
+              <Button type="submit" disabled={crear.isPending || actualizar.isPending}>
+                {editandoId ? "Actualizar" : "Guardar"}
               </Button>
             </DialogFooter>
           </form>
