@@ -79,9 +79,31 @@ describe("embarqueCotizacion mapper", () => {
     expect(map.puertoDestino).toBe("");
   });
 
-  it("vincular y desvincular cubren el mismo conjunto de campos", () => {
-    const vincular = buildVincularCotizacionUpdates(base).map(([k]) => k).sort();
-    const desvincular = buildDesvincularCotizacionUpdates().map(([k]) => k).sort();
-    expect(vincular).toEqual(desvincular);
+  it("desvincular limpia un superset que incluye los campos de vincular (marítimo)", () => {
+    const vincular = new Set(buildVincularCotizacionUpdates(base).map(([k]) => k));
+    const desvincular = new Set(buildDesvincularCotizacionUpdates().map(([k]) => k));
+    // Todos los campos vinculados (modo marítimo) deben quedar contemplados
+    // en el set que limpia desvincular, aunque desvincular abarque más
+    // (rutas aéreas/terrestres + MSDS) para garantizar limpieza total.
+    for (const f of vincular) expect(desvincular.has(f)).toBe(true);
+  });
+
+  it("modos alternos (aéreo / terrestre) mapean al campo de ruta correcto", () => {
+    const aereo = Object.fromEntries(
+      buildVincularCotizacionUpdates({ ...base, modo: "Aéreo" }) as Array<[string, string]>,
+    );
+    expect(aereo.aeropuertoOrigen).toBe("Shanghai");
+    expect(aereo.aeropuertoDestino).toBe("Manzanillo");
+
+    const terrestre = Object.fromEntries(
+      buildVincularCotizacionUpdates({ ...base, modo: "Terrestre" }) as Array<[string, string]>,
+    );
+    expect(terrestre.ciudadOrigen).toBe("Shanghai");
+    expect(terrestre.ciudadDestino).toBe("Manzanillo");
+  });
+
+  it("buildDesvincularCotizacionUpdates con modo 'conservar' devuelve lista vacía", () => {
+    expect(buildDesvincularCotizacionUpdates("conservar")).toEqual([]);
+    expect(buildDesvincularCotizacionUpdates("solo-conceptos")).toEqual([]);
   });
 });
