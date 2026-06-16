@@ -41,7 +41,7 @@ export default function CotizacionWizardLayout({
   saveLabel,
 }: CotizacionWizardLayoutProps) {
   const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, isPending } = w;
-  const contentRef = useRef<HTMLFormElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSinDesglose, setShowSinDesglose] = useState(false);
   const isBusy = isProcessing || isPending;
@@ -78,27 +78,25 @@ export default function CotizacionWizardLayout({
     setShowSinDesglose(true);
   }, [canCotizarSinDesglose]);
 
-  // Auto-focus removido (v13.33.8): el setTimeout chocaba con la fase de
-  // mutación de React (Strict Mode + datos resolviendo en paralelo) y producía
-  // `removeChild` en el primer mount del wizard.
-
   const irACargarCostos = useCallback(() => {
     if (!isBusy) wHandleBack();
   }, [isBusy, wHandleBack]);
 
-  // Enter avanza paso (paridad con EmbarqueWizardLayout).
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isBusy) handleNext();
-  }, [handleNext, isBusy]);
-
-  const handleFormKeyDown = useCallback((e: KeyboardEvent<HTMLFormElement>) => {
+  // IMPORTANTE: NO envolver el contenido en <form>. Radix Select detecta el
+  // form ancestro y monta `SelectBubbleInput`, que entra en conflicto con
+  // React Hook Form (Controller) y produce `removeChild` en el primer mount.
+  // Enter→Siguiente se maneja a nivel de keydown sobre el contenedor.
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'Enter') return;
     const target = e.target as HTMLElement;
     if (target.tagName === 'TEXTAREA') return;
     if (target.tagName === 'BUTTON') return;
+    if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'button') return;
     if (target.getAttribute('aria-expanded') === 'true') return;
-  }, []);
+    if (target.tagName !== 'INPUT' && target.tagName !== 'SELECT') return;
+    e.preventDefault();
+    if (!isBusy) handleNext();
+  }, [handleNext, isBusy]);
 
   return (
     <FormProvider {...form}>
@@ -120,7 +118,7 @@ export default function CotizacionWizardLayout({
           />
         </div>
 
-        <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="flex-1 overflow-y-auto p-4" ref={contentRef}>
+        <div onKeyDown={handleKeyDown} className="flex-1 overflow-y-auto p-4" ref={contentRef}>
           <div className="max-w-6xl mx-auto">
             {w.currentStep === 1 ? (
               <div className="grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
@@ -192,8 +190,7 @@ export default function CotizacionWizardLayout({
               </div>
             )}
           </div>
-          <button type="submit" className="sr-only" tabIndex={-1} aria-hidden>Siguiente</button>
-        </form>
+        </div>
 
         <CotizacionWizardFooter
           currentStep={w.currentStep}
