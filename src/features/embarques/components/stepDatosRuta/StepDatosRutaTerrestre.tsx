@@ -11,21 +11,21 @@ export function StepDatosRutaTerrestre({ errors }: { errors: StepValidationError
   return (
     <>
       <div className="space-y-2">
-        <Label>Ciudad Origen *</Label>
-        <Input placeholder="Ej: Houston, TX" {...register('ciudadOrigen')} />
+        <Label htmlFor="emb-ciudad-origen">Ciudad Origen *</Label>
+        <Input id="emb-ciudad-origen" placeholder="Ej: Houston, TX" {...register('ciudadOrigen')} />
         {errors.ciudadOrigen && <p className={errClass}>{errors.ciudadOrigen}</p>}
       </div>
       <div className="space-y-2">
-        <Label>Ciudad Destino *</Label>
-        <Input placeholder="Ej: León, Guanajuato" {...register('ciudadDestino')} />
+        <Label htmlFor="emb-ciudad-destino">Ciudad Destino *</Label>
+        <Input id="emb-ciudad-destino" placeholder="Ej: León, Guanajuato" {...register('ciudadDestino')} />
         {errors.ciudadDestino && <p className={errClass}>{errors.ciudadDestino}</p>}
       </div>
       <div className="space-y-2">
-        <Label>Transportista *</Label>
-        <Input {...register('transportista')} />
+        <Label htmlFor="emb-transportista">Transportista *</Label>
+        <Input id="emb-transportista" {...register('transportista')} />
         {errors.transportista && <p className={errClass}>{errors.transportista}</p>}
       </div>
-      <div className="space-y-2"><Label># Carta Porte</Label><Input {...register('cartaPorte')} /></div>
+      <div className="space-y-2"><Label htmlFor="emb-carta-porte"># Carta Porte</Label><Input id="emb-carta-porte" {...register('cartaPorte')} /></div>
     </>
   );
 }

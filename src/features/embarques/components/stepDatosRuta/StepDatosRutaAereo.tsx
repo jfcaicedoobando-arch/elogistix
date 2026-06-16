@@ -11,22 +11,22 @@ export function StepDatosRutaAereo({ errors }: { errors: StepValidationErrors })
   return (
     <>
       <div className="space-y-2">
-        <Label>Aeropuerto Origen *</Label>
-        <Input placeholder="Ej: Incheon (ICN)" {...register('aeropuertoOrigen')} />
+        <Label htmlFor="emb-aeropuerto-origen">Aeropuerto Origen *</Label>
+        <Input id="emb-aeropuerto-origen" placeholder="Ej: Incheon (ICN)" {...register('aeropuertoOrigen')} />
         {errors.aeropuertoOrigen && <p className={errClass}>{errors.aeropuertoOrigen}</p>}
       </div>
       <div className="space-y-2">
-        <Label>Aeropuerto Destino *</Label>
-        <Input placeholder="Ej: AICM (MEX)" {...register('aeropuertoDestino')} />
+        <Label htmlFor="emb-aeropuerto-destino">Aeropuerto Destino *</Label>
+        <Input id="emb-aeropuerto-destino" placeholder="Ej: AICM (MEX)" {...register('aeropuertoDestino')} />
         {errors.aeropuertoDestino && <p className={errClass}>{errors.aeropuertoDestino}</p>}
       </div>
-      <div className="space-y-2"><Label>Aerolínea</Label><Input {...register('aerolinea')} /></div>
+      <div className="space-y-2"><Label htmlFor="emb-aerolinea">Aerolínea</Label><Input id="emb-aerolinea" {...register('aerolinea')} /></div>
       <div className="space-y-2">
-        <Label># MAWB *</Label>
-        <Input {...register('mawb')} />
+        <Label htmlFor="emb-mawb"># MAWB *</Label>
+        <Input id="emb-mawb" {...register('mawb')} />
         {errors.mawb && <p className={errClass}>{errors.mawb}</p>}
       </div>
-      <div className="space-y-2"><Label># HAWB</Label><Input {...register('hawb')} /></div>
+      <div className="space-y-2"><Label htmlFor="emb-hawb"># HAWB</Label><Input id="emb-hawb" {...register('hawb')} /></div>
     </>
   );
 }
