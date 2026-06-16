@@ -145,6 +145,21 @@ function mapFechasFinancieras(e: EmbarqueRow) {
   };
 }
 
+function mapHerencia(e: EmbarqueRow) {
+  // Pack B+ (v13.33.0). Columnas nuevas en `embarques`; pueden faltar en filas
+  // antiguas hasta que se regeneren los tipos — accedemos como `unknown`.
+  const row = e as unknown as Record<string, unknown>;
+  return {
+    tarifaId: (row.tarifa_id as string | null) ?? "",
+    cartaGarantia: Boolean(row.carta_garantia),
+    diasLibresDestino: String(row.dias_libres_destino ?? 0),
+    diasAlmacenaje: String(row.dias_almacenaje ?? 0),
+    seguro: Boolean(row.seguro),
+    valorSeguroUsd: row.valor_seguro_usd != null ? String(row.valor_seguro_usd) : "",
+    notas: (row.notas as string | null) ?? "",
+  };
+}
+
 /** Mapea una fila de la BD al formato del formulario (para edición). */
 export function mapEmbarqueRowToFormValues(embarque: EmbarqueRow): EmbarqueFormValues {
   return {
@@ -153,6 +168,7 @@ export function mapEmbarqueRowToFormValues(embarque: EmbarqueRow): EmbarqueFormV
     ...mapAereo(embarque),
     ...mapTerrestre(embarque),
     ...mapFechasFinancieras(embarque),
+    ...mapHerencia(embarque),
     // Hidratación dinámica de `contenedores` queda fuera de alcance:
     // el detail-view consume `useContenedoresEmbarque` directamente.
     contenedores: [],
