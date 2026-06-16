@@ -124,7 +124,7 @@ export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir" }
         )}
       </div>
 
-      <div className="text-xs text-muted-foreground">Vigente hasta: {row.vigente_hasta}</div>
+      <div className="text-xs text-muted-foreground">Vigente hasta: {formatFechaMx(row.vigente_hasta)}</div>
 
       {onElegir && (
         <Button className="w-full" onClick={() => onElegir(row)}>
