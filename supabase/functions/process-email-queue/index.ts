@@ -91,6 +91,7 @@ Deno.serve(async (req) => {
     )
   }
 
+  // authenticateRequest: valida Bearer JWT con role=service_role antes de procesar.
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return new Response(
