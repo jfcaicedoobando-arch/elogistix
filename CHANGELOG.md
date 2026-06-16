@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.26.3] - 2026-06-16
+- **refactor(cotizaciones/wizard)**: `SeccionRutaCotizacion` dividido en sub-componentes (`OrigenDestinoBlock`, `TarifaFields`, `SeguroBlock`, `BannerOverride`) bajo `seccionRuta/` para cumplir la regla Power of 10 (≤200 líneas). Sin cambios funcionales.
+
 ## [13.26.2] - 2026-06-16
 - **fix(cotizaciones/tarifa-vinculada)**: El modal "Buscar tarifa marítima" ahora precarga el tipo de contenedor seleccionado en el Paso 1 del wizard, evitando que el usuario lo vuelva a elegir. La resolución se hace por nombre normalizado contra el catálogo `tipos_contenedor`.
 
