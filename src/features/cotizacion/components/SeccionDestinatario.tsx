@@ -20,9 +20,10 @@ interface ClienteOption {
 
 interface Props {
   clientes: ClienteOption[];
+  complete?: boolean;
 }
 
-export default function SeccionDestinatario({ clientes }: Props) {
+export default function SeccionDestinatario({ clientes, complete }: Props) {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
   const esProspecto = watch("esProspecto");
   const clienteId = watch("clienteId");
