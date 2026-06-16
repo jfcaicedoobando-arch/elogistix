@@ -6,12 +6,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const insertSpy = vi.fn().mockResolvedValue({ error: null });
-const fromSpy = vi.fn(() => ({ insert: insertSpy }));
+const fromSpy = vi.fn((_table: string) => ({ insert: insertSpy }));
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u-1", email: "t@t.mx" } } }) },
-    from: (...a: unknown[]) => fromSpy(...a),
+    from: (table: string) => fromSpy(table),
   },
 }));
 vi.mock("@/lib/supabase/cast", () => ({ toDbJson: <T,>(x: T) => x }));
