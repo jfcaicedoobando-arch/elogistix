@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.46.2] - 2026-06-16
+- **feat(cotizaciones/kpis)**: Las 4 tarjetas KPI (Total, Aceptadas, Rechazadas, Tasa de conversión) ahora se calculan solo sobre cotizaciones creadas en los últimos 30 días, independientes de los filtros de la tabla. Se añade subtítulo "KPIs · Últimos 30 días" para hacerlo explícito.
+
 ## [13.46.1] - 2026-06-16
 - **fix(db/grants)**: Faltaban GRANTs a `authenticated`/`service_role` en las tablas `tracking_externo`, `tracking_intentos`, `tracking_links`, `tracking_webhook_log`. Sin permisos, RLS nunca evaluaba y los SELECT regresaban 0 filas para usuarios admin (detectado por `test_rls_operaciones`, TEST 8).
 - **fix(db/trigger)**: `recalcular_estado_factura()` escribía en `facturas.fecha_pago` (columna inexistente), rompiendo cualquier alta/edición de `pagos_factura`. Eliminado del UPDATE.

@@ -90,11 +90,14 @@ export default function Cotizaciones() {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard titulo="Total cotizaciones" valor={c.kpis.total} icono={BarChart3} color="blue" />
-        <KpiCard titulo="Aceptadas" valor={c.kpis.aceptadas} icono={CheckCircle} color="emerald" />
-        <KpiCard titulo="Rechazadas" valor={c.kpis.rechazadas} icono={XCircle} color="red" />
-        <KpiCard titulo="Tasa de conversión" valor={`${c.kpis.tasa}%`} icono={TrendingUp} color="violet" />
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">KPIs · Últimos 30 días</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <KpiCard titulo="Total cotizaciones" valor={c.kpis.total} icono={BarChart3} color="blue" />
+          <KpiCard titulo="Aceptadas" valor={c.kpis.aceptadas} icono={CheckCircle} color="emerald" />
+          <KpiCard titulo="Rechazadas" valor={c.kpis.rechazadas} icono={XCircle} color="red" />
+          <KpiCard titulo="Tasa de conversión" valor={`${c.kpis.tasa}%`} icono={TrendingUp} color="violet" />
+        </div>
       </div>
 
       <Card>

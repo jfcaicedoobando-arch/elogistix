@@ -104,15 +104,23 @@ export function useCotizacionesPageController() {
 
   const { items: paginated, totalPages } = paginate(filtered);
 
+  // KPIs basados solo en cotizaciones creadas en los últimos 30 días.
+  // No dependen de los filtros visibles de la tabla.
   const kpis = useMemo(() => {
-    const total = filtered.length;
-    const aceptadas = filtered.filter(
+    const hace30Dias = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const ultimos30 = cotizaciones.filter((c) => {
+      if (!c.created_at) return false;
+      const ts = new Date(c.created_at).getTime();
+      return Number.isFinite(ts) && ts >= hace30Dias;
+    });
+    const total = ultimos30.length;
+    const aceptadas = ultimos30.filter(
       (c) => c.estado === "Aceptada" || c.estado === "En operación",
     ).length;
-    const rechazadas = filtered.filter((c) => c.estado === "Rechazada").length;
+    const rechazadas = ultimos30.filter((c) => c.estado === "Rechazada").length;
     const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
     return { total, aceptadas, rechazadas, tasa };
-  }, [filtered]);
+  }, [cotizaciones]);
 
   const irANueva = () => navigate("/cotizaciones/nueva");
   const irAEditar = (id: string) => navigate(`/cotizaciones/${id}/editar`);
