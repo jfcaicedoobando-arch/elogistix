@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
+import { useCallback, useRef, useState, KeyboardEvent } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
