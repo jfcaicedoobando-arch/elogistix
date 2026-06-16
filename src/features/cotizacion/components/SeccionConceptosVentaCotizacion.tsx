@@ -55,7 +55,7 @@ export default function SeccionConceptosVentaCotizacion({
           {mixtasUSD.length > 0 && (
             <div
               data-testid="bucket-mixed-warning-usd"
-              className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground dark:text-warning"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
@@ -78,7 +78,7 @@ export default function SeccionConceptosVentaCotizacion({
             {hayIvaUSD ? (
               <>
                 <span className="text-sm">Subtotal s/IVA: {formatCurrency(subtotalSinIvaUSD, 'USD')}</span>
-                <span className="text-sm text-amber-600">IVA 16%: {formatCurrency(ivaUSD, 'USD')}</span>
+                <span className="text-sm text-warning">IVA 16%: {formatCurrency(ivaUSD, 'USD')}</span>
                 <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
               </>
             ) : (
@@ -101,7 +101,7 @@ export default function SeccionConceptosVentaCotizacion({
           {mixtasMXN.length > 0 && (
             <div
               data-testid="bucket-mixed-warning-mxn"
-              className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground dark:text-warning"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
@@ -133,7 +133,7 @@ export default function SeccionConceptosVentaCotizacion({
         <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
         <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
         <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA 16%</span>
-        {hayIvaUSD && <span className="text-xs text-amber-600">* Algunos conceptos USD incluyen IVA 16%</span>}
+        {hayIvaUSD && <span className="text-xs text-warning">* Algunos conceptos USD incluyen IVA 16%</span>}
       </div>
     </div>
   );
