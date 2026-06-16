@@ -6,20 +6,17 @@
 import { describe, it, expect } from "vitest";
 import { sha256Hex, hexToUuid } from "../idempotencyHash";
 
-// jsdom no implementa File.arrayBuffer/stream funcional; construimos un File
-// "real" + override de arrayBuffer con el buffer ya conocido.
-function makeFile(content: string, name = "f.txt"): File {
-  const file = new File([content], name);
+// jsdom Blob/File no implementan arrayBuffer/stream funcional; usamos un
+// objeto plano que cumple el contrato mínimo que `sha256Hex` consume.
+function makeFile(content: string): File {
   const bytes = new TextEncoder().encode(content);
   const buffer = bytes.buffer.slice(
     bytes.byteOffset,
     bytes.byteOffset + bytes.byteLength,
   );
-  Object.defineProperty(file, "arrayBuffer", {
-    value: () => Promise.resolve(buffer),
-    configurable: true,
-  });
-  return file;
+  return {
+    arrayBuffer: () => Promise.resolve(buffer),
+  } as unknown as File;
 }
 
 describe("sha256Hex", () => {
