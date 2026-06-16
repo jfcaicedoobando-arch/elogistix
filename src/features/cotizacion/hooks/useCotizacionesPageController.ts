@@ -41,10 +41,11 @@ export function useCotizacionesPageController() {
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState({ estado: "todos", cliente: "todos" });
+  } = useListPageState({ estado: "todos", cliente: "todos", sinCostos: "no" });
 
   const filterEstado = filters.estado;
   const filterCliente = filters.cliente;
+  const filterSinCostos = filters.sinCostos === "si";
 
   const filtered = useMemo(() => {
     return cotizaciones.filter((c) => {
@@ -54,9 +55,12 @@ export function useCotizacionesPageController() {
         c.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
       const matchEstado = filterEstado === "todos" || c.estado === filterEstado;
       const matchCliente = filterCliente === "todos" || c.cliente_id === filterCliente;
-      return matchSearch && matchEstado && matchCliente;
+      // Estado real: sin_desglose_costos = true Y sin filas en cotizacion_costos.
+      const matchSinCostos = !filterSinCostos ||
+        (!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0));
+      return matchSearch && matchEstado && matchCliente && matchSinCostos;
     });
-  }, [cotizaciones, search, filterEstado, filterCliente]);
+  }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos]);
 
   const { items: paginated, totalPages } = paginate(filtered);
 
