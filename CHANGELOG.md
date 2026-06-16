@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.14] - 2026-06-16
+- **feat(costeo/tarifas)**: Agregados los conceptos "Cargos en Origen" y "Cargos en Destino" al selector de recargos en `TarifaRecargosEditor`.
+
 ## [13.33.13] - 2026-06-16
 - **fix(proveedores/editar)**: El modal "Editar Proveedor" ahora preserva todos los campos cargados (contacto, email, teléfono, RFC, país, dirección fiscal, banco, CLABE, etc.). Se normalizan los valores `null` de la base de datos a cadena vacía en `useEditarProveedorController` para mantener los inputs y selects controlados y evitar que aparezcan vacíos al abrir.
 

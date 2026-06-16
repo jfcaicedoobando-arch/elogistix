@@ -11,7 +11,7 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import type { TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
-const CONCEPTOS = ["BAF", "LSS", "ISPS", "THC Origen", "Otro"];
+const CONCEPTOS = ["BAF", "LSS", "ISPS", "THC Origen", "Cargos en Origen", "Cargos en Destino", "Otro"];
 
 interface Props {
   value: TarifaRecargoInput[];
