@@ -2,13 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { formatDate } from "@/lib/formatters";
+
 
 interface EmbarqueVinculado {
   id: string;
