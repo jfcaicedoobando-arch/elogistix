@@ -2,10 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   buildVincularCotizacionUpdates,
   buildDesvincularCotizacionUpdates,
+  snapshotFromVincularUpdates,
   type CotizacionParaVincular,
 } from "@/lib/mappers/embarqueCotizacion";
 
-function asMap(pairs: Array<[string, string]>): Record<string, string> {
+function asMap(pairs: Array<[string, unknown]>): Record<string, unknown> {
   return Object.fromEntries(pairs);
 }
 
@@ -27,7 +28,7 @@ describe("embarqueCotizacion mapper", () => {
 
   it("buildVincularCotizacionUpdates mapea todos los campos en orden", () => {
     const updates = buildVincularCotizacionUpdates(base);
-    const map = asMap(updates as Array<[string, string]>);
+    const map = asMap(updates);
     expect(map.clienteId).toBe("cli-1");
     expect(map.modo).toBe("Maritimo");
     expect(map.tipo).toBe("Importacion");
@@ -49,7 +50,7 @@ describe("embarqueCotizacion mapper", () => {
       tipo_carga: "",
       tipo_contenedor: null,
     });
-    const map = asMap(updates as Array<[string, string]>);
+    const map = asMap(updates);
     expect(map.clienteId).toBe("");
     expect(map.tipoCarga).toBe("Carga General");
     expect(map.tipoContenedor).toBe("");
@@ -62,7 +63,7 @@ describe("embarqueCotizacion mapper", () => {
       volumen_m3: 0,
       piezas: 0,
     });
-    const map = asMap(updates as Array<[string, string]>);
+    const map = asMap(updates);
     expect(map.pesoKg).toBe("");
     expect(map.volumenM3).toBe("");
     expect(map.piezas).toBe("");
@@ -70,7 +71,7 @@ describe("embarqueCotizacion mapper", () => {
 
   it("buildDesvincularCotizacionUpdates limpia todos los campos con incoterm default FOB", () => {
     const updates = buildDesvincularCotizacionUpdates();
-    const map = asMap(updates as Array<[string, string]>);
+    const map = asMap(updates);
     expect(map.clienteId).toBe("");
     expect(map.incoterm).toBe("FOB");
     expect(map.tipoCarga).toBe("Carga General");
@@ -82,22 +83,15 @@ describe("embarqueCotizacion mapper", () => {
   it("desvincular limpia un superset que incluye los campos de vincular (marítimo)", () => {
     const vincular = new Set(buildVincularCotizacionUpdates(base).map(([k]) => k));
     const desvincular = new Set(buildDesvincularCotizacionUpdates().map(([k]) => k));
-    // Todos los campos vinculados (modo marítimo) deben quedar contemplados
-    // en el set que limpia desvincular, aunque desvincular abarque más
-    // (rutas aéreas/terrestres + MSDS) para garantizar limpieza total.
     for (const f of vincular) expect(desvincular.has(f)).toBe(true);
   });
 
   it("modos alternos (aéreo / terrestre) mapean al campo de ruta correcto", () => {
-    const aereo = Object.fromEntries(
-      buildVincularCotizacionUpdates({ ...base, modo: "Aéreo" }) as Array<[string, string]>,
-    );
+    const aereo = asMap(buildVincularCotizacionUpdates({ ...base, modo: "Aéreo" }));
     expect(aereo.aeropuertoOrigen).toBe("Shanghai");
     expect(aereo.aeropuertoDestino).toBe("Manzanillo");
 
-    const terrestre = Object.fromEntries(
-      buildVincularCotizacionUpdates({ ...base, modo: "Terrestre" }) as Array<[string, string]>,
-    );
+    const terrestre = asMap(buildVincularCotizacionUpdates({ ...base, modo: "Terrestre" }));
     expect(terrestre.ciudadOrigen).toBe("Shanghai");
     expect(terrestre.ciudadDestino).toBe("Manzanillo");
   });
@@ -105,5 +99,56 @@ describe("embarqueCotizacion mapper", () => {
   it("buildDesvincularCotizacionUpdates con modo 'conservar' devuelve lista vacía", () => {
     expect(buildDesvincularCotizacionUpdates("conservar")).toEqual([]);
     expect(buildDesvincularCotizacionUpdates("solo-conceptos")).toEqual([]);
+  });
+
+  // ─── Pack B v13.30.0 ─────────────────────────────────────────────────────
+  it("FCL marítimo con num_contenedores siembra N placeholders con tipo precargado", () => {
+    const updates = buildVincularCotizacionUpdates({
+      ...base,
+      tipo_embarque: "FCL",
+      num_contenedores: 3,
+    });
+    const map = asMap(updates);
+    const contenedores = map.contenedores as Array<{ tipo_contenedor: string; orden: number }>;
+    expect(contenedores).toHaveLength(3);
+    expect(contenedores.every((c) => c.tipo_contenedor === "40HC")).toBe(true);
+    expect(contenedores.map((c) => c.orden)).toEqual([1, 2, 3]);
+  });
+
+  it("LCL o aéreo no genera placeholders aunque haya num_contenedores", () => {
+    const lcl = asMap(buildVincularCotizacionUpdates({
+      ...base, tipo_embarque: "LCL", num_contenedores: 2,
+    }));
+    expect(lcl.contenedores).toBeUndefined();
+
+    const aereo = asMap(buildVincularCotizacionUpdates({
+      ...base, modo: "Aéreo", tipo_embarque: "FCL", num_contenedores: 2,
+    }));
+    expect(aereo.contenedores).toBeUndefined();
+  });
+
+  it("desvincular con snapshot respeta los campos que el usuario editó (Opción A)", () => {
+    const updates = buildVincularCotizacionUpdates(base);
+    const snap = snapshotFromVincularUpdates(updates);
+    // Usuario edita descripción y peso, deja el resto intacto.
+    const current = {
+      ...Object.fromEntries(updates),
+      descripcionMercancia: "Refacciones premium",
+      pesoKg: "1500",
+    } as Partial<import("@/lib/mappers/embarque").EmbarqueFormValues>;
+
+    const cleanup = buildDesvincularCotizacionUpdates("limpiar", snap, current);
+    const fields = new Set(cleanup.map(([k]) => k));
+    // Los editados NO deben aparecer en el cleanup.
+    expect(fields.has("descripcionMercancia")).toBe(false);
+    expect(fields.has("pesoKg")).toBe(false);
+    // Los no tocados sí deben limpiarse.
+    expect(fields.has("clienteId")).toBe(true);
+    expect(fields.has("puertoOrigen")).toBe(true);
+  });
+
+  it("desvincular sin snapshot mantiene comportamiento legacy (limpia todo)", () => {
+    const full = buildDesvincularCotizacionUpdates("limpiar");
+    expect(full.length).toBeGreaterThan(10);
   });
 });
