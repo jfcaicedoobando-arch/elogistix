@@ -60,10 +60,7 @@ Deno.serve(async (req) => {
       const html = await renderAsync(
         React.createElement(entry.component, entry.previewData)
       )
-      const resolvedSubject =
-        typeof entry.subject === 'function'
-          ? entry.subject(entry.previewData)
-          : entry.subject
+      const resolvedSubject = resolveSubject(entry.subject, entry.previewData)
 
       results.push({
         templateName: name,
