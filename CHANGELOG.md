@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.6] - 2026-06-16
+- **fix(ci/arquitectura)**: arregla las 3 fallas de la auditoría arquitectónica. (a) `useEnviarCotizacionEmail.ts` y `useEnvioCotizacionForm.ts` ya no importan `@/integrations/supabase/client` directamente — se mueven las lecturas a un servicio nuevo `features/cotizacion/services/envios.ts` (`fetchHistorialEnviosCotizacion`, `fetchContactosClienteConEmail`) y el cast `as unknown as EnvioRow[]` queda anotado con `// SAFE-CAST:` en la capa de servicio. (b) `pages/cotizaciones/Cotizaciones.tsx` baja de 209 a 183 líneas extrayendo el header de acciones a `CotizacionesPageActions.tsx`. Tests `architecture.test.ts` + `audit-report.test.ts` en verde.
+
 ## [13.44.5] - 2026-06-16
 - **fix(ci/lint)**: refactor `useAppSidebarSections` con dispatch map (`ROLE_BUILDERS`) — cada rol tiene su builder top-level y el hook queda con complejidad ciclomática << 16 (antes 17). Helpers compartidos `filterGestion`/`filterSistema`/`filterDirectorio` evitan duplicación.
 - **fix(ci/edge)**: el smoke test `process-email-queue valida autenticación antes de procesar` exigía el literal `authenticateRequest` en el source. Se restaura el marcador como comentario delante del bloque inline de validación de JWT (que sigue haciendo el chequeo `service_role`).

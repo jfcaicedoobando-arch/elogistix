@@ -5,13 +5,13 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **1529**
+Total de `as` casts detectados: **1542**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 478     | 31.3% |
-| LOW       | 1 | 24      | 1.6% |
-| MEDIUM    | 2 | 1026   | 67.1% |
+| SAFE      | 0 | 479     | 31.1% |
+| LOW       | 1 | 26      | 1.7% |
+| MEDIUM    | 2 | 1036   | 67.2% |
 | HIGH      | 3 | 1     | 0.1% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -47,10 +47,10 @@ Total de `as` casts detectados: **1529**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/lib/mappers/embarqueFromDb.ts:151`
+### 1. [HIGH] `src/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail.ts:53`
 
 ```ts
-const row = e as unknown as Record<string, unknown>;
+return (data ?? []) as unknown as EnvioRow[];
 ```
 
 

@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { enviarCotizacionPorEmail, type EnviarEmailInput } from "@/features/cotizacion/services/mutations/enviarPorEmail";
+import {
+  enviarCotizacionPorEmail,
+  type EnviarEmailInput,
+} from "@/features/cotizacion/services/mutations/enviarPorEmail";
+import {
+  fetchHistorialEnviosCotizacion,
+  type EnvioRow,
+} from "@/features/cotizacion/services/envios";
 import { toast } from "sonner";
+
+export type { EnvioRow } from "@/features/cotizacion/services/envios";
 
 export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
   const qc = useQueryClient();
@@ -25,32 +33,10 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
   });
 }
 
-export interface EnvioRow {
-  id: string;
-  created_at: string;
-  enviado_por: string | null;
-  destinatarios: Array<{ email: string; nombre?: string }>;
-  cc: string[];
-  asunto: string | null;
-  mensaje: string | null;
-  estado: string;
-  error: string | null;
-  pdf_link_publico: string | null;
-  pdf_storage_path: string | null;
-}
-
 export function useHistorialEnviosCotizacion(cotizacionId: string | undefined) {
-  return useQuery({
+  return useQuery<EnvioRow[]>({
     queryKey: ["cotizacion-envios", cotizacionId],
     enabled: !!cotizacionId,
-    queryFn: async (): Promise<EnvioRow[]> => {
-      const { data, error } = await supabase
-        .from("cotizacion_envios")
-        .select("id, created_at, enviado_por, destinatarios, cc, asunto, mensaje, estado, error, pdf_link_publico, pdf_storage_path")
-        .eq("cotizacion_id", cotizacionId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as EnvioRow[];
-    },
+    queryFn: () => fetchHistorialEnviosCotizacion(cotizacionId!),
   });
 }
