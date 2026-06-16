@@ -91,8 +91,8 @@ BEGIN
     id, embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
     organization_id, estado_facturacion, aplica_iva, tasa_iva_aplicada, origen
   ) VALUES
-    (cv_a, emb_a, 'Flete', 1, 1000, 'USD', 1000, org_a, 'Pendiente', false, 0, 'manual'),
-    (cv_b, emb_b, 'Flete', 1, 9999, 'USD', 9999, org_b, 'Pendiente', false, 0, 'manual');
+    (cv_a, emb_a, 'Flete', 1, 1000, 'USD', 1000, org_a, 'pendiente', false, 0, 'manual'),
+    (cv_b, emb_b, 'Flete', 1, 9999, 'USD', 9999, org_b, 'pendiente', false, 0, 'manual');
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.conceptos_venta WHERE id IN (cv_a, cv_b);

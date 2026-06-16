@@ -68,16 +68,16 @@ BEGIN
     (emb_b, 'EXP-TAR-B', cli_b, 'Cli TAR B', org_b, 'Marítimo', 'Importación');
 
   -- Catálogos globales (sin organization_id): puertos, navieras, tipos_contenedor
+  -- Usar códigos únicos del test para evitar colisión con seed/datos previos;
+  -- si colisionara, ON CONFLICT DO NOTHING dejaría puerto_o/puerto_d sin fila
+  -- (puerto_o no es el id real) y la FK de costeo_rutas explotaría.
   INSERT INTO public.puertos(id, code, name, country, activo) VALUES
-    (puerto_o, 'CNSHA', 'Shanghai', 'CN', true),
-    (puerto_d, 'MXMZT', 'Manzanillo', 'MX', true)
-  ON CONFLICT DO NOTHING;
+    (puerto_o, 'TST-ORIG-' || substr(puerto_o::text, 1, 8), 'Test Origen', 'CN', true),
+    (puerto_d, 'TST-DEST-' || substr(puerto_d::text, 1, 8), 'Test Destino', 'MX', true);
   INSERT INTO public.navieras(id, code, name, activo) VALUES
-    (naviera_x, 'TST', 'Tarifas Test Liner', true)
-  ON CONFLICT DO NOTHING;
+    (naviera_x, 'TST-' || substr(naviera_x::text, 1, 8), 'Tarifas Test Liner', true);
   INSERT INTO public.tipos_contenedor(id, code, name, activo) VALUES
-    (tipo_cont, '40HC-TST', '40 HC Test', true)
-  ON CONFLICT DO NOTHING;
+    (tipo_cont, '40HC-' || substr(tipo_cont::text, 1, 8), '40 HC Test', true);
 
   -- Proveedores (necesarios para costeo_agentes y proveedor_facturas)
   INSERT INTO public.proveedores(
@@ -141,8 +141,9 @@ BEGIN
     fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva,
     retenciones, total, estado
   ) VALUES
-    (pf_a, org_a, prov_a, 'Prov TAR A', 'PF-A-001', CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Pendiente'),
-    (pf_b, org_b, prov_b, 'Prov TAR B', 'PF-B-001', CURRENT_DATE, 30, 'MXN', 1, 5000, 800, 0, 5800, 'Pendiente');
+    (pf_a, org_a, prov_a, 'Prov TAR A', 'PF-A-001', CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente'),
+    (pf_b, org_b, prov_b, 'Prov TAR B', 'PF-B-001', CURRENT_DATE, 30, 'MXN', 1, 5000, 800, 0, 5800, 'Vigente');
+
 
   INSERT INTO public.proveedor_notas_credito(
     id, organization_id, proveedor_factura_id, folio_nc, fecha, monto,
