@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import { MODOS, TIPOS, INCOTERMS } from "@/constants/wizardConstants";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
+import { LabelHeredable } from "./LabelHeredable";
 
 interface Contacto {
   id: string;
