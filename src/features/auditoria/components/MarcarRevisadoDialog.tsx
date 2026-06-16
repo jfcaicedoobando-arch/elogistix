@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,9 @@ export function MarcarRevisadoDialog({ hallazgo, revisionExistente, open, onOpen
             <CheckCircle2 className="h-5 w-5 text-primary" />
             {ctrl.yaRevisado ? "Hallazgo revisado" : "Atender hallazgo"}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Marcar el hallazgo como revisado, posponerlo o documentar la acción tomada.
+          </DialogDescription>
           <HallazgoSummary
             hallazgo={hallazgo}
             revisionExistente={revisionExistente}

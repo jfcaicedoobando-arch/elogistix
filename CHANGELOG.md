@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.11] - 2026-06-16
+- **fix(ui/dialog-description-y-tokens)**: (A) Agregado `DialogDescription` (visible o `sr-only`) a 18 diálogos que sólo tenían `DialogTitle`, cerrando los warnings de accesibilidad de Radix. (B) Reemplazadas 37 ocurrencias de colores hardcodeados en 22 archivos (`amber-*`, `blue-600`, `emerald-*`) por tokens semánticos del design system (`warning`, `info`, `success`) para respetar dark mode. Fix puntual: import de `DialogDescription` faltante en `CosteoAgentes.tsx`.
+
 ## [13.33.10] - 2026-06-16
 - **feat(crm,costeo/page-header)**: Las 12 rutas que mostraban `<h1>` + `<p>` inline ahora usan el componente `PageHeader` estándar para coherencia visual con el resto de la app. CRM (6): `Leads`, `Actividades`, `Oportunidades`, `CrmDashboard`, `MiDia`, `Analitica`. Costeo (6): `CosteoTarifas`, `CosteoBuscar`, `CosteoRutas`, `CosteoAgentes`, `CosteoNavieras`, `CosteoDemorasVenta`. Acciones existentes se conservan vía la prop `actions`. Sin cambios de lógica.
 
