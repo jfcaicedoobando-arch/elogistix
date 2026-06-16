@@ -13,6 +13,8 @@ import {
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { supabase } from "@/integrations/supabase/client";
+import { toDbJson } from "@/lib/supabase/cast";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 
 interface ToastFn {
@@ -36,7 +38,38 @@ export function validatePaso1(v: CotizacionFormValues): string | null {
       return "Captura el punto de carga/descarga";
     }
   }
+  // v13.35.0 — Política tarifa-first: marítimo requiere tarifa vinculada.
+  if (v.modo === "Marítimo" && !v.tarifaId) {
+    void logBloqueoSinTarifa(v);
+    return "Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada).";
+  }
   return null;
+}
+
+/**
+ * Registra en bitácora cuando el bloqueo tarifa-first detiene el avance.
+ * Best-effort: si falla, no rompe el flujo de validación.
+ */
+async function logBloqueoSinTarifa(v: CotizacionFormValues): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("bitacora_actividad").insert({
+      usuario_id: user.id,
+      usuario_email: user.email ?? "",
+      accion: "cotizacion_bloqueada_sin_tarifa",
+      modulo: "Cotizaciones",
+      entidad_id: null,
+      entidad_nombre: v.esProspecto ? v.prospectoEmpresa : (v.clienteId ?? ""),
+      detalles: toDbJson({
+        origen: v.origen ?? null,
+        destino: v.destino ?? null,
+        tipo_contenedor: v.tipoContenedor ?? null,
+      }),
+    });
+  } catch {
+    // Best-effort.
+  }
 }
 
 /**
