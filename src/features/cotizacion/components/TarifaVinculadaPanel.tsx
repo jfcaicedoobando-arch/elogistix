@@ -13,10 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import CartaGarantiaBadge from "./CartaGarantiaBadge";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
+
+const OPTS = { shouldValidate: true, shouldDirty: true } as const;
+
+const normalizarNombreContenedor = (s: string) =>
+  s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
