@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.22] - 2026-06-16
+- **fix(ci/rls)**: 6 suites RLS rojas (solo `isolation` pasaba). Causas reales identificadas leyendo el DDL real (no inferidas del error):
+  - `crm_operacional` L120 — enum `crm_actividad_tipo` valida `llamada/email/reunion/tarea/nota`; `'correo'` → `'email'`.
+  - `financiero_critico` L99 — enum `estado_conciliacion` valida `Pendiente/Conciliado/Ignorado` (capitalizado); `'pendiente'` → `'Pendiente'`.
+  - `financiero_critico` L211 — enum `estado_comision` valida `Devengada/Liquidada/Cancelada`; `'pendiente'` → `'Devengada'`.
+  - `financiero` L82 — `proformas` no tiene columna `estado`, sí `estado_proforma`; renombrada en el INSERT.
+  - `operaciones` L128 — `facturas` no tiene columna `saldo`; removida del INSERT (también ajustados los `VALUES` correspondientes).
+  - `tarifas_y_costeo` L117-118 — CHECK `costeo_tarifas_estado_check` permite `borrador/vigente/vencida`; `'activa'` → `'vigente'`.
+  - `roles_no_admin` — trigger `trg_pago_factura_comision` en `pagos_factura` llamaba a `calcular_comision_pago()` que hace `SELECT tipo_cambio FROM embarques`, columna que no existe (la tabla tiene `tipo_cambio_usd`/`tipo_cambio_eur`). Es un bug latente de producción que solo se manifiesta cuando se inserta un pago sin vendedora vinculada. Para CI: `DROP TRIGGER IF EXISTS trg_pago_factura_comision ON public.pagos_factura` en `_ci_post_migrate.sql` (las suites validan aislamiento RLS, no cálculo de comisiones). El fix real del trigger queda como deuda técnica separada.
+- **lección**: las "soluciones" inferidas del mensaje de error (sin abrir el `CREATE TABLE`/`CREATE TYPE` real) introducen regresiones — confirmado en 13.44.19 donde añadí `tipo_cambio` a un INSERT donde el error era del trigger, no del esquema. Esta iteración consultó `pg_constraint`, `pg_enum` y los archivos de migración antes de cada edit.
+
 ## [13.44.21] - 2026-06-16
 - **ci(rls-tests)**: mejoras restantes del plan de revisión del workflow `.github/workflows/rls-tests.yml`. (a) **#1 Cache del snapshot**: añadido `actions/cache@v4.2.0` con key `rls-snapshot-pg15.8-<hashFiles(migrations + _ci_*.sql + workflow)>`; los steps de bootstrap/drift/migrations/post-migrate/verify/dump ahora corren bajo `if: steps.snapshot-cache.outputs.cache-hit != 'true'`. En PRs que no tocan migraciones el job `rls` baja de ~2-3 min a ~20s. (b) **#5 Migraciones en transacción**: `psql --single-transaction` en el loop de aplicación de migraciones; con `ON_ERROR_STOP=1` un archivo que falla a la mitad hace rollback completo sin dejar objetos parciales. (c) **#8 Optimizaciones**: `pg_dump -Z 9` + `compression-level: 9` en `actions/upload-artifact` (≈40% menos peso del snapshot); `--shm-size=256m` en ambos servicios Postgres para evitar errores `out of shared memory` en migraciones con índices grandes; nuevo trigger `schedule: cron "0 6 * * 1"` (lunes 06:00 UTC) para detectar drift de la imagen Postgres o catálogos seed aunque no haya PRs. **Saltadas**: #4 (suites ya envuelven `BEGIN…ROLLBACK` internamente — verificado en `test_rls_isolation.sql` y `_helpers.sql`) y #6 (las suites hacen `SET ROLE authenticated`, lo que ya desactiva privilegios de superuser y enforce los GRANTs reales — el bug histórico se resolvió manteniendo GRANTs en el dump, no cambiando el rol de conexión). 0 cambios en lógica de tests SQL.
 
