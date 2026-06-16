@@ -1,7 +1,7 @@
 /**
  * Una fila editable para un contenedor dentro de ListaContenedoresEditable.
  */
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,7 @@ export function FilaContenedor({
   disabled,
 }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const uid = useId();
   const filaVacia =
     !value.numero_contenedor.trim() && !value.tipo_contenedor.trim();
 
@@ -106,8 +107,9 @@ export function FilaContenedor({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label className="text-xs">Número *</Label>
+          <Label htmlFor={`${uid}-num`} className="text-xs">Número *</Label>
           <Input
+            id={`${uid}-num`}
             placeholder="MSCU1234567"
             value={value.numero_contenedor}
             onChange={(e) => onChange({ numero_contenedor: e.target.value })}
@@ -116,13 +118,13 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs">Tipo *</Label>
+          <Label htmlFor={`${uid}-tipo`} className="text-xs">Tipo *</Label>
           <Select
             value={value.tipo_contenedor || undefined}
             onValueChange={(v) => onChange({ tipo_contenedor: v })}
             disabled={disabled}
           >
-            <SelectTrigger>
+            <SelectTrigger id={`${uid}-tipo`}>
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -138,8 +140,9 @@ export function FilaContenedor({
         </div>
 
         <div className="space-y-1 md:col-span-2">
-          <Label className="text-xs">BL House (opcional)</Label>
+          <Label htmlFor={`${uid}-blhouse`} className="text-xs">BL House (opcional)</Label>
           <Input
+            id={`${uid}-blhouse`}
             placeholder="Número BL House"
             value={value.bl_house}
             onChange={(e) => onChange({ bl_house: e.target.value })}

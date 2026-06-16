@@ -76,23 +76,23 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
       </div>
 
       <div className="space-y-2">
-        <Label>Shipper (Exportador) *</Label>
+        <Label htmlFor="emb-shipper">Shipper (Exportador) *</Label>
         <Controller name="shipper" render={({ field }) => (
           <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v !== '__otro__') setValue('shipperManual', ''); }}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
+            <SelectTrigger id="emb-shipper"><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
             <SelectContent>
               {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
               <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
             </SelectContent>
           </Select>
         )} />
-        {shipper === '__otro__' && <Input placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
+        {shipper === '__otro__' && <Input aria-label="Nombre del exportador" placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
       </div>
       <div className="space-y-2">
-        <Label>Consignatario *</Label>
+        <Label htmlFor="emb-consignatario">Consignatario *</Label>
         <Controller name="consignatario" render={({ field }) => (
           <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v !== '__otro__') setValue('consignatarioManual', ''); }}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
+            <SelectTrigger id="emb-consignatario"><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
             <SelectContent>
               {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
               {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
@@ -100,7 +100,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
             </SelectContent>
           </Select>
         )} />
-        {consignatario === '__otro__' && <Input placeholder="Nombre del consignatario" {...register('consignatarioManual')} className="mt-2" />}
+        {consignatario === '__otro__' && <Input aria-label="Nombre del consignatario" placeholder="Nombre del consignatario" {...register('consignatarioManual')} className="mt-2" />}
       </div>
     </>
   );
