@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
-import { useCotizacionVinculada } from "@/features/embarques/hooks/useHeredadoCotizacion";
+import { useCotizacionVinculada } from "@/features/embarques/hooks/useCotizacionVinculada";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
