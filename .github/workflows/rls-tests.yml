@@ -136,19 +136,23 @@ jobs:
 
 
       - name: Post-migrate (drop auth.users FKs para CI)
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
 
       - name: Verify RLS coverage
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
 
       - name: Dump prepared database
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p .rls-snapshot
           # Mantenemos GRANTs (sin --no-privileges) porque las suites RLS
           # ejecutan SELECT/INSERT con `SET ROLE authenticated`; sin grants
           # PostgREST-style en el destino el primer SELECT lanza
           # "permission denied for table …" antes de evaluar las policies.
-          pg_dump --format=custom --no-owner \
+          # -Z 9: máxima compresión del custom format (~40% menos peso).
+          pg_dump --format=custom --no-owner -Z 9 \
             --file=.rls-snapshot/db.dump postgres
           ls -lh .rls-snapshot/
 
@@ -159,6 +163,7 @@ jobs:
           path: .rls-snapshot/db.dump
           if-no-files-found: error
           retention-days: 1
+          compression-level: 9
 
   rls-suites:
     name: RLS suite — ${{ matrix.suite }}
