@@ -122,13 +122,14 @@ describe("embarqueMappers", () => {
       destino: "MIA",
     };
 
-    it("incluye todos los campos esperados", () => {
+    it("incluye todos los campos esperados (aéreo → aeropuertos)", () => {
       const updates = buildVincularCotizacionUpdates(cot);
       const map = Object.fromEntries(updates);
       expect(map.modo).toBe("Aéreo");
       expect(map.incoterm).toBe("CIF");
-      expect(map.puertoOrigen).toBe("MEX");
-      expect(map.puertoDestino).toBe("MIA");
+      expect(map.aeropuertoOrigen).toBe("MEX");
+      expect(map.aeropuertoDestino).toBe("MIA");
+      expect(map.puertoOrigen).toBeUndefined();
     });
 
     it("convierte números a strings", () => {
