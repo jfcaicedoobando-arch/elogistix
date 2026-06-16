@@ -92,4 +92,6 @@ export interface CreateCotizacionInput {
   num_contenedores?: number;
   modalidad_equipo?: string | null;
   punto_intermedio?: string | null;
+  tarifa_id?: string | null;
+  tarifa_override?: Record<string, boolean>;
 }

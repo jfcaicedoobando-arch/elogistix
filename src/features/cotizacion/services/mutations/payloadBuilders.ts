@@ -64,6 +64,8 @@ function partesComercialInsert(input: CreateCotizacionInput) {
     seguro: input.seguro ?? false,
     valor_seguro_usd: input.valor_seguro_usd ?? 0,
     carta_garantia: input.carta_garantia ?? false,
+    tarifa_id: input.tarifa_id ?? null,
+    tarifa_override: toDbJson(input.tarifa_override ?? {}),
   };
 }
 
