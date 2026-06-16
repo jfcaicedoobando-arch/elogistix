@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.26.1] - 2026-06-16
+- **fix(cotizaciones/wizard)**: Reordenado el dropdown "Tipo de Contenedor" en Paso 1 (FCL) agrupando primero por tamaño (20', 40', 45') y luego por variante (Dry, High Cube, Reefer, Open Top, Flat Rack) para mejorar legibilidad.
+
 ## [13.26.0] - 2026-06-16
 - **feat(cotizaciones/tarifa-vinculada)**: La tarifa marítima del módulo Costeo ahora es la fuente de verdad. En Paso 1 del wizard hay un panel "Tarifa marítima vinculada" que al elegir tarifa autollena tránsito, días libres y estado de carta garantía (badge real: vigente / por vencer / vencida / sin carta). Los campos quedan en modo lectura con badge "Tarifa"; si el vendedor los edita manualmente, se registra en `cotizaciones.tarifa_override` (jsonb) y se muestra banner con opción "Restaurar desde tarifa". En Paso 2 se quitó el botón "Buscar tarifa" y los costos se precargan automáticamente desde la tarifa vinculada. Nueva columna `cotizaciones.tarifa_id` (FK a `costeo_tarifas`, ON DELETE SET NULL).
 
