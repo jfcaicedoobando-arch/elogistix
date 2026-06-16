@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.1] - 2026-06-16
+- **fix(embarques/herencia-ui)**: Corregidos falsos positivos del `HeredadoBadge` en el wizard de Nuevo Embarque. (1) Cuando la cotización vinculada no aporta valor para un campo (null/vacío) ya no se pinta "Heredado" sobre el campo vacío del formulario. (2) `LabelHeredable` ahora usa `useWatch` en lugar de `getValues`, por lo que el badge desaparece en tiempo real al editar el campo sin esperar a otro re-render del wizard.
+
 ## [13.33.0] - 2026-06-16
 - **feat(embarques/herencia-ampliada)**: Pack B extendido. Al vincular una cotización al wizard de embarque se heredan 7 campos adicionales: `tarifa_id` (tarifa marítima vinculada), `carta_garantia`, `dias_libres_destino` (demoras), `dias_almacenaje`, `seguro`, `valor_seguro_usd` y `notas`. Las nuevas columnas se agregaron a `public.embarques` vía migración 2026-06-16 con FK opcional a `costeo_tarifas`. El mapper (`buildVincularCotizacionUpdates` / `buildDesvincularCotizacionUpdates`) y el payload de inserción/edición persisten los valores; `mapEmbarqueRowToFormValues` los hidrata de regreso.
 - **feat(embarques/herencia-ui)**: Nuevo hook `useHeredadoCotizacion` + contexto `CotizacionVinculadaProvider` envolviendo `/embarques/nuevo`. Las labels de cliente, modo, tipo, incoterm, descripción, tipo carga, peso, volumen y piezas muestran un `HeredadoBadge` con el folio de la cotización cuando el valor no ha sido editado. Nueva tarjeta `ResumenHerenciaCotizacion` en el Step Datos Generales lista los datos heredados que aún no tienen UI dedicada (tarifa, garantía, días libres, almacenaje, seguro, notas).
