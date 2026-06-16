@@ -31,12 +31,11 @@ export default function CotizacionDetalle() {
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
     nombreDestinatario,
     showConvertir, setShowConvertir,
-    showConfirmarConvertir, setShowConfirmarConvertir,
     clienteForm, setClienteForm,
-    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques, handleCrearBorrador,
-    showBloqueoSinCostos, setShowBloqueoSinCostos, irACargarCostos,
-    convertirProspecto, convertirAEmbarques, crearBorrador, navigate,
+    handleCambiarEstado, abrirDialogConvertir, handleConvertir,
+    convertirProspecto, navigate,
   } = useCotizacionDetalleState(id);
+
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
   if (isLoading) {
