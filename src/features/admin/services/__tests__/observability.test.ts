@@ -89,7 +89,7 @@ describe("acknowledgeAlerta", () => {
     expect(q.update).toHaveBeenCalled();
     expect(q.eq).toHaveBeenCalledWith("id", "a-1");
   });
-  it("propaga error", async () => {
+  it("propaga error en ack", async () => {
     fromMock.mockReturnValue(chainResolve({ error: { message: "no" } }));
     await expect(acknowledgeAlerta({ id: "a", userId: null })).rejects.toThrow();
   });
@@ -161,7 +161,7 @@ describe("fetchAppLogsHealthSummary", () => {
     });
     expect(rpcMock).toHaveBeenCalledWith("app_logs_health_summary", { p_hours: 24 });
   });
-  it("propaga error", async () => {
+  it("propaga error en health summary", async () => {
     rpcMock.mockResolvedValue({ data: null, error: { message: "y" } });
     await expect(fetchAppLogsHealthSummary(1)).rejects.toThrow("y");
   });
