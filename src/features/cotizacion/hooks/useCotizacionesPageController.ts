@@ -9,6 +9,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { ESTADOS_INACTIVOS } from "@/features/cotizacion/domain/lifecycle";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
@@ -20,7 +21,6 @@ export const ESTADOS_COTIZACION = [
   "En operación",
 ];
 
-import { ESTADOS_INACTIVOS } from "@/features/cotizacion/domain/lifecycle";
 
 export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>["data"]>[number];
 
