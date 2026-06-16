@@ -22,6 +22,7 @@ export {
   updateCotizacion,
   deleteCotizacion,
   updateEstadoCotizacion,
+  reactivarCotizacion,
 } from "./mutations";
 
 // Costos (subdominio)

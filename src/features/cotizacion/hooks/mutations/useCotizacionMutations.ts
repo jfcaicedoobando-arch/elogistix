@@ -51,3 +51,14 @@ export function useUpdateEstadoCotizacion() {
     },
   });
 }
+
+export function useReactivarCotizacion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => svcReactivar(id),
+    onSuccess: (_r, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(id) });
+    },
+  });
+}
