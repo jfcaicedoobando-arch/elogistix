@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
 import { useCotizacionVinculada } from "@/features/embarques/hooks/useHeredadoCotizacion";
-import { formatCurrencyUSD } from "@/lib/format";
+import { formatCurrency } from "@/lib/formatters/numbers";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
