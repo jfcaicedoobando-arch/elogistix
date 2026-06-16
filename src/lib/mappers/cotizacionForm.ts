@@ -91,6 +91,8 @@ function partesExtras(d: CotizacionInitialData) {
     numContenedores: d.num_contenedores ?? 1,
     modalidadEquipo: d.modalidad_equipo ?? "",
     puntoIntermedio: d.punto_intermedio ?? "",
+    tarifaId: d.tarifa_id ?? null,
+    tarifaOverride: (d.tarifa_override ?? {}) as Record<string, boolean>,
   };
 }
 
