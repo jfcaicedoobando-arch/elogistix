@@ -53,6 +53,14 @@ export interface EmbarqueFormValues {
   eta: string;
   tipoCambioUSD: string;
   tipoCambioEUR: string;
+  // Pack B+ (v13.33.0) — heredados de cotización
+  tarifaId: string;
+  cartaGarantia: boolean;
+  diasLibresDestino: string;
+  diasAlmacenaje: string;
+  seguro: boolean;
+  valorSeguroUsd: string;
+  notas: string;
 }
 
 /** Valores iniciales para un embarque nuevo. */
@@ -66,6 +74,9 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   aeropuertoOrigen: "", aeropuertoDestino: "", aerolinea: "", mawb: "", hawb: "",
   ciudadOrigen: "", ciudadDestino: "", transportista: "", cartaPorte: "",
   etd: "", eta: "", tipoCambioUSD: "17.25", tipoCambioEUR: "18.50",
+  // Pack B+
+  tarifaId: "", cartaGarantia: false, diasLibresDestino: "0", diasAlmacenaje: "0",
+  seguro: false, valorSeguroUsd: "", notas: "",
 };
 
 
