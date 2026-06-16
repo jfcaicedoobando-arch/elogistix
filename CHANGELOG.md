@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.37.0] - 2026-06-16
+- **ux(cotizacion→embarque)**: unificación de las 3 acciones de creación de embarque en un único botón primario + menú "Más opciones". El botón principal usa el flujo "Generar Embarques" (1 o N según `num_contenedores`); el menú conserva `Abrir wizard manual` y `Crear borrador rápido` como atajos avanzados. Reduce confusión reportada por usuarios en el detalle de cotizaciones Aceptadas.
+
 ## [13.36.0] - 2026-06-16
 - **test(cotizacion/tarifa-first)**: cobertura unitaria de la política tarifa-first y la auto-carga de costos desde sugerencias.
   - `validatePaso1.tarifaFirst.test.ts`: bloqueo en modo Marítimo sin `tarifaId`, registro en `bitacora_actividad` (`cotizacion_bloqueada_sin_tarifa`), avance OK con tarifa vinculada y no aplicación del bloqueo en Aéreo/Terrestre.
