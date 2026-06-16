@@ -25,13 +25,18 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
   const hasSugerencia = !!diasTransitoSugerencia && diasTransitoSugerencia > 0;
   const sugerencia = hasSugerencia ? sugerirETA(etd, diasTransitoSugerencia ?? 0) : null;
 
-  // Si el usuario edita ETA manualmente (distinto al último valor que aplicamos),
-  // dejamos de marcar como "Aplicada".
+  // Detecta cuando el ETA actual coincide con la sugerencia (auto-aplicación
+  // hecha por StepDatosRuta) y lo marca como "Aplicada". Si el usuario edita
+  // ETA a otro valor, el badge desaparece automáticamente.
   useEffect(() => {
-    if (autoApplied && eta !== lastAppliedRef.current) {
+    if (!hasSugerencia) return;
+    if (sugerencia && eta === sugerencia) {
+      lastAppliedRef.current = sugerencia;
+      setAutoApplied(true);
+    } else if (autoApplied && eta !== lastAppliedRef.current) {
       setAutoApplied(false);
     }
-  }, [eta, autoApplied]);
+  }, [eta, sugerencia, hasSugerencia, autoApplied]);
 
   const recalcular = useCallback(() => {
     if (!sugerencia) return;
