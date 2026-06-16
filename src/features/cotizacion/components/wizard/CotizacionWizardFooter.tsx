@@ -12,6 +12,8 @@ interface Props {
   onCotizarSinDesglose?: () => void;
   /** Si true, deshabilita ambos botones (validación/guardado en curso). */
   isProcessing?: boolean;
+  /** Role gate (Pack D): sólo gerencia/admin puede ver el atajo destructivo. */
+  canSkipCostos?: boolean;
 }
 
 export function CotizacionWizardFooter({
@@ -23,9 +25,10 @@ export function CotizacionWizardFooter({
   onSave,
   onCotizarSinDesglose,
   isProcessing = false,
+  canSkipCostos = false,
 }: Props) {
   const busy = isPending || isProcessing;
-  const showSinDesglose = currentStep === 1 && !!onCotizarSinDesglose;
+  const showSinDesglose = currentStep === 1 && !!onCotizarSinDesglose && canSkipCostos;
   return (
     <div className="flex-none border-t bg-background p-4">
       <div className="max-w-4xl mx-auto flex flex-wrap gap-2 justify-between items-center">
