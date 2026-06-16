@@ -19,6 +19,8 @@ import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVincula
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
+const OPTS = { shouldValidate: true, shouldDirty: true } as const;
+
 const normalizarNombreContenedor = (s: string) =>
   s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
 
