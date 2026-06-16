@@ -21,6 +21,7 @@ export default function NuevoEmbarque() {
 
   return (
     <FormProvider {...w.methods}>
+      <CotizacionVinculadaProvider cotizacion={w.cotizacionVinculada}>
       <EmbarqueWizardLayout
         title="Nuevo Embarque"
         subtitle="Completa los datos para registrar un embarque"
