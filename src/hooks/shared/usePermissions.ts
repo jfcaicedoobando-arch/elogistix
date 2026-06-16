@@ -56,6 +56,16 @@ const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
   "gerente_operaciones",
 ];
 
+// v13.39.0: roles autorizados a crear embarques "libres" (sin cotización vinculada).
+// El resto de roles operativos (coordinador_logistico, operador, ejecutivo_pricing)
+// debe iniciar el embarque desde una cotización Aceptada.
+const CREAR_EMBARQUE_LIBRE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_operaciones",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
@@ -70,6 +80,7 @@ export function usePermissions() {
   const canViewFinancials = has(FINANCE_VIEWERS, roleStr);
   const canEditSales = has(SALES, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
+  const canCrearEmbarqueLibre = has(CREAR_EMBARQUE_LIBRE, roleStr);
 
   // API pública (compatibilidad)
   const canEdit = canEditOperations || canEditFinance;
@@ -93,5 +104,6 @@ export function usePermissions() {
     canEditFinance,
     canEditSales,
     canCotizarSinDesglose,
+    canCrearEmbarqueLibre,
   };
 }
