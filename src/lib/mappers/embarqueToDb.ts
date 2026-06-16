@@ -109,6 +109,19 @@ function partesFinancieras(v: EmbarqueFormValues) {
   };
 }
 
+// Pack B+ (v13.33.0): campos heredados de cotización persistidos en `embarques`.
+function partesHerencia(v: EmbarqueFormValues) {
+  return {
+    tarifa_id: emptyToNull(v.tarifaId),
+    carta_garantia: Boolean(v.cartaGarantia),
+    dias_libres_destino: Number(v.diasLibresDestino) || 0,
+    dias_almacenaje: Number(v.diasAlmacenaje) || 0,
+    seguro: Boolean(v.seguro),
+    valor_seguro_usd: v.valorSeguroUsd ? Number(v.valorSeguroUsd) : null,
+    notas: emptyToNull(v.notas),
+  } as Record<string, unknown>;
+}
+
 /** Mapea valores del formulario al payload de inserción en BD. */
 export function buildEmbarquePayload(
   values: EmbarqueFormValues,
