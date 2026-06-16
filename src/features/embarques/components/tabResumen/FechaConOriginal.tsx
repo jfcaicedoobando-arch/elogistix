@@ -12,8 +12,8 @@ export function FechaConOriginal({ actual, original }: { actual: string | null; 
   const diff = differenceInCalendarDays(new Date(actual + "T00:00:00"), new Date(original + "T00:00:00"));
   const signo = diff > 0 ? `+${diff}d` : `${diff}d`;
   const tono = diff > 0
-    ? "bg-amber-100 text-amber-800 border-amber-200"
-    : "bg-emerald-100 text-emerald-800 border-emerald-200";
+    ? "bg-warning/10 text-warning border-warning/30"
+    : "bg-success/10 text-success border-success/30";
   return (
     <span className="inline-flex items-center gap-2">
       <span>{actualLabel}</span>

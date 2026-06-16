@@ -94,7 +94,7 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
           </button>
         </div>
         {capsOn && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+          <p className="text-xs text-warning flex items-center gap-1">
             <AlertCircle className="h-3 w-3" /> Bloq Mayús está activado
           </p>
         )}

@@ -26,7 +26,7 @@ export default function Privacidad() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">Legal</p>
         <h1 className="text-4xl font-bold tracking-tight">Aviso de privacidad</h1>
         <p className="mt-2 text-sm text-muted-foreground">Última actualización: 4 de junio de 2026</p>
-        <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="mt-3 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
           Borrador — pendiente de revisión legal. Sustituir antes de producción.
         </p>
 

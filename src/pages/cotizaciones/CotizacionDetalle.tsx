@@ -89,7 +89,7 @@ export default function CotizacionDetalle() {
               <div><span className="text-muted-foreground">Empresa</span><p className="font-medium">{cotizacion.prospecto_empresa}</p></div>
               <div><span className="text-muted-foreground">Contacto</span><p className="font-medium">{cotizacion.prospecto_contacto}</p></div>
               <div><span className="text-muted-foreground">Email</span><p className="font-medium">{cotizacion.prospecto_email || '-'}</p></div>
-              <div><span className="text-amber-600">Teléfono</span><p className="font-medium text-amber-900">{cotizacion.prospecto_telefono || '-'}</p></div>
+              <div><span className="text-warning">Teléfono</span><p className="font-medium text-warning">{cotizacion.prospecto_telefono || '-'}</p></div>
             </div>
           </CardContent>
         </Card>

@@ -137,7 +137,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
         if (revision?.estado_revision === "en_progreso") {
           return (
             <Button size="sm" variant="outline"
-              className="h-7 text-[11px] border-amber-500/40 text-amber-700 dark:text-amber-400"
+              className="h-7 text-[11px] border-warning/40 text-warning"
               onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
             >
               En progreso

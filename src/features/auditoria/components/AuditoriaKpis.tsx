@@ -21,8 +21,8 @@ const kpis = [
     key: "alto" as const,
     label: "Altos",
     icon: AlertTriangle,
-    accent: "text-amber-600 dark:text-amber-400",
-    ring: "ring-amber-500/20",
+    accent: "text-warning",
+    ring: "ring-warning/20",
     description: "Documentos faltantes en operación",
   },
   {

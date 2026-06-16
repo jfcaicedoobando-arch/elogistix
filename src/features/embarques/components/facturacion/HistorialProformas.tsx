@@ -30,7 +30,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
       badgeRevision = (
         <Badge
           variant="outline"
-          className="w-fit bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+          className="w-fit bg-warning/10 text-warning border-warning/30"
           title="Borrador sin conceptos asignados y con total en cero"
         >
           Borrador vacío

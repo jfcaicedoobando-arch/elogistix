@@ -18,16 +18,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const COLOR_MAP: Record<string, string> = {
-  "Marítimo": "text-blue-600 dark:text-blue-400",
+  "Marítimo": "text-info",
   "Aéreo": "text-sky-600 dark:text-sky-400",
-  "Terrestre": "text-amber-600 dark:text-amber-400",
+  "Terrestre": "text-warning",
   "Multimodal": "text-purple-600 dark:text-purple-400",
 };
 
 const CIRCLE_BG: Record<string, string> = {
-  "Marítimo": "bg-blue-100 dark:bg-blue-900/40",
+  "Marítimo": "bg-info/10",
   "Aéreo": "bg-sky-100 dark:bg-sky-900/40",
-  "Terrestre": "bg-amber-100 dark:bg-amber-900/40",
+  "Terrestre": "bg-warning/10",
   "Multimodal": "bg-purple-100 dark:bg-purple-900/40",
 };
 
