@@ -61,15 +61,15 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
         </div>
       )}
       <div className="space-y-2">
-        <Label>Peso (kg) *</Label>
+        <LabelHeredable field="pesoKg" getter={(c) => String(c.peso_kg || "")}>Peso (kg) *</LabelHeredable>
         <Input type="number" placeholder="0" {...register('pesoKg')} />
       </div>
       <div className="space-y-2">
-        <Label>Volumen (m³) *</Label>
+        <LabelHeredable field="volumenM3" getter={(c) => String(c.volumen_m3 || "")}>Volumen (m³) *</LabelHeredable>
         <Input type="number" placeholder="0" {...register('volumenM3')} />
       </div>
       <div className="space-y-2">
-        <Label>Piezas *</Label>
+        <LabelHeredable field="piezas" getter={(c) => String(c.piezas || "")}>Piezas *</LabelHeredable>
         <Input type="number" placeholder="0" {...register('piezas')} />
       </div>
     </div>
