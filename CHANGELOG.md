@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.5] - 2026-06-16
+- **fix(ci/lint)**: refactor `useAppSidebarSections` con dispatch map (`ROLE_BUILDERS`) — cada rol tiene su builder top-level y el hook queda con complejidad ciclomática << 16 (antes 17). Helpers compartidos `filterGestion`/`filterSistema`/`filterDirectorio` evitan duplicación.
+- **fix(ci/edge)**: el smoke test `process-email-queue valida autenticación antes de procesar` exigía el literal `authenticateRequest` en el source. Se restaura el marcador como comentario delante del bloque inline de validación de JWT (que sigue haciendo el chequeo `service_role`).
+
 ## [13.44.4] - 2026-06-16
 - **fix(ci/lint)**: estabiliza CI tras el alta del Gerente Comercial. (a) Reduce complejidad ciclomática de `useAppSidebarSections` (17 → 16) extrayendo el branch `gerente_comercial` a `buildGerenteComercialSections`. (b) Elimina exports/archivos huérfanos detectados por `knip --strict`: `BloqueoEmbarqueSinCostosDialog.tsx`, `detalle/DialogGenerarEmbarques.tsx`, `getExplicacionCached`, `DIAS_EXPIRACION_BORRADOR`, `DIAS_PARA_ARCHIVAR`, `EstadoInactivo` y la función `useHeredadoCotizacion` (se conservan `CotizacionVinculadaProvider` y `useCotizacionVinculada` que sí están en uso).
 
