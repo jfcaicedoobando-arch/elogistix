@@ -107,7 +107,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id, numero, fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado) VALUES (%L, %L, %L, %L, %L, %L, CURRENT_DATE, CURRENT_DATE+15, %L, 1, 0, 1, %L)',
-      gen_random_uuid(), org_a, cli_a, 'X', emb_a, 'VIEWER-INS', 'MXN', 'Pendiente'
+      gen_random_uuid(), org_a, cli_a, 'X', emb_a, 'VIEWER-INS', 'MXN', 'Emitida'
     ),
     'viewer_a NO debe poder INSERT facturas'
   );
@@ -115,8 +115,8 @@ BEGIN
   -- TEST 5: viewer NO puede UPDATE (verificar que afecta 0 filas)
   UPDATE public.facturas SET estado = 'Pagada' WHERE id = fac_a;
   PERFORM pg_temp.as_postgres();
-  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado = 'Pendiente';
-  PERFORM pg_temp.assert(visible = 1, 'viewer_a NO debe poder UPDATE facturas (estado debe seguir Pendiente)');
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado = 'Emitida';
+  PERFORM pg_temp.assert(visible = 1, 'viewer_a NO debe poder UPDATE facturas (estado debe seguir Emitida)');
   PERFORM pg_temp.as_user(viewer_a);
 
   -- TEST 6: viewer NO puede DELETE
@@ -140,7 +140,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id, numero, fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado) VALUES (%L, %L, %L, %L, %L, %L, CURRENT_DATE, CURRENT_DATE+15, %L, 1, 0, 1, %L)',
-      gen_random_uuid(), org_b, cli_b, 'X', emb_b, 'OPER-CROSS', 'MXN', 'Pendiente'
+      gen_random_uuid(), org_b, cli_b, 'X', emb_b, 'OPER-CROSS', 'MXN', 'Emitida'
     ),
     'operador_a NO debe poder INSERT facturas en org_b'
   );
@@ -148,7 +148,7 @@ BEGIN
   -- TEST 9: operador NO puede UPDATE factura de otra org
   UPDATE public.facturas SET estado = 'Cancelada' WHERE id = fac_b;
   PERFORM pg_temp.as_postgres();
-  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_b AND estado = 'Pendiente';
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_b AND estado = 'Emitida';
   PERFORM pg_temp.assert(visible = 1, 'operador_a NO debe poder UPDATE factura de org_b');
   PERFORM pg_temp.as_user(operador_a);
 
@@ -182,7 +182,7 @@ BEGIN
   PERFORM pg_temp.assert_insert_blocked(
     format(
       'INSERT INTO public.facturas(id, organization_id, cliente_id, cliente_nombre, embarque_id, numero, fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado) VALUES (%L, %L, %L, %L, %L, %L, CURRENT_DATE, CURRENT_DATE+15, %L, 1, 0, 1, %L)',
-      gen_random_uuid(), org_a, cli_a, 'X', emb_a, 'CLI-INS', 'MXN', 'Pendiente'
+      gen_random_uuid(), org_a, cli_a, 'X', emb_a, 'CLI-INS', 'MXN', 'Emitida'
     ),
     'cliente NO debe poder INSERT facturas'
   );
@@ -190,7 +190,7 @@ BEGIN
   -- TEST 14: cliente NO puede UPDATE facturas (cambio descartado por RLS)
   UPDATE public.facturas SET estado = 'Pagada' WHERE id = fac_a;
   PERFORM pg_temp.as_postgres();
-  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado = 'Pendiente';
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado = 'Emitida';
   PERFORM pg_temp.assert(visible = 1, 'cliente NO debe poder UPDATE facturas');
   PERFORM pg_temp.as_user(cli_user);
 

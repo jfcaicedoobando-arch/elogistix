@@ -150,7 +150,7 @@ BEGIN
       fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
     ) VALUES (
       fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Emitida'
     );
 
     INSERT INTO public.pagos_factura(
