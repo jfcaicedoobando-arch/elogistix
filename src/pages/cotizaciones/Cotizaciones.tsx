@@ -39,14 +39,29 @@ export default function Cotizaciones() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilterCount =
     (c.filterEstado && c.filterEstado !== "todos" ? 1 : 0) +
-    (c.filterCliente && c.filterCliente !== "todos" ? 1 : 0);
+    (c.filterCliente && c.filterCliente !== "todos" ? 1 : 0) +
+    (c.filterSinCostos ? 1 : 0);
   const clearAllFilters = () => {
     c.setFilter("estado", "todos");
     c.setFilter("cliente", "todos");
+    c.setFilter("sinCostos", "no");
   };
 
   const estadoSelect = <EstadoSelect value={c.filterEstado} onChange={(v) => c.setFilter("estado", v)} />;
   const clienteSelect = <ClienteSelect value={c.filterCliente} onChange={(v) => c.setFilter("cliente", v)} clientes={c.clientes} />;
+  const sinCostosToggle = (
+    <Button
+      type="button"
+      variant={c.filterSinCostos ? "default" : "outline"}
+      size="sm"
+      aria-pressed={c.filterSinCostos}
+      onClick={() => c.setFilter("sinCostos", c.filterSinCostos ? "no" : "si")}
+      className="gap-2"
+    >
+      <AlertTriangle className="h-4 w-4" />
+      Sólo sin costos
+    </Button>
+  );
 
   return (
     <div className="space-y-6">
