@@ -1,0 +1,80 @@
+/**
+ * v13.36.0 — Tests de política tarifa-first.
+ * Verifican que en modo Marítimo el wizard NO permita continuar sin `tarifaId`
+ * y registre el bloqueo en bitácora (best-effort).
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const insertSpy = vi.fn().mockResolvedValue({ error: null });
+const fromSpy = vi.fn(() => ({ insert: insertSpy }));
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u-1", email: "t@t.mx" } } }) },
+    from: (...a: unknown[]) => fromSpy(...a),
+  },
+}));
+vi.mock("@/lib/supabase/cast", () => ({ toDbJson: <T,>(x: T) => x }));
+vi.mock("@/features/cotizacion/services/wizard/paso1Crm", () => ({
+  obtenerUsuarioActual: vi.fn(),
+  fetchCotizacionFolio: vi.fn(),
+}));
+vi.mock("@/features/crm/services/vincularCotizacion", () => ({
+  vincularOCrearOportunidadParaCotizacion: vi.fn(),
+}));
+vi.mock("@/components/shared/utils/appFeedback", () => ({ notifyError: vi.fn() }));
+
+import { validatePaso1 } from "../handlePaso1Crm";
+import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
+
+const base = (over: Partial<CotizacionFormValues> = {}): CotizacionFormValues => ({
+  esProspecto: false,
+  clienteId: "cli-1",
+  prospectoModo: "nuevo",
+  prospectoEmpresa: "",
+  prospectoContacto: "",
+  prospectoEmail: "",
+  prospectoTelefono: "",
+  oportunidadId: "",
+  leadId: "",
+  modo: "Marítimo",
+  origen: "MXVER",
+  destino: "CNSHA",
+  tipoContenedor: "tc-1",
+  tarifaId: "",
+  ...over,
+} as unknown as CotizacionFormValues);
+
+beforeEach(() => { vi.clearAllMocks(); });
+
+describe("validatePaso1 — política tarifa-first (Marítimo)", () => {
+  it("BLOQUEA cuando modo=Marítimo y tarifaId está vacío", () => {
+    const err = validatePaso1(base({ tarifaId: "" }));
+    expect(err).toMatch(/tarifa marítima/i);
+  });
+
+  it("registra el bloqueo en bitácora (best-effort)", async () => {
+    validatePaso1(base({ tarifaId: "" }));
+    // logBloqueoSinTarifa se dispara con `void`; esperamos al microtask.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(fromSpy).toHaveBeenCalledWith("bitacora_actividad");
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ accion: "cotizacion_bloqueada_sin_tarifa" }),
+    );
+  });
+
+  it("PERMITE avanzar cuando hay tarifaId vinculado", () => {
+    const err = validatePaso1(base({ tarifaId: "tar-123" }));
+    expect(err).toBeNull();
+  });
+
+  it("NO aplica el bloqueo en modo Aéreo ni Terrestre", () => {
+    expect(validatePaso1(base({ modo: "Aéreo", tarifaId: "" }) as never)).toBeNull();
+    // Terrestre requiere modalidadEquipo; lo aportamos para aislar el bloqueo marítimo.
+    expect(
+      validatePaso1(
+        base({ modo: "Terrestre", tarifaId: "", modalidadEquipo: "Caja Seca" } as never),
+      ),
+    ).toBeNull();
+  });
+});
