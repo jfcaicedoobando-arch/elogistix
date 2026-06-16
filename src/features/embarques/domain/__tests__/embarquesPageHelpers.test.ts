@@ -18,8 +18,10 @@ const row = (over: Partial<EmbarqueRow>): EmbarqueRow =>
 
 describe("embarquesPageHelpers", () => {
   it("compareBy ordena asc/desc por la clave indicada", () => {
-    const a = row({ expediente: "A" });
-    const b = row({ expediente: "B" });
+    // El getter de "expediente" extrae los dígitos del folio (ELNAC-001 → 1),
+    // por eso usamos expedientes con consecutivos distintos.
+    const a = row({ expediente: "ELNAC-001" });
+    const b = row({ expediente: "ELNAC-002" });
     expect(compareBy(a, b, "expediente", "asc")).toBeLessThan(0);
     expect(compareBy(a, b, "expediente", "desc")).toBeGreaterThan(0);
     // Clave desconocida cae a expediente
