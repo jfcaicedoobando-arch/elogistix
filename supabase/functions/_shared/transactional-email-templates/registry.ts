@@ -4,7 +4,9 @@
 import type * as React from 'npm:react@18.3.1';
 
 export interface TemplateEntry {
-  component: React.ComponentType<any>;
+  // Cada plantilla define su propio shape de props; aquí lo dejamos abierto
+  // para que el registry pueda alojar componentes heterogéneos.
+  component: React.ComponentType<Record<string, unknown>>;
   subject: string | ((data: Record<string, unknown>) => string);
   displayName?: string;
   previewData?: Record<string, unknown>;

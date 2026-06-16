@@ -80,4 +80,3 @@ export function DesvincularCotizacionDialog({
   );
 }
 
-export default DesvincularCotizacionDialog;
