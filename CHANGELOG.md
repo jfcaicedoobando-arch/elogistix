@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.34.0] - 2026-06-16
+- **feat(costeo/a11y)**: Auditoría de accesibilidad y navegación por teclado del módulo Costeo (Fases 1 y 2).
+  - **AlertDialog en eliminaciones**: Reemplazado `window.confirm()` por `ConfirmDeleteAlert` (Radix AlertDialog) en `CosteoAgentes`, `CosteoRutas`, `CosteoTarifas` y `CosteoDemorasVenta`. El foco regresa al trigger, es anunciable por lectores de pantalla y respeta el tema.
+  - **Enter envía formularios**: Todos los diálogos de alta (Agentes, Rutas, Tarifas, Demoras-venta, Naviera Condiciones) ahora usan `<form onSubmit>` con `<Button type="submit">`. Presionar Enter desde cualquier campo envía el formulario.
+  - **Labels asociados**: Agregado `id` único a cada `SelectTrigger`/`Input`/`Textarea` y `htmlFor` correspondiente en `Label` en `TarifaFormFields`, `CosteoAgentes`, `CosteoRutas`, `CosteoDemorasVenta`, `CosteoBuscar`, `BuscarTarifaDialog` y `NavieraCondicionForm`. Hacer click en el label ahora enfoca el control y los AT lo anuncian correctamente.
+  - **aria-label en controles inline**: Cada `Input`/`Select` de fila editable en `DemorasTarifaEditor` y `TarifaRecargosEditor` ahora tiene `aria-label` dinámico ("Desde día del tramo N", "Concepto del recargo N", etc.).
+  - **Validación visible**: Campos requeridos vacíos en `TarifaForm` y diálogos de alta muestran `border-destructive` + `aria-invalid="true"` tras intentar enviar.
+  - **Token semántico**: `CartaGarantiaBadge` usa `bg-success text-success-foreground` en lugar del color crudo `bg-emerald-600`.
+  - **Tab deshabilitado explicado**: `TabsTrigger` "Tabulador de demoras" en `CosteoNavieras` ahora tiene `title` indicando por qué está deshabilitado.
+  - **Focus-trap robusto**: `BuscarTarifaDialog` mueve el `overflow-y-auto` a un contenedor interno y aplica `role="search"` a los filtros (mismo cambio en `CosteoBuscar`).
+  - **Símbolo accesible**: `∞` en la tabla de demoras-venta envuelto en `<span aria-label="sin límite">`.
+  - **aria-label en filtros**: `SelectTrigger` de filtros (estado, agente, tipo) en `CosteoTarifas` y botones de eliminar inline con etiqueta descriptiva.
+  - **Limpieza visual**: Removido `hover:bg-muted/30` engañoso en filas no clickeables de `CosteoTarifas`.
+
 ## [13.33.14] - 2026-06-16
 - **feat(costeo/tarifas)**: Agregados los conceptos "Cargos en Origen" y "Cargos en Destino" al selector de recargos en `TarifaRecargosEditor`.
 
