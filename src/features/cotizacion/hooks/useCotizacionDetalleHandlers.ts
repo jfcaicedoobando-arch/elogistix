@@ -10,30 +10,13 @@ import {
   type CotizacionRow,
 } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { supabase } from "@/integrations/supabase/client";
+import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
 import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
-/**
- * Verifica si la cotización tiene costos cargados.
- * Regla canónica del candado: bloqueamos por existencia real de filas
- * en `cotizacion_costos`, no por el flag `sin_desglose_costos`.
- */
-async function tieneCostosCargados(cotizacionId: string): Promise<boolean> {
-  const { count, error } = await supabase
-    .from("cotizacion_costos")
-    .select("id", { count: "exact", head: true })
-    .eq("cotizacion_id", cotizacionId);
-  if (error) {
-    console.error("[tieneCostosCargados] error", error);
-    // Ante error, no bloqueamos para no impedir operación legítima.
-    return true;
-  }
-  return (count ?? 0) > 0;
-}
 
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.

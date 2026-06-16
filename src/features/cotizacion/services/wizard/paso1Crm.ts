@@ -1,10 +1,11 @@
 /**
  * I/O puro del paso 1 del wizard de cotización: obtiene el usuario auth
- * actual y el folio de una cotización recién creada. Encapsula las
- * llamadas a Supabase para que el helper `handlePaso1Crm` no las haga
- * directamente.
+ * actual, el folio de una cotización recién creada y registra el bloqueo
+ * tarifa-first en bitácora. Encapsula las llamadas a Supabase para que el
+ * helper `handlePaso1Crm` no las haga directamente.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { toDbJson } from "@/lib/supabase/cast";
 
 export interface AuthUserLite {
   id: string;
@@ -25,3 +26,37 @@ export async function fetchCotizacionFolio(cotizacionId: string): Promise<string
   if (error) throw error;
   return data?.folio ?? null;
 }
+
+export interface BloqueoSinTarifaPayload {
+  entidadNombre: string;
+  origen: string | null;
+  destino: string | null;
+  tipoContenedor: string | null;
+}
+
+/**
+ * Registra en bitácora cuando el bloqueo tarifa-first detiene el avance.
+ * Best-effort: si falla, no rompe el flujo de validación.
+ */
+export async function registrarBloqueoSinTarifa(payload: BloqueoSinTarifaPayload): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("bitacora_actividad").insert({
+      usuario_id: user.id,
+      usuario_email: user.email ?? "",
+      accion: "cotizacion_bloqueada_sin_tarifa",
+      modulo: "Cotizaciones",
+      entidad_id: null,
+      entidad_nombre: payload.entidadNombre,
+      detalles: toDbJson({
+        origen: payload.origen,
+        destino: payload.destino,
+        tipo_contenedor: payload.tipoContenedor,
+      }),
+    });
+  } catch {
+    // Best-effort.
+  }
+}
+
