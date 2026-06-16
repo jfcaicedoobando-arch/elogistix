@@ -10,12 +10,12 @@ Total de `as` casts detectados: **1529**
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 478     | 31.3% |
-| LOW       | 1 | 23      | 1.5% |
+| LOW       | 1 | 24      | 1.6% |
 | MEDIUM    | 2 | 1026   | 67.1% |
-| HIGH      | 3 | 2     | 0.1% |
+| HIGH      | 3 | 1     | 0.1% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.1%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,13 +47,7 @@ Total de `as` casts detectados: **1529**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/cotizacion/services/queries.ts:49`
-
-```ts
-const flattened = (data as unknown as RawRow[] | null ?? []).map((r) => ({
-```
-
-### 2. [HIGH] `src/lib/mappers/embarqueFromDb.ts:151`
+### 1. [HIGH] `src/lib/mappers/embarqueFromDb.ts:151`
 
 ```ts
 const row = e as unknown as Record<string, unknown>;
