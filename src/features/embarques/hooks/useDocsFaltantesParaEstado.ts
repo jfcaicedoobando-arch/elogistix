@@ -8,7 +8,7 @@ import { fetchDocsFaltantesParaEstado } from "@/features/embarques/services/docs
 
 /** Estados en los que faltar documentos BLOQUEA el avance (hard). */
 const ESTADOS_BLOQUEANTES = new Set<string>([
-  "En Aduana", "Llegada", "Arribo", "Entregado", "EIR", "Cerrado",
+  "En Tránsito", "En Aduana", "Llegada", "Arribo", "Entregado", "EIR", "Cerrado",
 ]);
 
 export function esEstadoBloqueante(estado: string | null | undefined): boolean {

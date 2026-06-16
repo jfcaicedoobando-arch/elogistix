@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.43.0] - 2026-06-16
+- **feat(embarques)**: el avance a **"En Tránsito"** ahora bloquea (no sólo advierte) si faltan documentos requeridos para ese estado. Requeridos según modo: Marítimo = Factura Comercial + Packing List + BL Master + BL House; Aéreo = Factura Comercial + Packing List + AWB; Terrestre = Factura + Lista de Empaque + Carta Porte. Un documento marcado "No aplica" cuenta como cubierto. Validado tanto en cliente (`BlockDocsDialog`) como en backend (`avanzar_estado_embarque` rechaza con `documentos_faltantes`).
+
 ## [13.42.0] - 2026-06-16
 - **fix(embarques)**: el listado se ordena por el consecutivo numérico del expediente ignorando el prefijo (ELNAC, ELIMP, DEMO-…). Aplica al orden por defecto (descendente) y al hacer clic en la columna **Expediente**. Empates desempatan por expediente completo y luego por fecha de creación.
 

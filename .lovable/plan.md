@@ -1,36 +1,38 @@
 ## Objetivo
 
-Al cargar la tabla de Embarques y al ordenar por la columna **Expediente**, el orden debe basarse en el **consecutivo numérico** (la parte numérica final del expediente), ignorando el prefijo (ELNAC, ELIMP, DEMO-…, etc.). Orden por defecto: **descendente** (más reciente arriba).
+Bloquear (no sólo advertir) el paso de un embarque a **"En Tránsito"** cuando le faltan los documentos requeridos para ese estado. Hoy "En Tránsito" usa candado **soft** (advierte y permite avanzar); pasará a candado **hard** (bloquea con `BlockDocsDialog`, igual que En Aduana, Arribo, etc.).
 
-### Ejemplo
-Hoy (alfabético): `ELIMP00271`, `ELIMP00270`, `DEMO-2026-004`, `DEMO-2026-003`, `ELIMP00269`…
-Después (numérico): `ELIMP00271`, `ELIMP00270`, `ELIMP00269`, …, `DEMO-2026-004`, `DEMO-2026-003`… (el número manda; los empates conservan orden por `created_at desc`).
+## Documentos requeridos para "En Tránsito" (ya definidos)
+
+Vienen de `_docs_requeridos_por_estado` y se mantienen sin cambio:
+- **Marítimo**: Factura Comercial, Packing List, Bill of Lading (BL Master), Bill of Lading (BL House).
+- **Aéreo**: Factura Comercial, Packing List, Air Waybill (AWB).
+- **Terrestre**: Factura, Lista de Empaque, Carta Porte.
+
+Un documento cuenta como cubierto si tiene archivo subido **o** está marcado como "No aplica".
 
 ## Cambios
 
-### 1. Backend — RPC `embarques_listado`
-Nueva migración que reemplaza el ORDER BY dinámico para reconocer la pseudo-columna `expediente_num`:
+### 1. Backend — `avanzar_estado_embarque`
+Nueva migración que reemplaza la función agregando `'En Tránsito'` al arreglo `v_estados_bloqueantes`:
 
-- Agregar `'expediente_num'` al whitelist (y dejar `'expediente'` como alias del mismo comportamiento numérico, ya que el UI sólo expone una columna "Expediente").
-- Cuando `v_sort IN ('expediente','expediente_num')`, el `ORDER BY` usa:
-  `NULLIF(regexp_replace(expediente, '\D', '', 'g'), '')::bigint <dir> NULLS LAST, expediente <dir>, created_at DESC`
-  (el segundo criterio desempata expedientes con el mismo número pero distinto prefijo).
-- Para las demás columnas se mantiene el `%I` actual.
-- Cambiar `p_sort_by` DEFAULT a `'expediente_num'`.
+```
+v_estados_bloqueantes := ARRAY['En Tránsito','En Aduana','Llegada','Arribo','Entregado','EIR','Cerrado'];
+```
 
-### 2. Cliente
-- `services/queries/paginados.ts`: agregar `'expediente_num'` a `SORTABLE_EMBARQUE_COLUMNS`; cambiar el fallback de `created_at` → `expediente_num`; mapear UI key `expediente` → `expediente_num` en `SORT_KEY_TO_COLUMN`.
-- `services/queries/exportListado.ts`: cambiar el `sortBy: "created_at"` por `"expediente_num"` para que el export siga el mismo orden visible.
-- `components/embarqueColumns.tsx`: cambiar el `sortingFn` de la columna Expediente por uno numérico (extrae dígitos con regex y compara como número; desempate por string completo) para que la ordenación client-side (rama con filtro de estado) coincida con la del servidor.
-- `domain/embarquesPageHelpers.ts`: actualizar `SORT_GETTERS.expediente` para devolver el número (`Number(expediente.replace(/\D/g,'')) || 0`) para mantener consistencia en `compareBy`.
-- `services/queries/__tests__/listado.test.ts`: ajustar el test de fallback (`'invalid_col' → 'expediente_num'`).
+El resto de la función (idempotencia, asserts, update, nota, evento) queda igual. Esto garantiza que aunque el cliente intentara saltarse la validación, la base de datos rechaza con `documentos_faltantes: …`.
+
+### 2. Frontend — `useDocsFaltantesParaEstado`
+Agregar `"En Tránsito"` al set `ESTADOS_BLOQUEANTES`. Con esto:
+- `handleAvanzarEstado` abrirá `BlockDocsDialog` (no `WarnDocsDialog`) cuando el siguiente estado sea "En Tránsito" y existan faltantes.
+- El badge/indicador de docs faltantes en el header del embarque tratará "En Tránsito" como bloqueante.
 
 ### 3. Versionado
-- `APP_VERSION` → `13.42.0`.
-- Entrada en `CHANGELOG.md`:
-  > Embarques: orden por defecto y al ordenar por columna Expediente ahora usa el consecutivo numérico ignorando el prefijo (ELNAC, ELIMP, DEMO-…).
+- `APP_VERSION` → `13.43.0`.
+- `CHANGELOG.md`:
+  > Embarques: pasar a "En Tránsito" ahora bloquea si faltan documentos requeridos (Factura Comercial, Packing List y BL/AWB/Carta Porte según modo). Antes sólo advertía.
 
 ## Fuera de alcance
-- No se altera el formato de generación de expedientes ni la columna almacenada.
-- No se tocan otros listados (cotizaciones, facturas, proformas).
-- No se agrega una segunda columna "Consecutivo"; se mantiene una sola columna Expediente con el orden numérico.
+- No se modifica la matriz de documentos requeridos por modo/estado.
+- No se cambia el comportamiento de "Confirmado" (sigue siendo soft).
+- No se toca el flujo de re-apertura ni la sincronización automática de estado por fechas (ETD/ETA). El auto-sync de "Confirmado → En Tránsito" por ETD pasada **también** quedará bloqueado por la RPC; si esto causa ruido se puede ajustar después, pero es el comportamiento correcto (no avanzar sin docs).
