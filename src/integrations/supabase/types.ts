@@ -3676,9 +3676,12 @@ export type Database = {
         Row: {
           activo: boolean | null
           created_at: string | null
+          direccion: string | null
           id: string
           logo_url: string | null
+          moneda_preferida: string
           nombre: string
+          onboarding_completado: boolean
           plan: string | null
           rfc: string | null
           updated_at: string | null
@@ -3686,9 +3689,12 @@ export type Database = {
         Insert: {
           activo?: boolean | null
           created_at?: string | null
+          direccion?: string | null
           id?: string
           logo_url?: string | null
+          moneda_preferida?: string
           nombre: string
+          onboarding_completado?: boolean
           plan?: string | null
           rfc?: string | null
           updated_at?: string | null
@@ -3696,9 +3702,12 @@ export type Database = {
         Update: {
           activo?: boolean | null
           created_at?: string | null
+          direccion?: string | null
           id?: string
           logo_url?: string | null
+          moneda_preferida?: string
           nombre?: string
+          onboarding_completado?: boolean
           plan?: string | null
           rfc?: string | null
           updated_at?: string | null
@@ -5166,6 +5175,10 @@ export type Database = {
           total_count: number
           total_embarques: number
         }[]
+      }
+      complete_onboarding: {
+        Args: { _direccion: string; _moneda: string; _rfc: string }
+        Returns: Json
       }
       consolidar_proformas: {
         Args: {

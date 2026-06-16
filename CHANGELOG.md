@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.46.0] - 2026-06-16
+- **feat(auth/onboarding)**: Onboarding inicial post-registro en `/onboarding`. Captura RFC (12-13 chars), dirección fiscal y moneda preferida (MXN/USD/EUR) antes de entrar a `/inicio`.
+- Nuevas columnas en `organizations`: `direccion`, `moneda_preferida` (default `MXN`, CHECK MXN/USD/EUR), `onboarding_completado` (default `false`). Las organizaciones existentes se marcan como completadas para no interrumpir flujos vigentes.
+- Nuevo RPC `complete_onboarding(_rfc, _direccion, _moneda)` (SECURITY DEFINER): valida server-side y exige rol admin/admin_org/super_admin en la organización.
+- `get_user_context` ahora expone los tres campos nuevos; `CachedOrganization` y `AuthContext` (`refreshProfile`) actualizados.
+- `ProtectedRoute` redirige al onboarding cuando `organization.onboarding_completado === false` (excepto super_admin y cliente).
+- `SignupForm` ahora redirige tras la confirmación de email a `/onboarding`.
+
 ## [13.45.0] - 2026-06-16
 - **feat(auth/onboarding)**: Self-service signup completo. Al registrarse, el usuario ahora ingresa "Nombre de empresa", y al confirmar:
   - Se crea automáticamente una nueva `organizations` con ese nombre (plan `basic`).

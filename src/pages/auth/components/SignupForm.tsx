@@ -44,7 +44,7 @@ export function SignupForm() {
         password: signupPassword,
         fullName: signupName,
         companyName,
-        redirectTo: `${window.location.origin}/inicio`,
+        redirectTo: `${window.location.origin}/onboarding`,
       });
       setSignupDone(true);
       toast({ title: "Cuenta creada", description: "Revisa tu correo para confirmar tu cuenta." });

@@ -22,6 +22,7 @@ interface AuthContextType {
   organization: CachedOrganization | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   organization: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -44,7 +46,7 @@ export const useAuth = () => useContext(AuthContext);
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, session, loading, lastEvent } = useAuthSession();
-  const { profile, reset: resetProfile } = useAuthProfile(user?.id ?? null);
+  const { profile, reset: resetProfile, refresh: refreshProfile } = useAuthProfile(user?.id ?? null);
   const { clearLoginAudit } = useLoginAudit(user, lastEvent);
 
   // effectiveRole: orgRole para usuarios regulares, rol global para super_admin
@@ -107,8 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       organization: profile.organization,
       loading,
       signOut,
+      refreshProfile,
     }),
-    [user, session, profile, effectiveRole, loading, signOut],
+    [user, session, profile, effectiveRole, loading, signOut, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

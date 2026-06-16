@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, role, effectiveRole, loading } = useAuth();
+  const { user, role, effectiveRole, organization, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -34,6 +34,18 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const isSuperAdmin = role === "super_admin";
   if (isSuperAdmin && !location.pathname.startsWith("/admin")) {
     return <Navigate to="/admin" replace />;
+  }
+
+  // Onboarding inicial: si la organización del usuario no ha completado los
+  // datos básicos (RFC, dirección, moneda), forzar al admin a completarlos.
+  if (
+    organization &&
+    organization.onboarding_completado === false &&
+    role !== "cliente" &&
+    !isSuperAdmin &&
+    !location.pathname.startsWith("/onboarding")
+  ) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   if (allowedRoles && effectiveRole && !anyRoleSatisfies(allowedRoles, effectiveRole as AppRole)) {
