@@ -68,10 +68,16 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           <LabelHeredable field="incoterm" getter={(c) => c.incoterm}>Incoterm *</LabelHeredable>
           <Controller name="incoterm" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+              <SelectTrigger
+                aria-invalid={errors.incoterm ? true : undefined}
+                className={errors.incoterm ? 'border-destructive' : ''}
+              >
+                <SelectValue placeholder="Seleccionar" />
+              </SelectTrigger>
               <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
             </Select>
           )} />
+          {errors.incoterm && <p className="text-xs text-destructive">{errors.incoterm}</p>}
         </div>
       </div>
 

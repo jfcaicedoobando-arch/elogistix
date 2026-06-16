@@ -20,6 +20,7 @@ describe("validateStepDatosGenerales", () => {
       modo: "Marítimo",
       tipo: "Importación",
       clienteId: "abc",
+      incoterm: "FOB",
       descripcionMercancia: "Café",
     });
     expect(errors).toEqual({});
@@ -30,6 +31,7 @@ describe("validateStepDatosGenerales", () => {
     expect(errors.modo).toBeDefined();
     expect(errors.tipo).toBeDefined();
     expect(errors.clienteId).toBeDefined();
+    expect(errors.incoterm).toBeDefined();
     expect(errors.descripcionMercancia).toBeDefined();
   });
 });

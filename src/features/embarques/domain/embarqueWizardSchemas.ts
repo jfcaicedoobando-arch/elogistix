@@ -53,6 +53,7 @@ export const stepDatosGeneralesSchema = z.object({
   modo: z.string().min(1, msg("1.modo.required")),
   tipo: z.string().min(1, msg("1.tipo.required")),
   clienteId: z.string().min(1, msg("1.clienteId.required")),
+  incoterm: z.string().min(1, msg("1.incoterm.required")),
   descripcionMercancia: z
     .string()
     .trim()
@@ -65,12 +66,14 @@ export function validateStepDatosGenerales(input: {
   modo?: string | null;
   tipo?: string | null;
   clienteId?: string | null;
+  incoterm?: string | null;
   descripcionMercancia?: string | null;
 }): StepValidationErrors {
   const res = stepDatosGeneralesSchema.safeParse({
     modo: input.modo ?? "",
     tipo: input.tipo ?? "",
     clienteId: input.clienteId ?? "",
+    incoterm: input.incoterm ?? "",
     descripcionMercancia: input.descripcionMercancia ?? "",
   });
   return res.success ? {} : flattenZodErrors(res.error);

@@ -18,6 +18,7 @@ describe("validateWizardStep", () => {
       step: 1,
       values: {
         modo: "Marítimo", tipo: "Importación", clienteId: "c1",
+        incoterm: "FOB",
         descripcionMercancia: "Carga seca",
       },
       documentosArchivos: {},

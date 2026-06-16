@@ -38,6 +38,7 @@ export const FIELD_LABELS = {
   modo: "Modo de transporte",
   tipo: "Tipo de operación",
   cliente: "Cliente",
+  incoterm: "Incoterm",
   descripcion: "Descripción de mercancía",
   etd: "ETD",
   eta: "ETA",
@@ -65,6 +66,7 @@ const STATIC: Record<string, string> = {
   "1.modo.required": formatValidationMessage(FIELD_LABELS.modo, "selecciona una opción"),
   "1.tipo.required": formatValidationMessage(FIELD_LABELS.tipo, "selecciona una opción"),
   "1.clienteId.required": formatValidationMessage(FIELD_LABELS.cliente, "selecciona uno del catálogo"),
+  "1.incoterm.required": formatValidationMessage(FIELD_LABELS.incoterm, "selecciona una opción"),
   "1.descripcion.required": formatValidationMessage(FIELD_LABELS.descripcion, "campo obligatorio"),
   "1.descripcion.maxLen": formatValidationMessage(FIELD_LABELS.descripcion, "máximo 500 caracteres"),
 
