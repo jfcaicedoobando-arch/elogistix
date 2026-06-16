@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
 import { HistorialEnviosCard } from "@/features/cotizacion/components/detalle/HistorialEnviosCard";
@@ -14,6 +13,7 @@ import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/feature
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
 import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
+import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/pages/cotizaciones/detalle/CotizacionDetalleCards";
 
 
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
@@ -94,19 +94,12 @@ export default function CotizacionDetalle() {
 
 
       {cotizacion.es_prospecto && (
-        <Card className="border-warning/30 bg-warning/10">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium [color:hsl(var(--warning))] mb-2">
-              Datos del Prospecto — Convierte a cliente primero para poder generar embarques
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div><span className="text-muted-foreground">Empresa</span><p className="font-medium">{cotizacion.prospecto_empresa}</p></div>
-              <div><span className="text-muted-foreground">Contacto</span><p className="font-medium">{cotizacion.prospecto_contacto}</p></div>
-              <div><span className="text-muted-foreground">Email</span><p className="font-medium">{cotizacion.prospecto_email || '-'}</p></div>
-              <div><span className="text-warning">Teléfono</span><p className="font-medium text-warning">{cotizacion.prospecto_telefono || '-'}</p></div>
-            </div>
-          </CardContent>
-        </Card>
+        <ProspectoBanner
+          empresa={cotizacion.prospecto_empresa}
+          contacto={cotizacion.prospecto_contacto}
+          email={cotizacion.prospecto_email}
+          telefono={cotizacion.prospecto_telefono}
+        />
       )}
 
       <CotizacionDatosGeneralesCard cotizacion={cotizacion} />
@@ -125,23 +118,8 @@ export default function CotizacionDetalle() {
         />
       )}
 
-      {cotizacion.comentario_cliente && (
-        <Card className="border-info/50">
-          <CardHeader><CardTitle className="text-lg">Comentario del Cliente</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap italic">"{cotizacion.comentario_cliente}"</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {cotizacion.notas && (
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Notas</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{cotizacion.notas}</p>
-          </CardContent>
-        </Card>
-      )}
+      {cotizacion.comentario_cliente && <ComentarioClienteCard texto={cotizacion.comentario_cliente} />}
+      {cotizacion.notas && <NotasCard texto={cotizacion.notas} />}
 
       <CotizacionDetalleEmbarques
         embarques={embarquesVinculados}

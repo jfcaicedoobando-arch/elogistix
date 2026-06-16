@@ -20,13 +20,13 @@ import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVincula
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
 import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
-import type { TopTarifaRow } from "@/features/costeo/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import type { TopTarifaRow } from "@/features/costeo/types";
+import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 
-const normalizarNombreContenedor = (s: string) =>
-  s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
+// ── Component ────────────────────────────────────────────────────────────────
 
 interface Props {
   complete?: boolean;
@@ -53,14 +53,10 @@ export default function TarifaVinculadaPanel({
 
   const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
 
-  const tipoContenedorIdInicial = (() => {
-    if (!tipoContenedorActual) return undefined;
-    if (tiposContenedor.some((t) => t.id === tipoContenedorActual)) {
-      return tipoContenedorActual;
-    }
-    const objetivo = normalizarNombreContenedor(tipoContenedorActual);
-    return tiposContenedor.find((t) => normalizarNombreContenedor(t.name) === objetivo)?.id;
-  })();
+  const tipoContenedorIdInicial = resolveTipoContenedorId(
+    tipoContenedorActual ?? undefined,
+    tiposContenedor,
+  );
 
   if (modo !== "Marítimo") return null;
 
@@ -88,10 +84,11 @@ export default function TarifaVinculadaPanel({
     navigate(`/costeo/tarifas?${qs.toString()}`);
   };
 
-  const vencidaAntesDeValidez =
-    !!tarifa && !!validez && new Date(tarifa.vigente_hasta) < validez;
-  const tipoMismatch =
-    !!tarifa && !!tipoContenedorActual && tipoContenedorActual !== tarifa.tipo_contenedor_id;
+  const { vencidaAntesDeValidez, tipoMismatch } = computeTarifaWarnings(
+    tarifa,
+    validez,
+    tipoContenedorActual ?? undefined,
+  );
 
   return (
     <WizardSection title="Tarifa marítima vinculada" complete={complete}>

@@ -5,7 +5,7 @@
 import { useWatch, useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { HeredadoBadge } from "@/components/shared/HeredadoBadge";
-import { useCotizacionVinculada } from "@/features/embarques/hooks/useHeredadoCotizacion";
+import { useCotizacionVinculada } from "@/features/embarques/hooks/useCotizacionVinculada";
 import type { EmbarqueFormValues } from "@/lib/mappers/embarque";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 

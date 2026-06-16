@@ -24,6 +24,51 @@ export const ESTADOS_COTIZACION = [
 
 export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>["data"]>[number];
 
+// ── Pure filter helpers ──────────────────────────────────────────────────────
+
+export function matchesSearch(c: CotizacionListItem, search: string): boolean {
+  return (
+    !search ||
+    c.folio.toLowerCase().includes(search.toLowerCase()) ||
+    c.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
+    c.descripcion_mercancia.toLowerCase().includes(search.toLowerCase())
+  );
+}
+
+export function esCotizacionInactivaOculta(
+  c: CotizacionListItem,
+  incluirInactivas: boolean,
+  filterEstado: string,
+): boolean {
+  const esInactiva = (ESTADOS_INACTIVOS as readonly string[]).includes(c.estado ?? "");
+  if (!esInactiva) return false;
+  if (incluirInactivas) return false;
+  if (filterEstado !== "todos" && filterEstado === c.estado) return false;
+  return true;
+}
+
+export interface CotizacionFilterParams {
+  search: string;
+  filterEstado: string;
+  filterCliente: string;
+  filterSinCostos: boolean;
+  incluirInactivas: boolean;
+}
+
+export function matchesCotizacionFilter(
+  c: CotizacionListItem,
+  p: CotizacionFilterParams,
+): boolean {
+  if (!matchesSearch(c, p.search)) return false;
+  if (p.filterEstado !== "todos" && c.estado !== p.filterEstado) return false;
+  if (p.filterCliente !== "todos" && c.cliente_id !== p.filterCliente) return false;
+  if (p.filterSinCostos && !(!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0))) return false;
+  if (esCotizacionInactivaOculta(c, p.incluirInactivas, p.filterEstado)) return false;
+  return true;
+}
+
+// ── Hook ─────────────────────────────────────────────────────────────────────
+
 /**
  * Controller de la página de listado de Cotizaciones.
  * Centraliza queries, filtros, KPIs derivados y handlers de acciones de fila.
@@ -52,26 +97,9 @@ export function useCotizacionesPageController() {
   const incluirInactivas = filters.incluirInactivas === "si";
 
   const filtered = useMemo(() => {
-    return cotizaciones.filter((c) => {
-      const matchSearch = !search ||
-        c.folio.toLowerCase().includes(search.toLowerCase()) ||
-        c.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
-        c.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
-      const matchEstado = filterEstado === "todos" || c.estado === filterEstado;
-      const matchCliente = filterCliente === "todos" || c.cliente_id === filterCliente;
-      // Estado real: sin_desglose_costos = true Y sin filas en cotizacion_costos.
-      const matchSinCostos = !filterSinCostos ||
-        (!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0));
-      // Por defecto ocultamos Vencidas y Archivadas (housekeeping). Si el
-      // usuario seleccionó explícitamente uno de esos estados en el dropdown
-      // o activó el toggle "incluir inactivas", las dejamos pasar.
-      const esInactiva = (ESTADOS_INACTIVOS as readonly string[]).includes(c.estado ?? "");
-      const matchInactivas =
-        !esInactiva ||
-        incluirInactivas ||
-        (filterEstado !== "todos" && filterEstado === c.estado);
-      return matchSearch && matchEstado && matchCliente && matchSinCostos && matchInactivas;
-    });
+    return cotizaciones.filter((c) =>
+      matchesCotizacionFilter(c, { search, filterEstado, filterCliente, filterSinCostos, incluirInactivas }),
+    );
   }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos, incluirInactivas]);
 
   const { items: paginated, totalPages } = paginate(filtered);
