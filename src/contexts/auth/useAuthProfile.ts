@@ -63,6 +63,13 @@ export function useAuthProfile(userId: string | null) {
     lastFetchedAt.current = 0;
   }, []);
 
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    // Forzar bypass de TTL
+    lastFetchedAt.current = 0;
+    await fetchContext(userId);
+  }, [userId, fetchContext]);
+
   useEffect(() => {
     if (userId) {
       // Defer para evitar potencial deadlock con Supabase durante eventos de auth.
@@ -72,5 +79,5 @@ export function useAuthProfile(userId: string | null) {
     reset();
   }, [userId, fetchContext, reset]);
 
-  return { profile, reset };
+  return { profile, reset, refresh };
 }
