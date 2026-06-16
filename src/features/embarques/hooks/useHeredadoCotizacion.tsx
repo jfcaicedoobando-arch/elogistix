@@ -18,10 +18,8 @@
  *   ```
  */
 
-import { createContext, useContext, useCallback, type ReactNode } from "react";
-import { useFormContext } from "react-hook-form";
+import { createContext, useContext, type ReactNode } from "react";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
-import type { EmbarqueFormValues } from "@/lib/mappers/embarque";
 
 interface Ctx {
   cotizacion: CotizacionRow | null;
@@ -46,5 +44,4 @@ export function useCotizacionVinculada(): CotizacionRow | null {
   return useContext(CotizacionVinculadaContext).cotizacion;
 }
 
-type CotValueGetter = (cot: CotizacionRow) => unknown;
 
