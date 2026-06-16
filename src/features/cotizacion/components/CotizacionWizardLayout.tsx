@@ -105,7 +105,11 @@ export default function CotizacionWizardLayout({
               {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
             </div>
           </div>
-          <StepIndicator steps={WIZARD_STEPS} currentStep={w.currentStep} />
+          <StepIndicator
+            steps={WIZARD_STEPS}
+            currentStep={w.currentStep}
+            onStepClick={(s) => { if (!isBusy) w.setCurrentStep(s); }}
+          />
         </div>
 
         <div className="flex-1 overflow-y-auto p-4" ref={contentRef}>

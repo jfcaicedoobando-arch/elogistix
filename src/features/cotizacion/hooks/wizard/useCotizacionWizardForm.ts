@@ -113,7 +113,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
 
   return {
     form,
-    currentStep, cotizacionId,
+    currentStep, setCurrentStep, cotizacionId,
     costosInternos, setCostosInternos, costosPreLlenados, isPending,
     msdsFile, setMsdsFile,
     esMaritimo, esAereo, clienteSeleccionado,

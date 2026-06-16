@@ -77,8 +77,9 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
                 size="sm"
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => handleDeleteClick(doc.nombre)}
+                aria-label={`Eliminar archivo ${doc.nombre}`}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
               </Button>
             )}
           </div>

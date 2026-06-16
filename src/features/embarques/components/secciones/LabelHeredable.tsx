@@ -16,10 +16,12 @@ interface Props {
   field: keyof EmbarqueFormValues;
   /** Getter del valor original en la cotización. */
   getter: (cot: CotizacionRow) => unknown;
+  /** id del input asociado (para `htmlFor` accesible). */
+  htmlFor?: string;
   className?: string;
 }
 
-export function LabelHeredable({ children, field, getter, className }: Props) {
+export function LabelHeredable({ children, field, getter, htmlFor, className }: Props) {
   const cot = useCotizacionVinculada();
   const { control } = useFormContext<EmbarqueFormValues>();
   // useWatch garantiza re-render cuando el usuario edita el campo,
@@ -36,7 +38,7 @@ export function LabelHeredable({ children, field, getter, className }: Props) {
 
   return (
     <div className={`flex items-center gap-2 ${className ?? ""}`}>
-      <Label>{children}</Label>
+      <Label htmlFor={htmlFor}>{children}</Label>
       {heredado && cot && <HeredadoBadge origen={cot.folio ?? ""} />}
     </div>
   );
