@@ -7,6 +7,7 @@ import { useExpedientesCliente, type ExpedienteCliente } from "@/features/embarq
 import { BloqueClienteContactos } from "./secciones/BloqueClienteContactos";
 import { BloqueMercancia } from "./secciones/BloqueMercancia";
 import { BloqueVinculacion } from "./secciones/BloqueVinculacion";
+import { ResumenHerenciaCotizacion } from "./secciones/ResumenHerenciaCotizacion";
 
 interface Contacto {
   id: string;
