@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.10] - 2026-06-16
+- **feat(crm,costeo/page-header)**: Las 12 rutas que mostraban `<h1>` + `<p>` inline ahora usan el componente `PageHeader` estándar para coherencia visual con el resto de la app. CRM (6): `Leads`, `Actividades`, `Oportunidades`, `CrmDashboard`, `MiDia`, `Analitica`. Costeo (6): `CosteoTarifas`, `CosteoBuscar`, `CosteoRutas`, `CosteoAgentes`, `CosteoNavieras`, `CosteoDemorasVenta`. Acciones existentes se conservan vía la prop `actions`. Sin cambios de lógica.
+
 ## [13.33.9] - 2026-06-16
 - **fix(wizards/validacion-visual)**: Aplicados indicadores visuales de error en todos los campos obligatorios del wizard de Embarques que carecían de `border-destructive` y `aria-invalid`. `BloqueMercancia`: peso (kg), volumen (m³), piezas, descripciónMercancía y tipoCarga reciben `aria-invalid={error ? true : undefined}`, `className={cn(error && "border-destructive")}` y `<p className="text-xs text-destructive">` reactivo. `BloqueClienteContactos`: `SelectTrigger` de shipper y consignatario añaden los mismos atributos reactivos. `StepDatosRutaAereo`: aeropuertoOrigen, aeropuertoDestino y mawb. `StepDatosRutaTerrestre`: ciudadOrigen, ciudadDestino y transportista. `StepDatosRutaMaritimo`: tipoServicio SelectTrigger; PortSelect y NavieraSelect extendidos con props className y aria-invalid. `EmbarqueValidationErrors` extendido con tipoCarga, pesoKg, volumenM3, piezas, shipper y consignatario. No se modificó ningún schema Zod ni lógica de validación.
 
