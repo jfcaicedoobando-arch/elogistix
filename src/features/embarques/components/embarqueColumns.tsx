@@ -10,7 +10,8 @@ import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { sortByString, sortByDate, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
 
 export interface DocsInfo { pendientes: number; total: number }
 
@@ -80,7 +81,8 @@ export function buildEmbarqueColumns({
       header: "Expediente",
       accessorFn: (e) => e.expediente,
       enableSorting: true,
-      sortingFn: sortByString<EmbarqueRow>((e) => e.expediente),
+      // Ordena por consecutivo numérico ignorando el prefijo (ELNAC, ELIMP, DEMO-…).
+      sortingFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
       meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const e = row.original;

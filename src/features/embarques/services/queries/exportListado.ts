@@ -31,7 +31,7 @@ export async function fetchEmbarquesParaExport(
       ...f,
       page,
       pageSize: EXPORT_PAGE,
-      sortBy: "created_at",
+      sortBy: "expediente_num",
       sortDir: "desc",
     });
     total = count;
