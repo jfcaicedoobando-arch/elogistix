@@ -57,7 +57,7 @@ describe("fetchAlertasPendingCount", () => {
   });
   it("lanza si hay error", async () => {
     rpcMock.mockResolvedValue({ data: null, error: { message: "no" } });
-    await expect(fetchAlertasPendingCount()).rejects.toBeTruthy();
+    await expect(fetchAlertasPendingCount()).rejects.toThrow();
   });
 });
 
@@ -77,7 +77,7 @@ describe("fetchAlertasSistema", () => {
   });
   it("lanza si error", async () => {
     fromMock.mockReturnValue(chainResolve({ data: null, error: { message: "x" } }));
-    await expect(fetchAlertasSistema()).rejects.toBeTruthy();
+    await expect(fetchAlertasSistema()).rejects.toThrow();
   });
 });
 
@@ -91,7 +91,7 @@ describe("acknowledgeAlerta", () => {
   });
   it("propaga error", async () => {
     fromMock.mockReturnValue(chainResolve({ error: { message: "no" } }));
-    await expect(acknowledgeAlerta({ id: "a", userId: null })).rejects.toBeTruthy();
+    await expect(acknowledgeAlerta({ id: "a", userId: null })).rejects.toThrow();
   });
 });
 
