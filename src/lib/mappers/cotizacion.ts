@@ -113,5 +113,6 @@ export function buildPaso1Data(
     operador: userEmail,
     tarifa_id: values.tarifaId ?? null,
     tarifa_override: values.tarifaOverride ?? {},
+    sin_desglose_costos: values.sinDesgloseCostos ?? false,
   };
 }

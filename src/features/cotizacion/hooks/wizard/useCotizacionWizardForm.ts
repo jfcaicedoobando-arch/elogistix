@@ -99,7 +99,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form, clientes, userEmail]);
 
   // ── Handlers de navegación del wizard (hook dedicado) ──
-  const { handleSiguiente, handleGuardar, handleBack } = useCotizacionWizardSteps({
+  const { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose } = useCotizacionWizardSteps({
     form, toast, navigate, isEditMode,
     cotizacionId, setCotizacionId,
     currentStep, setCurrentStep,
@@ -124,6 +124,6 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     plUSD, plMXN,
     costosUSD: costosUSDFiltered,
     costosMXN: costosMXNFiltered,
-    handleSiguiente, handleGuardar, handleBack,
+    handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose,
   };
 }

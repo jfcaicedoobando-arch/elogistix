@@ -9,11 +9,32 @@ import {
   useCrearEmbarqueBorrador,
   type CotizacionRow,
 } from "@/features/cotizacion/hooks/useCotizaciones";
+import { useRegistrarActividad } from "@/hooks/shared";
+import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
 import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
+/**
+ * Verifica si la cotización tiene costos cargados.
+ * Regla canónica del candado: bloqueamos por existencia real de filas
+ * en `cotizacion_costos`, no por el flag `sin_desglose_costos`.
+ */
+async function tieneCostosCargados(cotizacionId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from("cotizacion_costos")
+    .select("id", { count: "exact", head: true })
+    .eq("cotizacion_id", cotizacionId);
+  if (error) {
+    console.error("[tieneCostosCargados] error", error);
+    // Ante error, no bloqueamos para no impedir operación legítima.
+    return true;
+  }
+  return (count ?? 0) > 0;
+}
+
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
  * Separado del state de queries/totales para favorecer la testabilidad.
@@ -25,10 +46,12 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   const convertirProspecto = useConvertirProspectoACliente();
   const convertirAEmbarques = useConvertirCotizacionAEmbarques();
   const crearBorrador = useCrearEmbarqueBorrador();
+  const registrarActividad = useRegistrarActividad();
 
 
   const [showConvertir, setShowConvertir] = useState(false);
   const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
+  const [showBloqueoSinCostos, setShowBloqueoSinCostos] = useState(false);
   const [clienteForm, setClienteForm] = useState<ClienteFormData>({
     nombre: '', contacto: '', email: '', telefono: '',
     rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
@@ -94,8 +117,34 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     }
   };
 
+  /**
+   * Candado: bloquea la creación de embarque(s) si la cotización no tiene costos cargados.
+   * Registra el bloqueo en bitácora para auditoría.
+   */
+  const validarCostosOBloquear = async (cotizacionId: string, accion: string): Promise<boolean> => {
+    const ok = await tieneCostosCargados(cotizacionId);
+    if (!ok) {
+      try {
+        registrarActividad.mutate({
+          accion: "embarque_bloqueado_sin_costos",
+          modulo: "cotizaciones",
+          entidad_id: cotizacionId,
+          entidad_nombre: "",
+          detalles: { accion_intentada: accion },
+        });
+      } catch {
+        // No bloquear UX por fallo de bitácora.
+      }
+      setShowConfirmarConvertir(false);
+      setShowBloqueoSinCostos(true);
+    }
+    return ok;
+  };
+
   const handleGenerarEmbarques = async () => {
     if (!cotizacion) return;
+    const ok = await validarCostosOBloquear(cotizacion.id, "generar_embarques");
+    if (!ok) return;
     try {
       await convertirAEmbarques.mutateAsync(cotizacion);
       notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
@@ -107,6 +156,8 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
 
   const handleCrearBorrador = async () => {
     if (!cotizacion) return;
+    const ok = await validarCostosOBloquear(cotizacion.id, "crear_borrador");
+    if (!ok) return;
     try {
       const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
       notifySuccess(toast, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
@@ -116,18 +167,25 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     }
   };
 
+  const irACargarCostos = () => {
+    if (!cotizacion) return;
+    setShowBloqueoSinCostos(false);
+    navigate(`/cotizaciones/${cotizacion.id}/editar`);
+  };
+
   return {
     showConvertir, setShowConvertir,
     showConfirmarConvertir, setShowConfirmarConvertir,
+    showBloqueoSinCostos, setShowBloqueoSinCostos,
     clienteForm, setClienteForm,
     handleCambiarEstado,
     abrirDialogConvertir,
     handleConvertir,
     handleGenerarEmbarques,
     handleCrearBorrador,
+    irACargarCostos,
     convertirProspecto,
     convertirAEmbarques,
     crearBorrador,
   };
 }
-

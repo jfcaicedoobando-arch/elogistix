@@ -14,6 +14,8 @@ const {
   convertirAEmbarquesMutateAsync, crearBorradorMutateAsync,
   sincronizarEtapaMock, propagarConversionMock,
   notifyErrorMock, notifySuccessMock,
+  registrarActividadMutate,
+  supabaseCountRef,
 } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
   toastFn: vi.fn(),
@@ -25,10 +27,24 @@ const {
   propagarConversionMock: vi.fn(),
   notifyErrorMock: vi.fn(),
   notifySuccessMock: vi.fn(),
+  registrarActividadMutate: vi.fn(),
+  supabaseCountRef: { value: 1 } as { value: number },
 }));
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigateMock }));
-vi.mock("@/hooks/shared", () => ({ useToast: () => ({ toast: toastFn }) }));
+vi.mock("@/hooks/shared", () => ({
+  useToast: () => ({ toast: toastFn }),
+  useRegistrarActividad: () => ({ mutate: registrarActividadMutate }),
+}));
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => Promise.resolve({ count: supabaseCountRef.value, error: null }),
+      }),
+    }),
+  },
+}));
 vi.mock("@/features/cotizacion/hooks/useCotizaciones", () => ({
   useUpdateEstadoCotizacion: () => ({ mutateAsync: actualizarEstadoMutateAsync }),
   useConvertirProspectoACliente: () => ({ mutateAsync: convertirProspectoMutateAsync, isPending: false }),
@@ -54,7 +70,7 @@ const cot = (over: Record<string, unknown> = {}) => ({
   // SAFE-CAST: shape mínimo de CotizacionRow requerido por el hook
 } as unknown as Parameters<typeof useCotizacionDetalleHandlers>[0]);
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => { vi.clearAllMocks(); supabaseCountRef.value = 1; });
 
 describe("useCotizacionDetalleHandlers", () => {
   it("handleCambiarEstado actualiza estado y sincroniza etapa CRM", async () => {

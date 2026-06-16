@@ -8,6 +8,8 @@ import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/S
 import PasoResumenCotizacion from "@/features/cotizacion/components/PasoResumenCotizacion";
 import PasoDatosGenerales from "@/features/cotizacion/components/wizard/PasoDatosGenerales";
 import { CotizacionWizardFooter } from "@/features/cotizacion/components/wizard/CotizacionWizardFooter";
+import { ConfirmSinDesgloseDialog } from "@/features/cotizacion/components/ConfirmSinDesgloseDialog";
+import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 
 const WIZARD_STEPS = [
   { num: 1, title: "Datos Generales" },
@@ -35,10 +37,12 @@ export default function CotizacionWizardLayout({
   onBack,
   saveLabel,
 }: CotizacionWizardLayoutProps) {
-  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, currentStep, isPending } = w;
+  const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, currentStep, isPending } = w;
   const contentRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSinDesglose, setShowSinDesglose] = useState(false);
   const isBusy = isProcessing || isPending;
+  const sinDesgloseFlag = !!form.watch("sinDesgloseCostos");
 
   const runProcessing = useCallback(async (fn: () => unknown | Promise<unknown>) => {
     if (isBusy) return;
@@ -50,6 +54,10 @@ export default function CotizacionWizardLayout({
   const handleSave = useCallback(() => { void runProcessing(handleGuardar); }, [runProcessing, handleGuardar]);
   const handleBack = useCallback(() => { if (!isBusy) wHandleBack(); }, [isBusy, wHandleBack]);
   const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
+  const handleConfirmSinDesglose = useCallback(() => {
+    setShowSinDesglose(false);
+    void runProcessing(handleCotizarSinDesglose);
+  }, [runProcessing, handleCotizarSinDesglose]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -60,6 +68,10 @@ export default function CotizacionWizardLayout({
     }, 100);
     return () => clearTimeout(timer);
   }, [currentStep]);
+
+  const irACargarCostos = useCallback(() => {
+    if (!isBusy) wHandleBack();
+  }, [isBusy, wHandleBack]);
 
   return (
     <FormProvider {...form}>
@@ -91,7 +103,10 @@ export default function CotizacionWizardLayout({
 
             {w.currentStep === 3 && (
               <>
-                {w.costosPreLlenados && (
+                {sinDesgloseFlag && (
+                  <SinDesgloseBanner onCargarCostos={irACargarCostos} />
+                )}
+                {w.costosPreLlenados && !sinDesgloseFlag && (
                   <div className="flex items-center gap-2 p-3 rounded-md bg-info/10 border border-info/30 [color:hsl(var(--info))] text-sm">
                     <Info className="h-4 w-4 flex-shrink-0" />
                     Pre-llenado desde Costos & P&L. Puedes ajustar si es necesario.
@@ -115,21 +130,26 @@ export default function CotizacionWizardLayout({
             )}
 
             {w.currentStep === 4 && (
-              <PasoResumenCotizacion
-                plUSD={w.plUSD}
-                plMXN={w.plMXN}
-                tieneCostosUSD={w.costosUSD.length > 0}
-                tieneCostosMXN={w.costosMXN.length > 0}
-                nombreCliente={form.watch("esProspecto") ? form.watch("prospectoEmpresa") : (w.clienteSeleccionado?.nombre || "—")}
-                origen={form.watch("origen")}
-                destino={form.watch("destino")}
-                numContenedores={form.watch("numContenedores")}
-                modo={form.watch("modo")}
-                incoterm={form.watch("incoterm")}
-                tipo={form.watch("tipo")}
-                totalUSD={w.totalUSD}
-                totalMXN={w.totalMXN}
-              />
+              <>
+                {sinDesgloseFlag && (
+                  <SinDesgloseBanner onCargarCostos={irACargarCostos} />
+                )}
+                <PasoResumenCotizacion
+                  plUSD={w.plUSD}
+                  plMXN={w.plMXN}
+                  tieneCostosUSD={w.costosUSD.length > 0}
+                  tieneCostosMXN={w.costosMXN.length > 0}
+                  nombreCliente={form.watch("esProspecto") ? form.watch("prospectoEmpresa") : (w.clienteSeleccionado?.nombre || "—")}
+                  origen={form.watch("origen")}
+                  destino={form.watch("destino")}
+                  numContenedores={form.watch("numContenedores")}
+                  modo={form.watch("modo")}
+                  incoterm={form.watch("incoterm")}
+                  tipo={form.watch("tipo")}
+                  totalUSD={w.totalUSD}
+                  totalMXN={w.totalMXN}
+                />
+              </>
             )}
           </div>
         </div>
@@ -142,8 +162,16 @@ export default function CotizacionWizardLayout({
           onBack={handleBack}
           onNext={handleNext}
           onSave={handleSave}
+          onCotizarSinDesglose={() => setShowSinDesglose(true)}
         />
       </div>
+
+      <ConfirmSinDesgloseDialog
+        open={showSinDesglose}
+        onOpenChange={setShowSinDesglose}
+        onConfirm={handleConfirmSinDesglose}
+        isPending={isBusy}
+      />
     </FormProvider>
   );
 }
