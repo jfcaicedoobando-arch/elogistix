@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
   if (suppressError) {
     console.error('Failed to upsert suppressed email', {
       error: suppressError,
-      email_redacted: normalizedEmail[0] + '***@' + normalizedEmail.split('@')[1],
+      email_redacted: redactEmail(normalizedEmail),
     })
     return jsonResponse({ error: 'Failed to write suppression' }, 500)
   }
@@ -103,13 +103,11 @@ Deno.serve(async (req) => {
 
   if (insertError) {
     // Non-fatal — log and continue. The suppression was already recorded.
-    console.warn('Failed to insert email_send_log', {
-      error: insertError,
-    })
+    console.warn('Failed to insert email_send_log', { error: insertError })
   }
 
   console.log('Suppression processed', {
-    email_redacted: normalizedEmail[0] + '***@' + normalizedEmail.split('@')[1],
+    email_redacted: redactEmail(normalizedEmail),
     reason: payload.reason,
     is_retry: payload.is_retry,
     retry_count: payload.retry_count,
@@ -118,29 +116,3 @@ Deno.serve(async (req) => {
 
   return jsonResponse({ success: true })
 })
-
-function mapReasonToStatus(
-  reason: string,
-): 'bounced' | 'complained' | 'suppressed' {
-  switch (reason) {
-    case 'bounce':
-      return 'bounced'
-    case 'complaint':
-      return 'complained'
-    default:
-      return 'suppressed'
-  }
-}
-
-function mapReasonToMessage(reason: string): string {
-  switch (reason) {
-    case 'bounce':
-      return 'Permanent bounce — email address is invalid or rejected'
-    case 'complaint':
-      return 'Spam complaint — recipient marked email as spam'
-    case 'unsubscribe':
-      return 'Recipient unsubscribed'
-    default:
-      return 'Email suppressed'
-  }
-}
