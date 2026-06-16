@@ -25,6 +25,7 @@ import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/compo
 import { useOportunidades, useMoverEtapaConAutomatizacion, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useUsuarios } from "@/hooks/usuario";
 import { oportunidadesColumns, activosFiltros } from "./oportunidadesTable";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function Oportunidades() {
   const navigate = useNavigate();
@@ -87,6 +88,10 @@ export default function Oportunidades() {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
+      <PageHeader
+        title="Oportunidades"
+        description="Pipeline de ventas por etapa con vista Kanban y tabla"
+      />
       <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(totalPipeline)}`} />
 
       <Card>

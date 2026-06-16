@@ -11,6 +11,7 @@ import {
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoBuscar() {
   const { data: puertos = [] } = usePuertos();
@@ -32,12 +33,10 @@ export default function CosteoBuscar() {
 
   return (
     <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Buscar tarifa</h1>
-        <p className="text-sm text-muted-foreground">
-          Top 3 tarifas vigentes ordenadas por precio total, días de crédito y días libres de demoras.
-        </p>
-      </div>
+      <PageHeader
+        title="Buscar tarifa"
+        description="Top 3 tarifas vigentes ordenadas por precio total, días de crédito y días libres de demoras."
+      />
 
       <Card className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <div>

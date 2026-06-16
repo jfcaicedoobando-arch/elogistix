@@ -1,4 +1,5 @@
 import { useFormContext, Controller } from "react-hook-form";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,21 +46,38 @@ export function StepDatosRutaMaritimo({ errors }: Props) {
       <div className="space-y-2">
         <Label>Puerto Origen *</Label>
         <Controller name="puertoOrigen" render={({ field }) => (
-          <PortSelect value={field.value} onValueChange={field.onChange} placeholder="Seleccionar puerto origen" />
+          <PortSelect
+            value={field.value}
+            onValueChange={field.onChange}
+            placeholder="Seleccionar puerto origen"
+            className={cn(errors.puertoOrigen && 'border-destructive')}
+            aria-invalid={errors.puertoOrigen ? true : undefined}
+          />
         )} />
         {errors.puertoOrigen && <p className={errClass}>{errors.puertoOrigen}</p>}
       </div>
       <div className="space-y-2">
         <Label>Puerto Destino *</Label>
         <Controller name="puertoDestino" render={({ field }) => (
-          <PortSelect value={field.value} onValueChange={field.onChange} placeholder="Seleccionar puerto destino" />
+          <PortSelect
+            value={field.value}
+            onValueChange={field.onChange}
+            placeholder="Seleccionar puerto destino"
+            className={cn(errors.puertoDestino && 'border-destructive')}
+            aria-invalid={errors.puertoDestino ? true : undefined}
+          />
         )} />
         {errors.puertoDestino && <p className={errClass}>{errors.puertoDestino}</p>}
       </div>
       <div className="space-y-2">
         <Label>Naviera *</Label>
         <Controller name="naviera" render={({ field }) => (
-          <NavieraSelect value={field.value} onValueChange={field.onChange} />
+          <NavieraSelect
+            value={field.value}
+            onValueChange={field.onChange}
+            className={cn(errors.naviera && 'border-destructive')}
+            aria-invalid={errors.naviera ? true : undefined}
+          />
         )} />
         {errors.naviera && <p className={errClass}>{errors.naviera}</p>}
       </div>
@@ -70,7 +88,12 @@ export function StepDatosRutaMaritimo({ errors }: Props) {
         <Label>Tipo de Servicio *</Label>
         <Controller name="tipoServicio" render={({ field }) => (
           <Select value={field.value} onValueChange={handleTipoServicioChange}>
-            <SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
+            <SelectTrigger
+              aria-invalid={errors.tipoServicio ? true : undefined}
+              className={cn(errors.tipoServicio && 'border-destructive')}
+            >
+              <SelectValue placeholder="FCL / LCL" />
+            </SelectTrigger>
             <SelectContent><SelectItem value="FCL">FCL</SelectItem><SelectItem value="LCL">LCL</SelectItem></SelectContent>
           </Select>
         )} />

@@ -17,6 +17,7 @@ import {
   type CrmLeadEstado, type CrmLeadFuente, type CrmLeadRow,
 } from "@/features/crm/hooks";
 import { makeLeadsColumns } from "./leadsColumns";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function Leads() {
   const navigate = useNavigate();
@@ -47,6 +48,10 @@ export default function Leads() {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
+      <PageHeader
+        title="Leads"
+        description="Prospectos y empresas en seguimiento comercial"
+      />
       <CrmSubheader context={`${totalCount} leads en cartera`} />
 
       {canEditCrm && selected.size > 0 && (

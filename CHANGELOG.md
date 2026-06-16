@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.9] - 2026-06-16
+
+- **feat(crm,costeo/page-header)**: Añadido `PageHeader` estándar en 12 páginas sin encabezado: CRM (Leads, Actividades, Oportunidades, CrmDashboard, MiDia, Analítica) y Costeo (CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta). Reemplaza patrones ad-hoc (`h1`+`p` inline o ausencia de header) con el componente `PageHeader` (title, description, actions). Consistente con audit v13.33.8.
+
 ## [13.33.8] - 2026-06-16
 - **fix(wizards/crash-removeChild-DEFINITIVO)**: Eliminado el crash `NotFoundError: Failed to execute 'removeChild' on 'Node'` que rompía el primer mount de `/embarques/nuevo` y `/cotizaciones/nueva`. Causa raíz: el contenido del wizard estaba envuelto en `<form>` para habilitar Enter→Siguiente; Radix Select detectaba el form ancestro y montaba `SelectBubbleInput` (input oculto para submit nativo) que colisionaba con la fase de mutación de React Hook Form (`Controller`) en el primer commit. Solución: se reemplaza el `<form>` por un `<div onKeyDown>` en `EmbarqueWizardLayout` y `CotizacionWizardLayout`, manejando Enter manualmente (sólo dispara "Siguiente" desde `<input>`/`<select>`, excluye textarea/botones/combobox abiertos). Se conserva el feature Enter→Siguiente sin generar bubble inputs. Verificado en preview: ambos wizards renderizan limpio sin disparar el ErrorBoundary.
 
