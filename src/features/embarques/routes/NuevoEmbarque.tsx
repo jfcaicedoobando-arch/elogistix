@@ -83,6 +83,7 @@ export default function NuevoEmbarque() {
           />
         )}
       </EmbarqueWizardLayout>
+      </CotizacionVinculadaProvider>
     </FormProvider>
   );
 }
