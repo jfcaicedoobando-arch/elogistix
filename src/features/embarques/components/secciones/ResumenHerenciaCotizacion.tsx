@@ -59,7 +59,7 @@ export function ResumenHerenciaCotizacion() {
             label="Seguro"
             value={
               cot.valor_seguro_usd
-                ? formatCurrencyUSD(Number(cot.valor_seguro_usd))
+                ? formatCurrency(Number(cot.valor_seguro_usd), "USD")
                 : "Sí"
             }
           />
