@@ -81,6 +81,41 @@ export function useCotizacionWizardSteps({
     }
   }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
 
+  /**
+   * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
+   * y salta directo al Paso 3 (Cotización Cliente). Bitácora: cotizacion_sin_desglose_creada.
+   */
+  const handleCotizarSinDesglose = useCallback(async () => {
+    const v = form.getValues();
+    const err = validatePaso1(v);
+    if (err) { notifyError(toast, { title: err }); return; }
+    // Marca el flag en el form para que buildPaso1Data lo persista.
+    form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
+    const esNueva = !cotizacionId;
+    try {
+      const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
+      if (!cotizacionId) setCotizacionId(id);
+      if (esNueva && v.esProspecto) {
+        await vincularCrmTrasCrear(id, v, toast);
+      }
+      registrarActividad.mutate({
+        accion: "cotizacion_sin_desglose_creada",
+        modulo: "cotizaciones",
+        entidad_id: id,
+        entidad_nombre: "",
+      });
+      setCurrentStep(3);
+    } catch (e: unknown) {
+      notifyError(toast, {
+        title: "Error al guardar cotización",
+        description: getErrorMessage(e),
+        error: e,
+        method: "COTIZAR_SIN_DESGLOSE",
+        context: { cotizacionId, paso: 1 },
+      });
+    }
+  }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep]);
+
   const handlePaso2 = useCallback(async () => {
     try {
       if (costosInternos.length > 0 && cotizacionId) {
@@ -159,5 +194,5 @@ export function useCotizacionWizardSteps({
     else navigate("/cotizaciones");
   }, [currentStep, navigate, setCurrentStep]);
 
-  return { handleSiguiente, handleGuardar, handleBack };
+  return { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose };
 }
