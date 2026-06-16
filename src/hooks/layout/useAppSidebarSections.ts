@@ -20,6 +20,25 @@ export interface SidebarSection {
   items: typeof SIDEBAR_DASHBOARD_ITEMS;
 }
 
+function buildGerenteComercialSections(
+  crmItems: typeof SIDEBAR_CRM_ITEMS,
+  sistemaItems: typeof SIDEBAR_SISTEMA_ITEMS,
+): SidebarSection[] {
+  const gestionGC = SIDEBAR_GESTION_ITEMS.filter((it) =>
+    ["/cotizaciones", "/embarques", "/comisiones"].includes(it.url),
+  );
+  return [
+    { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+    { label: "Gestión", items: gestionGC },
+    { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+    { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+    { label: "CRM", items: crmItems },
+    { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+    { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+    { label: "Sistema", items: sistemaItems.filter((it) => ["/ayuda", "/bitacora"].includes(it.url)) },
+  ];
+}
+
 export function useAppSidebarSections(): SidebarSection[] {
   const { role, effectiveRole } = useAuth();
   const { data: auditoriaCount = 0 } = useAuditoriaCount();
