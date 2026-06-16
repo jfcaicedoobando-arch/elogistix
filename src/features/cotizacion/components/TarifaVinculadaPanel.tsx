@@ -141,6 +141,7 @@ export default function TarifaVinculadaPanel() {
         onOpenChange={setOpen}
         onElegir={aplicarTarifa}
         selectLabel="Usar esta tarifa"
+        initial={{ tipoContenedorId: tipoContenedorIdInicial }}
       />
     </WizardSection>
   );
