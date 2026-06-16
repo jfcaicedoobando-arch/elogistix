@@ -10,6 +10,8 @@ import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/feature
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
 import { DialogGenerarEmbarques } from "@/features/cotizacion/components/detalle/DialogGenerarEmbarques";
+import { BloqueoEmbarqueSinCostosDialog } from "@/features/cotizacion/components/BloqueoEmbarqueSinCostosDialog";
+import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import CotizacionInformativaDetalle from "@/pages/cotizaciones/CotizacionInformativaDetalle";
@@ -32,6 +34,7 @@ export default function CotizacionDetalle() {
     showConfirmarConvertir, setShowConfirmarConvertir,
     clienteForm, setClienteForm,
     handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques, handleCrearBorrador,
+    showBloqueoSinCostos, setShowBloqueoSinCostos, irACargarCostos,
     convertirProspecto, convertirAEmbarques, crearBorrador, navigate,
   } = useCotizacionDetalleState(id);
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
@@ -56,6 +59,10 @@ export default function CotizacionDetalle() {
         onBack={() => navigate("/cotizaciones")}
         onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
       />
+
+      {cotizacion.sin_desglose_costos && (
+        <SinDesgloseBanner onCargarCostos={() => navigate(`/cotizaciones/${cotizacion.id}/editar`)} />
+      )}
 
       {canEdit && (
         <CotizacionDetalleAcciones
@@ -142,6 +149,12 @@ export default function CotizacionDetalle() {
         numContenedores={cotizacion.num_contenedores}
         isPending={convertirAEmbarques.isPending}
         onConfirmar={handleGenerarEmbarques}
+      />
+
+      <BloqueoEmbarqueSinCostosDialog
+        open={showBloqueoSinCostos}
+        onOpenChange={setShowBloqueoSinCostos}
+        onIrACargarCostos={irACargarCostos}
       />
     </div>
   );
