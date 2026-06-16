@@ -47,6 +47,15 @@ const SALES: readonly AppRole[] = [
   "ejecutivo_pricing",
 ];
 
+// Roles autorizados a disparar el atajo destructivo "Cotizar sin desglose"
+// del wizard de cotización (Pack D v13.32.0).
+const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_operaciones",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
@@ -60,6 +69,7 @@ export function usePermissions() {
   const canEditFinance = has(FINANCE, roleStr);
   const canViewFinancials = has(FINANCE_VIEWERS, roleStr);
   const canEditSales = has(SALES, roleStr);
+  const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
 
   // API pública (compatibilidad)
   const canEdit = canEditOperations || canEditFinance;
@@ -82,5 +92,6 @@ export function usePermissions() {
     canEditOperations,
     canEditFinance,
     canEditSales,
+    canCotizarSinDesglose,
   };
 }
