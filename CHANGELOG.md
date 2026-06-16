@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.27.0] - 2026-06-16
+- **feat(cotizaciones/sin-desglose)**: Nuevo atajo "Cotizar sin desglose" en Paso 1 del wizard, con modal destructivo + checkbox obligatorio que advierte de las consecuencias. Al confirmar, se marca `cotizaciones.sin_desglose_costos = true`, se salta al Paso 3 y se registra `cotizacion_sin_desglose_creada` en bitácora. En Paso 3/4 y en el detalle de la cotización aparece un banner amarillo persistente "Cotización sin desglose de costos" con CTA "Cargar costos". **Candado duro**: los handlers `handleGenerarEmbarques` y `handleCrearBorrador` validan la existencia de filas en `cotizacion_costos` antes de proceder; si está vacío, abren `BloqueoEmbarqueSinCostosDialog`, registran `embarque_bloqueado_sin_costos` y redirigen al editor de la cotización. La regla de bloqueo se basa en datos reales, no en el flag, para no bloquear cotizaciones a las que ya se les cargaron costos posteriormente.
+
 ## [13.26.3] - 2026-06-16
 - **refactor(cotizaciones/wizard)**: `SeccionRutaCotizacion` dividido en sub-componentes (`OrigenDestinoBlock`, `TarifaFields`, `SeguroBlock`, `BannerOverride`) bajo `seccionRuta/` para cumplir la regla Power of 10 (≤200 líneas). Sin cambios funcionales.
 
