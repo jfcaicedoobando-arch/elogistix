@@ -9,8 +9,8 @@ import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/features/cotizacion/components/CotizacionDetalleSecciones";
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
-import { DialogGenerarEmbarques } from "@/features/cotizacion/components/detalle/DialogGenerarEmbarques";
-import { BloqueoEmbarqueSinCostosDialog } from "@/features/cotizacion/components/BloqueoEmbarqueSinCostosDialog";
+
+
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
