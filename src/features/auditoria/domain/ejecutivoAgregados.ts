@@ -3,7 +3,6 @@
  * Extraídos de `useAuditoriaEjecutivo` (11.14.0).
  */
 import type {
-  AuditoriaRevision,
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
