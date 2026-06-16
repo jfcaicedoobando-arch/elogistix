@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.16] - 2026-06-16
+- **fix(coverage)**: CI rojo en `Coverage merge & report` porque `lines/statements` cayó a 34.89% (umbral 35%) tras retirar tests legacy de barrels `comisiones/tesoreria/services` en releases anteriores. Añadido `src/constants/__tests__/constantsSmoke.test.ts` (15 casos) que importa y valida invariantes triviales sobre 11 módulos de `src/constants/*` que estaban en 0% (bancosMexico, regimenFiscalSAT, cache, cotizacionInformativa, cotizacionTerrestre, externalUrls, reportes, cotizacionMercancia, proveedorConstants, wizardConstants, cotizacionConstants): sin duplicados, formato de clave SAT `^\d{3}$`, TTL ascendentes, HTTPS en URLs externas, `buildWhatsappUrl` URI-encodea, `labelSubtipoGasto` fallback `—`, etc. Coverage local medido: **35.23% statements/lines** (19 708/55 932), 71.62% branches, 53.36% functions — sobre el piso de 35/35/48/67. 0 cambios en lógica de producción. Nota: alcanzar 38% en una sola iteración no es viable con smoke tests (requeriría ~1 740 statements adicionales sobre módulos grandes); ratchet del umbral se mantiene en 35.
+
 ## [13.44.15] - 2026-06-16
 - **fix(test-hygiene)**: CI rojo en `audit-report > test hygiene baseline` por título duplicado de `describe("buildDesvincularCotizacionUpdates")` entre `src/lib/mappers/__tests__/embarque.test.ts:152` y el nuevo `embarqueCotizacionDesvincular.test.ts:16`. Renombrado el describe del archivo nuevo a `"buildDesvincularCotizacionUpdates — pure unit"` para mantener la regla `duplicate-title=0`. Verificado local: 13/13 verdes (8 mapper + 5 audit-report).
 
