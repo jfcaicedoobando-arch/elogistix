@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  Plus, MoreHorizontal, Download, TrendingUp,
-  CheckCircle, XCircle, BarChart3, AlertTriangle, Archive,
+  Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive,
 } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
@@ -14,13 +13,11 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 import { CotizacionesMobileFilters } from "@/features/cotizacion/components/CotizacionesMobileFilters";
 import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
+import { CotizacionesPageActions } from "@/features/cotizacion/components/CotizacionesPageActions";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -85,33 +82,11 @@ export default function Cotizaciones() {
         title="Cotizaciones"
         description={`${c.filtered.length} cotizaciones encontradas`}
         actions={
-          <>
-            <Button variant="outline" onClick={c.exportar} className="hidden sm:inline-flex">
-              <Download className="h-4 w-4 mr-2" /> Exportar CSV
-            </Button>
-            {c.canEdit && (
-              <Button onClick={c.irANueva} className="hidden sm:inline-flex">
-                <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
-              </Button>
-            )}
-            {c.canEdit && (
-              <Button variant="outline" onClick={() => (window.location.href = "/cotizaciones/nueva/tarifario")} className="hidden sm:inline-flex">
-                <Plus className="h-4 w-4 mr-2" /> Nuevo Tarifario
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="sm:hidden" aria-label="Más acciones">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={c.exportar}>
-                  <Download className="mr-2 h-4 w-4" /> Exportar CSV
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
+          <CotizacionesPageActions
+            canEdit={c.canEdit}
+            onExportar={c.exportar}
+            onNueva={c.irANueva}
+          />
         }
       />
 
