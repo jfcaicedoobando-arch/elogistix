@@ -33,6 +33,9 @@ export interface CachedOrganization {
   logo_url: string | null;
   plan: string | null;
   activo: boolean | null;
+  direccion: string | null;
+  moneda_preferida: string | null;
+  onboarding_completado: boolean | null;
 }
 
 export interface UserContextPayload {
