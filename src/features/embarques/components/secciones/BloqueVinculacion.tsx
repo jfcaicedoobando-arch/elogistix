@@ -171,6 +171,16 @@ export function BloqueVinculacion({
           )}
         </div>
       )}
+
+      <DesvincularCotizacionDialog
+        open={desvincularOpen}
+        onOpenChange={setDesvincularOpen}
+        cotizacionFolio={cotizacionVinculada?.folio}
+        onConfirm={(opcion) => {
+          setDesvincularOpen(false);
+          onDesvincularCotizacion?.(opcion);
+        }}
+      />
     </>
   );
 }
