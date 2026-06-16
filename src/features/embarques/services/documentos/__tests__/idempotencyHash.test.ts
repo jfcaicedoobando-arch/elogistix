@@ -8,12 +8,12 @@ import { sha256Hex, hexToUuid } from "../idempotencyHash";
 
 // jsdom no implementa File.arrayBuffer; lo polyfilleamos vía Response.
 beforeAll(() => {
-  if (!File.prototype.arrayBuffer) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (File.prototype as any).arrayBuffer = function () {
-      return new Response(this as Blob).arrayBuffer();
-    };
-  }
+beforeAll(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (File.prototype as any).arrayBuffer = function () {
+    return new Response(this as Blob).arrayBuffer();
+  };
+});
 });
 
 describe("sha256Hex", () => {
