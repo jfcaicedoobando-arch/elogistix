@@ -30,15 +30,24 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
   const status = usePaso1SectionStatus();
 
   const sections: SectionDef[] = useMemo(() => {
-    const all: SectionDef[] = [
+    if (esMaritimo) {
+      // v13.35.0 — Política tarifa-first: Tarifa precede a Mercancía.
+      return [
+        { id: "seccion-cliente",   label: "Cliente",   done: status.cliente },
+        { id: "seccion-operacion", label: "Operación", done: status.operacion },
+        { id: "seccion-ruta",      label: "Ruta",      done: status.ruta },
+        { id: "seccion-tarifa",    label: "Tarifa",    done: status.tarifa },
+        { id: "seccion-mercancia", label: "Mercancía", done: status.mercancia },
+        { id: "seccion-cierre",    label: "Cierre",    done: status.cierre },
+      ];
+    }
+    return [
       { id: "seccion-cliente",   label: "Cliente",   done: status.cliente },
       { id: "seccion-operacion", label: "Operación", done: status.operacion },
       { id: "seccion-ruta",      label: "Ruta",      done: status.ruta },
       { id: "seccion-mercancia", label: "Mercancía", done: status.mercancia },
-      { id: "seccion-tarifa",    label: "Tarifa",    done: status.tarifa },
       { id: "seccion-cierre",    label: "Cierre",    done: status.cierre },
     ];
-    return esMaritimo ? all : all.filter((s) => s.id !== "seccion-tarifa");
   }, [status, esMaritimo]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
