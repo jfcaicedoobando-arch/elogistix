@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnviarCotizacionEmail, type EnvioRow } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
-import { formatMoneyMxn, formatMoneyUsd } from "@/lib/formatters/money";
+import { formatCurrency } from "@/lib/formatters/numbers";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 
 interface Props {
@@ -130,8 +130,8 @@ export function EnviarCotizacionDialog({ open, onOpenChange, cotizacion, totalMx
         marcarEnviada,
         tasaIva,
         totales: {
-          mxn: totalMxn ? formatMoneyMxn(totalMxn) : undefined,
-          usd: totalUsd ? formatMoneyUsd(totalUsd) : undefined,
+          mxn: totalMxn ? formatCurrency(totalMxn, "MXN") : undefined,
+          usd: totalUsd ? formatCurrency(totalUsd, "USD") : undefined,
         },
         ejecutivo: {
           nombre: user?.user_metadata?.full_name ?? user?.email ?? undefined,
