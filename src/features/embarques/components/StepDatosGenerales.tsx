@@ -1,9 +1,12 @@
 import { useFormContext } from "react-hook-form";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import { useExpedientesCliente, type ExpedienteCliente } from "@/features/embarques/hooks";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { BloqueClienteContactos } from "./secciones/BloqueClienteContactos";
 import { BloqueMercancia } from "./secciones/BloqueMercancia";
 import { BloqueVinculacion } from "./secciones/BloqueVinculacion";
@@ -58,6 +61,9 @@ export function StepDatosGenerales({
   const { watch } = useFormContext<EmbarqueFormValues>();
   const clienteId = watch('clienteId');
   const { data: expedientesCliente = [] } = useExpedientesCliente(clienteId || undefined);
+  const { canCrearEmbarqueLibre } = usePermissions();
+  const requiereCotizacion = !canCrearEmbarqueLibre;
+  const faltaCotizacion = requiereCotizacion && !cotizacionVinculada;
 
   const errorsRecord = errors as Record<string, string>;
   const hasErrors = Object.keys(errorsRecord).length > 0;
@@ -67,6 +73,15 @@ export function StepDatosGenerales({
       <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Datos Generales</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         {hasErrors && <ValidationAlert severity="error" errors={errorsRecord} />}
+        {faltaCotizacion && (
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Cotización requerida</AlertTitle>
+            <AlertDescription>
+              Tu rol requiere iniciar el embarque desde una cotización Aceptada. Selecciona una cotización en la sección inferior para continuar.
+            </AlertDescription>
+          </Alert>
+        )}
         <BloqueVinculacion
           cotizacionesAceptadas={cotizacionesAceptadas}
           cotizacionVinculada={cotizacionVinculada}
