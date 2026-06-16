@@ -59,11 +59,14 @@ export function useHeredadoCotizacion() {
   return useCallback(
     (field: keyof EmbarqueFormValues, getter: CotValueGetter): boolean => {
       if (!cot) return false;
-      const current = getValues(field);
       const original = getter(cot);
-      // Normalizamos a string para comparar booleanos, números y nulls de forma
-      // homogénea sin sorprender al consumidor.
-      return String(current ?? "") === String(original ?? "");
+      // Si la cotización no aportó valor para este campo, NO es heredado
+      // (evita falsos positivos en campos vacíos en ambos lados).
+      if (original === null || original === undefined || original === "") return false;
+      const current = getValues(field);
+      if (current === null || current === undefined || current === "") return false;
+      // Normalizamos a string para comparar booleanos, números y nulls.
+      return String(current) === String(original);
     },
     [cot, getValues],
   );
