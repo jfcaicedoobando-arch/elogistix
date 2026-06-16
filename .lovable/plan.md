@@ -1,66 +1,69 @@
-# Unificar acciones de Cotización → Embarque
+# Forzar wizard al convertir cotización en embarque
 
 ## Problema
 
-Cuando una cotización está **Aceptada** (cliente real, sin embarque vinculado), aparecen 3 botones en `CotizacionDetalleAcciones` que hacen cosas muy parecidas:
+Hoy una cotización Aceptada se puede convertir a embarque de tres formas, dos de ellas en un solo clic:
 
-1. **"Crear embarque borrador"** → RPC `crearEmbarqueBorradorDesdeCotizacion` (1 clic, copia mínima).
-2. **"Crear Embarque (wizard)"** → navega a `/embarques/nuevo` con la cotización pre-vinculada.
-3. **"Generar Embarques"** → abre `DialogGenerarEmbarques`, crea **N embarques** según `num_contenedores` y copia conceptos por BL / por contenedor.
+- **Botón primario "Crear embarque" / "Generar N embarques"** → crea el/los embarques directo desde la cotización, sin pasar por el wizard. Quedan campos críticos vacíos (ruta detallada, fechas reales, documentos, contenedores, instrucciones, etc.) y luego el operador tiene que volver a editar.
+- **Menú ⋯ → "Abrir wizard manual"** → el camino correcto, pero escondido.
+- **Menú ⋯ → "Crear borrador rápido"** → todavía más incompleto (sin conceptos).
 
-Los tres terminan en un embarque, los usuarios no saben cuál usar y la documentación interna mezcla los términos. La sesión del usuario lo confirma: entró a una cotización, vio los botones y se quedó sin hacer clic.
+El usuario reporta que el atajo de un clic genera embarques con demasiada información faltante.
 
 ## Decisión de producto
 
-Dejar **una sola acción primaria visible** y mover las variantes a un menú secundario, con copy claro que explique cuándo usar cada una.
+Eliminar los atajos de "un clic" desde el detalle de la cotización. La única vía visible para pasar de cotización a embarque será **abrir el wizard de Nuevo Embarque** con la cotización pre-vinculada (ya hidrata cliente, ruta sugerida, contenedores, conceptos de costo y venta), y obligar al operador a completar los 4 pasos antes de guardar.
 
-### Caso por defecto (`num_contenedores === 1`)
+### Estado "Aceptada, sin embarque vinculado"
 
-- **Botón primario:** `Crear embarque` → ejecuta el flujo "Generar Embarques" actual (1 embarque, copia conceptos correctamente). Es el camino correcto y no requiere extra clics porque solo hay un contenedor.
-- **Menú "Más opciones" (⋯):**
-  - `Abrir wizard manual` → ruta `/embarques/nuevo` con `cotizacionPrevinculadaId` (para casos donde el operador quiere ajustar antes de guardar).
-  - `Crear borrador rápido (sin conceptos)` → la RPC actual. Se queda como atajo avanzado para soporte / debugging, oculto del flujo principal.
-
-### Caso multi-contenedor (`num_contenedores > 1`)
-
-- **Botón primario:** `Generar N embarques` (mismo handler, mismo `AlertDialog` de confirmación que ya existe).
-- **Menú "Más opciones":** mismas dos entradas que arriba.
+- **Un solo botón primario:** `Crear embarque` → `navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })`.
+- Si `num_contenedores > 1`: la etiqueta se mantiene `Crear embarque` y se añade un `Badge` con el número de contenedores (`{n}`) como pista de que el wizard generará/duplicará varios. La lógica de "N embarques" se resuelve dentro del wizard (paso de contenedores), no en el detalle.
+- **Sin menú ⋯, sin "borrador rápido", sin diálogo de confirmación** (`DialogGenerarEmbarques` deja de mostrarse en este flujo).
 
 ### Estado "ya hay embarque vinculado"
 
-Se conserva tal cual: un único botón **"Ver embarque borrador"**. No cambia.
+Sin cambios: botón `Ver embarque borrador`.
+
+### Resto de estados (Borrador, Enviada, Rechazada, Prospecto)
+
+Sin cambios.
 
 ## Cambios técnicos
 
-1. **`src/features/cotizacion/components/CotizacionDetalleSecciones.tsx`**
-   - Reemplazar el bloque de 3 `<Button>` (líneas 104-121) por:
-     - Un `<Button>` primario cuyo `onClick` es `onAbrirGenerarEmbarques` (ya lanza el `AlertDialog` con candado de costos).
-     - Etiqueta dinámica: `Crear embarque` si `numContenedores === 1`, `Generar {n} embarques` si es mayor.
-     - Un `<DropdownMenu>` adjunto (botón ghost con `MoreHorizontal`, `aria-label="Más opciones de embarque"`) con los dos items:
-       - "Abrir wizard manual" → mismo `navigate("/embarques/nuevo", ...)`.
-       - "Crear borrador rápido" → `onCrearBorrador`, deshabilitado con `isCreandoBorrador`.
-   - Mantener todas las props existentes para no romper el contrato con `CotizacionDetalle.tsx`.
+1. **`src/features/cotizacion/components/CotizacionDetalleSecciones.tsx`** (líneas 108-136)
+   - Reemplazar el bloque `flex items-center gap-1` (botón primario + `DropdownMenu`) por un único `<Button size="sm" onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}>` con etiqueta `Crear embarque` y, cuando `numContenedores > 1`, un `<Badge variant="secondary">` adyacente.
+   - Quitar imports y props que dejan de usarse en este componente: `DropdownMenu*`, `MoreHorizontal`, `onAbrirGenerarEmbarques`, `onCrearBorrador`, `isCreandoBorrador`.
+   - Mantener `embarqueIdVinculado`, `numContenedores`, `onAbrirConvertir`, `onCambiarEstado`.
 
-2. **Sin cambios** en:
-   - `useCotizacionDetalle` controller / handlers (`handleGenerarEmbarques`, `handleCrearBorrador`).
-   - `DialogGenerarEmbarques` ni `BloqueoEmbarqueSinCostosDialog`.
-   - Servicios `convertirCotizacionAEmbarques` / `crearEmbarqueBorradorDesdeCotizacion`.
-   - Tests existentes en `useCotizacionConversions.test.tsx` (los 3 hooks siguen vivos).
+2. **`src/features/cotizacion/components/CotizacionDetalle.tsx`** (consumidor)
+   - Dejar de pasar `onAbrirGenerarEmbarques`, `onCrearBorrador`, `isCreandoBorrador` a `CotizacionDetalleSecciones`.
+   - **No** renderizar más el `DialogGenerarEmbarques` ni el `BloqueoEmbarqueSinCostosDialog` asociado a este flujo (siguen viviendo en el código para usos futuros, sólo se quita la instancia montada desde el detalle).
 
-3. **Telemetría/Bitácora:** no se añaden eventos nuevos; los handlers actuales ya registran su actividad.
+3. **`src/features/cotizacion/hooks/useCotizacionDetalle.ts`**
+   - Marcar como deprecated (comentario `@deprecated v13.38.0 — el flujo único es el wizard`) los handlers `handleGenerarEmbarques` / `handleCrearBorrador` y dejar de exponerlos en el retorno del hook. No se eliminan los servicios subyacentes para no romper otros consumidores ni tests.
 
-4. **Metadatos:**
-   - Bump `APP_VERSION` a `13.37.0` en `src/constants/appVersion.ts`.
-   - Entrada en `CHANGELOG.md` describiendo la unificación.
+4. **Sin cambios** en:
+   - `useConvertirCotizacionAEmbarques`, `useCrearEmbarqueBorrador`, `convertirCotizacionAEmbarques`, `crearEmbarqueBorradorDesdeCotizacion` (siguen disponibles para edge functions / soporte).
+   - `NuevoEmbarque.tsx` ni `useNuevoEmbarqueCotVinculada` (ya hidratan la cotización pre-vinculada vía `cotizacionPrevinculadaId`).
+   - Wizard de cotización ni servicios de wizard.
+
+5. **Tests**
+   - Actualizar/ajustar el render de `CotizacionDetalleSecciones` (si tiene test) para reflejar el botón único.
+   - Los tests de `useCotizacionConversions` (`convertir`, `crear borrador`) permanecen — sólo dejan de invocarse desde el detalle.
+
+6. **Metadatos**
+   - Bump `APP_VERSION` a `13.38.0` en `src/constants/appVersion.ts`.
+   - Entrada en `CHANGELOG.md` describiendo el cambio: "Eliminados atajos de un clic. Cotización Aceptada ahora siempre abre el wizard de Nuevo Embarque con la cotización pre-vinculada."
 
 ## Fuera de alcance
 
-- No se elimina ninguno de los 3 servicios subyacentes (la RPC y el wizard manual siguen disponibles para casos de soporte).
-- No se cambia el flujo de portal cliente, ni el de cotización informativa, ni el de cotizaciones en estado Borrador/Enviada.
-- No se renombran rutas ni se reordenan secciones del detalle.
+- No se cambian las RPCs ni servicios de generación de embarques.
+- No se elimina el `DialogGenerarEmbarques` del codebase (sólo se desmonta del flujo de detalle).
+- No se modifica el portal cliente ni cotizaciones informativas.
+- No se ajusta el wizard de embarque (ya soporta multi-contenedor y conceptos heredados).
 
 ## Validación
 
-- Verificar visualmente en `/cotizaciones/<id>` (Aceptada, cliente real, sin embarque) que aparecen 1 botón + 1 menú.
-- Revisar que al pulsar el botón primario se abre `DialogGenerarEmbarques` (con candado de costos cuando aplique).
-- Confirmar que los items del menú navegan / disparan la RPC correctamente.
+- En `/cotizaciones/<id>` (Aceptada, cliente real, sin embarque): aparece **un solo botón** `Crear embarque` (+ badge si `num_contenedores > 1`), sin menú ⋯.
+- Al pulsarlo, navega a `/embarques/nuevo` con la cotización pre-vinculada, el wizard hidrata cliente/ruta/conceptos y obliga a completar los 4 pasos.
+- Estado con embarque vinculado sigue mostrando `Ver embarque borrador`.

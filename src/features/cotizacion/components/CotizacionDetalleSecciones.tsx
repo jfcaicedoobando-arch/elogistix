@@ -2,13 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { formatDate } from "@/lib/formatters";
+
 
 interface EmbarqueVinculado {
   id: string;
@@ -64,16 +61,13 @@ interface AccionesProps {
   numContenedores: number;
   cotizacionId: string;
   embarqueIdVinculado: string | null;
-  isCreandoBorrador: boolean;
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
-  onAbrirGenerarEmbarques: () => void;
-  onCrearBorrador: () => void;
 }
 
 export function CotizacionDetalleAcciones({
-  estado, esProspecto, numContenedores, cotizacionId, embarqueIdVinculado, isCreandoBorrador,
-  onCambiarEstado, onAbrirConvertir, onAbrirGenerarEmbarques, onCrearBorrador,
+  estado, esProspecto, numContenedores, cotizacionId, embarqueIdVinculado,
+  onCambiarEstado, onAbrirConvertir,
 }: AccionesProps) {
   const navigate = useNavigate();
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
@@ -106,35 +100,16 @@ export function CotizacionDetalleAcciones({
         </Button>
       )}
       {esAceptada && !esProspecto && !embarqueIdVinculado && (
-        <div className="flex items-center gap-1">
-          <Button size="sm" onClick={onAbrirGenerarEmbarques}>
-            {numContenedores > 1 ? `Generar ${numContenedores} embarques` : "Crear embarque"}
-            {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" aria-label="Más opciones de embarque">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>Opciones avanzadas</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
-              >
-                Abrir wizard manual
-                <span className="ml-2 text-xs text-muted-foreground">(ajustar antes de guardar)</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onCrearBorrador} disabled={isCreandoBorrador}>
-                {isCreandoBorrador ? "Creando…" : "Crear borrador rápido"}
-                <span className="ml-2 text-xs text-muted-foreground">(sin conceptos)</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <Button
+          size="sm"
+          onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
+        >
+          Crear embarque
+          {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
+        </Button>
       )}
     </div>
   );
 }
+
 

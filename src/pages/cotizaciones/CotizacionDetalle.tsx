@@ -9,8 +9,8 @@ import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/features/cotizacion/components/CotizacionDetalleSecciones";
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
-import { DialogGenerarEmbarques } from "@/features/cotizacion/components/detalle/DialogGenerarEmbarques";
-import { BloqueoEmbarqueSinCostosDialog } from "@/features/cotizacion/components/BloqueoEmbarqueSinCostosDialog";
+
+
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
@@ -31,12 +31,11 @@ export default function CotizacionDetalle() {
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
     nombreDestinatario,
     showConvertir, setShowConvertir,
-    showConfirmarConvertir, setShowConfirmarConvertir,
     clienteForm, setClienteForm,
-    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques, handleCrearBorrador,
-    showBloqueoSinCostos, setShowBloqueoSinCostos, irACargarCostos,
-    convertirProspecto, convertirAEmbarques, crearBorrador, navigate,
+    handleCambiarEstado, abrirDialogConvertir, handleConvertir,
+    convertirProspecto, navigate,
   } = useCotizacionDetalleState(id);
+
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
   if (isLoading) {
@@ -71,13 +70,11 @@ export default function CotizacionDetalle() {
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id!}
           embarqueIdVinculado={cotizacion.embarque_id ?? null}
-          isCreandoBorrador={crearBorrador.isPending}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
-          onAbrirGenerarEmbarques={() => setShowConfirmarConvertir(true)}
-          onCrearBorrador={handleCrearBorrador}
         />
       )}
+
 
       {cotizacion.es_prospecto && (
         <Card className="border-warning/30 bg-warning/10">
@@ -143,19 +140,7 @@ export default function CotizacionDetalle() {
         isPending={convertirProspecto.isPending}
       />
 
-      <DialogGenerarEmbarques
-        open={showConfirmarConvertir}
-        onOpenChange={setShowConfirmarConvertir}
-        numContenedores={cotizacion.num_contenedores}
-        isPending={convertirAEmbarques.isPending}
-        onConfirmar={handleGenerarEmbarques}
-      />
-
-      <BloqueoEmbarqueSinCostosDialog
-        open={showBloqueoSinCostos}
-        onOpenChange={setShowBloqueoSinCostos}
-        onIrACargarCostos={irACargarCostos}
-      />
     </div>
   );
 }
+
