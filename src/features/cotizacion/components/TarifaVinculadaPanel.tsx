@@ -20,44 +20,10 @@ import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVincula
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
 import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
-import type { TopTarifaRow } from "@/features/costeo/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
-
-const normalizarNombreContenedor = (s: string) =>
-  s.toLowerCase().replace(/['"'`]/g, "").replace(/\s+/g, " ").trim();
-
-// ── Pure helpers ────────────────────────────────────────────────────────────
-
-type TipoContenedorItem = { id: string; name: string };
-
-export function resolveTipoContenedorId(
-  tipoContenedorActual: string | undefined,
-  tiposContenedor: TipoContenedorItem[],
-): string | undefined {
-  if (!tipoContenedorActual) return undefined;
-  if (tiposContenedor.some((t) => t.id === tipoContenedorActual)) return tipoContenedorActual;
-  const objetivo = normalizarNombreContenedor(tipoContenedorActual);
-  return tiposContenedor.find((t) => normalizarNombreContenedor(t.name) === objetivo)?.id;
-}
-
-export interface TarifaWarnings {
-  vencidaAntesDeValidez: boolean;
-  tipoMismatch: boolean;
-}
-
-export function computeTarifaWarnings(
-  tarifa: Pick<TopTarifaRow, "vigente_hasta" | "tipo_contenedor_id"> | null | undefined,
-  validez: Date | null | undefined,
-  tipoContenedorActual: string | undefined,
-): TarifaWarnings {
-  return {
-    vencidaAntesDeValidez: !!tarifa && !!validez && new Date(tarifa.vigente_hasta) < validez,
-    tipoMismatch:
-      !!tarifa && !!tipoContenedorActual && tipoContenedorActual !== tarifa.tipo_contenedor_id,
-  };
-}
 
 // ── Component ────────────────────────────────────────────────────────────────
 
