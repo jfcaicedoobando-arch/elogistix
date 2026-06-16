@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.2] - 2026-06-16
+- **feat(roles)**: el **Gerente Comercial** ahora puede crear cotizaciones nuevas (botón "Nueva Cotización" visible) y ver el módulo de **Costeo / Tarifarios** en el sidebar (tarifas marítimas, rutas CN→MX, agentes, navieras y tarifa de demoras). Se incluyó en los grupos `OPERATIONS`, `SALES` y `FINANCE_VIEWERS` de `usePermissions` para habilitar edición de cotizaciones y visibilidad de márgenes.
+
 ## [13.44.1] - 2026-06-16
 - **fix(ci)**: estabiliza la corrida de CI tras el alta del rol Gerente Comercial. Quita dos `any` en plantillas transaccionales (`registry.ts` y `send-transactional-email/index.ts`), elimina los `export default` no usados de `HeredadoBadge` y `DesvincularCotizacionDialog` (sólo se importaban con nombre), y corrige el test de `compareBy` en `embarquesPageHelpers` para usar expedientes con consecutivo numérico (el getter extrae dígitos; "A"/"B" colapsaban a 0 y rompían el aserto de orden).
 
