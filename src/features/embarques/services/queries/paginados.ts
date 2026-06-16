@@ -9,12 +9,13 @@ type EmbarqueRow = Tables<"embarques">;
  * campos reales de DB en `SORT_KEY_TO_COLUMN`.
  */
 export const SORTABLE_EMBARQUE_COLUMNS = [
-  "created_at", "expediente", "cliente_nombre", "modo", "estado", "etd", "eta", "operador",
+  "created_at", "expediente", "expediente_num", "cliente_nombre", "modo", "estado", "etd", "eta", "operador",
 ] as const;
 export type SortableEmbarqueColumn = typeof SORTABLE_EMBARQUE_COLUMNS[number];
 
+// La columna visible "Expediente" se ordena por el consecutivo numérico (ignora prefijo).
 export const SORT_KEY_TO_COLUMN: Record<string, SortableEmbarqueColumn> = {
-  expediente: "expediente",
+  expediente: "expediente_num",
   cliente: "cliente_nombre",
   modo: "modo",
   estado: "estado",
@@ -53,7 +54,7 @@ export async function fetchEmbarquesPaginados(
 ): Promise<EmbarquesPaginadosResult> {
   const sortBy: SortableEmbarqueColumn = SORTABLE_EMBARQUE_COLUMNS.includes(f.sortBy as SortableEmbarqueColumn)
     ? (f.sortBy as SortableEmbarqueColumn)
-    : "created_at";
+    : "expediente_num";
   const from = f.page * f.pageSize;
 
   const { data, error } = await supabase.rpc("embarques_listado", {

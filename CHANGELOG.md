@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.42.0] - 2026-06-16
+- **fix(embarques)**: el listado se ordena por el consecutivo numérico del expediente ignorando el prefijo (ELNAC, ELIMP, DEMO-…). Aplica al orden por defecto (descendente) y al hacer clic en la columna **Expediente**. Empates desempatan por expediente completo y luego por fecha de creación.
+
 ## [13.41.0] - 2026-06-16
 - **feat(cotizaciones)**: envío de cotizaciones por correo al cliente desde el detalle.
   - Nuevo botón **Enviar por correo** (o **Reenviar** si ya hubo envíos) en el encabezado del detalle.

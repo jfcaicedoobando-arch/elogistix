@@ -40,12 +40,12 @@ describe("fetchEmbarquesPaginados", () => {
     expect(args.p_offset).toBe(0);
   });
 
-  it("falls back to created_at sort when sortBy is invalid", async () => {
+  it("falls back to expediente_num sort when sortBy is invalid", async () => {
     mock.setRpcResult("embarques_listado", { data: [], error: null });
     await fetchEmbarquesPaginados({ ...BASE_FILTERS, sortBy: "invalid_col" as never });
     const call = mock.rpcCalls.find((c) => c.fn === "embarques_listado");
     const args = call?.args as { p_sort_by: string };
-    expect(args.p_sort_by).toBe("created_at");
+    expect(args.p_sort_by).toBe("expediente_num");
   });
 
   it("extracts total_count and extras from enriched rows", async () => {

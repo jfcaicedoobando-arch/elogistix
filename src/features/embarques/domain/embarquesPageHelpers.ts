@@ -11,8 +11,15 @@ export interface EmbarqueListExtras {
 
 export type SortDir = "asc" | "desc";
 
-export const SORT_GETTERS: Record<string, (e: EmbarqueRow) => string> = {
-  expediente: (e) => e.expediente ?? "",
+/** Extrae el consecutivo numérico del expediente ignorando prefijo (ELNAC, ELIMP, DEMO-…). */
+export function expedienteConsecutivo(expediente: string | null | undefined): number {
+  if (!expediente) return 0;
+  const digits = expediente.replace(/\D/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+export const SORT_GETTERS: Record<string, (e: EmbarqueRow) => string | number> = {
+  expediente: (e) => expedienteConsecutivo(e.expediente),
   cliente: (e) => e.cliente_nombre ?? "",
   modo: (e) => e.modo ?? "",
   estado: (e) => e.estado ?? "",

@@ -80,7 +80,8 @@ export function buildEmbarqueColumns({
       header: "Expediente",
       accessorFn: (e) => e.expediente,
       enableSorting: true,
-      sortingFn: sortByString<EmbarqueRow>((e) => e.expediente),
+      // Ordena por consecutivo numérico ignorando el prefijo (ELNAC, ELIMP, DEMO-…).
+      sortingFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
       meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
         const e = row.original;
