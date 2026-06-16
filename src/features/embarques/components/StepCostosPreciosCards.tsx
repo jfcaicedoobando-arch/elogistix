@@ -60,7 +60,7 @@ export function CostosCard(p: CostosCardProps) {
           <div className="border-t pt-3 mt-3 text-sm text-right">
             <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(p.totalUSD, 'USD')}</span></div>
             {p.filasMixtasCount > 0 && (
-              <p className="text-xs text-amber-600 mt-1">
+              <p className="text-xs text-warning mt-1">
                 {p.filasMixtasCount} fila(s) convertida(s) a USD con TC vigente.
               </p>
             )}
@@ -118,7 +118,7 @@ export function VentasCard(p: VentasCardProps) {
           <div className="border-t pt-3 mt-3 text-sm text-right">
             <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(p.totalUSD, 'USD')}</span></div>
             {p.filasMixtasCount > 0 && (
-              <p className="text-xs text-amber-600 mt-1">
+              <p className="text-xs text-warning mt-1">
                 {p.filasMixtasCount} fila(s) convertida(s) a USD con TC vigente.
               </p>
             )}
