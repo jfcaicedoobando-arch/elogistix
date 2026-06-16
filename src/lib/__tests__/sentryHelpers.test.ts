@@ -1,52 +1,13 @@
 /**
- * Tests para `sentryHelpers`: detección HMR/React-Refresh, scrub PII de
- * eventos y sampling dinámico por ruta.
+ * Tests para `sentryHelpers`: scrub PII de eventos y sampling dinámico por
+ * ruta. Las detecciones de React-Refresh ya están cubiertas por
+ * `src/lib/__tests__/sentry.test.ts`.
  */
 import { describe, it, expect } from "vitest";
 import type * as Sentry from "@sentry/react";
-import {
-  isReactRefreshHmrError,
-  isReactRefreshStackTrace,
-  scrubEventPii,
-  sampleByRoute,
-} from "@/lib/sentryHelpers";
+import { scrubEventPii, sampleByRoute } from "@/lib/sentryHelpers";
 
-describe("isReactRefreshHmrError", () => {
-  it("true cuando mensaje 'is not defined' y stack contiene react-refresh", () => {
-    const e = new Error("pendienteOpen is not defined");
-    e.stack = "at performReactRefresh (react-refresh.js:1)";
-    expect(isReactRefreshHmrError(e)).toBe(true);
-  });
-  it("false si mensaje no incluye 'is not defined'", () => {
-    const e = new Error("otro error");
-    e.stack = "react-refresh";
-    expect(isReactRefreshHmrError(e)).toBe(false);
-  });
-  it("false si stack no es de react-refresh", () => {
-    const e = new Error("x is not defined");
-    e.stack = "at someUserCode (app.tsx:1)";
-    expect(isReactRefreshHmrError(e)).toBe(false);
-  });
-});
-
-describe("isReactRefreshStackTrace", () => {
-  it("detecta abs_path con @react-refresh", () => {
-    expect(isReactRefreshStackTrace({ frames: [{ abs_path: "/node_modules/@react-refresh/x.js" }] })).toBe(true);
-  });
-  it("detecta function performReactRefresh / scheduleRefresh", () => {
-    expect(isReactRefreshStackTrace({ frames: [{ function: "performReactRefresh" }] })).toBe(true);
-    expect(isReactRefreshStackTrace({ frames: [{ function: "scheduleRefresh" }] })).toBe(true);
-  });
-  it("false para input inválido o frames vacíos", () => {
-    expect(isReactRefreshStackTrace(null)).toBe(false);
-    expect(isReactRefreshStackTrace("not-object")).toBe(false);
-    expect(isReactRefreshStackTrace({})).toBe(false);
-    expect(isReactRefreshStackTrace({ frames: [] })).toBe(false);
-    expect(isReactRefreshStackTrace({ frames: [{ function: "render" }] })).toBe(false);
-  });
-});
-
-describe("scrubEventPii", () => {
+describe("scrubEventPii — recorta PII en eventos Sentry", () => {
   it("recorta event.user a sólo { id } y scrubea URL/mensaje/excepción", () => {
     const evt = {
       user: { id: "u-1", email: "alguien@test.com", ip_address: "1.2.3.4" },
@@ -66,7 +27,7 @@ describe("scrubEventPii", () => {
   });
 });
 
-describe("sampleByRoute", () => {
+describe("sampleByRoute — sampling dinámico por ruta", () => {
   const at = (pathname: string) => ({ location: { pathname } });
   it("rutas de marketing → 0", () => {
     expect(sampleByRoute(at("/"))).toBe(0);
