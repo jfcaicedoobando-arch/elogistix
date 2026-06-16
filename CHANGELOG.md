@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.41.0] - 2026-06-16
+- **feat(cotizaciones)**: envío de cotizaciones por correo al cliente desde el detalle.
+  - Nuevo botón **Enviar por correo** (o **Reenviar** si ya hubo envíos) en el encabezado del detalle.
+  - Diálogo `EnviarCotizacionDialog`: multiselect de contactos del cliente (preselecciona el de tipo "Cotizaciones"), email manual, CC fijo al usuario actual + CC manual, asunto/mensaje editables.
+  - Template `cotizacion-enviada` (React Email) branded Libre Carga con resumen (folio, ruta, incoterm, vigencia, totales MXN/USD), CTAs **Ver en el portal** y **Descargar PDF**, y firma del ejecutivo.
+  - Edge function `enviar-cotizacion-email` en 2 pasos (`prepare` → signed upload URL, `send` → invoca `send-transactional-email` por destinatario y CC, registra envío y bitácora).
+  - PDF generado en cliente con la plantilla existente y subido al bucket privado `cotizaciones-pdf` (RLS por `organization_id`); el correo lleva link firmado válido 30 días.
+  - Cotización en `Borrador` pasa automáticamente a **Enviada** y se registra `fecha_envio`.
+  - Nueva tabla `cotizacion_envios` con RLS por organización + sección **Historial de envíos por correo** en el detalle.
+  - Infraestructura de email transaccional activada (queues, cron, suppression, unsubscribe). Página `/unsubscribe` con confirmación de baja.
+
 ## [13.40.0] - 2026-06-16
 - **feat(cotizaciones)**: ciclo de vida automático para mantener la BD limpia.
   - Nuevo estado **Archivada** y reutilización de **Vencida** como estado de housekeeping.
