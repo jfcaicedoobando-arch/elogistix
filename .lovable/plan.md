@@ -1,106 +1,78 @@
-# Mejora integral del proceso de cotización
+# Plan — Continuación optimización cotizaciones
 
-Consolidación de lo platicado: reordenar el wizard, atajo "sin desglose" con candado, y precarga completa al crear embarque desde cotización.
+Bloque 2 (cotizar sin desglose + candado embarque) ya quedó implementado en v13.27.0. Este plan cubre los dos bloques restantes.
+
+---
 
 ## Bloque 1 — Reordenar Paso 1 del wizard (UX conversacional)
 
-Nuevo orden (de lo general a lo específico):
+**Objetivo:** que el llenado siga el orden natural en que un ejecutivo piensa la cotización, con validación inline y resumen sticky.
 
-1. **¿Para quién?** — Cliente / prospecto.
-2. **¿Qué operación?** — Modo, Tipo, Incoterm (+ Modalidad si Terrestre).
-3. **¿De dónde a dónde?** — Origen, destino, tránsito.
-4. **¿Qué se mueve?** — FCL/LCL, contenedor, peso, volumen, dims, MSDS.
-5. **Tarifa vinculada** (sólo marítimo) — ahora con ruta + contenedor ya capturados para que el botón "Sugerir tarifa" funcione bien.
-6. **Condiciones** — Días libres, almacenaje, seguro, carta garantía.
-7. **Cierre** — # embarques + Notas (acordeón abierto por defecto).
+### Nuevo orden de secciones (acordeones)
+```text
+1. Cliente            (cliente + contacto + vendedor)
+2. Operación          (modo transporte, tipo operación, incoterm)
+3. Ruta               (origen, destino, tránsito sugerido)
+4. Mercancía          (FCL/LCL, contenedor, # piezas, peso, vol, dims, MSDS/peligroso)
+5. Tarifa vinculada   (sólo marítimo, botón "Sugerir tarifa" usando ruta+contenedor)
+6. Condiciones        (días libres, almacenaje, seguro, carta garantía)
+7. Cierre             (# embarques estimados + Notas)  ← acordeón abierto por default
+```
 
-Mejoras tácticas en Paso 1:
+### Tácticas UX
+- Sidebar sticky derecho con resumen vivo (cliente, ruta, contenedor, tarifa) y CTA "Continuar a costos".
+- Validación inline por sección (no esperar al submit).
+- Badge "Heredado de tarifa" en campos que se autocompletan al elegir tarifa marítima.
+- Botón "Sugerir tarifa" en sección 5 que filtra `costeo_tarifas` por ruta + contenedor y muestra Top 3.
+- Cada acordeón muestra check verde cuando sus campos requeridos están completos.
 
-- Resumen lateral sticky con lo capturado.
-- Validación inline por bloque (no esperar al final).
-- Botón "Sugerir tarifa" basado en ruta + contenedor.
-- Badge "Heredado de tarifa" en campos auto-llenados desde una tarifa marítima.
+### Archivos a tocar
+- `src/features/cotizacion/components/wizard/Paso1Datos.tsx` (reordenar secciones, agregar acordeones con estado de validez).
+- `src/features/cotizacion/components/wizard/CotizacionWizardLayout.tsx` (sidebar resumen sticky).
+- Nuevo: `src/features/cotizacion/components/wizard/ResumenStickyCotizacion.tsx`.
+- Nuevo: `src/features/cotizacion/components/wizard/SugerirTarifaButton.tsx` (consulta a `costeo_tarifas`).
+- Nuevo: `src/features/cotizacion/components/wizard/HeredadoBadge.tsx` (reutilizable también en Bloque 3).
 
-## Bloque 2 — "Cotizar sin desglose" con candado duro
+**Fuera de alcance:** no se cambian validaciones de negocio, ni Paso 2/3, ni el schema.
 
-### En Paso 1
+---
 
-- Botón secundario "Cotizar sin desglose de costos" junto al primario "Continuar a costos".
-- Al hacer click: **modal destructivo** (no toast) con:
-  - Título: "¿Cotizar sin cargar costos?"
-  - Explicación: sin P&L, sin margen calculado, embarque **bloqueado** hasta cargar costos, práctica desaconsejada.
-  - Checkbox obligatorio: "Entiendo que esta cotización no tiene costos cargados y el embarque no podrá iniciarse hasta completarlos."
-  - Botones: "Cancelar" (default) / "Sí, cotizar sin desglose" (destructive, deshabilitado hasta marcar checkbox).
-- Si confirma: salta directo a Paso 3 (Cotización Cliente) y marca `cotizaciones.sin_desglose_costos = true`.
+## Bloque 3 — Precarga ampliada cotización → embarque
 
-### En Paso 3, detalle y listado
+Hoy `mapConceptosVentaFromCotizacion` y `mapConceptosCostoFromCotizacion` ya copian conceptos. Falta heredar el resto del contexto operativo.
 
-- Banner persistente (warning amarillo): "Esta cotización fue creada sin desglose de costos. Cargar costos antes de convertir a embarque." CTA "Cargar costos ahora" → abre Paso 2.
-- Badge "Sin costos" en el listado mientras `cotizacion_costos.length === 0`.
-- Badge interno "Sin desglose interno" en preview (no en PDF cliente).
-
-### Candado al crear embarque
-
-- En `useNuevoEmbarqueCotVinculada` y todo botón "Convertir a embarque":
-  - Validar: si `cotizacion_costos` tiene 0 filas → **bloquear**.
-  - Modal de bloqueo: "No se puede crear el embarque. Esta cotización no tiene costos cargados." CTA "Ir a cargar costos" / "Cancelar".
-- Regla canónica: el candado se basa en existencia de `cotizacion_costos`, no en el flag (por si se cargaron costos después).
-
-### Bitácora
-
-- `cotizacion_sin_desglose_creada` al usar el atajo.
-- `embarque_bloqueado_sin_costos` cuando se intenta convertir y se bloquea.
-
-## Bloque 3 — Precarga completa al crear embarque desde cotización
-
-Hoy `mapConceptosVentaFromCotizacion` / `mapConceptosCostoFromCotizacion` ya precargan conceptos. **Agregar precarga de:**
-
+### Campos adicionales a precargar
 - **Ruta:** origen, destino, tránsito.
-- **Mercancía:** tipo_carga, tipo_embarque, tipo_contenedor, # contenedores, peso, volumen, piezas, dimensiones.
-- **MSDS / peligrosos:** referencia + checklist de documentos requeridos.
-- **Condiciones:** días libres, almacenaje, seguro, carta garantía.
-- **Tarifa marítima:** como vínculo (`tarifa_id`), **no copia** de valores.
-- **Notas** de la cotización.
+- **Mercancía:** `tipo_carga`, `tipo_embarque`, `tipo_contenedor`, # contenedores, peso, volumen, piezas, dimensiones.
+- **MSDS / peligrosos:** flag + clase IMO + UN number.
+- **Condiciones:** días libres demoras, almacenaje, seguro, carta garantía.
+- **Tarifa marítima:** se pasa como `tarifa_id` (referencia, no copia de valores).
+- **Notas internas / cliente.**
 
-Reglas de herencia:
+### Reglas
+- Cada campo heredado lleva badge "Heredado de cotización FOLIO-XXX" (componente `HeredadoBadge` compartido con Bloque 1).
+- Cambios en el embarque **no** modifican la cotización origen.
+- Al desvincular cotización del embarque: modal con 3 opciones — conservar datos, limpiar sólo conceptos, limpiar todo lo heredado.
 
-- Mostrar badge "Heredado de cotización FOLIO-XXX" en todos los campos precargados.
-- Cambios en el embarque NO modifican la cotización.
-- **Desvincular cotización** en el embarque ofrece 3 opciones:
-  1. Conservar datos heredados (default).
-  2. Limpiar sólo conceptos.
-  3. Limpiar todo lo heredado.
+### Archivos a tocar
+- `src/lib/mappers/embarqueWizard.ts` (extender mapper actual con los nuevos campos).
+- `src/features/embarques/hooks/useNuevoEmbarqueCotVinculada.ts` (consumir el mapper extendido).
+- `src/features/embarques/components/wizard/*` (mostrar badge "Heredado" en campos precargados).
+- Nuevo: `src/features/embarques/components/DesvincularCotizacionDialog.tsx`.
 
-## Detalles técnicos
+**Fuera de alcance:** no se cambia el wizard de embarques (sólo recibe más campos pre-llenados), ni se altera el cálculo de margen.
 
-- **Schema:** migración que agrega `sin_desglose_costos boolean NOT NULL DEFAULT false` a `cotizaciones`.
-- **Componentes nuevos:**
-  - `ConfirmSinDesgloseDialog.tsx`
-  - `SinDesgloseBanner.tsx`
-  - `BloqueoEmbarqueSinCostosDialog.tsx`
-  - `HeredadoBadge.tsx` (reusable)
-- **Componentes a modificar:**
-  - `CotizacionWizardLayout.tsx` y subcomponentes de Paso 1 (reorden + botón sin desglose + resumen sticky).
-  - Listado y detalle de cotización (banner + badge + filtro opcional).
-  - `useNuevoEmbarqueCotVinculada` + handlers de "Convertir a embarque" (candado + precarga ampliada).
-  - `embarqueWizard.ts` / mappers — extender precarga a ruta, mercancía, condiciones, notas, tarifa_id.
-- **Cumple reglas del proyecto:** componentes ≤200 líneas (dividir si crece), sin `any`, manejar `error` de Supabase, cleanup en effects, RHF con `{shouldValidate, shouldDirty}` + `trigger()`, no inline styles.
-- **Changelog + APP_VERSION:** bump menor por bloque entregado, entrada en `CHANGELOG.md` raíz.
+---
 
-## Orden sugerido de entrega
+## Preguntas antes de implementar
 
-1. **Bloque 2** (sin desglose + candado) — riesgo operativo más alto, gana primero.
-2. **Bloque 3** (precarga ampliada) — desbloquea la promesa "cotización → embarque sin retrabajo".
-3. **Bloque 1** (reorden + UX) — mejora continua, no urgente.
+1. ¿Default en desvinculación: **"Conservar datos"** o **"Limpiar sólo conceptos"**?
+2. ¿"Sugerir tarifa" debe ser botón manual o auto-trigger en cuanto ruta + contenedor estén llenos?
+3. ¿El sidebar sticky de resumen lo quieres también en Paso 2 y Paso 3, o sólo Paso 1?
 
-## Fuera de alcance
+---
 
-- No tocar Paso 2 (cost board) ni el motor de cálculo de márgenes.
-- No permitir cargar costos parciales como bypass del candado.
-- No cambiar el wizard de embarque más allá de aceptar más campos precargados.
-
-## Preguntas abiertas
-
-- ¿"Cotizar sin desglose" disponible para cualquier vendedor o solo para gerencia comercial (role gate)? si, para cuialquier vendedor
-- ¿Quieres filtro rápido "Sin costos" en la toolbar del listado de cotizaciones? no es necesario
-- En la desvinculación, ¿el default debe ser "Conservar datos" o "Limpiar sólo conceptos"? conservar datos
+## Entregables
+- Bump `APP_VERSION` a `13.28.0` y entrada en `CHANGELOG.md`.
+- Sin migraciones nuevas (todo el schema ya existe).
+- Tests: actualizar `embarqueWizard.test.ts` con los campos nuevos.
