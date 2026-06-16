@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.3] - 2026-06-16
+- **test(e2e/wizard-teclado)**: Nuevo spec Playwright `07-wizard-embarque-teclado.spec.ts` que recorre el wizard de Nuevo Embarque con sólo Tab/Enter/flechas y previene regresiones de la auditoría de accesibilidad: foco directo al combobox de cotización, apertura con Enter, selección con `ArrowDown` + Enter, aparición de la píldora "Vinculada a COT-..." y de ≥3 badges `HEREDADO`, desaparición reactiva del badge al editar la descripción (vía `id="emb-descripcion-mercancia"`), Enter dentro de un input no rompe el form (verifica que seguimos en `/embarques/nuevo`) y `StepIndicator` se expone con `role="list"` accesible. Se salta automáticamente si no hay `E2E_HAS_SEED=1`.
+
 ## [13.33.2] - 2026-06-16
 - **fix(a11y/wizards-teclado)**: Auditoría visual y de teclado aplicada a los wizards de Cotización y Nuevo Embarque. (1) Botón Trash en `DocumentChecklist` ahora expone `aria-label="Eliminar archivo {nombre}"`. (2) `LabelHeredable` admite `htmlFor` y los inputs de `BloqueMercancia` (descripción, tipo carga, peso, volumen, piezas, MSDS) reciben `id` para asociación label↔control correcta. (3) `EmbarqueWizardLayout` ahora auto-foca el primer control al cambiar de paso, en paridad con `CotizacionWizardLayout`. (4) El contenido del wizard de embarque se envuelve en `<form onSubmit>` con submit `sr-only`, habilitando Enter→Siguiente desde cualquier input (excluye textarea, botones y combobox abiertos). (5) `StepIndicator` acepta `onStepClick`; los pasos ya visitados se renderizan como `<button>` con `aria-label` para saltar hacia atrás con teclado. Ambos wizards lo aprovechan.
 
