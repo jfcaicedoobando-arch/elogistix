@@ -15,7 +15,7 @@ export function CartaGarantiaBadge({ tieneCarta, vigenteHasta }: Props) {
     return <Badge variant="outline">Sin carta</Badge>;
   }
   if (estado === "vigente") {
-    return <Badge className="bg-emerald-600 hover:bg-emerald-600">Carta vigente</Badge>;
+    return <Badge className="bg-success text-success-foreground hover:bg-success/90">Carta vigente</Badge>;
   }
   if (estado === "por_vencer") {
     return <Badge className="bg-warning hover:bg-warning">Por vencer</Badge>;

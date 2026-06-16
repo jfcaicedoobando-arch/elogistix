@@ -1,6 +1,6 @@
 /**
  * Editor de filas dinámicas para recargos de una tarifa marítima.
- * Conceptos sugeridos: BAF, LSS, ISPS, THC Origen, Otro.
+ * Conceptos sugeridos: BAF, LSS, ISPS, THC Origen, Cargos en Origen/Destino, Otro.
  */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +47,14 @@ export function TarifaRecargosEditor({ value, onChange }: Props) {
       {value.map((r, i) => (
         <div key={i} className="grid grid-cols-12 gap-2 items-end">
           <div className="col-span-4">
+            <Label htmlFor={`recargo-concepto-${i}`} className="sr-only">{`Concepto del recargo ${i + 1}`}</Label>
             <Select value={r.concepto} onValueChange={(v) => update(i, { concepto: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger
+                id={`recargo-concepto-${i}`}
+                aria-label={`Concepto del recargo ${i + 1}`}
+              >
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {CONCEPTOS.map((c) => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -57,18 +63,27 @@ export function TarifaRecargosEditor({ value, onChange }: Props) {
             </Select>
           </div>
           <div className="col-span-3">
+            <Label htmlFor={`recargo-monto-${i}`} className="sr-only">{`Monto del recargo ${i + 1}`}</Label>
             <Input
+              id={`recargo-monto-${i}`}
               type="number"
               min={0}
               step="0.01"
               value={r.monto}
               onChange={(e) => update(i, { monto: Number(e.target.value) || 0 })}
               placeholder="Monto USD"
+              aria-label={`Monto del recargo ${i + 1} en USD`}
             />
           </div>
           <div className="col-span-3">
+            <Label htmlFor={`recargo-lado-${i}`} className="sr-only">{`Lado del recargo ${i + 1}`}</Label>
             <Select value={r.lado ?? "origen"} onValueChange={(v) => update(i, { lado: v as "origen" | "destino" })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger
+                id={`recargo-lado-${i}`}
+                aria-label={`Lado del recargo ${i + 1}`}
+              >
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="origen">Origen</SelectItem>
                 <SelectItem value="destino">Destino</SelectItem>
@@ -81,7 +96,7 @@ export function TarifaRecargosEditor({ value, onChange }: Props) {
               size="icon"
               variant="ghost"
               onClick={() => remove(i)}
-              aria-label="Quitar recargo"
+              aria-label={`Quitar recargo ${i + 1}`}
             >
               <Trash2 className="size-4 text-destructive" />
             </Button>
