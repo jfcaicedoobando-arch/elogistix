@@ -93,7 +93,7 @@ export default function CosteoAgentes() {
       <PageHeader
         title="Agentes de costeo"
         description="Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito se usan como criterio principal de desempate."
-        actions={<Button onClick={() => { setIntentoEnvio(false); setOpen(true); }}>
+        actions={<Button onClick={abrirNuevo}>
           <Plus className="size-4 mr-2" />
           Nuevo agente
         </Button>}
