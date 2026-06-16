@@ -73,9 +73,10 @@ BEGIN
       CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 'Emitida');
 
   INSERT INTO public.pagos_factura(
-    id, organization_id, factura_id, monto, moneda, fecha_pago, metodo_pago
+    id, organization_id, factura_id, monto, monto_aplicado_factura,
+    moneda, tipo_cambio, fecha_pago, forma_pago
   ) VALUES
-    (pago_a, org_a, fac_a, 500, 'MXN', CURRENT_DATE, 'Transferencia');
+    (pago_a, org_a, fac_a, 500, 500, 'MXN', 1, CURRENT_DATE, 'Transferencia');
 
   INSERT INTO public.cotizaciones(
     id, organization_id, cliente_id, cliente_nombre, modo, tipo, incoterm, estado

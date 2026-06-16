@@ -93,8 +93,11 @@ jobs:
       - name: Dump prepared database
         run: |
           mkdir -p .rls-snapshot
-          # --clean + --if-exists permite restaurar sobre una BD vacía sin colisiones.
-          pg_dump --format=custom --no-owner --no-privileges \
+          # Mantenemos GRANTs (sin --no-privileges) porque las suites RLS
+          # ejecutan SELECT/INSERT con `SET ROLE authenticated`; sin grants
+          # PostgREST-style en el destino el primer SELECT lanza
+          # "permission denied for table …" antes de evaluar las policies.
+          pg_dump --format=custom --no-owner \
             --file=.rls-snapshot/db.dump postgres
           ls -lh .rls-snapshot/
 
