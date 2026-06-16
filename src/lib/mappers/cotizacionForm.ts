@@ -93,6 +93,7 @@ function partesExtras(d: CotizacionInitialData) {
     puntoIntermedio: d.punto_intermedio ?? "",
     tarifaId: d.tarifa_id ?? null,
     tarifaOverride: (d.tarifa_override ?? {}) as Record<string, boolean>,
+    sinDesgloseCostos: d.sin_desglose_costos ?? false,
   };
 }
 

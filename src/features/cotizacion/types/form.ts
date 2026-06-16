@@ -54,6 +54,8 @@ export interface CotizacionFormValues {
   tarifaId: string | null;
   /** Campos editados manualmente tras elegir tarifa (para auditoría). */
   tarifaOverride: Record<string, boolean>;
+  /** Atajo: cotización creada sin desglose interno de costos (Paso 2 omitido). */
+  sinDesgloseCostos: boolean;
 }
 
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
@@ -99,6 +101,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   puntoIntermedio: "",
   tarifaId: null,
   tarifaOverride: {},
+  sinDesgloseCostos: false,
 };
 
 export interface CotizacionInitialData {
@@ -146,6 +149,7 @@ export interface CotizacionInitialData {
   punto_intermedio?: string | null;
   tarifa_id?: string | null;
   tarifa_override?: unknown;
+  sin_desglose_costos?: boolean;
 }
 
 export interface CotizacionInitialCosto {

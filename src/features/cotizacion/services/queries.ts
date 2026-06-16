@@ -7,7 +7,7 @@ import { fromDb } from "@/lib/supabase/cast";
 
 // ─── Columnas reutilizables ─────────────────────────────────────────────────
 export const COTIZACION_LIST_COLUMNS =
-  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta" as const;
+  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos" as const;
 
 export const COTIZACION_ACEPTADA_COLUMNS =
   "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas" as const;
