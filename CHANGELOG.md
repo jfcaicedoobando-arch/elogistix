@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.7] - 2026-06-16
+- **fix(ui/iconografia-dropdown)**: `EmbarquesHeaderActions` ahora usa `MoreHorizontal` (mismo ícono que el resto de menús "Más acciones" en tablas y headers de Cotizaciones, Proveedores, CxP y Admin) en lugar de `MoreVertical`, con tamaño `h-4 w-4` consistente. Cierra el último Bajo de iconografía del audit visual.
+
 ## [13.33.6] - 2026-06-16
 - **feat(embarques/incoterm-validacion)**: Paso 1 del wizard de Nuevo Embarque ahora valida `incoterm` (campo `*`) vía schema zod centralizado en `embarqueWizardSchemas` y mensaje `1.incoterm.required` en `errorCatalog`. `BloqueClienteContactos` pinta `border-destructive` + `aria-invalid` en el `SelectTrigger` y muestra el texto de error debajo. `EmbarqueValidationErrors` agrega el campo `incoterm`. Tests del validador actualizados.
 - **feat(embarques/eta-sugerida-badge)**: `StepDatosRutaFechas` reemplaza el hint plano "(sugerido: ETD + N días)" por un `Badge` "ETA sugerida aplicada" con ícono `CheckCircle2` cuando el ETA coincide con la sugerencia, y un botón "Usar sugerencia (N días)" con ícono `RotateCw` cuando el usuario lo modificó y existe una sugerencia distinta. Ambos campos ETD/ETA agregan `aria-invalid` y `border-destructive` reactivo a errores; ETA agrega `min={etd}` para impedir fechas previas al ETD desde el picker nativo.

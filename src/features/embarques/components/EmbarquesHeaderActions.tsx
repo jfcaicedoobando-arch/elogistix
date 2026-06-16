@@ -1,4 +1,4 @@
-import { Plus, Download, MoreVertical } from "lucide-react";
+import { Plus, Download, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -27,7 +27,7 @@ export function EmbarquesHeaderActions({ canEdit, exportandoCsv, onExport, onNue
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="Más acciones">
-            <MoreVertical className="h-5 w-5" />
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
