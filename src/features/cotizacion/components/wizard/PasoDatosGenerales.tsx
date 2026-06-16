@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Package, StickyNote } from "lucide-react";
+import { Package, StickyNote, Check } from "lucide-react";
 import { WizardSection } from "@/components/shared/WizardSection";
 import SeccionDestinatario from "@/features/cotizacion/components/SeccionDestinatario";
 import SeccionDatosGeneralesCotizacion from "@/features/cotizacion/components/SeccionDatosGeneralesCotizacion";
@@ -15,6 +15,7 @@ import SeccionMercanciaMaritimaLCL from "@/features/cotizacion/components/Seccio
 import SeccionMercanciaGeneral from "@/features/cotizacion/components/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/features/cotizacion/components/SeccionMercanciaAerea";
 import TarifaVinculadaPanel from "@/features/cotizacion/components/TarifaVinculadaPanel";
+import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
 
 import type { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 
@@ -26,27 +27,27 @@ interface Props {
 /**
  * Paso 1 del wizard de cotización. Orden conversacional v13.28.0:
  *   1. Cliente → 2. Operación → 3. Ruta → 4. Mercancía → 5. Tarifa → 6. Cierre.
- * Sigue cómo piensa un ejecutivo: primero quién y qué tipo de servicio,
- * después por dónde, después qué se mueve, después con qué tarifa, y al final
- * los detalles administrativos (# contenedores + notas).
+ * v13.29.0: cada sección muestra un check verde cuando sus campos requeridos
+ * están completos (`usePaso1SectionStatus`).
  */
 export default function PasoDatosGenerales({ w, clientes }: Props) {
   const { form } = w;
   const tipoEmbarque = form.watch("tipoEmbarque");
+  const status = usePaso1SectionStatus();
 
   return (
     <>
       {/* 1. Cliente */}
-      <SeccionDestinatario clientes={clientes} />
+      <SeccionDestinatario clientes={clientes} complete={status.cliente} />
 
-      {/* 2. Operación: modo / tipo / incoterm */}
-      <SeccionDatosGeneralesCotizacion />
+      {/* 2. Operación */}
+      <SeccionDatosGeneralesCotizacion complete={status.operacion} />
 
       {/* 3. Ruta */}
-      <SeccionRutaCotizacion />
+      <SeccionRutaCotizacion complete={status.ruta} />
 
       {/* 4. Mercancía */}
-      <WizardSection title="Mercancía">
+      <WizardSection title="Mercancía" complete={status.mercancia}>
         {w.esMaritimo ? (
           <div className="space-y-4">
             <RadioGroup
@@ -81,7 +82,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
       </WizardSection>
 
       {/* 5. Tarifa vinculada (sólo marítimo) */}
-      <TarifaVinculadaPanel />
+      <TarifaVinculadaPanel complete={status.tarifa} />
 
       {/* 6. Cierre */}
       <Accordion type="multiple" defaultValue={["num-embarques", "notas"]} className="w-full">
@@ -90,6 +91,14 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
             <span className="flex items-center gap-2">
               <Package className="h-5 w-5 text-primary" />
               Número de Embarques
+              {status.cierre && (
+                <span
+                  className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success"
+                  aria-label="Sección completa"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+              )}
             </span>
           </AccordionTrigger>
           <AccordionContent className="pt-2">
