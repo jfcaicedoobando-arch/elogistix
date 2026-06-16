@@ -145,7 +145,7 @@ export interface CotizacionInitialData {
   modalidad_equipo?: string | null;
   punto_intermedio?: string | null;
   tarifa_id?: string | null;
-  tarifa_override?: Record<string, boolean> | null;
+  tarifa_override?: unknown;
 }
 
 export interface CotizacionInitialCosto {
