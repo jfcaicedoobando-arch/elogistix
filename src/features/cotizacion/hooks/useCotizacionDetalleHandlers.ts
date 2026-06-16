@@ -9,7 +9,7 @@ import {
   useCrearEmbarqueBorrador,
   type CotizacionRow,
 } from "@/features/cotizacion/hooks/useCotizaciones";
-import { useBitacora } from "@/features/bitacora/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
@@ -46,7 +46,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   const convertirProspecto = useConvertirProspectoACliente();
   const convertirAEmbarques = useConvertirCotizacionAEmbarques();
   const crearBorrador = useCrearEmbarqueBorrador();
-  const { registrarActividad } = useBitacora();
+  const registrarActividad = useRegistrarActividad();
 
 
   const [showConvertir, setShowConvertir] = useState(false);
@@ -125,7 +125,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     const ok = await tieneCostosCargados(cotizacionId);
     if (!ok) {
       try {
-        registrarActividad({
+        registrarActividad.mutate({
           accion: "embarque_bloqueado_sin_costos",
           modulo: "cotizaciones",
           entidad_id: cotizacionId,
