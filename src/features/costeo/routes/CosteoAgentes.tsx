@@ -164,8 +164,10 @@ export default function CosteoAgentes() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo agente</DialogTitle>
-            <DialogDescription>Registra un nuevo agente de carga con sus datos de contacto.</DialogDescription>
+            <DialogTitle>{editandoId ? "Editar agente" : "Nuevo agente"}</DialogTitle>
+            <DialogDescription>
+              {editandoId ? "Modifica los datos del agente de carga." : "Registra un nuevo agente de carga con sus datos de contacto."}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleGuardar} className="space-y-3">
             <div>
