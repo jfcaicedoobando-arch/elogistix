@@ -132,26 +132,6 @@ async function authorizeEmbarque(
   return { ok: false, status: 403, message: "No autorizado para este embarque" };
 }
 
-function buildUserPrompt(regla: string, detalle: string, ctx: Awaited<ReturnType<typeof buildContexto>>): string {
-  if (!ctx) return "";
-  return [
-    `**Hallazgo**`,
-    `Regla: ${regla}`,
-    `Detalle: ${detalle}`,
-    ``,
-    `**Contexto real del embarque**`,
-    `Expediente: ${ctx.expediente} | Estado: ${ctx.estado} | Modo: ${ctx.modo}`,
-    `Cliente: ${ctx.cliente}`,
-    `ETD: ${ctx.etd ?? "—"} | ETA: ${ctx.eta ?? "—"} | Llegada real: ${ctx.fecha_llegada_real ?? "—"}`,
-    `Conceptos venta: ${ctx.conceptos_venta_total} (pendientes: ${ctx.conceptos_venta_pendientes}, facturados: ${ctx.conceptos_venta_facturados})`,
-    `Conceptos costo: ${ctx.conceptos_costo_total}`,
-    `Facturas (${ctx.facturas.length}): ${ctx.facturas.map((f) => `${f.folio} [${f.estado}] ${f.total} ${f.moneda}`).join("; ") || "—"}`,
-    `Proformas (${ctx.proformas.length}): ${ctx.proformas.map((p) => `${p.folio} [${p.estado}]`).join("; ") || "—"}`,
-    ``,
-    `**Documentos (${ctx.documentos.length} filas vivas)**`,
-    formatDocumentos(ctx.documentos),
-  ].join("\n");
-}
 
 async function invocarGateway(
   ctx: Awaited<ReturnType<typeof buildContexto>>,
