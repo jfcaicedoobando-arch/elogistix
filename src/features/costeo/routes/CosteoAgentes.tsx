@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -17,7 +18,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { useCosteoAgentes, useCosteoAgenteMutations } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useProveedoresAgente } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { CosteoAgenteInput } from "@/features/costeo/services/agentes";
@@ -36,24 +37,53 @@ const EMPTY: CosteoAgenteInput = {
 
 export default function CosteoAgentes() {
   const { data: agentes = [], isLoading } = useCosteoAgentes();
-  const { crear, eliminar } = useCosteoAgenteMutations();
+  const { crear, actualizar, eliminar } = useCosteoAgenteMutations();
   const { data: proveedores = [] } = useProveedoresAgente();
   const [open, setOpen] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState<CosteoAgenteInput>(EMPTY);
   const [aEliminar, setAEliminar] = useState<{ id: string; nombre: string } | null>(null);
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   const valido = form.nombre.trim().length > 0 && form.proveedor_id.length > 0;
 
+  const abrirNuevo = () => {
+    setEditandoId(null);
+    setForm(EMPTY);
+    setIntentoEnvio(false);
+    setOpen(true);
+  };
+
+  const abrirEditar = (a: typeof agentes[number]) => {
+    setEditandoId(a.id);
+    setForm({
+      nombre: a.nombre,
+      proveedor_id: a.proveedor_id ?? "",
+      pais: a.pais ?? "CN",
+      dias_credito: a.dias_credito ?? 0,
+      contacto_tarifario: a.contacto_tarifario ?? "",
+      email: a.email ?? "",
+      activo: a.activo ?? true,
+    });
+    setIntentoEnvio(false);
+    setOpen(true);
+  };
+
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!valido) return;
-    await crear.mutateAsync(form);
+    if (editandoId) {
+      await actualizar.mutateAsync({ id: editandoId, patch: form });
+    } else {
+      await crear.mutateAsync(form);
+    }
     setForm(EMPTY);
+    setEditandoId(null);
     setIntentoEnvio(false);
     setOpen(false);
   };
+
 
   const proveedorInvalido = intentoEnvio && !form.proveedor_id;
   const nombreInvalido = intentoEnvio && !form.nombre.trim();
@@ -63,7 +93,7 @@ export default function CosteoAgentes() {
       <PageHeader
         title="Agentes de costeo"
         description="Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito se usan como criterio principal de desempate."
-        actions={<Button onClick={() => { setIntentoEnvio(false); setOpen(true); }}>
+        actions={<Button onClick={abrirNuevo}>
           <Plus className="size-4 mr-2" />
           Nuevo agente
         </Button>}
@@ -79,7 +109,7 @@ export default function CosteoAgentes() {
               <TableHead>Contacto</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Activo</TableHead>
-              <TableHead className="w-12" />
+              <TableHead className="w-24 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,16 +130,30 @@ export default function CosteoAgentes() {
                 <TableCell className="text-right">{a.dias_credito}</TableCell>
                 <TableCell>{a.contacto_tarifario ?? "—"}</TableCell>
                 <TableCell>{a.email ?? "—"}</TableCell>
-                <TableCell>{a.activo ? "Sí" : "No"}</TableCell>
                 <TableCell>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setAEliminar({ id: a.id, nombre: a.nombre })}
-                    aria-label={`Eliminar agente ${a.nombre}`}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
+                  <Badge variant={a.activo ? "default" : "secondary"} className={a.activo ? "bg-success/15 text-success border-success/30" : ""}>
+                    {a.activo ? "Activo" : "Inactivo"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => abrirEditar(a)}
+                      aria-label={`Editar agente ${a.nombre}`}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setAEliminar({ id: a.id, nombre: a.nombre })}
+                      aria-label={`Eliminar agente ${a.nombre}`}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -120,8 +164,10 @@ export default function CosteoAgentes() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo agente</DialogTitle>
-            <DialogDescription>Registra un nuevo agente de carga con sus datos de contacto.</DialogDescription>
+            <DialogTitle>{editandoId ? "Editar agente" : "Nuevo agente"}</DialogTitle>
+            <DialogDescription>
+              {editandoId ? "Modifica los datos del agente de carga." : "Registra un nuevo agente de carga con sus datos de contacto."}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleGuardar} className="space-y-3">
             <div>
@@ -198,8 +244,8 @@ export default function CosteoAgentes() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={crear.isPending}>
-                Guardar
+              <Button type="submit" disabled={crear.isPending || actualizar.isPending}>
+                {editandoId ? "Actualizar" : "Guardar"}
               </Button>
             </DialogFooter>
           </form>

@@ -13,6 +13,13 @@ import type { TopTarifaRow } from "@/features/costeo/types";
 const usd = (n: number | null | undefined) =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD" }).format(Number(n || 0));
 
+const formatFechaMx = (iso: string | null | undefined) => {
+  if (!iso) return "—";
+  const [y, m, d] = String(iso).split("T")[0].split("-");
+  if (!y || !m || !d) return String(iso);
+  return `${d}/${m}/${y}`;
+};
+
 function CartaGarantiaIndicator({ row }: { row: TopTarifaRow }) {
   if (!row.naviera_condicion_id) {
     return (
@@ -117,7 +124,7 @@ export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir" }
         )}
       </div>
 
-      <div className="text-xs text-muted-foreground">Vigente hasta: {row.vigente_hasta}</div>
+      <div className="text-xs text-muted-foreground">Vigente hasta: {formatFechaMx(row.vigente_hasta)}</div>
 
       {onElegir && (
         <Button className="w-full" onClick={() => onElegir(row)}>

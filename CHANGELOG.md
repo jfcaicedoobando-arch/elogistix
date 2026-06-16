@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.34.1] - 2026-06-16
+- **feat(costeo/ux)**: Fase 3 de pulido visual del módulo Costeo.
+  - **Fechas localizadas**: `TarifaResultCard` ahora muestra "Vigente hasta" en formato `DD/MM/YYYY` (es-MX) en lugar del ISO crudo.
+  - **Badge de estado**: La columna "Activo" en `CosteoAgentes` usa un `Badge` semántico (Activo en verde / Inactivo en gris) en vez del texto "Sí/No".
+  - **Editar agente**: Se agregó botón Editar (ícono lápiz, con `aria-label`) en cada fila de `CosteoAgentes`. Reutiliza el mismo diálogo en modo edición con título y CTA dinámicos ("Actualizar"/"Guardar").
+
 ## [13.34.0] - 2026-06-16
 - **feat(costeo/a11y)**: Auditoría de accesibilidad y navegación por teclado del módulo Costeo (Fases 1 y 2).
   - **AlertDialog en eliminaciones**: Reemplazado `window.confirm()` por `ConfirmDeleteAlert` (Radix AlertDialog) en `CosteoAgentes`, `CosteoRutas`, `CosteoTarifas` y `CosteoDemorasVenta`. El foco regresa al trigger, es anunciable por lectores de pantalla y respeta el tema.
