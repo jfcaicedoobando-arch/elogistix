@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.26.2] - 2026-06-16
+- **fix(cotizaciones/tarifa-vinculada)**: El modal "Buscar tarifa marítima" ahora precarga el tipo de contenedor seleccionado en el Paso 1 del wizard, evitando que el usuario lo vuelva a elegir. La resolución se hace por nombre normalizado contra el catálogo `tipos_contenedor`.
+
 ## [13.26.1] - 2026-06-16
 - **fix(cotizaciones/wizard)**: Reordenado el dropdown "Tipo de Contenedor" en Paso 1 (FCL) agrupando primero por tamaño (20', 40', 45') y luego por variante (Dry, High Cube, Reefer, Open Top, Flat Rack) para mejorar legibilidad.
 
