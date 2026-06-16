@@ -59,12 +59,12 @@ BEGIN
   -- =========================================================================
   INSERT INTO public.facturas(
     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
-    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, saldo, estado
+    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
   ) VALUES
     (fac_a, org_a, cli_a, 'Cliente Fin A', emb_a, 'FA-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 1160, 'Pendiente'),
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Pendiente'),
     (fac_b, org_b, cli_b, 'Cliente Fin B', emb_b, 'FB-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 2320, 'Pendiente');
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 'Pendiente');
 
   PERFORM pg_temp.as_user(user_a);
   SELECT count(*) INTO visible FROM public.facturas;

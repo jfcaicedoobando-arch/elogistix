@@ -67,8 +67,10 @@ BEGIN
       (emb_a, 'EXP-FC-A', cli_a, 'CliFinC A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
       (emb_b, 'EXP-FC-B', cli_b, 'CliFinC B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
 
-  INSERT INTO public.proveedores(id, nombre, organization_id)
-    VALUES (prov_a, 'ProvFC A', org_a), (prov_b, 'ProvFC B', org_b);
+  INSERT INTO public.proveedores(id, nombre, organization_id, tipo, categoria)
+    VALUES
+      (prov_a, 'ProvFC A', org_a, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor),
+      (prov_b, 'ProvFC B', org_b, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 
   -- =========================================================================
   -- TEST 1: cuentas_bancarias aislamiento

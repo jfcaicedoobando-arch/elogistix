@@ -1,38 +1,71 @@
 ## Objetivo
 
-Bloquear (no sólo advertir) el paso de un embarque a **"En Tránsito"** cuando le faltan los documentos requeridos para ese estado. Hoy "En Tránsito" usa candado **soft** (advierte y permite avanzar); pasará a candado **hard** (bloquea con `BlockDocsDialog`, igual que En Aduana, Arribo, etc.).
+Las 6 suites RLS de CI (`logs_74424696920.zip`) fallan por **drift entre los fixtures de los tests y el esquema actual** de la base de datos. Cada error es distinto y deja a la suite con exit code 3. Hay que actualizar los fixtures (y el bootstrap de CI) sin tocar el código de la app ni el esquema de producción.
 
-## Documentos requeridos para "En Tránsito" (ya definidos)
+## Errores y arreglos
 
-Vienen de `_docs_requeridos_por_estado` y se mantienen sin cambio:
-- **Marítimo**: Factura Comercial, Packing List, Bill of Lading (BL Master), Bill of Lading (BL House).
-- **Aéreo**: Factura Comercial, Packing List, Air Waybill (AWB).
-- **Terrestre**: Factura, Lista de Empaque, Carta Porte.
+### 1. `test_rls_operaciones.sql` (líneas 73-74)
+`invalid input value for enum categoria_proveedor: "Naviera"`
 
-Un documento cuenta como cubierto si tiene archivo subido **o** está marcado como "No aplica".
+`categoria` ahora es enum `('Logistico','GastoOperativo')` con check constraint `Logistico ⇒ tipo NOT NULL`. El valor `'Naviera'` pertenece a `tipo_proveedor`.
 
-## Cambios
-
-### 1. Backend — `avanzar_estado_embarque`
-Nueva migración que reemplaza la función agregando `'En Tránsito'` al arreglo `v_estados_bloqueantes`:
-
+**Fix**: incluir las columnas `tipo` + `categoria` en el INSERT:
+```sql
+INSERT INTO public.proveedores(
+  id, nombre, rfc, contacto, email, telefono, moneda_preferida,
+  organization_id, tipo, categoria
+) VALUES
+  (prov_a, 'Prov A', 'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor),
+  (prov_b, 'Prov B', 'RFCB010101BBB', 'C', 'b@b', '555', 'MXN', org_b, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 ```
-v_estados_bloqueantes := ARRAY['En Tránsito','En Aduana','Llegada','Arribo','Entregado','EIR','Cerrado'];
+
+### 2. `test_rls_tarifas_y_costeo.sql` (líneas 84-87)
+`invalid input value for enum categoria_proveedor: "Agente"`
+
+Mismo arreglo: usar `tipo='Agente de Carga'::tipo_proveedor` + `categoria='Logistico'::categoria_proveedor`.
+
+### 3. `test_rls_financiero_critico.sql` (líneas 70-71)
+`new row for relation "proveedores" violates check constraint "proveedores_categoria_check"`
+
+El INSERT no envía `tipo` ni `categoria`, así que el default (`Logistico`) viola el check (falta `tipo`).
+
+**Fix**: ampliar el INSERT a `(id, nombre, organization_id, tipo, categoria) VALUES (..., 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor)`.
+
+### 4. `test_rls_crm_operacional.sql` (líneas 78-79)
+`invalid input value for enum crm_lead_fuente: "web"`
+
+El enum es case-sensitive (`Web`, `Referido`, ...).
+
+**Fix**: `'web'` → `'Web'` en ambos VALUES.
+
+### 5. `test_rls_financiero.sql` (línea 62)
+`column "saldo" of relation "facturas" does not exist`
+
+La columna `saldo` se reemplazó por `total_pendientes` y `pagado` (calculados aparte).
+
+**Fix**: quitar `saldo` del INSERT y del VALUES (el cálculo de saldo no se ejercita en este test; sólo se valida aislamiento RLS).
+
+### 6. `test_rls_isolation.sql` (línea 187)
+`permission denied for table clientes`
+
+El snapshot CI no tiene los GRANT por defecto sobre `public.*` que Supabase Cloud sí entrega. Esto no es un bug del esquema: es del entorno bare-Postgres de CI.
+
+**Fix**: agregar al final de `supabase/tests/rls/_ci_post_migrate.sql`:
+```sql
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, anon, service_role;
 ```
 
-El resto de la función (idempotencia, asserts, update, nota, evento) queda igual. Esto garantiza que aunque el cliente intentara saltarse la validación, la base de datos rechaza con `documentos_faltantes: …`.
+Esto sólo corre en CI (no se ejecuta en Lovable Cloud) y elimina el bloqueo. RLS sigue siendo el único gate de aislamiento.
 
-### 2. Frontend — `useDocsFaltantesParaEstado`
-Agregar `"En Tránsito"` al set `ESTADOS_BLOQUEANTES`. Con esto:
-- `handleAvanzarEstado` abrirá `BlockDocsDialog` (no `WarnDocsDialog`) cuando el siguiente estado sea "En Tránsito" y existan faltantes.
-- El badge/indicador de docs faltantes en el header del embarque tratará "En Tránsito" como bloqueante.
-
-### 3. Versionado
-- `APP_VERSION` → `13.43.0`.
-- `CHANGELOG.md`:
-  > Embarques: pasar a "En Tránsito" ahora bloquea si faltan documentos requeridos (Factura Comercial, Packing List y BL/AWB/Carta Porte según modo). Antes sólo advertía.
+## Versionado
+- Sólo cambios en tests/CI; no se bumpea `APP_VERSION` ni se añade entrada al `CHANGELOG.md` (convención: el changelog es para cambios visibles al usuario; estos arreglos son de tooling/QA interno).
 
 ## Fuera de alcance
-- No se modifica la matriz de documentos requeridos por modo/estado.
-- No se cambia el comportamiento de "Confirmado" (sigue siendo soft).
-- No se toca el flujo de re-apertura ni la sincronización automática de estado por fechas (ETD/ETA). El auto-sync de "Confirmado → En Tránsito" por ETD pasada **también** quedará bloqueado por la RPC; si esto causa ruido se puede ajustar después, pero es el comportamiento correcto (no avanzar sin docs).
+- No se modifica el esquema de producción ni las migraciones.
+- No se cambia la lógica de RLS.
+- No se regenera el snapshot de CI (los GRANTs en `_ci_post_migrate.sql` lo hacen innecesario).
