@@ -130,16 +130,30 @@ export default function CosteoAgentes() {
                 <TableCell className="text-right">{a.dias_credito}</TableCell>
                 <TableCell>{a.contacto_tarifario ?? "—"}</TableCell>
                 <TableCell>{a.email ?? "—"}</TableCell>
-                <TableCell>{a.activo ? "Sí" : "No"}</TableCell>
                 <TableCell>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setAEliminar({ id: a.id, nombre: a.nombre })}
-                    aria-label={`Eliminar agente ${a.nombre}`}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
+                  <Badge variant={a.activo ? "default" : "secondary"} className={a.activo ? "bg-success/15 text-success border-success/30" : ""}>
+                    {a.activo ? "Activo" : "Inactivo"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => abrirEditar(a)}
+                      aria-label={`Editar agente ${a.nombre}`}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setAEliminar({ id: a.id, nombre: a.nombre })}
+                      aria-label={`Eliminar agente ${a.nombre}`}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
