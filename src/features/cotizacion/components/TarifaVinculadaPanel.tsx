@@ -36,6 +36,18 @@ export default function TarifaVinculadaPanel() {
 
   const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
 
+  // El Paso 1 guarda la etiqueta del tipo de contenedor (ej. "40' High Cube"),
+  // pero el modal Buscar tarifa espera el id del catálogo. Resolvemos por nombre
+  // normalizado para precargar el campo cuando el usuario abre el modal.
+  const tipoContenedorIdInicial = (() => {
+    if (!tipoContenedorActual) return undefined;
+    if (tiposContenedor.some((t) => t.id === tipoContenedorActual)) {
+      return tipoContenedorActual;
+    }
+    const objetivo = normalizarNombreContenedor(tipoContenedorActual);
+    return tiposContenedor.find((t) => normalizarNombreContenedor(t.name) === objetivo)?.id;
+  })();
+
   if (modo !== "Marítimo") return null;
 
   const aplicarTarifa = (row: TopTarifaRow) => {
