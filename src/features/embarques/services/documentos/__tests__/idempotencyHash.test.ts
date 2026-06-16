@@ -8,12 +8,15 @@ import { sha256Hex, hexToUuid } from "../idempotencyHash";
 
 // jsdom no implementa File.arrayBuffer; lo polyfilleamos vía Response.
 beforeAll(() => {
-beforeAll(() => {
+// jsdom Blob/File no implementan arrayBuffer/stream funcional;
+// polyfilleamos usando el texto bruto que recibe el File ctor.
+function fakeFile(content: string, name = "f.txt"): File {
+  const file = new File([content], name);
+  const bytes = new TextEncoder().encode(content);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (File.prototype as any).arrayBuffer = function () {
-    return new Response(this as Blob).arrayBuffer();
-  };
-});
+  (file as any).arrayBuffer = () => Promise.resolve(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  return file;
+}
 });
 
 describe("sha256Hex", () => {
