@@ -2,6 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { formatDate } from "@/lib/formatters";
@@ -102,22 +106,33 @@ export function CotizacionDetalleAcciones({
         </Button>
       )}
       {esAceptada && !esProspecto && !embarqueIdVinculado && (
-        <>
-          <Button size="sm" onClick={onCrearBorrador} disabled={isCreandoBorrador}>
-            {isCreandoBorrador ? "Creando…" : "Crear embarque borrador"}
+        <div className="flex items-center gap-1">
+          <Button size="sm" onClick={onAbrirGenerarEmbarques}>
+            {numContenedores > 1 ? `Generar ${numContenedores} embarques` : "Crear embarque"}
+            {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
-          >
-            Crear Embarque (wizard)
-          </Button>
-          <Button size="sm" variant="outline" onClick={onAbrirGenerarEmbarques}>
-            Generar Embarques
-            <Badge className="ml-2">{numContenedores}</Badge>
-          </Button>
-        </>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" aria-label="Más opciones de embarque">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Opciones avanzadas</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
+              >
+                Abrir wizard manual
+                <span className="ml-2 text-xs text-muted-foreground">(ajustar antes de guardar)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onCrearBorrador} disabled={isCreandoBorrador}>
+                {isCreandoBorrador ? "Creando…" : "Crear borrador rápido"}
+                <span className="ml-2 text-xs text-muted-foreground">(sin conceptos)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       )}
     </div>
   );
