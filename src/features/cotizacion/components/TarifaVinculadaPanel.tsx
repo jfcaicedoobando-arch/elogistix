@@ -24,7 +24,7 @@ const OPTS = { shouldValidate: true, shouldDirty: true } as const;
 const normalizarNombreContenedor = (s: string) =>
   s.toLowerCase().replace(/['"’`]/g, "").replace(/\s+/g, " ").trim();
 
-export default function TarifaVinculadaPanel() {
+export default function TarifaVinculadaPanel({ complete }: { complete?: boolean } = {}) {
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
   const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
