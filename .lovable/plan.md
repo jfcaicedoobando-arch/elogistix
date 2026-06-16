@@ -1,71 +1,104 @@
 ## Objetivo
+Agregar el rol **`gerente_comercial`** (Gerente Comercial) — supervisor del equipo de ventas: ve todo el CRM, cotizaciones con márgenes, comisiones y clientes de la organización, pero no toca configuración, usuarios, CxP ni tesorería.
 
-Las 6 suites RLS de CI (`logs_74424696920.zip`) fallan por **drift entre los fixtures de los tests y el esquema actual** de la base de datos. Cada error es distinto y deja a la suite con exit code 3. Hay que actualizar los fixtures (y el bootstrap de CI) sin tocar el código de la app ni el esquema de producción.
+## Perfil funcional propuesto
 
-## Errores y arreglos
+| Área | Permiso |
+|---|---|
+| Dashboards | ✅ Lectura |
+| CRM (leads, oportunidades, pipeline, forecast, leaderboard, mi día) | ✅ Lectura/edición completa de la organización (no sólo "sus" cuentas) |
+| Clientes (directorio) | ✅ Lectura/edición |
+| Cotizaciones | ✅ Lectura/edición con costos, márgenes y P&L |
+| Embarques | ✅ Lectura (seguimiento comercial) — sin edición operativa |
+| Profit / Reportes | ✅ Lectura |
+| Comisiones | ✅ Lectura (supervisa al equipo); sin liquidar |
+| Facturación / CxP / Tesorería | ❌ |
+| Costeo (tarifas, navieras, agentes) | ❌ |
+| Configuración / Usuarios / Auditoría / Admin | ❌ |
+| Sistema → Ayuda + Bitácora (sus equipos) | ✅ |
 
-### 1. `test_rls_operaciones.sql` (líneas 73-74)
-`invalid input value for enum categoria_proveedor: "Naviera"`
+Equivalencias en `has_role` (BD y `roleHierarchy.ts`):
+- Satisface `vendedor` (ve datos de cualquier vendedor del tenant).
+- Satisface `viewer` (lectura general).
+- **No** satisface `operador` (no edita operación) ni `admin_org` (no toca config/usuarios).
 
-`categoria` ahora es enum `('Logistico','GastoOperativo')` con check constraint `Logistico ⇒ tipo NOT NULL`. El valor `'Naviera'` pertenece a `tipo_proveedor`.
+## Cambios
 
-**Fix**: incluir las columnas `tipo` + `categoria` en el INSERT:
+### 1. Base de datos (migración)
 ```sql
-INSERT INTO public.proveedores(
-  id, nombre, rfc, contacto, email, telefono, moneda_preferida,
-  organization_id, tipo, categoria
-) VALUES
-  (prov_a, 'Prov A', 'RFCA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor),
-  (prov_b, 'Prov B', 'RFCB010101BBB', 'C', 'b@b', '555', 'MXN', org_b, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor);
+-- 1. Agregar valor al enum
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'gerente_comercial';
+
+-- 2. Actualizar has_role: incluir gerente_comercial en los grupos vendedor y viewer
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
+ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles ur
+    WHERE ur.user_id = _user_id
+      AND ur.role = ANY (
+        CASE _role
+          WHEN 'super_admin'::app_role THEN ARRAY['super_admin']::app_role[]
+          WHEN 'admin'::app_role THEN ARRAY['admin','admin_org','super_admin']::app_role[]
+          WHEN 'admin_org'::app_role THEN ARRAY['admin_org','super_admin']::app_role[]
+          WHEN 'operador'::app_role THEN ARRAY['operador','coordinador_logistico','ejecutivo_pricing','gerente_operaciones','admin','admin_org','super_admin']::app_role[]
+          WHEN 'viewer'::app_role THEN ARRAY['viewer','customer_service','vendedor','contador','tesorero','ejecutivo_pricing','gerente_operaciones','gerente_visor','gerente_comercial','coordinador_logistico','admin','admin_org','super_admin']::app_role[]
+          WHEN 'vendedor'::app_role THEN ARRAY['vendedor','gerente_comercial','admin_org','super_admin']::app_role[]
+          ELSE ARRAY[_role]::app_role[]
+        END
+      )
+  )
+$$;
+```
+(Nota: el ALTER TYPE se hará en su propio bloque para cumplir con el requisito de Postgres de commit antes de usar el nuevo valor; la función va en una segunda sentencia tras ese commit implícito del migration runner.)
+
+### 2. Frontend — catálogo (`src/lib/roles/roleCatalog.ts`)
+- `ROLE_LABELS.gerente_comercial = "Gerente Comercial"`
+- `ROLE_DESCRIPTIONS.gerente_comercial = "Supervisa al equipo de ventas. Ve CRM completo, cotizaciones con márgenes, clientes y comisiones de la organización."`
+- `ROLE_BADGE_CLASSES.gerente_comercial = "bg-accent text-accent-foreground"`
+- Agregar `"gerente_comercial"` a `ASSIGNABLE_ROLES_ADMIN_ORG` (después de `vendedor`).
+
+### 3. Frontend — jerarquía (`src/lib/auth/roleHierarchy.ts`)
+- Añadir `gerente_comercial` a los arrays `operador.viewer.vendedor` cuando corresponda:
+  - `viewer`: incluir `'gerente_comercial'`.
+  - `vendedor`: `["vendedor","gerente_comercial","admin_org","super_admin"]`.
+- Entrada propia: `gerente_comercial: ["gerente_comercial"]`.
+
+### 4. Sidebar (`src/hooks/layout/useAppSidebarSections.ts`)
+Nuevo bloque antes del default:
+```ts
+if (effectiveRole === "gerente_comercial") {
+  const gestionGC = SIDEBAR_GESTION_ITEMS.filter((it) =>
+    ["/cotizaciones", "/embarques", "/comisiones"].includes(it.url),
+  );
+  return [
+    { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+    { label: "Gestión", items: gestionGC },
+    { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+    { label: "CRM", items: crmItems },
+    { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+    { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+    { label: "Sistema", items: sistemaItems.filter((it) => ["/ayuda","/bitacora"].includes(it.url)) },
+  ];
+}
 ```
 
-### 2. `test_rls_tarifas_y_costeo.sql` (líneas 84-87)
-`invalid input value for enum categoria_proveedor: "Agente"`
+### 5. Filtros existentes que listan "vendedores"
+En `VendedorSelect.tsx` y `Oportunidades.tsx` agregar `"gerente_comercial"` al `includes(...)` para que también aparezca como posible asignado/responsable de leads y oportunidades.
 
-Mismo arreglo: usar `tipo='Agente de Carga'::tipo_proveedor` + `categoria='Logistico'::categoria_proveedor`.
+### 6. Tests
+- Extender `roleCatalog.test.ts` y `roleCatalog.extra.test.ts`: incluir `gerente_comercial` en el set esperado y en `ASSIGNABLE_ROLES_ADMIN_ORG`.
+- Extender `roleHierarchy.test.ts` y `.extra.test.ts`:
+  - `roleSatisfies("vendedor","gerente_comercial") === true`
+  - `roleSatisfies("viewer","gerente_comercial") === true`
+  - `roleSatisfies("operador","gerente_comercial") === false`
+  - `roleSatisfies("admin_org","gerente_comercial") === false`
 
-### 3. `test_rls_financiero_critico.sql` (líneas 70-71)
-`new row for relation "proveedores" violates check constraint "proveedores_categoria_check"`
-
-El INSERT no envía `tipo` ni `categoria`, así que el default (`Logistico`) viola el check (falta `tipo`).
-
-**Fix**: ampliar el INSERT a `(id, nombre, organization_id, tipo, categoria) VALUES (..., 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor)`.
-
-### 4. `test_rls_crm_operacional.sql` (líneas 78-79)
-`invalid input value for enum crm_lead_fuente: "web"`
-
-El enum es case-sensitive (`Web`, `Referido`, ...).
-
-**Fix**: `'web'` → `'Web'` en ambos VALUES.
-
-### 5. `test_rls_financiero.sql` (línea 62)
-`column "saldo" of relation "facturas" does not exist`
-
-La columna `saldo` se reemplazó por `total_pendientes` y `pagado` (calculados aparte).
-
-**Fix**: quitar `saldo` del INSERT y del VALUES (el cálculo de saldo no se ejercita en este test; sólo se valida aislamiento RLS).
-
-### 6. `test_rls_isolation.sql` (línea 187)
-`permission denied for table clientes`
-
-El snapshot CI no tiene los GRANT por defecto sobre `public.*` que Supabase Cloud sí entrega. Esto no es un bug del esquema: es del entorno bare-Postgres de CI.
-
-**Fix**: agregar al final de `supabase/tests/rls/_ci_post_migrate.sql`:
-```sql
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, anon, service_role;
-```
-
-Esto sólo corre en CI (no se ejecuta en Lovable Cloud) y elimina el bloqueo. RLS sigue siendo el único gate de aislamiento.
-
-## Versionado
-- Sólo cambios en tests/CI; no se bumpea `APP_VERSION` ni se añade entrada al `CHANGELOG.md` (convención: el changelog es para cambios visibles al usuario; estos arreglos son de tooling/QA interno).
+### 7. Memoria + Changelog
+- Actualizar `mem://features/roles-catalog` añadiendo Gerente Comercial a la matriz (mismo formato que los demás).
+- `APP_VERSION` → **13.44.0** y entrada nueva en `CHANGELOG.md`.
 
 ## Fuera de alcance
-- No se modifica el esquema de producción ni las migraciones.
-- No se cambia la lógica de RLS.
-- No se regenera el snapshot de CI (los GRANTs en `_ci_post_migrate.sql` lo hacen innecesario).
+- No se modifican políticas RLS individuales: las que ya usan `has_role('vendedor', …)` o `has_role('viewer', …)` cubrirán automáticamente al nuevo rol gracias al agrupador.
+- No se otorgan permisos financieros (facturación, CxP, tesorería).
+- No se le permite editar configuración ni gestionar usuarios.

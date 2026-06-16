@@ -105,6 +105,23 @@ export function useAppSidebarSections(): SidebarSection[] {
     ];
   }
 
+  // Gerente comercial: supervisa equipo de ventas. CRM completo, cotizaciones con márgenes,
+  // embarques (lectura), comisiones (lectura), clientes y reportes. Sin config/admin.
+  if (effectiveRole === "gerente_comercial") {
+    const gestionGC = SIDEBAR_GESTION_ITEMS.filter((it) =>
+      ["/cotizaciones", "/embarques", "/comisiones"].includes(it.url),
+    );
+    return [
+      { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+      { label: "Gestión", items: gestionGC },
+      { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+      { label: "CRM", items: crmItems },
+      { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+      { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+      { label: "Sistema", items: sistemaItems.filter((it) => ["/ayuda", "/bitacora"].includes(it.url)) },
+    ];
+  }
+
   // Gerente de operaciones: todo lectura + edición operativa, sin admin.
   // No incluye "Auditoría operativa" (decisión 13.21.26: solo admin + viewer).
   if (effectiveRole === "gerente_operaciones") {

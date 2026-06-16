@@ -5819,6 +5819,7 @@ export type Database = {
         | "tesorero"
         | "customer_service"
         | "gerente_visor"
+        | "gerente_comercial"
       categoria_proveedor: "Logistico" | "GastoOperativo"
       crm_actividad_tipo: "llamada" | "email" | "reunion" | "tarea" | "nota"
       crm_entidad_tipo: "lead" | "oportunidad" | "cliente" | "contacto"
@@ -6089,6 +6090,7 @@ export const Constants = {
         "tesorero",
         "customer_service",
         "gerente_visor",
+        "gerente_comercial",
       ],
       categoria_proveedor: ["Logistico", "GastoOperativo"],
       crm_actividad_tipo: ["llamada", "email", "reunion", "tarea", "nota"],

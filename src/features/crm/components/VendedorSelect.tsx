@@ -23,7 +23,7 @@ export default function VendedorSelect({ value, onChange, label = "Vendedor asig
   if (!canEdit) return null;
 
   // Mostrar todos los usuarios staff + vendedores (no clientes ni viewers para CRM).
-  const candidatos = users.filter((u) => ["admin", "operador", "vendedor", "super_admin"].includes(u.role));
+  const candidatos = users.filter((u) => ["admin", "operador", "vendedor", "gerente_comercial", "super_admin"].includes(u.role));
 
   return (
     <div className="space-y-1">

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.0] - 2026-06-16
+- **feat(roles)**: nuevo rol **Gerente Comercial** (`gerente_comercial`) para supervisar al equipo de ventas. Ve CRM completo de la organización (no sólo sus cuentas), cotizaciones con costos y márgenes, clientes, comisiones (lectura) y embarques (seguimiento). Sin acceso a configuración, usuarios, CxP, tesorería ni costeo. Satisface el agrupador `vendedor` en `has_role` para que las políticas RLS existentes ya lo reconozcan. Aparece como asignable en el alta de usuarios y como responsable en leads/oportunidades del CRM.
+
 ## [13.43.0] - 2026-06-16
 - **feat(embarques)**: el avance a **"En Tránsito"** ahora bloquea (no sólo advierte) si faltan documentos requeridos para ese estado. Requeridos según modo: Marítimo = Factura Comercial + Packing List + BL Master + BL House; Aéreo = Factura Comercial + Packing List + AWB; Terrestre = Factura + Lista de Empaque + Carta Porte. Un documento marcado "No aplica" cuenta como cubierto. Validado tanto en cliente (`BlockDocsDialog`) como en backend (`avanzar_estado_embarque` rechaza con `documentos_faltantes`).
 

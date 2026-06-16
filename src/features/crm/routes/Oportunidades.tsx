@@ -40,7 +40,7 @@ export default function Oportunidades() {
   const vendedores = useMemo(
     () =>
       usuarios
-        .filter((u) => ["admin", "operador", "vendedor", "super_admin"].includes(u.role))
+        .filter((u) => ["admin", "operador", "vendedor", "gerente_comercial", "super_admin"].includes(u.role))
         .map((u) => ({ id: u.user_id, email: u.email })),
     [usuarios],
   );

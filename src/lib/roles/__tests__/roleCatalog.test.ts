@@ -16,6 +16,7 @@ describe("roleCatalog", () => {
       "admin_org",
       "gerente_operaciones",
       "gerente_visor",
+      "gerente_comercial",
       "coordinador_logistico",
       "ejecutivo_pricing",
       "contador",
@@ -45,10 +46,11 @@ describe("roleCatalog", () => {
     }
   });
 
-  it("ASSIGNABLE_ROLES_ADMIN_ORG contiene exactamente los 9 roles modernos asignables", () => {
-    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toHaveLength(9);
+  it("ASSIGNABLE_ROLES_ADMIN_ORG contiene exactamente los 10 roles modernos asignables", () => {
+    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toHaveLength(10);
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("admin_org");
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("vendedor");
+    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("gerente_comercial");
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("contador");
   });
 
