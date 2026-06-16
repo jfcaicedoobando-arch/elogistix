@@ -9,6 +9,7 @@ const Login = lazy(() => import("@/pages/auth/Login"));
 const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/auth/NotFound"));
 const TrackingPublico = lazy(() => import("@/pages/auth/TrackingPublico"));
+const Unsubscribe = lazy(() => import("@/pages/auth/Unsubscribe"));
 const HomeRoute = lazy(() => import("@/pages/marketing/HomeRoute"));
 const LogoPreview = lazy(() => import("@/pages/marketing/LogoPreview"));
 const Privacidad = lazy(() => import("@/pages/legal/Privacidad"));
@@ -23,6 +24,7 @@ export const publicRoutes = (
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/portal/login" element={<Navigate to="/login" replace />} />
     <Route path="/tracking/:token" element={<TrackingPublico />} />
+    <Route path="/unsubscribe" element={<Unsubscribe />} />
     <Route path="/logo-preview" element={<LogoPreview />} />
     <Route path="/legal/privacidad" element={<Privacidad />} />
     <Route path="/legal/terminos" element={<Terminos />} />
