@@ -82,7 +82,7 @@ BEGIN
     subtotal_mxn, iva_mxn, total_mxn, estado_proforma
   ) VALUES
     (prof_a, org_a, emb_a, cli_a, 'Cliente Fin A', 'EXP-FIN-A',
-      'PA-001', CURRENT_DATE, 100, 16, 116, 0, 0, 0, 'Borrador');
+      'PA-001', CURRENT_DATE, 100, 16, 116, 0, 0, 0, 'pendiente');
 
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.proformas WHERE id = prof_a;
