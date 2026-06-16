@@ -79,9 +79,9 @@ BEGIN
     (pago_a, org_a, fac_a, 500, 500, 'MXN', 1, CURRENT_DATE, 'Transferencia');
 
   INSERT INTO public.cotizaciones(
-    id, organization_id, cliente_id, cliente_nombre, modo, tipo, incoterm, estado
+    id, organization_id, cliente_id, cliente_nombre, folio, modo, tipo, incoterm, estado
   ) VALUES
-    (cot_a, org_a, cli_a, 'Cliente NA A', 'Marítimo', 'Importación', 'FOB', 'Cotizada');
+    (cot_a, org_a, cli_a, 'Cliente NA A', 'COT-RLS-NA-A', 'Marítimo', 'Importación', 'FOB', 'Enviada');
 
   -- ════════════════════════════════════════════════════════════════════════
   -- ROL VIEWER (org_a) — solo lectura
