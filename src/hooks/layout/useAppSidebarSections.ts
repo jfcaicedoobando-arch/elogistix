@@ -114,6 +114,7 @@ export function useAppSidebarSections(): SidebarSection[] {
     return [
       { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
       { label: "Gestión", items: gestionGC },
+      { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
       { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
       { label: "CRM", items: crmItems },
       { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
