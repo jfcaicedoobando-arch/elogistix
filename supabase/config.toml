@@ -3,5 +3,20 @@ project_id = "eorqadkulqtneqjbsblk"
 [functions.process-email-queue]
 verify_jwt = true
 
+[functions.send-transactional-email]
+verify_jwt = true
+
+[functions.preview-transactional-email]
+verify_jwt = false
+
+[functions.handle-email-unsubscribe]
+verify_jwt = false
+
+[functions.handle-email-suppression]
+verify_jwt = false
+
+[functions.enviar-cotizacion-email]
+verify_jwt = true
+
 [functions.sentry-tunnel]
 verify_jwt = false
