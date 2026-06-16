@@ -163,8 +163,8 @@ export default function Cotizaciones() {
               onPageChange: c.setPage,
               pageSize: c.pageSize,
               onPageSizeChange: (s: number) => { c.setPageSize(s); c.setPage(0); },
-              pageSizeOptions: [100, 999999],
-              pageSizeLabels: { 999999: "Todos" },
+              pageSizeOptions: [50, 100, 200, 500],
+              pageSizeLabels: { 500: "500" },
             }}
           />
         </CardContent>
