@@ -7,9 +7,9 @@ import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 
 const CONTENEDORES_FCL = [
-  "20' GP", "20' Dry", "40' Dry", "40' High Cube", "45' High Cube",
-  "20' Reefer", "40' Reefer", "20' Open Top", "40' Open Top",
-  "20' Flat Rack", "40' Flat Rack",
+  "20' GP", "20' Dry", "20' High Cube", "20' Reefer", "20' Open Top", "20' Flat Rack",
+  "40' Dry", "40' High Cube", "40' Reefer", "40' Open Top", "40' Flat Rack",
+  "45' High Cube",
 ];
 
 const TIPOS_PESO = ['Peso Normal', 'Sobrepeso'];
