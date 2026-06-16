@@ -1,0 +1,113 @@
+import { describe, it, expect } from "vitest";
+import {
+  calcularFlujoProyectado,
+  inicioSemana,
+  isoWeekKey,
+  toMxn,
+} from "../flujoProyectado";
+import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta } from "../resumen";
+
+describe("inicioSemana", () => {
+  it("regresa lunes 00:00 para un miércoles", () => {
+    const wed = new Date("2026-06-17T15:30:00");
+    const lun = inicioSemana(wed);
+    expect(lun.getDay()).toBe(1);
+    expect(lun.getHours()).toBe(0);
+  });
+
+  it("para domingo retrocede 6 días", () => {
+    const sun = new Date("2026-06-21T10:00:00");
+    const lun = inicioSemana(sun);
+    expect(lun.getDate()).toBe(15);
+  });
+});
+
+describe("isoWeekKey", () => {
+  it("genera formato YYYY-Www con padding", () => {
+    expect(isoWeekKey(new Date("2026-01-05T00:00:00Z"))).toMatch(/^2026-W0\d$/);
+  });
+  it("es consistente dentro de la misma semana", () => {
+    const a = isoWeekKey(new Date("2026-06-15T00:00:00Z"));
+    const b = isoWeekKey(new Date("2026-06-19T00:00:00Z"));
+    expect(a).toBe(b);
+  });
+});
+
+describe("toMxn", () => {
+  it("regresa monto tal cual si moneda es MXN", () => {
+    expect(toMxn(1000, "MXN", 20)).toBe(1000);
+  });
+  it("convierte USD usando tc", () => {
+    expect(toMxn(100, "USD", 18)).toBe(1800);
+  });
+  it("regresa monto sin convertir si tc inválido", () => {
+    expect(toMxn(100, "USD", 0)).toBe(100);
+    expect(toMxn(100, "USD", undefined)).toBe(100);
+  });
+});
+
+const cuentas: ResumenCuenta[] = [
+  { id: "c1", alias: "BBVA", banco: "BBVA", moneda: "MXN", saldo: 50_000 },
+];
+
+describe("calcularFlujoProyectado", () => {
+  it("genera semanas y calcula saldo proyectado acumulado", () => {
+    const hoy = new Date("2026-06-15T00:00:00");
+    const cobranza: CobranzaRow[] = [
+      { id: "f1", numero: "F-1", cliente_nombre: "A", moneda: "MXN", saldo: 10_000, fecha_vencimiento: "2026-06-18" },
+    ];
+    const cxp: CxpRow[] = [
+      { id: "x1", folio_proveedor: "P-1", proveedor_nombre: "P", moneda: "USD", saldo: 100, fecha_vencimiento: "2026-06-25", tipo_cambio_usd: 18 },
+    ];
+    const r = calcularFlujoProyectado({ cuentas, cobranza, cxp, liquidaciones: [], dias: 14, hoy });
+    expect(r.saldo_inicial_mxn).toBe(50_000);
+    expect(r.total_entradas_mxn).toBe(10_000);
+    expect(r.total_salidas_mxn).toBe(1_800);
+    expect(r.saldo_final_mxn).toBe(58_200);
+    expect(r.alertas_negativas).toBe(0);
+    expect(r.semanas.length).toBeGreaterThan(0);
+  });
+
+  it("detecta alertas cuando saldo proyectado se vuelve negativo", () => {
+    const hoy = new Date("2026-06-15T00:00:00");
+    const cxp: CxpRow[] = [
+      { id: "x1", folio_proveedor: "P-1", proveedor_nombre: "P", moneda: "MXN", saldo: 200_000, fecha_vencimiento: "2026-06-18" },
+    ];
+    const r = calcularFlujoProyectado({ cuentas, cobranza: [], cxp, liquidaciones: [], dias: 14, hoy });
+    expect(r.alertas_negativas).toBeGreaterThanOrEqual(1);
+    expect(r.saldo_final_mxn).toBeLessThan(0);
+  });
+
+  it("liquidaciones se asignan al día 5 del mes siguiente al periodo", () => {
+    const hoy = new Date("2026-06-01T00:00:00");
+    const liquidaciones: LiquidacionRow[] = [
+      { id: "l1", vendedora_id: "v1", periodo: "2026-06", total_mxn: 5_000, fecha_pago: null, created_at: "" },
+    ];
+    const r = calcularFlujoProyectado({ cuentas, cobranza: [], cxp: [], liquidaciones, dias: 45, hoy });
+    expect(r.total_salidas_mxn).toBe(5_000);
+    const detalle = r.semanas.flatMap((s) => s.detalle_salidas);
+    expect(detalle[0].concepto).toContain("2026-06");
+  });
+
+  it("ignora cobranza/cxp fuera de ventana", () => {
+    const hoy = new Date("2026-06-15T00:00:00");
+    const cobranza: CobranzaRow[] = [
+      { id: "f1", numero: "F-1", cliente_nombre: "A", moneda: "MXN", saldo: 999, fecha_vencimiento: "2026-12-01" },
+    ];
+    const r = calcularFlujoProyectado({ cuentas, cobranza, cxp: [], liquidaciones: [], dias: 14, hoy });
+    expect(r.total_entradas_mxn).toBe(0);
+  });
+
+  it("ignora saldo <=0, fecha_vencimiento null en cxp y periodos inválidos", () => {
+    const hoy = new Date("2026-06-15T00:00:00");
+    const cxp: CxpRow[] = [
+      { id: "x1", folio_proveedor: "P", proveedor_nombre: "P", moneda: "MXN", saldo: 0, fecha_vencimiento: "2026-06-20" },
+      { id: "x2", folio_proveedor: "P", proveedor_nombre: "P", moneda: "MXN", saldo: 100, fecha_vencimiento: null },
+    ];
+    const liquidaciones: LiquidacionRow[] = [
+      { id: "l1", vendedora_id: "v1", periodo: "invalid", total_mxn: 1, fecha_pago: null, created_at: "" },
+    ];
+    const r = calcularFlujoProyectado({ cuentas, cobranza: [], cxp, liquidaciones, dias: 14, hoy });
+    expect(r.total_salidas_mxn).toBe(0);
+  });
+});
