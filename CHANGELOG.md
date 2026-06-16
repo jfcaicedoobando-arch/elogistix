@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.33.13] - 2026-06-16
+- **fix(proveedores/editar)**: El modal "Editar Proveedor" ahora preserva todos los campos cargados (contacto, email, teléfono, RFC, país, dirección fiscal, banco, CLABE, etc.). Se normalizan los valores `null` de la base de datos a cadena vacía en `useEditarProveedorController` para mantener los inputs y selects controlados y evitar que aparezcan vacíos al abrir.
+
 ## [13.33.12] - 2026-06-16
 - **fix(mobile/dvh)**: Reemplazado `h-screen` por `h-dvh` en `ProtectedRoute.tsx` y `PortalProtectedRoute.tsx`; `h-screen w-screen` por `h-dvh w-dvw` en `PdfPreviewCotizacion.tsx`. Reemplazado `h-[calc(100vh-4rem)]` por `h-[calc(100dvh-4rem)]` en `EmbarqueWizardLayout.tsx` y `CotizacionWizardLayout.tsx` para soporte correcto de mobile viewport.
 - **skip(a11y/wizard-footer)**: Footers de ambos wizards ya tienen alineación horizontal y `gap-2` correctos — sin cambios.
