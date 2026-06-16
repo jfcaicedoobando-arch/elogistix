@@ -15,19 +15,27 @@ interface Props {
   diasTransitoSugerencia?: number | null;
 }
 
-export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
-  const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
-  const etd = watch("etd");
-  const eta = watch("eta");
+// ── useEtaSugerencia ───────────────────────────────────────────────────────────
+
+interface EtaSugerenciaResult {
+  hasSugerencia: boolean;
+  sugerencia: string | null;
+  autoApplied: boolean;
+  recalcular: () => void;
+}
+
+function useEtaSugerencia(
+  etd: string,
+  eta: string,
+  diasTransitoSugerencia: number | null | undefined,
+): EtaSugerenciaResult {
+  const { setValue } = useFormContext<EmbarqueFormValues>();
   const [autoApplied, setAutoApplied] = useState(false);
   const lastAppliedRef = useRef<string | null>(null);
 
   const hasSugerencia = !!diasTransitoSugerencia && diasTransitoSugerencia > 0;
   const sugerencia = hasSugerencia ? sugerirETA(etd, diasTransitoSugerencia ?? 0) : null;
 
-  // Detecta cuando el ETA actual coincide con la sugerencia (auto-aplicación
-  // hecha por StepDatosRuta) y lo marca como "Aplicada". Si el usuario edita
-  // ETA a otro valor, el badge desaparece automáticamente.
   useEffect(() => {
     if (!hasSugerencia) return;
     if (sugerencia && eta === sugerencia) {
@@ -45,6 +53,68 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
     setAutoApplied(true);
   }, [sugerencia, setValue]);
 
+  return { hasSugerencia, sugerencia, autoApplied, recalcular };
+}
+
+// ── EtaLabelAdornment ──────────────────────────────────────────────────────────
+
+interface EtaAdornmentProps {
+  hasSugerencia: boolean;
+  autoApplied: boolean;
+  sugerencia: string | null;
+  eta: string;
+  etd: string;
+  diasTransitoSugerencia: number | null | undefined;
+  recalcular: () => void;
+}
+
+function EtaLabelAdornment({
+  hasSugerencia,
+  autoApplied,
+  sugerencia,
+  eta,
+  etd,
+  diasTransitoSugerencia,
+  recalcular,
+}: EtaAdornmentProps) {
+  if (!hasSugerencia) return null;
+
+  if (autoApplied) {
+    return (
+      <Badge variant="secondary" className="gap-1 text-[10px] font-normal">
+        <CheckCircle2 className="h-3 w-3" />
+        ETA sugerida aplicada (ETD + {diasTransitoSugerencia} días)
+      </Badge>
+    );
+  }
+
+  if (sugerencia && etd && eta !== sugerencia) {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-6 px-2 text-[11px] gap-1"
+        onClick={recalcular}
+        aria-label={`Aplicar ETA sugerida (${sugerencia})`}
+      >
+        <RotateCw className="h-3 w-3" />
+        Usar sugerencia ({diasTransitoSugerencia} días)
+      </Button>
+    );
+  }
+
+  return null;
+}
+
+// ── StepDatosRutaFechas ────────────────────────────────────────────────────────
+
+export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
+  const { register, watch } = useFormContext<EmbarqueFormValues>();
+  const etd = watch("etd");
+  const eta = watch("eta");
+  const { hasSugerencia, sugerencia, autoApplied, recalcular } = useEtaSugerencia(etd, eta, diasTransitoSugerencia);
+
   return (
     <>
       <div className="space-y-2">
@@ -58,28 +128,19 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
         />
         {errors.etd && <p className={errClass}>{errors.etd}</p>}
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="emb-eta" className="flex items-center gap-2 flex-wrap">
           <span>ETA (Fecha Llegada Estimada) *</span>
-          {hasSugerencia && autoApplied && (
-            <Badge variant="secondary" className="gap-1 text-[10px] font-normal">
-              <CheckCircle2 className="h-3 w-3" />
-              ETA sugerida aplicada (ETD + {diasTransitoSugerencia} días)
-            </Badge>
-          )}
-          {hasSugerencia && !autoApplied && sugerencia && etd && eta !== sugerencia && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-[11px] gap-1"
-              onClick={recalcular}
-              aria-label={`Aplicar ETA sugerida (${sugerencia})`}
-            >
-              <RotateCw className="h-3 w-3" />
-              Usar sugerencia ({diasTransitoSugerencia} días)
-            </Button>
-          )}
+          <EtaLabelAdornment
+            hasSugerencia={hasSugerencia}
+            autoApplied={autoApplied}
+            sugerencia={sugerencia}
+            eta={eta}
+            etd={etd}
+            diasTransitoSugerencia={diasTransitoSugerencia}
+            recalcular={recalcular}
+          />
         </Label>
         <Input
           id="emb-eta"
