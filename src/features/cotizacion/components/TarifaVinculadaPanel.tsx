@@ -73,7 +73,7 @@ export default function TarifaVinculadaPanel({ complete }: { complete?: boolean 
     !!tarifa && !!tipoContenedorActual && tipoContenedorActual !== tarifa.tipo_contenedor_id;
 
   return (
-    <WizardSection title="Tarifa marítima vinculada">
+    <WizardSection title="Tarifa marítima vinculada" complete={complete}>
       <div className="space-y-3">
         {!tarifaId && (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-dashed p-3">
