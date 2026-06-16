@@ -161,8 +161,8 @@ BEGIN
   INSERT INTO public.eventos_embarque(
     id, embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id
   ) VALUES
-    (evt_a, emb_a, 'Confirmado', 'Booking confirmado', 'MX', NOW(), 'a@a', org_a),
-    (evt_b, emb_b, 'Confirmado', 'Booking confirmado', 'MX', NOW(), 'b@b', org_b);
+    (evt_a, emb_a, 'Zarpe', 'Booking confirmado', 'MX', NOW(), 'a@a', org_a),
+    (evt_b, emb_b, 'Zarpe', 'Booking confirmado', 'MX', NOW(), 'b@b', org_b);
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.eventos_embarque WHERE id IN (evt_a, evt_b);
