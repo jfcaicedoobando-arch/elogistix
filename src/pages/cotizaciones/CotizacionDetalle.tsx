@@ -9,6 +9,7 @@ import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/features/cotizacion/components/CotizacionDetalleSecciones";
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
+import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
 
 
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
@@ -57,6 +58,13 @@ export default function CotizacionDetalle() {
         nombreDestinatario={nombreDestinatario}
         onBack={() => navigate("/cotizaciones")}
         onExportarPdf={() => handleExportarPdf(cotizacion, tasaIva)}
+      />
+
+      <CotizacionInactivaBanner
+        cotizacionId={cotizacion.id}
+        estado={cotizacion.estado}
+        updatedAt={cotizacion.updated_at}
+        canEdit={canEdit}
       />
 
       {cotizacion.sin_desglose_costos && (
