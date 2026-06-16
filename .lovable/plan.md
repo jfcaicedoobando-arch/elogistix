@@ -1,28 +1,59 @@
-## Objetivo
-Que las 4 tarjetas KPI del módulo `/cotizaciones` (Total, Aceptadas, Rechazadas, Tasa de conversión) se calculen únicamente sobre cotizaciones creadas en los **últimos 30 días**, independientes de los filtros visibles de la tabla.
+## Problema
+La política `Tenant CRUD` en múltiples tablas exige `admin OR operador OR super_admin`. El rol **contador** (que sí pertenece a la organización) no aparece, así que cualquier INSERT/UPDATE/DELETE devuelve `42501 — new row violates row-level security policy`. El usuario lo vio al dar de alta un cliente, pero el mismo error ocurriría en facturación y CxP.
 
-## Alcance
-- Solo se modifica el cálculo de los KPIs. La tabla, filtros, búsqueda y export CSV siguen funcionando igual sobre el dataset completo.
-- Se usa `created_at` como fecha base (criterio uniforme y siempre presente). La ventana es **[hoy − 30 días, ahora]**, calculada con UTC normalizado por `date-time-standards`.
+## Solución
+Migración SQL que **recrea las políticas Tenant CRUD añadiendo `contador`** a la lista de roles permitidos en las tablas del alcance natural del rol (facturación + CxP + catálogos comerciales).
 
-## Cambios
+### Tablas afectadas (10)
+| Tabla | Justificación |
+|---|---|
+| `clientes` | Alta/edición para facturar |
+| `contactos_cliente` | Contactos de cobranza |
+| `proveedores` | Catálogo CxP |
+| `conceptos_factura` | Líneas de facturas |
+| `conceptos_venta` | Provisión de venta |
+| `conceptos_costo` | Provisión de costo |
+| `facturas` | Emisión/edición de facturas |
+| `pagos_factura` | Aplicación de pagos |
+| `proveedor_facturas` | Facturas de proveedor (CxP) |
+| `pagos_proveedor` | Pagos a proveedores |
 
-### 1. `src/features/cotizacion/hooks/useCotizacionesPageController.ts`
-- Reemplazar el `useMemo` actual de `kpis` (líneas 107–115) para que:
-  - Derive un subconjunto `ultimos30 = cotizaciones.filter(c => new Date(c.created_at) >= hace30Dias)`.
-  - Sobre ese subconjunto calcule `total`, `aceptadas` (`Aceptada` + `En operación`), `rechazadas` y `tasa`.
-- Usar `useMemo` con dependencia `[cotizaciones]` (no `filtered`).
-- `hace30Dias` se computa una sola vez fuera del filter con `Date.now() - 30 * 24 * 60 * 60 * 1000`.
+> Si alguna de estas tablas tiene política CRUD con nombre diferente, la migración la detecta vía `pg_policy` y la recrea preservando su forma.
 
-### 2. `src/pages/cotizaciones/Cotizaciones.tsx`
-- Añadir un subtítulo discreto encima/junto a la grilla de KPIs: **"Últimos 30 días"**, para que el usuario sepa que esos números no responden a sus filtros de tabla.
+### Forma de la política nueva
+```sql
+DROP POLICY IF EXISTS "Tenant CRUD <tabla>" ON public.<tabla>;
+CREATE POLICY "Tenant CRUD <tabla>" ON public.<tabla>
+  FOR ALL
+  USING (
+    (organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+    AND (
+      has_role(auth.uid(), 'admin')
+      OR has_role(auth.uid(), 'operador')
+      OR has_role(auth.uid(), 'contador')
+      OR has_role(auth.uid(), 'super_admin')
+    )
+  )
+  WITH CHECK (
+    (organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+    AND (
+      has_role(auth.uid(), 'admin')
+      OR has_role(auth.uid(), 'operador')
+      OR has_role(auth.uid(), 'contador')
+      OR has_role(auth.uid(), 'super_admin')
+    )
+  );
+```
 
-### 3. Versionado y changelog
-- Bump `APP_VERSION` → `13.46.2`.
-- Entrada en `CHANGELOG.md`:
-  - `feat(cotizaciones/kpis)`: KPIs ahora se calculan solo sobre cotizaciones creadas en los últimos 30 días; tabla y filtros no se ven afectados.
+### Lo que NO cambia
+- Cotizaciones, embarques, costeo, CRM, presupuesto, configuración, user_roles, organization_members → contador sigue sin escritura (solo lectura vía rol `viewer`/`contador` donde aplique).
+- Las políticas de `Cliente read own ...` y `Tenant viewer ...` se quedan tal cual.
+- No se modifican GRANTs ni el esquema.
+
+## Versionado
+- Bump `APP_VERSION` → `13.46.3`.
+- `CHANGELOG.md`: `fix(rls/contador)` — habilitar escritura en facturación, CxP y catálogos comerciales.
 
 ## Fuera de alcance
-- No se cambia la fuente de datos (`useCotizaciones` sigue trayendo todo).
-- No se agrega un selector de rango personalizado (7/30/90 días) — si lo quieres, lo abordamos en otro paso.
-- No se toca el módulo informativo ni el detalle.
+- No se actualiza la memoria `mem://features/roles-catalog` en esta tarea (puedo hacerlo si lo pides).
+- No se agrega `contador` a la matriz del frontend (`allowedRoles` en rutas). Las rutas `/clientes`, `/proveedores`, `/facturacion`, `/cxp` ya son accesibles para él; el bloqueo era exclusivamente RLS.
