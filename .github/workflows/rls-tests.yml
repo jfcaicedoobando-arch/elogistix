@@ -22,6 +22,10 @@ on:
       - "supabase/tests/rls/**"
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
+  schedule:
+    # Lunes 06:00 UTC — corre la suite contra `main` aunque no haya PRs
+    # para detectar drift de la imagen Postgres o de catálogos seed.
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
