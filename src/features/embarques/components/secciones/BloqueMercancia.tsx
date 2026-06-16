@@ -23,12 +23,14 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2 md:col-span-2">
-        <Label>Descripción de la Mercancía *</Label>
+        <LabelHeredable field="descripcionMercancia" getter={(c) => c.descripcion_mercancia}>
+          Descripción de la Mercancía *
+        </LabelHeredable>
         <Input className={errors.descripcionMercancia ? 'border-destructive' : ''} placeholder="Descripción detallada" {...register('descripcionMercancia')} />
         {errors.descripcionMercancia && <p className="text-xs text-destructive">{errors.descripcionMercancia}</p>}
       </div>
       <div className="space-y-2">
-        <Label>Tipo de Carga *</Label>
+        <LabelHeredable field="tipoCarga" getter={(c) => c.tipo_carga}>Tipo de Carga *</LabelHeredable>
         <Controller name="tipoCarga" render={({ field }) => (
           <Select value={field.value} onValueChange={field.onChange}>
             <SelectTrigger><SelectValue placeholder="Seleccionar tipo de carga" /></SelectTrigger>
