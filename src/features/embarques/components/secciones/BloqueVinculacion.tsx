@@ -9,12 +9,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import type { ExpedienteCliente } from "@/features/embarques/hooks";
+import { DesvincularCotizacionDialog, type DesvincularOpcion } from "@/features/embarques/components/DesvincularCotizacionDialog";
 
 interface Props {
   cotizacionesAceptadas: CotizacionRow[];
   cotizacionVinculada?: CotizacionRow | null;
   onVincularCotizacion?: (cot: CotizacionRow) => void;
-  onDesvincularCotizacion?: () => void;
+  onDesvincularCotizacion?: (opcion?: DesvincularOpcion) => void;
   clienteId: string;
   expedientesCliente: ExpedienteCliente[];
   modoExpediente?: 'nuevo' | 'existente';
