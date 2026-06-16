@@ -47,19 +47,23 @@ export function esCotizacionInactivaOculta(
   return true;
 }
 
+export interface CotizacionFilterParams {
+  search: string;
+  filterEstado: string;
+  filterCliente: string;
+  filterSinCostos: boolean;
+  incluirInactivas: boolean;
+}
+
 export function matchesCotizacionFilter(
   c: CotizacionListItem,
-  search: string,
-  filterEstado: string,
-  filterCliente: string,
-  filterSinCostos: boolean,
-  incluirInactivas: boolean,
+  p: CotizacionFilterParams,
 ): boolean {
-  if (!matchesSearch(c, search)) return false;
-  if (filterEstado !== "todos" && c.estado !== filterEstado) return false;
-  if (filterCliente !== "todos" && c.cliente_id !== filterCliente) return false;
-  if (filterSinCostos && !(!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0))) return false;
-  if (esCotizacionInactivaOculta(c, incluirInactivas, filterEstado)) return false;
+  if (!matchesSearch(c, p.search)) return false;
+  if (p.filterEstado !== "todos" && c.estado !== p.filterEstado) return false;
+  if (p.filterCliente !== "todos" && c.cliente_id !== p.filterCliente) return false;
+  if (p.filterSinCostos && !(!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0))) return false;
+  if (esCotizacionInactivaOculta(c, p.incluirInactivas, p.filterEstado)) return false;
   return true;
 }
 
@@ -94,7 +98,7 @@ export function useCotizacionesPageController() {
 
   const filtered = useMemo(() => {
     return cotizaciones.filter((c) =>
-      matchesCotizacionFilter(c, search, filterEstado, filterCliente, filterSinCostos, incluirInactivas),
+      matchesCotizacionFilter(c, { search, filterEstado, filterCliente, filterSinCostos, incluirInactivas }),
     );
   }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos, incluirInactivas]);
 

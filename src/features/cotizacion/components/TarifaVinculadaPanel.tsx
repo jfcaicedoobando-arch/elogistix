@@ -21,6 +21,7 @@ import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
 import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import type { TopTarifaRow } from "@/features/costeo/types";
 import { resolveTipoContenedorId, computeTarifaWarnings } from "./tarifaVinculadaPanel.helpers";
 
 const OPTS = { shouldValidate: true, shouldDirty: true } as const;
