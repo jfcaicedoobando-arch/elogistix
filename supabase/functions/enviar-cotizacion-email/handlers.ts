@@ -11,10 +11,7 @@ function json(data: Record<string, unknown>, status = 200): Response {
   });
 }
 
-function isEmail(v: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
-
+import { isEmail } from './emailValidation.ts';
 export { isEmail };
 
 export async function handlePrepare(

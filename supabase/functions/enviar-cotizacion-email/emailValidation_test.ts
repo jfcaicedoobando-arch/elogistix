@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { isEmail } from "./handlers.ts";
+import { isEmail } from "./emailValidation.ts";
 
 Deno.test("isEmail: válidos", () => {
   assert(isEmail("a@b.com"));
