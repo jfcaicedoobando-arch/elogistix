@@ -6,7 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.44.6] - 2026-06-16
+## [13.44.7] - 2026-06-16
+- **fix(ci/lint)**: cero warnings en `eslint --max-warnings 0` (antes 21). Refactors sin suprimir reglas: (a) edge functions `process-email-queue`, `send-transactional-email`, `enviar-cotizacion-email`, `handle-email-unsubscribe` y template `cotizacion-enviada` divididas en helpers (`queueProcessor`, `processItem`, `handlers`, `validation`, `unsubscribeToken`, `tokenExtractor`) con handlers thin <120 líneas y complejidad ≤16; (b) `TarifaVinculadaPanel` mueve helpers puros a `tarifaVinculadaPanel.helpers.ts` (react-refresh limpio); (c) `useCotizacionesPageController` usa objeto `CotizacionFilterParams` (≤5 params); (d) `handlePaso1Crm.validatePaso1` se divide en `validateCliente`/`validateProspecto`/`validateTerrestre`/`validateMaritimo`; (e) `embarqueCotizacion.buildVincularCotizacionUpdates` se divide en builders por sección; (f) `CotizacionDetalle.tsx` extrae `ProspectoBanner`/`ComentarioClienteCard`/`NotasCard` a `detalle/CotizacionDetalleCards.tsx`; (g) `BloqueMercancia`, `ResumenHerenciaCotizacion`, `StepDatosRutaFechas` extraen sub-componentes/hooks puros; (h) `useEditarProveedorController` elimina `eslint-disable` huérfano; (i) hook `useCotizacionVinculada` separado del Provider para cumplir `react-refresh/only-export-components`.
+
+
 - **fix(ci/arquitectura)**: arregla las 3 fallas de la auditoría arquitectónica. (a) `useEnviarCotizacionEmail.ts` y `useEnvioCotizacionForm.ts` ya no importan `@/integrations/supabase/client` directamente — se mueven las lecturas a un servicio nuevo `features/cotizacion/services/envios.ts` (`fetchHistorialEnviosCotizacion`, `fetchContactosClienteConEmail`) y el cast `as unknown as EnvioRow[]` queda anotado con `// SAFE-CAST:` en la capa de servicio. (b) `pages/cotizaciones/Cotizaciones.tsx` baja de 209 a 183 líneas extrayendo el header de acciones a `CotizacionesPageActions.tsx`. Tests `architecture.test.ts` + `audit-report.test.ts` en verde.
 
 ## [13.44.5] - 2026-06-16
