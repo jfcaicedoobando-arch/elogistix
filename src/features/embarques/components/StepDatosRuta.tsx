@@ -24,13 +24,16 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
   const eta = watch('eta');
   const contenedores = (watch('contenedores') ?? []) as ContenedorBorrador[];
 
-  // Sugerir ETA cuando se ingresa ETD y hay días de tránsito de cotización
+  // Auto-aplicar ETA sugerida sólo cuando hay ETD nuevo y ETA vacía.
+  // El badge "ETA sugerida aplicada" se renderiza dentro de StepDatosRutaFechas
+  // a partir del estado de los campos y del valor de la sugerencia.
   useEffect(() => {
     if (etd && !eta && diasTransitoSugerencia && diasTransitoSugerencia > 0) {
       const sug = sugerirETA(etd, diasTransitoSugerencia);
       if (sug) setValue('eta', sug, { shouldDirty: true });
     }
   }, [etd, eta, diasTransitoSugerencia, setValue]);
+
 
   const hasErrors = Object.keys(errors).length > 0;
   const esMaritimo = modo === 'Marítimo' || !modo;
