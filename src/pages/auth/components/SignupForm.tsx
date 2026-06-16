@@ -12,6 +12,7 @@ import { translateAuthError } from "@/lib/auth/translateAuthError";
 export function SignupForm() {
   const { toast } = useToast();
   const [signupName, setSignupName] = useState("");
+  const [signupCompany, setSignupCompany] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupPassword2, setSignupPassword2] = useState("");
@@ -23,6 +24,11 @@ export function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignupError(null);
+    const companyName = signupCompany.trim();
+    if (companyName.length < 2 || companyName.length > 120) {
+      setSignupError("El nombre de la empresa debe tener entre 2 y 120 caracteres.");
+      return;
+    }
     if (signupPassword !== signupPassword2) {
       setSignupError("Las contraseñas no coinciden.");
       return;
@@ -37,6 +43,7 @@ export function SignupForm() {
         email: signupEmail,
         password: signupPassword,
         fullName: signupName,
+        companyName,
         redirectTo: `${window.location.origin}/inicio`,
       });
       setSignupDone(true);
@@ -71,6 +78,10 @@ export function SignupForm() {
       <div className="space-y-2">
         <Label htmlFor="signup-name">Nombre completo</Label>
         <Input id="signup-name" type="text" placeholder="Juan Pérez" value={signupName} onChange={(e) => setSignupName(e.target.value)} required autoComplete="name" />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="signup-company">Nombre de empresa</Label>
+        <Input id="signup-company" type="text" placeholder="Mi Agencia Aduanal S.A. de C.V." value={signupCompany} onChange={(e) => setSignupCompany(e.target.value)} required minLength={2} maxLength={120} autoComplete="organization" />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email de trabajo</Label>

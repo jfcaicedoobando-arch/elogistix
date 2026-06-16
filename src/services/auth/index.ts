@@ -48,11 +48,14 @@ export interface SignUpInput {
   email: string;
   password: string;
   fullName: string;
+  companyName: string;
   redirectTo: string;
 }
 
 /**
- * Crea una cuenta nueva en Supabase Auth con metadata de nombre completo.
+ * Crea una cuenta nueva en Supabase Auth con metadata de nombre completo
+ * y nombre de empresa. El trigger `handle_new_user_signup` en BD usa
+ * `company_name` para crear la organización y la membresía admin.
  * Lanza si Supabase devuelve error.
  */
 export async function signUpWithEmail(input: SignUpInput): Promise<void> {
@@ -60,7 +63,10 @@ export async function signUpWithEmail(input: SignUpInput): Promise<void> {
     email: input.email,
     password: input.password,
     options: {
-      data: { full_name: input.fullName },
+      data: {
+        full_name: input.fullName,
+        company_name: input.companyName,
+      },
       emailRedirectTo: input.redirectTo,
     },
   });
