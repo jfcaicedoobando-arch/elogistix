@@ -16,7 +16,7 @@ import BannerOverride from "./seccionRuta/BannerOverride";
 import type { TarifaCtx } from "./seccionRuta/overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 
-export default function SeccionRutaCotizacion() {
+export default function SeccionRutaCotizacion({ complete }: { complete?: boolean } = {}) {
   const ctx = useFormContext<CotizacionFormValues>();
   const { watch, setValue } = ctx;
 
