@@ -71,13 +71,11 @@ export default function CotizacionDetalle() {
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id!}
           embarqueIdVinculado={cotizacion.embarque_id ?? null}
-          isCreandoBorrador={crearBorrador.isPending}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
-          onAbrirGenerarEmbarques={() => setShowConfirmarConvertir(true)}
-          onCrearBorrador={handleCrearBorrador}
         />
       )}
+
 
       {cotizacion.es_prospecto && (
         <Card className="border-warning/30 bg-warning/10">
