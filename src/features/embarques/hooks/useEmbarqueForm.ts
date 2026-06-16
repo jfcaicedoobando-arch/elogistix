@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/shared";
 import { uploadFile } from "@/services/storage/index";
@@ -110,12 +110,20 @@ export function useEmbarqueForm() {
     [documentosArchivos],
   );
 
+  // Snapshot del último vincular: permite que desvincular("limpiar") respete
+  // los campos que el usuario tocó manualmente después de heredarlos (Pack B).
+  const vincularSnapshotRef = useRef<
+    import("@/lib/mappers/embarque").VincularSnapshot
+  >({});
+
   const vincularCotizacion = useCallback(
     (cot: CotizacionParaVincular) => {
       const opts = { shouldValidate: true, shouldDirty: true } as const;
-      for (const [field, value] of buildVincularCotizacionUpdates(cot)) {
-        methods.setValue(field, value, opts);
+      const updates = buildVincularCotizacionUpdates(cot);
+      for (const [field, value] of updates) {
+        methods.setValue(field, value as never, opts);
       }
+      vincularSnapshotRef.current = Object.fromEntries(updates);
       methods.trigger();
     },
     [methods],
@@ -124,9 +132,15 @@ export function useEmbarqueForm() {
   const desvincularCotizacion = useCallback(
     (modo: "limpiar" | "conservar" | "solo-conceptos" = "limpiar") => {
       const opts = { shouldValidate: true, shouldDirty: true } as const;
-      for (const [field, value] of buildDesvincularCotizacionUpdates(modo)) {
-        methods.setValue(field, value, opts);
+      const updates = buildDesvincularCotizacionUpdates(
+        modo,
+        vincularSnapshotRef.current,
+        methods.getValues(),
+      );
+      for (const [field, value] of updates) {
+        methods.setValue(field, value as never, opts);
       }
+      if (modo === "limpiar") vincularSnapshotRef.current = {};
       methods.trigger();
     },
     [methods],

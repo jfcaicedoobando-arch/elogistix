@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.30.0] - 2026-06-16
+- **feat(embarques/precarga-contenedores)**: `buildVincularCotizacionUpdates` ahora siembra N placeholders de `contenedores` cuando la cotización vinculada es FCL marítima y trae `num_contenedores > 0`. Cada placeholder hereda el `tipo_contenedor` de la cotización; el usuario sólo captura número de contenedor, BL house y pesos.
+- **feat(embarques/desvincular-respeta-overrides)**: Al desvincular con la opción "Limpiar todo lo heredado", el mapper compara el snapshot original sembrado por la cotización contra el valor actual del formulario; los campos que el usuario editó manualmente se preservan y sólo se limpian los que siguen intactos (Opción A — respetar trabajo del usuario). Implementado con un `vincularSnapshotRef` interno en `useEmbarqueForm`, sin cambios en componentes consumidores.
+
 ## [13.29.0] - 2026-06-16
 - **feat(cotizaciones/wizard-validacion-inline)**: Cada sección del Paso 1 (Cliente, Operación, Ruta, Mercancía, Tarifa, Cierre) muestra un check verde cuando sus campos requeridos están completos. Nuevo hook puro `usePaso1SectionStatus` y prop opcional `complete` en `WizardSection`. Sin nuevos validadores Zod.
 - **feat(cotizaciones/heredado-badge)**: Reemplazado el badge inline "Tarifa" en `TarifaFields` por el `HeredadoBadge` estándar con tooltip ("Pre-llenado desde tarifa vinculada").
