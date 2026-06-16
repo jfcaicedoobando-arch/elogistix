@@ -103,10 +103,9 @@ async function callGateway(apiKey: string, userPrompt: string): Promise<Response
 }
 
 function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: HeadersInit) {
-  if (status === 429) return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
-  if (status === 402) return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
-  log.error("AI gateway error", { status_code: status });
-  return errorResponse("Error al generar la explicación", 500, cors);
+  const { status: mappedStatus, message } = mapGatewayStatus(status);
+  if (mappedStatus === 500) log.error("AI gateway error", { status_code: status });
+  return errorResponse(message, mappedStatus, cors);
 }
 
 async function authorizeEmbarque(
