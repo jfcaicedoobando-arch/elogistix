@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToFile } from "@react-pdf/renderer";
-import { TarifarioDocument } from "./src/pdf/documents/TarifarioDocument";
+import { TarifarioDocument } from "../src/pdf/documents/TarifarioDocument";
 
 const cotizacion: any = {
   folio: "TAR-2026-0042",
