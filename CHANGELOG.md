@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.1] - 2026-06-16
+- **fix(ci)**: estabiliza la corrida de CI tras el alta del rol Gerente Comercial. Quita dos `any` en plantillas transaccionales (`registry.ts` y `send-transactional-email/index.ts`), elimina los `export default` no usados de `HeredadoBadge` y `DesvincularCotizacionDialog` (sólo se importaban con nombre), y corrige el test de `compareBy` en `embarquesPageHelpers` para usar expedientes con consecutivo numérico (el getter extrae dígitos; "A"/"B" colapsaban a 0 y rompían el aserto de orden).
+
 ## [13.44.0] - 2026-06-16
 - **feat(roles)**: nuevo rol **Gerente Comercial** (`gerente_comercial`) para supervisar al equipo de ventas. Ve CRM completo de la organización (no sólo sus cuentas), cotizaciones con costos y márgenes, clientes, comisiones (lectura) y embarques (seguimiento). Sin acceso a configuración, usuarios, CxP, tesorería ni costeo. Satisface el agrupador `vendedor` en `has_role` para que las políticas RLS existentes ya lo reconozcan. Aparece como asignable en el alta de usuarios y como responsable en leads/oportunidades del CRM.
 
