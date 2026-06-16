@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.44.15] - 2026-06-16
+- **fix(test-hygiene)**: CI rojo en `audit-report > test hygiene baseline` por título duplicado de `describe("buildDesvincularCotizacionUpdates")` entre `src/lib/mappers/__tests__/embarque.test.ts:152` y el nuevo `embarqueCotizacionDesvincular.test.ts:16`. Renombrado el describe del archivo nuevo a `"buildDesvincularCotizacionUpdates — pure unit"` para mantener la regla `duplicate-title=0`. Verificado local: 13/13 verdes (8 mapper + 5 audit-report).
+
 ## [13.44.14] - 2026-06-16
 - **test(lógica/tesorería)**: 17 tests nuevos para módulos de dominio Tesorería que estaban sin cobertura (Fase 2 del plan, continuación). (a) `src/lib/domain/tesoreria/__tests__/resumen.test.ts` — 5 casos para `calcularResumenTesoreria`: suma cobranza/cxp por moneda dentro de ventana 30d, ignora saldos ≤0 y `fecha_vencimiento` nula, `top_deudores` filtra estatus `Vencida` y limita a 5 ordenados desc, `top_acreedores` acepta `Por vencer`/`Vencida` y excluye `Pagada`, valor por defecto de `hoy=new Date()`. (b) `src/lib/domain/tesoreria/__tests__/flujoProyectado.test.ts` — 12 casos para `inicioSemana` (miércoles→lunes 00:00, domingo retrocede 6 días), `isoWeekKey` (formato `YYYY-Www` con padding y consistencia intra-semana), `toMxn` (MXN tal cual, USD×tc, tc inválido sin convertir) y `calcularFlujoProyectado` (saldo acumulado, alertas negativas, liquidaciones asignadas al día 5 del mes siguiente al periodo, ignora cobranza fuera de ventana, periodos inválidos descartados). 17/17 verdes.
 
