@@ -1,81 +1,58 @@
-# Pack B — Precarga ampliada Cotización → Embarque
+# Pack C — Sugerir Tarifa Top 3 inline en el wizard
 
-Objetivo: que al crear un embarque desde una cotización **vinculada con desglose de costos**, se hereden todos los datos operativos relevantes (no sólo cliente/ruta básica), reduciendo recaptura y errores. Mantiene la regla de candado: sin desglose ⇒ no se puede crear embarque.
+Objetivo: cuando el usuario captura ruta + tipo de contenedor en el Paso 1 (modo Marítimo) y todavía no ha vinculado tarifa, el wizard muestra **proactivamente las 3 mejores tarifas vigentes** en cards compactas, sin necesidad de abrir el modal "Buscar tarifa". Un clic en "Elegir" la vincula con la lógica existente.
 
 ## Alcance funcional
 
-Campos a heredar automáticamente al `EmbarqueFormValues` cuando se entra a `/embarques/nuevo?cotizacion=<id>`:
+### C1 — Sugerencias inline
+- Cuando `modo === "Marítimo"` y hay `origen` + `destino` + `tipoContenedor` resueltos a IDs del catálogo y `tarifaId` está vacío → render automático de hasta 3 cards Top con la misma `TarifaResultCard` que usa el modal.
+- Heading: `"Tarifas sugeridas para esta ruta"` + contador `"3 vigentes"`.
+- Botón secundario `"Ver todas / cambiar filtros"` abre el `BuscarTarifaDialog` existente (con `initial` precargado), por si el usuario quiere ajustar fecha u otra combinación.
 
-### B1 — Operación y comercial
-- `incoterm` (FOB / CIF / DDP / …)
-- `naviera_id` (si la cotización trae tarifa con naviera)
-- `tipo_carga` (FCL / LCL / Aéreo / Terrestre)
-- `modalidad` (Importación / Exportación)
+### C2 — Estados auxiliares
+- **Resolviendo IDs**: si origen/destino vienen como texto libre (PortSelect guarda `"Shanghai, China (CNSHA)"`), resolver buscando en `usePuertos()` por coincidencia de nombre (mismo patrón que ya usa `TarifaVinculadaPanel` para `tipoContenedor`).
+- **Sin coincidencia** (origen/destino libres o no en catálogo): mensaje suave `"Selecciona puertos del catálogo para ver sugerencias."` con el botón "Buscar tarifa" actual como fallback.
+- **Sin resultados vigentes**: mensaje informativo `"No hay tarifas vigentes para esta combinación. Cotiza manualmente o captura una en Tarifas marítimas."`.
+- **Loading**: skeleton de 3 cards.
 
-### B2 — Ruta por modo
-Ya está parcialmente en el mapper. Asegurar que se hereda el set correcto según `modo_transporte`:
-- Marítimo: `puerto_origen_id`, `puerto_destino_id`
-- Aéreo: `aeropuerto_origen_id`, `aeropuerto_destino_id`
-- Terrestre: `ciudad_origen`, `ciudad_destino`
+### C3 — Cambio de combinación
+- Si el usuario cambia origen/destino/tipo después de vincular, mostrar inline `"La combinación cambió — ¿re-sugerir tarifas?"` con botón que limpia el vínculo y re-dispara la sugerencia (no rompe el override automáticamente; sólo quita el binding de tarifa, los campos manuales se conservan).
 
-### B3 — Mercancía
-- `descripcion_mercancia`
-- `peso_kg`, `volumen_m3`, `valor_mercancia`, `moneda_valor`
-- `es_peligrosa` + `clase_imo` + `un_number` (MSDS, ya parcial)
-- `requiere_refrigeracion` + `temperatura_c`
+### C4 — Telemetría
+- Registrar evento `tarifa_sugerida_aplicada` en `bitacora_actividad` cuando el usuario elige una sugerencia inline (vs abrir el modal), para medir adopción del Top 3 proactivo. Campos: `tarifa_id`, `ranking` (1/2/3), `cotizacion_id` o `borrador=true`.
 
-### B4 — Contenedores (FCL)
-- Precargar `embarque_contenedores` desde `cotizacion_costos` filtrando conceptos tipo "Flete marítimo" agrupados por `tipo_contenedor_id` y `cantidad`. Si la cotización trae 2x40HC + 1x20GP, crear 3 filas placeholder en el wizard (sin número de contenedor, sólo tipo).
-
-### B5 — Tarifa y garantías
-- `tarifa_id` (link a `costeo_tarifas` si la cotización fue cotizada con tarifa)
-- `requiere_carta_garantia` (heredado de `costeo_navieras_condiciones`)
-- `dias_libres_demoras` (tope sugerido del tabulador)
-
-### B6 — Tarifa de venta de demoras
-- Si la cotización tiene `costeo_demoras_venta_tarifa` ligada, copiar `tarifa_demoras_venta_id` al embarque para autocalcular demoras cliente desde el timeline.
-
-## UX
-
-- Cada campo precargado muestra `<HeredadoBadge tipoOrigen="cotizacion" origen={cot.folio} />` a la derecha del label.
-- Si el usuario edita un campo precargado, el badge desaparece y se marca `overridesCotizacion[campo] = true` (mismo patrón que `tarifaOverride`).
-- Banner superior del wizard: `"Datos heredados de cotización COT-2026-0123. Los cambios no se reflejarán de regreso."` con botón **"Ver cotización"**.
-- En `DesvincularCotizacionDialog` (ya existe), la opción "Conservar datos" mantiene los valores; "Limpiar" los borra todos en una pasada usando `overridesCotizacion` como guía inversa.
+## Fuera de alcance
+- Re-ranking por preferencias del cliente (último naviera usado, etc.) — el algoritmo Top 3 actual ya prioriza precio + tránsito + carta garantía; no se toca.
+- Sugerencias para modos no marítimos.
+- Notificación push cuando aparezca una tarifa mejor después de vincular.
 
 ## Detalles técnicos
 
+### Archivos nuevos
+- `src/features/cotizacion/components/seccionRuta/SugerenciasTarifaInline.tsx` (~150 líneas) — componente que:
+  - Consume `useFormContext<CotizacionFormValues>` para `origen`, `destino`, `tipoContenedor`, `tarifaId`.
+  - Consume `usePuertos()` y `useTiposContenedor()` para resolver IDs.
+  - Consume `useTopTarifas({ puertoOrigenId, puertoDestinoId, tipoContenedorId, fecha: hoy })`.
+  - Renderiza 3 `TarifaResultCard` con `onElegir` que aplica la tarifa (misma función `aplicarTarifa` que vive en `TarifaVinculadaPanel`, extraída a un helper compartido).
+- `src/features/cotizacion/components/seccionRuta/aplicarTarifa.ts` — helper puro `aplicarTarifaAlForm(setValue, trigger, row, opts)` extraído de `TarifaVinculadaPanel`.
+- `src/features/cotizacion/components/seccionRuta/__tests__/SugerenciasTarifaInline.test.tsx` — 3 casos: resuelve IDs por nombre, render Top 3, mensaje "sin coincidencia".
+
 ### Archivos a tocar
-- `src/lib/mappers/embarqueCotizacion.ts` — extender `mapCotizacionToEmbarqueDefaults()` con B1, B3 extendidos, B4, B5, B6.
-- `src/lib/mappers/__tests__/embarqueCotizacion.test.ts` — nuevos casos: FCL 2 tipos contenedor, IMO peligrosa, tarifa con carta garantía, demoras venta ligada.
-- `src/features/embarques/types/form.ts` — añadir campos `overridesCotizacion: Record<string, boolean>`, `tarifa_id?`, `requiere_carta_garantia?`, `dias_libres_demoras?`, `tarifa_demoras_venta_id?` (si faltan).
-- `src/features/embarques/hooks/useNuevoEmbarqueCotVinculada.ts` — invocar mapper extendido y poblar `overridesCotizacion = {}` al inicio.
-- `src/features/embarques/components/StepDatosGenerales.tsx` y secciones — pasar `tipoOrigen="cotizacion"` + `origen={folio}` al `HeredadoBadge` en cada campo heredado; suscribir `onChange` para marcar override.
-- `src/features/embarques/components/secciones/BloqueContenedores.tsx` (o equivalente) — hidratar filas placeholder desde mapper.
-- `src/features/embarques/components/DesvincularCotizacionDialog.tsx` — usar `overridesCotizacion` para "Limpiar".
+- `src/features/cotizacion/components/TarifaVinculadaPanel.tsx` — sustituir el bloque `!tarifaId` actual por `<SugerenciasTarifaInline />`; usar el helper compartido `aplicarTarifaAlForm`.
+- `src/lib/services/bitacora.ts` (o equivalente existente) — añadir helper `logTarifaSugeridaAplicada({ tarifaId, ranking, cotizacionId? })`.
 
-### Queries
-- Extender `getCotizacionById` (o equivalente) usado por el flujo de nuevo embarque para traer:
-  - `cotizacion_costos(*, tipo_contenedor:tipos_contenedor(*))`
-  - `tarifa:costeo_tarifas(*, naviera:navieras(*), condiciones:costeo_navieras_condiciones(*))`
-  - `tarifa_demoras_venta:costeo_demoras_venta_tarifa(*)`
-
-### Sin cambios en BD
-No hay migración. Todo es lectura + mapeo cliente.
+### Sin migración
+La RPC `top_tarifas` ya existe y se consume vía `fetchTopTarifas` / `useTopTarifas`. No hay cambios en BD.
 
 ### Versionado
-- Bump `APP_VERSION` a `13.30.0`.
-- Entrada en `CHANGELOG.md` bajo `## [13.30.0] - 2026-06-16`.
-
-## Fuera de alcance
-- Sugerencia de Top 3 tarifas (Pack C).
-- Sidebar sticky de progreso y role gate (Pack D).
-- Sincronización bidireccional cotización ↔ embarque (no se contempla).
+- Bump `APP_VERSION` a `13.31.0`.
+- Entrada en `CHANGELOG.md` bajo `## [13.31.0] - 2026-06-16`.
 
 ## Tests
-- Unit: 4 casos nuevos en `embarqueCotizacion.test.ts`.
-- Smoke manual: crear cotización con desglose FCL 2x40HC + IMO Clase 3 + naviera con carta garantía → crear embarque → verificar 6 secciones precargadas con badges.
+- Unit: 3 casos en `SugerenciasTarifaInline.test.tsx` (mock de `useTopTarifas`, `usePuertos`, `useTiposContenedor`).
+- Smoke manual: nueva cotización marítima → seleccionar Shanghai/Manzanillo/40HC en Paso 1 → ver 3 cards bajo "Tarifa" → click "Elegir #2" → verifica que campos se autollenan y badge "Heredado de tarifa" aparece.
 
 ## Pregunta de decisión
-Cuando el usuario edita un campo heredado y luego **desvincula** la cotización eligiendo "Limpiar", ¿qué hacemos con los campos que él ya tocó (override)?
-- **A.** Respetar el override del usuario (sólo limpiar los que siguen heredados puros). **Recomendado.**
-- **B.** Limpiar todo sin distinguir.
+Cuando el usuario YA tiene una tarifa vinculada y cambia origen/destino/tipo, ¿qué hacemos?
+- **A.** Mantener la tarifa vinculada y mostrar warning amarillo "Combinación cambió" con botón manual "Re-sugerir". **Recomendado** (no pisar trabajo del usuario).
+- **B.** Auto-desvincular y volver a mostrar las sugerencias inline inmediatamente.
