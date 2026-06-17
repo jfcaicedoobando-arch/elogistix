@@ -43,11 +43,21 @@ export function aplicarTarifaAlForm(
   if (row.tipo_contenedor_id) {
     setValue("tipoContenedor", row.tipo_contenedor_id, OPTS);
   }
+  // v13.47.0 — Frecuencia heredada (override de tarifa > frecuencia de naviera).
+  if (row.frecuencia_resuelta) {
+    setValue("frecuencia", row.frecuencia_resuelta, OPTS);
+  }
+  // v13.47.0 — Días libres de almacenaje LCL si vienen en la tarifa.
+  if (row.dias_libres_almacenaje_lcl != null) {
+    setValue("diasAlmacenaje", row.dias_libres_almacenaje_lcl, OPTS);
+  }
   void trigger([
     "tiempoTransitoDias",
     "diasLibresDestino",
     "cartaGarantia",
     "tipoContenedor",
+    "frecuencia",
+    "diasAlmacenaje",
   ]);
 
   // Auto-carga de costos (best-effort, no bloquea el flujo si falla).
