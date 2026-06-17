@@ -75,7 +75,7 @@ export function mapProveedorFacturaRows(data: unknown): ProveedorFacturaRow[] {
 export function mapEmbarqueERRows(data: unknown): EmbarqueER[] {
   return ((data ?? []) as RawRow[]).map((r) => ({
     id: str(r.id),
-    modo: str(r.modo) as EmbarqueER["modo"],
+    modo: str(r.modo),
     tipo_cambio_usd: nullableNum(r.tipo_cambio_usd),
     tipo_cambio_eur: nullableNum(r.tipo_cambio_eur),
   }));
@@ -86,7 +86,7 @@ export function mapEmbarqueERConExpediente(
 ): Array<EmbarqueER & { expediente: string | null }> {
   return ((data ?? []) as RawRow[]).map((r) => ({
     id: str(r.id),
-    modo: str(r.modo) as EmbarqueER["modo"],
+    modo: str(r.modo),
     tipo_cambio_usd: nullableNum(r.tipo_cambio_usd),
     tipo_cambio_eur: nullableNum(r.tipo_cambio_eur),
     expediente: nullableStr(r.expediente),
