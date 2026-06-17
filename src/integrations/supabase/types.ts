@@ -5509,6 +5509,7 @@ export type Database = {
           ultimo_contacto: string
         }[]
       }
+      cerrar_embarque: { Args: { p_embarque_id: string }; Returns: Json }
       check_ratelimit: {
         Args: { p_key: string; p_max?: number; p_window_seconds?: number }
         Returns: Json
@@ -6152,14 +6153,16 @@ export type Database = {
         Args: { _id: string; _table: string }
         Returns: undefined
       }
-      reabrir_embarque: {
-        Args: {
-          p_embarque_id: string
-          p_request_id?: string
-          p_usuario_email: string
-        }
-        Returns: Json
-      }
+      reabrir_embarque:
+        | { Args: { p_embarque_id: string; p_motivo: string }; Returns: Json }
+        | {
+            Args: {
+              p_embarque_id: string
+              p_request_id?: string
+              p_usuario_email: string
+            }
+            Returns: Json
+          }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -6234,6 +6237,10 @@ export type Database = {
       soft_delete_record: {
         Args: { _id: string; _table: string }
         Returns: undefined
+      }
+      validar_cierre_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: Json
       }
     }
     Enums: {
