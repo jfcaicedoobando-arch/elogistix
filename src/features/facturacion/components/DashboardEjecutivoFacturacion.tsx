@@ -55,7 +55,7 @@ export function DashboardEjecutivoFacturacion() {
 
   const facturadoMes = dash.data?.facturado_mes_mxn ?? 0;
   const cobradoMes = dash.data?.cobrado_mes_mxn ?? 0;
-  const porFacturar = hueco.data?.totalMxn ?? 0;
+  const porFacturar = hueco.totalMxn;
   const porCobrar = cob.total_mxn;
   const vencido = cob.vencido_mxn;
 
