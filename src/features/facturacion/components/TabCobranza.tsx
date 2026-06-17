@@ -10,6 +10,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useCobranza } from "@/features/facturacion/hooks";
+import { useUltimosRecordatorios, useEnviarRecordatorio } from "@/features/facturacion/hooks/useRecordatorios";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { buildCobranzaColumns } from "./cobranzaColumns";
 import { DialogRegistrarPago } from "./DialogRegistrarPago";
@@ -62,14 +63,21 @@ export function TabCobranza() {
     );
   };
 
+  const facturaIds = useMemo(() => data.map((f) => f.id), [data]);
+  const { data: recordatoriosMap } = useUltimosRecordatorios(facturaIds);
+  const enviar = useEnviarRecordatorio();
+
   const columns = useMemo(
     () => buildCobranzaColumns({
       canEdit,
       onRegistrarPago: setPagoFactura,
       onCrearNC: setNcFactura,
       onVerDetalle: setDetalleFactura,
+      onEnviarRecordatorio: (f) => enviar.mutate({ factura_id: f.id }),
+      recordatoriosMap,
+      recordatorioPendingId: enviar.isPending ? enviar.variables?.factura_id ?? null : null,
     }),
-    [canEdit],
+    [canEdit, recordatoriosMap, enviar],
   );
 
   const pagoAdapter = pagoFactura
