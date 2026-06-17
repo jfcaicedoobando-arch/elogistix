@@ -24,6 +24,8 @@ export function useTabProformasPendientesController(opts?: {
   const optsIsInRange = opts?.isInRange;
   const isInRange = useMemo(() => optsIsInRange ?? (() => true), [optsIsInRange]);
   const [search, setSearch] = useState("");
+  const [filtroCliente, setFiltroCliente] = useState<string>("todos");
+  const [filtroAntiguedad, setFiltroAntiguedad] = useState<"todos" | "7" | "15" | "30">("todos");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -33,10 +35,24 @@ export function useTabProformasPendientesController(opts?: {
   const tasaIva = useTasaIVA();
   const reqId = useStableRequestId();
 
+  const clientesDisponibles = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of proformas) if (p.cliente_nombre) set.add(p.cliente_nombre);
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "es-MX"));
+  }, [proformas]);
+
   const filtradas = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const umbralDias = filtroAntiguedad === "todos" ? 0 : Number(filtroAntiguedad);
+    const ahora = Date.now();
     return proformas.filter((p) => {
       if (!isInRange(p.fecha_emision)) return false;
+      if (filtroCliente !== "todos" && p.cliente_nombre !== filtroCliente) return false;
+      if (umbralDias > 0) {
+        if (!p.fecha_emision) return false;
+        const dias = (ahora - new Date(p.fecha_emision).getTime()) / (1000 * 60 * 60 * 24);
+        if (dias < umbralDias) return false;
+      }
       if (!q) return true;
       return (
         p.expediente.toLowerCase().includes(q) ||
@@ -46,7 +62,8 @@ export function useTabProformasPendientesController(opts?: {
         p.numero.toLowerCase().includes(q)
       );
     });
-  }, [proformas, search, isInRange]);
+  }, [proformas, search, isInRange, filtroCliente, filtroAntiguedad]);
+
 
 
   const grupos = useMemo(
