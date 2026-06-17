@@ -69,6 +69,17 @@ const CREAR_EMBARQUE_LIBRE: readonly AppRole[] = [
   "gerente_operaciones",
 ];
 
+// v13.47.0: roles autorizados a sobre-escribir manualmente datos operativos
+// heredados de una tarifa (tránsito, días libres, carta garantía, frecuencia).
+// Ventas/operación no debe tocar estos datos: deben provenir SIEMPRE de la
+// tarifa elegida en el módulo Costeo.
+const OVERRIDE_TARIFA_PRICING: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
