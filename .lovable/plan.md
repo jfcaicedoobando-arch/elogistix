@@ -1,19 +1,17 @@
-# Confirmación — sin cambios adicionales
+# Quitar botón "Crear tarifa" del wizard de cotización
 
-Las respuestas a las preguntas abiertas ya coinciden con lo implementado en v13.47.2:
+## Cambios
 
-## 1. Ruta del barco (post-tarifa)
-**Ya cumplido.** En `SeccionCondicionesComerciales.tsx`:
-- El input `rutaTexto` está **visible** tras la tarifa.
-- Al aplicar tarifa, `aplicarTarifa.ts` autollena con `"{puerto origen} → {puerto destino}"` (heredado).
-- El input queda **editable** por el comercial; muestra hint *"Sugerida desde la tarifa. Puedes editarla si el agente confirma escalas."*
-- Sin tarifa: deshabilitado.
+### `src/features/cotizacion/components/TarifaVinculadaPanel.tsx`
+- Eliminar el botón `<Button>` con icono `Plus` que dispara `irACrearTarifa` dentro del bloque "Tarifa requerida para continuar" (sin tarifa vinculada).
+- Eliminar la función `irACrearTarifa` y la dependencia `useNavigate` si queda huérfana.
+- Eliminar imports no usados: `Plus`, `useNavigate`.
+- El bloque queda con sólo el mensaje informativo + las sugerencias inline (`SugerenciasTarifaInline`). El alta de tarifas se hace exclusivamente desde el módulo Costeo.
 
-## 2. Seguro (post-tarifa)
-**Ya cumplido.** `SeguroBlock` se reutiliza tal cual en la nueva sección:
-- Toggle Sí/No y valor de mercancía 100% manuales.
-- Sin default sugerido desde tarifa/agente.
-- Sin tarifa: deshabilitado.
+### Versionado
+- Bump `APP_VERSION` → `13.47.3`.
+- Entrada en `CHANGELOG.md`: "Quitar botón 'Crear tarifa' del wizard — el alta de tarifas se hace exclusivamente desde el módulo Costeo".
 
-## Acción
-Ninguna. La implementación de v13.47.2 ya responde a ambas decisiones. Si quieres, puedo dejarlo así y pasar a la siguiente mejora del wizard.
+## Fuera de alcance
+- Cambios en el módulo Costeo (`/costeo/tarifas`).
+- Cambios en `SugerenciasTarifaInline` ni `BuscarTarifaDialog`.

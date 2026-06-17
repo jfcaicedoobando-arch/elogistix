@@ -8,8 +8,8 @@
  */
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import { Link2, Unlink, RefreshCcw, AlertTriangle, Plus, AlertCircle } from "lucide-react";
+import { Link2, Unlink, RefreshCcw, AlertTriangle, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardSection } from "@/components/shared/WizardSection";
@@ -40,7 +40,6 @@ interface Props {
 export default function TarifaVinculadaPanel({
   complete, onAutocargaCostos, markup, cantidad,
 }: Props = {}) {
-  const navigate = useNavigate();
   const { watch, setValue, trigger } = useFormContext<CotizacionFormValues>();
   const { data: tiposContenedor = [] } = useTiposContenedor();
   const [open, setOpen] = useState(false);
@@ -49,8 +48,7 @@ export default function TarifaVinculadaPanel({
   const tarifaId = watch("tarifaId");
   const validez = watch("validezPropuesta");
   const tipoContenedorActual = watch("tipoContenedor");
-  const origen = watch("origen");
-  const destino = watch("destino");
+
 
   const { data: tarifa, isLoading } = useTarifaVinculada(tarifaId);
 
@@ -77,14 +75,7 @@ export default function TarifaVinculadaPanel({
     setValue("tarifaOverride", {}, OPTS);
   };
 
-  const irACrearTarifa = () => {
-    const qs = new URLSearchParams();
-    if (origen) qs.set("origen", origen);
-    if (destino) qs.set("destino", destino);
-    if (tipoContenedorIdInicial) qs.set("tipoContenedor", tipoContenedorIdInicial);
-    qs.set("returnTo", "/cotizaciones/nueva");
-    navigate(`/costeo/tarifas?${qs.toString()}`);
-  };
+
 
   const { vencidaAntesDeValidez, tipoMismatch } = computeTarifaWarnings(
     tarifa,
@@ -106,15 +97,6 @@ export default function TarifaVinculadaPanel({
                   acelera la cotización auto-cargando flete y recargos al Paso 2.
                 </p>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={irACrearTarifa}
-                className="shrink-0"
-              >
-                <Plus className="size-4 mr-1" /> Crear tarifa
-              </Button>
             </div>
             <SugerenciasTarifaInline
               onAutocargaCostos={onAutocargaCostos}
