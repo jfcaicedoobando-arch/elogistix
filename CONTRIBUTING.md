@@ -55,3 +55,31 @@ Cada cambio funcional debe:
 ## Dependabot
 
 `.github/dependabot.yml` actualiza GitHub Actions semanalmente (grouped). Revisar y mergear los PRs `ci(deps):` cuando los checks pasen.
+
+## Cómo extender (reglas de la auditoría arquitectónica)
+
+Las siguientes 5 reglas son **obligatorias** y bloquean PRs en review.
+Surgieron del plan de remediación 13.56.1 → 13.56.7 y mantienen el baseline
+limpio.
+
+1. **Componentes ≤200 líneas.** Si crece más, extraer subcomponentes
+   presentacionales puros o hooks (`useXxxController`). Ver `TabPnl`,
+   `TabCierre` y `CosteoRutas` como referencia.
+2. **Sin `SELECT *` en servicios.** Declarar constantes `*_COLUMNS` con las
+   columnas explícitas necesarias. Esto blinda contra crecimiento del esquema
+   y mejora el plan de consulta.
+3. **Tokens semánticos para colores.** Nunca usar `text-emerald-*`,
+   `text-rose-*`, `bg-[#...]`. Usar `text-success`, `text-destructive`,
+   `text-warning`, `bg-card`, `bg-muted`, etc. Para tonos categóricos de
+   tarjetas KPI usar `bg-kpi-{tone}` / `text-kpi-{tone}`.
+4. **Tests por servicio + hook.** Todo módulo nuevo en `src/features/<x>/`
+   debe traer `services/__tests__/*.test.ts` (mockear con
+   `_supabaseChainMock`) y un test de hook con `createWrapper()` cuando
+   exponga estado React Query.
+5. **Cleanup obligatorio en `useEffect`.** Cualquier `useEffect` con canal
+   Supabase, listener, `setTimeout` o `setInterval` debe retornar función
+   de limpieza (`removeChannel`, `removeEventListener`, `clearTimeout`,
+   `clearInterval`). Ver `mem://principles/power-of-10`.
+
+Para deuda técnica futura usar el prefijo `// AUDIT(<id>)` y registrar la
+entrada en `.lovable/audit-todos.md`.
