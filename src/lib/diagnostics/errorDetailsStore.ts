@@ -4,7 +4,7 @@
  * de debug active el panel sin acoplarse al árbol de Toaster.
  */
 import { useSyncExternalStore } from "react";
-import type { ErrorReport } from "@/components/shared/utils/errorReport";
+import type { ErrorReport } from "@/lib/diagnostics/errorReportTypes";
 
 type State = { report: ErrorReport | null };
 

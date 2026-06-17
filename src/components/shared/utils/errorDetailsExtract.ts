@@ -13,11 +13,8 @@ import { ERROR_CODES, type AppErrorCode } from "@/lib/domain/errorCatalog";
 
 type Details = ErrorReport["errorDetails"];
 
-export interface ValidationIssue {
-  path: (string | number)[];
-  message: string;
-  code: string;
-}
+export type { ValidationIssue } from "@/lib/diagnostics/errorReportTypes";
+import type { ValidationIssue } from "@/lib/diagnostics/errorReportTypes";
 
 interface MaybePostgrestError {
   message?: unknown;

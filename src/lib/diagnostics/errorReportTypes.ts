@@ -4,7 +4,12 @@
  * sin romper la jerarquía de capas (lib → no depende de components).
  */
 import type { AppErrorCode } from "@/lib/domain/errorCatalog";
-import type { ValidationIssue } from "@/components/shared/utils/errorDetailsExtract";
+
+export interface ValidationIssue {
+  path: (string | number)[];
+  message: string;
+  code: string;
+}
 
 export interface ErrorReportInput {
   title?: string;
