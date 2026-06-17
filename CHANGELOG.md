@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.48.0] - 2026-06-17
+- **feat(pre-facturacion)**: Quick wins de auditoría del módulo. (A) `HuecoFacturacionCard` ahora se muestra como alerta global arriba de los tabs en `/facturacion` (antes huérfano, sólo referenciado en la guía). (B) `DateRangeFilter` movido arriba de `<Tabs>` una sola vez en lugar de repetirse en cada `TabsContent`. (C) Badges con tono en los tabs: "Por aprobar" (warn), "Facturas emitidas", "Cobranza" usa `kpis.facturas_vencidas` (danger), "Pagos a proveedores". (D) `useTabProformasPendientesController` añade filtros por cliente y por antigüedad (>7/>15/>30 días) más `clientesDisponibles`; UI expone los `<Select>` correspondientes. (E) Nuevo tab "6. Proyección" que monta `TabProyeccion` (antes existente pero no expuesto); se elimina el `HuecoFacturacionCard` interno para no duplicar la alerta global.
+
 ## [13.47.8] - 2026-06-17
+
 - **fix(ci/casts-baseline)**: CI verde. `EmbarqueDetalleTabs.tsx` (introducido en 13.47.7) usaba 9 `as any` para pasar props a los hijos, lo que reventó el baseline `0 HIGH y 0 CRITICAL` del `audit-report` y tumbó el shard 3/8 + el agregador de CI. Reemplazados por tipos derivados con `ComponentProps<typeof TabX>` (`EmbarqueProp` intersecta los contratos de Resumen/Facturación/Tracking; `notas` intersecta Notas y Tracking). 0 casts HIGH/CRITICAL, 2 973 tests verdes.
 
 ## [13.47.7] - 2026-06-17
