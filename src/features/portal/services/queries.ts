@@ -12,8 +12,7 @@ import {
   PORTAL_PAGO_FACTURA_COLUMNS,
 } from "./columns";
 
-// Schema reutilizable para joins anidados que devuelven { nombre } o null.
-// Validamos en runtime para detectar drift de schema en boundaries.
+// Schema reutilizable para joins anidados { nombre } | null — valida en runtime.
 const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
 
 // v13.56.3 — Límites defensivos en consultas del portal. Si un cliente acumula
@@ -66,15 +65,9 @@ export async function fetchPortalDocumentos(embarqueId: string) {
   return data ?? [];
 }
 
-// Estados visibles para clientes en el portal.
-// Borrador, Vencida y Cancelada se ocultan: son trabajo interno o ruido sin valor para el cliente.
-// Esta lista debe mantenerse alineada con la política RLS "Cliente read own cotizaciones".
-const PORTAL_COTIZACION_ESTADOS_VISIBLES = [
-  "Enviada",
-  "Aceptada",
-  "Rechazada",
-  "En operación",
-] as const;
+// Estados visibles para clientes en el portal. Borrador, Vencida y Cancelada se
+// ocultan: trabajo interno o ruido sin valor. Alinear con RLS "Cliente read own cotizaciones".
+const PORTAL_COTIZACION_ESTADOS_VISIBLES = ["Enviada", "Aceptada", "Rechazada", "En operación"] as const;
 
 export async function fetchPortalCotizaciones(clienteIds: string[]) {
   if (!clienteIds.length) return [];

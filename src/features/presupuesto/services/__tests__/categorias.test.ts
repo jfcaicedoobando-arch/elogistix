@@ -49,6 +49,6 @@ describe("presupuesto/categorias", () => {
 
   it("seedCategoriasDefault invoca RPC con organization_id", async () => {
     mockRef.current!.setRpcResult("seed_presupuesto_categorias", { data: null, error: null });
-    await seedCategoriasDefault("org-1");
+    await expect(seedCategoriasDefault("org-1")).resolves.toBeUndefined();
   });
 });

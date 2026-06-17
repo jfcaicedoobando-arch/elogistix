@@ -1,2 +1,28 @@
-/** Re-export canónico. Ver `src/lib/ui/auditoriaConfig.ts` para contexto. */
-export * from "@/components/shared/utils/kpiTones";
+/**
+ * Paleta categórica para tarjetas KPI / métricas / chips informativos.
+ *
+ * Estas tonalidades son **categóricas, no semánticas**: se usan para
+ * diferenciar visualmente tarjetas de un mismo grupo (Embarques vs
+ * Cotizaciones vs Profit). Para semántica de estado (success/warning/error)
+ * usar los tokens `success`, `warning`, `destructive` del design system.
+ *
+ * Tokens definidos en `src/index.css` (`--kpi-*` y `--kpi-*-soft`) y
+ * registrados como utilidades Tailwind `bg-kpi-{tone}` / `text-kpi-{tone}` /
+ * `bg-kpi-{tone}-soft`.
+ */
+export type KpiTone =
+  | "info"
+  | "success"
+  | "accent"
+  | "warning"
+  | "secondary"
+  | "danger";
+
+/**
+ * Devuelve las clases Tailwind para un "icon chip" (cuadrado redondeado con
+ * fondo pastel y color de icono). Usado en KpiCard, ClienteSummaryCards, etc.
+ */
+export function kpiIconChipClasses(tone: KpiTone): string {
+  return `bg-kpi-${tone}-soft text-kpi-${tone}`;
+}
+

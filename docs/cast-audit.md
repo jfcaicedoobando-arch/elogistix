@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **1580**
+Total de `as` casts detectados: **1631**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 480     | 30.4% |
-| LOW       | 1 | 27      | 1.7% |
-| MEDIUM    | 2 | 1064   | 67.3% |
-| HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 9 | 0.6% |
+| SAFE      | 0 | 494     | 30.3% |
+| LOW       | 1 | 30      | 1.8% |
+| MEDIUM    | 2 | 1106   | 67.8% |
+| HIGH      | 3 | 1     | 0.1% |
+| CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 9 (~0.6%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.1%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -29,9 +29,9 @@ Total de `as` casts detectados: **1580**
 
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
-| 1 | `src/features/embarques/components/EmbarqueDetalleTabs.tsx` | 9 | 36 | 0 | 0 | 0 | 0 | 9 |
-| 2 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
-| 3 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 1 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
+| 2 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 3 | `src/features/embarques/services/cierre.ts` | 11 | 20 | 0 | 2 | 9 | 0 | 0 |
 | 4 | `src/services/pagos-factura/__tests__/pagosFactura.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
 | 5 | `src/test/setup.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
 | 6 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
@@ -47,58 +47,10 @@ Total de `as` casts detectados: **1580**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:79`
+### 1. [HIGH] `src/features/embarques/services/pnlFinanciero.ts:50`
 
 ```ts
-<TabResumen embarque={embarque as any} />
-```
-
-### 2. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:87`
-
-```ts
-documentos={documentos as any}
-```
-
-### 3. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:103`
-
-```ts
-conceptosVenta={conceptosVenta as any}
-```
-
-### 4. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:105`
-
-```ts
-conceptosCosto={conceptosCosto as any}
-```
-
-### 5. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:121`
-
-```ts
-<TabFacturacion facturas={facturas as any} canEdit={canEdit} embarque={embarque as any} />
-```
-
-### 6. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:121`
-
-```ts
-<TabFacturacion facturas={facturas as any} canEdit={canEdit} embarque={embarque as any} />
-```
-
-### 7. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:130`
-
-```ts
-<TabTracking embarqueId={embarqueId} embarque={embarque as any} notas={notas as any} />
-```
-
-### 8. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:130`
-
-```ts
-<TabTracking embarqueId={embarqueId} embarque={embarque as any} notas={notas as any} />
-```
-
-### 9. [CRITICAL] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:136`
-
-```ts
-notas={notas as any}
+return data as unknown as PnlEmbarque;
 ```
 
 
