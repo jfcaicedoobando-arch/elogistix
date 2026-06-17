@@ -27,13 +27,13 @@ export function useFacturacionPageController(opts?: {
   } = useListPageState({ estado: "todos" });
   const filterEstado = filters.estado;
 
-  // Lazy fetching por tab activo (J de la auditoría). Si no se pasa `activeTab`
-  // se preservan los defaults (todas habilitadas) para retro-compatibilidad.
+  // Lazy fetching por tab activo (J de la auditoría). Sólo se aplica al listado
+  // pesado de facturas; el resto se mantiene siempre activo para alimentar
+  // badges/contadores que se ven desde cualquier tab.
   const facturasEnabled = activeTab === undefined || activeTab === "facturas";
-  const gastosEnabled = activeTab === undefined || activeTab === "liquidacion";
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas({ enabled: facturasEnabled });
-  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes({ enabled: gastosEnabled });
+  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
   const { data: proformasPendientes = [] } = useProformasPendientes();
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
