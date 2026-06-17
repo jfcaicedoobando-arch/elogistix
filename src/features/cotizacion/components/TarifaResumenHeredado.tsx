@@ -122,13 +122,13 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
             <Input
               type="number" min={0}
               value={transito ?? ""}
-              onChange={e => { marcarOverride({ getValues, setValue } as never, "tiempoTransitoDias"); setValue("tiempoTransitoDias", e.target.value ? Number(e.target.value) : undefined, OPTS); }}
+              onChange={e => { marcarOverride(form, "tiempoTransitoDias"); setValue("tiempoTransitoDias", e.target.value ? Number(e.target.value) : undefined, OPTS); }}
             />
             {override.tiempoTransitoDias && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
           </label>
           <label className="space-y-1">
             <span className="text-xs text-muted-foreground">Frecuencia</span>
-            <Select value={frecuencia ?? ""} onValueChange={v => { marcarOverride({ getValues, setValue } as never, "frecuencia"); setValue("frecuencia", v, OPTS); }}>
+            <Select value={frecuencia ?? ""} onValueChange={v => { marcarOverride(form, "frecuencia"); setValue("frecuencia", v, OPTS); }}>
               <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Diaria">Diaria</SelectItem>
@@ -146,7 +146,7 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
               <Input
                 type="number" min={0}
                 value={diasLibres ?? ""}
-                onChange={e => { marcarOverride({ getValues, setValue } as never, "diasLibresDestino"); setValue("diasLibresDestino", Number(e.target.value), OPTS); }}
+                onChange={e => { marcarOverride(form, "diasLibresDestino"); setValue("diasLibresDestino", Number(e.target.value), OPTS); }}
               />
               {override.diasLibresDestino && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
             </label>
@@ -157,7 +157,7 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
               <Input
                 type="number" min={0}
                 value={diasAlmacenaje ?? ""}
-                onChange={e => { marcarOverride({ getValues, setValue } as never, "diasAlmacenaje"); setValue("diasAlmacenaje", Number(e.target.value), OPTS); }}
+                onChange={e => { marcarOverride(form, "diasAlmacenaje"); setValue("diasAlmacenaje", Number(e.target.value), OPTS); }}
               />
               {override.diasAlmacenaje && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
             </label>
@@ -165,7 +165,7 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
           {esFCL && (
             <label className="space-y-1">
               <span className="text-xs text-muted-foreground">Carta garantía</span>
-              <Select value={watch("cartaGarantia") ? "si" : "no"} onValueChange={v => { marcarOverride({ getValues, setValue } as never, "cartaGarantia"); setValue("cartaGarantia", v === "si", OPTS); }}>
+              <Select value={watch("cartaGarantia") ? "si" : "no"} onValueChange={v => { marcarOverride(form, "cartaGarantia"); setValue("cartaGarantia", v === "si", OPTS); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="si">Sí</SelectItem>
