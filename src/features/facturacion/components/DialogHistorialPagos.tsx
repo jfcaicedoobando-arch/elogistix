@@ -22,6 +22,10 @@ interface Factura {
   numero: string;
   total: number;
   moneda: string;
+  /** TC histórico de la factura (al momento de emisión). Sólo se usa para
+   *  mostrar la conciliación cambiaria contra el TC de cada pago (I de la
+   *  auditoría 13.49.0). */
+  tipo_cambio?: number;
 }
 
 interface Props {
