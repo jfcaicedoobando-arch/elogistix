@@ -172,7 +172,7 @@ BEGIN
       tipo_cambio, estado, fecha_emision
     ) VALUES (
       nc_a, org_a, fac_a, 'NC-A-001', 'Descuento', 'Ajuste', 100, 'MXN',
-      1, 'aplicada', CURRENT_DATE
+      1, 'Aplicada', CURRENT_DATE
     );
 
     PERFORM pg_temp.as_user(user_b);
