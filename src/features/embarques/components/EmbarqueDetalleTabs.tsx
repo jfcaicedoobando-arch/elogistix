@@ -129,6 +129,11 @@ export function EmbarqueDetalleTabs({
         <TabConciliacion embarqueId={embarqueId} />
       </TabsContent>
 
+      <TabsContent value="pnl" className="space-y-6">
+        <TabPnl embarqueId={embarqueId} />
+      </TabsContent>
+
+
       <TabsContent value="facturacion">
         <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
       </TabsContent>
