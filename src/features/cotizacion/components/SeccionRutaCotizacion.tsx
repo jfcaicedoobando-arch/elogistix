@@ -16,6 +16,15 @@ import BannerOverride from "./seccionRuta/BannerOverride";
 import type { TarifaCtx } from "./seccionRuta/overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 
+/**
+ * v13.47.0 — Política tarifa-first para marítimo:
+ *  - Esta sección sólo captura cliente-visible: ruta, validez, movimiento, seguro.
+ *  - Tránsito, frecuencia, días libres, carta garantía y días de almacenaje
+ *    se HEREDAN de la tarifa elegida (panel `TarifaVinculadaPanel`). Ventas
+ *    no debe verlos editables aquí.
+ *  - Para modos NO marítimos (aéreo/terrestre/general), no hay tarifa
+ *    vinculada en el wizard, así que esos campos siguen aquí como manuales.
+ */
 export default function SeccionRutaCotizacion({ complete }: { complete?: boolean } = {}) {
   const ctx = useFormContext<CotizacionFormValues>();
   const { watch, setValue } = ctx;
@@ -39,30 +48,35 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
     hasTransito: tieneTarifa && !override.tiempoTransitoDias,
     hasDiasLibres: tieneTarifa && !override.diasLibresDestino,
     hasCartaGarantia: tieneTarifa && !override.cartaGarantia,
+    hasFrecuencia: tieneTarifa && !override.frecuencia,
+    hasDiasAlmacenaje: tieneTarifa && !override.diasAlmacenaje,
   };
 
   return (
     <WizardSection title="Ruta" complete={complete}>
-      <BannerOverride ctx={ctx} />
+      {!esMaritimo && <BannerOverride ctx={ctx} />}
       <div className={`grid grid-cols-1 gap-4 ${conPuntoIntermedio ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <OrigenDestinoBlock ctx={ctx} usarPortSelect={usarPortSelect} esTerrestre={esTerrestre} conPuntoIntermedio={conPuntoIntermedio} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-        <TransitoField ctx={ctx} tarifaCtx={tarifaCtx} />
+        {/* Tránsito / frecuencia / FCL-LCL: solo modos no marítimos. */}
+        {!esMaritimo && <TransitoField ctx={ctx} tarifaCtx={tarifaCtx} />}
 
-        {esMaritimo && <FclLclFields ctx={ctx} tipoEmbarque={tipoEmbarque} tarifaCtx={tarifaCtx} />}
-
-        <FormField label="Frecuencia">
-          <Select value={watch("frecuencia")} onValueChange={v => setValue("frecuencia", v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar frecuencia" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Diaria">Diaria</SelectItem>
-              <SelectItem value="Semanal">Semanal</SelectItem>
-              <SelectItem value="Quincenal">Quincenal</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
+        {!esMaritimo && (
+          <FormField label="Frecuencia">
+            <Select value={watch("frecuencia")} onValueChange={v => setValue("frecuencia", v)}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar frecuencia" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Diaria">Diaria</SelectItem>
+                <SelectItem value="Semanal">Semanal</SelectItem>
+                <SelectItem value="Quincenal">Quincenal</SelectItem>
+                <SelectItem value="Mensual">Mensual</SelectItem>
+                <SelectItem value="Bajo demanda">Bajo demanda</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormField>
+        )}
 
         <FormField label="Ruta" span={2}>
           <Input value={watch("rutaTexto")} onChange={e => setValue("rutaTexto", e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
@@ -97,6 +111,9 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
         )}
 
         <SeguroBlock ctx={ctx} seguro={seguro} />
+
+        {/* Eliminado de la vista marítima — se hereda desde la tarifa. */}
+        {!esMaritimo && tipoEmbarque && <FclLclFields ctx={ctx} tipoEmbarque={tipoEmbarque} tarifaCtx={tarifaCtx} />}
       </div>
     </WizardSection>
   );
