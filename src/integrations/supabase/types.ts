@@ -879,6 +879,7 @@ export type Database = {
       conceptos_factura: {
         Row: {
           cantidad: number
+          clave_sat: string
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -892,6 +893,7 @@ export type Database = {
         }
         Insert: {
           cantidad?: number
+          clave_sat?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -905,6 +907,7 @@ export type Database = {
         }
         Update: {
           cantidad?: number
+          clave_sat?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -2791,6 +2794,7 @@ export type Database = {
           naviera_id: string | null
           notas: string | null
           organization_id: string
+          proveedor_factura_id: string | null
           tiene_carta_garantia: boolean
           updated_at: string
         }
@@ -2806,6 +2810,7 @@ export type Database = {
           naviera_id?: string | null
           notas?: string | null
           organization_id?: string
+          proveedor_factura_id?: string | null
           tiene_carta_garantia?: boolean
           updated_at?: string
         }
@@ -2821,6 +2826,7 @@ export type Database = {
           naviera_id?: string | null
           notas?: string | null
           organization_id?: string
+          proveedor_factura_id?: string | null
           tiene_carta_garantia?: boolean
           updated_at?: string
         }
@@ -2852,6 +2858,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
           },
         ]
       }
@@ -3315,6 +3335,7 @@ export type Database = {
           cancelado_en: string | null
           cliente_id: string
           cliente_nombre: string
+          cotizacion_id: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -3357,6 +3378,7 @@ export type Database = {
           cancelado_en?: string | null
           cliente_id: string
           cliente_nombre?: string
+          cotizacion_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -3399,6 +3421,7 @@ export type Database = {
           cancelado_en?: string | null
           cliente_id?: string
           cliente_nombre?: string
+          cotizacion_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -3442,6 +3465,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
             referencedColumns: ["id"]
           },
           {
@@ -3798,6 +3828,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number
+          embarque_id: string | null
           factura_id: string
           fecha_pago: string
           forma_pago: string
@@ -3817,6 +3848,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
+          embarque_id?: string | null
           factura_id: string
           fecha_pago: string
           forma_pago?: string
@@ -3836,6 +3868,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
+          embarque_id?: string | null
           factura_id?: string
           fecha_pago?: string
           forma_pago?: string
@@ -3850,6 +3883,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pagos_factura_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pagos_factura_factura_id_fkey"
             columns: ["factura_id"]
@@ -3918,6 +3958,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pagos_proveedor_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
@@ -4377,6 +4424,13 @@ export type Database = {
             columns: ["categoria_presupuesto_id"]
             isOneToOne: false
             referencedRelation: "presupuesto_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_facturas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
           {
