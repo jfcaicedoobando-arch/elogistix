@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       user_id: userData.user.id,
       accion: "facturapi_cancelar_failed",
       entidad: "factura",
-      entidad_id: body.factura_id,
+      entidad_id: factura_id,
       detalle: { status: fapiRes.status, response: fapiJson },
     });
     return json({ error: "facturapi_error", status: fapiRes.status, detail: fapiJson }, 502);
@@ -74,10 +74,10 @@ Deno.serve(async (req) => {
     .from("facturas")
     .update({
       estado: "Cancelada",
-      cancelacion_motivo: body.motivo,
+      cancelacion_motivo: motivo,
       cancelado_en: new Date().toISOString(),
     })
-    .eq("id", body.factura_id);
+    .eq("id", factura_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await supabase.from("bitacora_actividad").insert({
@@ -85,8 +85,8 @@ Deno.serve(async (req) => {
     user_id: userData.user.id,
     accion: "facturapi_cancelada",
     entidad: "factura",
-    entidad_id: body.factura_id,
-    detalle: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
+    entidad_id: factura_id,
+    detalle: { motivo, sustituye_uuid: sustituye_uuid ?? null },
   });
 
   return json({ ok: true, status: fapiJson.status ?? "canceled" });
