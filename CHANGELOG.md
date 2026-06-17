@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.56.9] - 2026-06-17
+- **test(rutas)**: Nuevo `src/routes/__tests__/appRoutes.smoke.test.tsx` (76 casos) que garantiza que la poda 13.56.8 (helper `guarded()`) no cambió el comportamiento de `appRoutes.tsx`. Cubre: (a) envoltura raíz `ProtectedRoute > Layout` sin `allowedRoles`, (b) presencia exacta de 53 paths críticos vía `it.each`, (c) ausencia de paths duplicados, (d) `allowedRoles` exacto en las 16 rutas con gate de rol (cxp, tesorería, profit, papelera, idempotencia, auditoría, usuarios, configuración), (e) detección de gates accidentales en rutas no listadas, (f) las 4 redirecciones `<Navigate replace>` (/costeo, /profit, /reportes, /rentabilidad) conservan destino y flag `replace`. Inspecciona el árbol de `<Route>` sin montar Router (sin stubs de páginas lazy ni de auth), corre en <2s y queda incluido automáticamente en CI vía `vitest`. Bump `APP_VERSION` 13.56.9.
+
 ## [13.56.8] - 2026-06-17
 - **chore(auditoría-arquitectónica)**: Reverificación hallazgo 9 — `src/routes/appRoutes.tsx` había crecido a 208 líneas tras los bloques posteriores. Introducido helper local `guarded(roles, element)` que colapsa cada `<Route ... allowedRoles={[...]}>` a una sola línea; archivo final = **103 líneas** (margen amplio sobre el umbral ≤195). Sin cambios funcionales: mismas rutas, mismos roles, mismo orden, smoke `routes.smoke.test.tsx` verde (7/7). Reporte de auditoría actualizado. Bump `APP_VERSION` 13.56.8.
 
