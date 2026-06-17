@@ -13,7 +13,11 @@ import {
   SIDEBAR_ADMIN_ITEMS,
   SIDEBAR_SUPER_ADMIN_ITEMS,
   SIDEBAR_COSTEO_ITEMS,
+  SIDEBAR_BANDEJAS_ITEMS,
 } from "@/components/layout/sidebarItems";
+
+const filterBandejas = (urls: string[]) =>
+  SIDEBAR_BANDEJAS_ITEMS.filter((it) => urls.includes(it.url));
 
 export interface SidebarSection {
   label: string;
