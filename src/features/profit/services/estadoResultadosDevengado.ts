@@ -19,6 +19,16 @@ import {
   type ConceptoVentaER,
   type ConceptoCostoER,
 } from "@/lib/domain/estadoResultados";
+import {
+  mapFacturaRows,
+  mapNotaCreditoRows,
+  mapProveedorFacturaRows,
+  mapEmbarqueERRows,
+  mapEmbarqueERConExpediente,
+  type FacturaRow,
+  type NotaCreditoRow,
+  type ProveedorFacturaRow,
+} from "@/lib/mappers/estadoResultadosRows";
 
 interface Params {
   organizationId: string | null;
@@ -33,7 +43,7 @@ async function loadEmbarquesPorIds(ids: string[]): Promise<EmbarqueER[]> {
     .select("id, modo, tipo_cambio_usd, tipo_cambio_eur")
     .in("id", ids);
   if (error) throw error;
-  return (data ?? []) as EmbarqueER[];
+  return mapEmbarqueERRows(data);
 }
 
 async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, EmbarqueER>> {
@@ -44,17 +54,13 @@ async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, 
     .in("expediente", exps);
   if (error) throw error;
   const map = new Map<string, EmbarqueER>();
-  for (const e of (data ?? []) as (EmbarqueER & { expediente?: string })[]) {
+  for (const e of mapEmbarqueERConExpediente(data)) {
     if (e.expediente) map.set(e.expediente, e);
   }
   return map;
 }
 
 const fallbackTC = (tc: number | null) => (tc && tc > 0 ? tc : 1);
-
-interface FacturaRow { id: string; expediente: string | null; total: number; moneda: string; fecha_emision: string; tipo_cambio: number | null }
-interface NotaCreditoRow { monto: number; moneda: string; factura_id: string; updated_at: string }
-interface ProveedorFacturaRow { id: string; embarque_id: string | null; total: number; moneda: string; fecha_emision: string; tipo_cambio_usd: number | null }
 
 async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
   let q = supabase
@@ -66,7 +72,7 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as FacturaRow[];
+  return mapFacturaRows(data);
 }
 
 async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
@@ -80,7 +86,7 @@ async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: 
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as NotaCreditoRow[];
+  return mapNotaCreditoRows(data);
 }
 
 async function fetchProveedorFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<ProveedorFacturaRow[]> {
@@ -94,7 +100,7 @@ async function fetchProveedorFacturasMes(orgId: string | null, desde: string, ha
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as ProveedorFacturaRow[];
+  return mapProveedorFacturaRows(data);
 }
 
 function ingresosDeFacturas(

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.47.6] - 2026-06-17
+- **chore(audit)**: Aplicados fixes 1 y 2 de la auditoría. `knip.json` ya no ignora `src/constants/cache.ts` (todos sus exports están en uso). Mapeo de filas BD del Estado de Resultados Devengado extraído a `src/lib/mappers/estadoResultadosRows.ts` (funciones `mapFacturaRows`, `mapNotaCreditoRows`, `mapProveedorFacturaRows`, `mapEmbarqueERRows`, `mapEmbarqueERConExpediente`), eliminando los 5 casts MEDIUM `as FooRow[]` de `services/estadoResultadosDevengado.ts`.
+
 ## [13.47.5] - 2026-06-17
 - **fix(ci/arch-baseline)**: Tests `architecture-baseline` y `audit-report` ahora pasan. `Onboarding.tsx` ya no importa `supabase/client` directo (extraído a `features/onboarding/services/completeOnboarding.ts`). `TarifaResumenHeredado.tsx` reducido a 129 líneas (sub-componente `TarifaResumenHeredadoEditMode`). `SugerenciasTarifaInline.tsx` reducido a 164 líneas (helpers movidos a `resolverCatalogos.ts`). Test `aplicarTarifa.test.ts` actualizado para incluir `rutaTexto` en la lista de campos disparados por `trigger`.
 
