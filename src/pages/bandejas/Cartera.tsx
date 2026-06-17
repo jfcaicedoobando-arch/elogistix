@@ -30,7 +30,7 @@ export default function Cartera() {
           <CardContent className="text-2xl font-semibold">{formatCurrency(totalSaldo, "MXN")}</CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Vencido ({vencidas.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Vencido ({vencidas})</CardTitle></CardHeader>
           <CardContent className="text-2xl font-semibold text-destructive">{formatCurrency(vencidoSaldo, "MXN")}</CardContent>
         </Card>
       </div>

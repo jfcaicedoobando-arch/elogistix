@@ -4,11 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
+import { resumirCxpPorCapturar } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 
 export default function CxpPorCapturar() {
   const { data = [], isLoading } = useCxpPorCapturar();
-  const totalPresupuestado = data.reduce((acc, r) => acc + Number(r.costos_presupuestados ?? 0), 0);
+  const { totalPresupuestado, facturasCapturadas } = resumirCxpPorCapturar(data);
 
   return (
     <div className="p-6 space-y-4">
@@ -30,9 +31,7 @@ export default function CxpPorCapturar() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas capturadas</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">
-            {data.reduce((acc, r) => acc + (r.facturas_capturadas ?? 0), 0)}
-          </CardContent>
+          <CardContent className="text-2xl font-semibold">{facturasCapturadas}</CardContent>
         </Card>
       </div>
 

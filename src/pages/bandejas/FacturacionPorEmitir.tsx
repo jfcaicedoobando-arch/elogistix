@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/lib/formatters";
 import { useFacturacionPorEmitir } from "@/features/bandejas/hooks/useBandejas";
+import { resumirFacturacionPorEmitir, DIAS_ATRASO_FACTURACION } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 
 export default function FacturacionPorEmitir() {
   const { data = [], isLoading } = useFacturacionPorEmitir();
-  const totalPorFacturar = data.reduce((acc, r) => acc + Number(r.total ?? 0), 0);
-  const atrasadas = data.filter((r) => r.dias_desde_emision > 7).length;
+  const { totalPorFacturar, atrasadas } = resumirFacturacionPorEmitir(data);
 
   return (
     <div className="p-6 space-y-4">
@@ -30,7 +30,7 @@ export default function FacturacionPorEmitir() {
           <CardContent className="text-2xl font-semibold">{formatCurrency(totalPorFacturar, "MXN")}</CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Atrasadas (&gt;7 días)</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Atrasadas (&gt;{DIAS_ATRASO_FACTURACION} días)</CardTitle></CardHeader>
           <CardContent className="text-2xl font-semibold text-warning">{atrasadas}</CardContent>
         </Card>
       </div>
@@ -74,7 +74,7 @@ export default function FacturacionPorEmitir() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatCurrency(Number(row.total), "MXN")}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={row.dias_desde_emision > 7 ? "destructive" : "secondary"}>
+                    <Badge variant={row.dias_desde_emision > DIAS_ATRASO_FACTURACION ? "destructive" : "secondary"}>
                       {row.dias_desde_emision}d
                     </Badge>
                   </TableCell>
