@@ -107,7 +107,7 @@ export default function Facturacion() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="pendientes">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
           </TabsList>
