@@ -4768,6 +4768,83 @@ export type Database = {
         }
         Relationships: []
       }
+      seguros_embarque: {
+        Row: {
+          aseguradora: string
+          certificado_url: string | null
+          cobertura_descripcion: string | null
+          contacto: string | null
+          created_at: string
+          created_by: string | null
+          deducible: number
+          deleted_at: string | null
+          embarque_id: string
+          id: string
+          moneda: string
+          notas: string | null
+          numero_poliza: string
+          organization_id: string
+          prima: number
+          suma_asegurada: number
+          updated_at: string
+          updated_by: string | null
+          vigencia_desde: string
+          vigencia_hasta: string
+        }
+        Insert: {
+          aseguradora: string
+          certificado_url?: string | null
+          cobertura_descripcion?: string | null
+          contacto?: string | null
+          created_at?: string
+          created_by?: string | null
+          deducible?: number
+          deleted_at?: string | null
+          embarque_id: string
+          id?: string
+          moneda?: string
+          notas?: string | null
+          numero_poliza: string
+          organization_id: string
+          prima?: number
+          suma_asegurada?: number
+          updated_at?: string
+          updated_by?: string | null
+          vigencia_desde: string
+          vigencia_hasta: string
+        }
+        Update: {
+          aseguradora?: string
+          certificado_url?: string | null
+          cobertura_descripcion?: string | null
+          contacto?: string | null
+          created_at?: string
+          created_by?: string | null
+          deducible?: number
+          deleted_at?: string | null
+          embarque_id?: string
+          id?: string
+          moneda?: string
+          notas?: string | null
+          numero_poliza?: string
+          organization_id?: string
+          prima?: number
+          suma_asegurada?: number
+          updated_at?: string
+          updated_by?: string | null
+          vigencia_desde?: string
+          vigencia_hasta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seguros_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
