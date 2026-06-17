@@ -16,13 +16,20 @@ import {
 // Validamos en runtime para detectar drift de schema en boundaries.
 const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
 
+// v13.56.3 — Límites defensivos en consultas del portal. Si un cliente acumula
+// más de 500 embarques/facturas o 200 eventos/documentos/pagos por embarque,
+// habrá que paginar; por ahora un techo evita queries sin tope desde el portal.
+const PORTAL_LIST_MAX = 500;
+const PORTAL_RELATED_MAX = 200;
+
 export async function fetchPortalEmbarques(clienteIds: string[]) {
   if (!clienteIds.length) return [];
   const { data, error } = await supabase
     .from("embarques")
     .select(PORTAL_EMBARQUE_LIST_COLUMNS)
     .in("cliente_id", clienteIds)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(PORTAL_LIST_MAX);
   if (error) throw error;
   return data ?? [];
 }
@@ -42,7 +49,8 @@ export async function fetchPortalEventos(embarqueId: string) {
     .from("eventos_embarque")
     .select(PORTAL_EVENTO_COLUMNS)
     .eq("embarque_id", embarqueId)
-    .order("fecha", { ascending: false });
+    .order("fecha", { ascending: false })
+    .limit(PORTAL_RELATED_MAX);
   if (error) throw error;
   return data ?? [];
 }
@@ -52,7 +60,8 @@ export async function fetchPortalDocumentos(embarqueId: string) {
     .from("documentos_embarque")
     .select(PORTAL_DOCUMENTO_COLUMNS)
     .eq("embarque_id", embarqueId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(PORTAL_RELATED_MAX);
   if (error) throw error;
   return data ?? [];
 }
@@ -74,7 +83,8 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
     .select(PORTAL_COTIZACION_LIST_COLUMNS)
     .in("cliente_id", clienteIds)
     .in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(PORTAL_LIST_MAX);
   if (error) throw error;
   const cotizaciones = data ?? [];
 
@@ -128,7 +138,8 @@ export async function fetchPortalFacturas(clienteIds: string[]) {
     .from("facturas")
     .select(PORTAL_FACTURA_LIST_COLUMNS)
     .in("cliente_id", clienteIds)
-    .order("fecha_emision", { ascending: false });
+    .order("fecha_emision", { ascending: false })
+    .limit(PORTAL_LIST_MAX);
   if (error) throw error;
   return data ?? [];
 }
@@ -148,13 +159,14 @@ export async function fetchPortalPagosFactura(facturaId: string) {
     .from("pagos_factura")
     .select(PORTAL_PAGO_FACTURA_COLUMNS)
     .eq("factura_id", facturaId)
-    .order("fecha_pago", { ascending: false });
+    .order("fecha_pago", { ascending: false })
+    .limit(PORTAL_RELATED_MAX);
   if (error) throw error;
   return data ?? [];
 }
 
 export async function fetchPortalClientUsers() {
-  const { data, error } = await supabase.from("client_users").select("*");
+  const { data, error } = await supabase.from("client_users").select("*").limit(PORTAL_LIST_MAX);
   if (error) throw error;
   return data ?? [];
 }
