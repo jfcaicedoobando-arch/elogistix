@@ -10,6 +10,8 @@ export interface TarifaCtx {
   hasTransito: boolean;
   hasDiasLibres: boolean;
   hasCartaGarantia: boolean;
+  hasFrecuencia: boolean;
+  hasDiasAlmacenaje: boolean;
 }
 
 export function marcarOverride(ctx: Ctx, campo: string) {

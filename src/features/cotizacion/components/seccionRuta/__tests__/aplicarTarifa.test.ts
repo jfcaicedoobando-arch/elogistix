@@ -55,6 +55,8 @@ describe("aplicarTarifaAlForm", () => {
       "diasLibresDestino",
       "cartaGarantia",
       "tipoContenedor",
+      "frecuencia",
+      "diasAlmacenaje",
     ]);
   });
 

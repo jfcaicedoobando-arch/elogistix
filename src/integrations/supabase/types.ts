@@ -1329,6 +1329,7 @@ export type Database = {
           created_at: string
           deposito_contenedor_usd: number
           dias_libres_demoras_default: number
+          frecuencia: string | null
           id: string
           moneda_demoras: string
           naviera_id: string
@@ -1345,6 +1346,7 @@ export type Database = {
           created_at?: string
           deposito_contenedor_usd?: number
           dias_libres_demoras_default?: number
+          frecuencia?: string | null
           id?: string
           moneda_demoras?: string
           naviera_id: string
@@ -1361,6 +1363,7 @@ export type Database = {
           created_at?: string
           deposito_contenedor_usd?: number
           dias_libres_demoras_default?: number
+          frecuencia?: string | null
           id?: string
           moneda_demoras?: string
           naviera_id?: string
@@ -1492,9 +1495,11 @@ export type Database = {
           agente_id: string
           creado_por: string | null
           created_at: string
+          dias_libres_almacenaje_lcl: number | null
           dias_libres_demoras: number
           estado: string
           flete_base: number
+          frecuencia_override: string | null
           id: string
           moneda: string
           naviera_id: string
@@ -1512,9 +1517,11 @@ export type Database = {
           agente_id: string
           creado_por?: string | null
           created_at?: string
+          dias_libres_almacenaje_lcl?: number | null
           dias_libres_demoras?: number
           estado?: string
           flete_base: number
+          frecuencia_override?: string | null
           id?: string
           moneda?: string
           naviera_id: string
@@ -1532,9 +1539,11 @@ export type Database = {
           agente_id?: string
           creado_por?: string | null
           created_at?: string
+          dias_libres_almacenaje_lcl?: number | null
           dias_libres_demoras?: number
           estado?: string
           flete_base?: number
+          frecuencia_override?: string | null
           id?: string
           moneda?: string
           naviera_id?: string
@@ -4885,9 +4894,11 @@ export type Database = {
           agente_id: string | null
           agente_nombre: string | null
           dias_credito: number | null
+          dias_libres_almacenaje_lcl: number | null
           dias_libres_demoras: number | null
           estado: string | null
           flete_base: number | null
+          frecuencia_resuelta: string | null
           id: string | null
           moneda: string | null
           naviera_carta_garantia_activa: boolean | null
@@ -4895,6 +4906,7 @@ export type Database = {
           naviera_condicion_id: string | null
           naviera_demora_dia_6: number | null
           naviera_dias_libres_default: number | null
+          naviera_frecuencia: string | null
           naviera_id: string | null
           naviera_nombre: string | null
           naviera_tiene_carta_garantia: boolean | null
@@ -4905,6 +4917,7 @@ export type Database = {
           puerto_origen_nombre: string | null
           recargos_total: number | null
           ruta_id: string | null
+          tarifa_frecuencia_override: string | null
           tipo_contenedor_id: string | null
           tipo_contenedor_nombre: string | null
           total_comparable: number | null
@@ -5497,9 +5510,11 @@ export type Database = {
           agente_id: string | null
           agente_nombre: string | null
           dias_credito: number | null
+          dias_libres_almacenaje_lcl: number | null
           dias_libres_demoras: number | null
           estado: string | null
           flete_base: number | null
+          frecuencia_resuelta: string | null
           id: string | null
           moneda: string | null
           naviera_carta_garantia_activa: boolean | null
@@ -5507,6 +5522,7 @@ export type Database = {
           naviera_condicion_id: string | null
           naviera_demora_dia_6: number | null
           naviera_dias_libres_default: number | null
+          naviera_frecuencia: string | null
           naviera_id: string | null
           naviera_nombre: string | null
           naviera_tiene_carta_garantia: boolean | null
@@ -5517,6 +5533,7 @@ export type Database = {
           puerto_origen_nombre: string | null
           recargos_total: number | null
           ruta_id: string | null
+          tarifa_frecuencia_override: string | null
           tipo_contenedor_id: string | null
           tipo_contenedor_nombre: string | null
           total_comparable: number | null

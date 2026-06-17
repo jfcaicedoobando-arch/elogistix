@@ -21,7 +21,9 @@ function makeTopRow(o: Partial<TopTarifaRow> = {}): TopTarifaRow {
     moneda:"USD", flete_base:1000, recargos_total:200, total_comparable:1200, dias_libres_demoras:14,
     transit_time_dias:28, vigente_desde:"2026-01-01", vigente_hasta:"2026-12-31", estado:"vigente",
     naviera_condicion_id:null, naviera_tiene_carta_garantia:false, naviera_carta_garantia_vigente_hasta:null,
-    naviera_carta_garantia_activa:false, naviera_dias_libres_default:null, naviera_demora_dia_6:null, ...o };
+    naviera_carta_garantia_activa:false, naviera_dias_libres_default:null, naviera_demora_dia_6:null,
+    dias_libres_almacenaje_lcl:null, frecuencia_resuelta:null, naviera_frecuencia:null, tarifa_frecuencia_override:null,
+    ...o };
 }
 
 beforeEach(() => { mock.tableCalls.length = 0; mock.rpcCalls.length = 0; });

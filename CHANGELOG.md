@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.47.0] - 2026-06-16
+- **feat(cotizacion/wizard)**: Reestructura del wizard marítimo de importación bajo la política **tarifa-first** — ventas sólo captura cliente, modo, tipo, incoterm, origen, destino y tipo de contenedor; tiempo de tránsito, frecuencia, días libres en destino, días libres de almacenaje y carta garantía ahora **se heredan** automáticamente de la tarifa vinculada (módulo Costeo). El panel `TarifaVinculadaPanel` muestra esos datos en un nuevo bloque `TarifaResumenHeredado` en modo solo lectura, con badges "Heredado de tarifa". Sólo `admin`, `admin_org`, `super_admin` y `gerente_comercial` ven el botón "Editar manual" para sobre-escribir esos valores (se registra en `tarifaOverride`).
+- **feat(costeo/tarifas)**: Se agrega `frecuencia` a `costeo_navieras_condiciones` (Diaria/Semanal/Quincenal/Mensual/Bajo demanda) y dos columnas a `costeo_tarifas`: `frecuencia_override` (override por tarifa puntual) y `dias_libres_almacenaje_lcl` (LCL tiene días libres distintos a FCL). Se recrea la vista `costeo_tarifas_vigentes_v` para exponer `frecuencia_resuelta` (override > naviera) y `dias_libres_almacenaje_lcl` al wizard.
+- **chore(permissions)**: Nuevo permiso `canOverrideTarifaPricing` (admin + gerente_comercial) en `usePermissions`.
+
 ## [13.46.5] - 2026-06-16
 - **fix(ci/rls-snapshot)**: La migración que crea `tracking_webhook_log` tenía timestamp posterior a la migración 233650 que le hacía `GRANT`, así que el snapshot RLS seguía fallando con `relation does not exist`. Se renombra la migración a timestamp 233649 (un segundo antes) para que la tabla exista cuando se ejecutan los GRANTs.
 

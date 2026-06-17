@@ -16,6 +16,7 @@ import { WizardSection } from "@/components/shared/WizardSection";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import CartaGarantiaBadge from "./CartaGarantiaBadge";
+import TarifaResumenHeredado from "./TarifaResumenHeredado";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
 import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
@@ -182,6 +183,8 @@ export default function TarifaVinculadaPanel({
             )}
           </div>
         )}
+
+        {tarifa && <TarifaResumenHeredado tarifa={tarifa} />}
       </div>
 
       <BuscarTarifaDialog
