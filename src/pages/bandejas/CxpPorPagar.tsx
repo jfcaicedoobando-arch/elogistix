@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
+import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 
 export default function CxpPorPagar() {
   const { data = [], isLoading } = useCxpPorPagar();
-  const totalSaldo = data.reduce((acc, r) => acc + Number(r.saldo ?? 0), 0);
-  const vencidas = data.filter((r) => (r.dias_para_vencer ?? 0) < 0).length;
+  const { totalSaldo, vencidas } = resumirCxpPorPagar(data);
 
   return (
     <div className="p-6 space-y-4">
@@ -62,7 +62,7 @@ export default function CxpPorPagar() {
               )}
               {data.map((row) => {
                 const dias = row.dias_para_vencer ?? 0;
-                const variant = dias < 0 ? "destructive" : dias <= 7 ? "secondary" : "outline";
+                const variant = variantDiasParaVencer(dias);
                 return (
                   <TableRow key={row.factura_id} className="hover:bg-muted/50">
                     <TableCell>{row.proveedor_nombre ?? "—"}</TableCell>

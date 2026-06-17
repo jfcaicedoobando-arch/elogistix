@@ -1,16 +1,15 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import { Ship } from "lucide-react";
-import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/tracking";
+import { type TrackingPublicoData } from "@/services/tracking";
+import { useTrackingPublicoPage } from "@/services/tracking/useTrackingPublicoPage";
 import { TrackingPublicoErrorCard } from "@/components/tracking/TrackingPublicoErrorCard";
 import { TrackingPublicoLoading } from "@/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/components/tracking/TrackingPublicoTimeline";
-import { queryKeys } from "@/lib/query";
 import { Seo } from "@/components/seo/Seo";
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
@@ -20,12 +19,7 @@ function transporteLabel(e: TrackingPublicoData["embarque"]): string {
 export default function TrackingPublico() {
   const { token } = useParams<{ token: string }>();
 
-  const { data, isLoading, error } = useQuery<TrackingPublicoData>({
-    queryKey: queryKeys.trackingPublico(token ?? ""),
-    queryFn: () => fetchTrackingPublico(token!),
-    enabled: !!token,
-    retry: false,
-  });
+  const { data, isLoading, error } = useTrackingPublicoPage(token);
 
   if (isLoading) return <TrackingPublicoLoading />;
   if (error || !data) return <TrackingPublicoErrorCard message={(error as Error)?.message} />;

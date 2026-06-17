@@ -1,89 +1,81 @@
-# Plan: Tests automatizados para toda la Fase 1
+# Fase 2 — Refactor de severidad Alta
 
-Objetivo: blindar con tests cada uno de los 6 items completados en la Fase 1 del plan de auditoría (`.lovable/plan.md`) para que ninguna regresión arquitectónica futura pueda reintroducir los problemas que se acaban de resolver. Todo se hace con Vitest (frontend/arquitectura) y `supabase--test_edge_functions` (Deno tests para edge functions).
+Continuación del plan de auditoría arquitectónica (Fase 1 ya cerrada con tests).
+Fase 2 ataca **5 items**: extraer reglas de negocio, mover formatters, encapsular queries de página, sacar loops bulk-insert de la UI y migrar servicios globales a sus features.
 
 ---
 
-## 1. Item #1 — Fusión `facturacion` + `facturas`
+## 1. Extraer reglas de negocio de bandejas → `features/bandejas/domain/`
 
-**Test nuevo:** `src/__tests__/architecture/facturacion-fusion.test.ts`
+Las páginas `src/pages/bandejas/*` (Cartera, CxpPorCapturar, CxpPorPagar, FacturacionPorEmitir) hoy contienen filtros, agregados y reglas (días vencidos, prioridad, semáforos) mezclados con JSX y fetching.
 
-- Falla si vuelve a existir el directorio `src/features/facturas/`.
-- Falla si algún archivo del proyecto importa `@/features/facturas/...` (regex sobre `src/**/*.ts(x)`).
-- Verifica que `src/features/facturacion/queryKeys.ts` exporta `facturas` **y** `facturacion`.
-- Verifica que `src/lib/query/index.ts` importa `facturas` desde `@/features/facturacion/queryKeys`.
+- Crear `src/features/bandejas/domain/` con funciones puras (`clasificarCartera`, `calcularDiasVencidos`, `prioridadCxp`, `huecosFacturacionFiltrados`).
+- Cada función con su `__tests__/*.test.ts` (Vitest, sin Supabase).
+- Las páginas sólo consumen el output del hook + domain.
 
-## 2. Item #2 — Romper ciclo `admin ↔ configuracion`
+## 2. Mover formatters dispersos → `src/lib/formatters/`
 
-**Test nuevo:** `src/__tests__/architecture/admin-configuracion-cycle.test.ts`
+Hoy hay `formatDate`, `formatPercent`, `pctPnl`, `formatCurrency`, `formatMoney`, etc. duplicados en componentes y features.
 
-- Escanea `src/features/configuracion/**/*.ts(x)` y falla si encuentra `from "@/features/admin/...`.
-- Verifica que `TabExportar.tsx` vive en `src/features/admin/components/` y NO en `src/features/configuracion/components/`.
-- Verifica que `src/pages/admin-org/Configuracion.tsx` importa `TabExportar` desde la ruta nueva.
+- Consolidar todo en `src/lib/formatters/` con un barrel.
+- Reemplazar todos los imports (`@/lib/formatters`).
+- Eliminar copias locales (`PortalNotificationsBell.formatDate`, alias `calcularSubtotal`, `uiMappings.ts`).
+- Test de arquitectura: prohibir re-declaración local de estas funciones fuera de `src/lib/formatters/`.
 
-## 3. Item #3 — Eliminar `features/misc`
+## 3. Wrapper hooks para queries de página
 
-**Test nuevo:** `src/__tests__/architecture/no-misc-feature.test.ts`
+Páginas hoy llaman `useQuery` directo con keys ad-hoc (rompen la regla "Page → hook → service").
 
-- Falla si existe `src/features/misc/`.
-- Falla si algún archivo importa de `@/features/misc/...`.
-- Verifica que la API pública sigue intacta: importa `queryKeys` desde `@/lib/query` y comprueba que `queryKeys.bitacora`, `queryKeys.trackingLinks`, `queryKeys.trackingPublico`, `queryKeys.clienteFinancials` y `queryKeys.pdfPreviewCotizacion` están definidos y son arrays/funciones.
+- Auditar `src/pages/**` y por cada `useQuery` inline crear `useXxxPage()` en el feature correspondiente.
+- Página recibe sólo `{ data, isLoading, error }` listos.
+- Test de arquitectura: `src/pages/**/*.tsx` no puede importar `@tanstack/react-query` directamente (salvo `useQueryClient` para invalidaciones controladas).
 
-## 4. Item #4 — Encapsular `Unsubscribe.tsx`
+## 4. Extraer loops `bulk-insert` fuera de JSX
 
-**Tests nuevos:**
+Detectados en wizard embarque/cotización: bucles que arman payloads grandes dentro de `onClick`/`onSubmit`.
 
-- `src/services/__tests__/unsubscribeService.test.ts` — mockea `supabase.functions.invoke` y cubre:
-  - `validateUnsubscribeToken` resuelve con datos cuando la edge function responde OK.
-  - Propaga error cuando `invoke` devuelve `error`.
-  - `confirmUnsubscribe` envía el payload correcto.
-- `src/__tests__/architecture/unsubscribe-encapsulation.test.ts` — falla si `src/pages/auth/Unsubscribe.tsx`:
-  - Contiene `fetch(`
-  - Contiene `VITE_SUPABASE_URL` o `VITE_SUPABASE_PUBLISHABLE_KEY` o `VITE_SUPABASE_ANON_KEY`.
+- Mover lógica a servicios (`crearEmbarqueBulk`, `crearConceptosBulk`, etc.).
+- JSX queda con `await service(...)` + manejo de errores.
 
-## 5. Item #5 — Centralizar 21 casts en servicios
+## 5. Migrar servicios globales a su feature
 
-**Test nuevo:** `src/__tests__/architecture/safe-casts-services.test.ts`
+Servicios sueltos en `src/services/` que pertenecen a un dominio.
 
-- Reusa el clasificador existente (`scripts/lib/casts.ts`).
-- Falla si aparece algún cast `HIGH` o `CRITICAL` en `src/features/**/services/**/*.ts` sin el marcador `// SAFE-CAST:` en las 2 líneas previas.
-- Aserción dura: `expect(highOrCritical).toBe(0)` para mantener el umbral actual.
+- `unsubscribeService.ts` → `src/features/auth/services/` (o mantener si no hay feature `auth/` lo dejamos justificado).
+- Revisar otros archivos en `src/services/` (mover los específicos, mantener sólo los transversales).
+- Actualizar imports y tests.
 
-## 6. Item #6 — Edge functions fiscales
-
-Ya creados `helpers_test.ts` (facturapi-emitir, facturapi-cancelar) y `aiHelpers_test.ts` (parse-cfdi-xml) en el sprint anterior. Esta fase añade:
-
-- **Smoke deno test nuevo** `supabase/functions/facturapi-cancelar/index_test.ts` que sólo importa `./helpers.ts` y `./index.ts` no se rompe a la carga (compile-time guard).
-- **Smoke deno test nuevo** `supabase/functions/parse-cfdi-xml/index_test.ts` análogo importando `./aiHelpers.ts` + `./parser.ts`.
-- Ejecutar la suite Deno completa de las 3 funciones con `supabase--test_edge_functions` y dejar evidencia en el changelog.
-
-## Técnico
-
-- Los tests de arquitectura usan `fs.readFileSync` + `globby`/`fast-glob` ya disponible vía `scripts/lib/walk.ts` (no añadimos dependencias).
-- El test de SAFE-CAST reusa `scanCasts()` y `WEIGHT` de `scripts/lib/casts.ts`; ya hay un test similar en `src/__tests__/audit-casts-classifier.test.ts`.
-- El mock de `supabase.functions.invoke` se hace al estilo de tests existentes en `src/features/facturacion/hooks/__tests__/*` (vi-mock del módulo `@/integrations/supabase/client`).
-- Bump `APP_VERSION` a `13.59.1` y entrada en `CHANGELOG.md`.
+---
 
 ## Entregables
 
 ```text
+src/features/bandejas/domain/
+  ├── clasificarCartera.ts (+ test)
+  ├── prioridadCxp.ts (+ test)
+  └── huecosFiltro.ts (+ test)
+src/lib/formatters/
+  └── index.ts + tests (consolida date/money/percent)
+src/features/<feature>/hooks/useXxxPage.ts (wrappers)
+src/features/<feature>/services/  (loops bulk movidos)
 src/__tests__/architecture/
-  ├── facturacion-fusion.test.ts          (nuevo)
-  ├── admin-configuracion-cycle.test.ts   (nuevo)
-  ├── no-misc-feature.test.ts             (nuevo)
-  ├── unsubscribe-encapsulation.test.ts   (nuevo)
-  └── safe-casts-services.test.ts         (nuevo)
-src/services/__tests__/
-  └── unsubscribeService.test.ts          (nuevo)
-supabase/functions/facturapi-cancelar/
-  └── index_test.ts                       (nuevo, smoke)
-supabase/functions/parse-cfdi-xml/
-  └── index_test.ts                       (nuevo, smoke)
-CHANGELOG.md + src/constants/appVersion.ts  (bump 13.59.1)
+  ├── pages-no-direct-usequery.test.ts
+  └── no-local-formatters.test.ts
+CHANGELOG.md + APP_VERSION bump a 13.60.0
 ```
 
-## No incluido (fuera de alcance)
+## Técnico
 
-- Tests E2E de UI para Unsubscribe (ya cubierto por mocks unitarios).
-- Tests de las 17 edge functions restantes (es Fase 3 item #20 del plan, no Fase 1).
-- Refactor de los tests existentes en `__tests__/audit-casts-classifier.test.ts` (sólo añadimos uno nuevo más estricto).
+- Cada item se entrega como bloque atómico con su test arquitectónico/unitario.
+- Sin cambios de schema, sin migraciones, sin nuevas dependencias.
+- Sin cambios funcionales visibles al usuario; sólo reorganización + tests.
+
+## Fuera de alcance
+
+- Fase 3 (toast, Sentry, magic strings, edge functions restantes).
+- Fase 4 (renombrados kebab, inline styles, orfandades).
+- Cambios de UI o lógica de negocio nueva.
+
+## Pregunta
+
+¿Ejecuto los 5 items en una sola tanda con un solo bump de versión (13.60.0), o prefieres revisar item por item antes de avanzar al siguiente?

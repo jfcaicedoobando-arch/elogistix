@@ -19,16 +19,7 @@ import {
   useMarcarTodasLeidas,
   type NotificacionCliente,
 } from "@/features/portal/hooks";
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatDateTimeShort } from "@/lib/formatters";
 
 export function PortalNotificationsBell() {
   const { data: items = [] } = useNotificacionesCliente();
@@ -99,7 +90,7 @@ export function PortalNotificationsBell() {
                           <p className="text-[11px] text-muted-foreground line-clamp-2">{n.mensaje}</p>
                         )}
                         <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
-                          {formatDate(n.created_at)}
+                          {formatDateTimeShort(n.created_at)}
                         </p>
                       </div>
                     </div>
