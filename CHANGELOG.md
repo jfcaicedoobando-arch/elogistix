@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.56.8] - 2026-06-17
+- **chore(auditoría-arquitectónica)**: Reverificación hallazgo 9 — `src/routes/appRoutes.tsx` había crecido a 208 líneas tras los bloques posteriores. Introducido helper local `guarded(roles, element)` que colapsa cada `<Route ... allowedRoles={[...]}>` a una sola línea; archivo final = **103 líneas** (margen amplio sobre el umbral ≤195). Sin cambios funcionales: mismas rutas, mismos roles, mismo orden, smoke `routes.smoke.test.tsx` verde (7/7). Reporte de auditoría actualizado. Bump `APP_VERSION` 13.56.8.
+
 ## [13.56.7] - 2026-06-17
 - **chore(auditoría-arquitectónica)**: Cierre del plan de remediación (pasos 17–20). (17) Único `TODO` accionable en código productivo (`features/cotizacion/services/conversiones/portal.ts:18`) reescrito con prefijo `AUDIT(hallazgo-17.1)` y registrado en nuevo `.lovable/audit-todos.md` como tabla única de deuda técnica. (18) Auditoría de casts: el reporte arquitectónico confirma 0 HIGH/0 CRITICAL en 1374 casts; los MEDIUM restantes son patrones aceptados (`fromDb<T>()`, `as never` en mocks de test). (19) `rg console.(log|debug)` en `src/`: ocurrencias sólo en `test/canaries/pdfLeak.test.tsx` y `dataTable/__tests__/DataTable.perf.test.tsx` (legítimas, miden drift/perf); código productivo usa `lib/observability/logger`. (20) `reports/audit-report.md` actualizado con tabla de cierre que mapea los 20 hallazgos → versión donde se atendieron (13.56.1 → 13.56.7). `CONTRIBUTING.md` gana sección **Cómo extender** con las 5 reglas obligatorias surgidas del plan (componentes ≤200 líneas, sin `SELECT *`, tokens semánticos, tests servicio+hook, cleanup en `useEffect`). Sin cambios funcionales. Bump `APP_VERSION` 13.56.7.
 
