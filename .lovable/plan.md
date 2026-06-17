@@ -1,34 +1,75 @@
-## Objetivo
+# Reestructurar Paso 1 del wizard de cotización (marítimo)
 
-La fecha de "Validez de la propuesta" no debe poder exceder la fecha `vigente_hasta` de la tarifa seleccionada. Hoy sólo se muestra una advertencia visual (`vencidaAntesDeValidez`) pero el usuario aún puede guardar una validez mayor.
+## Razonamiento (perspectiva comercial)
 
-## Cambios
+Una persona de ventas sin conocimiento de costeo sólo sabe: a quién le vende, qué embarca, de dónde a dónde y cuántos contenedores. Lo demás (ruta intermedia del barco, días de tránsito, frecuencia, validez real, seguro recomendado por el agente) lo dicta la **tarifa**. Por eso el orden conversacional debe llevar a la persona a un único momento de decisión: **elegir tarifa**.
 
-### 1. `SeccionRutaCotizacion.tsx` (calendario de validez)
-- Leer la tarifa vinculada actual (`watch("tarifaVinculada")` o el panel ya expuesto) para obtener `vigente_hasta`.
-- Pasar `disabled={(date) => date < hoy || (tarifaHasta && date > tarifaHasta)}` al `<Calendar>`.
-- Si al seleccionar una tarifa la validez ya guardada supera `vigente_hasta`, recortarla automáticamente con `setValue("validezPropuesta", tarifaHasta, { shouldValidate: true, shouldDirty: true })` + `trigger()`.
-- Mostrar texto de ayuda: "Máximo DD/MM/AAAA según la tarifa seleccionada".
+## Nuevo orden propuesto (sólo modo Marítimo)
 
-### 2. `aplicarTarifa.ts`
-- Al aplicar/cambiar una tarifa, si `validezPropuesta` actual > `tarifa.vigente_hasta`, sobreescribirla al `vigente_hasta` de la tarifa (misma regla de RHF: `shouldValidate`, `shouldDirty`, `trigger`).
-- Si no hay validez previa, dejar el flujo actual (no auto-asignar).
+```text
+1. Cliente              (a quién le cotizo)
+2. Operación            (importación/exportación, incoterm, modo, tipo)
+3. Ruta                 (sólo origen + destino + tipo de movimiento CY/DR)
+4. Mercancía            (FCL/LCL, contenedor, peso, descripción, MSDS)
+5. Tarifa               (← momento de decisión: ya tengo todo para buscarla)
+6. Condiciones comerciales  (validez + seguro, heredadas/ajustables tras tarifa)
+7. Cierre               (nº embarques, notas)
+```
 
-### 3. Validación (Zod schema de la cotización)
-- Añadir refinamiento opcional: si el form trae `tarifaVinculada.vigente_hasta`, entonces `validezPropuesta <= vigente_hasta`. Mensaje: "La validez no puede exceder la vigencia de la tarifa (DD/MM/AAAA)".
-- Esto bloquea el avance del wizard y el guardado.
+Aéreo / Terrestre / General conservan su flujo actual (sin tarifa vinculada).
 
-### 4. `TarifaVinculadaPanel.tsx`
-- Reemplazar el warning `vencidaAntesDeValidez` por un mensaje informativo de que la validez fue recortada automáticamente (o dejarlo si la regla nueva la hace imposible).
+## Cambios concretos
 
-### 5. Sin cambios de backend ni migraciones
-- La columna `valido_hasta` de `cotizaciones` ya existe; sólo cambia la regla de captura en UI.
+### 1. `SeccionRutaCotizacion.tsx`
+En modo marítimo, dejar visible **sólo**:
+- Origen + Destino (PortSelect)
+- Tipo de movimiento (CY-CY, CY-DR, …)
 
-### 6. Versionado y changelog
-- Bump `APP_VERSION` a `13.47.1`.
-- Entrada en `CHANGELOG.md` describiendo el cap.
+Ocultar para marítimo (mover o eliminar de esta sección):
+- Campo **"Ruta"** (`rutaTexto`): se autollenará desde la tarifa o queda editable en el panel post-tarifa como dato heredado.
+- **Validez de la propuesta**: se muestra en la nueva sección "Condiciones comerciales".
+- **Seguro** (`SeguroBlock`): igual, se mueve a "Condiciones comerciales".
+
+Para modos no marítimos, **no cambia nada** (siguen como hoy).
+
+### 2. Nueva sección "Condiciones comerciales" (sólo marítimo)
+Crear `SeccionCondicionesComerciales.tsx` que se renderiza **después** de `TarifaVinculadaPanel`. Contiene:
+- **Ruta del barco** (`rutaTexto`): read-only con badge "Heredado de tarifa" cuando hay tarifa; editable manual con permiso `canOverrideTarifaPricing` (ya existe). Sin tarifa → input deshabilitado con hint "Selecciona una tarifa primero".
+- **Validez de la propuesta**: calendario con `disabled` hasta `tarifa.vigente_hasta` (lógica ya existe en `SeccionRutaCotizacion`, se traslada). Sin tarifa → deshabilitado con hint.
+- **Seguro** (`SeguroBlock`): se reutiliza tal cual. Sin tarifa → deshabilitado con hint.
+
+La autocarga de `rutaTexto` desde la tarifa se agrega en `aplicarTarifa.ts`: si la tarifa trae texto de ruta (campo `notas` o nuevo `ruta_texto` si lo decidimos) lo escribe vía `setValue("rutaTexto", …, OPTS)`. **Sin migración nueva**: en esta iteración usamos `"{origen} → {destino}"` por defecto si la tarifa no trae texto explícito (placeholder editable).
+
+### 3. `PasoDatosGenerales.tsx`
+Reordenar bloques para marítimo:
+```text
+Cliente → Operación → Ruta → Mercancía → Tarifa → Condiciones comerciales → Cierre
+```
+Para no-marítimo: sin cambios (Mercancía sigue al final como hoy ya que la Ruta conserva validez/seguro).
+
+### 4. `Paso1ProgressSidebar.tsx`
+Actualizar la lista de secciones para marítimo añadiendo el paso "Condiciones":
+```text
+Cliente · Operación · Ruta · Mercancía · Tarifa · Condiciones · Cierre
+```
+
+### 5. `usePaso1SectionStatus.ts`
+Añadir `condiciones: boolean` (true cuando `validezPropuesta` y `seguro` tienen valor) y reusar el ya existente para mercancía. La sección "Ruta" en marítimo ahora se marca completa con sólo origen/destino/tipo de movimiento.
+
+### 6. Validación / Zod
+- `rutaTexto`, `validezPropuesta`, `seguro` siguen siendo obligatorios para avanzar.
+- Añadir guardia: en marítimo, no se puede pasar a Paso 2 sin tarifa vinculada (regla ya existente vía `status.tarifa`).
+
+### 7. Versionado y changelog
+- Bump `APP_VERSION` → `13.47.2`.
+- Entrada en `CHANGELOG.md`: "Reordenar Paso 1 marítimo: Mercancía antes de Tarifa; Validez/Seguro/Ruta-texto se capturan después de tarifa".
+- Actualizar memoria `mem://features/wizard-cotizacion-flujo` con el nuevo orden.
 
 ## Fuera de alcance
-- Cambiar el modelo de `cotizaciones` o `costeo_tarifas`.
-- Validar retroactivamente cotizaciones ya guardadas con validez > vigencia.
-- Aéreo / terrestre (sólo aplica a marítimo importación, donde existe tarifa vinculada).
+- Cambios de esquema en `costeo_tarifas` (no se agrega `ruta_texto` en esta iteración; se autollena con `origen → destino`).
+- Aéreo, terrestre, multimodal y general (mantienen el flujo actual).
+- Persistencia de overrides nuevos: `rutaTexto` no entra al objeto `tarifa_override` en esta iteración (es texto libre comercial, no dato operativo de costeo).
+
+## Preguntas abiertas (responde si quieres ajustar antes de implementar)
+1. ¿El campo "Ruta" debe quedar visible como heredado/editable después de la tarifa, o lo eliminamos por completo de la UI de ventas y se autopobla en segundo plano para el PDF?
+2. ¿"Seguro" en post-tarifa debe traer un default sugerido por la tarifa/agente, o seguir 100% manual del comercial?
