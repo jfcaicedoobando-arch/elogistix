@@ -183,6 +183,8 @@ export default function TarifaVinculadaPanel({
             )}
           </div>
         )}
+
+        {tarifa && <TarifaResumenHeredado tarifa={tarifa} />}
       </div>
 
       <BuscarTarifaDialog
