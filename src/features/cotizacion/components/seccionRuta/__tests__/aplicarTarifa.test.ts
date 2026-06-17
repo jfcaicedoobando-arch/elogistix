@@ -57,8 +57,31 @@ describe("aplicarTarifaAlForm", () => {
       "tipoContenedor",
       "frecuencia",
       "diasAlmacenaje",
+      "validezPropuesta",
     ]);
   });
+
+  it("recorta validezPropuesta cuando excede vigente_hasta de la tarifa", () => {
+    const setValue = vi.fn();
+    const trigger = vi.fn().mockResolvedValue(true);
+    const rowConVigencia = { ...row, vigente_hasta: "2026-12-31" } as TopTarifaRow;
+    const validezActual = new Date(2027, 5, 15); // junio 2027 > vigente_hasta
+    aplicarTarifaAlForm(setValue as never, trigger as never, rowConVigencia, {}, validezActual);
+    const calls = setValue.mock.calls.filter((c) => c[0] === "validezPropuesta");
+    expect(calls).toHaveLength(1);
+    expect((calls[0][1] as Date).getFullYear()).toBe(2026);
+    expect((calls[0][1] as Date).getMonth()).toBe(11);
+    expect((calls[0][1] as Date).getDate()).toBe(31);
+  });
+
+  it("no toca validezPropuesta si es anterior a vigente_hasta", () => {
+    const setValue = vi.fn();
+    const trigger = vi.fn().mockResolvedValue(true);
+    const rowConVigencia = { ...row, vigente_hasta: "2026-12-31" } as TopTarifaRow;
+    const validezActual = new Date(2026, 5, 15);
+    aplicarTarifaAlForm(setValue as never, trigger as never, rowConVigencia, {}, validezActual);
+    expect(setValue.mock.calls.find((c) => c[0] === "validezPropuesta")).toBeUndefined();
+
 
   it("auto-carga costos con markup aplicado al elegir una sugerencia", async () => {
     fetchRecargosDeTarifa.mockResolvedValue(recargos);
