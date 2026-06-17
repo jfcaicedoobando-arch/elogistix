@@ -268,7 +268,7 @@ function ComparativaTable({ titulo, rows, invertirAlerta }: ComparativaProps) {
             })}
           </TableBody>
           {rows.length > 0 && (
-            <tfoot>
+            <TableFooter>
               <TableRow className="font-semibold border-t-2">
                 <TableCell>Total</TableCell>
                 <TableCell className="text-right">{fmt(totPresup)}</TableCell>
@@ -280,7 +280,7 @@ function ComparativaTable({ titulo, rows, invertirAlerta }: ComparativaProps) {
                   {totPresup > 0 ? pct((totDesv / totPresup) * 100) : "—"}
                 </TableCell>
               </TableRow>
-            </tfoot>
+            </TableFooter>
           )}
         </Table>
       </CardContent>
