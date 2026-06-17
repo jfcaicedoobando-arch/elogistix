@@ -42,4 +42,51 @@ describe("usePermissions", () => {
     const { result } = renderHook(() => usePermissions());
     expect(result.current.canCotizarSinDesglose).toBe(false);
   });
+
+  // v13.54.0 — Bloque Q: separación de responsabilidades financieras
+  it("contador → emite, captura y cobra; NO paga proveedor", () => {
+    mockUseAuth.mockReturnValue({ role: "contador", effectiveRole: "contador" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canEmitirFactura).toBe(true);
+    expect(result.current.canCapturarFacturaProveedor).toBe(true);
+    expect(result.current.canRegistrarCobro).toBe(true);
+    expect(result.current.canPagarProveedor).toBe(false);
+  });
+
+  it("auxiliar_contable → sólo captura factura de proveedor", () => {
+    mockUseAuth.mockReturnValue({ role: "auxiliar_contable", effectiveRole: "auxiliar_contable" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canCapturarFacturaProveedor).toBe(true);
+    expect(result.current.canEmitirFactura).toBe(false);
+    expect(result.current.canPagarProveedor).toBe(false);
+    expect(result.current.canRegistrarCobro).toBe(false);
+  });
+
+  it("tesorero → sólo paga proveedores", () => {
+    mockUseAuth.mockReturnValue({ role: "tesorero", effectiveRole: "tesorero" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canPagarProveedor).toBe(true);
+    expect(result.current.canEmitirFactura).toBe(false);
+    expect(result.current.canCapturarFacturaProveedor).toBe(false);
+    expect(result.current.canRegistrarCobro).toBe(false);
+  });
+
+  it("ejecutivo_cobranza → sólo registra cobros", () => {
+    mockUseAuth.mockReturnValue({ role: "ejecutivo_cobranza", effectiveRole: "ejecutivo_cobranza" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canRegistrarCobro).toBe(true);
+    expect(result.current.canEmitirFactura).toBe(false);
+    expect(result.current.canCapturarFacturaProveedor).toBe(false);
+    expect(result.current.canPagarProveedor).toBe(false);
+  });
+
+  it("operador → ninguna capacidad financiera de acción", () => {
+    mockUseAuth.mockReturnValue({ role: "operador", effectiveRole: "operador" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canEmitirFactura).toBe(false);
+    expect(result.current.canCapturarFacturaProveedor).toBe(false);
+    expect(result.current.canPagarProveedor).toBe(false);
+    expect(result.current.canRegistrarCobro).toBe(false);
+  });
+
 });
