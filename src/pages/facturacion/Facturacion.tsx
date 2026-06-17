@@ -13,6 +13,7 @@ import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFactur
 import { TabCobranza } from "@/features/facturacion/components/TabCobranza";
 import { TabProyeccion } from "@/features/facturacion/components/TabProyeccion";
 import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFacturacionCard";
+import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
 import { DialogHistorialPagos } from "@/features/facturacion/components/DialogHistorialPagos";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
@@ -96,6 +97,9 @@ export default function Facturacion() {
       <div className="space-y-6">
         <PageHeader title="Pre-Facturación" description="Control de proformas, facturas emitidas y gastos por liquidar" />
         <GuiaPrefacturacion />
+
+        {/* Dashboard ejecutivo: KPIs facturado/cobrado/vencido + tendencia 6 meses */}
+        <DashboardEjecutivoFacturacion />
 
         {/* Alerta global: Hueco de facturación */}
         <HuecoFacturacionCard />
