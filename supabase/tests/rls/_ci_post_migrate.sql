@@ -50,6 +50,7 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, anon, service_
 -- solo validan aislamiento, drop seguro.
 -- ============================================================================
 DROP TRIGGER IF EXISTS trg_pago_factura_comision ON public.pagos_factura;
+DROP TRIGGER IF EXISTS trg_pago_factura_comision_ins ON public.pagos_factura;
 
 -- ============================================================================
 -- Policies reales de tracking_externo (no existen en migraciones; añadidas
