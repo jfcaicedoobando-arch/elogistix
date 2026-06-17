@@ -96,7 +96,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
               >
                 <div className="flex items-start gap-2">
                   {c.ok ? (
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-success" />
                   ) : (
                     <XCircle className="mt-0.5 h-5 w-5 text-destructive" />
                   )}
