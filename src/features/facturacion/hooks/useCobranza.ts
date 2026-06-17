@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchCobranza, calcularKPIs, type EstatusCobranza } from "@/features/facturas/services";
+import { fetchCobranza, calcularKPIs, type EstatusCobranza } from "@/features/facturacion/services";
 import type { Database } from "@/integrations/supabase/types";
 
 type Moneda = Database["public"]["Enums"]["moneda"];

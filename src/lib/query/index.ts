@@ -10,7 +10,7 @@ import { embarques, trackingLinks, trackingPublico } from "@/features/embarques/
 import { proformas } from "@/features/proformas/queryKeys";
 import { cotizaciones, pdfPreviewCotizacion } from "@/features/cotizacion/queryKeys";
 import { clientes, clienteFinancials } from "@/features/cliente/queryKeys";
-import { facturas } from "@/features/facturas/queryKeys";
+
 import { proveedores } from "@/features/proveedor/queryKeys";
 import {
   configuracion, puertos, exchangeRates, navieras, tiposContenedor,
@@ -21,7 +21,7 @@ import { usuarios, planes, admin, appLogs, papelera, idempotenciaLog } from "@/f
 import { crm } from "@/features/crm/queryKeys";
 import { portal } from "@/features/portal/queryKeys";
 import { auditoria } from "@/features/auditoria/queryKeys";
-import { facturacion } from "@/features/facturacion/queryKeys";
+import { facturacion, facturas } from "@/features/facturacion/queryKeys";
 import { profit } from "@/features/profit/queryKeys";
 import { cxp } from "@/features/cxp/queryKeys";
 import { tesoreria } from "@/features/tesoreria/queryKeys";

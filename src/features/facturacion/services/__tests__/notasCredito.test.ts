@@ -13,7 +13,7 @@ import {
   listarNotasCreditoPorFactura,
   crearNotaCredito,
   cambiarEstadoNotaCredito,
-} from "@/features/facturas/services/notasCredito";
+} from "@/features/facturacion/services/notasCredito";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

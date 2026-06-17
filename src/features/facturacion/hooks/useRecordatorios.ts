@@ -5,7 +5,7 @@ import {
   enviarRecordatorio,
   fetchUltimosRecordatorios,
   type CanalRecordatorio,
-} from "@/features/facturas/services/recordatorios";
+} from "@/features/facturacion/services/recordatorios";
 
 const KEY_ULTIMOS = (ids: string[]) => ["factura_recordatorios", "ultimos", ids.slice().sort().join(",")] as const;
 

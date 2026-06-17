@@ -3,7 +3,7 @@ import {
   agruparSaldosPorMoneda,
   calcularKPIs,
   type FacturaCobranza,
-} from "@/features/facturas/services/cobranza";
+} from "@/features/facturacion/services/cobranza";
 
 const f = (over: Partial<FacturaCobranza> = {}): FacturaCobranza => ({
   id: "1",

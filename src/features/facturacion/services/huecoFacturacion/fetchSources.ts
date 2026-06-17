@@ -2,7 +2,7 @@
  * Fuentes de datos (Supabase) para el "Hueco de Facturación". Solo I/O.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchFacturasPorExpedientes } from "@/features/facturas/services/shared/fetchFacturas";
+import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
 
 export interface EmbarqueHuecoRow {
   id: string;

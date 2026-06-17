@@ -13,7 +13,7 @@ import {
   diasDesde,
   indexarVentas,
   construirFilaHueco,
-} from "@/features/facturas/services/huecoFacturacion/buildFilas";
+} from "@/features/facturacion/services/huecoFacturacion/buildFilas";
 
 describe("diasDesde", () => {
   it("devuelve 0 cuando fecha = hoy", () => {

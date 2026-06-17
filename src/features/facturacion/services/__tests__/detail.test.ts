@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchFacturaById } from "@/features/facturas/services/detail";
+import { fetchFacturaById } from "@/features/facturacion/services/detail";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

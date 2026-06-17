@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
-import type { MotivoCancelacionSat } from "@/features/facturas/services/facturapi";
+import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 
 interface Props {
   facturaId: string | null;

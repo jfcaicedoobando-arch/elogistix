@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/features/facturas/services", () => ({
+vi.mock("@/features/facturacion/services", () => ({
   fetchLayoutContableData: vi.fn(),
 }));
 vi.mock("@/generators/exportCsv", () => ({
@@ -8,7 +8,7 @@ vi.mock("@/generators/exportCsv", () => ({
 }));
 
 import { exportarLayoutContable } from "../layoutContable";
-import { fetchLayoutContableData } from "@/features/facturas/services";
+import { fetchLayoutContableData } from "@/features/facturacion/services";
 import { exportToCsv } from "@/generators/exportCsv";
 
 const mockFetch = fetchLayoutContableData as ReturnType<typeof vi.fn>;

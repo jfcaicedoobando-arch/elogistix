@@ -3,7 +3,7 @@
  * Solo I/O: trae embarques del mes + sus conceptos/facturas. Sin agregaciones.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchFacturasPorExpedientes } from "@/features/facturas/services/shared/fetchFacturas";
+import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
 
 export interface EmbarqueProyeccionRow {
   id: string;

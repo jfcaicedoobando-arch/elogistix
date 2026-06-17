@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchProyeccionMes } from "@/features/facturas/services/proyeccion";
+import { fetchProyeccionMes } from "@/features/facturacion/services/proyeccion";
 
 describe("fetchProyeccionMes", () => {
   it("devuelve [] cuando no hay embarques en el mes", async () => {

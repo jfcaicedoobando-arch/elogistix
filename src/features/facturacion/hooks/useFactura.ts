@@ -4,7 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchFacturaById, type FacturaDetalle } from "@/features/facturas/services/detail";
+import { fetchFacturaById, type FacturaDetalle } from "@/features/facturacion/services/detail";
 
 export type { FacturaDetalle };
 

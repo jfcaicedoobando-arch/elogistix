@@ -4,7 +4,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import type { FilaHueco } from "@/features/facturas/services";
+import type { FilaHueco } from "@/features/facturacion/services";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getDiasVencidosTone } from "@/components/shared/utils/uiMappings";
 import { cn } from "@/lib/utils";

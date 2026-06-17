@@ -9,7 +9,7 @@ import {
   fetchHuecoFacturacion,
   type FilaHueco,
   type HuecoFacturacionResult,
-} from "@/features/facturas/services";
+} from "@/features/facturacion/services";
 import { exportToCsv } from "@/generators/exportCsv";
 import { queryKeys } from "@/lib/query";
 import {

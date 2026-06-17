@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { emitirFacturapi, cancelarFacturapi, type MotivoCancelacionSat } from "@/features/facturas/services/facturapi";
-import { facturas as facturasKeys } from "@/features/facturas/queryKeys";
+import { emitirFacturapi, cancelarFacturapi, type MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
+import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
 export function useTimbrarFactura() {
   const qc = useQueryClient();

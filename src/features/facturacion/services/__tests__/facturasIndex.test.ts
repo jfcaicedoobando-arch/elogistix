@@ -11,7 +11,7 @@ import {
   fetchFacturas,
   marcarCostoPagado,
   fetchGastosPendientes,
-} from "@/features/facturas/services";
+} from "@/features/facturacion/services";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

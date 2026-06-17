@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useOrgFilter } from "@/hooks/shared";
-import { fetchDashboardEjecutivoFacturacion } from "@/features/facturas/services/dashboardEjecutivo";
+import { fetchDashboardEjecutivoFacturacion } from "@/features/facturacion/services/dashboardEjecutivo";
 
 export function useDashboardEjecutivoFacturacion() {
   const { organizationId } = useOrgFilter();

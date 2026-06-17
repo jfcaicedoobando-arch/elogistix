@@ -19,7 +19,7 @@ import { DialogHistorialPagos } from "./DialogHistorialPagos";
 import { NotasCreditoRecientes } from "./NotasCreditoRecientes";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
-import type { FacturaCobranza, EstatusCobranza } from "@/features/facturas/services";
+import type { FacturaCobranza, EstatusCobranza } from "@/features/facturacion/services";
 
 const ESTATUS: Array<EstatusCobranza | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
 
