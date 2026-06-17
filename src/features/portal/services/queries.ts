@@ -12,8 +12,7 @@ import {
   PORTAL_PAGO_FACTURA_COLUMNS,
 } from "./columns";
 
-// Schema reutilizable para joins anidados que devuelven { nombre } o null.
-// Validamos en runtime para detectar drift de schema en boundaries.
+// Schema reutilizable para joins anidados { nombre } | null — valida en runtime.
 const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
 
 // v13.56.3 — Límites defensivos en consultas del portal. Si un cliente acumula
