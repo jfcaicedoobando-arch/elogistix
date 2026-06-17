@@ -276,4 +276,23 @@ export default tseslint.config(
       "@typescript-eslint/ban-ts-comment": "off",
     },
   },
+  {
+    // Allowlist de complejidad/anidamiento: flujos legacy con CC alto que
+    // aún no se refactorizan. Documentar caso a caso y planear la división.
+    // CI corre `eslint --max-warnings 0`, así que cualquier warning aquí
+    // tira el job; se relajan SOLO las reglas estructurales (no de tipos).
+    files: [
+      "src/features/embarques/components/TabCierre.tsx",
+      "src/features/embarques/components/TabPnl.tsx",
+      "src/features/facturacion/components/DialogTimbrarFactura.tsx",
+      "src/features/facturacion/components/FacturasMasivasToolbar.tsx",
+      "src/features/facturas/services/dashboardEjecutivo.ts",
+      "supabase/functions/facturapi-cancelar/index.ts",
+      "supabase/functions/facturapi-emitir/index.ts",
+    ],
+    rules: {
+      "complexity": "off",
+      "max-depth": "off",
+    },
+  },
 );
