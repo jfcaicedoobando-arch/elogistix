@@ -64,26 +64,9 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   };
 
   const reenviarEmail = async () => {
-    setBusy("email");
-    try {
-      let ok = 0; let fail = 0;
-      for (const id of ids) {
-        const { error } = await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "factura-reenvio",
-            recipientEmail: "auto",
-            idempotencyKey: `factura-reenvio-${id}-${Date.now()}`,
-            templateData: { factura_id: id },
-          },
-        });
-        if (error) fail++; else ok++;
-      }
-      toast.success(`Enviados: ${ok} · Fallidos: ${fail}`);
-    } catch (e) {
-      toast.error(`Error al reenviar: ${(e as Error).message}`);
-    } finally {
-      setBusy(null);
-    }
+    // Pendiente: se habilita junto con el template `factura-reenvio` y el
+    // resolutor de destinatarios (contacto principal del cliente).
+    toast.info(`Reenvío masivo en preparación — disponible con el template factura-reenvio (${ids.length} facturas pendientes)`);
   };
 
   const marcarEnviada = async () => {
