@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.47.8] - 2026-06-17
+- **fix(ci/casts-baseline)**: CI verde. `EmbarqueDetalleTabs.tsx` (introducido en 13.47.7) usaba 9 `as any` para pasar props a los hijos, lo que reventó el baseline `0 HIGH y 0 CRITICAL` del `audit-report` y tumbó el shard 3/8 + el agregador de CI. Reemplazados por tipos derivados con `ComponentProps<typeof TabX>` (`EmbarqueProp` intersecta los contratos de Resumen/Facturación/Tracking; `notas` intersecta Notas y Tracking). 0 casts HIGH/CRITICAL, 2 973 tests verdes.
+
 ## [13.47.7] - 2026-06-17
 - **refactor(power-of-10)**: Refactor preventivo de archivos cerca del límite de 200 líneas. `useCotizacionWizardSteps.ts` (198→152) — handlers del Paso 1 extraídos a `usePaso1Handlers.ts`. `services/documentos.ts` (197→115) — `uploadDocumentoEmbarque` extraído a `services/documentos/uploadDocumentoEmbarque.ts` con helper `buildScopedRequestId`. `routes/EmbarqueDetalle.tsx` (196→123) — bloque de tabs extraído a `components/EmbarqueDetalleTabs.tsx`. Lint, type-check y 459 tests verdes.
 
