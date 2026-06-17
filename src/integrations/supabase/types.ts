@@ -637,6 +637,7 @@ export type Database = {
       clientes: {
         Row: {
           ciudad: string
+          codigo_postal: string | null
           contacto: string
           cp: string
           created_at: string
@@ -649,12 +650,15 @@ export type Database = {
           id: string
           nombre: string
           organization_id: string
+          regimen_fiscal: string | null
           rfc: string
           telefono: string
           updated_at: string
+          uso_cfdi_default: string | null
         }
         Insert: {
           ciudad?: string
+          codigo_postal?: string | null
           contacto?: string
           cp?: string
           created_at?: string
@@ -667,12 +671,15 @@ export type Database = {
           id?: string
           nombre: string
           organization_id?: string
+          regimen_fiscal?: string | null
           rfc?: string
           telefono?: string
           updated_at?: string
+          uso_cfdi_default?: string | null
         }
         Update: {
           ciudad?: string
+          codigo_postal?: string | null
           contacto?: string
           cp?: string
           created_at?: string
@@ -685,9 +692,11 @@ export type Database = {
           id?: string
           nombre?: string
           organization_id?: string
+          regimen_fiscal?: string | null
           rfc?: string
           telefono?: string
           updated_at?: string
+          uso_cfdi_default?: string | null
         }
         Relationships: [
           {
@@ -3302,6 +3311,8 @@ export type Database = {
       }
       facturas: {
         Row: {
+          cancelacion_motivo: string | null
+          cancelado_en: string | null
           cliente_id: string
           cliente_nombre: string
           created_at: string
@@ -3309,10 +3320,12 @@ export type Database = {
           deleted_by: string | null
           dias_credito: number | null
           embarque_id: string
+          enviada_cliente_at: string | null
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
           factura_pdf_url: string | null
           factura_xml_url: string | null
+          facturapi_id: string | null
           fecha_emision: string
           fecha_vencimiento: string
           folio_fiscal: number | null
@@ -3327,9 +3340,12 @@ export type Database = {
           proforma_id: string | null
           referencia_bl: string | null
           rfc_cliente: string | null
+          serie: string | null
           serie_id: string | null
           snapshot_emision: Json | null
           subtotal: number
+          timbrado_en: string | null
+          timbrado_por: string | null
           tipo_cambio: number
           total: number
           updated_at: string
@@ -3337,6 +3353,8 @@ export type Database = {
           uuid_fiscal: string | null
         }
         Insert: {
+          cancelacion_motivo?: string | null
+          cancelado_en?: string | null
           cliente_id: string
           cliente_nombre?: string
           created_at?: string
@@ -3344,10 +3362,12 @@ export type Database = {
           deleted_by?: string | null
           dias_credito?: number | null
           embarque_id: string
+          enviada_cliente_at?: string | null
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
           factura_pdf_url?: string | null
           factura_xml_url?: string | null
+          facturapi_id?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
           folio_fiscal?: number | null
@@ -3362,9 +3382,12 @@ export type Database = {
           proforma_id?: string | null
           referencia_bl?: string | null
           rfc_cliente?: string | null
+          serie?: string | null
           serie_id?: string | null
           snapshot_emision?: Json | null
           subtotal?: number
+          timbrado_en?: string | null
+          timbrado_por?: string | null
           tipo_cambio?: number
           total?: number
           updated_at?: string
@@ -3372,6 +3395,8 @@ export type Database = {
           uuid_fiscal?: string | null
         }
         Update: {
+          cancelacion_motivo?: string | null
+          cancelado_en?: string | null
           cliente_id?: string
           cliente_nombre?: string
           created_at?: string
@@ -3379,10 +3404,12 @@ export type Database = {
           deleted_by?: string | null
           dias_credito?: number | null
           embarque_id?: string
+          enviada_cliente_at?: string | null
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
           factura_pdf_url?: string | null
           factura_xml_url?: string | null
+          facturapi_id?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
           folio_fiscal?: number | null
@@ -3397,9 +3424,12 @@ export type Database = {
           proforma_id?: string | null
           referencia_bl?: string | null
           rfc_cliente?: string | null
+          serie?: string | null
           serie_id?: string | null
           snapshot_emision?: Json | null
           subtotal?: number
+          timbrado_en?: string | null
+          timbrado_por?: string | null
           tipo_cambio?: number
           total?: number
           updated_at?: string
@@ -5931,6 +5961,7 @@ export type Database = {
         | "EIR"
       estado_factura:
         | "Borrador"
+        | "Por timbrar"
         | "Emitida"
         | "Pagada"
         | "Vencida"
@@ -6207,6 +6238,7 @@ export const Constants = {
       ],
       estado_factura: [
         "Borrador",
+        "Por timbrar",
         "Emitida",
         "Pagada",
         "Vencida",
