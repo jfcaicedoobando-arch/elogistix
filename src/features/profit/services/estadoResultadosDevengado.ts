@@ -100,7 +100,7 @@ async function fetchProveedorFacturasMes(orgId: string | null, desde: string, ha
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as ProveedorFacturaRow[];
+  return mapProveedorFacturaRows(data);
 }
 
 function ingresosDeFacturas(
