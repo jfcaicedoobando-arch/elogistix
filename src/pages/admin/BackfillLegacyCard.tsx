@@ -8,8 +8,8 @@
  */
 import { useState } from "react";
 import { Database, Loader2, CheckCircle2 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { runAuditoriaBackfillLegacy, type BackfillLegacyResult } from "@/features/admin/services/backfillLegacy";
+import { type BackfillLegacyResult } from "@/features/admin/services/backfillLegacy";
+import { useBackfillLegacy } from "@/features/admin/hooks/useBackfillLegacy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,25 +17,17 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [result, setResult] = useState<BackfillLegacyResult | null>(null);
 
-  const run = useMutation({
-    mutationFn: runAuditoriaBackfillLegacy,
+  const run = useBackfillLegacy({
     onSuccess: (data) => {
       setResult(data);
       setOpen(false);
       setConfirmText("");
-      toast.success(
-        `Backfill ejecutado: ${data.totales.conceptos_actualizados} conceptos, ${data.totales.embarques_afectados} embarques, ${data.totales.proformas_actualizadas} proformas.`,
-      );
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Error al ejecutar backfill");
     },
   });
 
