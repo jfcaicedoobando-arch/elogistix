@@ -44,6 +44,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
 
   if (!factura) return null;
 
+  const tcFactura = factura?.tipo_cambio;
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
 
   const handleEliminar = async () => {
