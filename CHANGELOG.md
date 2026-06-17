@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.56.5] - 2026-06-17
+- **chore(auditoría-arquitectónica)**: Paso 8 — paginación restante en operaciones/reportes/proveedores. Verificado que `features/operaciones/services` y `features/reportes/services` ya delegan en RPCs con agregación en servidor (`operaciones_stats`, `reportes_resumen`, `sidebar_alert_counts`, `operadores_distintos`) sin SELECT * abiertos. En proveedores, `ProveedorOperacionesTable` ahora pagina en cliente (default 50, opciones 25/50/100/200) sobre el techo de 1000 filas del servicio, evitando rendir cientos de filas de golpe en proveedores con histórico largo. Sin cambios de UI ni de reglas de negocio. Bump `APP_VERSION` 13.56.5.
+
 ## [13.56.4] - 2026-06-17
 - **chore(auditoría-arquitectónica)**: Continuación del plan de remediación (pasos 4, 12, 14). (4) Cobertura ampliada en `features/operaciones/services/__tests__/index.test.ts` (caso con payload vacío) y en `features/reportes/services/__tests__/index.test.ts` (coerción numérica de strings en `fetchReportesResumen`, casos para `fetchOperadoresDistintos`, default vacío en `fetchSidebarAlertCounts`). (12) `useCotizacionesPageController` dividido: nuevo `useCotizacionActions` (navegación + eliminar + exportar) y helper `useCotizacionKpis` extraídos a `features/cotizacion/hooks/`; el composer queda en ~110 líneas conservando la firma pública. (14) `CosteoRutas.tsx` reducido de 195 → ~90 líneas: el diálogo de alta se extrajo a `features/costeo/components/RutaFormDialog.tsx`. Sin cambios funcionales ni de UI. Bump `APP_VERSION` 13.56.4.
 
