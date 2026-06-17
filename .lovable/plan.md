@@ -1,114 +1,84 @@
-# Plan — Facturapi (K: Listo para facturar) + DataTable row selection (desbloquea F)
+# Roadmap: cerrar el ciclo completo del embarque
 
-## Alcance de esta entrega
+Después de auditar el ERP, **las etapas 1–7 (cotización → CFDI 4.0) están sólidas**. Los huecos reales están en: (a) la trazabilidad entre módulos (FKs faltantes), (b) la falta de un **P&L por embarque** en pantalla, (c) la ausencia de un **cierre/liquidación financiera**, y (d) el módulo de **seguros**, hoy reducido a dos columnas booleanas.
 
-1. **DataTable row selection** — habilita selección multi-fila reusable en todo el proyecto.
-2. **Bloque K — Paso "Listo para facturar"** con Facturapi como proveedor de timbrado CFDI 4.0.
-3. **Bloque F — Acciones masivas en Facturas emitidas** sobre la nueva selección: descargar ZIP de PDFs, reenviar por email, marcar "enviada al cliente".
-
-L (consolidar Tab 1+2) y M (extraer CxP) quedan para una siguiente entrega.
+Propongo entregarlo en **5 bloques** incrementales, cada uno con su propio CHANGELOG/bump de versión.
 
 ---
 
-## 1. DataTable row selection
+## Bloque O — Integridad de datos (base para todo lo demás)
 
-`src/components/shared/DataTable.tsx` (141 líneas) hoy no expone selección. Cambios:
+Migración única, sin UI. Habilita los joins que los siguientes bloques necesitan.
 
-- Nueva prop opcional `selection?: { selectedIds: Set<string>; onSelectionChange: (ids: Set<string>) => void; }`.
-- Cuando se pasa, antepone columna `__select` con checkbox por fila + checkbox "seleccionar todo" en header (sólo de la página actual).
-- Helper hook `useRowSelection<T>()` para state controlado por la pantalla consumidora.
-- Tests unitarios mínimos: toggle, select-all, clear.
+- `proveedor_facturas.embarque_id` → agregar **FK real** a `embarques(id) ON DELETE SET NULL` (hoy es `uuid` sin constraint, sólo índice).
+- `facturas.cotizacion_id` → nueva columna + FK a `cotizaciones`; backfill desde `embarques.cotizacion_id`.
+- `pagos_factura.embarque_id` → nueva columna denormalizada + índice + backfill desde `facturas.embarque_id` + trigger de mantenimiento.
+- `comisiones_devengadas` → índice `idx_com_dev_embarque` (FK ya existe).
+- `pagos_proveedor.cuenta_bancaria_id` → FK faltante a `cuentas_bancarias`.
+- `embarque_garantias_contenedor.proveedor_factura_id` → nueva FK opcional para amarrar depósito ↔ factura del proveedor.
+- Verificar/forzar `conceptos_factura.clave_sat` con default `'78101800'` (freight forwarding).
 
-Sin breaking changes: la prop es opcional.
+Resultado: cualquier consulta "todo lo financiero de este embarque" se resuelve con joins directos.
 
-## 2. Bloque K — Listo para facturar con Facturapi
+## Bloque P — P&L por embarque (devengado real, no presupuestado)
 
-### 2.1 Esquema
+Hoy `profit_por_embarque()` existe en BD pero **no tiene pantalla**, y se calcula sobre `conceptos_*` (presupuestado), no sobre `facturas/proveedor_facturas` (real).
 
-Migración:
+- Nueva RPC `pnl_financiero_embarque(p_embarque_id)` que devuelve: ingresos facturados, ingresos cobrados, costos facturados por proveedor, costos pagados, utilidad presupuestada vs. realizada, margen %.
+- Nuevo `TabPnl` en `EmbarqueDetalleTabs` con dos columnas comparativas (Presupuestado | Real) + alertas de desviación >10%.
+- Reutiliza componentes de `src/features/profit/`.
 
-- Nuevo valor de enum `estado_factura`: `'Por timbrar'` (entre `Borrador` y `Emitida`).
-- Columnas en `facturas`:
-  - `facturapi_id text` — ID del invoice en Facturapi.
-  - `serie text` — letra/código de serie (A, B, …) usado al timbrar.
-  - `timbrado_en timestamptz`, `timbrado_por uuid`.
-  - `cancelacion_motivo text`, `cancelado_en timestamptz`.
-- Columnas en `clientes` (si faltan): `codigo_postal text`, `regimen_fiscal text`, `uso_cfdi_default text`.
+## Bloque Q — Cobranza inline + liquidación de costos automática
 
-### 2.2 Secreto
+- En `TabFacturacion` del embarque: mostrar **por factura** saldo pendiente, días vencidos, último recordatorio (sin salir a `/facturacion`).
+- En `TabCostos`: acción masiva "marcar como pagado" y trigger que actualice `conceptos_costo.estado_liquidacion = 'Pagado'` cuando los `pagos_proveedor` cubran el total de la línea ligada.
+- En `TabConciliacion`: alertas cuando lo facturado por proveedor supere lo presupuestado.
 
-`FACTURAPI_KEY` (Server Secret Key de Facturapi — live o test). Se solicita con `add_secret` tras aprobar el plan.
+## Bloque R — Módulo de Seguros (reemplaza columnas booleanas)
 
-### 2.3 Edge Functions
+Hoy `embarques.seguro` y `valor_seguro_usd` son sueltos; no hay póliza, aseguradora, ni cargo automático.
 
-- `facturapi-emitir` — POST `/v2/invoices` con auth Basic. Valida RFC, uso CFDI, código postal del receptor, items con clave SAT. Persiste: `uuid_fiscal`, `folio_fiscal`, `facturapi_id`, `factura_pdf_url`, `factura_xml_url`, `estado = 'Emitida'`, `timbrado_en`, `timbrado_por`. Bitácora.
-- `facturapi-cancelar` — DELETE `/v2/invoices/{id}` con motivo SAT (01–04). Actualiza `estado = 'Cancelada'`, `cancelacion_motivo`, `cancelado_en`.
-- `facturapi-descargar` — GET PDF/XML por proxy (usa `factura_pdf_url` ya guardada).
+- Nueva tabla `embarque_seguros` (aseguradora, no. póliza, valor mercancía, % prima, prima USD calculada, vigencia, estado, PDF).
+- Tabla opcional `costeo_seguros_tarifa` con primas default por tipo de carga/incoterm.
+- Trigger: al crear seguro vigente → auto-inyectar `conceptos_venta` con `origen = 'seguro_auto'` (mismo patrón que demoras).
+- Nuevo `TabSeguros` en embarque + servicio + hook.
+- Las columnas viejas quedan como vista legacy hasta que se complete migración de datos.
 
-Todas con `verify_jwt` por defecto + auth interno (org + rol Admin/Contador).
+## Bloque S — Cierre / Liquidación financiera del embarque
 
-### 2.4 UI
+Cierra formalmente el ciclo de negocio.
 
-- Nuevo botón **"Marcar listo para timbrar"** en proformas aprobadas → cambia estado a `Por timbrar`.
-- Nuevo sub-tab/sección **"Listo para facturar"** dentro del tab "1. Por aprobar" (o tab 2 reutilizado).
-- `DialogTimbrarFactura` — checklist visual:
-  - ✅ RFC válido del cliente (regex 13 chars + dígito verificador, lookup en `clientes`).
-  - ✅ CSF cargada (badge si existe `clientes.constancia_url`).
-  - ✅ Régimen fiscal del receptor.
-  - ✅ Código postal del receptor.
-  - ✅ Uso CFDI (select con catálogo SAT).
-  - ✅ Forma de pago + método de pago (catálogos SAT).
-  - ✅ Serie y siguiente folio (de `factura_series`).
-  - Botón **"Timbrar ahora"** dispara `facturapi-emitir`. Muestra el UUID, links a PDF/XML.
-- Botón **"Cancelar CFDI"** en Facturas emitidas (sólo Admin) → `DialogCancelarFactura` con motivo SAT.
+- Nuevo valor `'Liquidado'` en enum `estado_embarque` (después de `Cerrado`).
+- Nueva tabla `embarque_cierres` (totales facturados/cobrados/pagados, utilidad realizada, margen %, cerrado_por/en, notas).
+- RPC `cerrar_embarque_financiero(p_embarque_id)` con guard rails: todas las facturas en `Emitida|Cobrada`, todas las `proveedor_facturas` en `Pagada`, garantías sin estado pendiente. Si pasa, escribe el cierre y avanza el embarque a `Liquidado`.
+- Botón "Cerrar financieramente" en `TabPnl` (sólo Admin/Finanzas) con confirmación tipo ELIMINAR.
+- Reporte "Embarques cerrados del periodo" para el dashboard ejecutivo.
 
-### 2.5 Hooks y servicios
+---
 
-- `src/features/facturas/services/facturapi.ts` — wrapper de las edge functions.
-- `useTimbrarFactura()`, `useCancelarFactura()` con invalidación de queries.
+## Detalles técnicos (resumen)
 
-## 3. Bloque F — Acciones masivas (encima de la nueva selección)
+```text
+Bloque O  → 1 migración (SQL puro, backfills)         · sin riesgo de UI
+Bloque P  → 1 migración (RPC) + TabPnl                · lectura
+Bloque Q  → 1 migración (trigger) + 3 componentes UI  · escritura ligera
+Bloque R  → 2 migraciones (tabla+trigger) + módulo    · feature nuevo
+Bloque S  → 2 migraciones (enum+tabla+RPC) + UI cierre · feature nuevo
+```
 
-`TabFacturasEmitidas` recibe `useRowSelection`. Toolbar arriba de la tabla con:
+Cada bloque:
 
-- **Descargar ZIP** — `jszip` (ya disponible o se agrega) bundlea PDFs descargados de Facturapi.
-- **Reenviar por email** — invoca `send-transactional-email` por factura (nuevo template `factura-reenvio`).
-- **Marcar enviada al cliente** — flag `enviada_cliente_at` en `facturas` (mini-migración).
+- Respeta multi-tenant (`organization_id` + RLS + GRANTs).
+- Bump de `APP_VERSION` y entrada en `CHANGELOG.md` (raíz).
+- Tests de regresión donde aplique (mock Supabase con cadena thenable).
+- Sin tocar `auth/storage/realtime` ni archivos auto-generados.
 
-Tres botones se deshabilitan si `selectedIds.size === 0`.
+## Preguntas antes de empezar
 
-## Detalles técnicos
+1. **¿Por dónde arrancamos?** Sugiero **Bloque O primero** (es prerrequisito de P, Q y S, y no rompe nada visualmente).
+2. **¿Seguros (Bloque R) es prioridad real ahora**, o lo dejamos al final? Si nadie está vendiendo seguro hoy, conviene posponerlo.
+3. **¿El cierre financiero (Bloque S) debe ser irreversible**, o admite "reabrir" por Admin? Esto cambia el diseño del RPC.
 
-- Facturapi API base: `https://www.facturapi.io/v2`. Auth: `Authorization: Basic ${btoa(FACTURAPI_KEY + ':')}`. Endpoints clave: `POST /invoices`, `DELETE /invoices/:id`, `GET /invoices/:id/pdf`, `GET /invoices/:id/xml`.
-- El item enviado a Facturapi necesita `product.product_key` (clave SAT) — se toma de `conceptos_factura.clave_sat` (ya existente o se agrega columna en migración separada si falta).
-- Si Facturapi devuelve error, se conserva `estado = 'Por timbrar'` y se persiste el mensaje en `bitacora_actividad`.
-- Reuso de `factura_series` para folio incremental — la edge function hace `UPDATE … RETURNING` para evitar duplicados.
+Si confirmas el orden O → P → Q → S → R (seguros al final), abro build mode y empiezo por el Bloque O.
 
-## Entregables / archivos clave
-
-**Nuevos**
-
-- `supabase/functions/facturapi-emitir/index.ts` + `helpers.ts` + `helpers_test.ts`
-- `supabase/functions/facturapi-cancelar/index.ts`
-- `src/features/facturas/services/facturapi.ts`
-- `src/features/facturacion/hooks/useTimbrarFactura.ts`
-- `src/features/facturacion/components/DialogTimbrarFactura.tsx`
-- `src/features/facturacion/components/DialogCancelarFactura.tsx`
-- `src/features/facturacion/components/FacturasMasivasToolbar.tsx`
-- `src/components/shared/dataTable/useRowSelection.ts`
-- `supabase/functions/_shared/transactional-email-templates/factura-reenvio.tsx`
-
-**Modificados**
-
-- Migraciones (estado_factura enum + columnas)
-- `src/components/shared/DataTable.tsx` (+ subcomponentes)
-- `src/features/facturacion/components/TabFacturasEmitidas.tsx`
-- `src/features/facturacion/components/TabProformasPendientes.tsx` (botón "Listo para timbrar")
-- `src/pages/facturacion/Facturacion.tsx` (sub-tab / sección)
-- `CHANGELOG.md`, `src/constants/appVersion.ts` → **13.51.0**
-
-## Pendiente de confirmar antes de implementar
-
-1. **¿Modo Facturapi inicial?** Sandbox (live test key `sk_test_...`) para validar sin timbrar real, o ya producción. SANDBOX
-2. **¿Cancelación CFDI?** Incluir flujo de cancelación SAT con motivo en esta entrega, o sólo emisión. Incluir NC y cancelacion. 
-3. **¿Email de reenvío masivo?** Confirmar que el envío use el correo del contacto del cliente (`contactos_cliente`) o solicitar destinatarios al disparar. Ambos
+Empezamos solo por O. 
