@@ -111,15 +111,41 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.tracking_externo TO authenticated
 GRANT ALL ON public.tracking_externo TO service_role;
 ALTER TABLE public.tracking_externo ENABLE ROW LEVEL SECURITY;
 
--- Stub policy para que el verificador RLS (_ci_verify_rls.sql) no falle.
--- Las policies reales se aplican en migraciones posteriores.
+-- Policies reales replicadas desde prod (no existen como migración en repo,
+-- fueron añadidas manualmente). Aislamiento por organization_id + rol.
 DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'tracking_externo'
   ) THEN
-    EXECUTE 'CREATE POLICY "_ci_stub_deny_all" ON public.tracking_externo FOR ALL TO authenticated USING (false) WITH CHECK (false)';
+    EXECUTE $POL$
+      CREATE POLICY "Tenant CRUD tracking_externo" ON public.tracking_externo
+        FOR ALL TO authenticated
+        USING (
+          ((organization_id = current_user_org_id())
+            OR has_role(auth.uid(), 'super_admin'::app_role))
+          AND (has_role(auth.uid(), 'admin'::app_role)
+            OR has_role(auth.uid(), 'operador'::app_role)
+            OR has_role(auth.uid(), 'super_admin'::app_role))
+        )
+        WITH CHECK (
+          ((organization_id = current_user_org_id())
+            OR has_role(auth.uid(), 'super_admin'::app_role))
+          AND (has_role(auth.uid(), 'admin'::app_role)
+            OR has_role(auth.uid(), 'operador'::app_role)
+            OR has_role(auth.uid(), 'super_admin'::app_role))
+        );
+    $POL$;
+    EXECUTE $POL$
+      CREATE POLICY "Tenant viewer tracking_externo" ON public.tracking_externo
+        FOR SELECT TO authenticated
+        USING (
+          ((organization_id = current_user_org_id())
+            OR has_role(auth.uid(), 'super_admin'::app_role))
+          AND has_role(auth.uid(), 'viewer'::app_role)
+        );
+    $POL$;
   END IF;
 END $$;
 

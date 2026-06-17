@@ -113,11 +113,14 @@ BEGIN
     'viewer_a NO debe poder INSERT facturas'
   );
 
-  -- TEST 5: viewer NO puede UPDATE (verificar que afecta 0 filas)
+  -- TEST 5: viewer NO puede UPDATE (verificar que el estado NO cambió a 'Pagada').
+  -- Nota: el trigger `recalcular_estado_factura` ya movió fac_a a
+  -- 'Parcialmente pagada' al insertar pago_a, así que aquí solo nos importa
+  -- que el UPDATE del viewer (que intenta 'Pagada') NO haya tenido efecto.
   UPDATE public.facturas SET estado = 'Pagada' WHERE id = fac_a;
   PERFORM pg_temp.as_postgres();
-  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado = 'Emitida';
-  PERFORM pg_temp.assert(visible = 1, 'viewer_a NO debe poder UPDATE facturas (estado debe seguir Emitida)');
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado <> 'Pagada';
+  PERFORM pg_temp.assert(visible = 1, 'viewer_a NO debe poder UPDATE facturas (estado no debe quedar Pagada)');
   PERFORM pg_temp.as_user(viewer_a);
 
   -- TEST 6: viewer NO puede DELETE
