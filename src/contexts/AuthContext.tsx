@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void import("@/pages/dashboard/Dashboard");
       void import("@/pages/clientes/Clientes");
       void import("@/pages/proveedores/Proveedores");
-      void import("@/pages/facturacion/Facturacion");
+      void import("@/features/facturacion/routes/Facturacion");
     };
     if (typeof w.requestIdleCallback === "function") {
       idleHandle = w.requestIdleCallback(cb);
