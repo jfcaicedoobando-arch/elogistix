@@ -147,6 +147,9 @@ export function useTabProformasPendientesController(opts?: {
 
   return {
     search, setSearch,
+    filtroCliente, setFiltroCliente,
+    filtroAntiguedad, setFiltroAntiguedad,
+    clientesDisponibles,
     selectedIds, collapsed,
     isLoading, grupos,
     toggleSelect, toggleCollapse,
@@ -157,3 +160,4 @@ export function useTabProformasPendientesController(opts?: {
     isConsolidarPending: consolidar.isPending,
   };
 }
+
