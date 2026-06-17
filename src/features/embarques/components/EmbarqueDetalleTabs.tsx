@@ -11,7 +11,14 @@ import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 
+// Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
+type ResumenProps = ComponentProps<typeof TabResumen>;
 type DocsProps = ComponentProps<typeof TabDocumentos>;
+type CostosProps = ComponentProps<typeof TabCostos>;
+type FacturacionProps = ComponentProps<typeof TabFacturacion>;
+type NotasProps = ComponentProps<typeof TabNotas>;
+type TrackingProps = ComponentProps<typeof TabTracking>;
+
 type DocHandlers = Pick<
   DocsProps,
   "uploadingDocId" | "downloadingDocId" | "deletingDocId" | "togglingNoAplicaDocId"
@@ -25,23 +32,31 @@ interface Financials {
   margen: number;
 }
 
-interface Props {
-  embarque: {
+// El embarque debe satisfacer simultáneamente los contratos de TabResumen,
+// TabFacturacion y TabTracking, además de exponer los campos que esta vista
+// consume directamente (expediente, created_by_email, created_at).
+type EmbarqueProp = ResumenProps["embarque"]
+  & FacturacionProps["embarque"]
+  & TrackingProps["embarque"]
+  & {
     expediente: string;
     modo: string;
     created_by_email?: string | null;
     created_at: string;
   };
+
+interface Props {
+  embarque: EmbarqueProp;
   embarqueId: string;
   activeTab: string;
   setActiveTab: (t: string) => void;
   estadoVisual: string;
   canEdit: boolean;
-  documentos: unknown[];
-  conceptosVenta: unknown[];
-  conceptosCosto: unknown[];
-  facturas: unknown[];
-  notas: unknown[];
+  documentos: DocsProps["documentos"];
+  conceptosVenta: CostosProps["conceptosVenta"];
+  conceptosCosto: CostosProps["conceptosCosto"];
+  facturas: FacturacionProps["facturas"];
+  notas: NotasProps["notas"] & TrackingProps["notas"];
   financials: Financials;
   docHandlers: DocHandlers;
 }
@@ -75,16 +90,14 @@ export function EmbarqueDetalleTabs({
       )}
 
       <TabsContent value="resumen" className="space-y-6">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TabResumen embarque={embarque as any} />
+        <TabResumen embarque={embarque} />
       </TabsContent>
 
       <TabsContent value="documentos">
         <TabDocumentos
           embarqueId={embarqueId}
           modo={embarque.modo}
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          documentos={documentos as any}
+          documentos={documentos}
           canEdit={canEdit}
           uploadingDocId={docHandlers.uploadingDocId}
           downloadingDocId={docHandlers.downloadingDocId}
@@ -99,10 +112,8 @@ export function EmbarqueDetalleTabs({
 
       <TabsContent value="costos" className="space-y-6">
         <TabCostos
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          conceptosVenta={conceptosVenta as any}
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          conceptosCosto={conceptosCosto as any}
+          conceptosVenta={conceptosVenta}
+          conceptosCosto={conceptosCosto}
           totalVenta={financials.totalVenta}
           totalCosto={financials.totalCosto}
           utilidad={financials.utilidad}
@@ -117,8 +128,7 @@ export function EmbarqueDetalleTabs({
       </TabsContent>
 
       <TabsContent value="facturacion">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TabFacturacion facturas={facturas as any} canEdit={canEdit} embarque={embarque as any} />
+        <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
       </TabsContent>
 
       <TabsContent value="garantias">
@@ -126,14 +136,12 @@ export function EmbarqueDetalleTabs({
       </TabsContent>
 
       <TabsContent value="tracking">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TabTracking embarqueId={embarqueId} embarque={embarque as any} notas={notas as any} />
+        <TabTracking embarqueId={embarqueId} embarque={embarque} notas={notas} />
       </TabsContent>
 
       <TabsContent value="notas">
         <TabNotas
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          notas={notas as any}
+          notas={notas}
           embarqueId={embarqueId}
           expediente={embarque.expediente}
           creadoPor={embarque.created_by_email ?? null}
