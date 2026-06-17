@@ -63,6 +63,27 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
     hasDiasAlmacenaje: tieneTarifa && !override.diasAlmacenaje,
   };
 
+  // v13.47.1 — La validez de la propuesta no puede exceder la vigencia de la tarifa.
+  const { data: tarifaVinc } = useTarifaVinculada(esMaritimo ? tarifaId ?? null : null);
+  const tarifaHasta = useMemo(
+    () => parseVigenteHasta(tarifaVinc?.vigente_hasta ?? null),
+    [tarifaVinc?.vigente_hasta],
+  );
+
+  useEffect(() => {
+    if (!tarifaHasta || !validezPropuesta) return;
+    if (validezPropuesta > tarifaHasta) {
+      setValue("validezPropuesta", tarifaHasta, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [tarifaHasta, validezPropuesta, setValue]);
+
+  const hoy = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+
   return (
     <WizardSection title="Ruta" complete={complete}>
       {!esMaritimo && <BannerOverride ctx={ctx} />}
