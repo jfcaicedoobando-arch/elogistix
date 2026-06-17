@@ -131,6 +131,9 @@ export function TabCobranza() {
         </CardContent>
       </Card>
 
+      <NotasCreditoRecientes />
+
+
       <DialogRegistrarPago
         open={!!pagoAdapter}
         onOpenChange={(o) => !o && setPagoFactura(null)}
