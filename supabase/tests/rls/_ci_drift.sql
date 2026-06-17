@@ -33,6 +33,11 @@ BEGIN
     IF r.rel = 'proformas' OR r.rel = 'public.proformas' THEN
       EXECUTE 'ALTER TABLE public.proformas
                ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false';
+      -- 13.56.11: drift adicional descubierto al correr suites RLS local.
+      -- Migración 20260617052908 hace COALESCE(p.estado_aprobacion, '') sin
+      -- que ninguna migración previa la cree (añadida manualmente en prod).
+      EXECUTE 'ALTER TABLE public.proformas
+               ADD COLUMN IF NOT EXISTS estado_aprobacion text NOT NULL DEFAULT ''Aprobada''';
     END IF;
   END LOOP;
 END;
@@ -51,6 +56,8 @@ BEGIN
              WHERE table_schema = 'public' AND table_name = 'proformas') THEN
     EXECUTE 'ALTER TABLE public.proformas
              ADD COLUMN IF NOT EXISTS es_consolidada boolean NOT NULL DEFAULT false';
+    EXECUTE 'ALTER TABLE public.proformas
+             ADD COLUMN IF NOT EXISTS estado_aprobacion text NOT NULL DEFAULT ''Aprobada''';
   END IF;
 END $$;
 
