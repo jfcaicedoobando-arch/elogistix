@@ -1,0 +1,65 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  cerrarEmbarque,
+  fetchCierreLog,
+  reabrirEmbarque,
+  validarCierre,
+  type CierreLogEntry,
+  type CierreValidacion,
+} from "@/features/embarques/services/cierre";
+
+const KEYS = {
+  validacion: (id?: string) => ["embarque", id, "cierre-validacion"] as const,
+  log: (id?: string) => ["embarque", id, "cierre-log"] as const,
+};
+
+export function useValidacionCierre(embarqueId: string | undefined) {
+  return useQuery<CierreValidacion>({
+    queryKey: KEYS.validacion(embarqueId),
+    queryFn: () => validarCierre(embarqueId as string),
+    enabled: Boolean(embarqueId),
+    staleTime: 15_000,
+  });
+}
+
+export function useCierreLog(embarqueId: string | undefined) {
+  return useQuery<CierreLogEntry[]>({
+    queryKey: KEYS.log(embarqueId),
+    queryFn: () => fetchCierreLog(embarqueId as string),
+    enabled: Boolean(embarqueId),
+    staleTime: 30_000,
+  });
+}
+
+function invalidarTodo(qc: ReturnType<typeof useQueryClient>, embarqueId: string) {
+  qc.invalidateQueries({ queryKey: KEYS.validacion(embarqueId) });
+  qc.invalidateQueries({ queryKey: KEYS.log(embarqueId) });
+  qc.invalidateQueries({ queryKey: ["embarque", embarqueId] });
+  qc.invalidateQueries({ queryKey: ["embarques"] });
+  qc.invalidateQueries({ queryKey: ["comisiones"] });
+}
+
+export function useCerrarEmbarque(embarqueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => cerrarEmbarque(embarqueId),
+    onSuccess: () => {
+      invalidarTodo(qc, embarqueId);
+      toast.success("Embarque cerrado");
+    },
+    onError: (e: Error) => toast.error(e.message ?? "No se pudo cerrar el embarque"),
+  });
+}
+
+export function useReabrirEmbarque(embarqueId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (motivo: string) => reabrirEmbarque(embarqueId, motivo),
+    onSuccess: () => {
+      invalidarTodo(qc, embarqueId);
+      toast.success("Embarque reabierto");
+    },
+    onError: (e: Error) => toast.error(e.message ?? "No se pudo reabrir el embarque"),
+  });
+}

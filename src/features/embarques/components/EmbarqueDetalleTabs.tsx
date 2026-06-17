@@ -12,6 +12,7 @@ import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 import { TabPnl } from "@/features/embarques/components/TabPnl";
 import { TabSeguros } from "@/features/embarques/components/TabSeguros";
+import { TabCierre } from "@/features/embarques/components/TabCierre";
 
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
@@ -80,6 +81,7 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
         <TabsTrigger value="garantias">Garantías</TabsTrigger>
         <TabsTrigger value="seguros">Seguros</TabsTrigger>
+        <TabsTrigger value="cierre">Cierre</TabsTrigger>
 
         <TabsTrigger value="tracking">Tracking</TabsTrigger>
         <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
@@ -148,6 +150,10 @@ export function EmbarqueDetalleTabs({
 
       <TabsContent value="seguros">
         <TabSeguros embarqueId={embarqueId} canEdit={canEdit} />
+      </TabsContent>
+
+      <TabsContent value="cierre" className="space-y-6">
+        <TabCierre embarqueId={embarqueId} estatus={(embarque as { estatus?: string }).estatus ?? ""} />
       </TabsContent>
 
 

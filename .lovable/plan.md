@@ -1,105 +1,130 @@
-# Bloque Q — Separación de roles del ciclo financiero del embarque
+# Bloque S — Cierre Financiero del Embarque
 
-Replantear Bloque Q para que **cada rol vea sólo lo suyo** y trabaje desde bandejas dedicadas, sin sobrecargar al operador. El detalle del embarque deja de ser el lugar único de acción: pasa a ser el "tablero de estado" y las acciones financieras se mueven a módulos por rol.
+Congela el embarque al final de su ciclo de vida: bloquea ediciones, valida integridad financiera, devenga la comisión definitiva del vendedor y deja constancia auditable. Reapertura controlada con justificación.
 
-## Modelo de responsabilidades
+## 1. Cambios en Base de Datos
 
-| Etapa | Responsable | Dónde trabaja |
-|---|---|---|
-| Cotizar y cerrar venta | `vendedor` / `gerente_comercial` | Módulo CRM + Cotizaciones (ya existe) |
-| Ejecutar embarque, tracking, docs | `coordinador_logistico` / `operador` | Detalle del embarque (operativo) |
-| Capturar facturas de proveedor | `auxiliar_contable` (nuevo) | **Bandeja CxP** + detalle del proveedor |
-| Pagar a proveedores | `tesorero` | **Bandeja CxP – Por pagar** |
-| Emitir/timbrar factura a cliente | `contador` | **Bandeja Por facturar** |
-| Seguimiento de cartera y cobranza | `ejecutivo_cobranza` (nuevo) | **Bandeja Cartera** |
-| Aprobar notas de crédito y cierres | `contador` / `admin_org` | Bandejas correspondientes |
+### 1.1 Nuevo estado `cerrado` en `embarques`
+- Agregar `cerrado` al CHECK/enum de `estatus` en `embarques` (después de `entregado`).
+- Nuevas columnas en `embarques`:
+  - `cerrado_at timestamptz`
+  - `cerrado_por uuid` → `auth.users.id`
+  - `cerrado_snapshot jsonb` (P&L y totales congelados al momento del cierre)
+  - `reabierto_at timestamptz`, `reabierto_por uuid`, `reabierto_motivo text`
 
-## Cambios de roles
+### 1.2 Tabla `cierre_embarque_log`
+Bitácora de cada cierre/reapertura: `embarque_id`, `accion` (`cerrar` | `reabrir`), `usuario_id`, `motivo`, `snapshot jsonb`, `created_at`.
+- RLS multi-tenant por `organization_id`.
+- GRANT a `authenticated` y `service_role`.
 
-### Nuevos roles en `app_role` enum
-- `auxiliar_contable` — captura facturas de proveedor, concilia con costos del embarque, sube XML/PDF; NO ejecuta pagos.
-- `ejecutivo_cobranza` — ve sólo facturas emitidas con saldo, registra promesas de pago, envía recordatorios, marca cobros recibidos; NO emite facturas ni edita costos.
+### 1.3 Tabla `cierre_validaciones`
+Catálogo de checks ejecutados (por embarque y cierre): `regla` (`cxc_sin_pendientes`, `cxp_sin_pendientes`, `documentos_completos`, `pnl_margen_minimo`, `comision_calculada`), `paso boolean`, `detalle jsonb`. Permite mostrar el checklist en UI antes de cerrar.
 
-### Ajustes a `usePermissions` y `roleHierarchy`
-- `canEmitirFactura` → `contador`, `admin_org`, `super_admin`.
-- `canCapturarFacturaProveedor` → `auxiliar_contable`, `contador`, `admin_org`, `super_admin`.
-- `canPagarProveedor` → `tesorero`, `admin_org`, `super_admin`.
-- `canRegistrarCobro` → `ejecutivo_cobranza`, `contador`, `admin_org`, `super_admin`.
-- `canViewMontosEmbarque` (operador) → `coordinador_logistico`, `operador` lo recuperan **solo lectura** (sin acciones).
-- Actualizar `ROLE_LABELS`, `ROLE_DESCRIPTIONS`, `ASSIGNABLE_ROLES_ADMIN_ORG`, `roleCatalog`.
+### 1.4 RPC `validar_cierre_embarque(p_embarque_id uuid)`
+SECURITY DEFINER. Retorna `jsonb`:
+```json
+{ "puede_cerrar": false, "checks": [{ "regla":"cxc_sin_pendientes","ok":true }, ...] }
+```
+Reglas:
+- **CxC**: no existen facturas con `saldo > 0` no canceladas para el embarque.
+- **CxP**: todas las `proveedor_facturas` con `estatus in ('pagada','conciliada')`.
+- **Documentos**: checklist mínimo (BL, factura cliente, factura proveedor principal) presente en `documentos_embarque`.
+- **P&L**: utilidad >= umbral en `configuracion_global` (`pnl_margen_minimo_cierre`, default 0).
+- **Comisión**: existe registro en `comisiones_devengadas` consistente con P&L real.
 
-### Sidebar
-- Reorganizar menú por rol: Vendedor (CRM), Operador (Embarques/Tracking), Auxiliar (CxP), Tesorero (Pagos), Contador (Por facturar), Cobranza (Cartera).
+### 1.5 RPC `cerrar_embarque(p_embarque_id uuid)`
+SECURITY DEFINER. Flujo transaccional:
+1. Verifica rol (`admin`, `super_admin`, `contador`) vía `has_role`.
+2. Llama `validar_cierre_embarque`; aborta si algún check falla.
+3. Snapshot del P&L (reusa `pnl_financiero_embarque`) y de totales (CxC/CxP, conceptos, seguros).
+4. Marca `comisiones_devengadas.definitiva = true` con monto basado en P&L real.
+5. Actualiza `embarques.estatus='cerrado'`, `cerrado_at`, `cerrado_por`, `cerrado_snapshot`.
+6. Inserta fila en `cierre_embarque_log` (`accion='cerrar'`).
+7. Registra en `bitacora_actividad`.
 
-## Bandejas nuevas
+### 1.6 RPC `reabrir_embarque(p_embarque_id uuid, p_motivo text)`
+- Solo `super_admin` o `admin` con motivo obligatorio (>=20 caracteres).
+- Revierte `comisiones_devengadas.definitiva = false`.
+- `estatus` vuelve a `entregado`; limpia `cerrado_*` pero conserva snapshot histórico en el log.
+- Inserta `cierre_embarque_log` (`accion='reabrir'`).
 
-### 1. `/cxp/por-capturar` (auxiliar_contable)
-Lista de embarques con costos presupuestados sin factura de proveedor asociada, o XML recibidos sin conciliar. Acciones: subir XML/PDF, ligar a `embarque_id` + `concepto_costo`, validar totales y RFC.
+### 1.7 Triggers de bloqueo de edición
+Triggers `BEFORE INSERT/UPDATE/DELETE` que lanzan excepción si el embarque está en `cerrado` (excepto el propio RPC `reabrir_embarque`):
+- `conceptos_costo`, `conceptos_venta`, `documentos_embarque`, `seguros_embarque`, `eventos_embarque`, `embarque_contenedores`, `facturas` (ligadas al embarque), `proveedor_facturas`, `pagos_factura`, `pagos_proveedor`.
 
-### 2. `/cxp/por-pagar` (tesorero)
-Facturas de proveedor `estado='Vigente'` con saldo > 0, agrupadas por proveedor y vencimiento. Acciones: programar pago, registrar pago desde cuenta bancaria, descargar layout BBVA.
+Mecanismo: cada trigger consulta `embarques.estatus`; si es `cerrado`, `RAISE EXCEPTION 'Embarque cerrado: edición bloqueada'` salvo cuando `current_setting('app.bypass_cierre', true) = 'on'` (lo activa la RPC `reabrir_embarque`).
 
-### 3. `/facturacion/por-emitir` (contador)
-Embarques con proforma aprobada y sin factura emitida, o con diferencia entre proforma y factura. Acciones: revisar, timbrar (reusa `DialogTimbrarFactura`), cancelar.
+### 1.8 Comisiones devengadas
+Asegurar columnas en `comisiones_devengadas`: `definitiva boolean default false`, `pnl_base numeric`, `calculo_snapshot jsonb`.
 
-### 4. `/cartera` (ejecutivo_cobranza)
-Facturas emitidas con saldo, ordenadas por `dias_vencido` desc. Columnas: cliente, folio, total, pagado, saldo, días vencido, último contacto. Acciones: registrar pago, enviar recordatorio (reusa templates), agregar nota de seguimiento, marcar promesa de pago.
+## 2. Reglas de Negocio
 
-Cada bandeja:
-- Tabla server-paginated con filtro por cliente/proveedor/estado/fecha.
-- Tarjetas KPI arriba (total saldo, vencido, en periodo, etc.).
-- Drill-down al detalle del embarque (solo lectura financiera para los que no son dueños del paso).
+- **Quién cierra**: `admin`, `super_admin`, `contador`. Tesorero/cobranza solo consultan.
+- **Quién reabre**: `super_admin` siempre; `admin` si configuración lo permite.
+- **Cuándo cierra**: estado origen debe ser `entregado` y todos los checks de `validar_cierre_embarque` en verde.
+- **Comisión definitiva**: se calcula sobre P&L real (ingresos cobrados − costos pagados) usando la fórmula vigente del vendedor; queda inmutable salvo reapertura.
+- **Visibilidad**: embarques `cerrado` se muestran en bandejas operativas como solo lectura; en módulo financiero se filtran por “Cerrados/Abiertos”.
+- **Auditoría**: cada cierre/reapertura escribe en `cierre_embarque_log` y `bitacora_actividad`.
 
-## Detalle del embarque — modo "tablero"
-
-- **Operador** ve nueva sección colapsable **"Estado financiero"** con:
-  - Semáforo Costo (Capturado/Pendiente/Pagado).
-  - Semáforo Facturación cliente (Sin proforma/Proforma lista/Facturada/Cobrada).
-  - Tarjeta P&L (presupuestado vs real, ya existe en `TabPnl`).
-  - Sin botones de acción financieros.
-- **Contador/auxiliar/tesorero/cobranza** ven los mismos datos **más** sus acciones (botones condicionados por permiso). No se crean tabs nuevos para ellos: las acciones siguen viviendo en sus bandejas; el embarque sólo agrega un botón "Ir a CxP/Cartera/Por facturar de este embarque".
-
-## Tablas nuevas
-
-### `cobranza_seguimiento`
-- `factura_id` FK, `tipo` (`recordatorio_email`, `llamada`, `promesa_pago`, `nota`), `fecha`, `usuario_id`, `comentario`, `monto_promesa`, `fecha_promesa`.
-- RLS: cobranza, contador, admin_org.
-
-### Nuevo campo `proveedor_facturas.estado_captura`
-- `pendiente_xml`, `capturada`, `conciliada`, `pagada`. Permite separar "auxiliar terminó captura" de "tesorero pagó".
-
-## RPCs nuevos (todas `SECURITY INVOKER`)
-
-- `cxp_por_capturar(_org)` — embarques con costos sin factura de proveedor.
-- `cxp_por_pagar(_org)` — facturas vigentes con saldo, días al vencimiento.
-- `facturacion_por_emitir(_org)` — proformas sin factura.
-- `cartera_pendiente(_org)` — facturas con saldo, días vencidos, último contacto.
-- `embarque_estado_financiero(_embarque_id)` — devuelve 4 semáforos para el tablero del operador.
-
-## Tests
-- `usePermissions.test.tsx` — agregar 2 roles nuevos y 4 capacidades nuevas.
-- `roleHierarchy.test.ts` — `ejecutivo_cobranza` no satisface `contador`; `auxiliar_contable` no satisface `tesorero`.
-- RPC tests (`supabase/tests/rls/`) — cada bandeja con 3 escenarios: vacío, con datos del tenant, sin acceso cross-org.
-- E2E nuevo: `08-roles-finanzas.spec.ts` — login como cobranza, ve cartera pero NO ve botón timbrar.
-
-## Changelog & versión
-- `APP_VERSION` → `13.54.0`.
-- Migración del enum `app_role` (no destructiva, sólo agrega valores).
-- Entrada en `CHANGELOG.md` con la nueva matriz de roles.
-
-## Fuera de alcance
-- Conciliación bancaria BBVA automática (ya existe en otro módulo).
-- Bloque R (seguros) y Bloque S (cierre financiero).
-- Importador masivo de XML SAT (Bloque T propuesto).
-- Reasignación masiva de usuarios existentes a los nuevos roles (lo hacemos manualmente desde Admin).
-
-## Diagrama de flujo
+## 3. Flujo de Estados
 
 ```text
-Vendedor          Operador           Auxiliar         Tesorero         Contador        Cobranza
-   |                 |                  |                |                |               |
-Cotización →    Embarque ejecuta    Captura XML      Paga proveedor   Timbra factura  Sigue cartera
-   |          (tracking + docs)    proveedor           (BBVA)         al cliente      registra pago
-   |                 |                  |                |                |               |
-   └────── Embarque (tablero solo lectura para todos, acciones por rol) ──────────────────┘
+borrador → confirmado → en_transito → en_destino → entregado → cerrado
+                                                       ↑          │
+                                                       └── reabrir ┘ (con motivo)
 ```
+
+- Solo `entregado → cerrado` está permitido, vía RPC `cerrar_embarque`.
+- `cerrado → entregado` solo vía RPC `reabrir_embarque` con motivo.
+- Cualquier otro intento de cambiar estatus desde/hacia `cerrado` se rechaza por trigger.
+
+## 4. Frontend
+
+### 4.1 Servicios y hooks
+- `src/features/embarques/services/cierre.ts`: `validarCierre`, `cerrarEmbarque`, `reabrirEmbarque`, `getCierreLog`.
+- `src/features/embarques/hooks/useCierreEmbarque.ts`: React Query (queries + mutations) e invalida `embarque-detalle`, `pnl-financiero`, `comisiones`.
+
+### 4.2 Componentes
+- `TabCierre.tsx` (nueva pestaña en `EmbarqueDetalleTabs`):
+  - Checklist visual de `validar_cierre_embarque` (semáforo por regla, con detalle).
+  - Resumen P&L final (reusa componente existente).
+  - Comisión devengada estimada vs definitiva.
+  - Botón **Cerrar embarque** (deshabilitado si algún check rojo) con diálogo de confirmación tipo ELIMINAR (typing `CERRAR`).
+  - Si está cerrado: badge “Cerrado el dd/mm/aaaa por X”, snapshot y botón **Reabrir** (rol-gated, requiere motivo en textarea ≥20 chars).
+  - Historial (`cierre_embarque_log`) en tabla compacta.
+- Badge global en header del embarque: `Cerrado` / `Abierto`.
+- Banner solo-lectura en demás tabs cuando `estatus='cerrado'`.
+
+### 4.3 Permisos UI (`usePermissions`)
+- `puedeCerrarEmbarque`: admin, super_admin, contador.
+- `puedeReabrirEmbarque`: super_admin (y admin si config global lo habilita).
+
+### 4.4 Bandejas
+- Filtro `Incluir cerrados` (default OFF) en bandejas de Cartera, CxP y operativas.
+- Indicador de candado en filas cerradas.
+
+## 5. Configuración Global
+Nuevas claves en `configuracion_global`:
+- `pnl_margen_minimo_cierre` (numeric, default `0`)
+- `cierre_admin_puede_reabrir` (boolean, default `false`)
+- `cierre_documentos_requeridos` (jsonb: lista de `tipo_documento`)
+
+UI en módulo Configuración → sección “Cierre Financiero”.
+
+## 6. Versionado y Changelog
+- Bump `APP_VERSION` a `13.56.0`.
+- Entrada en `CHANGELOG.md`: nuevo bloque, RPC, triggers, UI, permisos.
+
+## 7. Orden de Implementación
+1. Migración 1: enum/check, columnas, tabla `cierre_embarque_log`, `cierre_validaciones`, columnas en `comisiones_devengadas`, configuración global.
+2. Migración 2: RPCs `validar_cierre_embarque`, `cerrar_embarque`, `reabrir_embarque` + triggers de bloqueo.
+3. Servicios + hooks + permisos.
+4. UI: `TabCierre`, badge global, banner read-only, filtros en bandejas.
+5. Configuración global UI.
+6. Tests: `validar_cierre_embarque` (verde/rojo), bloqueo por trigger, reapertura, comisión definitiva.
+7. Changelog + bump versión.
+
+## 8. Riesgos y Mitigación
+- **Triggers globales pueden romper flujos legacy** → bypass controlado vía `SET LOCAL app.bypass_cierre = 'on'` dentro de RPC autorizada.
+- **Snapshot pesado** → almacenar solo agregados, no filas detalle.
+- **Reapertura inconsistente con facturación ya cerrada fiscalmente** → la reapertura no toca facturas emitidas; solo levanta el bloqueo operativo.
