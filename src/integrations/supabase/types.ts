@@ -595,6 +595,47 @@ export type Database = {
           },
         ]
       }
+      cierre_embarque_log: {
+        Row: {
+          accion: string
+          created_at: string
+          embarque_id: string
+          id: string
+          motivo: string | null
+          organization_id: string | null
+          snapshot: Json | null
+          usuario_id: string | null
+        }
+        Insert: {
+          accion: string
+          created_at?: string
+          embarque_id: string
+          id?: string
+          motivo?: string | null
+          organization_id?: string | null
+          snapshot?: Json | null
+          usuario_id?: string | null
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          embarque_id?: string
+          id?: string
+          motivo?: string | null
+          organization_id?: string | null
+          snapshot?: Json | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cierre_embarque_log_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_users: {
         Row: {
           cliente_id: string
@@ -767,8 +808,10 @@ export type Database = {
       }
       comisiones_devengadas: {
         Row: {
+          calculo_snapshot: Json | null
           comision_mxn: number
           created_at: string
+          definitiva: boolean
           embarque_id: string | null
           estado: Database["public"]["Enums"]["estado_comision"]
           factura_id: string
@@ -778,14 +821,17 @@ export type Database = {
           nota: string | null
           organization_id: string
           pago_factura_id: string
+          pnl_base: number | null
           porcentaje_aplicado: number
           updated_at: string
           utilidad_prorrateada_mxn: number
           vendedora_id: string | null
         }
         Insert: {
+          calculo_snapshot?: Json | null
           comision_mxn?: number
           created_at?: string
+          definitiva?: boolean
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_comision"]
           factura_id: string
@@ -795,14 +841,17 @@ export type Database = {
           nota?: string | null
           organization_id: string
           pago_factura_id: string
+          pnl_base?: number | null
           porcentaje_aplicado?: number
           updated_at?: string
           utilidad_prorrateada_mxn?: number
           vendedora_id?: string | null
         }
         Update: {
+          calculo_snapshot?: Json | null
           comision_mxn?: number
           created_at?: string
+          definitiva?: boolean
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_comision"]
           factura_id?: string
@@ -812,6 +861,7 @@ export type Database = {
           nota?: string | null
           organization_id?: string
           pago_factura_id?: string
+          pnl_base?: number | null
           porcentaje_aplicado?: number
           updated_at?: string
           utilidad_prorrateada_mxn?: number
@@ -2942,6 +2992,9 @@ export type Database = {
           bl_master: string | null
           carta_garantia: boolean
           carta_porte: string | null
+          cerrado_at: string | null
+          cerrado_por: string | null
+          cerrado_snapshot: Json | null
           ciudad_destino: string | null
           ciudad_origen: string | null
           cliente_id: string
@@ -2979,6 +3032,9 @@ export type Database = {
           piezas: number
           puerto_destino: string | null
           puerto_origen: string | null
+          reabierto_at: string | null
+          reabierto_motivo: string | null
+          reabierto_por: string | null
           seguro: boolean
           shipper: string
           tarifa_id: string | null
@@ -3006,6 +3062,9 @@ export type Database = {
           bl_master?: string | null
           carta_garantia?: boolean
           carta_porte?: string | null
+          cerrado_at?: string | null
+          cerrado_por?: string | null
+          cerrado_snapshot?: Json | null
           ciudad_destino?: string | null
           ciudad_origen?: string | null
           cliente_id: string
@@ -3043,6 +3102,9 @@ export type Database = {
           piezas?: number
           puerto_destino?: string | null
           puerto_origen?: string | null
+          reabierto_at?: string | null
+          reabierto_motivo?: string | null
+          reabierto_por?: string | null
           seguro?: boolean
           shipper?: string
           tarifa_id?: string | null
@@ -3070,6 +3132,9 @@ export type Database = {
           bl_master?: string | null
           carta_garantia?: boolean
           carta_porte?: string | null
+          cerrado_at?: string | null
+          cerrado_por?: string | null
+          cerrado_snapshot?: Json | null
           ciudad_destino?: string | null
           ciudad_origen?: string | null
           cliente_id?: string
@@ -3107,6 +3172,9 @@ export type Database = {
           piezas?: number
           puerto_destino?: string | null
           puerto_origen?: string | null
+          reabierto_at?: string | null
+          reabierto_motivo?: string | null
+          reabierto_por?: string | null
           seguro?: boolean
           shipper?: string
           tarifa_id?: string | null
