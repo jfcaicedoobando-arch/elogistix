@@ -4,13 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
+import { resumirCartera } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 
 export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
-  const totalSaldo = data.reduce((acc, r) => acc + Number(r.saldo ?? 0), 0);
-  const vencidas = data.filter((r) => r.dias_vencido > 0);
-  const vencidoSaldo = vencidas.reduce((acc, r) => acc + Number(r.saldo ?? 0), 0);
+  const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
 
   return (
     <div className="p-6 space-y-4">
