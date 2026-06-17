@@ -3212,6 +3212,44 @@ export type Database = {
           },
         ]
       }
+      factura_recordatorios: {
+        Row: {
+          canal: string
+          created_at: string
+          enviado_por: string
+          factura_id: string
+          id: string
+          nota: string | null
+          organization_id: string
+        }
+        Insert: {
+          canal?: string
+          created_at?: string
+          enviado_por: string
+          factura_id: string
+          id?: string
+          nota?: string | null
+          organization_id: string
+        }
+        Update: {
+          canal?: string
+          created_at?: string
+          enviado_por?: string
+          factura_id?: string
+          id?: string
+          nota?: string | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factura_recordatorios_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       factura_series: {
         Row: {
           activa: boolean
