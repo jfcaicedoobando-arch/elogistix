@@ -71,12 +71,7 @@ export default function Onboarding() {
     }
     setSubmitting(true);
     try {
-      const { error: rpcError } = await supabase.rpc("complete_onboarding", {
-        _rfc: rfcClean,
-        _direccion: dirClean,
-        _moneda: moneda,
-      });
-      if (rpcError) throw rpcError;
+      await completeOnboarding({ rfc: rfcClean, direccion: dirClean, moneda });
       await refreshProfile();
       toast({ title: "¡Listo!", description: "Configuración inicial completada." });
       navigate("/inicio", { replace: true });
