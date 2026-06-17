@@ -112,7 +112,7 @@ export default function SugerenciasTarifaInline({
 
   const handleElegir = (row: TopTarifaRow) => {
     const rank = (tarifas.findIndex((t) => t.id === row.id) + 1) as 1 | 2 | 3;
-    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions);
+    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez);
     void logTarifaSugeridaAplicada({
       tarifaId: row.id,
       ranking: rank,
