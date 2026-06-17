@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Eye } from "lucide-react";
+import { DollarSign, Eye, Stamp, Ban } from "lucide-react";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
@@ -17,12 +17,15 @@ export interface FacturaColumnsOptions {
   canEdit: boolean;
   onRegistrarPago: (f: Factura) => void;
   onVerPagos: (f: Factura) => void;
+  onTimbrar?: (f: Factura) => void;
+  onCancelar?: (f: Factura) => void;
 }
 
 const ESTADOS_PAGABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
+const ESTADOS_TIMBRABLES = new Set(["Borrador", "Por timbrar"]);
 
 export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Factura, unknown>[] {
-  const { canEdit, onRegistrarPago, onVerPagos } = opts;
+  const { canEdit, onRegistrarPago, onVerPagos, onTimbrar, onCancelar } = opts;
   return defineColumns<Factura>([
     {
       id: "numero", header: "# Factura",
@@ -95,13 +98,20 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       },
     },
     {
-      id: "acciones", header: "Pagos",
-      meta: { width: "w-[150px]" },
+      id: "acciones", header: "Acciones",
+      meta: { width: "w-[200px]" },
       cell: ({ row }) => {
         const f = row.original;
         const pagable = canEdit && ESTADOS_PAGABLES.has(f.estado);
+        const timbrable = canEdit && onTimbrar && ESTADOS_TIMBRABLES.has(f.estado);
+        const cancelable = canEdit && onCancelar && f.estado === "Emitida";
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            {timbrable && (
+              <Button variant="default" size="sm" onClick={() => onTimbrar!(f)} title="Timbrar CFDI">
+                <Stamp className="h-3.5 w-3.5 mr-1" /> Timbrar
+              </Button>
+            )}
             {pagable && (
               <Button variant="outline" size="sm" onClick={() => onRegistrarPago(f)} title="Registrar pago">
                 <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
@@ -110,6 +120,11 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
             <Button variant="ghost" size="icon" onClick={() => onVerPagos(f)} title="Ver pagos">
               <Eye className="h-4 w-4" />
             </Button>
+            {cancelable && (
+              <Button variant="ghost" size="icon" onClick={() => onCancelar!(f)} title="Cancelar CFDI" className="text-destructive">
+                <Ban className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         );
       },

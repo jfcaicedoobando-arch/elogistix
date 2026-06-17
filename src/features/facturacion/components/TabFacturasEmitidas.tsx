@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Download } from "lucide-react";
 import SearchInput from "@/components/selects/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,12 +7,15 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/shared/DataTable";
+import { useRowSelection } from "@/components/shared/dataTable/useRowSelection";
+import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelectionColumn";
+import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import type { Database } from "@/types/db";
 import type { ColumnDef } from "@/components/shared/DataTable";
 import type { Factura } from "@/pages/facturacion/facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
-const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Parcialmente pagada', 'Pagada', 'Vencida', 'Cancelada'];
+const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Por timbrar', 'Emitida', 'Parcialmente pagada', 'Pagada', 'Vencida', 'Cancelada'];
 
 interface Props {
   search: string;
@@ -31,6 +35,13 @@ interface Props {
 }
 
 export function TabFacturasEmitidas(p: Props) {
+  const selection = useRowSelection();
+  const pageIds = useMemo(() => p.data.map((f) => f.id), [p.data]);
+  const columnsConSeleccion = useMemo(
+    () => [buildSelectionColumn<Factura>(selection, (f) => f.id, pageIds), ...p.columns],
+    [selection, pageIds, p.columns],
+  );
+
   return (
     <>
       <Card>
@@ -52,10 +63,12 @@ export function TabFacturasEmitidas(p: Props) {
         </CardContent>
       </Card>
 
+      <FacturasMasivasToolbar selectedIds={selection.selectedIds} onClear={selection.clear} />
+
       <Card>
         <CardContent className="p-0">
           <DataTable
-            columns={p.columns}
+            columns={columnsConSeleccion}
             data={p.data}
             isLoading={p.isLoading}
             emptyMessage="No se encontraron facturas"

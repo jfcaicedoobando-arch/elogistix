@@ -1,0 +1,113 @@
+import { useState } from "react";
+import { Download, Mail, CheckCircle2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { facturas as facturasKeys } from "@/features/facturas/queryKeys";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+
+interface Props {
+  selectedIds: Set<string>;
+  onClear: () => void;
+}
+
+/**
+ * Toolbar de acciones masivas para Facturas Emitidas.
+ * - Descargar ZIP de PDFs
+ * - Reenviar por email (correo del contacto principal del cliente)
+ * - Marcar como enviada al cliente (campo enviada_cliente_at)
+ */
+export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState<null | "zip" | "email" | "mark">(null);
+  const ids = Array.from(selectedIds);
+  const disabled = ids.length === 0;
+
+  const descargarZip = async () => {
+    setBusy("zip");
+    try {
+      const { data, error } = await supabase
+        .from("facturas")
+        .select("numero, factura_pdf_url, factura_xml_url")
+        .in("id", ids);
+      if (error) throw error;
+      const zip = new JSZip();
+      const folder = zip.folder("facturas")!;
+      let count = 0;
+      for (const f of data ?? []) {
+        if (f.factura_pdf_url) {
+          try {
+            const res = await fetch(f.factura_pdf_url);
+            if (res.ok) {
+              folder.file(`${f.numero}.pdf`, await res.arrayBuffer());
+              count++;
+            }
+          } catch { /* skip */ }
+        }
+        if (f.factura_xml_url) {
+          try {
+            const res = await fetch(f.factura_xml_url);
+            if (res.ok) folder.file(`${f.numero}.xml`, await res.arrayBuffer());
+          } catch { /* skip */ }
+        }
+      }
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      saveAs(blob, `facturas-${new Date().toISOString().slice(0, 10)}.zip`);
+      toast.success(`${count} factura(s) descargadas`);
+    } catch (e) {
+      toast.error(`Error al generar ZIP: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const reenviarEmail = async () => {
+    // Pendiente: se habilita junto con el template `factura-reenvio` y el
+    // resolutor de destinatarios (contacto principal del cliente).
+    toast.info(`Reenvío masivo en preparación — disponible con el template factura-reenvio (${ids.length} facturas pendientes)`);
+  };
+
+  const marcarEnviada = async () => {
+    setBusy("mark");
+    try {
+      const { error } = await supabase
+        .from("facturas")
+        .update({ enviada_cliente_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`${ids.length} factura(s) marcadas como enviadas`);
+      qc.invalidateQueries({ queryKey: facturasKeys.all });
+      onClear();
+    } catch (e) {
+      toast.error(`Error al marcar: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border rounded-md">
+      <span className="text-sm font-medium">
+        {ids.length} seleccionada{ids.length === 1 ? "" : "s"}
+      </span>
+      <div className="flex-1" />
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={descargarZip}>
+        {busy === "zip" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+        Descargar ZIP
+      </Button>
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={reenviarEmail}>
+        {busy === "email" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
+        Reenviar por email
+      </Button>
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={marcarEnviada}>
+        {busy === "mark" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+        Marcar enviada
+      </Button>
+      {ids.length > 0 && (
+        <Button variant="ghost" size="sm" onClick={onClear}>Limpiar</Button>
+      )}
+    </div>
+  );
+}

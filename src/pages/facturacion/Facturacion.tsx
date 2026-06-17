@@ -16,6 +16,8 @@ import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFac
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
 import { DialogHistorialPagos } from "@/features/facturacion/components/DialogHistorialPagos";
+import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
+import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
 import { useFacturacionPageController, useFacturacionDateRange, useCobranza } from "@/features/facturacion/hooks";
@@ -70,10 +72,16 @@ export default function Facturacion() {
 
   const [pagoFactura, setPagoFactura] = useState<Factura | null>(null);
   const [historialFactura, setHistorialFactura] = useState<Factura | null>(null);
+  const [timbrarFactura, setTimbrarFactura] = useState<Factura | null>(null);
+  const [cancelarFactura, setCancelarFactura] = useState<Factura | null>(null);
 
   const facturaColumns = useMemo(
     () => buildFacturaColumns({
-      canEdit, onRegistrarPago: setPagoFactura, onVerPagos: setHistorialFactura,
+      canEdit,
+      onRegistrarPago: setPagoFactura,
+      onVerPagos: setHistorialFactura,
+      onTimbrar: setTimbrarFactura,
+      onCancelar: setCancelarFactura,
     }),
     [canEdit],
   );
@@ -172,6 +180,17 @@ export default function Facturacion() {
           onOpenChange={(o) => !o && setHistorialFactura(null)}
           factura={historialFactura}
           canEdit={canEdit}
+        />
+        <DialogTimbrarFactura
+          facturaId={timbrarFactura?.id ?? null}
+          open={!!timbrarFactura}
+          onOpenChange={(o) => !o && setTimbrarFactura(null)}
+        />
+        <DialogCancelarFactura
+          facturaId={cancelarFactura?.id ?? null}
+          numero={cancelarFactura?.numero}
+          open={!!cancelarFactura}
+          onOpenChange={(o) => !o && setCancelarFactura(null)}
         />
       </div>
     </TooltipProvider>
