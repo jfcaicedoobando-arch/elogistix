@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, FileMinus, Eye } from "lucide-react";
+import { DollarSign, FileMinus, Eye, Bell, BellRing } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import type { FacturaCobranza, EstatusCobranza } from "@/features/facturas/services";
+import type { UltimoRecordatorio } from "@/features/facturas/services/recordatorios";
 
 const ESTATUS_COLOR: Record<EstatusCobranza, string> = {
   Vigente: "bg-success/10 text-success border-success/20",
@@ -15,15 +16,23 @@ const ESTATUS_COLOR: Record<EstatusCobranza, string> = {
   "Sin saldo": "bg-muted text-muted-foreground border-border",
 };
 
+function diasDesde(iso: string): number {
+  const d = new Date(iso);
+  return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export interface CobranzaColumnsOptions {
   canEdit: boolean;
   onRegistrarPago: (f: FacturaCobranza) => void;
   onCrearNC: (f: FacturaCobranza) => void;
   onVerDetalle: (f: FacturaCobranza) => void;
+  onEnviarRecordatorio: (f: FacturaCobranza) => void;
+  recordatoriosMap?: Map<string, UltimoRecordatorio>;
+  recordatorioPendingId?: string | null;
 }
 
 export function buildCobranzaColumns(opts: CobranzaColumnsOptions): ColumnDef<FacturaCobranza, unknown>[] {
-  const { canEdit, onRegistrarPago, onCrearNC, onVerDetalle } = opts;
+  const { canEdit, onRegistrarPago, onCrearNC, onVerDetalle, onEnviarRecordatorio, recordatoriosMap, recordatorioPendingId } = opts;
   return defineColumns<FacturaCobranza>([
     {
       id: "numero", header: "# Factura",
