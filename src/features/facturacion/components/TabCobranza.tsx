@@ -82,7 +82,7 @@ export function TabCobranza() {
     }
     : null;
   const detalleAdapter = detalleFactura
-    ? { id: detalleFactura.id, numero: detalleFactura.numero, total: detalleFactura.total, moneda: detalleFactura.moneda }
+    ? { id: detalleFactura.id, numero: detalleFactura.numero, total: detalleFactura.total, moneda: detalleFactura.moneda, tipo_cambio: detalleFactura.tipo_cambio }
     : null;
 
   return (
