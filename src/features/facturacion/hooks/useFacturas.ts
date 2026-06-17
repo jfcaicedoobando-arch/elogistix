@@ -11,11 +11,12 @@ import {
 
 export type { FacturaRow, FacturaListItem };
 
-export function useFacturas() {
+export function useFacturas(opts: { enabled?: boolean } = {}) {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: queryKeys.facturas.byOrg(organizationId),
     queryFn: () => fetchFacturas(organizationId ?? null),
+    enabled: opts.enabled ?? true,
   });
 }
 
@@ -29,9 +30,10 @@ export function useMarcarCostoPagado() {
   });
 }
 
-export function useGastosPendientes() {
+export function useGastosPendientes(opts: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.facturas.gastosPendientes,
     queryFn: fetchGastosPendientes,
+    enabled: opts.enabled ?? true,
   });
 }
