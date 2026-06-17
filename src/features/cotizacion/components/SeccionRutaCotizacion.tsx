@@ -114,10 +114,8 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
           <Input value={watch("rutaTexto")} onChange={e => setValue("rutaTexto", e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
         </FormField>
 
-        <FormField
-          label="Validez de la propuesta"
-          help={tarifaHasta ? `Máximo ${format(tarifaHasta, "dd/MM/yyyy")} según la tarifa vinculada` : undefined}
-        >
+        <FormField label="Validez de la propuesta">
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
