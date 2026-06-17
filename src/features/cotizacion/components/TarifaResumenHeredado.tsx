@@ -36,7 +36,7 @@ function ValueOrPlaceholder({ value }: { value: string | number | null | undefin
 export default function TarifaResumenHeredado({ tarifa }: Props) {
   const { canOverrideTarifaPricing } = usePermissions();
   const form = useFormContext<CotizacionFormValues>();
-  const { watch, setValue, getValues } = form;
+  const { watch, getValues } = form;
   const [editMode, setEditMode] = useState(false);
 
   const tipoEmbarque = watch("tipoEmbarque");
@@ -137,7 +137,7 @@ interface EditModeProps {
   frecuencia: string | undefined;
   diasLibres: number | undefined;
   diasAlmacenaje: number | undefined;
-  override: Record<string, unknown>;
+  override: Partial<Record<string, boolean | undefined>>;
 }
 
 function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAlmacenaje, override }: EditModeProps) {
