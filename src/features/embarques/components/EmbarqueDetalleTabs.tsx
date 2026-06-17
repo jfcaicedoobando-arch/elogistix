@@ -11,6 +11,8 @@ import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 import { TabPnl } from "@/features/embarques/components/TabPnl";
+import { TabSeguros } from "@/features/embarques/components/TabSeguros";
+
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
 type ResumenProps = ComponentProps<typeof TabResumen>;
