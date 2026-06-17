@@ -79,6 +79,8 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
         <TabsTrigger value="garantias">Garantías</TabsTrigger>
+        <TabsTrigger value="seguros">Seguros</TabsTrigger>
+
         <TabsTrigger value="tracking">Tracking</TabsTrigger>
         <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
       </TabsList>
