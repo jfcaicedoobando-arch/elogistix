@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
 import { Shield, Plus, ExternalLink, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -38,61 +38,59 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
   const [editing, setEditing] = useState<SeguroEmbarque | null>(null);
 
   const totales = useMemo(() => {
-    const primaPorMoneda = seguros.reduce<Record<string, number>>((acc, s) => {
+    return seguros.reduce<Record<string, number>>((acc, s) => {
       acc[s.moneda] = (acc[s.moneda] ?? 0) + Number(s.prima || 0);
       return acc;
     }, {});
-    return primaPorMoneda;
   }, [seguros]);
 
-  const columns = useMemo(
-    () =>
-      defineColumns<SeguroEmbarque>([
-        { id: "aseguradora", header: "Aseguradora", cell: (r) => <span className="font-medium">{r.aseguradora}</span> },
-        { id: "numero_poliza", header: "Póliza", cell: (r) => r.numero_poliza },
-        {
-          id: "vigencia",
-          header: "Vigencia",
-          cell: (r) => (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs">{formatDate(r.vigencia_desde)} → {formatDate(r.vigencia_hasta)}</span>
-              <VigenciaBadge hasta={r.vigencia_hasta} />
-            </div>
-          ),
-        },
-        { id: "suma_asegurada", header: "Suma asegurada", cell: (r) => formatCurrency(r.suma_asegurada, r.moneda) },
-        { id: "deducible", header: "Deducible", cell: (r) => formatCurrency(r.deducible, r.moneda) },
-        { id: "prima", header: "Prima (costo)", cell: (r) => <span className="font-semibold">{formatCurrency(r.prima, r.moneda)}</span> },
-        {
-          id: "certificado",
-          header: "Certificado",
-          cell: (r) => r.certificado_url ? (
-            <a href={r.certificado_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-              <ExternalLink className="h-3 w-3" /> Ver
-            </a>
-          ) : <span className="text-muted-foreground">—</span>,
-        },
-        {
-          id: "acciones",
-          header: "",
-          cell: (r) => (
-            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" disabled={!canEdit}
-                onClick={() => { setEditing(r); setOpen(true); }} aria-label="Editar">
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" disabled={!canEdit || del.isPending}
-                onClick={() => {
-                  if (window.confirm(`¿Eliminar póliza ${r.numero_poliza}?`)) del.mutate(r.id);
-                }} aria-label="Eliminar">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ),
-        },
-      ]),
-    [canEdit, del],
-  );
+  const columns = useMemo<ColumnDef<SeguroEmbarque, unknown>[]>(() => defineColumns<SeguroEmbarque>([
+    { id: "aseguradora", header: "Aseguradora",
+      cell: ({ row }) => <span className="font-medium">{row.original.aseguradora}</span> },
+    { id: "numero_poliza", header: "Póliza", cell: ({ row }) => row.original.numero_poliza },
+    {
+      id: "vigencia", header: "Vigencia",
+      cell: ({ row }) => (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs">{formatDate(row.original.vigencia_desde)} → {formatDate(row.original.vigencia_hasta)}</span>
+          <VigenciaBadge hasta={row.original.vigencia_hasta} />
+        </div>
+      ),
+    },
+    { id: "suma_asegurada", header: "Suma asegurada", meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) => formatCurrency(Number(row.original.suma_asegurada), row.original.moneda) },
+    { id: "deducible", header: "Deducible", meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) => formatCurrency(Number(row.original.deducible), row.original.moneda) },
+    { id: "prima", header: "Prima (costo)", meta: { align: "right", className: "tabular-nums font-semibold" },
+      cell: ({ row }) => formatCurrency(Number(row.original.prima), row.original.moneda) },
+    {
+      id: "certificado", header: "Certificado",
+      cell: ({ row }) => row.original.certificado_url ? (
+        <a href={row.original.certificado_url} target="_blank" rel="noreferrer"
+          className="inline-flex items-center gap-1 text-primary hover:underline"
+          onClick={(e) => e.stopPropagation()}>
+          <ExternalLink className="h-3 w-3" /> Ver
+        </a>
+      ) : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      id: "acciones", header: "",
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <Button variant="ghost" size="icon" disabled={!canEdit}
+            onClick={() => { setEditing(row.original); setOpen(true); }} aria-label="Editar">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" disabled={!canEdit || del.isPending}
+            onClick={() => {
+              if (window.confirm(`¿Eliminar póliza ${row.original.numero_poliza}?`)) del.mutate(row.original.id);
+            }} aria-label="Eliminar">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ]), [canEdit, del]);
 
   const venceProntoCount = seguros.filter((s) => diasRestantes(s.vigencia_hasta) <= 7).length;
 
@@ -122,7 +120,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
             {Object.entries(totales).map(([moneda, total]) => (
               <div key={moneda}>
                 <div className="text-xs text-muted-foreground">{moneda}</div>
-                <div className="text-2xl font-bold">{formatCurrency(total, moneda)}</div>
+                <div className="text-2xl font-bold tabular-nums">{formatCurrency(total, moneda)}</div>
               </div>
             ))}
           </CardContent>
@@ -131,21 +129,21 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
 
       <Card>
         <CardContent className="p-0">
-          {seguros.length === 0 && !isLoading ? (
-            <EmptyState
-              icon={Shield}
-              title="Sin pólizas registradas"
-              description="Registra la póliza de seguro de carga del embarque para que la prima entre en el P&L."
-            />
-          ) : (
-            <DataTable
-              data={seguros}
-              columns={columns}
-              loading={isLoading}
-              getRowId={(r) => r.id}
-              density="comfortable"
-            />
-          )}
+          <DataTable
+            data={seguros}
+            columns={columns}
+            rowKey={(r) => r.id}
+            density="comfortable"
+            emptyState={
+              <div className="p-6">
+                <EmptyState
+                  icon={Shield}
+                  title="Sin pólizas registradas"
+                  description="Registra la póliza de seguro de carga del embarque para que la prima entre en el P&L."
+                />
+              </div>
+            }
+          />
         </CardContent>
       </Card>
 
