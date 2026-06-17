@@ -19,9 +19,9 @@ import {
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
   Usuarios, Configuracion,
-  CrmLayout, CrmDashboard, CrmMiDia, Leads, LeadDetalle,
-  Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion,
+  CrmLayout,
 } from "./appRoutes.lazy";
+import { crmChildRoutes } from "./crmRoutes";
 
 export const appRoutes = (
   <Route
@@ -161,17 +161,7 @@ export const appRoutes = (
     <Route path="/ayuda" element={<Ayuda />} />
     <Route path="/sentry" element={<SentryDiagnostico />} />
     <Route path="/crm" element={<CrmLayout />}>
-      <Route index element={<CrmDashboard />} />
-      <Route path="mi-dia" element={<CrmMiDia />} />
-      <Route path="leads" element={<Leads />} />
-      <Route path="leads/:id" element={<LeadDetalle />} />
-      <Route path="oportunidades" element={<Oportunidades />} />
-      <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
-      <Route path="actividades" element={<ActividadesCrm />} />
-      <Route path="analitica" element={<AnaliticaCrm />} />
-      <Route path="forecast" element={<Navigate to="/crm/analitica?tab=forecast" replace />} />
-      <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
-      <Route path="configuracion" element={<CrmConfiguracion />} />
+      {crmChildRoutes}
     </Route>
     <Route path="/bitacora" element={<Bitacora />} />
     <Route

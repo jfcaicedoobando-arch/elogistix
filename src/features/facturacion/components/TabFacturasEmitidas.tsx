@@ -12,7 +12,7 @@ import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelecti
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import type { Database } from "@/types/db";
 import type { ColumnDef } from "@/components/shared/DataTable";
-import type { Factura } from "@/pages/facturacion/facturacionColumns";
+import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Por timbrar', 'Emitida', 'Parcialmente pagada', 'Pagada', 'Vencida', 'Cancelada'];
