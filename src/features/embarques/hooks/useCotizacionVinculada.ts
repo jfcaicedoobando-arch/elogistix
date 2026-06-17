@@ -4,7 +4,7 @@
  */
 import { useContext } from "react";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
-import { CotizacionVinculadaContext } from "./cotizacionVinculadaContext";
+import { CotizacionVinculadaContext } from "../contexts/cotizacionVinculadaContext";
 
 export function useCotizacionVinculada(): CotizacionRow | null {
   return useContext(CotizacionVinculadaContext).cotizacion;

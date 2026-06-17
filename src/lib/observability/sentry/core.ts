@@ -26,14 +26,14 @@ import {
   isReactRefreshStackTrace,
   sampleByRoute,
   scrubEventPii,
-} from "./sentryHelpers";
+} from "./helpers";
 
 export {
   isReactRefreshHmrError,
   isReactRefreshStackTrace,
   sampleByRoute,
   scrubEventPii,
-} from "./sentryHelpers";
+} from "./helpers";
 
 // DSN del proyecto elogistix/javascript-react (clave pública, segura en bundle).
 const DEFAULT_DSN =

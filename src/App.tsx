@@ -7,7 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
 import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
-import { queryClient } from "./lib/queryClient";
+import { queryClient } from "./lib/query/queryClient";
 import { AppRoutes } from "./routes";
 import { DemoModeBanner } from "@/components/marketing/DemoModeBanner";
 import { useRadixPointerEventsRescue } from "@/hooks/shared";

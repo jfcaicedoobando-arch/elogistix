@@ -12,7 +12,7 @@
  * montar. No hay regresión funcional.
  */
 import type { QueryClient } from "@tanstack/react-query";
-import { queryPersister, shouldDehydrateCatalogQuery } from "@/lib/queryClient";
+import { queryPersister, shouldDehydrateCatalogQuery } from "./queryClient";
 
 let started = false;
 
