@@ -1,0 +1,160 @@
+/**
+ * Bloque R — Tab Seguros: pólizas de carga del embarque.
+ * La prima se incluye automáticamente como costo real en el P&L.
+ */
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import EmptyState from "@/components/empty/EmptyState";
+import { Shield, Plus, ExternalLink, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+import { useDeleteSeguro, useSegurosEmbarque } from "@/features/embarques/hooks/useSegurosEmbarque";
+import type { SeguroEmbarque } from "@/features/embarques/services/seguros";
+import { DialogSeguroForm } from "./DialogSeguroForm";
+
+interface Props {
+  embarqueId: string;
+  canEdit: boolean;
+}
+
+function diasRestantes(hasta: string): number {
+  const end = new Date(hasta + "T23:59:59").getTime();
+  return Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000));
+}
+
+function VigenciaBadge({ hasta }: { hasta: string }) {
+  const dias = diasRestantes(hasta);
+  if (dias < 0) return <Badge variant="destructive">Vencida</Badge>;
+  if (dias <= 7) return <Badge className="bg-amber-100 text-amber-800">Vence en {dias}d</Badge>;
+  return <Badge variant="secondary">Vigente · {dias}d</Badge>;
+}
+
+export function TabSeguros({ embarqueId, canEdit }: Props) {
+  const { data: seguros = [], isLoading } = useSegurosEmbarque(embarqueId);
+  const del = useDeleteSeguro(embarqueId);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<SeguroEmbarque | null>(null);
+
+  const totales = useMemo(() => {
+    const primaPorMoneda = seguros.reduce<Record<string, number>>((acc, s) => {
+      acc[s.moneda] = (acc[s.moneda] ?? 0) + Number(s.prima || 0);
+      return acc;
+    }, {});
+    return primaPorMoneda;
+  }, [seguros]);
+
+  const columns = useMemo(
+    () =>
+      defineColumns<SeguroEmbarque>([
+        { id: "aseguradora", header: "Aseguradora", cell: (r) => <span className="font-medium">{r.aseguradora}</span> },
+        { id: "numero_poliza", header: "Póliza", cell: (r) => r.numero_poliza },
+        {
+          id: "vigencia",
+          header: "Vigencia",
+          cell: (r) => (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs">{formatDate(r.vigencia_desde)} → {formatDate(r.vigencia_hasta)}</span>
+              <VigenciaBadge hasta={r.vigencia_hasta} />
+            </div>
+          ),
+        },
+        { id: "suma_asegurada", header: "Suma asegurada", cell: (r) => formatCurrency(r.suma_asegurada, r.moneda) },
+        { id: "deducible", header: "Deducible", cell: (r) => formatCurrency(r.deducible, r.moneda) },
+        { id: "prima", header: "Prima (costo)", cell: (r) => <span className="font-semibold">{formatCurrency(r.prima, r.moneda)}</span> },
+        {
+          id: "certificado",
+          header: "Certificado",
+          cell: (r) => r.certificado_url ? (
+            <a href={r.certificado_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+              <ExternalLink className="h-3 w-3" /> Ver
+            </a>
+          ) : <span className="text-muted-foreground">—</span>,
+        },
+        {
+          id: "acciones",
+          header: "",
+          cell: (r) => (
+            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" disabled={!canEdit}
+                onClick={() => { setEditing(r); setOpen(true); }} aria-label="Editar">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" disabled={!canEdit || del.isPending}
+                onClick={() => {
+                  if (window.confirm(`¿Eliminar póliza ${r.numero_poliza}?`)) del.mutate(r.id);
+                }} aria-label="Eliminar">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ),
+        },
+      ]),
+    [canEdit, del],
+  );
+
+  const venceProntoCount = seguros.filter((s) => diasRestantes(s.vigencia_hasta) <= 7).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">Seguros de carga</h3>
+          {venceProntoCount > 0 && (
+            <Badge className="bg-amber-100 text-amber-800 gap-1">
+              <AlertTriangle className="h-3 w-3" /> {venceProntoCount} por vencer
+            </Badge>
+          )}
+        </div>
+        <Button onClick={() => { setEditing(null); setOpen(true); }} disabled={!canEdit}>
+          <Plus className="h-4 w-4 mr-2" /> Nueva póliza
+        </Button>
+      </div>
+
+      {Object.keys(totales).length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Prima total (suma de pólizas)</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-6">
+            {Object.entries(totales).map(([moneda, total]) => (
+              <div key={moneda}>
+                <div className="text-xs text-muted-foreground">{moneda}</div>
+                <div className="text-2xl font-bold">{formatCurrency(total, moneda)}</div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardContent className="p-0">
+          {seguros.length === 0 && !isLoading ? (
+            <EmptyState
+              icon={Shield}
+              title="Sin pólizas registradas"
+              description="Registra la póliza de seguro de carga del embarque para que la prima entre en el P&L."
+            />
+          ) : (
+            <DataTable
+              data={seguros}
+              columns={columns}
+              loading={isLoading}
+              getRowId={(r) => r.id}
+              density="comfortable"
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <DialogSeguroForm
+        open={open}
+        onOpenChange={setOpen}
+        embarqueId={embarqueId}
+        seguro={editing}
+      />
+    </div>
+  );
+}
