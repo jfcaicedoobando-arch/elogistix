@@ -95,6 +95,7 @@ export function usePermissions() {
   const canEditSales = has(SALES, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   const canCrearEmbarqueLibre = has(CREAR_EMBARQUE_LIBRE, roleStr);
+  const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
 
   // API pública (compatibilidad)
   const canEdit = canEditOperations || canEditFinance;
