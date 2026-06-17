@@ -1,0 +1,91 @@
+/**
+ * Acciones de fila de la lista de cotizaciones (navegación, eliminar, exportar).
+ * Extraído de `useCotizacionesPageController` en v13.56.4 (auditoría — paso 12)
+ * para separar orquestación de UI vs queries/derivaciones.
+ */
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/shared";
+import { useDeleteCotizacion, usePrefetchCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
+import { getErrorMessage } from "@/lib/errors";
+import { exportToCsv } from "@/generators/exportCsv";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+
+export interface CotizacionExportRow {
+  folio: string;
+  cliente_nombre: string;
+  modo: string;
+  origen?: string | null;
+  destino?: string | null;
+  subtotal: number | string | null;
+  moneda: string | null;
+  estado: string | null;
+  fecha_vigencia?: string | null;
+}
+
+export function useCotizacionActions() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const prefetchCotizacion = usePrefetchCotizacion();
+  const deleteCotizacion = useDeleteCotizacion();
+
+  const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
+
+  const irANueva = () => navigate("/cotizaciones/nueva");
+  const irAEditar = (id: string) => navigate(`/cotizaciones/${id}/editar`);
+  const irADetalle = (id: string) => navigate(`/cotizaciones/${id}`);
+
+  const confirmarEliminar = async () => {
+    if (!cotizacionAEliminar) return;
+    try {
+      await deleteCotizacion.mutateAsync(cotizacionAEliminar);
+      notifySuccess(toast, { title: "Cotización eliminada correctamente" });
+    } catch (err: unknown) {
+      notifyError(toast, {
+        title: "Error al eliminar",
+        description: getErrorMessage(err),
+        error: err,
+        method: "CONFIRMAR_ELIMINAR",
+      });
+    }
+    setCotizacionAEliminar(null);
+  };
+
+  const exportar = (filas: CotizacionExportRow[]) => {
+    exportToCsv(
+      `cotizaciones_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { key: "folio", label: "Folio" },
+        { key: "cliente", label: "Cliente" },
+        { key: "modo", label: "Modo" },
+        { key: "ruta", label: "Ruta" },
+        { key: "subtotal", label: "Subtotal" },
+        { key: "moneda", label: "Moneda" },
+        { key: "estado", label: "Estado" },
+        { key: "vigencia", label: "Vigencia" },
+      ],
+      filas.map((c) => ({
+        folio: c.folio,
+        cliente: c.cliente_nombre,
+        modo: c.modo,
+        ruta: `${c.origen || ""} → ${c.destino || ""}`,
+        subtotal: c.subtotal,
+        moneda: c.moneda,
+        estado: c.estado,
+        vigencia: c.fecha_vigencia || "",
+      })),
+    );
+  };
+
+  return {
+    cotizacionAEliminar,
+    setCotizacionAEliminar,
+    confirmarEliminar,
+    isDeleting: deleteCotizacion.isPending,
+    exportar,
+    irANueva,
+    irAEditar,
+    irADetalle,
+    prefetchCotizacion,
+  };
+}
