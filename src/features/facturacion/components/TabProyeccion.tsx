@@ -9,7 +9,6 @@ import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/features/facturacion/hooks";
-import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
 import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
 import { proyeccionColumns } from "./proyeccionColumns";
 
@@ -20,8 +19,7 @@ export function TabProyeccion() {
 
   return (
     <div className="space-y-4">
-      {/* Hueco de facturación — fijo arriba, indicador global */}
-      <HuecoFacturacionCard />
+
 
       {/* Header: Selector de mes + Export */}
       <Card>
