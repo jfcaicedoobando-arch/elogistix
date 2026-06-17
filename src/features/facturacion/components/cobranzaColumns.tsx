@@ -119,16 +119,45 @@ export function buildCobranzaColumns(opts: CobranzaColumnsOptions): ColumnDef<Fa
       ),
     },
     {
+      id: "recordatorio", header: "Último recordatorio",
+      meta: { width: "w-[150px]", className: "text-xs" },
+      cell: ({ row }) => {
+        const ult = recordatoriosMap?.get(row.original.id);
+        if (!ult) return <span className="text-muted-foreground">—</span>;
+        const dias = diasDesde(ult.fecha);
+        const tone = dias > 14 ? "text-warning" : "text-muted-foreground";
+        return (
+          <span className={tone} title={`${ult.canal} · ${formatDate(ult.fecha)}`}>
+            {formatDate(ult.fecha)} <span className="opacity-60">({dias}d)</span>
+          </span>
+        );
+      },
+    },
+    {
       id: "acciones", header: "Acciones",
-      meta: { width: "w-[170px]" },
+      meta: { width: "w-[200px]" },
       cell: ({ row }) => {
         const f = row.original;
         const cobrable = canEdit && f.saldo > 0;
+        const pending = recordatorioPendingId === f.id;
+        const hasRec = !!recordatoriosMap?.get(f.id);
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
             {cobrable && (
               <Button variant="outline" size="sm" onClick={() => onRegistrarPago(f)} title="Registrar pago">
                 <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
+              </Button>
+            )}
+            {canEdit && f.saldo > 0 && (
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => onEnviarRecordatorio(f)}
+                disabled={pending}
+                title={hasRec ? "Registrar nuevo recordatorio" : "Enviar recordatorio"}
+              >
+                {hasRec
+                  ? <BellRing className="h-4 w-4 text-warning" />
+                  : <Bell className="h-4 w-4" />}
               </Button>
             )}
             {canEdit && (
