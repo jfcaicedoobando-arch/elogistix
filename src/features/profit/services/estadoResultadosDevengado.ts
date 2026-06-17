@@ -17,7 +17,7 @@ import {
   type EstadoResultados,
   type EmbarqueER,
   type ConceptoVentaER,
-  type ConceptoCostoError,
+  type ConceptoCostoER,
 } from "@/lib/domain/estadoResultados";
 import {
   mapFacturaRows,
