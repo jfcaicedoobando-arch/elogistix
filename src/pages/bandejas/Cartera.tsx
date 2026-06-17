@@ -1,0 +1,96 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
+import { Inbox } from "lucide-react";
+
+export default function Cartera() {
+  const { data = [], isLoading } = useCarteraPendiente();
+  const totalSaldo = data.reduce((acc, r) => acc + Number(r.saldo ?? 0), 0);
+  const vencidas = data.filter((r) => r.dias_vencido > 0);
+  const vencidoSaldo = vencidas.reduce((acc, r) => acc + Number(r.saldo ?? 0), 0);
+
+  return (
+    <div className="p-6 space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold">Cartera</h1>
+        <p className="text-muted-foreground">
+          Facturas emitidas con saldo pendiente. Da seguimiento a cobranza, registra promesas y cobros.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas con saldo</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-semibold">{data.length}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-semibold">{formatCurrency(totalSaldo, "MXN")}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Vencido ({vencidas.length})</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-semibold text-destructive">{formatCurrency(vencidoSaldo, "MXN")}</CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Folio</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Embarque</TableHead>
+                <TableHead>Vencimiento</TableHead>
+                <TableHead className="text-center">Días vencido</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">Saldo</TableHead>
+                <TableHead>Último contacto</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Cargando...</TableCell></TableRow>
+              )}
+              {!isLoading && data.length === 0 && (
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  Sin cartera pendiente. ¡Todo cobrado!
+                </TableCell></TableRow>
+              )}
+              {data.map((row) => (
+                <TableRow key={row.factura_id} className="hover:bg-muted/50">
+                  <TableCell>
+                    <Link to={`/facturacion/${row.factura_id}`} className="text-primary hover:underline">
+                      {row.numero ?? "—"}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{row.cliente_nombre ?? "—"}</TableCell>
+                  <TableCell>
+                    {row.embarque_id ? (
+                      <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">
+                        {row.expediente ?? "—"}
+                      </Link>
+                    ) : "—"}
+                  </TableCell>
+                  <TableCell>{row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={row.dias_vencido > 0 ? "destructive" : "secondary"}>
+                      {row.dias_vencido}d
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(Number(row.total), row.moneda)}</TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold">{formatCurrency(Number(row.saldo), row.moneda)}</TableCell>
+                  <TableCell>{row.ultimo_contacto ? formatDate(row.ultimo_contacto) : <span className="text-muted-foreground">—</span>}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
