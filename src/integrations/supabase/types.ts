@@ -708,6 +708,63 @@ export type Database = {
           },
         ]
       }
+      cobranza_seguimiento: {
+        Row: {
+          comentario: string | null
+          created_at: string
+          factura_id: string
+          fecha: string
+          fecha_promesa: string | null
+          id: string
+          monto_promesa: number | null
+          organization_id: string
+          tipo: string
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string
+          factura_id: string
+          fecha?: string
+          fecha_promesa?: string | null
+          id?: string
+          monto_promesa?: number | null
+          organization_id: string
+          tipo: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string
+          factura_id?: string
+          fecha?: string
+          fecha_promesa?: string | null
+          id?: string
+          monto_promesa?: number | null
+          organization_id?: string
+          tipo?: string
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobranza_seguimiento_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobranza_seguimiento_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comisiones_devengadas: {
         Row: {
           comision_mxn: number
@@ -4342,6 +4399,7 @@ export type Database = {
           dias_credito: number
           embarque_id: string | null
           estado: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_captura: string
           fecha_emision: string
           fecha_vencimiento: string | null
           folio_proveedor: string
@@ -4371,6 +4429,7 @@ export type Database = {
           dias_credito?: number
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_captura?: string
           fecha_emision?: string
           fecha_vencimiento?: string | null
           folio_proveedor: string
@@ -4400,6 +4459,7 @@ export type Database = {
           dias_credito?: number
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_captura?: string
           fecha_emision?: string
           fecha_vencimiento?: string | null
           folio_proveedor?: string
@@ -5284,6 +5344,26 @@ export type Database = {
         Returns: boolean
       }
       can_view_financials: { Args: { _user_id: string }; Returns: boolean }
+      cartera_pendiente: {
+        Args: never
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          dias_vencido: number
+          embarque_id: string
+          estado: string
+          expediente: string
+          factura_id: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          moneda: string
+          numero: string
+          pagado: number
+          saldo: number
+          total: number
+          ultimo_contacto: string
+        }[]
+      }
       check_ratelimit: {
         Args: { p_key: string; p_max?: number; p_window_seconds?: number }
         Returns: Json
@@ -5495,6 +5575,35 @@ export type Database = {
       }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
+      cxp_por_capturar: {
+        Args: never
+        Returns: {
+          cliente_nombre: string
+          costos_presupuestados: number
+          embarque_id: string
+          expediente: string
+          facturas_capturadas: number
+          ultima_factura_fecha: string
+        }[]
+      }
+      cxp_por_pagar: {
+        Args: never
+        Returns: {
+          dias_para_vencer: number
+          embarque_id: string
+          estado_captura: string
+          expediente: string
+          factura_id: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          folio_proveedor: string
+          moneda: string
+          pagado: number
+          proveedor_nombre: string
+          saldo: number
+          total: number
+        }[]
+      }
       dashboard_details: { Args: never; Returns: Json }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
@@ -5518,6 +5627,10 @@ export type Database = {
       embarque_docs_faltantes: {
         Args: { p_embarque_id: string; p_estado_destino: string }
         Returns: string[]
+      }
+      embarque_estado_financiero: {
+        Args: { _embarque_id: string }
+        Returns: Json
       }
       embarques_list_extras: {
         Args: { p_ids: string[] }
@@ -5582,6 +5695,19 @@ export type Database = {
       }
       ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
       expirar_cotizaciones_job: { Args: never; Returns: Json }
+      facturacion_por_emitir: {
+        Args: never
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          dias_desde_emision: number
+          embarque_id: string
+          expediente: string
+          numero_proforma: string
+          proforma_id: string
+          total: number
+        }[]
+      }
       facturas_listado: {
         Args: {
           p_estado?: string
