@@ -20,64 +20,8 @@ import {
   fmtStackBlock,
 } from "./errorReportFormat";
 
-export interface ErrorReportInput {
-  title?: string;
-  description?: string;
-  phase?: string;
-  step?: number;
-  error?: unknown;
-  context?: Record<string, unknown>;
-  /** Override del código de error (si no se pasa, se infiere del error). */
-  errorCode?: AppErrorCode | string;
-  /**
-   * Acción que disparó el error: método HTTP ("POST", "DELETE") o un
-   * identificador semántico de acción ("SAVE_DRAFT_COTIZACION").
-   */
-  method?: string;
-  /** Override del request/trace id (si no se pasa, se genera con UUID v4). */
-  requestId?: string;
-}
-
-export interface ErrorReport {
-  /** UUID v4 que correlaciona logs cliente ↔ backend ↔ Sentry. */
-  requestId: string;
-  /** Código estandarizado del catálogo (`ERROR_CODES.*`). */
-  errorCode: AppErrorCode | string;
-  /** Método HTTP o acción semántica que originó el error. */
-  method?: string;
-  title: string;
-  description?: string;
-  phase?: string;
-  step?: number;
-  version: string;
-  timestampIso: string;
-  timezone: string;
-  route: string;
-  user: {
-    id: string | null;
-    email: string | null;
-    organizationId: string | null;
-    organizationName: string | null;
-    effectiveRole: string | null;
-  };
-  client: {
-    userAgent: string;
-    viewport: string;
-    devicePixelRatio: number;
-  };
-  errorDetails: {
-    message?: string;
-    name?: string;
-    code?: string | number;
-    status?: number;
-    details?: string;
-    hint?: string;
-    stack?: string;
-    /** Issues de Zod cuando el error proviene de validación. */
-    validationErrors?: ValidationIssue[];
-  };
-  context?: Record<string, unknown>;
-}
+export type { ErrorReportInput, ErrorReport } from "@/lib/diagnostics/errorReportTypes";
+import type { ErrorReport, ErrorReportInput } from "@/lib/diagnostics/errorReportTypes";
 
 function generateRequestId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
