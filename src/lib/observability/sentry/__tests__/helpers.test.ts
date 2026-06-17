@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from "vitest";
 import type * as Sentry from "@sentry/react";
-import { scrubEventPii, sampleByRoute } from "@/lib/sentryHelpers";
+import { scrubEventPii, sampleByRoute } from "@/lib/observability/sentry/helpers";
 
 describe("scrubEventPii — recorta PII en eventos Sentry", () => {
   it("recorta event.user a sólo { id } y scrubea URL/mensaje/excepción", () => {

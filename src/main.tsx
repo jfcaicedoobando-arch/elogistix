@@ -16,7 +16,7 @@ import {
   isDynamicImportError,
   tryReloadForChunkError,
 } from "./lib/errors/dynamicImportError";
-import { queryClient } from "./lib/queryClient";
+import { queryClient } from "./lib/query/queryClient";
 
 const previousVersion = getStoredAppVersion();
 if (previousVersion !== APP_VERSION) {
@@ -75,8 +75,8 @@ const scheduleIdle = (cb: () => void) => {
 };
 
 scheduleIdle(() => {
-  void import("./lib/sentry").then((m) => m.initSentry());
-  void import("./lib/queryPersistBootstrap").then((m) =>
+  void import("./lib/observability/sentry/core").then((m) => m.initSentry());
+  void import("./lib/query/persistBootstrap").then((m) =>
     m.bootstrapQueryPersister(queryClient),
   );
 });

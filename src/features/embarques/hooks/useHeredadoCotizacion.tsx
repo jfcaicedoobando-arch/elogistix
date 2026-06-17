@@ -7,7 +7,7 @@
  */
 import { type ReactNode } from "react";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
-import { CotizacionVinculadaContext } from "./cotizacionVinculadaContext";
+import { CotizacionVinculadaContext } from "../contexts/cotizacionVinculadaContext";
 
 interface ProviderProps {
   cotizacion: CotizacionRow | null | undefined;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isReactRefreshHmrError, isReactRefreshStackTrace } from "@/lib/sentry";
+import { isReactRefreshHmrError, isReactRefreshStackTrace } from "@/lib/observability/sentry/core";
 
 
 describe("isReactRefreshHmrError", () => {
