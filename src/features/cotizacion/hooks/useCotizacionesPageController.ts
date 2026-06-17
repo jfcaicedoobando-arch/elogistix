@@ -1,15 +1,10 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/shared";
 import { useListPageState } from "@/hooks/shared/useListPageState";
-import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
-
+import { useCotizaciones } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useClientesForSelect } from "@/features/cliente/hooks/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { getErrorMessage } from "@/lib/errors";
-import { exportToCsv } from "@/generators/exportCsv";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { ESTADOS_INACTIVOS } from "@/features/cotizacion/domain/lifecycle";
+import { useCotizacionActions } from "./useCotizacionActions";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
@@ -20,6 +15,9 @@ export const ESTADOS_COTIZACION = [
   "Archivada",
   "En operación",
 ];
+
+// re-export for backward-compat with prior single-file controller.
+export { useCotizacionActions };
 
 
 export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>["data"]>[number];
@@ -67,24 +65,39 @@ export function matchesCotizacionFilter(
   return true;
 }
 
-// ── Hook ─────────────────────────────────────────────────────────────────────
+/** KPIs derivados — siempre últimos 30 días, ignoran filtros visibles. */
+export function useCotizacionKpis(cotizaciones: CotizacionListItem[]) {
+  return useMemo(() => {
+    const hace30Dias = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const ultimos30 = cotizaciones.filter((c) => {
+      if (!c.created_at) return false;
+      const ts = new Date(c.created_at).getTime();
+      return Number.isFinite(ts) && ts >= hace30Dias;
+    });
+    const total = ultimos30.length;
+    const aceptadas = ultimos30.filter(
+      (c) => c.estado === "Aceptada" || c.estado === "En operación",
+    ).length;
+    const rechazadas = ultimos30.filter((c) => c.estado === "Rechazada").length;
+    const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
+    return { total, aceptadas, rechazadas, tasa };
+  }, [cotizaciones]);
+}
+
+// ── Hook composer ───────────────────────────────────────────────────────────
 
 /**
  * Controller de la página de listado de Cotizaciones.
- * Centraliza queries, filtros, KPIs derivados y handlers de acciones de fila.
+ * Ensambla queries + filtros/paginación + KPIs derivados + acciones de fila.
+ *
+ * v13.56.4: dividido en sub-hooks `useCotizacionActions` y `useCotizacionKpis`
+ * (auditoría — paso 12). Las firmas públicas se conservan.
  */
 export function useCotizacionesPageController() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { canEdit } = usePermissions();
-
   const { data: cotizaciones = [], isLoading } = useCotizaciones();
   const { data: clientes = [] } = useClientesForSelect();
-  const prefetchCotizacion = usePrefetchCotizacion();
-  const deleteCotizacion = useDeleteCotizacion();
-
-
-  const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
+  const actions = useCotizacionActions();
 
   const {
     search, filters, page, pageSize,
@@ -103,66 +116,9 @@ export function useCotizacionesPageController() {
   }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos, incluirInactivas]);
 
   const { items: paginated, totalPages } = paginate(filtered);
+  const kpis = useCotizacionKpis(cotizaciones);
 
-  // KPIs basados solo en cotizaciones creadas en los últimos 30 días.
-  // No dependen de los filtros visibles de la tabla.
-  const kpis = useMemo(() => {
-    const hace30Dias = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const ultimos30 = cotizaciones.filter((c) => {
-      if (!c.created_at) return false;
-      const ts = new Date(c.created_at).getTime();
-      return Number.isFinite(ts) && ts >= hace30Dias;
-    });
-    const total = ultimos30.length;
-    const aceptadas = ultimos30.filter(
-      (c) => c.estado === "Aceptada" || c.estado === "En operación",
-    ).length;
-    const rechazadas = ultimos30.filter((c) => c.estado === "Rechazada").length;
-    const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
-    return { total, aceptadas, rechazadas, tasa };
-  }, [cotizaciones]);
-
-  const irANueva = () => navigate("/cotizaciones/nueva");
-  const irAEditar = (id: string) => navigate(`/cotizaciones/${id}/editar`);
-  const irADetalle = (id: string) => navigate(`/cotizaciones/${id}`);
-
-
-  const confirmarEliminar = async () => {
-    if (!cotizacionAEliminar) return;
-    try {
-      await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-      notifySuccess(toast, { title: "Cotización eliminada correctamente" });
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err), error: err, method: "CONFIRMAR_ELIMINAR" });
-    }
-    setCotizacionAEliminar(null);
-  };
-
-  const exportar = () => {
-    exportToCsv(
-      `cotizaciones_${new Date().toISOString().slice(0, 10)}.csv`,
-      [
-        { key: "folio", label: "Folio" },
-        { key: "cliente", label: "Cliente" },
-        { key: "modo", label: "Modo" },
-        { key: "ruta", label: "Ruta" },
-        { key: "subtotal", label: "Subtotal" },
-        { key: "moneda", label: "Moneda" },
-        { key: "estado", label: "Estado" },
-        { key: "vigencia", label: "Vigencia" },
-      ],
-      filtered.map((c) => ({
-        folio: c.folio,
-        cliente: c.cliente_nombre,
-        modo: c.modo,
-        ruta: `${c.origen || ""} → ${c.destino || ""}`,
-        subtotal: c.subtotal,
-        moneda: c.moneda,
-        estado: c.estado,
-        vigencia: c.fecha_vigencia || "",
-      })),
-    );
-  };
+  const exportar = () => actions.exportar(filtered);
 
   return {
     // datos
@@ -176,16 +132,15 @@ export function useCotizacionesPageController() {
     search, filterEstado, filterCliente, filterSinCostos, incluirInactivas,
     page, pageSize, totalPages,
     setSearch, setFilter, setPage, setPageSize,
-    // acciones
-    cotizacionAEliminar,
-    setCotizacionAEliminar,
-    confirmarEliminar,
-    isDeleting: deleteCotizacion.isPending,
-    
+    // acciones (delegadas a useCotizacionActions)
+    cotizacionAEliminar: actions.cotizacionAEliminar,
+    setCotizacionAEliminar: actions.setCotizacionAEliminar,
+    confirmarEliminar: actions.confirmarEliminar,
+    isDeleting: actions.isDeleting,
     exportar,
-    irANueva,
-    irAEditar,
-    irADetalle,
-    prefetchCotizacion,
+    irANueva: actions.irANueva,
+    irAEditar: actions.irAEditar,
+    irADetalle: actions.irADetalle,
+    prefetchCotizacion: actions.prefetchCotizacion,
   };
 }
