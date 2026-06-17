@@ -137,7 +137,7 @@ interface EditModeProps {
   frecuencia: string | undefined;
   diasLibres: number | undefined;
   diasAlmacenaje: number | undefined;
-  override: Partial<Record<string, boolean | undefined>>;
+  override: Record<string, unknown>;
 }
 
 function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAlmacenaje, override }: EditModeProps) {
