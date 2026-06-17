@@ -1,3 +1,9 @@
+export const bitacora = {
+  all: ['bitacora'] as const,
+  list: (filters: Record<string, unknown>) => ['bitacora', filters] as const,
+  reciente: (limite: number) => ['bitacora', 'reciente', limite] as const,
+} as const;
+
 export const dashboard = {
   stats: ['dashboard-stats'] as const,
   statsSummary: ['dashboard-stats', 'summary'] as const,
