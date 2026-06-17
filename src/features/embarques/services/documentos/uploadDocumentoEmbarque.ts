@@ -1,0 +1,92 @@
+/**
+ * Upload idempotente de documentos de embarque. Extraído de
+ * `services/documentos.ts` para mantenerlo bajo 200 líneas (Power-of-10).
+ *
+ * El path incluye el hash del contenido y el registro de `documentos_embarque`
+ * sólo se actualiza si cambia. Reintentos con el mismo archivo no duplican
+ * ni reescriben filas. Reporta al log de idempotencia (vista /idempotencia)
+ * con `fn='upload_documento_embarque'`.
+ */
+import { supabase } from '@/integrations/supabase/client';
+import { uploadFile } from '@/services/storage/index';
+import { sanitizeFileName, sanitizeStorageKey } from '@/lib/storage';
+import type { TablesInsert } from '@/integrations/supabase/types';
+import {
+  idempotencyClaimSchema,
+  isCachedClaim,
+} from '@/features/embarques/services/idempotencyClaimSchema';
+import { sha256Hex, hexToUuid } from '@/features/embarques/services/documentos/idempotencyHash';
+
+type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
+
+export interface UploadDocumentoResult {
+  path: string;
+  fileName: string;
+  /** true si el archivo ya estaba registrado con el mismo contenido (no-op). */
+  cached: boolean;
+}
+
+async function buildScopedRequestId(embarqueId: string, docId: string, hash: string): Promise<string> {
+  // La clave DEBE incluir embarqueId+docId+hash; si sólo dependiera del hash,
+  // subir el mismo archivo a otro slot devolvería la respuesta cacheada del
+  // docId anterior y nunca actualizaríamos la fila correcta (bug 8.220.0).
+  const scopedHashBuf = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${embarqueId}:${docId}:${hash}`),
+  );
+  const scopedHex = Array.from(new Uint8Array(scopedHashBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hexToUuid(scopedHex);
+}
+
+export async function uploadDocumentoEmbarque(
+  embarqueId: string,
+  docId: string,
+  file: File,
+): Promise<UploadDocumentoResult> {
+  const hash = await sha256Hex(file);
+  const path = `embarques/${sanitizeStorageKey(embarqueId)}/${sanitizeStorageKey(docId)}/${hash.slice(0, 12)}-${sanitizeFileName(file.name)}`;
+
+  // 1) Si la fila ya apunta al mismo archivo (mismo contenido), no hacer nada.
+  const { data: actual, error: errSel } = await supabase
+    .from('documentos_embarque')
+    .select('archivo')
+    .eq('id', docId)
+    .maybeSingle();
+  if (errSel) throw errSel;
+  if (actual?.archivo === path) {
+    return { path, fileName: file.name, cached: true };
+  }
+
+  // 2) Reclamar idempotencia.
+  const requestId = await buildScopedRequestId(embarqueId, docId, hash);
+  const { data: claim } = await supabase.rpc('idempotency_claim', {
+    _key: requestId,
+    _fn: 'upload_documento_embarque',
+  });
+  const parsedClaim = idempotencyClaimSchema.safeParse(claim);
+  if (parsedClaim.success && isCachedClaim(parsedClaim.data)) {
+    const c = parsedClaim.data;
+    return { path: c.path, fileName: c.fileName ?? file.name, cached: true };
+  }
+
+  // 3) Upload y update de la fila. .select() detecta UPDATE de 0 filas (RLS,
+  //    docId borrado, etc.) y fallamos explícitamente en vez de éxito silencioso.
+  await uploadFile(path, file);
+  const { data: updated, error } = await supabase
+    .from('documentos_embarque')
+    .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
+    .eq('id', docId)
+    .select('id');
+  if (error) throw error;
+  if (!updated || updated.length === 0) {
+    throw new Error('No se pudo actualizar el documento (sin permisos o el documento ya no existe).');
+  }
+
+  await supabase.rpc('idempotency_store', {
+    _key: requestId,
+    _response: { path, fileName: file.name } as never,
+  });
+  return { path, fileName: file.name, cached: false };
+}
