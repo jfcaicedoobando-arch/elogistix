@@ -20,7 +20,8 @@ export async function fetchPlanes(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("planes")
     .select("*")
-    .order("precio_mensual");
+    .order("precio_mensual")
+    .limit(100);
   if (error) throw error;
   return fromDb<Plan[]>(data ?? []);
 }
