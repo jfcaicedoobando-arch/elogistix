@@ -70,7 +70,7 @@ Los 20 hallazgos del plan de auditoría arquitectónica quedaron atendidos:
 | 6 | 🟠 Alto | 13.56.2 | Desacoplado `comisiones → admin` vía `services/usuario`. |
 | 7 | 🟠 Alto | 13.56.2 | Página de Facturación movida a `features/facturacion/routes/`. |
 | 8 | 🟠 Alto | 13.56.3/5 | Paginación defensiva en planes, portal, proveedor operaciones. |
-| 9 | 🟠 Alto | 13.56.2 | `appRoutes.tsx` ≤195 líneas (CRM extraído a `crmRoutes.tsx`). |
+| 9 | 🟠 Alto | 13.56.2/8 | `appRoutes.tsx` reducido a 103 líneas (CRM extraído + helper `guarded()`). |
 | 10 | 🟡 Medio | 13.56.3/6 | Tokens semánticos (`text-success`, etc.) en cierre y KPI ejec. |
 | 11 | 🟡 Medio | 13.56.6 | Capa canónica `src/lib/{ui,auth,diagnostics}/` con re-exports. |
 | 12 | 🟡 Medio | 13.56.4 | `useCotizacionesPageController` dividido en hooks especializados. |

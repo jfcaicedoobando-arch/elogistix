@@ -1,34 +1,30 @@
-## Último bloque de remediación (hallazgos 17, 18, 19, 20)
+## Podar `appRoutes.tsx` a ≤195 líneas
 
-Cerramos los 4 hallazgos pendientes de severidad Baja. Sin cambios funcionales ni de UI.
+### Cambio
+Introducir un helper local `guarded(roles, element)` que reemplaza el patrón repetido `<Route ... element={<ProtectedRoute allowedRoles={[...]}>...</ProtectedRoute>} />` (14 ocurrencias, cada una ocupa 6-8 líneas).
 
-### Paso 17 — Consolidar `TODO`/`FIXME` de auditoría (🟢 Bajo)
-- Escanear `rg -n "TODO|FIXME|XXX|HACK"` en `src/` y mover los comentarios con valor accionable a issues internos (`.lovable/audit-todos.md`).
-- Eliminar los comentarios obsoletos (ya cerrados por bloques previos).
-- Conservar sólo los que apunten a trabajo futuro real, con prefijo `// AUDIT:` y referencia al hallazgo.
+```tsx
+const guarded = (roles: AppRole[], element: ReactNode) => (
+  <ProtectedRoute allowedRoles={roles}>{element}</ProtectedRoute>
+);
+```
 
-### Paso 18 — Tipar respuestas de RPCs sin `as never` / `as any` (🟢 Bajo)
-- Auditar `src/features/**/services/*.ts` y reemplazar casts `as any` / `as never` por:
-  - tipo del generado (`Database["public"]["Functions"][...]`), o
-  - una interfaz local + `fromDb<T>()` ya existente.
-- Marcar con `// SAFE-CAST:` los que sigan siendo inevitables (ver `mem://principles/safe-cast`).
+Cada ruta protegida queda en **una sola línea**:
 
-### Paso 19 — Limpieza de imports muertos y `console.log` residuales (🟢 Bajo)
-- Correr `bunx knip` (config ya existe en `knip.json`) y eliminar exports/imports no usados detectados.
-- `rg -n "console\\.(log|debug)" src/` → reemplazar por `logger.*` o eliminar; conservar `console.error`/`console.warn` justificados con comentario.
+```tsx
+<Route path="/cxp" element={guarded(["admin","super_admin","contador","tesorero","auxiliar_contable"], <Cxp />)} />
+```
 
-### Paso 20 — Documentación de arquitectura final (🟢 Bajo)
-- Actualizar `reports/audit-report.md` marcando los 20 hallazgos como cerrados, con commit/versión donde se atendió cada uno.
-- Añadir sección "Cómo extender" a `CONTRIBUTING.md` con las 5 reglas que surgieron de la auditoría:
-  1. Componentes ≤200 líneas.
-  2. Sin `SELECT *` en servicios.
-  3. Tokens semánticos para colores.
-  4. Tests por servicio + hook.
-  5. Cleanup obligatorio en `useEffect`.
+### Impacto
+- 14 rutas × ~5 líneas ahorradas ≈ 70 líneas menos. Archivo final estimado: **~135-140 líneas** (margen amplio sobre el umbral 195).
+- Cero cambio funcional: mismas rutas, mismos roles, mismo orden.
+- Sin tocar `crmRoutes.tsx`, `appRoutes.lazy.ts`, ni `ProtectedRoute`.
 
-### Metadatos
-- Bump `APP_VERSION` → `13.56.7`.
-- Entrada en `CHANGELOG.md` describiendo cierre del plan de remediación (pasos 17–20) y resumen final del recorrido 13.56.1 → 13.56.7.
+### Verificación post-cambio
+1. `wc -l src/routes/appRoutes.tsx` → confirmar ≤195.
+2. `bunx vitest run src/routes/__tests__/routes.smoke.test.tsx` → smoke de rutas sigue verde.
+3. Actualizar `reports/audit-report.md` hallazgo 9 a la nueva línea-cuenta.
+4. Bump `APP_VERSION` → `13.56.8` + entrada en `CHANGELOG.md`.
 
 ### Riesgo
-Muy bajo: limpieza, tipado más estricto y documentación. Sin cambios de comportamiento.
+Muy bajo: refactor mecánico de un único patrón JSX, validado por el smoke test existente y el typecheck (`AppRole[]` tipa los roles).

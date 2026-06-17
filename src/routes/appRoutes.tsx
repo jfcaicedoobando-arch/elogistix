@@ -2,11 +2,14 @@
  * Rutas principales de la aplicación (operativos autenticados). Bajo
  * `ProtectedRoute` + `Layout`. Incluye el sub-árbol del CRM anidado bajo /crm.
  * Extraído de `src/routes.tsx` en 11.65.0 (D12). Los `lazy(...)` viven en
- * `./appRoutes.lazy.ts` para mantener este archivo ≤200 líneas.
+ * `./appRoutes.lazy.ts`. En 13.56.8 se introdujo el helper `guarded()` para
+ * colapsar las rutas con `allowedRoles` a una sola línea cada una.
  */
+import type { ReactNode } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import type { AppRole } from "@/types/appRole";
 import {
   Dashboard, Operaciones, Reportes, Bitacora, Ayuda,
   Papelera, Idempotencia, Auditoria, SentryDiagnostico,
@@ -22,6 +25,12 @@ import {
   CrmLayout,
 } from "./appRoutes.lazy";
 import { crmChildRoutes } from "./crmRoutes";
+
+const guarded = (roles: AppRole[], element: ReactNode) => (
+  <ProtectedRoute allowedRoles={roles}>{element}</ProtectedRoute>
+);
+
+const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
 
 export const appRoutes = (
   <Route
@@ -40,84 +49,19 @@ export const appRoutes = (
     <Route path="/facturacion" element={<Facturacion />} />
     <Route path="/facturacion/:id" element={<FacturaDetalle />} />
     <Route path="/proformas/:id" element={<ProformaDetalle />} />
-    <Route
-      path="/cxp"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero", "auxiliar_contable"]}>
-          <Cxp />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/cxp/por-capturar"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "contador", "auxiliar_contable"]}>
-          <CxpPorCapturar />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/cxp/por-pagar"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "tesorero"]}>
-          <CxpPorPagar />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/facturacion/por-emitir"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "contador"]}>
-          <FacturacionPorEmitir />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/cartera"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza"]}>
-          <Cartera />
-        </ProtectedRoute>
-      }
-    />
 
-    <Route
-      path="/tesoreria"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
-          <Tesoreria />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/tesoreria/cuentas"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
-          <TesoreriaCuentas />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/tesoreria/conciliacion"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
-          <TesoreriaConciliacion />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/tesoreria/flujo"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
-          <TesoreriaFlujo />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/cxp" element={guarded([...TESORERIA_ROLES, "auxiliar_contable"], <Cxp />)} />
+    <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable"], <CxpPorCapturar />)} />
+    <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero"], <CxpPorPagar />)} />
+    <Route path="/facturacion/por-emitir" element={guarded(["admin", "super_admin", "admin_org", "contador"], <FacturacionPorEmitir />)} />
+    <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza"], <Cartera />)} />
 
-    <Route
-      path="/comisiones"
-      element={<Comisiones />}
-    />
+    <Route path="/tesoreria" element={guarded(TESORERIA_ROLES, <Tesoreria />)} />
+    <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_ROLES, <TesoreriaCuentas />)} />
+    <Route path="/tesoreria/conciliacion" element={guarded(TESORERIA_ROLES, <TesoreriaConciliacion />)} />
+    <Route path="/tesoreria/flujo" element={guarded(TESORERIA_ROLES, <TesoreriaFlujo />)} />
+
+    <Route path="/comisiones" element={<Comisiones />} />
     <Route path="/costeo" element={<Navigate to="/costeo/tarifas" replace />} />
     <Route path="/costeo/tarifas" element={<CosteoTarifas />} />
     <Route path="/costeo/buscar" element={<CosteoBuscar />} />
@@ -125,25 +69,12 @@ export const appRoutes = (
     <Route path="/costeo/agentes" element={<CosteoAgentes />} />
     <Route path="/costeo/navieras" element={<CosteoNavieras />} />
     <Route path="/costeo/demoras-venta" element={<CosteoDemorasVenta />} />
+
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
-    <Route
-      path="/profit/dashboard"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
-          <ProfitDashboardEjecutivo />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/profit/dashboard" element={guarded(TESORERIA_ROLES, <ProfitDashboardEjecutivo />)} />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
-    <Route
-      path="/profit/presupuesto"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
-          <ProfitPresupuesto />
-        </ProtectedRoute>
-      }
-    />
+    <Route path="/profit/presupuesto" element={guarded(TESORERIA_ROLES, <ProfitPresupuesto />)} />
 
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
@@ -160,49 +91,13 @@ export const appRoutes = (
     <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/ayuda" element={<Ayuda />} />
     <Route path="/sentry" element={<SentryDiagnostico />} />
-    <Route path="/crm" element={<CrmLayout />}>
-      {crmChildRoutes}
-    </Route>
+    <Route path="/crm" element={<CrmLayout />}>{crmChildRoutes}</Route>
     <Route path="/bitacora" element={<Bitacora />} />
-    <Route
-      path="/papelera"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-          <Papelera />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/idempotencia"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-          <Idempotencia />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/auditoria"
-      element={
-        <ProtectedRoute allowedRoles={["admin", "admin_org", "viewer", "customer_service"]}>
-          <Auditoria />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/usuarios"
-      element={
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <Usuarios />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/configuracion"
-      element={
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <Configuracion />
-        </ProtectedRoute>
-      }
-    />
+
+    <Route path="/papelera" element={guarded(["admin", "super_admin"], <Papelera />)} />
+    <Route path="/idempotencia" element={guarded(["admin", "super_admin"], <Idempotencia />)} />
+    <Route path="/auditoria" element={guarded(["admin", "admin_org", "viewer", "customer_service"], <Auditoria />)} />
+    <Route path="/usuarios" element={guarded(["admin"], <Usuarios />)} />
+    <Route path="/configuracion" element={guarded(["admin"], <Configuracion />)} />
   </Route>
 );
