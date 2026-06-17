@@ -81,6 +81,9 @@ describe("aplicarTarifaAlForm", () => {
     const validezActual = new Date(2026, 5, 15);
     aplicarTarifaAlForm(setValue as never, trigger as never, rowConVigencia, {}, validezActual);
     expect(setValue.mock.calls.find((c) => c[0] === "validezPropuesta")).toBeUndefined();
+  });
+
+
 
 
   it("auto-carga costos con markup aplicado al elegir una sugerencia", async () => {
