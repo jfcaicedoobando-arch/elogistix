@@ -4,7 +4,7 @@
  * y exige que las 4 cards del módulo vivan en la nueva ubicación.
  */
 import { describe, it, expect } from "vitest";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { sync as glob } from "fast-glob";
 import { join } from "node:path";
 
@@ -37,7 +37,6 @@ describe("Fase 4 — Naming camelCase para orgDetalle", () => {
     });
     const offenders: string[] = [];
     for (const abs of files) {
-      const { readFileSync } = await import("node:fs");
       const src = readFileSync(abs, "utf8");
       if (/components\/org-detalle\//.test(src)) {
         offenders.push(abs.slice(ROOT.length + 1));
