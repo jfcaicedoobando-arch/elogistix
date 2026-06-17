@@ -1,8 +1,16 @@
 /**
  * Miembros de organización y usuarios globales para la consola super admin.
+ *
+ * `fetchAvailableUsers`/`UserOption` viven ahora en `@/services/usuario/availableUsers`
+ * (v13.56.2 — auditoría paso 6). Aquí se re-exportan para mantener compatibilidad
+ * con consumidores existentes (`useOrgMembersMutations`, tests).
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
+import { fetchAvailableUsers, type UserOption } from "@/services/usuario/availableUsers";
+
+export { fetchAvailableUsers };
+export type { UserOption };
 
 export interface GlobalUserRow {
   user_id: string;
@@ -11,24 +19,11 @@ export interface GlobalUserRow {
   role: string;
 }
 
-export interface UserOption {
-  id: string;
-  email: string;
-}
-
 export interface OrgMemberRow {
   id: string;
   user_id: string;
   role: AppRole;
   email?: string;
-}
-
-export async function fetchAvailableUsers(): Promise<UserOption[]> {
-  const { data, error } = await supabase.functions.invoke("user-management", {
-    body: { action: "list" },
-  });
-  if (error) throw error;
-  return Array.isArray(data) ? (data as UserOption[]) : [];
 }
 
 export async function fetchAdminGlobalUsers(): Promise<GlobalUserRow[]> {
