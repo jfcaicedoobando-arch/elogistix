@@ -9,7 +9,7 @@ export function useTimbrarFactura() {
     mutationFn: (facturaId: string) => emitirFacturapi(facturaId),
     onSuccess: (res) => {
       toast.success(`Factura timbrada · UUID ${res.uuid.slice(0, 8)}…`);
-      qc.invalidateQueries({ queryKey: facturasQueryKeys.all });
+      qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
     onError: (err: Error) => toast.error(`No se pudo timbrar: ${err.message}`),
   });
@@ -22,7 +22,7 @@ export function useCancelarFactura() {
       cancelarFacturapi(vars.facturaId, vars.motivo, vars.sustituyeUuid),
     onSuccess: () => {
       toast.success("CFDI cancelado");
-      qc.invalidateQueries({ queryKey: facturasQueryKeys.all });
+      qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
     onError: (err: Error) => toast.error(`No se pudo cancelar: ${err.message}`),
   });
