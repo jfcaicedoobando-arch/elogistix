@@ -6,8 +6,12 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase
 
 export type CuentaBancaria = Tables<"cuentas_bancarias">;
 
+// v13.56.1 — Columnas explícitas (evita SELECT * en tablas financieras).
+const CUENTA_BANCARIA_COLUMNS =
+  "id, organization_id, banco, alias, numero_cuenta, clabe, moneda, saldo_inicial, activa, notas, created_at, updated_at, deleted_at, deleted_by";
+
 export async function listarCuentas(activas = true): Promise<CuentaBancaria[]> {
-  let q = supabase.from("cuentas_bancarias").select("*").order("alias", { ascending: true });
+  let q = supabase.from("cuentas_bancarias").select(CUENTA_BANCARIA_COLUMNS).order("alias", { ascending: true });
   if (activas) q = q.eq("activa", true);
   const { data, error } = await q;
   if (error) throw error;

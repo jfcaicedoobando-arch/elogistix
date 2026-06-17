@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +13,13 @@ import {
   seguridadConfigSchema,
 } from "@/features/configuracion/hooks";
 
+/**
+ * v13.56.1 — Inicialización movida a `useEffect` para evitar mutar estado
+ * en el cuerpo del render (anti-patrón React que dispara re-renders extra).
+ */
 export default function TabSeguridadGlobal() {
   const config = useConfigGlobalCategoria("seguridad");
   const updateConfig = useUpdateConfiguracionGlobal();
-  const [initialized, setInitialized] = useState(false);
-
   const configPlataforma = useConfigGlobalCategoria("plataforma");
 
   const [autoConfirmar, setAutoConfirmar] = useState(false);
@@ -26,8 +28,11 @@ export default function TabSeguridadGlobal() {
   const [maxIntentos, setMaxIntentos] = useState(5);
   const [registroPublico, setRegistroPublico] = useState(false);
   const [emailSoporte, setEmailSoporte] = useState("");
+  const [initialized, setInitialized] = useState(false);
 
-  if (Object.keys(config).length > 0 && !initialized) {
+  useEffect(() => {
+    if (initialized) return;
+    if (Object.keys(config).length === 0) return;
     const seg = parseConfigSafe(seguridadConfigSchema, config);
     const plat = parseConfigSafe(plataformaConfigSchema, configPlataforma);
     setAutoConfirmar(seg.auto_confirmar_email);
@@ -37,7 +42,7 @@ export default function TabSeguridadGlobal() {
     setRegistroPublico(seg.permitir_registro_publico);
     setEmailSoporte(plat.email_soporte);
     setInitialized(true);
-  }
+  }, [config, configPlataforma, initialized]);
 
   const handleGuardar = () => {
     updateConfig.mutate([

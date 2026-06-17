@@ -56,10 +56,14 @@ export interface FiltrosMovimientos {
   hasta?: string;
 }
 
+// v13.56.1 — Columnas explícitas (evita SELECT * en tabla financiera grande).
+const BBVA_MOVIMIENTO_COLUMNS =
+  "id, organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe, estado_conciliacion, pago_factura_id, pago_proveedor_id, motivo_ignorar, conciliado_por, conciliado_at, importado_por, created_at";
+
 export async function listarMovimientos(f: FiltrosMovimientos): Promise<MovimientoBBVA[]> {
   let q = supabase
     .from("bbva_movimientos")
-    .select("*")
+    .select(BBVA_MOVIMIENTO_COLUMNS)
     .eq("cuenta_bancaria_id", f.cuenta_bancaria_id)
     .order("fecha", { ascending: false })
     .limit(2000);
