@@ -7,7 +7,7 @@ import {
   marcarCostoPagado,
   type FacturaRow,
   type FacturaListItem,
-} from "@/features/facturas/services";
+} from "@/features/facturacion/services";
 
 export type { FacturaRow, FacturaListItem };
 

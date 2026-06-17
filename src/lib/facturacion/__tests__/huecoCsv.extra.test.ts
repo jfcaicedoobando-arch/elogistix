@@ -4,7 +4,7 @@ import {
   buildHuecoCsvFilename,
   buildHuecoCsvRows,
 } from "@/lib/facturacion/huecoCsv";
-import type { FilaHueco } from "@/features/facturas/services";
+import type { FilaHueco } from "@/features/facturacion/services";
 
 // ── Fixture helper ──────────────────────────────────────────────────────────
 function makeFilaHueco(overrides: Partial<FilaHueco> = {}): FilaHueco {

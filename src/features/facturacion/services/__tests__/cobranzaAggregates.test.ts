@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import {
   agruparSaldosPorMoneda,
   calcularKPIs,
-} from "@/features/facturas/services/cobranzaAggregates";
-import type { FacturaCobranza } from "@/features/facturas/services/cobranza";
+} from "@/features/facturacion/services/cobranzaAggregates";
+import type { FacturaCobranza } from "@/features/facturacion/services/cobranza";
 
 function f(overrides: Partial<FacturaCobranza>): FacturaCobranza {
   return {

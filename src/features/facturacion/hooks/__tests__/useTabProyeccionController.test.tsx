@@ -12,7 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 const fetchProyeccionMesMock = vi.fn();
 const exportToCsvMock = vi.fn();
 
-vi.mock("@/features/facturas/services", () => ({
+vi.mock("@/features/facturacion/services", () => ({
   fetchProyeccionMes: (...args: unknown[]) => fetchProyeccionMesMock(...args),
 }));
 vi.mock("@/generators/exportCsv", () => ({

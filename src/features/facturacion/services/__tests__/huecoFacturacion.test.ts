@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchHuecoFacturacion } from "@/features/facturas/services/huecoFacturacion";
+import { fetchHuecoFacturacion } from "@/features/facturacion/services/huecoFacturacion";
 
 const HOY = new Date("2026-06-15T12:00:00Z");
 

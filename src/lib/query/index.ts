@@ -10,7 +10,7 @@ import { embarques, trackingLinks, trackingPublico } from "@/features/embarques/
 import { proformas } from "@/features/proformas/queryKeys";
 import { cotizaciones, pdfPreviewCotizacion } from "@/features/cotizacion/queryKeys";
 import { clientes, clienteFinancials } from "@/features/cliente/queryKeys";
-import { facturas } from "@/features/facturas/queryKeys";
+import { facturas } from "@/features/facturacion/queryKeys";
 import { proveedores } from "@/features/proveedor/queryKeys";
 import {
   configuracion, puertos, exchangeRates, navieras, tiposContenedor,

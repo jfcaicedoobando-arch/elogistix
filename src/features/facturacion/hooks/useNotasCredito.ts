@@ -11,7 +11,7 @@ import {
   type NotaCredito,
   type NotaCreditoConFactura,
   type ListarNotasCreditoRecientesFiltros,
-} from "@/features/facturas/services/notasCredito";
+} from "@/features/facturacion/services/notasCredito";
 
 export function useNotasCredito(facturaId: string | undefined) {
   return useQuery({

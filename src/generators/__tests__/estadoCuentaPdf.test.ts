@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/features/facturas/services", () => ({
+vi.mock("@/features/facturacion/services", () => ({
   fetchEstadoCuentaFacturas: vi.fn(),
 }));
 vi.mock("@/pdf/emisor", () => ({
@@ -15,7 +15,7 @@ vi.mock("@/lib/utils", () => ({
 }));
 
 import { generarEstadoCuentaPdf } from "../estadoCuentaPdf";
-import { fetchEstadoCuentaFacturas } from "@/features/facturas/services";
+import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
 const mockFetch = fetchEstadoCuentaFacturas as ReturnType<typeof vi.fn>;

@@ -5,8 +5,8 @@ import { DollarSign, FileMinus, Eye, Bell, BellRing } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import type { FacturaCobranza, EstatusCobranza } from "@/features/facturas/services";
-import type { UltimoRecordatorio } from "@/features/facturas/services/recordatorios";
+import type { FacturaCobranza, EstatusCobranza } from "@/features/facturacion/services";
+import type { UltimoRecordatorio } from "@/features/facturacion/services/recordatorios";
 
 const ESTATUS_COLOR: Record<EstatusCobranza, string> = {
   Vigente: "bg-success/10 text-success border-success/20",

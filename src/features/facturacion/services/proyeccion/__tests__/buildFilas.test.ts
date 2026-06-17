@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { indexarPorEmbarque, buildFilasProyeccion } from "@/features/facturas/services/proyeccion/buildFilas";
-import type { EmbarqueProyeccionRow } from "@/features/facturas/services/proyeccion/fetchSources";
+import { indexarPorEmbarque, buildFilasProyeccion } from "@/features/facturacion/services/proyeccion/buildFilas";
+import type { EmbarqueProyeccionRow } from "@/features/facturacion/services/proyeccion/fetchSources";
 
 describe("indexarPorEmbarque", () => {
   it("agrupa por embarque_id usando la columna indicada", () => {

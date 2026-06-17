@@ -3,7 +3,7 @@
  * Lógica pura extraída de `useHuecoFacturacion` para permitir tests sin
  * acoplarse a React Query.
  */
-import type { FilaHueco } from "@/features/facturas/services";
+import type { FilaHueco } from "@/features/facturacion/services";
 import { formatDate } from "@/lib/formatters";
 
 export const HUECO_CSV_HEADERS = [
