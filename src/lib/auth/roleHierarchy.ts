@@ -4,8 +4,7 @@ import type { AppRole } from "@/types/appRole";
  * Replica del agrupador funcional implementado en `public.has_role()` (BD).
  * Permite que los guardas de frontend (ProtectedRoute, etc.) acepten cualquier rol
  * moderno equivalente al rol "lógico" solicitado, evitando que regrese una pantalla
- * de "sin acceso" para usuarios con roles modernos (admin_org, coordinador_logistico,
- * ejecutivo_pricing, gerente_operaciones, etc.).
+ * de "sin acceso" para usuarios con roles modernos.
  *
  * Si el agrupador de BD cambia, ESTE archivo debe actualizarse en paralelo.
  */
@@ -28,6 +27,8 @@ const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
     "vendedor",
     "contador",
     "tesorero",
+    "auxiliar_contable",
+    "ejecutivo_cobranza",
     "ejecutivo_pricing",
     "gerente_operaciones",
     "gerente_visor",
@@ -39,6 +40,11 @@ const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
     "super_admin",
   ],
   vendedor: ["vendedor", "gerente_comercial", "admin_org", "super_admin"],
+  // Contador puede ver lo que el auxiliar captura.
+  contador: ["contador", "auxiliar_contable", "admin_org", "super_admin"],
+  tesorero: ["tesorero", "admin_org", "super_admin"],
+  auxiliar_contable: ["auxiliar_contable", "contador", "admin_org", "super_admin"],
+  ejecutivo_cobranza: ["ejecutivo_cobranza", "contador", "admin_org", "super_admin"],
   // Roles sin agrupación: coincidencia exacta.
   coordinador_logistico: ["coordinador_logistico"],
   ejecutivo_pricing: ["ejecutivo_pricing"],
@@ -46,8 +52,6 @@ const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
   gerente_visor: ["gerente_visor"],
   gerente_comercial: ["gerente_comercial"],
   customer_service: ["customer_service"],
-  contador: ["contador"],
-  tesorero: ["tesorero"],
   cliente: ["cliente"],
 } as const;
 
