@@ -1,9 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FileEdit } from "lucide-react";
 import { usePermissions, useTabsParam } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
@@ -13,18 +10,11 @@ import {
   useEmbarqueDetalleActions,
   useEmbarqueDetalleTracking,
 } from "@/features/embarques/hooks";
-import { TabResumen } from "@/features/embarques/components/TabResumen";
-import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
-import { TabCostos } from "@/features/embarques/components/TabCostos";
-import { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
-import { TabNotas } from "@/features/embarques/components/TabNotas";
-import { TabTracking } from "@/features/embarques/components/TabTracking";
-import { TabGarantias } from "@/features/embarques/components/TabGarantias";
-import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 
 import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
 import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueDetalleHeader";
+import { EmbarqueDetalleTabs } from "@/features/embarques/components/EmbarqueDetalleTabs";
 import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
@@ -58,7 +48,7 @@ export default function EmbarqueDetalle() {
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
-  const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
+  const financials = useEmbarqueFinancials({
     conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
   });
 
@@ -101,96 +91,33 @@ export default function EmbarqueDetalle() {
         onIrADocumentos={() => { setBlockDocsOpen(false); setActiveTab("documentos"); }}
       />
 
-
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
 
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="gap-1">
-          <TabsTrigger value="resumen">Resumen</TabsTrigger>
-          <TabsTrigger value="documentos">Documentos</TabsTrigger>
-          <TabsTrigger value="costos">Costos</TabsTrigger>
-          <TabsTrigger value="conciliacion">Conciliación</TabsTrigger>
-          <TabsTrigger value="facturacion">Facturación</TabsTrigger>
-          <TabsTrigger value="garantias">Garantías</TabsTrigger>
-          <TabsTrigger value="tracking">Tracking</TabsTrigger>
-          <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
-        </TabsList>
-      {estadoVisual === "Borrador" && (
-        <Alert variant="warning">
-          <FileEdit className="h-4 w-4" />
-          <AlertTitle>Embarque en borrador</AlertTitle>
-          <AlertDescription>
-            Este embarque fue generado desde la cotización. Complétalo y cambia su estado a Confirmado para continuar con la operación.
-          </AlertDescription>
-        </Alert>
-      )}
-
-
-        <TabsContent value="resumen" className="space-y-6">
-          <TabResumen embarque={embarque} />
-        </TabsContent>
-
-        <TabsContent value="documentos">
-          <TabDocumentos
-            embarqueId={id!}
-            modo={embarque.modo}
-            documentos={documentos}
-            canEdit={canEdit}
-            uploadingDocId={uploadingDocId}
-            downloadingDocId={downloadingDocId}
-            deletingDocId={deletingDocId}
-            togglingNoAplicaDocId={togglingNoAplicaDocId}
-            onUpload={handleUpload}
-            onDownload={handleDownload}
-            onDelete={handleDeleteDoc}
-            onToggleNoAplica={handleToggleNoAplica}
-          />
-        </TabsContent>
-
-        <TabsContent value="costos" className="space-y-6">
-          <TabCostos
-            conceptosVenta={conceptosVenta}
-            conceptosCosto={conceptosCosto}
-            totalVenta={totalVenta}
-            totalCosto={totalCosto}
-            utilidad={utilidad}
-            margen={margen}
-            embarqueId={id!}
-            canEdit={canEdit}
-          />
-        </TabsContent>
-
-        <TabsContent value="conciliacion" className="space-y-6">
-          <TabConciliacion embarqueId={id!} />
-        </TabsContent>
-
-
-
-        <TabsContent value="facturacion">
-          <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
-        </TabsContent>
-
-        <TabsContent value="garantias">
-          <TabGarantias embarqueId={id!} canEdit={canEdit} />
-        </TabsContent>
-
-        <TabsContent value="tracking">
-          <TabTracking embarqueId={id!} embarque={embarque} notas={notas} />
-        </TabsContent>
-
-        <TabsContent value="notas">
-          <TabNotas
-            notas={notas}
-            embarqueId={id}
-            expediente={embarque.expediente}
-            creadoPor={embarque.created_by_email ?? null}
-            creadoEn={embarque.created_at}
-          />
-        </TabsContent>
-
-      </Tabs>
+      <EmbarqueDetalleTabs
+        embarque={embarque}
+        embarqueId={id!}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        estadoVisual={estadoVisual}
+        canEdit={canEdit}
+        documentos={documentos}
+        conceptosVenta={conceptosVenta}
+        conceptosCosto={conceptosCosto}
+        facturas={facturas}
+        notas={notas}
+        financials={financials}
+        docHandlers={{
+          uploadingDocId,
+          downloadingDocId,
+          deletingDocId,
+          togglingNoAplicaDocId,
+          onUpload: handleUpload,
+          onDownload: handleDownload,
+          onDelete: handleDeleteDoc,
+          onToggleNoAplica: handleToggleNoAplica,
+        }}
+      />
     </div>
   );
 }

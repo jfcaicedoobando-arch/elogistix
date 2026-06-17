@@ -5,11 +5,11 @@ import type { CostoCotizacion } from "@/features/cotizacion/hooks/useCotizacionC
 import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
-import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/features/cotizacion/services";
+import { savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
-import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
+import { usePaso1Handlers } from "./usePaso1Handlers";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
@@ -48,6 +48,8 @@ interface Deps {
 /**
  * Encapsula la navegación entre pasos del wizard de cotización.
  * v12.1.0: validación y vinculación CRM del paso 1 movidas a `handlePaso1Crm`.
+ * v13.47.7: handlers del Paso 1 extraídos a `usePaso1Handlers` para mantener
+ *           este archivo bajo 200 líneas (Power-of-10).
  */
 export function useCotizacionWizardSteps({
   form, toast, navigate, isEditMode,
@@ -56,65 +58,17 @@ export function useCotizacionWizardSteps({
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
   totalUSD, tasaIva, buildPaso1Data, mutations,
 }: Deps) {
-  const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
+  const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
-  const handlePaso1 = useCallback(async () => {
-    const v = form.getValues();
-    const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
-    const esNueva = !cotizacionId;
-    try {
-      const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
-      if (!cotizacionId) setCotizacionId(id);
-      if (esNueva && v.esProspecto) {
-        await vincularCrmTrasCrear(id, v, toast);
-      }
-      setCurrentStep(2);
-    } catch (e: unknown) {
-      notifyError(toast, {
-        title: "Error al guardar datos generales",
-        description: getErrorMessage(e),
-        error: e,
-        method: cotizacionId ? "UPDATE_DRAFT_COTIZACION" : "CREATE_DRAFT_COTIZACION",
-        context: { cotizacionId, paso: 1 },
-      });
-    }
-  }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
-
-  /**
-   * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
-   * y salta directo al Paso 3 (Cotización Cliente). Bitácora: cotizacion_sin_desglose_creada.
-   */
-  const handleCotizarSinDesglose = useCallback(async () => {
-    const v = form.getValues();
-    const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
-    // Marca el flag en el form para que buildPaso1Data lo persista.
-    form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
-    const esNueva = !cotizacionId;
-    try {
-      const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
-      if (!cotizacionId) setCotizacionId(id);
-      if (esNueva && v.esProspecto) {
-        await vincularCrmTrasCrear(id, v, toast);
-      }
-      registrarActividad.mutate({
-        accion: "cotizacion_sin_desglose_creada",
-        modulo: "cotizaciones",
-        entidad_id: id,
-        entidad_nombre: "",
-      });
-      setCurrentStep(3);
-    } catch (e: unknown) {
-      notifyError(toast, {
-        title: "Error al guardar cotización",
-        description: getErrorMessage(e),
-        error: e,
-        method: "COTIZAR_SIN_DESGLOSE",
-        context: { cotizacionId, paso: 1 },
-      });
-    }
-  }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep]);
+  const { handlePaso1, handleCotizarSinDesglose } = usePaso1Handlers({
+    form, toast, cotizacionId, setCotizacionId, setCurrentStep,
+    msdsFile, buildPaso1Data,
+    mutations: {
+      crearCotizacion: mutations.crearCotizacion,
+      updateCotizacion: mutations.updateCotizacion,
+      registrarActividad,
+    },
+  });
 
   const handlePaso2 = useCallback(async () => {
     try {
