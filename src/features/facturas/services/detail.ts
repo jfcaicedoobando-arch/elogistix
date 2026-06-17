@@ -30,6 +30,14 @@ export type FacturaDetalle = Pick<
   | "factura_xml_url"
   | "snapshot_emision"
   | "organization_id"
+  | "rfc_cliente"
+  | "uso_cfdi"
+  | "forma_pago"
+  | "metodo_pago"
+  | "uuid_fiscal"
+  | "folio_fiscal"
+  | "serie"
+  | "facturapi_id"
 > & {
   proformas: { numero: string } | null;
 };
@@ -56,6 +64,14 @@ const COLUMNS = [
   "factura_xml_url",
   "snapshot_emision",
   "organization_id",
+  "rfc_cliente",
+  "uso_cfdi",
+  "forma_pago",
+  "metodo_pago",
+  "uuid_fiscal",
+  "folio_fiscal",
+  "serie",
+  "facturapi_id",
   "proformas:proformas(numero)",
 ].join(", ");
 
