@@ -43,11 +43,44 @@ export const appRoutes = (
     <Route
       path="/cxp"
       element={
-        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero"]}>
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "contador", "tesorero", "auxiliar_contable"]}>
           <Cxp />
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/cxp/por-capturar"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "contador", "auxiliar_contable"]}>
+          <CxpPorCapturar />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/cxp/por-pagar"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "tesorero"]}>
+          <CxpPorPagar />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/facturacion/por-emitir"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "contador"]}>
+          <FacturacionPorEmitir />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/cartera"
+      element={
+        <ProtectedRoute allowedRoles={["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza"]}>
+          <Cartera />
+        </ProtectedRoute>
+      }
+    />
+
     <Route
       path="/tesoreria"
       element={
