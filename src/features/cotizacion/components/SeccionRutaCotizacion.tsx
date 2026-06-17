@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +16,16 @@ import SeguroBlock from "./seccionRuta/SeguroBlock";
 import BannerOverride from "./seccionRuta/BannerOverride";
 import type { TarifaCtx } from "./seccionRuta/overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
+import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
+
+/** Parsea 'YYYY-MM-DD' a Date local sin desplazar por zona horaria. */
+function parseVigenteHasta(s: string | null | undefined): Date | null {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d, 23, 59, 59, 999);
+}
+
 
 /**
  * v13.47.0 — Política tarifa-first para marítimo:
