@@ -69,7 +69,8 @@ export async function listarNotasCreditoRecientes(
   if (error) throw error;
   // SAFE-CAST: el join embebido `facturas!inner` viene como objeto anidado.
   type RawRow = NotaCredito & { facturas: { numero: string; cliente_id: string; cliente_nombre: string } | null };
-  return ((data as unknown as RawRow[] | null) ?? []).map((row) => {
+  return ((data as unknown as RawRow[] | null) ?? []).map((row) => { // SAFE-CAST: join embebido validado arriba
+
     const { facturas, ...nota } = row;
     return {
       ...nota,
