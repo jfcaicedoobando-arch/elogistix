@@ -154,7 +154,7 @@ function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAl
           value={transito ?? ""}
           onChange={e => { marcarOverride(form, "tiempoTransitoDias"); setValue("tiempoTransitoDias", e.target.value ? Number(e.target.value) : undefined, OPTS); }}
         />
-        {override.tiempoTransitoDias && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
+        {Boolean(override.tiempoTransitoDias) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
       </label>
       <label className="space-y-1">
         <span className="text-xs text-muted-foreground">Frecuencia</span>
@@ -168,7 +168,7 @@ function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAl
             <SelectItem value="Bajo demanda">Bajo demanda</SelectItem>
           </SelectContent>
         </Select>
-        {override.frecuencia && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
+        {Boolean(override.frecuencia) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
       </label>
       {esFCL && (
         <label className="space-y-1">
@@ -178,7 +178,7 @@ function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAl
             value={diasLibres ?? ""}
             onChange={e => { marcarOverride(form, "diasLibresDestino"); setValue("diasLibresDestino", Number(e.target.value), OPTS); }}
           />
-          {override.diasLibresDestino && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
+          {Boolean(override.diasLibresDestino) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
         </label>
       )}
       {esLCL && (
@@ -189,7 +189,7 @@ function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAl
             value={diasAlmacenaje ?? ""}
             onChange={e => { marcarOverride(form, "diasAlmacenaje"); setValue("diasAlmacenaje", Number(e.target.value), OPTS); }}
           />
-          {override.diasAlmacenaje && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
+          {Boolean(override.diasAlmacenaje) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
         </label>
       )}
       {esFCL && (
@@ -202,7 +202,7 @@ function EditMode({ form, tipoEmbarque, transito, frecuencia, diasLibres, diasAl
               <SelectItem value="no">No</SelectItem>
             </SelectContent>
           </Select>
-          {override.cartaGarantia && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
+          {Boolean(override.cartaGarantia) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
         </label>
       )}
     </div>
