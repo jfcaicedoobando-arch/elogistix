@@ -15,3 +15,21 @@ export const formatDate = (
     return dateStr;
   }
 };
+
+/**
+ * Formato corto día+mes+hora (es-MX), p.ej. "17 jun, 14:35".
+ * Usado por la campanita de notificaciones del portal.
+ */
+export function formatDateTimeShort(iso: string): string {
+  if (!iso) return "-";
+  try {
+    return new Date(iso).toLocaleDateString("es-MX", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
