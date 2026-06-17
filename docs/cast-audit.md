@@ -10,12 +10,12 @@ Total de `as` casts detectados: **1631**
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 494     | 30.3% |
-| LOW       | 1 | 30      | 1.8% |
+| LOW       | 1 | 31      | 1.9% |
 | MEDIUM    | 2 | 1106   | 67.8% |
-| HIGH      | 3 | 1     | 0.1% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **1631**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/embarques/services/pnlFinanciero.ts:50`
-
-```ts
-return data as unknown as PnlEmbarque;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
