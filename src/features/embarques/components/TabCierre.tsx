@@ -1,8 +1,10 @@
 /**
  * Bloque S — Pestaña de cierre financiero del embarque.
  * Muestra checklist de validaciones, snapshot y bitácora de cierres/reaperturas.
+ *
+ * v13.56.3 — auditoría paso 13: el manejo de estado de los diálogos se delegó
+ * a `useCierreDialog` para mantener este componente enfocado en presentación.
  */
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +27,7 @@ import {
   useReabrirEmbarque,
   useValidacionCierre,
 } from "@/features/embarques/hooks/useCierreEmbarque";
+import { useCierreDialog, CIERRE_MOTIVO_MIN } from "@/features/embarques/hooks/useCierreDialog";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 
 const ETIQUETAS_REGLA: Record<string, string> = {
@@ -50,10 +53,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
   const puedeCerrar = (isAdmin || canEditFinance) && estatus === "entregado";
   const puedeReabrir = isSuperAdmin || isAdmin;
 
-  const [openCerrar, setOpenCerrar] = useState(false);
-  const [openReabrir, setOpenReabrir] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [motivoReapertura, setMotivoReapertura] = useState("");
+  const dlg = useCierreDialog();
 
   const esCerrado = estatus === "cerrado";
   const checks = validacion?.checks ?? [];
@@ -121,7 +121,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
       <div className="flex flex-wrap gap-2">
         {!esCerrado && (
           <Button
-            onClick={() => setOpenCerrar(true)}
+            onClick={() => dlg.setOpenCerrar(true)}
             disabled={!puedeCerrar || !todoOk || cerrarMut.isPending}
           >
             <Lock className="mr-2 h-4 w-4" />
@@ -129,7 +129,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
           </Button>
         )}
         {esCerrado && puedeReabrir && (
-          <Button variant="outline" onClick={() => setOpenReabrir(true)}>
+          <Button variant="outline" onClick={() => dlg.setOpenReabrir(true)}>
             <Unlock className="mr-2 h-4 w-4" />
             Reabrir embarque
           </Button>
@@ -168,7 +168,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
       </Card>
 
       {/* Diálogo cerrar */}
-      <Dialog open={openCerrar} onOpenChange={setOpenCerrar}>
+      <Dialog open={dlg.openCerrar} onOpenChange={dlg.setOpenCerrar}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar cierre del embarque</DialogTitle>
@@ -181,22 +181,17 @@ export function TabCierre({ embarqueId, estatus }: Props) {
             <Label htmlFor="confirm-cerrar">Confirmación</Label>
             <Input
               id="confirm-cerrar"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
+              value={dlg.confirmText}
+              onChange={(e) => dlg.setConfirmText(e.target.value)}
               placeholder="CERRAR"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenCerrar(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => dlg.setOpenCerrar(false)}>Cancelar</Button>
             <Button
-              disabled={confirmText !== "CERRAR" || cerrarMut.isPending}
+              disabled={!dlg.puedeConfirmarCerrar || cerrarMut.isPending}
               onClick={() =>
-                cerrarMut.mutate(undefined, {
-                  onSuccess: () => {
-                    setOpenCerrar(false);
-                    setConfirmText("");
-                  },
-                })
+                cerrarMut.mutate(undefined, { onSuccess: dlg.resetCerrar })
               }
             >
               Cerrar embarque
@@ -206,37 +201,32 @@ export function TabCierre({ embarqueId, estatus }: Props) {
       </Dialog>
 
       {/* Diálogo reabrir */}
-      <Dialog open={openReabrir} onOpenChange={setOpenReabrir}>
+      <Dialog open={dlg.openReabrir} onOpenChange={dlg.setOpenReabrir}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reabrir embarque cerrado</DialogTitle>
             <DialogDescription>
-              Describe el motivo (mínimo 20 caracteres). Quedará registrado en bitácora.
+              Describe el motivo (mínimo {CIERRE_MOTIVO_MIN} caracteres). Quedará registrado en bitácora.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="motivo-reapertura">Motivo</Label>
             <Textarea
               id="motivo-reapertura"
-              value={motivoReapertura}
-              onChange={(e) => setMotivoReapertura(e.target.value)}
+              value={dlg.motivoReapertura}
+              onChange={(e) => dlg.setMotivoReapertura(e.target.value)}
               rows={4}
             />
             <p className="text-xs text-muted-foreground">
-              {motivoReapertura.trim().length}/20 caracteres
+              {dlg.motivoReapertura.trim().length}/{CIERRE_MOTIVO_MIN} caracteres
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenReabrir(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => dlg.setOpenReabrir(false)}>Cancelar</Button>
             <Button
-              disabled={motivoReapertura.trim().length < 20 || reabrirMut.isPending}
+              disabled={!dlg.puedeConfirmarReabrir || reabrirMut.isPending}
               onClick={() =>
-                reabrirMut.mutate(motivoReapertura, {
-                  onSuccess: () => {
-                    setOpenReabrir(false);
-                    setMotivoReapertura("");
-                  },
-                })
+                reabrirMut.mutate(dlg.motivoReapertura, { onSuccess: dlg.resetReabrir })
               }
             >
               Reabrir
