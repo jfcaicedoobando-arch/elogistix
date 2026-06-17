@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.55.0] - 2026-06-17
+- **feat(seguros-carga)**: Bloque R del roadmap "ciclo completo del embarque" — Seguros de carga por embarque que entran al P&L. Nueva tabla `seguros_embarque` (embarque_id, organization_id, aseguradora, numero_poliza, certificado_url, cobertura_descripcion, suma_asegurada, deducible, prima, moneda MXN/USD/EUR, vigencia_desde/hasta, contacto, notas, soft-delete) con RLS multi-tenant (tenant ve los suyos; operador/admin/super_admin escriben) e índices por embarque, organización y `vigencia_hasta`. RPC `pnl_financiero_embarque` actualizada: la prima de cada póliza vigente se suma como **costo real** en MXN equivalente (junto a facturas de proveedor) y aparece como línea "seguro de carga" en `por_concepto_costo` + entrada por aseguradora en `por_proveedor`. Frontend: `services/seguros.ts` (CRUD), `useSegurosEmbarque` (queries + mutaciones React Query, invalidando `pnl-financiero` al guardar), `TabSeguros` nuevo en el detalle del embarque con tabla de pólizas (vigencia con badges Vigente/Vence en Nd/Vencida, prima destacada, link al certificado, edit/delete), tarjeta de prima total por moneda y badge global "N por vencer" cuando ≤7 días. Diálogo `DialogSeguroForm` con campos completos y validación de vigencia. Bump `APP_VERSION` 13.55.0.
+
 ## [13.54.1] - 2026-06-17
+
 - **test(roles-finanzas)**: Cobertura unitaria del Bloque Q. `usePermissions.test.tsx` añade 5 escenarios validando la matriz de capacidades financieras: contador emite/captura/cobra pero no paga; auxiliar_contable sólo captura; tesorero sólo paga; ejecutivo_cobranza sólo registra cobros; operador no tiene ninguna acción financiera. Nuevo `roleHierarchy.bloqueQ.test.ts` con 8 casos que blindan la escalera: `ejecutivo_cobranza` no satisface `contador`, `auxiliar_contable` no satisface `tesorero`, `auxiliar_contable` sí satisface `contador`, `admin_org`/`super_admin` cubren los 4 roles financieros, operador no satisface ninguno. Bump `APP_VERSION` 13.54.1.
 
 ## [13.54.0] - 2026-06-17
