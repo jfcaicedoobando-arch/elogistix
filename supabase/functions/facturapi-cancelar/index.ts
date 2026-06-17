@@ -36,27 +36,24 @@ Deno.serve(async (req) => {
   const { data: userData, error: uErr } = await supabase.auth.getUser();
   if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
-  const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.factura_id) return json({ error: "factura_id_required" }, 400);
-  if (!body.motivo || !MOTIVOS_VALIDOS.has(body.motivo)) {
-    return json({ error: "motivo_invalido", message: "Motivo SAT requerido (01-04)" }, 400);
+  const body = (await req.json().catch(() => ({}))) as CancelacionInput;
+  const validated = validateCancelacionInput(body);
+  if (!validated.ok) {
+    return json({ error: validated.error, ...(validated.message ? { message: validated.message } : {}) }, 400);
   }
-  if (body.motivo === "01" && !body.sustituye_uuid) {
-    return json({ error: "sustituye_uuid_requerido", message: "Motivo 01 requiere UUID que sustituye" }, 400);
-  }
+  const { factura_id, motivo, sustituye_uuid } = validated.data;
 
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
     .select("id, facturapi_id, organization_id, estado")
-    .eq("id", body.factura_id)
+    .eq("id", factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
   if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
 
-  const params = new URLSearchParams({ motive: body.motivo });
-  if (body.sustituye_uuid) params.set("substitution", body.sustituye_uuid);
+  const query = buildCancelQuery(motivo, sustituye_uuid);
 
-  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices/${factura.facturapi_id}?${params}`, {
+  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices/${factura.facturapi_id}?${query}`, {
     method: "DELETE",
     headers: { "Authorization": basicAuthHeader(FACTURAPI_KEY) },
   });
