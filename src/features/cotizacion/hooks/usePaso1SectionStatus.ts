@@ -52,21 +52,28 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     number,
   ];
 
-  const cliente = esProspecto
-    ? !!prospectoEmpresa?.trim()
-    : !!clienteId;
-
-  const operacion = !!modo && !!tipo && !!incoterm;
-  const ruta = !!origen?.trim() && !!destino?.trim();
-  const mercancia = !!tipoCarga && ((pesoKg ?? 0) > 0 || (piezas ?? 0) > 0);
-
   const esMaritimo = (modo || "").toLowerCase().startsWith("mar");
-  const tarifa = esMaritimo ? !!tarifaId : true;
-  const condiciones = esMaritimo
-    ? !!rutaTexto?.trim() && !!validezPropuesta
-    : true;
 
-  const cierre = (numContenedores ?? 0) >= 1;
+  return {
+    cliente: clienteOk(esProspecto, prospectoEmpresa, clienteId),
+    operacion: !!modo && !!tipo && !!incoterm,
+    ruta: !!origen?.trim() && !!destino?.trim(),
+    mercancia: mercanciaOk(tipoCarga, pesoKg, piezas),
+    tarifa: esMaritimo ? !!tarifaId : true,
+    condiciones: condicionesOk(esMaritimo, rutaTexto, validezPropuesta),
+    cierre: (numContenedores ?? 0) >= 1,
+  };
+}
 
-  return { cliente, operacion, ruta, mercancia, tarifa, condiciones, cierre };
+function clienteOk(esProspecto: boolean, prospectoEmpresa: string, clienteId: string): boolean {
+  return esProspecto ? !!prospectoEmpresa?.trim() : !!clienteId;
+}
+
+function mercanciaOk(tipoCarga: string, pesoKg: number, piezas: number): boolean {
+  return !!tipoCarga && ((pesoKg ?? 0) > 0 || (piezas ?? 0) > 0);
+}
+
+function condicionesOk(esMaritimo: boolean, rutaTexto: string, validezPropuesta: Date | undefined): boolean {
+  if (!esMaritimo) return true;
+  return !!rutaTexto?.trim() && !!validezPropuesta;
 }
