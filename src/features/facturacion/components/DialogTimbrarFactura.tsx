@@ -27,7 +27,7 @@ interface FiscalCliente {
 
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const timbrar = useTimbrarFactura();
-  const { data: factura } = useFactura(facturaId);
+  const { data: factura } = useFactura(facturaId ?? undefined);
 
   const { data: cliente } = useQuery<FiscalCliente | null>({
     queryKey: ["cliente_fiscal", factura?.cliente_id],
