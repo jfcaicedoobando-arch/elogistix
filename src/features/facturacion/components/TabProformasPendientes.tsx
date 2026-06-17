@@ -3,11 +3,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { montoPrincipalProforma } from "@/lib/domain/proforma";
 import { useTabProformasPendientesController } from "@/features/facturacion/hooks";
+
 
 export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
   const c = useTabProformasPendientesController({ isInRange });
@@ -116,6 +120,31 @@ export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: stri
             placeholder="Buscar por expediente, BL, cliente o número..."
             className="flex-1 min-w-[260px]"
           />
+          <Select value={c.filtroCliente} onValueChange={c.setFiltroCliente}>
+            <SelectTrigger className="w-[200px]" aria-label="Filtrar por cliente">
+              <SelectValue placeholder="Cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los clientes</SelectItem>
+              {c.clientesDisponibles.map((cli) => (
+                <SelectItem key={cli} value={cli}>{toTitleCase(cli)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={c.filtroAntiguedad}
+            onValueChange={(v) => c.setFiltroAntiguedad(v as "todos" | "7" | "15" | "30")}
+          >
+            <SelectTrigger className="w-[160px]" aria-label="Filtrar por antigüedad">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Cualquier antigüedad</SelectItem>
+              <SelectItem value="7">Más de 7 días</SelectItem>
+              <SelectItem value="15">Más de 15 días</SelectItem>
+              <SelectItem value="30">Más de 30 días</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex flex-col items-end text-right text-xs leading-tight min-w-[160px]">
             <span className="text-muted-foreground">
               {c.totalSeleccionadas} seleccionada{c.totalSeleccionadas === 1 ? '' : 's'}
@@ -136,7 +165,6 @@ export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: stri
                 ? 'Solo puedes consolidar proformas del mismo embarque'
                 : 'Consolidar las proformas seleccionadas en una sola y aprobar'
             }
-
           >
             <Layers className="h-4 w-4 mr-2" /> Consolidar y aprobar
           </Button>
@@ -149,6 +177,7 @@ export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: stri
           </Button>
         </CardContent>
       </Card>
+
 
       {renderGrupos()}
     </div>
