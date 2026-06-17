@@ -15,6 +15,7 @@ import { buildCobranzaColumns } from "./cobranzaColumns";
 import { DialogRegistrarPago } from "./DialogRegistrarPago";
 import { DialogNotaCredito } from "./DialogNotaCredito";
 import { DialogHistorialPagos } from "./DialogHistorialPagos";
+import { NotasCreditoRecientes } from "./NotasCreditoRecientes";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCobranza, EstatusCobranza } from "@/features/facturas/services";
