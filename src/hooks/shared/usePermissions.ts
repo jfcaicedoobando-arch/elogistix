@@ -120,5 +120,6 @@ export function usePermissions() {
     canEditSales,
     canCotizarSinDesglose,
     canCrearEmbarqueLibre,
+    canOverrideTarifaPricing,
   };
 }
