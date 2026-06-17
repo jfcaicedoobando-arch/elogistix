@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.47.4] - 2026-06-17
+- **fix(rls-tests)**: Suite completa pasa 7/7. Corregidos valores de enums (`Descuento`, `Aplicada`) en `test_rls_financiero_critico`; aserciones de viewer/cliente UPDATE en `test_rls_roles_no_admin` ahora validan `estado <> 'Pagada'` (compatible con el trigger `recalcular_estado_factura`); `_ci_post_migrate.sql` también dropea `trg_pago_factura_comision_ins` e instala las policies reales de `tracking_externo` (que existen en prod pero no en migraciones del repo).
+
 ## [13.47.3] - 2026-06-17
 - **chore(cotizacion/wizard)**: Quitar botón "Crear tarifa" del panel de tarifa vinculada. El alta de tarifas se hace exclusivamente desde el módulo Costeo.
 
