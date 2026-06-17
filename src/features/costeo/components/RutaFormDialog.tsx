@@ -11,13 +11,13 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import type { UseMutationResult } from "@tanstack/react-query";
+import type { useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
 import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  crear: UseMutationResult<unknown, Error, { puerto_origen_id: string; puerto_destino_id: string }>;
+  crear: ReturnType<typeof useCosteoRutaMutations>["crear"];
 }
 
 export function RutaFormDialog({ open, onOpenChange, crear }: Props) {
