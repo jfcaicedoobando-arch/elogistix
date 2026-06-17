@@ -3,9 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle2, XCircle, MailMinus } from "lucide-react";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+import {
+  validateUnsubscribeToken,
+  confirmUnsubscribe,
+} from "@/services/unsubscribeService";
 
 type Status = "loading" | "valid" | "invalid" | "already" | "confirming" | "success" | "error";
 
@@ -23,11 +24,7 @@ export default function Unsubscribe() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(
-          `${SUPABASE_URL}/functions/v1/handle-email-unsubscribe?token=${encodeURIComponent(token)}`,
-          { headers: { apikey: SUPABASE_ANON } },
-        );
-        const data = await res.json().catch(() => ({}));
+        const data = await validateUnsubscribeToken(token);
         if (cancelled) return;
         if (data.valid) setStatus("valid");
         else if (data.reason === "already_unsubscribed") setStatus("already");
@@ -44,12 +41,7 @@ export default function Unsubscribe() {
   const handleConfirm = async () => {
     setStatus("confirming");
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/handle-email-unsubscribe`, {
-        method: "POST",
-        headers: { apikey: SUPABASE_ANON, "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json().catch(() => ({}));
+      const data = await confirmUnsubscribe(token);
       if (data.success || data.reason === "already_unsubscribed") setStatus("success");
       else {
         setErrorMsg(data.error ?? "No se pudo procesar la baja");

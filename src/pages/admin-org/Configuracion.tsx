@@ -7,7 +7,7 @@ import { useConfiguracionState } from "@/features/configuracion/hooks";
 import TabEmpresa from "@/features/configuracion/components/TabEmpresa";
 import TabFacturacion from "@/features/configuracion/components/TabFacturacion";
 import TabPuertos from "@/features/configuracion/components/TabPuertos";
-import TabExportar from "@/features/configuracion/components/TabExportar";
+import TabExportar from "@/features/admin/components/TabExportar";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
   if (isSaving) return "Guardando...";
