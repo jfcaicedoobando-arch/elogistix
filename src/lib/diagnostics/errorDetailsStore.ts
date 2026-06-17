@@ -1,5 +1,41 @@
 /**
- * Re-export canónico del store de detalles de error.
- * Nueva ubicación preferida (Auditoría arquitectónica 13.56.6 / paso 11).
+ * Store mínimo (useSyncExternalStore) para abrir/cerrar el diálogo global
+ * de detalles de error. Permite que cualquier toast destructive con payload
+ * de debug active el panel sin acoplarse al árbol de Toaster.
  */
-export * from "@/components/shared/utils/errorDetailsStore";
+import { useSyncExternalStore } from "react";
+import type { ErrorReport } from "@/components/shared/utils/errorReport";
+
+type State = { report: ErrorReport | null };
+
+let state: State = { report: null };
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+export function openErrorReport(report: ErrorReport): void {
+  state = { report };
+  emit();
+}
+
+export function closeErrorReport(): void {
+  state = { report: null };
+  emit();
+}
+
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+
+function getSnapshot(): State {
+  return state;
+}
+
+export function useErrorReport(): ErrorReport | null {
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot).report;
+}
