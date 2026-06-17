@@ -85,6 +85,8 @@ export default function SugerenciasTarifaInline({
   const origen = watch("origen");
   const destino = watch("destino");
   const tipoContenedor = watch("tipoContenedor");
+  const validez = watch("validezPropuesta");
+
 
   const puertoOrigenId = useMemo(
     () => resolverPuertoId(origen, puertos),
@@ -110,7 +112,7 @@ export default function SugerenciasTarifaInline({
 
   const handleElegir = (row: TopTarifaRow) => {
     const rank = (tarifas.findIndex((t) => t.id === row.id) + 1) as 1 | 2 | 3;
-    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions);
+    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez);
     void logTarifaSugeridaAplicada({
       tarifaId: row.id,
       ranking: rank,
@@ -133,7 +135,8 @@ export default function SugerenciasTarifaInline({
         <BuscarTarifaDialog
           open={openDialog}
           onOpenChange={setOpenDialog}
-          onElegir={(row) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions)}
+          onElegir={(row) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez)}
+
           selectLabel="Usar esta tarifa"
           initial={{ puertoOrigenId, puertoDestinoId, tipoContenedorId }}
         />
@@ -188,7 +191,7 @@ export default function SugerenciasTarifaInline({
       <BuscarTarifaDialog
         open={openDialog}
         onOpenChange={setOpenDialog}
-        onElegir={(row) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions)}
+        onElegir={(row) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez)}
         selectLabel="Usar esta tarifa"
         initial={{ puertoOrigenId, puertoDestinoId, tipoContenedorId }}
       />

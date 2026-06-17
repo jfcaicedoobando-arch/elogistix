@@ -68,8 +68,9 @@ export default function TarifaVinculadaPanel({
   };
 
   const aplicarTarifa = (row: TopTarifaRow) => {
-    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions);
+    aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez);
   };
+
 
   const quitarVinculo = () => {
     setValue("tarifaId", null, OPTS);

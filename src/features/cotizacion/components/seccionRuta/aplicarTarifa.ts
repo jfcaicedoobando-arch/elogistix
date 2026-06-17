@@ -34,6 +34,8 @@ export function aplicarTarifaAlForm(
   trigger: UseFormTrigger<CotizacionFormValues>,
   row: TopTarifaRow,
   options: AplicarTarifaOptions = {},
+  /** Validez actual del form para recortar si excede la vigencia de la tarifa. */
+  validezActual?: Date | null | undefined,
 ): void {
   setValue("tarifaId", row.id, OPTS);
   setValue("tarifaOverride", {}, OPTS);
@@ -51,6 +53,16 @@ export function aplicarTarifaAlForm(
   if (row.dias_libres_almacenaje_lcl != null) {
     setValue("diasAlmacenaje", row.dias_libres_almacenaje_lcl, OPTS);
   }
+  // v13.47.1 — La validez de la propuesta no puede exceder la vigencia de la tarifa.
+  if (row.vigente_hasta && validezActual) {
+    const [y, m, d] = row.vigente_hasta.split("-").map(Number);
+    if (y && m && d) {
+      const tarifaHasta = new Date(y, m - 1, d, 23, 59, 59, 999);
+      if (validezActual > tarifaHasta) {
+        setValue("validezPropuesta", tarifaHasta, OPTS);
+      }
+    }
+  }
   void trigger([
     "tiempoTransitoDias",
     "diasLibresDestino",
@@ -58,7 +70,9 @@ export function aplicarTarifaAlForm(
     "tipoContenedor",
     "frecuencia",
     "diasAlmacenaje",
+    "validezPropuesta",
   ]);
+
 
   // Auto-carga de costos (best-effort, no bloquea el flujo si falla).
   if (options.onAutocargaCostos) {

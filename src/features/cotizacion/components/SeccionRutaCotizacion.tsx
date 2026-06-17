@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +16,16 @@ import SeguroBlock from "./seccionRuta/SeguroBlock";
 import BannerOverride from "./seccionRuta/BannerOverride";
 import type { TarifaCtx } from "./seccionRuta/overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
+import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
+
+/** Parsea 'YYYY-MM-DD' a Date local sin desplazar por zona horaria. */
+function parseVigenteHasta(s: string | null | undefined): Date | null {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d, 23, 59, 59, 999);
+}
+
 
 /**
  * v13.47.0 — Política tarifa-first para marítimo:
@@ -52,6 +63,27 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
     hasDiasAlmacenaje: tieneTarifa && !override.diasAlmacenaje,
   };
 
+  // v13.47.1 — La validez de la propuesta no puede exceder la vigencia de la tarifa.
+  const { data: tarifaVinc } = useTarifaVinculada(esMaritimo ? tarifaId ?? null : null);
+  const tarifaHasta = useMemo(
+    () => parseVigenteHasta(tarifaVinc?.vigente_hasta ?? null),
+    [tarifaVinc?.vigente_hasta],
+  );
+
+  useEffect(() => {
+    if (!tarifaHasta || !validezPropuesta) return;
+    if (validezPropuesta > tarifaHasta) {
+      setValue("validezPropuesta", tarifaHasta, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [tarifaHasta, validezPropuesta, setValue]);
+
+  const hoy = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+
   return (
     <WizardSection title="Ruta" complete={complete}>
       {!esMaritimo && <BannerOverride ctx={ctx} />}
@@ -83,6 +115,7 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
         </FormField>
 
         <FormField label="Validez de la propuesta">
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
@@ -91,10 +124,24 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={validezPropuesta} onSelect={d => setValue("validezPropuesta", d)} initialFocus className={cn("p-3 pointer-events-auto")} />
+              <Calendar
+                mode="single"
+                selected={validezPropuesta}
+                onSelect={d => setValue("validezPropuesta", d, { shouldValidate: true, shouldDirty: true })}
+                disabled={(date) => date < hoy || (!!tarifaHasta && date > tarifaHasta)}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
             </PopoverContent>
           </Popover>
+          {tarifaHasta && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Máximo {format(tarifaHasta, "dd/MM/yyyy")} según la tarifa vinculada.
+            </p>
+          )}
         </FormField>
+
+
 
         {!esTerrestre && (
           <FormField label="Tipo de movimiento">
