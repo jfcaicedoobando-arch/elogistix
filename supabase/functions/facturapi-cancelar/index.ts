@@ -11,14 +11,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from "../facturapi-emitir/helpers.ts";
+import { buildCancelQuery, validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 
 const FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const MOTIVOS_VALIDOS = new Set(["01", "02", "03", "04"]);
-
-interface ReqBody { factura_id?: string; motivo?: string; sustituye_uuid?: string }
 
 function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
