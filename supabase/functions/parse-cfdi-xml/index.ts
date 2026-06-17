@@ -146,17 +146,7 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
     return errorResponse(msg, 400, cors);
   }
 
-  let categorias: Categoria[] = [];
-  if (categoriasJson) {
-    try {
-      const arr = JSON.parse(categoriasJson);
-      if (Array.isArray(arr)) {
-        categorias = arr
-          .filter((c) => c && typeof c.id === "string" && typeof c.nombre === "string")
-          .slice(0, 50);
-      }
-    } catch { /* ignore */ }
-  }
+  const categorias: Categoria[] = parseCategoriasJson(categoriasJson);
 
   let aiResult: AiCallResult;
   if (LOVABLE_API_KEY) {
