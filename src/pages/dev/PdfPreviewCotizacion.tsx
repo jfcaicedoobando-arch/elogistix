@@ -4,27 +4,16 @@
  * antes de cablear el botón de descarga en producción.
  */
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useTasaIVA } from "@/features/catalogos/hooks";
-import { fetchCotizacionById } from "@/features/cotizacion/services";
+import { usePdfPreviewCotizacionPage } from "@/features/cotizacion/hooks/usePdfPreviewCotizacionPage";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
-import { cargarEmisorEmpresa } from "@/pdf/emisor";
-import { queryKeys } from "@/lib/query";
 
 export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
   const tasaIva = useTasaIVA();
-  const { data, isLoading, error } = useQuery({
-    queryKey: queryKeys.pdfPreviewCotizacion(id ?? ""),
-    enabled: !!id,
-    queryFn: () => fetchCotizacionById(id!),
-  });
-  const { data: emisor } = useQuery({
-    queryKey: ["pdf-emisor"],
-    queryFn: () => cargarEmisorEmpresa(),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { cotizacion: { data, isLoading, error }, emisor: { data: emisor } } =
+    usePdfPreviewCotizacionPage(id);
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Cargando cotización…</div>;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
