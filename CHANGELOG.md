@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.47.7] - 2026-06-17
+- **refactor(power-of-10)**: Refactor preventivo de archivos cerca del límite de 200 líneas. `useCotizacionWizardSteps.ts` (198→152) — handlers del Paso 1 extraídos a `usePaso1Handlers.ts`. `services/documentos.ts` (197→115) — `uploadDocumentoEmbarque` extraído a `services/documentos/uploadDocumentoEmbarque.ts` con helper `buildScopedRequestId`. `routes/EmbarqueDetalle.tsx` (196→123) — bloque de tabs extraído a `components/EmbarqueDetalleTabs.tsx`. Lint, type-check y 459 tests verdes.
+
 ## [13.47.6] - 2026-06-17
 - **chore(audit)**: Aplicados fixes 1 y 2 de la auditoría. `knip.json` ya no ignora `src/constants/cache.ts` (todos sus exports están en uso). Mapeo de filas BD del Estado de Resultados Devengado extraído a `src/lib/mappers/estadoResultadosRows.ts` (funciones `mapFacturaRows`, `mapNotaCreditoRows`, `mapProveedorFacturaRows`, `mapEmbarqueERRows`, `mapEmbarqueERConExpediente`), eliminando los 5 casts MEDIUM `as FooRow[]` de `services/estadoResultadosDevengado.ts`.
 
