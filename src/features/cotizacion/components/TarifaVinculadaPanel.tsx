@@ -97,15 +97,6 @@ export default function TarifaVinculadaPanel({
                   acelera la cotización auto-cargando flete y recargos al Paso 2.
                 </p>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={irACrearTarifa}
-                className="shrink-0"
-              >
-                <Plus className="size-4 mr-1" /> Crear tarifa
-              </Button>
             </div>
             <SugerenciasTarifaInline
               onAutocargaCostos={onAutocargaCostos}

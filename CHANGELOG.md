@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.47.3] - 2026-06-17
+- **chore(cotizacion/wizard)**: Quitar botón "Crear tarifa" del panel de tarifa vinculada. El alta de tarifas se hace exclusivamente desde el módulo Costeo.
+
 ## [13.47.2] - 2026-06-17
 - **feat(cotizacion/wizard)**: Reordenar Paso 1 marítimo desde la perspectiva del comercial — `Cliente → Operación → Ruta (sólo origen/destino/tipo de movimiento) → Mercancía → Tarifa → Condiciones comerciales → Cierre`. Nueva sección "Condiciones comerciales" agrupa **ruta del barco**, **validez de la propuesta** y **seguro**, deshabilitadas hasta vincular tarifa. Al aplicar tarifa, `rutaTexto` se autollena con "Puerto origen → Puerto destino" (editable). Sidebar de progreso suma el paso "Condiciones". Aéreo/terrestre/multimodal/general conservan el flujo previo.
 
