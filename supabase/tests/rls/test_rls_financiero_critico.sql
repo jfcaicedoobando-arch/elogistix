@@ -171,8 +171,8 @@ BEGIN
       id, organization_id, factura_id, folio, motivo, descripcion, monto, moneda,
       tipo_cambio, estado, fecha_emision
     ) VALUES (
-      nc_a, org_a, fac_a, 'NC-A-001', 'descuento', 'Ajuste', 100, 'MXN',
-      1, 'aplicada', CURRENT_DATE
+      nc_a, org_a, fac_a, 'NC-A-001', 'Descuento', 'Ajuste', 100, 'MXN',
+      1, 'Aplicada', CURRENT_DATE
     );
 
     PERFORM pg_temp.as_user(user_b);

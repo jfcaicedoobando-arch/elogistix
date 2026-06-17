@@ -112,7 +112,8 @@ GRANT ALL ON public.tracking_externo TO service_role;
 ALTER TABLE public.tracking_externo ENABLE ROW LEVEL SECURITY;
 
 -- Stub policy para que el verificador RLS (_ci_verify_rls.sql) no falle.
--- Las policies reales se aplican en migraciones posteriores.
+-- Las policies reales se instalan en _ci_post_migrate.sql (después de que
+-- las migraciones crean has_role()/current_user_org_id()).
 DO $$
 BEGIN
   IF NOT EXISTS (
