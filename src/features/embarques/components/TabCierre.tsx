@@ -1,13 +1,11 @@
 /**
  * Bloque S — Pestaña de cierre financiero del embarque.
- * Muestra checklist de validaciones, snapshot y bitácora de cierres/reaperturas.
+ * Orquesta validación + acciones de cierre/reapertura.
  *
- * v13.56.3 — auditoría paso 13: el manejo de estado de los diálogos se delegó
- * a `useCierreDialog` para mantener este componente enfocado en presentación.
+ * v13.56.6 — paso 15: checklist e historial extraídos a subcomponentes
+ * presentacionales en `components/cierre/`.
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -20,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, XCircle, Lock, Unlock, History } from "lucide-react";
+import { Lock, Unlock } from "lucide-react";
 import {
   useCerrarEmbarque,
   useCierreLog,
@@ -29,6 +27,8 @@ import {
 } from "@/features/embarques/hooks/useCierreEmbarque";
 import { useCierreDialog, CIERRE_MOTIVO_MIN } from "@/features/embarques/hooks/useCierreDialog";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { CierreChecklistCard } from "./cierre/CierreChecklistCard";
+import { CierreHistorialCard } from "./cierre/CierreHistorialCard";
 
 const ETIQUETAS_REGLA: Record<string, string> = {
   cxc_sin_pendientes: "Cuentas por cobrar al día",
@@ -79,44 +79,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
         </Alert>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Checklist de cierre</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {isLoading && <p className="text-sm text-muted-foreground">Validando…</p>}
-          {!isLoading && checks.length === 0 && (
-            <p className="text-sm text-muted-foreground">Sin datos.</p>
-          )}
-          <ul className="space-y-2">
-            {checks.map((c) => (
-              <li
-                key={c.regla}
-                className="flex items-start justify-between gap-3 rounded-md border p-3"
-              >
-                <div className="flex items-start gap-2">
-                  {c.ok ? (
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 text-success" />
-                  ) : (
-                    <XCircle className="mt-0.5 h-5 w-5 text-destructive" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">{ETIQUETAS_REGLA[c.regla] ?? c.regla}</p>
-                    {c.detalle && (
-                      <p className="text-xs text-muted-foreground">
-                        {JSON.stringify(c.detalle)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <Badge variant={c.ok ? "secondary" : "destructive"}>
-                  {c.ok ? "OK" : "Pendiente"}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <CierreChecklistCard isLoading={isLoading} checks={checks} etiquetas={ETIQUETAS_REGLA} />
 
       <div className="flex flex-wrap gap-2">
         {!esCerrado && (
@@ -136,36 +99,7 @@ export function TabCierre({ embarqueId, estatus }: Props) {
         )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <History className="h-4 w-4" /> Historial de cierres
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {log.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sin movimientos.</p>
-          ) : (
-            <ul className="space-y-2">
-              {log.map((entry) => (
-                <li key={entry.id} className="rounded-md border p-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <Badge variant={entry.accion === "cerrar" ? "default" : "outline"}>
-                      {entry.accion === "cerrar" ? "Cerrado" : "Reabierto"}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(entry.created_at).toLocaleString("es-MX")}
-                    </span>
-                  </div>
-                  {entry.motivo && (
-                    <p className="mt-1 text-sm text-muted-foreground">{entry.motivo}</p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <CierreHistorialCard log={log} />
 
       {/* Diálogo cerrar */}
       <Dialog open={dlg.openCerrar} onOpenChange={dlg.setOpenCerrar}>

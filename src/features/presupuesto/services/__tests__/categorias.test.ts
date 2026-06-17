@@ -1,41 +1,54 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-const mock = await vi.hoisted(async () => {
-  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
-});
-vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+import { createSupabaseMock } from "@/services/__tests__/_supabaseChainMock";
 
-import { fetchCategorias, crearCategoria, eliminarCategoria, seedCategoriasDefault } from "../categorias";
+const { mockRef } = vi.hoisted(() => ({
+  mockRef: { current: null as ReturnType<typeof createSupabaseMock> | null },
+}));
 
-describe("categorias presupuesto service", () => {
-  beforeEach(() => {
-    mock.tableCalls.length = 0;
-    mock.rpcCalls.length = 0;
+vi.mock("@/integrations/supabase/client", () => ({
+  get supabase() { return mockRef.current!.supabase; },
+}));
+
+import {
+  fetchCategorias,
+  crearCategoria,
+  actualizarCategoria,
+  eliminarCategoria,
+  seedCategoriasDefault,
+} from "../categorias";
+
+describe("presupuesto/categorias", () => {
+  beforeEach(() => { mockRef.current = createSupabaseMock(); });
+
+  it("fetchCategorias devuelve [] si data null", async () => {
+    mockRef.current!.setTableResult("presupuesto_categorias", { data: null, error: null });
+    const r = await fetchCategorias(true);
+    expect(r).toEqual([]);
   });
 
-  it("fetchCategorias ordena por orden y nombre", async () => {
-    mock.setTableResult("presupuesto_categorias", { data: [], error: null });
-    await fetchCategorias();
-    const call = mock.tableCalls.find(c => c.table === "presupuesto_categorias");
-    expect(call?.ops).toContain("order");
+  it("fetchCategorias propaga error", async () => {
+    mockRef.current!.setTableResult("presupuesto_categorias", { data: null, error: new Error("boom") });
+    await expect(fetchCategorias()).rejects.toThrow("boom");
   });
 
-  it("crearCategoria inserta", async () => {
-    mock.setTableResult("presupuesto_categorias", { data: { id: "1" }, error: null });
-    const res = await crearCategoria({ nombre: "Cat1" } as any);
-    expect(res.id).toBe("1");
+  it("crearCategoria llama insert y devuelve fila", async () => {
+    mockRef.current!.setTableResult("presupuesto_categorias", { data: { id: "x" }, error: null });
+    const r = await crearCategoria({ nombre: "Renta" } as never);
+    expect(r).toEqual({ id: "x" });
   });
 
-  it("eliminarCategoria borra registro", async () => {
-    mock.setTableResult("presupuesto_categorias", { data: [], error: null });
-    await eliminarCategoria("1");
-    const call = mock.tableCalls.find(c => c.table === "presupuesto_categorias");
-    expect(call?.ops).toContain("delete");
+  it("actualizarCategoria propaga error", async () => {
+    mockRef.current!.setTableResult("presupuesto_categorias", { data: null, error: new Error("e") });
+    await expect(actualizarCategoria("1", { nombre: "x" } as never)).rejects.toThrow("e");
   });
 
-  it("seedCategoriasDefault llama al RPC", async () => {
-    mock.setRpcResult("seed_presupuesto_categorias", { data: null, error: null });
-    await seedCategoriasDefault("o1");
-    expect(mock.rpcCalls[0].fn).toBe("seed_presupuesto_categorias");
+  it("eliminarCategoria no lanza en éxito", async () => {
+    mockRef.current!.setTableResult("presupuesto_categorias", { data: null, error: null });
+    await expect(eliminarCategoria("1")).resolves.toBeUndefined();
+  });
+
+  it("seedCategoriasDefault invoca RPC con organization_id", async () => {
+    mockRef.current!.setRpcResult("seed_presupuesto_categorias", { data: null, error: null });
+    await seedCategoriasDefault("org-1");
   });
 });

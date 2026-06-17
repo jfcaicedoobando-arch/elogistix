@@ -37,8 +37,8 @@ export function KpiCard({ label, value, delta, deltaVariant = "neutral", icon: I
               <p
                 className={cn(
                   "text-xs tabular-nums",
-                  deltaVariant === "positive" && "text-emerald-600",
-                  deltaVariant === "negative" && "text-rose-600",
+                  deltaVariant === "positive" && "text-success",
+                  deltaVariant === "negative" && "text-destructive",
                   deltaVariant === "neutral" && "text-muted-foreground",
                 )}
               >
