@@ -15,7 +15,7 @@ export async function portalResponderCotizacion(
   });
   if (error) throw error;
 
-  // TODO Fase 2.1 — Email a operaciones (inactivo hasta configurar dominio de email).
+  // AUDIT(hallazgo-17) Fase 2.1 — Email a operaciones (inactivo hasta configurar dominio de email).
   // Cuando se complete `setup_email_infra` + `scaffold_transactional_email` y el
   // template `cotizacion-respuesta` esté registrado en registry.ts, descomentar:
   //
