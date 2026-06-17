@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +22,31 @@ interface Props {
   operaciones: ProveedorOperacion[];
 }
 
+const DEFAULT_PAGE_SIZE = 50;
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 200];
+
+/**
+ * Tabla de operaciones de un proveedor.
+ *
+ * v13.56.5 — Paginación defensiva en cliente. El servicio limita el fetch
+ * a 1000 filas y la UI nunca renderiza más de `pageSize` (default 50) para
+ * mantener fluido el detalle de proveedores con mucho histórico.
+ */
 export function ProveedorOperacionesTable({ operaciones }: Props) {
   type Op = ProveedorOperacion & { __idx?: number };
-  const opsConId: Op[] = operaciones.map((o, i) => ({ ...o, __idx: i }));
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  const opsConId: Op[] = useMemo(
+    () => operaciones.map((o, i) => ({ ...o, __idx: i })),
+    [operaciones],
+  );
+  const totalPages = Math.max(1, Math.ceil(opsConId.length / pageSize));
+  const pageItems = useMemo(
+    () => opsConId.slice(page * pageSize, (page + 1) * pageSize),
+    [opsConId, page, pageSize],
+  );
+
   const opCols: ColumnDef<Op, unknown>[] = defineColumns<Op>([
     {
       id: "exp",
@@ -41,9 +64,17 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
   return (
     <DataTable
       columns={opCols}
-      data={opsConId}
+      data={pageItems}
       rowKey={(o) => `${o.embarqueId}-${o.__idx}`}
       density="compact"
+      pagination={{
+        page,
+        totalPages,
+        onPageChange: setPage,
+        pageSize,
+        onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
+        pageSizeOptions: PAGE_SIZE_OPTIONS,
+      }}
       emptyState={
         <div className="p-6">
           <EmptyState
