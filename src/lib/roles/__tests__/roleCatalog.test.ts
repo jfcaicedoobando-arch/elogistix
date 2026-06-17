@@ -21,6 +21,8 @@ describe("roleCatalog", () => {
       "ejecutivo_pricing",
       "contador",
       "tesorero",
+      "auxiliar_contable",
+      "ejecutivo_cobranza",
       "vendedor",
       "customer_service",
       "cliente",
@@ -46,12 +48,14 @@ describe("roleCatalog", () => {
     }
   });
 
-  it("ASSIGNABLE_ROLES_ADMIN_ORG contiene exactamente los 10 roles modernos asignables", () => {
-    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toHaveLength(10);
+  it("ASSIGNABLE_ROLES_ADMIN_ORG contiene exactamente los 12 roles modernos asignables", () => {
+    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toHaveLength(12);
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("admin_org");
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("vendedor");
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("gerente_comercial");
     expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("contador");
+    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("auxiliar_contable");
+    expect(ASSIGNABLE_ROLES_ADMIN_ORG).toContain("ejecutivo_cobranza");
   });
 
   it("LEGACY_ROLES incluye admin/operador/viewer", () => {

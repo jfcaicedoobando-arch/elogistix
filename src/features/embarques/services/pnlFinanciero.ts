@@ -47,5 +47,7 @@ export async function fetchPnlEmbarque(embarqueId: string): Promise<PnlEmbarque>
     _embarque_id: embarqueId,
   });
   if (error) throw error;
+  // SAFE-CAST: RPC `pnl_financiero_embarque` retorna JSON con el shape PnlEmbarque
+  // garantizado por la función Postgres (ver migración pnl_financiero_embarque.sql).
   return data as unknown as PnlEmbarque;
 }

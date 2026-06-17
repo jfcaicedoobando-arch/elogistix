@@ -61,7 +61,7 @@ describe("cierre service", () => {
       expect(mockedRpc).toHaveBeenCalledWith("cerrar_embarque", { p_embarque_id: "emb-2" });
     });
 
-    it("propaga el error de la RPC", async () => {
+    it("propaga el error de la RPC al cerrar embarque", async () => {
       mockedRpc.mockResolvedValue({ data: null, error: { message: "validaciones no satisfechas" } });
       await expect(cerrarEmbarque("emb-2")).rejects.toThrow("validaciones no satisfechas");
     });
