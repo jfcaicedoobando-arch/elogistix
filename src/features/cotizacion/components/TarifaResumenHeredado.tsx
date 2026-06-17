@@ -35,7 +35,8 @@ function ValueOrPlaceholder({ value }: { value: string | number | null | undefin
 
 export default function TarifaResumenHeredado({ tarifa }: Props) {
   const { canOverrideTarifaPricing } = usePermissions();
-  const { watch, setValue, getValues } = useFormContext<CotizacionFormValues>();
+  const form = useFormContext<CotizacionFormValues>();
+  const { watch, setValue, getValues } = form;
   const [editMode, setEditMode] = useState(false);
 
   const tipoEmbarque = watch("tipoEmbarque");
