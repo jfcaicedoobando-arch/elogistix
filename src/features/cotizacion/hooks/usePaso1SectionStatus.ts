@@ -8,16 +8,15 @@ export interface Paso1SectionStatus {
   mercancia: boolean;
   /** Solo aplica a marítimo. Para otros modos siempre true (no aplica). */
   tarifa: boolean;
+  /** Solo aplica a marítimo (validez + ruta texto). Otros modos: true. */
+  condiciones: boolean;
   cierre: boolean;
 }
 
 /**
  * Calcula qué secciones del Paso 1 del wizard de cotización ya tienen
  * sus campos requeridos cubiertos. Sirve para mostrar el check verde
- * por sección (v13.29.0) sin agregar nuevos validadores de Zod.
- *
- * Hook puro basado en `useWatch`; sólo re-renderiza cuando alguno
- * de los campos vigilados cambia.
+ * por sección sin agregar nuevos validadores de Zod.
  */
 export function usePaso1SectionStatus(): Paso1SectionStatus {
   const { control } = useFormContext<CotizacionFormValues>();
@@ -30,6 +29,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
       "origen", "destino",
       "tipoCarga", "pesoKg", "piezas",
       "tarifaId",
+      "rutaTexto", "validezPropuesta",
       "numContenedores",
     ],
   });
@@ -40,6 +40,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     origen, destino,
     tipoCarga, pesoKg, piezas,
     tarifaId,
+    rutaTexto, validezPropuesta,
     numContenedores,
   ] = v as [
     string, boolean, string,
@@ -47,6 +48,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     string, string,
     string, number, number,
     string | null,
+    string, Date | undefined,
     number,
   ];
 
@@ -60,8 +62,11 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
 
   const esMaritimo = (modo || "").toLowerCase().startsWith("mar");
   const tarifa = esMaritimo ? !!tarifaId : true;
+  const condiciones = esMaritimo
+    ? !!rutaTexto?.trim() && !!validezPropuesta
+    : true;
 
   const cierre = (numContenedores ?? 0) >= 1;
 
-  return { cliente, operacion, ruta, mercancia, tarifa, cierre };
+  return { cliente, operacion, ruta, mercancia, tarifa, condiciones, cierre };
 }

@@ -18,7 +18,6 @@ import type { TarifaCtx } from "./seccionRuta/overrideHelpers";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 
-/** Parsea 'YYYY-MM-DD' a Date local sin desplazar por zona horaria. */
 function parseVigenteHasta(s: string | null | undefined): Date | null {
   if (!s) return null;
   const [y, m, d] = s.split("-").map(Number);
@@ -26,15 +25,14 @@ function parseVigenteHasta(s: string | null | undefined): Date | null {
   return new Date(y, m - 1, d, 23, 59, 59, 999);
 }
 
-
 /**
- * v13.47.0 — Política tarifa-first para marítimo:
- *  - Esta sección sólo captura cliente-visible: ruta, validez, movimiento, seguro.
- *  - Tránsito, frecuencia, días libres, carta garantía y días de almacenaje
- *    se HEREDAN de la tarifa elegida (panel `TarifaVinculadaPanel`). Ventas
- *    no debe verlos editables aquí.
- *  - Para modos NO marítimos (aéreo/terrestre/general), no hay tarifa
- *    vinculada en el wizard, así que esos campos siguen aquí como manuales.
+ * v13.47.2 — Política tarifa-first (marítimo):
+ *   Esta sección sólo captura origen, destino y tipo de movimiento.
+ *   "Ruta del barco", "Validez de la propuesta" y "Seguro" se capturan en
+ *   `SeccionCondicionesComerciales` DESPUÉS de elegir la tarifa.
+ *
+ *   Para modos no marítimos (aéreo / terrestre / general / multimodal) se
+ *   conserva el flujo manual con todos los campos.
  */
 export default function SeccionRutaCotizacion({ complete }: { complete?: boolean } = {}) {
   const ctx = useFormContext<CotizacionFormValues>();
@@ -63,8 +61,9 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
     hasDiasAlmacenaje: tieneTarifa && !override.diasAlmacenaje,
   };
 
-  // v13.47.1 — La validez de la propuesta no puede exceder la vigencia de la tarifa.
-  const { data: tarifaVinc } = useTarifaVinculada(esMaritimo ? tarifaId ?? null : null);
+  // Clamping defensivo (sólo se activa fuera de marítimo, donde el calendario
+  // sigue viviendo en esta sección).
+  const { data: tarifaVinc } = useTarifaVinculada(esMaritimo ? null : tarifaId ?? null);
   const tarifaHasta = useMemo(
     () => parseVigenteHasta(tarifaVinc?.vigente_hasta ?? null),
     [tarifaVinc?.vigente_hasta],
@@ -83,7 +82,6 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
     return d;
   }, []);
 
-
   return (
     <WizardSection title="Ruta" complete={complete}>
       {!esMaritimo && <BannerOverride ctx={ctx} />}
@@ -92,7 +90,24 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-        {/* Tránsito / frecuencia / FCL-LCL: solo modos no marítimos. */}
+        {/* Tipo de movimiento — relevante también en marítimo (dato de ruta puro). */}
+        {!esTerrestre && (
+          <FormField label="Tipo de movimiento">
+            <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CY-CY">CY-CY</SelectItem>
+                <SelectItem value="CY-DR">CY-DR</SelectItem>
+                <SelectItem value="DR-DR">DR-DR</SelectItem>
+                <SelectItem value="DR-CY">DR-CY</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormField>
+        )}
+
+        {/* Tránsito / frecuencia / ruta-texto / validez / seguro / FCL-LCL:
+            sólo modos NO marítimos. En marítimo viven en
+            `SeccionCondicionesComerciales` después de elegir tarifa. */}
         {!esMaritimo && <TransitoField ctx={ctx} tarifaCtx={tarifaCtx} />}
 
         {!esMaritimo && (
@@ -110,56 +125,37 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
           </FormField>
         )}
 
-        <FormField label="Ruta" span={2}>
-          <Input value={watch("rutaTexto")} onChange={e => setValue("rutaTexto", e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
-        </FormField>
-
-        <FormField label="Validez de la propuesta">
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Seleccionar fecha"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={validezPropuesta}
-                onSelect={d => setValue("validezPropuesta", d, { shouldValidate: true, shouldDirty: true })}
-                disabled={(date) => date < hoy || (!!tarifaHasta && date > tarifaHasta)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-          {tarifaHasta && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Máximo {format(tarifaHasta, "dd/MM/yyyy")} según la tarifa vinculada.
-            </p>
-          )}
-        </FormField>
-
-
-
-        {!esTerrestre && (
-          <FormField label="Tipo de movimiento">
-            <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CY-CY">CY-CY</SelectItem>
-                <SelectItem value="CY-DR">CY-DR</SelectItem>
-                <SelectItem value="DR-DR">DR-DR</SelectItem>
-                <SelectItem value="DR-CY">DR-CY</SelectItem>
-              </SelectContent>
-            </Select>
+        {!esMaritimo && (
+          <FormField label="Ruta" span={2}>
+            <Input value={watch("rutaTexto")} onChange={e => setValue("rutaTexto", e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
           </FormField>
         )}
 
-        <SeguroBlock ctx={ctx} seguro={seguro} />
+        {!esMaritimo && (
+          <FormField label="Validez de la propuesta">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Seleccionar fecha"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={validezPropuesta}
+                  onSelect={d => setValue("validezPropuesta", d, { shouldValidate: true, shouldDirty: true })}
+                  disabled={(date) => date < hoy || (!!tarifaHasta && date > tarifaHasta)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </FormField>
+        )}
 
-        {/* Eliminado de la vista marítima — se hereda desde la tarifa. */}
+        {!esMaritimo && <SeguroBlock ctx={ctx} seguro={seguro} />}
+
         {!esMaritimo && tipoEmbarque && <FclLclFields ctx={ctx} tipoEmbarque={tipoEmbarque} tarifaCtx={tarifaCtx} />}
       </div>
     </WizardSection>

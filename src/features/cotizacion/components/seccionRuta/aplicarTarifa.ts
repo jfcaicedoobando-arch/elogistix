@@ -45,6 +45,10 @@ export function aplicarTarifaAlForm(
   if (row.tipo_contenedor_id) {
     setValue("tipoContenedor", row.tipo_contenedor_id, OPTS);
   }
+  // v13.47.2 — Autollenar "ruta del barco" con puerto origen → destino.
+  if (row.puerto_origen_nombre && row.puerto_destino_nombre) {
+    setValue("rutaTexto", `${row.puerto_origen_nombre} → ${row.puerto_destino_nombre}`, OPTS);
+  }
   // v13.47.0 — Frecuencia heredada (override de tarifa > frecuencia de naviera).
   if (row.frecuencia_resuelta) {
     setValue("frecuencia", row.frecuencia_resuelta, OPTS);
@@ -71,6 +75,7 @@ export function aplicarTarifaAlForm(
     "frecuencia",
     "diasAlmacenaje",
     "validezPropuesta",
+    "rutaTexto",
   ]);
 
 
