@@ -191,11 +191,11 @@ BEGIN
     'cliente NO debe poder INSERT facturas'
   );
 
-  -- TEST 14: cliente NO puede UPDATE facturas (cambio descartado por RLS)
+  -- TEST 14: cliente NO puede UPDATE facturas (mismo razonamiento que TEST 5)
   UPDATE public.facturas SET estado = 'Pagada' WHERE id = fac_a;
   PERFORM pg_temp.as_postgres();
-  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado = 'Emitida';
-  PERFORM pg_temp.assert(visible = 1, 'cliente NO debe poder UPDATE facturas');
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a AND estado <> 'Pagada';
+  PERFORM pg_temp.assert(visible = 1, 'cliente NO debe poder UPDATE facturas (estado no debe quedar Pagada)');
   PERFORM pg_temp.as_user(cli_user);
 
   -- TEST 15: cliente NO puede DELETE facturas
