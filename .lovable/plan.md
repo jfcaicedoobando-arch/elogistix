@@ -1,87 +1,105 @@
-# Bloque P — P&L Real por Embarque
+# Bloque Q — Separación de roles del ciclo financiero del embarque
 
-Construir el estado financiero real de cada embarque comparando lo **presupuestado** (`conceptos_venta` / `conceptos_costo`) contra lo **realmente facturado/costeado** (`facturas` emitidas al cliente + `proveedor_facturas` de proveedores logísticos), con margen, utilidad y desglose por tipo de gasto.
+Replantear Bloque Q para que **cada rol vea sólo lo suyo** y trabaje desde bandejas dedicadas, sin sobrecargar al operador. El detalle del embarque deja de ser el lugar único de acción: pasa a ser el "tablero de estado" y las acciones financieras se mueven a módulos por rol.
 
-## Objetivo
+## Modelo de responsabilidades
 
-Hoy el P&L del embarque vive sólo en `conceptos_venta` y `conceptos_costo` (presupuesto). Tras Bloque O ya tenemos los FKs reales a `facturas` y `proveedor_facturas`, así que podemos cruzar:
+| Etapa | Responsable | Dónde trabaja |
+|---|---|---|
+| Cotizar y cerrar venta | `vendedor` / `gerente_comercial` | Módulo CRM + Cotizaciones (ya existe) |
+| Ejecutar embarque, tracking, docs | `coordinador_logistico` / `operador` | Detalle del embarque (operativo) |
+| Capturar facturas de proveedor | `auxiliar_contable` (nuevo) | **Bandeja CxP** + detalle del proveedor |
+| Pagar a proveedores | `tesorero` | **Bandeja CxP – Por pagar** |
+| Emitir/timbrar factura a cliente | `contador` | **Bandeja Por facturar** |
+| Seguimiento de cartera y cobranza | `ejecutivo_cobranza` (nuevo) | **Bandeja Cartera** |
+| Aprobar notas de crédito y cierres | `contador` / `admin_org` | Bandejas correspondientes |
 
-- **Ingreso real** = `facturas` (estado ≠ Cancelado) ligadas al embarque + notas de crédito.
-- **Costo real** = `proveedor_facturas` (estado ≠ Cancelado) ligadas al embarque + notas de crédito de proveedor.
-- **Presupuestado** = `conceptos_venta` / `conceptos_costo` activos.
+## Cambios de roles
 
-Se entrega como nueva pestaña **P&L** en el detalle del embarque, con totales en MXN y USD usando los tipos de cambio del embarque.
+### Nuevos roles en `app_role` enum
+- `auxiliar_contable` — captura facturas de proveedor, concilia con costos del embarque, sube XML/PDF; NO ejecuta pagos.
+- `ejecutivo_cobranza` — ve sólo facturas emitidas con saldo, registra promesas de pago, envía recordatorios, marca cobros recibidos; NO emite facturas ni edita costos.
 
-## Entregables
+### Ajustes a `usePermissions` y `roleHierarchy`
+- `canEmitirFactura` → `contador`, `admin_org`, `super_admin`.
+- `canCapturarFacturaProveedor` → `auxiliar_contable`, `contador`, `admin_org`, `super_admin`.
+- `canPagarProveedor` → `tesorero`, `admin_org`, `super_admin`.
+- `canRegistrarCobro` → `ejecutivo_cobranza`, `contador`, `admin_org`, `super_admin`.
+- `canViewMontosEmbarque` (operador) → `coordinador_logistico`, `operador` lo recuperan **solo lectura** (sin acciones).
+- Actualizar `ROLE_LABELS`, `ROLE_DESCRIPTIONS`, `ASSIGNABLE_ROLES_ADMIN_ORG`, `roleCatalog`.
 
-### 1. RPC `pnl_financiero_embarque(_embarque_id uuid)`
+### Sidebar
+- Reorganizar menú por rol: Vendedor (CRM), Operador (Embarques/Tracking), Auxiliar (CxP), Tesorero (Pagos), Contador (Por facturar), Cobranza (Cartera).
 
-`SECURITY INVOKER` (respeta RLS). Devuelve una sola fila JSON con:
+## Bandejas nuevas
 
-- Totales por bloque (MXN y USD):
-  - `venta_presupuestada`, `venta_real`, `venta_facturada_pdte_cobro`
-  - `costo_presupuestado`, `costo_real`, `costo_pdte_pago`
-  - `utilidad_presupuestada`, `utilidad_real`, `margen_presupuestado_pct`, `margen_real_pct`
-  - `desviacion_venta`, `desviacion_costo`, `desviacion_utilidad`
-- Desglose por **tipo de gasto** (`concepto` agrupado): array `[{ concepto, presupuestado, real, desviacion, moneda }]`
-- Desglose por **proveedor**: `[{ proveedor_id, proveedor_nombre, presupuestado, real, facturas_count }]`
-- Conversión a MXN/USD usando `tipo_cambio_usd` y `tipo_cambio_eur` del embarque (mismo patrón que `estadoResultados.ts`).
+### 1. `/cxp/por-capturar` (auxiliar_contable)
+Lista de embarques con costos presupuestados sin factura de proveedor asociada, o XML recibidos sin conciliar. Acciones: subir XML/PDF, ligar a `embarque_id` + `concepto_costo`, validar totales y RFC.
 
-### 2. Servicio y hook
+### 2. `/cxp/por-pagar` (tesorero)
+Facturas de proveedor `estado='Vigente'` con saldo > 0, agrupadas por proveedor y vencimiento. Acciones: programar pago, registrar pago desde cuenta bancaria, descargar layout BBVA.
 
-- `src/features/embarques/services/pnlFinanciero.ts` → wrapper de la RPC con tipos.
-- `src/features/embarques/hooks/usePnlFinanciero.ts` → React Query con `embarque_id` en queryKey, `staleTime: 30s`.
+### 3. `/facturacion/por-emitir` (contador)
+Embarques con proforma aprobada y sin factura emitida, o con diferencia entre proforma y factura. Acciones: revisar, timbrar (reusa `DialogTimbrarFactura`), cancelar.
 
-### 3. UI: nueva pestaña `TabPnl`
+### 4. `/cartera` (ejecutivo_cobranza)
+Facturas emitidas con saldo, ordenadas por `dias_vencido` desc. Columnas: cliente, folio, total, pagado, saldo, días vencido, último contacto. Acciones: registrar pago, enviar recordatorio (reusa templates), agregar nota de seguimiento, marcar promesa de pago.
 
-Ubicación: `src/features/embarques/components/tabs/TabPnl.tsx`, integrada en el detalle de embarque junto a las pestañas existentes (Costos, Facturación, Conciliación…).
+Cada bandeja:
+- Tabla server-paginated con filtro por cliente/proveedor/estado/fecha.
+- Tarjetas KPI arriba (total saldo, vencido, en periodo, etc.).
+- Drill-down al detalle del embarque (solo lectura financiera para los que no son dueños del paso).
 
-Estructura:
+## Detalle del embarque — modo "tablero"
 
-```text
-┌─ KPIs cards (4) ──────────────────────────────────────────┐
-│  Venta Real | Costo Real | Utilidad Real | Margen Real %  │
-│  (cada card muestra delta vs presupuestado en pequeño)    │
-├─ Tabla comparativa: Presupuestado vs Real ────────────────┤
-│  Concepto │ Presup MXN │ Real MXN │ Δ MXN │ Δ %           │
-│  (zebra-striped, totales al pie)                          │
-├─ Tabla desglose por proveedor ────────────────────────────┤
-│  Proveedor │ Presupuestado │ Facturado │ # Facturas       │
-├─ Badges de alerta ────────────────────────────────────────┤
-│  • Sobrecosto >10% (rojo)                                 │
-│  • Venta facturada < presupuestada (ámbar)                │
-│  • Margen real < 15% (ámbar)                              │
-└───────────────────────────────────────────────────────────┘
-```
+- **Operador** ve nueva sección colapsable **"Estado financiero"** con:
+  - Semáforo Costo (Capturado/Pendiente/Pagado).
+  - Semáforo Facturación cliente (Sin proforma/Proforma lista/Facturada/Cobrada).
+  - Tarjeta P&L (presupuestado vs real, ya existe en `TabPnl`).
+  - Sin botones de acción financieros.
+- **Contador/auxiliar/tesorero/cobranza** ven los mismos datos **más** sus acciones (botones condicionados por permiso). No se crean tabs nuevos para ellos: las acciones siguen viviendo en sus bandejas; el embarque sólo agrega un botón "Ir a CxP/Cartera/Por facturar de este embarque".
 
-Reutiliza `DataTable`, `formatCurrency`, tokens semánticos (`text-success`, `text-destructive`, `text-warning`).
+## Tablas nuevas
 
-### 4. Tests
+### `cobranza_seguimiento`
+- `factura_id` FK, `tipo` (`recordatorio_email`, `llamada`, `promesa_pago`, `nota`), `fecha`, `usuario_id`, `comentario`, `monto_promesa`, `fecha_promesa`.
+- RLS: cobranza, contador, admin_org.
 
-- `pnlFinanciero.test.ts` — RPC con datos seed: presupuesto sin facturas, presupuesto con factura parcial, costo real > presupuestado.
-- `TabPnl.test.tsx` — render con datos mock, badges de alerta, formato MXN/USD.
+### Nuevo campo `proveedor_facturas.estado_captura`
+- `pendiente_xml`, `capturada`, `conciliada`, `pagada`. Permite separar "auxiliar terminó captura" de "tesorero pagó".
 
-### 5. Changelog & versión
+## RPCs nuevos (todas `SECURITY INVOKER`)
 
-- `APP_VERSION` → `13.53.0`.
-- Entrada nueva en `CHANGELOG.md`.
+- `cxp_por_capturar(_org)` — embarques con costos sin factura de proveedor.
+- `cxp_por_pagar(_org)` — facturas vigentes con saldo, días al vencimiento.
+- `facturacion_por_emitir(_org)` — proformas sin factura.
+- `cartera_pendiente(_org)` — facturas con saldo, días vencidos, último contacto.
+- `embarque_estado_financiero(_embarque_id)` — devuelve 4 semáforos para el tablero del operador.
 
-## Detalles técnicos
+## Tests
+- `usePermissions.test.tsx` — agregar 2 roles nuevos y 4 capacidades nuevas.
+- `roleHierarchy.test.ts` — `ejecutivo_cobranza` no satisface `contador`; `auxiliar_contable` no satisface `tesorero`.
+- RPC tests (`supabase/tests/rls/`) — cada bandeja con 3 escenarios: vacío, con datos del tenant, sin acceso cross-org.
+- E2E nuevo: `08-roles-finanzas.spec.ts` — login como cobranza, ve cartera pero NO ve botón timbrar.
 
-**Reglas de cálculo**:
-- Facturas/proveedor_facturas con `estado IN ('Cancelada','Borrador')` se excluyen del "real".
-- Notas de crédito (`factura_notas_credito`, `proveedor_notas_credito`) se restan al real.
-- Conversión a MXN con `tipo_cambio_usd`/`tipo_cambio_eur` del embarque (fallback a tipo de cambio de la factura si el embarque no lo tiene). Patrón ya validado en `src/lib/domain/proyeccionFacturacion/conversion.ts`.
-- Agrupación por tipo de gasto: usar `conceptos_factura.descripcion` (real) vs `conceptos_venta.descripcion` (presupuestado); el match es fuzzy por `lower(trim(concepto))`.
-- Margen 0 cuando venta = 0 (regla ya estandarizada en `embarqueKpis.ts`).
-
-**RLS**: la RPC corre con `SECURITY INVOKER`; las tablas ya tienen RLS por `organization_id` y el embarque mismo. Sin cambios de policies.
-
-**Sin migración de datos** — sólo se crea la función. Bloque O ya garantizó FKs.
+## Changelog & versión
+- `APP_VERSION` → `13.54.0`.
+- Migración del enum `app_role` (no destructiva, sólo agrega valores).
+- Entrada en `CHANGELOG.md` con la nueva matriz de roles.
 
 ## Fuera de alcance
+- Conciliación bancaria BBVA automática (ya existe en otro módulo).
+- Bloque R (seguros) y Bloque S (cierre financiero).
+- Importador masivo de XML SAT (Bloque T propuesto).
+- Reasignación masiva de usuarios existentes a los nuevos roles (lo hacemos manualmente desde Admin).
 
-- Marcar pagos / cobranza (queda para Bloque Q).
-- Cierre financiero (Bloque S).
-- Cambios en módulo Seguros (Bloque R).
-- Modificar tablas existentes.
+## Diagrama de flujo
+
+```text
+Vendedor          Operador           Auxiliar         Tesorero         Contador        Cobranza
+   |                 |                  |                |                |               |
+Cotización →    Embarque ejecuta    Captura XML      Paga proveedor   Timbra factura  Sigue cartera
+   |          (tracking + docs)    proveedor           (BBVA)         al cliente      registra pago
+   |                 |                  |                |                |               |
+   └────── Embarque (tablero solo lectura para todos, acciones por rol) ──────────────────┘
+```
