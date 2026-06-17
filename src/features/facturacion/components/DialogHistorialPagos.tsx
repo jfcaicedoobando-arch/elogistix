@@ -22,6 +22,10 @@ interface Factura {
   numero: string;
   total: number;
   moneda: string;
+  /** TC histórico de la factura (al momento de emisión). Sólo se usa para
+   *  mostrar la conciliación cambiaria contra el TC de cada pago (I de la
+   *  auditoría 13.49.0). */
+  tipo_cambio?: number;
 }
 
 interface Props {
@@ -40,6 +44,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
 
   if (!factura) return null;
 
+  const tcFactura = factura?.tipo_cambio;
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
 
   const handleEliminar = async () => {
@@ -87,31 +92,52 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
                     <th className="text-left py-2 px-2">Fecha</th>
                     <th className="text-right py-2 px-2">Monto</th>
                     <th className="text-right py-2 px-2">Aplicado</th>
+                    {tcFactura !== undefined && (
+                      <>
+                        <th className="text-right py-2 px-2" title="Tipo de cambio del pago vs el TC de la factura">TC pago / fact.</th>
+                        <th className="text-right py-2 px-2" title="Diferencia cambiaria registrada en MXN">Dif. cambiaria</th>
+                      </>
+                    )}
                     <th className="text-left py-2 px-2">Forma</th>
                     <th className="text-left py-2 px-2">Referencia</th>
                     {canEdit && <th className="w-10"></th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {pagos.map((p) => (
-                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-2 px-2 whitespace-nowrap">{formatDate(p.fecha_pago)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">{formatCurrency(Number(p.monto), p.moneda)}</td>
-                      <td className="py-2 px-2 text-right tabular-nums">{formatCurrency(Number(p.monto_aplicado_factura), factura.moneda)}</td>
-                      <td className="py-2 px-2">{p.forma_pago}</td>
-                      <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia}>{p.referencia || "—"}</td>
-                      {canEdit && (
-                        <td className="py-2 px-2">
-                          <Button
-                            variant="ghost" size="icon"
-                            onClick={(e) => { e.stopPropagation(); setPagoAEliminar(p.id); }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
+                  {pagos.map((p) => {
+                    const tcPago = Number(p.tipo_cambio) || 1;
+                    const dif = Number(p.diferencia_cambiaria_mxn) || 0;
+                    const tieneDif = Math.abs(dif) > 0.005;
+                    return (
+                      <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                        <td className="py-2 px-2 whitespace-nowrap">{formatDate(p.fecha_pago)}</td>
+                        <td className="py-2 px-2 text-right tabular-nums">{formatCurrency(Number(p.monto), p.moneda)}</td>
+                        <td className="py-2 px-2 text-right tabular-nums">{formatCurrency(Number(p.monto_aplicado_factura), factura.moneda)}</td>
+                        {tcFactura !== undefined && (
+                          <>
+                            <td className="py-2 px-2 text-right tabular-nums text-xs whitespace-nowrap">
+                              {tcPago.toFixed(4)} / {tcFactura.toFixed(4)}
+                            </td>
+                            <td className={`py-2 px-2 text-right tabular-nums text-xs whitespace-nowrap ${tieneDif ? (dif > 0 ? "text-success" : "text-destructive") : "text-muted-foreground"}`}>
+                              {tieneDif ? formatCurrency(dif, "MXN") : "—"}
+                            </td>
+                          </>
+                        )}
+                        <td className="py-2 px-2">{p.forma_pago}</td>
+                        <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia}>{p.referencia || "—"}</td>
+                        {canEdit && (
+                          <td className="py-2 px-2">
+                            <Button
+                              variant="ghost" size="icon"
+                              onClick={(e) => { e.stopPropagation(); setPagoAEliminar(p.id); }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

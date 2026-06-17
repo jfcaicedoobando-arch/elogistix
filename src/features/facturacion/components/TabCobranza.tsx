@@ -15,6 +15,7 @@ import { buildCobranzaColumns } from "./cobranzaColumns";
 import { DialogRegistrarPago } from "./DialogRegistrarPago";
 import { DialogNotaCredito } from "./DialogNotaCredito";
 import { DialogHistorialPagos } from "./DialogHistorialPagos";
+import { NotasCreditoRecientes } from "./NotasCreditoRecientes";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCobranza, EstatusCobranza } from "@/features/facturas/services";
@@ -81,7 +82,7 @@ export function TabCobranza() {
     }
     : null;
   const detalleAdapter = detalleFactura
-    ? { id: detalleFactura.id, numero: detalleFactura.numero, total: detalleFactura.total, moneda: detalleFactura.moneda }
+    ? { id: detalleFactura.id, numero: detalleFactura.numero, total: detalleFactura.total, moneda: detalleFactura.moneda, tipo_cambio: detalleFactura.tipo_cambio }
     : null;
 
   return (
@@ -129,6 +130,9 @@ export function TabCobranza() {
           />
         </CardContent>
       </Card>
+
+      <NotasCreditoRecientes />
+
 
       <DialogRegistrarPago
         open={!!pagoAdapter}

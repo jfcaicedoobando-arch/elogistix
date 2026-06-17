@@ -33,6 +33,53 @@ export async function listarNotasCreditoPorFactura(facturaId: string): Promise<N
   return data ?? [];
 }
 
+export interface NotaCreditoConFactura extends NotaCredito {
+  factura_numero: string;
+  cliente_id: string;
+  cliente_nombre: string;
+}
+
+export interface ListarNotasCreditoRecientesFiltros {
+  cliente_id?: string;
+  estado?: EstadoNotaCredito | "todos";
+  limit?: number;
+}
+
+/**
+ * Lista las notas de crédito más recientes en toda la cartera, con datos
+ * básicos de la factura asociada. Usado por la vista consolidada de NCs
+ * dentro de Cobranza (G de la auditoría 13.49.0).
+ */
+export async function listarNotasCreditoRecientes(
+  filtros: ListarNotasCreditoRecientesFiltros = {},
+): Promise<NotaCreditoConFactura[]> {
+  const limit = filtros.limit ?? 100;
+  let query = supabase
+    .from("factura_notas_credito")
+    .select(`
+      *,
+      facturas!inner(numero, cliente_id, cliente_nombre)
+    `)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (filtros.cliente_id) query = query.eq("facturas.cliente_id", filtros.cliente_id);
+  if (filtros.estado && filtros.estado !== "todos") query = query.eq("estado", filtros.estado);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  // SAFE-CAST: el join embebido `facturas!inner` viene como objeto anidado.
+  type RawRow = NotaCredito & { facturas: { numero: string; cliente_id: string; cliente_nombre: string } | null };
+  return ((data as unknown as RawRow[] | null) ?? []).map((row) => {
+    const { facturas, ...nota } = row;
+    return {
+      ...nota,
+      factura_numero: facturas?.numero ?? "—",
+      cliente_id: facturas?.cliente_id ?? "",
+      cliente_nombre: facturas?.cliente_nombre ?? "—",
+    };
+  });
+}
+
 export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<NotaCredito> {
   const user = await getCurrentUser();
   const payload: TablesInsert<"factura_notas_credito"> = {
