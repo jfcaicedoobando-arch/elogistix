@@ -65,15 +65,9 @@ export async function fetchPortalDocumentos(embarqueId: string) {
   return data ?? [];
 }
 
-// Estados visibles para clientes en el portal.
-// Borrador, Vencida y Cancelada se ocultan: son trabajo interno o ruido sin valor para el cliente.
-// Esta lista debe mantenerse alineada con la política RLS "Cliente read own cotizaciones".
-const PORTAL_COTIZACION_ESTADOS_VISIBLES = [
-  "Enviada",
-  "Aceptada",
-  "Rechazada",
-  "En operación",
-] as const;
+// Estados visibles para clientes en el portal. Borrador, Vencida y Cancelada se
+// ocultan: trabajo interno o ruido sin valor. Alinear con RLS "Cliente read own cotizaciones".
+const PORTAL_COTIZACION_ESTADOS_VISIBLES = ["Enviada", "Aceptada", "Rechazada", "En operación"] as const;
 
 export async function fetchPortalCotizaciones(clienteIds: string[]) {
   if (!clienteIds.length) return [];
