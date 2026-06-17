@@ -90,3 +90,11 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
  { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
  { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Calculator },
 ];
+
+// v13.54.0 — Bloque Q: bandejas por rol financiero.
+export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
+  { title: "Por capturar (CxP)", url: "/cxp/por-capturar", icon: Receipt },
+  { title: "Por pagar (CxP)", url: "/cxp/por-pagar", icon: Landmark },
+  { title: "Por emitir (Facturación)", url: "/facturacion/por-emitir", icon: FileText },
+  { title: "Cartera", url: "/cartera", icon: PiggyBank },
+];

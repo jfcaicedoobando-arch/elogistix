@@ -13,7 +13,11 @@ import {
   SIDEBAR_ADMIN_ITEMS,
   SIDEBAR_SUPER_ADMIN_ITEMS,
   SIDEBAR_COSTEO_ITEMS,
+  SIDEBAR_BANDEJAS_ITEMS,
 } from "@/components/layout/sidebarItems";
+
+const filterBandejas = (urls: string[]) =>
+  SIDEBAR_BANDEJAS_ITEMS.filter((it) => urls.includes(it.url));
 
 export interface SidebarSection {
   label: string;
@@ -66,6 +70,7 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Mi bandeja", items: filterBandejas(["/facturacion/por-emitir", "/cartera"]) },
   { label: "Gestión", items: filterGestion(["/facturacion", "/cxp", "/tesoreria", "/comisiones"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
@@ -75,11 +80,26 @@ const buildContador: Builder = ({ sistemaItems }) => [
 
 const buildTesorero: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Mi bandeja", items: filterBandejas(["/cxp/por-pagar"]) },
   { label: "Gestión", items: filterGestion(["/cxp", "/tesoreria", "/comisiones"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
   { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
+];
+
+const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
+  { label: "Mi bandeja", items: filterBandejas(["/cxp/por-capturar"]) },
+  { label: "Gestión", items: filterGestion(["/cxp"]) },
+  { label: "Directorio", items: filterDirectorio(["/proveedores"]) },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
+];
+
+const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
+  { label: "Mi bandeja", items: filterBandejas(["/cartera"]) },
+  { label: "Gestión", items: filterGestion(["/facturacion"]) },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
@@ -112,6 +132,8 @@ const ROLE_BUILDERS: Record<string, Builder> = {
   ejecutivo_pricing: buildEjecutivoPricing,
   contador: buildContador,
   tesorero: buildTesorero,
+  auxiliar_contable: buildAuxiliarContable,
+  ejecutivo_cobranza: buildEjecutivoCobranza,
   gerente_comercial: buildGerenteComercial,
   gerente_operaciones: buildGerenteOperaciones,
 };

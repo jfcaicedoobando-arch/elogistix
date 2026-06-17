@@ -29,6 +29,8 @@ const FINANCE: readonly AppRole[] = [
   "admin",
   "contador",
   "tesorero",
+  "auxiliar_contable",
+  "ejecutivo_cobranza",
 ];
 const FINANCE_VIEWERS: readonly AppRole[] = [
   "super_admin",
@@ -39,6 +41,8 @@ const FINANCE_VIEWERS: readonly AppRole[] = [
   "gerente_comercial",
   "contador",
   "tesorero",
+  "auxiliar_contable",
+  "ejecutivo_cobranza",
   "ejecutivo_pricing",
 ];
 const SALES: readonly AppRole[] = [
@@ -50,8 +54,6 @@ const SALES: readonly AppRole[] = [
   "ejecutivo_pricing",
 ];
 
-// Roles autorizados a disparar el atajo destructivo "Cotizar sin desglose"
-// del wizard de cotización (Pack D v13.32.0).
 const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
   "super_admin",
   "admin_org",
@@ -59,9 +61,6 @@ const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
   "gerente_operaciones",
 ];
 
-// v13.39.0: roles autorizados a crear embarques "libres" (sin cotización vinculada).
-// El resto de roles operativos (coordinador_logistico, operador, ejecutivo_pricing)
-// debe iniciar el embarque desde una cotización Aceptada.
 const CREAR_EMBARQUE_LIBRE: readonly AppRole[] = [
   "super_admin",
   "admin_org",
@@ -69,15 +68,40 @@ const CREAR_EMBARQUE_LIBRE: readonly AppRole[] = [
   "gerente_operaciones",
 ];
 
-// v13.47.0: roles autorizados a sobre-escribir manualmente datos operativos
-// heredados de una tarifa (tránsito, días libres, carta garantía, frecuencia).
-// Ventas/operación no debe tocar estos datos: deben provenir SIEMPRE de la
-// tarifa elegida en el módulo Costeo.
 const OVERRIDE_TARIFA_PRICING: readonly AppRole[] = [
   "super_admin",
   "admin_org",
   "admin",
   "gerente_comercial",
+];
+
+// v13.54.0 — Bloque Q: separación de responsabilidades financieras.
+// El auxiliar captura, el tesorero paga; el contador emite, cobranza cobra.
+const EMITIR_FACTURA_CLIENTE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "contador",
+];
+const CAPTURAR_FACTURA_PROVEEDOR: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "contador",
+  "auxiliar_contable",
+];
+const PAGAR_PROVEEDOR: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "tesorero",
+];
+const REGISTRAR_COBRO: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "contador",
+  "ejecutivo_cobranza",
 ];
 
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
@@ -87,7 +111,6 @@ export function usePermissions() {
   const { role, effectiveRole } = useAuth();
   const roleStr = effectiveRole as AppRole | null;
 
-  // Capacidades por área
   const canAdminTenant = has(TENANT_ADMINS, roleStr);
   const canEditOperations = has(OPERATIONS, roleStr);
   const canEditFinance = has(FINANCE, roleStr);
@@ -97,7 +120,12 @@ export function usePermissions() {
   const canCrearEmbarqueLibre = has(CREAR_EMBARQUE_LIBRE, roleStr);
   const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
 
-  // API pública (compatibilidad)
+  // Bloque Q
+  const canEmitirFactura = has(EMITIR_FACTURA_CLIENTE, roleStr);
+  const canCapturarFacturaProveedor = has(CAPTURAR_FACTURA_PROVEEDOR, roleStr);
+  const canPagarProveedor = has(PAGAR_PROVEEDOR, roleStr);
+  const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
+
   const canEdit = canEditOperations || canEditFinance;
   const isAdmin = canAdminTenant;
   const isSuperAdmin = (role as AppRole) === "super_admin";
@@ -105,7 +133,6 @@ export function usePermissions() {
   const canEditCrm = canEdit || canEditSales;
 
   return {
-    // legacy / public
     canEdit,
     canEditCrm,
     isAdmin,
@@ -113,7 +140,6 @@ export function usePermissions() {
     isOperador,
     canViewFinancials,
     role: effectiveRole,
-    // nuevas (matriz por área)
     canAdminTenant,
     canEditOperations,
     canEditFinance,
@@ -121,5 +147,9 @@ export function usePermissions() {
     canCotizarSinDesglose,
     canCrearEmbarqueLibre,
     canOverrideTarifaPricing,
+    canEmitirFactura,
+    canCapturarFacturaProveedor,
+    canPagarProveedor,
+    canRegistrarCobro,
   };
 }
