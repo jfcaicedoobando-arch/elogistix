@@ -25,4 +25,21 @@ describe('operaciones/index', () => {
     mockRef.current!.setRpcResult('operaciones_stats', { data: null, error: new Error('Network Error') });
     await expect(fetchOperacionesStats()).rejects.toThrow('Network Error');
   });
+
+  it('fetchOperacionesStats acepta payload vacío sin operadores', async () => {
+    const empty = {
+      operadores: [],
+      global: {
+        totalActivas: 0, totalContenedores: 0, totalEsteMes: 0, totalProfit: 0,
+        totalDemoras: 0, totalCriticos: 0, totalEnPuerto: 0, totalPorArribar: 0,
+        activasHoy: 0, maxContenedores: 0,
+      },
+      historicoGlobal: [],
+      mesesLabels: [],
+    };
+    mockRef.current!.setRpcResult('operaciones_stats', { data: empty, error: null });
+    const result = await fetchOperacionesStats();
+    expect(result.operadores).toHaveLength(0);
+    expect(result.global.totalActivas).toBe(0);
+  });
 });
