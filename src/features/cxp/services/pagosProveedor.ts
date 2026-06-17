@@ -7,10 +7,14 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type PagoProveedor = Tables<"pagos_proveedor">;
 
+// v13.56.1 — Columnas explícitas (auditoría: evita SELECT * en tablas financieras).
+const PAGO_PROVEEDOR_COLUMNS =
+  "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by";
+
 export async function listarPagosProveedor(facturaId: string): Promise<PagoProveedor[]> {
   const { data, error } = await supabase
     .from("pagos_proveedor")
-    .select("*")
+    .select(PAGO_PROVEEDOR_COLUMNS)
     .eq("proveedor_factura_id", facturaId)
     .order("fecha_pago", { ascending: false });
   if (error) throw error;

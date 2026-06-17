@@ -6,10 +6,14 @@ import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 export type LiquidacionRow = Tables<"liquidaciones_comision">;
 
+// v13.56.1 — Columnas explícitas (auditoría: evitar SELECT * en tablas financieras).
+const LIQUIDACION_COLUMNS =
+  "id, organization_id, vendedora_id, periodo, total_mxn, fecha_pago, metodo_pago, referencia, notas, creada_por, created_at, updated_at";
+
 export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
   const { data, error } = await supabase
     .from("liquidaciones_comision")
-    .select("*")
+    .select(LIQUIDACION_COLUMNS)
     .order("periodo", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(500);

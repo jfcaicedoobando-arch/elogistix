@@ -30,10 +30,14 @@ async function buildEmailMap(ids: string[]): Promise<Record<string, string>> {
   }
 }
 
+// v13.56.1 — Columnas explícitas (evita SELECT * en tablas financieras).
+const VENDEDORA_CONFIG_COLUMNS =
+  "id, organization_id, user_id, porcentaje_default, activa, fecha_alta, created_at, updated_at";
+
 export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
   const { data, error } = await supabase
     .from("vendedora_config")
-    .select("*")
+    .select(VENDEDORA_CONFIG_COLUMNS)
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw error;
