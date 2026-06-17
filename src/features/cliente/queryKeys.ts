@@ -11,3 +11,7 @@ export const clientes = {
   diasCredito: (id: string) => ['clientes', 'dias_credito', id] as const,
   paraPdf: (id: string) => ['clientes', 'para_pdf', id] as const,
 } as const;
+
+export const clienteFinancials = {
+  byCliente: (clienteId?: string) => ['cliente-financials', clienteId] as const,
+} as const;

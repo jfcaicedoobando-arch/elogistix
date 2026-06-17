@@ -6,3 +6,5 @@ export const cotizaciones = {
   costos: (id: string) => ['cotizacion_costos', id] as const,
   embarquesVinculados: (id: string) => ['embarques', 'cotizacion', id] as const,
 } as const;
+
+export const pdfPreviewCotizacion = (id: string) => ['pdf-preview-cotizacion', id] as const;

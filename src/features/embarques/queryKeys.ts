@@ -16,3 +16,10 @@ export const embarques = {
   eventos: (id: string) => ['eventos_embarque', id] as const,
   relacionados: (id: string, blMaster: string) => ['embarques', 'relacionados', id, blMaster] as const,
 } as const;
+
+export const trackingLinks = {
+  all: ['tracking_links'] as const,
+  byEmbarque: (embarqueId?: string) => ['tracking_links', embarqueId] as const,
+} as const;
+
+export const trackingPublico = (token: string) => ['tracking-public', token] as const;
