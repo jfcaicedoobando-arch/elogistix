@@ -31,14 +31,15 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
 
   const sections: SectionDef[] = useMemo(() => {
     if (esMaritimo) {
-      // v13.35.0 — Política tarifa-first: Tarifa precede a Mercancía.
+      // v13.47.2 — Mercancía antes de Tarifa; Condiciones comerciales tras Tarifa.
       return [
-        { id: "seccion-cliente",   label: "Cliente",   done: status.cliente },
-        { id: "seccion-operacion", label: "Operación", done: status.operacion },
-        { id: "seccion-ruta",      label: "Ruta",      done: status.ruta },
-        { id: "seccion-tarifa",    label: "Tarifa",    done: status.tarifa },
-        { id: "seccion-mercancia", label: "Mercancía", done: status.mercancia },
-        { id: "seccion-cierre",    label: "Cierre",    done: status.cierre },
+        { id: "seccion-cliente",      label: "Cliente",      done: status.cliente },
+        { id: "seccion-operacion",    label: "Operación",    done: status.operacion },
+        { id: "seccion-ruta",         label: "Ruta",         done: status.ruta },
+        { id: "seccion-mercancia",    label: "Mercancía",    done: status.mercancia },
+        { id: "seccion-tarifa",       label: "Tarifa",       done: status.tarifa },
+        { id: "seccion-condiciones",  label: "Condiciones",  done: status.condiciones },
+        { id: "seccion-cierre",       label: "Cierre",       done: status.cierre },
       ];
     }
     return [

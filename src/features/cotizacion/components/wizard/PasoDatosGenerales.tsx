@@ -15,6 +15,7 @@ import SeccionMercanciaMaritimaLCL from "@/features/cotizacion/components/Seccio
 import SeccionMercanciaGeneral from "@/features/cotizacion/components/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/features/cotizacion/components/SeccionMercanciaAerea";
 import TarifaVinculadaPanel from "@/features/cotizacion/components/TarifaVinculadaPanel";
+import SeccionCondicionesComerciales from "@/features/cotizacion/components/SeccionCondicionesComerciales";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
@@ -30,9 +31,9 @@ interface Props {
  * Paso 1 del wizard de cotización.
  *
  * Orden conversacional:
- *   - Marítimo (v13.35.0 — tarifa-first):
- *       1. Cliente → 2. Operación → 3. Ruta → 4. Tarifa (guardián, auto-carga) →
- *       5. Mercancía → 6. Cierre.
+ *   - Marítimo (v13.47.2 — tarifa-first reordenado):
+ *       1. Cliente → 2. Operación → 3. Ruta (origen/destino/tipo movimiento) →
+ *       4. Mercancía → 5. Tarifa → 6. Condiciones comerciales → 7. Cierre.
  *   - Aéreo / Terrestre / General:
  *       1. Cliente → 2. Operación → 3. Ruta → 4. Mercancía → 5. Cierre.
  *
@@ -46,12 +47,6 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
   const status = usePaso1SectionStatus();
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
-  /**
-   * Inyecta filas de costo auto-cargadas al vincular una tarifa marítima.
-   * Reemplaza filas previamente auto-cargadas (notas "Auto-cargado…") para
-   * evitar duplicados al cambiar de tarifa, pero conserva las capturadas
-   * manualmente por el usuario.
-   */
   const handleAutocargaCostos = (filas: FilaCostoLocal[]): void => {
     w.setCostosInternos((prev) => {
       const manuales = prev.filter((f) => f.notas !== "Auto-cargado desde tarifa marítima");
@@ -108,6 +103,12 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
     </div>
   ) : null;
 
+  const condicionesBlock = w.esMaritimo ? (
+    <div id="seccion-condiciones" className="scroll-mt-4">
+      <SeccionCondicionesComerciales complete={status.condiciones} />
+    </div>
+  ) : null;
+
   return (
     <>
       {/* 1. Cliente */}
@@ -125,11 +126,13 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
         <SeccionRutaCotizacion complete={status.ruta} />
       </div>
 
-      {/* 4-5. Marítimo: Tarifa → Mercancía. Otros modos: solo Mercancía. */}
-      {tarifaBlock}
+      {/* Marítimo: Mercancía → Tarifa → Condiciones comerciales.
+          Otros modos: sólo Mercancía. */}
       {mercanciaBlock}
+      {tarifaBlock}
+      {condicionesBlock}
 
-      {/* 6. Cierre */}
+      {/* Cierre */}
       <div id="seccion-cierre" className="scroll-mt-4">
         <Accordion type="multiple" defaultValue={["num-embarques", "notas"]} className="w-full">
           <AccordionItem value="num-embarques">
