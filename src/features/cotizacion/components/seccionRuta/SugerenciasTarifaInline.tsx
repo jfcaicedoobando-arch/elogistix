@@ -191,7 +191,7 @@ export default function SugerenciasTarifaInline({
       <BuscarTarifaDialog
         open={openDialog}
         onOpenChange={setOpenDialog}
-        onElegir={(row) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions)}
+        onElegir={(row) => aplicarTarifaAlForm(setValue, trigger, row, aplicarOptions, validez)}
         selectLabel="Usar esta tarifa"
         initial={{ puertoOrigenId, puertoDestinoId, tipoContenedorId }}
       />
