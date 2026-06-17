@@ -32,7 +32,7 @@ function VigenciaBadge({ hasta }: { hasta: string }) {
 }
 
 export function TabSeguros({ embarqueId, canEdit }: Props) {
-  const { data: seguros = [], isLoading } = useSegurosEmbarque(embarqueId);
+  const { data: seguros = [] } = useSegurosEmbarque(embarqueId);
   const del = useDeleteSeguro(embarqueId);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SeguroEmbarque | null>(null);
