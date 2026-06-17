@@ -98,6 +98,9 @@ export default function Facturacion() {
         <PageHeader title="Pre-Facturación" description="Control de proformas, facturas emitidas y gastos por liquidar" />
         <GuiaPrefacturacion />
 
+        {/* Dashboard ejecutivo: KPIs facturado/cobrado/vencido + tendencia 6 meses */}
+        <DashboardEjecutivoFacturacion />
+
         {/* Alerta global: Hueco de facturación */}
         <HuecoFacturacionCard />
 
