@@ -36,7 +36,11 @@ describe("Fase 3/4 — Reubicaciones aplicadas", () => {
   });
 
   it("ningún archivo importa de los paths antiguos", () => {
-    const files = glob("src/**/*.{ts,tsx}", { cwd: ROOT, absolute: true });
+    const files = glob("src/**/*.{ts,tsx}", {
+      cwd: ROOT,
+      absolute: true,
+      ignore: ["src/__tests__/architecture/fase3-4-reubicaciones.test.ts"],
+    });
     const offenders: string[] = [];
     for (const abs of files) {
       const src = readFileSync(abs, "utf8");
