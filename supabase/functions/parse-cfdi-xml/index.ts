@@ -14,12 +14,16 @@ import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
 import { parseCfdi } from "./parser.ts";
+import {
+  fallbackResult,
+  parseCategoriasJson,
+  parseToolCallResponse,
+  type Categoria,
+} from "./aiHelpers.ts";
 
 initSentryEdge("parse-cfdi-xml");
 
 const MAX_BYTES = 2 * 1024 * 1024;
-
-interface Categoria { id: string; nombre: string }
 
 const TOOL_DEF = {
   type: "function",
@@ -37,27 +41,6 @@ const TOOL_DEF = {
     },
   },
 };
-
-function fallbackResult(conceptos: { descripcion: string }[]): { categoria_id: string | null; notas: string } {
-  return {
-    categoria_id: null,
-    notas: conceptos.map(c => c.descripcion).join("; ").slice(0, 240),
-  };
-}
-
-function parseToolCallResponse(j: unknown, categorias: Categoria[]): { categoria_id: string | null; notas: string } | null {
-  const args = (j as { choices?: Array<{ message?: { tool_calls?: Array<{ function?: { arguments?: string } }> } }> })
-    .choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-  if (!args) return null;
-  try {
-    const parsed = JSON.parse(args);
-    const id = String(parsed.categoria_id ?? "").trim();
-    const valid = categorias.some(c => c.id === id);
-    return { categoria_id: valid ? id : null, notas: String(parsed.notas ?? "").slice(0, 240) };
-  } catch {
-    return null;
-  }
-}
 
 type AiOutcome = "ok" | "http_error" | "timeout" | "network_error" | "parse_error" | "skipped";
 
