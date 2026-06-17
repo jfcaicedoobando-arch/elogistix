@@ -72,7 +72,7 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as FacturaRow[];
+  return mapFacturaRows(data);
 }
 
 async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
