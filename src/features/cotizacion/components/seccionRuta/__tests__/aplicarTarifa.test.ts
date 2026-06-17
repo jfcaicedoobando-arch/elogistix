@@ -58,6 +58,7 @@ describe("aplicarTarifaAlForm", () => {
       "frecuencia",
       "diasAlmacenaje",
       "validezPropuesta",
+      "rutaTexto",
     ]);
   });
 
