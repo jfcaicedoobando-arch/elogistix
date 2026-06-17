@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FileEdit } from "lucide-react";
@@ -10,16 +11,12 @@ import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 
-interface DocHandlers {
-  uploadingDocId: string | null;
-  downloadingDocId: string | null;
-  deletingDocId: string | null;
-  togglingNoAplicaDocId: string | null;
-  onUpload: (docId: string, file: File) => void;
-  onDownload: (docId: string, archivo: string | null | undefined, nombre: string) => void;
-  onDelete: (docId: string, archivo: string | null | undefined, nombre: string) => void;
-  onToggleNoAplica: (docId: string, nombre: string, currentEstado: string) => void;
-}
+type DocsProps = ComponentProps<typeof TabDocumentos>;
+type DocHandlers = Pick<
+  DocsProps,
+  "uploadingDocId" | "downloadingDocId" | "deletingDocId" | "togglingNoAplicaDocId"
+  | "onUpload" | "onDownload" | "onDelete" | "onToggleNoAplica"
+>;
 
 interface Financials {
   totalVenta: number;
