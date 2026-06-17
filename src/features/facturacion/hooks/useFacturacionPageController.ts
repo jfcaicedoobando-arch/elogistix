@@ -16,8 +16,10 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  */
 export function useFacturacionPageController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;
+  activeTab?: string;
 }) {
   const optsIsInRange = opts?.isInRange;
+  const activeTab = opts?.activeTab;
   const isInRange = useMemo(() => optsIsInRange ?? (() => true), [optsIsInRange]);
   const {
     search, filters, page, pageSize,
@@ -25,8 +27,13 @@ export function useFacturacionPageController(opts?: {
   } = useListPageState({ estado: "todos" });
   const filterEstado = filters.estado;
 
-  const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
-  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
+  // Lazy fetching por tab activo (J de la auditoría). Si no se pasa `activeTab`
+  // se preservan los defaults (todas habilitadas) para retro-compatibilidad.
+  const facturasEnabled = activeTab === undefined || activeTab === "facturas";
+  const gastosEnabled = activeTab === undefined || activeTab === "liquidacion";
+
+  const { data: facturas = [], isLoading: loadingFacturas } = useFacturas({ enabled: facturasEnabled });
+  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes({ enabled: gastosEnabled });
   const { data: proformasPendientes = [] } = useProformasPendientes();
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
