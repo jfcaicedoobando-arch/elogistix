@@ -85,6 +85,8 @@ export default function SugerenciasTarifaInline({
   const origen = watch("origen");
   const destino = watch("destino");
   const tipoContenedor = watch("tipoContenedor");
+  const validez = watch("validezPropuesta");
+
 
   const puertoOrigenId = useMemo(
     () => resolverPuertoId(origen, puertos),
