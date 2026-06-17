@@ -5374,6 +5374,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      convertir_a_mxn: {
+        Args: {
+          _moneda: string
+          _monto: number
+          _tc_eur: number
+          _tc_usd: number
+        }
+        Returns: number
+      }
       cotizaciones_listado: {
         Args: {
           p_cliente_id?: string
@@ -5794,6 +5803,7 @@ export type Database = {
           operador: string
         }[]
       }
+      pnl_financiero_embarque: { Args: { _embarque_id: string }; Returns: Json }
       portal_responder_cotizacion:
         | {
             Args: { p_cotizacion_id: string; p_respuesta: string }

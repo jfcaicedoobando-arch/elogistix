@@ -10,6 +10,7 @@ import { TabNotas } from "@/features/embarques/components/TabNotas";
 import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
+import { TabPnl } from "@/features/embarques/components/TabPnl";
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
 type ResumenProps = ComponentProps<typeof TabResumen>;
@@ -73,6 +74,7 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="documentos">Documentos</TabsTrigger>
         <TabsTrigger value="costos">Costos</TabsTrigger>
         <TabsTrigger value="conciliacion">Conciliación</TabsTrigger>
+        <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
         <TabsTrigger value="garantias">Garantías</TabsTrigger>
         <TabsTrigger value="tracking">Tracking</TabsTrigger>
@@ -126,6 +128,11 @@ export function EmbarqueDetalleTabs({
       <TabsContent value="conciliacion" className="space-y-6">
         <TabConciliacion embarqueId={embarqueId} />
       </TabsContent>
+
+      <TabsContent value="pnl" className="space-y-6">
+        <TabPnl embarqueId={embarqueId} />
+      </TabsContent>
+
 
       <TabsContent value="facturacion">
         <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
