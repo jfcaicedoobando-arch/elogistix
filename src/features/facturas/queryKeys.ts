@@ -7,5 +7,6 @@ export const facturas = {
   cobranza: (filtros?: unknown) => ['facturas', 'cobranza', filtros ?? null] as const,
   series: ['factura_series'] as const,
   notasCredito: (facturaId: string) => ['factura_notas_credito', facturaId] as const,
+  notasCreditoRecientes: (filtros?: unknown) => ['factura_notas_credito', 'recientes', filtros ?? null] as const,
 } as const;
 
