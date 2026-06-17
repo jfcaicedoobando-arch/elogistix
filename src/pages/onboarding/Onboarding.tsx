@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { completeOnboarding } from "@/features/onboarding/services/completeOnboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,12 +71,7 @@ export default function Onboarding() {
     }
     setSubmitting(true);
     try {
-      const { error: rpcError } = await supabase.rpc("complete_onboarding", {
-        _rfc: rfcClean,
-        _direccion: dirClean,
-        _moneda: moneda,
-      });
-      if (rpcError) throw rpcError;
+      await completeOnboarding({ rfc: rfcClean, direccion: dirClean, moneda });
       await refreshProfile();
       toast({ title: "¡Listo!", description: "Configuración inicial completada." });
       navigate("/inicio", { replace: true });

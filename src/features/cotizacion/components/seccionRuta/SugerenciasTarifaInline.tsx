@@ -21,46 +21,10 @@ import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
 import { aplicarTarifaAlForm, logTarifaSugeridaAplicada, type AplicarTarifaOptions } from "./aplicarTarifa";
+import { resolverPuertoId, resolverTipoId } from "./resolverCatalogos";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
-
-const norm = (s: string) =>
-  s.toLowerCase().replace(/['"’`()]/g, "").replace(/\s+/g, " ").trim();
-
-/**
- * Resuelve un texto libre o id de puerto contra el catálogo.
- * Si el valor ya es un id válido, lo devuelve. Si no, intenta match por
- * nombre normalizado (case + acentos no — pero los puertos vienen en ASCII).
- */
-function resolverPuertoId(
-  valor: string | undefined | null,
-  puertos: Array<{ id: string; name: string; country: string; code: string }>,
-): string | undefined {
-  if (!valor) return undefined;
-  if (puertos.some((p) => p.id === valor)) return valor;
-  const objetivo = norm(valor);
-  if (!objetivo) return undefined;
-  return puertos.find((p) => {
-    const candidatos = [
-      p.name,
-      `${p.name}, ${p.country}`,
-      `${p.name}, ${p.country} (${p.code})`,
-      p.code,
-    ].map(norm);
-    return candidatos.some((c) => c === objetivo || objetivo.startsWith(c));
-  })?.id;
-}
-
-function resolverTipoId(
-  valor: string | undefined | null,
-  tipos: Array<{ id: string; name: string }>,
-): string | undefined {
-  if (!valor) return undefined;
-  if (tipos.some((t) => t.id === valor)) return valor;
-  const objetivo = norm(valor);
-  return tipos.find((t) => norm(t.name) === objetivo)?.id;
-}
 
 interface SugerenciasTarifaInlineProps {
   /** Si la cotización ya está persistida, se pasa para bitácora. */
