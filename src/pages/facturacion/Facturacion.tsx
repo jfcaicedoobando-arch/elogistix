@@ -51,6 +51,7 @@ function TabTriggerInfo({ tab }: { tab: TabDef }) {
 
 export default function Facturacion() {
   const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
+  const [activeTab, setActiveTab] = useState<string>("pendientes");
 
   const {
     search, setSearch,
@@ -61,7 +62,7 @@ export default function Facturacion() {
     loadingFacturas, loadingGastos,
     canEdit, marcarPagadoPending,
     handleMarcarPagado, exportarFacturasCsv, exportarLayoutContable,
-  } = useFacturacionPageController({ isInRange });
+  } = useFacturacionPageController({ isInRange, activeTab });
 
   // Badge de cobranza vencida (comparte cache con TabCobranza)
   const { kpis: cobranzaKpis } = useCobranza({ estatus: "todos", moneda: "todas" });
