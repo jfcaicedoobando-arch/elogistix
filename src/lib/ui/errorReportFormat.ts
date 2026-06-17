@@ -2,7 +2,7 @@
  * Helpers de formateo Markdown para `errorReport.ts`.
  * Extraído para mantener complejidad <15 en `formatReportMarkdown`.
  */
-import type { ErrorReport } from "./errorReport";
+import type { ErrorReport } from "@/components/shared/utils/errorReport";
 
 export function fmtHeader(r: ErrorReport): string[] {
   const lines = [
