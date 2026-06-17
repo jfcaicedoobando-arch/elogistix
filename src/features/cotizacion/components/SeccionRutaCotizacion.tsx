@@ -134,7 +134,13 @@ export default function SeccionRutaCotizacion({ complete }: { complete?: boolean
               />
             </PopoverContent>
           </Popover>
+          {tarifaHasta && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Máximo {format(tarifaHasta, "dd/MM/yyyy")} según la tarifa vinculada.
+            </p>
+          )}
         </FormField>
+
 
 
         {!esTerrestre && (
