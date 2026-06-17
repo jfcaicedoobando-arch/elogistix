@@ -255,6 +255,12 @@ export default tseslint.config(
       // Sub-tablas read-only estáticas (sin sort/paginación) — no requieren DataTable:
       "src/components/cotizacion/seccionMercancia/DimensionesLCLTable.tsx",
       "src/components/cotizacion/seccionMercancia/DimensionesAereasTable.tsx",
+      // Bandejas operativas (Cartera/CxP) — listados read-only con totales arriba,
+      // sin sort/paginación cliente; mantienen primitivas de tabla por simplicidad.
+      "src/pages/bandejas/Cartera.tsx",
+      "src/pages/bandejas/CxpPorCapturar.tsx",
+      "src/pages/bandejas/CxpPorPagar.tsx",
+      "src/pages/bandejas/FacturacionPorEmitir.tsx",
     ],
     rules: {
       "no-restricted-imports": "off",

@@ -130,7 +130,9 @@ export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
 export function basicAuthHeader(apiKey: string): string {
   // Facturapi: usuario = api key, password vacío.
-  // deno-lint-ignore no-explicit-any
-  const b64 = typeof btoa === "function" ? btoa(`${apiKey}:`) : (globalThis as any).Buffer.from(`${apiKey}:`).toString("base64");
+  const g = globalThis as { Buffer?: { from: (s: string) => { toString: (enc: string) => string } } };
+  const b64 = typeof btoa === "function"
+    ? btoa(`${apiKey}:`)
+    : g.Buffer!.from(`${apiKey}:`).toString("base64");
   return `Basic ${b64}`;
 }
