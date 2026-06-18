@@ -93,6 +93,7 @@ export function StepDatosGenerales({
           onModoExpedienteChange={onModoExpedienteChange}
           expedienteSeleccionado={expedienteSeleccionado}
           onSeleccionarExpediente={onSeleccionarExpediente}
+          requiereCotizacion={requiereCotizacion}
         />
         <BloqueClienteContactos
           clientes={clientes}
