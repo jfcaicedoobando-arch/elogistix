@@ -53,7 +53,7 @@ export default function Embarques() {
         actions={
           isEmptyState ? null : (
             <EmbarquesHeaderActions
-              canEdit={canEdit}
+              canEdit={canCrear}
               exportandoCsv={exportandoCsv}
               onExport={exportarCsv}
               onNuevo={goNuevo}
