@@ -41,14 +41,54 @@ export async function fetchHistorialEnviosCotizacion(cotizacionId: string): Prom
   return (data ?? []) as unknown as EnvioRow[];
 }
 
+export const CLIENTE_PRINCIPAL_ID = "__cliente_principal__";
+
 export async function fetchContactosClienteConEmail(
   clienteId: string,
 ): Promise<ContactoClienteEmail[]> {
-  const { data, error } = await supabase
-    .from("contactos_cliente")
-    .select("id, nombre, contacto, email, tipo")
-    .eq("cliente_id", clienteId)
-    .is("deleted_at", null);
-  if (error) throw error;
-  return (data ?? []).filter((c) => c.email && EMAIL_RE.test(c.email)) as ContactoClienteEmail[];
+  const [{ data: contactosData, error: errContactos }, { data: clienteData, error: errCliente }] =
+    await Promise.all([
+      supabase
+        .from("contactos_cliente")
+        .select("id, nombre, contacto, email, tipo")
+        .eq("cliente_id", clienteId)
+        .is("deleted_at", null),
+      supabase.from("clientes").select("nombre, email").eq("id", clienteId).maybeSingle(),
+    ]);
+  if (errContactos) throw errContactos;
+  if (errCliente) throw errCliente;
+
+  const contactos = (contactosData ?? []).filter(
+    (c) => c.email && EMAIL_RE.test(c.email),
+  ) as ContactoClienteEmail[];
+
+  const out: ContactoClienteEmail[] = [];
+  const emailPrincipal = clienteData?.email?.trim();
+  if (emailPrincipal && EMAIL_RE.test(emailPrincipal)) {
+    out.push({
+      id: CLIENTE_PRINCIPAL_ID,
+      nombre: clienteData?.nombre ?? "",
+      contacto: clienteData?.nombre ?? "",
+      email: emailPrincipal,
+      tipo: "Cliente",
+    });
+  }
+  const principalLower = emailPrincipal?.toLowerCase();
+  for (const c of contactos) {
+    if (principalLower && c.email.toLowerCase() === principalLower) continue;
+    out.push(c);
+  }
+  return out;
 }
+
+const PROVEEDOR_TIPO_RE = /(proveedor|exportador|shipper|fabric)/i;
+const CLIENTE_PRIORIDAD_RE = /(cliente|cotiz|operativ|administ|cobran)/i;
+
+export function esContactoProveedor(c: Pick<ContactoClienteEmail, "tipo">): boolean {
+  return !!c.tipo && PROVEEDOR_TIPO_RE.test(c.tipo);
+}
+
+export function esContactoPrioridadCliente(c: Pick<ContactoClienteEmail, "tipo">): boolean {
+  return !!c.tipo && CLIENTE_PRIORIDAD_RE.test(c.tipo);
+}
+
