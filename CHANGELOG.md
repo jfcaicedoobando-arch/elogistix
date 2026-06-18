@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.2] - 2026-06-18
+- **refactor(cotizacion-detalle-acciones)**: Eliminada la duplicación entre los botones "Ver {expediente}" del header de cotización y la tarjeta "Embarques Generados". `CotizacionDetalleAcciones` ya no renderiza un botón por cada embarque vinculado; la tarjeta `CotizacionDetalleEmbarques` queda como única vista para navegar a los embarques generados (ya incluía estado, fecha y click-to-navigate por fila). Props `embarqueIdVinculado` y `embarquesVinculados` removidas; reemplazadas por `tieneEmbarquesVinculados: boolean` que sólo controla si se muestra el CTA "Crear embarque" en estado Aceptada. Bump `APP_VERSION` 13.66.2.
+
 ## [13.66.1] - 2026-06-18
 - **feat(embarque-detalle-cotizacion-origen)**: El detalle de embarque (`/embarques/:id`) ahora muestra de qué cotización se generó. Nuevo chip "Generado desde COT-XXXX" debajo del nombre del cliente en `EmbarqueDetalleHeader.tsx`, con link a `/cotizaciones/{cotizacion_id}`. Si `embarque.cotizacion_id` existe pero la cotización ya no es accesible, muestra badge inactivo "Cotización origen no disponible". Implementado con un hook liviano `useCotizacionFolio(id)` (staleTime 5 min) que sólo trae `folio`. Sin cambios de BD. Bump `APP_VERSION` 13.66.1.
 
