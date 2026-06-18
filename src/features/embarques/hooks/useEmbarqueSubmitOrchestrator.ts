@@ -148,6 +148,7 @@ export function useEmbarqueSubmitOrchestrator() {
       registrarActividad.mutate({
         accion: "crear",
         modulo: "embarques",
+        entidad_id: embarqueCreadoId ?? undefined,
         entidad_nombre: expediente,
         detalles: buildBitacoraDetalles({
           modo: p.values.modo,
