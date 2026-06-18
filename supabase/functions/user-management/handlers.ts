@@ -44,6 +44,23 @@ const VALID_ROLES = [
   "viewer",
 ] as const;
 
+// Roles que un admin_org (no global) puede asignar. Excluye `admin` y cualquier
+// rol con escalado a privilegios globales — corrige privilege escalation
+// reportado por el escáner de seguridad.
+const ASSIGNABLE_BY_ORG_ADMIN = new Set<string>([
+  "admin_org",
+  "gerente_operaciones",
+  "gerente_visor",
+  "coordinador_logistico",
+  "ejecutivo_pricing",
+  "contador",
+  "tesorero",
+  "vendedor",
+  "customer_service",
+  "operador",
+  "viewer",
+]);
+
 export function validateCreatePayload(body: { email?: string; password?: string }): string | null {
   if (!body.email || !body.password) return "Email y contraseña son requeridos";
   if (body.password.length < 6) return "La contraseña debe tener al menos 6 caracteres";
@@ -65,6 +82,12 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
   if (!role || !(VALID_ROLES as readonly string[]).includes(role)) {
     log.finish(400, "invalid_role", { user_id: callerId, payload: { role } });
     return errorResponse(`Rol no soportado: ${role ?? "(vacío)"}`, 400, cors);
+  }
+  // Privilege escalation guard: un admin_org (no global) no puede asignar roles
+  // con escalado a privilegios globales (admin/super_admin).
+  if (!admin.isGlobalAdmin && !ASSIGNABLE_BY_ORG_ADMIN.has(role)) {
+    log.finish(403, "role_not_assignable_by_org_admin", { user_id: callerId, payload: { role } });
+    return errorResponse("No tienes permiso para asignar ese rol", 403, cors);
   }
   const selectedRole = role;
 

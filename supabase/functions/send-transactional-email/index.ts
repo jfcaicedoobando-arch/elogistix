@@ -16,10 +16,29 @@ Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
     console.error('Missing required environment variables')
     return corsResponse({ error: 'Server configuration error' }, 500)
+  }
+
+  // Auth: solo aceptamos service_role JWT verificado (callers server-to-server).
+  // Bloquea relay de email abierto desde Internet.
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return corsResponse({ error: 'Unauthorized' }, 401)
+  }
+  const token = authHeader.slice('Bearer '.length).trim()
+  try {
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token)
+    if (claimsError || claimsData?.claims?.role !== 'service_role') {
+      return corsResponse({ error: 'Forbidden' }, 403)
+    }
+  } catch (e) {
+    console.error('JWT verification failed', e)
+    return corsResponse({ error: 'Forbidden' }, 403)
   }
 
   const parsed = await parseRequest(req)
