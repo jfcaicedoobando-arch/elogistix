@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchContactosClienteConEmail,
-  esContactoProveedor,
   esContactoPrioridadCliente,
   CLIENTE_PRINCIPAL_ID,
   type ContactoClienteEmail,
 } from "@/features/cotizacion/services/envios";
+
 
 
 export type Contacto = ContactoClienteEmail;
