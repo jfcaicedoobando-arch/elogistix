@@ -10,6 +10,8 @@ import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { parseTarifasInformativas } from "@/features/cotizacion/services";
 import { useToast } from "@/hooks/shared";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
 interface Props {
   cotizacion: CotizacionRow;
