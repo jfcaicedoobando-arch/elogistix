@@ -108,7 +108,7 @@ export async function convertirCotizacionAEmbarques(
 
   // 5) Insertar conceptos_venta desde el jsonb de la cotización (v12.13.1 hardening).
   const ventasJsonb = Array.isArray(cotizacion.conceptos_venta) ? cotizacion.conceptos_venta : [];
-  await insertarVentasEmbarque(ventasJsonb, embarque.id);
+  await insertarVentasEmbarque(ventasJsonb, embarque.id, hijosCreados);
 
   // 6) Marcar cotización como "En operación" y vincularla al embarque.
   const { error: errorUpdate } = await supabase
