@@ -43,9 +43,8 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
   const qc = useQueryClient();
   const [drafts, setDrafts] = useState<Record<string, DraftPatch>>({});
 
-  // SAFE-CAST: `contenedores` viene de supabase/types con columnas nuevas (13.66.11)
-  // aún no regeneradas; el shape coincide con EditableRow en runtime.
   const rows = useMemo<EditableRow[]>(
+    // SAFE-CAST: `contenedores` viene de supabase/types con columnas nuevas (13.66.11) aún no regeneradas; shape compatible con EditableRow en runtime.
     () => contenedores as unknown as EditableRow[],
     [contenedores],
   );
