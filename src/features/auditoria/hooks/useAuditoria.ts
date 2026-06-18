@@ -14,12 +14,14 @@ const QUERY_KEY = ["auditoria", "embarques"] as const;
  * Reporte completo de auditoría operativa. Cache 5 min compartida con
  * useAuditoriaCount() para que el badge del sidebar no genere round-trips extra.
  */
-export function useAuditoria() {
+export function useAuditoria(options: { enabled?: boolean } = {}) {
+  const enabled = options.enabled ?? true;
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchReporteAuditoria,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
+    enabled,
   });
 }
 
@@ -27,8 +29,13 @@ export function useAuditoria() {
  * Devuelve el total de hallazgos PENDIENTES (excluye los ya marcados como
  * revisados). Reusa la misma query del reporte y la de revisiones, así que si
  * /auditoria ya cargó los datos, el badge los lee del cache sin tocar la red.
+ *
+ * `enabled` permite que callers (p. ej. el sidebar) deshabiliten el hook para
+ * roles sin acceso al RPC `auditoria_embarques_org`, evitando 403 ruidosos que
+ * antes terminaban en Sentry vía `QueryCache.onError`.
  */
-export function useAuditoriaCount() {
+export function useAuditoriaCount(options: { enabled?: boolean } = {}) {
+  const enabled = options.enabled ?? true;
   const results = useQueries({
     queries: [
       {
@@ -36,6 +43,7 @@ export function useAuditoriaCount() {
         queryFn: fetchReporteAuditoria,
         staleTime: 5 * 60_000,
         gcTime: 10 * 60_000,
+        enabled,
       },
       {
         queryKey: AUDITORIA_REVISIONES_KEY,
@@ -43,9 +51,14 @@ export function useAuditoriaCount() {
         // produce el mismo Map sin depender del orden de montaje.
         queryFn: buildRevisionesMap,
         staleTime: 60_000,
+        enabled,
       },
     ],
   });
+  if (!enabled) {
+    return { data: undefined, isLoading: false, isError: false, error: null };
+  }
+
   // SAFE-CAST: useQueries pierde la inferencia de tipos heterogéneos; ambos
   // queryFn están tipados arriba (fetchReporteAuditoria → ReporteAuditoria,
   // buildRevisionesMap → Map<string, AuditoriaRevision>), así que el shape
