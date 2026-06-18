@@ -86,8 +86,7 @@ export default function CotizacionDetalle() {
           esProspecto={cotizacion.es_prospecto}
           numContenedores={cotizacion.num_contenedores}
           cotizacionId={id!}
-          embarqueIdVinculado={cotizacion.embarque_id ?? null}
-          embarquesVinculados={embarquesVinculados}
+          tieneEmbarquesVinculados={embarquesVinculados.length > 0 || !!cotizacion.embarque_id}
           onCambiarEstado={handleCambiarEstado}
           onAbrirConvertir={abrirDialogConvertir}
         />
