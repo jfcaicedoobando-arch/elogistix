@@ -19,17 +19,19 @@ export interface QueueConfig {
   rateLimited: boolean
 }
 
-function parseJwtClaims(token: string): Record<string, unknown> | null {
-  const parts = token.split('.')
-  if (parts.length < 2) return null
+async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promise<boolean> {
+  // Verifica la firma del JWT contra el proyecto y exige role=service_role.
+  // Reemplaza el decode manual base64 (vulnerable a tokens forjados).
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+  if (!anonKey) return false
   try {
-    const payload = parts[1]
-      .replaceAll('-', '+')
-      .replaceAll('_', '/')
-      .padEnd(Math.ceil(parts[1].length / 4) * 4, '=')
-    return JSON.parse(atob(payload)) as Record<string, unknown>
-  } catch {
-    return null
+    const anonClient = createClient(supabaseUrl, anonKey)
+    const { data, error } = await anonClient.auth.getClaims(token)
+    if (error || !data?.claims) return false
+    return data.claims.role === 'service_role'
+  } catch (e) {
+    console.error('JWT verification failed', e)
+    return false
   }
 }
 
