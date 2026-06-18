@@ -5,6 +5,7 @@ import {
   fetchCosteoRutas,
   insertCosteoRuta,
   deleteCosteoRuta,
+  CosteoRutaDuplicadaError,
   type CosteoRutaInput,
 } from "@/features/costeo/services/rutas";
 
@@ -29,7 +30,11 @@ export function useCosteoRutaMutations() {
   const crear = useMutation({
     mutationFn: (input: CosteoRutaInput) => insertCosteoRuta(organizationId!, input),
     onSuccess: () => { invalidate(); toast({ title: "Ruta agregada" }); },
-    onError: (e: Error) => toast({ title: "Error al agregar", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({
+      title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
+      description: e.message,
+      variant: "destructive",
+    }),
   });
   const eliminar = useMutation({
     mutationFn: (id: string) => deleteCosteoRuta(id),

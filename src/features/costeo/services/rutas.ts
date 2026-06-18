@@ -30,6 +30,19 @@ export interface CosteoRutaInput {
   activa?: boolean;
 }
 
+export class CosteoRutaDuplicadaError extends Error {
+  constructor() {
+    super("Esta ruta CN → MX ya está registrada en tu organización.");
+    this.name = "CosteoRutaDuplicadaError";
+  }
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; message?: unknown };
+  return candidate.code === "23505" || String(candidate.message ?? "").includes("costeo_rutas_organization_id_puerto_origen_id_puer");
+}
+
 export async function insertCosteoRuta(
   organizationId: string,
   input: CosteoRutaInput,
@@ -39,7 +52,10 @@ export async function insertCosteoRuta(
     .insert({ ...input, organization_id: organizationId })
     .select("*")
     .single();
-  if (error) throw error;
+  if (error) {
+    if (isUniqueViolation(error)) throw new CosteoRutaDuplicadaError();
+    throw error;
+  }
   return data as CosteoRuta;
 }
 
