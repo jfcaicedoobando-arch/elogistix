@@ -77,7 +77,7 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
   ];
 }
 
-export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: Props) {
+export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tiposContenedor = [] }: Props) {
   const totales = calcularTotales(cotizacion.conceptos_venta, tasaIva);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
@@ -106,6 +106,14 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: P
     });
   }
 
+  const headerMeta = [
+    { label: "Estado", value: cotizacion.estado },
+    { label: "Fecha", value: formatDate(cotizacion.created_at.substring(0, 10)) },
+    ...(cotizacion.fecha_vigencia
+      ? [{ label: "Vigencia", value: formatDate(cotizacion.fecha_vigencia) }]
+      : []),
+  ];
+
   return (
     <Document title={`${cotizacion.folio} - Cotización`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
@@ -113,21 +121,19 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: P
           tipoDocumento="Cotización"
           folio={cotizacion.folio}
           emisor={emisor}
-          meta={[
-            { label: "Estado", value: cotizacion.estado },
-            { label: "Fecha", value: formatDate(cotizacion.created_at.substring(0, 10)) },
-          ]}
+          meta={headerMeta}
         />
         <BillToBlock
           titulo={cotizacion.es_prospecto ? "Destinatario (Prospecto)" : "Destinatario"}
           destinatario={{ nombre }}
         />
+        <SeccionResumenRuta c={cotizacion} />
         <SeccionProspecto c={cotizacion} />
-        <SeccionDatosYMercancia c={cotizacion} />
+        <SeccionDatosYMercancia c={cotizacion} tiposContenedor={tiposContenedor} />
 
-        {/* Salto de página antes de Conceptos */}
-        <View break />
-        <Text style={styles.h3}>Conceptos de Venta</Text>
+        <View wrap={false} style={{ marginTop: 10 }}>
+          <Text style={styles.h3}>Conceptos de Venta</Text>
+        </View>
 
         {usd.length > 0 ? (
           <>
@@ -157,12 +163,12 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: P
         />
 
         {cotizacion.notas ? (
-          <>
+          <View wrap={false}>
             <Text style={styles.h3}>Notas</Text>
             <View style={styles.notesBox}>
               <Text>{cotizacion.notas}</Text>
             </View>
-          </>
+          </View>
         ) : null}
 
         <Footer empresaNombre={emisor?.razonSocial} />
