@@ -90,7 +90,7 @@ Deno.serve(wrapEdgeHandler("process-email-queue", async (req) => {
   const env = loadEnv()
   if (env instanceof Response) return env
 
-  const authErr = authenticateRequest(req)
+  const authErr = await authenticateRequest(req, env.supabaseUrl)
   if (authErr) return authErr
 
   const supabase = createClient(env.supabaseUrl, env.supabaseServiceKey)
