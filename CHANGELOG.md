@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.1] - 2026-06-18
+- **fix(rls)**: Política `costeo_rutas_write_org` ahora incluye el rol `coordinador_logistico` (además de admin, admin_org, gerente_operaciones, ejecutivo_pricing, operador y super_admin). Resuelve el error "new row violates row-level security policy for table costeo_rutas" que vio Valeria al dar de alta una ruta CN→MX.
+
 ## [13.67.0] - 2026-06-18
 - **feat(mobile-p0)**: Remediación P0 de la auditoría visual mobile (viewport 390×844).
   - **FAB no tapa la última fila**: `pb-24 md:pb-0` en el contenedor raíz de `/clientes`, `/proveedores`, `/cotizaciones`, `/embarques`. El FAB (56px, `bottom-6 right-4`) queda con safe-area inferior real.
