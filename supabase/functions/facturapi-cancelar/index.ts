@@ -91,4 +91,4 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   });
 
   return json({ ok: true, status: fapiJson.status ?? "canceled" });
-});
+}));
