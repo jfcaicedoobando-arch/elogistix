@@ -1,20 +1,37 @@
 import { useSearchParams } from "react-router-dom";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 /**
  * Hook genérico: estado de tab persistido en query param (?tab=<id>).
  * Reemplaza el valor por defecto cuando se selecciona la primera opción.
+ *
+ * v13.66.15: soporta `legacyMap` opcional para redirigir deep-links antiguos
+ * (p.ej. `pnl-contenedor` → `pnl`, `demoras` → `garantias`) cuando se fusionan
+ * o renombran tabs sin romper bookmarks ni enlaces compartidos.
  */
 export function useTabsParam<T extends string>(
   validTabs: readonly T[],
   defaultTab: T,
   paramName = "tab",
+  legacyMap?: Record<string, T>,
 ): { activeTab: T; setActiveTab: (v: string) => void } {
   const [searchParams, setSearchParams] = useSearchParams();
   const param = searchParams.get(paramName);
-  const activeTab = (validTabs as readonly string[]).includes(param ?? "")
-    ? (param as T)
-    : defaultTab;
+
+  const isValid = (validTabs as readonly string[]).includes(param ?? "");
+  const legacyTarget = !isValid && legacyMap && param ? legacyMap[param] : undefined;
+  const activeTab = isValid ? (param as T) : (legacyTarget ?? defaultTab);
+
+  // Si vino un valor legacy, normalizar la URL para no exponer el id viejo.
+  useEffect(() => {
+    if (legacyTarget) {
+      const next = new URLSearchParams(searchParams);
+      if (legacyTarget === defaultTab) next.delete(paramName);
+      else next.set(paramName, legacyTarget);
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [legacyTarget]);
 
   const setActiveTab = useCallback(
     (v: string) => {

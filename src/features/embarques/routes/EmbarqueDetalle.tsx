@@ -19,13 +19,25 @@ import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
-const TABS_VALIDOS = ["resumen", "documentos", "costos", "conciliacion", "facturacion", "garantias", "tracking", "notas"] as const;
+// v13.66.15: reordenadas por flujo (operación → finanzas → cierre → bitácora)
+// y fusionadas (P&L+P&L Contenedor, Garantías+Demoras).
+const TABS_VALIDOS = [
+  "resumen", "tracking", "documentos",
+  "costos", "garantias", "seguros", "pnl", "facturacion", "conciliacion",
+  "cierre", "notas",
+] as const;
+
+// Mapa de compatibilidad con deep-links antiguos (?tab=pnl-contenedor, ?tab=demoras).
+const TABS_LEGACY: Record<string, (typeof TABS_VALIDOS)[number]> = {
+  "pnl-contenedor": "pnl",
+  "demoras": "garantias",
+};
 
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
-  const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen");
+  const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
   const {
     embarque, conceptosVenta, conceptosCosto, documentos, notas, facturas,
