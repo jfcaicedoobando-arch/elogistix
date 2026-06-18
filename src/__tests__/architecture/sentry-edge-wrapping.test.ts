@@ -13,8 +13,18 @@ import path from "node:path";
 const ROOT = path.resolve(__dirname, "../../..");
 
 const CRITICAL = [
+  // Fase C (13.62.0)
   "supabase/functions/facturapi-emitir/index.ts",
   "supabase/functions/facturapi-cancelar/index.ts",
+  // F1 (13.65.0) — email/queue/sales/cron/exchange-rates
+  "supabase/functions/send-transactional-email/index.ts",
+  "supabase/functions/process-email-queue/index.ts",
+  "supabase/functions/enviar-cotizacion-email/index.ts",
+  "supabase/functions/auditoria-weekly-digest/index.ts",
+  "supabase/functions/handle-email-suppression/index.ts",
+  "supabase/functions/handle-email-unsubscribe/index.ts",
+  "supabase/functions/preview-transactional-email/index.ts",
+  "supabase/functions/exchange-rates/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
