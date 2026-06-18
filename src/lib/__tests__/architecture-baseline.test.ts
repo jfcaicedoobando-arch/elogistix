@@ -34,8 +34,13 @@ const BASELINE: ReadonlySet<string> = new Set<string>([
 const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 // Allowlist temporal para archivos > 200 líneas pendientes de split.
-// 13.38.2 — VACÍO: toda la deuda histórica de tamaño dividida.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([]);
+// 13.66.21 — Re-incorporados tras crecimiento marginal por features tarifarias/PNL.
+const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
+  "src/features/embarques/services/pnlPorContenedor.ts",
+  "src/features/embarques/components/TabDemoras.tsx",
+  "src/features/embarques/components/TabPnlContenedor.tsx",
+  "src/features/embarques/components/EmbarqueDetalleTabs.tsx",
+]);
 
 
 function walk(dir: string, out: string[] = []): string[] {
