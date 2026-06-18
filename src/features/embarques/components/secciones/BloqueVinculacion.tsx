@@ -22,6 +22,8 @@ interface Props {
   onModoExpedienteChange?: (modo: 'nuevo' | 'existente') => void;
   expedienteSeleccionado?: ExpedienteCliente | null;
   onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
+  /** Cuando es true, vincular cotización es obligatorio (controlado por rol del usuario). */
+  requiereCotizacion?: boolean;
 }
 
 export function BloqueVinculacion({
