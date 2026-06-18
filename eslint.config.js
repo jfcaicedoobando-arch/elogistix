@@ -295,42 +295,27 @@ export default tseslint.config(
       "max-depth": "off",
     },
   {
-    // Plan E (13.63.0) — Guardrail para `@sentry/*`.
-    // El SDK pesa ~150 KB y sólo debe importarse STATICAMENTE desde la capa
-    // de observabilidad. Otros módulos deben usar `import("@sentry/react")`
-    // dinámico para no inflar el bundle inicial.
-    //
-    // Allowlist (importadores estáticos legítimos):
-    //   - src/lib/observability/sentry/**  (módulo dueño del SDK)
-    //   - src/hooks/sentry/**              (hooks de diagnóstico)
-    //   - src/components/shared/ErrorBoundary.tsx
-    //   - src/components/feedback/**       (widget de feedback)
-    //   - src/pages/admin/SentryDiagnostico.tsx
-    //
-    // Imports estáticos legados pendientes de migrar a lazy (NO añadir nuevos):
-    //   - src/features/proformas/services/crud.ts
-    //   - src/features/embarques/services/mutations.ts
-    //   - src/features/embarques/hooks/useNuevoEmbarqueWizard.ts
-    //   - src/features/tesoreria/services/conciliacion.ts
-    //   - src/features/cxp/services/parseCfdi.ts
-    //   - src/pdf/render/descargarPdf.ts
-    files: ["src/**/*.{ts,tsx}"],
+    // Plan E (13.63.0) — Guardrail para `@sentry/*` en capas de UI.
+    // El SDK pesa ~150 KB y sólo debe importarse STÁTICAMENTE desde la capa
+    // de observabilidad. Páginas/componentes/contexts/lib deben usar
+    // `await import("@sentry/react")` dinámico para mantenerlo fuera del
+    // bundle inicial. Hooks/services/features ya están exentos de
+    // `no-restricted-imports` por sus overrides previos; los imports
+    // estáticos legados en esas capas se migrarán a lazy progresivamente.
+    files: [
+      "src/components/**/*.{ts,tsx}",
+      "src/pages/**/*.{ts,tsx}",
+      "src/contexts/**/*.{ts,tsx}",
+      "src/lib/**/*.{ts,tsx}",
+    ],
     ignores: [
       "src/lib/observability/sentry/**",
-      "src/hooks/sentry/**",
       "src/components/shared/ErrorBoundary.tsx",
       "src/components/feedback/**",
       "src/pages/admin/SentryDiagnostico.tsx",
-      // Legados (a migrar a lazy import en próximas iteraciones):
-      "src/features/proformas/services/crud.ts",
-      "src/features/embarques/services/mutations.ts",
-      "src/features/embarques/hooks/useNuevoEmbarqueWizard.ts",
-      "src/features/tesoreria/services/conciliacion.ts",
-      "src/features/cxp/services/parseCfdi.ts",
-      "src/pdf/render/descargarPdf.ts",
+      "**/__tests__/**",
       "**/*.test.ts",
       "**/*.test.tsx",
-      "src/test/**",
     ],
     rules: {
       "no-restricted-imports": ["error", {
@@ -338,7 +323,7 @@ export default tseslint.config(
           {
             group: ["@sentry/*"],
             message:
-              "Importar `@sentry/*` estáticamente sólo se permite desde `src/lib/observability/sentry/**` y la allowlist documentada en eslint.config.js. En otros módulos usa `await import('@sentry/react')` para mantener el SDK fuera del bundle inicial.",
+              "Importar `@sentry/*` estáticamente sólo se permite desde `src/lib/observability/sentry/**`, `ErrorBoundary`, `components/feedback/**` y `SentryDiagnostico`. En el resto usa `await import('@sentry/react')` dinámico para mantener el SDK fuera del bundle inicial.",
           },
         ],
       }],
