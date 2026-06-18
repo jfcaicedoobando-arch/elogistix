@@ -1,46 +1,28 @@
-## Reglas nuevas de cierre del embarque (v13.66.12)
+## Backfill embarque ELIMP00272: costos por contenedor
 
-Agregar 3 reglas duras a `validar_cierre_embarque` para que el cierre **no se ejecute** mientras queden cabos sueltos en conceptos de venta o de costo.
+### Estado actual
+- Embarque `79fe05dc-305f-46d5-a7ab-d40e685fe1ee` con 6 contenedores.
+- 2 conceptos de costo "generales" (`contenedor_id = NULL`):
+  - Flete Marítimo — USD 5,327.16
+  - Cargos en Destino — USD 96.16
 
-### 1. Migración — `validar_cierre_embarque` extendido
+### Cambio a aplicar (data-only, sin migración)
+Usar la herramienta `supabase--insert` en una sola transacción:
 
-Reescribir el RPC para agregar **3 checks** antes del retorno (orden tras `comision_calculada`):
+1. **Insertar 12 nuevos `conceptos_costo`** (2 conceptos × 6 contenedores), copiando todos los campos del concepto original (proveedor_id, proveedor_nombre, moneda, fecha_vencimiento, organization_id, embarque_id) y fijando:
+   - `contenedor_id` = id del contenedor correspondiente
+   - `monto` = monto original sin cambios (5,327.16 / 96.16)
+   - `estado_liquidacion` = `'Pendiente'`
+   - `fecha_pago`, `referencia_pago` = NULL
+2. **Soft-delete** de los 2 conceptos generales originales (`deleted_at = now()`) para no duplicar la suma del embarque.
 
-- **`venta_conceptos_facturados`** — `ok=true` solo si no existe ningún `conceptos_venta` con `embarque_id = p_embarque_id`, `deleted_at IS NULL` y `estado_facturacion <> 'facturado'`. Devuelve `detalle = { pendientes: N, en_proforma: N }` para que el checklist muestre cuántos quedan.
+Total resultante: 6 × 5,327.16 + 6 × 96.16 = **USD 32,539.92** en 12 líneas.
 
-- **`costo_conceptos_con_factura`** — `ok=true` solo si todo `conceptos_costo` (no borrado) tiene al menos una entrada en `proveedor_facturas_conceptos` vinculada a una `proveedor_facturas` no cancelada. Devuelve `detalle = { sin_factura: N }`.
+### Verificación post-cambio
+- `SELECT contenedor_id, concepto, monto FROM conceptos_costo WHERE embarque_id = ... AND deleted_at IS NULL` → 12 filas, 2 por contenedor.
+- Confirmar que el TabCierre del embarque ya muestra los costos repartidos y siguen apareciendo como pendientes de factura proveedor / liquidación (las nuevas reglas de cierre v13.66.12 los van a bloquear hasta facturarlos, que es lo esperado).
 
-- **`costos_liquidados`** — `ok=true` solo si no existe `conceptos_costo` con `estado_liquidacion = 'Pendiente'` (o equivalente). Devuelve `detalle = { pendientes: N }`.
-
-Las 3 alimentan `v_puede` (AND) igual que las demás reglas. Si alguna falla, el botón "Cerrar embarque" queda deshabilitado.
-
-### 2. UI — etiquetas en `TabCierre`
-
-Agregar al diccionario `ETIQUETAS_REGLA`:
-
-- `venta_conceptos_facturados`: `"Todos los conceptos de venta facturados"`
-- `costo_conceptos_con_factura`: `"Todos los costos tienen factura de proveedor recibida"`
-- `costos_liquidados`: `"Todos los costos están liquidados (pagados al proveedor)"`
-
-Sin cambios estructurales: `CierreChecklistCard` ya renderiza cualquier regla devuelta por el RPC.
-
-### 3. Tests
-
-`TabCierre.rules.test.ts` (existente) — agregar 3 casos: una regla en `ok=false` por cada nueva, verificar que el botón se deshabilita y que la etiqueta aparece en rojo.
-
-### 4. Metadata
-
-- `APP_VERSION` → `13.66.12`.
-- Entrada en `CHANGELOG.md` describiendo las 3 reglas nuevas, cómo se calculan y por qué (ventas/costos sin formalizar dejaban embarques con utilidad falsa).
-
-## Fuera de alcance
-
-- No se modifica la UI de Facturación ni de Conciliación (ya muestran los pendientes; solo se agrega bloqueo formal al cerrar).
-- No se hace backfill de embarques cerrados previamente (mantienen su estado).
-- No se altera el modelo de `estado_facturacion` ni `estado_liquidacion`.
-
-## Detalles técnicos clave
-
-- RPC mantiene `SECURITY DEFINER` + `SET search_path = public`.
-- Las consultas nuevas son simples `EXISTS` / `COUNT(*)` con índice sobre `embarque_id` (ya existe en ambas tablas).
-- La regla `costos_liquidados` es independiente de `cxp_pagada`: cxp valida que `proveedor_facturas` estén pagadas, pero un `conceptos_costo` puede no estar marcado como `Liquidado` si nadie cruzó el pago al concepto.
+### Fuera de alcance
+- No se modifican `conceptos_venta` (la venta se sigue manejando como hoy).
+- No se crean facturas de proveedor automáticamente.
+- No se cambia código ni esquema; solo datos del embarque 272.
