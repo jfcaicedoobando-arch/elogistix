@@ -1,114 +1,62 @@
-## Diagnóstico
+## Contexto
 
-ELIMP00273 (cotización COT-2026-0077, **LCL**) está guardado así:
+**COT-2026-0076 → ELIMP00272** es Marítimo **FCL** con 6 contenedores 40HC capturados (números de contenedor reales), pero los campos `peso_kg`, `volumen_m3` y `piezas` quedaron en 0 en cada hijo. El trigger `sync_embarque_desde_contenedor` propaga la suma (0) al embarque padre, por eso la tabla muestra "faltan datos". La cotización origen también tiene esos campos en 0, así que no hay valor canónico para auto-rellenar.
 
-| | parent embarque | contenedor hijo único |
-|---|---|---|
-| peso_kg | 0 | 0 |
-| volumen_m3 | 0 | 0 |
-| piezas | 0 | 0 |
-| tipo_contenedor | LCL | LCL |
-| numero_contenedor | — | (vacío) |
+A diferencia de los bugs LCL ya corregidos (v13.66.8 / v13.66.9), aquí no hay bug de mapper ni de helper: el wizard FCL permite guardar los contenedores con totales en 0 porque al momento de crear el embarque pueden no conocerse. La decisión de producto es **exigirlos sólo más adelante, antes de cerrar el embarque o generar la primera proforma**.
 
-La cotización origen sí tiene la información de la mercancía:
-- `peso_kg = 0`, `volumen_m3 = 4.09274`, `piezas = 3`
-- `dimensiones_lcl = [{l:86,a:175,h:113,pzs:2,vol:3.4013}, {l:67,a:120,h:86,pzs:1,vol:0.69144}]`
+ELIMP00272 se deja como está: el usuario lo edita desde la UI de contenedores cuando tenga los pesos reales.
 
-Eso es lo que el usuario percibe como "antes tenía contenedores y ahora le falta información": la pieza de mercancía/volumen/piezas nunca se persistió en el embarque al crearse desde el wizard.
+## Cambios
 
-## Causa raíz (dos bugs concurrentes)
+### 1. Regla nueva en `validar_cierre_embarque` (RPC)
 
-### Bug A — Wizard no siembra el contenedor LCL desde la cotización
+Migración que reemplaza la función `public.validar_cierre_embarque(uuid)` agregando un check extra:
 
-`src/lib/mappers/embarqueCotizacion.ts → buildContenedoresPlaceholder` sólo crea placeholders cuando la cotización es **FCL**:
+- **Regla**: `contenedores_datos_completos`
+- **Aplica sólo** cuando `embarques.modo = 'Marítimo'` AND `embarques.tipo_servicio = 'FCL'`.
+- **Falla** si existe algún `embarque_contenedores` del embarque con `peso_kg <= 0` o `volumen_m3 <= 0` (piezas opcional, dado que algunos clientes FCL no las desglosan).
+- **Detalle** devuelto: `{ contenedores_incompletos: <int>, ids: [uuid...] }` para que la UI pueda enlazar.
+- Para modos/servicios distintos (Aéreo, Terrestre, LCL) el check devuelve `ok: true` automáticamente.
+
+El check se suma a `v_checks` y participa en `v_puede_cerrar` igual que las reglas actuales (`cxc_cobrada`, `cxp_pagada`, `docs_completos`, `pnl_margen_minimo`).
+
+### 2. UI de cierre
+
+`src/features/embarques/components/TabCierre.tsx`: agregar etiqueta en `ETIQUETAS_REGLA`:
 
 ```ts
-if (!esFCL(cot) || !esModoMaritimo(cot.modo)) return [];
+contenedores_datos_completos: "Datos de contenedores capturados (peso y volumen)",
 ```
 
-Para cotizaciones **LCL**, el array `contenedores` del form queda vacío. Luego `StepDatosRutaMaritimo` (al cambiar de modo) lo inicializa con `[crearContenedorVacio(1)]` — **un contenedor con peso/volumen/piezas = 0**. El usuario nunca llena ese formulario porque la pantalla ya muestra "vinculada a COT-…".
+No requiere más cambios: `CierreChecklistCard` ya renderiza dinámicamente cualquier regla devuelta por la RPC.
 
-### Bug B — Trigger `sync_embarque_desde_contenedor` borra los totales del parent
+### 3. Pre-check al generar proforma
 
-Aunque la RPC `crear_embarque_completo` (con el fix del turno anterior) insertara peso/vol/piezas correctos en `embarques`, el AFTER INSERT en `embarque_contenedores` recalcula y **sobreescribe** así:
+Punto único: hook `useProformas` (o el componente que abre el wizard `PasoConfirmacionProforma`).
 
-```sql
-UPDATE public.embarques
-SET peso_kg = v_total_peso,           -- suma de hijos
-    volumen_m3 = v_total_vol,
-    piezas = v_total_piezas,
-    contenedor = …, tipo_contenedor = …
-WHERE id = v_embarque_id;
-```
+- Antes de abrir el flujo de creación de proforma, ejecutar una verificación cliente: si el embarque es Marítimo FCL y cualquiera de sus `embarque_contenedores` tiene `peso_kg=0` o `volumen_m3=0`, mostrar `toast.error` en español ("Captura peso y volumen de todos los contenedores antes de generar la proforma.") y abortar.
+- Implementación: pequeña función `validarContenedoresFCL(embarqueId)` en `src/features/embarques/services/` que hace un `select id, peso_kg, volumen_m3 from embarque_contenedores where embarque_id=?` y aplica el mismo criterio que la RPC. Reusable también desde `submitProformaDialog.ts`.
+- No se duplica lógica de cierre: la validación de cierre sigue siendo server-side via RPC; el pre-check de proforma vive sólo en cliente porque la RPC `crear_proforma_atomica` no conoce esta regla.
 
-Con un hijo placeholder en ceros → el parent termina en ceros. El trigger es correcto en intención (los hijos son fuente de verdad), pero choca con un wizard que entrega hijos sin datos.
+### 4. Tests
 
-## Alcance
+- `src/features/embarques/services/__tests__/validarContenedoresFCL.test.ts` (nuevo): cubre Marítimo FCL con incompletos / completos, LCL marítimo (siempre ok), Aéreo (siempre ok).
+- `src/features/embarques/components/__tests__/TabCierre.rules.test.ts` (existente): añadir caso para la nueva regla en la lista de etiquetas.
 
-Mismo patrón en los embarques que vinculé en el turno anterior:
+### 5. Metadata
 
-| Expediente | Cotización LCL? | Estado del parent ahora | Acción |
-|---|---|---|---|
-| **ELIMP00273** | LCL con `vol=4.09, pzs=3` | parent 0/0/0, hijo único 0/0/0 | **backfill** (datos sí existen en la cot) |
-| ELIMP00232 | LCL pero cot con 0/0/0 | parent ya recalculado por operativos (2904 kg, 30 pzs) vía hijos editados | nada (ya está OK) |
-| ELIMP00184/00204/00262 | FCL, cot sin peso/vol | hijos ya editados manualmente con datos reales | nada |
+- Bump `APP_VERSION` → `13.66.10`.
+- Entrada en `CHANGELOG.md` describiendo: "Cierre y proforma exigen peso y volumen capturados en cada contenedor FCL antes de proceder. No afecta LCL, Aéreo ni Terrestre. ELIMP00272 queda pendiente de edición manual del usuario."
 
-Sólo **ELIMP00273** requiere backfill puntual.
+## Fuera de alcance (confirmado por el usuario)
 
-## Fix
+- No se toca ELIMP00272 ni los 6 contenedores (el usuario los editará desde la UI).
+- No se exigen peso/volumen/piezas en cotizaciones FCL.
+- No se bloquea el guardado del wizard de embarque al crear (sólo al cerrar o facturar vía proforma).
 
-### 1. Backfill ELIMP00273 (data-only, idempotente)
+## Detalles técnicos clave
 
-Migración con `SET LOCAL app.bypass_cierre = 'on'` (el embarque está en estado `Confirmado`, pero seguimos el mismo patrón de seguridad del turno anterior).
-
-```sql
--- Sembrar el contenedor hijo único con los totales de la cotización LCL
-UPDATE public.embarque_contenedores
-   SET peso_kg = 0,
-       volumen_m3 = 4.09274,
-       piezas = 3,
-       tipo_contenedor = COALESCE(NULLIF(tipo_contenedor, ''), 'LCL')
- WHERE id = '76866c80-675d-4b36-81cc-28211c131c88'
-   AND peso_kg = 0 AND volumen_m3 = 0 AND piezas = 0;
-```
-
-El propio trigger `sync_embarque_desde_contenedor` propagará la suma al parent (`embarques.peso_kg/volumen_m3/piezas`), así que **no tocamos `embarques` directamente** — el embarque queda consistente por construcción.
-
-### 2. Fix del wizard: sembrar contenedor LCL con totales de la cotización
-
-`src/lib/mappers/embarqueCotizacion.ts`:
-
-- Renombrar/extender `buildContenedoresPlaceholder` para que:
-  - Si es **FCL marítimo** → comportamiento actual (N placeholders con `tipo_contenedor`).
-  - Si es **LCL marítimo** → devolver **un único** contenedor pre-rellenado con `peso_kg = cot.peso_kg`, `volumen_m3 = cot.volumen_m3`, `piezas = cot.piezas`, `tipo_contenedor = "LCL"`.
-  - Cualquier otro modo → `[]` (sin cambios).
-
-- Esto sembrará valores reales en el form ANTES de que `StepDatosRutaMaritimo` cree el placeholder vacío. Hay que verificar el orden de hidratación; si `StepDatosRutaMaritimo` machaca a `[crearContenedorVacio(1)]` cuando detecta `contenedores.length === 0 && modo === 'Marítimo'`, ya no se ejecuta (porque el mapper sembró 1).
-
-- Tests nuevos en `embarqueCotizacion.test.ts`:
-  - LCL marítimo → 1 contenedor con `tipo_contenedor: "LCL"` y totales = cotización.
-  - LCL aéreo o terrestre → `[]` (sin cambios).
-  - FCL → comportamiento actual preservado.
-
-### 3. Sanity check de invariantes
-
-Añadir un test de integración ligero (puede ser sólo unitario contra el mapper + `deriveContenedoresPayload`) que verifique: para cotización LCL con vol > 0, el payload de contenedores entregado al wizard nunca es `[{peso:0, vol:0, piezas:0}]`.
-
-### 4. Metadatos
-
-- `APP_VERSION` → `13.66.8`.
-- `CHANGELOG.md` con entrada describiendo (a) bug LCL del mapper, (b) interacción con trigger `sync_embarque_desde_contenedor`, (c) backfill puntual de ELIMP00273.
-
-## Archivos a tocar
-
-- `supabase/migrations/<ts>_backfill_elimp00273_contenedor_lcl.sql`
-- `src/lib/mappers/embarqueCotizacion.ts`
-- `src/lib/mappers/__tests__/embarqueCotizacion.test.ts` (+ `embarque.test.ts` si comparte fixtures)
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
-
-## No tocar
-
-- El trigger `sync_embarque_desde_contenedor` se conserva: la fuente de verdad de los totales son los hijos.
-- La RPC `crear_embarque_completo` ya quedó arreglada en 13.66.7; el problema actual es upstream (mapper → form).
-- Embarques ELIMP00184/00204/00232/00262 NO se tocan: sus contenedores ya tienen datos reales cargados por operativos.
+- La RPC seguirá expuesta sólo a `authenticated` (igual que hoy) con `REVOKE EXECUTE ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated`.
+- La función mantiene `SECURITY DEFINER` y `SET search_path = public` ya presentes.
+- El criterio "peso_kg > 0 AND volumen_m3 > 0" se basa en NUMERIC, no en NULL, para compatibilidad con filas existentes que tienen `0` por default.
+- El check se ejecuta **después** de los otros para no enmascarar errores financieros más graves en el orden visual del checklist.
