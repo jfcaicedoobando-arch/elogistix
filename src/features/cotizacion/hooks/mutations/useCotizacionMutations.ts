@@ -44,7 +44,8 @@ export function useDeleteCotizacion() {
 export function useUpdateEstadoCotizacion() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, estado }: { id: string; estado: string }) => svcUpdateEstado(id, estado),
+    mutationFn: ({ id, estado, embarqueId }: { id: string; estado: string; embarqueId?: string | null }) =>
+      svcUpdateEstado(id, estado, embarqueId),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
