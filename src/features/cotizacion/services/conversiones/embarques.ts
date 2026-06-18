@@ -33,9 +33,10 @@ async function insertarCostosEmbarque(
 async function insertarVentasEmbarque(
   ventasJsonb: unknown[],
   embarqueId: string,
+  hijos: Tables<"embarque_contenedores">[] | null,
 ): Promise<void> {
   if (ventasJsonb.length === 0) return;
-  const ventasRows = parsearVentasJsonb(ventasJsonb, embarqueId);
+  const ventasRows = parsearVentasJsonb(ventasJsonb, embarqueId, hijos ?? undefined);
   if (ventasRows.length === 0) return;
   const { error } = await supabase.from("conceptos_venta").insert(ventasRows);
   if (error) throw error;
