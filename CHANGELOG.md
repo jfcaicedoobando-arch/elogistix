@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.19] - 2026-06-18
+- **feat(embarques-cotizacion-obligatoria-defensa-servidor)**: Investigación tras detectar que `coordinador_logistico` creó ELIMP00274 y ELIMP00275 sin `cotizacion_id`. La validación cliente de v13.39.0 (`canCrearEmbarqueLibre`) sólo bloqueaba en UI; cualquier bypass (parche al validador, salto entre pasos, llamada directa a PostgREST) podía evadirla. Defensa en profundidad:
+  - **DB**: nuevo trigger `BEFORE INSERT` `trg_enforce_cotizacion_obligatoria` sobre `embarques` con función `public.enforce_cotizacion_obligatoria()` (`SECURITY DEFINER`, `search_path=public`) que rechaza inserts sin `cotizacion_id` cuando el `auth.uid()` no es `super_admin` global ni tiene rol `{admin_org, admin, gerente_operaciones}` en la organización del embarque. Mensaje: *"Tu rol requiere vincular una cotización Aceptada para crear el embarque."*
+  - **Cliente**: `useNuevoEmbarqueWizard.handleFinish` agrega guard previo al orquestador — si `requiereCotizacion && !cotizacionVinculadaId`, fuerza vuelta al paso 1 con toast destructivo. `BloqueVinculacion` ahora acepta `requiereCotizacion` y muestra label *"Vincular cotización Aceptada (obligatorio)"* (destacado en destructive cuando aún no hay cotización).
+  - **Detalle de embarque**: badge ámbar *"Sin cotización"* en la cabecera para los embarques heredados con `cotizacion_id = NULL`.
+- Sin cambios en la lista de roles autorizados; sin backfill de embarques históricos. Bump `APP_VERSION` 13.66.19.
+
 ## [13.66.18] - 2026-06-18
 - **fix(bitacora-link-embarques-creados)**: En la bitácora de actividad, las entradas `crear` de embarques aparecían como texto plano sin link clickeable. Causa: `useEmbarqueSubmitOrchestrator` (Fase 5) registraba la actividad sin `entidad_id`, aunque el id del embarque recién creado ya estaba disponible en scope. `FilaEntrada` sólo construye el hyperlink cuando hay `entidad_id`. Se incluye `entidad_id: embarqueCreadoId ?? undefined` en el payload de bitácora. Backfill por migración SQL: 149 filas legacy con `entidad_id NULL` se rehidratan uniendo `entidad_nombre = embarques.expediente` dentro de la misma `organization_id`. Bump `APP_VERSION` 13.66.18.
 

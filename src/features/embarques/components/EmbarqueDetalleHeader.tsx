@@ -67,7 +67,7 @@ export function EmbarqueDetalleHeader({
           <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
         </div>
         <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
-        {embarque.cotizacion_id && (
+        {embarque.cotizacion_id ? (
           <div className="mt-1.5">
             {cotizacionFolio ? (
               <Link to={`/cotizaciones/${embarque.cotizacion_id}`}>
@@ -82,6 +82,13 @@ export function EmbarqueDetalleHeader({
                 Cotización origen no disponible
               </Badge>
             )}
+          </div>
+        ) : (
+          <div className="mt-1.5">
+            <Badge variant="warning" className="gap-1" title="Embarque creado sin cotización vinculada">
+              <FileText className="h-3 w-3" />
+              Sin cotización
+            </Badge>
           </div>
         )}
       </div>

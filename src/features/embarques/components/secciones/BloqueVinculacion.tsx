@@ -22,6 +22,8 @@ interface Props {
   onModoExpedienteChange?: (modo: 'nuevo' | 'existente') => void;
   expedienteSeleccionado?: ExpedienteCliente | null;
   onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
+  /** Cuando es true, vincular cotización es obligatorio (controlado por rol del usuario). */
+  requiereCotizacion?: boolean;
 }
 
 export function BloqueVinculacion({
@@ -35,6 +37,7 @@ export function BloqueVinculacion({
   onModoExpedienteChange,
   expedienteSeleccionado,
   onSeleccionarExpediente,
+  requiereCotizacion = false,
 }: Props) {
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [expedienteComboOpen, setExpedienteComboOpen] = useState(false);
@@ -44,7 +47,11 @@ export function BloqueVinculacion({
   return (
     <>
       <div className="space-y-2">
-        <Label>¿Vincular a cotización existente? (opcional)</Label>
+        <Label className={requiereCotizacion && !cotizacionVinculada ? "text-destructive" : undefined}>
+          {requiereCotizacion
+            ? "Vincular cotización Aceptada (obligatorio)"
+            : "¿Vincular a cotización existente? (opcional)"}
+        </Label>
         {cotizacionVinculada ? (
           <div className="flex items-center gap-2">
             <Badge variant="success" className="px-3 py-1.5 text-sm">
