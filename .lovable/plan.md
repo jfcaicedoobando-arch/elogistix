@@ -1,101 +1,114 @@
 ## Diagnóstico
 
-**COT-2026-0077** quedó en un estado inconsistente:
-- `cotizaciones.estado = 'En operación'` ✅
-- `cotizaciones.embarque_id = NULL` ❌
-- Embarque `ELIMP00273` (`a006c055-…`) creado en el mismo segundo, pero con `embarques.cotizacion_id = NULL` ❌
+ELIMP00273 (cotización COT-2026-0077, **LCL**) está guardado así:
 
-Por eso `fetchEmbarquesVinculados` (que filtra por `embarques.cotizacion_id = cot.id`) devuelve `[]`, la cotización entra en la rama `estadoSugiereEmbarque && embarques.length === 0` y `CotizacionDetalleEmbarques` muestra:
+| | parent embarque | contenedor hijo único |
+|---|---|---|
+| peso_kg | 0 | 0 |
+| volumen_m3 | 0 | 0 |
+| piezas | 0 | 0 |
+| tipo_contenedor | LCL | LCL |
+| numero_contenedor | — | (vacío) |
 
-> "Esta cotización aparece como **En operación**, pero no hay embarques vinculados…"
+La cotización origen sí tiene la información de la mercancía:
+- `peso_kg = 0`, `volumen_m3 = 4.09274`, `piezas = 3`
+- `dimensiones_lcl = [{l:86,a:175,h:113,pzs:2,vol:3.4013}, {l:67,a:120,h:86,pzs:1,vol:0.69144}]`
 
-Eso es el "error" que el usuario percibe.
+Eso es lo que el usuario percibe como "antes tenía contenedores y ahora le falta información": la pieza de mercancía/volumen/piezas nunca se persistió en el embarque al crearse desde el wizard.
 
 ## Causa raíz (dos bugs concurrentes)
 
-### Bug 1 — RPC `crear_embarque_completo` ignora `cotizacion_id`
-`useEmbarqueSubmitOrchestrator` arma el payload así:
+### Bug A — Wizard no siembra el contenedor LCL desde la cotización
+
+`src/lib/mappers/embarqueCotizacion.ts → buildContenedoresPlaceholder` sólo crea placeholders cuando la cotización es **FCL**:
+
 ```ts
-const embarquePayload = {
-  expediente,
-  ...p.buildEmbarquePayload(...),
-  ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
-};
+if (!esFCL(cot) || !esModoMaritimo(cot.modo)) return [];
 ```
-y lo envía a `supabase.rpc('crear_embarque_completo', { p_embarque: toDbJson(...) })`.
 
-Pero el `INSERT INTO embarques(...)` dentro del RPC **no incluye la columna `cotizacion_id`** en su lista. El campo se descarta silenciosamente → embarque sin vínculo.
+Para cotizaciones **LCL**, el array `contenedores` del form queda vacío. Luego `StepDatosRutaMaritimo` (al cambiar de modo) lo inicializa con `[crearContenedorVacio(1)]` — **un contenedor con peso/volumen/piezas = 0**. El usuario nunca llena ese formulario porque la pantalla ya muestra "vinculada a COT-…".
 
-### Bug 2 — Fase 4 del orquestador no escribe `embarque_id` en la cotización
-```ts
-await updateEstadoCotizacion.mutateAsync({
-  id: p.cotizacionVinculada.id,
-  estado: "En operación",
-});
-```
-Sólo actualiza `estado`. Nunca setea `cotizaciones.embarque_id`. Aunque arregláramos el Bug 1, la cotización seguiría apuntando a `NULL` (la columna existe y es la que usan otras vistas: `CotizacionDetalleAcciones`, generadores de PDF, etc.).
+### Bug B — Trigger `sync_embarque_desde_contenedor` borra los totales del parent
 
-> Nota: el flujo alterno `crear_embarque_borrador_desde_cotizacion` (RPC) sí actualiza `embarque_id`. El bug está sólo en el wizard de "Nuevo Embarque" cuando se vincula a una cotización existente.
-
-## Fix
-
-### 1. Migración: `crear_embarque_completo` debe persistir `cotizacion_id`
-
-Migración SQL nueva (`fix_crear_embarque_completo_cotizacion_id`) — re-emite `CREATE OR REPLACE FUNCTION public.crear_embarque_completo(...)` idéntica a la actual, sumando:
-
-- En la lista de columnas del `INSERT INTO embarques (...)`: agregar `cotizacion_id`.
-- En `VALUES`: `CASE WHEN p_embarque->>'cotizacion_id' IS NOT NULL AND p_embarque->>'cotizacion_id' <> '' THEN (p_embarque->>'cotizacion_id')::uuid ELSE NULL END`.
-
-Sin cambiar el resto del cuerpo (idempotency, conceptos, documentos, notas).
-
-### 2. Mutación: setear `embarque_id` en la cotización tras crear el embarque
-
-- `src/features/cotizacion/services/mutations/estado.ts` → nueva función `vincularEmbarqueACotizacion(cotizacionId, embarqueId, estado?)` que hace
-  `update cotizaciones set estado=?, embarque_id=? where id=?`.
-- Exponerla en `src/features/cotizacion/services/index.ts` y un hook nuevo `useVincularEmbarqueACotizacion` (o extender `useUpdateEstadoCotizacion` con un parámetro `embarqueId?`).
-- En `useEmbarqueSubmitOrchestrator.ts`, capturar el `id` devuelto por `createEmbarque.mutateAsync` y, en la Fase 4, llamar a la nueva mutación con `{ estado: "En operación", embarqueId }`. La advertencia no bloqueante se conserva.
-
-### 3. Data-fix: vincular COT-2026-0077 ↔ ELIMP00273
-
-Migración de datos (`backfill_cot_2026_0077_embarque_link`) **idempotente**:
+Aunque la RPC `crear_embarque_completo` (con el fix del turno anterior) insertara peso/vol/piezas correctos en `embarques`, el AFTER INSERT en `embarque_contenedores` recalcula y **sobreescribe** así:
 
 ```sql
 UPDATE public.embarques
-   SET cotizacion_id = 'b75f1f9a-12b6-4cee-bbe5-db45df1f7c32'
- WHERE id = 'a006c055-e574-4e98-8738-b4f280c3c908'
-   AND cotizacion_id IS NULL;
-
-UPDATE public.cotizaciones
-   SET embarque_id = 'a006c055-e574-4e98-8738-b4f280c3c908', updated_at = now()
- WHERE id = 'b75f1f9a-12b6-4cee-bbe5-db45df1f7c32'
-   AND embarque_id IS NULL;
+SET peso_kg = v_total_peso,           -- suma de hijos
+    volumen_m3 = v_total_vol,
+    piezas = v_total_piezas,
+    contenedor = …, tipo_contenedor = …
+WHERE id = v_embarque_id;
 ```
 
-Después, la card "Embarques Generados" muestra `ELIMP00273` con su estado actual y deja de pintar el mensaje de error.
+Con un hijo placeholder en ceros → el parent termina en ceros. El trigger es correcto en intención (los hijos son fuente de verdad), pero choca con un wizard que entrega hijos sin datos.
 
-### 4. Verificación
+## Alcance
 
-- Query post-migración:
-  ```
-  select c.folio, c.estado, c.embarque_id, e.expediente, e.cotizacion_id
-  from cotizaciones c join embarques e on e.id = c.embarque_id
-  where c.folio = 'COT-2026-0077';
-  ```
-- Abrir `/cotizaciones/b75f1f9a-…` y confirmar que aparece la tarjeta con el link a `ELIMP00273` (sin el mensaje de advertencia).
-- Test unitario nuevo: `useEmbarqueSubmitOrchestrator` — cuando hay `cotizacionVinculada`, llamar a la nueva mutación con `{ estado, embarqueId }` y propagar `cotizacion_id` al payload del RPC (mockeado).
-- Test de servicio: `vincularEmbarqueACotizacion` envía ambos campos en el update.
+Mismo patrón en los embarques que vinculé en el turno anterior:
 
-### 5. Metadatos
+| Expediente | Cotización LCL? | Estado del parent ahora | Acción |
+|---|---|---|---|
+| **ELIMP00273** | LCL con `vol=4.09, pzs=3` | parent 0/0/0, hijo único 0/0/0 | **backfill** (datos sí existen en la cot) |
+| ELIMP00232 | LCL pero cot con 0/0/0 | parent ya recalculado por operativos (2904 kg, 30 pzs) vía hijos editados | nada (ya está OK) |
+| ELIMP00184/00204/00262 | FCL, cot sin peso/vol | hijos ya editados manualmente con datos reales | nada |
 
-- `APP_VERSION` → `13.66.7`.
-- `CHANGELOG.md` con la entrada del fix y el backfill de COT-2026-0077.
+Sólo **ELIMP00273** requiere backfill puntual.
+
+## Fix
+
+### 1. Backfill ELIMP00273 (data-only, idempotente)
+
+Migración con `SET LOCAL app.bypass_cierre = 'on'` (el embarque está en estado `Confirmado`, pero seguimos el mismo patrón de seguridad del turno anterior).
+
+```sql
+-- Sembrar el contenedor hijo único con los totales de la cotización LCL
+UPDATE public.embarque_contenedores
+   SET peso_kg = 0,
+       volumen_m3 = 4.09274,
+       piezas = 3,
+       tipo_contenedor = COALESCE(NULLIF(tipo_contenedor, ''), 'LCL')
+ WHERE id = '76866c80-675d-4b36-81cc-28211c131c88'
+   AND peso_kg = 0 AND volumen_m3 = 0 AND piezas = 0;
+```
+
+El propio trigger `sync_embarque_desde_contenedor` propagará la suma al parent (`embarques.peso_kg/volumen_m3/piezas`), así que **no tocamos `embarques` directamente** — el embarque queda consistente por construcción.
+
+### 2. Fix del wizard: sembrar contenedor LCL con totales de la cotización
+
+`src/lib/mappers/embarqueCotizacion.ts`:
+
+- Renombrar/extender `buildContenedoresPlaceholder` para que:
+  - Si es **FCL marítimo** → comportamiento actual (N placeholders con `tipo_contenedor`).
+  - Si es **LCL marítimo** → devolver **un único** contenedor pre-rellenado con `peso_kg = cot.peso_kg`, `volumen_m3 = cot.volumen_m3`, `piezas = cot.piezas`, `tipo_contenedor = "LCL"`.
+  - Cualquier otro modo → `[]` (sin cambios).
+
+- Esto sembrará valores reales en el form ANTES de que `StepDatosRutaMaritimo` cree el placeholder vacío. Hay que verificar el orden de hidratación; si `StepDatosRutaMaritimo` machaca a `[crearContenedorVacio(1)]` cuando detecta `contenedores.length === 0 && modo === 'Marítimo'`, ya no se ejecuta (porque el mapper sembró 1).
+
+- Tests nuevos en `embarqueCotizacion.test.ts`:
+  - LCL marítimo → 1 contenedor con `tipo_contenedor: "LCL"` y totales = cotización.
+  - LCL aéreo o terrestre → `[]` (sin cambios).
+  - FCL → comportamiento actual preservado.
+
+### 3. Sanity check de invariantes
+
+Añadir un test de integración ligero (puede ser sólo unitario contra el mapper + `deriveContenedoresPayload`) que verifique: para cotización LCL con vol > 0, el payload de contenedores entregado al wizard nunca es `[{peso:0, vol:0, piezas:0}]`.
+
+### 4. Metadatos
+
+- `APP_VERSION` → `13.66.8`.
+- `CHANGELOG.md` con entrada describiendo (a) bug LCL del mapper, (b) interacción con trigger `sync_embarque_desde_contenedor`, (c) backfill puntual de ELIMP00273.
 
 ## Archivos a tocar
 
-- `supabase/migrations/<ts>_fix_crear_embarque_completo_cotizacion_id.sql` (RPC).
-- `supabase/migrations/<ts>_backfill_cot_2026_0077_embarque_link.sql` (data-fix).
-- `src/features/cotizacion/services/mutations/estado.ts` (+ index).
-- `src/features/cotizacion/hooks/mutations/useCotizacionMutations.ts` (nuevo hook o extensión).
-- `src/features/embarques/hooks/useEmbarqueSubmitOrchestrator.ts` (Fase 4).
-- Tests asociados.
-- `src/constants/appVersion.ts`, `CHANGELOG.md`.
+- `supabase/migrations/<ts>_backfill_elimp00273_contenedor_lcl.sql`
+- `src/lib/mappers/embarqueCotizacion.ts`
+- `src/lib/mappers/__tests__/embarqueCotizacion.test.ts` (+ `embarque.test.ts` si comparte fixtures)
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
+
+## No tocar
+
+- El trigger `sync_embarque_desde_contenedor` se conserva: la fuente de verdad de los totales son los hijos.
+- La RPC `crear_embarque_completo` ya quedó arreglada en 13.66.7; el problema actual es upstream (mapper → form).
+- Embarques ELIMP00184/00204/00232/00262 NO se tocan: sus contenedores ya tienen datos reales cargados por operativos.
