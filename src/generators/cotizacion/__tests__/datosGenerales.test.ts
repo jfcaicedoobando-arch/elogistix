@@ -93,4 +93,28 @@ describe("buildMercancia", () => {
     expect(keys).toContain("Tipo de Embarque");
     expect(keys).toContain("Tipo de Contenedor");
   });
+
+  it("resuelve UUID de tipo_contenedor contra catálogo", () => {
+    const uuid = "8014e97d-37a6-4e99-9238-fd507543c340";
+    const rows = buildMercancia(
+      { ...base, modo: "Marítimo", tipo_embarque: "FCL", tipo_contenedor: uuid } as CotizacionRow,
+      [{ id: uuid, name: "40' High Cube" }],
+    );
+    const tc = rows.find(([k]) => k === "Tipo de Contenedor");
+    expect(tc?.[1]).toBe("40' High Cube");
+  });
+
+  it("devuelve placeholder cuando UUID no está en catálogo", () => {
+    const rows = buildMercancia(
+      {
+        ...base,
+        modo: "Marítimo",
+        tipo_embarque: "FCL",
+        tipo_contenedor: "8014e97d-37a6-4e99-9238-fd507543c340",
+      } as CotizacionRow,
+      [],
+    );
+    const tc = rows.find(([k]) => k === "Tipo de Contenedor");
+    expect(tc?.[1]).toBe("—");
+  });
 });

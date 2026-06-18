@@ -4,7 +4,7 @@
  * antes de cablear el botón de descarga en producción.
  */
 import { useParams } from "react-router-dom";
-import { useTasaIVA } from "@/features/catalogos/hooks";
+import { useTasaIVA, useTiposContenedor } from "@/features/catalogos/hooks";
 import { usePdfPreviewCotizacionPage } from "@/features/cotizacion/hooks/usePdfPreviewCotizacionPage";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
@@ -12,6 +12,7 @@ import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
 export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
   const tasaIva = useTasaIVA();
+  const { data: tiposContenedor = [] } = useTiposContenedor();
   const { cotizacion: { data, isLoading, error }, emisor: { data: emisor } } =
     usePdfPreviewCotizacionPage(id);
 
@@ -22,7 +23,7 @@ export default function PdfPreviewCotizacionPage() {
   return (
     <div className="h-dvh w-dvw bg-muted/30">
       <PdfPreview
-        doc={<CotizacionDocument cotizacion={data} tasaIva={tasaIva} emisor={emisor} />}
+        doc={<CotizacionDocument cotizacion={data} tasaIva={tasaIva} emisor={emisor} tiposContenedor={tiposContenedor} />}
         height="100vh"
       />
     </div>

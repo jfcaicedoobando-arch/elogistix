@@ -2,6 +2,7 @@ import { View, Text } from "@react-pdf/renderer";
 import { styles } from "../theme/styles";
 import type { CotizacionRow, DimensionLCL, DimensionAerea } from "@/features/cotizacion/types";
 import { buildDatosGenerales, buildMercancia } from "@/generators/cotizacion/datosGenerales";
+import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { KeyValueGrid } from "../components/KeyValueGrid";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 
@@ -9,6 +10,9 @@ interface Props {
   c: CotizacionRow;
 }
 
+interface PropsConCatalogo extends Props {
+  tiposContenedor?: ReadonlyArray<TipoContenedorCatalogo>;
+}
 
 /** Sección "Datos del Prospecto" sólo cuando aplica. */
 function SeccionProspecto({ c }: Props) {
@@ -20,10 +24,25 @@ function SeccionProspecto({ c }: Props) {
     ["Teléfono", c.prospecto_telefono || "-"],
   ];
   return (
-    <>
+    <View wrap={false}>
       <Text style={styles.h3}>Datos del Prospecto</Text>
       <KeyValueGrid items={items} columns={4} />
-    </>
+    </View>
+  );
+}
+
+/** Resumen ejecutivo de la ruta para lectura rápida del cliente. */
+export function SeccionResumenRuta({ c }: Props) {
+  const partes: string[] = [];
+  if (c.origen || c.destino) partes.push(`${c.origen || '—'} → ${c.destino || '—'}`);
+  if (c.modo) partes.push(c.modo);
+  if (c.incoterm) partes.push(c.incoterm);
+  if (c.tiempo_transito_dias != null) partes.push(`Tránsito ${c.tiempo_transito_dias} días`);
+  if (partes.length === 0) return null;
+  return (
+    <View style={{ marginTop: 4, marginBottom: 4 }} wrap={false}>
+      <Text style={{ ...styles.paragraph, fontSize: 10 }}>{partes.join("  ·  ")}</Text>
+    </View>
   );
 }
 
@@ -77,13 +96,17 @@ export function SeccionDimensiones({ c }: Props) {
 export { SeccionProspecto };
 
 /** Sección Datos Generales + Mercancía + descripción adicional + dimensiones. */
-export function SeccionDatosYMercancia({ c }: Props) {
+export function SeccionDatosYMercancia({ c, tiposContenedor = [] }: PropsConCatalogo) {
   return (
     <>
-      <Text style={styles.h3}>Datos Generales</Text>
-      <KeyValueGrid items={buildDatosGenerales(c)} columns={4} />
-      <Text style={styles.h3}>Mercancía</Text>
-      <KeyValueGrid items={buildMercancia(c)} columns={4} />
+      <View wrap={false}>
+        <Text style={styles.h3}>Datos Generales</Text>
+        <KeyValueGrid items={buildDatosGenerales(c)} columns={3} />
+      </View>
+      <View wrap={false} style={{ marginTop: 8 }}>
+        <Text style={styles.h3}>Mercancía</Text>
+        <KeyValueGrid items={buildMercancia(c, tiposContenedor)} columns={3} />
+      </View>
       {c.descripcion_adicional ? (
         <View style={{ marginTop: 6 }} wrap>
           <Text style={styles.label}>Descripción Adicional</Text>
