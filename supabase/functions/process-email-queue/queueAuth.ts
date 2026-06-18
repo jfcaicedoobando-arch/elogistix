@@ -48,7 +48,7 @@ export interface AuthFail {
   response: Response
 }
 
-export function authenticateRequest(req: Request): AuthOk | AuthFail {
+export async function authenticateRequest(req: Request): Promise<AuthOk | AuthFail> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -64,8 +64,8 @@ export function authenticateRequest(req: Request): AuthOk | AuthFail {
   }
 
   const token = authHeader.slice('Bearer '.length).trim()
-  const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
+  const isServiceRole = await verifyServiceRoleToken(token, supabaseUrl)
+  if (!isServiceRole) {
     return { ok: false, response: jsonResp({ error: 'Forbidden' }, 403) }
   }
 
