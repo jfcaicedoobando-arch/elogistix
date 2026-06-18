@@ -39,46 +39,58 @@ const ASSERTION_REGEX = /\b(expect|expectTypeOf|assert|assertEquals|assertExists
  * confunda con `{}` dentro de títulos, mensajes o regex que contengan
  * comillas (ej. `/from\s+["']@\/foo/`).
  */
+const REGEX_PRECEDERS = new Set([
+  "", "(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";",
+  "+", "-", "*", "%", "<", ">", "~", "^",
+]);
+
+function lastNonBlank(s: string): string {
+  for (let k = s.length - 1; k >= 0; k--) {
+    if (s[k] !== " " && s[k] !== "\t") return s[k]!;
+  }
+  return "";
+}
+
+/** Avanza el índice más allá de una cadena que inicia en `line[start]`. */
+function skipString(line: string, start: number): number {
+  const quote = line[start]!;
+  let i = start + 1;
+  while (i < line.length) {
+    if (line[i] === "\\") { i += 2; continue; }
+    if (line[i] === quote) return i + 1;
+    i++;
+  }
+  return i;
+}
+
+/** Avanza el índice más allá de un regex literal que inicia en `line[start]`. */
+function skipRegex(line: string, start: number): number {
+  let i = start + 1;
+  let inClass = false;
+  while (i < line.length) {
+    const c = line[i]!;
+    if (c === "\\") { i += 2; continue; }
+    if (c === "[") { inClass = true; i++; continue; }
+    if (c === "]") { inClass = false; i++; continue; }
+    if (c === "/" && !inClass) { i++; break; }
+    i++;
+  }
+  while (i < line.length && /[gimsuy]/.test(line[i]!)) i++;
+  return i;
+}
+
 function stripStringsAndComments(line: string): string {
   let out = "";
   let i = 0;
-  // Para detectar si un `/` inicia regex (vs división), miramos el último
-  // carácter no-blanco emitido: si es operador/paréntesis/coma/inicio, es regex.
-  const REGEX_PRECEDERS = new Set(["", "(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";", "+", "-", "*", "%", "<", ">", "~", "^"]);
-  const lastEmitted = (): string => {
-    for (let k = out.length - 1; k >= 0; k--) {
-      if (out[k] !== " " && out[k] !== "\t") return out[k]!;
-    }
-    return "";
-  };
   while (i < line.length) {
     const ch = line[i]!;
-    if (ch === "/" && line[i + 1] === "/") break; // resto es comentario
+    if (ch === "/" && line[i + 1] === "/") break;
     if (ch === '"' || ch === "'" || ch === "`") {
-      const quote = ch;
-      i++;
-      while (i < line.length) {
-        if (line[i] === "\\") { i += 2; continue; }
-        if (line[i] === quote) { i++; break; }
-        i++;
-      }
+      i = skipString(line, i);
       continue;
     }
-    if (ch === "/" && REGEX_PRECEDERS.has(lastEmitted())) {
-      // Posible regex literal: consume hasta el `/` de cierre, saltando
-      // escapes y clases de caracteres `[...]` (que pueden contener `/`).
-      i++;
-      let inClass = false;
-      while (i < line.length) {
-        const c = line[i]!;
-        if (c === "\\") { i += 2; continue; }
-        if (c === "[") { inClass = true; i++; continue; }
-        if (c === "]") { inClass = false; i++; continue; }
-        if (c === "/" && !inClass) { i++; break; }
-        i++;
-      }
-      // Consumir flags (g, i, m, s, u, y).
-      while (i < line.length && /[gimsuy]/.test(line[i]!)) i++;
+    if (ch === "/" && REGEX_PRECEDERS.has(lastNonBlank(out))) {
+      i = skipRegex(line, i);
       continue;
     }
     out += ch;
@@ -86,6 +98,7 @@ function stripStringsAndComments(line: string): string {
   }
   return out;
 }
+
 
 
 /**
