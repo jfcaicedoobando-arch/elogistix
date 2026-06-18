@@ -11,6 +11,7 @@ import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
 import { TabConciliacion } from "@/features/embarques/components/TabConciliacion";
 import { TabPnl } from "@/features/embarques/components/TabPnl";
+import { TabPnlContenedor } from "@/features/embarques/components/TabPnlContenedor";
 import { TabSeguros } from "@/features/embarques/components/TabSeguros";
 import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
@@ -79,6 +80,7 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="costos">Costos</TabsTrigger>
         <TabsTrigger value="conciliacion">Conciliación</TabsTrigger>
         <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
+        <TabsTrigger value="pnl-contenedor">P&amp;L Contenedor</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
         <TabsTrigger value="garantias">Garantías</TabsTrigger>
         <TabsTrigger value="demoras">Demoras</TabsTrigger>
@@ -140,6 +142,11 @@ export function EmbarqueDetalleTabs({
       <TabsContent value="pnl" className="space-y-6">
         <TabPnl embarqueId={embarqueId} />
       </TabsContent>
+
+      <TabsContent value="pnl-contenedor" className="space-y-6">
+        <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente} />
+      </TabsContent>
+
 
 
       <TabsContent value="facturacion">
