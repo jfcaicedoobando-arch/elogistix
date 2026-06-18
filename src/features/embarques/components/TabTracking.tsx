@@ -35,7 +35,6 @@ type EmbarqueTrackingProps = Pick<
 interface Props {
   embarqueId: string;
   embarque?: EmbarqueTrackingProps | null;
-  notas?: NotaEmbarqueRow[];
 }
 
 const DAY_MS = 86_400_000;
