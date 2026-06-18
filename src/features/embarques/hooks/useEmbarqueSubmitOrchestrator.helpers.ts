@@ -10,13 +10,17 @@ import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 const METHOD_TAG = "USE_EMBARQUE_SUBMIT_ORCHESTRATOR";
 
 /**
- * Reglas: marítimo LCL → fila auto-LCL única; marítimo FCL → contenedores del form;
+ * Reglas: marítimo LCL → fila auto-LCL única usando peso/volumen/piezas del form;
+ * marítimo FCL → contenedores del form;
  * cualquier otro modo (Aéreo/Terrestre) → vacío.
  */
 export function deriveContenedoresPayload(values: {
   modo: string;
   tipoServicio?: string;
   contenedores?: ContenedorBorrador[];
+  pesoKg?: number | string;
+  volumenM3?: number | string;
+  piezas?: number | string;
 }): ContenedorBorrador[] {
   if (values.modo !== "Marítimo") return [];
   if (values.tipoServicio === "LCL") {
@@ -24,9 +28,9 @@ export function deriveContenedoresPayload(values: {
       numero_contenedor: "",
       tipo_contenedor: "LCL",
       bl_house: "",
-      peso_kg: 0,
-      volumen_m3: 0,
-      piezas: 0,
+      peso_kg: Number(values.pesoKg) || 0,
+      volumen_m3: Number(values.volumenM3) || 0,
+      piezas: Number(values.piezas) || 0,
       orden: 1,
     }];
   }

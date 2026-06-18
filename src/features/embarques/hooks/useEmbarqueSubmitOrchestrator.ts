@@ -49,7 +49,7 @@ type EmbarqueFormApi = ReturnType<typeof useEmbarqueForm>;
 
 export interface SubmitOrchestratorParams {
   /** Valores actuales del formulario (RHF.getValues()). */
-  values: { modo: string; tipo: string; blMaster: string; tipoServicio?: string; contenedores?: ContenedorBorrador[] };
+  values: { modo: string; tipo: string; blMaster: string; tipoServicio?: string; contenedores?: ContenedorBorrador[]; pesoKg?: number | string; volumenM3?: number | string; piezas?: number | string };
   modoExpediente: ModoExpediente;
   expedienteSeleccionado: ExpedienteCliente | null;
   cotizacionVinculada: CotizacionRow | null;
