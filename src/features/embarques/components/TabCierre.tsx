@@ -36,6 +36,7 @@ const ETIQUETAS_REGLA: Record<string, string> = {
   documentos_completos: "Documentos requeridos completos",
   pnl_margen_minimo: "Utilidad mínima alcanzada",
   comision_calculada: "Comisión devengada calculada",
+  contenedores_datos_completos: "Datos de contenedores capturados (peso y volumen)",
 };
 
 interface Props {
