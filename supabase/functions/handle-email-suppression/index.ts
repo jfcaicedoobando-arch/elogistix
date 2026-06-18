@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
 import {
   parseSuppressionPayload,
@@ -15,7 +16,7 @@ function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   })
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("handle-email-suppression", async (req) => {
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
   }
@@ -115,4 +116,4 @@ Deno.serve(async (req) => {
   })
 
   return jsonResponse({ success: true })
-})
+}))

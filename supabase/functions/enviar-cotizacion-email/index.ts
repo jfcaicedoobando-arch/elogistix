@@ -3,6 +3,7 @@
 // La lógica pesada vive en `handlers.ts`; este archivo solo valida JWT,
 // carga la cotización y enruta a `handlePrepare` o `handleSend`.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { handlePrepare, handleSend } from './handlers.ts';
 
@@ -54,7 +55,7 @@ async function loadCotizacion(admin: ReturnType<typeof createClient>, cotizacion
   return { cot };
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("enviar-cotizacion-email", async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 

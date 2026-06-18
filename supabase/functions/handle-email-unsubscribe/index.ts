@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { extractToken } from './tokenExtractor.ts'
 
@@ -9,7 +10,7 @@ function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   })
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("handle-email-unsubscribe", async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
   if (req.method !== 'GET' && req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405)
@@ -65,4 +66,4 @@ Deno.serve(async (req) => {
 
   console.log('Email unsubscribed', { email: tokenRecord.email })
   return jsonResponse({ success: true })
-})
+}))

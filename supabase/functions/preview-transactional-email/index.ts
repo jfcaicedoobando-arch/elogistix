@@ -1,4 +1,5 @@
 import * as React from 'npm:react@18.3.1'
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
@@ -7,7 +8,7 @@ import { isAuthorized, resolveSubject } from './helpers.ts'
 // Renders all registered templates with their previewData.
 // Gated by LOVABLE_API_KEY — only the Go API calls this.
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -89,4 +90,4 @@ Deno.serve(async (req) => {
     status: 200,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
-})
+}))
