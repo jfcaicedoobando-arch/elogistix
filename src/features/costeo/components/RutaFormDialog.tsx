@@ -13,14 +13,16 @@ import {
 } from "@/components/ui/dialog";
 import type { useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
 import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
+import type { CosteoRuta } from "@/features/costeo/types";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   crear: ReturnType<typeof useCosteoRutaMutations>["crear"];
+  rutas: CosteoRuta[];
 }
 
-export function RutaFormDialog({ open, onOpenChange, crear }: Props) {
+export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
   const { data: puertos = [] } = usePuertos();
   const [origenId, setOrigenId] = useState<string>("");
   const [destinoId, setDestinoId] = useState<string>("");
@@ -38,7 +40,7 @@ export function RutaFormDialog({ open, onOpenChange, crear }: Props) {
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
-    if (!origenId || !destinoId) return;
+    if (!origenId || !destinoId || rutaDuplicada) return;
     await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
     setOrigenId("");
     setDestinoId("");
@@ -48,6 +50,10 @@ export function RutaFormDialog({ open, onOpenChange, crear }: Props) {
 
   const origenInvalido = intentoEnvio && !origenId;
   const destinoInvalido = intentoEnvio && !destinoId;
+  const rutaDuplicada = rutas.some(
+    (ruta) => ruta.puerto_origen_id === origenId && ruta.puerto_destino_id === destinoId,
+  );
+  const mostrarDuplicada = intentoEnvio && !!origenId && !!destinoId && rutaDuplicada;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,11 +101,16 @@ export function RutaFormDialog({ open, onOpenChange, crear }: Props) {
               </SelectContent>
             </Select>
           </div>
+          {mostrarDuplicada && (
+            <p className="text-sm text-destructive" role="alert">
+              Esta ruta CN → MX ya está registrada. No necesitas volver a crearla.
+            </p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={crear.isPending}>
+            <Button type="submit" disabled={crear.isPending || rutaDuplicada}>
               Guardar
             </Button>
           </DialogFooter>
