@@ -6,7 +6,12 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchCosteoRutas, insertCosteoRuta, deleteCosteoRuta } from "../rutas";
+import {
+  CosteoRutaDuplicadaError,
+  fetchCosteoRutas,
+  insertCosteoRuta,
+  deleteCosteoRuta,
+} from "../rutas";
 
 const ORG = "00000000-0000-0000-0000-000000000001";
 
@@ -39,6 +44,15 @@ describe("costeo/services/rutas", () => {
     const payload = mock.getMutationPayload("costeo_rutas", "insert") as Record<string, unknown>;
     expect(payload.organization_id).toBe(ORG);
     expect(payload.puerto_origen_id).toBe("po");
+  });
+
+  it("insertCosteoRuta traduce duplicados a error de negocio", async () => {
+    mock.setTableResult("costeo_rutas", {
+      data: null,
+      error: { code: "23505", message: "duplicate key value violates unique constraint" },
+    });
+    await expect(insertCosteoRuta(ORG, { puerto_origen_id: "po", puerto_destino_id: "pd" }))
+      .rejects.toBeInstanceOf(CosteoRutaDuplicadaError);
   });
 
   it("deleteCosteoRuta usa delete().eq('id', ...)", async () => {
