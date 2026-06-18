@@ -83,6 +83,12 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
     log.finish(400, "invalid_role", { user_id: callerId, payload: { role } });
     return errorResponse(`Rol no soportado: ${role ?? "(vacío)"}`, 400, cors);
   }
+  // Privilege escalation guard: un admin_org (no global) no puede asignar roles
+  // con escalado a privilegios globales (admin/super_admin).
+  if (!admin.isGlobalAdmin && !ASSIGNABLE_BY_ORG_ADMIN.has(role)) {
+    log.finish(403, "role_not_assignable_by_org_admin", { user_id: callerId, payload: { role } });
+    return errorResponse("No tienes permiso para asignar ese rol", 403, cors);
+  }
   const selectedRole = role;
 
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
