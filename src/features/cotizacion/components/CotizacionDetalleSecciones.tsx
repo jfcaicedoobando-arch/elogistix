@@ -63,31 +63,19 @@ interface AccionesProps {
   esProspecto: boolean;
   numContenedores: number;
   cotizacionId: string;
-  embarqueIdVinculado: string | null;
-  embarquesVinculados?: EmbarqueVinculado[];
+  tieneEmbarquesVinculados?: boolean;
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
 }
 
 export function CotizacionDetalleAcciones({
-  estado, esProspecto, numContenedores, cotizacionId, embarqueIdVinculado,
-  embarquesVinculados = [],
+  estado, esProspecto, numContenedores, cotizacionId,
+  tieneEmbarquesVinculados = false,
   onCambiarEstado, onAbrirConvertir,
 }: AccionesProps) {
   const navigate = useNavigate();
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
-  const enOperacion = estado === "En operación" || estado === "Cerrada";
-
-  // Resolver el (o los) embarques vinculados desde múltiples fuentes:
-  // 1) Lista cargada por `fetchEmbarquesVinculados` (canónica, vía cotizacion_id).
-  // 2) `embarque_id` legacy guardado en la cotización.
-  const idsVinculados = embarquesVinculados.length > 0
-    ? embarquesVinculados.map((e) => ({ id: e.id, label: e.expediente }))
-    : embarqueIdVinculado
-      ? [{ id: embarqueIdVinculado, label: "embarque borrador" }]
-      : [];
-  const hayVinculados = idsVinculados.length > 0;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -110,12 +98,7 @@ export function CotizacionDetalleAcciones({
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
-      {(esAceptada || enOperacion) && !esProspecto && hayVinculados && idsVinculados.map((emb) => (
-        <Button key={emb.id} size="sm" onClick={() => navigate(`/embarques/${emb.id}`)}>
-          Ver {emb.label}
-        </Button>
-      ))}
-      {esAceptada && !esProspecto && !hayVinculados && (
+      {esAceptada && !esProspecto && !tieneEmbarquesVinculados && (
         <Button
           size="sm"
           onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
