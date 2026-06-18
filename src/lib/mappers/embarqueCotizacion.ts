@@ -59,10 +59,31 @@ const esModoMaritimo = (m: string) => ["maritimo", "marítimo"].includes(norm(m)
 const esModoAereo = (m: string) => ["aereo", "aéreo"].includes(norm(m));
 const esFCL = (cot: CotizacionParaVincular) =>
   norm(cot.tipo_embarque ?? cot.tipo_carga ?? "") === "fcl";
+const esLCL = (cot: CotizacionParaVincular) =>
+  norm(cot.tipo_embarque ?? cot.tipo_carga ?? "") === "lcl";
 
-/** Construye N placeholders de contenedores FCL desde la cotización. */
+/**
+ * Construye los contenedores hijos pre-rellenados desde la cotización.
+ * - FCL marítimo: N placeholders con `tipo_contenedor` del catálogo.
+ * - LCL marítimo: 1 contenedor con totales (peso/volumen/piezas) de la cotización
+ *   y `tipo_contenedor = "LCL"`. Crítico: sin esto, el trigger
+ *   `sync_embarque_desde_contenedor` machaca los totales del embarque parent a 0.
+ * - Otros: array vacío.
+ */
 function buildContenedoresPlaceholder(cot: CotizacionParaVincular): ContenedorBorrador[] {
-  if (!esFCL(cot) || !esModoMaritimo(cot.modo)) return [];
+  if (!esModoMaritimo(cot.modo)) return [];
+
+  if (esLCL(cot)) {
+    return [{
+      ...crearContenedorVacio(1),
+      tipo_contenedor: "LCL",
+      peso_kg: Number(cot.peso_kg) || 0,
+      volumen_m3: Number(cot.volumen_m3) || 0,
+      piezas: Number(cot.piezas) || 0,
+    }];
+  }
+
+  if (!esFCL(cot)) return [];
   const n = Math.max(0, Math.floor(Number(cot.num_contenedores ?? 0)));
   if (n === 0) return [];
   const tipo = cot.tipo_contenedor ?? "";
@@ -71,6 +92,7 @@ function buildContenedoresPlaceholder(cot: CotizacionParaVincular): ContenedorBo
     tipo_contenedor: tipo,
   }));
 }
+
 
 // ── Sub-builders ─────────────────────────────────────────────────────────────
 
