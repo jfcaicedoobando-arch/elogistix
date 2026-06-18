@@ -77,7 +77,9 @@ export default function Cotizaciones() {
   );
 
   return (
-    <div className="space-y-6">
+    // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
+    <div className="space-y-6 pb-24 md:pb-0">
+
       <PageHeader
         title="Cotizaciones"
         description={`${c.filtered.length} cotizaciones encontradas`}
