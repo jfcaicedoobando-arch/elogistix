@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.22] - 2026-06-18
+- **fix(sidebar-auditoria-badge-gating-roles)**: `useAppSidebarSections` invocaba `useAuditoriaCount()` para todos los roles, lo que disparaba el RPC `auditoria_embarques_org` incluso para roles sin acceso (RLS responde 403). React Query propagaba el 403 a `QueryCache.onError` y se reportaba a Sentry como issue `wq` (`feature: react_query, kind: query`) en cada carga de `/inicio`. `useAuditoria` y `useAuditoriaCount` ahora aceptan `{ enabled?: boolean }`; el sidebar lo gatea por `canVerAuditoria = super_admin || admin || admin_org` (mismo criterio que decide si `/auditoria` aparece en el menú). Para los demás roles el badge cae al default `0` sin tocar la red. Bump `APP_VERSION` 13.66.22.
+
 ## [13.66.21] - 2026-06-18
 - **fix(ci-green)**: Estabiliza la CI tras 13.66.19/20. (1) Mock de `usePermissions` en `useNuevoEmbarqueWizard.test.tsx` para que el guard `canCrearEmbarqueLibre` no aborte los tests de `handleFinish`. (2) Refactor de `parsearVentasJsonb` (`embarquesHelpers.ts`) extrayendo `parseVentaRow` para bajar complejidad ciclomática de 20 → < 16 y pasar `eslint --max-warnings 0`. (3) Agrega marcador `// SAFE-CAST:` en `TabDemoras.tsx:46` para degradar el cast `as unknown as EditableRow[]` a severidad LOW (audit-casts HIGH = 0). (4) Re-incorpora a `OVERSIZED_BASELINE` (en `architecture-baseline.test.ts` y `audit-report.test.ts`) los 4 archivos > 200 líneas pendientes de split: `pnlPorContenedor.ts`, `TabDemoras.tsx`, `TabPnlContenedor.tsx`, `EmbarqueDetalleTabs.tsx`. Bump `APP_VERSION` 13.66.21.
 

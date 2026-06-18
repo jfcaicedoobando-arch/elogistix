@@ -1,26 +1,35 @@
+## Problema
+
+El usuario con rol `contador` cae en `/inicio` y `useAppSidebarSections` invoca `useAuditoriaCount()` incondicionalmente. El RPC `auditoria_embarques_org` responde 403 por RLS (sólo admin/admin_org/super_admin tienen acceso), React Query lo propaga al `QueryCache.onError` y se reporta a Sentry como issue `wq` (`feature: react_query, kind: query`). El badge ni siquiera se muestra para este rol porque `/auditoria` está filtrado del sidebar.
+
+Hallazgos relacionados en los breadcrumbs: dos llamadas a `auditoria_embarques_org` con 403, y otra similar a `auditoria_revisiones` (200, pero también innecesaria para roles sin acceso).
+
 ## Cambios
 
-Para los roles sin `canCrearEmbarqueLibre` (todos excepto `super_admin`, `admin_org`, `admin`, `gerente_operaciones`), el botón "Nuevo Embarque" desaparece del listado, ya que la única vía válida para ellos es **Cotización Aceptada → "Generar embarque"** (botón en el detalle de cotización, que sí queda visible).
+1. **`src/features/auditoria/hooks/useAuditoria.ts`**
+   - Aceptar opción `{ enabled?: boolean }` en `useAuditoria()` y `useAuditoriaCount()`.
+   - Propagar `enabled` tanto al query del reporte como al de revisiones dentro de `useQueries`.
+   - Cuando `enabled === false`, ambos queries quedan deshabilitados y el hook devuelve `{ data: undefined, isLoading: false, isError: false, error: null }` sin disparar fetch.
 
-### 1. Ocultar el botón en tres puntos
-- `EmbarquesHeaderActions.tsx` — recibir nueva prop `canCrearLibre` y mostrar el botón "Nuevo Embarque" sólo si `canEdit && canCrearLibre`.
-- `EmbarquesEmptyState.tsx` — misma prop; el CTA de empty state también se condiciona.
-- `Embarques.tsx` (FAB flotante) — mismo gate.
+2. **`src/hooks/layout/useAppSidebarSections.ts`**
+   - Calcular `canVerAuditoria = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin"` (mismo criterio que decide si `/auditoria` aparece en el sidebar).
+   - Llamar `useAuditoriaCount({ enabled: canVerAuditoria })`.
+   - Mantener el mapeo del `badgeCount` sin cambios (cuando está deshabilitado, `auditoriaCount` cae al default `0`).
 
-`Embarques.tsx` lee `canCrearEmbarqueLibre` desde `usePermissions()` y lo propaga.
+3. **`src/hooks/layout/__tests__/useLayout.test.tsx`** (si el mock lo requiere)
+   - Ajustar el mock de `useAuditoriaCount` para aceptar el nuevo argumento opcional sin romper aserciones existentes.
 
-### 2. Guard de ruta `/embarques/nuevo`
-En `NuevoEmbarque.tsx`, si el usuario no tiene `canCrearEmbarqueLibre` **y** no llega con `state.cotizacionPrevinculadaId` (es decir, no viene del flujo Cotización → Embarque), redirigir a `/embarques` con `toast` informativo. Esto evita que peguen la URL directa.
-
-### 3. Changelog + `APP_VERSION` 13.66.20
+4. **`CHANGELOG.md` + `src/constants/appVersion.ts`**
+   - Nueva entrada `[13.66.22]` describiendo el gating del badge de auditoría para roles sin acceso y el efecto en Sentry (elimina 403 ruidosos).
 
 ## Fuera de alcance
 
-- No se toca el botón "Generar embarque" en el detalle de cotización — sigue disponible para todos los roles, porque ese flujo siempre arranca con `cotizacion_id` y el trigger de DB lo permite.
-- No se modifica la lista de roles autorizados.
+- No tocar la política RLS del RPC (el 403 server-side sigue siendo la última línea de defensa).
+- No modificar otros hooks que consulten endpoints de auditoría desde rutas ya protegidas (`/auditoria` ya está gated por el router).
+- No cambiar el matriz de roles ni la visibilidad del item de sidebar.
 
 ## Verificación
 
-- Login como Valeria (`coordinador_logistico`): la página `/embarques` no muestra botón Nuevo ni FAB; entrar manualmente a `/embarques/nuevo` redirige a `/embarques`.
-- Login como admin: comportamiento sin cambios.
-- Flujo Cotización → Generar embarque sigue funcionando para todos.
+- `bunx vitest run src/hooks/layout src/features/auditoria/hooks`
+- Lint sobre los dos archivos editados.
+- Recuento manual: con rol `contador`, no debe haber request a `auditoria_embarques_org` ni a `auditoria_revisiones` al cargar `/inicio`.
