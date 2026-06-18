@@ -8,6 +8,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { calcularTotalesProforma } from "@/lib/domain/proforma";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
+import { validarContenedoresFCL } from "@/features/embarques/services/validarContenedoresFCL";
 
 type ClienteParaPdf = Pick<
   Tables<"clientes">,
@@ -61,6 +62,12 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     notas, diasCredito, filtroContenedor, contenedores, totales, tasaIva,
     crearProformaMutateAsync, fetchClienteParaPdfCached,
   } = params;
+
+  // Pre-check: contenedores FCL marítimos deben tener peso y volumen capturados.
+  const validacion = validarContenedoresFCL(embarque, contenedores);
+  if (!validacion.ok) {
+    throw new Error(validacion.mensaje ?? "Captura peso y volumen de todos los contenedores antes de generar la proforma.");
+  }
 
   const ivaOverrides: Record<string, boolean> = {};
   conceptosSeleccionados.forEach((c) => {
