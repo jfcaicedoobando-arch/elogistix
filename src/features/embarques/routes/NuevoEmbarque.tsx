@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
@@ -7,6 +9,7 @@ import { StepDocumentos } from "@/features/embarques/components/StepDocumentos";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
 import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 const steps = [
   { title: "Datos Generales", num: 1 },
@@ -17,6 +20,21 @@ const steps = [
 
 export default function NuevoEmbarque() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { canCrearEmbarqueLibre } = usePermissions();
+  const llegaConCotizacion = Boolean(
+    (location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId,
+  );
+
+  // Guard: roles sin permiso de crear embarque libre sólo pueden entrar
+  // si vienen del flujo Cotización → Generar embarque.
+  useEffect(() => {
+    if (!canCrearEmbarqueLibre && !llegaConCotizacion) {
+      toast.error("Tu rol requiere iniciar el embarque desde una cotización Aceptada.");
+      navigate("/embarques", { replace: true });
+    }
+  }, [canCrearEmbarqueLibre, llegaConCotizacion, navigate]);
+
   const w = useNuevoEmbarqueWizard();
 
   return (
