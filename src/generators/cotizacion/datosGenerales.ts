@@ -1,5 +1,9 @@
 import type { CotizacionRow } from '@/features/cotizacion/types';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import {
+  resolveTipoContenedorNombre,
+  type TipoContenedorCatalogo,
+} from '@/features/cotizacion/utils/resolveTipoContenedorNombre';
 
 function rowsMaritimo(c: CotizacionRow): [string, string][] {
   if (c.modo !== 'Marítimo') return [];
@@ -40,13 +44,16 @@ export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
   return [...base, ...rowsOpcionales(c), ...rowsMaritimo(c), seguro];
 }
 
-export function buildMercancia(c: CotizacionRow): [string, string][] {
+export function buildMercancia(
+  c: CotizacionRow,
+  tiposContenedor: ReadonlyArray<TipoContenedorCatalogo> = [],
+): [string, string][] {
   const esMaritimo = c.modo === 'Marítimo';
   const esAereo = c.modo === 'Aéreo';
   const m: [string, string][] = [];
   if (esMaritimo) m.push(['Tipo de Embarque', c.tipo_embarque]);
   if (esMaritimo && c.tipo_embarque === 'FCL') {
-    m.push(['Tipo de Contenedor', c.tipo_contenedor || '-']);
+    m.push(['Tipo de Contenedor', resolveTipoContenedorNombre(c.tipo_contenedor, tiposContenedor, '—')]);
     m.push(['Peso', c.tipo_peso]);
   }
   m.push(['Tipo de Carga', c.tipo_carga || 'Carga General']);
