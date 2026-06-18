@@ -153,9 +153,12 @@ function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
 
 export function useAppSidebarSections(): SidebarSection[] {
   const { role, effectiveRole } = useAuth();
-  const { data: auditoriaCount = 0 } = useAuditoriaCount();
+  const canVerAuditoria =
+    role === "super_admin" || effectiveRole === "admin" || effectiveRole === "admin_org";
+  const { data: auditoriaCount = 0 } = useAuditoriaCount({ enabled: canVerAuditoria });
   const { count: alertasSistemaCount } = useAlertasPendingCount();
   const { data: crmVencidas = 0 } = useActividadesVencidasCount();
+
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,
