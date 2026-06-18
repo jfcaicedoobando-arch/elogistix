@@ -1,49 +1,73 @@
-## Unificar venta por contenedor + backfill ELIMP00272
+## P&L por contenedor — estilo CargoWise (sin sub-embarques reales)
 
-### Parte 1 — Backfill datos ELIMP00272 (vía `supabase--insert`)
+Mantenemos **1 embarque = 1 expediente** (ELIMP00272). El contenedor sigue siendo entidad operativa, NO centro de utilidad independiente. Agregamos visibilidad de P&L por contenedor con prorrateo flat (÷N) de generales.
 
-Embarque `79fe05dc-305f-46d5-a7ab-d40e685fe1ee`, 6 contenedores. Hoy `conceptos_venta` tiene 2 filas generales:
-- Flete Marítimo · cant 1 · USD 5,665
-- Cargos en Destino · cant 1 · USD 125
+### Parte 1 — Helper puro de cálculo
 
-Aplicar:
-1. Por cada uno de los 2 conceptos, insertar 6 nuevas filas en `conceptos_venta`, una por contenedor, con `cantidad = 1`, `precio_unitario` igual al original, `total = precio_unitario`, mismo `moneda/aplica_iva/tasa_iva_aplicada/organization_id`.
-2. Soft-eliminar las 2 filas originales (la tabla no tiene `deleted_at`, así que usar `DELETE` directo si no hay FK que lo impida; si las hay, marcar el `total = 0` y `descripcion = '[ANULADO] ...'`). Verificación previa: `proforma_id IS NULL` y `estado_facturacion = 'pendiente'` para confirmar que no están facturadas todavía.
+Nuevo archivo `src/features/embarques/services/pnlPorContenedor.ts`:
 
-Total venta resultante: 6 × 5,665 + 6 × 125 = **USD 34,740**. Margen vs. costos backfilled (USD 32,539.92) ≈ **USD 2,200**.
+- `calcularPnlPorContenedor({ contenedores, conceptosVenta, conceptosCosto }) → FilaPnlContenedor[]`
+- Por cada contenedor:
+  - `subexpediente`: `${embarque.expediente}-${String(orden).padStart(2, '0')}` (ej. `ELIMP00272-01`). Solo display.
+  - `venta_directa` = suma de `conceptos_venta` con ese `contenedor_id`, agrupado por moneda.
+  - `costo_directo` = idem para `conceptos_costo`.
+  - `venta_prorrateada` = suma de `conceptos_venta` con `contenedor_id IS NULL` ÷ N contenedores.
+  - `costo_prorrateado` = idem para costos generales.
+  - `venta_total`, `costo_total`, `utilidad`, `margen_pct` por moneda.
+- Fila adicional `'Generales'` mostrando los conceptos sin asignar (antes del prorrateo) para auditabilidad.
+- Fila `'Total embarque'` que cuadra contra la P&L global existente.
 
-### Parte 2 — Unificar regla en código (`parsearVentasJsonb`)
+**Reglas duras**:
+- No se mezclan monedas; se devuelve un map `{ USD: [...], MXN: [...] }` o filas con columna `moneda`.
+- Si N=0 contenedores → sólo fila `'Generales'` con los conceptos tal cual.
+- El residuo del prorrateo flat (cuando `monto / N` no es entero a 2 decimales) se asigna al último contenedor para que la suma cuadre al centavo.
 
-Archivo: `src/features/cotizacion/services/conversiones/embarquesHelpers.ts`.
+### Parte 2 — UI: nueva pestaña "P&L por Contenedor"
 
-Cambiar la lógica de replicación para que se comporte como `construirCostosRows`:
+Nuevo componente `src/features/embarques/components/TabPnlContenedor.tsx`:
 
-- Si `unidad_medida.toLowerCase() === 'contenedor'` Y hay hijos → **una fila por hijo** con `cantidad = (cantidad original)` y `precio_unitario` SIN cambios, `total = cantidad * precio_unitario`. Es decir, **se multiplica el monto por N contenedores** (no se reparte la cantidad).
-- Si `unidad_medida === 'BL'` o no hay hijos → 1 fila general con `contenedor_id = null` (sin cambios).
-- Eliminar la condición `cantidad >= numHijos` que hoy hace que casos como `cantidad=1` caigan al fallback general.
+- Tabla con columnas: `Sub-expediente | # Contenedor | Tipo | Venta directa | Venta prorrateada | Venta total | Costo directo | Costo prorrateado | Costo total | Utilidad | Margen %`.
+- Filas pintadas con el zebra-striping estándar; última fila `Total` en negrita.
+- Toggle "Mostrar moneda: USD / MXN / Ambas" (default Ambas, una sub-tabla por moneda).
+- Badge en el header de cada fila con el `subexpediente` (`ELIMP00272-01`) para que el usuario lo pueda copiar/usar como referencia operativa.
+- Reutiliza `KpiCard` para mostrar 4 KPIs arriba: Venta total / Costo total / Utilidad / Margen %.
+- Estado vacío: "Este embarque no tiene contenedores registrados."
 
-Esto pone venta y costo en simetría exacta: ambas usan `unidad_medida` para decidir si replicar y ambas multiplican el monto.
+Agregar `<TabsTrigger value="pnl-contenedor">P&L Contenedor</TabsTrigger>` en `EmbarqueDetalleTabs.tsx` justo después de la pestaña `pnl` existente. La pestaña `pnl` actual sigue mostrando la P&L global; la nueva muestra el desglose.
 
-### Parte 3 — Actualizar tests
+### Parte 3 — Subexpediente como etiqueta global
 
-Archivos:
-- `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.test.ts`
-- `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts`
+- Helper `formatSubexpediente(expedientePadre, orden) → string` en `src/lib/domain/embarque/subexpediente.ts` con test unitario.
+- Usarlo también en:
+  - `EmbarqueDetalleContenedoresTab` (badge en cada card de contenedor).
+  - `TabCierre` cuando lista conceptos faltantes por contenedor.
+- NO se guarda en BD. Es función pura `(expediente, orden) → string`.
 
-Cambios:
-- Reescribir los 4 tests `(v13.66.11)` que asumen el reparto de cantidad: ahora deben verificar que `cantidad` se preserva y `monto total = monto original × N`.
-- El caso "cantidad < numHijos cae a fallback" pasa a comportarse como "replica multiplicando" (ya no hay fallback por cantidad).
-- Caso "residual al último hijo" se elimina o se reemplaza por "todas las filas tienen la misma cantidad/precio".
+### Parte 4 — Tests
 
-### Parte 4 — Metadata
+- `pnlPorContenedor.test.ts` (puro, sin Supabase):
+  - 1 contenedor + 0 generales → directo = total.
+  - 3 contenedores + costo general 100 USD → cada uno carga 33.33, último 33.34 (residuo).
+  - Mezcla USD/MXN no se cruza.
+  - Concepto con `contenedor_id` inexistente (contenedor borrado) cae a "Generales".
+  - Embarque sin contenedores → sólo fila Generales.
+- `subexpediente.test.ts`: padding a 2 dígitos, manejo de orden 0/null, expediente vacío.
+- `TabPnlContenedor.test.tsx` render smoke con mock de hook (cantidad de filas + presencia de subexpediente).
 
-- Bump `APP_VERSION` a `13.66.13` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md` raíz: explicar la unificación de regla venta/costo por contenedor + backfill manual de ELIMP00272.
+### Parte 5 — Metadata
 
-### Fuera de alcance
-- No se tocan cotizaciones existentes ni otros embarques históricos. Sólo el embarque 272 y la regla para conversiones futuras.
-- No se modifica el wizard de cotización (sigue capturando ventas como hoy).
-- No se cambian reglas de facturación, proforma, ni cierre.
+- Bump `APP_VERSION` a `13.66.14`.
+- Entrada en `CHANGELOG.md` raíz explicando: nueva pestaña P&L por contenedor con prorrateo flat de generales, subexpediente como display (no entidad), referencia al modelo CargoWise.
+
+### Fuera de alcance (explícito)
+
+- **NO** se crea tabla `embarques_hijos` ni columna `embarque_padre_id`. No hay sub-embarque real.
+- **NO** se modifica la facturación: las facturas siguen siendo del embarque padre.
+- **NO** se cambia el cierre: las reglas v13.66.12 aplican al embarque completo.
+- **NO** se reasigna la regla de prorrateo a peso/volumen (decidiste flat ÷N). Si más adelante quieres peso/volumen, se agrega como toggle en la misma pestaña.
+- **NO** se toca embarque 272 con migración de datos; ya quedó con conceptos repartidos por contenedor en pasos anteriores.
 
 ### Riesgos
-- Cotizaciones donde el vendedor capturó `cantidad = N contenedores` con `precio_unitario` ya pensado como total/contenedor se DUPLICARÍAN al convertirse a embarque con la nueva regla. Mitigación: la regla nueva sólo se dispara para conversiones futuras; los embarques históricos no se re-procesan. Se documenta en el changelog.
+
+- El subexpediente `ELIMP00272-01` puede confundirse con un expediente real si se exporta sin contexto. Mitigación: en exports/PDF siempre rotularlo "Ref. contenedor: ELIMP00272-01" en lugar de mostrarlo como folio.
+- Si el orden de los contenedores cambia, el subexpediente cambia. Mitigación: `orden` ya es estable en `embarque_contenedores` y no se reasigna al editar.
