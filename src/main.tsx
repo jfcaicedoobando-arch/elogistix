@@ -55,30 +55,35 @@ window.addEventListener("load", () => {
 
 /**
  * Sentry + React Query persister se cargan de forma DIFERIDA fuera del
- * critical path (Etapa 5 sub-loop 2). Esto saca `@sentry/react` (~150 KB) y
+ * critical path. Esto saca `@sentry/react` (~150 KB) y
  * `@tanstack/react-query-persist-client` (~25 KB) del bundle inicial.
  *
- * - Sentry: errores tempranos siguen siendo capturados por los listeners
- *   globales del navegador y se reenvían cuando init termina.
- * - Persister: durante los primeros ~ms tras el paint los catálogos no
- *   están hidratados; las queries refetchearán al montar (no hay regresión).
+ * 13.63.0: en lugar de esperar al `requestIdleCallback` para iniciar la
+ * descarga (lo que dejaba una ventana ciega de hasta 3s al arrancar la app),
+ * disparamos `import()` INMEDIATAMENTE — el browser baja el chunk en paralelo
+ * con el render — y sólo diferimos la EJECUCIÓN de `initSentry()` /
+ * `bootstrapQueryPersister()` al idle. Resultado: misma cobertura, menor
+ * latencia hasta que Sentry empieza a capturar.
  */
+const sentryModulePromise = import("./lib/observability/sentry/core");
+const persisterModulePromise = import("./lib/query/persistBootstrap");
+
 const scheduleIdle = (cb: () => void) => {
   const w = window as Window & {
     requestIdleCallback?: (cb: IdleRequestCallback, opts?: { timeout: number }) => number;
   };
   if (typeof w.requestIdleCallback === "function") {
-    w.requestIdleCallback(() => cb(), { timeout: 3000 });
+    w.requestIdleCallback(() => cb(), { timeout: 1500 });
   } else {
-    setTimeout(cb, 1500);
+    setTimeout(cb, 200);
   }
 };
 
 scheduleIdle(() => {
-  void import("./lib/observability/sentry/core").then((m) => m.initSentry());
-  void import("./lib/query/persistBootstrap").then((m) =>
-    m.bootstrapQueryPersister(queryClient),
-  );
+  void sentryModulePromise.then((m) => m.initSentry()).catch(() => undefined);
+  void persisterModulePromise
+    .then((m) => m.bootstrapQueryPersister(queryClient))
+    .catch(() => undefined);
 });
 
 createRoot(document.getElementById("root")!).render(

@@ -1,8 +1,34 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 
+/**
+ * Reporta a Sentry los errores que React Query rescata en su pipeline
+ * (queries fallidas, mutations fallidas) — la mayoría de errores de red en
+ * la app pasan por aquí y antes quedaban silenciosos si la UI sólo mostraba
+ * un `toast.error`. Lazy import para no inflar el bundle inicial.
+ */
+function reportQueryError(
+  err: unknown,
+  kind: "query" | "mutation",
+  meta?: Record<string, unknown>,
+): void {
+  void import("@sentry/react")
+    .then(({ captureException }) =>
+      captureException(err, { tags: { feature: "react_query", kind }, extra: meta }),
+    )
+    .catch(() => undefined);
+}
+
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (err, query) =>
+      reportQueryError(err, "query", { queryKey: query.queryKey }),
+  }),
+  mutationCache: new MutationCache({
+    onError: (err, _vars, _ctx, mutation) =>
+      reportQueryError(err, "mutation", { mutationKey: mutation.options.mutationKey }),
+  }),
   defaultOptions: {
     queries: {
       // 12.34.0: subido de 30s → 60s para reducir refetches innecesarios al

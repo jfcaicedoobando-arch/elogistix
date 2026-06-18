@@ -49,6 +49,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
     let eventId: string | null = null;
     Sentry.withScope((scope) => {
       scope.setTag("source", "react-error-boundary");
+      // 13.63.0: tag por ruta para filtrar en Sentry qué pantalla rompió.
+      // Usar pathname (sin query) para evitar PII en el tag.
+      if (typeof window !== "undefined") {
+        scope.setTag("crashed_route", window.location.pathname || "/");
+      }
       if (errorInfo.componentStack) {
         scope.setContext("react", { componentStack: errorInfo.componentStack });
       }

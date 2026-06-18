@@ -295,4 +295,39 @@ export default tseslint.config(
       "max-depth": "off",
     },
   },
+  {
+    // Plan E (13.63.0) — Guardrail para `@sentry/*` en capas de UI.
+    // El SDK pesa ~150 KB y sólo debe importarse STÁTICAMENTE desde la capa
+    // de observabilidad. Páginas/componentes/contexts/lib deben usar
+    // `await import("@sentry/react")` dinámico para mantenerlo fuera del
+    // bundle inicial. Hooks/services/features ya están exentos de
+    // `no-restricted-imports` por sus overrides previos; los imports
+    // estáticos legados en esas capas se migrarán a lazy progresivamente.
+    files: [
+      "src/components/**/*.{ts,tsx}",
+      "src/pages/**/*.{ts,tsx}",
+      "src/contexts/**/*.{ts,tsx}",
+      "src/lib/**/*.{ts,tsx}",
+    ],
+    ignores: [
+      "src/lib/observability/sentry/**",
+      "src/components/shared/ErrorBoundary.tsx",
+      "src/components/feedback/**",
+      "src/pages/admin/SentryDiagnostico.tsx",
+      "**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          {
+            group: ["@sentry/*"],
+            message:
+              "Importar `@sentry/*` estáticamente sólo se permite desde `src/lib/observability/sentry/**`, `ErrorBoundary`, `components/feedback/**` y `SentryDiagnostico`. En el resto usa `await import('@sentry/react')` dinámico para mantener el SDK fuera del bundle inicial.",
+          },
+        ],
+      }],
+    },
+  },
 );
