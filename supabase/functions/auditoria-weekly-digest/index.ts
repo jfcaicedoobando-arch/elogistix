@@ -185,4 +185,4 @@ Deno.serve(wrapEdgeHandler("auditoria-weekly-digest", async (req) => {
       status: 500,
     });
   }
-});
+}));

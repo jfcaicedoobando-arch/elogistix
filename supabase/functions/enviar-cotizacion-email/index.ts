@@ -98,4 +98,4 @@ Deno.serve(wrapEdgeHandler("enviar-cotizacion-email", async (req) => {
     body,
     timestamp,
   });
-});
+}));
