@@ -74,7 +74,7 @@ export default function CosteoRutas() {
         </Table>
       </Card>
 
-      <RutaFormDialog open={open} onOpenChange={setOpen} crear={crear} />
+      <RutaFormDialog open={open} onOpenChange={setOpen} crear={crear} rutas={rutas} />
 
       <ConfirmDeleteAlert
         open={!!aEliminar}
