@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.23] - 2026-06-18
+- **fix(seo-landing-contrast)**: Sube opacidades de texto sobre fondo `bg-primary` en `LandingHero.tsx` (de `/55` → `/75` y `/60` → `/80`) para cumplir WCAG AA 4.5:1 y resolver hallazgo Lighthouse de accesibilidad por bajo contraste. No cambia jerarquía visual. Bump `APP_VERSION` 13.66.23.
+
 ## [13.66.22] - 2026-06-18
 - **fix(sidebar-auditoria-badge-gating-roles)**: `useAppSidebarSections` invocaba `useAuditoriaCount()` para todos los roles, lo que disparaba el RPC `auditoria_embarques_org` incluso para roles sin acceso (RLS responde 403). React Query propagaba el 403 a `QueryCache.onError` y se reportaba a Sentry como issue `wq` (`feature: react_query, kind: query`) en cada carga de `/inicio`. `useAuditoria` y `useAuditoriaCount` ahora aceptan `{ enabled?: boolean }`; el sidebar lo gatea por `canVerAuditoria = super_admin || admin || admin_org` (mismo criterio que decide si `/auditoria` aparece en el menú). Para los demás roles el badge cae al default `0` sin tocar la red. Bump `APP_VERSION` 13.66.22.
 
