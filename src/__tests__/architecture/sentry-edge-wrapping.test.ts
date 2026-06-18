@@ -1,0 +1,33 @@
+/**
+ * Plan C (audit Sentry): garantiza que las edge functions críticas de
+ * facturación (facturapi-emitir, facturapi-cancelar) llaman a
+ * `Deno.serve(wrapEdgeHandler(...))`. Sin el wrapper, los errores 500/timeout
+ * de Facturapi pasarían invisibles a Sentry — riesgo fiscal.
+ *
+ * Si añades una edge function nueva sensible al CFDI, agrégala a `CRITICAL`.
+ */
+import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = path.resolve(__dirname, "../../..");
+
+const CRITICAL = [
+  "supabase/functions/facturapi-emitir/index.ts",
+  "supabase/functions/facturapi-cancelar/index.ts",
+];
+
+describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
+  it.each(CRITICAL)("%s usa Deno.serve(wrapEdgeHandler(...))", (rel) => {
+    const full = path.join(ROOT, rel);
+    expect(fs.existsSync(full), `Falta archivo ${rel}`).toBe(true);
+    const src = fs.readFileSync(full, "utf-8");
+
+    // 1) Importa el wrapper desde el shared.
+    expect(src).toMatch(/from\s+["']\.\.\/_shared\/sentry\.ts["']/);
+    expect(src).toMatch(/import\s+\{[^}]*wrapEdgeHandler[^}]*\}/);
+
+    // 2) El handler se monta a través de wrapEdgeHandler(fnName, ...).
+    expect(src).toMatch(/Deno\.serve\(\s*wrapEdgeHandler\(/);
+  });
+});
