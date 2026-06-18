@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.17] - 2026-06-18
+- **fix(sidebar-mobile-autoclose)**: En móvil el sidebar (renderizado como `Sheet` overlay) no se cerraba al hacer click en un item de navegación: la ruta cambiaba pero el sheet quedaba abierto encima del contenido y el usuario tenía que cerrarlo manualmente. `SidebarGroupBlock` ahora consume `useSidebar()` y, cuando `isMobile === true`, llama `setOpenMobile(false)` en el `onClick` de cada `NavLink`. Sin efecto en desktop (`isMobile === false`). Bump `APP_VERSION` 13.66.17.
+
 ## [13.66.16] - 2026-06-18
 - **fix(tab-tracking-quitar-notas)**: El tab `Tracking` renderizaba `<TabNotas>` al final de su contenido, duplicando las notas que ya tienen su pestaña dedicada **"Notas y Actividad"** (resultado de la reorganización v13.66.15). Se elimina el import de `TabNotas`, la prop `notas` del contrato de `TabTracking`, y su renderización. Se ajusta `EmbarqueDetalleTabs` para dejar de pasar `notas` a `TabTracking`. Las notas siguen disponibles exclusivamente en su tab propio. Bump `APP_VERSION` 13.66.16.
 

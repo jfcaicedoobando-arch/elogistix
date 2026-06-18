@@ -6,6 +6,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,10 @@ function isActive(pathname: string, path: string): boolean {
  * en cada navegación: solo el grupo cuyo `pathname` activo cambia se re-renderea.
  */
 function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas }: Props) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const handleNavigate = () => {
+    if (isMobile) setOpenMobile(false);
+  };
   return (
     <>
       <SidebarGroup>
@@ -78,6 +83,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
+                      onClick={handleNavigate}
                       className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
                       activeClassName="bg-sidebar-accent/10 text-sidebar-foreground font-semibold"
                     >
