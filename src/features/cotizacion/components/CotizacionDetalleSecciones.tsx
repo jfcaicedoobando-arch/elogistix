@@ -22,17 +22,20 @@ interface Props {
 export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Props) {
   const navigate = useNavigate();
 
-  if (cotizacionEstado !== "En operación" && embarques.length === 0) return null;
+  // Mostrar la tarjeta cuando hay embarques vinculados, o cuando la cotización
+  // ya está "En operación" / "Cerrada" para indicar que debería haberlos.
+  const estadoSugiereEmbarque = cotizacionEstado === "En operación" || cotizacionEstado === "Cerrada";
+  if (embarques.length === 0 && !estadoSugiereEmbarque) return null;
 
   return (
     <Card>
       <CardHeader><CardTitle className="text-lg">Embarques Generados</CardTitle></CardHeader>
       <CardContent>
         {embarques.length === 0 ? (
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Esta cotización aparece como <strong>{cotizacionEstado}</strong>, pero no hay embarques vinculados.
+            Verifica con tu administrador o vuelve a generar el embarque desde el botón <em>Crear embarque</em>.
+          </p>
         ) : (
           <div className="space-y-2">
             {embarques.map((emb) => (
