@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.2] - 2026-06-18
+- **fix(toast-action-mobile)**: El botón "Ver detalles" de los toasts de error ahora es clickeable en mobile. Tres causas resueltas en `src/components/ui/sonner.tsx`: (1) selectores CSS `group-[.toaster]` nunca matcheaban (Sonner usa `data-sonner-toaster`, no clase `.toaster`) — reemplazados por clases directas con `!important` sobre el toast; (2) `actionButton` no respetaba el estándar P0 de 44px — ahora forzado a `min-h-11 min-w-[44px] px-3`; (3) swipe-to-dismiss capturaba taps con micro-movimiento — `swipeThreshold` subido a 80px y `swipeDirections` limitado a derecha. Bump `APP_VERSION` 13.67.2.
+
 ## [13.67.1] - 2026-06-18
 - **fix(rls)**: Política `costeo_rutas_write_org` ahora incluye el rol `coordinador_logistico` (además de admin, admin_org, gerente_operaciones, ejecutivo_pricing, operador y super_admin). Resuelve el error "new row violates row-level security policy for table costeo_rutas" que vio Valeria al dar de alta una ruta CN→MX.
 
