@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 interface Props {
   selectedIds: Set<string>;
@@ -58,6 +59,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       toast.success(`${count} factura(s) descargadas`);
     } catch (e) {
       toast.error(`Error al generar ZIP: ${(e as Error).message}`);
+      reportCaughtError(e, { feature: "facturacion", op: "generar_zip_masivo" }, { total: ids.length });
     } finally {
       setBusy(null);
     }
@@ -82,6 +84,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       onClear();
     } catch (e) {
       toast.error(`Error al marcar: ${(e as Error).message}`);
+      reportCaughtError(e, { feature: "facturacion", op: "marcar_enviada_masivo" }, { count: ids.length });
     } finally {
       setBusy(null);
     }

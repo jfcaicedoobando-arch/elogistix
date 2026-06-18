@@ -6,6 +6,7 @@
  * en logs sin fallar.
  */
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
@@ -142,7 +143,7 @@ function unauthorized(corsHeaders: Record<string, string>): Response {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("auditoria-weekly-digest", async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const corsHeaders = buildCors(req);
@@ -184,4 +185,4 @@ Deno.serve(async (req) => {
       status: 500,
     });
   }
-});
+}));

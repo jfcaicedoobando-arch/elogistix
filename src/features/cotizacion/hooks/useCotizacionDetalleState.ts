@@ -10,6 +10,7 @@ import {
   EMPTY_TOTALES,
 } from "@/lib/parsers/cotizacionDetalle";
 import { useCotizacionDetalleHandlers } from "@/features/cotizacion/hooks/useCotizacionDetalleHandlers";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 /**
  * Orquestador del detalle de cotización: combina queries (cotización + embarques vinculados),
@@ -34,6 +35,7 @@ export function useCotizacionDetalleState(id: string | undefined) {
       return calcularTotalesConceptos(conceptos, tasaIva);
     } catch (err) {
       console.error("[useCotizacionDetalleState] error calculando totales", err);
+      reportCaughtError(err, { feature: "cotizacion", op: "calcular_totales" });
       return EMPTY_TOTALES;
     }
   }, [conceptosRaw, tasaIva]);

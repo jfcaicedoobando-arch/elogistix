@@ -11,26 +11,33 @@ import { queryClient } from "./lib/query/queryClient";
 import { AppRoutes } from "./routes";
 import { DemoModeBanner } from "@/components/marketing/DemoModeBanner";
 import { useRadixPointerEventsRescue } from "@/hooks/shared";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 const App = () => {
   useRadixPointerEventsRescue();
   return (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <ErrorDetailsDialog />
-      <BrowserRouter>
-        <NuqsAdapter>
-          <BreadcrumbProvider>
-            <DemoModeBanner />
-            <Suspense fallback={<RouteLoadingFallback />}>
-              <AppRoutes />
-            </Suspense>
-          </BreadcrumbProvider>
-        </NuqsAdapter>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  // F2 (13.65.0): ErrorBoundary raíz — captura crashes en BrowserRouter,
+  // providers (Tooltip/QueryClient/Nuqs) y rutas públicas (landing, login,
+  // tracking-publico). El boundary interno de Layout sólo cubría el área
+  // autenticada, dejando pantallas en blanco fuera de ella sin reporte.
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <ErrorDetailsDialog />
+        <BrowserRouter>
+          <NuqsAdapter>
+            <BreadcrumbProvider>
+              <DemoModeBanner />
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <AppRoutes />
+              </Suspense>
+            </BreadcrumbProvider>
+          </NuqsAdapter>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
   );
 };
 

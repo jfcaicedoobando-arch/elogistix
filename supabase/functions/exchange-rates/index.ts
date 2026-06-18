@@ -1,9 +1,7 @@
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { initSentryEdge } from "../_shared/sentry.ts";
-
-initSentryEdge("exchange-rates");
+import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5 };
 const FETCH_TIMEOUT_MS = 5000;
@@ -16,7 +14,7 @@ export function computeRates(data: unknown): { usdMxn: number; eurMxn: number } 
   return { usdMxn, eurMxn };
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -43,4 +41,4 @@ Deno.serve(async (req) => {
   } finally {
     clearTimeout(timer);
   }
-});
+}));

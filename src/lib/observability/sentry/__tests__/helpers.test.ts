@@ -53,7 +53,8 @@ describe("sampleByRoute — sampling dinámico por ruta", () => {
     expect(sampleByRoute(at("/clientes/"))).toBe(0.05);
   });
   it("resto → 0.1", () => {
-    expect(sampleByRoute(at("/admin/usuarios"))).toBe(0.1);
+    // F5 (13.65.0): /admin se elevó a 0.3, /reportes a 0.5. Probar paths neutros.
     expect(sampleByRoute(at("/configuracion"))).toBe(0.1);
+    expect(sampleByRoute(at("/perfil"))).toBe(0.1);
   });
 });

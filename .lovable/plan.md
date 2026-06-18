@@ -1,39 +1,44 @@
-## Estado de la implementación
+## Estado actual
 
-Verifiqué los 5 sub-planes (A, B, C, D, E) del audit de Sentry — **todo está implementado en código** (v13.63.0):
+Las Fases A–E del audit anterior están aplicadas (v13.64.0). El sub-agente identificó **6 gaps reales** + 5 deudas menores que aún limitan la cobertura efectiva (~92% → ~98% si se cierran).
 
-- A: `tracePropagationTargets` + `resolveEnvironment` en `core.ts`, `captureException` en `useAuthSession`/`useAuthProfile`/`fetchExchangeRates`, release alineado en `vite.config.ts`.
-- B: `QueryCache`/`MutationCache` con `onError → reportQueryError` (queryClient), `ErrorBoundary` con tag `crashed_route`, init Sentry coordinado con preload del persister.
-- C: `wrapEdgeHandler` en `facturapi-emitir` e `facturapi-cancelar`.
-- D: `APP_VERSION` único como fuente de verdad para release vite + runtime.
-- E: ESLint `no-restricted-imports` para `@sentry/*` con allowlist + `user.test.ts` cubre login/logout.
+## Hallazgos clave
 
-**Gap real**: faltan tests específicos para el código nuevo de A/B/C. El plan es cerrarlo con una sola tanda de pruebas.
+**Gaps reales:**
+1. **G1 — 8 edge functions sin `wrapEdgeHandler`** (cobertura backend: 55%). Críticas: `send-transactional-email`, `process-email-queue`, `enviar-cotizacion-email`. Media: `auditoria-weekly-digest`, `handle-email-suppression`, `exchange-rates` (importa `initSentryEdge` pero no envuelve handler). Baja: `handle-email-unsubscribe`, `preview-transactional-email`.
+2. **G2 — `ErrorBoundary` solo en `Layout.tsx`**, no en raíz. Rutas públicas (`/landing`, `/tracking-public`, login, `/privacidad`) y errores en `<BrowserRouter>` / providers → pantalla en blanco sin evento.
+3. **G3 — Source maps condicionales a `SENTRY_AUTH_TOKEN`** que no está documentado como configurado. Sin token → stacks minificados en producción (variables `o`, `r`, `n`).
+4. **G4 — ~30 `toast.error()` en flujos críticos** fuera de `MutationCache` (catch manuales). Top 5: `FacturasMasivasToolbar`, `TesoreriaConciliacion`, `useTesoreriaCuentasController`, `useCotizacionDetalleState`, `ProfitDashboardEjecutivo`.
+5. **G5 — `scrubEventPii` incompleto**: no toca `event.request.headers` (puede incluir `Authorization`/cookies) ni breadcrumbs de `ui.click`/`navigation` con query strings sensibles.
+6. **G6 — Falta `httpClientIntegration()`** — 4xx/5xx de `fetch`/XHR (RLS de Supabase, Resend) no generan eventos automáticos.
 
-## Tests a generar
+**Deuda menor:** `exchange-rates` sin wrap (3 líneas); sin scrub/límite de tamaño en `ctx.extra` del wrapper edge; `sampleByRoute` no cubre `/reportes`, `/auditoria/:id`, `/admin`; `autoSessionTracking` no explícito; `SENTRY_DSN_EDGE` sin documentar en `.env.example`/README.
 
-| # | Archivo | Cubre |
-|---|---|---|
-| 1 | `src/lib/observability/sentry/__tests__/environment.test.ts` | `resolveEnvironment()`: prioridad `VITE_SENTRY_ENV` > host (`lovable.app`→preview, `librecarga.com`→production) > MODE. Valida que `TRACE_PROPAGATION_TARGETS` exporta los 3 patrones correctos (regex API/functions, Supabase functions, librecarga). |
-| 2 | `src/lib/query/__tests__/queryClient.sentry.test.ts` | `reportQueryError`: con `vi.mock('@sentry/react')`, dispara una query y una mutation que fallan y verifica que `captureException` se llamó con `tags: { feature: 'react_query', kind: 'query'/'mutation' }` y `extra` con el `queryKey`/`mutationKey`. |
-| 3 | `src/components/shared/__tests__/ErrorBoundary.test.tsx` | Render con hijo que lanza → fallback visible, `captureException` invocado con tag `crashed_route` resuelto a `window.location.pathname`. Botón "Recargar" llama `window.location.reload`. |
-| 4 | `src/contexts/auth/__tests__/useAuthSession.sentry.test.ts` | Mock de `supabase.auth.getSession` que rechaza → `captureException` se llama con `tags: { feature: 'auth', phase: 'getCurrentSession' }`. Variante happy-path no reporta. |
-| 5 | `src/contexts/auth/__tests__/useAuthProfile.sentry.test.ts` | Mock del fetch de profile rechaza → `captureException` con `tags: { feature: 'auth', phase: 'fetchUserContext' }`. |
-| 6 | `src/features/catalogos/services/__tests__/exchangeRates.sentry.test.ts` | Mock de `supabase.functions.invoke` que devuelve `error` → se llama `captureException` con `tags: { feature: 'exchange_rates', source: 'edge_invoke' }` y la función degrada con fallback. |
-| 7 | `src/__tests__/architecture/sentry-imports-guardrail.test.ts` | Recorre `src/components`, `src/pages`, `src/contexts`, `src/lib` (excepto allowlist: `observability/sentry/**`, `ErrorBoundary.tsx`, `queryClient.ts`, `main.tsx`, hooks de auth `useAuth*`, `services/.../index.ts` de catálogos) y asserta que NO hay `import ... from "@sentry/...";` estático. Cualquier nuevo archivo que viole esto rompe CI antes que ESLint. |
-| 8 | `supabase/functions/facturapi-emitir/sentry_test.ts` y `facturapi-cancelar/sentry_test.ts` | Smoke test Deno: importa `index.ts`, intercepta `Deno.serve` para extraer el handler y verifica que está envuelto por `wrapEdgeHandler` (firma esperada: añade `sentry-trace`/captura excepciones al re-lanzar). Mantiene el patrón existente de `helpers_test.ts`. |
+## Plan F — Propuesta de ejecución (priorizado por ROI)
 
-Adicionalmente:
-- Bump `APP_VERSION` → `13.64.0`.
-- Entrada en `CHANGELOG.md`: "Cobertura de tests de la auditoría Sentry (Fases A–E)".
+Sugiero ejecutar en este orden — **F2+F3 primero (1 h total, ROI máximo)**, luego F1, finalmente F4/F5/limpieza de deuda.
 
-## Detalles técnicos clave
+| # | Ítem | Esfuerzo | Por qué primero |
+|---|---|---|---|
+| **F2** | `<ErrorBoundary>` raíz en `App.tsx` (envolviendo `BrowserRouter`/providers) + `Sentry.httpClientIntegration({ failedRequestStatusCodes: [[400,599]] })` en `core.ts` | ½ h | Toda la app queda cubierta; 4xx/5xx aparecen automáticos. |
+| **F3** | Documentar requisito `SENTRY_AUTH_TOKEN` + agregar warning en build si falta (sin token, log `[sentry] sourcemaps NO subidos`) | ½ h | Sin token, los stacks de prod son ilegibles — invalida todo el resto. |
+| **F1** | `wrapEdgeHandler` en las 8 edge functions descubiertas (priorizando email/cola/ventas) | ½ día | Cierra 45% del blind spot backend. |
+| **F4** | `captureException` en los 5 catch manuales TOP de G4 (`tags: { feature: <dominio> }`) | 1 h | Errores en flujos de dinero hoy invisibles. |
+| **F5** | Extender `scrubEventPii` con `headers.authorization|cookie|x-*-token` y scrub de query strings en `breadcrumbs[].data.url`; añadir guard de tamaño (`extra` > 32 KB → truncar) en `_shared/sentry.ts` | ½ h | Compliance/PII y evitar 413 en envíos a Sentry. |
+| **F-deuda** | Cerrar D1–D5: `exchange-rates` wrap, `sampleByRoute` ampliado (`/reportes`→50%, `/auditoria`→30%), `autoSessionTracking: true` explícito, `.env.example` con `SENTRY_DSN_EDGE` + nota en README de observabilidad | ½ h | Limpieza arquitectónica. |
 
-- **Reset entre tests**: en (1) usar `vi.stubGlobal('window', ...)` + `vi.stubEnv('VITE_SENTRY_ENV', ...)` y limpiar con `vi.unstubAllEnvs()/unstubAllGlobals()` en `afterEach`.
-- **Mock de `@sentry/react`**: usar `vi.mock('@sentry/react', () => ({ captureException: vi.fn(), withScope: (cb) => cb({ setTag: vi.fn(), setContext: vi.fn() }) }))` en (2)(3)(4)(5)(6). El import dinámico (`void import('@sentry/react').then(...)`) en `queryClient.ts` resuelve al mock — usar `await vi.waitFor(...)` para esperar la microtask.
-- **(3) ErrorBoundary**: usar `vi.spyOn(console, 'error').mockImplementation(() => {})` para silenciar el ruido de React al renderizar el componente que lanza.
-- **(7) guardrail**: leer archivos con `fs.readdirSync` recursivo + regex `/from\s+["']@sentry\//`. Allowlist como `Set<string>` con paths relativos.
+## Detalles técnicos
 
-## Verificación
+- **F2 — orden de envoltorio**: `<Sentry.ErrorBoundary fallback={<AppFatalError />}>` por fuera de `<BrowserRouter>` para capturar errores de routing. Reutilizar el `ErrorBoundary` actual o crear `RootErrorBoundary` minimalista (sin layout, solo mensaje + reload).
+- **F2 — httpClient**: usar `failedRequestTargets` con regex del proyecto Supabase + dominios productivos para no capturar errores de terceros (CDN, ads-block). Configurar `failedRequestStatusCodes: [[500, 599]]` inicialmente (más restrictivo) y subir a 4xx después de calibrar volumen, para no quemar cuota.
+- **F3 — guardia de build**: en `vite.config.ts`, si `mode === "production"` y `!process.env.SENTRY_AUTH_TOKEN` → `console.warn("[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán")`. No romper el build (CI debe poder correr en forks).
+- **F4 — patrón**: lazy `import("@sentry/react")` en cada catch para respetar el ESLint guardrail; añadir tag `feature` específico (`facturacion`, `tesoreria`, `cotizacion`, `pnl`).
+- **F5 — scrub headers**: lista negra: `authorization`, `cookie`, `x-supabase-auth`, `apikey`. Iterar `Object.keys` case-insensitive.
+- **Tests**: cada fase F lleva sus propios casos (extender `environment.test.ts` para httpClient integration, nuevos archivos para los catch de F4, casos en `helpers.test.ts` para los nuevos scrubs).
+- **CHANGELOG/versionado**: bump por cada fase (F2+F3 → `13.65.0`, F1 → `13.66.0`, F4+F5 → `13.67.0`).
 
-Correr la suite afectada (`vitest run` filtrando por los paths nuevos) y confirmar 0 fallos antes de cerrar.
+## Verificación al cerrar
+
+- Build de prod debe loguear "sourcemaps subidos a release `libre-carga@13.65.0`".
+- `vitest run` y `deno test supabase/functions/_shared/` deben pasar.
+- Smoke manual: forzar un 500 desde una llamada a edge function de prueba y verificar evento en Sentry con frames legibles.

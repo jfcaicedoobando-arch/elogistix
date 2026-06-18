@@ -1,4 +1,5 @@
 import * as React from 'npm:react@18.3.1'
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
@@ -10,7 +11,7 @@ const SITE_NAME = "elogistix"
 const SENDER_DOMAIN = "notify.librecarga.com"
 const FROM_DOMAIN = "librecarga.com"
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -135,4 +136,4 @@ Deno.serve(async (req) => {
 
   console.log('Transactional email enqueued', { templateName, effectiveRecipient })
   return corsResponse({ success: true, queued: true })
-})
+}))

@@ -28,10 +28,32 @@ export function isReactRefreshStackTrace(stacktrace: unknown): boolean {
   );
 }
 
+/** Headers que NUNCA deben llegar a Sentry (tokens y cookies). */
+const SENSITIVE_HEADERS = new Set([
+  "authorization",
+  "cookie",
+  "set-cookie",
+  "apikey",
+  "x-supabase-auth",
+  "x-supabase-api-key",
+]);
+
+/** Redacta headers sensibles en place (case-insensitive). */
+function scrubHeaders(headers: Record<string, unknown> | undefined): void {
+  if (!headers || typeof headers !== "object") return;
+  for (const key of Object.keys(headers)) {
+    if (SENSITIVE_HEADERS.has(key.toLowerCase())) {
+      headers[key] = "[Filtered]";
+    }
+  }
+}
+
 /**
  * Aplica scrub de PII sobre un Sentry event (P3): recorta `event.user` a sólo
- * `{ id }`, redacta query strings sensibles en `event.request.url`, y aplica
- * regex de RFC/CURP/email sobre `event.message` y `event.exception.values[*].value`.
+ * `{ id }`, redacta query strings sensibles en `event.request.url`, aplica
+ * regex de RFC/CURP/email sobre `event.message` y `event.exception.values[*].value`,
+ * y filtra headers/breadcrumbs sensibles. F5 (13.65.0): añade scrub de
+ * `request.headers` y `breadcrumbs[].data.url`.
  */
 export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   if (event.user) {
@@ -40,6 +62,7 @@ export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   if (event.request?.url) {
     event.request.url = scrubUrl(event.request.url);
   }
+  scrubHeaders(event.request?.headers as Record<string, unknown> | undefined);
   if (typeof event.message === "string") {
     event.message = scrubPii(event.message);
   }
@@ -47,6 +70,24 @@ export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   if (values) {
     for (const v of values) {
       if (typeof v.value === "string") v.value = scrubPii(v.value);
+    }
+  }
+  // F5: limpiar URLs sensibles en breadcrumbs (navigation / ui.click / fetch / xhr).
+  if (Array.isArray(event.breadcrumbs)) {
+    for (const b of event.breadcrumbs) {
+      const data = b.data as Record<string, unknown> | undefined;
+      if (data && typeof data.url === "string") {
+        data.url = scrubUrl(data.url);
+      }
+      if (data && typeof data.to === "string") {
+        data.to = scrubUrl(data.to);
+      }
+      if (data && typeof data.from === "string") {
+        data.from = scrubUrl(data.from);
+      }
+      if (typeof b.message === "string") {
+        b.message = scrubPii(b.message);
+      }
     }
   }
   return event;
@@ -73,7 +114,10 @@ export function sampleByRoute(ctx: {
     return 1.0;
   }
 
+  // F5 (13.65.0): ampliar muestreo en flujos de reportes y auditoría.
+  if (/^\/reportes/i.test(path)) return 0.5;
   if (/^\/(profit|tesoreria|comisiones|cxc|cxp)/i.test(path)) return 0.5;
+  if (/^\/(auditoria|admin)/i.test(path)) return 0.3;
 
   if (/^\/(dashboard|embarques|clientes|proveedores)\/?$/i.test(path)) return 0.05;
 

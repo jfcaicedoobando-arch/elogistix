@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { processQueue } from './queueProcessor.ts'
 
 const DEFAULT_BATCH_SIZE = 10
@@ -83,7 +84,7 @@ async function loadConfig(supabase: ReturnType<typeof createClient>): Promise<Qu
   }
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("process-email-queue", async (req) => {
   const env = loadEnv()
   if (env instanceof Response) return env
 
@@ -110,4 +111,4 @@ Deno.serve(async (req) => {
   }
 
   return jsonResponse({ processed: totalProcessed })
-})
+}))
