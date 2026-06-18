@@ -68,45 +68,55 @@ interface AccionesProps {
   onAbrirConvertir: () => void;
 }
 
+function AccionesBorrador({ cotizacionId, onCambiarEstado }: { cotizacionId: string; onCambiarEstado: AccionesProps["onCambiarEstado"] }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => navigate(`/cotizaciones/${cotizacionId}/editar`)}>Editar</Button>
+      <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>Marcar como Enviada</Button>
+    </>
+  );
+}
+
+function AccionesBorradorOEnviada({ onCambiarEstado }: { onCambiarEstado: AccionesProps["onCambiarEstado"] }) {
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Rechazada")}>Rechazar</Button>
+      <Button size="sm" onClick={() => onCambiarEstado("Aceptada")}>Aceptar</Button>
+    </>
+  );
+}
+
+function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: string; numContenedores: number }) {
+  const navigate = useNavigate();
+  return (
+    <Button
+      size="sm"
+      onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
+    >
+      Crear embarque
+      {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
+    </Button>
+  );
+}
+
 export function CotizacionDetalleAcciones({
   estado, esProspecto, numContenedores, cotizacionId,
   tieneEmbarquesVinculados = false,
   onCambiarEstado, onAbrirConvertir,
 }: AccionesProps) {
-  const navigate = useNavigate();
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
+  const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
 
   return (
     <div className="flex flex-wrap gap-2">
-      {estado === "Borrador" && (
-        <>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/cotizaciones/${cotizacionId}/editar`)}>
-            Editar
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>
-            Marcar como Enviada
-          </Button>
-        </>
-      )}
-      {esBorradorOEnviada && (
-        <>
-          <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Rechazada")}>Rechazar</Button>
-          <Button size="sm" onClick={() => onCambiarEstado("Aceptada")}>Aceptar</Button>
-        </>
-      )}
+      {estado === "Borrador" && <AccionesBorrador cotizacionId={cotizacionId} onCambiarEstado={onCambiarEstado} />}
+      {esBorradorOEnviada && <AccionesBorradorOEnviada onCambiarEstado={onCambiarEstado} />}
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
-      {esAceptada && !esProspecto && !tieneEmbarquesVinculados && (
-        <Button
-          size="sm"
-          onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
-        >
-          Crear embarque
-          {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
-        </Button>
-      )}
+      {mostrarCrearEmbarque && <AccionCrearEmbarque cotizacionId={cotizacionId} numContenedores={numContenedores} />}
     </div>
   );
 }
