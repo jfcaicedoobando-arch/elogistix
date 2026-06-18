@@ -10,6 +10,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import {
   FACTURAPI_BASE, basicAuthHeader, buildFacturapiPayload, validateContext,
   type FacturaContext,
@@ -28,7 +29,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
@@ -162,4 +163,4 @@ Deno.serve(async (req) => {
   });
 
   return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });
-});
+}));

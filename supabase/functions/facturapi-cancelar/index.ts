@@ -10,6 +10,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from "../facturapi-emitir/helpers.ts";
 import { buildCancelQuery, validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 
@@ -21,7 +22,7 @@ function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   if (!FACTURAPI_KEY) return json({ error: "missing_facturapi_key" }, 500);
@@ -90,4 +91,4 @@ Deno.serve(async (req) => {
   });
 
   return json({ ok: true, status: fapiJson.status ?? "canceled" });
-});
+}));

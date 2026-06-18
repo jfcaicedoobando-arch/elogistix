@@ -40,6 +40,27 @@ const DEFAULT_DSN =
   "https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160";
 const DSN = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || DEFAULT_DSN;
 
+/** Hosts a los que adjuntar `sentry-trace` / `baggage` para trazas distribuidas
+ *  front ↔ edge functions. Incluye el proyecto Supabase y dominios productivos. */
+const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
+  /^\/(api|functions)\//,
+  /\.supabase\.co\/functions\/v1\//,
+  /librecarga\.com/,
+];
+
+/** Resuelve el environment de Sentry. Prioriza `VITE_SENTRY_ENV` (permite
+ *  distinguir `preview` de `production` en builds idénticos). Fallback a MODE. */
+function resolveEnvironment(): string {
+  const explicit = import.meta.env.VITE_SENTRY_ENV as string | undefined;
+  if (explicit && explicit.length > 0) return explicit;
+  if (typeof window !== "undefined") {
+    const host = window.location?.hostname ?? "";
+    if (host.endsWith("lovable.app")) return "preview";
+    if (host === "librecarga.com" || host === "www.librecarga.com") return "production";
+  }
+  return import.meta.env.MODE;
+}
+
 let initialized = false;
 
 export function initSentry(): void {
@@ -51,8 +72,9 @@ export function initSentry(): void {
   Sentry.init({
     dsn: DSN,
     release: `libre-carga@${APP_VERSION}`,
-    environment: import.meta.env.MODE,
+    environment: resolveEnvironment(),
     tracesSampler: sampleByRoute,
+    tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
     profilesSampleRate: 0.1,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,

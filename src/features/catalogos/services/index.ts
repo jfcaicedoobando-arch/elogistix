@@ -119,7 +119,14 @@ export async function deleteTipoContenedor(id: string): Promise<void> {
 
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
   const { data, error } = await supabase.functions.invoke("exchange-rates");
-  if (error) throw error;
+  if (error) {
+    // Reportar a Sentry con tag para alertar caída del proveedor (Frankfurter)
+    // o de la edge function — luego degradamos a fallback duro.
+    void import("@sentry/react").then(({ captureException }) =>
+      captureException(error, { tags: { feature: "exchange_rates", source: "edge_invoke" } }),
+    ).catch(() => undefined);
+    throw error;
+  }
   return {
     usdMxn: data?.usdMxn ?? 17.25,
     eurMxn: data?.eurMxn ?? 18.5,
