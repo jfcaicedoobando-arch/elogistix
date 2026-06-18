@@ -28,6 +28,8 @@ export default function Embarques() {
     exportarCsv, exportandoCsv,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
+  const { canCrearEmbarqueLibre } = usePermissions();
+  const canCrear = canEdit && canCrearEmbarqueLibre;
 
 
   const {
