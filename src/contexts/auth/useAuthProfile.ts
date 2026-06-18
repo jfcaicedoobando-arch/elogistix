@@ -49,6 +49,9 @@ export function useAuthProfile(userId: string | null) {
       } catch (err) {
         // No envenenar el perfil. El listener de auth puede reintentar.
         console.error("[useAuthProfile] fetchUserContext failed", err);
+        void import("@sentry/react").then(({ captureException }) =>
+          captureException(err, { tags: { feature: "auth", phase: "fetchUserContext" }, extra: { uid } }),
+        ).catch(() => undefined);
       } finally {
         inflight.current = null;
       }
