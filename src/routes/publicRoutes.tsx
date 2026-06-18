@@ -16,6 +16,7 @@ const Privacidad = lazy(() => import("@/pages/legal/Privacidad"));
 const Terminos = lazy(() => import("@/pages/legal/Terminos"));
 const GuiaCartaPorte = lazy(() => import("@/pages/marketing/GuiaCartaPorte"));
 const GuiaIncoterms2020 = lazy(() => import("@/pages/marketing/GuiaIncoterms2020"));
+const GuiaPuertosMexico = lazy(() => import("@/pages/marketing/GuiaPuertosMexico"));
 const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
 
 export const publicRoutes = (
