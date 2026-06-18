@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.25] - 2026-06-18
+- **fix(security-scan-batch)**: Lote de correcciones del escáner de seguridad.
+  - **Edge functions**: (1) `process-email-queue` y `send-transactional-email` ahora verifican firma JWT con `auth.getClaims()` y exigen `role=service_role` — antes el decode era base64 manual sin verificar firma, permitiendo tokens forjados o relay abierto desde Internet. (2) `user-management/handleCreate` añade `ASSIGNABLE_BY_ORG_ADMIN` para que un `admin_org` no pueda asignar `admin`/`super_admin` al crear usuarios (privilege escalation cerrado).
+  - **RLS**: `app_logs` INSERT exige `organization_id = current_user_org_id()`; `auditoria_snapshots` WITH CHECK exige rol admin/operador; tablas `costeo_*` (agentes, tarifas, rutas, navieras_condiciones, tarifa_recargos, demoras_venta_tarifa) restringen escritura a `admin/admin_org/gerente_operaciones/ejecutivo_pricing/operador/super_admin` (viewer/vendedor/cliente pierden write); `cierre_embarque_log` INSERT ya no es `WITH CHECK true` (exige membresía de la org); `seguros_embarque` "Hide soft deleted" convertida a RESTRICTIVE.
+  - **Vista**: `costeo_tarifas_vigentes_v` ahora `security_invoker=true`.
+  - **search_path**: fijado en `enqueue_email`, `read_email_batch`, `move_to_dlq`, `delete_email`, `_docs_requeridos_por_estado`.
+  - Bump `APP_VERSION` 13.66.25.
+
 ## [13.66.24] - 2026-06-18
 - **feat(seo-guia-puertos-mexico)**: Nueva guía SEO `/recursos/guia-puertos-mexico` con los 5 puertos top de México (Manzanillo MXZLO, Veracruz MXVER, Lázaro Cárdenas MXLZC, Altamira MXATM, Ensenada MXESE): UN/LOCODE, rutas troncales, navieras, vocación de carga, tabla comparativa y FAQ. JSON-LD `Article` + `FAQPage` + `BreadcrumbList`, idioma `es-MX`. Sigue el patrón de `GuiaCartaPorte` (componente + data + article, cada archivo ≤200 líneas). Ruta pública lazy en `publicRoutes.tsx`. Sitemap actualizado. Bump `APP_VERSION` 13.66.24.
 
