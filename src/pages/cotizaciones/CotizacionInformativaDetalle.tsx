@@ -34,6 +34,7 @@ async function descargarTarifario(cotizacion: CotizacionRow) {
 export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Props) {
   const { toast } = useToast();
   const tarifas = parseTarifasInformativas(cotizacion.tarifas_informativas);
+  const { data: tiposContenedor = [] } = useTiposContenedor();
 
   const handleDescargar = async () => {
     try { await descargarTarifario(cotizacion); }
@@ -102,7 +103,7 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
                 return (
                   <tr key={t.id} className={i % 2 === 0 ? "bg-background" : "bg-muted/20"}>
                     <td className="p-2">{t.modo}</td>
-                    <td className="p-2">{t.modalidad_equipo || t.tipo_contenedor || "—"}</td>
+                    <td className="p-2">{t.modalidad_equipo || resolveTipoContenedorNombre(t.tipo_contenedor, tiposContenedor)}</td>
                     <td className="p-2">{ruta}</td>
                     <td className="p-2">{t.unidad_medida}</td>
                     <td className="p-2 text-right tabular-nums">{formatCurrency(t.precio, t.moneda)}</td>
