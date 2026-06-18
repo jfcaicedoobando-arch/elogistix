@@ -44,6 +44,30 @@ function ultimosNMeses(n: number, hoy: Date): { desde: Date; rangos: Array<{ ini
   return { desde, rangos };
 }
 
+type FacturaRow = { fecha_emision: string; total: number; moneda: string; tipo_cambio: number | null };
+type PagoRow = { fecha_pago: string; monto_aplicado_factura: number; tipo_cambio: number | null; moneda: string };
+
+function mxnEquivalente(monto: number, moneda: string, tipoCambio: number | null): number {
+  const tc = moneda === "MXN" ? 1 : Number(tipoCambio ?? 0);
+  return Number(monto) * (tc || 1);
+}
+
+function acumularFacturas(facturas: FacturaRow[], tendencia: MesKpi[], idxMes: Map<string, number>): void {
+  for (const f of facturas) {
+    const i = idxMes.get(f.fecha_emision.slice(0, 7));
+    if (i === undefined) continue;
+    tendencia[i].facturado_mxn += mxnEquivalente(f.total, f.moneda, f.tipo_cambio);
+  }
+}
+
+function acumularPagos(pagos: PagoRow[], tendencia: MesKpi[], idxMes: Map<string, number>): void {
+  for (const p of pagos) {
+    const i = idxMes.get(p.fecha_pago.slice(0, 7));
+    if (i === undefined) continue;
+    tendencia[i].cobrado_mxn += mxnEquivalente(p.monto_aplicado_factura, p.moneda, p.tipo_cambio);
+  }
+}
+
 export async function fetchDashboardEjecutivoFacturacion(
   organizationId: string | null,
   hoy: Date = new Date(),
@@ -75,21 +99,8 @@ export async function fetchDashboardEjecutivoFacturacion(
   const tendencia: MesKpi[] = rangos.map((r) => ({ mes: r.mes, facturado_mxn: 0, cobrado_mxn: 0 }));
   const idxMes = new Map(rangos.map((r, i) => [r.mes, i]));
 
-  for (const f of (facturas ?? []) as Array<{ fecha_emision: string; total: number; moneda: string; tipo_cambio: number | null }>) {
-    const mes = f.fecha_emision.slice(0, 7);
-    const i = idxMes.get(mes);
-    if (i === undefined) continue;
-    const tc = f.moneda === "MXN" ? 1 : Number(f.tipo_cambio ?? 0);
-    tendencia[i].facturado_mxn += Number(f.total) * (tc || 1);
-  }
-
-  for (const p of (pagos ?? []) as Array<{ fecha_pago: string; monto_aplicado_factura: number; tipo_cambio: number | null; moneda: string }>) {
-    const mes = p.fecha_pago.slice(0, 7);
-    const i = idxMes.get(mes);
-    if (i === undefined) continue;
-    const tc = p.moneda === "MXN" ? 1 : Number(p.tipo_cambio ?? 0);
-    tendencia[i].cobrado_mxn += Number(p.monto_aplicado_factura) * (tc || 1);
-  }
+  acumularFacturas((facturas ?? []) as FacturaRow[], tendencia, idxMes);
+  acumularPagos((pagos ?? []) as PagoRow[], tendencia, idxMes);
 
   const actual = tendencia[tendencia.length - 1] ?? { facturado_mxn: 0, cobrado_mxn: 0 };
   return {
@@ -98,3 +109,4 @@ export async function fetchDashboardEjecutivoFacturacion(
     tendencia,
   };
 }
+
