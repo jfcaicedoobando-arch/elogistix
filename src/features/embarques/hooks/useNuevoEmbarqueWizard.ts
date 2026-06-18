@@ -96,6 +96,19 @@ export function useNuevoEmbarqueWizard() {
   const wizardStartedAt = useRef<number>(Date.now());
 
   const handleFinish = async () => {
+    // Guard final defense-in-depth: si el rol exige cotización y no hay vinculada,
+    // abortamos antes del orquestador para evitar bypasses por errores parcheados/saltados.
+    if (!canCrearEmbarqueLibre && !cotVinc.cotizacionVinculada?.id) {
+      setCurrentStep(1);
+      notifyError(toast, {
+        step: 1,
+        errors: { cotizacion: "Tu rol requiere iniciar el embarque desde una cotización Aceptada." },
+        method: "USE_NUEVO_EMBARQUE_WIZARD",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+
     for (const step of [1, 2, 3, 4]) {
       if (!validateStep(step)) {
         setCurrentStep(step);
