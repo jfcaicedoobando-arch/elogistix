@@ -7,6 +7,7 @@ import {
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
+  fetchCotizacionFolio,
 } from '@/features/cotizacion/services';
 
 export function useCotizacionesAceptadas() {
@@ -51,5 +52,15 @@ export function useEmbarquesVinculados(cotizacionId: string | undefined) {
     queryKey: queryKeys.cotizaciones.embarquesVinculados(cotizacionId!),
     queryFn: () => fetchEmbarquesVinculados(cotizacionId!),
     enabled: !!cotizacionId,
+  });
+}
+
+/** Folio de una cotización (consulta liviana para chips/links). */
+export function useCotizacionFolio(cotizacionId: string | null | undefined) {
+  return useQuery<string | null>({
+    queryKey: ['cotizaciones', 'folio', cotizacionId ?? ''] as const,
+    queryFn: () => fetchCotizacionFolio(cotizacionId!),
+    enabled: !!cotizacionId,
+    staleTime: 5 * 60 * 1000,
   });
 }
