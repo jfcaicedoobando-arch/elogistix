@@ -294,6 +294,7 @@ export default tseslint.config(
       "complexity": "off",
       "max-depth": "off",
     },
+  },
   {
     // Plan E (13.63.0) — Guardrail para `@sentry/*` en capas de UI.
     // El SDK pesa ~150 KB y sólo debe importarse STÁTICAMENTE desde la capa
