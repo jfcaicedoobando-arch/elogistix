@@ -7,23 +7,28 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const setUser = vi.fn();
-const setTags = vi.fn();
-const setTag = vi.fn();
-const getCurrentScope = vi.fn(() => ({ setTag }));
+// `vi.hoisted` corre ANTES que cualquier import (igual que vi.mock), por lo
+// que evita el TDZ sobre los spies cuando el factory del mock se ejecuta.
+const sentryMocks = vi.hoisted(() => {
+  const setUser = vi.fn();
+  const setTags = vi.fn();
+  const setTag = vi.fn();
+  const getCurrentScope = vi.fn(() => ({ setTag }));
+  return { setUser, setTags, setTag, getCurrentScope };
+});
 
 vi.mock("@sentry/react", () => ({
-  setUser: (...args: unknown[]) => setUser(...args),
-  setTags: (...args: unknown[]) => setTags(...args),
-  getCurrentScope: () => getCurrentScope(),
+  setUser: sentryMocks.setUser,
+  setTags: sentryMocks.setTags,
+  getCurrentScope: sentryMocks.getCurrentScope,
 }));
 
 beforeEach(() => {
   vi.resetModules();
-  setUser.mockClear();
-  setTags.mockClear();
-  setTag.mockClear();
-  getCurrentScope.mockClear();
+  sentryMocks.setUser.mockClear();
+  sentryMocks.setTags.mockClear();
+  sentryMocks.setTag.mockClear();
+  sentryMocks.getCurrentScope.mockClear();
 });
 
 afterEach(() => {
@@ -31,10 +36,9 @@ afterEach(() => {
 });
 
 async function flushImport() {
-  // Dos micro-ticks: una para resolver `import("@sentry/react")` y otra
-  // para que `.then()` dentro del wrapper ejecute su callback.
-  await Promise.resolve();
-  await Promise.resolve();
+  // Cuatro micro-ticks cubren con holgura: resolver `import("@sentry/react")`,
+  // ejecutar el `.then()` interno, y dar margen al siguiente await.
+  for (let i = 0; i < 4; i++) await Promise.resolve();
 }
 
 describe("syncSentryUser", () => {
@@ -47,8 +51,11 @@ describe("syncSentryUser", () => {
       effectiveRole: "admin_org",
     });
     await flushImport();
-    expect(setUser).toHaveBeenCalledWith({ id: "u-123", email: "test@librecarga.com" });
-    expect(setTags).toHaveBeenCalledWith({
+    expect(sentryMocks.setUser).toHaveBeenCalledWith({
+      id: "u-123",
+      email: "test@librecarga.com",
+    });
+    expect(sentryMocks.setTags).toHaveBeenCalledWith({
       organization_id: "org-1",
       effective_role: "admin_org",
     });
@@ -63,8 +70,8 @@ describe("syncSentryUser", () => {
       effectiveRole: null,
     });
     await flushImport();
-    expect(setUser).toHaveBeenCalledWith(null);
-    expect(setTags).not.toHaveBeenCalled();
+    expect(sentryMocks.setUser).toHaveBeenCalledWith(null);
+    expect(sentryMocks.setTags).not.toHaveBeenCalled();
   });
 
   it("ante llamadas concurrentes aplica sólo la última (latest-wins)", async () => {
@@ -72,8 +79,8 @@ describe("syncSentryUser", () => {
     syncSentryUser({ userId: "u-1", email: "a@x.com", organizationId: "o-1", effectiveRole: "user" });
     syncSentryUser({ userId: "u-2", email: "b@x.com", organizationId: "o-2", effectiveRole: "admin" });
     await flushImport();
-    expect(setUser).toHaveBeenCalledTimes(1);
-    expect(setUser).toHaveBeenCalledWith({ id: "u-2", email: "b@x.com" });
+    expect(sentryMocks.setUser).toHaveBeenCalledTimes(1);
+    expect(sentryMocks.setUser).toHaveBeenCalledWith({ id: "u-2", email: "b@x.com" });
   });
 });
 
@@ -82,13 +89,13 @@ describe("syncSentryActiveOrg", () => {
     const { syncSentryActiveOrg } = await import("../user");
     syncSentryActiveOrg("org-42");
     await flushImport();
-    expect(setTag).toHaveBeenCalledWith("active_organization_id", "org-42");
+    expect(sentryMocks.setTag).toHaveBeenCalledWith("active_organization_id", "org-42");
   });
 
   it("normaliza null a 'none' para evitar tags vacíos en Sentry", async () => {
     const { syncSentryActiveOrg } = await import("../user");
     syncSentryActiveOrg(null);
     await flushImport();
-    expect(setTag).toHaveBeenCalledWith("active_organization_id", "none");
+    expect(sentryMocks.setTag).toHaveBeenCalledWith("active_organization_id", "none");
   });
 });
