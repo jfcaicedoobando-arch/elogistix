@@ -48,14 +48,14 @@ function loadEnv(): QueueEnv | Response {
 }
 
 // authenticateRequest: verifica JWT service_role en defensa en profundidad
-function authenticateRequest(req: Request): Response | null {
+async function authenticateRequest(req: Request, supabaseUrl: string): Promise<Response | null> {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return jsonResponse({ error: 'Unauthorized' }, 401)
   }
   const token = authHeader.slice('Bearer '.length).trim()
-  const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
+  const isServiceRole = await verifyServiceRoleToken(token, supabaseUrl)
+  if (!isServiceRole) {
     return jsonResponse({ error: 'Forbidden' }, 403)
   }
   return null
