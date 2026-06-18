@@ -1,46 +1,101 @@
 ## Diagnóstico
 
-En `/cotizaciones/.../enviar`, el `DestinatariosPicker` consulta `contactos_cliente` filtrando por `cliente_id`. Para el cliente **INDIMEX TRADING** (y en general en la base) los únicos contactos guardados son `tipo = "Proveedor"` o `"Exportador"` (22 + 1 en toda la BD). Esos son los **shippers de origen** (fábricas chinas), no los contactos del importador a quien se le debe enviar la cotización.
+**COT-2026-0077** quedó en un estado inconsistente:
+- `cotizaciones.estado = 'En operación'` ✅
+- `cotizaciones.embarque_id = NULL` ❌
+- Embarque `ELIMP00273` (`a006c055-…`) creado en el mismo segundo, pero con `embarques.cotizacion_id = NULL` ❌
 
-Además, `clientes.email` (ej. `erika@indimextrading.com`) tiene el correo principal del cliente y hoy **no aparece** en el picker.
+Por eso `fetchEmbarquesVinculados` (que filtra por `embarques.cotizacion_id = cot.id`) devuelve `[]`, la cotización entra en la rama `estadoSugiereEmbarque && embarques.length === 0` y `CotizacionDetalleEmbarques` muestra:
 
-## Fix propuesto
+> "Esta cotización aparece como **En operación**, pero no hay embarques vinculados…"
 
-### 1. Incluir el email principal del cliente como destinatario sintético
-- En `fetchContactosClienteConEmail` (o en el hook `useEnvioCotizacionForm`), traer también `clientes.email` y `clientes.nombre`.
-- Inyectarlo al inicio de la lista como un pseudo-contacto con `id = "cliente-principal"`, `tipo = "Cliente"`, marcado y resaltado.
+Eso es el "error" que el usuario percibe.
 
-### 2. Separar visualmente shippers/proveedores
-- En `DestinatariosPicker`, partir la lista en dos grupos:
-  - **Contactos del cliente** (tipos: `Cliente`, `Cotización`, `Operativo`, `Cobranza`, `Administrativo`, sin tipo, etc.) — visibles y ordenados primero.
-  - **Proveedores / Shippers (origen)** (tipos: `Proveedor`, `Exportador`) — dentro de un `<details>` colapsado con leyenda "Mostrar shippers de origen (no recomendado para cotización)".
-- Badge del tipo con color distinto (warning) para los proveedores, para que sea obvio si alguien los selecciona.
+## Causa raíz (dos bugs concurrentes)
 
-### 3. Pre-selección segura
-- Cambiar la lógica del `useEffect` de pre-selección:
-  1. Email principal del cliente (si existe y es válido).
-  2. Si no, primer contacto cuyo `tipo` matchee `/(cotiz|operativ|administ|cliente)/i`.
-  3. Si no, **ninguno** (forzar al usuario a elegir; mejor que mandar al shipper por accidente).
-- Nunca pre-seleccionar contactos con tipo `Proveedor` / `Exportador`.
+### Bug 1 — RPC `crear_embarque_completo` ignora `cotizacion_id`
+`useEmbarqueSubmitOrchestrator` arma el payload así:
+```ts
+const embarquePayload = {
+  expediente,
+  ...p.buildEmbarquePayload(...),
+  ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
+};
+```
+y lo envía a `supabase.rpc('crear_embarque_completo', { p_embarque: toDbJson(...) })`.
 
-### 4. Empty state
-- Si tras filtrar no queda ningún contacto cliente y el cliente no tiene `email`, mostrar el mensaje actual + un link a "Agregar contacto" en la ficha del cliente.
+Pero el `INSERT INTO embarques(...)` dentro del RPC **no incluye la columna `cotizacion_id`** en su lista. El campo se descarta silenciosamente → embarque sin vínculo.
 
-## Verificación
+### Bug 2 — Fase 4 del orquestador no escribe `embarque_id` en la cotización
+```ts
+await updateEstadoCotizacion.mutateAsync({
+  id: p.cotizacionVinculada.id,
+  estado: "En operación",
+});
+```
+Sólo actualiza `estado`. Nunca setea `cotizaciones.embarque_id`. Aunque arregláramos el Bug 1, la cotización seguiría apuntando a `NULL` (la columna existe y es la que usan otras vistas: `CotizacionDetalleAcciones`, generadores de PDF, etc.).
 
-1. Abrir `/cotizaciones/b75f1f9a-...` (INDIMEX TRADING) → "Enviar cotización": ver `erika@indimextrading.com` marcado por defecto y los 7 proveedores chinos ocultos bajo el `<details>`.
-2. Cliente sin `email` y sólo contactos `Proveedor`: lista principal vacía, nada pre-seleccionado, shippers disponibles bajo el desplegable.
-3. Cliente con contactos `Cotización`: ese contacto queda pre-seleccionado en vez del email principal.
-4. Test de `useEnvioCotizacionForm`: cubrir las 3 ramas de pre-selección.
+> Nota: el flujo alterno `crear_embarque_borrador_desde_cotizacion` (RPC) sí actualiza `embarque_id`. El bug está sólo en el wizard de "Nuevo Embarque" cuando se vincula a una cotización existente.
+
+## Fix
+
+### 1. Migración: `crear_embarque_completo` debe persistir `cotizacion_id`
+
+Migración SQL nueva (`fix_crear_embarque_completo_cotizacion_id`) — re-emite `CREATE OR REPLACE FUNCTION public.crear_embarque_completo(...)` idéntica a la actual, sumando:
+
+- En la lista de columnas del `INSERT INTO embarques (...)`: agregar `cotizacion_id`.
+- En `VALUES`: `CASE WHEN p_embarque->>'cotizacion_id' IS NOT NULL AND p_embarque->>'cotizacion_id' <> '' THEN (p_embarque->>'cotizacion_id')::uuid ELSE NULL END`.
+
+Sin cambiar el resto del cuerpo (idempotency, conceptos, documentos, notas).
+
+### 2. Mutación: setear `embarque_id` en la cotización tras crear el embarque
+
+- `src/features/cotizacion/services/mutations/estado.ts` → nueva función `vincularEmbarqueACotizacion(cotizacionId, embarqueId, estado?)` que hace
+  `update cotizaciones set estado=?, embarque_id=? where id=?`.
+- Exponerla en `src/features/cotizacion/services/index.ts` y un hook nuevo `useVincularEmbarqueACotizacion` (o extender `useUpdateEstadoCotizacion` con un parámetro `embarqueId?`).
+- En `useEmbarqueSubmitOrchestrator.ts`, capturar el `id` devuelto por `createEmbarque.mutateAsync` y, en la Fase 4, llamar a la nueva mutación con `{ estado: "En operación", embarqueId }`. La advertencia no bloqueante se conserva.
+
+### 3. Data-fix: vincular COT-2026-0077 ↔ ELIMP00273
+
+Migración de datos (`backfill_cot_2026_0077_embarque_link`) **idempotente**:
+
+```sql
+UPDATE public.embarques
+   SET cotizacion_id = 'b75f1f9a-12b6-4cee-bbe5-db45df1f7c32'
+ WHERE id = 'a006c055-e574-4e98-8738-b4f280c3c908'
+   AND cotizacion_id IS NULL;
+
+UPDATE public.cotizaciones
+   SET embarque_id = 'a006c055-e574-4e98-8738-b4f280c3c908', updated_at = now()
+ WHERE id = 'b75f1f9a-12b6-4cee-bbe5-db45df1f7c32'
+   AND embarque_id IS NULL;
+```
+
+Después, la card "Embarques Generados" muestra `ELIMP00273` con su estado actual y deja de pintar el mensaje de error.
+
+### 4. Verificación
+
+- Query post-migración:
+  ```
+  select c.folio, c.estado, c.embarque_id, e.expediente, e.cotizacion_id
+  from cotizaciones c join embarques e on e.id = c.embarque_id
+  where c.folio = 'COT-2026-0077';
+  ```
+- Abrir `/cotizaciones/b75f1f9a-…` y confirmar que aparece la tarjeta con el link a `ELIMP00273` (sin el mensaje de advertencia).
+- Test unitario nuevo: `useEmbarqueSubmitOrchestrator` — cuando hay `cotizacionVinculada`, llamar a la nueva mutación con `{ estado, embarqueId }` y propagar `cotizacion_id` al payload del RPC (mockeado).
+- Test de servicio: `vincularEmbarqueACotizacion` envía ambos campos en el update.
+
+### 5. Metadatos
+
+- `APP_VERSION` → `13.66.7`.
+- `CHANGELOG.md` con la entrada del fix y el backfill de COT-2026-0077.
 
 ## Archivos a tocar
 
-- `src/features/cotizacion/services/envios.ts` — extender `fetchContactosClienteConEmail` para devolver también el email principal del cliente (o un nuevo `fetchDestinatariosCliente`).
-- `src/features/cotizacion/hooks/useEnvioCotizacionForm.ts` — nueva lógica de pre-selección y tipo de "Cliente".
-- `src/features/cotizacion/components/detalle/DestinatariosPicker.tsx` — agrupar y colapsar proveedores.
-- `CHANGELOG.md` + `src/constants/appVersion.ts` → `13.66.5`.
-
-## Notas
-
-- No se modifica el esquema; los contactos tipo `Proveedor` siguen existiendo en `contactos_cliente` y son visibles en la ficha de cliente.
-- La separación es UI-only en el flujo de envío de cotización (no afecta otras pantallas que consumen `contactos_cliente`).
+- `supabase/migrations/<ts>_fix_crear_embarque_completo_cotizacion_id.sql` (RPC).
+- `supabase/migrations/<ts>_backfill_cot_2026_0077_embarque_link.sql` (data-fix).
+- `src/features/cotizacion/services/mutations/estado.ts` (+ index).
+- `src/features/cotizacion/hooks/mutations/useCotizacionMutations.ts` (nuevo hook o extensión).
+- `src/features/embarques/hooks/useEmbarqueSubmitOrchestrator.ts` (Fase 4).
+- Tests asociados.
+- `src/constants/appVersion.ts`, `CHANGELOG.md`.

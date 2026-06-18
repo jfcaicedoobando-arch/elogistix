@@ -106,13 +106,14 @@ export function useEmbarqueSubmitOrchestrator() {
       }
 
       // Fase 3: crear embarque
+      let embarqueCreadoId: string | null = null;
       try {
         const embarquePayload = {
           expediente,
           ...p.buildEmbarquePayload(p.contactos, p.selectedClienteNombre, user?.email || ""),
           ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
         };
-        await createEmbarque.mutateAsync({
+        const created = await createEmbarque.mutateAsync({
           embarque: embarquePayload,
           conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
           conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
@@ -120,18 +121,20 @@ export function useEmbarqueSubmitOrchestrator() {
           contenedores: deriveContenedoresPayload(p.values),
           requestId: reqId.get(),
         });
+        embarqueCreadoId = created?.id ?? null;
         reqId.reset();
       } catch (err: unknown) {
         notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
         return false;
       }
 
-      // Fase 4: actualizar cotización (no bloqueante)
+      // Fase 4: actualizar cotización (no bloqueante) — estado + vínculo embarque_id
       if (p.cotizacionVinculada) {
         try {
           await updateEstadoCotizacion.mutateAsync({
             id: p.cotizacionVinculada.id,
             estado: "En operación",
+            embarqueId: embarqueCreadoId,
           });
         } catch (err: unknown) {
           notifyWarning(toast, {

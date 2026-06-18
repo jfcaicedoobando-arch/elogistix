@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.7] - 2026-06-18
+- **fix(cotizacion-embarque-link)**: COT-2026-0077 quedó en estado "En operación" pero sin `embarque_id`, y su embarque ELIMP00273 sin `cotizacion_id`, así que el detalle mostraba "no hay embarques vinculados". Causa raíz doble: (1) RPC `crear_embarque_completo` no incluía `cotizacion_id` en su `INSERT INTO embarques` aunque el wizard lo enviaba en `p_embarque` — campo descartado silenciosamente; (2) `useEmbarqueSubmitOrchestrator` actualizaba la cotización sólo con `estado: "En operación"` y nunca seteaba `embarque_id`. Fix: la RPC ahora persiste `cotizacion_id` cuando viene en el payload; `updateEstadoCotizacion` acepta `embarqueId?` opcional y el orquestador captura el id devuelto por `createEmbarque.mutateAsync` para enviarlo en la Fase 4. Backfill data-fix: vinculados COT-2026-0077 ↔ ELIMP00273 (ambas direcciones, sólo si estaban NULL). Bump `APP_VERSION` 13.66.7.
+
 ## [13.66.6] - 2026-06-18
 - **fix(ci-eslint-complexity)**: `stripStringsAndComments` en `scripts/lib/tests.ts` quedó en complejidad ciclomática 20 (>16) tras agregar el manejo de regex literals en 13.66.4, rompiendo `ESLint (max-warnings 0)`. Refactor: extraídos helpers `skipString`, `skipRegex` y `lastNonBlank`, y la constante `REGEX_PRECEDERS` movida a scope de módulo. La función principal queda en complejidad ≤8 sin cambios de comportamiento (los 9 tests de auditoría siguen verdes). Bump `APP_VERSION` 13.66.6.
 
