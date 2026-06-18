@@ -1,47 +1,34 @@
-# Mostrar cotización origen en el detalle del embarque
-
 ## Problema
+En `/cotizaciones/:id` coexisten dos controles que navegan al mismo destino (`/embarques/:id`):
 
-En `/embarques/:id` no hay ninguna referencia visible a la cotización que originó el embarque, aunque `embarques.cotizacion_id` exista. Hoy sólo se usa internamente (tracking, fases, herencia).
+1. **Botones "Ver {expediente}"** en la barra de acciones (`CotizacionDetalleAcciones`) — generan ruido visual cuando hay múltiples embarques.
+2. **Tarjeta "Embarques Generados"** (`CotizacionDetalleEmbarques`) — lista rica con estado, fecha y navegación por click en la fila.
 
-## Solución
+El usuario prefiere dejar solo la tarjeta.
 
-Agregar un chip "Generado desde **COT-XXXX**" en `EmbarqueDetalleHeader.tsx`, debajo del nombre del cliente, que navega a `/cotizaciones/{cotizacion_id}`.
+## Cambios
 
-### Cambios
+### 1. `CotizacionDetalleAcciones` — simplificación
+- Eliminar los botones de navegación a embarque (líneas ~113-117 del archivo actual).
+- Eliminar import de `useNavigate` si queda sin uso.
+- Eliminar props que solo servían para esos botones:
+  - `embarqueIdVinculado: string | null`
+  - `embarquesVinculados?: EmbarqueVinculado[]`
+- Eliminar la lógica de `idsVinculados` y `hayVinculados` que armaba la lista para los botones.
+- Ajustar la condición del botón "Crear embarque" para que siga apareciendo en `Aceptada` (sin embarques) sin depender de `hayVinculados`.
 
-1. **Nuevo hook** `useCotizacionFolio(cotizacionId)` en `src/features/cotizacion/hooks/useCotizacionQueries.ts`:
-   - Query liviana `select('folio').eq('id', id).maybeSingle()`.
-   - `staleTime: 5 min`, `enabled: !!cotizacionId`.
-   - Devuelve `{ folio: string | null, isLoading }`.
+### 2. `CotizacionDetalle.tsx` — quitar props innecesarias
+- Dejar de pasar `embarqueIdVinculado` y `embarquesVinculados` a `<CotizacionDetalleAcciones>`.
 
-2. **`EmbarqueDetalleHeader.tsx`**:
-   - Consumir el hook con `embarque.cotizacion_id`.
-   - Si hay folio, renderizar debajo del `cliente_nombre`:
-     ```
-     <Link to=`/cotizaciones/${embarque.cotizacion_id}`>
-       <Badge variant="outline">
-         <FileText className="h-3 w-3 mr-1" /> Generado desde {folio}
-       </Badge>
-     </Link>
-     ```
-   - Si `cotizacion_id` existe pero el folio no se pudo resolver (cot. eliminada), mostrar badge inactivo "Cotización origen no disponible".
-
-3. **Sin cambios de BD ni de tabs**: el dato ya existe en `embarque.cotizacion_id`.
+### 3. `CotizacionDetalleEmbarques` — sin cambios
+- La tarjeta sigue siendo la única forma de ver y navegar a embarques generados.
 
 ## Verificación
-
-- En `/embarques/79fe05dc-...` (ELIMP00272, vinculado a COT-2026-0076) debe verse el chip y navegar a la cotización.
-- En embarques sin `cotizacion_id` no debe aparecer nada.
+- Abrir una cotización en estado "En operación" con 1+ embarques vinculados.
+- Confirmar que NO hay botones "Ver ELIMPxxxxx" en la barra de acciones.
+- Confirmar que la tarjeta "Embarques Generados" sigue mostrando los embarques y permite navegar al hacer click.
+- Confirmar que el botón "Crear embarque" aún aparece cuando una cotización "Aceptada" no tiene embarques.
 
 ## Versionado
-
-- `APP_VERSION` → `13.66.1`.
-- Entrada en `CHANGELOG.md` describiendo el cambio.
-
-## Archivos afectados
-
-- `src/features/cotizacion/hooks/useCotizacionQueries.ts` (hook nuevo)
-- `src/features/cotizacion/services/queries.ts` (helper `fetchCotizacionFolio`)
-- `src/features/embarques/components/EmbarqueDetalleHeader.tsx`
-- `src/constants/appVersion.ts`, `CHANGELOG.md`
+- `APP_VERSION` → siguiente patch.
+- Entrada en `CHANGELOG.md` describiendo la simplificación.
