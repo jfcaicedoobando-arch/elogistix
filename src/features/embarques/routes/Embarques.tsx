@@ -63,7 +63,7 @@ export default function Embarques() {
       />
 
       {isEmptyState ? (
-        <EmbarquesEmptyState canEdit={canEdit} onCreate={goNuevo} />
+        <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
       ) : (
         <>
           <Card>
