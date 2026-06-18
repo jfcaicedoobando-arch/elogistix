@@ -1,81 +1,39 @@
-# Fase 2 — Refactor de severidad Alta
+## Estado de la implementación
 
-Continuación del plan de auditoría arquitectónica (Fase 1 ya cerrada con tests).
-Fase 2 ataca **5 items**: extraer reglas de negocio, mover formatters, encapsular queries de página, sacar loops bulk-insert de la UI y migrar servicios globales a sus features.
+Verifiqué los 5 sub-planes (A, B, C, D, E) del audit de Sentry — **todo está implementado en código** (v13.63.0):
 
----
+- A: `tracePropagationTargets` + `resolveEnvironment` en `core.ts`, `captureException` en `useAuthSession`/`useAuthProfile`/`fetchExchangeRates`, release alineado en `vite.config.ts`.
+- B: `QueryCache`/`MutationCache` con `onError → reportQueryError` (queryClient), `ErrorBoundary` con tag `crashed_route`, init Sentry coordinado con preload del persister.
+- C: `wrapEdgeHandler` en `facturapi-emitir` e `facturapi-cancelar`.
+- D: `APP_VERSION` único como fuente de verdad para release vite + runtime.
+- E: ESLint `no-restricted-imports` para `@sentry/*` con allowlist + `user.test.ts` cubre login/logout.
 
-## 1. Extraer reglas de negocio de bandejas → `features/bandejas/domain/`
+**Gap real**: faltan tests específicos para el código nuevo de A/B/C. El plan es cerrarlo con una sola tanda de pruebas.
 
-Las páginas `src/pages/bandejas/*` (Cartera, CxpPorCapturar, CxpPorPagar, FacturacionPorEmitir) hoy contienen filtros, agregados y reglas (días vencidos, prioridad, semáforos) mezclados con JSX y fetching.
+## Tests a generar
 
-- Crear `src/features/bandejas/domain/` con funciones puras (`clasificarCartera`, `calcularDiasVencidos`, `prioridadCxp`, `huecosFacturacionFiltrados`).
-- Cada función con su `__tests__/*.test.ts` (Vitest, sin Supabase).
-- Las páginas sólo consumen el output del hook + domain.
+| # | Archivo | Cubre |
+|---|---|---|
+| 1 | `src/lib/observability/sentry/__tests__/environment.test.ts` | `resolveEnvironment()`: prioridad `VITE_SENTRY_ENV` > host (`lovable.app`→preview, `librecarga.com`→production) > MODE. Valida que `TRACE_PROPAGATION_TARGETS` exporta los 3 patrones correctos (regex API/functions, Supabase functions, librecarga). |
+| 2 | `src/lib/query/__tests__/queryClient.sentry.test.ts` | `reportQueryError`: con `vi.mock('@sentry/react')`, dispara una query y una mutation que fallan y verifica que `captureException` se llamó con `tags: { feature: 'react_query', kind: 'query'/'mutation' }` y `extra` con el `queryKey`/`mutationKey`. |
+| 3 | `src/components/shared/__tests__/ErrorBoundary.test.tsx` | Render con hijo que lanza → fallback visible, `captureException` invocado con tag `crashed_route` resuelto a `window.location.pathname`. Botón "Recargar" llama `window.location.reload`. |
+| 4 | `src/contexts/auth/__tests__/useAuthSession.sentry.test.ts` | Mock de `supabase.auth.getSession` que rechaza → `captureException` se llama con `tags: { feature: 'auth', phase: 'getCurrentSession' }`. Variante happy-path no reporta. |
+| 5 | `src/contexts/auth/__tests__/useAuthProfile.sentry.test.ts` | Mock del fetch de profile rechaza → `captureException` con `tags: { feature: 'auth', phase: 'fetchUserContext' }`. |
+| 6 | `src/features/catalogos/services/__tests__/exchangeRates.sentry.test.ts` | Mock de `supabase.functions.invoke` que devuelve `error` → se llama `captureException` con `tags: { feature: 'exchange_rates', source: 'edge_invoke' }` y la función degrada con fallback. |
+| 7 | `src/__tests__/architecture/sentry-imports-guardrail.test.ts` | Recorre `src/components`, `src/pages`, `src/contexts`, `src/lib` (excepto allowlist: `observability/sentry/**`, `ErrorBoundary.tsx`, `queryClient.ts`, `main.tsx`, hooks de auth `useAuth*`, `services/.../index.ts` de catálogos) y asserta que NO hay `import ... from "@sentry/...";` estático. Cualquier nuevo archivo que viole esto rompe CI antes que ESLint. |
+| 8 | `supabase/functions/facturapi-emitir/sentry_test.ts` y `facturapi-cancelar/sentry_test.ts` | Smoke test Deno: importa `index.ts`, intercepta `Deno.serve` para extraer el handler y verifica que está envuelto por `wrapEdgeHandler` (firma esperada: añade `sentry-trace`/captura excepciones al re-lanzar). Mantiene el patrón existente de `helpers_test.ts`. |
 
-## 2. Mover formatters dispersos → `src/lib/formatters/`
+Adicionalmente:
+- Bump `APP_VERSION` → `13.64.0`.
+- Entrada en `CHANGELOG.md`: "Cobertura de tests de la auditoría Sentry (Fases A–E)".
 
-Hoy hay `formatDate`, `formatPercent`, `pctPnl`, `formatCurrency`, `formatMoney`, etc. duplicados en componentes y features.
+## Detalles técnicos clave
 
-- Consolidar todo en `src/lib/formatters/` con un barrel.
-- Reemplazar todos los imports (`@/lib/formatters`).
-- Eliminar copias locales (`PortalNotificationsBell.formatDate`, alias `calcularSubtotal`, `uiMappings.ts`).
-- Test de arquitectura: prohibir re-declaración local de estas funciones fuera de `src/lib/formatters/`.
+- **Reset entre tests**: en (1) usar `vi.stubGlobal('window', ...)` + `vi.stubEnv('VITE_SENTRY_ENV', ...)` y limpiar con `vi.unstubAllEnvs()/unstubAllGlobals()` en `afterEach`.
+- **Mock de `@sentry/react`**: usar `vi.mock('@sentry/react', () => ({ captureException: vi.fn(), withScope: (cb) => cb({ setTag: vi.fn(), setContext: vi.fn() }) }))` en (2)(3)(4)(5)(6). El import dinámico (`void import('@sentry/react').then(...)`) en `queryClient.ts` resuelve al mock — usar `await vi.waitFor(...)` para esperar la microtask.
+- **(3) ErrorBoundary**: usar `vi.spyOn(console, 'error').mockImplementation(() => {})` para silenciar el ruido de React al renderizar el componente que lanza.
+- **(7) guardrail**: leer archivos con `fs.readdirSync` recursivo + regex `/from\s+["']@sentry\//`. Allowlist como `Set<string>` con paths relativos.
 
-## 3. Wrapper hooks para queries de página
+## Verificación
 
-Páginas hoy llaman `useQuery` directo con keys ad-hoc (rompen la regla "Page → hook → service").
-
-- Auditar `src/pages/**` y por cada `useQuery` inline crear `useXxxPage()` en el feature correspondiente.
-- Página recibe sólo `{ data, isLoading, error }` listos.
-- Test de arquitectura: `src/pages/**/*.tsx` no puede importar `@tanstack/react-query` directamente (salvo `useQueryClient` para invalidaciones controladas).
-
-## 4. Extraer loops `bulk-insert` fuera de JSX
-
-Detectados en wizard embarque/cotización: bucles que arman payloads grandes dentro de `onClick`/`onSubmit`.
-
-- Mover lógica a servicios (`crearEmbarqueBulk`, `crearConceptosBulk`, etc.).
-- JSX queda con `await service(...)` + manejo de errores.
-
-## 5. Migrar servicios globales a su feature
-
-Servicios sueltos en `src/services/` que pertenecen a un dominio.
-
-- `unsubscribeService.ts` → `src/features/auth/services/` (o mantener si no hay feature `auth/` lo dejamos justificado).
-- Revisar otros archivos en `src/services/` (mover los específicos, mantener sólo los transversales).
-- Actualizar imports y tests.
-
----
-
-## Entregables
-
-```text
-src/features/bandejas/domain/
-  ├── clasificarCartera.ts (+ test)
-  ├── prioridadCxp.ts (+ test)
-  └── huecosFiltro.ts (+ test)
-src/lib/formatters/
-  └── index.ts + tests (consolida date/money/percent)
-src/features/<feature>/hooks/useXxxPage.ts (wrappers)
-src/features/<feature>/services/  (loops bulk movidos)
-src/__tests__/architecture/
-  ├── pages-no-direct-usequery.test.ts
-  └── no-local-formatters.test.ts
-CHANGELOG.md + APP_VERSION bump a 13.60.0
-```
-
-## Técnico
-
-- Cada item se entrega como bloque atómico con su test arquitectónico/unitario.
-- Sin cambios de schema, sin migraciones, sin nuevas dependencias.
-- Sin cambios funcionales visibles al usuario; sólo reorganización + tests.
-
-## Fuera de alcance
-
-- Fase 3 (toast, Sentry, magic strings, edge functions restantes).
-- Fase 4 (renombrados kebab, inline styles, orfandades).
-- Cambios de UI o lógica de negocio nueva.
-
-## Pregunta
-
-¿Ejecuto los 5 items en una sola tanda con un solo bump de versión (13.60.0), o prefieres revisar item por item antes de avanzar al siguiente?
+Correr la suite afectada (`vitest run` filtrando por los paths nuevos) y confirmar 0 fallos antes de cerrar.
