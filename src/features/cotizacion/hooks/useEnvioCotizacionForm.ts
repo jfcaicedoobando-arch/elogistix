@@ -68,11 +68,15 @@ export function useEnvioCotizacionForm(
     setEmailsManualesAgregados([]);
     setCcManual("");
     const pre: Record<string, boolean> = {};
-    const prioridad = contactos.find((c) => (c.tipo ?? "").toLowerCase().includes("cotiz"));
-    if (prioridad) pre[prioridad.id] = true;
-    else if (contactos[0]) pre[contactos[0].id] = true;
+    // Prioridad: 1) email principal del cliente, 2) contacto cliente-facing, 3) ninguno.
+    const principal = contactos.find((c) => c.id === CLIENTE_PRINCIPAL_ID);
+    const prioridad = contactos.find(esContactoPrioridadCliente);
+    if (principal) pre[principal.id] = true;
+    else if (prioridad) pre[prioridad.id] = true;
+    // Nunca pre-seleccionar proveedores/shippers.
     setSeleccionados(pre);
   }, [open, contactos, folio, origen, destino]);
+
 
   const agregarManual = () => {
     const v = emailManual.trim();
