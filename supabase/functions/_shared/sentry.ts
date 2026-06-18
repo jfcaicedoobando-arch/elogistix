@@ -81,6 +81,25 @@ export interface EdgeErrorContext {
   extra?: Record<string, unknown>;
 }
 
+/** F5 (13.65.0): límite duro para `extra` y evitar 413 en Sentry (cap ~128 KB
+ *  por evento). Si el payload se serializa por encima de este umbral lo
+ *  recortamos a un placeholder; los detalles relevantes deberían ir en `tags`. */
+const MAX_EXTRA_BYTES = 32_000;
+
+function truncatedExtra(extra: Record<string, unknown>): Record<string, unknown> {
+  try {
+    const serialized = JSON.stringify(extra);
+    if (serialized.length <= MAX_EXTRA_BYTES) return extra;
+    return {
+      _truncated: true,
+      _original_bytes: serialized.length,
+      preview: serialized.slice(0, 2000),
+    };
+  } catch {
+    return { _unserializable: true };
+  }
+}
+
 /**
  * Captura un error en Sentry con tags estructurados y hace flush para garantizar
  * el envío antes de que el isolate termine. No relanza — el caller decide.
@@ -97,7 +116,7 @@ export async function captureEdgeException(err: unknown, ctx: EdgeErrorContext):
       if (ctx.organization_id) scope.setTag("organization_id", ctx.organization_id);
       if (ctx.status_code != null) scope.setTag("status_code", String(ctx.status_code));
       if (ctx.latency_ms != null) scope.setExtra("latency_ms", ctx.latency_ms);
-      if (ctx.extra) scope.setContext("edge", ctx.extra);
+      if (ctx.extra) scope.setContext("edge", truncatedExtra(ctx.extra));
       Sentry.captureException(err);
     });
     await Sentry.flush(2000);
