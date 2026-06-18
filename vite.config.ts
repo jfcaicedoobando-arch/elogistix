@@ -37,7 +37,19 @@ function verifyHtmlBundlePlugin(): Plugin {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  // F3 (13.65.0): si build prod sin SENTRY_AUTH_TOKEN, log warning para que
+  // operaciones detecte que los sourcemaps NO se subirán a Sentry (los stack
+  // traces de prod quedarán minificados). No rompemos el build — forks/CI
+  // ajenos deben poder compilar sin el token.
+  if (mode === "production" && !process.env.SENTRY_AUTH_TOKEN) {
+    console.warn(
+      "[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán a Sentry. " +
+      "Los stack traces de producción quedarán minificados. " +
+      "Configura el token en Workspace Settings → Build Secrets.",
+    );
+  }
+  return {
   server: {
     host: "::",
     port: 8080,

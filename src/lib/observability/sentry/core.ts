@@ -123,6 +123,9 @@ export function initSentry(): void {
       }
       return breadcrumb;
     },
+    // 13.65.0: declarado explícito para evitar regresiones silenciosas si
+    // un upgrade del SDK cambia el default.
+    autoSessionTracking: true,
     integrations: [
       Sentry.reactRouterV6BrowserTracingIntegration({
         useEffect,
@@ -132,6 +135,19 @@ export function initSentry(): void {
         matchRoutes,
       }),
       Sentry.browserProfilingIntegration(),
+      // F2 (13.65.0): captura automática de respuestas 5xx en fetch/XHR.
+      // Empezamos en 500-599 para no inflar la cuota: muchos 4xx son
+      // comportamiento esperado (401 al cargar sesión, 409 conflictos UX).
+      // `failedRequestTargets` limita a nuestros backends — evita ruido de
+      // CDNs/anuncios/extensiones de terceros.
+      Sentry.httpClientIntegration({
+        failedRequestStatusCodes: [[500, 599]],
+        failedRequestTargets: [
+          /\.supabase\.co\//,
+          /librecarga\.com/,
+          /^\/(api|functions)\//,
+        ],
+      }),
       Sentry.replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
