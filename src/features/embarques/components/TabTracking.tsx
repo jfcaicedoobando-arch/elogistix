@@ -7,13 +7,12 @@ import { useEventosEmbarque } from "@/features/embarques/hooks";
 import { usePermissions } from "@/hooks/shared";
 
 import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
-import { TabNotas } from "./TabNotas";
 import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
 import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
-import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
+
 
 type EmbarqueTrackingProps = Pick<
   Tables<"embarques">,
