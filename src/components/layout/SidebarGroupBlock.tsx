@@ -41,6 +41,10 @@ function isActive(pathname: string, path: string): boolean {
  * en cada navegación: solo el grupo cuyo `pathname` activo cambia se re-renderea.
  */
 function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas }: Props) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const handleNavigate = () => {
+    if (isMobile) setOpenMobile(false);
+  };
   return (
     <>
       <SidebarGroup>
