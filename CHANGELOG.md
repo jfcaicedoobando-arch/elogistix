@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.18] - 2026-06-18
+- **fix(bitacora-link-embarques-creados)**: En la bitácora de actividad, las entradas `crear` de embarques aparecían como texto plano sin link clickeable. Causa: `useEmbarqueSubmitOrchestrator` (Fase 5) registraba la actividad sin `entidad_id`, aunque el id del embarque recién creado ya estaba disponible en scope. `FilaEntrada` sólo construye el hyperlink cuando hay `entidad_id`. Se incluye `entidad_id: embarqueCreadoId ?? undefined` en el payload de bitácora. Backfill por migración SQL: 149 filas legacy con `entidad_id NULL` se rehidratan uniendo `entidad_nombre = embarques.expediente` dentro de la misma `organization_id`. Bump `APP_VERSION` 13.66.18.
+
 ## [13.66.17] - 2026-06-18
 - **fix(sidebar-mobile-autoclose)**: En móvil el sidebar (renderizado como `Sheet` overlay) no se cerraba al hacer click en un item de navegación: la ruta cambiaba pero el sheet quedaba abierto encima del contenido y el usuario tenía que cerrarlo manualmente. `SidebarGroupBlock` ahora consume `useSidebar()` y, cuando `isMobile === true`, llama `setOpenMobile(false)` en el `onClick` de cada `NavLink`. Sin efecto en desktop (`isMobile === false`). Bump `APP_VERSION` 13.66.17.
 
