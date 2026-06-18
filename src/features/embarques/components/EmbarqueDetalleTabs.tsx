@@ -150,6 +150,11 @@ export function EmbarqueDetalleTabs({
         <TabGarantias embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
 
+      <TabsContent value="demoras">
+        <TabDemoras embarqueId={embarqueId} canEdit={canEdit} />
+      </TabsContent>
+
+
       <TabsContent value="seguros">
         <TabSeguros embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
