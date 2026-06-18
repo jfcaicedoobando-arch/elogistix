@@ -50,6 +50,7 @@ export function LandingFooter() {
             { label: "Portal del cliente", to: "/login" },
           ]} />
           <FooterCol title="Legal" links={[
+            { label: "Seguridad y privacidad", to: "/legal/seguridad" },
             { label: "Aviso de privacidad", to: "/legal/privacidad" },
             { label: "Términos y condiciones", to: "/legal/terminos" },
             { label: "Contacto", href: `mailto:${FOOTER.contact}` },

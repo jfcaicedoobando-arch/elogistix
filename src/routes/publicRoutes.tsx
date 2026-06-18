@@ -14,6 +14,7 @@ const HomeRoute = lazy(() => import("@/pages/marketing/HomeRoute"));
 const LogoPreview = lazy(() => import("@/pages/marketing/LogoPreview"));
 const Privacidad = lazy(() => import("@/pages/legal/Privacidad"));
 const Terminos = lazy(() => import("@/pages/legal/Terminos"));
+const Seguridad = lazy(() => import("@/pages/legal/Seguridad"));
 const GuiaCartaPorte = lazy(() => import("@/pages/marketing/GuiaCartaPorte"));
 const GuiaIncoterms2020 = lazy(() => import("@/pages/marketing/GuiaIncoterms2020"));
 const GuiaPuertosMexico = lazy(() => import("@/pages/marketing/GuiaPuertosMexico"));
@@ -30,6 +31,7 @@ export const publicRoutes = (
     <Route path="/logo-preview" element={<LogoPreview />} />
     <Route path="/legal/privacidad" element={<Privacidad />} />
     <Route path="/legal/terminos" element={<Terminos />} />
+    <Route path="/legal/seguridad" element={<Seguridad />} />
     <Route path="/recursos/guia-carta-porte-3" element={<GuiaCartaPorte />} />
     <Route path="/recursos/guia-incoterms-2020" element={<GuiaIncoterms2020 />} />
     <Route path="/recursos/guia-puertos-mexico" element={<GuiaPuertosMexico />} />
