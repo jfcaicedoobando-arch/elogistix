@@ -1,52 +1,61 @@
-# Auditoría visual mobile — Libre Carga
+# Plan P0 — Remediación mobile crítica
 
-## Objetivo
-Recorrer las rutas clave de la app en viewport móvil (375×812, iPhone-like) y reportar hallazgos visuales: overflow horizontal, tap targets <44px, texto cortado, tablas que rompen, modales sin scroll, headers que tapan contenido, contraste, sidebar/FAB superpuestos, formularios con campos apretados, etc. **Solo auditoría — no se modifica código en esta fase.** Las correcciones se planifican después según prioridad.
+Sólo los 3 bloqueantes detectados en la auditoría. Cambios de presentación; sin lógica de negocio ni esquema.
 
-## Cómo se ejecuta
-Lanzo 5 sub-agentes Playwright en paralelo (`acp_subagent--spawn_agent`), cada uno con sesión Supabase pre-minteada y viewport `390×844`. Cada sub-agente:
+## P0-1 · FAB ya no tapa la última fila de las listas
 
-1. Restaura sesión (`LOVABLE_BROWSER_SUPABASE_SESSION_JSON`).
-2. Navega su lote de rutas, espera `networkidle`, toma screenshot `viewport-only` (NUNCA `full_page`).
-3. Inspecciona DOM: `document.documentElement.scrollWidth > innerWidth` (overflow-x), botones con `getBoundingClientRect()` < 44px, elementos con `position:fixed` que ocluyan el `<main>`, tablas sin scroll wrapper.
-4. Devuelve JSON estructurado: `{ruta, screenshot_path, hallazgos:[{tipo, severidad, selector, descripcion}]}`.
+**Problema:** `FloatingActionButton` (56px, `bottom-6 right-4`, `z-40`) se superpone al último registro en `/clientes`, `/proveedores`, `/cotizaciones`, `/embarques`, `/costeo/*`.
 
-Yo consolido los 5 reportes en un único informe markdown ordenado por severidad.
+**Solución:** padding inferior global cuando hay FAB visible — opción más limpia que tocar cada página.
 
-## Lotes de rutas
+1. `src/components/shared/FloatingActionButton.tsx`: el botón se mantiene igual, pero exportar un `MOBILE_FAB_SAFE_PADDING = "pb-24 md:pb-0"` (constante reutilizable).
+2. En cada página que renderiza `<FloatingActionButton />` (5 archivos detectados con `rg`), añadir esa clase al wrapper raíz de la página:
+   - `src/pages/clientes/Clientes.tsx`
+   - `src/pages/proveedores/Proveedores.tsx`
+   - `src/pages/cotizaciones/Cotizaciones.tsx`
+   - `src/features/embarques/routes/Embarques.tsx`
+   - `src/pages/costeo/*` (subpáginas que renderizan FAB — verificar)
+3. Si una página usa `ResponsiveDataTable`, el `<ul>` móvil ya queda dentro de ese wrapper → sin cambios adicionales.
 
-```text
-Lote A — Marketing & Auth (público)
-  /  /login  /legal/seguridad  /legal/privacidad  /legal/terminos
-  /recursos/guia-puertos-mexico
+## P0-2 · Tablas financieras críticas con vista mobile-card
 
-Lote B — Dashboard & Operación
-  /inicio  /embarques  /embarques/:id (uno de demo)
-  /cotizaciones  /cotizaciones/nueva  /tracking
+**Problema:** `/cartera`, `/profit/estado-resultados`, `/profit/presupuesto` cortan cifras en mobile.
 
-Lote C — Finanzas
-  /facturacion  /cxc  /cxp  /tesoreria/cuentas  /tesoreria/flujo
-  /profit/dashboard  /profit/estado-resultados
+**Solución:** migrar las 3 tablas a `ResponsiveDataTable` (ya existente, ya usado en `/embarques`, `/cotizaciones`, `/reportes`, `/proveedores`). Cada una recibe un `mobileCard(row)` con layout vertical de 2 columnas (label izquierda · cifra derecha `text-right tabular-nums`).
 
-Lote D — Catálogos & Config
-  /clientes  /clientes/:id  /proveedores  /puertos
-  /configuracion  /usuarios
+1. **`/cartera`** (`src/pages/.../Cartera*.tsx` — localizar): identificar la `<DataTable>` actual, envolverla con `ResponsiveDataTable`, definir `mobileCard` mostrando cliente · saldo total · vencido. Acciones de fila → menú `⋮`.
+2. **`/profit/estado-resultados`** (`src/features/profit/components/EstadoResultadosTable.tsx`): mismo patrón. `mobileCard` con concepto + valor por modo (Marítimo / Aéreo / Terrestre) apilados.
+3. **`/profit/presupuesto`**: grid editable. Patrón: mostrar lista de filas; en mobile, abrir un Drawer/Sheet para editar la celda (en lugar de inputs inline). Mantener el grid en `≥md`.
 
-Lote E — Auditoría, Portal cliente, Admin
-  /auditoria  /admin/auditoria  /portal/inicio  /portal/embarques
-  /bandejas  /notificaciones
-```
+Cada cambio debe verificarse con Playwright en `390×844` revisando que las cifras no se corten.
 
-## Entregable
-Informe markdown con:
-- **Resumen ejecutivo** (#hallazgos por severidad).
-- **Top issues bloqueantes** (overflow horizontal, tap targets críticos, contenido inaccesible).
-- **Tabla por ruta** con screenshot + hallazgos.
-- **Recomendaciones priorizadas** (P0/P1/P2) listas para implementar en un siguiente plan.
+## P0-3 · Inputs y tap targets ≥44px en `<md` (estandarización)
+
+**Problema:** densidad alta de tap targets <44px detectada en todas las listas y formularios.
+
+**Solución (de bajo riesgo, presentación pura):** ampliar el preset `size="icon"` y `size="sm"` de `src/components/ui/button.tsx` para móvil:
+
+- `size="icon"`: actual `h-9 w-9` → `h-11 w-11 md:h-9 md:w-9`.
+- `size="sm"`: actual `h-9` → `h-10 md:h-9`.
+- `Input`, `Select`, `Textarea` (shadcn defaults en `src/components/ui/`): altura `h-10` → `h-11 md:h-10`.
+
+Esto eleva ~70% de los tap targets reportados sin tocar cada página.
+
+## Verificación
+
+Al terminar, relanzar los 2 sub-agentes de los lotes más afectados (B y D) y comparar:
+- `tap_targets_<44px` debe caer ≥40% en `/clientes`, `/proveedores`, `/operaciones`.
+- `cartera.png`, `profit-estado-resultados.png` no deben mostrar cifras cortadas en viewport 390.
+- FAB no se superpone a la última fila en `/clientes` y `/proveedores`.
 
 ## Fuera de alcance
-- No se modifican archivos.
-- No se audita escritorio/tablet (solo mobile, como pidió el usuario).
-- No se valida lógica de negocio ni accesibilidad WCAG completa (solo signals visuales rápidos).
 
-¿Apruebas que lance los 5 sub-agentes con este recorrido?
+- **Landing público para usuarios autenticados** (originalmente P0-3 de la auditoría): tras revisar `HomeRoute.tsx`, el redirect de `/` → `/inicio` con sesión es intencional y los crawlers SEO siempre lo ven sin sesión. Lo bajo a P2/no-fix.
+- **`/embarques/:id` sobrecargado**, warnings de `/crm`, 404 en `/auditoria`: P1/P2, plan separado.
+- **Datos reales de `/admin/*` y `/portal/*`**: requieren credenciales con otros roles.
+
+## Changelog
+
+Bump `APP_VERSION` y entrada en `CHANGELOG.md` describiendo: FAB padding, mobile-card en finanzas críticas, tap-targets ≥44px en `<md`.
+
+¿Apruebas?

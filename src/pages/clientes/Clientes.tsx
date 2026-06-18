@@ -89,7 +89,9 @@ export default function Clientes() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="space-y-6">
+    // pb-24 md:pb-0 evita que el FAB tape la última fila de la lista en mobile.
+    <div className="space-y-6 pb-24 md:pb-0">
+
       <PageHeader
         icon={<Users className="h-6 w-6 text-accent" />}
         title="Clientes"

@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.0] - 2026-06-18
+- **feat(mobile-p0)**: Remediación P0 de la auditoría visual mobile (viewport 390×844).
+  - **FAB no tapa la última fila**: `pb-24 md:pb-0` en el contenedor raíz de `/clientes`, `/proveedores`, `/cotizaciones`, `/embarques`. El FAB (56px, `bottom-6 right-4`) queda con safe-area inferior real.
+  - **Tap targets ≥44px en mobile**: bumpeo del preset shadcn — `Button` (`default h-11`, `sm h-10`, `lg h-12`, `icon h-11 w-11`), `Input` (`h-11`), `Select.Trigger` (`h-11`) — todos con `md:h-{valor-anterior}` para no afectar densidad de escritorio. Esto eleva la mayoría de los ~600 tap-targets <44px detectados sin tocar cada página.
+  - **Cartera mobile-card**: `/cartera` ahora renderiza tarjetas apiladas en `<sm` con folio + cliente + embarque + vencimiento + saldo en grande, evitando que las cifras (`$1,328,850.6…`) queden cortadas. La tabla original se mantiene intacta en `≥sm`.
+  - **Estado de Resultados mobile-card**: `EstadoResultadosTable` agrupa ingresos/costos por concepto y muestra los 3 modos (Marítimo/Aéreo/Terrestre) + total en grid 2-col en `<sm`. Tabla completa en `≥sm` (con `overflow-x-auto`).
+  - **Pendiente P1**: refactor de `/embarques/:id` (tabs scrollables + 5 acciones), `/profit/presupuesto` (grid editable mobile), warnings React en `/crm`, 404 en `/auditoria`. Quedan fuera de este lote por riesgo/scope.
+- Bump `APP_VERSION` 13.67.0.
+
 ## [13.66.26] - 2026-06-18
 - **feat(trust-page)**: Nueva página pública `/legal/seguridad` (Centro de confianza y seguridad) mantenida por Libre Carga: controles de acceso, aislamiento por organización (RLS), cifrado en tránsito, respaldos, subprocesadores, retención, responsabilidad compartida, reporte de incidentes y cumplimiento LFPDPPP. Sin reclamos de certificación. Linkeada en footer (Legal) y agregada al sitemap. Bump `APP_VERSION` 13.66.26.
 

@@ -59,7 +59,9 @@ export default function Proveedores() {
   };
 
   return (
-    <div className="space-y-6">
+    // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
+    <div className="space-y-6 pb-24 md:pb-0">
+
       <PageHeader
         icon={<Truck className="h-6 w-6 text-accent" />}
         title="Proveedores"

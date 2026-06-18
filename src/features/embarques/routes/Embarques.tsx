@@ -46,7 +46,9 @@ export default function Embarques() {
   const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
 
   return (
-    <div className="space-y-6">
+    // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
+    <div className="space-y-6 pb-24 md:pb-0">
+
       <PageHeader
         title="Embarques"
         description={headerDescription}
