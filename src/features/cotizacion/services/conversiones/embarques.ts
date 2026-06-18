@@ -33,9 +33,10 @@ async function insertarCostosEmbarque(
 async function insertarVentasEmbarque(
   ventasJsonb: unknown[],
   embarqueId: string,
+  hijos: Tables<"embarque_contenedores">[] | null,
 ): Promise<void> {
   if (ventasJsonb.length === 0) return;
-  const ventasRows = parsearVentasJsonb(ventasJsonb, embarqueId);
+  const ventasRows = parsearVentasJsonb(ventasJsonb, embarqueId, hijos ?? undefined);
   if (ventasRows.length === 0) return;
   const { error } = await supabase.from("conceptos_venta").insert(ventasRows);
   if (error) throw error;
@@ -107,7 +108,7 @@ export async function convertirCotizacionAEmbarques(
 
   // 5) Insertar conceptos_venta desde el jsonb de la cotización (v12.13.1 hardening).
   const ventasJsonb = Array.isArray(cotizacion.conceptos_venta) ? cotizacion.conceptos_venta : [];
-  await insertarVentasEmbarque(ventasJsonb, embarque.id);
+  await insertarVentasEmbarque(ventasJsonb, embarque.id, hijosCreados);
 
   // 6) Marcar cotización como "En operación" y vincularla al embarque.
   const { error: errorUpdate } = await supabase

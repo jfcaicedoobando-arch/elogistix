@@ -2835,7 +2835,10 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          dias_libres_override: number | null
           embarque_id: string
+          fecha_descarga: string | null
+          fecha_devolucion: string | null
           id: string
           numero_contenedor: string
           orden: number
@@ -2851,7 +2854,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          dias_libres_override?: number | null
           embarque_id: string
+          fecha_descarga?: string | null
+          fecha_devolucion?: string | null
           id?: string
           numero_contenedor?: string
           orden?: number
@@ -2867,7 +2873,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          dias_libres_override?: number | null
           embarque_id?: string
+          fecha_descarga?: string | null
+          fecha_devolucion?: string | null
           id?: string
           numero_contenedor?: string
           orden?: number
@@ -6216,7 +6225,10 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          dias_libres_override: number | null
           embarque_id: string
+          fecha_descarga: string | null
+          fecha_devolucion: string | null
           id: string
           numero_contenedor: string
           orden: number

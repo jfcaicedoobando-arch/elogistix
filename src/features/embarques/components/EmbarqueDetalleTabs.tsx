@@ -13,6 +13,7 @@ import { TabConciliacion } from "@/features/embarques/components/TabConciliacion
 import { TabPnl } from "@/features/embarques/components/TabPnl";
 import { TabSeguros } from "@/features/embarques/components/TabSeguros";
 import { TabCierre } from "@/features/embarques/components/TabCierre";
+import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
@@ -80,6 +81,7 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
         <TabsTrigger value="garantias">Garantías</TabsTrigger>
+        <TabsTrigger value="demoras">Demoras</TabsTrigger>
         <TabsTrigger value="seguros">Seguros</TabsTrigger>
         <TabsTrigger value="cierre">Cierre</TabsTrigger>
 
@@ -147,6 +149,11 @@ export function EmbarqueDetalleTabs({
       <TabsContent value="garantias">
         <TabGarantias embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
+
+      <TabsContent value="demoras">
+        <TabDemoras embarqueId={embarqueId} canEdit={canEdit} />
+      </TabsContent>
+
 
       <TabsContent value="seguros">
         <TabSeguros embarqueId={embarqueId} canEdit={canEdit} />

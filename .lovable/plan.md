@@ -1,62 +1,74 @@
-## Contexto
+## Contexto del hallazgo
 
-**COT-2026-0076 → ELIMP00272** es Marítimo **FCL** con 6 contenedores 40HC capturados (números de contenedor reales), pero los campos `peso_kg`, `volumen_m3` y `piezas` quedaron en 0 en cada hijo. El trigger `sync_embarque_desde_contenedor` propaga la suma (0) al embarque padre, por eso la tabla muestra "faltan datos". La cotización origen también tiene esos campos en 0, así que no hay valor canónico para auto-rellenar.
+Hoy la conversión cotización → embarque tiene un comportamiento **asimétrico**:
 
-A diferencia de los bugs LCL ya corregidos (v13.66.8 / v13.66.9), aquí no hay bug de mapper ni de helper: el wizard FCL permite guardar los contenedores con totales en 0 porque al momento de crear el embarque pueden no conocerse. La decisión de producto es **exigirlos sólo más adelante, antes de cerrar el embarque o generar la primera proforma**.
+- `conceptos_costo`: cuando `cotizacion_costos.unidad_medida='Contenedor'` el helper `construirCostosRows` ya replica una fila por cada contenedor hijo (línea 64-66 de `embarquesHelpers.ts`). Cuando es `'BL'` se inserta una sola con `contenedor_id=NULL`.
+- `conceptos_venta`: `parsearVentasJsonb` toma el jsonb `cotizaciones.conceptos_venta` y lo inserta **siempre con `contenedor_id=NULL`**, sin replicar y sin importar la unidad de medida. Por eso ELIMP00272 tiene 2 conceptos generales pese a tener 6 contenedores.
 
-ELIMP00272 se deja como está: el usuario lo edita desde la UI de contenedores cuando tenga los pesos reales.
+Para demoras, `calcular_demoras_embarque` usa **una sola fecha** `Descarga` (mín) y **una sola** `Entrega` (máx) del timeline del embarque y aplica los mismos días a cada contenedor. No hay forma hoy de capturar que el contenedor A se devolvió el día 12 y el B el día 25.
+
+ELIMP00272 ya quedó como está (proforma única con los 2 conceptos manuales actuales — fuera de alcance de este plan).
 
 ## Cambios
 
-### 1. Regla nueva en `validar_cierre_embarque` (RPC)
+### 1. Replicar conceptos de venta por contenedor (alineado con costos)
 
-Migración que reemplaza la función `public.validar_cierre_embarque(uuid)` agregando un check extra:
+**`src/features/cotizacion/services/conversiones/embarquesHelpers.ts`** — extender `parsearVentasJsonb` a `parsearVentasJsonb(ventasJsonb, embarqueId, hijos)`:
 
-- **Regla**: `contenedores_datos_completos`
-- **Aplica sólo** cuando `embarques.modo = 'Marítimo'` AND `embarques.tipo_servicio = 'FCL'`.
-- **Falla** si existe algún `embarque_contenedores` del embarque con `peso_kg <= 0` o `volumen_m3 <= 0` (piezas opcional, dado que algunos clientes FCL no las desglosan).
-- **Detalle** devuelto: `{ contenedores_incompletos: <int>, ids: [uuid...] }` para que la UI pueda enlazar.
-- Para modos/servicios distintos (Aéreo, Terrestre, LCL) el check devuelve `ok: true` automáticamente.
+- Si el item jsonb trae `unidad_medida === 'BL'` (o vacío): 1 fila con `contenedor_id=NULL` (como hoy).
+- Si trae `unidad_medida === 'Contenedor'` (default): N filas, una por hijo, con `contenedor_id = hijo.id`, dividiendo `cantidad` para que el total siga siendo el cotizado (igual que costos).
+- Mismas reglas para `tasa_iva_aplicada`/`aplica_iva` por fila.
 
-El check se suma a `v_checks` y participa en `v_puede_cerrar` igual que las reglas actuales (`cxc_cobrada`, `cxp_pagada`, `docs_completos`, `pnl_margen_minimo`).
+**`embarques.ts`** — pasar `hijosCreados` al llamar `insertarVentasEmbarque` y propagar la firma.
 
-### 2. UI de cierre
+Esto cierra el hueco: a partir de v13.66.11, cualquier embarque generado desde cotización **ya nace con ventas etiquetadas por contenedor** y la UI del wizard de proforma puede filtrar por contenedor sin pasos manuales extra.
 
-`src/features/embarques/components/TabCierre.tsx`: agregar etiqueta en `ETIQUETAS_REGLA`:
+**No se backfillea** ELIMP00272 ni embarques previos (los conceptos manuales ya divergieron de la cotización).
 
-```ts
-contenedores_datos_completos: "Datos de contenedores capturados (peso y volumen)",
-```
+### 2. Demoras por contenedor
 
-No requiere más cambios: `CierreChecklistCard` ya renderiza dinámicamente cualquier regla devuelta por la RPC.
+**Migración**: agregar a `embarque_contenedores`:
 
-### 3. Pre-check al generar proforma
+- `fecha_descarga date NULL` — fecha en que el contenedor llegó/se descargó.
+- `fecha_devolucion date NULL` — fecha real de devolución a la naviera.
+- `dias_libres_override int NULL` — opcional, para sobreescribir el default de la naviera por contenedor.
 
-Punto único: hook `useProformas` (o el componente que abre el wizard `PasoConfirmacionProforma`).
+**Migración**: reescribir `public.calcular_demoras_embarque(uuid)`:
 
-- Antes de abrir el flujo de creación de proforma, ejecutar una verificación cliente: si el embarque es Marítimo FCL y cualquiera de sus `embarque_contenedores` tiene `peso_kg=0` o `volumen_m3=0`, mostrar `toast.error` en español ("Captura peso y volumen de todos los contenedores antes de generar la proforma.") y abortar.
-- Implementación: pequeña función `validarContenedoresFCL(embarqueId)` en `src/features/embarques/services/` que hace un `select id, peso_kg, volumen_m3 from embarque_contenedores where embarque_id=?` y aplica el mismo criterio que la RPC. Reusable también desde `submitProformaDialog.ts`.
-- No se duplica lógica de cierre: la validación de cierre sigue siendo server-side via RPC; el pre-check de proforma vive sólo en cliente porque la RPC `crear_proforma_atomica` no conoce esta regla.
+- Para cada `embarque_contenedores` del embarque:
+  - Usar `ec.fecha_descarga`/`ec.fecha_devolucion` si existen; si no, **fallback** a las fechas del timeline (`Descarga` min / `Entrega` max) para no romper el comportamiento de embarques actuales sin datos por contenedor.
+  - Usar `ec.dias_libres_override` si no es NULL; si no, el default de `costeo_navieras_condiciones.dias_libres_demoras_default`.
+  - Calcular `dias_excedidos = max(0, dias_puerto - dias_libres)` por contenedor.
+  - Aplicar el tabulador escalonado (ya existe la lógica `v_tarifa`) por contenedor.
+- Borrar/recrear `conceptos_costo` y `conceptos_venta` con `origen='demoras_auto'` etiquetados con `contenedor_id` del hijo correspondiente.
+- Mantener el shape JSON de retorno (`contenedores: [...]`) y los totales agregados.
+
+**UI mínima** en `EmbarqueDetalleContenedoresTab` (o donde se edita el contenedor): inputs `Fecha de descarga`, `Fecha de devolución`, `Días libres (override)`. Al guardar dispara recálculo de demoras (ya existe trigger `trg_recalcular_demoras_al_entregar`; añadiremos otro `AFTER UPDATE` sobre estos tres campos).
+
+### 3. UX wizard de proforma
+
+`PasoSeleccionConceptos`/`FiltroContenedorChips` ya soportan filtrar por contenedor — sin cambios. Cuando los conceptos de venta vengan ya etiquetados (cambio #1) y las demoras también (cambio #2), el operador puede generar 1 proforma por contenedor pulsando el chip respectivo. No se fuerza: sigue siendo decisión del operador.
 
 ### 4. Tests
 
-- `src/features/embarques/services/__tests__/validarContenedoresFCL.test.ts` (nuevo): cubre Marítimo FCL con incompletos / completos, LCL marítimo (siempre ok), Aéreo (siempre ok).
-- `src/features/embarques/components/__tests__/TabCierre.rules.test.ts` (existente): añadir caso para la nueva regla en la lista de etiquetas.
+- `embarquesHelpers.integration.test.ts`: nuevos casos para `parsearVentasJsonb` con BL vs Contenedor + N hijos.
+- `calcular_demoras_embarque`: test SQL/integration con 2 contenedores con fechas distintas → verificar conceptos generados por hijo.
+- Snapshot del wizard de proforma filtrado por contenedor con conceptos heredados de cotización.
 
 ### 5. Metadata
 
-- Bump `APP_VERSION` → `13.66.10`.
-- Entrada en `CHANGELOG.md` describiendo: "Cierre y proforma exigen peso y volumen capturados en cada contenedor FCL antes de proceder. No afecta LCL, Aéreo ni Terrestre. ELIMP00272 queda pendiente de edición manual del usuario."
+- Bump `APP_VERSION` → `13.66.11`.
+- Entrada en `CHANGELOG.md` (idioma español mexicano, formato Keep a Changelog) describiendo: replicación de ventas por contenedor, demoras por contenedor con fallback a timeline, columnas nuevas en `embarque_contenedores`.
 
-## Fuera de alcance (confirmado por el usuario)
+## Fuera de alcance
 
-- No se toca ELIMP00272 ni los 6 contenedores (el usuario los editará desde la UI).
-- No se exigen peso/volumen/piezas en cotizaciones FCL.
-- No se bloquea el guardado del wizard de embarque al crear (sólo al cerrar o facturar vía proforma).
+- No se modifica ELIMP00272 ni embarques previos (sus conceptos ya están divergidos de la cotización; la proforma actual se genera tal cual con los 2 conceptos generales).
+- No se quita la capacidad de tener conceptos `contenedor_id=NULL` ("generales del embarque") — sigue siendo válido para honorarios, despacho, etc.
+- No se cambia el modelo de proforma (sigue siendo 1 proforma → 1 factura).
 
 ## Detalles técnicos clave
 
-- La RPC seguirá expuesta sólo a `authenticated` (igual que hoy) con `REVOKE EXECUTE ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated`.
-- La función mantiene `SECURITY DEFINER` y `SET search_path = public` ya presentes.
-- El criterio "peso_kg > 0 AND volumen_m3 > 0" se basa en NUMERIC, no en NULL, para compatibilidad con filas existentes que tienen `0` por default.
-- El check se ejecuta **después** de los otros para no enmascarar errores financieros más graves en el orden visual del checklist.
+- Las nuevas columnas son `NULL` por default → embarques existentes no cambian su cálculo (fallback a timeline).
+- La RPC mantiene `SECURITY DEFINER` + `SET search_path = public` + GRANT a `authenticated, service_role`.
+- La replicación de ventas divide `cantidad` para preservar el total facturable; alternativa: replicar `cantidad` íntegra y duplicar el total → necesita confirmación del usuario antes de implementar (lo dejo con división como costos, que es el patrón canónico hoy).
+- Triggers de UI: al editar `fecha_devolucion`/`dias_libres_override` de un contenedor → `PERFORM public.calcular_demoras_embarque(embarque_id)` para regenerar conceptos automáticos.

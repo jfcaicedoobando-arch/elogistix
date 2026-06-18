@@ -167,6 +167,67 @@ describe("Integración Cotización → Embarque (helpers puros)", () => {
       );
       expect(out.map((r) => r.moneda)).toEqual(["USD", "MXN", "MXN"]);
     });
+
+    it("(v13.66.11) sin hijos: comportamiento legacy, 1 fila por concepto sin contenedor_id", () => {
+      const out = parsearVentasJsonb(
+        [
+          { descripcion: "Flete", unidad_medida: "Contenedor", cantidad: 3, precio_unitario: 100, total: 300 },
+          { descripcion: "B/L Fee", unidad_medida: "BL", cantidad: 1, precio_unitario: 50, total: 50 },
+        ],
+        "emb-1",
+      );
+      expect(out).toHaveLength(2);
+      expect(out.every((r) => r.contenedor_id === undefined)).toBe(true);
+    });
+
+    it("(v13.66.11) con hijos: replica unidad_medida='Contenedor' por hijo dividiendo cantidad", () => {
+      const hijos = [{ id: "h1" }, { id: "h2" }, { id: "h3" }] as Pick<Tables<"embarque_contenedores">, "id">[];
+      const out = parsearVentasJsonb(
+        [{ descripcion: "Flete", unidad_medida: "Contenedor", cantidad: 3, precio_unitario: 2300, total: 6900 }],
+        "emb-1",
+        hijos,
+      );
+      expect(out).toHaveLength(3);
+      expect(out.map((r) => r.contenedor_id)).toEqual(["h1", "h2", "h3"]);
+      expect(out.every((r) => r.cantidad === 1)).toBe(true);
+      expect(out.every((r) => r.total === 2300)).toBe(true);
+    });
+
+    it("(v13.66.11) con hijos: unidad_medida='BL' se inserta UNA vez sin contenedor_id", () => {
+      const hijos = [{ id: "h1" }, { id: "h2" }] as Pick<Tables<"embarque_contenedores">, "id">[];
+      const out = parsearVentasJsonb(
+        [{ descripcion: "Documentación", unidad_medida: "BL", cantidad: 1, precio_unitario: 195, total: 195 }],
+        "emb-1",
+        hijos,
+      );
+      expect(out).toHaveLength(1);
+      expect(out[0].contenedor_id).toBeUndefined();
+      expect(out[0].cantidad).toBe(1);
+    });
+
+    it("(v13.66.11) con hijos: cantidad < numHijos cae a fallback general (no parte)", () => {
+      const hijos = [{ id: "h1" }, { id: "h2" }, { id: "h3" }] as Pick<Tables<"embarque_contenedores">, "id">[];
+      const out = parsearVentasJsonb(
+        [{ descripcion: "Servicio raro", unidad_medida: "Contenedor", cantidad: 1, precio_unitario: 500, total: 500 }],
+        "emb-1",
+        hijos,
+      );
+      expect(out).toHaveLength(1);
+      expect(out[0].contenedor_id).toBeUndefined();
+      expect(out[0].total).toBe(500);
+    });
+
+    it("(v13.66.11) con hijos: residual de cantidad va al último hijo", () => {
+      const hijos = [{ id: "h1" }, { id: "h2" }, { id: "h3" }] as Pick<Tables<"embarque_contenedores">, "id">[];
+      const out = parsearVentasJsonb(
+        [{ descripcion: "Lote", unidad_medida: "Contenedor", cantidad: 10, precio_unitario: 100, total: 1000 }],
+        "emb-1",
+        hijos,
+      );
+      expect(out.map((r) => r.cantidad)).toEqual([3, 3, 4]);
+      const totalSuma = out.reduce((s, r) => s + Number(r.total), 0);
+      expect(totalSuma).toBe(1000);
+    });
   });
 
   describe("flujo completo (composición real)", () => {
