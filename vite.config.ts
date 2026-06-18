@@ -5,6 +5,7 @@ import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { APP_VERSION } from "./src/constants/appVersion";
 
 /**
  * Verifica que `dist/index.html` contenga el bundle JS antes de terminar el
