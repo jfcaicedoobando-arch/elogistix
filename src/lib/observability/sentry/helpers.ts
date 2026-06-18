@@ -55,6 +55,19 @@ function scrubHeaders(headers: Record<string, unknown> | undefined): void {
  * y filtra headers/breadcrumbs sensibles. F5 (13.65.0): añade scrub de
  * `request.headers` y `breadcrumbs[].data.url`.
  */
+function scrubBreadcrumb(b: { data?: unknown; message?: unknown }): void {
+  const data = b.data as Record<string, unknown> | undefined;
+  if (data) {
+    for (const key of ["url", "to", "from"] as const) {
+      const v = data[key];
+      if (typeof v === "string") data[key] = scrubUrl(v);
+    }
+  }
+  if (typeof b.message === "string") {
+    b.message = scrubPii(b.message);
+  }
+}
+
 export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   if (event.user) {
     event.user = { id: event.user.id };
@@ -74,24 +87,11 @@ export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
   }
   // F5: limpiar URLs sensibles en breadcrumbs (navigation / ui.click / fetch / xhr).
   if (Array.isArray(event.breadcrumbs)) {
-    for (const b of event.breadcrumbs) {
-      const data = b.data as Record<string, unknown> | undefined;
-      if (data && typeof data.url === "string") {
-        data.url = scrubUrl(data.url);
-      }
-      if (data && typeof data.to === "string") {
-        data.to = scrubUrl(data.to);
-      }
-      if (data && typeof data.from === "string") {
-        data.from = scrubUrl(data.from);
-      }
-      if (typeof b.message === "string") {
-        b.message = scrubPii(b.message);
-      }
-    }
+    for (const b of event.breadcrumbs) scrubBreadcrumb(b);
   }
   return event;
 }
+
 
 /**
  * Sampling dinámico por ruta. Devuelve la probabilidad [0..1] de trazar la
