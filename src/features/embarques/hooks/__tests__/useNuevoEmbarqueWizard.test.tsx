@@ -56,6 +56,9 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
 vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
+vi.mock("@/hooks/shared/usePermissions", () => ({
+  usePermissions: () => ({ canCrearEmbarqueLibre: true }),
+}));
 vi.mock("../useNuevoEmbarqueExpediente", () => ({
   useNuevoEmbarqueExpediente: () => ({
     modoExpediente: "nuevo",
