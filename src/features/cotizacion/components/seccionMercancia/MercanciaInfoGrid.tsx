@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, FileDown } from "lucide-react";
 import { getSignedUrl } from "@/services/storage";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
 interface Cot {
   modo: string;
@@ -21,6 +23,9 @@ export function MercanciaInfoGrid({ cotizacion }: { cotizacion: Cot }) {
   const esAereo = cotizacion.modo === 'Aéreo';
   const esFCL = esMaritimo && cotizacion.tipo_embarque === 'FCL';
   const esTerrestre = !esMaritimo && !esAereo;
+  const { data: tiposContenedor = [] } = useTiposContenedor();
+  const tipoContenedorNombre = resolveTipoContenedorNombre(cotizacion.tipo_contenedor, tiposContenedor, '-');
+
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -34,7 +39,7 @@ export function MercanciaInfoGrid({ cotizacion }: { cotizacion: Cot }) {
         <>
           <div>
             <span className="text-muted-foreground">Tipo de Contenedor</span>
-            <p className="font-medium">{cotizacion.tipo_contenedor || '-'}</p>
+            <p className="font-medium">{tipoContenedorNombre}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Peso</span>

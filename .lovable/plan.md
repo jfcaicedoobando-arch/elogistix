@@ -1,44 +1,66 @@
-## Estado actual
+# Fix detalle de cotización: tipo de contenedor + embarque vinculado
 
-Las Fases A–E del audit anterior están aplicadas (v13.64.0). El sub-agente identificó **6 gaps reales** + 5 deudas menores que aún limitan la cobertura efectiva (~92% → ~98% si se cierran).
+## Contexto (datos reales de COT-2026-0076)
 
-## Hallazgos clave
+- `cotizaciones.tipo_contenedor = '8014e97d-37a6-4e99-9238-fd507543c340'` → es un UUID del catálogo `tipos_contenedor`. La UI lo renderiza tal cual (`{cotizacion.tipo_contenedor || '-'}`) y por eso ves el UUID.
+- `cotizaciones.embarque_id = NULL` y `embarques.cotizacion_id IS NULL` en el embarque `ELIMP00272` que sí se generó desde esta cotización (created_at del embarque coincide con updated_at de la cot.). Además el botón "Ver embarque borrador" sólo aparece cuando `estado === 'Aceptada'`, pero el estado actual es `En operación`, así que aunque el vínculo existiera no se mostraría.
 
-**Gaps reales:**
-1. **G1 — 8 edge functions sin `wrapEdgeHandler`** (cobertura backend: 55%). Críticas: `send-transactional-email`, `process-email-queue`, `enviar-cotizacion-email`. Media: `auditoria-weekly-digest`, `handle-email-suppression`, `exchange-rates` (importa `initSentryEdge` pero no envuelve handler). Baja: `handle-email-unsubscribe`, `preview-transactional-email`.
-2. **G2 — `ErrorBoundary` solo en `Layout.tsx`**, no en raíz. Rutas públicas (`/landing`, `/tracking-public`, login, `/privacidad`) y errores en `<BrowserRouter>` / providers → pantalla en blanco sin evento.
-3. **G3 — Source maps condicionales a `SENTRY_AUTH_TOKEN`** que no está documentado como configurado. Sin token → stacks minificados en producción (variables `o`, `r`, `n`).
-4. **G4 — ~30 `toast.error()` en flujos críticos** fuera de `MutationCache` (catch manuales). Top 5: `FacturasMasivasToolbar`, `TesoreriaConciliacion`, `useTesoreriaCuentasController`, `useCotizacionDetalleState`, `ProfitDashboardEjecutivo`.
-5. **G5 — `scrubEventPii` incompleto**: no toca `event.request.headers` (puede incluir `Authorization`/cookies) ni breadcrumbs de `ui.click`/`navigation` con query strings sensibles.
-6. **G6 — Falta `httpClientIntegration()`** — 4xx/5xx de `fetch`/XHR (RLS de Supabase, Resend) no generan eventos automáticos.
+## Problema A — Tipo de contenedor en UUID
 
-**Deuda menor:** `exchange-rates` sin wrap (3 líneas); sin scrub/límite de tamaño en `ctx.extra` del wrapper edge; `sampleByRoute` no cubre `/reportes`, `/auditoria/:id`, `/admin`; `autoSessionTracking` no explícito; `SENTRY_DSN_EDGE` sin documentar en `.env.example`/README.
+Hoy el catálogo `tipos_contenedor` se guarda como UUID en `cotizaciones.tipo_contenedor`. La cotización vieja guarda strings (`"20'"`, `"40HC"`). Hay que resolver ambos casos a un **nombre legible**.
 
-## Plan F — Propuesta de ejecución (priorizado por ROI)
+### Cambios
 
-Sugiero ejecutar en este orden — **F2+F3 primero (1 h total, ROI máximo)**, luego F1, finalmente F4/F5/limpieza de deuda.
+1. Reusar el hook existente `useTiposContenedor` (ya consume `tipos_contenedor`).
+2. En `src/features/cotizacion/components/seccionMercancia/MercanciaInfoGrid.tsx`:
+   - Recibir `tiposContenedor` (o llamar al hook) y mapear `tipo_contenedor` → `nombre` si es UUID; si no matchea, mostrar el valor crudo como fallback.
+   - Si no resuelve a nada legible, mostrar `'-'`.
+3. Aplicar el mismo helper en:
+   - `src/pages/cotizaciones/CotizacionInformativaDetalle.tsx` línea 103 (renglón de tarifas).
+   - PDF de cotización si renderiza este campo (revisar `usePdfPreviewCotizacionPage`).
+4. Crear util `resolveTipoContenedorNombre(value, catalogo)` en `src/features/cotizacion/utils/` con tests unitarios (UUID match, string legacy, vacío).
 
-| # | Ítem | Esfuerzo | Por qué primero |
-|---|---|---|---|
-| **F2** | `<ErrorBoundary>` raíz en `App.tsx` (envolviendo `BrowserRouter`/providers) + `Sentry.httpClientIntegration({ failedRequestStatusCodes: [[400,599]] })` en `core.ts` | ½ h | Toda la app queda cubierta; 4xx/5xx aparecen automáticos. |
-| **F3** | Documentar requisito `SENTRY_AUTH_TOKEN` + agregar warning en build si falta (sin token, log `[sentry] sourcemaps NO subidos`) | ½ h | Sin token, los stacks de prod son ilegibles — invalida todo el resto. |
-| **F1** | `wrapEdgeHandler` en las 8 edge functions descubiertas (priorizando email/cola/ventas) | ½ día | Cierra 45% del blind spot backend. |
-| **F4** | `captureException` en los 5 catch manuales TOP de G4 (`tags: { feature: <dominio> }`) | 1 h | Errores en flujos de dinero hoy invisibles. |
-| **F5** | Extender `scrubEventPii` con `headers.authorization|cookie|x-*-token` y scrub de query strings en `breadcrumbs[].data.url`; añadir guard de tamaño (`extra` > 32 KB → truncar) en `_shared/sentry.ts` | ½ h | Compliance/PII y evitar 413 en envíos a Sentry. |
-| **F-deuda** | Cerrar D1–D5: `exchange-rates` wrap, `sampleByRoute` ampliado (`/reportes`→50%, `/auditoria`→30%), `autoSessionTracking: true` explícito, `.env.example` con `SENTRY_DSN_EDGE` + nota en README de observabilidad | ½ h | Limpieza arquitectónica. |
+## Problema B — Embarque generado no visible
 
-## Detalles técnicos
+### Cambios en `CotizacionDetalleSecciones.tsx` y página detalle
 
-- **F2 — orden de envoltorio**: `<Sentry.ErrorBoundary fallback={<AppFatalError />}>` por fuera de `<BrowserRouter>` para capturar errores de routing. Reutilizar el `ErrorBoundary` actual o crear `RootErrorBoundary` minimalista (sin layout, solo mensaje + reload).
-- **F2 — httpClient**: usar `failedRequestTargets` con regex del proyecto Supabase + dominios productivos para no capturar errores de terceros (CDN, ads-block). Configurar `failedRequestStatusCodes: [[500, 599]]` inicialmente (más restrictivo) y subir a 4xx después de calibrar volumen, para no quemar cuota.
-- **F3 — guardia de build**: en `vite.config.ts`, si `mode === "production"` y `!process.env.SENTRY_AUTH_TOKEN` → `console.warn("[sentry] SENTRY_AUTH_TOKEN ausente: sourcemaps NO se subirán")`. No romper el build (CI debe poder correr en forks).
-- **F4 — patrón**: lazy `import("@sentry/react")` en cada catch para respetar el ESLint guardrail; añadir tag `feature` específico (`facturacion`, `tesoreria`, `cotizacion`, `pnl`).
-- **F5 — scrub headers**: lista negra: `authorization`, `cookie`, `x-supabase-auth`, `apikey`. Iterar `Object.keys` case-insensitive.
-- **Tests**: cada fase F lleva sus propios casos (extender `environment.test.ts` para httpClient integration, nuevos archivos para los catch de F4, casos en `helpers.test.ts` para los nuevos scrubs).
-- **CHANGELOG/versionado**: bump por cada fase (F2+F3 → `13.65.0`, F1 → `13.66.0`, F4+F5 → `13.67.0`).
+1. Cargar `fetchEmbarquesVinculados(cotizacionId)` desde `CotizacionDetalle.tsx` (ya existe el servicio) y pasarlo como prop `embarquesVinculados: Array<{id, expediente, estado}>`.
+2. Combinar con `embarque_id` directo para no perder casos legacy.
+3. Mostrar el botón "Ver embarque" siempre que `embarquesVinculados.length > 0`, sin gatear por `estado === 'Aceptada'`. Estados válidos: `Aceptada`, `En operación`, `Cerrada`.
+4. Si hay un solo embarque → botón directo `Ver embarque ELIMP00272`. Si hay varios → `DropdownMenu` listando expediente + estado, cada uno navegando a `/embarques/{id}`.
+5. Mantener "Crear embarque" sólo cuando `estado === 'Aceptada'` y no hay vinculados.
 
-## Verificación al cerrar
+### Backfill puntual
 
-- Build de prod debe loguear "sourcemaps subidos a release `libre-carga@13.65.0`".
-- `vitest run` y `deno test supabase/functions/_shared/` deben pasar.
-- Smoke manual: forzar un 500 desde una llamada a edge function de prueba y verificar evento en Sentry con frames legibles.
+Migración SQL (idempotente) para reparar vínculos rotos detectados:
+```sql
+-- Vincula embarques cuyo cotizacion_id es null pero cuya cotización
+-- quedó en "En operación" y matchea por cliente + ventana de tiempo.
+-- Acota a la org y registra en bitácora.
+```
+Aplicarlo al menos a COT-2026-0076 ↔ ELIMP00272 explícitamente (UPDATE puntual con WHERE id=...) para resolver el caso visible hoy. Se deja la corrección general para una auditoría posterior.
+
+## Investigación complementaria (no bloquea)
+
+Documentar como deuda: revisar `useEmbarqueSubmitOrchestrator.ts:113` — solo asigna `cotizacion_id` cuando `p.cotizacionVinculada` está presente. Validar que el flujo "Crear embarque desde cotización" siempre llene ese payload (parece que en algunos paths se pierde). Se abrirá ticket aparte para no mezclar con este fix.
+
+## Versionado
+
+- `APP_VERSION` → `13.66.0`.
+- Entrada nueva en `CHANGELOG.md` describiendo ambos fixes y el backfill puntual.
+
+## Tests
+
+- Unit: `resolveTipoContenedorNombre` (3 casos).
+- Componente: `CotizacionDetalleSecciones` renderiza botón "Ver embarque" en estado `En operación` cuando hay vinculados; dropdown cuando hay >1.
+- Integración: `MercanciaInfoGrid` muestra nombre cuando el catálogo tiene el UUID.
+
+## Archivos afectados
+
+- `src/features/cotizacion/components/seccionMercancia/MercanciaInfoGrid.tsx`
+- `src/features/cotizacion/components/CotizacionDetalleSecciones.tsx`
+- `src/pages/cotizaciones/CotizacionDetalle.tsx`
+- `src/pages/cotizaciones/CotizacionInformativaDetalle.tsx`
+- `src/features/cotizacion/utils/resolveTipoContenedorNombre.ts` (nuevo) + test
+- `supabase/migrations/<timestamp>_relink_cot_2026_0076.sql` (backfill puntual)
+- `src/constants/appVersion.ts`, `CHANGELOG.md`

@@ -1,0 +1,30 @@
+/**
+ * Resuelve `tipo_contenedor` (UUID nuevo o string legacy) a un nombre legible.
+ *
+ * - Si `value` es un UUID que existe en el catálogo, devuelve `name`.
+ * - Si `value` es un string legacy (p.ej. "20'", "40HC"), lo devuelve tal cual.
+ * - Si no se puede resolver, devuelve `fallback` (por defecto `"—"`).
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export interface TipoContenedorCatalogo {
+  id: string;
+  name: string;
+  code?: string;
+}
+
+export function resolveTipoContenedorNombre(
+  value: string | null | undefined,
+  catalogo: ReadonlyArray<TipoContenedorCatalogo> = [],
+  fallback = "—",
+): string {
+  const v = (value ?? "").trim();
+  if (!v) return fallback;
+
+  if (UUID_RE.test(v)) {
+    const match = catalogo.find((t) => t.id === v);
+    return match?.name ?? match?.code ?? fallback;
+  }
+
+  return v;
+}

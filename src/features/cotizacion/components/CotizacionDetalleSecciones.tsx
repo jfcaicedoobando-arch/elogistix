@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
@@ -22,17 +22,20 @@ interface Props {
 export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Props) {
   const navigate = useNavigate();
 
-  if (cotizacionEstado !== "En operación" && embarques.length === 0) return null;
+  // Mostrar la tarjeta cuando hay embarques vinculados, o cuando la cotización
+  // ya está "En operación" / "Cerrada" para indicar que debería haberlos.
+  const estadoSugiereEmbarque = cotizacionEstado === "En operación" || cotizacionEstado === "Cerrada";
+  if (embarques.length === 0 && !estadoSugiereEmbarque) return null;
 
   return (
     <Card>
       <CardHeader><CardTitle className="text-lg">Embarques Generados</CardTitle></CardHeader>
       <CardContent>
         {embarques.length === 0 ? (
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Esta cotización aparece como <strong>{cotizacionEstado}</strong>, pero no hay embarques vinculados.
+            Verifica con tu administrador o vuelve a generar el embarque desde el botón <em>Crear embarque</em>.
+          </p>
         ) : (
           <div className="space-y-2">
             {embarques.map((emb) => (
@@ -61,17 +64,30 @@ interface AccionesProps {
   numContenedores: number;
   cotizacionId: string;
   embarqueIdVinculado: string | null;
+  embarquesVinculados?: EmbarqueVinculado[];
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
 }
 
 export function CotizacionDetalleAcciones({
   estado, esProspecto, numContenedores, cotizacionId, embarqueIdVinculado,
+  embarquesVinculados = [],
   onCambiarEstado, onAbrirConvertir,
 }: AccionesProps) {
   const navigate = useNavigate();
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
+  const enOperacion = estado === "En operación" || estado === "Cerrada";
+
+  // Resolver el (o los) embarques vinculados desde múltiples fuentes:
+  // 1) Lista cargada por `fetchEmbarquesVinculados` (canónica, vía cotizacion_id).
+  // 2) `embarque_id` legacy guardado en la cotización.
+  const idsVinculados = embarquesVinculados.length > 0
+    ? embarquesVinculados.map((e) => ({ id: e.id, label: e.expediente }))
+    : embarqueIdVinculado
+      ? [{ id: embarqueIdVinculado, label: "embarque borrador" }]
+      : [];
+  const hayVinculados = idsVinculados.length > 0;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -94,12 +110,12 @@ export function CotizacionDetalleAcciones({
       {esAceptada && esProspecto && (
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
-      {esAceptada && !esProspecto && embarqueIdVinculado && (
-        <Button size="sm" onClick={() => navigate(`/embarques/${embarqueIdVinculado}`)}>
-          Ver embarque borrador
+      {(esAceptada || enOperacion) && !esProspecto && hayVinculados && idsVinculados.map((emb) => (
+        <Button key={emb.id} size="sm" onClick={() => navigate(`/embarques/${emb.id}`)}>
+          Ver {emb.label}
         </Button>
-      )}
-      {esAceptada && !esProspecto && !embarqueIdVinculado && (
+      ))}
+      {esAceptada && !esProspecto && !hayVinculados && (
         <Button
           size="sm"
           onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
