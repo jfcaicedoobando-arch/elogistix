@@ -83,6 +83,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
+                      onClick={handleNavigate}
                       className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
                       activeClassName="bg-sidebar-accent/10 text-sidebar-foreground font-semibold"
                     >
