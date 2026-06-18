@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.6] - 2026-06-18
+- **fix(ci-eslint-complexity)**: `stripStringsAndComments` en `scripts/lib/tests.ts` quedó en complejidad ciclomática 20 (>16) tras agregar el manejo de regex literals en 13.66.4, rompiendo `ESLint (max-warnings 0)`. Refactor: extraídos helpers `skipString`, `skipRegex` y `lastNonBlank`, y la constante `REGEX_PRECEDERS` movida a scope de módulo. La función principal queda en complejidad ≤8 sin cambios de comportamiento (los 9 tests de auditoría siguen verdes). Bump `APP_VERSION` 13.66.6.
+
 ## [13.66.5] - 2026-06-18
 - **fix(cotizacion-envio-destinatarios)**: El diálogo "Enviar cotización" listaba como destinatarios a los contactos `tipo = Proveedor / Exportador` (shippers de origen guardados bajo el cliente) y omitía el correo principal del cliente (`clientes.email`). Ahora `fetchContactosClienteConEmail` también trae `clientes.email/nombre` y lo inyecta como contacto sintético "Email principal del cliente". `DestinatariosPicker` separa visualmente los contactos del cliente (arriba, pre-seleccionables) de los proveedores/shippers, que quedan colapsados bajo un `<details>` con badge de advertencia. La pre-selección automática prioriza: (1) email principal, (2) primer contacto cliente-facing (Cotización/Operativo/Administrativo/Cobranza/Cliente), (3) ninguno — nunca un proveedor. Bump `APP_VERSION` 13.66.5.
 
