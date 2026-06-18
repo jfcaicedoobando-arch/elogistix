@@ -53,7 +53,7 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
   const rutaDuplicada = rutas.some(
     (ruta) => ruta.puerto_origen_id === origenId && ruta.puerto_destino_id === destinoId,
   );
-  const mostrarDuplicada = intentoEnvio && !!origenId && !!destinoId && rutaDuplicada;
+  const mostrarDuplicada = !!origenId && !!destinoId && rutaDuplicada;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
