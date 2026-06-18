@@ -1,36 +1,51 @@
 ## Diagnóstico
 
-En móvil, el sidebar se renderiza como `Sheet` (overlay) de Radix vía shadcn `Sidebar`. Al hacer click sobre un `NavLink` dentro de `SidebarGroupBlock`, react-router cambia la ruta pero **nadie llama a `setOpenMobile(false)`**, por lo que el Sheet se queda abierto encima del contenido. El usuario debe cerrarlo manualmente (tap fuera o botón X).
+El timeline de Bitácora (`FilaEntrada`) construye el hyperlink así:
 
-Hallazgos del audit:
+```ts
+const linkEntidad = rutaModulo && entrada.entidad_id ? `${rutaModulo}/${entrada.entidad_id}` : undefined;
+```
 
-1. **`SidebarGroupBlock.tsx`** — los `NavLink` no cierran el sidebar móvil al navegar. Causa raíz del bug reportado.
-2. **`AppSidebar.tsx`** — no propaga el handler de cierre; no usa `useSidebar().setOpenMobile`.
-3. **`SidebarUserMenu.tsx`** — "Cerrar sesión" y toggle de tema tampoco cierran el sheet móvil (menor, pero misma clase de bug).
-4. **`OrgSwitcher`** (renderizado dentro del sidebar) — revisar si tras cambiar de organización deja el sheet abierto.
-5. La opción nativa de shadcn `SidebarMenuButton` no auto-cierra en móvil; es responsabilidad del consumidor.
+Si no hay `entidad_id`, renderiza el nombre como `<span>` sin link. Confirmado con consulta directa a `bitacora_actividad`:
 
-## Cambios propuestos
+- **149 registros** `modulo='embarques' accion='crear'` con `entidad_id = NULL` pero `entidad_nombre` con el expediente (ej. `ELIMP00275`).
+- Otros módulos no tienen este problema en datos reales (sólo `auth.login`, que no necesita link).
 
-1. **`SidebarGroupBlock.tsx`**
-   - Consumir `useSidebar()` y obtener `isMobile`, `setOpenMobile`.
-   - En el `NavLink`, agregar `onClick={() => { if (isMobile) setOpenMobile(false); }}`.
+**Causa raíz** — `src/features/embarques/hooks/useEmbarqueSubmitOrchestrator.ts` línea 147-159: tras crear el embarque, la llamada a `registrarActividad.mutate({...})` omite `entidad_id`, aunque el id (`embarqueCreadoId`) ya está disponible en scope desde la Fase 3.
 
-2. **`SidebarUserMenu.tsx`**
-   - Aceptar opcional `onAfterAction?: () => void` desde `AppSidebar` (que pasará `() => setOpenMobile(false)` cuando `isMobile`).
-   - Llamarlo dentro de `onSignOut` y `onToggleTheme` envueltos.
+## Cambios
 
-3. **`AppSidebar.tsx`**
-   - Leer `setOpenMobile` y `isMobile` de `useSidebar()` (ya usa `useSidebar`).
-   - Pasar el callback de cierre al `SidebarUserMenu`.
+### 1. Fix forward (`useEmbarqueSubmitOrchestrator.ts`)
+Incluir `entidad_id: embarqueCreadoId ?? undefined` en el payload de bitácora de creación. Sin tocar otras fases.
 
-4. **`OrgSwitcher`** — revisar y, si aplica, cerrar el sheet móvil tras seleccionar org.
+### 2. Backfill de registros legacy (migración SQL)
+Actualizar los 149 registros existentes uniendo por `entidad_nombre = embarques.expediente` dentro de la misma organización:
 
-5. **Verificación visual** con Playwright en viewport móvil (375×812): abrir sidebar, click en "Embarques", confirmar navegación + sheet cerrado por screenshot.
+```sql
+UPDATE public.bitacora_actividad ba
+SET entidad_id = e.id
+FROM public.embarques e
+WHERE ba.modulo = 'embarques'
+  AND ba.entidad_id IS NULL
+  AND ba.entidad_nombre IS NOT NULL
+  AND e.expediente = ba.entidad_nombre
+  AND e.organization_id = ba.organization_id;
+```
 
-6. **Changelog + APP_VERSION** bump siguiendo la convención del proyecto.
+Migración idempotente (sólo afecta filas NULL).
+
+### 3. Sin cambios en la UI
+`FilaEntrada` ya muestra el link correctamente cuando `entidad_id` existe — no requiere modificación.
+
+### 4. Changelog + bump `APP_VERSION` (`13.66.18`)
+
+## Verificación
+
+- Crear un embarque nuevo desde la app y confirmar que la entrada en `/bitacora` aparece como link clickeable hacia `/embarques/<id>`.
+- Re-consultar `bitacora_actividad` para validar que las filas legacy quedaron con `entidad_id` poblado.
 
 ## Fuera de alcance
 
-- No se toca el comportamiento desktop (sidebar tipo `collapsible="icon"` no se ve afectado: `isMobile` es `false`).
-- No se modifican rutas ni lógica de permisos.
+- No se rediseña la fila de bitácora.
+- No se tocan otros módulos (no presentan el bug en datos reales).
+- No se modifica `fetchBitacoraEmbarque`; el OR por `entidad_nombre` deja de ser necesario tras el backfill pero se mantiene como defensa.
