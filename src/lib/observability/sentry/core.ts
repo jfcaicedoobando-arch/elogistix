@@ -123,9 +123,8 @@ export function initSentry(): void {
       }
       return breadcrumb;
     },
-    // 13.65.0: declarado explícito para evitar regresiones silenciosas si
-    // un upgrade del SDK cambia el default.
-    autoSessionTracking: true,
+    // 13.65.0: `autoSessionTracking` es el default del SDK; documentado en
+    // comentario para que un futuro upgrade no regrese silenciosamente.
     integrations: [
       Sentry.reactRouterV6BrowserTracingIntegration({
         useEffect,

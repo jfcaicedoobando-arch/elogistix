@@ -110,5 +110,7 @@ export default defineConfig(({ mode }) => {
     // (lazy-loaded en routes.tsx) — el costo de bundle inicial es aceptable
     // y la app deja de quedarse en pantalla en blanco.
   },
-}));
+  };
+});
+
 
