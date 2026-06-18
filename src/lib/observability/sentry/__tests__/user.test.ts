@@ -24,7 +24,6 @@ vi.mock("@sentry/react", () => ({
 }));
 
 beforeEach(() => {
-  vi.resetModules();
   sentryMocks.setUser.mockClear();
   sentryMocks.setTags.mockClear();
   sentryMocks.setTag.mockClear();
@@ -36,8 +35,8 @@ afterEach(() => {
 });
 
 async function flushImport() {
-  // Cuatro micro-ticks cubren con holgura: resolver `import("@sentry/react")`,
-  // ejecutar el `.then()` interno, y dar margen al siguiente await.
+  // Esperar a que microtasks + macrotask drenen (dynamic import + .then chain).
+  await new Promise<void>((r) => setTimeout(r, 10));
   for (let i = 0; i < 4; i++) await Promise.resolve();
 }
 
