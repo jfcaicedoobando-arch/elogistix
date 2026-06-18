@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.24] - 2026-06-18
+- **feat(seo-guia-puertos-mexico)**: Nueva guía SEO `/recursos/guia-puertos-mexico` con los 5 puertos top de México (Manzanillo MXZLO, Veracruz MXVER, Lázaro Cárdenas MXLZC, Altamira MXATM, Ensenada MXESE): UN/LOCODE, rutas troncales, navieras, vocación de carga, tabla comparativa y FAQ. JSON-LD `Article` + `FAQPage` + `BreadcrumbList`, idioma `es-MX`. Sigue el patrón de `GuiaCartaPorte` (componente + data + article, cada archivo ≤200 líneas). Ruta pública lazy en `publicRoutes.tsx`. Sitemap actualizado. Bump `APP_VERSION` 13.66.24.
+
 ## [13.66.23] - 2026-06-18
 - **fix(seo-landing-contrast)**: Sube opacidades de texto sobre fondo `bg-primary` en `LandingHero.tsx` (de `/55` → `/75` y `/60` → `/80`) para cumplir WCAG AA 4.5:1 y resolver hallazgo Lighthouse de accesibilidad por bajo contraste. No cambia jerarquía visual. Bump `APP_VERSION` 13.66.23.
 
