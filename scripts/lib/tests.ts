@@ -34,13 +34,23 @@ const TEST_START_REGEX = /^\s*(it|test)\(\s*(['"`])([^'"`]+)\2/;
 const ASSERTION_REGEX = /\b(expect|expectTypeOf|assert|assertEquals|assertExists|assertRejects|assertThrows)\s*[(.]/;
 
 /**
- * Quita el contenido de strings (', ", `) y comentarios `//` de una línea,
- * para que el conteo de llaves no se confunda con `{}` dentro de títulos
- * o mensajes (ej. `it("retorna {} ...", ...)`).
+ * Quita el contenido de strings (', ", `), regex literals (/.../) y
+ * comentarios `//` de una línea, para que el conteo de llaves no se
+ * confunda con `{}` dentro de títulos, mensajes o regex que contengan
+ * comillas (ej. `/from\s+["']@\/foo/`).
  */
 function stripStringsAndComments(line: string): string {
   let out = "";
   let i = 0;
+  // Para detectar si un `/` inicia regex (vs división), miramos el último
+  // carácter no-blanco emitido: si es operador/paréntesis/coma/inicio, es regex.
+  const REGEX_PRECEDERS = new Set(["", "(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";", "+", "-", "*", "%", "<", ">", "~", "^"]);
+  const lastEmitted = (): string => {
+    for (let k = out.length - 1; k >= 0; k--) {
+      if (out[k] !== " " && out[k] !== "\t") return out[k]!;
+    }
+    return "";
+  };
   while (i < line.length) {
     const ch = line[i]!;
     if (ch === "/" && line[i + 1] === "/") break; // resto es comentario
@@ -48,16 +58,27 @@ function stripStringsAndComments(line: string): string {
       const quote = ch;
       i++;
       while (i < line.length) {
-        if (line[i] === "\\") {
-          i += 2;
-          continue;
-        }
-        if (line[i] === quote) {
-          i++;
-          break;
-        }
+        if (line[i] === "\\") { i += 2; continue; }
+        if (line[i] === quote) { i++; break; }
         i++;
       }
+      continue;
+    }
+    if (ch === "/" && REGEX_PRECEDERS.has(lastEmitted())) {
+      // Posible regex literal: consume hasta el `/` de cierre, saltando
+      // escapes y clases de caracteres `[...]` (que pueden contener `/`).
+      i++;
+      let inClass = false;
+      while (i < line.length) {
+        const c = line[i]!;
+        if (c === "\\") { i += 2; continue; }
+        if (c === "[") { inClass = true; i++; continue; }
+        if (c === "]") { inClass = false; i++; continue; }
+        if (c === "/" && !inClass) { i++; break; }
+        i++;
+      }
+      // Consumir flags (g, i, m, s, u, y).
+      while (i < line.length && /[gimsuy]/.test(line[i]!)) i++;
       continue;
     }
     out += ch;
@@ -65,6 +86,7 @@ function stripStringsAndComments(line: string): string {
   }
   return out;
 }
+
 
 /**
  * Devuelve la posición (índice 0-based en `lines`) del `}` que cierra el bloque
