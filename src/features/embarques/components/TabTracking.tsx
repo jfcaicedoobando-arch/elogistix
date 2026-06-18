@@ -164,8 +164,6 @@ export function TabTracking({ embarqueId, embarque }: Props) {
           <TrackingEventTimeline eventos={eventos} isLoading={isLoading} />
         </CardContent>
       </Card>
-
-      <TabNotas notas={notas} embarqueId={embarqueId} expediente={embarque?.expediente ?? null} />
     </div>
   );
 }
