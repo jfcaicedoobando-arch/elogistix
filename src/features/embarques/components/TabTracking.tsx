@@ -102,7 +102,7 @@ function FreshnessHeader({
   );
 }
 
-export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
+export function TabTracking({ embarqueId, embarque }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const { canEdit } = usePermissions();
   const [formAbierto, setFormAbierto] = useState(false);
