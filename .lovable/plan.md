@@ -1,60 +1,46 @@
-## Bug confirmado: tipo de contenedor como UUID en el PDF
+## Diagnóstico
 
-Consulté COT-2026-0076 en BD: `tipo_contenedor = '8014e97d-37a6-4e99-9238-fd507543c340'` (UUID del catálogo `tipos_contenedor`). El generador del PDF lo imprime crudo:
+En `/cotizaciones/.../enviar`, el `DestinatariosPicker` consulta `contactos_cliente` filtrando por `cliente_id`. Para el cliente **INDIMEX TRADING** (y en general en la base) los únicos contactos guardados son `tipo = "Proveedor"` o `"Exportador"` (22 + 1 en toda la BD). Esos son los **shippers de origen** (fábricas chinas), no los contactos del importador a quien se le debe enviar la cotización.
 
-- `src/generators/cotizacion/datosGenerales.ts` línea 49:
-  ```ts
-  m.push(['Tipo de Contenedor', c.tipo_contenedor || '-']);
-  ```
+Además, `clientes.email` (ej. `erika@indimextrading.com`) tiene el correo principal del cliente y hoy **no aparece** en el picker.
 
-El mismo bug se arregló en pantalla con `resolveTipoContenedorNombre` + `useTiposContenedor`, pero el PDF no lo consume. Resultado: el PDF descargado muestra `8014e97d-...` en lugar de "40' High Cube".
+## Fix propuesto
 
-## Cambios
+### 1. Incluir el email principal del cliente como destinatario sintético
+- En `fetchContactosClienteConEmail` (o en el hook `useEnvioCotizacionForm`), traer también `clientes.email` y `clientes.nombre`.
+- Inyectarlo al inicio de la lista como un pseudo-contacto con `id = "cliente-principal"`, `tipo = "Cliente"`, marcado y resaltado.
 
-### 1. Fix tipo de contenedor en PDF
-- `src/generators/cotizacion/datosGenerales.ts`:
-  - `buildMercancia` acepta un segundo parámetro opcional `tiposContenedor: TipoContenedorCatalogo[]`.
-  - Internamente usa `resolveTipoContenedorNombre(c.tipo_contenedor, tiposContenedor, '—')`.
-- `src/pdf/documents/cotizacionSections.tsx`:
-  - `SeccionDatosYMercancia` recibe y reenvía `tiposContenedor`.
-- `src/pdf/documents/CotizacionDocument.tsx`:
-  - Acepta prop `tiposContenedor` (default `[]`) y lo pasa hacia abajo.
-- `src/generators/cotizacionPdf.tsx`:
-  - Antes de renderizar, llama `fetchTiposContenedor(true)` (incluye inactivos por si el id está deshabilitado) y se lo pasa a `CotizacionDocument`. Promesas en paralelo con `cargarEmisorEmpresa()`.
+### 2. Separar visualmente shippers/proveedores
+- En `DestinatariosPicker`, partir la lista en dos grupos:
+  - **Contactos del cliente** (tipos: `Cliente`, `Cotización`, `Operativo`, `Cobranza`, `Administrativo`, sin tipo, etc.) — visibles y ordenados primero.
+  - **Proveedores / Shippers (origen)** (tipos: `Proveedor`, `Exportador`) — dentro de un `<details>` colapsado con leyenda "Mostrar shippers de origen (no recomendado para cotización)".
+- Badge del tipo con color distinto (warning) para los proveedores, para que sea obvio si alguien los selecciona.
 
-### 2. Mejoras de layout
+### 3. Pre-selección segura
+- Cambiar la lógica del `useEffect` de pre-selección:
+  1. Email principal del cliente (si existe y es válido).
+  2. Si no, primer contacto cuyo `tipo` matchee `/(cotiz|operativ|administ|cliente)/i`.
+  3. Si no, **ninguno** (forzar al usuario a elegir; mejor que mandar al shipper por accidente).
+- Nunca pre-seleccionar contactos con tipo `Proveedor` / `Exportador`.
 
-**Problema:** el `<View break />` antes de "Conceptos de Venta" fuerza salto duro aunque haya espacio sobrante en página 1; KeyValueGrid con `columns=4` genera celdas muy estrechas que truncan labels largos ("Tipo de Contenedor", "Días libres de almacenaje"); `BillToBlock` queda aislado mostrando sólo el nombre.
+### 4. Empty state
+- Si tras filtrar no queda ningún contacto cliente y el cliente no tiene `email`, mostrar el mensaje actual + un link a "Agregar contacto" en la ficha del cliente.
 
-- **Quitar el `<View break />` forzado** (línea 126 de `CotizacionDocument.tsx`). React-PDF maneja paginación naturalmente; el título de Conceptos se mantiene unido a la primera fila con `wrap={false}` en un wrapper para evitar título huérfano.
-- **KeyValueGrid: pasar Datos Generales y Mercancía a `columns={3}`** (no a 2 para no estirar la página). Más respiración, labels completos sin truncar.
-- **Header de meta enriquecido**: además de Estado y Fecha, incluir Vigencia (`fecha_vigencia`) en `BrandHeader.meta`. Reduce el peso de la sección "Datos Generales" y pone la información que el cliente busca primero (¿hasta cuándo es válida?).
-- **Resumen ejecutivo de ruta**: añadir un mini-bloque entre `BillToBlock` y `SeccionDatosYMercancia` con `Origen → Destino · Modo · Incoterm · Tránsito X días`. Lectura inmediata; los detalles siguen en Datos Generales.
-- **Bloque Mercancía como sección visualmente distinta**: el `<Text style={styles.h3}>Mercancía</Text>` queda pegado al grid de Datos Generales. Añadir `marginTop` consistente (mismo estilo que la separación con "Conceptos de Venta") y un `wrap={false}` en el wrapper del título + primera fila para evitar que el encabezado quede al final de página.
-- **Notas**: hoy van al final, sin separación; envolver en un `View wrap={false}` cuando el texto sea corto (< ~6 líneas) para mantenerlas en una sola página.
+## Verificación
 
-### 3. Verificación visual (obligatoria)
+1. Abrir `/cotizaciones/b75f1f9a-...` (INDIMEX TRADING) → "Enviar cotización": ver `erika@indimextrading.com` marcado por defecto y los 7 proveedores chinos ocultos bajo el `<details>`.
+2. Cliente sin `email` y sólo contactos `Proveedor`: lista principal vacía, nada pre-seleccionado, shippers disponibles bajo el desplegable.
+3. Cliente con contactos `Cotización`: ese contacto queda pre-seleccionado en vez del email principal.
+4. Test de `useEnvioCotizacionForm`: cubrir las 3 ramas de pre-selección.
 
-Después de cada cambio:
-1. Generar PDF de COT-2026-0076 desde `/cotizaciones/.../` (botón "Exportar PDF").
-2. Confirmar:
-   - **Tipo de Contenedor** muestra el nombre legible (ej. "40' High Cube"), no el UUID.
-   - **Vigencia** aparece en el encabezado.
-   - **Resumen de ruta** aparece justo bajo el destinatario.
-   - **Sin salto duro** antes de Conceptos: el flujo se llena natural.
-   - **Sin labels truncados** en grids.
-   - **Conceptos** y **Totales** siguen en orden, sin texto solapado.
+## Archivos a tocar
 
-### 4. Versionado
-- `APP_VERSION` → `13.66.3`.
-- Entrada en `CHANGELOG.md`: `fix(cotizacion-pdf-tipo-contenedor)` + `refactor(cotizacion-pdf-layout)`.
+- `src/features/cotizacion/services/envios.ts` — extender `fetchContactosClienteConEmail` para devolver también el email principal del cliente (o un nuevo `fetchDestinatariosCliente`).
+- `src/features/cotizacion/hooks/useEnvioCotizacionForm.ts` — nueva lógica de pre-selección y tipo de "Cliente".
+- `src/features/cotizacion/components/detalle/DestinatariosPicker.tsx` — agrupar y colapsar proveedores.
+- `CHANGELOG.md` + `src/constants/appVersion.ts` → `13.66.5`.
 
-## Archivos afectados
+## Notas
 
-- `src/generators/cotizacion/datosGenerales.ts` (fix tipo contenedor + signature)
-- `src/pdf/documents/cotizacionSections.tsx` (pass-through prop)
-- `src/pdf/documents/CotizacionDocument.tsx` (props, quitar break, layout)
-- `src/generators/cotizacionPdf.tsx` (fetch tipos contenedor)
-- `src/pdf/components/BrandHeader.tsx` (sin cambio si meta ya soporta items extra) — verificar
-- `src/constants/appVersion.ts`, `CHANGELOG.md`
-- Test nuevo: `src/generators/cotizacion/__tests__/datosGenerales.test.ts` ampliado: caso UUID con catálogo y caso UUID sin catálogo (devuelve `—`).
+- No se modifica el esquema; los contactos tipo `Proveedor` siguen existiendo en `contactos_cliente` y son visibles en la ficha de cliente.
+- La separación es UI-only en el flujo de envío de cotización (no afecta otras pantallas que consumen `contactos_cliente`).
