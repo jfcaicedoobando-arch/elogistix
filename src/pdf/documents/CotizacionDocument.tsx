@@ -1,5 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/types";
+import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
@@ -15,12 +16,14 @@ import { BillToBlock } from "../components/BillToBlock";
 import {
   SeccionDatosYMercancia,
   SeccionProspecto,
+  SeccionResumenRuta,
 } from "./cotizacionSections";
 
 interface Props {
   cotizacion: CotizacionRow;
   tasaIva?: number;
   emisor?: EmisorInfo;
+  tiposContenedor?: ReadonlyArray<TipoContenedorCatalogo>;
 }
 
 function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
