@@ -1,73 +1,71 @@
-## P&L por contenedor — estilo CargoWise (sin sub-embarques reales)
+## Situación actual
 
-Mantenemos **1 embarque = 1 expediente** (ELIMP00272). El contenedor sigue siendo entidad operativa, NO centro de utilidad independiente. Agregamos visibilidad de P&L por contenedor con prorrateo flat (÷N) de generales.
+El detalle de un embarque tiene **13 tabs** en orden poco lógico:
 
-### Parte 1 — Helper puro de cálculo
+`Resumen · Documentos · Costos · Conciliación · P&L · P&L Contenedor · Facturación · Garantías · Demoras · Seguros · Cierre · Tracking · Notas y Actividad`
 
-Nuevo archivo `src/features/embarques/services/pnlPorContenedor.ts`:
+Problemas:
+- Tracking aparece al final, cuando es operación diaria.
+- P&L y P&L Contenedor son la misma vista con distinta agrupación.
+- Garantías y Demoras son el mismo concepto (free time de contenedor → cargo extra).
+- Conciliación está separada de Facturación pese a ser CxP del mismo flujo.
+- No hay agrupación por etapa (operación / finanzas / cierre).
 
-- `calcularPnlPorContenedor({ contenedores, conceptosVenta, conceptosCosto }) → FilaPnlContenedor[]`
-- Por cada contenedor:
-  - `subexpediente`: `${embarque.expediente}-${String(orden).padStart(2, '0')}` (ej. `ELIMP00272-01`). Solo display.
-  - `venta_directa` = suma de `conceptos_venta` con ese `contenedor_id`, agrupado por moneda.
-  - `costo_directo` = idem para `conceptos_costo`.
-  - `venta_prorrateada` = suma de `conceptos_venta` con `contenedor_id IS NULL` ÷ N contenedores.
-  - `costo_prorrateado` = idem para costos generales.
-  - `venta_total`, `costo_total`, `utilidad`, `margen_pct` por moneda.
-- Fila adicional `'Generales'` mostrando los conceptos sin asignar (antes del prorrateo) para auditabilidad.
-- Fila `'Total embarque'` que cuadra contra la P&L global existente.
+## Propuesta: fusiones
 
-**Reglas duras**:
-- No se mezclan monedas; se devuelve un map `{ USD: [...], MXN: [...] }` o filas con columna `moneda`.
-- Si N=0 contenedores → sólo fila `'Generales'` con los conceptos tal cual.
-- El residuo del prorrateo flat (cuando `monto / N` no es entero a 2 decimales) se asigna al último contenedor para que la suma cuadre al centavo.
+| # | Fusión | Justificación |
+|---|---|---|
+| 1 | **P&L** + **P&L Contenedor** → una sola tab `P&L` con toggle interno *Global / Por contenedor* | Mismos datos, distinta agrupación. Ya hoy son dos componentes hermanos. |
+| 2 | **Garantías** + **Demoras** → una sola tab `Garantías y Demoras` con dos secciones colapsables | Ambos derivan del timeline + tabulador naviera; el usuario los consulta juntos al cerrar costos. |
+| 3 | **Conciliación** se mueve dentro de la familia financiera (no se fusiona con Facturación porque una es CxP-proveedor y la otra CxC-cliente, pero quedan contiguas) | Mantener separación contable, mejorar adyacencia. |
+| 4 | **Notas y Actividad** se mantiene como tab propia (es bitácora cross-feature, no solo tracking) | No fusionar con Tracking: Tracking = eventos operativos, Notas = comentarios + auditoría. |
 
-### Parte 2 — UI: nueva pestaña "P&L por Contenedor"
+Resultado: **13 → 11 tabs**.
 
-Nuevo componente `src/features/embarques/components/TabPnlContenedor.tsx`:
+## Nuevo orden propuesto
 
-- Tabla con columnas: `Sub-expediente | # Contenedor | Tipo | Venta directa | Venta prorrateada | Venta total | Costo directo | Costo prorrateado | Costo total | Utilidad | Margen %`.
-- Filas pintadas con el zebra-striping estándar; última fila `Total` en negrita.
-- Toggle "Mostrar moneda: USD / MXN / Ambas" (default Ambas, una sub-tabla por moneda).
-- Badge en el header de cada fila con el `subexpediente` (`ELIMP00272-01`) para que el usuario lo pueda copiar/usar como referencia operativa.
-- Reutiliza `KpiCard` para mostrar 4 KPIs arriba: Venta total / Costo total / Utilidad / Margen %.
-- Estado vacío: "Este embarque no tiene contenedores registrados."
+Agrupado por flujo operativo (izquierda = día a día, derecha = cierre):
 
-Agregar `<TabsTrigger value="pnl-contenedor">P&L Contenedor</TabsTrigger>` en `EmbarqueDetalleTabs.tsx` justo después de la pestaña `pnl` existente. La pestaña `pnl` actual sigue mostrando la P&L global; la nueva muestra el desglose.
+```text
+[ Operación ]              [ Finanzas ]                          [ Cierre ]      [ Bitácora ]
+Resumen  Tracking  Documentos | Costos  Garantías y Demoras  Seguros  P&L  Facturación  Conciliación | Cierre | Notas y Actividad
+```
 
-### Parte 3 — Subexpediente como etiqueta global
+Razonamiento del orden:
+1. **Resumen** — entrada por defecto.
+2. **Tracking** — lo más consultado durante la operación; sube desde el penúltimo lugar al segundo.
+3. **Documentos** — soporte operativo (BL, factura comercial, packing).
+4. **Costos** — captura de conceptos venta/costo.
+5. **Garantías y Demoras** — derivados de costos + timeline.
+6. **Seguros** — accesorio de la carga, antes de calcular margen.
+7. **P&L** — resultado consolidado (con toggle Global/Contenedor).
+8. **Facturación** — emisión CxC al cliente.
+9. **Conciliación** — CxP contra proveedores.
+10. **Cierre** — checklist final.
+11. **Notas y Actividad** — bitácora siempre al final.
 
-- Helper `formatSubexpediente(expedientePadre, orden) → string` en `src/lib/domain/embarque/subexpediente.ts` con test unitario.
-- Usarlo también en:
-  - `EmbarqueDetalleContenedoresTab` (badge en cada card de contenedor).
-  - `TabCierre` cuando lista conceptos faltantes por contenedor.
-- NO se guarda en BD. Es función pura `(expediente, orden) → string`.
+## Alcance técnico
 
-### Parte 4 — Tests
+Solo UI/presentación, sin cambios de negocio:
 
-- `pnlPorContenedor.test.ts` (puro, sin Supabase):
-  - 1 contenedor + 0 generales → directo = total.
-  - 3 contenedores + costo general 100 USD → cada uno carga 33.33, último 33.34 (residuo).
-  - Mezcla USD/MXN no se cruza.
-  - Concepto con `contenedor_id` inexistente (contenedor borrado) cae a "Generales".
-  - Embarque sin contenedores → sólo fila Generales.
-- `subexpediente.test.ts`: padding a 2 dígitos, manejo de orden 0/null, expediente vacío.
-- `TabPnlContenedor.test.tsx` render smoke con mock de hook (cantidad de filas + presencia de subexpediente).
+- `src/features/embarques/components/EmbarqueDetalleTabs.tsx`
+  - Reordenar `TabsTrigger` y `TabsContent` según el nuevo orden.
+  - Renombrar `value="pnl-contenedor"` → eliminado; `TabPnl` recibe el toggle Global/Contenedor.
+  - Renombrar `value="demoras"` → eliminado; `TabGarantias` recibe sección Demoras.
+- `src/features/embarques/components/TabPnl.tsx` — añadir toggle (`ToggleGroup` shadcn) con dos vistas; reutiliza `TabPnlContenedor` como sub-componente. Estado local, sin URL params nuevos.
+- `src/features/embarques/components/TabGarantias.tsx` — wrap actual + `<Separator/>` + render de `TabDemoras` debajo, con headings claros.
+- Revisar deep-links existentes a `?tab=pnl-contenedor` y `?tab=demoras` si los hay → redirigir a `pnl` y `garantias` respectivamente (compatibilidad).
+- Actualizar `CHANGELOG.md` y bump `APP_VERSION` (13.66.15).
+- Tests: smoke test del componente `EmbarqueDetalleTabs` (orden y existencia de las 11 tabs); ajustar tests que referencien las tabs eliminadas.
 
-### Parte 5 — Metadata
+## Fuera de alcance
 
-- Bump `APP_VERSION` a `13.66.14`.
-- Entrada en `CHANGELOG.md` raíz explicando: nueva pestaña P&L por contenedor con prorrateo flat de generales, subexpediente como display (no entidad), referencia al modelo CargoWise.
+- No tocar lógica de cálculo de P&L, garantías ni demoras.
+- No mover lógica de negocio entre archivos.
+- No cambiar permisos ni RLS.
+- No tocar el wizard de creación.
 
-### Fuera de alcance (explícito)
+## Riesgos
 
-- **NO** se crea tabla `embarques_hijos` ni columna `embarque_padre_id`. No hay sub-embarque real.
-- **NO** se modifica la facturación: las facturas siguen siendo del embarque padre.
-- **NO** se cambia el cierre: las reglas v13.66.12 aplican al embarque completo.
-- **NO** se reasigna la regla de prorrateo a peso/volumen (decidiste flat ÷N). Si más adelante quieres peso/volumen, se agrega como toggle en la misma pestaña.
-- **NO** se toca embarque 272 con migración de datos; ya quedó con conceptos repartidos por contenedor en pasos anteriores.
-
-### Riesgos
-
-- El subexpediente `ELIMP00272-01` puede confundirse con un expediente real si se exporta sin contexto. Mitigación: en exports/PDF siempre rotularlo "Ref. contenedor: ELIMP00272-01" en lugar de mostrarlo como folio.
-- Si el orden de los contenedores cambia, el subexpediente cambia. Mitigación: `orden` ya es estable en `embarque_contenedores` y no se reasigna al editar.
+- Usuarios acostumbrados al orden actual: mitigado por agrupación lógica + changelog visible.
+- Deep-links rotos: mitigado con redirección de `tab` query param.
