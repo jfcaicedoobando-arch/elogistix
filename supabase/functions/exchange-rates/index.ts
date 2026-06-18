@@ -14,7 +14,7 @@ export function computeRates(data: unknown): { usdMxn: number; eurMxn: number } 
   return { usdMxn, eurMxn };
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
@@ -41,4 +41,4 @@ Deno.serve(async (req) => {
   } finally {
     clearTimeout(timer);
   }
-});
+}));
