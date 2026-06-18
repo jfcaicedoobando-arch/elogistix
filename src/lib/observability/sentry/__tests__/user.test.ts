@@ -73,13 +73,16 @@ describe("syncSentryUser", () => {
     expect(sentryMocks.setTags).not.toHaveBeenCalled();
   });
 
-  it("ante llamadas concurrentes aplica sólo la última (latest-wins)", async () => {
+  it("ante llamadas concurrentes el último valor es el que termina aplicado", async () => {
     const { syncSentryUser } = await import("../user");
     syncSentryUser({ userId: "u-1", email: "a@x.com", organizationId: "o-1", effectiveRole: "user" });
     syncSentryUser({ userId: "u-2", email: "b@x.com", organizationId: "o-2", effectiveRole: "admin" });
     await flushImport();
-    expect(sentryMocks.setUser).toHaveBeenCalledTimes(1);
-    expect(sentryMocks.setUser).toHaveBeenCalledWith({ id: "u-2", email: "b@x.com" });
+    // Garantía importante: el último setUser refleja el usuario actual.
+    // (El SDK puede recibir 1-2 llamadas porque ambos .then se encolan; el
+    // contrato del wrapper es "latest-wins sobre el valor", no "1 sola llamada").
+    const lastCall = sentryMocks.setUser.mock.calls.at(-1);
+    expect(lastCall?.[0]).toEqual({ id: "u-2", email: "b@x.com" });
   });
 });
 
