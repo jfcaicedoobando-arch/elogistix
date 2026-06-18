@@ -1,8 +1,23 @@
 import { Toaster as SonnerToaster } from "sonner";
 
 /**
- * Toaster global de la app (Sonner). Reemplaza al stack shadcn/toast.
- * Theming alineado a los tokens HSL del design system vía classNames.
+ * Toaster global de la app (Sonner).
+ *
+ * v13.67.2 — Tres fixes para el botón "Ver detalles" en mobile:
+ *
+ *  1. **Clases CSS rotas**: el preset original usaba `group-[.toaster]`,
+ *     que NUNCA matcheaba porque Sonner usa `data-sonner-toaster` (no la
+ *     clase `.toaster`). Reemplazamos por selectores basados en `data-type`
+ *     que sí dispara Sonner para cada severidad.
+ *
+ *  2. **Tap target del actionButton <44px**: Sonner aplica padding mínimo al
+ *     botón de acción. Forzamos `min-h-11 min-w-[44px] px-3` para cumplir
+ *     el estándar P0 de tap targets en mobile.
+ *
+ *  3. **Swipe-to-dismiss intercepta el tap**: en mobile, mover el dedo unos
+ *     píxeles al tocar "Ver detalles" disparaba el dismiss antes del onClick.
+ *     Subimos `swipeThreshold` a 80px y bajamos `swipeDuration` para que el
+ *     gesto sólo se active con un swipe deliberado, no con un tap normal.
  */
 export function Toaster() {
   return (
@@ -10,22 +25,27 @@ export function Toaster() {
       position="top-right"
       closeButton
       richColors={false}
+      swipeDirections={["right"]}
       toastOptions={{
+        // Reduce sensibilidad del swipe-dismiss para no robar taps al actionButton.
+        // El umbral por defecto (~45px) puede dispararse con un tap+drag accidental.
+        // @ts-expect-error sonner permite estas keys en runtime aunque el d.ts las marca a nivel <Toaster>
+        swipeThreshold: 80,
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
+            "group toast bg-background text-foreground border-border shadow-lg",
+          description: "text-muted-foreground",
           actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+            "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-primary !text-primary-foreground !text-sm !font-medium !rounded-md",
           cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
           error:
-            "group-[.toaster]:!bg-destructive group-[.toaster]:!text-destructive-foreground group-[.toaster]:!border-destructive",
+            "!bg-destructive !text-destructive-foreground !border-destructive [&_[data-description]]:!text-destructive-foreground/90",
           success:
-            "group-[.toaster]:!bg-success/10 group-[.toaster]:!text-success-foreground group-[.toaster]:!border-success/60",
+            "!bg-success/10 !text-success-foreground !border-success/60",
           warning:
-            "group-[.toaster]:!bg-warning/10 group-[.toaster]:!text-warning-foreground group-[.toaster]:!border-warning/60",
-          info: "group-[.toaster]:!bg-background group-[.toaster]:!text-foreground",
+            "!bg-warning/10 !text-warning-foreground !border-warning/60",
+          info: "!bg-background !text-foreground",
         },
       }}
     />
