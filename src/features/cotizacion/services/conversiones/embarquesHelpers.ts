@@ -79,6 +79,34 @@ export function construirCostosRows(
  * Cuando `unidad_medida === 'BL'` o no hay hijos, se inserta una sola fila
  * con `contenedor_id = null` (concepto general / legacy).
  */
+interface VentaParsed {
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  moneda: Moneda;
+  aplicaIva: boolean;
+  tasaIva: number;
+  unidadMedida: string;
+  totalCotizado: number;
+}
+
+function parseVentaRow(raw: unknown): VentaParsed | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const v = fromDb<Record<string, unknown>>(raw);
+  const descripcion = String(v.descripcion ?? "").trim();
+  if (!descripcion) return null;
+  const cantidad = Number(v.cantidad ?? 1);
+  const precioUnitario = Number(v.precio_unitario ?? 0);
+  const moneda = (v.moneda === "USD" ? "USD" : "MXN") as Moneda;
+  const aplicaIva = Boolean(v.aplica_iva ?? false);
+  const tasaIva = typeof v.tasa_iva_aplicada === "number"
+    ? Number(v.tasa_iva_aplicada)
+    : (aplicaIva ? 0.16 : 0);
+  const unidadMedida = String(v.unidad_medida ?? "Contenedor");
+  const totalCotizado = Number(v.total ?? cantidad * precioUnitario);
+  return { descripcion, cantidad, precioUnitario, moneda, aplicaIva, tasaIva, unidadMedida, totalCotizado };
+}
+
 export function parsearVentasJsonb(
   ventasJsonb: unknown[],
   embarqueId: string,
@@ -86,50 +114,36 @@ export function parsearVentasJsonb(
 ): ConceptoVentaInsert[] {
   const out: ConceptoVentaInsert[] = [];
   for (const raw of ventasJsonb) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-    const v = fromDb<Record<string, unknown>>(raw);
-    const descripcion = String(v.descripcion ?? "").trim();
-    if (!descripcion) continue;
+    const parsed = parseVentaRow(raw);
+    if (!parsed) continue;
 
-    const cantidad = Number(v.cantidad ?? 1);
-    const precioUnitario = Number(v.precio_unitario ?? 0);
-    const moneda = (v.moneda === "USD" ? "USD" : "MXN") as Moneda;
-    const aplicaIva = Boolean(v.aplica_iva ?? false);
-    const tasaIva = typeof v.tasa_iva_aplicada === "number"
-      ? Number(v.tasa_iva_aplicada)
-      : (aplicaIva ? 0.16 : 0);
-    const unidadMedida = String(v.unidad_medida ?? "Contenedor");
-    const totalCotizado = Number(v.total ?? cantidad * precioUnitario);
-
-    const esPorContenedor = unidadMedida.toLowerCase() === "contenedor";
+    const esPorContenedor = parsed.unidadMedida.toLowerCase() === "contenedor";
     const numHijos = hijos?.length ?? 0;
 
     if (esPorContenedor && numHijos > 0) {
-      // Replicar SIN dividir: cada contenedor lleva su propio monto completo.
       for (let i = 0; i < numHijos; i++) {
         out.push({
           embarque_id: embarqueId,
-          descripcion,
-          cantidad,
-          precio_unitario: precioUnitario,
-          moneda,
-          aplica_iva: aplicaIva,
-          tasa_iva_aplicada: tasaIva,
-          total: cantidad * precioUnitario,
+          descripcion: parsed.descripcion,
+          cantidad: parsed.cantidad,
+          precio_unitario: parsed.precioUnitario,
+          moneda: parsed.moneda,
+          aplica_iva: parsed.aplicaIva,
+          tasa_iva_aplicada: parsed.tasaIva,
+          total: parsed.cantidad * parsed.precioUnitario,
           contenedor_id: hijos![i].id,
         });
       }
     } else {
-      // BL o sin hijos → 1 fila general (contenedor_id null).
       out.push({
         embarque_id: embarqueId,
-        descripcion,
-        cantidad,
-        precio_unitario: precioUnitario,
-        moneda,
-        aplica_iva: aplicaIva,
-        tasa_iva_aplicada: tasaIva,
-        total: totalCotizado,
+        descripcion: parsed.descripcion,
+        cantidad: parsed.cantidad,
+        precio_unitario: parsed.precioUnitario,
+        moneda: parsed.moneda,
+        aplica_iva: parsed.aplicaIva,
+        tasa_iva_aplicada: parsed.tasaIva,
+        total: parsed.totalCotizado,
       });
     }
   }
