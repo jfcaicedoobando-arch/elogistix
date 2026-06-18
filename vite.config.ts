@@ -59,8 +59,8 @@ export default defineConfig(({ mode }) => ({
       org: "elogistix",
       project: "javascript-react",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-      // Empata con `release` en src/lib/sentry.ts (`libre-carga@${APP_VERSION}`).
-      release: { name: `libre-carga@${process.env.APP_VERSION ?? "unknown"}` },
+      // Empata con `release` runtime en src/lib/observability/sentry/core.ts.
+      release: { name: `libre-carga@${APP_VERSION}` },
       sourcemaps: {
         // Borrar .map del dist tras subirlos: nunca queremos servir sourcemaps
         // al cliente en producción (filtración de código fuente).
