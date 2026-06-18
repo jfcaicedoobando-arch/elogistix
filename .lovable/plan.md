@@ -1,35 +1,52 @@
-## Problema
+# Auditoría visual mobile — Libre Carga
 
-El usuario con rol `contador` cae en `/inicio` y `useAppSidebarSections` invoca `useAuditoriaCount()` incondicionalmente. El RPC `auditoria_embarques_org` responde 403 por RLS (sólo admin/admin_org/super_admin tienen acceso), React Query lo propaga al `QueryCache.onError` y se reporta a Sentry como issue `wq` (`feature: react_query, kind: query`). El badge ni siquiera se muestra para este rol porque `/auditoria` está filtrado del sidebar.
+## Objetivo
+Recorrer las rutas clave de la app en viewport móvil (375×812, iPhone-like) y reportar hallazgos visuales: overflow horizontal, tap targets <44px, texto cortado, tablas que rompen, modales sin scroll, headers que tapan contenido, contraste, sidebar/FAB superpuestos, formularios con campos apretados, etc. **Solo auditoría — no se modifica código en esta fase.** Las correcciones se planifican después según prioridad.
 
-Hallazgos relacionados en los breadcrumbs: dos llamadas a `auditoria_embarques_org` con 403, y otra similar a `auditoria_revisiones` (200, pero también innecesaria para roles sin acceso).
+## Cómo se ejecuta
+Lanzo 5 sub-agentes Playwright en paralelo (`acp_subagent--spawn_agent`), cada uno con sesión Supabase pre-minteada y viewport `390×844`. Cada sub-agente:
 
-## Cambios
+1. Restaura sesión (`LOVABLE_BROWSER_SUPABASE_SESSION_JSON`).
+2. Navega su lote de rutas, espera `networkidle`, toma screenshot `viewport-only` (NUNCA `full_page`).
+3. Inspecciona DOM: `document.documentElement.scrollWidth > innerWidth` (overflow-x), botones con `getBoundingClientRect()` < 44px, elementos con `position:fixed` que ocluyan el `<main>`, tablas sin scroll wrapper.
+4. Devuelve JSON estructurado: `{ruta, screenshot_path, hallazgos:[{tipo, severidad, selector, descripcion}]}`.
 
-1. **`src/features/auditoria/hooks/useAuditoria.ts`**
-   - Aceptar opción `{ enabled?: boolean }` en `useAuditoria()` y `useAuditoriaCount()`.
-   - Propagar `enabled` tanto al query del reporte como al de revisiones dentro de `useQueries`.
-   - Cuando `enabled === false`, ambos queries quedan deshabilitados y el hook devuelve `{ data: undefined, isLoading: false, isError: false, error: null }` sin disparar fetch.
+Yo consolido los 5 reportes en un único informe markdown ordenado por severidad.
 
-2. **`src/hooks/layout/useAppSidebarSections.ts`**
-   - Calcular `canVerAuditoria = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin"` (mismo criterio que decide si `/auditoria` aparece en el sidebar).
-   - Llamar `useAuditoriaCount({ enabled: canVerAuditoria })`.
-   - Mantener el mapeo del `badgeCount` sin cambios (cuando está deshabilitado, `auditoriaCount` cae al default `0`).
+## Lotes de rutas
 
-3. **`src/hooks/layout/__tests__/useLayout.test.tsx`** (si el mock lo requiere)
-   - Ajustar el mock de `useAuditoriaCount` para aceptar el nuevo argumento opcional sin romper aserciones existentes.
+```text
+Lote A — Marketing & Auth (público)
+  /  /login  /legal/seguridad  /legal/privacidad  /legal/terminos
+  /recursos/guia-puertos-mexico
 
-4. **`CHANGELOG.md` + `src/constants/appVersion.ts`**
-   - Nueva entrada `[13.66.22]` describiendo el gating del badge de auditoría para roles sin acceso y el efecto en Sentry (elimina 403 ruidosos).
+Lote B — Dashboard & Operación
+  /inicio  /embarques  /embarques/:id (uno de demo)
+  /cotizaciones  /cotizaciones/nueva  /tracking
+
+Lote C — Finanzas
+  /facturacion  /cxc  /cxp  /tesoreria/cuentas  /tesoreria/flujo
+  /profit/dashboard  /profit/estado-resultados
+
+Lote D — Catálogos & Config
+  /clientes  /clientes/:id  /proveedores  /puertos
+  /configuracion  /usuarios
+
+Lote E — Auditoría, Portal cliente, Admin
+  /auditoria  /admin/auditoria  /portal/inicio  /portal/embarques
+  /bandejas  /notificaciones
+```
+
+## Entregable
+Informe markdown con:
+- **Resumen ejecutivo** (#hallazgos por severidad).
+- **Top issues bloqueantes** (overflow horizontal, tap targets críticos, contenido inaccesible).
+- **Tabla por ruta** con screenshot + hallazgos.
+- **Recomendaciones priorizadas** (P0/P1/P2) listas para implementar en un siguiente plan.
 
 ## Fuera de alcance
+- No se modifican archivos.
+- No se audita escritorio/tablet (solo mobile, como pidió el usuario).
+- No se valida lógica de negocio ni accesibilidad WCAG completa (solo signals visuales rápidos).
 
-- No tocar la política RLS del RPC (el 403 server-side sigue siendo la última línea de defensa).
-- No modificar otros hooks que consulten endpoints de auditoría desde rutas ya protegidas (`/auditoria` ya está gated por el router).
-- No cambiar el matriz de roles ni la visibilidad del item de sidebar.
-
-## Verificación
-
-- `bunx vitest run src/hooks/layout src/features/auditoria/hooks`
-- Lint sobre los dos archivos editados.
-- Recuento manual: con rol `contador`, no debe haber request a `auditoria_embarques_org` ni a `auditoria_revisiones` al cargar `/inicio`.
+¿Apruebas que lance los 5 sub-agentes con este recorrido?
