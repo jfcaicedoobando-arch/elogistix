@@ -88,3 +88,14 @@ export async function fetchEmbarquesVinculados(cotizacionId: string) {
   return data ?? [];
 }
 
+/** Folio liviano de una cotización (para chips/links en otras vistas). */
+export async function fetchCotizacionFolio(cotizacionId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("cotizaciones")
+    .select("folio")
+    .eq("id", cotizacionId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.folio ?? null;
+}
+
