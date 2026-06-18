@@ -1,74 +1,46 @@
-## Contexto del hallazgo
+## Reglas nuevas de cierre del embarque (v13.66.12)
 
-Hoy la conversión cotización → embarque tiene un comportamiento **asimétrico**:
+Agregar 3 reglas duras a `validar_cierre_embarque` para que el cierre **no se ejecute** mientras queden cabos sueltos en conceptos de venta o de costo.
 
-- `conceptos_costo`: cuando `cotizacion_costos.unidad_medida='Contenedor'` el helper `construirCostosRows` ya replica una fila por cada contenedor hijo (línea 64-66 de `embarquesHelpers.ts`). Cuando es `'BL'` se inserta una sola con `contenedor_id=NULL`.
-- `conceptos_venta`: `parsearVentasJsonb` toma el jsonb `cotizaciones.conceptos_venta` y lo inserta **siempre con `contenedor_id=NULL`**, sin replicar y sin importar la unidad de medida. Por eso ELIMP00272 tiene 2 conceptos generales pese a tener 6 contenedores.
+### 1. Migración — `validar_cierre_embarque` extendido
 
-Para demoras, `calcular_demoras_embarque` usa **una sola fecha** `Descarga` (mín) y **una sola** `Entrega` (máx) del timeline del embarque y aplica los mismos días a cada contenedor. No hay forma hoy de capturar que el contenedor A se devolvió el día 12 y el B el día 25.
+Reescribir el RPC para agregar **3 checks** antes del retorno (orden tras `comision_calculada`):
 
-ELIMP00272 ya quedó como está (proforma única con los 2 conceptos manuales actuales — fuera de alcance de este plan).
+- **`venta_conceptos_facturados`** — `ok=true` solo si no existe ningún `conceptos_venta` con `embarque_id = p_embarque_id`, `deleted_at IS NULL` y `estado_facturacion <> 'facturado'`. Devuelve `detalle = { pendientes: N, en_proforma: N }` para que el checklist muestre cuántos quedan.
 
-## Cambios
+- **`costo_conceptos_con_factura`** — `ok=true` solo si todo `conceptos_costo` (no borrado) tiene al menos una entrada en `proveedor_facturas_conceptos` vinculada a una `proveedor_facturas` no cancelada. Devuelve `detalle = { sin_factura: N }`.
 
-### 1. Replicar conceptos de venta por contenedor (alineado con costos)
+- **`costos_liquidados`** — `ok=true` solo si no existe `conceptos_costo` con `estado_liquidacion = 'Pendiente'` (o equivalente). Devuelve `detalle = { pendientes: N }`.
 
-**`src/features/cotizacion/services/conversiones/embarquesHelpers.ts`** — extender `parsearVentasJsonb` a `parsearVentasJsonb(ventasJsonb, embarqueId, hijos)`:
+Las 3 alimentan `v_puede` (AND) igual que las demás reglas. Si alguna falla, el botón "Cerrar embarque" queda deshabilitado.
 
-- Si el item jsonb trae `unidad_medida === 'BL'` (o vacío): 1 fila con `contenedor_id=NULL` (como hoy).
-- Si trae `unidad_medida === 'Contenedor'` (default): N filas, una por hijo, con `contenedor_id = hijo.id`, dividiendo `cantidad` para que el total siga siendo el cotizado (igual que costos).
-- Mismas reglas para `tasa_iva_aplicada`/`aplica_iva` por fila.
+### 2. UI — etiquetas en `TabCierre`
 
-**`embarques.ts`** — pasar `hijosCreados` al llamar `insertarVentasEmbarque` y propagar la firma.
+Agregar al diccionario `ETIQUETAS_REGLA`:
 
-Esto cierra el hueco: a partir de v13.66.11, cualquier embarque generado desde cotización **ya nace con ventas etiquetadas por contenedor** y la UI del wizard de proforma puede filtrar por contenedor sin pasos manuales extra.
+- `venta_conceptos_facturados`: `"Todos los conceptos de venta facturados"`
+- `costo_conceptos_con_factura`: `"Todos los costos tienen factura de proveedor recibida"`
+- `costos_liquidados`: `"Todos los costos están liquidados (pagados al proveedor)"`
 
-**No se backfillea** ELIMP00272 ni embarques previos (los conceptos manuales ya divergieron de la cotización).
+Sin cambios estructurales: `CierreChecklistCard` ya renderiza cualquier regla devuelta por el RPC.
 
-### 2. Demoras por contenedor
+### 3. Tests
 
-**Migración**: agregar a `embarque_contenedores`:
+`TabCierre.rules.test.ts` (existente) — agregar 3 casos: una regla en `ok=false` por cada nueva, verificar que el botón se deshabilita y que la etiqueta aparece en rojo.
 
-- `fecha_descarga date NULL` — fecha en que el contenedor llegó/se descargó.
-- `fecha_devolucion date NULL` — fecha real de devolución a la naviera.
-- `dias_libres_override int NULL` — opcional, para sobreescribir el default de la naviera por contenedor.
+### 4. Metadata
 
-**Migración**: reescribir `public.calcular_demoras_embarque(uuid)`:
-
-- Para cada `embarque_contenedores` del embarque:
-  - Usar `ec.fecha_descarga`/`ec.fecha_devolucion` si existen; si no, **fallback** a las fechas del timeline (`Descarga` min / `Entrega` max) para no romper el comportamiento de embarques actuales sin datos por contenedor.
-  - Usar `ec.dias_libres_override` si no es NULL; si no, el default de `costeo_navieras_condiciones.dias_libres_demoras_default`.
-  - Calcular `dias_excedidos = max(0, dias_puerto - dias_libres)` por contenedor.
-  - Aplicar el tabulador escalonado (ya existe la lógica `v_tarifa`) por contenedor.
-- Borrar/recrear `conceptos_costo` y `conceptos_venta` con `origen='demoras_auto'` etiquetados con `contenedor_id` del hijo correspondiente.
-- Mantener el shape JSON de retorno (`contenedores: [...]`) y los totales agregados.
-
-**UI mínima** en `EmbarqueDetalleContenedoresTab` (o donde se edita el contenedor): inputs `Fecha de descarga`, `Fecha de devolución`, `Días libres (override)`. Al guardar dispara recálculo de demoras (ya existe trigger `trg_recalcular_demoras_al_entregar`; añadiremos otro `AFTER UPDATE` sobre estos tres campos).
-
-### 3. UX wizard de proforma
-
-`PasoSeleccionConceptos`/`FiltroContenedorChips` ya soportan filtrar por contenedor — sin cambios. Cuando los conceptos de venta vengan ya etiquetados (cambio #1) y las demoras también (cambio #2), el operador puede generar 1 proforma por contenedor pulsando el chip respectivo. No se fuerza: sigue siendo decisión del operador.
-
-### 4. Tests
-
-- `embarquesHelpers.integration.test.ts`: nuevos casos para `parsearVentasJsonb` con BL vs Contenedor + N hijos.
-- `calcular_demoras_embarque`: test SQL/integration con 2 contenedores con fechas distintas → verificar conceptos generados por hijo.
-- Snapshot del wizard de proforma filtrado por contenedor con conceptos heredados de cotización.
-
-### 5. Metadata
-
-- Bump `APP_VERSION` → `13.66.11`.
-- Entrada en `CHANGELOG.md` (idioma español mexicano, formato Keep a Changelog) describiendo: replicación de ventas por contenedor, demoras por contenedor con fallback a timeline, columnas nuevas en `embarque_contenedores`.
+- `APP_VERSION` → `13.66.12`.
+- Entrada en `CHANGELOG.md` describiendo las 3 reglas nuevas, cómo se calculan y por qué (ventas/costos sin formalizar dejaban embarques con utilidad falsa).
 
 ## Fuera de alcance
 
-- No se modifica ELIMP00272 ni embarques previos (sus conceptos ya están divergidos de la cotización; la proforma actual se genera tal cual con los 2 conceptos generales).
-- No se quita la capacidad de tener conceptos `contenedor_id=NULL` ("generales del embarque") — sigue siendo válido para honorarios, despacho, etc.
-- No se cambia el modelo de proforma (sigue siendo 1 proforma → 1 factura).
+- No se modifica la UI de Facturación ni de Conciliación (ya muestran los pendientes; solo se agrega bloqueo formal al cerrar).
+- No se hace backfill de embarques cerrados previamente (mantienen su estado).
+- No se altera el modelo de `estado_facturacion` ni `estado_liquidacion`.
 
 ## Detalles técnicos clave
 
-- Las nuevas columnas son `NULL` por default → embarques existentes no cambian su cálculo (fallback a timeline).
-- La RPC mantiene `SECURITY DEFINER` + `SET search_path = public` + GRANT a `authenticated, service_role`.
-- La replicación de ventas divide `cantidad` para preservar el total facturable; alternativa: replicar `cantidad` íntegra y duplicar el total → necesita confirmación del usuario antes de implementar (lo dejo con división como costos, que es el patrón canónico hoy).
-- Triggers de UI: al editar `fecha_devolucion`/`dias_libres_override` de un contenedor → `PERFORM public.calcular_demoras_embarque(embarque_id)` para regenerar conceptos automáticos.
+- RPC mantiene `SECURITY DEFINER` + `SET search_path = public`.
+- Las consultas nuevas son simples `EXISTS` / `COUNT(*)` con índice sobre `embarque_id` (ya existe en ambas tablas).
+- La regla `costos_liquidados` es independiente de `cxp_pagada`: cxp valida que `proveedor_facturas` estén pagadas, pero un `conceptos_costo` puede no estar marcado como `Liquidado` si nadie cruzó el pago al concepto.
