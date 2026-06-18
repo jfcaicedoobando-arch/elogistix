@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.20] - 2026-06-18
+- **feat(ocultar-nuevo-embarque-roles-sin-libre)**: Para roles que requieren cotización (sin `canCrearEmbarqueLibre`), se oculta el botón "Nuevo Embarque" del header del listado (`EmbarquesHeaderActions`), del empty state (`EmbarquesEmptyState`) y el FAB flotante. `Embarques.tsx` combina `canEdit && canCrearEmbarqueLibre`. Guard adicional en la ruta `/embarques/nuevo`: si el usuario carece de `canCrearEmbarqueLibre` y no llega con `state.cotizacionPrevinculadaId`, se le muestra toast y redirige a `/embarques`. El flujo Cotización Aceptada → "Generar embarque" sigue disponible para todos los roles (siempre llega con cotización vinculada y el trigger DB lo permite). Bump `APP_VERSION` 13.66.20.
+
 ## [13.66.19] - 2026-06-18
 - **feat(embarques-cotizacion-obligatoria-defensa-servidor)**: Investigación tras detectar que `coordinador_logistico` creó ELIMP00274 y ELIMP00275 sin `cotizacion_id`. La validación cliente de v13.39.0 (`canCrearEmbarqueLibre`) sólo bloqueaba en UI; cualquier bypass (parche al validador, salto entre pasos, llamada directa a PostgREST) podía evadirla. Defensa en profundidad:
   - **DB**: nuevo trigger `BEFORE INSERT` `trg_enforce_cotizacion_obligatoria` sobre `embarques` con función `public.enforce_cotizacion_obligatoria()` (`SECURITY DEFINER`, `search_path=public`) que rechaza inserts sin `cotizacion_id` cuando el `auth.uid()` no es `super_admin` global ni tiene rol `{admin_org, admin, gerente_operaciones}` en la organización del embarque. Mensaje: *"Tu rol requiere vincular una cotización Aceptada para crear el embarque."*

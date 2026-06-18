@@ -10,6 +10,7 @@ import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEm
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
 import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/embarques/hooks";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
@@ -27,6 +28,8 @@ export default function Embarques() {
     exportarCsv, exportandoCsv,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
+  const { canCrearEmbarqueLibre } = usePermissions();
+  const canCrear = canEdit && canCrearEmbarqueLibre;
 
 
   const {
@@ -50,7 +53,7 @@ export default function Embarques() {
         actions={
           isEmptyState ? null : (
             <EmbarquesHeaderActions
-              canEdit={canEdit}
+              canEdit={canCrear}
               exportandoCsv={exportandoCsv}
               onExport={exportarCsv}
               onNuevo={goNuevo}
@@ -60,7 +63,7 @@ export default function Embarques() {
       />
 
       {isEmptyState ? (
-        <EmbarquesEmptyState canEdit={canEdit} onCreate={goNuevo} />
+        <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
       ) : (
         <>
           <Card>
@@ -144,7 +147,7 @@ export default function Embarques() {
         </>
       )}
 
-      {canEdit && !isEmptyState ? (
+      {canCrear && !isEmptyState ? (
         <FloatingActionButton
           icon={<Plus className="h-6 w-6" />}
           label="Nuevo embarque"
