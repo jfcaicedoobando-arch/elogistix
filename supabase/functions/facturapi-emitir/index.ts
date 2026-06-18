@@ -163,4 +163,4 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   });
 
   return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });
-});
+}));
