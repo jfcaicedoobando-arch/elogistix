@@ -58,6 +58,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       toast.success(`${count} factura(s) descargadas`);
     } catch (e) {
       toast.error(`Error al generar ZIP: ${(e as Error).message}`);
+      reportCaughtError(e, { feature: "facturacion", op: "generar_zip_masivo" }, { count });
     } finally {
       setBusy(null);
     }
@@ -82,6 +83,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       onClear();
     } catch (e) {
       toast.error(`Error al marcar: ${(e as Error).message}`);
+      reportCaughtError(e, { feature: "facturacion", op: "marcar_enviada_masivo" }, { count: ids.length });
     } finally {
       setBusy(null);
     }
