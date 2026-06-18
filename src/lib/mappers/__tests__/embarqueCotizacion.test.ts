@@ -115,17 +115,32 @@ describe("embarqueCotizacion mapper", () => {
     expect(contenedores.map((c) => c.orden)).toEqual([1, 2, 3]);
   });
 
-  it("LCL o aéreo no genera placeholders aunque haya num_contenedores", () => {
+  it("LCL marítimo siembra 1 contenedor con peso/volumen/piezas de la cotización", () => {
     const lcl = asMap(buildVincularCotizacionUpdates({
-      ...base, tipo_embarque: "LCL", num_contenedores: 2,
+      ...base, tipo_embarque: "LCL", num_contenedores: 1,
+      peso_kg: 0, volumen_m3: 4.09274, piezas: 3,
     }));
-    expect(lcl.contenedores).toBeUndefined();
+    const contenedores = lcl.contenedores as Array<{ tipo_contenedor: string; peso_kg: number; volumen_m3: number; piezas: number; orden: number }>;
+    expect(contenedores).toHaveLength(1);
+    expect(contenedores[0].tipo_contenedor).toBe("LCL");
+    expect(contenedores[0].peso_kg).toBe(0);
+    expect(contenedores[0].volumen_m3).toBe(4.09274);
+    expect(contenedores[0].piezas).toBe(3);
+    expect(contenedores[0].orden).toBe(1);
+  });
 
+  it("LCL aéreo o terrestre no genera contenedores", () => {
     const aereo = asMap(buildVincularCotizacionUpdates({
-      ...base, modo: "Aéreo", tipo_embarque: "FCL", num_contenedores: 2,
+      ...base, modo: "Aéreo", tipo_embarque: "LCL", num_contenedores: 1,
     }));
     expect(aereo.contenedores).toBeUndefined();
+
+    const terrestre = asMap(buildVincularCotizacionUpdates({
+      ...base, modo: "Terrestre", tipo_embarque: "FCL", num_contenedores: 2,
+    }));
+    expect(terrestre.contenedores).toBeUndefined();
   });
+
 
   it("desvincular con snapshot respeta los campos que el usuario editó (Opción A)", () => {
     const updates = buildVincularCotizacionUpdates(base);
