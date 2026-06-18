@@ -173,8 +173,6 @@ export function EmbarqueDetalleTabs({
             type="single"
             value={pnlView}
             onValueChange={(v) => { if (v) setPnlView(v as PnlView); }}
-            size="sm"
-            variant="outline"
           >
             <ToggleGroupItem value="global" aria-label="Vista global">Global</ToggleGroupItem>
             <ToggleGroupItem value="contenedor" aria-label="Vista por contenedor">Por contenedor</ToggleGroupItem>
