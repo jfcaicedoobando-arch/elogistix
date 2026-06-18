@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.66.26] - 2026-06-18
+- **feat(trust-page)**: Nueva página pública `/legal/seguridad` (Centro de confianza y seguridad) mantenida por Libre Carga: controles de acceso, aislamiento por organización (RLS), cifrado en tránsito, respaldos, subprocesadores, retención, responsabilidad compartida, reporte de incidentes y cumplimiento LFPDPPP. Sin reclamos de certificación. Linkeada en footer (Legal) y agregada al sitemap. Bump `APP_VERSION` 13.66.26.
+
 ## [13.66.25] - 2026-06-18
 - **fix(security-scan-batch)**: Lote de correcciones del escáner de seguridad.
   - **Edge functions**: (1) `process-email-queue` y `send-transactional-email` ahora verifican firma JWT con `auth.getClaims()` y exigen `role=service_role` — antes el decode era base64 manual sin verificar firma, permitiendo tokens forjados o relay abierto desde Internet. (2) `user-management/handleCreate` añade `ASSIGNABLE_BY_ORG_ADMIN` para que un `admin_org` no pueda asignar `admin`/`super_admin` al crear usuarios (privilege escalation cerrado).
