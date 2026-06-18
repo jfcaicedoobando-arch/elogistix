@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { Edit, ChevronRight, Trash2, Share2, Copy, Unlock } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Edit, ChevronRight, Trash2, Share2, Copy, Unlock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
 import { EmbarqueHeaderDialogs } from "./EmbarqueHeaderDialogs";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useCotizacionFolio } from "@/features/cotizacion/hooks";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 
 interface Props {
@@ -61,6 +62,7 @@ export function EmbarqueDetalleHeader({
   const { isAdmin } = usePermissions();
   const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
   const bloqueadoPorDocs = docsBloqueantes && docsFaltantes.length > 0;
+  const { data: cotizacionFolio } = useCotizacionFolio(embarque.cotizacion_id);
 
   const renderAvanzarButton = () => {
     const btn = (
@@ -93,6 +95,23 @@ export function EmbarqueDetalleHeader({
           <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
         </div>
         <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
+        {embarque.cotizacion_id && (
+          <div className="mt-1.5">
+            {cotizacionFolio ? (
+              <Link to={`/cotizaciones/${embarque.cotizacion_id}`}>
+                <Badge variant="outline" className="gap-1 hover:bg-muted cursor-pointer">
+                  <FileText className="h-3 w-3" />
+                  Generado desde {cotizacionFolio}
+                </Badge>
+              </Link>
+            ) : (
+              <Badge variant="outline" className="gap-1 text-muted-foreground">
+                <FileText className="h-3 w-3" />
+                Cotización origen no disponible
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
         {canEdit && siguienteEstado ? (
