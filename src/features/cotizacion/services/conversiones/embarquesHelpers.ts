@@ -69,31 +69,75 @@ export function construirCostosRows(
   return rows;
 }
 
-/** Parsea el jsonb `conceptos_venta` de una cotización a filas `conceptos_venta`. */
+/**
+ * Parsea el jsonb `conceptos_venta` de una cotización a filas `conceptos_venta`.
+ *
+ * v13.66.11: cuando `unidad_medida === 'Contenedor'` (default), la fila se
+ * replica una vez por cada contenedor hijo dividiendo `cantidad` para
+ * preservar el total cotizado. Cuando `unidad_medida === 'BL'`, se inserta
+ * una sola fila con `contenedor_id = null` (concepto general).
+ *
+ * Si `hijos` es `undefined`/vacío, se mantiene el comportamiento legacy
+ * (1 fila por concepto sin `contenedor_id`).
+ */
 export function parsearVentasJsonb(
   ventasJsonb: unknown[],
   embarqueId: string,
+  hijos?: Pick<Tables<"embarque_contenedores">, "id">[],
 ): ConceptoVentaInsert[] {
-  return ventasJsonb
-    .map((raw): ConceptoVentaInsert | null => {
-      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-      const v = fromDb<Record<string, unknown>>(raw);
-      const descripcion = String(v.descripcion ?? "").trim();
-      if (!descripcion) return null;
-      return {
+  const out: ConceptoVentaInsert[] = [];
+  for (const raw of ventasJsonb) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const v = fromDb<Record<string, unknown>>(raw);
+    const descripcion = String(v.descripcion ?? "").trim();
+    if (!descripcion) continue;
+
+    const cantidad = Number(v.cantidad ?? 1);
+    const precioUnitario = Number(v.precio_unitario ?? 0);
+    const moneda = (v.moneda === "USD" ? "USD" : "MXN") as Moneda;
+    const aplicaIva = Boolean(v.aplica_iva ?? false);
+    const tasaIva = typeof v.tasa_iva_aplicada === "number"
+      ? Number(v.tasa_iva_aplicada)
+      : (aplicaIva ? 0.16 : 0);
+    const unidadMedida = String(v.unidad_medida ?? "Contenedor");
+    const totalCotizado = Number(v.total ?? cantidad * precioUnitario);
+
+    const esPorContenedor = unidadMedida.toLowerCase() === "contenedor";
+    const numHijos = hijos?.length ?? 0;
+
+    if (esPorContenedor && numHijos > 0 && cantidad >= numHijos) {
+      // Replicar dividiendo cantidad. Residual al último hijo.
+      const base = Math.floor(cantidad / numHijos);
+      let restante = cantidad;
+      for (let i = 0; i < numHijos; i++) {
+        const esUltimo = i === numHijos - 1;
+        const cantHijo = esUltimo ? restante : base;
+        restante -= cantHijo;
+        out.push({
+          embarque_id: embarqueId,
+          descripcion,
+          cantidad: cantHijo,
+          precio_unitario: precioUnitario,
+          moneda,
+          aplica_iva: aplicaIva,
+          tasa_iva_aplicada: tasaIva,
+          total: cantHijo * precioUnitario,
+          contenedor_id: hijos![i].id,
+        });
+      }
+    } else {
+      // BL, sin hijos o cantidad < numHijos → 1 fila general (contenedor_id null).
+      out.push({
         embarque_id: embarqueId,
         descripcion,
-        cantidad: Number(v.cantidad ?? 1),
-        precio_unitario: Number(v.precio_unitario ?? 0),
-        moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
-        aplica_iva: Boolean(v.aplica_iva ?? false),
-        // Tasa por fila: si viene definida la respetamos (incluye 0 exento);
-        // si no, derivamos 0.16 cuando aplica_iva=true ó 0 cuando no.
-        tasa_iva_aplicada: typeof v.tasa_iva_aplicada === "number"
-          ? Number(v.tasa_iva_aplicada)
-          : (v.aplica_iva ? 0.16 : 0),
-        total: Number(v.total ?? 0),
-      };
-    })
-    .filter((v): v is ConceptoVentaInsert => v !== null);
+        cantidad,
+        precio_unitario: precioUnitario,
+        moneda,
+        aplica_iva: aplicaIva,
+        tasa_iva_aplicada: tasaIva,
+        total: totalCotizado,
+      });
+    }
+  }
+  return out;
 }
