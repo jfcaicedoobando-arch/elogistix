@@ -7,13 +7,12 @@ import { useEventosEmbarque } from "@/features/embarques/hooks";
 import { usePermissions } from "@/hooks/shared";
 
 import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
-import { TabNotas } from "./TabNotas";
 import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
 import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
-import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
+
 
 type EmbarqueTrackingProps = Pick<
   Tables<"embarques">,
@@ -36,7 +35,6 @@ type EmbarqueTrackingProps = Pick<
 interface Props {
   embarqueId: string;
   embarque?: EmbarqueTrackingProps | null;
-  notas?: NotaEmbarqueRow[];
 }
 
 const DAY_MS = 86_400_000;
@@ -104,7 +102,7 @@ function FreshnessHeader({
   );
 }
 
-export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
+export function TabTracking({ embarqueId, embarque }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const { canEdit } = usePermissions();
   const [formAbierto, setFormAbierto] = useState(false);
@@ -166,8 +164,6 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
           <TrackingEventTimeline eventos={eventos} isLoading={isLoading} />
         </CardContent>
       </Card>
-
-      <TabNotas notas={notas} embarqueId={embarqueId} expediente={embarque?.expediente ?? null} />
     </div>
   );
 }

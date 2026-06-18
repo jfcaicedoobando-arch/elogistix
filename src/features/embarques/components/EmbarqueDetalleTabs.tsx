@@ -64,7 +64,7 @@ interface Props {
   conceptosVenta: CostosProps["conceptosVenta"];
   conceptosCosto: CostosProps["conceptosCosto"];
   facturas: FacturacionProps["facturas"];
-  notas: NotasProps["notas"] & TrackingProps["notas"];
+  notas: NotasProps["notas"];
   financials: Financials;
   docHandlers: DocHandlers;
 }
@@ -116,7 +116,7 @@ export function EmbarqueDetalleTabs({
       </TabsContent>
 
       <TabsContent value="tracking">
-        <TabTracking embarqueId={embarqueId} embarque={embarque} notas={notas} />
+        <TabTracking embarqueId={embarqueId} embarque={embarque} />
       </TabsContent>
 
       <TabsContent value="documentos">
