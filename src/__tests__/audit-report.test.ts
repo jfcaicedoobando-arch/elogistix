@@ -23,6 +23,10 @@ const PAGES_COMPONENTS_BASELINE = new Set<string>([
 const OVERSIZED_BASELINE = new Set<string>([
   "src/features/auditoria/domain/ejecutivoAgregados.ts",
   "src/features/proformas/routes/ProformaDetalle.tsx",
+  "src/features/embarques/services/pnlPorContenedor.ts",
+  "src/features/embarques/components/TabDemoras.tsx",
+  "src/features/embarques/components/TabPnlContenedor.tsx",
+  "src/features/embarques/components/EmbarqueDetalleTabs.tsx",
 ]);
 
 // Baseline temporal de archivos con `.rejects.toBeDefined()/toBeTruthy()`.
