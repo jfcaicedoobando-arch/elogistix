@@ -72,13 +72,12 @@ export function construirCostosRows(
 /**
  * Parsea el jsonb `conceptos_venta` de una cotización a filas `conceptos_venta`.
  *
- * v13.66.11: cuando `unidad_medida === 'Contenedor'` (default), la fila se
- * replica una vez por cada contenedor hijo dividiendo `cantidad` para
- * preservar el total cotizado. Cuando `unidad_medida === 'BL'`, se inserta
- * una sola fila con `contenedor_id = null` (concepto general).
- *
- * Si `hijos` es `undefined`/vacío, se mantiene el comportamiento legacy
- * (1 fila por concepto sin `contenedor_id`).
+ * v13.66.13: simétrico con `construirCostosRows`. Cuando
+ * `unidad_medida === 'Contenedor'` (default) y hay hijos, la fila se REPLICA
+ * una vez por cada contenedor conservando `cantidad` y `precio_unitario`
+ * originales (el monto se MULTIPLICA por N contenedores, igual que costos).
+ * Cuando `unidad_medida === 'BL'` o no hay hijos, se inserta una sola fila
+ * con `contenedor_id = null` (concepto general / legacy).
  */
 export function parsearVentasJsonb(
   ventasJsonb: unknown[],
@@ -105,28 +104,23 @@ export function parsearVentasJsonb(
     const esPorContenedor = unidadMedida.toLowerCase() === "contenedor";
     const numHijos = hijos?.length ?? 0;
 
-    if (esPorContenedor && numHijos > 0 && cantidad >= numHijos) {
-      // Replicar dividiendo cantidad. Residual al último hijo.
-      const base = Math.floor(cantidad / numHijos);
-      let restante = cantidad;
+    if (esPorContenedor && numHijos > 0) {
+      // Replicar SIN dividir: cada contenedor lleva su propio monto completo.
       for (let i = 0; i < numHijos; i++) {
-        const esUltimo = i === numHijos - 1;
-        const cantHijo = esUltimo ? restante : base;
-        restante -= cantHijo;
         out.push({
           embarque_id: embarqueId,
           descripcion,
-          cantidad: cantHijo,
+          cantidad,
           precio_unitario: precioUnitario,
           moneda,
           aplica_iva: aplicaIva,
           tasa_iva_aplicada: tasaIva,
-          total: cantHijo * precioUnitario,
+          total: cantidad * precioUnitario,
           contenedor_id: hijos![i].id,
         });
       }
     } else {
-      // BL, sin hijos o cantidad < numHijos → 1 fila general (contenedor_id null).
+      // BL o sin hijos → 1 fila general (contenedor_id null).
       out.push({
         embarque_id: embarqueId,
         descripcion,
@@ -141,3 +135,4 @@ export function parsearVentasJsonb(
   }
   return out;
 }
+
