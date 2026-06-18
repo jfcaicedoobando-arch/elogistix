@@ -68,7 +68,7 @@ export function LandingHero() {
           <div className="w-full max-w-md rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] p-5 shadow-2xl backdrop-blur-sm">
             <div className="mb-4 flex items-center justify-between border-b border-primary-foreground/10 pb-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/60">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/80">
                   Embarque · FCL
                 </p>
                 <p className="font-mono text-sm font-semibold">LCG-2026-0142</p>
@@ -80,11 +80,11 @@ export function LandingHero() {
 
             <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-lg bg-primary-foreground/[0.06] p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">BL Master</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/75">BL Master</p>
                 <p className="font-mono text-sm font-semibold">MAEU-794821</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/[0.06] p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/55">Naviera</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/75">Naviera</p>
                 <p className="text-sm font-semibold">Maersk</p>
               </div>
             </div>
@@ -92,12 +92,12 @@ export function LandingHero() {
             {/* Ruta */}
             <div className="mb-4 flex items-center gap-2 text-xs">
               <div className="flex-1 text-left">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/60">Origen</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/80">Origen</p>
                 <p className="font-semibold text-primary-foreground">Shanghái CNSHA</p>
               </div>
               <Ship className="h-4 w-4 text-primary-foreground" />
               <div className="flex-1 text-right">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/60">Destino</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/80">Destino</p>
                 <p className="font-semibold text-primary-foreground">Manzanillo MZLO</p>
               </div>
             </div>
@@ -113,12 +113,12 @@ export function LandingHero() {
                 <div key={e.label} className="flex items-center gap-3 text-xs">
                   <span
                     className={`flex h-6 w-6 flex-none items-center justify-center rounded-full ${
-                      e.done ? "bg-primary-foreground text-primary" : "bg-primary-foreground/15 text-primary-foreground/55"
+                      e.done ? "bg-primary-foreground text-primary" : "bg-primary-foreground/15 text-primary-foreground/75"
                     }`}
                   >
                     <e.icon className="h-3 w-3" />
                   </span>
-                  <span className={`flex-1 ${e.done ? "text-primary-foreground" : "text-primary-foreground/60"}`}>
+                  <span className={`flex-1 ${e.done ? "text-primary-foreground" : "text-primary-foreground/80"}`}>
                     {e.label}
                   </span>
                   <span className="font-mono text-primary-foreground/70">{e.date}</span>
@@ -132,7 +132,7 @@ export function LandingHero() {
       {/* Prueba social: sistemas / actores */}
       <div className="relative border-t border-primary-foreground/10 bg-primary/95">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <p className="mb-4 text-center text-xs font-medium uppercase tracking-wider text-primary-foreground/55">
+          <p className="mb-4 text-center text-xs font-medium uppercase tracking-wider text-primary-foreground/75">
             {PROOF_TITLE}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
