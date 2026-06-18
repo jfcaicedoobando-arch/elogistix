@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/features/tesoreria/hooks";
 import type { Database } from "@/integrations/supabase/types";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -52,6 +53,7 @@ export function useTesoreriaCuentasController() {
       setOpen(false);
     } catch (e) {
       toast.error((e as Error).message);
+      reportCaughtError(e, { feature: "tesoreria", op: "crear_cuenta" });
     }
   };
 

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useCuentasBancarias, useMovimientos, useImportarMovimientos } from "@/features/tesoreria/hooks";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { parseEstadoCuentaBBVA } from "@/lib/import/bbva";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
@@ -45,6 +46,7 @@ export default function TesoreriaConciliacion() {
       toast.success(`Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados`);
     } catch (err) {
       toast.error((err as Error).message);
+      reportCaughtError(err, { feature: "tesoreria", op: "importar_movimientos_bbva" });
     } finally {
       if (fileRef.current) fileRef.current.value = "";
     }

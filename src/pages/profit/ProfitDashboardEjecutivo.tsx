@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks";
 import { SelectorPeriodo, type PresetPeriodo } from "@/components/dashboard-ejecutivo/SelectorPeriodo";
 import { BandaKPIs } from "@/components/dashboard-ejecutivo/BandaKPIs";
@@ -45,6 +46,7 @@ export default function ProfitDashboardEjecutivo() {
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
       toast.error("No se pudo generar el PDF");
+      reportCaughtError(e, { feature: "pnl", op: "generar_pdf_ejecutivo" }, { periodo: data?.periodo });
     }
   }, [data]);
 
