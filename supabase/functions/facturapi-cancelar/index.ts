@@ -22,7 +22,7 @@ function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   if (!FACTURAPI_KEY) return json({ error: "missing_facturapi_key" }, 500);
