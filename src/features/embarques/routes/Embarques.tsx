@@ -147,7 +147,7 @@ export default function Embarques() {
         </>
       )}
 
-      {canEdit && !isEmptyState ? (
+      {canCrear && !isEmptyState ? (
         <FloatingActionButton
           icon={<Plus className="h-6 w-6" />}
           label="Nuevo embarque"
