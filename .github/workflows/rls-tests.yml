@@ -78,8 +78,8 @@ jobs:
         # la matriz declarada en este workflow.
         run: |
           set -euo pipefail
-          expected=$(ls supabase/tests/rls/test_rls_*.sql \
-            | sed -E 's|.*/test_rls_||; s|\.sql$||' \
+          expected=$(find supabase/tests/rls -maxdepth 1 -name 'test_rls_*.sql' -printf '%f\n' \
+            | sed -E 's|^test_rls_||; s|\.sql$||' \
             | LC_ALL=C sort)
           declared=$(printf '%s\n' \
             isolation \
