@@ -186,16 +186,16 @@ function buildTemplateData(cot: Cotizacion, parsed: SendBodyParsed, pdfLink: str
 }
 
 export async function handleSend(params: SendParams): Promise<Response> {
-  const { admin, supabaseUrl, supabaseServiceKey, cot, userId, userEmail, body, timestamp } = params;
+  const { admin, supabaseUrl, supabaseServiceKey, cot, userId, userEmail, body, timestamp, cors } = params;
 
   const parsed = parseSendBody(body);
-  if (parsed.validRecipients.length === 0) return json({ error: 'Al menos un destinatario válido es requerido' }, 400);
-  if (!parsed.pdfStoragePath) return json({ error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
+  if (parsed.validRecipients.length === 0) return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
+  if (!parsed.pdfStoragePath) return json(cors, { error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
 
   const { data: signed, error: signErr } = await admin
     .storage.from('cotizaciones-pdf')
     .createSignedUrl(parsed.pdfStoragePath, SIGNED_URL_TTL);
-  if (signErr || !signed) return json({ error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
+  if (signErr || !signed) return json(cors, { error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
 
   const pdfLink = signed.signedUrl;
   const enlacePortal = `${APP_URL}/cotizaciones/${cot.id}`;
@@ -219,5 +219,5 @@ export async function handleSend(params: SendParams): Promise<Response> {
 
   await updateCotizacionEstado(admin, cot, anyOk, parsed.marcarEnviada);
 
-  return json({ success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados, pdf_link: pdfLink });
+  return json(cors, { success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados, pdf_link: pdfLink });
 }
