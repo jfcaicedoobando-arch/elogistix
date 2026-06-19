@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.7] - 2026-06-19
+- **fix(embarques/bl_house-nullable)**: REACT-Y en Sentry (4 usuarios, 8 eventos) — al editar un embarque se intentaba insertar contenedores sin `bl_house` y la columna era `NOT NULL`, produciendo `23502: null value in column "bl_house"`. Migración hace `DROP NOT NULL` + `DEFAULT ''` (el BL House se captura más tarde en el flujo operativo). Cliente: `rowAContenedorBorrador` ahora hace `bl_house ?? ""` para tolerar el nuevo tipo `string | null`.
+- **fix(cotizaciones/email-retry)**: REACT-12 en Sentry — tras el fix de 13.68.6, el error real visible era `TypeError: Failed to fetch` (cold start / micro-corte de red al edge function). Añadido `fetchConReintento` en `invokeEnviarCotizacion`: hasta 3 intentos con backoff 0/800/1600 ms, sólo en errores de red (no en 4xx/5xx con cuerpo). Los reintentos son transparentes para el usuario.
+- **chore(sentry)**: Resueltos REACT-11 y REACT-Z (manifestaciones viejas del mismo problema de red, ya cubiertas por los reintentos y el manejo existente en `fetchExchangeRates`). Ignorado REACT-10 (ruido del tracker `~flock.js` de Lovable, fuera de nuestro código).
+- Bump `APP_VERSION` 13.68.7.
+
 ## [13.68.6] - 2026-06-19
 - **fix(cotizaciones/enviar-email-cliente)**: Tras el fix CORS de 13.68.5, Valeria seguía viendo "Failed to send a request to the Edge Function". El preflight del backend ya respondía bien (verificado vía curl desde `https://librecarga.com`), pero `supabase.functions.invoke()` enmascaraba cualquier error HTTP del servidor como un genérico `FunctionsFetchError`. Migrado `enviarPorEmail` a `fetch` directo con `Authorization` + `apikey` explícitos: ahora si el servicio responde 4xx/5xx, leemos el cuerpo JSON y lanzamos `Servicio de correo (status): <detalle real>`, y si no hay sesión se muestra "Tu sesión expiró". Sin cambios en la edge function. Bump `APP_VERSION` 13.68.6.
 
