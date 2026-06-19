@@ -17,7 +17,8 @@ import {
   filtrarPorContenedor,
   type FiltroContenedor,
 } from "@/lib/domain/conceptosPorContenedor";
-import { submitProformaDialog } from "@/features/embarques/services/submitProformaDialog";
+import { submitProformaDialog, ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
+import { toast } from "@/hooks/shared";
 import {
   calcularTotalesProforma,
   buildInitialProformaState,
@@ -138,8 +139,25 @@ export function useDialogGenerarProformaController(
         fetchClienteParaPdfCached,
       });
       onClose();
-    } catch {
-      // Error manejado en hook
+    } catch (err) {
+      // Errores del RPC `crearProforma` ya muestran toast vía onError del hook;
+      // este catch maneja validación FCL previa y fallos del PDF/cliente, que
+      // antes se silenciaban (botón "no hacía nada"). 13.67.9.
+      const message =
+        err instanceof Error ? err.message : "No se pudo generar la proforma. Intenta de nuevo.";
+      const isValidation = err instanceof ProformaValidationError;
+      const isMutationError = !isValidation
+        && typeof err === "object" && err !== null
+        && "name" in err && (err as { name?: string }).name === "PostgrestError";
+      // El hook crearProforma ya toasteó este caso, evitamos duplicar.
+      if (!isMutationError) {
+        toast({ title: message, variant: isValidation ? "warning" : "destructive" });
+      }
+      if (!isValidation && !isMutationError) {
+        void import("@sentry/react").then(({ captureException }) =>
+          captureException(err, { tags: { feature: "proforma_generate" } }),
+        ).catch(() => undefined);
+      }
     }
   };
 

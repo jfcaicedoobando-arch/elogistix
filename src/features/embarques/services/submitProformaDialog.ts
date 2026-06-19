@@ -10,6 +10,18 @@ import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { validarContenedoresFCL } from "@/features/embarques/services/validarContenedoresFCL";
 
+/**
+ * Error de pre-validación esperada (ej. FCL sin peso/volumen).
+ * El controller lo trata como aviso al usuario, NO como bug a reportar en Sentry.
+ */
+export class ProformaValidationError extends Error {
+  readonly isValidation = true as const;
+  constructor(message: string) {
+    super(message);
+    this.name = "ProformaValidationError";
+  }
+}
+
 type ClienteParaPdf = Pick<
   Tables<"clientes">,
   "nombre" | "rfc" | "direccion" | "ciudad" | "estado" | "cp"
@@ -66,7 +78,9 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
   // Pre-check: contenedores FCL marítimos deben tener peso y volumen capturados.
   const validacion = validarContenedoresFCL(embarque, contenedores);
   if (!validacion.ok) {
-    throw new Error(validacion.mensaje ?? "Captura peso y volumen de todos los contenedores antes de generar la proforma.");
+    throw new ProformaValidationError(
+      validacion.mensaje ?? "Captura peso y volumen de todos los contenedores antes de generar la proforma.",
+    );
   }
 
   const ivaOverrides: Record<string, boolean> = {};
