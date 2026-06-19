@@ -3,18 +3,21 @@
 // La lógica pesada vive en `handlers.ts`; este archivo solo valida JWT,
 // carga la cotización y enruta a `handlePrepare` o `handleSend`.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { wrapEdgeHandler } from "../_shared/sentry.ts"
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { handlePrepare, handleSend } from './handlers.ts';
 
-function json(data: Record<string, unknown>, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+function makeJson(cors: Record<string, string>) {
+  return (data: Record<string, unknown>, status = 200): Response =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    });
 }
 
-async function loadEnv(): Promise<{ url: string; anon: string; service: string } | Response> {
+type JsonFn = ReturnType<typeof makeJson>;
+
+async function loadEnv(json: JsonFn): Promise<{ url: string; anon: string; service: string } | Response> {
   const url = Deno.env.get('SUPABASE_URL');
   const anon = Deno.env.get('SUPABASE_ANON_KEY');
   const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -22,7 +25,7 @@ async function loadEnv(): Promise<{ url: string; anon: string; service: string }
   return { url, anon, service };
 }
 
-async function authenticateRequest(req: Request, url: string, anon: string) {
+async function authenticateRequest(req: Request, url: string, anon: string, json: JsonFn) {
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.toLowerCase().startsWith('bearer ')) {
     return { res: json({ error: 'Missing authorization' }, 401) };
@@ -36,7 +39,12 @@ async function authenticateRequest(req: Request, url: string, anon: string) {
   return { userId: userData.user.id, userEmail: userData.user.email ?? '' };
 }
 
-async function loadCotizacion(admin: ReturnType<typeof createClient>, cotizacionId: string, userId: string) {
+async function loadCotizacion(
+  admin: ReturnType<typeof createClient>,
+  cotizacionId: string,
+  userId: string,
+  json: JsonFn,
+) {
   const { data: cot, error } = await admin
     .from('cotizaciones')
     .select('id, folio, organization_id, cliente_nombre, origen, destino, incoterm, modo, fecha_vigencia, estado, deleted_at')
@@ -56,13 +64,18 @@ async function loadCotizacion(admin: ReturnType<typeof createClient>, cotizacion
 }
 
 Deno.serve(wrapEdgeHandler("enviar-cotizacion-email", async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+
+  const cors = buildCors(req);
+  const json = makeJson(cors);
+
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  const env = await loadEnv();
+  const env = await loadEnv(json);
   if (env instanceof Response) return env;
 
-  const auth = await authenticateRequest(req, env.url, env.anon);
+  const auth = await authenticateRequest(req, env.url, env.anon, json);
   if ('res' in auth) return auth.res;
 
   const admin = createClient(env.url, env.service, { auth: { persistSession: false } });
@@ -78,14 +91,14 @@ Deno.serve(wrapEdgeHandler("enviar-cotizacion-email", async (req) => {
   const cotizacionId = String(body.cotizacion_id ?? '');
   if (!cotizacionId) return json({ error: 'cotizacion_id requerido' }, 400);
 
-  const loaded = await loadCotizacion(admin, cotizacionId, auth.userId);
+  const loaded = await loadCotizacion(admin, cotizacionId, auth.userId, json);
   if ('res' in loaded) return loaded.res;
   const { cot } = loaded;
 
   const timestamp = Date.now();
   const pdfPath = `${cot.organization_id}/${cot.id}/${cot.folio}-${timestamp}.pdf`;
 
-  if (action === 'prepare') return handlePrepare(admin, pdfPath);
+  if (action === 'prepare') return handlePrepare(admin, pdfPath, cors);
   if (action !== 'send') return json({ error: 'action inválida (prepare|send)' }, 400);
 
   return handleSend({
@@ -97,5 +110,6 @@ Deno.serve(wrapEdgeHandler("enviar-cotizacion-email", async (req) => {
     userEmail: auth.userEmail,
     body,
     timestamp,
+    cors,
   });
 }));
