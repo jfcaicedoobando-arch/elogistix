@@ -14,6 +14,7 @@ import {
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "./TarifaResultCard";
+import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
 interface Props {
