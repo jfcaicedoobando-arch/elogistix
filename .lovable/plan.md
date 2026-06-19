@@ -1,39 +1,29 @@
-# Fix: Unhandled promise rejection al crear ruta duplicada
-
 ## Problema
 
-En `/costeo/rutas`, al intentar guardar una ruta CN→MX duplicada, Sentry registra un `UnhandledRejection` con el error crudo de Postgrest (`{code, details, hint, message}`). La respuesta HTTP es 409 (violación de unique constraint), pero el rechazo termina como promesa no manejada.
+En Sentry aparece `FunctionsFetchError: Failed to send a request to the Edge Function` cada vez que el navegador no logra contactar la edge `exchange-rates` (cold start del servidor, micro-corte de red del cliente, AdBlock, etc.).
 
-Dos causas combinadas:
+El error está **manejado** (`handled: yes`) — React Query reintenta y la app ya tiene un fallback duro (17.25 / 18.5). Es ruido de Sentry, no un bug funcional. La analogía: es como reportar al jefe cada vez que el WiFi parpadea un segundo, aunque el teléfono se reconectó solo.
 
-1. **`RutaFormDialog.handleGuardar`** llama `await crear.mutateAsync(...)` sin `try/catch`. React Query dispara `onError` (toast), pero `mutateAsync` **igualmente** rechaza la promesa. Como `handleGuardar` es un handler `onSubmit` no esperado por nadie, el rechazo queda colgado → `unhandledrejection`.
-2. **`insertCosteoRuta`** detecta el unique violation comparando contra el nombre exacto `costeo_rutas_organization_id_puerto_origen_id_puer` (truncado). Si en producción el nombre del constraint difiere, `isUniqueViolation` devuelve `false` y se relanza el objeto crudo (no `Error`) — que es justo lo que Sentry capturó. El check por `code === "23505"` debería bastar, pero por las dudas reforzamos.
+## Causa
 
-## Cambios
+`fetchExchangeRates` reporta **cualquier** error (incluido el de red transitorio) a Sentry y lo relanza. El proveedor (Frankfurter) ya cuenta con fallback dentro de la edge, pero ese fallback nunca llega si la petición ni siquiera sale del navegador.
 
-### 1. `src/features/costeo/components/RutaFormDialog.tsx`
-Envolver `crear.mutateAsync` en `try/catch` para consumir el rechazo. El toast ya lo emite `onError` del hook; aquí sólo evitamos cerrar el diálogo y resetear el formulario cuando falla.
+## Cambios propuestos
 
-```ts
-try {
-  await crear.mutateAsync({ ... });
-  setOrigenId(""); setDestinoId(""); setIntentoEnvio(false);
-  onOpenChange(false);
-} catch {
-  // onError del hook ya mostró el toast; mantenemos el diálogo abierto.
-}
-```
+1. **`src/features/catalogos/services/index.ts`** — `fetchExchangeRates`:
+   - Si el error es `FunctionsFetchError` (fallo de red al invocar), **NO** capturar en Sentry; sólo dejar un `addBreadcrumb` y devolver `FALLBACK` (17.25 / 18.5) en vez de lanzar. Así React Query no reintenta inútilmente y la UI sigue funcionando.
+   - Para otros errores (5xx del edge, JSON inválido), mantener el `captureException` actual y relanzar (comportamiento sin cambios).
 
-### 2. `src/features/costeo/services/rutas.ts`
-Endurecer `isUniqueViolation`: aceptar también `code === 23505` (numérico), y match más laxo del nombre de constraint (`/costeo_rutas.*puerto/i`). Garantiza que cualquier 409 por duplicado se traduzca a `CosteoRutaDuplicadaError` (que sí es `Error`), nunca al objeto Postgrest crudo.
+2. **`src/features/catalogos/services/__tests__/exchangeRates.sentry.test.ts`**:
+   - Añadir caso: cuando `invoke` devuelve un error con `name === "FunctionsFetchError"`, la función **devuelve el fallback** y **no** llama a `captureException`.
+   - Conservar el test existente para errores genéricos (siguen reportándose y relanzándose).
 
-### 3. Tests
-Extender `rutas.test.ts` con un caso donde el constraint name viene distinto pero `code` es `"23505"` — debe lanzar `CosteoRutaDuplicadaError`.
+3. **`src/constants/appVersion.ts`** → `13.67.8`.
 
-### 4. Versión / changelog
-- `APP_VERSION` → `13.67.6`
-- Entrada en `CHANGELOG.md` describiendo el fix.
+4. **`CHANGELOG.md`** → entrada `[13.67.8]` describiendo el silenciado del ruido de Sentry para fallos de red transitorios.
 
 ## Fuera de alcance
-- No se toca RLS, schema, ni la UI del módulo más allá del handler.
-- No se cambian otros diálogos del feature (sólo `RutaFormDialog` mostró el síntoma); si quieres puedo auditar el resto de `mutateAsync` del módulo en un follow-up.
+
+- No tocar la edge function `exchange-rates` (ya tiene su propio fallback).
+- No cambiar `verify_jwt`, CORS, ni `config.toml`.
+- No cambiar UI ni lógica de facturación.

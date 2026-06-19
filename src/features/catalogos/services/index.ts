@@ -117,18 +117,39 @@ export async function deleteTipoContenedor(id: string): Promise<void> {
 
 // ─── Tipo de cambio (edge function) ──────────────────────────────────────────
 
+const EXCHANGE_RATES_FALLBACK: ExchangeRates = { usdMxn: 17.25, eurMxn: 18.5 };
+
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
   const { data, error } = await supabase.functions.invoke("exchange-rates");
   if (error) {
-    // Reportar a Sentry con tag para alertar caída del proveedor (Frankfurter)
-    // o de la edge function — luego degradamos a fallback duro.
-    void import("@sentry/react").then(({ captureException }) =>
-      captureException(error, { tags: { feature: "exchange_rates", source: "edge_invoke" } }),
-    ).catch(() => undefined);
+    // `FunctionsFetchError` = el navegador no logró siquiera contactar la edge
+    // (cold start, micro-corte de red, AdBlock). Es transitorio y la app tiene
+    // fallback. Sólo dejamos breadcrumb, NO capturamos en Sentry, y devolvemos
+    // los rates fallback para evitar reintentos inútiles de React Query.
+    const isFetchError =
+      (error as { name?: string })?.name === "FunctionsFetchError";
+    void import("@sentry/react").then((Sentry) => {
+      if (isFetchError) {
+        Sentry.addBreadcrumb({
+          category: "exchange_rates",
+          level: "warning",
+          message: "exchange_rates.fetch_error.fallback",
+          data: { name: (error as { name?: string })?.name },
+        });
+        return;
+      }
+      // Errores no transitorios (5xx, JSON inválido) sí van a Sentry.
+      Sentry.captureException(error, {
+        tags: { feature: "exchange_rates", source: "edge_invoke" },
+      });
+    }).catch(() => undefined);
+
+    if (isFetchError) return EXCHANGE_RATES_FALLBACK;
     throw error;
   }
   return {
-    usdMxn: data?.usdMxn ?? 17.25,
-    eurMxn: data?.eurMxn ?? 18.5,
+    usdMxn: data?.usdMxn ?? EXCHANGE_RATES_FALLBACK.usdMxn,
+    eurMxn: data?.eurMxn ?? EXCHANGE_RATES_FALLBACK.eurMxn,
   };
 }
+
