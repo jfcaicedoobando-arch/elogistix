@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.8] - 2026-06-19
+- **fix(observability/exchange-rates)**: Silenciado ruido de Sentry por `FunctionsFetchError` al invocar la edge `exchange-rates`. Este error es transitorio (cold start del edge runtime, micro-cortes de red del cliente, AdBlock) y la app ya tenía fallback duro (17.25 / 18.5), pero igual generaba alertas. Ahora `fetchExchangeRates` detecta `error.name === "FunctionsFetchError"`, deja un `addBreadcrumb` en Sentry, devuelve el fallback y evita el reintento de React Query. Los errores no transitorios (5xx, JSON inválido) siguen reportándose y relanzándose. Bump `APP_VERSION` 13.67.8.
+
 ## [13.67.7] - 2026-06-19
 - **fix(user-management/list-clients)**: La edge function devolvía 403 "No autorizado" a roles modernos (`coordinador_logistico`, `admin_org`, `ejecutivo_pricing`, `gerente_operaciones`) al listar usuarios del portal de un cliente. `authorizeListClients` sólo permitía `admin` y `operador` (legacy). Ampliada la whitelist en `clientHandlers.ts` para incluir los roles modernos equivalentes, consistente con `handleList`. Bump `APP_VERSION` 13.67.7.
 
