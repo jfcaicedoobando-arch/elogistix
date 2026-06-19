@@ -10,6 +10,7 @@ import {
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import { TarifaEstadoBadge } from "./TarifaEstadoBadge";
 import { usd } from "../routes/CosteoTarifas.helpers";
+import type { CosteoTarifaEstado } from "@/features/costeo/types";
 
 interface TarifaRow {
   id: string;
@@ -23,7 +24,7 @@ interface TarifaRow {
   total_comparable: number;
   vigente_desde: string;
   vigente_hasta: string;
-  estado: string;
+  estado: CosteoTarifaEstado;
 }
 
 interface Props {
