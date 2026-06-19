@@ -1,29 +1,38 @@
-## Problema
+## Diagnóstico
 
-En Sentry aparece `FunctionsFetchError: Failed to send a request to the Edge Function` cada vez que el navegador no logra contactar la edge `exchange-rates` (cold start del servidor, micro-corte de red del cliente, AdBlock, etc.).
+El botón "Confirmar y Generar" del diálogo de proforma (embarque → tab Facturación) **sí ejecuta su handler**, pero el `handleConfirmar` en `useDialogGenerarProformaController.ts` (líneas 132–144) tiene un `catch { }` vacío. Cuando algo falla **antes** del `mutateAsync` (típicamente la validación FCL de peso/volumen de contenedores en `validarContenedoresFCL`) o **después** (la generación del PDF), la promesa se cae silenciosamente y al usuario le parece que el botón "no hace nada".
 
-El error está **manejado** (`handled: yes`) — React Query reintenta y la app ya tiene un fallback duro (17.25 / 18.5). Es ruido de Sentry, no un bug funcional. La analogía: es como reportar al jefe cada vez que el WiFi parpadea un segundo, aunque el teléfono se reconectó solo.
+Analogía: es como apretar el botón del elevador y que internamente suene una alarma — pero los altavoces están apagados, así que nadie se entera de por qué no se mueve.
 
-## Causa
+Los errores del propio RPC `crearProforma` sí muestran toast (vía `onError` del hook), pero los otros dos casos no.
 
-`fetchExchangeRates` reporta **cualquier** error (incluido el de red transitorio) a Sentry y lo relanza. El proveedor (Frankfurter) ya cuenta con fallback dentro de la edge, pero ese fallback nunca llega si la petición ni siquiera sale del navegador.
+## Causa más probable para Alan
+
+Su embarque tiene contenedores FCL marítimos sin peso o volumen capturados. `validarContenedoresFCL` lanza `Error("Captura peso y volumen…")` antes de llegar al RPC. El `catch {}` se lo come y el dialog queda abierto sin ninguna pista visual.
 
 ## Cambios propuestos
 
-1. **`src/features/catalogos/services/index.ts`** — `fetchExchangeRates`:
-   - Si el error es `FunctionsFetchError` (fallo de red al invocar), **NO** capturar en Sentry; sólo dejar un `addBreadcrumb` y devolver `FALLBACK` (17.25 / 18.5) en vez de lanzar. Así React Query no reintenta inútilmente y la UI sigue funcionando.
-   - Para otros errores (5xx del edge, JSON inválido), mantener el `captureException` actual y relanzar (comportamiento sin cambios).
+1. **`src/features/embarques/hooks/useDialogGenerarProformaController.ts`** (`handleConfirmar`):
+   - Cambiar `catch { }` por `catch (err) { ... }` que:
+     - Muestre un `toast.error` con el mensaje del `Error` (fallback genérico si no es `Error`).
+     - Reporte a Sentry con `tags: { feature: "proforma_generate" }` SOLO si NO es un error de validación esperado (los de validación FCL no son bugs).
+   - No cerrar el diálogo cuando falla (comportamiento ya correcto, se mantiene).
+   - Importar `toast` desde `@/hooks/shared` y `captureException` lazy.
 
-2. **`src/features/catalogos/services/__tests__/exchangeRates.sentry.test.ts`**:
-   - Añadir caso: cuando `invoke` devuelve un error con `name === "FunctionsFetchError"`, la función **devuelve el fallback** y **no** llama a `captureException`.
-   - Conservar el test existente para errores genéricos (siguen reportándose y relanzándose).
+2. **`src/features/embarques/services/submitProformaDialog.ts`**:
+   - Marcar el `Error` lanzado por la validación FCL con una flag (`(err as any).isValidation = true`) o usar una subclase `ProformaValidationError` para diferenciarlo de errores reales. Preferencia: subclase exportada `ProformaValidationError extends Error` (más limpia, testeable).
+   - Aplicar la misma subclase a futuros pre-checks.
 
-3. **`src/constants/appVersion.ts`** → `13.67.8`.
+3. **`src/features/embarques/hooks/__tests__/useDialogGenerarProformaController.test.tsx`**:
+   - Añadir test: cuando `submitProformaDialog` rechaza con `ProformaValidationError`, se llama `toast.error` con el mensaje y NO se llama a `captureException`.
+   - Añadir test: cuando rechaza con `Error` genérico (ej. fallo del PDF), se llama `toast.error` y SÍ `captureException`.
 
-4. **`CHANGELOG.md`** → entrada `[13.67.8]` describiendo el silenciado del ruido de Sentry para fallos de red transitorios.
+4. **`src/constants/appVersion.ts`** → `13.67.9`.
+
+5. **`CHANGELOG.md`** → entrada `[13.67.9]` describiendo que el botón ahora muestra feedback en lugar de fallar silenciosamente.
 
 ## Fuera de alcance
 
-- No tocar la edge function `exchange-rates` (ya tiene su propio fallback).
-- No cambiar `verify_jwt`, CORS, ni `config.toml`.
-- No cambiar UI ni lógica de facturación.
+- No cambiar la lógica de validación FCL en sí (sigue exigiendo peso y volumen).
+- No cambiar el RPC ni la generación del PDF.
+- No tocar UI del diálogo (sólo se añade un toast).
