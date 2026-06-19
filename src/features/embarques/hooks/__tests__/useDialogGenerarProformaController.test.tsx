@@ -55,6 +55,11 @@ const mockConceptos = [
 const wrapper = createWrapper();
 
 describe("useDialogGenerarProformaController", () => {
+  beforeEach(() => {
+    hoisted.submitMock.mockReset();
+    hoisted.toastMock.mockReset();
+    hoisted.captureMock.mockReset();
+  });
   it("inicializa correctamente al abrir", () => {
     const { result } = renderHook(
       () => useDialogGenerarProformaController(true, mockEmbarque, mockConceptos, vi.fn()),
