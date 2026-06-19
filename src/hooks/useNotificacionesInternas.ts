@@ -8,6 +8,7 @@ import {
   subscribeNotificaciones,
   type NotificacionInterna,
 } from "@/services/notificaciones";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 export type { NotificacionInterna };
 
@@ -37,11 +38,17 @@ export function useNotificacionesInternas() {
   const marcarLeidaMut = useMutation({
     mutationFn: svcMarcarLeida,
     onSuccess: () => qc.invalidateQueries({ queryKey: [...QUERY_KEY, userId] }),
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al marcar notificación: ${error.message}`, error, method: "MARK_INTERNAL_NOTIF_READ" });
+    },
   });
 
   const marcarTodasMut = useMutation({
     mutationFn: () => (userId ? svcMarcarTodas(userId) : Promise.resolve()),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...QUERY_KEY, userId] }),
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al marcar notificaciones: ${error.message}`, error, method: "MARK_ALL_INTERNAL_NOTIF_READ" });
+    },
   });
 
   const noLeidas = (query.data ?? []).filter((n) => !n.leida).length;

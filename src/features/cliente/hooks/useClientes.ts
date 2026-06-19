@@ -16,6 +16,7 @@ import {
   fetchCotizacionesCliente,
 } from "@/features/cliente/services";
 import type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
 
@@ -55,12 +56,17 @@ export function useContactosCliente(clienteId: string | undefined) {
   });
 }
 
+// NOTA: el wizard de alta de cliente puede emitir su propio toast de éxito;
+// aquí sólo añadimos onError como red de seguridad.
 export function useCreateCliente() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (cliente: TablesInsert<"clientes">) => createCliente(cliente),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear cliente: ${error.message}`, error, method: "CREATE_CLIENTE" });
     },
   });
 }
@@ -69,8 +75,13 @@ export function useCreateContacto() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (contacto: TablesInsert<"contactos_cliente">) => createContacto(contacto),
-    onSuccess: (_resultado, vars) =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
+    onSuccess: (_resultado, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
+      notifySuccess(undefined, { title: "Contacto creado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear contacto: ${error.message}`, error, method: "CREATE_CONTACTO" });
+    },
   });
 }
 
@@ -79,8 +90,13 @@ export function useUpdateContacto() {
   return useMutation({
     mutationFn: ({ id, cliente_id, ...updates }: Partial<ContactoCliente> & { id: string; cliente_id: string }) =>
       updateContacto(id, updates),
-    onSuccess: (_resultado, vars) =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
+    onSuccess: (_resultado, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
+      notifySuccess(undefined, { title: "Contacto actualizado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar contacto: ${error.message}`, error, method: "UPDATE_CONTACTO" });
+    },
   });
 }
 
@@ -88,8 +104,13 @@ export function useDeleteContacto() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id }: { id: string; cliente_id: string }) => deleteContacto(id),
-    onSuccess: (_resultado, vars) =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
+    onSuccess: (_resultado, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
+      notifySuccess(undefined, { title: "Contacto eliminado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar contacto: ${error.message}`, error, method: "DELETE_CONTACTO" });
+    },
   });
 }
 
@@ -124,6 +145,10 @@ export function useUpdateCliente() {
     onSuccess: (clienteActualizado) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.detail(clienteActualizado.id) });
+      notifySuccess(undefined, { title: "Cliente actualizado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar cliente: ${error.message}`, error, method: "UPDATE_CLIENTE" });
     },
   });
 }

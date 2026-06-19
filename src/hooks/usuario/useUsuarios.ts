@@ -7,6 +7,7 @@ import {
   type UserRow,
 } from '@/services/usuario';
 import type { AppRole } from "@/types/appRole";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { UserRow };
 
@@ -25,8 +26,12 @@ export function useUpdateUserRole() {
   return useMutation({
     mutationFn: ({ userId, newRole }: { userId: string; newRole: AppRole }) =>
       updateUserRole(userId, newRole),
-    onSuccess: () => {
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+      notifySuccess(undefined, { title: `Rol actualizado a ${vars.newRole}` });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al cambiar rol: ${error.message}`, error, method: "UPDATE_USER_ROLE" });
     },
   });
 }
@@ -37,6 +42,10 @@ export function useDeleteUser() {
     mutationFn: (userId: string) => deleteUserViaEdgeFunction(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+      notifySuccess(undefined, { title: "Usuario eliminado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar usuario: ${error.message}`, error, method: "DELETE_USER" });
     },
   });
 }

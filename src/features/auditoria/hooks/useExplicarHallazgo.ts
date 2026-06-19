@@ -4,6 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { explicarHallazgo, type ExplicacionHallazgo } from "@/features/auditoria/services/explicarHallazgo";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 export type { ExplicacionHallazgo };
 
@@ -24,6 +25,9 @@ export function useExplicarHallazgo() {
       });
       qc.setQueryData(cacheKey(h), data);
       return data;
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al explicar hallazgo: ${error.message}`, error, method: "EXPLAIN_HALLAZGO" });
     },
   });
 }

@@ -6,6 +6,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { actualizarFechaLlegadaRealEmbarque } from "@/features/embarques/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface Input {
   embarqueId: string;
@@ -21,6 +22,10 @@ export function useActualizarFechaLlegadaReal() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      notifySuccess(undefined, { title: "Fecha de llegada actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar fecha: ${error.message}`, error, method: "UPDATE_FECHA_LLEGADA_REAL" });
     },
   });
 }

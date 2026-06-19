@@ -12,6 +12,7 @@ import {
   type PlantillaMensajeRow,
   type PlantillaInput,
 } from "@/features/crm/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { PlantillaCanal, PlantillaMensajeRow, PlantillaInput };
 
@@ -27,7 +28,13 @@ export function useCrearPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: crearPlantilla,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all });
+      notifySuccess(undefined, { title: "Plantilla creada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear plantilla: ${error.message}`, error, method: "CREATE_PLANTILLA" });
+    },
   });
 }
 
@@ -35,7 +42,13 @@ export function useActualizarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: actualizarPlantilla,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all });
+      notifySuccess(undefined, { title: "Plantilla actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar plantilla: ${error.message}`, error, method: "UPDATE_PLANTILLA" });
+    },
   });
 }
 
@@ -43,7 +56,13 @@ export function useEliminarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: eliminarPlantilla,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all });
+      notifySuccess(undefined, { title: "Plantilla eliminada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar plantilla: ${error.message}`, error, method: "DELETE_PLANTILLA" });
+    },
   });
 }
 

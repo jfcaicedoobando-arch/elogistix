@@ -5,6 +5,7 @@ import {
   upsertCotizacionCostos,
 } from '@/features/cotizacion/services';
 import { newRequestId } from '@/lib/idempotency';
+import { notifyError } from '@/components/shared/utils/appFeedback';
 
 export type { CostoCotizacion } from '@/features/cotizacion/types';
 import type { CostoCotizacion } from '@/features/cotizacion/types';
@@ -24,6 +25,9 @@ export function useUpsertCotizacionCostos() {
       upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId()),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al guardar costos: ${error.message}`, error, method: "UPSERT_COTIZACION_COSTOS" });
     },
   });
 }

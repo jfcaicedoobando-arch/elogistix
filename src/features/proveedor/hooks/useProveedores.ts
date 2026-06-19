@@ -15,6 +15,7 @@ import {
   type ProveedorOperacion,
   type ProveedorLite,
 } from "@/features/proveedor/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;
@@ -57,19 +58,38 @@ export function useProveedorMutations() {
 
   const addProveedorMutation = useMutation({
     mutationFn: (prov: TablesInsert<"proveedores">) => insertProveedor(prov),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
+      notifySuccess(undefined, { title: "Proveedor creado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear proveedor: ${error.message}`, error, method: "CREATE_PROVEEDOR" });
+    },
   });
 
   const updateProveedorMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: TablesUpdate<"proveedores"> }) =>
       svcUpdate(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
+      notifySuccess(undefined, { title: "Proveedor actualizado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar proveedor: ${error.message}`, error, method: "UPDATE_PROVEEDOR" });
+    },
   });
 
   const deleteProveedorMutation = useMutation({
     mutationFn: (id: string) => svcDelete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
+      notifySuccess(undefined, { title: "Proveedor eliminado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar proveedor: ${error.message}`, error, method: "DELETE_PROVEEDOR" });
+    },
   });
+
 
   return {
     addProveedor: addProveedorMutation.mutateAsync,

@@ -24,12 +24,17 @@ export function useAuditoriaSnapshots(dias = 30) {
   });
 }
 
+// Captura idempotente: si falla la dejamos pasar (logger.warn en el caller).
+// Toast molestaría al usuario porque la captura es background al abrir el tab.
 export function useCapturarSnapshotAuditoria() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: capturarSnapshotAuditoria,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.snapshotsAll });
+    },
+    onError: (err: Error) => {
+      logger.warn("[useCapturarSnapshotAuditoria] no se pudo capturar:", err);
     },
   });
 }

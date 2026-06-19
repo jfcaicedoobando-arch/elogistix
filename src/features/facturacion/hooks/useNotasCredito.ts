@@ -12,6 +12,7 @@ import {
   type NotaCreditoConFactura,
   type ListarNotasCreditoRecientesFiltros,
 } from "@/features/facturacion/services/notasCredito";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useNotasCredito(facturaId: string | undefined) {
   return useQuery({
@@ -44,7 +45,13 @@ export function useCrearNotaCredito() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CrearNotaCreditoInput) => crearNotaCredito(input),
-    onSuccess: (_d, vars) => invalidar(qc, vars.factura_id),
+    onSuccess: (_d, vars) => {
+      invalidar(qc, vars.factura_id);
+      notifySuccess(undefined, { title: "Nota de crédito creada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear nota de crédito: ${error.message}`, error, method: "CREATE_NOTA_CREDITO" });
+    },
   });
 }
 
@@ -57,7 +64,13 @@ export function useCambiarEstadoNotaCredito() {
       estadoActual: EstadoNotaCredito;
       estadoNuevo: EstadoNotaCredito;
     }) => cambiarEstadoNotaCredito(params.id, params.estadoActual, params.estadoNuevo),
-    onSuccess: (_d, vars) => invalidar(qc, vars.facturaId),
+    onSuccess: (_d, vars) => {
+      invalidar(qc, vars.facturaId);
+      notifySuccess(undefined, { title: `Nota de crédito ${vars.estadoNuevo}` });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al cambiar estado de nota: ${error.message}`, error, method: "CHANGE_NC_STATE" });
+    },
   });
 }
 

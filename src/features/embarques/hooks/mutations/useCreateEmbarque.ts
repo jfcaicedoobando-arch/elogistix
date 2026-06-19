@@ -8,6 +8,7 @@ import { crearEmbarqueRpc, duplicarEmbarqueRpc } from '@/features/embarques/serv
 import { crearMuchos } from '@/features/embarques/services/contenedores';
 import { fromDb } from "@/lib/supabase/cast";
 import { newRequestId } from "@/lib/idempotency";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 
 type EmbarqueRow = Tables<'embarques'>;
@@ -39,6 +40,10 @@ export function useCreateEmbarque() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      notifySuccess(undefined, { title: "Embarque creado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear embarque: ${error.message}`, error, method: "CREATE_EMBARQUE" });
     },
   });
 }
@@ -64,6 +69,10 @@ export function useDuplicarEmbarque() {
       duplicarEmbarqueRpc(embarqueOrigen.id, copias, requestId ?? newRequestId()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      notifySuccess(undefined, { title: "Embarque duplicado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al duplicar embarque: ${error.message}`, error, method: "DUPLICATE_EMBARQUE" });
     },
   });
 }

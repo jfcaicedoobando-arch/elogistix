@@ -7,6 +7,7 @@ import {
 import { generarFolioCotizacion } from "@/features/cotizacion/services/queries";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface UseCrearCotizacionDesdeOpInput {
   oportunidad: CrearCotizacionDesdeOpInput["oportunidad"] & {
@@ -49,9 +50,13 @@ export function useCrearCotizacionDesdeOportunidad() {
       }
       return { id: cot.id, folio };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.opCotizaciones.all });
+      notifySuccess(undefined, { title: `Cotización ${data.folio} creada` });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear cotización desde oportunidad: ${error.message}`, error, method: "CREATE_COTIZACION_FROM_OP" });
     },
   });
 }

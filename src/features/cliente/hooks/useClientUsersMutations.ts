@@ -6,6 +6,7 @@ import {
   revokeClientUser,
   type InviteClientUserParams,
 } from "@/features/cliente/services/usuarios";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 /**
  * Lista los usuarios del portal vinculados a un cliente específico.
@@ -24,6 +25,10 @@ export function useInviteClientUser(clienteId: string) {
     mutationFn: (params: InviteClientUserParams) => inviteClientUser(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.clientUsers(clienteId) });
+      notifySuccess(undefined, { title: "Invitación enviada al usuario" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al invitar usuario: ${error.message}`, error, method: "INVITE_CLIENT_USER" });
     },
   });
 }
@@ -34,6 +39,10 @@ export function useRevokeClientUser(clienteId: string) {
     mutationFn: (id: string) => revokeClientUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.clientUsers(clienteId) });
+      notifySuccess(undefined, { title: "Acceso revocado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al revocar usuario: ${error.message}`, error, method: "REVOKE_CLIENT_USER" });
     },
   });
 }
@@ -45,5 +54,11 @@ export function useRevokeClientUser(clienteId: string) {
 export function useResendClientUserInvite(_clienteId: string) {
   return useMutation({
     mutationFn: (params: InviteClientUserParams) => inviteClientUser(params),
+    onSuccess: () => {
+      notifySuccess(undefined, { title: "Invitación reenviada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al reenviar invitación: ${error.message}`, error, method: "RESEND_CLIENT_USER_INVITE" });
+    },
   });
 }

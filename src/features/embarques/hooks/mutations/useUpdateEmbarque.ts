@@ -13,6 +13,7 @@ import { sincronizarContenedores } from '@/features/embarques/services/contenedo
 import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
 import { CONTENEDORES_QUERY_KEY } from '@/features/embarques/hooks/useContenedoresEmbarque';
 import { newRequestId } from '@/lib/idempotency';
+import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -43,6 +44,10 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: [CONTENEDORES_QUERY_KEY, embarqueActualizado.id] });
+      notifySuccess(undefined, { title: "Embarque actualizado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar embarque: ${error.message}`, error, method: "UPDATE_EMBARQUE" });
     },
   });
 }

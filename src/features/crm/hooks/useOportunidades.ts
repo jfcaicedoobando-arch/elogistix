@@ -18,6 +18,7 @@ import {
   type CrmOportunidadRow,
   type OportunidadInput as ServiceOportunidadInput,
 } from "@/features/crm/services/oportunidades";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { CrmOportunidadRow, Moneda } from "@/features/crm/services/oportunidades";
 export type OportunidadInput = ServiceOportunidadInput;
@@ -56,6 +57,10 @@ export function useCrearOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      notifySuccess(undefined, { title: "Oportunidad creada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear oportunidad: ${error.message}`, error, method: "CREATE_OPORTUNIDAD" });
     },
   });
 }
@@ -69,6 +74,9 @@ export function useActualizarOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar oportunidad: ${error.message}`, error, method: "UPDATE_OPORTUNIDAD" });
+    },
   });
 }
 
@@ -77,6 +85,12 @@ export function useEliminarOportunidad() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: (id: string) => eliminarOportunidad(id, user?.id ?? null),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      notifySuccess(undefined, { title: "Oportunidad eliminada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar oportunidad: ${error.message}`, error, method: "DELETE_OPORTUNIDAD" });
+    },
   });
 }

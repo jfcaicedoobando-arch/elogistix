@@ -9,6 +9,7 @@ import {
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas,
 } from "@/features/portal/services";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 const KEY = ["portal", "notificaciones"] as const;
 
@@ -29,6 +30,9 @@ export function useMarcarNotificacionLeida() {
   return useMutation({
     mutationFn: marcarNotificacionLeida,
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al marcar notificación: ${error.message}`, error, method: "MARK_NOTIF_READ" });
+    },
   });
 }
 
@@ -37,5 +41,8 @@ export function useMarcarTodasLeidas() {
   return useMutation({
     mutationFn: marcarTodasNotificacionesLeidas,
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al marcar notificaciones: ${error.message}`, error, method: "MARK_ALL_NOTIF_READ" });
+    },
   });
 }
