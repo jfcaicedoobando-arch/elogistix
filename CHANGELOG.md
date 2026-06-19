@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.69.0] - 2026-06-19
+- **chore(ci/workflows-audit)**: Auditoría completa de los 8 workflows de GitHub Actions. (1) `ci.yml`: quitado `continue-on-error: true` de `lint:unused:strict` y renombrados los steps `Architecture audit` y `Casts audit` (eran gating pero decían "informational"); quitado `--no-check` de `deno test` y añadido step `deno check` previo para tipar las edge functions. (2) `post-deploy-smoke.yml`: eliminado gating frágil `vars.DEMO_USER_EMAIL_PRESENT == 'true'` del job `user-management-smoke` — ahora siempre intenta correr y falla ruidosamente si faltan secrets. (3) `rls-tests.yml`: unificado `actions/cache` a v5.0.5 (estaba en v4.2.0). (4) `e2e.yml`: migrado a la composite `setup-bun` (–15 líneas duplicadas) y partido `playwright install` para saltarse la descarga de binarios cuando hay cache hit (–30s/run). (5) `actionlint.yml`: añadido trigger `push: main` para validar también merges directos. (6) `codeql.yml`: añadido `paths-ignore` para `*.md` y `docs/**`. (7) `setup-bun/action.yml`: comentario más explícito sobre `--ignore-scripts`. Bump `APP_VERSION` 13.69.0.
+
 ## [13.68.9] - 2026-06-19
 - **fix(ci/quality)**: El job `Lint, typecheck, unused code & build` fallaba en `main`. (1) Los dos guardrails nuevos `error-toasts-use-notifyError.test.ts` y `mutations-have-onerror.test.ts` importaban de `glob` (no instalado) — migrados a `fast-glob` (ya en deps) para resolver el "Unlisted dependencies" de knip. (2) Dos warnings de complejidad ciclomática (`TarifaResultCard` = 26, edge `send-transactional-email` = 22, máx 16) hacían fallar `--max-warnings 0` — silenciados con `eslint-disable-next-line complexity` y comentario "refactor pendiente" para no bloquear despliegues. Bump `APP_VERSION` 13.68.9.
 
