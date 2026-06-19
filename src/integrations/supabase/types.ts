@@ -1908,6 +1908,7 @@ export type Database = {
           estado_anterior:
             | Database["public"]["Enums"]["estado_cotizacion"]
             | null
+          estado_revalidacion: string
           fecha_aceptacion: string | null
           fecha_envio: string | null
           fecha_rechazo: string | null
@@ -1933,6 +1934,9 @@ export type Database = {
           prospecto_empresa: string
           prospecto_telefono: string
           punto_intermedio: string | null
+          revalidacion_delta_jsonb: Json | null
+          revalidacion_resuelta_en: string | null
+          revalidacion_solicitada_en: string | null
           ruta_texto: string
           sector_economico: string
           seguro: boolean
@@ -1980,6 +1984,7 @@ export type Database = {
           estado_anterior?:
             | Database["public"]["Enums"]["estado_cotizacion"]
             | null
+          estado_revalidacion?: string
           fecha_aceptacion?: string | null
           fecha_envio?: string | null
           fecha_rechazo?: string | null
@@ -2005,6 +2010,9 @@ export type Database = {
           prospecto_empresa?: string
           prospecto_telefono?: string
           punto_intermedio?: string | null
+          revalidacion_delta_jsonb?: Json | null
+          revalidacion_resuelta_en?: string | null
+          revalidacion_solicitada_en?: string | null
           ruta_texto?: string
           sector_economico?: string
           seguro?: boolean
@@ -2052,6 +2060,7 @@ export type Database = {
           estado_anterior?:
             | Database["public"]["Enums"]["estado_cotizacion"]
             | null
+          estado_revalidacion?: string
           fecha_aceptacion?: string | null
           fecha_envio?: string | null
           fecha_rechazo?: string | null
@@ -2077,6 +2086,9 @@ export type Database = {
           prospecto_empresa?: string
           prospecto_telefono?: string
           punto_intermedio?: string | null
+          revalidacion_delta_jsonb?: Json | null
+          revalidacion_resuelta_en?: string | null
+          revalidacion_solicitada_en?: string | null
           ruta_texto?: string
           sector_economico?: string
           seguro?: boolean
@@ -3046,7 +3058,13 @@ export type Database = {
           reabierto_por: string | null
           seguro: boolean
           shipper: string
+          tarifa_decision: string | null
+          tarifa_delta_jsonb: Json | null
           tarifa_id: string | null
+          tarifa_id_aplicada: string | null
+          tarifa_id_original: string | null
+          tarifa_revalidada_en: string | null
+          tarifa_revalidada_por: string | null
           tiene_proforma: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur: number
@@ -3116,7 +3134,13 @@ export type Database = {
           reabierto_por?: string | null
           seguro?: boolean
           shipper?: string
+          tarifa_decision?: string | null
+          tarifa_delta_jsonb?: Json | null
           tarifa_id?: string | null
+          tarifa_id_aplicada?: string | null
+          tarifa_id_original?: string | null
+          tarifa_revalidada_en?: string | null
+          tarifa_revalidada_por?: string | null
           tiene_proforma?: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
@@ -3186,7 +3210,13 @@ export type Database = {
           reabierto_por?: string | null
           seguro?: boolean
           shipper?: string
+          tarifa_decision?: string | null
+          tarifa_delta_jsonb?: Json | null
           tarifa_id?: string | null
+          tarifa_id_aplicada?: string | null
+          tarifa_id_original?: string | null
+          tarifa_revalidada_en?: string | null
+          tarifa_revalidada_por?: string | null
           tiene_proforma?: boolean
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
@@ -3225,6 +3255,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "embarques_tarifa_id_aplicada_fkey"
+            columns: ["tarifa_id_aplicada"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_tarifa_id_aplicada_fkey"
+            columns: ["tarifa_id_aplicada"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "embarques_tarifa_id_fkey"
             columns: ["tarifa_id"]
             isOneToOne: false
@@ -3234,6 +3278,20 @@ export type Database = {
           {
             foreignKeyName: "embarques_tarifa_id_fkey"
             columns: ["tarifa_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas_vigentes_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_tarifa_id_original_fkey"
+            columns: ["tarifa_id_original"]
+            isOneToOne: false
+            referencedRelation: "costeo_tarifas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_tarifa_id_original_fkey"
+            columns: ["tarifa_id_original"]
             isOneToOne: false
             referencedRelation: "costeo_tarifas_vigentes_v"
             referencedColumns: ["id"]
@@ -5648,10 +5706,17 @@ export type Database = {
           total_count: number
         }[]
       }
-      crear_embarque_borrador_desde_cotizacion: {
-        Args: { p_cotizacion_id: string }
-        Returns: string
-      }
+      crear_embarque_borrador_desde_cotizacion:
+        | { Args: { p_cotizacion_id: string }; Returns: string }
+        | {
+            Args: {
+              p_cotizacion_id: string
+              p_decision?: string
+              p_delta_jsonb?: Json
+              p_tarifa_id_aplicada?: string
+            }
+            Returns: string
+          }
       crear_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
@@ -6199,9 +6264,17 @@ export type Database = {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
       }
+      resolver_reaprobacion_tarifa: {
+        Args: { p_cotizacion_id: string; p_decision: string }
+        Returns: undefined
+      }
       restore_record: {
         Args: { _id: string; _table: string }
         Returns: undefined
+      }
+      revalidar_tarifa_cotizacion: {
+        Args: { p_cotizacion_id: string }
+        Returns: Json
       }
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
       seed_demo_organization: { Args: never; Returns: undefined }
@@ -6248,6 +6321,10 @@ export type Database = {
       }
       soft_delete_record: {
         Args: { _id: string; _table: string }
+        Returns: undefined
+      }
+      solicitar_reaprobacion_tarifa: {
+        Args: { p_cotizacion_id: string; p_delta_jsonb: Json }
         Returns: undefined
       }
       validar_cierre_embarque: {
