@@ -98,6 +98,69 @@ function FechaVigencia({ vigenteHasta, vencePronto }: { vigenteHasta: string; ve
   );
 }
 
+function WinnerBadge() {
+  return (
+    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+      <Badge className="bg-success text-success-foreground border-success gap-1 shadow-sm">
+        <Trophy className="size-3" /> Mejor opción
+      </Badge>
+    </div>
+  );
+}
+
+function EtiquetasList({ etiquetas }: { etiquetas: string[] }) {
+  if (etiquetas.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {etiquetas.map((e) => (
+        <Badge key={e} variant="secondary" className="text-[10px] uppercase tracking-wide font-semibold">
+          {e}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
+function PreciosBase({ row }: { row: TopTarifaRow }) {
+  return (
+    <div className="flex flex-col gap-1.5 text-sm">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-muted-foreground shrink-0">Flete base</span>
+        <span className="tabular-nums whitespace-nowrap">{usd(row.flete_base)}</span>
+      </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-muted-foreground shrink-0">Recargos</span>
+        <span className="tabular-nums whitespace-nowrap">{usd(row.recargos_total)}</span>
+      </div>
+    </div>
+  );
+}
+
+function ElegirButton({
+  row,
+  esGanador,
+  selectLabel,
+  onElegir,
+}: {
+  row: TopTarifaRow;
+  esGanador: boolean;
+  selectLabel: string;
+  onElegir: (row: TopTarifaRow) => void;
+}) {
+  return (
+    <div className="mt-auto pt-1">
+      <Button
+        className="w-full"
+        size={esGanador ? "lg" : "default"}
+        variant={esGanador ? "default" : "outline"}
+        onClick={() => onElegir(row)}
+      >
+        {selectLabel} {esGanador && "esta"}
+      </Button>
+    </div>
+  );
+}
+
 export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", meta }: Props) {
   const { data: recargos = [] } = useQuery({
     queryKey: ["costeo", "tarifa-recargos", row.id],
@@ -120,57 +183,19 @@ export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", 
             : "border-border hover:shadow-sm",
         )}
       >
-        {esGanador && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <Badge className="bg-success text-success-foreground border-success gap-1 shadow-sm">
-              <Trophy className="size-3" /> Mejor opción
-            </Badge>
-          </div>
-        )}
-
+        {esGanador && <WinnerBadge />}
         <CardHeader row={row} rank={rank} esGanador={esGanador} />
-
-        {etiquetas.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {etiquetas.map((e) => (
-              <Badge key={e} variant="secondary" className="text-[10px] uppercase tracking-wide font-semibold">
-                {e}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-1.5 text-sm">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-muted-foreground shrink-0">Flete base</span>
-            <span className="tabular-nums whitespace-nowrap">{usd(row.flete_base)}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-muted-foreground shrink-0">Recargos</span>
-            <span className="tabular-nums whitespace-nowrap">{usd(row.recargos_total)}</span>
-          </div>
-        </div>
-
+        <EtiquetasList etiquetas={etiquetas} />
+        <PreciosBase row={row} />
         <CostoTotalBlock row={row} esGanador={esGanador} delta={delta} />
-
         <TarifaCardDesglose recargos={recargos} />
         <TarifaCardBadges row={row} />
-
         <FechaVigencia vigenteHasta={row.vigente_hasta} vencePronto={vencePronto} />
-
         {onElegir && (
-          <div className="mt-auto pt-1">
-            <Button
-              className="w-full"
-              size={esGanador ? "lg" : "default"}
-              variant={esGanador ? "default" : "outline"}
-              onClick={() => onElegir(row)}
-            >
-              {selectLabel} {esGanador && "esta"}
-            </Button>
-          </div>
+          <ElegirButton row={row} esGanador={esGanador} selectLabel={selectLabel} onElegir={onElegir} />
         )}
       </Card>
     </TooltipProvider>
   );
 }
+
