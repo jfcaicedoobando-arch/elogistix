@@ -14,6 +14,7 @@ import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/d
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
 import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
 import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/pages/cotizaciones/detalle/CotizacionDetalleCards";
+import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 
 
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
@@ -75,6 +76,13 @@ export default function CotizacionDetalle() {
         updatedAt={cotizacion.updated_at}
         canEdit={canEdit}
       />
+
+      <ReaprobacionTarifaBanner
+        cotizacionId={cotizacion.id}
+        estado={(cotizacion as { estado_revalidacion?: string }).estado_revalidacion}
+        deltaJsonb={(cotizacion as { revalidacion_delta_jsonb?: unknown }).revalidacion_delta_jsonb}
+      />
+
 
       {cotizacion.sin_desglose_costos && (
         <SinDesgloseBanner onCargarCostos={() => navigate(`/cotizaciones/${cotizacion.id}/editar`)} />
