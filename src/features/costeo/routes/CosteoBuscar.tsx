@@ -92,11 +92,16 @@ export default function CosteoBuscar() {
           No hay tarifas vigentes para esta combinación. Captura una nueva en "Tarifas marítimas".
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {tarifas.map((t, i) => (
-            <TarifaResultCard key={t.id} row={t} rank={i + 1} />
-          ))}
-        </div>
+        (() => {
+          const meta = computeRankingMeta(tarifas);
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tarifas.map((t, i) => (
+                <TarifaResultCard key={t.id} row={t} rank={i + 1} meta={meta[i]} />
+              ))}
+            </div>
+          );
+        })()
       )}
     </div>
   );
