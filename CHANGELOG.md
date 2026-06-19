@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.6] - 2026-06-19
+- **fix(costeo/rutas)**: Resuelto `UnhandledRejection` en Sentry al intentar guardar una ruta CN→MX duplicada. (1) `RutaFormDialog.handleGuardar` ahora envuelve `crear.mutateAsync` en `try/catch` para consumir el rechazo (el toast de error sigue siendo emitido por `onError` del hook). (2) `isUniqueViolation` en `services/rutas.ts` ahora acepta `code === 23505` (string o numérico) y hace match laxo del mensaje (`/costeo_rutas.*puerto/i` o `/duplicate key/i`), garantizando que cualquier 409 se traduzca a `CosteoRutaDuplicadaError` en vez de relanzar el objeto Postgrest crudo. Bump `APP_VERSION` 13.67.6.
+
 ## [13.67.5] - 2026-06-19
 - **feat(costeo/rutas)**: Enriquecida la tabla `/costeo/rutas` con información operativa real.
   - Nuevas columnas: **Tarifas vigentes** (badge numérico, "Sin tarifa" en rojo cuando 0), **Proveedores** (agentes distintos con tarifa), **Próxima a vencer** (con ⚠️ si ≤7 días), **Última actualización** (max `updated_at` de tarifas vigentes).

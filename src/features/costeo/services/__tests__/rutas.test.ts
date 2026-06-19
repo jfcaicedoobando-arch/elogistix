@@ -89,6 +89,15 @@ describe("costeo/services/rutas", () => {
       .rejects.toBeInstanceOf(CosteoRutaDuplicadaError);
   });
 
+  it("insertCosteoRuta traduce duplicado aunque el constraint name difiera", async () => {
+    mock.setTableResult("costeo_rutas", {
+      data: null,
+      error: { code: "23505", message: "duplicate key value violates unique constraint \"costeo_rutas_pkey_v2\"" },
+    });
+    await expect(insertCosteoRuta(ORG, { puerto_origen_id: "po", puerto_destino_id: "pd" }))
+      .rejects.toBeInstanceOf(CosteoRutaDuplicadaError);
+  });
+
   it("deleteCosteoRuta usa delete().eq('id', ...)", async () => {
     mock.setTableResult("costeo_rutas", { data: null, error: null });
     await deleteCosteoRuta("r1");
