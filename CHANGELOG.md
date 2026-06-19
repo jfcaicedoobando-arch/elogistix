@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.69.2] - 2026-06-19
+- **fix(ci/actionlint-shellcheck)**: El job `actionlint` falló en CI porque la versión que descarga (1.7.12) trata el warning info-level `SC2012` ("Use find instead of ls") como error, mientras que mi nix local usa 1.7.9 que sólo lo reporta. El step `Validate matrix covers every test_rls_*.sql` en `rls-tests.yml` usaba `ls supabase/tests/rls/test_rls_*.sql | sed ...` — migrado a `find -maxdepth 1 -name 'test_rls_*.sql' -printf '%f\n'` que es equivalente y limpio bajo shellcheck. Validado contra actionlint 1.7.12. Bump `APP_VERSION` 13.69.2.
+
 ## [13.69.1] - 2026-06-19
 - **fix(ci/workflows-audit-hotfix)**: El PR de 13.69.0 tumbó CI por 2 razones. (1) Job `edge-functions`: agregar `deno check` con tipos completos hace que los `@ts-expect-error Deno global` / `supabase chain` se marquen como "Unused directive" (TS2578) porque Deno SÍ conoce esos tipos, pero el bundle web (vitest/tsc) los necesita. Revertido — mantenemos `--no-check` en `deno test` con comentario explicando el porqué. (2) `TarifaResultCard.tsx` quedó en 201 líneas (límite Power of 10 = 200) tras el refactor de complejidad de 13.68.9. Extraídos los 7 sub-componentes presentacionales (`CardHeader`, `CostoTotalBlock`, `FechaVigencia`, `WinnerBadge`, `EtiquetasList`, `PreciosBase`, `ElegirButton`) a `TarifaResultCardParts.tsx`; el archivo principal bajó a 69 líneas. Bump `APP_VERSION` 13.69.1.
 
