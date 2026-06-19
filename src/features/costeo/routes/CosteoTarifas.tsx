@@ -1,29 +1,24 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
+ * v13.68.1: dividida en sub-componentes para cumplir Power of 10 (≤200 líneas).
  */
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Plus, Trash2, Copy, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   useCosteoTarifas, useCosteoTarifaMutations,
 } from "@/features/costeo/hooks/useCosteoTarifas";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
-import { TarifaEstadoBadge } from "@/features/costeo/components/TarifaEstadoBadge";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
+import { CosteoTarifasFiltros } from "@/features/costeo/components/CosteoTarifasFiltros";
+import { CosteoTarifasTable } from "@/features/costeo/components/CosteoTarifasTable";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
+import { buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoTarifas() {
@@ -49,7 +44,6 @@ export default function CosteoTarifas() {
     [estado, agenteId, tipoId, rutaIdFromUrl],
   );
   const { data: tarifas = [], isLoading } = useCosteoTarifas(tarifaFilters);
-
   const { eliminar } = useCosteoTarifaMutations();
 
   const duplicar = (id: string) => {
@@ -103,109 +97,24 @@ export default function CosteoTarifas() {
         </Card>
       )}
 
-      <Card className="p-4 flex flex-wrap gap-3">
+      <CosteoTarifasFiltros
+        estado={estado}
+        onEstadoChange={setEstado}
+        agenteId={agenteId}
+        onAgenteChange={setAgenteId}
+        tipoId={tipoId}
+        onTipoChange={setTipoId}
+        agentes={agentes}
+        tipos={tipos}
+      />
 
-        <div className="min-w-[140px]">
-          <Label htmlFor="filtro-estado" className="sr-only">Estado</Label>
-          <Select value={estado} onValueChange={(v) => setEstado(v as EstadoFiltro)}>
-            <SelectTrigger id="filtro-estado" aria-label="Filtrar por estado"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="vigente">Vigentes</SelectItem>
-              <SelectItem value="vencida">Vencidas</SelectItem>
-              <SelectItem value="reemplazada">Reemplazadas</SelectItem>
-              <SelectItem value="todas">Todas</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-[180px]">
-          <Label htmlFor="filtro-agente" className="sr-only">Agente</Label>
-          <Select value={agenteId} onValueChange={setAgenteId}>
-            <SelectTrigger id="filtro-agente" aria-label="Filtrar por agente"><SelectValue placeholder="Agente" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los agentes</SelectItem>
-              {agentes.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-[160px]">
-          <Label htmlFor="filtro-tipo" className="sr-only">Tipo de contenedor</Label>
-          <Select value={tipoId} onValueChange={setTipoId}>
-            <SelectTrigger id="filtro-tipo" aria-label="Filtrar por tipo de contenedor"><SelectValue placeholder="Contenedor" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los tipos</SelectItem>
-              {tipos.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
-
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Ruta</TableHead>
-              <TableHead>Agente</TableHead>
-              <TableHead>Naviera</TableHead>
-              <TableHead>Contenedor</TableHead>
-              <TableHead className="text-right">Flete</TableHead>
-              <TableHead className="text-right">Recargos</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Vigencia</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="w-24" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
-            )}
-            {!isLoading && tarifas.length === 0 && (
-              <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground">Sin tarifas para los filtros aplicados.</TableCell></TableRow>
-            )}
-            {tarifas.map((t) => (
-              <TableRow key={t.id}>
-                <TableCell className="text-sm">
-                  {t.puerto_origen_nombre} → {t.puerto_destino_nombre}
-                </TableCell>
-                <TableCell className="font-medium">{t.agente_nombre}</TableCell>
-                <TableCell>{t.naviera_nombre}</TableCell>
-                <TableCell>{t.tipo_contenedor_nombre}</TableCell>
-                <TableCell className="text-right tabular-nums">{usd(Number(t.flete_base))}</TableCell>
-                <TableCell className="text-right tabular-nums">{usd(t.recargos_total)}</TableCell>
-                <TableCell className="text-right tabular-nums font-semibold">{usd(t.total_comparable)}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {t.vigente_desde} → {t.vigente_hasta}
-                </TableCell>
-                <TableCell>
-                  <TarifaEstadoBadge estado={t.estado} vigenteHasta={t.vigente_hasta} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1 justify-end">
-                    <Button size="icon" variant="ghost" onClick={() => editar(t.id)} aria-label="Editar tarifa">
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => duplicar(t.id)} aria-label="Duplicar tarifa">
-                      <Copy className="size-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setAEliminar(t.id)}
-                      aria-label="Eliminar tarifa"
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <CosteoTarifasTable
+        tarifas={tarifas}
+        isLoading={isLoading}
+        onEditar={editar}
+        onDuplicar={duplicar}
+        onEliminar={(id) => setAEliminar(id)}
+      />
 
       <TarifaForm open={open} onOpenChange={setOpen} initial={initial} tarifaId={editId} />
 
