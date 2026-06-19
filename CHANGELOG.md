@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.5] - 2026-06-19
+- **fix(edge/enviar-cotizacion-email CORS)**: Valeria recibía "Failed to send a request to the Edge Function" al enviar cotización por correo desde `librecarga.com`. El edge function importaba `corsHeaders` desde `npm:@supabase/supabase-js@2/cors` — subpath inexistente que dejaba los headers vacíos, así el preflight OPTIONS no autorizaba el origen y el navegador cancelaba el request antes de llegar al servidor (por eso los logs sólo mostraban `booted`). Migrado a `buildCors`/`handlePreflightStrict` del `_shared/cors.ts` que ya whitelistea `librecarga.com` y `www.librecarga.com`. Sin cambios de lógica de envío. Bump `APP_VERSION` 13.68.5.
+
 ## [13.68.4] - 2026-06-19
 - **fix(costeo/estado-reemplazada)**: Valeria recibía "new row for relation costeo_tarifas violates check constraint costeo_tarifas_estado_check" al guardar una tarifa que el sistema marcaba automáticamente como `reemplazada` (porque ya existía una vigente para la misma combinación agente/naviera/ruta/contenedor). El check constraint de BD sólo permitía `borrador/vigente/vencida`, pero la app y el trigger ya usaban también `reemplazada`. Migración amplía el constraint a los 4 estados. Sin cambios de código cliente. Bump `APP_VERSION` 13.68.4.
 
