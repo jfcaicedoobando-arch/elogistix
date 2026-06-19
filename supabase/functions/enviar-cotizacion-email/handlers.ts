@@ -104,6 +104,7 @@ export interface SendParams {
   userEmail: string;
   body: Record<string, unknown>;
   timestamp: number;
+  cors: Record<string, string>;
 }
 
 interface SendBodyParsed {
