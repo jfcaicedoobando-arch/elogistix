@@ -15,15 +15,16 @@ export { isEmail };
 
 export async function handlePrepare(
   admin: ReturnType<typeof createClient>,
-  pdfPath: string
+  pdfPath: string,
+  cors: Record<string, string>,
 ): Promise<Response> {
   const { data: upload, error: upErr } = await admin
     .storage.from('cotizaciones-pdf')
     .createSignedUploadUrl(pdfPath);
   if (upErr || !upload) {
-    return json({ error: 'No se pudo preparar la subida', detail: upErr?.message }, 500);
+    return json(cors, { error: 'No se pudo preparar la subida', detail: upErr?.message }, 500);
   }
-  return json({ upload_url: upload.signedUrl, upload_token: upload.token, path: pdfPath });
+  return json(cors, { upload_url: upload.signedUrl, upload_token: upload.token, path: pdfPath });
 }
 
 interface Destinatario { email: string; nombre?: string }
