@@ -11,28 +11,31 @@ const SITE_NAME = "elogistix"
 const SENDER_DOMAIN = "notify.librecarga.com"
 const FROM_DOMAIN = "librecarga.com"
 
-// eslint-disable-next-line complexity -- Handler de edge function con múltiples ramas de validación; refactor pendiente.
-Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+interface EnvVars {
+  supabaseUrl: string
+  supabaseServiceKey: string
+  supabaseAnonKey: string
+}
 
+function loadEnvOrFail(): EnvVars | Response {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
-
   if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
     console.error('Missing required environment variables')
     return corsResponse({ error: 'Server configuration error' }, 500)
   }
+  return { supabaseUrl, supabaseServiceKey, supabaseAnonKey }
+}
 
-  // Auth: solo aceptamos service_role JWT verificado (callers server-to-server).
-  // Bloquea relay de email abierto desde Internet.
+async function verifyServiceRoleOrFail(req: Request, env: EnvVars): Promise<Response | null> {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return corsResponse({ error: 'Unauthorized' }, 401)
   }
   const token = authHeader.slice('Bearer '.length).trim()
   try {
-    const anonClient = createClient(supabaseUrl, supabaseAnonKey)
+    const anonClient = createClient(env.supabaseUrl, env.supabaseAnonKey)
     const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token)
     if (claimsError || claimsData?.claims?.role !== 'service_role') {
       return corsResponse({ error: 'Forbidden' }, 403)
@@ -41,6 +44,71 @@ Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
     console.error('JWT verification failed', e)
     return corsResponse({ error: 'Forbidden' }, 403)
   }
+  return null
+}
+
+// deno-lint-ignore no-explicit-any
+async function checkSuppressionOrFail(
+  supabase: any,
+  normalizedEmail: string,
+  meta: { messageId: string; templateName: string; effectiveRecipient: string },
+): Promise<Response | null> {
+  const { data: suppressed, error: suppressionError } = await supabase
+    .from('suppressed_emails')
+    .select('id')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (suppressionError) {
+    console.error('Suppression check failed — refusing to send', { error: suppressionError, effectiveRecipient: meta.effectiveRecipient })
+    return corsResponse({ error: 'Failed to verify suppression status' }, 500)
+  }
+
+  if (suppressed) {
+    await supabase.from('email_send_log').insert({
+      message_id: meta.messageId, template_name: meta.templateName,
+      recipient_email: meta.effectiveRecipient, status: 'suppressed',
+    })
+    console.log('Email suppressed', { effectiveRecipient: meta.effectiveRecipient, templateName: meta.templateName })
+    return corsResponse({ success: false, reason: 'email_suppressed' })
+  }
+  return null
+}
+
+// deno-lint-ignore no-explicit-any
+async function resolveUnsubscribeOrFail(
+  supabase: any,
+  normalizedEmail: string,
+  meta: { messageId: string; templateName: string; effectiveRecipient: string },
+): Promise<{ token: string } | Response> {
+  const tokenResult = await getOrCreateUnsubscribeToken(supabase, normalizedEmail)
+  if ('suppressed' in tokenResult) {
+    await supabase.from('email_send_log').insert({
+      message_id: meta.messageId, template_name: meta.templateName,
+      recipient_email: meta.effectiveRecipient, status: 'suppressed',
+      error_message: 'Unsubscribe token used but email missing from suppressed list',
+    })
+    return corsResponse({ success: false, reason: 'email_suppressed' })
+  }
+  if ('tokenError' in tokenResult) {
+    await supabase.from('email_send_log').insert({
+      message_id: meta.messageId, template_name: meta.templateName,
+      recipient_email: meta.effectiveRecipient, status: 'failed',
+      error_message: tokenResult.tokenError,
+    })
+    return corsResponse({ error: 'Failed to prepare email' }, 500)
+  }
+  return { token: tokenResult.token }
+}
+
+Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+
+  const env = loadEnvOrFail()
+  if (env instanceof Response) return env
+
+  const authFail = await verifyServiceRoleOrFail(req, env)
+  if (authFail) return authFail
 
   const parsed = await parseRequest(req)
   if (parsed instanceof Response) return parsed
@@ -64,52 +132,16 @@ Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
     )
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createClient(env.supabaseUrl, env.supabaseServiceKey)
   const normalizedEmail = effectiveRecipient.toLowerCase()
+  const meta = { messageId, templateName, effectiveRecipient }
 
-  // Check suppression list (fail-closed)
-  const { data: suppressed, error: suppressionError } = await supabase
-    .from('suppressed_emails')
-    .select('id')
-    .eq('email', normalizedEmail)
-    .maybeSingle()
+  const suppressionFail = await checkSuppressionOrFail(supabase, normalizedEmail, meta)
+  if (suppressionFail) return suppressionFail
 
-  if (suppressionError) {
-    console.error('Suppression check failed — refusing to send', { error: suppressionError, effectiveRecipient })
-    return corsResponse({ error: 'Failed to verify suppression status' }, 500)
-  }
-
-  if (suppressed) {
-    await supabase.from('email_send_log').insert({
-      message_id: messageId, template_name: templateName,
-      recipient_email: effectiveRecipient, status: 'suppressed',
-    })
-    console.log('Email suppressed', { effectiveRecipient, templateName })
-    return corsResponse({ success: false, reason: 'email_suppressed' })
-  }
-
-  // Get or create unsubscribe token
-  const tokenResult = await getOrCreateUnsubscribeToken(supabase, normalizedEmail)
-
-  if ('suppressed' in tokenResult) {
-    await supabase.from('email_send_log').insert({
-      message_id: messageId, template_name: templateName,
-      recipient_email: effectiveRecipient, status: 'suppressed',
-      error_message: 'Unsubscribe token used but email missing from suppressed list',
-    })
-    return corsResponse({ success: false, reason: 'email_suppressed' })
-  }
-
-  if ('tokenError' in tokenResult) {
-    await supabase.from('email_send_log').insert({
-      message_id: messageId, template_name: templateName,
-      recipient_email: effectiveRecipient, status: 'failed',
-      error_message: tokenResult.tokenError,
-    })
-    return corsResponse({ error: 'Failed to prepare email' }, 500)
-  }
-
-  const { token: unsubscribeToken } = tokenResult
+  const unsubResult = await resolveUnsubscribeOrFail(supabase, normalizedEmail, meta)
+  if (unsubResult instanceof Response) return unsubResult
+  const { token: unsubscribeToken } = unsubResult
 
   // Render React Email template to HTML and plain text
   const html = await renderAsync(React.createElement(template.component, templateData))
