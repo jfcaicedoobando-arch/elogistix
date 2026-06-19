@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { createLead, updateLead, softDeleteLead } from "@/features/crm/services/leads";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import type { LeadInput } from "./constants";
 
 export function useCrearLead() {
@@ -13,6 +14,10 @@ export function useCrearLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      notifySuccess(undefined, { title: "Lead creado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear lead: ${error.message}`, error, method: "CREATE_LEAD" });
     },
   });
 }
@@ -26,6 +31,9 @@ export function useActualizarLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar lead: ${error.message}`, error, method: "UPDATE_LEAD" });
+    },
   });
 }
 
@@ -37,6 +45,10 @@ export function useEliminarLead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      notifySuccess(undefined, { title: "Lead eliminado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar lead: ${error.message}`, error, method: "DELETE_LEAD" });
     },
   });
 }

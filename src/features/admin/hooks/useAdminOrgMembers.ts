@@ -33,6 +33,9 @@ export function useAdminOrgMembers(id: string | undefined) {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(id!) });
       notifySuccess(toast, { title: "Rol actualizado" });
     },
+    onError: (error: Error) => {
+      notifyError(toast, { title: "Error al actualizar rol", description: error.message, method: "UPDATE_ORG_MEMBER_ROLE", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    },
   });
 
   const removeMember = useMutation({

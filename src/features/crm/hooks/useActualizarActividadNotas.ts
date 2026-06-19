@@ -5,13 +5,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { actualizarActividadNotas } from "@/features/crm/services";
 import { queryKeys } from "@/lib/query";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
+// NOTA: la edición de notas es inline; un toast de éxito por cada blur sería
+// ruido. Solo notificamos errores.
 export function useActualizarActividadNotas() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: actualizarActividadNotas,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al guardar notas: ${error.message}`, error, method: "UPDATE_ACTIVIDAD_NOTAS" });
     },
   });
 }

@@ -6,6 +6,7 @@ import {
   cambiarPasswordPortal,
 } from "@/features/portal/services";
 import type { PortalPerfilData } from "@/features/portal/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { PortalPerfilData };
 
@@ -22,6 +23,10 @@ export function useActualizarContactoPortal() {
     mutationFn: actualizarContactoPortal,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.portal.perfil });
+      notifySuccess(undefined, { title: "Datos de contacto actualizados" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar contacto: ${error.message}`, error, method: "PORTAL_UPDATE_CONTACT" });
     },
   });
 }
@@ -29,5 +34,11 @@ export function useActualizarContactoPortal() {
 export function useCambiarPasswordPortal() {
   return useMutation({
     mutationFn: cambiarPasswordPortal,
+    onSuccess: () => {
+      notifySuccess(undefined, { title: "Contraseña actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al cambiar contraseña: ${error.message}`, error, method: "PORTAL_CHANGE_PASSWORD" });
+    },
   });
 }

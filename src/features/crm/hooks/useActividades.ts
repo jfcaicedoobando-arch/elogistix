@@ -19,6 +19,7 @@ import {
   type CrmEntidadTipo,
   type CrearActividadInput,
 } from "@/features/crm/services/actividades";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { CrmActividadRow, CrmActividadTipo, CrmEntidadTipo } from "@/features/crm/services/actividades";
 export type ActividadInput = CrearActividadInput;
@@ -70,6 +71,10 @@ export function useCrearActividad() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      notifySuccess(undefined, { title: "Actividad agregada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear actividad: ${error.message}`, error, method: "CREATE_ACTIVIDAD" });
     },
   });
 }
@@ -81,6 +86,10 @@ export function useCompletarActividad() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      notifySuccess(undefined, { title: "Actividad completada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al completar actividad: ${error.message}`, error, method: "COMPLETE_ACTIVIDAD" });
     },
   });
 }
@@ -93,6 +102,10 @@ export function usePosponerActividad() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      notifySuccess(undefined, { title: "Actividad pospuesta" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al posponer actividad: ${error.message}`, error, method: "POSTPONE_ACTIVIDAD" });
     },
   });
 }

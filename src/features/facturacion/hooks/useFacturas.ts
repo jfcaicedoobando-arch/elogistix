@@ -8,6 +8,7 @@ import {
   type FacturaRow,
   type FacturaListItem,
 } from "@/features/facturacion/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { FacturaRow, FacturaListItem };
 
@@ -26,6 +27,10 @@ export function useMarcarCostoPagado() {
     mutationFn: marcarCostoPagado,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.gastosPendientes });
+      notifySuccess(undefined, { title: "Costo marcado como pagado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al marcar costo pagado: ${error.message}`, error, method: "MARK_COST_PAID" });
     },
   });
 }

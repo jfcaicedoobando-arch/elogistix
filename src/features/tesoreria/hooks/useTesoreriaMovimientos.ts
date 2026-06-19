@@ -11,6 +11,7 @@ import {
   type FiltrosMovimientos, type MovimientoBBVA,
 } from "@/features/tesoreria/services";
 import type { MovimientoParseado } from "@/lib/import/bbva";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useMovimientos(filtros: FiltrosMovimientos | null) {
   return useQuery({
@@ -27,7 +28,13 @@ export function useImportarMovimientos() {
   return useMutation({
     mutationFn: ({ cuentaId, movimientos }: { cuentaId: string; movimientos: MovimientoParseado[] }) =>
       importarMovimientos(cuentaId, movimientos, user?.id ?? null),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all }),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      notifySuccess(undefined, { title: `${vars.movimientos.length} movimientos importados` });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al importar movimientos: ${error.message}`, error, method: "IMPORT_MOVIMIENTOS" });
+    },
   });
 }
 
@@ -46,7 +53,13 @@ export function useConciliarPago() {
   return useMutation({
     mutationFn: (v: { movId: string; tipo: "cxc" | "cxp"; pagoId: string }) =>
       conciliarConPago(v.movId, v.tipo, v.pagoId, user?.id ?? null),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      notifySuccess(undefined, { title: "Movimiento conciliado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al conciliar: ${error.message}`, error, method: "CONCILIAR_PAGO" });
+    },
   });
 }
 
@@ -54,7 +67,13 @@ export function useDesconciliar() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (movId: string) => desconciliarMovimiento(movId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      notifySuccess(undefined, { title: "Movimiento desconciliado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al desconciliar: ${error.message}`, error, method: "DESCONCILIAR" });
+    },
   });
 }
 
@@ -63,6 +82,12 @@ export function useIgnorarMovimiento() {
   return useMutation({
     mutationFn: ({ movId, motivo }: { movId: string; motivo: string }) =>
       ignorarMovimiento(movId, motivo),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      notifySuccess(undefined, { title: "Movimiento ignorado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al ignorar movimiento: ${error.message}`, error, method: "IGNORAR_MOVIMIENTO" });
+    },
   });
 }

@@ -8,6 +8,7 @@ import {
   crearEmbarqueBorradorDesdeCotizacion,
   type ProspectoAClienteInput,
 } from '@/features/cotizacion/services';
+import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
 
 
 /** Convierte un prospecto en cliente y actualiza la cotización */
@@ -24,6 +25,10 @@ export function useConvertirProspectoACliente() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
+      notifySuccess(undefined, { title: "Prospecto convertido a cliente" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al convertir prospecto: ${error.message}`, error, method: "CONVERT_PROSPECTO_CLIENTE" });
     },
   });
 }
@@ -38,6 +43,10 @@ export function useConvertirCotizacionAEmbarques() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacion.id) });
+      notifySuccess(undefined, { title: "Cotización convertida a embarques" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al convertir cotización: ${error.message}`, error, method: "CONVERT_COTIZACION_EMBARQUES" });
     },
   });
 }
@@ -52,7 +61,10 @@ export function useCrearEmbarqueBorrador() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });
+      notifySuccess(undefined, { title: "Embarque borrador creado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear embarque borrador: ${error.message}`, error, method: "CREATE_EMBARQUE_BORRADOR" });
     },
   });
 }
-

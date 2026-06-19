@@ -14,6 +14,7 @@ import {
   type CrmEtapaTipo,
   type EtapaPatch,
 } from "@/features/crm/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export type { CrmEtapaRow, CrmEtapaTipo, EtapaPatch };
 
@@ -28,7 +29,13 @@ export function useActualizarEtapa() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: actualizarEtapa,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.all });
+      notifySuccess(undefined, { title: "Etapa actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar etapa: ${error.message}`, error, method: "UPDATE_ETAPA" });
+    },
   });
 }
 
@@ -51,7 +58,13 @@ export function useActualizarMotivoPerdida() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: actualizarMotivoPerdida,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.motivos.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.motivos.all });
+      notifySuccess(undefined, { title: "Motivo actualizado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar motivo: ${error.message}`, error, method: "UPDATE_MOTIVO_PERDIDA" });
+    },
   });
 }
 
@@ -59,6 +72,12 @@ export function useCrearMotivoPerdida() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: crearMotivoPerdida,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.motivos.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.motivos.all });
+      notifySuccess(undefined, { title: "Motivo creado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear motivo: ${error.message}`, error, method: "CREATE_MOTIVO_PERDIDA" });
+    },
   });
 }

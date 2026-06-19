@@ -4,6 +4,7 @@ import {
   fetchEventosEmbarque,
   insertEventoEmbarque,
 } from "@/features/embarques/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export interface EventoEmbarque {
   id: string;
@@ -53,6 +54,10 @@ export function useCreateEventoEmbarque() {
     mutationFn: (input: CreateEventoInput) => insertEventoEmbarque(input),
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      notifySuccess(undefined, { title: "Evento agregado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al agregar evento: ${error.message}`, error, method: "CREATE_EVENTO_EMBARQUE" });
     },
   });
 }

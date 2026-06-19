@@ -11,6 +11,7 @@ import {
   crearComentarioOportunidad,
   type ComentarioRow,
 } from "@/features/crm/services";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 export type { ComentarioRow };
 
@@ -39,6 +40,9 @@ export function useCrearComentarioOportunidad() {
       qc.invalidateQueries({
         queryKey: queryKeys.crm.comentarios.byOportunidadAll(vars.oportunidadId),
       });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al agregar comentario: ${error.message}`, error, method: "CREATE_COMENTARIO_OP" });
     },
   });
 }

@@ -6,6 +6,7 @@ import {
   eliminarPagoFactura,
   type RegistrarPagoInput,
 } from "@/services/pagos-factura";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function usePagosFactura(facturaId: string | undefined) {
   return useQuery({
@@ -20,11 +21,17 @@ function invalidarFacturasYPagos(qc: ReturnType<typeof useQueryClient>, facturaI
   qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
 }
 
+// NOTA: el dialog `DialogRegistrarPago` ya muestra su propio toast de éxito
+// vía notifySuccess en el catch del componente. Aquí sólo añadimos onError
+// como red de seguridad para llamadas desde otros consumidores.
 export function useRegistrarPagoFactura() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: RegistrarPagoInput) => registrarPagoFactura(input),
     onSuccess: (_d, vars) => invalidarFacturasYPagos(qc, vars.factura_id),
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al registrar pago: ${error.message}`, error, method: "REGISTER_PAYMENT" });
+    },
   });
 }
 
@@ -32,6 +39,12 @@ export function useEliminarPagoFactura() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (params: { id: string; facturaId: string }) => eliminarPagoFactura(params.id),
-    onSuccess: (_d, vars) => invalidarFacturasYPagos(qc, vars.facturaId),
+    onSuccess: (_d, vars) => {
+      invalidarFacturasYPagos(qc, vars.facturaId);
+      notifySuccess(undefined, { title: "Pago eliminado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar pago: ${error.message}`, error, method: "DELETE_PAYMENT" });
+    },
   });
 }

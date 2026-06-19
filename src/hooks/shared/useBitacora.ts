@@ -7,6 +7,7 @@ import {
   type EntradaBitacora,
   type FiltrosBitacora,
 } from "@/services/bitacora";
+import { logger } from "@/lib/observability/logger";
 
 
 export type { EntradaBitacora };
@@ -45,6 +46,11 @@ export function useRegistrarActividad() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bitacora.all });
+    },
+    // Bitácora es background; un toast por cada acción registrada sería ruido.
+    // Solo logueamos en consola para no romper el flujo del usuario.
+    onError: (err: Error) => {
+      logger.warn("[useRegistrarActividad] no se pudo registrar:", err);
     },
   });
 }

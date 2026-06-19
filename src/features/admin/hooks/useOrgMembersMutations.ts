@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { addOrgMember, fetchAvailableUsers } from "@/features/admin/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 /**
  * Lista todos los usuarios disponibles vía edge function `user-management` (action `list`).
@@ -22,6 +23,10 @@ export function useAddOrgMember() {
     mutationFn: addOrgMember,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.allUsers });
+      notifySuccess(undefined, { title: "Miembro agregado a la organización" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al agregar miembro: ${error.message}`, error, method: "ADD_ORG_MEMBER" });
     },
   });
 }

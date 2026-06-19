@@ -9,6 +9,7 @@ import {
   createDocumentoEmbarqueRow,
   setDocumentoEstadoNoAplica,
 } from '@/features/embarques/services';
+import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
 
 export function useUploadDocumentoEmbarque() {
   const queryClient = useQueryClient();
@@ -18,6 +19,10 @@ export function useUploadDocumentoEmbarque() {
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      notifySuccess(undefined, { title: "Documento subido" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al subir documento: ${error.message}`, error, method: "UPLOAD_DOC_EMBARQUE" });
     },
   });
 }
@@ -30,6 +35,10 @@ export function useDeleteDocumentoEmbarque() {
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      notifySuccess(undefined, { title: "Documento eliminado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al eliminar documento: ${error.message}`, error, method: "DELETE_DOC_EMBARQUE" });
     },
   });
 }
@@ -48,6 +57,9 @@ export function useCreateDocumentoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear documento: ${error.message}`, error, method: "CREATE_DOC_EMBARQUE" });
+    },
   });
 }
 
@@ -63,6 +75,9 @@ export function useSetDocumentoNoAplica() {
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al marcar documento: ${error.message}`, error, method: "SET_DOC_NO_APLICA" });
     },
   });
 }

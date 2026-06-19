@@ -13,6 +13,7 @@ import {
   type GlobalUserRow,
   type OrgRow,
 } from '@/features/admin/services';
+import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
 
 export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, OrgRow };
 
@@ -63,6 +64,10 @@ export function useCreateOrganization() {
     mutationFn: createOrganization,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.organizations });
+      notifySuccess(undefined, { title: "Organización creada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al crear organización: ${error.message}`, error, method: "CREATE_ORGANIZATION" });
     },
   });
 }

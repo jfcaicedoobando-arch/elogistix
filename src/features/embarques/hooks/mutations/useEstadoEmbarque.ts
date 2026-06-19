@@ -14,6 +14,7 @@ import {
   descripcionEventoCambioEstado,
 } from '@/features/embarques/domain/embarque';
 import { newRequestId } from '@/lib/idempotency';
+import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
   await insertEventoEmbarque({
@@ -44,6 +45,10 @@ export function useAvanzarEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      notifySuccess(undefined, { title: `Estado actualizado a ${vars.nuevoEstado}` });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al avanzar estado: ${error.message}`, error, method: "ADVANCE_EMBARQUE_STATE" });
     },
   });
 }
@@ -59,6 +64,9 @@ export function useSyncEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al sincronizar estado: ${error.message}`, error, method: "SYNC_EMBARQUE_STATE" });
     },
   });
 }
@@ -82,6 +90,10 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      notifySuccess(undefined, { title: "Embarque reabierto" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al reabrir embarque: ${error.message}`, error, method: "REOPEN_EMBARQUE" });
     },
   });
 }

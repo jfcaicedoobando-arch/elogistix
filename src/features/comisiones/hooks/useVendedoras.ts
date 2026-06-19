@@ -12,6 +12,7 @@ import {
   fetchEmbarquesSinVendedora,
   asignarVendedoraEmbarque,
 } from "@/features/comisiones/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useVendedorasConfig() {
   return useQuery({
@@ -41,7 +42,13 @@ export function useUpsertVendedoraConfig() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (config: TablesInsert<"vendedora_config">) => upsertVendedoraConfig(config),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.comisiones.vendedorasConfig() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.comisiones.vendedorasConfig() });
+      notifySuccess(undefined, { title: "Configuración de vendedora guardada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al guardar configuración: ${error.message}`, error, method: "UPSERT_VENDEDORA_CONFIG" });
+    },
   });
 }
 
@@ -50,7 +57,13 @@ export function useUpdateVendedoraConfig() {
   return useMutation({
     mutationFn: (p: { id: string; changes: TablesUpdate<"vendedora_config"> }) =>
       updateVendedoraConfig(p.id, p.changes),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.comisiones.vendedorasConfig() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.comisiones.vendedorasConfig() });
+      notifySuccess(undefined, { title: "Configuración actualizada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al actualizar configuración: ${error.message}`, error, method: "UPDATE_VENDEDORA_CONFIG" });
+    },
   });
 }
 
@@ -62,6 +75,10 @@ export function useAsignarVendedoraEmbarque() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.comisiones.embarquesSinVendedora() });
       qc.invalidateQueries({ queryKey: queryKeys.comisiones.all });
+      notifySuccess(undefined, { title: "Vendedora asignada" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: `Error al asignar vendedora: ${error.message}`, error, method: "ASSIGN_VENDEDORA" });
     },
   });
 }
