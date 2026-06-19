@@ -1,7 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useDialogGenerarProformaController } from "../useDialogGenerarProformaController";
+import { ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
+
+const hoisted = vi.hoisted(() => ({
+  submitMock: vi.fn(),
+  toastMock: vi.fn(),
+  captureMock: vi.fn(),
+}));
 
 vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({
   useTasaIVA: () => 0.16,
@@ -18,6 +25,25 @@ vi.mock("../useProformaDialog", () => ({
 
 vi.mock("../useContenedoresEmbarque", () => ({
   useContenedoresEmbarque: () => ({ data: [] }),
+}));
+
+vi.mock("@/features/embarques/services/submitProformaDialog", async () => {
+  const actual = await vi.importActual<typeof import("@/features/embarques/services/submitProformaDialog")>(
+    "@/features/embarques/services/submitProformaDialog",
+  );
+  return {
+    ...actual,
+    submitProformaDialog: (...args: unknown[]) => hoisted.submitMock(...args),
+  };
+});
+
+vi.mock("@/hooks/shared", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>("@/hooks/shared");
+  return { ...actual, toast: (...args: unknown[]) => hoisted.toastMock(...args) };
+});
+
+vi.mock("@sentry/react", () => ({
+  captureException: (...args: unknown[]) => hoisted.captureMock(...args),
 }));
 
 const mockEmbarque = { id: "emb-1", cliente_id: "cli-1" } as any;
