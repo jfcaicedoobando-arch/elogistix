@@ -6,7 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.5] - 2026-06-19
+- **feat(costeo/rutas)**: Enriquecida la tabla `/costeo/rutas` con información operativa real.
+  - Nuevas columnas: **Tarifas vigentes** (badge numérico, "Sin tarifa" en rojo cuando 0), **Proveedores** (agentes distintos con tarifa), **Próxima a vencer** (con ⚠️ si ≤7 días), **Última actualización** (max `updated_at` de tarifas vigentes).
+  - **Estado dinámico**: el badge ya no refleja sólo el flag manual `activa`. Combina el flag con la presencia de tarifas vigentes y proximidad de expiración → `Activa` / `Sin tarifa` / `Vence en Nd` / `Vencida` / `Inactiva`.
+  - **Filtro y orden**: select de estado con conteo en cada opción; orden por defecto pone arriba las rutas con problemas (sin tarifa → por vencer → activa → inactiva).
+  - **Acción "Ver tarifas"** por fila → navega a `/costeo/tarifas?ruta=<id>` con filtro pre-aplicado y card de "Limpiar filtro".
+  - Service `fetchCosteoRutas` ahora hace nested-select a `costeo_tarifas` y agrega client-side (count, próxima expiración, max updated_at, agentes distintos). Sin cambios de schema ni RLS.
+  - Helper puro nuevo `utils/rutaEstado.ts` con `computeRutaEstado` y `diasParaExpirar`.
+  - Archivos: `services/rutas.ts`, `routes/CosteoRutas.tsx`, `routes/CosteoTarifas.tsx`, `types/index.ts`, nuevo `utils/rutaEstado.ts`. Bump `APP_VERSION` 13.67.5.
+
 ## [13.67.4] - 2026-06-18
+
 - **feat(costeo/tarifas-ui)**: Rediseño visual del modal "Buscar tarifa marítima (Top 3)" y de la página `/costeo/buscar` para resolver problemas de legibilidad reportados por usuarios.
   - **Legibilidad móvil**: Flete/Recargos ahora en una sola columna con gap explícito (antes el texto se pegaba: "FleteUSD 6,100.00"). Valores con `tabular-nums whitespace-nowrap`.
   - **Jerarquía del ganador**: Card #1 con badge flotante "🏆 Mejor opción", border 2px success, ring sutil, total en color success, botón `size="lg"`. #2/#3 con botón outline y delta `+USD X vs #1`.

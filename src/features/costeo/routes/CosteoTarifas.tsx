@@ -1,7 +1,9 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -25,6 +27,8 @@ import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoTarifas() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rutaIdFromUrl = searchParams.get("ruta") ?? undefined;
   const [estado, setEstado] = useState<EstadoFiltro>("vigente");
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
@@ -35,11 +39,17 @@ export default function CosteoTarifas() {
 
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
-  const { data: tarifas = [], isLoading } = useCosteoTarifas({
-    estado,
-    agenteId: agenteId === "todos" ? undefined : agenteId,
-    tipoContenedorId: tipoId === "todos" ? undefined : tipoId,
-  });
+  const tarifaFilters = useMemo(
+    () => ({
+      estado,
+      agenteId: agenteId === "todos" ? undefined : agenteId,
+      tipoContenedorId: tipoId === "todos" ? undefined : tipoId,
+      rutaId: rutaIdFromUrl,
+    }),
+    [estado, agenteId, tipoId, rutaIdFromUrl],
+  );
+  const { data: tarifas = [], isLoading } = useCosteoTarifas(tarifaFilters);
+
   const { eliminar } = useCosteoTarifaMutations();
 
   const duplicar = (id: string) => {
@@ -71,7 +81,30 @@ export default function CosteoTarifas() {
         actions={<Button onClick={nuevo}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
       />
 
+      {rutaIdFromUrl && tarifas[0] && (
+        <Card className="p-3 flex items-center justify-between bg-muted/40">
+          <p className="text-sm">
+            Filtrando por ruta:{" "}
+            <span className="font-medium">
+              {tarifas[0].puerto_origen_nombre} → {tarifas[0].puerto_destino_nombre}
+            </span>
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const next = new URLSearchParams(searchParams);
+              next.delete("ruta");
+              setSearchParams(next, { replace: true });
+            }}
+          >
+            Limpiar filtro
+          </Button>
+        </Card>
+      )}
+
       <Card className="p-4 flex flex-wrap gap-3">
+
         <div className="min-w-[140px]">
           <Label htmlFor="filtro-estado" className="sr-only">Estado</Label>
           <Select value={estado} onValueChange={(v) => setEstado(v as EstadoFiltro)}>

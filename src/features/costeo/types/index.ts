@@ -27,7 +27,16 @@ export interface CosteoRuta {
   updated_at: string;
   puerto_origen_nombre?: string;
   puerto_destino_nombre?: string;
+  /** Conteo de tarifas con estado='vigente' y vigente_hasta >= hoy. */
+  tarifas_vigentes_count?: number;
+  /** Fecha (ISO date) de la tarifa vigente más próxima a vencer. */
+  proxima_expiracion?: string | null;
+  /** updated_at máximo entre las tarifas vigentes de la ruta. */
+  ultima_actualizacion_tarifa?: string | null;
+  /** Cantidad de agentes distintos con tarifa vigente en la ruta. */
+  proveedores_count?: number;
 }
+
 
 export type CosteoTarifaEstado = "borrador" | "vigente" | "vencida" | "reemplazada";
 

@@ -29,6 +29,7 @@ describe("costeo/services/rutas", () => {
           puerto_destino_id: "pd",
           puerto_origen: { name: "Shanghai" },
           puerto_destino: { name: "Manzanillo" },
+          costeo_tarifas: [],
         },
       ],
       error: null,
@@ -36,7 +37,40 @@ describe("costeo/services/rutas", () => {
     const res = await fetchCosteoRutas(ORG);
     expect(res[0].puerto_origen_nombre).toBe("Shanghai");
     expect(res[0].puerto_destino_nombre).toBe("Manzanillo");
+    expect(res[0].tarifas_vigentes_count).toBe(0);
+    expect(res[0].proveedores_count).toBe(0);
   });
+
+  it("fetchCosteoRutas agrega conteos de tarifas vigentes y proveedores", async () => {
+    const futura = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const pasada = new Date(Date.now() - 5 * 86400000).toISOString().slice(0, 10);
+    mock.setTableResult("costeo_rutas", {
+      data: [
+        {
+          id: "r1",
+          puerto_origen_id: "po",
+          puerto_destino_id: "pd",
+          activa: true,
+          puerto_origen: { name: "Ningbo" },
+          puerto_destino: { name: "Lázaro Cárdenas" },
+          costeo_tarifas: [
+            { estado: "vigente", vigente_hasta: futura, updated_at: "2026-06-10T00:00:00Z", agente_id: "a1" },
+            { estado: "vigente", vigente_hasta: futura, updated_at: "2026-06-15T00:00:00Z", agente_id: "a2" },
+            { estado: "vencida", vigente_hasta: pasada, updated_at: "2026-01-01T00:00:00Z", agente_id: "a3" },
+            { estado: "vigente", vigente_hasta: pasada, updated_at: "2026-01-01T00:00:00Z", agente_id: "a4" },
+          ],
+        },
+      ],
+      error: null,
+    });
+    const [ruta] = await fetchCosteoRutas(ORG);
+    expect(ruta.tarifas_vigentes_count).toBe(2);
+    expect(ruta.proveedores_count).toBe(2);
+    expect(ruta.proxima_expiracion).toBe(futura);
+    expect(ruta.ultima_actualizacion_tarifa).toBe("2026-06-15T00:00:00Z");
+  });
+
+
 
   it("insertCosteoRuta incluye organization_id en el payload", async () => {
     mock.setTableResult("costeo_rutas", { data: { id: "r2" }, error: null });
