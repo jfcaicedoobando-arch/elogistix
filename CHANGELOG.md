@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.2] - 2026-06-19
+- **fix(costeo/rls-coordinador)**: Valeria (coordinador logístico) recibía "new row violates row-level security policy for table costeo_tarifas" al guardar una tarifa. Las políticas `costeo_tarifas_write_org`, `costeo_recargos_write_org` y `costeo_agentes_write_org` no incluían el rol `coordinador_logistico`, pero `costeo_rutas_write_org` sí — inconsistencia. Migración que alinea los tres permisos con la lista completa (admin, admin_org, gerente_operaciones, ejecutivo_pricing, operador, coordinador_logistico, super_admin). Sin cambios de código cliente. Bump `APP_VERSION` 13.68.2.
+
 ## [13.68.1] - 2026-06-19
 - **chore(costeo/power-of-10)**: Suite verde. Tres archivos de costeo excedían el límite de 200 líneas del Power of 10 (`TarifaResultCard` 267, `CosteoTarifas` 227, `CosteoRutas` 226) y rompían los tests `architecture-baseline` y `audit-report`. Se dividieron en sub-componentes (`CartaGarantiaIndicator`, `TarifaCardDesglose`, `TarifaCardBadges`, `CosteoTarifasFiltros`, `CosteoTarifasTable`, `CosteoRutasTable`) y helpers (`tarifaFormatters`). Sin cambios de comportamiento. Bump `APP_VERSION` 13.68.1.
 
