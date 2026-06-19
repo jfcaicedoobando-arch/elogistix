@@ -14,6 +14,7 @@ import {
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "./TarifaResultCard";
+import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
 interface Props {
@@ -57,13 +58,15 @@ function ResultadosBody({
       </p>
     );
   }
+  const meta = computeRankingMeta(tarifas);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
       {tarifas.map((t, i) => (
         <TarifaResultCard
           key={t.id}
           row={t}
           rank={i + 1}
+          meta={meta[i]}
           onElegir={onElegir ? (row) => { onElegir(row); onOpenChange(false); } : undefined}
           selectLabel={selectLabel}
         />
@@ -106,7 +109,7 @@ export function BuscarTarifaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Buscar tarifa marítima (Top 3)</DialogTitle>
           <DialogDescription>Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada.</DialogDescription>

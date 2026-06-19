@@ -6,6 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.4] - 2026-06-18
+- **feat(costeo/tarifas-ui)**: Rediseño visual del modal "Buscar tarifa marítima (Top 3)" y de la página `/costeo/buscar` para resolver problemas de legibilidad reportados por usuarios.
+  - **Legibilidad móvil**: Flete/Recargos ahora en una sola columna con gap explícito (antes el texto se pegaba: "FleteUSD 6,100.00"). Valores con `tabular-nums whitespace-nowrap`.
+  - **Jerarquía del ganador**: Card #1 con badge flotante "🏆 Mejor opción", border 2px success, ring sutil, total en color success, botón `size="lg"`. #2/#3 con botón outline y delta `+USD X vs #1`.
+  - **Etiquetas dinámicas**: Helper `computeRankingMeta` calcula "Mejor precio / Más crédito / Más días libres / Tránsito más corto" comparando los 3 rows.
+  - **Total destacado**: Bloque con fondo propio (`bg-success/10` o `bg-muted/50`), título "Costo total estimado" + tooltip explicativo (antes "Total comparable" sin contexto).
+  - **Desglose colapsable**: Recargos detallados ahora en `<button>` expandible ("Ver desglose (N recargos)") en lugar de siempre visibles.
+  - **Badges agrupadas**: Fila comercial (crédito + carta garantía) separada de fila operativa (días libres + tránsito + demora). Demora día 6 con tooltip explicando qué es.
+  - **Vigencia prominente**: Icono + label + badge "Vence pronto" cuando `vigente_hasta` está a ≤7 días.
+  - **Grid responsive**: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` (antes saltaba a 3 columnas directo en md). Modal ampliado a `max-w-5xl`.
+  - Archivos: `TarifaResultCard.tsx` (rediseño), `BuscarTarifaDialog.tsx`, `CosteoBuscar.tsx`, nuevo `utils/rankingLabels.ts`. Bump `APP_VERSION` 13.67.4.
+
 ## [13.67.3] - 2026-06-18
 - **fix(costeo/rutas)**: El alta de rutas CN→MX ahora detecta rutas duplicadas antes de guardar y deshabilita el botón Guardar con un mensaje claro. Si por concurrencia el backend devuelve `23505`, se traduce a "Ruta duplicada" en vez de mostrar el constraint técnico. Bump `APP_VERSION` 13.67.3.
 
