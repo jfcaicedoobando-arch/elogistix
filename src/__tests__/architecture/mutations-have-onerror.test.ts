@@ -52,7 +52,7 @@ function findUseMutationsWithoutOnError(filePath: string): number[] {
 
 describe("Toast coverage: useMutation requiere onError", () => {
   it("todas las mutations en src/features y src/hooks tienen onError", async () => {
-    const files = await glob(
+    const files = await fg(
       [
         "src/features/**/hooks/**/use*.ts",
         "src/features/**/hooks/**/use*.tsx",

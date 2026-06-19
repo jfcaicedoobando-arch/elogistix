@@ -26,7 +26,7 @@ const ALLOWLIST = new Set<string>([
 
 describe("Error toasts deben usar notifyError", () => {
   it("nadie llama a toast.error(...) directo", async () => {
-    const files = await glob(["src/**/*.ts", "src/**/*.tsx"], {
+    const files = await fg(["src/**/*.ts", "src/**/*.tsx"], {
       cwd: ROOT,
       ignore: ["src/**/__tests__/**", "src/**/*.test.*", "src/**/*.spec.*"],
     });
@@ -43,7 +43,7 @@ describe("Error toasts deben usar notifyError", () => {
   });
 
   it("nadie pasa variant: 'destructive' a toast()", async () => {
-    const files = await glob(["src/**/*.ts", "src/**/*.tsx"], {
+    const files = await fg(["src/**/*.ts", "src/**/*.tsx"], {
       cwd: ROOT,
       ignore: ["src/**/__tests__/**", "src/**/*.test.*", "src/**/*.spec.*"],
     });
