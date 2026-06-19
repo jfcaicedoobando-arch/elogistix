@@ -155,7 +155,7 @@ async function authorizeListClients(
     .select("role")
     .eq("user_id", callerId)
     .eq("organization_id", clienteOrgId)
-    .in("role", ["admin", "operador"])
+    .in("role", ["admin", "admin_org", "operador", "coordinador_logistico", "ejecutivo_pricing", "gerente_operaciones"])
     .maybeSingle();
   return !!member;
 }

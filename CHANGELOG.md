@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.7] - 2026-06-19
+- **fix(user-management/list-clients)**: La edge function devolvía 403 "No autorizado" a roles modernos (`coordinador_logistico`, `admin_org`, `ejecutivo_pricing`, `gerente_operaciones`) al listar usuarios del portal de un cliente. `authorizeListClients` sólo permitía `admin` y `operador` (legacy). Ampliada la whitelist en `clientHandlers.ts` para incluir los roles modernos equivalentes, consistente con `handleList`. Bump `APP_VERSION` 13.67.7.
+
 ## [13.67.6] - 2026-06-19
 - **fix(costeo/rutas)**: Resuelto `UnhandledRejection` en Sentry al intentar guardar una ruta CN→MX duplicada. (1) `RutaFormDialog.handleGuardar` ahora envuelve `crear.mutateAsync` en `try/catch` para consumir el rechazo (el toast de error sigue siendo emitido por `onError` del hook). (2) `isUniqueViolation` en `services/rutas.ts` ahora acepta `code === 23505` (string o numérico) y hace match laxo del mensaje (`/costeo_rutas.*puerto/i` o `/duplicate key/i`), garantizando que cualquier 409 se traduzca a `CosteoRutaDuplicadaError` en vez de relanzar el objeto Postgrest crudo. Bump `APP_VERSION` 13.67.6.
 
