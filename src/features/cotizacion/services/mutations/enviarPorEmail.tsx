@@ -46,6 +46,24 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const ENVIAR_URL = `${SUPABASE_URL}/functions/v1/enviar-cotizacion-email`;
 
+async function fetchConReintento(url: string, init: RequestInit): Promise<Response> {
+  const delays = [0, 800, 1600]; // 3 intentos: inmediato, 800ms, 1.6s
+  let lastErr: unknown;
+  for (const delay of delays) {
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+    try {
+      return await fetch(url, init);
+    } catch (e) {
+      lastErr = e;
+      // Sólo reintentamos errores de red (TypeError: Failed to fetch).
+      // Cualquier otra cosa se propaga inmediatamente.
+      const isNet = e instanceof TypeError;
+      if (!isNet) throw e;
+    }
+  }
+  throw lastErr;
+}
+
 async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>): Promise<T> {
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
@@ -55,7 +73,7 @@ async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>
 
   let resp: Response;
   try {
-    resp = await fetch(ENVIAR_URL, {
+    resp = await fetchConReintento(ENVIAR_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
