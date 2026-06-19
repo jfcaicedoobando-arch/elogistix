@@ -20,8 +20,9 @@ function success(message: string): void {
 function error(message: string, err?: unknown): void {
   const description =
     err instanceof Error ? err.message : typeof err === "string" ? err : undefined;
-  notifyError(toast, { title: "Error", description: message, duration: 4000, description, method: "FEATURES_CRM_DOMAIN_CRMTOAST_1" });
+  notifyError(toast, { title: message, description, error: err, method: "CRM_TOAST" });
 }
+
 
 function info(message: string): void {
   toast(message, { duration: 2000 });
