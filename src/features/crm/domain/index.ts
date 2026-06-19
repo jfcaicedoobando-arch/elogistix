@@ -4,7 +4,7 @@
  * Supabase. Movido desde `src/lib/crm/` en la auditoría v12.95.10.
  */
 export * from "./cliente360";
-export * from "./crmToast";
+export * from "../lib/crmToast";
 export * from "./dashboardAggregates";
 export * from "./forecast";
 export * from "./forecastBuckets";
