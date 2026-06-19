@@ -6,6 +6,11 @@
  *  2. Genera el PDF como blob en cliente con la plantilla existente.
  *  3. Sube el PDF al bucket privado vía signed upload URL.
  *  4. `send` → invoca la edge function que dispara los correos y registra el envío.
+ *
+ * Nota (13.68.6): se usa `fetch` directo en vez de `supabase.functions.invoke()`
+ * para enviar `Authorization` + `apikey` explícitos y leer el cuerpo del error.
+ * Antes, cuando la edge function devolvía un error, el cliente sólo veía
+ * "Failed to send a request to the Edge Function" sin la causa real.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow } from "@/features/cotizacion/types";
@@ -37,6 +42,59 @@ export interface EnviarEmailResult {
   pdf_link: string;
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+const ENVIAR_URL = `${SUPABASE_URL}/functions/v1/enviar-cotizacion-email`;
+
+async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>): Promise<T> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) {
+    throw new Error("Tu sesión expiró. Vuelve a iniciar sesión e intenta de nuevo.");
+  }
+
+  let resp: Response;
+  try {
+    resp = await fetch(ENVIAR_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        apikey: SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`No se pudo contactar al servicio de correo: ${msg}`);
+  }
+
+  const raw = await resp.text();
+  let parsed: unknown = null;
+  try {
+    parsed = raw ? JSON.parse(raw) : null;
+  } catch {
+    // respuesta no-JSON; conservamos `raw` para el mensaje
+  }
+
+  if (!resp.ok) {
+    const detalle =
+      (parsed && typeof parsed === "object" && "error" in parsed
+        ? String((parsed as { error: unknown }).error)
+        : raw) || `HTTP ${resp.status}`;
+    throw new Error(`Servicio de correo (${resp.status}): ${detalle}`);
+  }
+
+  return (parsed ?? {}) as T;
+}
+
+interface PrepareResponse {
+  upload_url?: string;
+  upload_token?: string;
+  path?: string;
+  error?: string;
+}
+
 async function generarPdfBlob(cotizacion: CotizacionRow, tasaIva: number): Promise<Blob> {
   // Reusa la misma plantilla que el botón "Exportar PDF".
   const { CotizacionDocument } = await import("@/pdf/documents/CotizacionDocument");
@@ -51,10 +109,10 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
   const { cotizacion, tasaIva = TASA_IVA } = input;
 
   // 1. prepare → signed upload URL
-  const { data: prep, error: prepErr } = await supabase.functions.invoke("enviar-cotizacion-email", {
-    body: { action: "prepare", cotizacion_id: cotizacion.id },
+  const prep = await invokeEnviarCotizacion<PrepareResponse>({
+    action: "prepare",
+    cotizacion_id: cotizacion.id,
   });
-  if (prepErr) throw new Error(prepErr.message);
   if (!prep?.upload_token || !prep?.path) {
     throw new Error(prep?.error ?? "No se pudo preparar la subida del PDF");
   }
@@ -69,22 +127,19 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
   if (uploadErr) throw new Error(`Subida de PDF falló: ${uploadErr.message}`);
 
   // 4. send
-  const { data: send, error: sendErr } = await supabase.functions.invoke("enviar-cotizacion-email", {
-    body: {
-      action: "send",
-      cotizacion_id: cotizacion.id,
-      destinatarios: input.destinatarios,
-      cc: input.cc,
-      mensaje: input.mensaje,
-      asunto: input.asunto,
-      marcar_enviada: input.marcarEnviada,
-      pdf_path: prep.path,
-      totales: input.totales,
-      ejecutivo: input.ejecutivo,
-    },
+  const send = await invokeEnviarCotizacion<EnviarEmailResult & { error?: string }>({
+    action: "send",
+    cotizacion_id: cotizacion.id,
+    destinatarios: input.destinatarios,
+    cc: input.cc,
+    mensaje: input.mensaje,
+    asunto: input.asunto,
+    marcar_enviada: input.marcarEnviada,
+    pdf_path: prep.path,
+    totales: input.totales,
+    ejecutivo: input.ejecutivo,
   });
-  if (sendErr) throw new Error(sendErr.message);
   if (!send) throw new Error("Respuesta vacía del servidor");
   if (send.error) throw new Error(send.error);
-  return send as EnviarEmailResult;
+  return send;
 }
