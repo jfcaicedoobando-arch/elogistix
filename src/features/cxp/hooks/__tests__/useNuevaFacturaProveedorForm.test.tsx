@@ -87,7 +87,7 @@ describe("useNuevaFacturaProveedorForm", () => {
     const { result } = renderHook(() => useNuevaFacturaProveedorForm(onDone), { wrapper: createWrapper() });
     await act(async () => { await result.current.submit(); });
     expect(mutateAsync).not.toHaveBeenCalled();
-    expect(toastError).toHaveBeenCalledWith("Revisa los campos marcados");
+    expect(toastError).toHaveBeenCalledWith("Revisa los campos marcados", expect.anything());
     expect(result.current.errors.provId).toMatch(/proveedor/i);
   });
 
@@ -121,7 +121,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleChange("subtotal", "100");
     });
     await act(async () => { await result.current.submit(); });
-    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i));
+    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i), expect.anything());
     expect(onDone).not.toHaveBeenCalled();
   });
 
