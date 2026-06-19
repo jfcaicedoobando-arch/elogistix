@@ -44,7 +44,7 @@ export function rowAContenedorBorrador(row: EmbarqueContenedor): ContenedorBorra
     id: row.id,
     numero_contenedor: row.numero_contenedor,
     tipo_contenedor: row.tipo_contenedor,
-    bl_house: row.bl_house,
+    bl_house: row.bl_house ?? "",
     peso_kg: Number(row.peso_kg),
     volumen_m3: Number(row.volumen_m3),
     piezas: row.piezas,
