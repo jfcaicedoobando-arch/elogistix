@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchCosteoAgentes,
   insertCosteoAgente,
@@ -34,7 +35,7 @@ export function useCosteoAgenteMutations() {
       toast({ title: "Agente agregado" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al agregar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al agregar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_1" }),
   });
 
   const actualizar = useMutation({
@@ -45,7 +46,7 @@ export function useCosteoAgenteMutations() {
       toast({ title: "Agente actualizado" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al actualizar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al actualizar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_2" }),
   });
 
   const eliminar = useMutation({
@@ -55,7 +56,7 @@ export function useCosteoAgenteMutations() {
       toast({ title: "Agente eliminado" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOAGENTES_3" }),
   });
 
   return { crear, actualizar, eliminar };

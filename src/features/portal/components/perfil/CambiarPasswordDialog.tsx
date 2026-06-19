@@ -38,11 +38,11 @@ export function CambiarPasswordDialog({ open, onOpenChange }: Props) {
 
   const handleSubmit = async () => {
     if (nueva.length < 8) {
-      toast({ title: "Contraseña muy corta", description: "Mínimo 8 caracteres.", variant: "destructive" });
+      notifyError(toast, { title: "Contraseña muy corta", description: "Mínimo 8 caracteres.", method: "FEATURES_PORTAL_COMPONENTS_PERFIL_CAMBIARPASSWORDDIALOG_1" });
       return;
     }
     if (nueva !== confirma) {
-      toast({ title: "No coinciden", description: "La confirmación no coincide.", variant: "destructive" });
+      notifyError(toast, { title: "No coinciden", description: "La confirmación no coincide.", method: "FEATURES_PORTAL_COMPONENTS_PERFIL_CAMBIARPASSWORDDIALOG_2" });
       return;
     }
     try {
