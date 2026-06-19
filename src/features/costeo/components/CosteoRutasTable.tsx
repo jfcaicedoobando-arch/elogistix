@@ -33,8 +33,8 @@ function formatFecha(iso: string | null | undefined): string {
 
 interface RutaRow {
   id: string;
-  puerto_origen_nombre: string | null;
-  puerto_destino_nombre: string | null;
+  puerto_origen_nombre?: string | null;
+  puerto_destino_nombre?: string | null;
   tarifas_vigentes_count?: number | null;
   proveedores_count?: number | null;
   proxima_expiracion?: string | null;
