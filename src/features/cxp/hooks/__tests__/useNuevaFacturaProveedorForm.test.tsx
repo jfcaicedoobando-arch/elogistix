@@ -121,7 +121,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleChange("subtotal", "100");
     });
     await act(async () => { await result.current.submit(); });
-    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i));
+    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i), expect.anything());
     expect(onDone).not.toHaveBeenCalled();
   });
 
