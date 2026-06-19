@@ -1,0 +1,1 @@
+ALTER TABLE public.embarque_contenedores ALTER COLUMN bl_house DROP NOT NULL; ALTER TABLE public.embarque_contenedores ALTER COLUMN bl_house SET DEFAULT '';
