@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchAlertasPendingCount,
   fetchAlertasSistema,
@@ -56,7 +57,7 @@ export function useAcknowledgeAlerta() {
       qc.invalidateQueries({ queryKey: QK_LIST });
     },
     onError: (err: Error) => {
-      toast({ title: "No se pudo reconocer la alerta", description: err.message, variant: "destructive" });
+      notifyError(toast, { title: "No se pudo reconocer la alerta", description: err.message, error: err, method: "FEATURES_ADMIN_HOOKS_USEALERTASSISTEMA_1" });
     },
   });
 }

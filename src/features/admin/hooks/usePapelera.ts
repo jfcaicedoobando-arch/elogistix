@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/shared";
 import { listTrash, restoreRecord, purgeRecord, type SoftTable, type TrashRow } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export type { SoftTable, TrashRow };
 
 export function usePapelera(enabled: boolean) {
@@ -29,7 +30,7 @@ export function usePapelera(enabled: boolean) {
       qc.invalidateQueries({ queryKey: queryKeys.papelera(tabla) });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al restaurar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al restaurar", description: e.message, error: e, method: "FEATURES_ADMIN_HOOKS_USEPAPELERA_1" }),
   });
 
   const purge = useMutation({
@@ -39,7 +40,7 @@ export function usePapelera(enabled: boolean) {
       qc.invalidateQueries({ queryKey: queryKeys.papelera(tabla) });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al purgar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al purgar", description: e.message, error: e, method: "FEATURES_ADMIN_HOOKS_USEPAPELERA_2" }),
   });
 
   return {

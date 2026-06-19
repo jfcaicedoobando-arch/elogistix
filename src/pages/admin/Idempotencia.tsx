@@ -10,6 +10,7 @@ import { usePermissions, useToast } from "@/hooks/shared";
 import { useIdempotenciaLog, type FnFilter } from "@/features/admin/hooks";
 import type { IdempotenciaRow } from "@/features/admin/services";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const FN_LABEL: Record<string, string> = {
   crear_embarque_completo: "Crear embarque",
   duplicar_embarque_completo: "Duplicar embarque",
@@ -51,7 +52,7 @@ export default function Idempotencia() {
       await navigator.clipboard.writeText(k);
       toast({ title: "requestId copiado" });
     } catch {
-      toast({ title: "No se pudo copiar", variant: "destructive" });
+      notifyError(toast, { title: "No se pudo copiar", method: "PAGES_ADMIN_IDEMPOTENCIA_1" });
     }
   };
 

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface VendedoraOpt { id: string; nombre: string }
 
 export function DialogGenerarLiquidacion({
@@ -29,7 +30,7 @@ export function DialogGenerarLiquidacion({
       { vendedora_id: vendedoraId, periodo, organization_id: organizationId },
       {
         onSuccess: () => { toast.success("Liquidación generada"); onOpenChange(false); },
-        onError: (e) => toast.error((e as Error).message),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGGENERARLIQUIDACION_1" }),
       },
     );
   };

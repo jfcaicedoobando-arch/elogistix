@@ -4,6 +4,7 @@
  */
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   runAuditoriaBackfillLegacy,
   type BackfillLegacyResult,
@@ -23,7 +24,7 @@ export function useBackfillLegacy(options: UseBackfillLegacyOptions = {}) {
       options.onSuccess?.(data);
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Error al ejecutar backfill");
+      notifyError(toast, { title: err instanceof Error ? err.message : "Error al ejecutar backfill", error: err, method: "FEATURES_ADMIN_HOOKS_USEBACKFILLLEGACY_1" });
     },
   });
 }

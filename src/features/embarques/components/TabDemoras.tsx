@@ -20,6 +20,7 @@ import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   embarqueId: string;
   canEdit: boolean;
@@ -69,7 +70,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
       qc.invalidateQueries({ queryKey: ["conceptos_costo", embarqueId] });
       qc.invalidateQueries({ queryKey: ["conceptos_venta", embarqueId] });
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => notifyError(toast, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
   });
 
   const setDraft = (id: string, patch: DraftPatch) => {

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useProveedorMutations } from "@/features/proveedor/hooks";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -33,7 +34,7 @@ export function CrearProveedorDesdeCfdiDialog({
 
   const submit = async () => {
     if (!n.trim() || !r.trim()) {
-      toast.error("Nombre y RFC son obligatorios");
+      notifyError(toast, { title: "Nombre y RFC son obligatorios", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_1" });
       return;
     }
     try {
@@ -59,7 +60,7 @@ export function CrearProveedorDesdeCfdiDialog({
         onOpenChange(false);
         return;
       }
-      toast.error(err.message ?? "Error al crear proveedor");
+      notifyError(toast, { title: err.message ?? "Error al crear proveedor", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_2" });
     }
   };
 

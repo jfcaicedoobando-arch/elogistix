@@ -13,6 +13,7 @@ import {
 import { fetchProveedoresPorTipo } from "@/features/costeo/services/agentes";
 import type { NavieraCondicionInput, DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const KEY = ["costeo", "navieras_condiciones"] as const;
 
 export function useCondicionesNaviera() {
@@ -39,7 +40,7 @@ export function useCondicionNavieraMutations() {
       toast({ title: "Condiciones guardadas" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al guardar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_1" }),
   });
 
   const eliminar = useMutation({
@@ -49,7 +50,7 @@ export function useCondicionNavieraMutations() {
       toast({ title: "Condiciones eliminadas" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_2" }),
   });
 
   return { guardar, eliminar };
@@ -81,7 +82,7 @@ export function useReemplazarTramos() {
       toast({ title: "Tabulador actualizado" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al guardar tabulador", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al guardar tabulador", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USENAVIERACONDICIONES_3" }),
   });
 }
 

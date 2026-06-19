@@ -12,6 +12,7 @@ import {
 import type { AuditoriaComentario } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const baseKey = (revisionId: string) =>
   ["auditoria", "comentarios", revisionId] as const;
 
@@ -43,9 +44,7 @@ export function useAgregarComentarioAuditoria() {
     },
     onError: (err: Error) => {
       logger.error("[useAgregarComentarioAuditoria] error:", err);
-      toast.error("No se pudo agregar el comentario", {
-        description: err.message,
-      });
+      notifyError(toast, { title: "No se pudo agregar el comentario", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USEAUDITORIACOMENTARIOS_1" });
     },
   });
 }

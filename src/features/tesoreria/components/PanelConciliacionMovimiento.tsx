@@ -15,6 +15,7 @@ import type { MovimientoBBVA } from "@/features/tesoreria/services";
 import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   movimiento: MovimientoBBVA | null;
   onClose: () => void;
@@ -44,18 +45,18 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
       { movId: movimiento.id, tipo, pagoId },
       {
         onSuccess: () => { toast.success("Movimiento conciliado"); onClose(); },
-        onError: (e) => toast.error((e as Error).message),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_1" }),
       },
     );
   };
 
   const onIgnorar = () => {
-    if (!motivo.trim()) return toast.error("Captura un motivo");
+    if (!motivo.trim()) return notifyError(toast, { title: "Captura un motivo", method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_2" });
     ignorar.mutate(
       { movId: movimiento.id, motivo: motivo.trim() },
       {
         onSuccess: () => { toast.success("Movimiento ignorado"); setOpenIgnorar(false); setMotivo(""); onClose(); },
-        onError: (e) => toast.error((e as Error).message),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_3" }),
       },
     );
   };
@@ -63,7 +64,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
   const onDesconciliar = () => {
     desconciliar.mutate(movimiento.id, {
       onSuccess: () => { toast.success("Movimiento desconciliado"); onClose(); },
-      onError: (e) => toast.error((e as Error).message),
+      onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_4" }),
     });
   };
 

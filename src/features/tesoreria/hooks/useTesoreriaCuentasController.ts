@@ -9,6 +9,7 @@ import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/featur
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
 const INITIAL_FORM = {
@@ -35,7 +36,7 @@ export function useTesoreriaCuentasController() {
 
   const submit = async () => {
     if (!form.alias.trim()) {
-      toast.error("Captura un alias");
+      notifyError(toast, { title: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
       return;
     }
     try {
@@ -52,7 +53,7 @@ export function useTesoreriaCuentasController() {
       reset();
       setOpen(false);
     } catch (e) {
-      toast.error((e as Error).message);
+      notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_2" });
       reportCaughtError(e, { feature: "tesoreria", op: "crear_cuenta" });
     }
   };

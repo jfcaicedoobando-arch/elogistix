@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/formatters";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   useVendedorasConfig, useUpsertVendedoraConfig, useUpdateVendedoraConfig,
   useEmbarquesSinVendedora, useAsignarVendedoraEmbarque,
@@ -49,13 +50,13 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
         toast.success("Vendedora configurada");
         setNuevaVendedora(""); setNuevoPct("5");
       },
-      onError: (e) => toast.error((e as Error).message),
+      onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_1" }),
     });
   };
 
   const guardarPct = (id: string) => {
     const v = Number(pcts[id]);
-    if (Number.isNaN(v) || v < 0 || v > 100) return toast.error("% inválido");
+    if (Number.isNaN(v) || v < 0 || v > 100) return notifyError(toast, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_2" });
     update.mutate({ id, changes: { porcentaje_default: v } }, {
       onSuccess: () => toast.success("Porcentaje actualizado"),
     });

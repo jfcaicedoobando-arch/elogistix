@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   createSeguroEmbarque,
   deleteSeguroEmbarque,
@@ -33,7 +34,7 @@ export function useCreateSeguro(embarqueId: string) {
       invalidatePnl(qc, embarqueId);
       toast.success("Póliza registrada");
     },
-    onError: (e: Error) => toast.error(e.message ?? "No se pudo guardar la póliza"),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo guardar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_1" }),
   });
 }
 
@@ -46,7 +47,7 @@ export function useUpdateSeguro(embarqueId: string) {
       invalidatePnl(qc, embarqueId);
       toast.success("Póliza actualizada");
     },
-    onError: (e: Error) => toast.error(e.message ?? "No se pudo actualizar la póliza"),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo actualizar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_2" }),
   });
 }
 
@@ -58,6 +59,6 @@ export function useDeleteSeguro(embarqueId: string) {
       invalidatePnl(qc, embarqueId);
       toast.success("Póliza eliminada");
     },
-    onError: (e: Error) => toast.error(e.message ?? "No se pudo eliminar la póliza"),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo eliminar la póliza", error: e, method: "FEATURES_EMBARQUES_HOOKS_USESEGUROSEMBARQUE_3" }),
   });
 }

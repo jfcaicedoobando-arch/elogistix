@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { useRegistrarPagoLiquidacion } from "@/features/comisiones/hooks";
 import type { LiquidacionRow } from "@/features/comisiones/services";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function DialogRegistrarPagoLiquidacion({
   open, onOpenChange, liq,
 }: { open: boolean; onOpenChange: (o: boolean) => void; liq: LiquidacionRow | null }) {
@@ -29,7 +30,7 @@ export function DialogRegistrarPagoLiquidacion({
       { id: liq.id, fecha_pago: fecha, metodo_pago: metodo, referencia },
       {
         onSuccess: () => { toast.success("Pago registrado"); onOpenChange(false); },
-        onError: (e) => toast.error((e as Error).message),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGREGISTRARPAGOLIQUIDACION_1" }),
       },
     );
   };

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchGarantiasEmbarque, updateGarantia, type UpdateGarantiaInput } from "../services/garantias";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useGarantiasContenedor(embarqueId: string | undefined) {
   return useQuery({
     queryKey: ["garantias-embarque", embarqueId],
@@ -20,7 +21,7 @@ export function useUpdateGarantia(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al actualizar";
-      toast.error(msg);
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEGARANTIASCONTENEDOR_1" });
     },
   });
 }

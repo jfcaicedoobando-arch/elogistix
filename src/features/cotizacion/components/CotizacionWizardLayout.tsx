@@ -9,6 +9,7 @@ import { CotizacionWizardSteps } from "@/features/cotizacion/components/wizard/C
 import { ConfirmSinDesgloseDialog } from "@/features/cotizacion/components/ConfirmSinDesgloseDialog";
 import { usePermissions } from "@/hooks/shared";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const WIZARD_STEPS = [
   { num: 1, title: "Datos Generales" },
   { num: 2, title: "Costos & P&L" },
@@ -57,7 +58,7 @@ export default function CotizacionWizardLayout({
   const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
   const handleConfirmSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
-      toast.error("Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.");
+      notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
       setShowSinDesglose(false);
       return;
     }
@@ -67,7 +68,7 @@ export default function CotizacionWizardLayout({
 
   const handleOpenSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
-      toast.error("Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.");
+      notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_2" });
       return;
     }
     setShowSinDesglose(true);

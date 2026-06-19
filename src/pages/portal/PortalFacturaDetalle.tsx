@@ -13,6 +13,7 @@ import PortalFacturaResumenCard from "@/features/portal/components/factura/Porta
 import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";
 import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalFacturaPagosCard";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -23,11 +24,8 @@ export default function PortalFacturaDetalle() {
     try {
       await openFacturaInNewTab(stored);
     } catch (err) {
-      toast({
-        title: `No se pudo abrir el ${kind}`,
-        description: (err as Error).message,
-        variant: "destructive",
-      });
+      notifyError(toast, { title: `No se pudo abrir el ${kind}`,
+        description: (err as Error).message, error: err, method: "PAGES_PORTAL_PORTALFACTURADETALLE_1" });
     }
   };
 

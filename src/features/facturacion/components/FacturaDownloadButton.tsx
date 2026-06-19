@@ -3,6 +3,7 @@ import { FileText, FileCode2 } from "lucide-react";
 import { openFacturaInNewTab } from "@/services/storage";
 import { toast } from "@/hooks/shared";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   stored: string;
   kind: "pdf" | "xml";
@@ -20,11 +21,8 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className }
     try {
       await openFacturaInNewTab(stored);
     } catch (err) {
-      toast({
-        title: "No se pudo abrir el archivo",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
+      notifyError(toast, { title: "No se pudo abrir el archivo",
+        description: (err as Error).message, error: err, method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1" });
     }
   };
   if (size === "icon") {

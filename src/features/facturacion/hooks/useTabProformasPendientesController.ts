@@ -13,6 +13,7 @@ import {
 
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useStableRequestId } from "@/lib/idempotency";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   agruparProformasPendientes,
   totalesProformasSeleccionadas,
@@ -116,7 +117,7 @@ export function useTabProformasPendientesController(opts?: {
     // rápido con mensaje claro si una proforma trae metadata inconsistente.
     const clienteIds = new Set(sel.map((p) => p.cliente_id));
     if (clienteIds.size > 1) {
-      toast.error("No se pueden consolidar proformas de clientes distintos.");
+      notifyError(toast, { title: "No se pueden consolidar proformas de clientes distintos.", method: "FEATURES_FACTURACION_HOOKS_USETABPROFORMASPENDIENTESCONTROLLER_1" });
       return;
     }
     consolidar.mutate(

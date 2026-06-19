@@ -19,6 +19,7 @@ import { seedCategoriasDefault } from "@/features/presupuesto/services";
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);
@@ -35,7 +36,7 @@ export function TabCategorias() {
       cats.refetch();
     } catch (e) {
       const err = e as { message?: string };
-      toast.error(err.message ?? "Error");
+      notifyError(toast, { title: err.message ?? "Error", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
     }
   };
 
@@ -47,7 +48,7 @@ export function TabCategorias() {
       setBorrarId(null);
     } catch (e) {
       const err = e as { message?: string };
-      toast.error(err.message ?? "No se pudo eliminar");
+      notifyError(toast, { title: err.message ?? "No se pudo eliminar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
     }
   };
 

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOrgFilter } from "@/hooks/shared";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   enviarRecordatorio,
   fetchUltimosRecordatorios,
@@ -32,7 +33,7 @@ export function useEnviarRecordatorio() {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error desconocido";
-      toast.error(`No se pudo registrar el recordatorio: ${msg}`);
+      notifyError(toast, { title: `No se pudo registrar el recordatorio: ${msg}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USERECORDATORIOS_1" });
     },
   });
 }

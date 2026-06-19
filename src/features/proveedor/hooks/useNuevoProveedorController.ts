@@ -15,6 +15,7 @@ import {
 } from "./useNuevoProveedorController.constants";
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export {
   DOCS_EXTRANJERO,
   DOCS_NACIONAL,
@@ -137,7 +138,7 @@ export function useNuevoProveedorController(
   const handleSave = async () => {
     const clabeTrim = form.clabe.trim();
     if (clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
-      toast.error("La CLABE debe tener exactamente 18 dígitos numéricos.");
+      notifyError(toast, { title: "La CLABE debe tener exactamente 18 dígitos numéricos.", method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_1" });
       return;
     }
     setSaving(true);

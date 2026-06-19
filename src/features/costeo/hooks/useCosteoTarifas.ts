@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchCosteoTarifas,
   insertTarifaConRecargos,
@@ -36,7 +37,7 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Tarifa guardada" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al guardar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_1" }),
   });
 
   const actualizar = useMutation({
@@ -47,7 +48,7 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Tarifa actualizada" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al actualizar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al actualizar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_2" }),
   });
 
   const reemplazar = useMutation({
@@ -57,7 +58,7 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Tarifa marcada como reemplazada" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3" }),
   });
 
   const eliminar = useMutation({
@@ -67,7 +68,7 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Tarifa eliminada" });
     },
     onError: (e: Error) =>
-      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
+      notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_4" }),
   });
 
   return { crear, actualizar, reemplazar, eliminar };

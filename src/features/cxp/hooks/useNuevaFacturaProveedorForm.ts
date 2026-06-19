@@ -18,6 +18,7 @@ import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
 import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   type PendingCfdi,
   type VinculoLinea,
@@ -154,15 +155,15 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const handleSubmitError = (e: unknown) => {
     const err = e as { message?: string; code?: string };
     if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
-      toast.error("Ya existe una factura con este UUID fiscal (CFDI duplicado).");
+      notifyError(toast, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
     } else {
-      toast.error(err.message ?? "Error al capturar");
+      notifyError(toast, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
     }
   };
 
   const submit = async () => {
     if (!validate()) {
-      toast.error("Revisa los campos marcados");
+      notifyError(toast, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
       return;
     }
     try {

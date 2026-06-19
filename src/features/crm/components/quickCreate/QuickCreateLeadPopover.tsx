@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   onCreated: (id: string) => void;
   onMore: () => void;
@@ -25,7 +26,7 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
 
   const submit = async () => {
     const emp = empresa.trim();
-    if (!emp) return toast.error("Empresa requerida");
+    if (!emp) return notifyError(toast, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_1" });
     try {
       const r = await crear.mutateAsync({
         empresa: emp,
@@ -42,7 +43,7 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
       onClose();
       onCreated(r.id);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al crear");
+      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_2" });
     }
   };
 

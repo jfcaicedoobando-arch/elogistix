@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   onCreated: (id: string) => void;
   onMore: () => void;
@@ -30,8 +31,8 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
 
   const submit = async () => {
     const n = nombre.trim();
-    if (!n) return toast.error("Nombre requerido");
-    if (!etapaInicial) return toast.error("Configura el pipeline primero");
+    if (!n) return notifyError(toast, { title: "Nombre requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_1" });
+    if (!etapaInicial) return notifyError(toast, { title: "Configura el pipeline primero", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_2" });
     const cliente = clientes.find((c) => c.id === clienteId);
     try {
       const r = await crear.mutateAsync({
@@ -49,7 +50,7 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
       onClose();
       onCreated(r.id);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al crear");
+      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_3" });
     }
   };
 

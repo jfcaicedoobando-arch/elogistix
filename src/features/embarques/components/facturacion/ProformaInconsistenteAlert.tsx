@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import type { Tables } from "@/types/db";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   proformaBorrador: ProformaConFactura;
   conceptosPendientes: Tables<"conceptos_venta">[];
@@ -47,7 +48,7 @@ export function ProformaInconsistenteAlert({
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Error desconocido";
-      toast.error(`No se pudieron asignar los conceptos: ${msg}`);
+      notifyError(toast, { title: `No se pudieron asignar los conceptos: ${msg}`, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1" });
     },
     onSettled: () => setBusy(false),
   });

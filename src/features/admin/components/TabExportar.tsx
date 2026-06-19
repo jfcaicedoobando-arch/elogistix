@@ -7,6 +7,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { exportOrganizationZip, EXPORT_TABLES, type ExportProgress } from "@/features/admin/services";
 import { toast } from "sonner";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export default function TabExportar() {
   const { organizationId, organization } = useOrganization();
   const [progress, setProgress] = useState<ExportProgress | null>(null);
@@ -14,7 +15,7 @@ export default function TabExportar() {
 
   const handleExport = async () => {
     if (!organizationId || !organization) {
-      toast.error("No hay organización activa");
+      notifyError(toast, { title: "No hay organización activa", method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_1" });
       return;
     }
     setRunning(true);
@@ -24,7 +25,7 @@ export default function TabExportar() {
       toast.success("Export generado y descargado");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error desconocido";
-      toast.error(`Falló el export: ${msg}`);
+      notifyError(toast, { title: `Falló el export: ${msg}`, error: err, method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_2" });
     } finally {
       setRunning(false);
       setTimeout(() => setProgress(null), 2000);

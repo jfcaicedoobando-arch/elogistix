@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacionInformativa } from "@/features/cotizacion/hooks";
 import SeccionTarifasInformativas from "./SeccionTarifasInformativas";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   nuevaTarifaInformativa,
   validateCotizacionInformativa,
@@ -48,7 +49,7 @@ export default function WizardInformativa() {
     };
     const v = validateCotizacionInformativa(input);
     if (!v.ok) {
-      toast({ title: "Revisa los datos", description: v.errores.join(" • "), variant: "destructive" });
+      notifyError(toast, { title: "Revisa los datos", description: v.errores.join(" • "), method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_1" });
       return;
     }
     try {
@@ -57,7 +58,7 @@ export default function WizardInformativa() {
       navigate(`/cotizaciones/${cot.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_2" });
     }
   };
 

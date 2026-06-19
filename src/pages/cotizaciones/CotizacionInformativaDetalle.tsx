@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/shared";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   cotizacion: CotizacionRow;
   onBack: () => void;
@@ -40,7 +41,7 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
     try { await descargarTarifario(cotizacion); }
     catch (e) {
       const msg = e instanceof Error ? e.message : "Error al generar PDF";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      notifyError(toast, { title: msg, error: e, method: "PAGES_COTIZACIONES_COTIZACIONINFORMATIVADETALLE_1" });
     }
   };
 

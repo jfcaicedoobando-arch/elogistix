@@ -1,119 +1,83 @@
-## Resultado de la auditoría
 
-El subagente identificó **66 hallazgos** (18 CRITICAL, 30 HIGH, 16 MEDIUM, 2 LOW). El patrón principal: **mutations de React Query sin `onError`** (errores silenciosos) y **operaciones destructivas/financieras sin `onSuccess` toast** (sin confirmación).
+## Diagnóstico
 
-Buena noticia: **no hay `catch {}` vacíos** en componentes — todo lo que se traga está concentrado en los hooks. Eso hace el fix sistémico, no archivo-por-archivo.
+**Analogía**: imagina dos modelos de extintor en la oficina. Unos traen una etiqueta con teléfono de bomberos y QR para reportar el incidente; otros sólo dicen "fuego". Los toasts de error de la app están en ese mismo limbo: algunos traen botón **"Ver detalles"** que abre el diálogo con **Copiar reporte / Copiar JSON** (útil para mandarte el error o pegarlo a Lovable), y otros sólo muestran el texto y se desvanecen.
 
-Analogía: es como un panel de control de una fábrica donde la mitad de los botones funcionan pero no encienden la luz que confirma — los operadores los aprietan dos veces "por si acaso", o no se enteran de que falló.
+### Por qué pasa
 
-## Estrategia (en 4 oleadas)
+Hay 3 formas de emitir un toast de error en el código y sólo UNA trae el botón de copiar:
 
-Para no inundar al usuario con toasts duplicados (algunos componentes ya tienen `try/catch` propio), seguimos la regla:
+| Patrón | Botón "Ver detalles" + copiar | Uso actual |
+|---|---|---|
+| `notifyError(toast, {error, method, ...})` de `appFeedback.ts` | ✅ Sí, siempre | 227 call sites |
+| `toast.error("…")` directo de `sonner` | ❌ No | 81 call sites en 45 archivos |
+| `toast({title, description, variant: "destructive"})` (shim legacy `useToast`) | ❌ No (salvo que pases `debug: ErrorReport`, casi nadie lo hace) | 29 call sites en 16 archivos |
 
-- **Hooks añaden `onError` siempre** (red de seguridad para cualquier lugar que use el hook).
-- **Hooks añaden `onSuccess` toast** sólo cuando NINGÚN consumidor actual ya lo muestra. Si un dialog ya muestra success, dejamos el hook silent en success.
-- Componentes que usan `mutateAsync` y emiten su propio `notifyError` en catch: migrar a `mutate` (sin await) para que el `onError` del hook tome control, eliminando duplicados.
+El error que vio Valeria en *Costeo → Tarifas* (RLS) salió del patrón legacy en `useCosteoTarifas.ts` — por eso no tenía botón para copiar.
 
-### Oleada 1 — CRITICAL: Embarques + Tesorería + Documentos fiscales (18 hooks)
+## Objetivo
 
-Archivos a editar (sólo añadir `onError`/`onSuccess` en `useMutation`):
+Que el **100% de los toasts de error** muestre el botón "Ver detalles" con Copiar reporte (markdown) y Copiar JSON, sin importar desde dónde se disparen. Los toasts de éxito / warning siguen igual (no necesitan reporte).
 
-1. `src/features/embarques/mutations/useCreateEmbarque.ts` — `useCreateEmbarque`, `useDuplicarEmbarque`
-2. `src/features/embarques/mutations/useDeleteEmbarque.ts` — `useEliminarEmbarque`
-3. `src/features/embarques/mutations/useUpdateEmbarque.ts` — `useUpdateEmbarque`
-4. `src/features/embarques/mutations/useEstadoEmbarque.ts` — `useAvanzarEstadoEmbarque`, `useSyncEstadoEmbarque`, `useReabrirEmbarque`
-5. `src/features/embarques/mutations/useDocumentoEmbarqueMutations.ts` — 4 hooks (upload/delete/create/setNoAplica)
-6. `src/features/embarques/mutations/useNotaEmbarque.ts` — `useCreateNotaEmbarque`
-7. `src/features/facturacion/hooks/useFacturas.ts` — `useMarcarCostoPagado`
-8. `src/features/facturacion/hooks/useNotasCredito.ts` — `useCrearNotaCredito`, `useCambiarEstadoNotaCredito`
-9. `src/features/facturacion/hooks/usePagosFactura.ts` — `useRegistrarPagoFactura`, `useEliminarPagoFactura` (revisar `DialogRegistrarPago` para evitar duplicado)
-10. `src/features/cxp/hooks/useFacturaProveedorMutations.ts` — crear/eliminar
-11. `src/features/cxp/hooks/usePagosProveedor.ts` — registrar/eliminar
-12. `src/features/tesoreria/hooks/useTesoreriaMovimientos.ts` — `useImportarMovimientos`, `useConciliarPago`, `useDesconciliar`, `useIgnorarMovimiento`
-13. `src/features/tesoreria/hooks/useTesoreriaCuentas.ts` — crear/eliminar
-14. `src/features/crm/hooks/leads/convertir.ts` — `useConvertirLead`
+## Cambios
 
-### Oleada 2 — HIGH: CRM + Cotizaciones + Clientes/Proveedores (30 hooks)
+### Wave 1 — Migrar `variant: "destructive"` y `toast.error(...)` a `notifyError`
 
-15. `src/features/cotizacion/hooks/mutations/useCotizacionMutations.ts` — 5 hooks
-16. `src/features/cotizacion/hooks/mutations/usePortalCotizacionMutations.ts` — `useResponderCotizacion`
-17. `src/features/cotizacion/hooks/useCrearCotizacionDesdeOportunidad.ts`
-18. `src/features/cliente/hooks/useClientes.ts` — 5 hooks (verificar wizard de alta cliente que ya toastea)
-19. `src/features/cliente/hooks/useClientUsersMutations.ts` — 3 hooks
-20. `src/features/proveedor/hooks/useProveedores.ts` — 3 hooks (verificar dialogs)
-21. `src/features/crm/hooks/useOportunidades.ts` — 3 hooks
-22. `src/features/crm/hooks/useActividades.ts` — 3 hooks
-23. `src/features/crm/hooks/leads/mutations.ts` — 3 hooks
-24. `src/features/crm/hooks/leads/bulk.ts` — 3 hooks
-25. `src/features/portal/hooks/usePortalPerfil.ts` — `useActualizarContactoPortal`, `useCambiarPasswordPortal`
-26. `src/features/admin/hooks/useAdminData.ts` — `useCreateOrganization`
-27. `src/hooks/usuario/useUsuarioMutations.ts` — `useCreateUser`, `useDeleteUser`
-28. `src/hooks/usuario/useUsuarios.ts` — `useChangeUserRole`, `useDeleteUser`
-
-### Oleada 3 — MEDIUM: Presupuesto + Plantillas + Etapas (16 hooks)
-
-29. `src/features/presupuesto/hooks/usePresupuestoMensual.ts`
-30. `src/features/presupuesto/hooks/usePresupuestoCategorias.ts`
-31. `src/features/crm/hooks/useComentariosOportunidad.ts`
-32. `src/features/crm/hooks/usePlantillasMensaje.ts`
-33. `src/features/crm/hooks/useEtapasPipeline.ts`
-34. `src/features/crm/hooks/useAutomatizacionesEtapa.ts`
-35. `src/features/crm/hooks/useActualizarActividadNotas.ts`
-36. `src/features/embarques/hooks/useEventosEmbarque.ts`
-37. `src/features/embarques/hooks/useTrackingLinks.ts`
-38. `src/hooks/useAcknowledgeAlerta.ts` (sólo añadir success)
-
-### Oleada 4 — Formularios de auth y mejoras menores
-
-39. `src/pages/auth/ResetPassword.tsx` y `ForgotPasswordDialog.tsx` — añadir `toast.error` en `setError` (duplicar feedback para que sea más visible).
-
-## Best practice / patrón canónico a usar en cada hook
+Recorrer los ~60 archivos identificados y reemplazar cada toast de error por:
 
 ```ts
-import { toast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/notifications";
-
-return useMutation({
-  mutationFn: async (...) => { /* ... */ },
-  onSuccess: () => {
-    qc.invalidateQueries({ queryKey: [...] });
-    notifySuccess(toast, { title: "Embarque creado" });
-  },
-  onError: (error: Error) => {
-    notifyError(toast, { title: `Error al crear embarque: ${error.message}`, error, method: "CREATE_EMBARQUE" });
-  },
+notifyError(toast, {
+  title: "…",                  // mismo título que tenía
+  description: e.message,      // misma descripción
+  error: e,                    // ⬅ clave: alimenta el reporte copiable
+  method: "NOMBRE_UNICO",      // para agrupar en Sentry
 });
 ```
 
 Reglas:
-- Mensajes en **español mexicano**, verbo en pasado para éxito ("creado/eliminado/actualizado"), verbo en presente para error ("Error al crear").
-- `method` único por mutation para que Sentry pueda agrupar.
-- Para acciones que ya tienen toast en el componente: agregar SÓLO `onError` al hook como red de seguridad, NO `onSuccess` (evita duplicado). Anotar con comentario `// onSuccess se emite desde <Componente> para evitar doble toast`.
+- `method` único y descriptivo (ej. `COSTEO_TARIFA_CREAR`, `TESORERIA_MOVIMIENTO_ELIMINAR`).
+- Si el catch no tiene la excepción a la mano (`onError: (e) => ...`), pasarla siempre como `error`.
+- Para toasts de **warning/success** no se cambia nada.
 
-## Tests
+Archivos prioritarios (todos los que ya rompieron con Valeria u operaciones financieras/destructivas):
 
-- Test nuevo `src/__tests__/architecture/mutations-have-onerror.test.ts`: scanner estático que recorre `src/features/**/use*.ts` + `src/hooks/**/use*.ts`, parsea cada `useMutation({...})` y FALLA si encuentra uno sin `onError`. Whitelist explícita para los pocos casos justificados. Esto previene regresiones futuras — es la garantía de "100% cubierto".
+- Costeo: `useCosteoTarifas.ts`, `useCosteoAgentes.ts`, `useCosteoRutas.ts`, `useNavieraCondiciones.ts`, `useDemorasVenta.ts`
+- Tesorería: `useTesoreriaCuentas.ts`, `useTesoreriaMovimientos.ts`, `PanelConciliacionMovimiento.tsx`, `TesoreriaConciliacion.tsx`, `useTesoreriaCuentasController.ts`
+- Embarques: `useSegurosEmbarque.ts`, `useDemorasEmbarque.ts`, `useCierreEmbarque.ts`
+- CXP / Facturación: `useNuevaFacturaProveedorForm.ts`, `useTimbrarFactura.ts`, `useRecordatorios.ts`, `CargaCfdiSection.tsx`, `DialogRegistrarPagoProveedor.tsx`, `CrearProveedorDesdeCfdiDialog.tsx`, `FacturasMasivasToolbar.tsx`, `Cxp.tsx`
+- CRM: `crmToast.ts`, `QuickCreate*Popover.tsx`
+- Proveedores / Clientes / Cotización: `ProveedorCsfUpdateButton.tsx`, `useEnviarCotizacionEmail.ts`, `WizardInformativa.tsx`
+- Presupuesto / Comisiones / Admin: `TabCategorias.tsx`, `DialogCategoria.tsx`, `TabCaptura.tsx`, `TabVendedorasConfig.tsx`, `usePapelera.ts`, `TabExportar.tsx`, `SentryDiagnostico.tsx`, `Idempotencia.tsx`
+- Auditoría: `useSnoozeHallazgo.ts`
+- Catálogos: `useTiposContenedor.ts`, `usePuertos.ts`, `useNavieras.ts`
 
-## Metadata
+(Resto de la lista se cubre en la misma pasada; ~110 toasts total).
 
-- `APP_VERSION` → `13.68.0` (cambio mayor de cobertura UX, lo merece minor bump).
-- `CHANGELOG.md` → entrada `[13.68.0]` describiendo las 4 oleadas y el test de arquitectura.
-- Memoria nueva `mem://principles/toast-coverage.md`: regla "Todo `useMutation` lleva `onError` con `notifyError`; `onSuccess` toast salvo si el componente ya lo emite".
+### Wave 2 — Guardrail
 
-## Plan de ejecución
+Agregar `src/__tests__/architecture/error-toasts-use-notifyError.test.ts`:
 
-Cada oleada se hará en un commit lógico (verificable, reversible):
+- Escanea `src/**/*.ts(x)` (excluye `__tests__`, helpers internos, `useToast.ts`, `ErrorDetailsDialog.tsx`, `sonner.tsx`).
+- Falla si encuentra:
+  - `toast.error(` literal
+  - `variant: "destructive"`
+- Whitelist vacía por diseño (con espacio para justificaciones futuras).
 
-1. **Build #1** — Oleada 1 + memoria + test de arquitectura (skip-listado inicialmente para no romper en oleadas pendientes).
-2. **Build #2** — Oleada 2 + reducir skip-list.
-3. **Build #3** — Oleadas 3+4 + remover skip-list por completo.
-4. **Build #4** — Bump version, CHANGELOG, correr suite completa de tests.
+Esto evita que el problema vuelva a aparecer.
 
-Total ≈ 35 archivos editados, todos cambios localizados y de bajo riesgo (sólo añadir callbacks a hooks existentes). Sin cambios de schema, RLS, ni UI.
+### Wave 3 — Metadata
+
+- `APP_VERSION` → `13.68.3`.
+- Entrada en `CHANGELOG.md` describiendo la unificación y el nuevo guardrail.
 
 ## Fuera de alcance
 
-- No modificar la firma de las mutations (sigue `mutateAsync` disponible).
-- No cambiar los servicios (RPC, edge functions, queries).
-- No tocar componentes que ya toastean bien (sólo verificar para evitar duplicados).
-- No tocar i18n.
+- No se cambian toasts de éxito ni de advertencia.
+- No se modifican mensajes ni textos visibles, sólo la "etiqueta de bomberos".
+- No se toca la lógica de negocio de ningún hook ni los mutations existentes (eso quedó cubierto en 13.68.0).
+- No se cambia el diálogo `ErrorDetailsDialog` ni el contenido del reporte (ya está completo: versión, ruta, usuario/org, viewport, stack, contexto, `requestId`, `errorCode`, `method`).
+
+## Verificación
+
+1. Build y suite de tests (`vitest`) verdes, incluyendo el nuevo guardrail.
+2. Disparar manualmente el flujo que falló a Valeria (Costeo → Nueva tarifa sin permisos en cuenta sin RLS) y confirmar que el toast trae "Ver detalles" → "Copiar reporte" / "Copiar JSON".

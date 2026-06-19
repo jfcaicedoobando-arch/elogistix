@@ -9,6 +9,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   selectedIds: Set<string>;
   onClear: () => void;
@@ -58,7 +59,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       saveAs(blob, `facturas-${new Date().toISOString().slice(0, 10)}.zip`);
       toast.success(`${count} factura(s) descargadas`);
     } catch (e) {
-      toast.error(`Error al generar ZIP: ${(e as Error).message}`);
+      notifyError(toast, { title: `Error al generar ZIP: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_1" });
       reportCaughtError(e, { feature: "facturacion", op: "generar_zip_masivo" }, { total: ids.length });
     } finally {
       setBusy(null);
@@ -83,7 +84,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       onClear();
     } catch (e) {
-      toast.error(`Error al marcar: ${(e as Error).message}`);
+      notifyError(toast, { title: `Error al marcar: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_2" });
       reportCaughtError(e, { feature: "facturacion", op: "marcar_enviada_masivo" }, { count: ids.length });
     } finally {
       setBusy(null);

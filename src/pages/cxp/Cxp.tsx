@@ -19,6 +19,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
@@ -39,7 +40,7 @@ export default function Cxp() {
 
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
-      toast.error("No se puede eliminar: la factura tiene pagos registrados");
+      notifyError(toast, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
       return;
     }
     f.setAEliminar(fact);
@@ -145,7 +146,7 @@ export default function Cxp() {
           if (!f.aEliminar) return;
           await eliminar.mutateAsync(f.aEliminar.id, {
             onSuccess: () => toast.success("Factura eliminada"),
-            onError: (e) => toast.error((e as Error).message),
+            onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "PAGES_CXP_CXP_2" }),
           });
           f.setAEliminar(null);
         }}

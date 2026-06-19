@@ -16,6 +16,7 @@ import {
 } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const MESES_LABEL = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 interface Props { anio: number; onAnioChange: (a: number) => void }
@@ -45,7 +46,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
     if (!organizationId) return;
     const monto = Number(raw);
     if (Number.isNaN(monto) || monto < 0) {
-      toast.error("Monto inválido");
+      notifyError(toast, { title: "Monto inválido", method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_1" });
       return;
     }
     const key = `${categoria_id}|${periodo}`;
@@ -58,7 +59,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
       setDraft((d) => { const n = { ...d }; delete n[key]; return n; });
     } catch (e) {
       const err = e as { message?: string };
-      toast.error(err.message ?? "Error al guardar");
+      notifyError(toast, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_2" });
     }
   };
 

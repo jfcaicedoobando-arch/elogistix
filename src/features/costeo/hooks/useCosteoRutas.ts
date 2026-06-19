@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchCosteoRutas,
   insertCosteoRuta,
@@ -30,16 +31,13 @@ export function useCosteoRutaMutations() {
   const crear = useMutation({
     mutationFn: (input: CosteoRutaInput) => insertCosteoRuta(organizationId!, input),
     onSuccess: () => { invalidate(); toast({ title: "Ruta agregada" }); },
-    onError: (e: Error) => toast({
-      title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
-      description: e.message,
-      variant: "destructive",
-    }),
+    onError: (e: Error) => notifyError(toast, { title: e instanceof CosteoRutaDuplicadaError ? "Ruta duplicada" : "Error al agregar",
+      description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_1" }),
   });
   const eliminar = useMutation({
     mutationFn: (id: string) => deleteCosteoRuta(id),
     onSuccess: () => { invalidate(); toast({ title: "Ruta eliminada" }); },
-    onError: (e: Error) => toast({ title: "Error al eliminar", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEORUTAS_2" }),
   });
   return { crear, eliminar };
 }

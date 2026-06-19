@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { parseCsf, type CsfParsedData } from "@/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export type CsfPatch = Partial<
   Pick<
     NuevoProveedorForm,
@@ -33,7 +34,7 @@ export async function procesarCsfUpload(file: File): Promise<CsfPatch | null> {
     return buildCsfPatch(data);
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-    toast.error(mensaje);
+    notifyError(toast, { title: mensaje, error: err, method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER.CSF_1" });
     return null;
   }
 }

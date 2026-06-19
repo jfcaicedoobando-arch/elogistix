@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { calcularDemorasEmbarque, eliminarDemorasAuto } from "../services/demorasEmbarque";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useRecalcularDemoras(embarqueId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
@@ -20,7 +21,7 @@ export function useRecalcularDemoras(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al calcular demoras";
-      toast.error(msg);
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_1" });
     },
   });
 }
@@ -37,7 +38,7 @@ export function useEliminarDemorasAuto(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al eliminar";
-      toast.error(msg);
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_2" });
     },
   });
 }

@@ -9,6 +9,7 @@ import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";
 import { queryKeys } from "@/lib/query";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useMarcarRevisado() {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
@@ -66,16 +67,11 @@ export function useMarcarRevisado() {
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
-      toast.error(
-        isPermiso
+      notifyError(toast, { title: isPermiso
           ? "No tienes permisos para marcar revisado"
-          : "Error al marcar revisado",
-        {
-          description: isPermiso
+          : "Error al marcar revisado", description: isPermiso
             ? "Tu rol en esta organización no permite esta acción. Contacta a un administrador."
-            : e?.message ?? "Error desconocido",
-        },
-      );
+            : e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_MARCAR_1" });
     },
   });
 }

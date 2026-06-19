@@ -12,6 +12,7 @@
  */
 import { toast } from "sonner";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 function success(message: string): void {
   toast.success(message, { duration: 2000 });
 }
@@ -19,8 +20,9 @@ function success(message: string): void {
 function error(message: string, err?: unknown): void {
   const description =
     err instanceof Error ? err.message : typeof err === "string" ? err : undefined;
-  toast.error(message, { duration: 4000, description });
+  notifyError(toast, { title: message, description, error: err, method: "CRM_TOAST" });
 }
+
 
 function info(message: string): void {
   toast(message, { duration: 2000 });

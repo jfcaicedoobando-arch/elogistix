@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   cerrarEmbarque,
   fetchCierreLog,
@@ -48,7 +49,7 @@ export function useCerrarEmbarque(embarqueId: string) {
       invalidarTodo(qc, embarqueId);
       toast.success("Embarque cerrado");
     },
-    onError: (e: Error) => toast.error(e.message ?? "No se pudo cerrar el embarque"),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo cerrar el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_1" }),
   });
 }
 
@@ -60,6 +61,6 @@ export function useReabrirEmbarque(embarqueId: string) {
       invalidarTodo(qc, embarqueId);
       toast.success("Embarque reabierto");
     },
-    onError: (e: Error) => toast.error(e.message ?? "No se pudo reabrir el embarque"),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo reabrir el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_2" }),
   });
 }

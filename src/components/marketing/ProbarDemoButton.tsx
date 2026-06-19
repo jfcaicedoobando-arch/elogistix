@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/shared";
 import { enterDemoMode } from "@/services/demoAccess";
 import { Loader2, Sparkles } from "lucide-react";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props extends Omit<ButtonProps, "onClick" | "disabled" | "children"> {
   label?: string;
   hideIcon?: boolean;
@@ -29,11 +30,8 @@ export function ProbarDemoButton({ label = "Probar demo", hideIcon = false, ...r
       });
       navigate("/inicio", { replace: true });
     } catch (err) {
-      toast({
-        title: "No pudimos abrir la demo",
-        description: err instanceof Error ? err.message : "Intenta de nuevo en un momento.",
-        variant: "destructive",
-      });
+      notifyError(toast, { title: "No pudimos abrir la demo",
+        description: err instanceof Error ? err.message : "Intenta de nuevo en un momento.", error: err, method: "COMPONENTS_MARKETING_PROBARDEMOBUTTON_1" });
       setLoading(false);
     }
   };

@@ -21,6 +21,7 @@ import { safeSessionStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { toast } from "sonner";
 import { descargarBlob } from "@/lib/downloadBlob";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 function periodoInicial(): string {
   const guardado = safeSessionStorage.getItem(STORAGE_KEYS.dashboardEjecutivoPeriodo);
   if (guardado && /^\d{4}-\d{2}$/.test(guardado)) return guardado;
@@ -45,7 +46,7 @@ export default function ProfitDashboardEjecutivo() {
       const blob = await pdf(<ReporteEjecutivoDocument snapshot={data} />).toBlob();
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
-      toast.error("No se pudo generar el PDF");
+      notifyError(toast, { title: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });
       reportCaughtError(e, { feature: "pnl", op: "generar_pdf_ejecutivo" }, { periodo: data?.periodo });
     }
   }, [data]);

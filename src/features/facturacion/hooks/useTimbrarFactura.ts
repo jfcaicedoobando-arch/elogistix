@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { emitirFacturapi, cancelarFacturapi, type MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useTimbrarFactura() {
   const qc = useQueryClient();
   return useMutation({
@@ -11,7 +12,7 @@ export function useTimbrarFactura() {
       toast.success(`Factura timbrada · UUID ${res.uuid.slice(0, 8)}…`);
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
-    onError: (err: Error) => toast.error(`No se pudo timbrar: ${err.message}`),
+    onError: (err: Error) => notifyError(toast, { title: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
   });
 }
 
@@ -24,6 +25,6 @@ export function useCancelarFactura() {
       toast.success("CFDI cancelado");
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
-    onError: (err: Error) => toast.error(`No se pudo cancelar: ${err.message}`),
+    onError: (err: Error) => notifyError(toast, { title: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" }),
   });
 }

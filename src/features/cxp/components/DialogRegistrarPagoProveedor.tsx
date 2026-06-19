@@ -17,6 +17,7 @@ import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "./usePagoProveedorForm";
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -29,8 +30,8 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
 
   const submit = async () => {
     if (!factura) return;
-    if (f.montoNum <= 0) return toast.error("El monto debe ser mayor a 0");
-    if (f.excede) return toast.error("El monto excede el saldo pendiente");
+    if (f.montoNum <= 0) return notifyError(toast, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
+    if (f.excede) return notifyError(toast, { title: "El monto excede el saldo pendiente", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
     try {
       await registrar.mutateAsync({
         proveedor_factura_id: factura.id,
@@ -48,7 +49,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
       onOpenChange(false);
     } catch (e) {
       const err = e as { message?: string };
-      toast.error(err.message ?? "Error al registrar pago");
+      notifyError(toast, { title: err.message ?? "Error al registrar pago", error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
     }
   };
 

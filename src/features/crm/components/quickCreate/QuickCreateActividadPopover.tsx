@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   onCreated: () => void;
   onMore: () => void;
@@ -35,8 +36,8 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
 
   const submit = async () => {
     const a = asunto.trim();
-    if (!a) return toast.error("Asunto requerido");
-    if (!entidadId) return toast.error("Selecciona una oportunidad");
+    if (!a) return notifyError(toast, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_1" });
+    if (!entidadId) return notifyError(toast, { title: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_2" });
     try {
       await crear.mutateAsync({
         tipo: "tarea",
@@ -51,7 +52,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
       onClose();
       onCreated();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al crear");
+      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_3" });
     }
   };
 

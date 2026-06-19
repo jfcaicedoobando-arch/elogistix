@@ -11,6 +11,7 @@ import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const steps = [
   { title: "Datos Generales", num: 1 },
   { title: "Datos de Ruta", num: 2 },
@@ -30,7 +31,7 @@ export default function NuevoEmbarque() {
   // si vienen del flujo Cotización → Generar embarque.
   useEffect(() => {
     if (!canCrearEmbarqueLibre && !llegaConCotizacion) {
-      toast.error("Tu rol requiere iniciar el embarque desde una cotización Aceptada.");
+      notifyError(toast, { title: "Tu rol requiere iniciar el embarque desde una cotización Aceptada.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
       navigate("/embarques", { replace: true });
     }
   }, [canCrearEmbarqueLibre, llegaConCotizacion, navigate]);

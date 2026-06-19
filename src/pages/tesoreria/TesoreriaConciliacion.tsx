@@ -16,6 +16,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 const ESTADO_COLOR: Record<string, string> = {
   Pendiente: "bg-warning/10 text-warning border-warning/20",
   Conciliado: "bg-success/10 text-success border-success/20",
@@ -35,17 +36,17 @@ export default function TesoreriaConciliacion() {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !cuentaId) {
-      if (!cuentaId) toast.error("Selecciona una cuenta primero");
+      if (!cuentaId) notifyError(toast, { title: "Selecciona una cuenta primero", method: "PAGES_TESORERIA_TESORERIACONCILIACION_1" });
       return;
     }
     try {
       toast.message("Procesando archivo...");
       const movimientos = await parseEstadoCuentaBBVA(file);
-      if (movimientos.length === 0) return toast.error("No se encontraron movimientos válidos");
+      if (movimientos.length === 0) return notifyError(toast, { title: "No se encontraron movimientos válidos", method: "PAGES_TESORERIA_TESORERIACONCILIACION_2" });
       const res = await importar.mutateAsync({ cuentaId, movimientos });
       toast.success(`Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados`);
     } catch (err) {
-      toast.error((err as Error).message);
+      notifyError(toast, { title: (err as Error).message, error: err, method: "PAGES_TESORERIA_TESORERIACONCILIACION_3" });
       reportCaughtError(err, { feature: "tesoreria", op: "importar_movimientos_bbva" });
     } finally {
       if (fileRef.current) fileRef.current.value = "";

@@ -16,6 +16,7 @@ import type { HallazgoAuditoria } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useSnoozeHallazgo() {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
@@ -67,7 +68,7 @@ export function useSnoozeHallazgo() {
     },
     onError: (err: Error) => {
       logger.error("[useSnoozeHallazgo] error:", err);
-      toast.error("No se pudo silenciar el hallazgo", { description: err.message });
+      notifyError(toast, { title: "No se pudo silenciar el hallazgo", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USESNOOZEHALLAZGO_1" });
     },
   });
 }
@@ -82,7 +83,7 @@ export function useQuitarSnooze() {
       toast.success("Snooze removido");
     },
     onError: (err: Error) => {
-      toast.error("Error al quitar snooze", { description: err.message });
+      notifyError(toast, { title: "Error al quitar snooze", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USESNOOZEHALLAZGO_2" });
     },
   });
 }

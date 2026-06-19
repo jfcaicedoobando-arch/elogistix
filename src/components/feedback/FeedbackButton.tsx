@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   variant?: "ghost" | "outline";
   className?: string;
@@ -22,11 +23,8 @@ export function FeedbackButton({ variant = "ghost", className }: Props) {
   const handleClick = async () => {
     const feedback = Sentry.getFeedback();
     if (!feedback) {
-      toast({
-        title: "Reporte no disponible",
-        description: "El sistema de feedback no se inicializó correctamente.",
-        variant: "destructive",
-      });
+      notifyError(toast, { title: "Reporte no disponible",
+        description: "El sistema de feedback no se inicializó correctamente.", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_1" });
       return;
     }
     try {
@@ -34,7 +32,7 @@ export function FeedbackButton({ variant = "ghost", className }: Props) {
       form.appendToDom();
       form.open();
     } catch {
-      toast({ title: "No se pudo abrir el formulario", variant: "destructive" });
+      notifyError(toast, { title: "No se pudo abrir el formulario", method: "COMPONENTS_FEEDBACK_FEEDBACKBUTTON_2" });
     }
   };
 

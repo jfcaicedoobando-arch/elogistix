@@ -9,6 +9,7 @@ import {
 } from "@/features/cotizacion/services/envios";
 import { toast } from "sonner";
 
+import { notifyError } from "@/components/shared/utils/appFeedback";
 export type { EnvioRow } from "@/features/cotizacion/services/envios";
 
 export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
@@ -21,7 +22,7 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
       } else if (res.estado === "parcial") {
         toast.warning("Algunos correos no pudieron enviarse");
       } else {
-        toast.error("No se pudo enviar el correo");
+        notifyError(toast, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
       }
       if (cotizacionId) {
         qc.invalidateQueries({ queryKey: ["cotizacion", cotizacionId] });
@@ -29,7 +30,7 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
       }
       qc.invalidateQueries({ queryKey: ["cotizaciones"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => notifyError(toast, { title: e.message, error: e, method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_2" }),
   });
 }
 
