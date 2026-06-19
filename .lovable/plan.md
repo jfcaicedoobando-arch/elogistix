@@ -1,89 +1,80 @@
-# Auditoría visual — Modal "Buscar tarifa marítima (Top 3)"
+# Mejoras al módulo de Rutas marítimas
 
-## Problemas detectados en la captura
+## Problema actual
 
-Revisé `BuscarTarifaDialog.tsx` + `TarifaResultCard.tsx` contra la imagen del usuario (vista móvil 343px). Hallazgos por prioridad:
+La tabla en `/costeo/rutas` sólo muestra: Origen, Destino, Activa (Sí/No), eliminar. La columna "Activa" es un flag manual (`costeo_rutas.activa`) que no refleja la realidad operativa: una ruta puede estar marcada como activa pero **no tener tarifas vigentes**, y por tanto ser inútil para cotizar.
 
-### 🔴 Críticos (rompen la lectura)
+## Propuesta
 
-1. **Etiqueta y valor pegados sin espacio**: se lee `FleteUSD 6,100.00` y `RecargosUSD 35.00 base`. Causa: `<div className="flex justify-between">` con texto largo en columna estrecha colapsa el espacio entre los dos `<span>`. En móvil con `grid-cols-2` cada celda queda muy angosta y se desborda.
-2. **Layout 2 columnas en móvil**: `grid grid-cols-2 gap-2` para Flete/Recargos en un card de ~160px de ancho es ilegible. Debería ser 1 columna en móvil.
-3. **El modal usa `md:grid-cols-3` pero el contenido NO cabe** en móvil dentro del Dialog (`max-w-4xl`); las cards se sienten apretadas.
-4. **Jerarquía visual débil del "ganador" (#1)**: sólo cambia border-color sutil; no se distingue claramente del #2/#3. El usuario no sabe a primera vista cuál es la mejor opción.
+### 1. Nueva columna: "Tarifas vigentes"
 
-### 🟡 Importantes (claridad semántica)
+Por cada ruta, contar las `costeo_tarifas` que cumplen:
 
-5. **"Total comparable"**: término técnico que confunde. Mejor "Total estimado" o "Costo total" con tooltip explicando qué incluye.
-6. **Desglose de recargos siempre visible**: ocupa mucho espacio y compite con la info principal. Debería ser colapsable ("Ver desglose").
-7. **Badges mezcladas sin agrupar**: crédito, días libres, tránsito, demora día 6 — todas iguales visualmente. Falta agrupar por tipo (comercial vs operativo).
-8. **"Demora día 6: USD X/día"** aparece como warning sin contexto. Usuario no sabe si es bueno o malo.
-9. **Vigencia al fondo en texto chico**: dato relevante (puede vencer pronto) pierde prominencia. Sin badge de "vence pronto" si <7 días.
-10. **Botón "Elegir esta"** ocupa todo el ancho pero sin íconografía/jerarquía diferenciada para #1 vs #2/#3.
+- `ruta_id = ruta.id`
+- `estado = 'vigente'` (o el estado equivalente que use el módulo)
+- `vigente_hasta >= CURRENT_DATE` (o sin fecha de fin)
 
-### 🟢 Mejoras de UX
+Mostrar como badge numérico:
 
-11. **Filtros en el header del Dialog**: 4 selects en `grid-cols-2 md:grid-cols-4` ocupan demasiado espacio en móvil antes de ver resultados. Debería poder colapsarse tras la primera búsqueda.
-12. **Falta indicador de "mejor por…"**: el #1 podría tener chip "Mejor precio", #2 "Mejor crédito", etc. (el RPC ya ordena por precio/crédito/días libres).
-13. **Carta garantía**: el badge en esquina superior derecha compite por atención con el rank. Considerar moverlo a la fila de badges o al footer.
-14. **No hay comparador rápido**: ver 3 cards lado a lado en desktop es bueno, pero falta resaltar las diferencias clave (delta de precio vs #1, p.ej. "+USD 554" en #2).
-15. **Sin "Elegir" sticky en mobile**: el botón queda al fondo del card; con desglose largo requiere scroll dentro del modal.
+- `0` → badge rojo/destructive con texto "Sin tarifa"
+- `1-2` → badge ámbar "2 tarifas"
+- `3+` → badge verde "5 tarifas"
 
-## Plan de mejoras propuesto
+### 2. Columna "Estado" calculada (reemplaza "Activa")
 
-### Fase 1 — Legibilidad inmediata (P0)
+Lógica derivada (no sólo el flag):
 
-- En `TarifaResultCard.tsx`:
-  - Reemplazar `flex justify-between` por estructura con `min-w-0` + `gap-2` explícito y `truncate` en label, valor con `tabular-nums` y `whitespace-nowrap`.
-  - Cambiar `grid grid-cols-2 gap-2` del bloque Flete/Recargos a `flex flex-col gap-1.5` (1 columna siempre, más legible).
-  - Total comparable: subir tamaño (`text-xl`), fondo sutil `bg-muted/50` con padding propio para destacar.
-- En `BuscarTarifaDialog.tsx`:
-  - En móvil cambiar grid de resultados a `grid-cols-1` con cards apiladas; `md:grid-cols-2 lg:grid-cols-3`.
-  - Ampliar `max-w-4xl` → `max-w-5xl` para que en desktop respiren las cards.
 
-### Fase 2 — Jerarquía del ganador (P0)
+| Flag `activa` | Tarifas vigentes | Estado mostrado                                           |
+| ------------- | ---------------- | --------------------------------------------------------- |
+| true          | ≥1               | **Activa** (verde)                                        |
+| true          | 0                | **Sin tarifa** (ámbar) — *dada de alta pero no cotizable* |
+| false         | cualquiera       | **Inactiva** (gris)                                       |
 
-- Card #1: badge prominente "🏆 Mejor opción" arriba, fondo `bg-success/10`, border `border-success` (2px), sombra suave. Botón "Elegir esta" con `variant="default"` y tamaño mayor.
-- Cards #2/#3: visual más neutro, botón `variant="outline"`. Mostrar delta vs #1: `+USD 554 vs #1` debajo del total.
 
-### Fase 3 — Información colapsable y agrupada (P1)
+El flag manual sigue existiendo (permite desactivar a propósito), pero el badge refleja el estado real.
 
-- Desglose de recargos: usar `<details>` o `<Collapsible>` con label "Ver desglose ({n} recargos)" — colapsado por defecto en móvil, abierto en desktop.
-- Renombrar "Total comparable" → "Costo total estimado" con `<Tooltip>` que explique "Flete base + todos los recargos vigentes a la fecha seleccionada".
-- Agrupar badges en 2 filas semánticas:
-  - Fila comercial: Crédito · Vigencia · Carta garantía
-  - Fila operativa: Tránsito · Días libres · Demora día 6 (con tooltip "Costo por día después del periodo libre")
+### 3. Columnas adicionales útiles
 
-### Fase 4 — Comparación inteligente (P1)
+- **Próxima a vencer**: fecha de la tarifa vigente más próxima a `vigente_hasta`. Si ≤15 días, mostrar en rojo con ícono ⚠️.
+- **Última actualización**: `MAX(costeo_tarifas.updated_at)` por ruta — ayuda a detectar rutas estancadas.
+- **Navieras / agentes**: cantidad de proveedores distintos con tarifa en esa ruta (mini badge).
 
-- Mostrar etiqueta dinámica "Mejor precio" / "Más crédito" / "Más días libres" según en qué métrica gana cada card (cálculo en cliente comparando los 3 rows).
-- Badge "Vence pronto" en rojo si `vigente_hasta` está a ≤7 días.
+### 4. Acciones por fila
 
-### Fase 5 — Header del Dialog (P2)
+Añadir junto a "eliminar":
 
-- Mostrar resumen compacto de filtros aplicados (ej: "Shanghái → Manzanillo · 40' HC · 18/06/2026") con botón "Cambiar" que despliega los selects.
-- Reduce ruido visual cuando ya hay resultados.
+- **Ver tarifas** → navega a `/costeo/tarifas?ruta=<id>` (filtro pre-aplicado).
+- **Nueva tarifa** → abre el modal de alta de tarifa con la ruta pre-seleccionada. Especialmente útil cuando el estado es "Sin tarifa".
 
-## Detalles técnicos
+### 5. Filtro y orden
 
-Archivos a modificar:
+- Filtro rápido arriba: `Todas` / `Activas` / `Sin tarifa` / `Inactivas`.
+- Orden por defecto: rutas con problemas primero (Sin tarifa → Próximas a vencer → Activas → Inactivas).
 
-- `src/features/costeo/components/TarifaResultCard.tsx` — refactor visual completo, props nuevas (`esGanador`, `etiquetaMejorEn`, `deltaVsGanador`).
-- `src/features/costeo/components/BuscarTarifaDialog.tsx` — grid responsive, header colapsable.
-- `src/features/costeo/routes/CosteoBuscar.tsx` — aplicar misma lógica de etiquetas/delta.
-- Helper nuevo `src/features/costeo/utils/rankingLabels.ts` — calcula etiquetas "Mejor en X" comparando rows.
+## Alcance técnico
 
-Sin cambios en backend (RPC `get_top_tarifas`), tipos, ni lógica de selección. Sólo presentación.
+**Sin cambios de schema.** Toda la información ya existe en `costeo_tarifas`.
 
-## Validación
+Archivos a tocar:
 
-- Playwright en viewport 390×844 (móvil) navegando a `/costeo/buscar` con filtros pre-llenados; screenshot de las 3 cards y verificar que ningún texto se pegue.
-- Repetir en 1280×800 (desktop).
-- `APP_VERSION` → `13.67.4`, entrada en `CHANGELOG.md`.
+- `src/features/costeo/services/rutas.ts` — extender `fetchCosteoRutas` para hacer un join/agregación con `costeo_tarifas` (subquery o segundo query agrupado por `ruta_id`).
+- `src/features/costeo/types/index.ts` — añadir a `CosteoRuta`: `tarifas_vigentes_count`, `proxima_expiracion`, `ultima_actualizacion_tarifa`, `proveedores_count`.
+- `src/features/costeo/routes/CosteoRutas.tsx` — nuevas columnas, badges, filtro, orden.
+- Helper nuevo `src/features/costeo/utils/rutaEstado.ts` — función pura que dado `(ruta, tarifasCount)` devuelve `{ label, variant, tone }`.
+- Tests: extender `rutas.test.ts` con el agregado de conteo y un test unitario para `rutaEstado.ts`.
+
+**Sin tocar:** RLS, edge functions, migración. El conteo se hace client-side leyendo `costeo_tarifas` filtradas por org (RLS ya lo cubre).
+
+**Versión:** bump `APP_VERSION` a `13.67.5` y entrada en `CHANGELOG.md`.
 
 ## Fuera de alcance
 
-- Cambios al RPC o esquema de tarifas.
-- Lógica de selección/aplicación al wizard de cotización.
-- Rediseño completo del módulo Costeo.
+- No se modifica el modelo de datos.
+- No se altera el wizard de cotización ni la búsqueda de tarifas.
+- No se toca el flag manual `activa` (sigue siendo editable más adelante; ahora sólo lectura).
 
-¿Procedo con todas las fases, o prefieres que arranque sólo con P0 (Fases 1 y 2) y validamos antes de seguir? Todas las fases 
+## Preguntas opcionales (puedo asumir defaults si prefieres avanzar)
+
+1. ¿El umbral de "próxima a vencer" debe ser **15 días** o prefieres otro (7/30)? 7 dias 
+2. ¿"Ver tarifas" debe abrir la página de tarifas filtrada, o un panel lateral con las tarifas inline?abrir página 
