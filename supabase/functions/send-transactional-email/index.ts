@@ -47,9 +47,10 @@ async function verifyServiceRoleOrFail(req: Request, env: EnvVars): Promise<Resp
   return null
 }
 
-// deno-lint-ignore no-explicit-any
+type SupabaseAdmin = ReturnType<typeof createClient>
+
 async function checkSuppressionOrFail(
-  supabase: any,
+  supabase: SupabaseAdmin,
   normalizedEmail: string,
   meta: { messageId: string; templateName: string; effectiveRecipient: string },
 ): Promise<Response | null> {
@@ -75,9 +76,8 @@ async function checkSuppressionOrFail(
   return null
 }
 
-// deno-lint-ignore no-explicit-any
 async function resolveUnsubscribeOrFail(
-  supabase: any,
+  supabase: SupabaseAdmin,
   normalizedEmail: string,
   meta: { messageId: string; templateName: string; effectiveRecipient: string },
 ): Promise<{ token: string } | Response> {
