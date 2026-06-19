@@ -10,7 +10,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { glob } from "glob";
+import fg from "fast-glob";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
