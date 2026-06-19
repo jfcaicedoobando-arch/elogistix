@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.6] - 2026-06-19
+- **fix(cotizaciones/enviar-email-cliente)**: Tras el fix CORS de 13.68.5, Valeria seguía viendo "Failed to send a request to the Edge Function". El preflight del backend ya respondía bien (verificado vía curl desde `https://librecarga.com`), pero `supabase.functions.invoke()` enmascaraba cualquier error HTTP del servidor como un genérico `FunctionsFetchError`. Migrado `enviarPorEmail` a `fetch` directo con `Authorization` + `apikey` explícitos: ahora si el servicio responde 4xx/5xx, leemos el cuerpo JSON y lanzamos `Servicio de correo (status): <detalle real>`, y si no hay sesión se muestra "Tu sesión expiró". Sin cambios en la edge function. Bump `APP_VERSION` 13.68.6.
+
 ## [13.68.5] - 2026-06-19
 - **fix(edge/enviar-cotizacion-email CORS)**: Valeria recibía "Failed to send a request to the Edge Function" al enviar cotización por correo desde `librecarga.com`. El edge function importaba `corsHeaders` desde `npm:@supabase/supabase-js@2/cors` — subpath inexistente que dejaba los headers vacíos, así el preflight OPTIONS no autorizaba el origen y el navegador cancelaba el request antes de llegar al servidor (por eso los logs sólo mostraban `booted`). Migrado a `buildCors`/`handlePreflightStrict` del `_shared/cors.ts` que ya whitelistea `librecarga.com` y `www.librecarga.com`. Sin cambios de lógica de envío. Bump `APP_VERSION` 13.68.5.
 
