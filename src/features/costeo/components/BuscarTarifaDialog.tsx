@@ -109,7 +109,7 @@ export function BuscarTarifaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Buscar tarifa marítima (Top 3)</DialogTitle>
           <DialogDescription>Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada.</DialogDescription>
