@@ -1,80 +1,39 @@
-# Mejoras al módulo de Rutas marítimas
+# Fix: Unhandled promise rejection al crear ruta duplicada
 
-## Problema actual
+## Problema
 
-La tabla en `/costeo/rutas` sólo muestra: Origen, Destino, Activa (Sí/No), eliminar. La columna "Activa" es un flag manual (`costeo_rutas.activa`) que no refleja la realidad operativa: una ruta puede estar marcada como activa pero **no tener tarifas vigentes**, y por tanto ser inútil para cotizar.
+En `/costeo/rutas`, al intentar guardar una ruta CN→MX duplicada, Sentry registra un `UnhandledRejection` con el error crudo de Postgrest (`{code, details, hint, message}`). La respuesta HTTP es 409 (violación de unique constraint), pero el rechazo termina como promesa no manejada.
 
-## Propuesta
+Dos causas combinadas:
 
-### 1. Nueva columna: "Tarifas vigentes"
+1. **`RutaFormDialog.handleGuardar`** llama `await crear.mutateAsync(...)` sin `try/catch`. React Query dispara `onError` (toast), pero `mutateAsync` **igualmente** rechaza la promesa. Como `handleGuardar` es un handler `onSubmit` no esperado por nadie, el rechazo queda colgado → `unhandledrejection`.
+2. **`insertCosteoRuta`** detecta el unique violation comparando contra el nombre exacto `costeo_rutas_organization_id_puerto_origen_id_puer` (truncado). Si en producción el nombre del constraint difiere, `isUniqueViolation` devuelve `false` y se relanza el objeto crudo (no `Error`) — que es justo lo que Sentry capturó. El check por `code === "23505"` debería bastar, pero por las dudas reforzamos.
 
-Por cada ruta, contar las `costeo_tarifas` que cumplen:
+## Cambios
 
-- `ruta_id = ruta.id`
-- `estado = 'vigente'` (o el estado equivalente que use el módulo)
-- `vigente_hasta >= CURRENT_DATE` (o sin fecha de fin)
+### 1. `src/features/costeo/components/RutaFormDialog.tsx`
+Envolver `crear.mutateAsync` en `try/catch` para consumir el rechazo. El toast ya lo emite `onError` del hook; aquí sólo evitamos cerrar el diálogo y resetear el formulario cuando falla.
 
-Mostrar como badge numérico:
+```ts
+try {
+  await crear.mutateAsync({ ... });
+  setOrigenId(""); setDestinoId(""); setIntentoEnvio(false);
+  onOpenChange(false);
+} catch {
+  // onError del hook ya mostró el toast; mantenemos el diálogo abierto.
+}
+```
 
-- `0` → badge rojo/destructive con texto "Sin tarifa"
-- `1-2` → badge ámbar "2 tarifas"
-- `3+` → badge verde "5 tarifas"
+### 2. `src/features/costeo/services/rutas.ts`
+Endurecer `isUniqueViolation`: aceptar también `code === 23505` (numérico), y match más laxo del nombre de constraint (`/costeo_rutas.*puerto/i`). Garantiza que cualquier 409 por duplicado se traduzca a `CosteoRutaDuplicadaError` (que sí es `Error`), nunca al objeto Postgrest crudo.
 
-### 2. Columna "Estado" calculada (reemplaza "Activa")
+### 3. Tests
+Extender `rutas.test.ts` con un caso donde el constraint name viene distinto pero `code` es `"23505"` — debe lanzar `CosteoRutaDuplicadaError`.
 
-Lógica derivada (no sólo el flag):
-
-
-| Flag `activa` | Tarifas vigentes | Estado mostrado                                           |
-| ------------- | ---------------- | --------------------------------------------------------- |
-| true          | ≥1               | **Activa** (verde)                                        |
-| true          | 0                | **Sin tarifa** (ámbar) — *dada de alta pero no cotizable* |
-| false         | cualquiera       | **Inactiva** (gris)                                       |
-
-
-El flag manual sigue existiendo (permite desactivar a propósito), pero el badge refleja el estado real.
-
-### 3. Columnas adicionales útiles
-
-- **Próxima a vencer**: fecha de la tarifa vigente más próxima a `vigente_hasta`. Si ≤15 días, mostrar en rojo con ícono ⚠️.
-- **Última actualización**: `MAX(costeo_tarifas.updated_at)` por ruta — ayuda a detectar rutas estancadas.
-- **Navieras / agentes**: cantidad de proveedores distintos con tarifa en esa ruta (mini badge).
-
-### 4. Acciones por fila
-
-Añadir junto a "eliminar":
-
-- **Ver tarifas** → navega a `/costeo/tarifas?ruta=<id>` (filtro pre-aplicado).
-- **Nueva tarifa** → abre el modal de alta de tarifa con la ruta pre-seleccionada. Especialmente útil cuando el estado es "Sin tarifa".
-
-### 5. Filtro y orden
-
-- Filtro rápido arriba: `Todas` / `Activas` / `Sin tarifa` / `Inactivas`.
-- Orden por defecto: rutas con problemas primero (Sin tarifa → Próximas a vencer → Activas → Inactivas).
-
-## Alcance técnico
-
-**Sin cambios de schema.** Toda la información ya existe en `costeo_tarifas`.
-
-Archivos a tocar:
-
-- `src/features/costeo/services/rutas.ts` — extender `fetchCosteoRutas` para hacer un join/agregación con `costeo_tarifas` (subquery o segundo query agrupado por `ruta_id`).
-- `src/features/costeo/types/index.ts` — añadir a `CosteoRuta`: `tarifas_vigentes_count`, `proxima_expiracion`, `ultima_actualizacion_tarifa`, `proveedores_count`.
-- `src/features/costeo/routes/CosteoRutas.tsx` — nuevas columnas, badges, filtro, orden.
-- Helper nuevo `src/features/costeo/utils/rutaEstado.ts` — función pura que dado `(ruta, tarifasCount)` devuelve `{ label, variant, tone }`.
-- Tests: extender `rutas.test.ts` con el agregado de conteo y un test unitario para `rutaEstado.ts`.
-
-**Sin tocar:** RLS, edge functions, migración. El conteo se hace client-side leyendo `costeo_tarifas` filtradas por org (RLS ya lo cubre).
-
-**Versión:** bump `APP_VERSION` a `13.67.5` y entrada en `CHANGELOG.md`.
+### 4. Versión / changelog
+- `APP_VERSION` → `13.67.6`
+- Entrada en `CHANGELOG.md` describiendo el fix.
 
 ## Fuera de alcance
-
-- No se modifica el modelo de datos.
-- No se altera el wizard de cotización ni la búsqueda de tarifas.
-- No se toca el flag manual `activa` (sigue siendo editable más adelante; ahora sólo lectura).
-
-## Preguntas opcionales (puedo asumir defaults si prefieres avanzar)
-
-1. ¿El umbral de "próxima a vencer" debe ser **15 días** o prefieres otro (7/30)? 7 dias 
-2. ¿"Ver tarifas" debe abrir la página de tarifas filtrada, o un panel lateral con las tarifas inline?abrir página 
+- No se toca RLS, schema, ni la UI del módulo más allá del handler.
+- No se cambian otros diálogos del feature (sólo `RutaFormDialog` mostró el síntoma); si quieres puedo auditar el resto de `mutateAsync` del módulo en un follow-up.
