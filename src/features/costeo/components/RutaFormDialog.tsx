@@ -41,11 +41,15 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!origenId || !destinoId || rutaDuplicada) return;
-    await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
-    setOrigenId("");
-    setDestinoId("");
-    setIntentoEnvio(false);
-    onOpenChange(false);
+    try {
+      await crear.mutateAsync({ puerto_origen_id: origenId, puerto_destino_id: destinoId });
+      setOrigenId("");
+      setDestinoId("");
+      setIntentoEnvio(false);
+      onOpenChange(false);
+    } catch {
+      // onError del hook ya mostró el toast; mantenemos el diálogo abierto.
+    }
   };
 
   const origenInvalido = intentoEnvio && !origenId;
