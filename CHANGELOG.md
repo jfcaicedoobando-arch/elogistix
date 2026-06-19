@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.4] - 2026-06-19
+- **fix(costeo/estado-reemplazada)**: Valeria recibía "new row for relation costeo_tarifas violates check constraint costeo_tarifas_estado_check" al guardar una tarifa que el sistema marcaba automáticamente como `reemplazada` (porque ya existía una vigente para la misma combinación agente/naviera/ruta/contenedor). El check constraint de BD sólo permitía `borrador/vigente/vencida`, pero la app y el trigger ya usaban también `reemplazada`. Migración amplía el constraint a los 4 estados. Sin cambios de código cliente. Bump `APP_VERSION` 13.68.4.
+
 ## [13.68.3] - 2026-06-19
 - **feat(observability/toast-copy-uniform)**: Todos los toasts de error ahora muestran el botón "Ver detalles" con Copiar reporte (markdown) y Copiar JSON. Antes coexistían 3 patrones (`notifyError`, `toast.error()` directo de sonner, y `toast({ variant: "destructive" })` del shim legacy) y sólo el primero traía el botón de copiar — por eso algunos errores como el RLS de Valeria en Costeo → Tarifas no eran copiables. Codemod migró 108 call sites en 60 archivos a `notifyError(toast, { title, description, error, method })`. Cada uno con `method` único para agrupación en Sentry. **Nuevo guardrail** `src/__tests__/architecture/error-toasts-use-notifyError.test.ts` falla si alguien vuelve a usar `toast.error(...)` o `variant: "destructive"`. Sin cambios de mensajes ni lógica de negocio. Bump `APP_VERSION` 13.68.3.
 
