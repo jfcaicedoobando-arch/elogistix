@@ -11,6 +11,7 @@ import {
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
+import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoBuscar() {
