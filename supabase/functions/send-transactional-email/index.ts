@@ -11,6 +11,7 @@ const SITE_NAME = "elogistix"
 const SENDER_DOMAIN = "notify.librecarga.com"
 const FROM_DOMAIN = "librecarga.com"
 
+// eslint-disable-next-line complexity -- Handler de edge function con múltiples ramas de validación; refactor pendiente.
 Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 

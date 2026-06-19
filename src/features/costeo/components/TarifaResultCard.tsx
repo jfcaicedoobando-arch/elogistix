@@ -24,6 +24,7 @@ interface Props {
   meta?: RankingMeta;
 }
 
+// eslint-disable-next-line complexity -- Card de presentación con muchos branches de UI; refactor pendiente.
 export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", meta }: Props) {
   const { data: recargos = [] } = useQuery({
     queryKey: ["costeo", "tarifa-recargos", row.id],

@@ -10,7 +10,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { glob } from "glob";
+import fg from "fast-glob";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
@@ -52,7 +52,7 @@ function findUseMutationsWithoutOnError(filePath: string): number[] {
 
 describe("Toast coverage: useMutation requiere onError", () => {
   it("todas las mutations en src/features y src/hooks tienen onError", async () => {
-    const files = await glob(
+    const files = await fg(
       [
         "src/features/**/hooks/**/use*.ts",
         "src/features/**/hooks/**/use*.tsx",
