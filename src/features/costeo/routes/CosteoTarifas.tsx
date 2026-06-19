@@ -27,6 +27,8 @@ import { usd, buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoTarifas() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rutaIdFromUrl = searchParams.get("ruta") ?? undefined;
   const [estado, setEstado] = useState<EstadoFiltro>("vigente");
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
@@ -37,11 +39,17 @@ export default function CosteoTarifas() {
 
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
-  const { data: tarifas = [], isLoading } = useCosteoTarifas({
-    estado,
-    agenteId: agenteId === "todos" ? undefined : agenteId,
-    tipoContenedorId: tipoId === "todos" ? undefined : tipoId,
-  });
+  const tarifaFilters = useMemo(
+    () => ({
+      estado,
+      agenteId: agenteId === "todos" ? undefined : agenteId,
+      tipoContenedorId: tipoId === "todos" ? undefined : tipoId,
+      rutaId: rutaIdFromUrl,
+    }),
+    [estado, agenteId, tipoId, rutaIdFromUrl],
+  );
+  const { data: tarifas = [], isLoading } = useCosteoTarifas(tarifaFilters);
+
   const { eliminar } = useCosteoTarifaMutations();
 
   const duplicar = (id: string) => {
