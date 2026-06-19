@@ -96,4 +96,44 @@ describe("useDialogGenerarProformaController", () => {
     expect(result.current.totalSeleccionados).toBe(1);
     expect(result.current.seleccionados.has("c1")).toBe(false);
   });
+
+  it("muestra toast warning sin reportar a Sentry en ProformaValidationError", async () => {
+    hoisted.submitMock.mockRejectedValueOnce(new ProformaValidationError("Falta peso/volumen"));
+    const onClose = vi.fn();
+    const { result } = renderHook(
+      () => useDialogGenerarProformaController(true, mockEmbarque, mockConceptos, onClose),
+      { wrapper }
+    );
+
+    await act(async () => { await result.current.handleConfirmar(); });
+
+    expect(hoisted.toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Falta peso/volumen", variant: "warning" }),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    // captureException se hace lazy; damos un microtick y verificamos
+    await new Promise((r) => setTimeout(r, 5));
+    expect(hoisted.captureMock).not.toHaveBeenCalled();
+  });
+
+  it("muestra toast destructive y reporta a Sentry en error genérico", async () => {
+    hoisted.submitMock.mockRejectedValueOnce(new Error("PDF blew up"));
+    const onClose = vi.fn();
+    const { result } = renderHook(
+      () => useDialogGenerarProformaController(true, mockEmbarque, mockConceptos, onClose),
+      { wrapper }
+    );
+
+    await act(async () => { await result.current.handleConfirmar(); });
+
+    expect(hoisted.toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "PDF blew up", variant: "destructive" }),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    await new Promise((r) => setTimeout(r, 5));
+    expect(hoisted.captureMock).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: { feature: "proforma_generate" } }),
+    );
+  });
 });
