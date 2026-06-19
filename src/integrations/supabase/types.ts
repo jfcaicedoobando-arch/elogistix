@@ -2831,7 +2831,7 @@ export type Database = {
       }
       embarque_contenedores: {
         Row: {
-          bl_house: string
+          bl_house: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -2850,7 +2850,7 @@ export type Database = {
           volumen_m3: number
         }
         Insert: {
-          bl_house?: string
+          bl_house?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -2869,7 +2869,7 @@ export type Database = {
           volumen_m3?: number
         }
         Update: {
-          bl_house?: string
+          bl_house?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -6221,7 +6221,7 @@ export type Database = {
       sincronizar_contenedores_embarque: {
         Args: { p_contenedores: Json; p_embarque_id: string }
         Returns: {
-          bl_house: string
+          bl_house: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
