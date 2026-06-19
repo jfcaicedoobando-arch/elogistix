@@ -33,7 +33,7 @@ export function useEnviarRecordatorio() {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error desconocido";
-      notifyError(toast, { title: "Error", description: `No se pudo registrar el recordatorio: ${msg}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USERECORDATORIOS_1" });
+      notifyError(toast, { title: `No se pudo registrar el recordatorio: ${msg}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USERECORDATORIOS_1" });
     },
   });
 }

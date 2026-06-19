@@ -21,7 +21,7 @@ export function useUpdateGarantia(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al actualizar";
-      notifyError(toast, { title: "Error", description: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEGARANTIASCONTENEDOR_1" });
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEGARANTIASCONTENEDOR_1" });
     },
   });
 }

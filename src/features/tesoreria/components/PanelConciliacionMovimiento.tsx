@@ -45,18 +45,18 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
       { movId: movimiento.id, tipo, pagoId },
       {
         onSuccess: () => { toast.success("Movimiento conciliado"); onClose(); },
-        onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_1" }),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_1" }),
       },
     );
   };
 
   const onIgnorar = () => {
-    if (!motivo.trim()) return notifyError(toast, { title: "Error", description: "Captura un motivo", method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_2" });
+    if (!motivo.trim()) return notifyError(toast, { title: "Captura un motivo", method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_2" });
     ignorar.mutate(
       { movId: movimiento.id, motivo: motivo.trim() },
       {
         onSuccess: () => { toast.success("Movimiento ignorado"); setOpenIgnorar(false); setMotivo(""); onClose(); },
-        onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_3" }),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_3" }),
       },
     );
   };
@@ -64,7 +64,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
   const onDesconciliar = () => {
     desconciliar.mutate(movimiento.id, {
       onSuccess: () => { toast.success("Movimiento desconciliado"); onClose(); },
-      onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_4" }),
+      onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_4" }),
     });
   };
 

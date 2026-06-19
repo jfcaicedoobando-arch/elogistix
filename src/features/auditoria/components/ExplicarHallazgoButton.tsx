@@ -28,7 +28,7 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
         onSuccess: (res) => setData(res),
         onError: (err) => {
           const msg = err instanceof Error ? err.message : "Error al explicar";
-          notifyError(toast, { title: "Error", description: msg.includes("402") ? "Sin créditos IA disponibles" : msg.includes("429") ? "Demasiadas solicitudes, intenta en un momento" : "No se pudo generar la explicación", error: err, method: "FEATURES_AUDITORIA_COMPONENTS_EXPLICARHALLAZGOBUTTON_1" });
+          notifyError(toast, { title: msg.includes("402") ? "Sin créditos IA disponibles" : msg.includes("429") ? "Demasiadas solicitudes, intenta en un momento" : "No se pudo generar la explicación", error: err, method: "FEATURES_AUDITORIA_COMPONENTS_EXPLICARHALLAZGOBUTTON_1" });
         },
       });
     }

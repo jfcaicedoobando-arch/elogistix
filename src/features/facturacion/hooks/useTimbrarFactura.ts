@@ -12,7 +12,7 @@ export function useTimbrarFactura() {
       toast.success(`Factura timbrada · UUID ${res.uuid.slice(0, 8)}…`);
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
-    onError: (err: Error) => notifyError(toast, { title: "Error", description: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
+    onError: (err: Error) => notifyError(toast, { title: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
   });
 }
 
@@ -25,6 +25,6 @@ export function useCancelarFactura() {
       toast.success("CFDI cancelado");
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
-    onError: (err: Error) => notifyError(toast, { title: "Error", description: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" }),
+    onError: (err: Error) => notifyError(toast, { title: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" }),
   });
 }

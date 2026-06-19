@@ -41,7 +41,7 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
     try { await descargarTarifario(cotizacion); }
     catch (e) {
       const msg = e instanceof Error ? e.message : "Error al generar PDF";
-      notifyError(toast, { title: "Error", description: msg, error: e, method: "PAGES_COTIZACIONES_COTIZACIONINFORMATIVADETALLE_1" });
+      notifyError(toast, { title: msg, error: e, method: "PAGES_COTIZACIONES_COTIZACIONINFORMATIVADETALLE_1" });
     }
   };
 

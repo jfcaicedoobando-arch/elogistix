@@ -67,7 +67,7 @@ export function useMarcarRevisado() {
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
-      notifyError(toast, { title: "Error", description: isPermiso
+      notifyError(toast, { title: isPermiso
           ? "No tienes permisos para marcar revisado"
           : "Error al marcar revisado", description: isPermiso
             ? "Tu rol en esta organización no permite esta acción. Contacta a un administrador."

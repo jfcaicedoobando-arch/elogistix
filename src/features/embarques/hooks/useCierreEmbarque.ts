@@ -49,7 +49,7 @@ export function useCerrarEmbarque(embarqueId: string) {
       invalidarTodo(qc, embarqueId);
       toast.success("Embarque cerrado");
     },
-    onError: (e: Error) => notifyError(toast, { title: "Error", description: e.message ?? "No se pudo cerrar el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_1" }),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo cerrar el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_1" }),
   });
 }
 
@@ -61,6 +61,6 @@ export function useReabrirEmbarque(embarqueId: string) {
       invalidarTodo(qc, embarqueId);
       toast.success("Embarque reabierto");
     },
-    onError: (e: Error) => notifyError(toast, { title: "Error", description: e.message ?? "No se pudo reabrir el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_2" }),
+    onError: (e: Error) => notifyError(toast, { title: e.message ?? "No se pudo reabrir el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_2" }),
   });
 }

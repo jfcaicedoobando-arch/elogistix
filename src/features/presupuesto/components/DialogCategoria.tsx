@@ -40,7 +40,7 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
   }, [categoria, open]);
 
   const submit = async () => {
-    if (!nombre.trim()) return notifyError(toast, { title: "Error", description: "Nombre requerido", method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_1" });
+    if (!nombre.trim()) return notifyError(toast, { title: "Nombre requerido", method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_1" });
     try {
       if (categoria) {
         await actualizar.mutateAsync({ id: categoria.id, patch: { nombre: nombre.trim(), orden, activa } });
@@ -52,7 +52,7 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
       onOpenChange(false);
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: "Error", description: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_2" });
+      notifyError(toast, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_2" });
     }
   };
 

@@ -21,7 +21,7 @@ export function useRecalcularDemoras(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al calcular demoras";
-      notifyError(toast, { title: "Error", description: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_1" });
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_1" });
     },
   });
 }
@@ -38,7 +38,7 @@ export function useEliminarDemorasAuto(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al eliminar";
-      notifyError(toast, { title: "Error", description: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_2" });
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_2" });
     },
   });
 }

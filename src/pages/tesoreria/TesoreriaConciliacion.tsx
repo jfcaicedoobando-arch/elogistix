@@ -36,17 +36,17 @@ export default function TesoreriaConciliacion() {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !cuentaId) {
-      if (!cuentaId) notifyError(toast, { title: "Error", description: "Selecciona una cuenta primero", method: "PAGES_TESORERIA_TESORERIACONCILIACION_1" });
+      if (!cuentaId) notifyError(toast, { title: "Selecciona una cuenta primero", method: "PAGES_TESORERIA_TESORERIACONCILIACION_1" });
       return;
     }
     try {
       toast.message("Procesando archivo...");
       const movimientos = await parseEstadoCuentaBBVA(file);
-      if (movimientos.length === 0) return notifyError(toast, { title: "Error", description: "No se encontraron movimientos válidos", method: "PAGES_TESORERIA_TESORERIACONCILIACION_2" });
+      if (movimientos.length === 0) return notifyError(toast, { title: "No se encontraron movimientos válidos", method: "PAGES_TESORERIA_TESORERIACONCILIACION_2" });
       const res = await importar.mutateAsync({ cuentaId, movimientos });
       toast.success(`Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados`);
     } catch (err) {
-      notifyError(toast, { title: "Error", description: (err as Error).message, error: err, method: "PAGES_TESORERIA_TESORERIACONCILIACION_3" });
+      notifyError(toast, { title: (err as Error).message, error: err, method: "PAGES_TESORERIA_TESORERIACONCILIACION_3" });
       reportCaughtError(err, { feature: "tesoreria", op: "importar_movimientos_bbva" });
     } finally {
       if (fileRef.current) fileRef.current.value = "";

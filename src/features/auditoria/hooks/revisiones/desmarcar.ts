@@ -41,7 +41,7 @@ export function useDesmarcarRevisado() {
     },
     onError: (err: Error) => {
       logger.error("[useDesmarcarRevisado] error:", err);
-      notifyError(toast, { title: "Error", description: "Error al eliminar marca", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_DESMARCAR_1" });
+      notifyError(toast, { title: "Error al eliminar marca", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_DESMARCAR_1" });
     },
   });
 }

@@ -39,11 +39,11 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
   const handleXml = (f: File | null) => {
     if (!f) return;
     if (!f.name.toLowerCase().endsWith(".xml")) {
-      notifyError(toast, { title: "Error", description: "El archivo debe ser .xml", method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_1" });
+      notifyError(toast, { title: "El archivo debe ser .xml", method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_1" });
       return;
     }
     if (f.size > 2 * 1024 * 1024) {
-      notifyError(toast, { title: "Error", description: "XML excede 2 MB", method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_2" });
+      notifyError(toast, { title: "XML excede 2 MB", method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_2" });
       return;
     }
     setXml(f);
@@ -66,9 +66,9 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando XML";
       if (msg === "CLIENT_TIMEOUT") {
-        notifyError(toast, { title: "Error", description: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.", error: e, method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_3" });
+        notifyError(toast, { title: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.", error: e, method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_3" });
       } else {
-        notifyError(toast, { title: "Error", description: msg, method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_4" });
+        notifyError(toast, { title: msg, method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_4" });
       }
     } finally {
       if (timeoutId) clearTimeout(timeoutId);

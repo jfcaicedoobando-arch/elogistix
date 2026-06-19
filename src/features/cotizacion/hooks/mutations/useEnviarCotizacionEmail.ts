@@ -22,7 +22,7 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
       } else if (res.estado === "parcial") {
         toast.warning("Algunos correos no pudieron enviarse");
       } else {
-        notifyError(toast, { title: "Error", description: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
+        notifyError(toast, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
       }
       if (cotizacionId) {
         qc.invalidateQueries({ queryKey: ["cotizacion", cotizacionId] });
@@ -30,7 +30,7 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
       }
       qc.invalidateQueries({ queryKey: ["cotizaciones"] });
     },
-    onError: (e: Error) => notifyError(toast, { title: "Error", description: e.message, error: e, method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_2" }),
+    onError: (e: Error) => notifyError(toast, { title: e.message, error: e, method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_2" }),
   });
 }
 

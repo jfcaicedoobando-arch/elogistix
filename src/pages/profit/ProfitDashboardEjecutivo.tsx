@@ -46,7 +46,7 @@ export default function ProfitDashboardEjecutivo() {
       const blob = await pdf(<ReporteEjecutivoDocument snapshot={data} />).toBlob();
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
-      notifyError(toast, { title: "Error", description: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });
+      notifyError(toast, { title: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });
       reportCaughtError(e, { feature: "pnl", op: "generar_pdf_ejecutivo" }, { periodo: data?.periodo });
     }
   }, [data]);

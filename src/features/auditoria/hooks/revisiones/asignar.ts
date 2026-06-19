@@ -81,7 +81,7 @@ export function useAsignarResponsable() {
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
-      notifyError(toast, { title: "Error", description: isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable", description: e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_ASIGNAR_1" });
+      notifyError(toast, { title: isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable", description: e?.message ?? "Error desconocido", method: "FEATURES_AUDITORIA_HOOKS_REVISIONES_ASIGNAR_1" });
     },
   });
 }

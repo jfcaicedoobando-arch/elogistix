@@ -138,7 +138,7 @@ export function useNuevoProveedorController(
   const handleSave = async () => {
     const clabeTrim = form.clabe.trim();
     if (clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
-      notifyError(toast, { title: "Error", description: "La CLABE debe tener exactamente 18 dígitos numéricos.", method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_1" });
+      notifyError(toast, { title: "La CLABE debe tener exactamente 18 dígitos numéricos.", method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_1" });
       return;
     }
     setSaving(true);

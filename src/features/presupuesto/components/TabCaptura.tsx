@@ -46,7 +46,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
     if (!organizationId) return;
     const monto = Number(raw);
     if (Number.isNaN(monto) || monto < 0) {
-      notifyError(toast, { title: "Error", description: "Monto inválido", method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_1" });
+      notifyError(toast, { title: "Monto inválido", method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_1" });
       return;
     }
     const key = `${categoria_id}|${periodo}`;
@@ -59,7 +59,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
       setDraft((d) => { const n = { ...d }; delete n[key]; return n; });
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: "Error", description: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_2" });
+      notifyError(toast, { title: err.message ?? "Error al guardar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCAPTURA_2" });
     }
   };
 

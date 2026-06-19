@@ -30,8 +30,8 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
 
   const submit = async () => {
     if (!factura) return;
-    if (f.montoNum <= 0) return notifyError(toast, { title: "Error", description: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
-    if (f.excede) return notifyError(toast, { title: "Error", description: "El monto excede el saldo pendiente", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
+    if (f.montoNum <= 0) return notifyError(toast, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
+    if (f.excede) return notifyError(toast, { title: "El monto excede el saldo pendiente", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
     try {
       await registrar.mutateAsync({
         proveedor_factura_id: factura.id,
@@ -49,7 +49,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
       onOpenChange(false);
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: "Error", description: err.message ?? "Error al registrar pago", error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
+      notifyError(toast, { title: err.message ?? "Error al registrar pago", error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
     }
   };
 

@@ -30,7 +30,7 @@ export function DialogRegistrarPagoLiquidacion({
       { id: liq.id, fecha_pago: fecha, metodo_pago: metodo, referencia },
       {
         onSuccess: () => { toast.success("Pago registrado"); onOpenChange(false); },
-        onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGREGISTRARPAGOLIQUIDACION_1" }),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGREGISTRARPAGOLIQUIDACION_1" }),
       },
     );
   };

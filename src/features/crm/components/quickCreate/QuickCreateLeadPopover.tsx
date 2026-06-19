@@ -26,7 +26,7 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
 
   const submit = async () => {
     const emp = empresa.trim();
-    if (!emp) return notifyError(toast, { title: "Error", description: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_1" });
+    if (!emp) return notifyError(toast, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_1" });
     try {
       const r = await crear.mutateAsync({
         empresa: emp,
@@ -43,7 +43,7 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
       onClose();
       onCreated(r.id);
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_2" });
+      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADPOPOVER_2" });
     }
   };
 

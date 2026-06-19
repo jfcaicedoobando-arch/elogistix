@@ -68,7 +68,7 @@ export function useSnoozeHallazgo() {
     },
     onError: (err: Error) => {
       logger.error("[useSnoozeHallazgo] error:", err);
-      notifyError(toast, { title: "Error", description: "No se pudo silenciar el hallazgo", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USESNOOZEHALLAZGO_1" });
+      notifyError(toast, { title: "No se pudo silenciar el hallazgo", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USESNOOZEHALLAZGO_1" });
     },
   });
 }
@@ -83,7 +83,7 @@ export function useQuitarSnooze() {
       toast.success("Snooze removido");
     },
     onError: (err: Error) => {
-      notifyError(toast, { title: "Error", description: "Error al quitar snooze", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USESNOOZEHALLAZGO_2" });
+      notifyError(toast, { title: "Error al quitar snooze", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USESNOOZEHALLAZGO_2" });
     },
   });
 }

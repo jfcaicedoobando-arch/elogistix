@@ -30,7 +30,7 @@ export function DialogGenerarLiquidacion({
       { vendedora_id: vendedoraId, periodo, organization_id: organizationId },
       {
         onSuccess: () => { toast.success("Liquidación generada"); onOpenChange(false); },
-        onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGGENERARLIQUIDACION_1" }),
+        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGGENERARLIQUIDACION_1" }),
       },
     );
   };

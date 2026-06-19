@@ -58,7 +58,7 @@ export default function WizardInformativa() {
       navigate(`/cotizaciones/${cot.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar";
-      notifyError(toast, { title: "Error", description: msg, error: e, method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_2" });
+      notifyError(toast, { title: msg, error: e, method: "FEATURES_COTIZACION_COMPONENTS_INFORMATIVA_WIZARDINFORMATIVA_2" });
     }
   };
 

@@ -155,15 +155,15 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const handleSubmitError = (e: unknown) => {
     const err = e as { message?: string; code?: string };
     if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
-      notifyError(toast, { title: "Error", description: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
+      notifyError(toast, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
     } else {
-      notifyError(toast, { title: "Error", description: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
+      notifyError(toast, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
     }
   };
 
   const submit = async () => {
     if (!validate()) {
-      notifyError(toast, { title: "Error", description: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
+      notifyError(toast, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
       return;
     }
     try {

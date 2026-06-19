@@ -31,8 +31,8 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
 
   const submit = async () => {
     const n = nombre.trim();
-    if (!n) return notifyError(toast, { title: "Error", description: "Nombre requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_1" });
-    if (!etapaInicial) return notifyError(toast, { title: "Error", description: "Configura el pipeline primero", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_2" });
+    if (!n) return notifyError(toast, { title: "Nombre requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_1" });
+    if (!etapaInicial) return notifyError(toast, { title: "Configura el pipeline primero", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_2" });
     const cliente = clientes.find((c) => c.id === clienteId);
     try {
       const r = await crear.mutateAsync({
@@ -50,7 +50,7 @@ export default function QuickCreateOportunidadPopover({ onCreated, onMore, onClo
       onClose();
       onCreated(r.id);
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_3" });
+      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADPOPOVER_3" });
     }
   };
 

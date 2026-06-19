@@ -70,7 +70,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
       qc.invalidateQueries({ queryKey: ["conceptos_costo", embarqueId] });
       qc.invalidateQueries({ queryKey: ["conceptos_venta", embarqueId] });
     },
-    onError: (err: Error) => notifyError(toast, { title: "Error", description: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
+    onError: (err: Error) => notifyError(toast, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
   });
 
   const setDraft = (id: string, patch: DraftPatch) => {

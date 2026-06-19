@@ -50,13 +50,13 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
         toast.success("Vendedora configurada");
         setNuevaVendedora(""); setNuevoPct("5");
       },
-      onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_1" }),
+      onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_1" }),
     });
   };
 
   const guardarPct = (id: string) => {
     const v = Number(pcts[id]);
-    if (Number.isNaN(v) || v < 0 || v > 100) return notifyError(toast, { title: "Error", description: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_2" });
+    if (Number.isNaN(v) || v < 0 || v > 100) return notifyError(toast, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_2" });
     update.mutate({ id, changes: { porcentaje_default: v } }, {
       onSuccess: () => toast.success("Porcentaje actualizado"),
     });

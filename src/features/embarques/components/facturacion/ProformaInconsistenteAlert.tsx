@@ -48,7 +48,7 @@ export function ProformaInconsistenteAlert({
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error", description: `No se pudieron asignar los conceptos: ${msg}`, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1" });
+      notifyError(toast, { title: `No se pudieron asignar los conceptos: ${msg}`, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_FACTURACION_PROFORMAINCONSISTENTEALERT_1" });
     },
     onSettled: () => setBusy(false),
   });

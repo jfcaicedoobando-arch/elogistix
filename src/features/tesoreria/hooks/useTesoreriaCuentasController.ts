@@ -36,7 +36,7 @@ export function useTesoreriaCuentasController() {
 
   const submit = async () => {
     if (!form.alias.trim()) {
-      notifyError(toast, { title: "Error", description: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
+      notifyError(toast, { title: "Captura un alias", method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_1" });
       return;
     }
     try {
@@ -53,7 +53,7 @@ export function useTesoreriaCuentasController() {
       reset();
       setOpen(false);
     } catch (e) {
-      notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_2" });
+      notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_HOOKS_USETESORERIACUENTASCONTROLLER_2" });
       reportCaughtError(e, { feature: "tesoreria", op: "crear_cuenta" });
     }
   };

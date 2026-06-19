@@ -61,14 +61,14 @@ export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
       data = await parseCsf(file);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "No se pudo procesar la CSF";
-      notifyError(toast, { title: "Error", description: msg, error: err, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_1" });
+      notifyError(toast, { title: msg, error: err, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_1" });
       setCsfLoading(false);
       return;
     }
 
     const validacion = validarCsf(data, proveedor);
     if (!validacion.ok) {
-      notifyError(toast, { title: "Error", description: validacion.msg, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_2" });
+      notifyError(toast, { title: validacion.msg, method: "PAGES_PROVEEDORES_PROVEEDORCSFUPDATEBUTTON_2" });
       setCsfLoading(false);
       return;
     }

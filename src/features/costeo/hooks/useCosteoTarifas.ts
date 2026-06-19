@@ -58,7 +58,7 @@ export function useCosteoTarifaMutations() {
       toast({ title: "Tarifa marcada como reemplazada" });
     },
     onError: (e: Error) =>
-      notifyError(toast, { title: "Error", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3" }),
+      notifyError(toast, { title: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3" }),
   });
 
   const eliminar = useMutation({

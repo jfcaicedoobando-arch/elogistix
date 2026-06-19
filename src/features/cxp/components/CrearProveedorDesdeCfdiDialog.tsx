@@ -34,7 +34,7 @@ export function CrearProveedorDesdeCfdiDialog({
 
   const submit = async () => {
     if (!n.trim() || !r.trim()) {
-      notifyError(toast, { title: "Error", description: "Nombre y RFC son obligatorios", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_1" });
+      notifyError(toast, { title: "Nombre y RFC son obligatorios", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_1" });
       return;
     }
     try {
@@ -60,7 +60,7 @@ export function CrearProveedorDesdeCfdiDialog({
         onOpenChange(false);
         return;
       }
-      notifyError(toast, { title: "Error", description: err.message ?? "Error al crear proveedor", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_2" });
+      notifyError(toast, { title: err.message ?? "Error al crear proveedor", method: "FEATURES_CXP_COMPONENTS_CREARPROVEEDORDESDECFDIDIALOG_2" });
     }
   };
 

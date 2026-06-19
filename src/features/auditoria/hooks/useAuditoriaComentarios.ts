@@ -44,7 +44,7 @@ export function useAgregarComentarioAuditoria() {
     },
     onError: (err: Error) => {
       logger.error("[useAgregarComentarioAuditoria] error:", err);
-      notifyError(toast, { title: "Error", description: "No se pudo agregar el comentario", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USEAUDITORIACOMENTARIOS_1" });
+      notifyError(toast, { title: "No se pudo agregar el comentario", description: err.message, error: err, method: "FEATURES_AUDITORIA_HOOKS_USEAUDITORIACOMENTARIOS_1" });
     },
   });
 }

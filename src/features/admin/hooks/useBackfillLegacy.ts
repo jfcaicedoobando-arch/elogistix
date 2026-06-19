@@ -24,7 +24,7 @@ export function useBackfillLegacy(options: UseBackfillLegacyOptions = {}) {
       options.onSuccess?.(data);
     },
     onError: (err) => {
-      notifyError(toast, { title: "Error", description: err instanceof Error ? err.message : "Error al ejecutar backfill", error: err, method: "FEATURES_ADMIN_HOOKS_USEBACKFILLLEGACY_1" });
+      notifyError(toast, { title: err instanceof Error ? err.message : "Error al ejecutar backfill", error: err, method: "FEATURES_ADMIN_HOOKS_USEBACKFILLLEGACY_1" });
     },
   });
 }

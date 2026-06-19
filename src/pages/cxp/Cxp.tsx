@@ -40,7 +40,7 @@ export default function Cxp() {
 
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
-      notifyError(toast, { title: "Error", description: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
+      notifyError(toast, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
       return;
     }
     f.setAEliminar(fact);
@@ -146,7 +146,7 @@ export default function Cxp() {
           if (!f.aEliminar) return;
           await eliminar.mutateAsync(f.aEliminar.id, {
             onSuccess: () => toast.success("Factura eliminada"),
-            onError: (e) => notifyError(toast, { title: "Error", description: (e as Error).message, error: e, method: "PAGES_CXP_CXP_2" }),
+            onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "PAGES_CXP_CXP_2" }),
           });
           f.setAEliminar(null);
         }}

@@ -58,7 +58,7 @@ export default function CotizacionWizardLayout({
   const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
   const handleConfirmSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
-      notifyError(toast, { title: "Error", description: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
+      notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
       setShowSinDesglose(false);
       return;
     }
@@ -68,7 +68,7 @@ export default function CotizacionWizardLayout({
 
   const handleOpenSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
-      notifyError(toast, { title: "Error", description: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_2" });
+      notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_2" });
       return;
     }
     setShowSinDesglose(true);

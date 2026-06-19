@@ -36,7 +36,7 @@ export function TabCategorias() {
       cats.refetch();
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: "Error", description: err.message ?? "Error", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
+      notifyError(toast, { title: err.message ?? "Error", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_1" });
     }
   };
 
@@ -48,7 +48,7 @@ export function TabCategorias() {
       setBorrarId(null);
     } catch (e) {
       const err = e as { message?: string };
-      notifyError(toast, { title: "Error", description: err.message ?? "No se pudo eliminar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
+      notifyError(toast, { title: err.message ?? "No se pudo eliminar", error: e, method: "FEATURES_PRESUPUESTO_COMPONENTS_TABCATEGORIAS_2" });
     }
   };
 

@@ -15,7 +15,7 @@ export default function TabExportar() {
 
   const handleExport = async () => {
     if (!organizationId || !organization) {
-      notifyError(toast, { title: "Error", description: "No hay organización activa", method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_1" });
+      notifyError(toast, { title: "No hay organización activa", method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_1" });
       return;
     }
     setRunning(true);
@@ -25,7 +25,7 @@ export default function TabExportar() {
       toast.success("Export generado y descargado");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error", description: `Falló el export: ${msg}`, error: err, method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_2" });
+      notifyError(toast, { title: `Falló el export: ${msg}`, error: err, method: "FEATURES_ADMIN_COMPONENTS_TABEXPORTAR_2" });
     } finally {
       setRunning(false);
       setTimeout(() => setProgress(null), 2000);

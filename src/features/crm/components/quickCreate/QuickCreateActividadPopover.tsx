@@ -36,8 +36,8 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
 
   const submit = async () => {
     const a = asunto.trim();
-    if (!a) return notifyError(toast, { title: "Error", description: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_1" });
-    if (!entidadId) return notifyError(toast, { title: "Error", description: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_2" });
+    if (!a) return notifyError(toast, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_1" });
+    if (!entidadId) return notifyError(toast, { title: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_2" });
     try {
       await crear.mutateAsync({
         tipo: "tarea",
@@ -52,7 +52,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
       onClose();
       onCreated();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_3" });
+      notifyError(toast, { title: e instanceof Error ? e.message : "Error al crear", error: e, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_3" });
     }
   };
 

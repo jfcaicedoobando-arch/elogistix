@@ -31,7 +31,7 @@ export default function NuevoEmbarque() {
   // si vienen del flujo Cotización → Generar embarque.
   useEffect(() => {
     if (!canCrearEmbarqueLibre && !llegaConCotizacion) {
-      notifyError(toast, { title: "Error", description: "Tu rol requiere iniciar el embarque desde una cotización Aceptada.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
+      notifyError(toast, { title: "Tu rol requiere iniciar el embarque desde una cotización Aceptada.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
       navigate("/embarques", { replace: true });
     }
   }, [canCrearEmbarqueLibre, llegaConCotizacion, navigate]);
