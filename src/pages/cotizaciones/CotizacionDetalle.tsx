@@ -14,6 +14,7 @@ import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/d
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
 import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
 import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/pages/cotizaciones/detalle/CotizacionDetalleCards";
+import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 
 
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
