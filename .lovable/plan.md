@@ -1,39 +1,21 @@
-## Problema
+## Plan
 
-Valeria intenta enviar una cotización por correo desde `librecarga.com` y le sale **"Failed to send a request to the Edge Function"**. Los logs del edge function `enviar-cotizacion-email` muestran que arranca (`booted`), pero **nunca recibe el request real** — sólo el preflight OPTIONS, y el navegador lo bloquea.
+1. **Cambiar la llamada del cliente al servicio de correo**
+   - En el flujo de “Enviar cotización por email”, dejar de depender de `supabase.functions.invoke()` para este caso.
+   - Hacer una llamada `fetch` directa al servicio con encabezados explícitos: `Authorization`, `apikey` y `Content-Type`.
+   - Antes de llamar, validar que exista sesión activa; si no, mostrar “Tu sesión expiró, vuelve a iniciar sesión”.
 
-### Causa raíz (analogía)
+2. **Mejorar el diagnóstico del error**
+   - Si el backend responde con error HTTP, leer el cuerpo JSON/texto y lanzar un mensaje útil en vez del genérico “Failed to send a request to the Edge Function”.
+   - Mantener el toast copiable con el JSON técnico, para que el siguiente reporte traiga causa real.
 
-El edge function tiene un "portero" (CORS) que decide qué dominios pueden tocar la puerta. El portero actual lo importamos de un paquete fantasma:
+3. **Mantener CORS del backend como está, pero verificarlo**
+   - Ya confirmé que el preflight desde `https://librecarga.com` responde con los encabezados CORS correctos.
+   - Después del ajuste del cliente, probar `prepare`/`send` contra el servicio y revisar logs.
 
-```ts
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-```
+4. **Actualizar metadata del proyecto**
+   - Subir `APP_VERSION` a `13.68.6`.
+   - Agregar entrada breve en `CHANGELOG.md` explicando el ajuste del envío de cotizaciones.
 
-Ese subpath `/cors` **no existe** en supabase-js, así que `corsHeaders` queda vacío. Resultado: cuando el navegador de Valeria (en `librecarga.com`) pregunta "¿me dejas pasar?", el portero no responde con los permisos correctos y el navegador cancela el request antes de que llegue al servidor. Por eso en los logs no se ve ni un error: nunca llegó.
-
-El resto de edge functions del proyecto ya usan el portero correcto en `supabase/functions/_shared/cors.ts`, que tiene `librecarga.com` y `www.librecarga.com` en la whitelist.
-
-## Cambios propuestos
-
-### 1. `supabase/functions/enviar-cotizacion-email/index.ts`
-- Reemplazar `import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'` por `import { buildCors, handlePreflightStrict } from '../_shared/cors.ts'`.
-- Usar `handlePreflightStrict(req)` para responder al OPTIONS.
-- Usar `buildCors(req)` en todas las respuestas (incluida la helper `json`, que debe recibir `req` o los headers ya construidos).
-
-### 2. `supabase/functions/enviar-cotizacion-email/handlers.ts`
-- Mismo reemplazo de import.
-- Aceptar headers CORS construidos (pasados desde `index.ts`) y aplicarlos a cada `Response`.
-
-### 3. Metadata
-- `APP_VERSION` → `13.68.5`.
-- `CHANGELOG.md` → entrada `[13.68.5]` describiendo el fix de CORS en `enviar-cotizacion-email`.
-
-## Verificación
-
-Después del cambio, pedirle a Valeria que reintente desde `librecarga.com`. Si el problema persiste, revisar logs del edge function — ya debería verse el request entrar y cualquier error real (no sólo `booted`).
-
-## No se toca
-
-- Lógica de envío de correos, plantillas, validación de auth, ni la tabla de cotizaciones.
-- Otros edge functions.
+## Analogía rápida
+El backend ya abrió la puerta correcta, pero el mensajero del navegador sigue llegando con credenciales poco claras. Voy a cambiarlo por un mensajero que enseñe explícitamente su identificación y, si algo falla, nos diga exactamente en qué ventanilla se atoró.
