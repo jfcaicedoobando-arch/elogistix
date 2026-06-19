@@ -11,7 +11,7 @@ import {
 import {
   useCompletarActividad, usePosponerActividad, type CrmActividadRow,
 } from "@/features/crm/hooks";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 import ActividadNotasSheet from "@/features/crm/components/actividades/ActividadNotasSheet";
 
 interface Props { actividad: CrmActividadRow }

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useComentariosOportunidad,

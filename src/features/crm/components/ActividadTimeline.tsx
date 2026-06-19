@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 import {
   useActividades, useCrearActividad, useCompletarActividad,
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
