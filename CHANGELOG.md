@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.8] - 2026-06-19
+- **fix(cotizaciones/email-retry-extendido)**: REACT-12 regresó en `13.68.7` — los 3 reintentos rápidos (0/800/1600 ms) no alcanzaban a sobrevivir a microcortes de red más largos del cliente (los logs del edge function confirman que la petición nunca llegó a Supabase). Ahora `fetchConReintento` hace 5 intentos con backoff 0/1s/2s/4s/8s (~15s totales) y entre intentos espera al evento `online` hasta 10s si el navegador reporta `navigator.onLine === false`. Adicional: si ya estamos offline antes de iniciar, falla rápido con mensaje claro ("Tu conexión a internet está caída..."), y el mensaje final incluye sugerencia de revisar VPN/antivirus/firewall corporativo. Sin cambios en la edge function. Nuevo suite `enviarPorEmail.test.ts`. Bump `APP_VERSION` 13.68.8.
+
 ## [13.68.7] - 2026-06-19
 - **fix(embarques/bl_house-nullable)**: REACT-Y en Sentry (4 usuarios, 8 eventos) — al editar un embarque se intentaba insertar contenedores sin `bl_house` y la columna era `NOT NULL`, produciendo `23502: null value in column "bl_house"`. Migración hace `DROP NOT NULL` + `DEFAULT ''` (el BL House se captura más tarde en el flujo operativo). Cliente: `rowAContenedorBorrador` ahora hace `bl_house ?? ""` para tolerar el nuevo tipo `string | null`.
 - **fix(cotizaciones/email-retry)**: REACT-12 en Sentry — tras el fix de 13.68.6, el error real visible era `TypeError: Failed to fetch` (cold start / micro-corte de red al edge function). Añadido `fetchConReintento` en `invokeEnviarCotizacion`: hasta 3 intentos con backoff 0/800/1600 ms, sólo en errores de red (no en 4xx/5xx con cuerpo). Los reintentos son transparentes para el usuario.
