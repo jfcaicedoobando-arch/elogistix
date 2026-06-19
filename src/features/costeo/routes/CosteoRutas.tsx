@@ -1,53 +1,26 @@
 /**
  * Página: Rutas de costeo (par puerto origen CN → destino MX).
- * v13.67.5: enriquecida con conteo de tarifas vigentes, estado dinámico,
- *  filtro por estado y acceso directo a tarifas filtradas.
+ * v13.68.1: dividida en sub-componentes para cumplir Power of 10 (≤200 líneas).
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { Plus, Trash2, ExternalLink, AlertTriangle } from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AlertTriangle, Plus } from "lucide-react";
 import { useCosteoRutas, useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { RutaFormDialog } from "@/features/costeo/components/RutaFormDialog";
-import {
-  computeRutaEstado,
-  diasParaExpirar,
-  DIAS_POR_VENCER,
-  type RutaEstadoMeta,
-} from "@/features/costeo/utils/rutaEstado";
+import { CosteoRutasTable } from "@/features/costeo/components/CosteoRutasTable";
+import { computeRutaEstado, type RutaEstadoMeta } from "@/features/costeo/utils/rutaEstado";
 
 type FiltroEstado = "todas" | RutaEstadoMeta["key"];
 
-const TONE_VARIANT: Record<RutaEstadoMeta["tone"], "default" | "destructive" | "secondary" | "outline"> = {
-  success: "default",
-  warning: "outline",
-  destructive: "destructive",
-  muted: "secondary",
-};
-
-function formatFecha(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
 export default function CosteoRutas() {
-  const navigate = useNavigate();
   const { data: rutas = [], isLoading } = useCosteoRutas();
   const { crear, eliminar } = useCosteoRutaMutations();
   const [open, setOpen] = useState(false);
@@ -105,105 +78,12 @@ export default function CosteoRutas() {
           )}
         </Card>
 
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Origen (CN)</TableHead>
-                <TableHead>Destino (MX)</TableHead>
-                <TableHead className="text-center">Tarifas vigentes</TableHead>
-                <TableHead className="text-center">Proveedores</TableHead>
-                <TableHead>Próxima a vencer</TableHead>
-                <TableHead>Última actualización</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="w-32 text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    Cargando…
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading && rutasOrdenadas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    {rutas.length === 0 ? "Sin rutas registradas." : "Sin rutas para el filtro seleccionado."}
-                  </TableCell>
-                </TableRow>
-              )}
-              {rutasOrdenadas.map(({ ruta, meta }) => {
-                const count = ruta.tarifas_vigentes_count ?? 0;
-                const dias = diasParaExpirar(ruta);
-                const porVencer = dias !== null && dias <= DIAS_POR_VENCER;
-                return (
-                  <TableRow key={ruta.id}>
-                    <TableCell className="font-medium">{ruta.puerto_origen_nombre ?? "—"}</TableCell>
-                    <TableCell>{ruta.puerto_destino_nombre ?? "—"}</TableCell>
-                    <TableCell className="text-center">
-                      {count === 0 ? (
-                        <Badge variant="destructive">Sin tarifa</Badge>
-                      ) : (
-                        <Badge variant={count >= 3 ? "default" : "outline"}>{count}</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center text-sm text-muted-foreground tabular-nums">
-                      {ruta.proveedores_count ?? 0}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {ruta.proxima_expiracion ? (
-                        <span className={porVencer ? "text-destructive font-medium" : "text-muted-foreground"}>
-                          {porVencer && <AlertTriangle className="inline size-3.5 mr-1" />}
-                          {formatFecha(ruta.proxima_expiracion)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatFecha(ruta.ultima_actualizacion_tarifa)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={TONE_VARIANT[meta.tone]}>{meta.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 justify-end">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => navigate(`/costeo/tarifas?ruta=${ruta.id}`)}
-                              aria-label="Ver tarifas de esta ruta"
-                            >
-                              <ExternalLink className="size-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Ver tarifas</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => setAEliminar(ruta.id)}
-                              aria-label="Eliminar ruta"
-                            >
-                              <Trash2 className="size-4 text-destructive" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Eliminar ruta</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Card>
+        <CosteoRutasTable
+          rutasOrdenadas={rutasOrdenadas}
+          isLoading={isLoading}
+          totalRutas={rutas.length}
+          onEliminar={(id) => setAEliminar(id)}
+        />
 
         <RutaFormDialog open={open} onOpenChange={setOpen} crear={crear} rutas={rutas} />
 
