@@ -77,6 +77,13 @@ export default function CotizacionDetalle() {
         canEdit={canEdit}
       />
 
+      <ReaprobacionTarifaBanner
+        cotizacionId={cotizacion.id}
+        estado={(cotizacion as { estado_revalidacion?: string }).estado_revalidacion}
+        deltaJsonb={(cotizacion as { revalidacion_delta_jsonb?: unknown }).revalidacion_delta_jsonb}
+      />
+
+
       {cotizacion.sin_desglose_costos && (
         <SinDesgloseBanner onCargarCostos={() => navigate(`/cotizaciones/${cotizacion.id}/editar`)} />
       )}
