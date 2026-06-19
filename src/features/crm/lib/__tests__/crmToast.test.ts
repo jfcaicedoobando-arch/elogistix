@@ -32,17 +32,27 @@ describe("crmToast", () => {
 
   it("error con Error usa message como descripción", () => {
     crmToast.error("Falló", new Error("boom"));
-    expect(toastFn.error).toHaveBeenCalledWith("Falló", { duration: 4000, description: "boom" });
+    expect(toastFn.error).toHaveBeenCalledWith("Falló", expect.objectContaining({
+      description: "boom",
+      duration: Infinity,
+      action: expect.objectContaining({ label: "Ver detalles" }),
+    }));
   });
 
   it("error con string usa el string como descripción", () => {
     crmToast.error("Falló", "detalle");
-    expect(toastFn.error).toHaveBeenCalledWith("Falló", { duration: 4000, description: "detalle" });
+    expect(toastFn.error).toHaveBeenCalledWith("Falló", expect.objectContaining({
+      description: "detalle",
+      duration: Infinity,
+    }));
   });
 
   it("error sin err deja description undefined", () => {
     crmToast.error("Falló");
-    expect(toastFn.error).toHaveBeenCalledWith("Falló", { duration: 4000, description: undefined });
+    expect(toastFn.error).toHaveBeenCalledWith("Falló", expect.objectContaining({
+      description: undefined,
+      duration: Infinity,
+    }));
   });
 
   it("info dispara toast base 2s", () => {
