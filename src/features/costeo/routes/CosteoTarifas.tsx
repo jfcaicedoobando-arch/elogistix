@@ -1,7 +1,9 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
