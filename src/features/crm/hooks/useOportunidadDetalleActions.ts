@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/features/crm/hooks";
 
 interface EtapaLite {

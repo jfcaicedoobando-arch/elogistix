@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/features/crm/components/ConvertirLeadDialog";
 import ConvertirLeadSheet from "@/features/crm/components/ConvertirLeadSheet";

@@ -10,7 +10,7 @@ import {
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
 import {
   LEAD_ESTADOS, useActualizarLeadsBulk, useEliminarLeadsBulk, type CrmLeadEstado,

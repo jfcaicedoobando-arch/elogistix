@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { toast as sonnerToast } from "sonner";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
-import { crmToast } from "@/features/crm/domain/crmToast";
+import { crmToast } from "@/features/crm/lib/crmToast";
 
 interface Props {
   open: boolean;
