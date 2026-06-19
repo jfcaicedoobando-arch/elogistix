@@ -1,13 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
 
-function json(data: Record<string, unknown>, status = 200): Response {
+function json(cors: Record<string, string>, data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...cors, 'Content-Type': 'application/json' },
   });
 }
 
