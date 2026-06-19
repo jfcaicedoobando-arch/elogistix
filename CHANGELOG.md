@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.68.1] - 2026-06-19
+- **chore(costeo/power-of-10)**: Suite verde. Tres archivos de costeo excedían el límite de 200 líneas del Power of 10 (`TarifaResultCard` 267, `CosteoTarifas` 227, `CosteoRutas` 226) y rompían los tests `architecture-baseline` y `audit-report`. Se dividieron en sub-componentes (`CartaGarantiaIndicator`, `TarifaCardDesglose`, `TarifaCardBadges`, `CosteoTarifasFiltros`, `CosteoTarifasTable`, `CosteoRutasTable`) y helpers (`tarifaFormatters`). Sin cambios de comportamiento. Bump `APP_VERSION` 13.68.1.
+
 ## [13.68.0] - 2026-06-19
 - **feat(observability/toast-coverage)**: Cobertura 100% de toasts en mutations de React Query. Auditoría detectó 66+ hooks sin `onError` (errores silenciosos) y muchas operaciones destructivas sin `onSuccess` toast. Se editaron ~40 archivos en 3 oleadas (CRITICAL: embarques, tesorería, facturación, CXP, leads → HIGH: cotizaciones, clientes, proveedores, CRM, usuarios, portal → MEDIUM: presupuesto, plantillas, etapas, comisiones, auditoría). Cada hook ahora muestra `notifyError` con `method` único para agrupación en Sentry. Las operaciones destructivas o financieras (crear/eliminar/conciliar/pagar) muestran además `notifySuccess`. Background ops (bitácora, snapshots auditoría, notificaciones internas) usan `logger.warn` o toast silencioso para no inundar al usuario. **Nuevo test de arquitectura** `src/__tests__/architecture/mutations-have-onerror.test.ts` escanea estáticamente todos los hooks bajo `src/features/**` y `src/hooks/**` y FALLA si alguna `useMutation` no declara `onError` — guardrail permanente contra regresiones. Bump `APP_VERSION` 13.68.0.
 
