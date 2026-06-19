@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.67.9] - 2026-06-19
+- **fix(embarques/proforma-dialog)**: El botón "Confirmar y Generar" del diálogo de generar proforma (embarque → tab Facturación) parecía no hacer nada cuando la validación FCL fallaba (peso/volumen vacíos en contenedores marítimos) o cuando la generación del PDF reventaba: el `handleConfirmar` tenía un `catch { }` vacío que se tragaba el error. Ahora (1) `submitProformaDialog` lanza una nueva subclase `ProformaValidationError` para errores esperados; (2) el controller muestra `toast` warning con el mensaje exacto sin reportar a Sentry; (3) errores genuinos (PDF, fetch cliente) muestran toast destructive y se reportan a Sentry con `feature: "proforma_generate"`. Tests agregados. Bump `APP_VERSION` 13.67.9.
+
 ## [13.67.8] - 2026-06-19
 - **fix(observability/exchange-rates)**: Silenciado ruido de Sentry por `FunctionsFetchError` al invocar la edge `exchange-rates`. Este error es transitorio (cold start del edge runtime, micro-cortes de red del cliente, AdBlock) y la app ya tenía fallback duro (17.25 / 18.5), pero igual generaba alertas. Ahora `fetchExchangeRates` detecta `error.name === "FunctionsFetchError"`, deja un `addBreadcrumb` en Sentry, devuelve el fallback y evita el reintento de React Query. Los errores no transitorios (5xx, JSON inválido) siguen reportándose y relanzándose. Bump `APP_VERSION` 13.67.8.
 
