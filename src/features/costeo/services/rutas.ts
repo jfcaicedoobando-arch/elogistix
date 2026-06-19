@@ -68,7 +68,9 @@ export class CosteoRutaDuplicadaError extends Error {
 function isUniqueViolation(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const candidate = error as { code?: unknown; message?: unknown };
-  return candidate.code === "23505" || String(candidate.message ?? "").includes("costeo_rutas_organization_id_puerto_origen_id_puer");
+  if (candidate.code === "23505" || candidate.code === 23505) return true;
+  const msg = String(candidate.message ?? "");
+  return /costeo_rutas.*puerto/i.test(msg) || /duplicate key/i.test(msg);
 }
 
 export async function insertCosteoRuta(
