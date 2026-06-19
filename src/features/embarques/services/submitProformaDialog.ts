@@ -78,7 +78,9 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
   // Pre-check: contenedores FCL marítimos deben tener peso y volumen capturados.
   const validacion = validarContenedoresFCL(embarque, contenedores);
   if (!validacion.ok) {
-    throw new Error(validacion.mensaje ?? "Captura peso y volumen de todos los contenedores antes de generar la proforma.");
+    throw new ProformaValidationError(
+      validacion.mensaje ?? "Captura peso y volumen de todos los contenedores antes de generar la proforma.",
+    );
   }
 
   const ivaOverrides: Record<string, boolean> = {};
