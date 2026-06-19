@@ -18,5 +18,9 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      # --ignore-scripts: protección contra postinstall maliciosos en dependencias transitivas.
+      # --ignore-scripts: protección contra postinstall maliciosos en deps
+      # transitivas. Las deps con binarios nativos que usamos (esbuild, @swc/core,
+      # @react-pdf/renderer) descargan/resuelven binarios en runtime o vía optional
+      # deps, por eso esto no rompe el build. Si agregas una dep con postinstall
+      # imprescindible, considera quitar el flag o whitelistear con trustedDependencies.
       run: bun install --frozen-lockfile --ignore-scripts

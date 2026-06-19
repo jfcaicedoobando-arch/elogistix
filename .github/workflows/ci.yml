@@ -42,18 +42,17 @@ jobs:
       - name: Unused code check (knip)
         run: bun run lint:unused
 
-      - name: Strict unused exports & types (informational)
+      - name: Strict unused exports & types
         if: always()
-        continue-on-error: true
         run: bun run lint:unused:strict
 
       - name: Test hygiene (no skip/only/todo, no duplicate titles)
         run: bun run audit:tests
 
-      - name: Architecture audit (informational logs)
+      - name: Architecture audit
         run: bun run audit:arch
 
-      - name: Casts audit (informational logs)
+      - name: Casts audit
         run: bun run audit:casts
 
       - name: Architecture gating tests (oversized, casts, layers, shadow folders)
@@ -129,6 +128,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deno-
 
+      - name: Type-check edge functions
+        run: |
+          readarray -t files < <(find supabase/functions -name '*.ts' ! -name '*_test.ts')
+          deno check "${files[@]}"
+
       - name: Run Deno tests (excluding smoke)
         run: |
           readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
@@ -136,7 +140,6 @@ jobs:
             --allow-env \
             --allow-net \
             --allow-read \
-            --no-check \
             "${tests[@]}"
 
   tests:
