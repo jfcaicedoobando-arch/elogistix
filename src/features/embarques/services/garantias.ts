@@ -1,10 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { EstadoGarantia, GarantiaContenedor } from "../types/garantia";
 
+const GARANTIA_COLS =
+  "id, embarque_id, embarque_contenedor_id, naviera_id, monto_deposito_usd, tiene_carta_garantia, estado, fecha_deposito, fecha_liberacion, fecha_limite_devolucion, referencia_deposito, notas";
+
 export async function fetchGarantiasEmbarque(embarqueId: string): Promise<GarantiaContenedor[]> {
   const { data, error } = await supabase
     .from("embarque_garantias_contenedor")
-    .select("id, embarque_id, embarque_contenedor_id, naviera_id, monto_deposito_usd, tiene_carta_garantia, estado, fecha_deposito, fecha_liberacion, notas")
+    .select(GARANTIA_COLS)
     .eq("embarque_id", embarqueId);
   if (error) throw error;
   return (data ?? []) as GarantiaContenedor[];
@@ -12,10 +15,11 @@ export async function fetchGarantiasEmbarque(embarqueId: string): Promise<Garant
 
 export interface UpdateGarantiaInput {
   id: string;
-  estado: EstadoGarantia;
+  estado?: EstadoGarantia;
   fecha_deposito?: string | null;
   fecha_liberacion?: string | null;
   monto_deposito_usd?: number;
+  referencia_deposito?: string | null;
   notas?: string | null;
 }
 

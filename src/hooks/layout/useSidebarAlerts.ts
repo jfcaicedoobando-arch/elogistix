@@ -12,10 +12,12 @@ export function useSidebarAlerts() {
 
   const embarquesDemora = data?.embarquesDemora ?? 0;
   const facturasVencidas = data?.facturasVencidas ?? 0;
+  const garantiasAtoradas = data?.garantiasAtoradas ?? 0;
 
   return {
-    totalAlertas: embarquesDemora + facturasVencidas,
+    totalAlertas: embarquesDemora + facturasVencidas + garantiasAtoradas,
     embarquesDemora,
     facturasVencidas,
+    garantiasAtoradas,
   };
 }

@@ -10,6 +10,8 @@ export interface GarantiaContenedor {
   estado: EstadoGarantia;
   fecha_deposito: string | null;
   fecha_liberacion: string | null;
+  fecha_limite_devolucion: string | null;
+  referencia_deposito: string | null;
   notas: string | null;
 }
 

@@ -16,17 +16,17 @@ describe('reportes/index', () => {
 
   it('fetchSidebarAlertCounts mapea datos correctamente', async () => {
     mockRef.current!.setRpcResult('sidebar_alert_counts', {
-      data: [{ embarques_demora: 5, facturas_vencidas: 2 }],
+      data: [{ embarques_demora: 5, facturas_vencidas: 2, garantias_atoradas: 1 }],
       error: null,
     });
     const result = await fetchSidebarAlertCounts();
-    expect(result).toEqual({ embarquesDemora: 5, facturasVencidas: 2 });
+    expect(result).toEqual({ embarquesDemora: 5, facturasVencidas: 2, garantiasAtoradas: 1 });
   });
 
   it('fetchSidebarAlertCounts usa valores por defecto cuando data es vacío', async () => {
     mockRef.current!.setRpcResult('sidebar_alert_counts', { data: [], error: null });
     const result = await fetchSidebarAlertCounts();
-    expect(result).toEqual({ embarquesDemora: 0, facturasVencidas: 0 });
+    expect(result).toEqual({ embarquesDemora: 0, facturasVencidas: 0, garantiasAtoradas: 0 });
   });
 
   it('fetchReportesResumen llama al RPC reportes_resumen', async () => {
