@@ -3,7 +3,7 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-vi.mock("@/services/pagos-factura", () => ({
+vi.mock("@/features/facturacion/services/pagos", () => ({
   listarPagosFactura: vi.fn(),
   registrarPagoFactura: vi.fn(),
   eliminarPagoFactura: vi.fn(),
@@ -21,7 +21,7 @@ import {
   listarPagosFactura,
   registrarPagoFactura,
   eliminarPagoFactura,
-} from "@/services/pagos-factura";
+} from "@/features/facturacion/services/pagos";
 import { usePagosFactura, useRegistrarPagoFactura, useEliminarPagoFactura } from "../usePagosFactura";
 
 const mockListar = vi.mocked(listarPagosFactura);

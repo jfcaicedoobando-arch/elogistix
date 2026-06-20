@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { parseCsf, type CsfParsedData } from "@/services/csf";
+import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { Tables } from "@/types/db";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";

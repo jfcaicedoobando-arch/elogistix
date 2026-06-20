@@ -5,7 +5,7 @@ import {
   registrarPagoFactura,
   eliminarPagoFactura,
   type RegistrarPagoInput,
-} from "@/services/pagos-factura";
+} from "@/features/facturacion/services/pagos";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function usePagosFactura(facturaId: string | undefined) {
