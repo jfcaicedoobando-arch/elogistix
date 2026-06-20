@@ -1,76 +1,99 @@
-# Plan: Arreglar `post-deploy-smoke` (job `user-management-smoke`)
+# Plan: Quick Wins de Tests + Ratchet 35% + Gaps de Cobertura
 
-## Diagnóstico
+Versión objetivo: `13.85.7` → `13.86.0` (incrementos por entrega).
+Cada entrega = 1 bump `APP_VERSION` + 1 entrada `CHANGELOG.md` (root).
 
-Los logs del workflow `post-deploy-smoke` muestran:
+---
 
-- ✅ `exchange-rates-smoke` → HTTP 200, contrato OK.
-- ✅ `tracking-public-smoke` → HTTP 404 esperado.
-- ❌ `user-management-smoke` → falla en el paso *Validate required secrets* porque los GitHub Actions Secrets `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD` no están configurados en el repo (`DEMO_USER_EMAIL:` viene vacío en el bloque `env:`).
+## Parte A — Quick Wins (6)
 
-No es un bug de código: es una dependencia de configuración del CI. El fallo encadena al job `notify-failure`, que abre/actualiza el issue `smoke-failure`.
+### QW1 · Test vacío que pasa silenciosamente (5 min)
+- Archivo: `src/__tests__/architecture/fase2-pages-and-formatters.test.ts:19`
+- Acción: añadir `expect(...)` real (verificar que los formatters listados existen y exportan función), o eliminar el `it()` si la regla ya está cubierta por `fase4-naming-camelcase`.
+- Riesgo: ninguno; sólo cierra un falso verde.
 
-**Analogía:** es como una alarma de incendios que se dispara porque le falta la batería, no porque haya fuego. El smoke en sí no probó nada.
+### QW2 · Títulos duplicados de `it(...)` (10 min)
+- Archivos:
+  - `src/features/embarques/hooks/mutations/__tests__/mutations.test.ts` (3 duplicados)
+  - `src/lib/formatters/__tests__/*.test.ts` (~14 duplicados)
+- Acción: renombrar añadiendo contexto (`"formatea cero" → "formatCurrency formatea cero"`). No alterar lógica.
+- Verificación: `bun run audit:tests` debe quedar en 0.
 
-## Opciones (a elegir contigo)
+### QW3 · Migrar 7 mocks manuales de Supabase a `createSupabaseMock` (~1 h)
+- Subagente: explorar y listar los 7 archivos con mocks ad-hoc bajo `src/**/__tests__/**` y `src/services/**/__tests__/**`.
+- Acción: reemplazar por el helper canónico `@/services/__tests__/_supabaseChainMock` (cadena thenable, ya estandarizado por memoria `mem://technical/testing-mock-patterns`).
+- Riesgo: cambios mecánicos; correr suite tras cada archivo.
 
-### Opción A — Usar la edge function `demo-access` (recomendada)
+### QW4 · Timers sin cleanup en 9 archivos (~1 h)
+- Subagente: localizar los 9 tests con `setTimeout`/`setInterval` sin `vi.useFakeTimers()` + `vi.useRealTimers()` en `afterEach`.
+- Acción: envolver con fake timers, o añadir `clearTimeout/clearInterval` en cleanup. Respetar `mem://technical/testing-cleanup-protocol`.
+- Verificación: leak canary (`pdfLeak.test.tsx`) sigue verde.
 
-Ya tenemos `supabase/functions/demo-access` que provisiona la cuenta demo y devuelve `{ email, password }` (esto es exactamente lo que usa el botón "Probar demo" del marketing). El smoke puede:
+### QW5 · Ratchet de cobertura a **35%** (5 min)
+- Archivo: `vitest.config.ts`
+- Acción: subir thresholds:
+  ```ts
+  thresholds: { lines: 35, statements: 35, functions: 48, branches: 67 }
+  ```
+- Nota: cobertura actual líneas = 29.0%. **El umbral 35% fallará la suite hoy.** Se aplica DESPUÉS de QW6 (al elevar cobertura) para no romper CI. Orden definido en sección C.
 
-1. Llamar `POST /functions/v1/demo-access` con el anon key.
-2. Tomar `email` + `password` del payload.
-3. Hacer login real y ejecutar `smoke_test.ts` con esas credenciales.
+### QW6 · Unit tests para los 3 hooks más grandes sin cobertura (~3-4 h)
+- `src/hooks/cxp/useNuevaFacturaProveedorForm.ts` (194 líneas, 0%)
+- `src/features/cxp/hooks/useNuevoProveedorController.ts` (191, 0%)
+- `src/features/embarques/hooks/useNuevoEmbarqueWizard.ts` (187, 0%)
+- Patrón: `renderHook` + `createSupabaseMock` + casos felices/error/validación.
+- Meta por hook: ≥70% líneas → suma ~+1.1% cobertura global cada uno.
 
-**Ventajas:** no requiere configurar secrets nuevos; el smoke prueba exactamente el mismo flujo que ven los usuarios reales del demo; password es público por diseño (cuenta demo).
+---
 
-**Cambios:**
+## Parte B — Cierre de Gaps de Cobertura (para sostener ratchet 35%)
 
-- `.github/workflows/post-deploy-smoke.yml`: reemplazar paso *Validate required secrets* por un paso `Fetch demo credentials` que hace `curl` a `demo-access` y exporta `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` con `>> $GITHUB_ENV`. El paso *Run user-management smoke* se queda igual.
+Tras QW6 quedaremos en ~32%. Para llegar y sostener 35% sin sufrir cada migración, se agrega:
 
-### Opción B — Configurar los secrets en GitHub
+### B1 · Top 10 archivos 0% de alto impacto (subagente paralelo)
+Priorizar por líneas × frecuencia de cambio (del reporte):
+1. `src/hooks/cxp/useNuevaFacturaProveedorForm.ts` (cubierto en QW6)
+2. `src/features/embarques/hooks/useEmbarquesPageState.ts` (126)
+3. `src/components/cxp/DialogRegistrarPagoProveedor.tsx` → extraer hook puro y testearlo
+4. `src/features/embarques/components/tracking/TrackingNuevoEventoForm.tsx` → hook de validación
+5. `src/features/auditoria/components/HallazgosTabla.tsx` → helpers de filtros
 
-Tú agregas manualmente `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD` en *Settings → Secrets and variables → Actions* del repo `jfcaicedoobando-arch/elogistix`. El workflow ya está listo y volverá a pasar sin cambios de código.
+Excluimos páginas puras (`Login.tsx`, `Dashboard.tsx`, `Clientes.tsx`, `ClienteDetalle.tsx`, `Bitacora.tsx`, `Papelera.tsx`, `Idempotencia.tsx`, `Oportunidades.tsx`) — son JSX declarativo, mejor cubrir vía E2E (fuera de alcance de este plan).
 
-**Cuándo:** si prefieres una cuenta dedicada distinta a la del demo.
+### B2 · Excluir más ruido del denominador
+Añadir a `coverage.exclude` en `vitest.config.ts`:
+- `src/pages/**/*.tsx` que sólo orquestan layout (verificar caso por caso, máx 5 archivos)
+- `src/components/**/*Dialog.tsx` que son sólo presentación sin lógica
+Trade-off: menos denominador → más % real. Documentar criterio en comentario.
 
-### Opción C — Saltarse el job si no hay secrets
+### B3 · Subir `functions` a 50 y `branches` a 68
+Ya estamos en 46.8/67.7. Tras QW6+B1 quedaremos sobre 50/68. Subir como ratchet defensivo.
 
-Cambiar el paso de validación para que haga `echo` y `exit 0` cuando faltan los secrets (job pasa en verde con un warning). Más laxo: el smoke deja de cubrir user-management hasta que alguien configure las credenciales.
+---
 
-**Recomendación:** Opción A. Mantiene la cobertura del smoke sin trabajo manual de tu parte ni secrets adicionales.
+## Parte C — Orden de Ejecución (importante)
 
-## Detalle técnico (Opción A)
+1. **QW1 + QW2** (paralelo, <15 min) → bump `13.85.7`
+2. **QW3 + QW4** (subagentes paralelos, ~1 h) → bump `13.85.8`
+3. **QW6** (3 hooks, subagentes paralelos) → bump `13.85.9`, mide cobertura
+4. **B1 + B2** (subagentes paralelos) → bump `13.85.10`, mide cobertura
+5. Solo cuando coverage real ≥ 36% (1% de margen):
+   **QW5 + B3** → ratchet a `lines/statements: 35, functions: 50, branches: 68` → bump `13.86.0`
+6. Correr suite completa final + `audit:tests` + `coverage-report`.
 
-Reemplazar los pasos 40-48 del workflow por:
+**Política del ratchet 35%**: si tras un PR la cobertura baja de 35%, CI debe fallar. El umbral se mantiene fijo en 35% (no se baja nunca). Subir sólo cuando coverage real ≥ umbral+2%.
 
-```yaml
-- name: Fetch demo credentials
-  run: |
-    set -euo pipefail
-    curl -sS -X POST \
-      -H "apikey: ${ANON_KEY}" \
-      -H "Authorization: Bearer ${ANON_KEY}" \
-      -H "Content-Type: application/json" \
-      -d '{}' \
-      "${SUPABASE_URL}/functions/v1/demo-access" > /tmp/demo.json
-    EMAIL=$(jq -r '.email' /tmp/demo.json)
-    PASSWORD=$(jq -r '.password' /tmp/demo.json)
-    if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ]; then
-      echo "::error::demo-access no devolvió credenciales válidas"
-      cat /tmp/demo.json
-      exit 1
-    fi
-    echo "DEMO_USER_EMAIL=$EMAIL" >> "$GITHUB_ENV"
-    echo "::add-mask::$PASSWORD"
-    echo "DEMO_USER_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
-```
+---
 
-Y eliminar las referencias `${{ secrets.DEMO_USER_* }}` del paso *Run user-management smoke* (ya estarán en el env del job).
+## Verificación final
+- `bunx vitest run` → 3354+ tests, 0 fallos
+- `bun run audit:tests` → 0 violaciones
+- `bun run coverage-report` → líneas ≥ 36%
+- `vitest.config.ts` → thresholds {35, 35, 50, 68}
+- `CHANGELOG.md` → entradas por cada bump
+- `APP_VERSION` → `13.86.0`
 
-## Changelog + version
-
-- Bump `APP_VERSION` a `13.85.6`.
-- Entrada en `CHANGELOG.md`: "Smoke post-deploy: obtener credenciales demo desde `demo-access` en vez de exigir secrets manuales."
-
-¿Voy con la **Opción A**, o prefieres B/C? Opción a
+## Detalles técnicos
+- Subagentes: usar `acp_subagent--spawn_agent` en paralelo para QW3, QW4, QW6 (3 hooks), B1 (5 archivos). Total: ~10 subagentes simultáneos en 2 olas.
+- Reglas a respetar: `mem://principles/power-of-10`, `mem://technical/testing-mock-patterns`, `mem://technical/testing-cleanup-protocol`, `mem://instructions/changelog-updates`.
+- No tocar: `src/integrations/supabase/**`, `.env`, `supabase/config.toml`.
