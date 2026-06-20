@@ -5,20 +5,20 @@
 import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 
-const Login = lazy(() => import("@/pages/auth/Login"));
-const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
-const NotFound = lazy(() => import("@/pages/auth/NotFound"));
-const TrackingPublico = lazy(() => import("@/pages/auth/TrackingPublico"));
-const Unsubscribe = lazy(() => import("@/pages/auth/Unsubscribe"));
-const HomeRoute = lazy(() => import("@/pages/marketing/HomeRoute"));
-const LogoPreview = lazy(() => import("@/pages/marketing/LogoPreview"));
-const Privacidad = lazy(() => import("@/pages/legal/Privacidad"));
-const Terminos = lazy(() => import("@/pages/legal/Terminos"));
-const Seguridad = lazy(() => import("@/pages/legal/Seguridad"));
-const GuiaCartaPorte = lazy(() => import("@/pages/marketing/GuiaCartaPorte"));
-const GuiaIncoterms2020 = lazy(() => import("@/pages/marketing/GuiaIncoterms2020"));
-const GuiaPuertosMexico = lazy(() => import("@/pages/marketing/GuiaPuertosMexico"));
-const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
+const Login = lazy(() => import("@/features/auth/routes/Login"));
+const ResetPassword = lazy(() => import("@/features/auth/routes/ResetPassword"));
+const NotFound = lazy(() => import("@/features/auth/routes/NotFound"));
+const TrackingPublico = lazy(() => import("@/features/auth/routes/TrackingPublico"));
+const Unsubscribe = lazy(() => import("@/features/auth/routes/Unsubscribe"));
+const HomeRoute = lazy(() => import("@/features/marketing/routes/HomeRoute"));
+const LogoPreview = lazy(() => import("@/features/marketing/routes/LogoPreview"));
+const Privacidad = lazy(() => import("@/features/legal/routes/Privacidad"));
+const Terminos = lazy(() => import("@/features/legal/routes/Terminos"));
+const Seguridad = lazy(() => import("@/features/legal/routes/Seguridad"));
+const GuiaCartaPorte = lazy(() => import("@/features/marketing/routes/GuiaCartaPorte"));
+const GuiaIncoterms2020 = lazy(() => import("@/features/marketing/routes/GuiaIncoterms2020"));
+const GuiaPuertosMexico = lazy(() => import("@/features/marketing/routes/GuiaPuertosMexico"));
+const Onboarding = lazy(() => import("@/features/onboarding/routes/Onboarding"));
 
 export const publicRoutes = (
   <>

@@ -7,14 +7,14 @@ import { Route } from "react-router-dom";
 import { PortalProtectedRoute } from "@/components/auth/PortalProtectedRoute";
 import PortalLayout from "@/features/portal/components/PortalLayout";
 
-const PortalDashboard = lazy(() => import("@/pages/portal/PortalDashboard"));
-const PortalEmbarques = lazy(() => import("@/pages/portal/PortalEmbarques"));
-const PortalEmbarqueDetalle = lazy(() => import("@/pages/portal/PortalEmbarqueDetalle"));
-const PortalCotizaciones = lazy(() => import("@/pages/portal/PortalCotizaciones"));
-const PortalCotizacionDetalle = lazy(() => import("@/pages/portal/PortalCotizacionDetalle"));
-const PortalFacturas = lazy(() => import("@/pages/portal/PortalFacturas"));
-const PortalFacturaDetalle = lazy(() => import("@/pages/portal/PortalFacturaDetalle"));
-const PortalPerfil = lazy(() => import("@/pages/portal/PortalPerfil"));
+const PortalDashboard = lazy(() => import("@/features/portal/routes/PortalDashboard"));
+const PortalEmbarques = lazy(() => import("@/features/portal/routes/PortalEmbarques"));
+const PortalEmbarqueDetalle = lazy(() => import("@/features/portal/routes/PortalEmbarqueDetalle"));
+const PortalCotizaciones = lazy(() => import("@/features/portal/routes/PortalCotizaciones"));
+const PortalCotizacionDetalle = lazy(() => import("@/features/portal/routes/PortalCotizacionDetalle"));
+const PortalFacturas = lazy(() => import("@/features/portal/routes/PortalFacturas"));
+const PortalFacturaDetalle = lazy(() => import("@/features/portal/routes/PortalFacturaDetalle"));
+const PortalPerfil = lazy(() => import("@/features/portal/routes/PortalPerfil"));
 
 export const portalRoutes = (
   <Route

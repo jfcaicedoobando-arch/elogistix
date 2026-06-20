@@ -66,9 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cb = () => {
       void import("@/features/embarques/routes/Embarques");
       void import("@/features/cotizacion/routes/Cotizaciones");
-      void import("@/pages/dashboard/Dashboard");
+      void import("@/features/dashboard/routes/Dashboard");
       void import("@/features/cliente/routes/Clientes");
-      void import("@/pages/proveedores/Proveedores");
+      void import("@/features/proveedor/routes/Proveedores");
       void import("@/features/facturacion/routes/Facturacion");
     };
     if (typeof w.requestIdleCallback === "function") {
