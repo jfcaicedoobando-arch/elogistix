@@ -20,6 +20,8 @@ export default function Dashboard() {
     isOperador, canViewFinancials, hideFinancials, isLoading,
     cargasPorCliente, cargasActivasTotal, scoped, saludo, hoyStr,
   } = useDashboardController();
+  const { data: misReaprob = 0 } = useMisCotizacionesPendientesReaprobacion();
+
 
   return (
     <div className="space-y-4 sm:space-y-6">
