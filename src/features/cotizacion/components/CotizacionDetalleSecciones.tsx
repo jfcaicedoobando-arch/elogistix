@@ -95,15 +95,11 @@ function AccionesBorradorOEnviada({ onCambiarEstado }: { onCambiarEstado: Accion
 }
 
 function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: string; numContenedores: number }) {
-  const navigate = useNavigate();
   return (
-    <Button
-      size="sm"
-      onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
-    >
-      Crear embarque
-      {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
-    </Button>
+    <CrearEmbarqueConRevalidacion
+      cotizacionId={cotizacionId}
+      numContenedores={numContenedores}
+    />
   );
 }
 
