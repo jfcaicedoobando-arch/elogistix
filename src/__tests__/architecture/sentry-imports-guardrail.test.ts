@@ -27,6 +27,8 @@ const ALLOWLIST = new Set<string>([
   "src/components/feedback/FeedbackButton.tsx",
   // Página interna de diagnóstico Sentry (sólo cargada bajo /admin/sentry).
   "src/features/admin/routes/SentryDiagnostico.tsx",
+  // Hook de diagnóstico Sentry (sólo consumido por la página /admin/sentry).
+  "src/lib/observability/hooks/useSentryInfo.ts",
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {
