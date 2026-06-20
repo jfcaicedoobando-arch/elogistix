@@ -370,4 +370,4 @@ Deno.serve(wrapEdgeHandler("process-email-queue", async (req) => {
     JSON.stringify({ processed: totalProcessed }),
     { headers: { 'Content-Type': 'application/json' } }
   )
-})
+}))
