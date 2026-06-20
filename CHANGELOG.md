@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.87.0] - 2026-06-20
+- **chore(coverage) B3 del plan de tests — ratchet de umbrales**: tras QW6 + B2, `bun vitest run --coverage` reporta **Lines 39.77% / Functions 55.99% / Branches 73.37%** (3388/3388 tests verdes). Margen ≥ 2 puntos en las tres métricas → se sube `vitest.config.ts` a `functions: 52` (antes 50) y `branches: 72` (antes 70). `lines`/`statements` se mantienen en 35 por política ratchet ("subir sólo cuando real ≥ umbral + 2"; lines tiene margen 4.77 pero subir lines hace el ratchet más frágil para cambios futuros — se posterga). Cierra los pendientes del plan de tests salvo **B1** (archivos 0% restantes hasta 41% líneas), que queda diferido: con coverage real ya en 39.77% el ROI marginal es bajo.
+
 ## [13.86.2] - 2026-06-20
 - **chore(coverage) B2 del plan de tests — limpieza de denominador**: se agregaron exclusiones en `vitest.config.ts` para 15 *Dialog shells* presentacionales puros (sin `useState`/`useMutation`/`useForm`/`useReducer`, sólo orquestan props hacia hooks/body hermanos que sí están testeados) y para `src/components/layout/**` (chrome de la app: AppSidebar, Layout, BrandLockup, NavLink, etc., cubierto por E2E). Los 15 dialogs fueron seleccionados con `grep` cruzado: de 34 `*Dialog.tsx`, 19 tienen lógica propia (no se excluyen) y 15 son shells. Ninguno está referenciado por tests existentes (verificado con `rg`). Esto destensa el denominador para habilitar el ratchet B3 (`functions: 52, branches: 72`) en el próximo bump sin tocar código productivo. Quedan abiertos: **B1** (archivos 0% restantes) y **B3** (ratchet final).
 
