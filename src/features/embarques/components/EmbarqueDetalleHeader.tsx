@@ -5,6 +5,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
+import { EmbarqueBadgeAdmin } from "./EmbarqueBadgeAdmin";
 import { EmbarqueHeaderDialogs } from "./EmbarqueHeaderDialogs";
 import { EmbarqueDetalleHeaderActions } from "./EmbarqueDetalleHeaderActions";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -65,6 +66,7 @@ export function EmbarqueDetalleHeader({
           <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
           <ModoIcon modo={embarque.modo} size={18} circle />
           <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
+          <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
         </div>
         <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
         {embarque.cotizacion_id ? (
