@@ -82,20 +82,22 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
 
   return (
     <div className="space-y-4">
-      <ResumenConceptosVenta
-        conceptos={conceptos}
-        contenedores={contenedores}
-        tasaIva={tasaIva}
-        canEdit={canEdit}
-        onGenerarProforma={() => {
-          setDialogInitialFiltro('todos');
-          setDialogOpen(true);
-        }}
-        onGenerarProformaContenedor={(contenedorId) => {
-          setDialogInitialFiltro(contenedorId);
-          setDialogOpen(true);
-        }}
-      />
+      <div ref={registerRef("venta-pendientes")} data-focus="venta-pendientes">
+        <ResumenConceptosVenta
+          conceptos={conceptos}
+          contenedores={contenedores}
+          tasaIva={tasaIva}
+          canEdit={canEdit}
+          onGenerarProforma={() => {
+            setDialogInitialFiltro('todos');
+            setDialogOpen(true);
+          }}
+          onGenerarProformaContenedor={(contenedorId) => {
+            setDialogInitialFiltro(contenedorId);
+            setDialogOpen(true);
+          }}
+        />
+      </div>
 
       {borradorVacio && (
         <ProformaInconsistenteAlert
@@ -114,7 +116,9 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         onEliminar={(id, numero) => setProformaAEliminar({ id, numero })}
       />
 
-      <HistorialFacturas facturas={facturas} proformas={proformas} />
+      <div ref={registerRef("cxc")} data-focus="cxc">
+        <HistorialFacturas facturas={facturas} proformas={proformas} />
+      </div>
 
       <DialogGenerarProforma
         open={dialogOpen}
