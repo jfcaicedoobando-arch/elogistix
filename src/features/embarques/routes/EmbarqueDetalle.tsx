@@ -102,7 +102,13 @@ export default function EmbarqueDetalle() {
         onBlockDocsOpenChange={setBlockDocsOpen}
         onConfirmarAvanceConDocsPendientes={confirmarAvanceConDocsPendientes}
         onIrADocumentos={() => { setBlockDocsOpen(false); setActiveTab("documentos"); }}
+        cierreEsSiguiente={cierreEsSiguiente}
+        rolPuedeCerrar={rolPuedeCerrar}
+        cierrePuedeAvanzar={cierrePuedeAvanzar}
+        cierreMotivoBloqueo={cierreMotivoBloqueo}
+        onIrACierre={() => setActiveTab("cierre")}
       />
+
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
