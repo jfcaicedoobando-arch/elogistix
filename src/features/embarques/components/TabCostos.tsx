@@ -141,21 +141,38 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
+      <Card ref={registerRef(costoFocus ?? "")} data-focus={costoFocus ?? undefined}>
+        <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+          <CardTitle className="text-sm">Conceptos de Costo</CardTitle>
+          {costoFocus && (
+            <div className="flex items-center gap-2 text-xs">
+              <Badge variant="outline" className="border-primary text-primary">
+                Filtrando: {focusLabel[costoFocus]}
+              </Badge>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs"
+                onClick={clearFocus}
+              >
+                <X className="mr-1 h-3 w-3" /> Limpiar
+              </Button>
+            </div>
+          )}
+        </CardHeader>
         <CardContent className="p-0">
           <DataTable
             columns={costoColumns}
-            data={conceptosCosto}
+            data={conceptosCostoFiltrados}
             rowKey={(c) => c.id}
             density="compact"
             emptyState={
               <div className="p-6">
                 <EmptyState
                   icon={FileText}
-                  title="Sin conceptos de costo"
-                  description={irACargarCostos ? "Haz clic en el ícono o en el botón para capturar los costos del embarque." : "Aún no se han registrado conceptos de costo para este embarque."}
-                  primaryAction={irACargarCostos}
+                  title={costoFocus ? "Sin coincidencias con el filtro" : "Sin conceptos de costo"}
+                  description={costoFocus ? "El filtro del checklist no encuentra costos pendientes; verifica si ya fueron atendidos." : (irACargarCostos ? "Haz clic en el ícono o en el botón para capturar los costos del embarque." : "Aún no se han registrado conceptos de costo para este embarque.")}
+                  primaryAction={costoFocus ? undefined : irACargarCostos}
                 />
               </div>
             }
