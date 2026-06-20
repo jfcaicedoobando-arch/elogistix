@@ -36,7 +36,7 @@ export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
   onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar, onReabrir,
-  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
+  cierreEsSiguiente, rolPuedeCerrar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
   const navigate = useNavigate();
 
