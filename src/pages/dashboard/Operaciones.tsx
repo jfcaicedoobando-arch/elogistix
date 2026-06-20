@@ -28,6 +28,7 @@ export default function Operaciones() {
     creadasEsteMes, llegadasEsteMes,
     balancePct, contPct, totalAlertas,
   } = useOperacionesPageController();
+  const { data: pendientesReaprob = 0 } = useCotizacionesPendientesReaprobacion();
 
   function renderTendenciaChart() {
     if (isLoading) return <Skeleton className="h-[260px] w-full" />;
