@@ -1,5 +1,8 @@
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DashboardStatusCards } from "@/features/dashboard/components/DashboardStatusCards";
 import { AlertasDemoraCard } from "@/features/dashboard/components/AlertasDemoraCard";
@@ -9,6 +12,7 @@ import { EmbarquesActivosTable } from "@/features/dashboard/components/Embarques
 import { CargasActivasClienteCard } from "@/features/dashboard/components/CargasActivasClienteCard";
 import { MiOperacionSection } from "@/features/dashboard/components/operador/MiOperacionSection";
 import { useDashboardController, type DashboardScope } from "@/features/dashboard/hooks/useDashboardController";
+import { useMisCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
 
 export default function Dashboard() {
   const {
