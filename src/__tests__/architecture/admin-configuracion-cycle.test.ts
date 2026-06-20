@@ -27,8 +27,8 @@ describe("Fase 1 #2 — ciclo admin ↔ configuracion", () => {
     expect(existsSync(join(ROOT, "src/features/configuracion/components/TabExportar.tsx"))).toBe(false);
   });
 
-  it("pages/admin-org/Configuracion.tsx importa TabExportar desde la ruta nueva", () => {
-    const src = readFileSync(join(ROOT, "src/pages/admin-org/Configuracion.tsx"), "utf8");
+  it("features/admin/routes/admin-org/Configuracion.tsx importa TabExportar desde la ruta nueva", () => {
+    const src = readFileSync(join(ROOT, "src/features/admin/routes/admin-org/Configuracion.tsx"), "utf8");
     expect(src).toMatch(/from\s+["']@\/features\/admin\/components\/TabExportar["']/);
   });
 });

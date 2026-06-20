@@ -10,7 +10,7 @@ const sentryMock = vi.hoisted(() => ({ captureException: vi.fn() }));
 vi.mock("@sentry/react", () => sentryMock);
 
 const { mockFetchUserContext } = vi.hoisted(() => ({ mockFetchUserContext: vi.fn() }));
-vi.mock("@/services/auth", () => ({ fetchUserContext: mockFetchUserContext }));
+vi.mock("@/features/auth/services", () => ({ fetchUserContext: mockFetchUserContext }));
 
 import { useAuthProfile } from "../useAuthProfile";
 

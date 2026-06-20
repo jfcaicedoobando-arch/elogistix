@@ -84,7 +84,7 @@ describe("Arquitectura — baseline de imports directos a supabase/client", () =
   });
 
   it("components/ y pages/ jamás importan supabase/client directamente (salvo allowlist temporal)", () => {
-    const v = [...findCurrentViolators(["src/components", "src/pages"])].sort();
+    const v = [...findCurrentViolators(["src/components"])].sort();
     const nuevos = v.filter((f) => !PAGES_COMPONENTS_BASELINE.has(f));
     expect(
       nuevos,
@@ -99,7 +99,7 @@ describe("Arquitectura — baseline de imports directos a supabase/client", () =
       `Estos archivos ya no violan la regla. Quítalos de BASELINE en este archivo:\n${stale.join("\n")}`,
     ).toEqual([]);
 
-    const currentPages = findCurrentViolators(["src/components", "src/pages"]);
+    const currentPages = findCurrentViolators(["src/components"]);
     const stalePages = [...PAGES_COMPONENTS_BASELINE].filter((f) => !currentPages.has(f)).sort();
     expect(
       stalePages,

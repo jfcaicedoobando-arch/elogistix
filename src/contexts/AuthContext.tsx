@@ -4,7 +4,7 @@ import type { AppRole } from "@/types/appRole";
 import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
-import { signOutCurrentSession } from "@/services/auth";
+import { signOutCurrentSession } from "@/features/auth/services";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/components/shared/utils/authSnapshot";
 import { syncSentryUser } from "@/lib/observability/sentry/user";
@@ -66,9 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cb = () => {
       void import("@/features/embarques/routes/Embarques");
       void import("@/features/cotizacion/routes/Cotizaciones");
-      void import("@/pages/dashboard/Dashboard");
+      void import("@/features/dashboard/routes/Dashboard");
       void import("@/features/cliente/routes/Clientes");
-      void import("@/pages/proveedores/Proveedores");
+      void import("@/features/proveedor/routes/Proveedores");
       void import("@/features/facturacion/routes/Facturacion");
     };
     if (typeof w.requestIdleCallback === "function") {

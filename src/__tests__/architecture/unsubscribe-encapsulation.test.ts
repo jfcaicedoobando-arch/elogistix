@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
-const src = readFileSync(join(ROOT, "src/pages/auth/Unsubscribe.tsx"), "utf8");
+const src = readFileSync(join(ROOT, "src/features/auth/routes/Unsubscribe.tsx"), "utf8");
 
 describe("Fase 1 #4 — Unsubscribe encapsulado", () => {
   it("no contiene `fetch(`", () => {

@@ -4,16 +4,16 @@
  */
 import { lazy } from "react";
 
-export const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
-export const Operaciones = lazy(() => import("@/pages/dashboard/Operaciones"));
-export const Reportes = lazy(() => import("@/pages/dashboard/Reportes"));
-export const Bitacora = lazy(() => import("@/pages/dashboard/Bitacora"));
-export const Ayuda = lazy(() => import("@/pages/dashboard/Ayuda"));
+export const Dashboard = lazy(() => import("@/features/dashboard/routes/Dashboard"));
+export const Operaciones = lazy(() => import("@/features/operaciones/routes/Operaciones"));
+export const Reportes = lazy(() => import("@/features/reportes/routes/Reportes"));
+export const Bitacora = lazy(() => import("@/features/dashboard/routes/Bitacora"));
+export const Ayuda = lazy(() => import("@/features/dashboard/routes/Ayuda"));
 
-export const Papelera = lazy(() => import("@/pages/admin/Papelera"));
-export const Idempotencia = lazy(() => import("@/pages/admin/Idempotencia"));
+export const Papelera = lazy(() => import("@/features/admin/routes/Papelera"));
+export const Idempotencia = lazy(() => import("@/features/admin/routes/Idempotencia"));
 export const Auditoria = lazy(() => import("@/features/auditoria/routes/AuditoriaPage"));
-export const SentryDiagnostico = lazy(() => import("@/pages/admin/SentryDiagnostico"));
+export const SentryDiagnostico = lazy(() => import("@/features/admin/routes/SentryDiagnostico"));
 
 export const Embarques = lazy(() => import("@/features/embarques/routes/Embarques"));
 export const EmbarqueDetalle = lazy(() => import("@/features/embarques/routes/EmbarqueDetalle"));
@@ -25,29 +25,29 @@ export const NuevaCotizacion = lazy(() => import("@/features/cotizacion/routes/N
 export const NuevaCotizacionInformativa = lazy(() => import("@/features/cotizacion/routes/NuevaCotizacionInformativa"));
 export const CotizacionDetalle = lazy(() => import("@/features/cotizacion/routes/CotizacionDetalle"));
 export const EditarCotizacion = lazy(() => import("@/features/cotizacion/routes/EditarCotizacion"));
-export const PdfPreviewCotizacion = lazy(() => import("@/pages/dev/PdfPreviewCotizacion"));
+export const PdfPreviewCotizacion = lazy(() => import("@/features/dev/routes/PdfPreviewCotizacion"));
 
 export const Clientes = lazy(() => import("@/features/cliente/routes/Clientes"));
 export const ClienteDetalle = lazy(() => import("@/features/cliente/routes/ClienteDetalle"));
-export const Proveedores = lazy(() => import("@/pages/proveedores/Proveedores"));
-export const ProveedorDetalle = lazy(() => import("@/pages/proveedores/ProveedorDetalle"));
+export const Proveedores = lazy(() => import("@/features/proveedor/routes/Proveedores"));
+export const ProveedorDetalle = lazy(() => import("@/features/proveedor/routes/ProveedorDetalle"));
 export const Facturacion = lazy(() => import("@/features/facturacion/routes/Facturacion"));
-export const FacturaDetalle = lazy(() => import("@/pages/facturacion/FacturaDetalle"));
+export const FacturaDetalle = lazy(() => import("@/features/facturacion/routes/FacturaDetalle"));
 export const ProformaDetalle = lazy(() => import("@/features/proformas/routes/ProformaDetalle"));
-export const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
-export const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
-export const ProfitPresupuesto = lazy(() => import("@/pages/profit/ProfitPresupuesto"));
-export const ProfitDashboardEjecutivo = lazy(() => import("@/pages/profit/ProfitDashboardEjecutivo"));
-export const Cxp = lazy(() => import("@/pages/cxp/Cxp"));
-export const CxpPorCapturar = lazy(() => import("@/pages/bandejas/CxpPorCapturar"));
-export const CxpPorPagar = lazy(() => import("@/pages/bandejas/CxpPorPagar"));
-export const FacturacionPorEmitir = lazy(() => import("@/pages/bandejas/FacturacionPorEmitir"));
-export const Cartera = lazy(() => import("@/pages/bandejas/Cartera"));
-export const Tesoreria = lazy(() => import("@/pages/tesoreria/Tesoreria"));
-export const TesoreriaCuentas = lazy(() => import("@/pages/tesoreria/TesoreriaCuentas"));
-export const TesoreriaConciliacion = lazy(() => import("@/pages/tesoreria/TesoreriaConciliacion"));
-export const TesoreriaFlujo = lazy(() => import("@/pages/tesoreria/TesoreriaFlujo"));
-export const Comisiones = lazy(() => import("@/pages/comisiones/Comisiones"));
+export const ProfitProyeccion = lazy(() => import("@/features/profit/routes/ProfitProyeccion"));
+export const ProfitEstadoResultados = lazy(() => import("@/features/profit/routes/ProfitEstadoResultados"));
+export const ProfitPresupuesto = lazy(() => import("@/features/profit/routes/ProfitPresupuesto"));
+export const ProfitDashboardEjecutivo = lazy(() => import("@/features/profit/routes/ProfitDashboardEjecutivo"));
+export const Cxp = lazy(() => import("@/features/cxp/routes/Cxp"));
+export const CxpPorCapturar = lazy(() => import("@/features/bandejas/routes/CxpPorCapturar"));
+export const CxpPorPagar = lazy(() => import("@/features/bandejas/routes/CxpPorPagar"));
+export const FacturacionPorEmitir = lazy(() => import("@/features/bandejas/routes/FacturacionPorEmitir"));
+export const Cartera = lazy(() => import("@/features/bandejas/routes/Cartera"));
+export const Tesoreria = lazy(() => import("@/features/tesoreria/routes/Tesoreria"));
+export const TesoreriaCuentas = lazy(() => import("@/features/tesoreria/routes/TesoreriaCuentas"));
+export const TesoreriaConciliacion = lazy(() => import("@/features/tesoreria/routes/TesoreriaConciliacion"));
+export const TesoreriaFlujo = lazy(() => import("@/features/tesoreria/routes/TesoreriaFlujo"));
+export const Comisiones = lazy(() => import("@/features/comisiones/routes/Comisiones"));
 
 export const CosteoTarifas = lazy(() => import("@/features/costeo/routes/CosteoTarifas"));
 export const CosteoBuscar = lazy(() => import("@/features/costeo/routes/CosteoBuscar"));
@@ -56,8 +56,8 @@ export const CosteoAgentes = lazy(() => import("@/features/costeo/routes/CosteoA
 export const CosteoNavieras = lazy(() => import("@/features/costeo/routes/CosteoNavieras"));
 export const CosteoDemorasVenta = lazy(() => import("@/features/costeo/routes/CosteoDemorasVenta"));
 
-export const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
-export const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
+export const Usuarios = lazy(() => import("@/features/admin/routes/admin-org/Usuarios"));
+export const Configuracion = lazy(() => import("@/features/admin/routes/admin-org/Configuracion"));
 
 // CRM — anidado bajo /crm con CrmLayout
 export const CrmLayout = lazy(() => import("@/features/crm/routes/CrmLayout"));
