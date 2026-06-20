@@ -1,8 +1,4 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useMemo, useState } from "react";
-import { useToast } from "@/hooks/shared";
-import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/features/admin/hooks/useAdminData";
 import { useDeleteUserAuth as useDeleteUser } from "@/features/admin/hooks/usuario";
 import { uniqueSorted } from "@/lib/utils/uniqueSorted";
@@ -13,7 +9,6 @@ export function useAdminUsuariosController() {
   const [search, setSearch] = useState("");
   const [orgFilter, setOrgFilter] = useState<string>("todos");
   const [roleFilter, setRoleFilter] = useState<string>("todos");
-  const { toast } = useToast();
   const { data: users = [], isLoading, refetch } = useAdminGlobalUsers();
   const deleteUser = useDeleteUser();
 
@@ -30,19 +25,15 @@ export function useAdminUsuariosController() {
     });
   }, [users, search, orgFilter, roleFilter]);
 
+  // 13.85.10 — Toasts viven en `useDeleteUserAuth`. Aquí sólo refetch y reset de selección.
   const handleDelete = () => {
     if (!deleteTarget) return;
     deleteUser.mutate(deleteTarget.user_id, {
       onSuccess: () => {
-        notifySuccess(toast, {
-          title: "Usuario eliminado",
-          description: `Se eliminó ${deleteTarget.email} del sistema.`,
-        });
         refetch();
         setDeleteTarget(null);
       },
-      onError: (err: unknown) => {
-        notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      onError: () => {
         setDeleteTarget(null);
       },
     });
@@ -61,3 +52,4 @@ export function useAdminUsuariosController() {
     actions: { handleDelete, refetch, deleteUserPending: deleteUser.isPending },
   };
 }
+
