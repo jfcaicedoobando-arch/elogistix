@@ -1,7 +1,8 @@
 /**
  * v13.89.2 — Metadatos por regla del checklist de cierre.
+ * v13.89.3 — `ruta(embarqueId, detalle?)`: ahora puede anexar `focus` y `ids`
+ * para que el tab destino haga scroll, resalte y prefiltre la fila exacta.
  *
- * Tabla pura `regla → { label, responsable, ruta(embarqueId), formatDetalle(detalle) }`.
  * Función pura → testeable sin React.
  */
 
@@ -19,7 +20,7 @@ export interface CierreCheckMeta {
   label: string;
   responsable: ResponsableCierre;
   /** Ruta destino (relativa a la app) o null si no aplica acción. */
-  ruta: ((embarqueId: string) => string) | null;
+  ruta: ((embarqueId: string, detalle?: unknown) => string) | null;
   ctaLabel: string;
   formatDetalle: (detalle: unknown) => string | null;
 }
@@ -38,20 +39,24 @@ const pick = (d: unknown, key: string): unknown =>
   d && typeof d === "object" ? (d as Record<string, unknown>)[key] : undefined;
 
 const fmtCxc = (d: unknown): string | null => {
-  const monto = pick(d, "monto_pendiente") ?? pick(d, "saldo") ?? pick(d, "pendiente");
-  const facturas = pick(d, "facturas_pendientes") ?? pick(d, "facturas");
+  const total = Number(pick(d, "total") ?? 0);
+  const pagado = Number(pick(d, "pagado") ?? 0);
+  const saldo = total - pagado;
+  const facturas = pick(d, "facturas_pendientes");
   const partes: string[] = [];
   if (Number(facturas) > 0) partes.push(`${facturas} factura(s) por cobrar`);
-  if (Number(monto) > 0) partes.push(`saldo ${fmtMoney(monto)}`);
+  if (saldo > 0.01) partes.push(`saldo ${fmtMoney(saldo)}`);
   return partes.length > 0 ? partes.join(" · ") : null;
 };
 
 const fmtCxp = (d: unknown): string | null => {
-  const monto = pick(d, "monto_pendiente") ?? pick(d, "saldo") ?? pick(d, "pendiente");
-  const facturas = pick(d, "facturas_pendientes") ?? pick(d, "facturas");
+  const total = Number(pick(d, "total") ?? 0);
+  const pagado = Number(pick(d, "pagado") ?? 0);
+  const saldo = total - pagado;
+  const facturas = pick(d, "facturas_pendientes");
   const partes: string[] = [];
   if (Number(facturas) > 0) partes.push(`${facturas} factura(s) de proveedor por pagar`);
-  if (Number(monto) > 0) partes.push(`monto ${fmtMoney(monto)}`);
+  if (saldo > 0.01) partes.push(`monto ${fmtMoney(saldo)}`);
   return partes.length > 0 ? partes.join(" · ") : null;
 };
 
@@ -67,29 +72,66 @@ const fmtDocs = (d: unknown): string | null => {
 };
 
 const fmtMargen = (d: unknown): string | null => {
-  const margen = pick(d, "margen") ?? pick(d, "margen_actual");
-  const minimo = pick(d, "minimo") ?? pick(d, "margen_minimo");
-  if (margen != null && minimo != null) {
-    return `Margen actual ${Number(margen).toFixed(1)}% (mínimo ${Number(minimo).toFixed(1)}%)`;
+  const utilidad = pick(d, "utilidad");
+  const minimo = pick(d, "minimo");
+  if (utilidad != null && minimo != null) {
+    return `Utilidad actual ${fmtMoney(utilidad)} (mínimo ${fmtMoney(minimo)})`;
   }
   return null;
 };
 
-const fmtConceptos = (d: unknown): string | null => {
-  const pendientes = pick(d, "pendientes") ?? pick(d, "conceptos");
-  if (Number(pendientes) > 0) return `${pendientes} concepto(s) pendiente(s)`;
-  if (Array.isArray(pendientes) && pendientes.length > 0)
-    return `${pendientes.length} concepto(s) pendiente(s)`;
+const fmtVentaPendientes = (d: unknown): string | null => {
+  const p = Number(pick(d, "pendientes") ?? 0);
+  const ep = Number(pick(d, "en_proforma") ?? 0);
+  const partes: string[] = [];
+  if (p > 0) partes.push(`${p} concepto(s) pendiente(s)`);
+  if (ep > 0) partes.push(`${ep} en proforma sin facturar`);
+  return partes.length > 0 ? partes.join(" · ") : null;
+};
+
+const fmtSinFactura = (d: unknown): string | null => {
+  const n = Number(pick(d, "sin_factura") ?? pick(d, "pendientes") ?? 0);
+  if (n > 0) return `${n} concepto(s) sin factura de proveedor`;
+  return null;
+};
+
+const fmtPendientesLiq = (d: unknown): string | null => {
+  const n = Number(pick(d, "pendientes") ?? 0);
+  if (n > 0) return `${n} concepto(s) por liquidar al proveedor`;
   return null;
 };
 
 const fmtContenedores = (d: unknown): string | null => {
-  const sin = pick(d, "sin_datos") ?? pick(d, "incompletos");
-  if (Number(sin) > 0) return `${sin} contenedor(es) sin peso/volumen`;
+  const sin = Number(pick(d, "contenedores_incompletos") ?? pick(d, "sin_datos") ?? 0);
+  if (sin > 0) return `${sin} contenedor(es) sin peso/volumen`;
   return null;
 };
 
-const tabEmbarque = (tab: string) => (id: string) => `/embarques/${id}?tab=${tab}`;
+/** Construye una ruta con tab + focus opcionales. */
+const buildRuta = (
+  tab: string,
+  focus?: string,
+  extras?: Record<string, string | undefined>,
+) => (id: string, _detalle?: unknown): string => {
+  const params = new URLSearchParams({ tab });
+  if (focus) params.set("focus", focus);
+  if (extras) {
+    for (const [k, v] of Object.entries(extras)) {
+      if (v) params.set(k, v);
+    }
+  }
+  return `/embarques/${id}?${params.toString()}`;
+};
+
+/** Versión que extrae `ids` del detalle (para contenedores). */
+const rutaContenedores = (id: string, detalle?: unknown): string => {
+  const ids = pick(detalle, "ids");
+  const params = new URLSearchParams({ tab: "resumen", focus: "contenedores" });
+  if (Array.isArray(ids) && ids.length > 0) {
+    params.set("ids", ids.map(String).join(","));
+  }
+  return `/embarques/${id}?${params.toString()}`;
+};
 
 /**
  * Tabla principal. Acepta variantes de nombre (la RPC ha cambiado entre versiones).
@@ -98,86 +140,86 @@ const META: Record<string, CierreCheckMeta> = {
   cxc_sin_pendientes: {
     label: "Cuentas por cobrar al día",
     responsable: "Cobranza",
-    ruta: tabEmbarque("facturacion"),
+    ruta: buildRuta("facturacion", "cxc"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtCxc,
   },
   cxc_cobrada: {
     label: "Cuentas por cobrar al día",
     responsable: "Cobranza",
-    ruta: tabEmbarque("facturacion"),
+    ruta: buildRuta("facturacion", "cxc"),
     ctaLabel: "Ir a Facturación",
     formatDetalle: fmtCxc,
   },
   cxp_sin_pendientes: {
     label: "Cuentas por pagar al día",
     responsable: "Tesorero",
-    ruta: tabEmbarque("facturacion"),
-    ctaLabel: "Ir a Facturación",
+    ruta: buildRuta("costos", "cxp"),
+    ctaLabel: "Ir a Costos",
     formatDetalle: fmtCxp,
   },
   cxp_pagada: {
     label: "Cuentas por pagar al día",
     responsable: "Tesorero",
-    ruta: tabEmbarque("facturacion"),
-    ctaLabel: "Ir a Facturación",
+    ruta: buildRuta("costos", "cxp"),
+    ctaLabel: "Ir a Costos",
     formatDetalle: fmtCxp,
   },
   documentos_completos: {
     label: "Documentos requeridos completos",
     responsable: "Coordinador logístico",
-    ruta: tabEmbarque("documentos"),
+    ruta: buildRuta("documentos", "faltantes"),
     ctaLabel: "Ir a Documentos",
     formatDetalle: fmtDocs,
   },
   docs_completos: {
     label: "Documentos requeridos completos",
     responsable: "Coordinador logístico",
-    ruta: tabEmbarque("documentos"),
+    ruta: buildRuta("documentos", "faltantes"),
     ctaLabel: "Ir a Documentos",
     formatDetalle: fmtDocs,
   },
   pnl_margen_minimo: {
     label: "Utilidad mínima alcanzada",
     responsable: "Ventas",
-    ruta: tabEmbarque("pnl"),
+    ruta: buildRuta("pnl", "utilidad"),
     ctaLabel: "Ver P&L",
     formatDetalle: fmtMargen,
   },
   comision_calculada: {
     label: "Comisión devengada calculada",
     responsable: "Sistema",
-    ruta: tabEmbarque("pnl"),
+    ruta: buildRuta("pnl", "comision"),
     ctaLabel: "Ver P&L",
     formatDetalle: () => null,
   },
   contenedores_datos_completos: {
     label: "Datos de contenedores capturados (peso y volumen)",
     responsable: "Operador",
-    ruta: tabEmbarque("resumen"),
+    ruta: rutaContenedores,
     ctaLabel: "Ir a Resumen",
     formatDetalle: fmtContenedores,
   },
   venta_conceptos_facturados: {
     label: "Todos los conceptos de venta facturados",
     responsable: "Contador",
-    ruta: tabEmbarque("facturacion"),
+    ruta: buildRuta("facturacion", "venta-pendientes"),
     ctaLabel: "Ir a Facturación",
-    formatDetalle: fmtConceptos,
+    formatDetalle: fmtVentaPendientes,
   },
   costo_conceptos_con_factura: {
     label: "Todos los costos tienen factura de proveedor recibida",
     responsable: "Auxiliar contable",
-    ruta: tabEmbarque("costos"),
+    ruta: buildRuta("costos", "costo-sin-factura"),
     ctaLabel: "Ir a Costos",
-    formatDetalle: fmtConceptos,
+    formatDetalle: fmtSinFactura,
   },
   costos_liquidados: {
     label: "Todos los costos están liquidados (pagados al proveedor)",
     responsable: "Tesorero",
-    ruta: tabEmbarque("facturacion"),
-    ctaLabel: "Ir a Facturación",
-    formatDetalle: fmtConceptos,
+    ruta: buildRuta("costos", "costo-no-liquidado"),
+    ctaLabel: "Ir a Costos",
+    formatDetalle: fmtPendientesLiq,
   },
 };
 

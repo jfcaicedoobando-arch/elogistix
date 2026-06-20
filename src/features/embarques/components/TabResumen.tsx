@@ -3,6 +3,7 @@ import { toTitleCase } from "@/lib/formatters";
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
@@ -18,6 +19,7 @@ export function TabResumen({ embarque }: Props) {
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
   const currentStepIndex = ESTADOS_EMBARQUE.indexOf(estadoVisual as typeof ESTADOS_EMBARQUE[number]);
   const { data: relacionados = [] } = useEmbarquesRelacionados(embarque.id, embarque.bl_master);
+  const { registerRef } = useFocusSection();
 
   return (
     <div className="space-y-6">
@@ -39,7 +41,11 @@ export function TabResumen({ embarque }: Props) {
         </Card>
       </div>
 
-      {embarque.modo === "Marítimo" && <SeccionContenedoresReadonly embarqueId={embarque.id} />}
+      {embarque.modo === "Marítimo" && (
+        <div ref={registerRef("contenedores")} data-focus="contenedores">
+          <SeccionContenedoresReadonly embarqueId={embarque.id} />
+        </div>
+      )}
 
       <OrigenCostosSection
         tarifaIdOriginal={(embarque as { tarifa_id_original?: string | null }).tarifa_id_original}

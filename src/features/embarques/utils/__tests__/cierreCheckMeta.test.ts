@@ -2,36 +2,52 @@ import { describe, it, expect } from "vitest";
 import { getCierreCheckMeta } from "../cierreCheckMeta";
 
 describe("cierreCheckMeta", () => {
-  it("devuelve metadata para reglas conocidas con ruta al tab del embarque", () => {
-    const m = getCierreCheckMeta("cxp_sin_pendientes");
-    expect(m.label).toMatch(/pagar/i);
+  it("CxP devuelve ruta con focus=cxp al tab costos", () => {
+    const m = getCierreCheckMeta("cxp_pagada");
     expect(m.responsable).toBe("Tesorero");
-    expect(m.ruta?.("abc-123")).toBe("/embarques/abc-123?tab=facturacion");
+    const url = m.ruta!("abc");
+    expect(url).toContain("tab=costos");
+    expect(url).toContain("focus=cxp");
   });
 
-  it("documentos lleva al tab documentos", () => {
-    const m = getCierreCheckMeta("documentos_completos");
-    expect(m.ruta?.("id1")).toBe("/embarques/id1?tab=documentos");
-    expect(m.responsable).toBe("Coordinador logístico");
+  it("CxC devuelve ruta con focus=cxc al tab facturacion", () => {
+    const m = getCierreCheckMeta("cxc_cobrada");
+    const url = m.ruta!("id1");
+    expect(url).toContain("tab=facturacion");
+    expect(url).toContain("focus=cxc");
   });
 
-  it("costos con factura lleva al tab costos", () => {
-    const m = getCierreCheckMeta("costo_conceptos_con_factura");
-    expect(m.ruta?.("id1")).toBe("/embarques/id1?tab=costos");
+  it("documentos lleva con focus=faltantes", () => {
+    const m = getCierreCheckMeta("docs_completos");
+    expect(m.ruta!("id1")).toContain("focus=faltantes");
   });
 
-  it("formato CxC humaniza monto y facturas", () => {
-    const m = getCierreCheckMeta("cxc_sin_pendientes");
-    const txt = m.formatDetalle({ facturas_pendientes: 2, monto_pendiente: 14500 });
+  it("contenedores incluye ids del detalle como csv", () => {
+    const m = getCierreCheckMeta("contenedores_datos_completos");
+    const url = m.ruta!("id1", { contenedores_incompletos: 2, ids: ["c1", "c2"] });
+    expect(url).toContain("tab=resumen");
+    expect(url).toContain("focus=contenedores");
+    expect(url).toContain("ids=c1%2Cc2");
+  });
+
+  it("formato CxC humaniza saldo y facturas", () => {
+    const m = getCierreCheckMeta("cxc_cobrada");
+    const txt = m.formatDetalle({ total: 20000, pagado: 5500, facturas_pendientes: 2 });
     expect(txt).toMatch(/2 factura/);
     expect(txt).toMatch(/14,500/);
   });
 
-  it("formato docs lista nombres faltantes", () => {
+  it("formato docs lista nombres faltantes cuando viene array", () => {
     const m = getCierreCheckMeta("documentos_completos");
     const txt = m.formatDetalle({ faltantes: ["BL", "Factura"] });
     expect(txt).toMatch(/BL/);
     expect(txt).toMatch(/Factura/);
+  });
+
+  it("formato docs maneja conteo cuando viene número", () => {
+    const m = getCierreCheckMeta("docs_completos");
+    const txt = m.formatDetalle({ faltantes: 3 });
+    expect(txt).toMatch(/3 documento/);
   });
 
   it("regla desconocida usa fallback sin ruta", () => {

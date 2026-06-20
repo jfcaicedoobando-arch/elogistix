@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { KpiCard } from "./pnl/KpiCard";
 import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
@@ -19,6 +20,7 @@ interface Props {
 
 export function TabPnl({ embarqueId }: Props) {
   const { data, isLoading, error } = usePnlFinanciero(embarqueId);
+  const { registerRef } = useFocusSection();
 
   if (isLoading) {
     return (
@@ -61,7 +63,11 @@ export function TabPnl({ embarqueId }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div
+        ref={registerRef("utilidad")}
+        data-focus="utilidad"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+      >
         <KpiCard
           label="Venta real"
           value={fmtPnl(ventaReal)}
@@ -140,7 +146,9 @@ export function TabPnl({ embarqueId }: Props) {
         invertirAlerta
       />
 
-      <PnlProveedoresTable proveedores={data.por_proveedor} />
+      <div ref={registerRef("comision")} data-focus="comision">
+        <PnlProveedoresTable proveedores={data.por_proveedor} />
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Tipos de cambio del embarque: USD {data.tipo_cambio_usd?.toFixed(4) ?? "—"} · EUR {data.tipo_cambio_eur?.toFixed(4) ?? "—"}

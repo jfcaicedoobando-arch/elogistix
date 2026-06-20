@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { AgregarDocumentoDialog } from "./tabDocumentos/AgregarDocumentoDialog";
 import { useDocumentoColumns } from "./tabDocumentos/useDocumentoColumns";
 
@@ -32,6 +34,13 @@ export function TabDocumentos({
 }: Props) {
   const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const { focus, registerRef, clearFocus } = useFocusSection();
+  const filtrarFaltantes = focus === "faltantes";
+
+  const documentosVisibles = useMemo(() => {
+    if (!filtrarFaltantes) return documentos;
+    return documentos.filter(d => !d.archivo || d.archivo === '');
+  }, [documentos, filtrarFaltantes]);
 
   const columns = useDocumentoColumns({
     canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
@@ -41,9 +50,21 @@ export function TabDocumentos({
 
   return (
     <>
-      <Card>
+      <Card ref={registerRef("faltantes")} data-focus="faltantes">
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
-          <CardTitle className="text-base font-semibold">Documentos del embarque</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base font-semibold">Documentos del embarque</CardTitle>
+            {filtrarFaltantes && (
+              <>
+                <Badge variant="outline" className="border-primary text-primary">
+                  Filtrando: documentos faltantes
+                </Badge>
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={clearFocus}>
+                  <X className="mr-1 h-3 w-3" /> Limpiar
+                </Button>
+              </>
+            )}
+          </div>
           {canEdit && (
             <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
               <Plus className="h-3.5 w-3.5 mr-1" /> Agregar documento
@@ -53,14 +74,17 @@ export function TabDocumentos({
         <CardContent className="p-0">
           <DataTable
             columns={columns}
-            data={documentos}
+            data={documentosVisibles}
             rowKey={(d) => d.id}
-            emptyMessage={canEdit
-              ? 'Sin documentos registrados. Usa "Agregar documento" para crear el primero.'
-              : 'Sin documentos registrados'}
+            emptyMessage={filtrarFaltantes
+              ? 'No hay documentos faltantes; todos tienen archivo cargado.'
+              : (canEdit
+                ? 'Sin documentos registrados. Usa "Agregar documento" para crear el primero.'
+                : 'Sin documentos registrados')}
           />
         </CardContent>
       </Card>
+
 
       <AgregarDocumentoDialog
         open={addOpen}
