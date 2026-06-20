@@ -14,7 +14,7 @@ import {
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
+import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;

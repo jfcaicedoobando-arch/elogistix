@@ -8,8 +8,8 @@ import {
   buildConceptosCostoPayload,
   
   DEFAULT_EMBARQUE_VALUES,
-} from "@/lib/mappers/embarque";
-import type { EmbarqueFormValues } from "@/lib/mappers/embarque";
+} from "@/features/embarques/domain/mappers/embarque";
+import type { EmbarqueFormValues } from "@/features/embarques/domain/mappers/embarque";
 
 function base(over: Partial<EmbarqueFormValues> = {}): EmbarqueFormValues {
   return {

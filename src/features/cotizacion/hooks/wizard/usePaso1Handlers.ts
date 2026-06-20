@@ -6,7 +6,7 @@
  */
 import { useCallback } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
+import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
 import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";

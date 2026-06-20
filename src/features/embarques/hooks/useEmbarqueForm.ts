@@ -15,14 +15,14 @@ import {
   buildDesvincularCotizacionUpdates,
   type EmbarqueFormValues,
   type CotizacionParaVincular,
-} from "@/lib/mappers/embarque";
+} from "@/features/embarques/domain/mappers/embarque";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 // Re-exports para compatibilidad con consumidores existentes
-export type { EmbarqueFormValues } from "@/lib/mappers/embarque";
+export type { EmbarqueFormValues } from "@/features/embarques/domain/mappers/embarque";
 
 type EmbarqueRow = Tables<"embarques">;
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
@@ -113,7 +113,7 @@ export function useEmbarqueForm() {
   // Snapshot del último vincular: permite que desvincular("limpiar") respete
   // los campos que el usuario tocó manualmente después de heredarlos (Pack B).
   const vincularSnapshotRef = useRef<
-    import("@/lib/mappers/embarque").VincularSnapshot
+    import("@/features/embarques/domain/mappers/embarque").VincularSnapshot
   >({});
 
   const vincularCotizacion = useCallback(

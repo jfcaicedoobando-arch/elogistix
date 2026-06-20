@@ -2,7 +2,7 @@
  * cotizacionForm.extra — edge cases no cubiertos en cotizacionForm.test.ts.
  */
 import { describe, it, expect } from "vitest";
-import { buildCotizacionDefaultValues, buildCotizacionInitialCostos } from "@/lib/mappers/cotizacionForm";
+import { buildCotizacionDefaultValues, buildCotizacionInitialCostos } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CotizacionInitialData } from "@/features/cotizacion/types";
 
 function baseData(over: Partial<CotizacionInitialData> = {}): CotizacionInitialData {

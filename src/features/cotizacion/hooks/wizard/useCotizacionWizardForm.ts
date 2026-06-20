@@ -4,21 +4,21 @@ import type { NavigateFunction } from "react-router-dom";
 import type { ConceptoVentaCotizacion, CotizacionRow, CreateCotizacionInput } from "@/features/cotizacion/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
-import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacion";
+import { buildPaso1Data as buildPaso1Mapper } from "@/features/cotizacion/domain/mappers/cotizacion";
 import {
   buildCotizacionDefaultValues,
   buildCotizacionInitialCostos,
   type CotizacionFormValues,
   type CotizacionInitialData,
   type CotizacionInitialCosto,
-} from "@/lib/mappers/cotizacionForm";
+} from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import { useConceptosVentaCotizacion } from "@/features/cotizacion/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
 
 // Re-exports para preservar la API pública existente
-export { COTIZACION_FORM_DEFAULTS } from "@/lib/mappers/cotizacionForm";
-export type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
+export { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+export type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
 // ────────── Types ──────────
 interface ToastFn {

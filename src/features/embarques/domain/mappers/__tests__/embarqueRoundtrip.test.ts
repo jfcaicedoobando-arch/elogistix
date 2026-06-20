@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { buildEmbarquePayload } from "@/lib/mappers/embarqueToDb";
-import { mapEmbarqueRowToFormValues, DEFAULT_EMBARQUE_VALUES } from "@/lib/mappers/embarqueFromDb";
+import { buildEmbarquePayload } from "@/features/embarques/domain/mappers/embarqueToDb";
+import { mapEmbarqueRowToFormValues, DEFAULT_EMBARQUE_VALUES } from "@/features/embarques/domain/mappers/embarqueFromDb";
 
 describe("embarqueToDb · buildEmbarquePayload", () => {
   it("convierte strings vacíos en null para campos opcionales", () => {

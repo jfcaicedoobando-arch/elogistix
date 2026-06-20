@@ -10,7 +10,7 @@ import { resolverContacto } from "@/features/cliente/domain/contacto";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
-import { emptyToNull } from "./_helpers";
+import { emptyToNull } from "@/lib/mappers/_helpers";
 import {
   modoEmbarqueSchema,
   tipoOperacionSchema,

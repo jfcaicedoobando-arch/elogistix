@@ -4,7 +4,7 @@ import {
   buildDesvincularCotizacionUpdates,
   snapshotFromVincularUpdates,
   type CotizacionParaVincular,
-} from "@/lib/mappers/embarqueCotizacion";
+} from "@/features/embarques/domain/mappers/embarqueCotizacion";
 
 function asMap(pairs: Array<[string, unknown]>): Record<string, unknown> {
   return Object.fromEntries(pairs);
@@ -150,7 +150,7 @@ describe("embarqueCotizacion mapper", () => {
       ...Object.fromEntries(updates),
       descripcionMercancia: "Refacciones premium",
       pesoKg: "1500",
-    } as Partial<import("@/lib/mappers/embarque").EmbarqueFormValues>;
+    } as Partial<import("@/features/embarques/domain/mappers/embarque").EmbarqueFormValues>;
 
     const cleanup = buildDesvincularCotizacionUpdates("limpiar", snap, current);
     const fields = new Set(cleanup.map(([k]) => k));
