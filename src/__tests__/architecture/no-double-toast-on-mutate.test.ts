@@ -25,7 +25,11 @@ const ROOT = path.resolve(__dirname, "../../..");
 
 /** Casos excepcionales (justificación obligatoria). */
 const WHITELIST = new Set<string>([
-  // Vacío por diseño. Si necesitas agregar uno, deja un comentario con la razón.
+  // `useResponderCotizacion` deja explícitamente el toast en el controller
+  // (ver comentario en `mutations/usePortalCotizacionMutations.ts`). El hook
+  // sólo invalida cache; el toast con fecha formateada y mensaje según
+  // Aceptada/Rechazada vive en el controller, que es la única notificación.
+  "src/features/cotizacion/hooks/usePortalCotizacionDetalleController.ts",
 ]);
 
 const TOAST_TOKENS = /\b(toast\s*[.(]|notifySuccess|notifyError|notifyWarning|notifyInfo)\b/;
