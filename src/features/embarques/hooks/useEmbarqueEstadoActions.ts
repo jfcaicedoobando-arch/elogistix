@@ -54,7 +54,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { data: validacionCierre } = useValidacionCierre(cierreVisible ? id : undefined);
   const rolPuedeCerrar = isAdmin || canEditFinance;
   const validacionOk = validacionCierre?.puede_cerrar === true;
-  const bloqueoCierreMotivo = !cierreVisible
+  const bloqueoCierreMotivo: "rol" | "checklist" | null = !cierreVisible
     ? null
     : !rolPuedeCerrar
       ? "rol"
