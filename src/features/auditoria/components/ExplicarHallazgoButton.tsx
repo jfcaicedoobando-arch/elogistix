@@ -7,11 +7,9 @@ import { Sparkles, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "sonner";
 import { useExplicarHallazgo, type ExplicacionHallazgo } from "@/features/auditoria/hooks/useExplicarHallazgo";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
   hallazgo: HallazgoAuditoria;
 }
@@ -21,18 +19,17 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
   const [data, setData] = useState<ExplicacionHallazgo | null>(null);
   const explicar = useExplicarHallazgo();
 
+  // 13.85.10 — Toast de error vive en `useExplicarHallazgo` (mapea 402/429).
+  // Aquí sólo guardamos la respuesta exitosa.
   const handleOpen = (next: boolean) => {
     setOpen(next);
     if (next && !data && !explicar.isPending) {
       explicar.mutate(hallazgo, {
         onSuccess: (res) => setData(res),
-        onError: (err) => {
-          const msg = err instanceof Error ? err.message : "Error al explicar";
-          notifyError(toast, { title: msg.includes("402") ? "Sin créditos IA disponibles" : msg.includes("429") ? "Demasiadas solicitudes, intenta en un momento" : "No se pudo generar la explicación", error: err, method: "FEATURES_AUDITORIA_COMPONENTS_EXPLICARHALLAZGOBUTTON_1" });
-        },
       });
     }
   };
+
 
   return (
     <Popover open={open} onOpenChange={handleOpen}>
