@@ -38,8 +38,9 @@ describe("costeo/utils/tarifaFormatters", () => {
       expect(formatFechaMx("")).toBe("—");
     });
 
-    it("devuelve la entrada original si no parsea YYYY-MM-DD", () => {
-      expect(formatFechaMx("no-es-fecha")).toBe("no-es-fecha");
+    it("devuelve la entrada original cuando no hay 3 segmentos separados por '-'", () => {
+      // Sin guiones: split produce un solo elemento → fallback.
+      expect(formatFechaMx("sinformato")).toBe("sinformato");
     });
   });
 });
