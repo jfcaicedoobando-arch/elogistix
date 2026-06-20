@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolverContacto, resolverValorContactoDesdeTexto } from "../index";
+import { resolverContacto, resolverValorContactoDesdeTexto } from "../contacto";
 
 const cs = [
   { id: "c1", nombre: "Shipper SA", tipo: "Shipper", pais: "CN" },
