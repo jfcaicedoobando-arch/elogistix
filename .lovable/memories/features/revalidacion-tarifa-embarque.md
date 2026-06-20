@@ -55,9 +55,14 @@ Restricción única `(organization_id, categoria, clave)` desde 13.71.3 — un v
 
 ## Pendientes conocidos (no implementados)
 
-- `resolver_reaprobacion_tarifa(reaprobada)` sólo cambia el estado; NO refresca `conceptos_venta`/`cotizacion_costos` ni regenera el PDF para reenvío al cliente. Pendiente RPC nueva o flujo de re-cotizado automático.
-- Badges en lista de "Tarifa vencida" / "Precio cambió" en tiempo real por fila (requiere RPC batch para no degradar la lista).
-- Emails al cliente cuando ventas re-aprueba con cambio de precio.
+- Emails automáticos al cliente cuando ventas re-aprueba o re-cotiza con cambio de precio (hoy sólo bitácora + notificación interna).
+- Badge "Precio cambió" en tiempo real por fila (requiere RPC batch que compare snapshot vs tarifa vigente — el badge "Tarifa vencida" ya está, usa el JOIN de la lista).
+
+## Cierre v13.73.0
+
+- `resolver_reaprobacion_tarifa` acepta `'recotizada'` además de `reaprobada`/`rechazada`.
+- `ReaprobacionTarifaBanner` ofrece 3 acciones: re-aprobar, **re-cotizar con tarifa vigente** (llama `recotizar_cotizacion` + navega a `/cotizaciones/:id/editar`), o rechazar. Al guardar y aceptar la nueva versión, el PDF se regenera por el flujo normal.
+- `COTIZACION_LIST_COLUMNS` hace JOIN con `costeo_tarifas:tarifa_id(vigente_hasta)`; `estadoVigenciaCell` muestra badge `⚠ Tarifa vencida` cuando la cotización está Aceptada y la tarifa expiró.
 
 ## Fase 2 implementada
 
