@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.73.3] - 2026-06-20
+- **fix(emails)**: desatorada la cola de correos transaccionales. El worker `process-email-queue` había perdido permisos contra la cola (probable rotación de service-role key) y los envíos quedaban en `pending` indefinidamente. Refrescado el secreto en Vault y redeploy del worker; los 4 correos atorados (incluyendo el reenvío con CC de COT-2026-0078) se procesaron correctamente a `sent`.
+
 ## [13.73.2] - 2026-06-20
 - **chore(ci/calidad)**: CI verde tras la feature de revalidación de tarifa.
   - Lint: extraídos helpers `buildVigenciaNode`/`isTarifaVencida` en `estadoVigenciaCell.tsx` y subcomponentes `DeltaTable`/`extraerCambios` en `OrigenCostosSection.tsx` para bajar complejidad ciclomática a ≤16.
