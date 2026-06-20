@@ -112,6 +112,11 @@ export function RevalidarTarifaModal({
               <Button variant="outline" onClick={onMantener} disabled={loading}>
                 Mantener costos cotizados
               </Button>
+              {onSustituir && (
+                <Button variant="outline" onClick={onSustituir} disabled={loading}>
+                  Elegir otra tarifa…
+                </Button>
+              )}
               <Button onClick={onRefrescar} disabled={loading}>
                 <RefreshCw className="h-4 w-4 mr-2" aria-hidden />
                 Refrescar desde tarifa vigente
