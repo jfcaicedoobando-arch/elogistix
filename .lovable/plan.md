@@ -1,63 +1,51 @@
-## Resumen de la auditoría
+## Qué quedó pendiente del plan de tests
 
-Se confirmaron **13 instancias** del mismo bug de doble-toast en 9 archivos. El subagente además marcó 4 sospechosos y validó que los hooks recién corregidos (`Usuarios.tsx`) ya están limpios.
+Cerramos QW1–QW5 (ratchet a 35% líneas / 50% funciones / 70% ramas en `13.85.7`) y QW3/QW4 en `13.85.8` (eran falsos positivos en su mayoría). **Falta:**
 
-**Mecánica:** TanStack Query **acumula** los callbacks pasados a `mutation.mutate(vars, { onSuccess, onError })` sobre los definidos en `useMutation({ onSuccess, onError })`. Cuando ambas capas notifican, el usuario ve dos toasts. Analogía: el hook es el repartidor que ya tocó el timbre; el componente vuelve a tocarlo cuando recibe la pizza.
+### QW6 — Tests unitarios para 3 hooks grandes con 0% cobertura
+1. `src/features/proveedores/hooks/useNuevaFacturaProveedorForm.ts` (194 líneas)
+2. `src/features/proveedores/hooks/useNuevoProveedorController.ts` (191 líneas)
+3. `src/features/embarques/hooks/useNuevoEmbarqueWizard.ts` (187 líneas)
 
-## Convención a establecer
+Para cada uno: `renderHook` + `createSupabaseMock` (canónico), cubrir defaults, validaciones, transiciones de estado, casos de error. Meta: ≥80% líneas por hook.
 
-**El toast vive exclusivamente en el hook de mutación** (`useMutation.onSuccess`/`onError`). Los componentes pueden seguir pasando callbacks por `mutate(vars, { onSuccess })` pero sólo para reacciones locales (cerrar diálogo, limpiar form, redirigir). Nunca para notificar.
+### B1 — Top archivos 0% de alto impacto (no orquestación)
+Triage en este orden, parar cuando la cobertura llegue a 41% líneas:
+- `useEmbarquesPageState.ts`
+- `DialogRegistrarPagoProveedor.tsx` (lógica del form, no el JSX shell)
+- `TrackingNuevoEventoForm.tsx`
+- `HallazgosTabla.tsx`
+- Siguientes según `coverage/coverage-summary.json` ordenado por LOC × (1 − coverage).
 
-## Lista de cambios (13 hallazgos en 9 archivos)
+### B2 — Limpiar denominador de cobertura
+Añadir a `coverage.exclude` en `vitest.config.ts`:
+- `src/**/*Dialog.tsx` que sean shells presentacionales puros (lista a confirmar con grep)
+- Layouts (`src/components/layout/**`)
+Sin tocar exclusiones ya aplicadas.
 
-| # | Archivo a editar | Acción |
-|---|---|---|
-| 1 | `src/features/admin/components/AgregarMiembroOrgDialog.tsx` (~L44) | Quitar `notifySuccess`/`notifyError` del `try/catch`; conservar cierre del diálogo en `onSuccess`/`onSettled` sin toast |
-| 2 | `src/features/admin/components/usuario/NuevoUsuarioDialog.tsx` (L78, L84) | Quitar `onSuccess`/`onError` con toast del segundo arg de `createUser.mutate` |
-| 3 | `src/features/cliente/components/TabPortalCliente.tsx` (L61, L71-72) | Quitar callbacks de toast de `revokeMutation.mutate` y `resendMutation.mutate` |
-| 4 | `src/features/comisiones/components/TabVendedorasConfig.tsx` (L50-53, L61, L164) | Quitar 3 pares de `onSuccess: toast.success`/`onError: notifyError` |
-| 5 | `src/features/comisiones/components/DialogRegistrarPagoLiquidacion.tsx` (L32-33) | Quitar callbacks de toast |
-| 6 | `src/features/comisiones/components/DialogGenerarLiquidacion.tsx` (L32-33) | Quitar callbacks de toast |
-| 7 | `src/features/cxp/routes/Cxp.tsx` (L148-149) | Quitar `onSuccess`/`onError` con toast de `eliminar.mutateAsync` |
-| 8 | `src/features/tesoreria/components/PanelConciliacionMovimiento.tsx` (L47-48, L58-59, L66-67) | Quitar 3 pares de callbacks |
+### B3 — Ratchet final (solo si cobertura real ≥ umbral + 2)
+Subir `vitest.config.ts` a `functions: 52, branches: 72` cuando QW6+B1+B2 dejen la cobertura con margen ≥ 2 puntos por métrica.
 
-Para cada uno: si el callback además hacía algo no-toast (cerrar diálogo, reset de form), preservar esa lógica y borrar sólo la línea de `toast.*`/`notifySuccess`/`notifyError`. Eliminar imports muertos (`toast`, `notifySuccess`, `notifyError`, `useToast`, `getErrorMessage`) cuando queden sin uso.
+## Orden de ejecución y bumps
 
-## Revisión manual adicional (sospechosos)
+1. **QW6** (3 hooks, un commit por hook) → `13.85.9`
+2. **B1** (archivos 0%, batch) + **B2** (exclusiones) → `13.85.10`
+3. **B3** ratchet de `functions`/`branches` → `13.86.0`
 
-Antes de cerrar, abrir y validar estos 4. Si presentan el mismo patrón, corregir en el mismo lote:
+## Verificación por paso
 
-- `src/features/tesoreria/routes/TesoreriaConciliacion.tsx`
-- `src/features/admin/hooks/useAdminUsuariosController.ts:35`
-- `src/features/facturacion/hooks/useFacturacionPageController.ts:74`
-- `src/features/embarques/components/TabDemoras.tsx:67`
-
-## Guardrail para prevenir regresiones
-
-Añadir test de arquitectura en `src/__tests__/architecture/no-double-toast-on-mutate.test.ts`:
-
-- Escanea `src/features/**/*.tsx` (excluye `__tests__/`).
-- Para cada `.mutate(` o `.mutateAsync(` con un segundo argumento `{ ... }`, busca dentro de ese objeto las llaves `onSuccess`/`onError`/`onSettled` y prohibe que su cuerpo contenga `toast`, `notifySuccess`, `notifyError`, `notifyWarning` o `notifyInfo`.
-- Una allowlist mínima por path para excepciones justificadas (vacía al inicio).
-- Falla CI con file:line y un mensaje que cita la convención.
-
-Esto convierte la convención en código y evita reaparecer el bug en cada feature nueva.
-
-## Verificación
-
-- `bunx vitest run src/features/admin src/features/cliente src/features/comisiones src/features/cxp src/features/tesoreria src/__tests__/architecture` → todo verde.
-- `bun run audit:tests` sin violaciones.
-- Smoke manual: eliminar un miembro, crear un usuario, revocar acceso de portal, configurar vendedora, generar/pagar liquidación, conciliar/ignorar/desconciliar movimiento, eliminar factura CxP → **un solo toast por acción**.
-
-## Changelog y versión
-
-- Bump `APP_VERSION` a `13.86.0` (cierra el bug clase a nivel app).
-- Entrada en `CHANGELOG.md`:
-  - `fix(toasts) eliminación masiva de doble-toast en 9 pantallas` con la lista de los 13 sitios.
-  - `test(arch) guardrail anti doble-toast en mutaciones`.
+- `bunx vitest run` verde (≥ 3372 tests, sin baja).
+- `bun run coverage` reporta líneas/funciones/ramas por encima del umbral nuevo.
+- `bun run audit:tests` 0 violaciones.
+- `CHANGELOG.md` actualizado en cada bump (formato `## [X.Y.Z] - YYYY-MM-DD`).
 
 ## Fuera de alcance
 
-- No tocar los hooks (ya notifican correctamente).
-- No cambiar copies ni internacionalización de los toasts.
-- No refactorizar los formularios ni la lógica de mutación.
+- No tocar `src/integrations/supabase/**`, `.env`, `supabase/config.toml`.
+- No reescribir hooks productivos — solo testearlos.
+- No cambiar copies ni i18n.
+- Pages/routes JSX quedan excluidos (cubiertos por E2E).
+
+## Próximo paso
+
+Al aprobar, arranco con **QW6** (3 hooks en paralelo vía subagentes, un commit por hook).
