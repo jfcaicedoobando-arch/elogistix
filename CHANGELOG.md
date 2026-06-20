@@ -20,6 +20,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - **Pendientes documentados** (no entran en este release): que la acción "Re-cotizar con tarifa vigente" del banner refresque `conceptos_venta`/`cotizacion_costos` y regenere PDF (hoy sólo cambia estado); badges en tiempo real de "Tarifa vencida" / "Precio cambió" por fila (caros, requieren RPC batch). Ver `mem://features/revalidacion-tarifa-embarque`.
 
 
+## [13.71.3] - 2026-06-20
 - **fix(configuracion/operaciones)**: Los umbrales de varianza de reconciliación (alerta/crítico) ahora se administran **por organización** en `/configuracion → Operaciones`, no en el panel Super Admin. Migración: la tabla `configuracion` cambia su unicidad de `(categoria, clave)` a `(organization_id, categoria, clave)` para permitir un valor distinto por empresa, RLS de lectura ahora filtra por `organization_id = current_user_org_id()`, y se siembran los defaults (10% alerta / 25% crítico) para todas las orgs existentes. Nuevo `useUmbralesReconciliacion` consume estos valores desde la reconciliación 3 columnas. Se elimina `TabOperacionesGlobal` y la pestaña "Operaciones" del Super Admin.
 
 ## [13.71.2] - 2026-06-20
