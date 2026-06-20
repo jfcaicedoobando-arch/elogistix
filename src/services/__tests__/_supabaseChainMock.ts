@@ -1,14 +1,15 @@
 /**
  * Helper para mockear `supabase.from(...).select().eq()...` en tests Vitest.
  *
- * Cada `from(table)` devuelve un thenable encadenable. Configurar las
- * respuestas por tabla con `setTableResult(table, { data, error })`.
+ * **Fuente única de verdad (v13.85.3 — consolidación).** El antiguo helper
+ * de `src/test/utils/_supabaseChainMock.ts` ahora re-exporta desde aquí
+ * para evitar dos implementaciones divergentes.
  *
- * Para mockear RPCs usar `setRpcResult(fnName, { data, error })`.
- *
- * 12.61.20 (Sprint 4): cada `TableCall` ahora expone `opArgs[i]` con los
- * argumentos pasados a la operación, y `getMutationPayload(table, op)` para
- * extraer el payload de `insert`/`update`/`upsert`.
+ * APIs disponibles:
+ * - `createSupabaseMock()` — completa, con `setTableResult`/`setRpcResult`,
+ *   captura de llamadas, payloads de mutación. **Preferida**.
+ * - `createSupabaseChainMock(data, error)` — wrapper retrocompatible para los
+ *   tests legacy que esperan un único resultado por mock.
  */
 import { vi } from "vitest";
 
@@ -105,3 +106,50 @@ export function createSupabaseMock() {
 
   return { supabase, setTableResult, setRpcResult, tableCalls, rpcCalls, getMutationPayload };
 }
+
+/**
+ * Wrapper retrocompatible: devuelve un mock thenable que responde con
+ * `{ data, error }` a cualquier cadena. Útil cuando el test sólo necesita
+ * un único resultado y no le importa qué tabla/operación se invocó.
+ *
+ * Para tests nuevos, preferir `createSupabaseMock()`.
+ */
+export const createSupabaseChainMock = (data: unknown = [], error: unknown = null) => {
+  const single = (): Promise<Resp> =>
+    Promise.resolve({ data: Array.isArray(data) ? data[0] : data, error });
+  const maybeSingle = (): Promise<Resp> =>
+    Promise.resolve({
+      data: Array.isArray(data) ? (data.length > 0 ? data[0] : null) : data,
+      error,
+    });
+  const mock = {
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    upsert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
+    like: vi.fn().mockReturnThis(),
+    ilike: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    contains: vi.fn().mockReturnThis(),
+    containedBy: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockImplementation(single),
+    maybeSingle: vi.fn().mockImplementation(maybeSingle),
+    then: vi.fn().mockImplementation((onfulfilled) =>
+      Promise.resolve({ data, error }).then(onfulfilled),
+    ),
+    rpc: vi.fn().mockReturnThis(),
+  };
+  return mock;
+};

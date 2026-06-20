@@ -1,11 +1,10 @@
 import { expect, it, describe, vi, beforeEach } from "vitest";
 import React from "react";
 
-// Mock @react-pdf/renderer ANTES de importar descargarPdf
-const toBlobMock = vi.fn(async () => new Blob(["%PDF-1.4"], { type: "application/pdf" }));
-vi.mock("@react-pdf/renderer", () => ({
-  pdf: vi.fn(() => ({ toBlob: toBlobMock })),
-}));
+// 13.85.3 — Eliminamos el `vi.mock("@react-pdf/renderer", ...)` local porque
+// `vitest.config.ts` ya aliasa el módulo al stub en `src/test/mocks/reactPdfStub.tsx`.
+// Espiamos sobre la función `pdf` exportada por el stub para verificar invocación.
+import * as ReactPDF from "@react-pdf/renderer";
 
 const descargarBlobMock = vi.fn();
 vi.mock("@/lib/downloadBlob", () => ({
@@ -13,29 +12,27 @@ vi.mock("@/lib/downloadBlob", () => ({
 }));
 
 import { descargarPdf } from "../descargarPdf";
-import { pdf } from "@react-pdf/renderer";
 
 global.URL.createObjectURL = vi.fn(() => "mock-url");
 global.URL.revokeObjectURL = vi.fn();
 
 describe("pdf/render/descargarPdf", () => {
   beforeEach(() => {
-    toBlobMock.mockClear();
     descargarBlobMock.mockClear();
-    (pdf as ReturnType<typeof vi.fn>).mockClear();
   });
 
   it("renderiza el elemento y delega la descarga del Blob", async () => {
+    const pdfSpy = vi.spyOn(ReactPDF, "pdf");
     const element = React.createElement("div") as never;
     await descargarPdf(element, "mi-documento");
 
-    expect(pdf).toHaveBeenCalledTimes(1);
-    expect(pdf).toHaveBeenCalledWith(element);
-    expect(toBlobMock).toHaveBeenCalledTimes(1);
+    expect(pdfSpy).toHaveBeenCalledTimes(1);
+    expect(pdfSpy).toHaveBeenCalledWith(element);
     expect(descargarBlobMock).toHaveBeenCalledTimes(1);
     const [blobArg, nameArg] = descargarBlobMock.mock.calls[0];
     expect(blobArg).toBeInstanceOf(Blob);
     expect(nameArg).toBe("mi-documento.pdf");
+    pdfSpy.mockRestore();
   });
 
   it("conserva la extensión .pdf si ya está incluida", async () => {
@@ -44,10 +41,15 @@ describe("pdf/render/descargarPdf", () => {
   });
 
   it("propaga el error si toBlob falla", async () => {
-    toBlobMock.mockRejectedValueOnce(new Error("render fail"));
+    const pdfSpy = vi.spyOn(ReactPDF, "pdf").mockReturnValueOnce({
+      toBlob: () => Promise.reject(new Error("render fail")),
+      toBuffer: () => Promise.resolve(new Uint8Array()),
+      toString: () => Promise.resolve(""),
+    } as never);
     await expect(
       descargarPdf(React.createElement("div") as never, "x"),
     ).rejects.toThrow("render fail");
     expect(descargarBlobMock).not.toHaveBeenCalled();
+    pdfSpy.mockRestore();
   });
 });
