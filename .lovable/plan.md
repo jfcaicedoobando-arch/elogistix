@@ -1,117 +1,76 @@
-# Plan: Pasos 9 + 10 de la auditoría
+# Plan: Arreglar `post-deploy-smoke` (job `user-management-smoke`)
 
-Objetivo: cerrar la auditoría arquitectónica con cambios de bajo riesgo y alto valor. Saltar Paso 8 (renombre PascalCase) y el worker de `descargarZip` por baja relación beneficio/riesgo.
+## Diagnóstico
 
-Tras cada paso: `bun run lint -- --max-warnings 0`, bump `APP_VERSION`, entrada en `CHANGELOG.md`.
+Los logs del workflow `post-deploy-smoke` muestran:
 
----
+- ✅ `exchange-rates-smoke` → HTTP 200, contrato OK.
+- ✅ `tracking-public-smoke` → HTTP 404 esperado.
+- ❌ `user-management-smoke` → falla en el paso *Validate required secrets* porque los GitHub Actions Secrets `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD` no están configurados en el repo (`DEMO_USER_EMAIL:` viene vacío en el bloque `env:`).
 
-## Paso 10A — Extraer `checks` de `DialogTimbrarFactura`
+No es un bug de código: es una dependencia de configuración del CI. El fallo encadena al job `notify-failure`, que abre/actualiza el issue `smoke-failure`.
 
-**Archivo nuevo:** `src/features/facturacion/utils/validarDatosTimbrado.ts`
+**Analogía:** es como una alarma de incendios que se dispara porque le falta la batería, no porque haya fuego. El smoke en sí no probó nada.
 
-Función pura:
-```text
-buildChecksTimbrado({ rfc, cp, regimen, usoCfdi, formaPago, metodoPago })
-  → { checks: { ok: boolean; label: string }[], puedeTimbrar: boolean }
+## Opciones (a elegir contigo)
+
+### Opción A — Usar la edge function `demo-access` (recomendada)
+
+Ya tenemos `supabase/functions/demo-access` que provisiona la cuenta demo y devuelve `{ email, password }` (esto es exactamente lo que usa el botón "Probar demo" del marketing). El smoke puede:
+
+1. Llamar `POST /functions/v1/demo-access` con el anon key.
+2. Tomar `email` + `password` del payload.
+3. Hacer login real y ejecutar `smoke_test.ts` con esas credenciales.
+
+**Ventajas:** no requiere configurar secrets nuevos; el smoke prueba exactamente el mismo flujo que ven los usuarios reales del demo; password es público por diseño (cuenta demo).
+
+**Cambios:**
+
+- `.github/workflows/post-deploy-smoke.yml`: reemplazar paso *Validate required secrets* por un paso `Fetch demo credentials` que hace `curl` a `demo-access` y exporta `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` con `>> $GITHUB_ENV`. El paso *Run user-management smoke* se queda igual.
+
+### Opción B — Configurar los secrets en GitHub
+
+Tú agregas manualmente `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD` en *Settings → Secrets and variables → Actions* del repo `jfcaicedoobando-arch/elogistix`. El workflow ya está listo y volverá a pasar sin cambios de código.
+
+**Cuándo:** si prefieres una cuenta dedicada distinta a la del demo.
+
+### Opción C — Saltarse el job si no hay secrets
+
+Cambiar el paso de validación para que haga `echo` y `exit 0` cuando faltan los secrets (job pasa en verde con un warning). Más laxo: el smoke deja de cubrir user-management hasta que alguien configure las credenciales.
+
+**Recomendación:** Opción A. Mantiene la cobertura del smoke sin trabajo manual de tu parte ni secrets adicionales.
+
+## Detalle técnico (Opción A)
+
+Reemplazar los pasos 40-48 del workflow por:
+
+```yaml
+- name: Fetch demo credentials
+  run: |
+    set -euo pipefail
+    curl -sS -X POST \
+      -H "apikey: ${ANON_KEY}" \
+      -H "Authorization: Bearer ${ANON_KEY}" \
+      -H "Content-Type: application/json" \
+      -d '{}' \
+      "${SUPABASE_URL}/functions/v1/demo-access" > /tmp/demo.json
+    EMAIL=$(jq -r '.email' /tmp/demo.json)
+    PASSWORD=$(jq -r '.password' /tmp/demo.json)
+    if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ]; then
+      echo "::error::demo-access no devolvió credenciales válidas"
+      cat /tmp/demo.json
+      exit 1
+    fi
+    echo "DEMO_USER_EMAIL=$EMAIL" >> "$GITHUB_ENV"
+    echo "::add-mask::$PASSWORD"
+    echo "DEMO_USER_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
 ```
 
-**Editar:** `DialogTimbrarFactura.tsx` líneas 44–56 → reemplazar por una llamada al helper.
+Y eliminar las referencias `${{ secrets.DEMO_USER_* }}` del paso *Run user-management smoke* (ya estarán en el env del job).
 
-**Test:** `src/features/facturacion/utils/__tests__/validarDatosTimbrado.test.ts` con casos: RFC corto, CP no numérico, todos los campos vacíos, happy path.
+## Changelog + version
 
-**Bump:** `13.84.1` · CHANGELOG: "Extracción de validaciones de timbrado a helper puro testeable".
+- Bump `APP_VERSION` a `13.85.6`.
+- Entrada en `CHANGELOG.md`: "Smoke post-deploy: obtener credenciales demo desde `demo-access` en vez de exigir secrets manuales."
 
----
-
-## Paso 10B — Helper de estado de `ContenedorCell`
-
-**Archivo nuevo:** `src/features/embarques/utils/estadoContenedorCell.ts`
-
-Función pura:
-```text
-derivarEstadoContenedor(embarque, info?, legacyCount?)
-  → { count, primero, incompletos, blFalta, pendientes, pendientesTitle }
-```
-
-**Editar:** `src/features/embarques/components/embarqueColumns.tsx` líneas 37–66 → `ContenedorCell` queda como componente fino que solo arma JSX a partir del helper.
-
-**No** extraer `ContenedorCell` a archivo propio (es el único consumer; mover el componente sin necesidad genera ruido en git).
-
-**Test:** casos pendientes BL falta, incompletos > 0, modo aéreo (no aplica BL), legacy count fallback.
-
-**Bump:** `13.84.2` · CHANGELOG: "Helper puro para derivar estado de celda de contenedores".
-
----
-
-## Paso 9 — Spanglish en `src/features/admin/` (parcial, conservador)
-
-Estrategia: renombrar **tipos, interfaces y funciones de dominio** a español. **NO** renombrar archivos de servicios (rompería decenas de imports por estética). **NO** tocar términos técnicos universales: `backfill`, `legacy`, `observability`, `health`, `logs`, `email`.
-
-### 9.1 `services/stats.ts`
-- `AdminOrgStats` → `EstadisticasAdminOrg`
-- `AdminOrgActivity` → `ActividadAdminOrg`
-- `AdminRecentOrg` → `OrganizacionReciente`
-- Campos `totalOrgs` → `totalOrganizaciones`, `totalUsers` → `totalUsuarios`
-
-### 9.2 `services/members.ts`
-- `GlobalUserRow` → `FilaUsuarioGlobal`
-- `OrgMemberRow` → `FilaMiembroOrg`
-- `updateOrgMemberRole` → `actualizarRolMiembro`
-- `removeOrgMember` → `eliminarMiembro`
-- `addOrgMember` → `agregarMiembro`
-
-### 9.3 `services/organizations.ts` + `services/organization/index.ts`
-- Unificar `OrgRow` y `OrganizationRow` en un único tipo `FilaOrganizacion` exportado desde `services/organization/index.ts`. Eliminar el duplicado.
-- `createOrganization` → `crearOrganizacion`
-- `updateAdminOrganization` → `actualizarOrganizacion`
-- `setOrganizationActivo` → `establecerOrganizacionActiva`
-
-### 9.4 `services/exportOrg.ts`
-- `ExportProgress` → `ProgresoExportacion`
-- `ProgressCallback` → `CallbackProgreso`
-- `ExportTableResult` → `ResultadoExportTabla`
-
-### 9.5 `services/observability.ts`
-- `acknowledgeAlerta` → `reconocerAlerta`
-- Tipos `AppLogsQueryInput/Result`, `HealthSummaryRow`, `HealthTimelinePoint`: **dejar en inglés** (términos técnicos de observabilidad).
-
-### 9.6 `services/usuario/availableUsers.ts`
-- `UserOption` → `OpcionUsuario`
-
-### 9.7 `domain/roles/roleCatalog.ts`
-- `ROLE_LABELS` → `ETIQUETAS_ROL`
-- `ROLE_DESCRIPTIONS` → `DESCRIPCIONES_ROL`
-- `ROLE_BADGE_CLASSES` → `CLASES_BADGE_ROL`
-- `ASSIGNABLE_ROLES_ADMIN_ORG` → `ROLES_ASIGNABLES_ADMIN_ORG`
-- `getRoleLabel` → `obtenerEtiquetaRol`
-- Dejar `LEGACY_ROLES` (técnico).
-
-### 9.8 `hooks/`
-- `useAddOrgMember` → `useAgregarMiembro`
-- `useAvailableUsers` interno → `useUsuariosDisponibles`
-
-### Decisiones explícitas
-- **NO** renombrar archivos (`organizations.ts`, `members.ts`, etc.): el costo en imports y blame supera el beneficio.
-- **NO** tocar `observability.ts`, `backfillLegacy.ts` ni dividirlos: fuera de alcance.
-- Cada rename actualiza **todos los call sites** en el mismo commit lógico para no romper build.
-
-**Bump:** `13.85.0` (minor por cambio amplio de API interna) · CHANGELOG: "Estandarización a español de tipos y funciones en módulo admin (sin cambios funcionales)".
-
----
-
-## Verificación final
-
-1. `bun run lint -- --max-warnings 0`
-2. `bun run lint:unused`
-3. Smoke test mental: rutas `/admin/usuarios`, `/admin/organizaciones`, `/admin/auditoria` siguen compilando.
-4. Cerrar la auditoría con nota en `mem://audit/pendings` marcando pasos 8 y worker-zip como "no se ejecuta — costo > beneficio".
-
----
-
-## Fuera de alcance (confirmado)
-
-- Paso 8 (renombre PascalCase de columnas).
-- Worker para `descargarZip`.
-- Renombre de archivos en `features/admin/`.
-- Tres-way split de `observability.ts`.
+¿Voy con la **Opción A**, o prefieres B/C? Opción a

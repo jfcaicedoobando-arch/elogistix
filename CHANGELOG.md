@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.85.6] - 2026-06-20
+- **fix(ci) post-deploy-smoke fallaba por secrets faltantes**: el job `user-management-smoke` exigía `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` configurados a mano en GitHub Actions y abortaba en el paso *Validate required secrets*. Reemplazado por un paso `Fetch demo credentials` que invoca la edge function `demo-access` (misma fuente que usa el botón "Probar demo") y expone las credenciales al runner vía `$GITHUB_ENV` con `::add-mask::` sobre el password. Analogía: en vez de pedir que alguien deje la llave bajo el tapete, la portería la entrega cuando la pides. Cero cambios de código de la app.
+
 ## [13.85.5] - 2026-06-20
 - **fix(ci) ESLint bloqueaba re-export de mock consolidado**: el wrapper `src/test/utils/_supabaseChainMock.ts` re-exportaba desde `@/services/__tests__/_supabaseChainMock` y la regla `no-restricted-imports` lo prohibía (carpeta interna `__tests__`). Añadido `// eslint-disable-next-line no-restricted-imports` específico a esa línea — uso legítimo: helper de tests apuntando a la fuente canónica. Cero impacto en producción.
 

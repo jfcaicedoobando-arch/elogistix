@@ -37,20 +37,28 @@ jobs:
         with:
           deno-version: v1.x
 
-      - name: Validate required secrets
-        env:
-          DEMO_USER_EMAIL: ${{ secrets.DEMO_USER_EMAIL }}
-          DEMO_USER_PASSWORD: ${{ secrets.DEMO_USER_PASSWORD }}
+      - name: Fetch demo credentials
         run: |
-          if [ -z "$DEMO_USER_EMAIL" ] || [ -z "$DEMO_USER_PASSWORD" ]; then
-            echo "::error::Faltan secrets DEMO_USER_EMAIL / DEMO_USER_PASSWORD"
+          set -euo pipefail
+          curl -sS -X POST \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "${SUPABASE_URL}/functions/v1/demo-access" > /tmp/demo.json
+          EMAIL=$(jq -r '.email' /tmp/demo.json)
+          PASSWORD=$(jq -r '.password' /tmp/demo.json)
+          if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ] || [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
+            echo "::error::demo-access no devolvió credenciales válidas"
+            cat /tmp/demo.json
             exit 1
           fi
+          echo "DEMO_USER_EMAIL=$EMAIL" >> "$GITHUB_ENV"
+          echo "::add-mask::$PASSWORD"
+          echo "DEMO_USER_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
 
       - name: Run user-management smoke
         env:
-          DEMO_USER_EMAIL: ${{ secrets.DEMO_USER_EMAIL }}
-          DEMO_USER_PASSWORD: ${{ secrets.DEMO_USER_PASSWORD }}
           VITE_SUPABASE_URL: ${{ env.SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ env.ANON_KEY }}
         run: |
@@ -59,6 +67,7 @@ jobs:
             --allow-env \
             --allow-read \
             supabase/functions/user-management/smoke_test.ts
+
 
   exchange-rates-smoke:
     runs-on: ubuntu-latest
