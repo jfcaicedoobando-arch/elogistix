@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.71.1] - 2026-06-20
+- **feat(cotizaciones/embarques)**: Integración UI Fase 2 — botón "Re-cotizar" (con `RecotizarModal`) en acciones de `CotizacionDetalle` cuando la cotización está Aceptada; nueva sección "Reconciliación 3 columnas" dentro de la pestaña Conciliación del detalle de embarque, mostrando Cotizado / Refrescado / Real con filtro de varianza y export CSV arriba de la conciliación vs facturas proveedor existente.
+
 ## [13.71.0] - 2026-06-20
+
 - **feat(cotizaciones/versionado-fase-2)**: Versionado de cotizaciones + reconciliación a 3 columnas (cotizado / refrescado / real). Nueva tabla `cotizacion_costos_historico` con RLS por organización, columnas `version`, `version_aceptada`, `aceptada_en/por` en `cotizaciones`, y RPCs `archivar_version_cotizacion`, `recotizar_cotizacion` (motivo obligatorio, regresa a Borrador), `aceptar_cotizacion_version` (fija version_aceptada), `obtener_costos_cotizacion_version` (lee vivas o históricas). Backfill: cotizaciones ya aceptadas reciben `version_aceptada = 1`. Servicio `reconciliacion3Columnas.ts` combina costos cotizados (versión aceptada) + delta de Fase 1 (`tarifa_delta_jsonb`) + conceptos reales del embarque, alineados por (concepto, moneda). Dominio puro `versionadoCotizacion.ts` con `calcularDelta`, `clasificarVarianza` (umbrales 5%/15% configurables en `configuracion_global`), tests exhaustivos. UI: `RecotizarModal` (motivo + tipear "RECOTIZAR") y `ReconciliacionTresColumnas` con tabla, filtro "sólo con varianza", export CSV y tooltips por columna. Hooks: `useRecotizarCotizacion`, `useAceptarCotizacionVersion`, `useCostosCotizacionVersion`, `useReconciliacion3Columnas`. Memoria nueva `mem://features/versionado-cotizaciones-reconciliacion`. Bump `APP_VERSION` 13.71.0.
 
 ## [13.70.0] - 2026-06-19

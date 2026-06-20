@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -5,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { formatDate } from "@/lib/formatters";
+import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
+
+
 
 
 interface EmbarqueVinculado {
@@ -63,10 +67,12 @@ interface AccionesProps {
   esProspecto: boolean;
   numContenedores: number;
   cotizacionId: string;
+  version?: number;
   tieneEmbarquesVinculados?: boolean;
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
 }
+
 
 function AccionesBorrador({ cotizacionId, onCambiarEstado }: { cotizacionId: string; onCambiarEstado: AccionesProps["onCambiarEstado"] }) {
   const navigate = useNavigate();
@@ -101,10 +107,11 @@ function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: 
 }
 
 export function CotizacionDetalleAcciones({
-  estado, esProspecto, numContenedores, cotizacionId,
+  estado, esProspecto, numContenedores, cotizacionId, version,
   tieneEmbarquesVinculados = false,
   onCambiarEstado, onAbrirConvertir,
 }: AccionesProps) {
+  const [recotizarOpen, setRecotizarOpen] = useState(false);
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
   const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
@@ -117,8 +124,22 @@ export function CotizacionDetalleAcciones({
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
       {mostrarCrearEmbarque && <AccionCrearEmbarque cotizacionId={cotizacionId} numContenedores={numContenedores} />}
+      {esAceptada && (
+        <>
+          <Button variant="outline" size="sm" onClick={() => setRecotizarOpen(true)}>
+            Re-cotizar
+          </Button>
+          <RecotizarModal
+            open={recotizarOpen}
+            onOpenChange={setRecotizarOpen}
+            cotizacionId={cotizacionId}
+            versionActual={version ?? 1}
+          />
+        </>
+      )}
     </div>
   );
 }
+
 
 
