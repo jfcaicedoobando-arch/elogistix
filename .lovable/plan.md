@@ -1,35 +1,24 @@
-## Problema detectado
+## Estado del plan "Umbrales por organización"
 
-Tienes razón: los umbrales de varianza (alerta y crítico) para la reconciliación 3 columnas son una **decisión operativa de cada empresa**, no del dueño de Libre Carga. Cada forwarder tolera diferente margen de error.
+| # | Paso | Estado |
+|---|------|--------|
+| 1 | UI por organización (`TabOperaciones.tsx`) | ✅ Hecho |
+| 2 | Pestaña "Operaciones" en `/configuracion` | ✅ Hecho |
+| 3 | Quitar pestaña de Super Admin + borrar `TabOperacionesGlobal.tsx` | ✅ Hecho |
+| 4 | Lectura de umbrales por tenant (`useUmbralesReconciliacion`) | ✅ Hecho |
+| 5 | Changelog `[13.71.3]` + bump `APP_VERSION` | ✅ Hecho |
+| Extra | Migración BD: unicidad `(organization_id, categoria, clave)` + RLS por org + seed de defaults | ✅ Hecho (no estaba previsto, fue necesaria porque `configuracion` era global) |
 
-Actualmente quedaron en `/admin/configuracion` → pestaña "Operaciones" (solo Super Admin), lo cual está mal.
+## Pendiente
 
-## Plan: mover umbrales a configuración por tenant
+Sólo queda **1 tarea menor** del plan:
 
-### 1. Mover UI a Configuración por organización
-- Crear `TabOperacionesOrganizacion.tsx` en `src/features/configuracion/components/` (o donde vivan los tabs por tenant).
-- Reutilizar los dos inputs (`reconciliacion_varianza_alerta_pct`, `reconciliacion_varianza_critica_pct`) con la misma validación (crítico > alerta).
-- Usar `useConfiguracion` / `useUpdateConfiguracion` (tabla `configuracion`, scoped por `organization_id`) en lugar de `configuracion_global`.
+### Actualizar memoria del proyecto
+- `mem://features/versionado-cotizaciones-reconciliacion`: anotar que los umbrales son **por organización** (no globales) y que viven en categoría `operaciones` con claves `reconciliacion_varianza_alerta_pct` / `reconciliacion_varianza_critica_pct`.
 
-### 2. Agregar pestaña "Operaciones" en `/configuracion`
-- Localizar el `AdminConfiguracion`/`Configuracion` por tenant (ruta `/configuracion`) y añadir `TabsContent value="operaciones"` con ícono `Scale`.
-- Visible para **Admin de organización** (no requiere Super Admin).
+### Opcional (decisión tuya, lo dejé pendiente porque no respondiste)
+- **Default global editable por Super Admin** que cada tenant pueda sobrescribir. Hoy el default está hardcoded en `UMBRALES_DEFAULT` (10% / 25%). Si quieres que el dueño de Libre Carga pueda cambiar ese valor sugerido sin tocar código, habría que:
+  - Reactivar una mini-pestaña en `/admin/configuracion` que escriba en `configuracion_global`.
+  - Hacer que `useUmbralesReconciliacion` use ese global como fallback antes de `UMBRALES_DEFAULT`.
 
-### 3. Quitar pestaña de Super Admin
-- Eliminar `TabOperacionesGlobal.tsx` y su `TabsContent` en `AdminConfiguracion.tsx`.
-- No tocar `configuracion_global` (queda libre por si en el futuro se necesita un default global, pero sin UI por ahora).
-
-### 4. Ajustar lectura de umbrales en reconciliación
-- En `useReconciliacion3Columnas` (o donde se consuman los umbrales), leer desde `configuracion` del tenant activo.
-- Fallback a `UMBRALES_DEFAULT` de `versionadoCotizacion.ts` si el tenant no ha configurado valores.
-
-### 5. Changelog + versión
-- `CHANGELOG.md`: entrada `[13.71.3]` — "Umbrales de reconciliación movidos a configuración por organización".
-- Bump `APP_VERSION` a `13.71.3`.
-
-### Notas técnicas
-- No requiere migración de BD: `configuracion` ya soporta llaves arbitrarias por tenant.
-- Mantener constantes `UMBRALES_DEFAULT` como fallback compartido.
-- Memoria a actualizar: `mem://features/versionado-cotizaciones-reconciliacion` para reflejar que los umbrales son por tenant.
-
-¿Apruebas que lo mueva tal cual, o quieres además dejar un **default global** editable por Super Admin que cada tenant pueda sobrescribir?
+¿Quieres que (a) sólo actualice la memoria y cerremos, o (b) además implemente el default global del Super Admin?
