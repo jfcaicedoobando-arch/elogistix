@@ -1,66 +1,31 @@
+## Qué pasa
 
-## Qué pasó
+Tu correo **sí se generó**, pero está atorado — no salió del servidor a Mailgun.
 
-El último push rompió CI. El job agregador marca `quality=failure` y `tests=failure`. Todos los hallazgos vienen de archivos que tocamos al construir la revalidación automática de tarifa (v13.73.x). Ninguno es un bug funcional — son reglas de calidad del proyecto (Power of 10, formatters centralizados, jerarquía de capas, higiene de tests).
+Pruebas:
+- En `email_send_log` veo 4 envíos a `hector@lopezbenavides.com` hoy (03:40 y 03:47 UTC) con status `pending` — nunca pasaron a `sent`.
+- La cola `transactional_emails` tiene **4 mensajes visibles** sin procesar (el más viejo lleva 14 min esperando).
+- El worker `process-email-queue` se está despertando cada 5 s (cron activo) pero **no procesa nada**: sus logs sólo muestran `booted`/`shutdown`, ni un solo `sent` ni `error`.
+- El último envío exitoso a tu correo fue hace 2 días (18-jun).
 
-## Hallazgos a corregir
+**Analogía:** es como si el cartero llegara puntual cada 5 minutos a la oficina de correos, pero la puerta del almacén estuviera cerrada con llave — recoge cero cartas y se va. Las cartas siguen ahí, sólo no las puede tocar.
 
-### 1. Lint: complejidad ciclomática > 16
+La causa típica documentada es que la *service-role key* de Cloud rotó y el worker ya no tiene permiso para leer la cola (devuelve 401/403 silencioso). La solución es refrescar el secreto interno que usa el worker.
 
-| Archivo | Función | Complejidad |
-|---|---|---|
-| `src/features/cotizacion/components/columnsParts/estadoVigenciaCell.tsx` | `renderEstadoVigencia` | 17 |
-| `src/features/embarques/components/OrigenCostosSection.tsx` | `OrigenCostosSection` | 18 |
+Esto **no afecta sólo al CC** — afecta a cualquier correo transaccional (cotizaciones, notificaciones) desde hace ~14 min. Hay que arreglarlo ya.
 
-**Acción:** extraer sub-funciones puras (`getBadgeVariant`, `getEstadoLabel`, helpers de render) hasta dejar cada función ≤ 16.
+## Plan
 
-### 2. Arquitectura — capas Pages→Hooks→Services→Lib
+1. **Refrescar credenciales de la cola de correo** — ejecutar `email_domain--setup_email_infra` (es idempotente, no recrea tablas; sólo regenera el secreto `email_queue_service_role_key` en Vault que usa el worker).
+2. **Verificar** que la cola se vacíe: revisar `pgmq.metrics_all()` para `transactional_emails` (debe bajar a 0) y `email_send_log` para los 4 envíos (deben pasar a `sent`).
+3. **Si después de 1 min siguen pendientes**, revisar logs de `process-email-queue` por errores específicos (suppressed, dominio, etc.) y ajustar.
+4. **Confirmar contigo** que el correo (TO + CC a hector@lopezbenavides.com) ya llegó a tu bandeja.
+5. **Changelog**: registrar el incidente en `CHANGELOG.md` y subir `APP_VERSION` patch (13.73.3) con la nota "Fix: refresco de credenciales del worker de correos transaccionales atorado".
 
-**`src/features/embarques/hooks/useEmbarqueTarifaInfo.ts`** importa `@/integrations/supabase/client` directamente.
+## Lo que NO voy a hacer
 
-**Acción:** mover la consulta a un nuevo `src/features/embarques/services/tarifaInfo.ts` que el hook consuma.
+- No voy a tocar la lógica del CC en `enviar-cotizacion-email/handlers.ts` — ya revisé y está bien: arma `recipients` con `to` + `cc` y manda cada uno como envío individual con su propia `idempotencyKey`. El bug no está ahí.
+- No voy a borrar mensajes de la cola — una vez refrescado el secreto, el worker los procesará solo (aún están dentro del TTL de 60 min).
+- No voy a recrear tablas ni cron — `setup_email_infra` es seguro de re-ejecutar.
 
-### 3. SAFE-CAST faltantes
-
-**`src/features/embarques/services/reconciliacion3Columnas.ts`** líneas 127 y 139 — casts `as unknown as` sin el marcador requerido.
-
-**Acción:** anteponer `// SAFE-CAST: <razón breve>` a cada uno (ver `mem://principles/safe-cast`).
-
-### 4. Archivo > 200 líneas (Power of 10)
-
-**`src/features/embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx`** — 204 líneas, sin allowlist.
-
-**Acción:** extraer la columna o un subcomponente (`ColumnaCotizado`, `ColumnaReal`, `ColumnaDelta`) a un archivo aparte para bajar a < 200.
-
-### 5. Formatter local redeclarado
-
-**`src/features/cotizacion/components/revalidacion/RevalidarTarifaModal.tsx`** declara `formatMoney` localmente.
-
-**Acción:** importar desde `@/lib/formatters` (el centralizado del proyecto) y eliminar la versión local.
-
-### 6. Test hygiene — títulos duplicados (4 violaciones)
-
-| Archivo | Línea | Título duplicado |
-|---|---|---|
-| `src/features/admin/services/__tests__/idempotencia.test.ts` | 31 | `"propaga errores de la RPC"` |
-| `src/features/cotizacion/services/conversiones/__tests__/embarques.test.ts` | 100 | `"falla si la RPC no devuelve id"` |
-| `src/features/cotizacion/services/revalidacion/__tests__/index.test.ts` | 64 | `"propaga error"` |
-| `src/lib/domain/__tests__/revalidacionTarifa.test.ts` | 21 | `describe("calcularDeltaPct")` |
-
-**Acción:** renombrar a títulos más específicos en cada uno de los **archivos nuevos** (los que rompieron baseline), no en los preexistentes. Por ejemplo: `"propaga error de revalidarTarifaEnCotizacion"`, `"propaga error de crearVersionEmbarque"`.
-
-## Fuera de alcance
-
-- No tocar lógica de negocio.
-- No tocar archivos preexistentes salvo SAFE-CAST en `reconciliacion3Columnas.ts` (mínimo: agregar el comentario marcador).
-- No cambiar umbrales (lint, líneas, casts) — corregir el código para cumplirlos.
-
-## Verificación
-
-1. `bun run lint -- --max-warnings 0` → 0 errores, 0 warnings.
-2. `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/architecture/` → todo verde.
-3. Bump `APP_VERSION` → `13.73.2` + entrada en `CHANGELOG.md`: *"Fix: CI verde — corrige lint de complejidad, jerarquía de capas, SAFE-CAST, formatter centralizado y títulos de test duplicados en la feature de revalidación de tarifa."*
-
-## Estimación
-
-7 archivos editados + 1 nuevo (`services/tarifaInfo.ts`) + bump versión + changelog. Cambios pequeños, todos cosméticos/estructurales. Sin riesgo de regresión funcional.
+¿Procedo?
