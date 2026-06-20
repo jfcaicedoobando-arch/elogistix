@@ -8,10 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
 import { Loader2, UserPlus, Building2, ShieldCheck } from "lucide-react";
-import { getErrorMessage } from "@/lib/errors";
 import { useCreateUser } from "@/features/admin/hooks/usuario";
 import { useOrganizationsList } from "@/features/admin/hooks";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
@@ -71,17 +70,15 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
       return;
     }
 
+    // 13.85.10 — Los toasts de éxito/error los emite `useCreateUser`.
+    // Aquí sólo coordinamos reset/close/onCreated.
     createUser.mutate(
       { email, password, role, orgId: showOrgSelector ? orgId : undefined },
       {
         onSuccess: () => {
-          notifySuccess(toast, { title: "Usuario creado", description: `Se registró ${email} como ${ROLE_LABELS[role]}` });
           reset();
           onOpenChange(false);
           onCreated();
-        },
-        onError: (err: unknown) => {
-          notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
         },
       },
     );

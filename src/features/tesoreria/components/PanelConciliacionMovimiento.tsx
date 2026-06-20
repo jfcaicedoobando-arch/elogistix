@@ -40,13 +40,12 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
   const esCargo = Number(movimiento.cargo) > 0;
   const monto = esCargo ? Number(movimiento.cargo) : Number(movimiento.abono);
 
+  // 13.85.10 — Toasts viven en los hooks (`useConciliarPago`, `useIgnorarMovimiento`, `useDesconciliar`).
+  // Aquí sólo coordinamos cierre del panel y reset de inputs.
   const onConciliar = (tipo: "cxc" | "cxp", pagoId: string) => {
     conciliar.mutate(
       { movId: movimiento.id, tipo, pagoId },
-      {
-        onSuccess: () => { toast.success("Movimiento conciliado"); onClose(); },
-        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_1" }),
-      },
+      { onSuccess: () => onClose() },
     );
   };
 
@@ -54,19 +53,16 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
     if (!motivo.trim()) return notifyError(toast, { title: "Captura un motivo", method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_2" });
     ignorar.mutate(
       { movId: movimiento.id, motivo: motivo.trim() },
-      {
-        onSuccess: () => { toast.success("Movimiento ignorado"); setOpenIgnorar(false); setMotivo(""); onClose(); },
-        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_3" }),
-      },
+      { onSuccess: () => { setOpenIgnorar(false); setMotivo(""); onClose(); } },
     );
   };
 
   const onDesconciliar = () => {
     desconciliar.mutate(movimiento.id, {
-      onSuccess: () => { toast.success("Movimiento desconciliado"); onClose(); },
-      onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_TESORERIA_COMPONENTS_PANELCONCILIACIONMOVIMIENTO_4" }),
+      onSuccess: () => onClose(),
     });
   };
+
 
   return (
     <Card>

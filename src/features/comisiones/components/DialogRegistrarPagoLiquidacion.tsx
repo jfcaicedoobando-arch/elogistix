@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
@@ -14,7 +13,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { useRegistrarPagoLiquidacion } from "@/features/comisiones/hooks";
 import type { LiquidacionRow } from "@/features/comisiones/services";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+
 export function DialogRegistrarPagoLiquidacion({
   open, onOpenChange, liq,
 }: { open: boolean; onOpenChange: (o: boolean) => void; liq: LiquidacionRow | null }) {
@@ -25,15 +24,14 @@ export function DialogRegistrarPagoLiquidacion({
 
   if (!liq) return null;
 
+  // 13.85.10 — Toasts viven en `useRegistrarPagoLiquidacion`. Aquí sólo cerramos el dialog.
   const submit = () => {
     reg.mutate(
       { id: liq.id, fecha_pago: fecha, metodo_pago: metodo, referencia },
-      {
-        onSuccess: () => { toast.success("Pago registrado"); onOpenChange(false); },
-        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGREGISTRARPAGOLIQUIDACION_1" }),
-      },
+      { onSuccess: () => onOpenChange(false) },
     );
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

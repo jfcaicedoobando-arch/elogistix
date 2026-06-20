@@ -23,9 +23,15 @@ export function useInviteClientUser(clienteId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (params: InviteClientUserParams) => inviteClientUser(params),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.clientUsers(clienteId) });
-      notifySuccess(undefined, { title: "Invitación enviada al usuario" });
+      // 13.85.10 — Diferencia "nuevo" vs "vinculado" según respuesta del servicio.
+      notifySuccess(undefined, {
+        title: data?.is_new ? "Invitación enviada" : "Usuario vinculado",
+        description: data?.is_new
+          ? "Se creó la cuenta y se envió un correo para establecer contraseña."
+          : "El usuario existente fue vinculado a este cliente.",
+      });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al invitar usuario: ${error.message}`, error, method: "INVITE_CLIENT_USER" });

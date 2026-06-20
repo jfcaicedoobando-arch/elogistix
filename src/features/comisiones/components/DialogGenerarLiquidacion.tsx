@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
@@ -13,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
 interface VendedoraOpt { id: string; nombre: string }
 
 export function DialogGenerarLiquidacion({
@@ -24,16 +22,15 @@ export function DialogGenerarLiquidacion({
   const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7));
   const gen = useGenerarLiquidacion();
 
+  // 13.85.10 — Toasts viven en `useGenerarLiquidacion`. Aquí sólo cerramos el dialog.
   const submit = () => {
     if (!vendedoraId || !periodo || !organizationId) return;
     gen.mutate(
       { vendedora_id: vendedoraId, periodo, organization_id: organizationId },
-      {
-        onSuccess: () => { toast.success("Liquidación generada"); onOpenChange(false); },
-        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGGENERARLIQUIDACION_1" }),
-      },
+      { onSuccess: () => onOpenChange(false) },
     );
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -18,8 +18,10 @@ import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
-
 import { notifyError } from "@/components/shared/utils/appFeedback";
+
+
+
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
@@ -144,10 +146,12 @@ export default function Cxp() {
         isPending={eliminar.isPending}
         onConfirm={async () => {
           if (!f.aEliminar) return;
-          await eliminar.mutateAsync(f.aEliminar.id, {
-            onSuccess: () => toast.success("Factura eliminada"),
-            onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "PAGES_CXP_CXP_2" }),
-          });
+          // 13.85.10 — Toasts viven en `useEliminarFacturaProveedor`. No duplicar aquí.
+          try {
+            await eliminar.mutateAsync(f.aEliminar.id);
+          } catch {
+            // Notificación gestionada por el hook.
+          }
           f.setAEliminar(null);
         }}
       />

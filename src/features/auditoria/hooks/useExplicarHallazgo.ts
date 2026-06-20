@@ -27,7 +27,14 @@ export function useExplicarHallazgo() {
       return data;
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al explicar hallazgo: ${error.message}`, error, method: "EXPLAIN_HALLAZGO" });
+      // 13.85.10 — Mapeo de códigos comunes de IA Gateway (402 sin créditos, 429 rate-limit).
+      const msg = error.message ?? "";
+      const title = msg.includes("402")
+        ? "Sin créditos IA disponibles"
+        : msg.includes("429")
+          ? "Demasiadas solicitudes, intenta en un momento"
+          : "No se pudo generar la explicación";
+      notifyError(undefined, { title, error, method: "EXPLAIN_HALLAZGO" });
     },
   });
 }
