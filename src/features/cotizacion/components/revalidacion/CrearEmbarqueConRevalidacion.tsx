@@ -59,7 +59,7 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
       setResultado(r);
       if (r.severidad === "sin_cambios") {
         // Crear directo
-        await ejecutarCreacion("sin_cambios", r.tarifa_id_vigente, { cambios: r.cambios });
+        await ejecutarCreacion("sin_cambios", r.tarifa_id_vigente ?? null, { cambios: r.cambios });
       } else {
         setModalOpen(true);
       }
