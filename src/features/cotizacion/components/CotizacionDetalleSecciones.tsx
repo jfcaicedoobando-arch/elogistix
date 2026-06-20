@@ -67,10 +67,12 @@ interface AccionesProps {
   esProspecto: boolean;
   numContenedores: number;
   cotizacionId: string;
+  version?: number;
   tieneEmbarquesVinculados?: boolean;
   onCambiarEstado: (e: "Enviada" | "Aceptada" | "Rechazada") => void;
   onAbrirConvertir: () => void;
 }
+
 
 function AccionesBorrador({ cotizacionId, onCambiarEstado }: { cotizacionId: string; onCambiarEstado: AccionesProps["onCambiarEstado"] }) {
   const navigate = useNavigate();
