@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { KpiCard } from "./pnl/KpiCard";
 import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
