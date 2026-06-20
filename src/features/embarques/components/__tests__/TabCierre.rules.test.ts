@@ -9,12 +9,16 @@ import { describe, it, expect } from "vitest";
  * Replica la lógica embebida en TabCierre.tsx para validarla de forma aislada.
  * Si esta regla cambia, debe actualizarse aquí y en el componente al unísono.
  */
+const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
 function puedeCerrar(opts: {
   isAdmin: boolean;
   canEditFinance: boolean;
   estatus: string;
 }): boolean {
-  return (opts.isAdmin || opts.canEditFinance) && opts.estatus === "entregado";
+  return (
+    (opts.isAdmin || opts.canEditFinance) &&
+    ESTADOS_LISTOS_PARA_CIERRE.has((opts.estatus ?? "").toLowerCase())
+  );
 }
 
 function puedeReabrir(opts: { isSuperAdmin: boolean; isAdmin: boolean }): boolean {
@@ -26,11 +30,16 @@ describe("cierre — reglas de gating", () => {
     expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "entregado" })).toBe(true);
   });
 
+  it("admin con embarque EIR (marítimo) puede cerrar", () => {
+    expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "eir" })).toBe(true);
+    expect(puedeCerrar({ isAdmin: true, canEditFinance: false, estatus: "EIR" })).toBe(true);
+  });
+
   it("contador (canEditFinance) con embarque entregado puede cerrar", () => {
     expect(puedeCerrar({ isAdmin: false, canEditFinance: true, estatus: "entregado" })).toBe(true);
   });
 
-  it("admin NO puede cerrar si el embarque no está entregado", () => {
+  it("admin NO puede cerrar si el embarque no está entregado ni en EIR", () => {
     expect(puedeCerrar({ isAdmin: true, canEditFinance: true, estatus: "en_transito" })).toBe(false);
     expect(puedeCerrar({ isAdmin: true, canEditFinance: true, estatus: "cerrado" })).toBe(false);
   });
