@@ -1,5 +1,10 @@
+/* eslint-disable max-lines, max-lines-per-function, complexity, max-depth */
+// NOTA: archivo regenerado por `email_domain.setup_email_infra`. Si vuelve a sobrescribirse,
+// re-aplicar: (1) este header eslint-disable, (2) import wrapEdgeHandler, (3) función
+// `authenticateRequest`, (4) wrap `Deno.serve(wrapEdgeHandler("process-email-queue", ...))`.
 import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { wrapEdgeHandler } from "../_shared/sentry.ts"
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
