@@ -18,7 +18,7 @@ import {
   fmtErrorBlock,
   fmtContextBlock,
   fmtStackBlock,
-} from "./errorReportFormat";
+} from "@/lib/ui/errorReportFormat";
 
 export type { ErrorReportInput, ErrorReport } from "@/lib/diagnostics/errorReportTypes";
 import type { ErrorReport, ErrorReportInput } from "@/lib/diagnostics/errorReportTypes";
