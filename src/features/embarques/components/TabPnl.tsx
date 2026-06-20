@@ -146,7 +146,9 @@ export function TabPnl({ embarqueId }: Props) {
         invertirAlerta
       />
 
-      <PnlProveedoresTable proveedores={data.por_proveedor} />
+      <div ref={registerRef("comision")} data-focus="comision">
+        <PnlProveedoresTable proveedores={data.por_proveedor} />
+      </div>
 
       <p className="text-xs text-muted-foreground">
         Tipos de cambio del embarque: USD {data.tipo_cambio_usd?.toFixed(4) ?? "—"} · EUR {data.tipo_cambio_eur?.toFixed(4) ?? "—"}
