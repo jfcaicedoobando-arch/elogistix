@@ -13,14 +13,14 @@ import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/feature
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { CotizacionDetalleHeader } from "@/features/cotizacion/components/detalle/CotizacionDetalleHeader";
 import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
-import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/pages/cotizaciones/detalle/CotizacionDetalleCards";
+import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "./detalle/CotizacionDetalleCards";
 import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 
 
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
-import CotizacionInformativaDetalle from "@/pages/cotizaciones/CotizacionInformativaDetalle";
+import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
