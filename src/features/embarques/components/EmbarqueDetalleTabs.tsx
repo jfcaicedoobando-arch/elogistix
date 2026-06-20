@@ -153,7 +153,7 @@ export function EmbarqueDetalleTabs({
       <TabsContent value="garantias" className="space-y-6">
         <section aria-labelledby="seccion-garantias" className="space-y-3">
           <h2 id="seccion-garantias" className="text-base font-semibold">Garantías</h2>
-          <TabGarantias embarqueId={embarqueId} canEdit={canEdit} />
+          <TabGarantias embarqueId={embarqueId} canEdit={canEdit} fechaLlegadaReal={embarque.fecha_llegada_real ?? null} />
         </section>
         <Separator />
         <section aria-labelledby="seccion-demoras" className="space-y-3">
