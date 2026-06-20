@@ -34,14 +34,10 @@ async function verifyServiceRoleOrFail(req: Request, env: EnvVars): Promise<Resp
     return corsResponse({ error: 'Unauthorized' }, 401)
   }
   const token = authHeader.slice('Bearer '.length).trim()
-  try {
-    const anonClient = createClient(env.supabaseUrl, env.supabaseAnonKey)
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token)
-    if (claimsError || claimsData?.claims?.role !== 'service_role') {
-      return corsResponse({ error: 'Forbidden' }, 403)
-    }
-  } catch (e) {
-    console.error('JWT verification failed', e)
+  // Server-to-server only: compara directamente contra SUPABASE_SERVICE_ROLE_KEY.
+  // Más estricto que validar `claims.role === 'service_role'` y evita fallas de
+  // `getClaims()` cuando el JWT del service role no se puede verificar localmente.
+  if (token !== env.supabaseServiceKey) {
     return corsResponse({ error: 'Forbidden' }, 403)
   }
   return null

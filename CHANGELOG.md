@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.73.1] - 2026-06-20
+- **fix(cotizaciones/email)**: `send-transactional-email` rechazaba todos los correos con `403 Forbidden` porque `auth.getClaims()` no podía verificar localmente el JWT estático del service role en Lovable Cloud. Se reemplazó la verificación por comparación directa contra `SUPABASE_SERVICE_ROLE_KEY` — más estricto y server-to-server seguro. Ahora `enviar-cotizacion-email` puede invocar la cola de correos transaccionales y la cotización se manda correctamente al cliente y al CC.
+
 ## [13.73.0] - 2026-06-20
 - **feat(cotizaciones/revalidacion-tarifa-cierre)**: Cierre de los dos pendientes del plan de revalidación de tarifa.
   - **Re-cotizar con tarifa vigente desde el banner de ventas**: `ReaprobacionTarifaBanner` ahora ofrece 3 acciones — *Re-aprobar manteniendo precio*, *Re-cotizar con tarifa vigente* y *Rechazar*. La opción de re-cotizar llama `recotizar_cotizacion` (archiva versión actual, bumpea a versión nueva en estado Borrador), registra la decisión `recotizada` y navega a `/cotizaciones/:id/editar` para que ventas re-aplique la tarifa vigente; al guardar y aceptar, el PDF se regenera por el flujo normal de la cotización.
