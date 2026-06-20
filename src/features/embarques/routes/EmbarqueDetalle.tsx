@@ -58,6 +58,7 @@ export default function EmbarqueDetalle() {
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
     confirmarAvanceConDocsPendientes,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
+    cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
   const financials = useEmbarqueFinancials({
