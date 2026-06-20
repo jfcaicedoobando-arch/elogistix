@@ -1,8 +1,8 @@
 import { memo, forwardRef } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/lib/contexts/ThemeContext";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 import { useSidebarAlerts } from "@/hooks/layout";
 import {

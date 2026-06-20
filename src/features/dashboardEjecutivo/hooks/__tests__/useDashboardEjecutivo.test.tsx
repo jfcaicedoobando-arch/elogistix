@@ -12,7 +12,7 @@ vi.mock('@/features/dashboardEjecutivo/services', () => ({
   fetchDashboardEjecutivo: mockFetch,
 }));
 
-vi.mock('@/contexts/OrganizationContext', () => ({
+vi.mock('@/lib/contexts/OrganizationContext', () => ({
   useOrganization: () => ({ organizationId: 'org-1' }),
 }));
 

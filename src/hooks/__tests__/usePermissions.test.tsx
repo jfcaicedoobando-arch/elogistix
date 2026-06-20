@@ -2,11 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { usePermissions } from "@/hooks/shared";
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: vi.fn(),
 }));
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 const mockUseAuth = vi.mocked(useAuth);
 
 describe("usePermissions", () => {

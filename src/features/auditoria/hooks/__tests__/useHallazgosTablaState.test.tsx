@@ -10,7 +10,7 @@ import type {
   HallazgoAuditoria,
 } from "@/features/auditoria/types";
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "user-1" } }),
 }));
 vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {

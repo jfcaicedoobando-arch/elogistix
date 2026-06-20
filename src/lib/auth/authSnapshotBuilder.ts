@@ -4,7 +4,7 @@
  */
 import type { User } from "@supabase/supabase-js";
 import type { AppRole } from "@/types/appRole";
-import type { CachedOrganization } from "@/contexts/auth/useAuthProfile";
+import type { CachedOrganization } from "@/lib/contexts/auth/useAuthProfile";
 
 interface ProfileLike {
   organizationId: string | null;

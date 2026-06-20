@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useProformaDetalle } from "@/features/proformas/hooks/useProformaDetalle";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";

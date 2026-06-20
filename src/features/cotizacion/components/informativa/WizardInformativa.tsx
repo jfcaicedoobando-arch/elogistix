@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/shared";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacionInformativa } from "@/features/cotizacion/hooks";
 import SeccionTarifasInformativas from "./SeccionTarifasInformativas";

@@ -1,4 +1,4 @@
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 
 /**
  * Returns the active organization ID for query filtering.

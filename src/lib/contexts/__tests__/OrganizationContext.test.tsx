@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { OrganizationProvider, useOrganization } from "../OrganizationContext";
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({
     user: null,
     role: null,

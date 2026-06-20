@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchTopTarifas, type TopTarifasParams } from "@/features/costeo/services/topTarifas";
 
 export function useTopTarifas(p: Partial<TopTarifasParams>) {

@@ -11,7 +11,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   usePresupuestoCategorias, useEliminarCategoriaPresupuesto,
 } from "@/features/presupuesto/hooks";

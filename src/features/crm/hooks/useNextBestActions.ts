@@ -5,7 +5,7 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useActividadesVencidasList } from "./useCrmDashboard";
 import { useCotizacionesSinRespuesta } from "./useCotizacionesSinRespuesta";
 import { computeNextBestActions, type NbaItem } from "@/features/crm/domain/nextBestActions";

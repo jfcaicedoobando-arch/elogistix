@@ -3,7 +3,7 @@
  * I/O delegada a `services/crm/dashboard` y `services/crm/actividades`.
  */
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { fetchCrmDashboard, type CrmDashboardData } from "@/features/crm/services/dashboard";
 import {

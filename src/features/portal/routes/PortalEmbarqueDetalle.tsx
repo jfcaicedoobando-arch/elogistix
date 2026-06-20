@@ -14,7 +14,7 @@ import { PortalEmbarqueResumenTab } from "@/features/portal/components/embarqueD
 import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueStepper";
 
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();

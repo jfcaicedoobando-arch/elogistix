@@ -4,7 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { fetchOrgMembers, type OrgMemberRow } from "@/features/admin/services/members";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { queryKeys } from "@/lib/query";
 
 export interface ResponsableOption {

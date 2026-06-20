@@ -1,7 +1,7 @@
 import { vi, describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-vi.mock('@/contexts/AuthContext', () => ({
+vi.mock('@/lib/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 vi.mock('@/features/auditoria/hooks', () => ({
@@ -14,7 +14,7 @@ vi.mock('@/features/crm/hooks/useCrmDashboard', () => ({
   useActividadesVencidasCount: () => ({ data: 0 }),
 }));
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useAppSidebarSections } from '../useAppSidebarSections';
 
 describe('useLayout Hooks', () => {

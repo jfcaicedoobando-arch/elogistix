@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 export function PortalProtectedRoute({ children }: { children: React.ReactNode }) {

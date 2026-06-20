@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   useAsignarResponsable,
   useOrgMembersAsignables,

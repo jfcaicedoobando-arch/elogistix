@@ -19,7 +19,7 @@ import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/reval
 
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)

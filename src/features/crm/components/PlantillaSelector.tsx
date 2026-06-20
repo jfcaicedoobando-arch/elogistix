@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/features/crm/hooks";
 import { insertBitacora } from "@/features/auditoria/services/bitacora";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { buildWhatsappUrl } from "@/constants/externalUrls";
 
 interface Props {

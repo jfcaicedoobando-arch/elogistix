@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle } from "lucide-react";
 import { usePortalFactura } from "@/features/portal/hooks";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";

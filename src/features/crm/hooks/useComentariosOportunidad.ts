@@ -4,7 +4,7 @@
  * trigger en BD (`crm_notify_comentario_oportunidad`).
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import {
   fetchComentariosOportunidad,

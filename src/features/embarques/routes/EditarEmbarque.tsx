@@ -15,7 +15,7 @@ const steps = [
   { title: 'Costos y Pricing', num: 3 },
 ];
 
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 export default function EditarEmbarque() {
   const { id } = useParams();

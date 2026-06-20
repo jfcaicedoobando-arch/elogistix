@@ -6,7 +6,7 @@
  * - Mías: filtradas por `operador = <email actual>` (dashboard comercial).
  */
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   contarCotizacionesPendientesReaprobacion,
   contarMisCotizacionesPendientesReaprobacion,

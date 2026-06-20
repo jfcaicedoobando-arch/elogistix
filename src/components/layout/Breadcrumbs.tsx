@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { Fragment, memo, useMemo } from "react";
-import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
+import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
 
 /**
  * Mapa de segmentos de ruta → etiqueta visible.

@@ -4,7 +4,7 @@
  * (Auditoría Paso 6).
  */
 import { useMemo, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
 import { useDashboardData, ESTADOS_FILTRO } from "@/features/dashboard/hooks";
 

@@ -17,7 +17,7 @@ vi.mock('@/features/cxp/services', () => ({
   eliminarPagoProveedor: mockEliminarPago,
 }));
 
-vi.mock('@/contexts/AuthContext', () => ({
+vi.mock('@/lib/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'user-123' } }),
 }));
 

@@ -12,7 +12,7 @@ vi.mock("@/features/cotizacion/services", () => ({
   crearEmbarqueBorradorDesdeCotizacion,
 }));
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "user-1" } }),
 }));
 

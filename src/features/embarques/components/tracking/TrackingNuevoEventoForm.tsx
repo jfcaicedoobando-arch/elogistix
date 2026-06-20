@@ -9,7 +9,7 @@ import { TrackingConfirmFechaLlegadaDialog } from "./TrackingConfirmFechaLlegada
 import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/features/embarques/hooks";
 import { useActualizarFechaLlegadaReal } from "@/features/embarques/hooks/mutations/useActualizarFechaLlegadaReal";
 import { ICONO_EVENTO } from "@/features/embarques/constants/embarqueConstants";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
