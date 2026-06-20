@@ -8,7 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTimbrarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useFactura } from "@/features/facturacion/hooks/useFactura";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchClienteFiscal,
+  actualizarDatosTimbradoFactura,
+  type ClienteFiscalRow,
+} from "@/features/facturacion/services";
 import { useQuery } from "@tanstack/react-query";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 
@@ -18,12 +22,7 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-interface FiscalCliente {
-  rfc: string | null;
-  codigo_postal: string | null;
-  regimen_fiscal: string | null;
-  uso_cfdi_default: string | null;
-}
+type FiscalCliente = ClienteFiscalRow;
 
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const timbrar = useTimbrarFactura();
@@ -32,14 +31,7 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const { data: cliente } = useQuery<FiscalCliente | null>({
     queryKey: ["cliente_fiscal", factura?.cliente_id],
     enabled: !!factura?.cliente_id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("clientes")
-        .select("rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
-        .eq("id", factura!.cliente_id)
-        .maybeSingle();
-      return data;
-    },
+    queryFn: () => fetchClienteFiscal(factura!.cliente_id),
   });
 
   const [serie, setSerie] = useState("A");
