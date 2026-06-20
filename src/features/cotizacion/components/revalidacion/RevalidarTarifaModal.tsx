@@ -19,6 +19,7 @@ interface Props {
   resultado: ResultadoRevalidacion | null;
   onMantener: () => void;
   onRefrescar: () => void;
+  onSustituir?: () => void;
   onSolicitarReaprobacion: () => void;
   loading?: boolean;
 }
