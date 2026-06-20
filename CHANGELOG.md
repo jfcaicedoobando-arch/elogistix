@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.76.0] - 2026-06-20
+- **refactor(estructura) Paso 3 auditoría**: movidos los servicios de dominio fuera de `src/services/` hacia sus features correspondientes. `pagos-factura/` → `src/features/facturacion/services/pagos/`, `csf/` → `src/features/cliente/services/csf/`, `planes/` → `src/features/admin/services/planes/`. Actualizados todos los imports (`@/services/<x>` → `@/features/<feature>/services/<x>`) en hooks, páginas, tests y edge functions. `src/services/` queda solo con servicios transversales (auth, bitácora, search, storage, tracking, organization, notificaciones, observability, demoAccess, demoMode, usuario, unsubscribeService). Verificado: 8/8 archivos de test (33/33 tests) verdes; auditoría arquitectónica sin nuevos hallazgos.
+
 ## [13.75.0] - 2026-06-20
 - **refactor(estructura) Paso 2 auditoría**: migradas las rutas de `cotizaciones` (6 archivos + carpeta `detalle/`) y `clientes` (2 archivos) desde `src/pages/` hacia `src/features/cotizacion/routes/` y `src/features/cliente/routes/`. Actualizados los imports lazy en `src/routes/appRoutes.lazy.ts` y los prefetch en `src/contexts/AuthContext.tsx`. Imports internos de `CotizacionDetalle.tsx` ahora son relativos al feature. Sin cambios de comportamiento.
 
