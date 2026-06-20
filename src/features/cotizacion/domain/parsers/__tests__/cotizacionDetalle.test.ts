@@ -4,7 +4,7 @@ import {
   calcularTotalesConceptos,
   getNombreDestinatario,
   EMPTY_TOTALES,
-} from "@/lib/parsers/cotizacionDetalle";
+} from "@/features/cotizacion/domain/parsers/cotizacionDetalle";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 
 const concepto = (over: Partial<ConceptoVentaCotizacion>): ConceptoVentaCotizacion => ({

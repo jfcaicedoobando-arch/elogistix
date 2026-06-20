@@ -8,7 +8,7 @@
  */
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
-import { parseConceptos } from "@/lib/parsers/cotizacionDetalle";
+import { parseConceptos } from "@/features/cotizacion/domain/parsers/cotizacionDetalle";
 
 export interface ConceptoVentaWizard {
   id: number;

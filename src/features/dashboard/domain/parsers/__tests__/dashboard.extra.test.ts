@@ -9,8 +9,8 @@ import {
   EMPTY_CONTEO,
   EMPTY_ARRIBOS,
   EMPTY_RESUMEN,
-} from "@/lib/parsers/dashboard";
-import type { DashboardStats, EmbarqueConEstado } from "@/lib/parsers/dashboard";
+} from "@/features/dashboard/domain/parsers/dashboard";
+import type { DashboardStats, EmbarqueConEstado } from "@/features/dashboard/domain/parsers/dashboard";
 
 const makeEstado = (id: string): EmbarqueConEstado => ({
   id,

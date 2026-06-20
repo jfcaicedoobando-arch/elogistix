@@ -4,7 +4,7 @@ import {
   numOrCompute,
   safeMargen,
   parseEmbarqueConProfitRaw,
-} from "@/lib/parsers/dashboardProfit";
+} from "@/features/dashboard/domain/parsers/dashboardProfit";
 
 describe("dashboardProfit | numOr0", () => {
   it("dashboardProfit.extra: retorna el número directamente", () => {
