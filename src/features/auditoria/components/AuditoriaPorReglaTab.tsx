@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { HallazgoTabla } from "@/features/auditoria/components/HallazgoTabla";
-import { REGLA_INFO, REGLAS_ORDEN } from "@/lib/ui/auditoriaConfig";
+import { REGLA_INFO, REGLAS_ORDEN } from "@/features/auditoria/constants/auditoriaConfig";
 import type { useAuditoriaPageController } from "@/features/auditoria/hooks";
 
 interface Props {
