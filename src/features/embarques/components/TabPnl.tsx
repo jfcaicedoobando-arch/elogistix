@@ -20,6 +20,7 @@ interface Props {
 
 export function TabPnl({ embarqueId }: Props) {
   const { data, isLoading, error } = usePnlFinanciero(embarqueId);
+  const { registerRef } = useFocusSection();
 
   if (isLoading) {
     return (
