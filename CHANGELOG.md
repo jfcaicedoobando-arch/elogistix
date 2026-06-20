@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.87.5] - 2026-06-20
+- **ui(embarques/cierre) mensaje contextual según modo de transporte**: el alert de "Aún no se puede cerrar" ahora diferencia claramente: embarques **marítimos** requieren estado **EIR**; los demás modos requieren **Entregado**. Se pasa la prop `modo` desde `EmbarqueDetalleTabs` hasta `TabCierre`.
+
 ## [13.87.4] - 2026-06-20
 - **fix(embarques/cierre) permitir cerrar desde EIR además de Entregado**: el flujo marítimo termina en `EIR` (devolución del contenedor a la naviera), pero `TabCierre` y la RPC `cerrar_embarque` exigían exactamente `Entregado`, dejando atorados los embarques marítimos. Ahora ambos aceptan `Entregado` o `EIR` (aéreo/terrestre siguen cerrando desde `Entregado`, EIR no aplica). Normalización a lowercase en el frontend para tolerar variantes de casing. Tests `TabCierre.rules` agregan el caso EIR.
 
