@@ -4,7 +4,7 @@
  * que el controller fusionará en el form. Solo aplica a proveedores nacionales.
  */
 import { toast } from "sonner";
-import { parseCsf, type CsfParsedData } from "@/services/csf";
+import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";

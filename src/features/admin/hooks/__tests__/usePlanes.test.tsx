@@ -2,9 +2,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { usePlanes, useUpdatePlan } from "../usePlanes";
 import { createWrapper } from "@/test/utils/queryWrapper";
-import * as planesService from "@/services/planes";
+import * as planesService from "@/features/admin/services/planes";
 
-vi.mock("@/services/planes", () => ({
+vi.mock("@/features/admin/services/planes", () => ({
   fetchPlanes: vi.fn().mockResolvedValue([{ id: "1", nombre: "Plan A" }]),
   updatePlan: vi.fn().mockResolvedValue({ success: true }),
 }));

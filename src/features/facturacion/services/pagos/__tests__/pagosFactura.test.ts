@@ -16,7 +16,7 @@ import {
   listarPagosFactura,
   registrarPagoFactura,
   eliminarPagoFactura,
-} from "@/services/pagos-factura";
+} from "@/features/facturacion/services/pagos";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
