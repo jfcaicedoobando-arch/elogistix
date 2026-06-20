@@ -98,6 +98,15 @@ export function TabConciliacion({ embarqueId }: Props) {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Reconciliación 3 columnas (Cotizado · Refrescado · Real)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReconciliacionTresColumnas embarqueId={embarqueId} />
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpis.map((k) => (
           <Card key={k.label}>
@@ -110,7 +119,7 @@ export function TabConciliacion({ embarqueId }: Props) {
       </div>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Cotizado vs Real por concepto</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Cotizado vs Real por concepto (facturas proveedor)</CardTitle></CardHeader>
         <CardContent className="p-0">
           <DataTable
             columns={cols}
@@ -132,3 +141,4 @@ export function TabConciliacion({ embarqueId }: Props) {
     </div>
   );
 }
+
