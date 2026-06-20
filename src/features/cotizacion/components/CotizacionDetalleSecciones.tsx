@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { formatDate } from "@/lib/formatters";
 import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
+import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
 
 
 
