@@ -23,6 +23,6 @@ describe("Fase 1 #4 — Unsubscribe encapsulado", () => {
   });
 
   it("usa el wrapper @/features/auth/services/unsubscribeService", () => {
-    expect(src).toMatch(/from\s+["']@\/services\/unsubscribeService["']/);
+    expect(src).toMatch(/from\s+["']@\/features\/auth\/services\/unsubscribeService["']/);
   });
 });
