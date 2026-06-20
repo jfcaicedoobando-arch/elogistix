@@ -124,6 +124,7 @@ export async function obtenerReconciliacion3Columnas(
     };
   }
 
+  // SAFE-CAST: el select trae sólo columnas de EmbarqueMeta; Supabase devuelve unknown.
   const emb = embRaw as unknown as EmbarqueMeta;
   let cotizados: CostoVersionado[] = [];
   let versionAceptada: number | null = null;
@@ -136,6 +137,7 @@ export async function obtenerReconciliacion3Columnas(
       .eq("id", emb.cotizacion_id)
       .maybeSingle();
     if (cotErr) throw new Error(cotErr.message);
+    // SAFE-CAST: version_aceptada existe pero el tipo generado aún no la incluye.
     versionAceptada = ((cotMeta as unknown as { version_aceptada: number | null } | null)
       ?.version_aceptada) ?? null;
     cotizados = await obtenerCostosCotizacionVersion(emb.cotizacion_id, versionAceptada);

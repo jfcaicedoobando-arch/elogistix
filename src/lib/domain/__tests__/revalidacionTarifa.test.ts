@@ -18,7 +18,7 @@ const cambio = (over: Partial<CambioTarifa> = {}): CambioTarifa => ({
   ...over,
 });
 
-describe("calcularDeltaPct", () => {
+describe("calcularDeltaPct (revalidación tarifa)", () => {
   it("devuelve 0 cuando ambos son 0", () => {
     expect(calcularDeltaPct(0, 0)).toBe(0);
   });

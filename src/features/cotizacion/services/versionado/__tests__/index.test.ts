@@ -37,7 +37,7 @@ describe("recotizarCotizacion", () => {
     expect(call?.args).toEqual({ p_cotizacion_id: "c1", p_motivo: "Cliente pidió revisión" });
   });
 
-  it("propaga errores de la RPC", async () => {
+  it("propaga error de la RPC recotizar_cotizacion", async () => {
     mock.setRpcResult("recotizar_cotizacion", { data: null, error: { message: "boom" } });
     await expect(recotizarCotizacion("c1", "x")).rejects.toThrow("boom");
   });

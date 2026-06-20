@@ -1,60 +1,66 @@
-## Diagnóstico
 
-**Analogía:** la función `enviar-cotizacion-email` toca el timbre de `send-transactional-email` y le entrega la "llave maestra" (service role key). El portero (validación JWT) está intentando descifrar la llave consultando un servicio externo y no le funciona, así que devuelve **Forbidden** para todos los destinatarios.
+## Qué pasó
 
-Evidencia en `cotizacion_envios`:
+El último push rompió CI. El job agregador marca `quality=failure` y `tests=failure`. Todos los hallazgos vienen de archivos que tocamos al construir la revalidación automática de tarifa (v13.73.x). Ninguno es un bug funcional — son reglas de calidad del proyecto (Power of 10, formatters centralizados, jerarquía de capas, higiene de tests).
 
-```
-estado: "fallido"
-error: [{ "email": "...", "ok": false, "error": "Forbidden" }, ... ]
-```
+## Hallazgos a corregir
 
-El 403 viene de `supabase/functions/send-transactional-email/index.ts` en `verifyServiceRoleOrFail`:
+### 1. Lint: complejidad ciclomática > 16
 
-```ts
-const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token)
-if (claimsError || claimsData?.claims?.role !== 'service_role') {
-  return corsResponse({ error: 'Forbidden' }, 403)
-}
-```
+| Archivo | Función | Complejidad |
+|---|---|---|
+| `src/features/cotizacion/components/columnsParts/estadoVigenciaCell.tsx` | `renderEstadoVigencia` | 17 |
+| `src/features/embarques/components/OrigenCostosSection.tsx` | `OrigenCostosSection` | 18 |
 
-`auth.getClaims()` valida JWTs con la clave pública asimétrica del proyecto. Cuando recibe el JWT estático del **service role** (HMAC, no asimétrico) en muchos proyectos Lovable Cloud no logra validarlo localmente y la verificación falla → todos los correos caen como `Forbidden`. El bug se introdujo con la versión actual de la validación; los logs de la edge function ni siquiera muestran el send porque rebota en el guard.
+**Acción:** extraer sub-funciones puras (`getBadgeVariant`, `getEstadoLabel`, helpers de render) hasta dejar cada función ≤ 16.
 
-## Cambio propuesto (1 archivo)
+### 2. Arquitectura — capas Pages→Hooks→Services→Lib
 
-`supabase/functions/send-transactional-email/index.ts` — reemplazar el `getClaims` por una comparación directa contra `SUPABASE_SERVICE_ROLE_KEY` (función llamada exclusivamente server-to-server por otras edge functions, no por el browser):
+**`src/features/embarques/hooks/useEmbarqueTarifaInfo.ts`** importa `@/integrations/supabase/client` directamente.
 
-```ts
-async function verifyServiceRoleOrFail(req: Request, env: EnvVars): Promise<Response | null> {
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return corsResponse({ error: 'Unauthorized' }, 401)
-  }
-  const token = authHeader.slice('Bearer '.length).trim()
-  if (token !== env.supabaseServiceKey) {
-    return corsResponse({ error: 'Forbidden' }, 403)
-  }
-  return null
-}
-```
+**Acción:** mover la consulta a un nuevo `src/features/embarques/services/tarifaInfo.ts` que el hook consuma.
 
-Por qué es seguro:
-- El service role key sólo está accesible dentro de edge functions (no se expone al cliente).
-- Una comparación exacta es estrictamente más estricta que `claims.role === 'service_role'` (sólo acepta *ese* key, no cualquier JWT firmado con role service_role).
-- Mantiene el mismo contrato externo: las funciones que ya llaman con `Bearer <SERVICE_ROLE_KEY>` siguen funcionando.
+### 3. SAFE-CAST faltantes
 
-## Verificación
+**`src/features/embarques/services/reconciliacion3Columnas.ts`** líneas 127 y 139 — casts `as unknown as` sin el marcador requerido.
 
-1. Probar reenviando la misma cotización; confirmar que `cotizacion_envios.estado = 'enviado'` y que los registros en `email_send_log` cambian a `pending` → `sent`.
-2. Confirmar que `useEnviarCotizacionEmail` ya no dispara `notifyError`.
+**Acción:** anteponer `// SAFE-CAST: <razón breve>` a cada uno (ver `mem://principles/safe-cast`).
 
-## Bitácora
+### 4. Archivo > 200 líneas (Power of 10)
 
-- `CHANGELOG.md`: agregar entrada `13.73.1 — fix(cotizaciones/email)`.
-- `APP_VERSION` → `13.73.1`.
+**`src/features/embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx`** — 204 líneas, sin allowlist.
+
+**Acción:** extraer la columna o un subcomponente (`ColumnaCotizado`, `ColumnaReal`, `ColumnaDelta`) a un archivo aparte para bajar a < 200.
+
+### 5. Formatter local redeclarado
+
+**`src/features/cotizacion/components/revalidacion/RevalidarTarifaModal.tsx`** declara `formatMoney` localmente.
+
+**Acción:** importar desde `@/lib/formatters` (el centralizado del proyecto) y eliminar la versión local.
+
+### 6. Test hygiene — títulos duplicados (4 violaciones)
+
+| Archivo | Línea | Título duplicado |
+|---|---|---|
+| `src/features/admin/services/__tests__/idempotencia.test.ts` | 31 | `"propaga errores de la RPC"` |
+| `src/features/cotizacion/services/conversiones/__tests__/embarques.test.ts` | 100 | `"falla si la RPC no devuelve id"` |
+| `src/features/cotizacion/services/revalidacion/__tests__/index.test.ts` | 64 | `"propaga error"` |
+| `src/lib/domain/__tests__/revalidacionTarifa.test.ts` | 21 | `describe("calcularDeltaPct")` |
+
+**Acción:** renombrar a títulos más específicos en cada uno de los **archivos nuevos** (los que rompieron baseline), no en los preexistentes. Por ejemplo: `"propaga error de revalidarTarifaEnCotizacion"`, `"propaga error de crearVersionEmbarque"`.
 
 ## Fuera de alcance
 
-- No se modifica `enviar-cotizacion-email/handlers.ts` ni el flujo de envío en el cliente.
-- No se cambia la lógica de plantillas, suppression list ni cola pgmq.
-- No se tocan otras edge functions con guardas similares (no hay reportes de fallo).
+- No tocar lógica de negocio.
+- No tocar archivos preexistentes salvo SAFE-CAST en `reconciliacion3Columnas.ts` (mínimo: agregar el comentario marcador).
+- No cambiar umbrales (lint, líneas, casts) — corregir el código para cumplirlos.
+
+## Verificación
+
+1. `bun run lint -- --max-warnings 0` → 0 errores, 0 warnings.
+2. `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/architecture/` → todo verde.
+3. Bump `APP_VERSION` → `13.73.2` + entrada en `CHANGELOG.md`: *"Fix: CI verde — corrige lint de complejidad, jerarquía de capas, SAFE-CAST, formatter centralizado y títulos de test duplicados en la feature de revalidación de tarifa."*
+
+## Estimación
+
+7 archivos editados + 1 nuevo (`services/tarifaInfo.ts`) + bump versión + changelog. Cambios pequeños, todos cosméticos/estructurales. Sin riesgo de regresión funcional.
