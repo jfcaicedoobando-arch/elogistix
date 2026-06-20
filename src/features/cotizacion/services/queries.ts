@@ -10,7 +10,7 @@ import { fromDb } from "@/lib/supabase/cast";
 // usamos para decidir si una cotización tiene costos cargados o sigue
 // "Sin costos" (v13.29.0).
 export const COTIZACION_LIST_COLUMNS =
-  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, cotizacion_costos(count)" as const;
+  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, estado_revalidacion, cotizacion_costos(count)" as const;
 
 export const COTIZACION_ACEPTADA_COLUMNS =
   "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas" as const;
