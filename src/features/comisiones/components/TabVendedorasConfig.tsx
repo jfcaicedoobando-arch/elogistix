@@ -158,11 +158,9 @@ function SeccionEmbarquesSinAsignar({ vendedoras }: { vendedoras: VendedoraOpt[]
                 <Button
                   size="sm" variant="outline"
                   disabled={!sel[e.id] || asignar.isPending}
-                  onClick={() => asignar.mutate(
-                    { embarqueId: e.id, vendedoraId: sel[e.id] },
-                    { onSuccess: () => toast.success("Vendedora asignada") },
-                  )}
+                  onClick={() => asignar.mutate({ embarqueId: e.id, vendedoraId: sel[e.id] })}
                 >
+
                   Asignar
                 </Button>
               </div>
