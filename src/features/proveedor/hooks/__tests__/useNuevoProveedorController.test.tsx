@@ -7,21 +7,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
-const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError } = vi.hoisted(() => ({
-  findProveedorByRfcEnOrg: vi.fn(),
-  procesarCsfUpload: vi.fn(),
-  notifyError: vi.fn(),
-}));
-
-class ProveedorDuplicadoError extends Error {
-  existente: { id: string; nombre: string } | null;
-  rfcNormalizado: string;
-  constructor(existente: { id: string; nombre: string } | null, rfcNormalizado: string) {
-    super("dup");
-    this.existente = existente;
-    this.rfcNormalizado = rfcNormalizado;
+const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError, ProveedorDuplicadoError } = vi.hoisted(() => {
+  class ProveedorDuplicadoError extends Error {
+    existente: { id: string; nombre: string } | null;
+    rfcNormalizado: string;
+    constructor(existente: { id: string; nombre: string } | null, rfcNormalizado: string) {
+      super("dup");
+      this.existente = existente;
+      this.rfcNormalizado = rfcNormalizado;
+    }
   }
-}
+  return {
+    findProveedorByRfcEnOrg: vi.fn(),
+    procesarCsfUpload: vi.fn(),
+    notifyError: vi.fn(),
+    ProveedorDuplicadoError,
+  };
+});
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
