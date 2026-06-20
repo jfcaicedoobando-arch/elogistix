@@ -57,13 +57,21 @@ export default function Operaciones() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />
         <KpiCard titulo="Contenedores (TEU)" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
         <KpiCard titulo="Profit USD" valor={formatCurrencyCompact(global.totalProfit, "USD")} valorTooltip={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="success" loading={isLoading} />
         <KpiCard titulo="Alertas" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
+        <KpiCard
+          titulo="Tarifas a re-aprobar"
+          valor={pendientesReaprob}
+          subtitulo={pendientesReaprob > 0 ? "Cotizaciones esperando ventas" : "Al día"}
+          icono={RefreshCw}
+          color={pendientesReaprob > 0 ? "danger" : "info"}
+          loading={isLoading}
+        />
       </div>
 
       <DesempenoOperadores operadores={operadores} isLoading={isLoading} />
