@@ -195,7 +195,7 @@ describe("useNuevoProveedorController — handleSave", () => {
   });
 
   it("ProveedorDuplicadoError mantiene el diálogo abierto", async () => {
-    const onSave = vi.fn().mockRejectedValue(new ProveedorDuplicadoError("pv-x", "Dup"));
+    const onSave = vi.fn().mockRejectedValue(new ProveedorDuplicadoError({ id: "pv-x", nombre: "Dup" }, "RFC123456789"));
     const onClose = vi.fn();
     const { result } = renderHook(() => useNuevoProveedorController(onSave, onClose));
     fillStep1Logistico(result);
