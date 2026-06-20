@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { fetchSidebarAlertCounts } from '@/features/reportes/services';
+import { fetchAdminPendientesCount } from '@/features/embarques/services/cierre';
 
 export function useSidebarAlerts() {
   const { data } = useQuery({
@@ -10,14 +11,23 @@ export function useSidebarAlerts() {
     gcTime: 10 * 60_000,
   });
 
+  // v13.89.0 — conteo de embarques con pendientes administrativos (Entregado/EIR).
+  const { data: adminPendientes = 0 } = useQuery({
+    queryKey: ['sidebar', 'embarques-admin-pendientes'],
+    queryFn: fetchAdminPendientesCount,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+
   const embarquesDemora = data?.embarquesDemora ?? 0;
   const facturasVencidas = data?.facturasVencidas ?? 0;
   const garantiasAtoradas = data?.garantiasAtoradas ?? 0;
 
   return {
-    totalAlertas: embarquesDemora + facturasVencidas + garantiasAtoradas,
+    totalAlertas: embarquesDemora + facturasVencidas + garantiasAtoradas + adminPendientes,
     embarquesDemora,
     facturasVencidas,
     garantiasAtoradas,
+    adminPendientes,
   };
 }
