@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.74.0] - 2026-06-20
+- **refactor(emails) Paso 1 auditoría**: `process-email-queue/index.ts` reducido de 373 → 45 líneas. Ahora es un compositor delgado que delega en los módulos hermanos ya existentes (`queueAuth.ts`, `queueProcessor.ts`, `processItem.ts`, `messageProcessor.ts`). Elimina la violación crónica de Power of 10 (>200 líneas) que volvía a aparecer cada vez que `setup_email_infra` regeneraba el archivo. Tests verdes: 4/4 smoke Deno + 10/10 `sentry-edge-wrapping.test.ts`. Cuando vuelva a regenerarse, basta con re-aplicar este compositor (ver `mem://technical/process-email-queue-regeneration`).
+
 ## [13.73.4] - 2026-06-20
 - **fix(ci)**: CI verde tras la regeneración del worker `process-email-queue/index.ts` por `setup_email_infra`. La plantilla auto-generada perdió: (1) el wrap `wrapEdgeHandler` exigido por `sentry-edge-wrapping.test.ts`, (2) la función nombrada `authenticateRequest` exigida por el smoke test Deno, (3) cumplimiento de límites ESLint (max-lines, complexity, max-depth, max-lines-per-function).
   - Re-aplicado el import `wrapEdgeHandler` desde `../_shared/sentry.ts` y cambiado `Deno.serve(async ...)` por `Deno.serve(wrapEdgeHandler("process-email-queue", async ...))`.
