@@ -30,20 +30,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { CierreChecklistCard } from "./cierre/CierreChecklistCard";
 import { CierreHistorialCard } from "./cierre/CierreHistorialCard";
 
-const ETIQUETAS_REGLA: Record<string, string> = {
-  cxc_sin_pendientes: "Cuentas por cobrar al día",
-  cxc_cobrada: "Cuentas por cobrar al día",
-  cxp_sin_pendientes: "Cuentas por pagar al día",
-  cxp_pagada: "Cuentas por pagar al día",
-  documentos_completos: "Documentos requeridos completos",
-  docs_completos: "Documentos requeridos completos",
-  pnl_margen_minimo: "Utilidad mínima alcanzada",
-  comision_calculada: "Comisión devengada calculada",
-  contenedores_datos_completos: "Datos de contenedores capturados (peso y volumen)",
-  venta_conceptos_facturados: "Todos los conceptos de venta facturados",
-  costo_conceptos_con_factura: "Todos los costos tienen factura de proveedor recibida",
-  costos_liquidados: "Todos los costos están liquidados (pagados al proveedor)",
-};
+// v13.89.2 — Etiquetas y mapeos ahora viven en `utils/cierreCheckMeta.ts`.
 
 // EIR sólo aplica al flujo marítimo (último paso operativo del contenedor).
 // Aéreo/terrestre cierran desde Entregado.
