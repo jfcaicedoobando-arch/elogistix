@@ -1,10 +1,13 @@
 /**
  * Subcomponente presentacional: tarjeta del checklist de validaciones de cierre.
  * Extraído de `TabCierre.tsx` (Auditoría arquitectónica 13.56.6 / paso 15).
+ *
+ * v13.89.2 — Cada item es ahora un `CierreCheckItem` con deep-link al tab
+ * correspondiente del embarque. La prop `etiquetas` se conserva por
+ * compatibilidad pero ya no se usa (los labels viven en `cierreCheckMeta`).
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CierreCheckItem } from "./CierreCheckItem";
 
 export interface CierreCheck {
   regla: string;
@@ -15,10 +18,12 @@ export interface CierreCheck {
 interface Props {
   isLoading: boolean;
   checks: CierreCheck[];
-  etiquetas: Record<string, string>;
+  embarqueId: string;
+  /** @deprecated — los labels están en `cierreCheckMeta`. Se acepta para no romper consumidores. */
+  etiquetas?: Record<string, string>;
 }
 
-export function CierreChecklistCard({ isLoading, checks, etiquetas }: Props) {
+export function CierreChecklistCard({ isLoading, checks, embarqueId }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -31,29 +36,13 @@ export function CierreChecklistCard({ isLoading, checks, etiquetas }: Props) {
         )}
         <ul className="space-y-2">
           {checks.map((c) => (
-            <li
+            <CierreCheckItem
               key={c.regla}
-              className="flex items-start justify-between gap-3 rounded-md border p-3"
-            >
-              <div className="flex items-start gap-2">
-                {c.ok ? (
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 text-success" />
-                ) : (
-                  <XCircle className="mt-0.5 h-5 w-5 text-destructive" />
-                )}
-                <div>
-                  <p className="text-sm font-medium">{etiquetas[c.regla] ?? c.regla}</p>
-                  {c.detalle != null && (
-                    <p className="text-xs text-muted-foreground">
-                      {JSON.stringify(c.detalle)}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <Badge variant={c.ok ? "secondary" : "destructive"}>
-                {c.ok ? "OK" : "Pendiente"}
-              </Badge>
-            </li>
+              regla={c.regla}
+              ok={c.ok}
+              detalle={c.detalle}
+              embarqueId={embarqueId}
+            />
           ))}
         </ul>
       </CardContent>
