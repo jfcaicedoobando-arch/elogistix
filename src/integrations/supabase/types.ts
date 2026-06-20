@@ -1829,6 +1829,92 @@ export type Database = {
           },
         ]
       }
+      cotizacion_costos_historico: {
+        Row: {
+          archivada_en: string
+          archivada_por: string | null
+          cantidad: number
+          concepto: string
+          costeo_tarifa_id: string | null
+          costeo_tarifa_recargo_id: string | null
+          costo_total: number | null
+          costo_unitario: number
+          cotizacion_id: string
+          created_at: string
+          id: string
+          moneda: string
+          motivo: string | null
+          notas: string
+          organization_id: string
+          origen_costo_id: string
+          porcentaje_profit: number | null
+          precio_total: number | null
+          precio_venta: number
+          profit: number | null
+          proveedor: string
+          unidad_medida: string
+          version: number
+        }
+        Insert: {
+          archivada_en?: string
+          archivada_por?: string | null
+          cantidad?: number
+          concepto: string
+          costeo_tarifa_id?: string | null
+          costeo_tarifa_recargo_id?: string | null
+          costo_total?: number | null
+          costo_unitario?: number
+          cotizacion_id: string
+          created_at?: string
+          id?: string
+          moneda: string
+          motivo?: string | null
+          notas?: string
+          organization_id: string
+          origen_costo_id: string
+          porcentaje_profit?: number | null
+          precio_total?: number | null
+          precio_venta?: number
+          profit?: number | null
+          proveedor?: string
+          unidad_medida?: string
+          version: number
+        }
+        Update: {
+          archivada_en?: string
+          archivada_por?: string | null
+          cantidad?: number
+          concepto?: string
+          costeo_tarifa_id?: string | null
+          costeo_tarifa_recargo_id?: string | null
+          costo_total?: number | null
+          costo_unitario?: number
+          cotizacion_id?: string
+          created_at?: string
+          id?: string
+          moneda?: string
+          motivo?: string | null
+          notas?: string
+          organization_id?: string
+          origen_costo_id?: string
+          porcentaje_profit?: number | null
+          precio_total?: number | null
+          precio_venta?: number
+          profit?: number | null
+          proveedor?: string
+          unidad_medida?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_costos_historico_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizacion_envios: {
         Row: {
           asunto: string | null
@@ -1887,6 +1973,8 @@ export type Database = {
       }
       cotizaciones: {
         Row: {
+          aceptada_en: string | null
+          aceptada_por: string | null
           carta_garantia: boolean
           cliente_id: string | null
           cliente_nombre: string
@@ -1957,12 +2045,16 @@ export type Database = {
           updated_at: string
           validez_propuesta: string | null
           valor_seguro_usd: number
+          version: number
+          version_aceptada: number | null
           vigencia_desde: string | null
           vigencia_dias: number
           vigencia_hasta: string | null
           volumen_m3: number
         }
         Insert: {
+          aceptada_en?: string | null
+          aceptada_por?: string | null
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
@@ -2033,12 +2125,16 @@ export type Database = {
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
+          version?: number
+          version_aceptada?: number | null
           vigencia_desde?: string | null
           vigencia_dias?: number
           vigencia_hasta?: string | null
           volumen_m3?: number
         }
         Update: {
+          aceptada_en?: string | null
+          aceptada_por?: string | null
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
@@ -2109,6 +2205,8 @@ export type Database = {
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
+          version?: number
+          version_aceptada?: number | null
           vigencia_desde?: string | null
           vigencia_dias?: number
           vigencia_hasta?: string | null
@@ -5399,6 +5497,10 @@ export type Database = {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
       }
+      aceptar_cotizacion_version: {
+        Args: { p_cotizacion_id: string }
+        Returns: Json
+      }
       actualizar_cotizacion_costos: {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
@@ -5439,6 +5541,10 @@ export type Database = {
       aprobar_nota_credito_proveedor: {
         Args: { _nc_id: string }
         Returns: undefined
+      }
+      archivar_version_cotizacion: {
+        Args: { p_cotizacion_id: string; p_motivo?: string }
+        Returns: number
       }
       asignar_conceptos_a_proforma: {
         Args: { p_concepto_ids: string[]; p_proforma_id: string }
@@ -6119,6 +6225,10 @@ export type Database = {
         Args: never
         Returns: number
       }
+      obtener_costos_cotizacion_version: {
+        Args: { p_cotizacion_id: string; p_version?: number }
+        Returns: Json[]
+      }
       obtener_top_tarifas: {
         Args: {
           p_fecha?: string
@@ -6244,6 +6354,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      recotizar_cotizacion: {
+        Args: { p_cotizacion_id: string; p_motivo: string }
+        Returns: Json
       }
       reportes_resumen: {
         Args: {
