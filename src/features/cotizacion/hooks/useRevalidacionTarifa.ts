@@ -57,14 +57,18 @@ export function useResolverReaprobacion() {
       decision,
     }: {
       cotizacionId: string;
-      decision: "reaprobada" | "rechazada";
+      decision: "reaprobada" | "rechazada" | "recotizada";
     }) => resolverReaprobacion(cotizacionId, decision),
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.cotizacionId) });
       qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
-      notifySuccess(undefined, {
-        title: vars.decision === "reaprobada" ? "Tarifa re-aprobada" : "Re-aprobación rechazada",
-      });
+      const titulo =
+        vars.decision === "reaprobada"
+          ? "Tarifa re-aprobada"
+          : vars.decision === "recotizada"
+            ? "Cotización re-cotizada con tarifa vigente"
+            : "Re-aprobación rechazada";
+      notifySuccess(undefined, { title: titulo });
     },
     onError: (error: Error) => {
       notifyError(undefined, {
