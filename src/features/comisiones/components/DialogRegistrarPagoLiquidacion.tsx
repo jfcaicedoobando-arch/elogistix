@@ -25,15 +25,14 @@ export function DialogRegistrarPagoLiquidacion({
 
   if (!liq) return null;
 
+  // 13.85.10 — Toasts viven en `useRegistrarPagoLiquidacion`. Aquí sólo cerramos el dialog.
   const submit = () => {
     reg.mutate(
       { id: liq.id, fecha_pago: fecha, metodo_pago: metodo, referencia },
-      {
-        onSuccess: () => { toast.success("Pago registrado"); onOpenChange(false); },
-        onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_DIALOGREGISTRARPAGOLIQUIDACION_1" }),
-      },
+      { onSuccess: () => onOpenChange(false) },
     );
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
