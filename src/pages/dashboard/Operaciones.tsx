@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, AlertTriangle, Package, Container, Ship } from "lucide-react";
+import { TrendingUp, AlertTriangle, Package, Container, Ship, RefreshCw } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
@@ -12,6 +12,7 @@ import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/features/operaciones/components/DesempenoOperadores";
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
+import { useCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI.
 const OperacionesTendenciaChart = lazy(
