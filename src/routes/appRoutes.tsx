@@ -8,7 +8,7 @@
 import type { ReactNode } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import type { AppRole } from "@/types/appRole";
 import {
   Dashboard, Operaciones, Reportes, Bitacora, Ayuda,

@@ -17,7 +17,7 @@ import {
   type ReactNode,
 } from "react";
 import { appRoutes } from "../appRoutes";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { Layout } from "@/components/layout/Layout";
 import type { AppRole } from "@/types/appRole";
 

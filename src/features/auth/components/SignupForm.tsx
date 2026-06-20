@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { signUpWithEmail } from "@/services/auth";
+import { signUpWithEmail } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

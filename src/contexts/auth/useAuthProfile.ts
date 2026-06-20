@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppRole } from "@/types/appRole";
-import { fetchUserContext, type CachedOrganization } from "@/services/auth";
+import { fetchUserContext, type CachedOrganization } from "@/features/auth/services";
 
 export type { CachedOrganization };
 

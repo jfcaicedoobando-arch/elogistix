@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { CTA_FINAL } from "../landingCopy";
-import { ProbarDemoButton } from "@/components/marketing/ProbarDemoButton";
+import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
 
 
 

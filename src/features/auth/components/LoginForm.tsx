@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmail, resolveLandingRoute } from "@/services/auth";
+import { signInWithEmail, resolveLandingRoute } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

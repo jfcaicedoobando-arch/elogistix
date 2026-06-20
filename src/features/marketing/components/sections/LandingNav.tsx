@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import { ProbarDemoButton } from "@/components/marketing/ProbarDemoButton";
+import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
 
 const links = [
   { href: "#demo", label: "Demo" },

@@ -11,7 +11,7 @@ vi.mock("../auth/useAuthProfile", () => ({
 vi.mock("../auth/useLoginAudit", () => ({
   useLoginAudit: () => ({ clearLoginAudit: vi.fn() }),
 }));
-vi.mock("@/services/auth", () => ({ signOutCurrentSession: vi.fn() }));
+vi.mock("@/features/auth/services", () => ({ signOutCurrentSession: vi.fn() }));
 vi.mock("@/lib/supabase/cast", () => ({ fromDb: (x: unknown) => x }));
 vi.mock("@/components/shared/utils/authSnapshot", () => ({ setAuthSnapshot: vi.fn() }));
 vi.mock("@/lib/observability/sentry/user", () => ({ syncSentryUser: vi.fn() }));

@@ -4,7 +4,7 @@
  */
 import { lazy } from "react";
 import { Route } from "react-router-dom";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { AdminLayout } from "@/features/admin/components/AdminLayout";
 
 const AdminDashboard = lazy(() => import("@/features/admin/routes/AdminDashboard"));

@@ -7,7 +7,7 @@ const { mockFetchUserContext } = vi.hoisted(() => ({
   mockFetchUserContext: vi.fn(),
 }));
 
-vi.mock("@/services/auth", () => ({
+vi.mock("@/features/auth/services", () => ({
   fetchUserContext: mockFetchUserContext,
 }));
 

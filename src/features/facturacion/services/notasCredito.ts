@@ -6,7 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import { getCurrentUser } from "@/services/auth";
+import { getCurrentUser } from "@/features/auth/services";
 
 export type NotaCredito = Tables<"factura_notas_credito">;
 export type EstadoNotaCredito = NotaCredito["estado"];

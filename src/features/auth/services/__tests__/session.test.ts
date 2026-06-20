@@ -22,7 +22,7 @@ import {
   getCurrentSession,
   signOutCurrentSession,
   fetchUserContext,
-} from "@/services/auth/session";
+} from "@/features/auth/services/session";
 
 beforeEach(() => {
   mock.rpcCalls.length = 0;

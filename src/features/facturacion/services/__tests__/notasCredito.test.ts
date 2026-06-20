@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("@/services/auth", () => ({
+vi.mock("@/features/auth/services", () => ({
   getCurrentUser: vi.fn().mockResolvedValue({ id: "user-1" }),
 }));
 
