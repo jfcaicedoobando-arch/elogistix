@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.73.0] - 2026-06-20
+- **feat(cotizaciones/revalidacion-tarifa-cierre)**: Cierre de los dos pendientes del plan de revalidación de tarifa.
+  - **Re-cotizar con tarifa vigente desde el banner de ventas**: `ReaprobacionTarifaBanner` ahora ofrece 3 acciones — *Re-aprobar manteniendo precio*, *Re-cotizar con tarifa vigente* y *Rechazar*. La opción de re-cotizar llama `recotizar_cotizacion` (archiva versión actual, bumpea a versión nueva en estado Borrador), registra la decisión `recotizada` y navega a `/cotizaciones/:id/editar` para que ventas re-aplique la tarifa vigente; al guardar y aceptar, el PDF se regenera por el flujo normal de la cotización.
+  - **RPC `resolver_reaprobacion_tarifa`** aceptaba sólo `reaprobada` y `rechazada`; ahora también acepta `recotizada` para dejar trazabilidad explícita de esta ruta. Migración aplicada.
+  - **Badge `⚠ Tarifa vencida` en listado de cotizaciones**: la consulta `COTIZACION_LIST_COLUMNS` ahora hace JOIN con `costeo_tarifas:tarifa_id(vigente_hasta)` y `estadoVigenciaCell` muestra el badge cuando la cotización está en estado *Aceptada* y la tarifa vinculada ya venció. Sin RPC extra ni coste por fila — el dato viene en el mismo `select`.
+
 ## [13.72.0] - 2026-06-20
 - **feat(cotizaciones/embarques/revalidacion-tarifa-ui)**: Cierre del plan original de revalidación de tarifa (Fase 1) en UI:
   - **Crear embarque con revalidación**: nuevo `CrearEmbarqueConRevalidacion` intercepta el botón "Crear embarque" de la cotización aceptada, ejecuta `revalidar_tarifa_cotizacion` y según severidad: `sin_cambios` crea directo, `informativa` abre `RevalidarTarifaModal` con opciones Mantener / Refrescar / **Elegir otra tarifa…** (reabre `BuscarTarifaDialog`), `bloqueante` fuerza "Solicitar re-aprobación a ventas". Al crear se navega al embarque generado.
