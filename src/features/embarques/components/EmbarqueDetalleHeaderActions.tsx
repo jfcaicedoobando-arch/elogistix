@@ -24,17 +24,30 @@ interface Props {
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
   onReabrir: () => void;
+  // v13.89.1 — Cierre gateado
+  cierreEsSiguiente: boolean;
+  rolPuedeCerrar: boolean;
+  cierrePuedeAvanzar: boolean;
+  cierreMotivoBloqueo: "rol" | "checklist" | null;
+  onIrACierre: () => void;
 }
 
 export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
   onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar, onReabrir,
+  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
   const navigate = useNavigate();
 
+  // v13.89.1 — Si el siguiente estado es Cerrado y el rol no puede cerrar,
+  // ocultamos el botón. El cierre se hace desde el Tab Cierre (o por admin).
+  const ocultarAvance = cierreEsSiguiente && !rolPuedeCerrar;
+  const cierreBloqueadoPorChecklist = cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
+  const avanzarDisabled = avanzandoEstado || bloqueadoPorDocs || cierreBloqueadoPorChecklist;
+
   const avanzarBtn = (
-    <Button size="sm" disabled={avanzandoEstado || bloqueadoPorDocs}>
+    <Button size="sm" disabled={avanzarDisabled}>
       <ChevronRight className="h-4 w-4 mr-1" />
       Avanzar a {siguienteEstado}
     </Button>
@@ -50,12 +63,24 @@ export function EmbarqueDetalleHeaderActions({
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  ) : cierreBloqueadoPorChecklist ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span tabIndex={0} onClick={onIrACierre} className="cursor-pointer">{avanzarBtn}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">Hay pendientes administrativos.</p>
+          <p className="text-xs font-medium">Click para ver el Tab Cierre.</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   ) : avanzarBtn;
 
   return (
     <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
-      {canEdit && siguienteEstado ? (
-        bloqueadoPorDocs ? avanzarWithTooltip : (
+      {canEdit && siguienteEstado && !ocultarAvance ? (
+        bloqueadoPorDocs || cierreBloqueadoPorChecklist ? avanzarWithTooltip : (
           <AlertDialog>
             <AlertDialogTrigger asChild>{avanzarWithTooltip}</AlertDialogTrigger>
             <AlertDialogContent>
@@ -72,7 +97,7 @@ export function EmbarqueDetalleHeaderActions({
             </AlertDialogContent>
           </AlertDialog>
         )
-      ) : canEdit ? (
+      ) : canEdit && (!siguienteEstado || ocultarAvance) ? (
         <Button size="sm" onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>

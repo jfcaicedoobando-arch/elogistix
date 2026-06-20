@@ -100,7 +100,7 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
       <CierreChecklistCard isLoading={isLoading} checks={checks} etiquetas={ETIQUETAS_REGLA} />
 
       <div className="flex flex-wrap gap-2">
-        {!esCerrado && (
+        {!esCerrado && (isAdmin || canEditFinance) && (
           <Button
             onClick={() => dlg.setOpenCerrar(true)}
             disabled={!puedeCerrar || !todoOk || cerrarMut.isPending}
@@ -108,6 +108,11 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
             <Lock className="mr-2 h-4 w-4" />
             Cerrar embarque
           </Button>
+        )}
+        {!esCerrado && !(isAdmin || canEditFinance) && (
+          <p className="text-xs text-muted-foreground">
+            El cierre del embarque es responsabilidad del equipo de administración / finanzas.
+          </p>
         )}
         {esCerrado && puedeReabrir && (
           <Button variant="outline" onClick={() => dlg.setOpenReabrir(true)}>

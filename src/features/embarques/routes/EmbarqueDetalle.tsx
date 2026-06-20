@@ -58,6 +58,7 @@ export default function EmbarqueDetalle() {
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
     confirmarAvanceConDocsPendientes,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
+    cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
   const financials = useEmbarqueFinancials({
@@ -101,7 +102,13 @@ export default function EmbarqueDetalle() {
         onBlockDocsOpenChange={setBlockDocsOpen}
         onConfirmarAvanceConDocsPendientes={confirmarAvanceConDocsPendientes}
         onIrADocumentos={() => { setBlockDocsOpen(false); setActiveTab("documentos"); }}
+        cierreEsSiguiente={cierreEsSiguiente}
+        rolPuedeCerrar={rolPuedeCerrar}
+        cierrePuedeAvanzar={cierrePuedeAvanzar}
+        cierreMotivoBloqueo={cierreMotivoBloqueo}
+        onIrACierre={() => setActiveTab("cierre")}
       />
+
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />

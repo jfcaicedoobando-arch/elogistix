@@ -1,70 +1,46 @@
 
-# Panel de Pendientes Administrativos (sin estado nuevo)
+# Cierre de embarque: separar operativo de administrativo
 
-Mantenemos los 7 estados actuales. Agregamos visibilidad sobre el "limbo administrativo" entre EIR/Entregado y Cerrado, reusando `validar_cierre_embarque` que ya valida CxC, CxP, documentos y comisiones.
+Hoy el botón "Avanzar estado" del header permite a cualquier rol con permiso de avance brincar de EIR/Entregado a Cerrado sin pasar por el checklist financiero. Unificamos todo bajo `validar_cierre_embarque` y separamos roles.
 
-## Qué se agrega
+## Reglas nuevas
 
-### 1. Sub-badge "Admin pendiente" en lista y detalle
-En embarques con estado **EIR** (marítimo) o **Entregado** (resto) que aún no están Cerrados:
-- Badge ámbar al lado del estado: `Admin pendiente · 2`
-- El número = cantidad de checks que fallan en `validar_cierre_embarque`.
-- Verde `Listo para cerrar` cuando todos los checks pasan.
+### Roles
+- **Operativos** (operador, coordinador_logistico, customer_service, viewer): su flujo termina en **EIR** (marítimo) o **Entregado** (resto). No cierran.
+- **Administración/Finanzas** (admin, contador, tesorero, ejecutivo_cobranza, super_admin): son los únicos que pueden cerrar.
 
-### 2. Nueva pestaña "Cierre Administrativo" en el detalle del embarque
-Solo visible cuando estado ∈ {EIR, Entregado}. Muestra checklist en vivo:
+### Botón "Avanzar estado" en el header (`EmbarqueDetalleHeaderActions`)
+- Cuando el siguiente estado calculado es **Cerrado**:
+  - Si el rol NO es admin/finanzas → el botón desaparece (último estado visible para el operador es EIR/Entregado).
+  - Si el rol SÍ es admin/finanzas → el botón aparece, pero **deshabilitado** mientras `validar_cierre_embarque.puede_cerrar === false`. Tooltip: "Hay pendientes administrativos. Ver Tab Cierre."
+  - Cuando el checklist está OK, el botón funciona como atajo y dispara la misma RPC `cerrar_embarque` que usa el Tab Cierre (con su confirmación "CERRAR" inline, no diálogo).
+- Quitamos `warnCierreOpen` (aviso "sin proforma") porque ya está cubierto por el check unificado.
 
-```
-✅  Documentos completos
-⚠   Cobranza pendiente — Factura F-001 ($12,400 MXN)     [Ir a CxC]
-⚠   Pago a proveedor pendiente — MAERSK ($2,400 USD)     [Ir a CxP]
-✅  Comisión calculada
-─────────────────────────────────────────
-        [ Cerrar embarque ]   (deshabilitado hasta que todo esté ✅)
-```
+### Tab Cierre (`TabCierre.tsx`)
+- Visible para todos los roles (incluido operativo).
+- El checklist sigue siendo de sólo lectura para quien no puede cerrar.
+- El botón "Cerrar embarque" queda oculto para operativos (hoy ya está deshabilitado; lo escondemos para reducir ruido).
+- Para admin/finanzas no cambia.
 
-Reutiliza `validarCierre(embarqueId)` que ya existe en `services/cierre.ts`.
+### RPC `cerrar_embarque` (backend)
+- Ya valida `puede_cerrar` server-side, así que ningún rol puede saltarse el checklist aunque modifique el front. Confirmamos que sigue así (no cambia, solo verificamos).
 
-### 3. Filtros en lista de embarques
-Chip de filtro rápido:
-- `Listos para cerrar` (todos los checks ✅, aún no Cerrado)
-- `Admin pendiente` (al menos un check ⚠)
+## Archivos a tocar
 
-### 4. Alerta en sidebar
-Nuevo contador en `useSidebarAlerts`:
-- **Administración/Finanzas (admin, contabilidad, cobranza):** ven todos los embarques con admin pendiente de su organización.
-- **Operativo:** ve solo embarques donde es responsable operativo + un badge informativo (no crítico, color gris).
-- **Vendedor:** ve solo embarques donde es el vendedor asignado (para seguimiento de comisión).
+- `src/features/embarques/hooks/useEmbarqueEstadoActions.ts` — gatear el avance a Cerrado por rol y por `puede_cerrar`. Quitar warnCierre.
+- `src/features/embarques/components/EmbarqueDetalleHeader.tsx` y `EmbarqueDetalleHeaderActions.tsx` — calcular `puedeAvanzarACerrado` (rol financiero + validación), pasar tooltip explicativo.
+- `src/features/embarques/components/EmbarqueHeaderDialogs.tsx` — eliminar el diálogo "cierre sin proforma".
+- `src/features/embarques/components/TabCierre.tsx` — ocultar el botón Cerrar/Reabrir cuando el rol no aplique (hoy queda deshabilitado, ahora se oculta).
+- `src/hooks/shared/usePermissions.ts` — verificar si existe `canCloseEmbarque`; si no, agregar helper que combine `isAdmin || canEditFinance`.
+- Tests:
+  - `TabCierre.rules.test` — caso operador no ve botón.
+  - Test nuevo del header: operador no ve botón cuando siguiente=Cerrado; admin lo ve deshabilitado si validación falla.
+- `APP_VERSION` → `13.89.1` y entrada en `CHANGELOG.md`.
 
-Una sola RPC `embarques_admin_pendientes_count(p_scope)` que devuelve el conteo filtrado según rol/usuario.
+## Lo que el usuario verá
 
-### 5. Permiso de "Cerrar embarque"
-Solo roles administrativos pueden pulsar el botón final de Cerrar. El operativo ve el panel pero el botón está deshabilitado con tooltip "Solo administración puede cerrar".
+- **Operador termina embarque marítimo:** llega a EIR, ve el badge `Admin pendiente · N`, ya no aparece "Avanzar estado". El Tab Cierre muestra el checklist en sólo lectura.
+- **Administración entra al embarque:** ve el mismo badge; si todo está ✅ aparece el botón "Avanzar a Cerrado" en el header como atajo, o puede ir al Tab Cierre y usar el flujo completo con confirmación "CERRAR".
+- **Si admin intenta cerrar con pendientes:** botón deshabilitado con tooltip que apunta al Tab Cierre.
 
-## Lo que NO cambia
-- Sin estado nuevo en `ESTADOS_EMBARQUE`.
-- Sin migración de datos.
-- Timeline de fases (Cotización → Confirmado → Tránsito → Llegada → Cerrado) intacto.
-- Reportes y filtros existentes siguen funcionando.
-
-## Detalle técnico
-
-**Backend:**
-- Nueva RPC `embarques_admin_pendientes(p_org_id, p_scope_user_id)` que devuelve `{embarque_id, file, checks_pendientes[], cliente, monto_pendiente_cxc, monto_pendiente_cxp}` para listas y contadores. Reutiliza la misma lógica de `validar_cierre_embarque` aplicada a múltiples embarques.
-- Index parcial en `embarques (organization_id, estado) WHERE estado IN ('EIR','Entregado')` para acelerar.
-
-**Frontend:**
-- `src/features/embarques/components/TabCierreAdministrativo.tsx` (nuevo, ~150 líneas).
-- `src/features/embarques/components/EmbarqueDetalleTabs.tsx` — registrar la pestaña condicional.
-- `src/features/embarques/components/EmbarqueBadgeAdmin.tsx` (nuevo) — sub-badge reutilizable en lista y detalle.
-- `src/features/embarques/hooks/useAdminPendienteResumen.ts` (nuevo).
-- `src/hooks/layout/useSidebarAlerts.ts` — agregar `adminPendientesCount` con filtro por rol.
-- `src/components/layout/sidebarItems.ts` — badge en el item de Embarques.
-- `src/features/embarques/services/cierre.ts` — añadir `fetchAdminPendientes(scope)`.
-
-**Versión y changelog:**
-- `APP_VERSION` → `13.89.0`
-- Entrada en `CHANGELOG.md`: panel de cierre administrativo, badges, filtros, alertas por rol.
-
-## Próximo paso después de implementar (no incluido aún)
-Notificación automática al admin cuando un embarque entra a EIR/Entregado con `admin_pendiente > 0` por más de N días. Lo dejamos para otra iteración.
+Sin cambios de schema, sin migración.

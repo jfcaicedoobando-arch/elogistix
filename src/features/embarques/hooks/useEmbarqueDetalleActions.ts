@@ -38,5 +38,10 @@ export function useEmbarqueDetalleActions(embarque: EmbarqueRow | undefined, id:
     uploadDoc: docs.uploadDoc,
     deleteDoc: docs.deleteDoc,
     setNoAplica: docs.setNoAplica,
+    // v13.89.1 — Cierre gateado
+    cierreEsSiguiente: estado.cierreEsSiguiente,
+    rolPuedeCerrar: estado.rolPuedeCerrar,
+    cierrePuedeAvanzar: estado.cierrePuedeAvanzar,
+    cierreMotivoBloqueo: estado.cierreMotivoBloqueo,
   };
 }

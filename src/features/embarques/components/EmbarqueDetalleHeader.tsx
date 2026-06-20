@@ -40,6 +40,12 @@ interface Props {
   onBlockDocsOpenChange: (open: boolean) => void;
   onConfirmarAvanceConDocsPendientes: () => void;
   onIrADocumentos: () => void;
+  // v13.89.1 — Cierre gateado
+  cierreEsSiguiente: boolean;
+  rolPuedeCerrar: boolean;
+  cierrePuedeAvanzar: boolean;
+  cierreMotivoBloqueo: "rol" | "checklist" | null;
+  onIrACierre: () => void;
 }
 
 export function EmbarqueDetalleHeader({
@@ -52,6 +58,7 @@ export function EmbarqueDetalleHeader({
   warnDocsOpen, onWarnDocsOpenChange,
   blockDocsOpen, onBlockDocsOpenChange,
   onConfirmarAvanceConDocsPendientes, onIrADocumentos,
+  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
   const { isAdmin } = usePermissions();
   const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
@@ -112,6 +119,11 @@ export function EmbarqueDetalleHeader({
         onAbrirEliminar={onAbrirEliminar}
         onAbrirDuplicar={onAbrirDuplicar}
         onReabrir={onReabrir}
+        cierreEsSiguiente={cierreEsSiguiente}
+        rolPuedeCerrar={rolPuedeCerrar}
+        cierrePuedeAvanzar={cierrePuedeAvanzar}
+        cierreMotivoBloqueo={cierreMotivoBloqueo}
+        onIrACierre={onIrACierre}
       />
 
       <EmbarqueHeaderDialogs
