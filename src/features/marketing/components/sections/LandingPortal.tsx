@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { PORTAL } from "../landingCopy";
+import { PORTAL } from "../../routes/landingCopy";
 
 export function LandingPortal() {
   return (

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Sparkles } from "lucide-react";
-import { PRECIO } from "../landingCopy";
+import { PRECIO } from "../../routes/landingCopy";
 
 export function LandingPrecio() {
   return (

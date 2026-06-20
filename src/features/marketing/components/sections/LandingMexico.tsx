@@ -1,5 +1,5 @@
 import { Globe, Percent, TrendingUp, Anchor, Calendar, Lock, Languages, type LucideIcon } from "lucide-react";
-import { MEXICO } from "../landingCopy";
+import { MEXICO } from "../../routes/landingCopy";
 
 const ICONS: Record<string, LucideIcon> = { Percent, TrendingUp, Anchor, Calendar, Lock, Languages };
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, Calendar } from "lucide-react";
-import { FOOTER } from "../landingCopy";
+import { FOOTER } from "../../routes/landingCopy";
 
 /**
  * Demo de 60 segundos. Slot listo para video real en /demo-libre-carga.mp4.

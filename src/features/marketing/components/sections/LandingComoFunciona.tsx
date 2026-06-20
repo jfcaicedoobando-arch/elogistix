@@ -1,4 +1,4 @@
-import { PASOS } from "../landingCopy";
+import { PASOS } from "../../routes/landingCopy";
 
 export function LandingComoFunciona() {
   return (

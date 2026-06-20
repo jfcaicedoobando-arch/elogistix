@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Ship, Container, FileText, Clock } from "lucide-react";
-import { HERO, PROOF_TITLE, PROOF_LOGOS, KPIS } from "../landingCopy";
+import { HERO, PROOF_TITLE, PROOF_LOGOS, KPIS } from "../../routes/landingCopy";
 import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
 
 export function LandingHero() {

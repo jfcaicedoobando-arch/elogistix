@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, ExternalLink } from "lucide-react";
-import { FOOTER } from "../landingCopy";
+import { FOOTER } from "../../routes/landingCopy";
 
 export function LandingFooter() {
   return (

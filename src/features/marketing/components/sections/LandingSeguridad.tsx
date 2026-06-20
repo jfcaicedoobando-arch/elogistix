@@ -1,5 +1,5 @@
 import { ShieldCheck, Lock, Users, Activity, DatabaseBackup, type LucideIcon } from "lucide-react";
-import { SEGURIDAD } from "../landingCopy";
+import { SEGURIDAD } from "../../routes/landingCopy";
 
 const ICONS: LucideIcon[] = [Lock, Users, Activity, DatabaseBackup];
 

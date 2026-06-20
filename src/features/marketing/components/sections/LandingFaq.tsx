@@ -1,7 +1,7 @@
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { FAQ } from "../landingCopy";
+import { FAQ } from "../../routes/landingCopy";
 
 export function LandingFaq() {
   return (

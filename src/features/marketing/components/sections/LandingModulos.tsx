@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import {
   FileText, Ship, Receipt, Wallet, Users, Target, type LucideIcon,
 } from "lucide-react";
-import { MODULOS } from "../landingCopy";
+import { MODULOS } from "../../routes/landingCopy";
 
 const ICONS: Record<string, LucideIcon> = { FileText, Ship, Receipt, Wallet, Users, Target };
 

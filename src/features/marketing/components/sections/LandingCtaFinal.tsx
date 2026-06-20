@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { CTA_FINAL } from "../landingCopy";
+import { CTA_FINAL } from "../../routes/landingCopy";
 import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
 
 
