@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { Plus, FileText, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
@@ -17,6 +18,8 @@ import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { notifyError } from "@/components/shared/utils/appFeedback";
+
 
 
 export default function Cxp() {
