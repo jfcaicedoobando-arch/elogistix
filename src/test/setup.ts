@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { afterEach, afterAll, vi } from "vitest";
+import { afterEach, afterAll, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
 Object.defineProperty(window, "matchMedia", {
