@@ -57,9 +57,12 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
 
   const onConfirm = async () => {
     // Persiste la elección antes de timbrar
-    await supabase.from("facturas").update({
-      serie, uso_cfdi: usoCfdi, forma_pago: formaPago, metodo_pago: metodoPago,
-    }).eq("id", facturaId);
+    await actualizarDatosTimbradoFactura(facturaId, {
+      serie,
+      uso_cfdi: usoCfdi,
+      forma_pago: formaPago,
+      metodo_pago: metodoPago,
+    });
 
     timbrar.mutate(facturaId, { onSuccess: () => onOpenChange(false) });
   };
