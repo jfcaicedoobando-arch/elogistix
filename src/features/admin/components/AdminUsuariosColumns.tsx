@@ -11,7 +11,7 @@ import {
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import type { GlobalUserRow } from "@/features/admin/hooks";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
 
 const ROLE_BADGE: Record<string, string> = {
   super_admin: "bg-primary text-primary-foreground",
@@ -61,7 +61,7 @@ export function buildAdminUsuariosColumns(
       meta: { width: "w-[120px]" },
       cell: ({ row }) => (
         <Badge className={ROLE_BADGE[row.original.role] ?? ""} variant="outline">
-          {getRoleLabel(row.original.role)}
+          {obtenerEtiquetaRol(row.original.role)}
         </Badge>
       ),
     },

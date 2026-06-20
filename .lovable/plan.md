@@ -1,105 +1,117 @@
-# Auditoría arquitectónica — Libre Carga
+# Plan: Pasos 9 + 10 de la auditoría
 
-Resultado de 4 subagentes en paralelo (tamaño/complejidad, separación de capas, duplicación/código muerto, naming/estructura). El proyecto está **mayormente sano**: las migraciones de Pasos 8-10 dejaron `src/pages/` y `src/contexts/` vacíos, las capas `lib` y `services` no importan de capas superiores, los formateadores están centralizados y `domain/` es puro. Los hallazgos se concentran en **fugas Supabase en componentes** y **shims residuales** post-migración.
+Objetivo: cerrar la auditoría arquitectónica con cambios de bajo riesgo y alto valor. Saltar Paso 8 (renombre PascalCase) y el worker de `descargarZip` por baja relación beneficio/riesgo.
 
-## Hallazgos por categoría
-
-### A. God Components — UI llamando a Supabase directo (CRÍTICO)
-La regla "componentes no llaman a `@/integrations/supabase/client`" se rompe en 7 puntos:
-
-| Archivo | Línea | Llamada |
-|---|---|---|
-| `src/features/facturacion/components/FacturasMasivasToolbar.tsx` | 33, 78 | `supabase.from("facturas").select/update` |
-| `src/features/facturacion/components/DialogTimbrarFactura.tsx` | 11, 84 | `clientes.maybeSingle`, `facturas.update` |
-| `src/features/embarques/components/TabDemoras.tsx` | 20, 55 | `embarque_contenedores.update` |
-| `src/features/embarques/components/facturacion/ProformaInconsistenteAlert.tsx` | 13, 42 | `supabase.rpc("asignar_conceptos_a_proforma")` |
-| `src/features/cotizacion/components/seccionRuta/aplicarTarifa.ts` | 4, 25 | client + `bitacora_actividad` |
-
-### B. Shims de re-export huérfanos (post Paso 10)
-8 archivos en `src/components/shared/utils/*` cuyo único contenido es `export * from "@/lib/...";` Ya no aportan: son `authSnapshot`, `authSnapshotBuilder`, `auditoriaConfig`, `errorDetailsStore`, `errorReportFormat`, `estadoConfig`, `kpiTones`, `uiMappings`.
-
-### C. Archivos largos
-- `src/integrations/supabase/types.ts` (6887) — autogenerado, no tocar.
-- `src/components/ui/sidebar.tsx` (637) — shadcn primitiva original; partirlo invalida la convención shadcn (riesgo alto/beneficio bajo).
-- Resto del top 25 está bajo 222 líneas. **No hay deuda de tamaño real.**
-
-### D. Código muerto (knip)
-- Exports no usados: `useRevalidarTarifa` (`useRevalidacionTarifa.ts`), `useAceptarCotizacionVersion` y `useCostosCotizacionVersion` (`useVersionadoCotizacion.ts`).
-- Bloque comentado: `src/features/cotizacion/services/conversiones/portal.ts:22-26` (invocación a Edge Function abandonada).
-- 7 barrels `index.ts` con ≤2 usuarios externos (eliminables).
-- Scripts residuales en root: `count_its.py`, `detect_weak.py`, `audit_coverage.cjs`.
-
-### E. Naming inconsistente
-- Columnas: `clienteColumns.tsx` (camel) vs `AdminOrganizacionesColumns.tsx` (Pascal). Sin estándar único.
-- Spanglish: `useAdminOrgConfig` vs `useAdminOrgDetalle`, `useIdempotenciaLog` vs `useAppLogs`.
-- Carpetas mezcladas: `admin/services/organization/` (singular) vs `organizations.ts` (plural); `admin/routes/admin-org/` (kebab) vs `AdminOrganizaciones.tsx` (Pascal).
-
-### F. Misplaced files
-- `src/components/shared/utils/auditoriaConfig.ts` → pertenece a `features/auditoria/`.
-- `src/hooks/shared/useOrgFilter.ts` y `usePermissions.ts` → acoplados a auth/org.
-- `src/features/admin/routes/BackfillLegacyCard.tsx` → es componente, no ruta.
-- Carpetas con 1 archivo: `src/components/selects/`, `src/components/seo/`.
-
-### G. Features con layout divergente
-- `bandejas/` y `catalogos/` no siguen el estándar `{routes,components,hooks,services,domain,types}`.
-- `auth/` no tiene `domain/`.
-
-### H. Complejidad puntual
-Top 3 (no crítica): `FacturasMasivasToolbar.tsx:30` (descargarZip con try/catch anidado), `embarqueColumns.tsx:37` (ternarios densos en `ContenedorCell`), `DialogTimbrarFactura.tsx:56` (array `checks` con validación inline).
+Tras cada paso: `bun run lint -- --max-warnings 0`, bump `APP_VERSION`, entrada en `CHANGELOG.md`.
 
 ---
 
-## Plan ordenado (crítico → opcional)
+## Paso 10A — Extraer `checks` de `DialogTimbrarFactura`
 
-### Paso 1 — CRÍTICO: Eliminar fugas Supabase en componentes
-Mover las 7 llamadas directas a servicios:
-- `FacturasMasivasToolbar` → nuevos métodos en `features/facturacion/services/facturas.ts`.
-- `DialogTimbrarFactura` → `services/timbrado.ts`.
-- `TabDemoras` → `features/embarques/services/contenedores.ts` (ya existe).
-- `ProformaInconsistenteAlert` → `features/embarques/services/proformas.ts`.
-- `aplicarTarifa.ts` → mover a `features/cotizacion/services/tarifas.ts` (separar puro/IO).
-Tests de arquitectura existentes (`unsubscribe-encapsulation.test.ts` patrón) detectarán regresiones.
+**Archivo nuevo:** `src/features/facturacion/utils/validarDatosTimbrado.ts`
 
-### Paso 2 — CRÍTICO: Borrar los 8 shims de `components/shared/utils/`
-Reescribir imports `@/components/shared/utils/{authSnapshot,authSnapshotBuilder,auditoriaConfig,errorDetailsStore,errorReportFormat,estadoConfig,kpiTones,uiMappings}` → `@/lib/...` o `@/lib/ui/...` correspondiente. Después eliminar los archivos shim. Riesgo bajo: son re-exports de 1 línea.
+Función pura:
+```text
+buildChecksTimbrado({ rfc, cp, regimen, usoCfdi, formaPago, metodoPago })
+  → { checks: { ok: boolean; label: string }[], puedeTimbrar: boolean }
+```
 
-### Paso 3 — ALTO: Mover `auditoriaConfig` a su feature
-Cortar `src/lib/ui/auditoriaConfig.ts` (o donde quede tras Paso 2) → `src/features/auditoria/constants/auditoriaConfig.ts`. Actualizar imports.
+**Editar:** `DialogTimbrarFactura.tsx` líneas 44–56 → reemplazar por una llamada al helper.
 
-### Paso 4 — ALTO: Eliminar código muerto detectado por knip
-Borrar exports `useRevalidarTarifa`, `useAceptarCotizacionVersion`, `useCostosCotizacionVersion`. Limpiar bloque comentado en `conversiones/portal.ts:22-26`. Verificar con `bun run lint:unused:strict`.
+**Test:** `src/features/facturacion/utils/__tests__/validarDatosTimbrado.test.ts` con casos: RFC corto, CP no numérico, todos los campos vacíos, happy path.
 
-### Paso 5 — MEDIO: Mover scripts residuales del root
-`count_its.py`, `detect_weak.py`, `audit_coverage.cjs` → `/scripts/` (o eliminar si CI no los usa — verificar `.github/workflows/`).
-
-### Paso 6 — MEDIO: Eliminar 7 barrels redundantes
-`features/{dashboardEjecutivo,profit,reportes,dashboard,notificaciones}/{hooks,services}/index.ts` con ≤2 importadores. Reescribir esos importadores y borrar el barrel.
-
-### Paso 7 — MEDIO: Reubicar archivos sueltos
-- `BackfillLegacyCard.tsx` → `features/admin/components/`.
-- `src/components/selects/SearchInput.tsx` → `src/components/shared/` y eliminar carpeta.
-- `src/components/seo/Seo.tsx` → `src/components/shared/` y eliminar carpeta.
-- Evaluar `useOrgFilter.ts` y `usePermissions.ts` → `features/auth/hooks/` (decisión: ¿son transversales o auth-owned?).
-
-### Paso 8 — BAJO: Unificar naming de columnas a PascalCase
-Renombrar `clienteColumns.tsx`, `usuariosColumns.tsx`, `embarqueColumns.tsx`, `facturacionColumns.tsx`, etc. → `ClienteColumns.tsx`, etc. Un test de arquitectura puede enforce.
-
-### Paso 9 — BAJO: Spanglish y consistencia en `admin/`
-Decidir un idioma por capa y renombrar `organization/`↔`organizations.ts`, `useIdempotenciaLog`↔`useAppLogs`, `useAdminOrgConfig`↔`useAdminOrgDetalle`.
-
-### Paso 10 — OPCIONAL: Refactor de complejidad
-Partir `descargarZip` (extraer worker), `ContenedorCell` (extraer helper), `checks` array de `DialogTimbrarFactura` (mover a `domain/`). Solo si los toca un feature nuevo.
+**Bump:** `13.84.1` · CHANGELOG: "Extracción de validaciones de timbrado a helper puro testeable".
 
 ---
 
-## Notas técnicas
+## Paso 10B — Helper de estado de `ContenedorCell`
 
-- **No tocar**: `src/integrations/supabase/types.ts` (autogen), `src/components/ui/sidebar.tsx` (primitiva shadcn), `src/components/ui/*` en general.
-- **Pasos 1-4 son los de mayor impacto y menor riesgo**; cubren la mayoría del valor.
-- **Pasos 5-7 son higiénicos**; ningún cambio funcional, solo orden.
-- **Pasos 8-10 son cosméticos/refactor**; valor marginal, postergar hasta tener pretexto.
-- Cada paso debe: actualizar `CHANGELOG.md` + bumpear `APP_VERSION` + correr `bun run lint -- --max-warnings 0` y `bun run lint:unused`.
+**Archivo nuevo:** `src/features/embarques/utils/estadoContenedorCell.ts`
 
-## Resumen para no técnicos
+Función pura:
+```text
+derivarEstadoContenedor(embarque, info?, legacyCount?)
+  → { count, primero, incompletos, blFalta, pendientes, pendientesTitle }
+```
 
-Tu casa está bien construida. Hay 7 "cables sueltos" donde la cocina (UI) habla directo con la tubería principal (BD) en vez de pasar por el plomero (services) — eso es lo más urgente. También quedaron 8 "carteles viejos" señalando direcciones que ya cambiamos (shims) que se pueden quitar de una sola pasada. El resto son detalles de orden y nombres.
+**Editar:** `src/features/embarques/components/embarqueColumns.tsx` líneas 37–66 → `ContenedorCell` queda como componente fino que solo arma JSX a partir del helper.
+
+**No** extraer `ContenedorCell` a archivo propio (es el único consumer; mover el componente sin necesidad genera ruido en git).
+
+**Test:** casos pendientes BL falta, incompletos > 0, modo aéreo (no aplica BL), legacy count fallback.
+
+**Bump:** `13.84.2` · CHANGELOG: "Helper puro para derivar estado de celda de contenedores".
+
+---
+
+## Paso 9 — Spanglish en `src/features/admin/` (parcial, conservador)
+
+Estrategia: renombrar **tipos, interfaces y funciones de dominio** a español. **NO** renombrar archivos de servicios (rompería decenas de imports por estética). **NO** tocar términos técnicos universales: `backfill`, `legacy`, `observability`, `health`, `logs`, `email`.
+
+### 9.1 `services/stats.ts`
+- `AdminOrgStats` → `EstadisticasAdminOrg`
+- `AdminOrgActivity` → `ActividadAdminOrg`
+- `AdminRecentOrg` → `OrganizacionReciente`
+- Campos `totalOrgs` → `totalOrganizaciones`, `totalUsers` → `totalUsuarios`
+
+### 9.2 `services/members.ts`
+- `GlobalUserRow` → `FilaUsuarioGlobal`
+- `OrgMemberRow` → `FilaMiembroOrg`
+- `updateOrgMemberRole` → `actualizarRolMiembro`
+- `removeOrgMember` → `eliminarMiembro`
+- `addOrgMember` → `agregarMiembro`
+
+### 9.3 `services/organizations.ts` + `services/organization/index.ts`
+- Unificar `OrgRow` y `OrganizationRow` en un único tipo `FilaOrganizacion` exportado desde `services/organization/index.ts`. Eliminar el duplicado.
+- `createOrganization` → `crearOrganizacion`
+- `updateAdminOrganization` → `actualizarOrganizacion`
+- `setOrganizationActivo` → `establecerOrganizacionActiva`
+
+### 9.4 `services/exportOrg.ts`
+- `ExportProgress` → `ProgresoExportacion`
+- `ProgressCallback` → `CallbackProgreso`
+- `ExportTableResult` → `ResultadoExportTabla`
+
+### 9.5 `services/observability.ts`
+- `acknowledgeAlerta` → `reconocerAlerta`
+- Tipos `AppLogsQueryInput/Result`, `HealthSummaryRow`, `HealthTimelinePoint`: **dejar en inglés** (términos técnicos de observabilidad).
+
+### 9.6 `services/usuario/availableUsers.ts`
+- `UserOption` → `OpcionUsuario`
+
+### 9.7 `domain/roles/roleCatalog.ts`
+- `ROLE_LABELS` → `ETIQUETAS_ROL`
+- `ROLE_DESCRIPTIONS` → `DESCRIPCIONES_ROL`
+- `ROLE_BADGE_CLASSES` → `CLASES_BADGE_ROL`
+- `ASSIGNABLE_ROLES_ADMIN_ORG` → `ROLES_ASIGNABLES_ADMIN_ORG`
+- `getRoleLabel` → `obtenerEtiquetaRol`
+- Dejar `LEGACY_ROLES` (técnico).
+
+### 9.8 `hooks/`
+- `useAddOrgMember` → `useAgregarMiembro`
+- `useAvailableUsers` interno → `useUsuariosDisponibles`
+
+### Decisiones explícitas
+- **NO** renombrar archivos (`organizations.ts`, `members.ts`, etc.): el costo en imports y blame supera el beneficio.
+- **NO** tocar `observability.ts`, `backfillLegacy.ts` ni dividirlos: fuera de alcance.
+- Cada rename actualiza **todos los call sites** en el mismo commit lógico para no romper build.
+
+**Bump:** `13.85.0` (minor por cambio amplio de API interna) · CHANGELOG: "Estandarización a español de tipos y funciones en módulo admin (sin cambios funcionales)".
+
+---
+
+## Verificación final
+
+1. `bun run lint -- --max-warnings 0`
+2. `bun run lint:unused`
+3. Smoke test mental: rutas `/admin/usuarios`, `/admin/organizaciones`, `/admin/auditoria` siguen compilando.
+4. Cerrar la auditoría con nota en `mem://audit/pendings` marcando pasos 8 y worker-zip como "no se ejecuta — costo > beneficio".
+
+---
+
+## Fuera de alcance (confirmado)
+
+- Paso 8 (renombre PascalCase de columnas).
+- Worker para `descargarZip`.
+- Renombre de archivos en `features/admin/`.
+- Tres-way split de `observability.ts`.

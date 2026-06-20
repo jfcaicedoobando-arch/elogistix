@@ -4,7 +4,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
 
 export interface PendingRoleChange {
   user: UserRow;
@@ -28,8 +28,8 @@ export function RoleChangeAlertDialog({ pendingRole, isPending, onConfirm, onCan
             {pendingRole && (
               <>
                 Vas a cambiar el rol de <strong>{pendingRole.user.email}</strong> de{" "}
-                <strong>{getRoleLabel(pendingRole.user.role)}</strong> a{" "}
-                <strong>{getRoleLabel(pendingRole.newRole)}</strong>. Esto modifica los permisos del usuario inmediatamente.
+                <strong>{obtenerEtiquetaRol(pendingRole.user.role)}</strong> a{" "}
+                <strong>{obtenerEtiquetaRol(pendingRole.newRole)}</strong>. Esto modifica los permisos del usuario inmediatamente.
               </>
             )}
           </AlertDialogDescription>

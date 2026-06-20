@@ -91,7 +91,7 @@ export const ASSIGNABLE_ROLES_ADMIN_ORG: readonly AppRole[] = [
 /** Roles legacy que se conservan en BD pero no se muestran como opción nueva. */
 export const LEGACY_ROLES: readonly AppRole[] = ["admin", "operador", "viewer"];
 
-export const getRoleLabel = (role: string | null | undefined): string => {
+export const obtenerEtiquetaRol = (role: string | null | undefined): string => {
   if (!role) return "—";
   return ROLE_LABELS[role as AppRole] ?? role;
 };

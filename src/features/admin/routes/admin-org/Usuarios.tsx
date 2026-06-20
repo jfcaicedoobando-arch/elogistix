@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
@@ -44,7 +44,7 @@ export default function Usuarios() {
     if (!pendingRole) return;
     try {
       await updateRole.mutateAsync({ userId: pendingRole.user.user_id, newRole: pendingRole.newRole });
-      notifySuccess(toast, { title: "Rol actualizado", description: `${pendingRole.user.email} ahora es ${getRoleLabel(pendingRole.newRole)}.` });
+      notifySuccess(toast, { title: "Rol actualizado", description: `${pendingRole.user.email} ahora es ${obtenerEtiquetaRol(pendingRole.newRole)}.` });
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err), error: err, method: "CONFIRM_ROLE_CHANGE" });
     } finally {

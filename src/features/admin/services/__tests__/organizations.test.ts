@@ -12,7 +12,7 @@ import {
   createOrganization,
   fetchAdminOrganization,
   updateAdminOrganization,
-  setOrganizationActivo,
+  establecerOrganizacionActiva,
 } from "@/features/admin/services/organizations";
 
 beforeEach(() => {
@@ -88,15 +88,15 @@ describe("services/admin/organizations", () => {
     expect(call.opArgs[idx]).toEqual(["id", "o-123"]);
   });
 
-  it("setOrganizationActivo manda activo=false", async () => {
+  it("establecerOrganizacionActiva manda activo=false", async () => {
     mock.setTableResult("organizations", { data: null, error: null });
-    await setOrganizationActivo("o1", false);
+    await establecerOrganizacionActiva("o1", false);
     const p = mock.getMutationPayload("organizations", "update") as Record<string, unknown>;
     expect(p).toEqual({ activo: false });
   });
 
-  it("setOrganizationActivo propaga error", async () => {
+  it("establecerOrganizacionActiva propaga error", async () => {
     mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(setOrganizationActivo("o1", true)).rejects.toThrow();
+    await expect(establecerOrganizacionActiva("o1", true)).rejects.toThrow();
   });
 });

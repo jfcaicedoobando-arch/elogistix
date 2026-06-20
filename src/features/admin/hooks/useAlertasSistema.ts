@@ -5,7 +5,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchAlertasPendingCount,
   fetchAlertasSistema,
-  acknowledgeAlerta,
+  reconocerAlerta,
   type AlertaSistema,
 } from "@/features/admin/services";
 
@@ -51,7 +51,7 @@ export function useAcknowledgeAlerta() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (id: string) => acknowledgeAlerta({ id, userId: user?.id ?? null }),
+    mutationFn: (id: string) => reconocerAlerta({ id, userId: user?.id ?? null }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QK_PENDING });
       qc.invalidateQueries({ queryKey: QK_LIST });
