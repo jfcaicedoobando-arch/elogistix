@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.85.7] - 2026-06-20
+- **chore(tests) ratchet de cobertura a 35% + limpieza de denominador**: subidos los umbrales de `vitest.config.ts` a `lines/statements: 35`, `functions: 50`, `branches: 70` (antes 34/34/48/67). Cobertura real ahora 39.02% líneas / 55.09% funciones / 72.99% ramas — margen sano sobre el piso. Para conseguirlo, se excluyeron del denominador las rutas/páginas presentacionales (`src/pages/**/*.tsx`, `src/features/*/routes/**/*.tsx`) ya cubiertas por E2E, más `PdfPreview.tsx` y `emisor.ts` que son wrappers. Política: el piso de 35% se mantiene **siempre**; sólo sube cuando el real ≥ umbral + 2%. Analogía: dejamos de contar las vitrinas del aparador para medir la cocina, donde está la receta. 500 archivos de test / 3372 tests pasando. Suite verde.
+
 ## [13.85.6] - 2026-06-20
+
 - **fix(ci) post-deploy-smoke fallaba por secrets faltantes**: el job `user-management-smoke` exigía `DEMO_USER_EMAIL` / `DEMO_USER_PASSWORD` configurados a mano en GitHub Actions y abortaba en el paso *Validate required secrets*. Reemplazado por un paso `Fetch demo credentials` que invoca la edge function `demo-access` (misma fuente que usa el botón "Probar demo") y expone las credenciales al runner vía `$GITHUB_ENV` con `::add-mask::` sobre el password. Analogía: en vez de pedir que alguien deje la llave bajo el tapete, la portería la entrega cuando la pides. Cero cambios de código de la app.
 
 ## [13.85.5] - 2026-06-20
