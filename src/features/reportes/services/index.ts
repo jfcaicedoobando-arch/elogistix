@@ -11,15 +11,17 @@ import { supabase } from "@/integrations/supabase/client";
 export interface SidebarAlertCounts {
   embarquesDemora: number;
   facturasVencidas: number;
+  garantiasAtoradas: number;
 }
 
 export async function fetchSidebarAlertCounts(): Promise<SidebarAlertCounts> {
   const { data, error } = await supabase.rpc("sidebar_alert_counts");
   if (error) throw error;
-  const row = data?.[0] ?? { embarques_demora: 0, facturas_vencidas: 0 };
+  const row = data?.[0] ?? { embarques_demora: 0, facturas_vencidas: 0, garantias_atoradas: 0 };
   return {
     embarquesDemora: Number(row.embarques_demora),
     facturasVencidas: Number(row.facturas_vencidas),
+    garantiasAtoradas: Number((row as { garantias_atoradas?: number }).garantias_atoradas ?? 0),
   };
 }
 
