@@ -8,7 +8,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, ExternalLink, XCircle } from "lucide-react";
 import { getCierreCheckMeta } from "@/features/embarques/utils/cierreCheckMeta";
 
 interface Props {
@@ -22,6 +22,7 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId }: Props) {
   const meta = getCierreCheckMeta(regla);
   const detalleTxt = meta.formatDetalle(detalle);
   const showCta = !ok && meta.ruta != null;
+  const href = showCta && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
 
   return (
     <li className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between">
@@ -48,11 +49,17 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId }: Props) {
         <Badge variant={ok ? "secondary" : "destructive"}>
           {ok ? "OK" : "Pendiente"}
         </Badge>
-        {showCta && meta.ruta && (
+        {href && (
           <Button asChild size="sm" variant="outline">
-            <Link to={meta.ruta(embarqueId)}>
+            <Link
+              to={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Abrir en nueva pestaña"
+            >
               {meta.ctaLabel}
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              <ExternalLink className="ml-1 h-3 w-3 opacity-60" />
             </Link>
           </Button>
         )}
