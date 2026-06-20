@@ -113,11 +113,15 @@ export default defineConfig({
       // SE MANTIENE EN 35% SIEMPRE. Subir sólo cuando coverage real ≥ umbral + 2%.
       // 13.85.7 — lines/statements 34→35 (real ~35.9% tras limpieza denominador),
       // functions 48→50 (real 53%), branches 67→70 (real 72%).
+      // 13.87.0 (B3) — Ratchet final. Tras QW6 + B2, coverage real:
+      // Lines 39.77%, Functions 55.99%, Branches 73.37%. Subimos
+      // functions 50→52 y branches 70→72 (margen ≥ 2 puntos).
+      // lines/statements se mantienen en 35 por política ratchet.
       thresholds: {
         lines: 35,
         statements: 35,
-        functions: 50,
-        branches: 70,
+        functions: 52,
+        branches: 72,
       },
 
 
