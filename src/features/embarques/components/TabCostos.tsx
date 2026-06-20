@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Receipt, X } from "lucide-react";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
 
