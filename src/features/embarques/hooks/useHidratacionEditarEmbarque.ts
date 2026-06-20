@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import type { UseFormReturn, FieldValues } from "react-hook-form";
 import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
-import { resolverValorContactoDesdeTexto } from "@/lib/contacto";
+import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
 
 interface ConceptoVentaDb {
   descripcion: string;

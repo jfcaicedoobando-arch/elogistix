@@ -3,7 +3,7 @@ import {
   HUECO_CSV_HEADERS,
   buildHuecoCsvFilename,
   buildHuecoCsvRows,
-} from "@/lib/facturacion/huecoCsv";
+} from "@/features/facturacion/domain/huecoCsv";
 import type { FilaHueco } from "@/features/facturacion/services";
 
 // ── Fixture helper ──────────────────────────────────────────────────────────

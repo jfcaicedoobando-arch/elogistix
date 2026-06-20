@@ -12,7 +12,7 @@ vi.mock("@/features/facturacion/services", () => ({
 vi.mock("@/generators/exportCsv", () => ({
   exportToCsv: vi.fn(),
 }));
-vi.mock("@/lib/facturacion/huecoCsv", () => ({
+vi.mock("@/features/facturacion/domain/huecoCsv", () => ({
   HUECO_CSV_HEADERS: ["col"],
   buildHuecoCsvFilename: () => "hueco.csv",
   buildHuecoCsvRows: (filas: unknown[]) => filas,

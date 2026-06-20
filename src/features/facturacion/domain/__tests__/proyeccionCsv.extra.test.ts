@@ -3,7 +3,7 @@ import {
   PROYECCION_CSV_HEADERS,
   buildProyeccionCsvFilename,
   buildProyeccionCsvRows,
-} from "@/lib/facturacion/proyeccionCsv";
+} from "@/features/facturacion/domain/proyeccionCsv";
 import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
 
 // ── Fixture helper ──────────────────────────────────────────────────────────

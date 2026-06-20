@@ -20,7 +20,7 @@ import {
   PROYECCION_CSV_HEADERS,
   buildProyeccionCsvFilename,
   buildProyeccionCsvRows,
-} from "@/lib/facturacion/proyeccionCsv";
+} from "@/features/facturacion/domain/proyeccionCsv";
 import { queryKeys } from "@/lib/query";
 
 type FiltroEstado = "todos" | EstadoProyeccion;
