@@ -19,6 +19,7 @@ export function TabResumen({ embarque }: Props) {
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
   const currentStepIndex = ESTADOS_EMBARQUE.indexOf(estadoVisual as typeof ESTADOS_EMBARQUE[number]);
   const { data: relacionados = [] } = useEmbarquesRelacionados(embarque.id, embarque.bl_master);
+  const { registerRef } = useFocusSection();
 
   return (
     <div className="space-y-6">
