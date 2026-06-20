@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { AgregarDocumentoDialog } from "./tabDocumentos/AgregarDocumentoDialog";
 import { useDocumentoColumns } from "./tabDocumentos/useDocumentoColumns";
 
