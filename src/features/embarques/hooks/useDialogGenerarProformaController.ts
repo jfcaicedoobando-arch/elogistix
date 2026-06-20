@@ -16,7 +16,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedo
 import {
   filtrarPorContenedor,
   type FiltroContenedor,
-} from "@/lib/domain/conceptosPorContenedor";
+} from "@/features/cotizacion/domain/conceptosPorContenedor";
 import { submitProformaDialog, ProformaValidationError } from "@/features/embarques/services/submitProformaDialog";
 import { toast } from "@/hooks/shared";
 import {

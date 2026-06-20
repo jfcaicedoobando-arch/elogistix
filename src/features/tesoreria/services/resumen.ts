@@ -4,7 +4,7 @@
  * (Auditoría Paso 4, v12.95.11).
  *
  * El cálculo del resumen se hace con la función pura
- * `calcularResumenTesoreria` en `@/lib/domain/tesoreria`, alimentada por el
+ * `calcularResumenTesoreria` en `@/features/tesoreria/domain`, alimentada por el
  * hook `useResumenTesoreria` que compone las tres fuentes.
  */
 import { supabase } from "@/integrations/supabase/client";
@@ -14,9 +14,9 @@ import {
   type ResumenTesoreria,
   type CobranzaRow,
   type CxpRow,
-} from "@/lib/domain/tesoreria";
+} from "@/features/tesoreria/domain";
 
-export type { ResumenCuenta, ResumenTesoreria, FlujoMes, TopItem } from "@/lib/domain/tesoreria";
+export type { ResumenCuenta, ResumenTesoreria, FlujoMes, TopItem } from "@/features/tesoreria/domain";
 
 async function calcularSaldoCuenta(cuentaId: string, saldoInicial: number): Promise<number> {
   const { data, error } = await supabase

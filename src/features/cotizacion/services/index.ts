@@ -2,7 +2,7 @@
  * Barrel del dominio Cotizaciones (folder-style).
  * Convención: `queries` (lecturas) + `mutations` (escrituras) + subdominios
  * (`costos`, `conversiones`, `wizard`). La lógica pura vive en
- * `@/lib/domain/cotizacion`.
+ * `@/features/cotizacion/domain/cotizacion`.
  */
 
 // Queries (lecturas)
@@ -51,5 +51,5 @@ export { savePaso1, savePaso2, savePaso3, savePasoFinal } from "./wizard";
 export { crearCotizacionInformativa, parseTarifasInformativas } from "./informativa";
 
 // Lógica pura del dominio (re-exportada por compatibilidad; preferir importar desde lib/domain/cotizacion)
-export { buildConceptosFromCostos } from "@/lib/domain/cotizacion";
-export type { ConceptoVentaPrellenado } from "@/lib/domain/cotizacion";
+export { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion";
+export type { ConceptoVentaPrellenado } from "@/features/cotizacion/domain/cotizacion";

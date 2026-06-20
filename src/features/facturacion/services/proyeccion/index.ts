@@ -1,7 +1,7 @@
 /**
  * Orquestador: trae datos + arma filas de proyección de facturación del mes.
  */
-import { rangoMes, type FilaProyeccion } from "@/lib/domain/proyeccionFacturacion";
+import { rangoMes, type FilaProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { fetchEmbarquesMes, fetchConceptosYFacturas } from "./fetchSources";
 import { indexarPorEmbarque, buildFilasProyeccion } from "./buildFilas";
 

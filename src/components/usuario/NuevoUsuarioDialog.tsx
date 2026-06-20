@@ -13,7 +13,7 @@ import { useCreateUser } from "@/hooks/usuario";
 import { useOrganizationsList } from "@/features/admin/hooks";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/roles/roleCatalog";
+import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 

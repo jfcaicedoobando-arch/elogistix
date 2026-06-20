@@ -4,7 +4,7 @@
  */
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow } from "@/features/cotizacion/types";
-import { mapCostosACostosEmbarque } from "@/lib/domain/cotizacion";
+import { mapCostosACostosEmbarque } from "@/features/cotizacion/domain/cotizacion";
 import { fromDb } from "@/lib/supabase/cast";
 
 type ContenedorInsert = TablesInsert<"embarque_contenedores">;

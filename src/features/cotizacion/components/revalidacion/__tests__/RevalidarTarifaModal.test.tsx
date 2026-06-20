@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { RevalidarTarifaModal } from "@/features/cotizacion/components/revalidacion/RevalidarTarifaModal";
-import type { ResultadoRevalidacion } from "@/lib/domain/revalidacionTarifa";
+import type { ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
 
 function baseRes(over: Partial<ResultadoRevalidacion> = {}): ResultadoRevalidacion {
   return {

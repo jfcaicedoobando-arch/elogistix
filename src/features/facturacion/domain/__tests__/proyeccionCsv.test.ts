@@ -9,7 +9,7 @@ import {
   buildProyeccionCsvRows,
   PROYECCION_CSV_HEADERS,
 } from "../proyeccionCsv";
-import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion/types";
+import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion/types";
 
 const grupo = (over: Partial<GrupoProyeccion> = {}): GrupoProyeccion => ({
   expediente: "LCM-0001",

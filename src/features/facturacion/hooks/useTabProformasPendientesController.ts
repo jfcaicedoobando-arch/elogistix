@@ -17,7 +17,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   agruparProformasPendientes,
   totalesProformasSeleccionadas,
-} from "@/lib/domain/proforma";
+} from "@/features/proformas/domain/proforma";
 
 export function useTabProformasPendientesController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;

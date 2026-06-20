@@ -19,7 +19,7 @@ import {
   useSolicitarReaprobacion,
 } from "@/features/cotizacion/hooks/useRevalidacionTarifa";
 import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
-import type { ResultadoRevalidacion } from "@/lib/domain/revalidacionTarifa";
+import type { ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
 interface Props {

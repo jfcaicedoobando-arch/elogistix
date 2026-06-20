@@ -11,13 +11,13 @@ import {
   type FlujoProyectado,
   type LiquidacionRow,
   type ResumenCuenta,
-} from "@/lib/domain/tesoreria";
+} from "@/features/tesoreria/domain";
 
 export type {
   DetalleFlujo,
   SemanaFlujo,
   FlujoProyectado,
-} from "@/lib/domain/tesoreria";
+} from "@/features/tesoreria/domain";
 
 export async function fetchLiquidacionesPendientes(): Promise<LiquidacionRow[]> {
   const { data, error } = await supabase

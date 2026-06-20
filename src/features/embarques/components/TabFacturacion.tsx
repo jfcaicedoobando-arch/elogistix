@@ -21,7 +21,7 @@ import { HistorialProformas } from "./facturacion/HistorialProformas";
 import { esBorradorVacio } from "./facturacion/esBorradorVacio";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
-import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;

@@ -4,14 +4,14 @@
  * todos los conceptos_venta / conceptos_costo asociados.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { rangoMes } from "@/lib/domain/proyeccionFacturacion";
+import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import {
   buildEstadoResultados,
   type EstadoResultados,
   type EmbarqueER,
   type ConceptoVentaER,
   type ConceptoCostoER,
-} from "@/lib/domain/estadoResultados";
+} from "@/features/profit/domain/estadoResultados";
 
 interface Params {
   organizationId: string | null;

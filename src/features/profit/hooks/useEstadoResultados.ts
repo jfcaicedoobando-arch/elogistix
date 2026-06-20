@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { fetchEstadoResultadosMes, fetchEstadoResultadosDevengado } from "@/features/profit/services";
-import { generarMesesDisponibles, mesActualKey } from "@/lib/domain/proyeccionFacturacion";
+import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
 const MES_MINIMO = "2026-04";

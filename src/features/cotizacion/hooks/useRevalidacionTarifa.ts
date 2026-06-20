@@ -17,7 +17,7 @@ import {
   resolverReaprobacion,
   crearEmbarqueBorradorConDecision,
 } from "@/features/cotizacion/services/revalidacion";
-import type { DecisionTarifa, ResultadoRevalidacion } from "@/lib/domain/revalidacionTarifa";
+import type { DecisionTarifa, ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
 
 export function useRevalidarTarifa(cotizacionId: string | undefined, enabled = false) {
   return useQuery<ResultadoRevalidacion>({

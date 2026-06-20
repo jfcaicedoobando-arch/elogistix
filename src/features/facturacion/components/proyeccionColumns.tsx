@@ -5,7 +5,7 @@
 import { Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
+import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";

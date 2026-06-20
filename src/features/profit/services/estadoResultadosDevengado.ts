@@ -11,14 +11,14 @@
  * Terrestre depende del vínculo correcto al embarque.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { rangoMes } from "@/lib/domain/proyeccionFacturacion";
+import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import {
   buildEstadoResultados,
   type EstadoResultados,
   type EmbarqueER,
   type ConceptoVentaER,
   type ConceptoCostoER,
-} from "@/lib/domain/estadoResultados";
+} from "@/features/profit/domain/estadoResultados";
 import {
   mapFacturaRows,
   mapNotaCreditoRows,

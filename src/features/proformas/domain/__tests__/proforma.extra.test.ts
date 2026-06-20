@@ -3,7 +3,7 @@ import {
   calcularTotalesProforma,
   type ConceptoVentaLite,
   type TotalesProforma,
-} from "@/lib/domain/proforma";
+} from "@/features/proformas/domain/proforma";
 
 const mkConcepto = (over: Partial<ConceptoVentaLite>): ConceptoVentaLite => ({
   id: "c1",

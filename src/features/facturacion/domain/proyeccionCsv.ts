@@ -4,7 +4,7 @@
  * controller dentro del límite de 200 líneas y permitir tests aislados
  * (espejando `huecoCsv.ts`).
  */
-import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
+import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { formatDate } from "@/lib/formatters";
 
 export const PROYECCION_CSV_HEADERS = [

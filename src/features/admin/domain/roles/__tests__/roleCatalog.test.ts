@@ -6,7 +6,7 @@ import {
   ASSIGNABLE_ROLES_ADMIN_ORG,
   LEGACY_ROLES,
   getRoleLabel,
-} from "@/lib/roles/roleCatalog";
+} from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
 
 describe("roleCatalog", () => {

@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
-import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_LABELS } from "@/lib/roles/roleCatalog";
+import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface Props {

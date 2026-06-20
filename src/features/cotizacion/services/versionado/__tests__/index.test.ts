@@ -14,7 +14,7 @@ import {
 import {
   CotizacionYaAceptadaError,
   MotivoRequeridoError,
-} from "@/lib/domain/versionadoCotizacion";
+} from "@/features/cotizacion/domain/versionadoCotizacion";
 
 beforeEach(() => {
   mock.rpcCalls.length = 0;

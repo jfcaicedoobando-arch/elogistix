@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   CotizacionYaAceptadaError,
   MotivoRequeridoError,
-} from "@/lib/domain/versionadoCotizacion";
+} from "@/features/cotizacion/domain/versionadoCotizacion";
 
 export interface CostoVersionado {
   id: string;

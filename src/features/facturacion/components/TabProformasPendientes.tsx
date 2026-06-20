@@ -9,7 +9,7 @@ import {
 import SearchInput from "@/components/selects/SearchInput";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import { montoPrincipalProforma } from "@/lib/domain/proforma";
+import { montoPrincipalProforma } from "@/features/proformas/domain/proforma";
 import { useTabProformasPendientesController } from "@/features/facturacion/hooks";
 
 

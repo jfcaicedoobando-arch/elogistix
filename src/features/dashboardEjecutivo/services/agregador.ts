@@ -10,7 +10,7 @@ import {
   fetchFlujoProyectado,
 } from "@/features/tesoreria/services";
 import { fetchPresupuestoVsReal } from "@/features/presupuesto/services";
-import type { CobranzaRow, CxpRow } from "@/lib/domain/tesoreria";
+import type { CobranzaRow, CxpRow } from "@/features/tesoreria/domain";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
 
