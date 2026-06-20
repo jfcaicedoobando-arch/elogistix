@@ -1,46 +1,66 @@
 
-# Cierre de embarque: separar operativo de administrativo
+# Mejora UX del Tab Cierre: deep-links accionables por check
 
-Hoy el botón "Avanzar estado" del header permite a cualquier rol con permiso de avance brincar de EIR/Entregado a Cerrado sin pasar por el checklist financiero. Unificamos todo bajo `validar_cierre_embarque` y separamos roles.
+## Problema
 
-## Reglas nuevas
+Hoy el checklist de cierre muestra ❌/✅ y un `JSON.stringify(detalle)` poco legible. Si Isela ve "cxp_sin_pendientes: Pendiente", tiene que adivinar a dónde ir, abrir otro tab, buscar el embarque, y resolver. El cierre se vuelve un juego del gato.
 
-### Roles
-- **Operativos** (operador, coordinador_logistico, customer_service, viewer): su flujo termina en **EIR** (marítimo) o **Entregado** (resto). No cierran.
-- **Administración/Finanzas** (admin, contador, tesorero, ejecutivo_cobranza, super_admin): son los únicos que pueden cerrar.
+## Solución
 
-### Botón "Avanzar estado" en el header (`EmbarqueDetalleHeaderActions`)
-- Cuando el siguiente estado calculado es **Cerrado**:
-  - Si el rol NO es admin/finanzas → el botón desaparece (último estado visible para el operador es EIR/Entregado).
-  - Si el rol SÍ es admin/finanzas → el botón aparece, pero **deshabilitado** mientras `validar_cierre_embarque.puede_cerrar === false`. Tooltip: "Hay pendientes administrativos. Ver Tab Cierre."
-  - Cuando el checklist está OK, el botón funciona como atajo y dispara la misma RPC `cerrar_embarque` que usa el Tab Cierre (con su confirmación "CERRAR" inline, no diálogo).
-- Quitamos `warnCierreOpen` (aviso "sin proforma") porque ya está cubierto por el check unificado.
+Convertir cada item del checklist en una tarjeta accionable:
 
-### Tab Cierre (`TabCierre.tsx`)
-- Visible para todos los roles (incluido operativo).
-- El checklist sigue siendo de sólo lectura para quien no puede cerrar.
-- El botón "Cerrar embarque" queda oculto para operativos (hoy ya está deshabilitado; lo escondemos para reducir ruido).
-- Para admin/finanzas no cambia.
+1. **Etiqueta clara** (ya existe).
+2. **Detalle legible** en español (no JSON crudo): "Faltan 2 facturas de proveedor por capturar", "Cliente debe $14,500 MXN", etc.
+3. **Botón "Resolver"** que abre la **sub-tab del embarque actual** cuando aplica (preserva contexto) o la **bandeja global filtrada por este embarque** cuando no.
+4. **Etiqueta "Responsable"**: chip pequeño indicando qué rol debe actuar (Contador, Tesorero, Operador, Coordinador). Útil para que Isela sepa cuándo el bloqueo no es suyo y a quién pedirle.
 
-### RPC `cerrar_embarque` (backend)
-- Ya valida `puede_cerrar` server-side, así que ningún rol puede saltarse el checklist aunque modifique el front. Confirmamos que sigue así (no cambia, solo verificamos).
+## Mapeo check → destino → responsable
 
-## Archivos a tocar
+| Check | Destino (preferido sub-tab embarque) | Responsable |
+|---|---|---|
+| `cxc_sin_pendientes` / `cxc_cobrada` | Tab "Cobranza" del embarque → fallback `/cartera?embarque=:id` | Contador / Cobranza |
+| `cxp_sin_pendientes` / `cxp_pagada` | Tab "Pagos a proveedor" del embarque → fallback `/cxp/por-pagar?embarque=:id` | Tesorero |
+| `documentos_completos` / `docs_completos` | Tab "Documentos" del embarque | Coordinador logístico |
+| `venta_conceptos_facturados` | Tab "Facturación" del embarque → fallback `/facturacion/por-emitir?embarque=:id` | Contador |
+| `costo_conceptos_con_factura` | Tab "Costos" del embarque → fallback `/cxp/por-capturar?embarque=:id` | Auxiliar contable |
+| `costos_liquidados` | Tab "Pagos a proveedor" → fallback `/cxp/por-pagar?embarque=:id` | Tesorero |
+| `pnl_margen_minimo` | Tab "P&L" del embarque (sólo info, no es accionable directo) | Ventas / Gerente |
+| `comision_calculada` | Botón "Recalcular comisión" inline (RPC ya existente) | Sistema / Admin |
+| `contenedores_datos_completos` | Tab "Contenedores" del embarque | Operador |
 
-- `src/features/embarques/hooks/useEmbarqueEstadoActions.ts` — gatear el avance a Cerrado por rol y por `puede_cerrar`. Quitar warnCierre.
-- `src/features/embarques/components/EmbarqueDetalleHeader.tsx` y `EmbarqueDetalleHeaderActions.tsx` — calcular `puedeAvanzarACerrado` (rol financiero + validación), pasar tooltip explicativo.
-- `src/features/embarques/components/EmbarqueHeaderDialogs.tsx` — eliminar el diálogo "cierre sin proforma".
-- `src/features/embarques/components/TabCierre.tsx` — ocultar el botón Cerrar/Reabrir cuando el rol no aplique (hoy queda deshabilitado, ahora se oculta).
-- `src/hooks/shared/usePermissions.ts` — verificar si existe `canCloseEmbarque`; si no, agregar helper que combine `isAdmin || canEditFinance`.
-- Tests:
-  - `TabCierre.rules.test` — caso operador no ve botón.
-  - Test nuevo del header: operador no ve botón cuando siguiente=Cerrado; admin lo ve deshabilitado si validación falla.
-- `APP_VERSION` → `13.89.1` y entrada en `CHANGELOG.md`.
+Los slugs de sub-tab los confirmo leyendo `EmbarqueDetalle.tsx` durante la implementación (uso `useTabsParam` para conmutar tab sin recargar).
+
+## Cambios técnicos
+
+- **Nuevo** `src/features/embarques/components/cierre/CierreCheckItem.tsx`: tarjeta presentacional por check con ícono, etiqueta, detalle formateado, chip de responsable y botón "Resolver".
+- **Nuevo** `src/features/embarques/utils/cierreCheckMeta.ts`: tabla pura `regla → { label, responsable, ruta(embarqueId), formatDetalle(detalle) }`. Función pura → testeable.
+- **Refactor** `CierreChecklistCard.tsx`: en vez de `<li>` inline, renderiza `<CierreCheckItem />`. Recibe `embarqueId` como prop nueva.
+- **Refactor** `TabCierre.tsx`: pasa `embarqueId` al checklist (ya lo tiene). Sin cambios de lógica.
+- **Test** `cierreCheckMeta.test.ts`: cubre formato de detalle por cada regla y que la ruta generada sea correcta.
 
 ## Lo que el usuario verá
 
-- **Operador termina embarque marítimo:** llega a EIR, ve el badge `Admin pendiente · N`, ya no aparece "Avanzar estado". El Tab Cierre muestra el checklist en sólo lectura.
-- **Administración entra al embarque:** ve el mismo badge; si todo está ✅ aparece el botón "Avanzar a Cerrado" en el header como atajo, o puede ir al Tab Cierre y usar el flujo completo con confirmación "CERRAR".
-- **Si admin intenta cerrar con pendientes:** botón deshabilitado con tooltip que apunta al Tab Cierre.
+Antes:
+```
+❌ Cuentas por pagar al día    [Pendiente]
+   {"facturas_pendientes":2,"monto":14500}
+```
 
-Sin cambios de schema, sin migración.
+Después:
+```
+❌ Cuentas por pagar al día    [Pendiente]   Tesorero
+   2 facturas de proveedor pendientes de pago por $14,500 MXN
+                                                  [Resolver →]
+```
+
+Click en "Resolver" → abre el Tab "Pagos a proveedor" del mismo embarque.
+
+## Sin tocar
+
+- RPC `validar_cierre_embarque` (sigue devolviendo el mismo shape).
+- Lógica de cierre, permisos, RLS, BD.
+- Tab Cierre sigue funcionando idéntico para admin/finanzas y operadores.
+
+## Versionado
+
+`APP_VERSION` → `13.89.2` + entrada en `CHANGELOG.md` ("UX: deep-links accionables en checklist de cierre").
