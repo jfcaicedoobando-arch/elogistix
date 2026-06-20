@@ -17,7 +17,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { Clock, Save } from "lucide-react";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
-import { supabase } from "@/integrations/supabase/client";
+import { actualizarDemorasContenedor } from "@/features/embarques/services/contenedores";
 import { toast } from "sonner";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -51,14 +51,8 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
   );
 
   const updateMut = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: DraftPatch }) => {
-      const { error } = await supabase
-        .from("embarque_contenedores")
-        // SAFE-CAST: columnas nuevas (13.66.11) aún no regeneradas en supabase/types.ts.
-        .update(patch as never)
-        .eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, patch }: { id: string; patch: DraftPatch }) =>
+      actualizarDemorasContenedor(id, patch),
     onSuccess: (_, vars) => {
       toast.success("Demoras del contenedor actualizadas");
       setDrafts((d) => {
