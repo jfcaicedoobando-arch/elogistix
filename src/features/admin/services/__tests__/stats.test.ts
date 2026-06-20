@@ -1,31 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// Custom mock: por-tabla devolvemos data y count separados.
-const mock = await vi.hoisted(() => {
-  const tableResults = new Map<string, { data: unknown; count?: number; error: unknown }>();
-  const rpcResults = new Map<string, { data: unknown; error: unknown }>();
-  const setTable = (t: string, r: { data: unknown; count?: number; error: unknown }) => tableResults.set(t, r);
-  const setRpc = (name: string, r: { data: unknown; error: unknown }) => rpcResults.set(name, r);
-  const clear = () => { tableResults.clear(); rpcResults.clear(); };
-  const supabase = {
-    from: (table: string) => {
-      const res = tableResults.get(table) ?? { data: [], error: null };
-      const chain: Record<string, unknown> = {};
-      const pass = () => chain;
-      chain.select = pass;
-      chain.eq = pass;
-      chain.order = pass;
-      chain.limit = pass;
-      chain.then = (cb: (r: unknown) => unknown) =>
-        Promise.resolve({ data: res.data, error: res.error, count: res.count ?? null }).then(cb);
-      return chain;
-    },
-    rpc: (name: string) => {
-      const res = rpcResults.get(name) ?? { data: [], error: null };
-      return Promise.resolve(res);
-    },
-  };
-  return { supabase, setTable, setRpc, clear };
+// 13.85.8 — Migrado al helper canónico `createSupabaseMock`. Se envuelve cada
+// resultado en `{ data, error, count }` porque los servicios usan el conteo
+// de filas devuelto por Supabase para los dashboards de admin.
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
 });
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
@@ -40,9 +20,16 @@ import {
   countOrgCotizaciones,
 } from "@/features/admin/services/stats";
 
+type TableArg = { data: unknown; count?: number; error: unknown };
+const setTable = (t: string, r: TableArg) =>
+  mock.setTableResult(t, { data: r.data, error: r.error, count: r.count ?? null } as never);
+const setRpc = (name: string, r: { data: unknown; error: unknown }) =>
+  mock.setRpcResult(name, r);
+
 beforeEach(() => {
   // Reset por test: evita arrastrar `count`/`data` configurados en el anterior.
-  mock.clear();
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("services/admin/stats", () => {
