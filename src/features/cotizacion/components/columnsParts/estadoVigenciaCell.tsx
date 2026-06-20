@@ -43,6 +43,15 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
   const sinCostos =
     !!r.sin_desglose_costos && ((r.cotizacion_costos_count ?? 0) === 0);
 
+  // Badge "Tarifa vencida": cuando la cotización está aceptada y la tarifa
+  // vinculada ya no es vigente, ventas/operaciones debería revisarla antes de
+  // crear el embarque. Se calcula con la fecha del JOIN — sin RPC extra.
+  const vigHasta = (r as { tarifa_vigente_hasta?: string | null }).tarifa_vigente_hasta;
+  const tarifaVencida =
+    !!vigHasta &&
+    (r.estado || "").toLowerCase() === "aceptada" &&
+    new Date(vigHasta) < new Date(new Date().toISOString().slice(0, 10));
+
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -60,6 +69,15 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
         {(r as { estado_revalidacion?: string }).estado_revalidacion === "pendiente_reaprobacion" && (
           <Badge variant="warning" className="w-fit text-[10px] whitespace-nowrap" title="Tarifa cambió: requiere re-aprobación de ventas">
             ⚠ Re-aprobación pendiente
+          </Badge>
+        )}
+        {tarifaVencida && (
+          <Badge
+            variant="destructive"
+            className="w-fit text-[10px] whitespace-nowrap"
+            title={`La tarifa vinculada venció el ${formatDate(vigHasta!)}`}
+          >
+            ⚠ Tarifa vencida
           </Badge>
         )}
       </div>

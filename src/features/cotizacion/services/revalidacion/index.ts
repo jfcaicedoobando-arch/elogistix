@@ -73,9 +73,11 @@ export async function solicitarReaprobacionVentas(
   if (error) throw new Error(error.message);
 }
 
+export type DecisionReaprobacion = "reaprobada" | "rechazada" | "recotizada";
+
 export async function resolverReaprobacion(
   cotizacionId: string,
-  decision: "reaprobada" | "rechazada",
+  decision: DecisionReaprobacion,
 ): Promise<void> {
   // SAFE-CAST: RPC nueva.
   const { error } = await (supabase.rpc as unknown as (

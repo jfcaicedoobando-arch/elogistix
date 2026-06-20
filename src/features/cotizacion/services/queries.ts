@@ -10,7 +10,7 @@ import { fromDb } from "@/lib/supabase/cast";
 // usamos para decidir si una cotización tiene costos cargados o sigue
 // "Sin costos" (v13.29.0).
 export const COTIZACION_LIST_COLUMNS =
-  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, estado_revalidacion, cotizacion_costos(count)" as const;
+  "id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, estado_revalidacion, tarifa_id, cotizacion_costos(count), costeo_tarifas:tarifa_id(vigente_hasta)" as const;
 
 export const COTIZACION_ACEPTADA_COLUMNS =
   "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas" as const;
@@ -45,15 +45,19 @@ export async function fetchCotizaciones(organizationId: string | null) {
   if (error) throw error;
   // Aplanamos `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N`
   // para consumir más cómodo en el listado.
-  type RawRow = Record<string, unknown> & { cotizacion_costos?: Array<{ count: number }> };
+  type RawRow = Record<string, unknown> & {
+    cotizacion_costos?: Array<{ count: number }>;
+    costeo_tarifas?: { vigente_hasta?: string | null } | null;
+  };
   // SAFE-CAST: Supabase tipa la respuesta como filas de la tabla, pero el join
   // `cotizacion_costos(count)` agrega un array virtual que no aparece en el
   // schema generado. Lo aplanamos a `RawRow` para consumir el conteo.
   const flattened = (data as unknown as RawRow[] | null ?? []).map((r) => ({
     ...r,
     cotizacion_costos_count: r.cotizacion_costos?.[0]?.count ?? 0,
+    tarifa_vigente_hasta: r.costeo_tarifas?.vigente_hasta ?? null,
   }));
-  return fromDb<Array<CotizacionRow & { cotizacion_costos_count: number }>>(flattened);
+  return fromDb<Array<CotizacionRow & { cotizacion_costos_count: number; tarifa_vigente_hasta: string | null }>>(flattened);
 }
 
 export async function fetchCotizacionesAceptadas(organizationId: string | null) {
