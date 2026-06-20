@@ -74,6 +74,9 @@ export default defineConfig({
         // - tipos puros (sólo type/interface).
         // La lógica real vive en hooks y utils que sí se testean.
         "src/pages/marketing/**",
+        // 13.87.1 — copy/datos estáticos de marketing también viven bajo
+        // features/marketing/routes (landingCopy, guia*.data, etc.).
+        "src/features/marketing/**",
         "src/**/*Columns.{ts,tsx}",
         "src/**/*columns.{ts,tsx}",
         "src/types/**",
