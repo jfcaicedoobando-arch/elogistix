@@ -43,6 +43,16 @@ export default function Dashboard() {
           </TabsList>
         </Tabs>
       )}
+      {misReaprob > 0 && (
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Tienes {misReaprob} cotización{misReaprob === 1 ? "" : "es"} esperando tu re-aprobación</AlertTitle>
+          <AlertDescription>
+            Operaciones detectó cambios en la tarifa al crear el embarque.{" "}
+            <Link to="/cotizaciones?reaprobacion=pendiente" className="underline font-medium">Revisar ahora →</Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {isOperador && (
         <MiOperacionSection
