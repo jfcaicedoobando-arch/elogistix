@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.83.2] - 2026-06-20
+- **fix(lint) allowlist `@sentry/*`**: tras mover `useSentryInfo.ts` a `src/lib/observability/hooks/` el lint marcó el import estático de `@sentry/react` como restringido. Añadido `src/lib/observability/hooks/**` al ignores de la regla `no-restricted-imports` en `eslint.config.js` (mismo trato que `SentryDiagnostico`, ya que el hook sólo se consume desde esa página de diagnóstico).
+
 ## [13.83.1] - 2026-06-20
 - **fix(ci) post-migración Paso 8/10**: CI fallaba en *Lint* y *audit:report* por paths viejos de `src/pages`. Actualizado `eslint.config.js` allowlist de `@sentry/*` (`src/pages/admin/SentryDiagnostico.tsx` → `src/features/admin/routes/SentryDiagnostico.tsx`) y `scripts/lib/arch.ts` (`findDirectClientImports` ya no escanea `src/pages` porque la carpeta dejó de existir).
 
