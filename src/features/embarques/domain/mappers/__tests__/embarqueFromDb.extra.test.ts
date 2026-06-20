@@ -2,7 +2,7 @@
  * embarqueFromDb.extra — edge cases no cubiertos en embarqueFromDb.test.ts.
  */
 import { describe, it, expect } from "vitest";
-import { mapEmbarqueRowToFormValues, DEFAULT_EMBARQUE_VALUES } from "@/lib/mappers/embarqueFromDb";
+import { mapEmbarqueRowToFormValues, DEFAULT_EMBARQUE_VALUES } from "@/features/embarques/domain/mappers/embarqueFromDb";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Row = Tables<"embarques">;

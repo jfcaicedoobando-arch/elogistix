@@ -5,7 +5,7 @@
  * con dimensiones, vigenciaDias futuro, partesMercancia flags, notas, etc.
  */
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { buildPaso1Data } from "@/lib/mappers/cotizacion";
+import { buildPaso1Data } from "@/features/cotizacion/domain/mappers/cotizacion";
 import { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/types";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 

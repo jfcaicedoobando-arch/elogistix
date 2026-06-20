@@ -27,7 +27,7 @@ vi.mock("@/features/crm/services/vincularCotizacion", () => ({
 vi.mock("@/components/shared/utils/appFeedback", () => ({ notifyError: vi.fn() }));
 
 import { validatePaso1 } from "../handlePaso1Crm";
-import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
+import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
 const base = (over: Partial<CotizacionFormValues> = {}): CotizacionFormValues => ({
   esProspecto: false,

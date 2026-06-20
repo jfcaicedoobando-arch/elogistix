@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPaso1Data } from "@/lib/mappers/cotizacion";
+import { buildPaso1Data } from "@/features/cotizacion/domain/mappers/cotizacion";
 import { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/types";
 
 describe("cotizacion · buildPaso1Data", () => {

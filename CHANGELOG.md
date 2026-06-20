@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.79.0] - 2026-06-20
+- **refactor(estructura) Paso 6 auditoría**: movidos los mappers específicos de dominio fuera de `src/lib/mappers/` hacia sus features. `cotizacion.ts` + `cotizacionForm.ts` → `src/features/cotizacion/domain/mappers/`; `embarque.ts`, `embarqueFromDb.ts`, `embarqueToDb.ts`, `embarqueCotizacion.ts`, `embarqueCotizacionDesvincular.ts`, `embarquePayloadSchemas.ts` → `src/features/embarques/domain/mappers/`. Tests reubicados junto a cada mapper (16 archivos). Imports reescritos (`@/lib/mappers/<x>` → `@/features/<feature>/domain/mappers/<x>`) en hooks de wizard de cotización, hooks de embarques, componentes y servicios. `src/lib/mappers/` queda solo con utilidades transversales (`_helpers`, `genericPayloadMapper`, `estadoResultadosRows`). Verificado: 18/18 archivos de test (157/157 tests) verdes.
+
 ## [13.78.0] - 2026-06-20
 - **refactor(estructura) Paso 5 auditoría**: continuada la limpieza de `src/lib/` moviendo más módulos específicos a sus features. `lib/parsers/dashboard*.ts` (4 archivos) → `features/dashboard/domain/parsers/`, `lib/parsers/cotizacionDetalle.ts` → `features/cotizacion/domain/parsers/`, `lib/import/bbva.ts` → `features/tesoreria/domain/import/`. Tests movidos junto a sus módulos (8 archivos de test). Imports reescritos en `useDashboardData`, `useCotizacionDetalleState`, `embarqueWizard`, `TesoreriaConciliacion`, `conciliacion` service y `useTesoreriaMovimientos`. Carpetas `src/lib/{parsers,import}/` eliminadas. Verificado: 124/124 tests verdes.
 

@@ -3,7 +3,7 @@ import {
   buildCotizacionDefaultValues,
   buildCotizacionInitialCostos,
   COTIZACION_FORM_DEFAULTS,
-} from "@/lib/mappers/cotizacionForm";
+} from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CotizacionInitialData } from "@/features/cotizacion/types";
 
 function baseData(overrides: Partial<CotizacionInitialData> = {}): CotizacionInitialData {

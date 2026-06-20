@@ -5,7 +5,7 @@
 
 import type { Tables } from "@/integrations/supabase/types";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
-import { str, numStr } from "./_helpers";
+import { str, numStr } from "@/lib/mappers/_helpers";
 
 type EmbarqueRow = Tables<"embarques">;
 
