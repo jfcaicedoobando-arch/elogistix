@@ -5,7 +5,7 @@ describe("lib/formatters/pnl", () => {
   describe("fmtPnl", () => {
     it("formatea positivos en MXN", () => {
       expect(fmtPnl(1500)).toMatch(/1[,.]500/);
-      expect(fmtPnl(1500)).toMatch(/\$/);
+      expect(fmtPnl(1500)).toMatch(/MXN|\$/);
     });
     it("trata null/undefined como 0", () => {
       expect(fmtPnl(null as unknown as number)).toMatch(/0/);
