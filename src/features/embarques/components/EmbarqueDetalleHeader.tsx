@@ -119,6 +119,11 @@ export function EmbarqueDetalleHeader({
         onAbrirEliminar={onAbrirEliminar}
         onAbrirDuplicar={onAbrirDuplicar}
         onReabrir={onReabrir}
+        cierreEsSiguiente={cierreEsSiguiente}
+        rolPuedeCerrar={rolPuedeCerrar}
+        cierrePuedeAvanzar={cierrePuedeAvanzar}
+        cierreMotivoBloqueo={cierreMotivoBloqueo}
+        onIrACierre={onIrACierre}
       />
 
       <EmbarqueHeaderDialogs
