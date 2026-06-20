@@ -5,8 +5,8 @@
  * v8.117.4: además de MXN se mantiene la suma equivalente en USD usando
  * convertirAUSD con el TC del propio embarque (tarjetas "Cierre mensual").
  */
-export * from "./proyeccionFacturacion/types";
-export * from "./proyeccionFacturacion/conversion";
-export * from "./proyeccionFacturacion/agrupar";
-export * from "./proyeccionFacturacion/kpis";
-export * from "./proyeccionFacturacion/meses";
+export * from "./types";
+export * from "./conversion";
+export * from "./agrupar";
+export * from "./kpis";
+export * from "./meses";
