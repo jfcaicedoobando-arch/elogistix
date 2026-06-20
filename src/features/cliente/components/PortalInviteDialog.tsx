@@ -14,10 +14,6 @@ import { cn } from "@/lib/utils";
 import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { useInviteClientUser } from "@/features/cliente/hooks";
-import { useToast } from "@/hooks/shared";
-import { getErrorMessage } from "@/lib/errors";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 interface Props {
   open: boolean;
@@ -32,35 +28,22 @@ export default function PortalInviteDialog({
   clienteId,
   organizationId,
 }: Props) {
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const inviteMutation = useInviteClientUser(clienteId);
 
+  // 13.85.10 — Toasts viven en `useInviteClientUser`. Aquí sólo cerramos el dialog.
   const handleInvite = () => {
     inviteMutation.mutate(
       { email, cliente_id: clienteId, organization_id: organizationId },
       {
-        onSuccess: (data) => {
-          notifySuccess(toast, {
-            title: data.is_new ? "Invitación enviada" : "Usuario vinculado",
-            description: data.is_new
-              ? "Se creó la cuenta y se envió un correo para establecer contraseña."
-              : "El usuario existente fue vinculado a este cliente.",
-          });
+        onSuccess: () => {
           onOpenChange(false);
           setEmail("");
-        },
-        onError: (err: unknown) => {
-          notifyError(toast, {
-            title: "Error",
-            description: getErrorMessage(err),
-            method: "ON_ERROR",
-            errorCode: ERROR_CODES.VALIDATION_FAILED,
-          });
         },
       }
     );
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
