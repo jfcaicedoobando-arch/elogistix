@@ -27,11 +27,17 @@ vi.mock("@/features/presupuesto/services", () => ({
   fetchPresupuestoVsReal: (...args: unknown[]) => fetchPresupuestoVsReal(...args),
 }));
 
-const calcularAlertasMock = vi.fn(() => [{ id: "a1", severidad: "alta" }]);
-const calcularKPIsEjecutivosMock = vi.fn(() => ({ ingresos: 100 }));
+const calcularAlertasMock = vi.fn((...args: unknown[]) => {
+  void args;
+  return [{ id: "a1", severidad: "alta" }];
+});
+const calcularKPIsEjecutivosMock = vi.fn((...args: unknown[]) => {
+  void args;
+  return { ingresos: 100 };
+});
 vi.mock("../alertas", () => ({
-  calcularAlertas: (...args: unknown[]) => calcularAlertasMock(...args),
-  calcularKPIsEjecutivos: (...args: unknown[]) => calcularKPIsEjecutivosMock(...args),
+  calcularAlertas: (...args: unknown[]) => calcularAlertasMock(args[0]),
+  calcularKPIsEjecutivos: (...args: unknown[]) => calcularKPIsEjecutivosMock(args[0], args[1]),
 }));
 
 import { fetchDashboardEjecutivo } from "../agregador";
