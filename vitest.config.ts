@@ -87,6 +87,27 @@ export default defineConfig({
         // Wrappers presentacionales sin lógica testeable unitariamente.
         "src/pdf/render/PdfPreview.tsx",
         "src/pdf/emisor.ts",
+        // 13.85.10 (B2) — Limpieza de denominador.
+        // Layout/chrome de la app: orquestación JSX cubierta por E2E.
+        "src/components/layout/**",
+        // Dialog shells presentacionales puros: sólo orquestan, sin
+        // useState/useMutation/useForm/useReducer propios. La lógica vive
+        // en hooks/forms hermanos que sí se testean.
+        "src/components/shared/BulkImportDialog.tsx",
+        "src/features/admin/components/NuevaOrganizacionDialog.tsx",
+        "src/features/admin/routes/admin-org/RoleChangeAlertDialog.tsx",
+        "src/features/auditoria/components/AsignarResponsableDialog.tsx",
+        "src/features/auditoria/components/MarcarRevisadoDialog.tsx",
+        "src/features/cliente/components/NuevoClienteDialog.tsx",
+        "src/features/costeo/components/CosteoAgenteFormDialog.tsx",
+        "src/features/cotizacion/components/detalle/EnviarCotizacionDialog.tsx",
+        "src/features/crm/components/ImportarLeadsCsvDialog.tsx",
+        "src/features/embarques/components/tracking/TrackingConfirmFechaLlegadaDialog.tsx",
+        "src/features/facturacion/components/HuecoFacturacionDetalleDialog.tsx",
+        "src/features/portal/components/cotizacion/PortalCotizacionConfirmDialog.tsx",
+        "src/features/proveedor/components/EditarProveedorDialog.tsx",
+        "src/features/proveedor/components/NuevoProveedorDialog.tsx",
+        "src/features/proveedor/components/ProveedoresImportDialog.tsx",
       ],
       // Umbrales mínimos globales. POLÍTICA RATCHET: el piso de lines/statements
       // SE MANTIENE EN 35% SIEMPRE. Subir sólo cuando coverage real ≥ umbral + 2%.
