@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.83.3] - 2026-06-20
+- **fix(ci) post-migración contexts → lib**: dos fallas tras Paso 10. (1) Test de arquitectura `src/lib no importa @/hooks|components|pages` rompía porque `AuthContext.tsx` importaba `setAuthSnapshot` y `buildAuthSnapshot/buildSentryUserContext` desde `@/components/shared/utils/*` (eran shims hacia `@/lib/auth/*`). Reescrito el import a la fuente canónica `@/lib/auth/authSnapshot` y `@/lib/auth/authSnapshotBuilder`. (2) Lint CI corre `--max-warnings 0` y el override de `react-refresh/only-export-components` seguía apuntando a `src/contexts/**` (carpeta ya eliminada). Actualizado a `src/lib/contexts/**`.
+
 ## [13.83.2] - 2026-06-20
 - **fix(lint) allowlist `@sentry/*`**: tras mover `useSentryInfo.ts` a `src/lib/observability/hooks/` el lint marcó el import estático de `@sentry/react` como restringido. Añadido `src/lib/observability/hooks/**` al ignores de la regla `no-restricted-imports` en `eslint.config.js` (mismo trato que `SentryDiagnostico`, ya que el hook sólo se consume desde esa página de diagnóstico).
 
