@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/shared";
 import { ShieldCheck, UserPlus } from "lucide-react";
-import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/features/admin/components/usuario/NuevoUsuarioDialog";
 import { DataTable } from "@/components/shared/DataTable";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/features/admin/hooks/usuario";
@@ -10,8 +9,7 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { PageHeader } from "@/components/shared/PageHeader";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
-import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
+import { notifyWarning } from "@/components/shared/utils/appFeedback";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
@@ -40,27 +38,30 @@ export default function Usuarios() {
   }, [users, isLoading, toast]);
 
 
+  // 13.85.9 — Los toasts de éxito/error los emite el hook (`useUpdateUserRole`).
+  // No duplicar aquí: causaría doble toast.
   const confirmRoleChange = async () => {
     if (!pendingRole) return;
     try {
       await updateRole.mutateAsync({ userId: pendingRole.user.user_id, newRole: pendingRole.newRole });
-      notifySuccess(toast, { title: "Rol actualizado", description: `${pendingRole.user.email} ahora es ${obtenerEtiquetaRol(pendingRole.newRole)}.` });
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err), error: err, method: "CONFIRM_ROLE_CHANGE" });
+    } catch {
+      // Notificación gestionada por el hook.
     } finally {
       setPendingRole(null);
     }
   };
 
+  // 13.85.9 — Los toasts de éxito/error los emite el hook (`useDeleteUser`).
+  // No duplicar aquí: causaría doble toast.
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
       await deleteUser.mutateAsync(deleteTarget.user_id);
-      notifySuccess(toast, { title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar usuario", description: getErrorMessage(err), error: err, method: "HANDLE_DELETE" });
+    } catch {
+      // Notificación gestionada por el hook.
     }
   };
+
 
   const columns = useUsuarioColumns({
     currentUserId: user?.id,
