@@ -3,7 +3,7 @@ import {
   shortNameFromEmail,
   buildDesempenoChartRows,
   ESTADOS_KEYS,
-} from "@/lib/operaciones/desempenoChart";
+} from "@/features/operaciones/domain/desempenoChart";
 import type { OperadorBase } from "@/types/operaciones";
 
 const makeOp = (nombre: string, overrides: Partial<OperadorBase["desgloseEstados"]> = {}): OperadorBase => ({

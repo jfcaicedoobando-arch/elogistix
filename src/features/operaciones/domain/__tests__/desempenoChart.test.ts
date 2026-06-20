@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { shortNameFromEmail, buildDesempenoChartRows, ESTADOS_KEYS } from "@/lib/operaciones/desempenoChart";
+import { shortNameFromEmail, buildDesempenoChartRows, ESTADOS_KEYS } from "@/features/operaciones/domain/desempenoChart";
 import type { OperadorBase } from "@/types/operaciones";
 
 describe("shortNameFromEmail", () => {

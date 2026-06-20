@@ -6,7 +6,7 @@
  * para dar errores claros en vez de propagar valores inválidos al backend.
  */
 
-import { resolverContacto } from "@/lib/contacto";
+import { resolverContacto } from "@/features/cliente/domain/contacto";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";

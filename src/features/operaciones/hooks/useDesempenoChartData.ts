@@ -7,7 +7,7 @@ import {
   buildDesempenoChartRows,
   ESTADOS_KEYS,
   type ChartRow,
-} from "@/lib/operaciones/desempenoChart";
+} from "@/features/operaciones/domain/desempenoChart";
 
 export { ESTADOS_KEYS };
 export type { ChartRow };

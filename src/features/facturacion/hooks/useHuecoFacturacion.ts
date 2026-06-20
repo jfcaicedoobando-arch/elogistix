@@ -16,7 +16,7 @@ import {
   HUECO_CSV_HEADERS,
   buildHuecoCsvFilename,
   buildHuecoCsvRows,
-} from "@/lib/facturacion/huecoCsv";
+} from "@/features/facturacion/domain/huecoCsv";
 
 export type { FilaHueco, HuecoFacturacionResult };
 
