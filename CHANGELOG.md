@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.83.1] - 2026-06-20
+- **fix(ci) post-migración Paso 8/10**: CI fallaba en *Lint* y *audit:report* por paths viejos de `src/pages`. Actualizado `eslint.config.js` allowlist de `@sentry/*` (`src/pages/admin/SentryDiagnostico.tsx` → `src/features/admin/routes/SentryDiagnostico.tsx`) y `scripts/lib/arch.ts` (`findDirectClientImports` ya no escanea `src/pages` porque la carpeta dejó de existir).
+
 ## [13.83.0] - 2026-06-20
 - **refactor(estructura) Paso 10 auditoría**: consolidado `src/contexts/` en `src/lib/contexts/`. Movidos `AuthContext.tsx`, `OrganizationContext.tsx`, `ThemeContext.tsx`, `BreadcrumbContext.tsx`, la subcarpeta `auth/` (useAuthSession/useAuthProfile/useLoginAudit + tests) y `__tests__/` a `src/lib/contexts/`. 94 imports `@/contexts/*` reescritos a `@/lib/contexts/*` (`AuthContext` ×59, `OrganizationContext` ×18, `BreadcrumbContext` ×14, `ThemeContext` ×2, `auth/useAuthProfile` ×1) + 2 imports relativos en `main.tsx`/`App.tsx`. Carpeta `src/contexts/` eliminada. Tests de arquitectura actualizados: `src/lib/__tests__/architecture.test.ts`, `architecture-baseline.test.ts`, `scripts/lib/arch.ts` y `sentry-imports-guardrail.test.ts` apuntan al nuevo path.
 
