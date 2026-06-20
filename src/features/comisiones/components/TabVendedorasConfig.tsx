@@ -38,6 +38,8 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
   const [nuevoPct, setNuevoPct] = useState("5");
   const [pcts, setPcts] = useState<Record<string, string>>({});
 
+  // 13.85.10 — Toasts viven en los hooks (`useUpsertVendedoraConfig`, `useUpdateVendedoraConfig`).
+  // Aquí sólo se conserva el reset de inputs en onSuccess.
   const agregar = () => {
     if (!nuevaVendedora || !organizationId) return;
     upsert.mutate({
@@ -47,24 +49,21 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
       activa: true,
     }, {
       onSuccess: () => {
-        toast.success("Vendedora configurada");
         setNuevaVendedora(""); setNuevoPct("5");
       },
-      onError: (e) => notifyError(toast, { title: (e as Error).message, error: e, method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_1" }),
     });
   };
 
   const guardarPct = (id: string) => {
     const v = Number(pcts[id]);
     if (Number.isNaN(v) || v < 0 || v > 100) return notifyError(toast, { title: "% inválido", method: "FEATURES_COMISIONES_COMPONENTS_TABVENDEDORASCONFIG_2" });
-    update.mutate({ id, changes: { porcentaje_default: v } }, {
-      onSuccess: () => toast.success("Porcentaje actualizado"),
-    });
+    update.mutate({ id, changes: { porcentaje_default: v } });
   };
 
   const toggleActiva = (id: string, activa: boolean) => {
     update.mutate({ id, changes: { activa } });
   };
+
 
   const disponibles = vendedoras.filter((v) => !configs.some((c) => c.user_id === v.id));
 
