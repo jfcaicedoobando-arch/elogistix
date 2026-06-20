@@ -12,6 +12,8 @@ import {
 } from "@/features/embarques/hooks/useEmbarques";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqueQueries";
 import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFaltantesParaEstado";
+import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarque";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useEffect, useState, useCallback } from "react";
 
