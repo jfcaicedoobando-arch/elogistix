@@ -6,9 +6,9 @@ import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
 import { signOutCurrentSession } from "@/features/auth/services";
 import { fromDb } from "@/lib/supabase/cast";
-import { setAuthSnapshot } from "@/components/shared/utils/authSnapshot";
+import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { syncSentryUser } from "@/lib/observability/sentry/user";
-import { buildAuthSnapshot, buildSentryUserContext } from "@/components/shared/utils/authSnapshotBuilder";
+import { buildAuthSnapshot, buildSentryUserContext } from "@/lib/auth/authSnapshotBuilder";
 
 export type { CachedOrganization } from "./auth/useAuthProfile";
 

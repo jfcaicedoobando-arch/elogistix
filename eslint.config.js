@@ -137,7 +137,7 @@ export default tseslint.config(
     // Contexts y barrels: re-exportan helpers/hooks junto al Provider.
     // El componente raíz de cada contexto rara vez se edita; el warning
     // de Fast Refresh es ruido para esta convención del proyecto.
-    files: ["src/contexts/**"],
+    files: ["src/lib/contexts/**"],
     rules: {
       "react-refresh/only-export-components": "off",
     },
