@@ -1,48 +1,55 @@
-# Paso 8 — Consolidar `src/pages/` en `features/*/routes/`
+# Paso 9 — Mover `src/services/*` y `src/hooks/*` shadow a sus features
 
-Movemos los 85 archivos restantes de `src/pages/` a la carpeta `routes/` (o `components/`/`data/` cuando no son rutas) del feature correspondiente, actualizamos `src/routes/appRoutes.lazy.ts` y todos los imports cruzados.
+Continuamos la auditoría adelgazando los cajones layer-first (`src/services/`, `src/hooks/`) para empujarlos a `features/<dominio>/(services|hooks)/`. Lo transversal (sin dueño claro) se queda.
 
-## Mapeo propuesto
+## Mapeo de servicios
 
-| Origen (`src/pages/`)            | Destino (`src/features/`)                          |
-| -------------------------------- | -------------------------------------------------- |
-| `dashboard/Dashboard.tsx`        | `dashboard/routes/Dashboard.tsx`                   |
-| `dashboard/Operaciones.tsx`      | `operaciones/routes/Operaciones.tsx`               |
-| `dashboard/Reportes.tsx`         | `reportes/routes/Reportes.tsx`                     |
-| `dashboard/Bitacora.tsx`         | `dashboard/routes/Bitacora.tsx`                    |
-| `dashboard/Ayuda*.{tsx,ts}`      | `dashboard/routes/`                                |
-| `admin/*.tsx`                    | `admin/routes/` (incluye `BackfillLegacyCard`)     |
-| `admin-org/*.tsx`                | `admin/routes/admin-org/`                          |
-| `auth/{Login,ResetPassword,NotFound,TrackingPublico,Unsubscribe}.tsx` + `components/`, `ForgotPasswordDialog.tsx` | nueva `features/auth/routes/` + `features/auth/components/` |
-| `bandejas/*.tsx`                 | `bandejas/routes/`                                 |
-| `comisiones/Comisiones.tsx`      | `comisiones/routes/Comisiones.tsx`                 |
-| `cxp/Cxp.tsx`                    | `cxp/routes/Cxp.tsx`                               |
-| `facturacion/FacturaDetalle.tsx` | `facturacion/routes/FacturaDetalle.tsx`            |
-| `portal/*.tsx`                   | `portal/routes/`                                   |
-| `profit/*.tsx`                   | `profit/routes/`                                   |
-| `proveedores/*.{tsx,ts}`         | `proveedor/routes/` (Detalle, Proveedores) y `proveedor/components/` (tablas/dialogos/cards/columns) |
-| `tesoreria/*.tsx`                | `tesoreria/routes/`                                |
-| `onboarding/Onboarding.tsx`      | `onboarding/routes/Onboarding.tsx`                 |
-| `marketing/*` (incl. `sections/` y `*.data.ts` + `landingCopy`) | nueva `features/marketing/routes/` y `features/marketing/components/sections/` |
-| `legal/*.tsx`                    | nueva `features/legal/routes/`                     |
-| `dev/PdfPreviewCotizacion.tsx`   | nueva `features/dev/routes/` (sólo dev)            |
+| Origen                                  | Destino                                          | Notas |
+| --------------------------------------- | ------------------------------------------------ | ----- |
+| `src/services/bitacora/`                | `features/auditoria/services/bitacora/`          | Consumido por hooks de auditoría y `useBitacora`. |
+| `src/services/notificaciones/`          | `features/notificaciones/services/` (feature nueva) o `features/admin/services/notificaciones/` si prefieres no abrir otra | El único consumidor es `useNotificacionesInternas`. |
+| `src/services/organization/`            | `features/admin/services/organization/`          | Lo usa `OrganizationContext`. |
+| `src/services/search/`                  | `features/search/services/` (feature nueva) o quedarse transversal | Lo usa `useGlobalSearch` y un hook del portal. |
+| `src/services/storage/`                 | `features/embarques/services/storage/`           | Aunque lo importan varios features (portal, cotización, embarques), su dueño funcional son adjuntos de embarque. Alternativa: dejarlo transversal. |
+| `src/services/tracking/`                | `features/embarques/services/tracking/`          | TrackingPublico es página pero el contenido es de embarques. |
+| `src/services/usuario/`                 | `features/admin/services/usuario/`               | Lo consumen admin/users. |
+| `src/services/observability/`           | **Se queda en `src/services/`** (transversal — logger, ErrorBoundary). |
+| `src/services/{demoAccess,demoMode,unsubscribeService}.ts` | `features/{marketing,marketing,auth}/services/` | Cada uno tiene un consumidor claro. |
 
-## Actualizaciones
+## Mapeo de hooks
 
-1. `git mv` por carpeta para preservar historial.
-2. Reescribir `src/routes/appRoutes.lazy.ts` apuntando a los nuevos paths.
-3. Buscar `rg "@/pages/"` y actualizar cada import (tests, hooks que referencian columns, etc.).
-4. Verificar que `src/__tests__/architecture/fase2-pages-and-formatters.test.ts` y `fase3-4-reubicaciones.test.ts` no rompan; ajustar guardarriel si bloquea los nuevos paths.
-5. Correr `bunx vitest run` completo y revisar 0 regresiones.
-6. Bumpear `APP_VERSION` → `13.81.0` y agregar entrada en `CHANGELOG.md`.
+| Origen                              | Destino                                       |
+| ----------------------------------- | --------------------------------------------- |
+| `src/hooks/layout/`                 | `src/components/layout/hooks/` o `features/_shared/` — transversal; **se queda**. |
+| `src/hooks/sentry/`                 | `src/lib/observability/hooks/` — transversal. |
+| `src/hooks/shared/useBitacora.ts`   | `features/auditoria/hooks/`                   |
+| `src/hooks/shared/useGlobalSearch.ts` | `features/search/hooks/` (o donde aterrice search) |
+| `src/hooks/shared/{useDebounce,useIsMobile,useListPageState,useOrgFilter,usePermissions,useRadixPointerEventsRescue}.ts` | Se quedan (utilidades UI transversales). |
+| `src/hooks/usuario/`                | `features/admin/hooks/usuario/`               |
+| `src/hooks/useIsDemoUser.ts`        | `features/marketing/hooks/`                   |
+| `src/hooks/useNotificacionesInternas.ts` | `features/notificaciones/hooks/` o `features/admin/hooks/` |
 
-## Riesgos
+## Mapeo de componentes (sólo los que claramente son de un feature)
 
-- `marketing/` y `legal/` no tienen feature aún → se crean carpetas nuevas.
-- `proveedores/` mezcla rutas con componentes de tabla; se reparten entre `routes/` y `components/`.
-- `auth/components/{LoginForm,SignupForm}` y `ForgotPasswordDialog` se mueven a `features/auth/components/`.
-- `src/lib/__tests__/architecture.test.ts` puede tener reglas sobre paths legacy → ajustar.
+| Origen                                  | Destino                                       |
+| --------------------------------------- | --------------------------------------------- |
+| `src/components/dashboard-ejecutivo/`   | `features/dashboardEjecutivo/components/`     |
+| `src/components/tracking/`              | `features/embarques/components/tracking/`     |
+| `src/components/usuario/`               | `features/admin/components/usuario/`          |
 
-## Pregunta
+Los demás (`shared/`, `ui/`, `layout/`, `selects/`, `seo/`, `feedback/`, `empty/`) son transversales y permanecen.
 
-¿Procedo con el mapeo completo en una sola pasada, o prefieres dividirlo en 2-3 turnos (por ejemplo: 1º admin/dashboard/tesoreria/portal/profit, 2º auth/proveedores/bandejas/cxp/facturacion/comisiones, 3º marketing/legal/onboarding/dev)?
+## Trabajo concreto
+
+1. `mv` por carpeta + crear features nuevas si hace falta (`notificaciones`, `search`).
+2. Reescribir imports con `find … | xargs sed -i`.
+3. Actualizar barrels (`features/<x>/services/index.ts`, `hooks/index.ts`) para reexportar.
+4. Ajustar tests de arquitectura que referencien las rutas viejas (`unsubscribe-encapsulation.test.ts`, etc.).
+5. Correr `bunx vitest run`.
+6. Bumpear `APP_VERSION` → `13.82.0` y entrada en `CHANGELOG.md`.
+
+## Preguntas antes de implementar
+
+1. ¿Creo features nuevos para `notificaciones` y `search`, o los meto bajo `features/admin/` y `features/_shared/` respectivamente para no inflar el árbol?
+2. `src/services/storage/` lo usan 3 features distintos. ¿Lo dejo en `src/services/storage/` como transversal, o lo muevo a `features/embarques/services/storage/` re-exportando?
+3. ¿Hacemos los tres bloques (services + hooks + components) en un solo turno (≈40-50 archivos) o lo divido?
