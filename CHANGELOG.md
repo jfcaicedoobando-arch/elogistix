@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.75.0] - 2026-06-20
+- **refactor(estructura) Paso 2 auditoría**: migradas las rutas de `cotizaciones` (6 archivos + carpeta `detalle/`) y `clientes` (2 archivos) desde `src/pages/` hacia `src/features/cotizacion/routes/` y `src/features/cliente/routes/`. Actualizados los imports lazy en `src/routes/appRoutes.lazy.ts` y los prefetch en `src/contexts/AuthContext.tsx`. Imports internos de `CotizacionDetalle.tsx` ahora son relativos al feature. Sin cambios de comportamiento.
+
 ## [13.74.0] - 2026-06-20
 - **refactor(emails) Paso 1 auditoría**: `process-email-queue/index.ts` reducido de 373 → 45 líneas. Ahora es un compositor delgado que delega en los módulos hermanos ya existentes (`queueAuth.ts`, `queueProcessor.ts`, `processItem.ts`, `messageProcessor.ts`). Elimina la violación crónica de Power of 10 (>200 líneas) que volvía a aparecer cada vez que `setup_email_infra` regeneraba el archivo. Tests verdes: 4/4 smoke Deno + 10/10 `sentry-edge-wrapping.test.ts`. Cuando vuelva a regenerarse, basta con re-aplicar este compositor (ver `mem://technical/process-email-queue-regeneration`).
 
