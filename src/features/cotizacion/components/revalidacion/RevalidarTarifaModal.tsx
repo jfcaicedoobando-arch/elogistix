@@ -35,7 +35,7 @@ function formatMoney(n: number | null, moneda: "USD" | "MXN") {
 
 export function RevalidarTarifaModal({
   open, onOpenChange, resultado,
-  onMantener, onRefrescar, onSolicitarReaprobacion, loading,
+  onMantener, onRefrescar, onSustituir, onSolicitarReaprobacion, loading,
 }: Props) {
   if (!resultado) return null;
   const { severidad, cambios, tarifa_vigente, umbral_pct, max_delta_pct } = resultado;
