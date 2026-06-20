@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { RevalidarTarifaModal } from "@/features/cotizacion/components/revalidacion/RevalidarTarifaModal";
-import BuscarTarifaDialog from "@/features/costeo/components/BuscarTarifaDialog";
+import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import {
   useCrearEmbarqueBorradorConDecision,
   useSolicitarReaprobacion,
