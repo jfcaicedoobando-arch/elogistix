@@ -6,8 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.71.2] - 2026-06-20
+- **feat(admin/configuracion)**: Nueva pestaña "Operaciones" en `/admin/configuracion` con `TabOperacionesGlobal` para editar los umbrales globales de reconciliación (`reconciliacion_varianza_alerta_pct`, `reconciliacion_varianza_critica_pct`) usados por la matriz Cotizado/Refrescado/Real. Valida que el umbral crítico sea mayor que el de alerta.
+
 ## [13.71.1] - 2026-06-20
 - **feat(cotizaciones/embarques)**: Integración UI Fase 2 — botón "Re-cotizar" (con `RecotizarModal`) en acciones de `CotizacionDetalle` cuando la cotización está Aceptada; nueva sección "Reconciliación 3 columnas" dentro de la pestaña Conciliación del detalle de embarque, mostrando Cotizado / Refrescado / Real con filtro de varianza y export CSV arriba de la conciliación vs facturas proveedor existente.
+
 
 ## [13.71.0] - 2026-06-20
 
