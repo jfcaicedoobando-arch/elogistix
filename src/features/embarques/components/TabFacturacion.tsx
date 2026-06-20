@@ -15,6 +15,7 @@ import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
 import { useProformasEmbarque, useEliminarProforma } from "@/features/embarques/hooks";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
