@@ -120,9 +120,11 @@ export default defineConfig({
       // Lines 39.77%, Functions 55.99%, Branches 73.37%. Subimos
       // functions 50→52 y branches 70→72 (margen ≥ 2 puntos).
       // lines/statements se mantienen en 35 por política ratchet.
+      // 13.87.2 — Lines/statements 35→38 tras excluir marketing del
+      // denominador (real 40.62%, margen 2.62).
       thresholds: {
-        lines: 35,
-        statements: 35,
+        lines: 38,
+        statements: 38,
         functions: 52,
         branches: 72,
       },
