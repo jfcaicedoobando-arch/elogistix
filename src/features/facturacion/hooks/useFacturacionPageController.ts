@@ -60,6 +60,7 @@ export function useFacturacionPageController(opts?: {
 
   const { items: paginatedFacturas, totalPages } = paginate(filtered);
 
+  // 13.85.10 — Toasts viven en `useMarcarCostoPagado`. Aquí sólo registramos actividad.
   const handleMarcarPagado = useCallback((id: string) => {
     marcarPagado.mutate({ id }, {
       onSuccess: () => {
@@ -69,11 +70,10 @@ export function useFacturacionPageController(opts?: {
           entidad_id: id,
           entidad_nombre: 'Gasto marcado como pagado',
         });
-        notifySuccess(toast, { title: "Gasto marcado como pagado" });
       },
-      onError: () => notifyError(toast, { title: "Error al marcar como pagado", method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED }),
     });
-  }, [marcarPagado, registrarActividad, toast]);
+  }, [marcarPagado, registrarActividad]);
+
 
   const exportarFacturasCsv = useCallback(() => {
     exportToCsv(
