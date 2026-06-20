@@ -314,6 +314,7 @@ export default tseslint.config(
       "src/components/shared/ErrorBoundary.tsx",
       "src/components/feedback/**",
       "src/features/admin/routes/SentryDiagnostico.tsx",
+      "src/lib/observability/hooks/**",
       "**/__tests__/**",
       "**/*.test.ts",
       "**/*.test.tsx",
