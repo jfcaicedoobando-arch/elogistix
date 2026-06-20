@@ -11,7 +11,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useCuentasBancarias, useMovimientos, useImportarMovimientos } from "@/features/tesoreria/hooks";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { parseEstadoCuentaBBVA } from "@/lib/import/bbva";
+import { parseEstadoCuentaBBVA } from "@/features/tesoreria/domain/import/bbva";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";

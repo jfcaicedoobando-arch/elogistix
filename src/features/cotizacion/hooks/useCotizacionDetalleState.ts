@@ -8,7 +8,7 @@ import {
   calcularTotalesConceptos,
   getNombreDestinatario,
   EMPTY_TOTALES,
-} from "@/lib/parsers/cotizacionDetalle";
+} from "@/features/cotizacion/domain/parsers/cotizacionDetalle";
 import { useCotizacionDetalleHandlers } from "@/features/cotizacion/hooks/useCotizacionDetalleHandlers";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 

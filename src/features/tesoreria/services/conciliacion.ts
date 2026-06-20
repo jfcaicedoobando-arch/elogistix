@@ -9,7 +9,7 @@
 import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import type { MovimientoParseado } from "@/lib/import/bbva";
+import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
 

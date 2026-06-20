@@ -10,7 +10,7 @@ import {
   ignorarMovimiento, sugerirCandidatos,
   type FiltrosMovimientos, type MovimientoBBVA,
 } from "@/features/tesoreria/services";
-import type { MovimientoParseado } from "@/lib/import/bbva";
+import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useMovimientos(filtros: FiltrosMovimientos | null) {
