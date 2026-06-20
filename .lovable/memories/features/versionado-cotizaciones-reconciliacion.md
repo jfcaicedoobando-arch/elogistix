@@ -27,10 +27,13 @@ type: feature
 
 Alineación por `(concepto, moneda)` case-insensitive. Conceptos reales sin contraparte cotizada aparecen con cotizado/refrescado = 0.
 
-# Umbrales (configuracion_global, categoría `operaciones`)
+# Umbrales (tabla `configuracion`, categoría `operaciones`, POR ORGANIZACIÓN)
 
-- `reconciliacion_varianza_alerta_pct` (default 5).
-- `reconciliacion_varianza_critica_pct` (default 15).
+- `reconciliacion_varianza_alerta_pct` (default 10) — % desde el cual la varianza se marca como alerta.
+- `reconciliacion_varianza_critica_pct` (default 25) — % desde el cual se marca como crítica.
+- Cada empresa edita sus propios umbrales en `/configuracion → Operaciones` (NO en Super Admin).
+- Hook de lectura: `useUmbralesReconciliacion` (cae a `UMBRALES_DEFAULT` de `versionadoCotizacion.ts` si no hay valor).
+- Unicidad BD: `configuracion (organization_id, categoria, clave)`. RLS de lectura: `organization_id = current_user_org_id()`.
 
 # UI
 
