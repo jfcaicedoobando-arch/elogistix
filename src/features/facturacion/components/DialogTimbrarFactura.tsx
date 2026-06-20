@@ -15,6 +15,7 @@ import {
 } from "@/features/facturacion/services";
 import { useQuery } from "@tanstack/react-query";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 
 interface Props {
   facturaId: string | null;
@@ -41,19 +42,14 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
 
   if (!facturaId || !factura) return null;
 
-  const rfc = cliente?.rfc ?? factura.rfc_cliente ?? "";
-  const cp = cliente?.codigo_postal ?? "";
-  const regimen = cliente?.regimen_fiscal ?? "";
-
-  const checks = [
-    { ok: !!rfc && rfc.length >= 12, label: `RFC del cliente: ${rfc || "FALTA"}` },
-    { ok: !!cp && /^\d{5}$/.test(cp), label: `Código postal: ${cp || "FALTA"}` },
-    { ok: !!regimen, label: `Régimen fiscal: ${regimen || "FALTA"}` },
-    { ok: !!usoCfdi, label: `Uso CFDI: ${usoCfdi}` },
-    { ok: !!formaPago, label: `Forma de pago SAT: ${formaPago}` },
-    { ok: !!metodoPago, label: `Método de pago SAT: ${metodoPago}` },
-  ];
-  const puedeTimbrar = checks.every((c) => c.ok);
+  const { checks, puedeTimbrar } = buildChecksTimbrado({
+    rfc: cliente?.rfc ?? factura.rfc_cliente ?? "",
+    cp: cliente?.codigo_postal ?? "",
+    regimen: cliente?.regimen_fiscal ?? "",
+    usoCfdi,
+    formaPago,
+    metodoPago,
+  });
 
   const onConfirm = async () => {
     // Persiste la elección antes de timbrar
