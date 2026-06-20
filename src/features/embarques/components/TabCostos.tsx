@@ -34,6 +34,25 @@ const kpiColors = [
 export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
+  const { focus, registerRef, clearFocus } = useFocusSection();
+
+  // Foco soportado en este tab: filtra la tabla de costos según el motivo del cierre.
+  // - "cxp" / "costo-no-liquidado" → estado_liquidacion = "Pendiente".
+  // - "costo-sin-factura" → no podemos verificar facturas client-side; sólo resaltamos la sección.
+  const costoFocus = focus && ["cxp", "costo-no-liquidado", "costo-sin-factura"].includes(focus)
+    ? focus
+    : null;
+  const conceptosCostoFiltrados = useMemo(() => {
+    if (costoFocus === "cxp" || costoFocus === "costo-no-liquidado") {
+      return conceptosCosto.filter(c => (c.estado_liquidacion ?? '').toLowerCase() !== 'pagado');
+    }
+    return conceptosCosto;
+  }, [conceptosCosto, costoFocus]);
+  const focusLabel: Record<string, string> = {
+    cxp: "facturas de proveedor por pagar",
+    "costo-no-liquidado": "costos pendientes de liquidación",
+    "costo-sin-factura": "costos sin factura de proveedor",
+  };
   const showContenedorCol = contenedores.length >= 2;
   const contenedorLabelById = useMemo(() => {
     const map = new Map<string, string>();
