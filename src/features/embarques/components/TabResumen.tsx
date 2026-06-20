@@ -41,7 +41,11 @@ export function TabResumen({ embarque }: Props) {
         </Card>
       </div>
 
-      {embarque.modo === "Marítimo" && <SeccionContenedoresReadonly embarqueId={embarque.id} />}
+      {embarque.modo === "Marítimo" && (
+        <div ref={registerRef("contenedores")} data-focus="contenedores">
+          <SeccionContenedoresReadonly embarqueId={embarque.id} />
+        </div>
+      )}
 
       <OrigenCostosSection
         tarifaIdOriginal={(embarque as { tarifa_id_original?: string | null }).tarifa_id_original}
