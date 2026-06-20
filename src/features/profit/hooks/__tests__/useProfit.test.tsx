@@ -19,8 +19,10 @@ const { mockFetchER, mockFetchERDevengado } = vi.hoisted(() => ({
   mockFetchERDevengado: vi.fn(),
 }));
 
-vi.mock('@/features/profit/services', () => ({
+vi.mock('@/features/profit/services/estadoResultados', () => ({
   fetchEstadoResultadosMes: mockFetchER,
+}));
+vi.mock('@/features/profit/services/estadoResultadosDevengado', () => ({
   fetchEstadoResultadosDevengado: mockFetchERDevengado,
 }));
 
