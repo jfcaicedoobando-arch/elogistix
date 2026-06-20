@@ -10,7 +10,7 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 import type { UserRow } from "@/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate } from "@/lib/formatters";
-import { ROLE_BADGE_CLASSES, ROLE_LABELS, ASSIGNABLE_ROLES_ADMIN_ORG, getRoleLabel } from "@/lib/roles/roleCatalog";
+import { ROLE_BADGE_CLASSES, ROLE_LABELS, ASSIGNABLE_ROLES_ADMIN_ORG, getRoleLabel } from "@/features/admin/domain/roles/roleCatalog";
 
 const roleBadge = ROLE_BADGE_CLASSES;
 

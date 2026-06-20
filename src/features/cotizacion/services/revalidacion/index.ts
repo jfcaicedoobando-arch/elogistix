@@ -11,7 +11,7 @@ import type {
   CambioTarifa,
   SeveridadRevalidacion,
   DecisionTarifa,
-} from "@/lib/domain/revalidacionTarifa";
+} from "@/features/cotizacion/domain/revalidacionTarifa";
 
 function parseResultado(raw: unknown): ResultadoRevalidacion {
   const r = (raw ?? {}) as Record<string, unknown>;

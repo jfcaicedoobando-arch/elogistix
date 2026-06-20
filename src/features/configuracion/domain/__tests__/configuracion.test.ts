@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { agruparConfigPorCategoria } from "@/lib/domain/configuracion";
+import { agruparConfigPorCategoria } from "@/features/configuracion/domain/configuracion";
 
 describe("agruparConfigPorCategoria", () => {
   it("agrupa items por categoría manteniendo orden", () => {

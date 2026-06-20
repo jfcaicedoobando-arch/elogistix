@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, AlertCircle, RefreshCw } from "lucide-react";
-import type { ResultadoRevalidacion } from "@/lib/domain/revalidacionTarifa";
+import type { ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
 import { formatCurrency } from "@/lib/formatters";
 
 interface Props {

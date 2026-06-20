@@ -5,7 +5,7 @@ import {
   sumarConceptosEnMxn,
   sumarConceptosEnUsd,
   type FilaProyeccion,
-} from "@/lib/domain/proyeccionFacturacion";
+} from "@/features/facturacion/domain/proyeccionFacturacion";
 import type { EmbarqueProyeccionRow } from "./fetchSources";
 
 interface ConceptoAgg {

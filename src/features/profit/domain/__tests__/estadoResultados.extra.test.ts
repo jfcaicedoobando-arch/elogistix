@@ -5,7 +5,7 @@ import {
   type EmbarqueER,
   type ConceptoVentaER,
   type ConceptoCostoER,
-} from "@/lib/domain/estadoResultados";
+} from "@/features/profit/domain/estadoResultados";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const emb = (

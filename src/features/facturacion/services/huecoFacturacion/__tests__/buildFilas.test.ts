@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@/lib/domain/proyeccionFacturacion", () => ({
+vi.mock("@/features/facturacion/domain/proyeccionFacturacion", () => ({
   sumarConceptosEnMxn: vi.fn((rows: Array<{ monto: number; moneda: string }>, tcUsd: number, tcEur: number) =>
     rows.reduce((acc, r) => acc + r.monto * (r.moneda === "USD" ? tcUsd : r.moneda === "EUR" ? tcEur : 1), 0),
   ),

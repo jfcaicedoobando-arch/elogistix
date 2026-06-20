@@ -5,7 +5,7 @@ import {
   totalesProformasSeleccionadas,
   MULTI_CONTENEDOR,
   type ProformaPendienteLite,
-} from "@/lib/domain/proformaAgrupacion";
+} from "@/features/proformas/domain/proformaAgrupacion";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const base = (overrides: Partial<ProformaPendienteLite> = {}): ProformaPendienteLite => ({

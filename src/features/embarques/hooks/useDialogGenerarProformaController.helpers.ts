@@ -6,7 +6,7 @@ import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from 
 import {
   filtrarPorContenedor,
   type FiltroContenedor,
-} from "@/lib/domain/conceptosPorContenedor";
+} from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<"conceptos_venta">;

@@ -1,5 +1,5 @@
 import { formatCurrency } from "@/lib/formatters";
-import type { EstadoResultados, ModoColumna } from "@/lib/domain/estadoResultados";
+import type { EstadoResultados, ModoColumna } from "@/features/profit/domain/estadoResultados";
 
 export function fmt(n: number): string {
   if (n === 0) return "—";

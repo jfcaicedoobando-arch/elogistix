@@ -14,7 +14,7 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import { useProformaDetalle } from "@/features/proformas/hooks/useProformaDetalle";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
-import { calcularTotalesProforma } from "@/lib/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { EstadoBadges, TotalesCard } from "@/features/proformas/components/ProformaDetalleCards";
 import type { ConceptoVentaRow } from "@/features/proformas/services";

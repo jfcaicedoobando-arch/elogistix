@@ -8,7 +8,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
-import { agruparPorContenedor } from "@/lib/domain/conceptosPorContenedor";
+import { agruparPorContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 

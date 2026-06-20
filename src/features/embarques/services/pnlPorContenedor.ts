@@ -21,7 +21,7 @@ import type {
   ConceptoVentaRow,
   ConceptoCostoRow,
 } from "@/features/embarques/types/embarque";
-import { formatSubexpediente } from "@/lib/domain/embarque/subexpediente";
+import { formatSubexpediente } from "@/features/embarques/domain/embarque/subexpediente";
 
 export interface FilaPnlContenedor {
   contenedorId: string | null; // null = fila "Generales" o "Total"

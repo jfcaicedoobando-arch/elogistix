@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-vi.mock("@/lib/domain/estadoResultados", () => ({
+vi.mock("@/features/profit/domain/estadoResultados", () => ({
   buildEstadoResultados: vi.fn((emb, v, c) => ({ emb, v, c }))
 }));
 

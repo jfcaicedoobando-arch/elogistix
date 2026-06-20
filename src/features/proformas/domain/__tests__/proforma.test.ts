@@ -9,7 +9,7 @@ import {
   totalesProformasSeleccionadas,
   type ConceptoVentaLite,
   type ProformaPendienteLite,
-} from "@/lib/domain/proforma";
+} from "@/features/proformas/domain/proforma";
 
 describe("calcularTotalesProforma", () => {
   const tasa = 0.16;

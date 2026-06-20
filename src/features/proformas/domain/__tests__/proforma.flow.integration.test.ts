@@ -20,7 +20,7 @@ import {
   totalesProformasSeleccionadas,
   type ConceptoVentaLite,
   type ProformaPendienteLite,
-} from "@/lib/domain/proforma";
+} from "@/features/proformas/domain/proforma";
 
 const TASA = 0.16;
 

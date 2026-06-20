@@ -6,7 +6,7 @@ import {
   RevalidacionRequeridaError,
   type CambioTarifa,
   type ResultadoRevalidacion,
-} from "@/lib/domain/revalidacionTarifa";
+} from "@/features/cotizacion/domain/revalidacionTarifa";
 
 const cambio = (over: Partial<CambioTarifa> = {}): CambioTarifa => ({
   concepto: "Flete",

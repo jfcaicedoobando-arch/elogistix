@@ -1,7 +1,7 @@
 /**
  * Helpers de formato compartidos por la tabla de reconciliación a 3 columnas.
  */
-import type { ClasificacionVarianza } from "@/lib/domain/versionadoCotizacion";
+import type { ClasificacionVarianza } from "@/features/cotizacion/domain/versionadoCotizacion";
 
 export const fmt = (n: number, moneda: string): string =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: moneda || "USD" }).format(n);

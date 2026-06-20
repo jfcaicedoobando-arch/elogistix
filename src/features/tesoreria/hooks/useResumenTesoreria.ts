@@ -2,7 +2,7 @@
  * Compone el resumen de tesorería a partir de cobranza (CxC) + CxP + saldos.
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
-import { calcularResumenTesoreria, type ResumenTesoreria } from "@/lib/domain/tesoreria";
+import { calcularResumenTesoreria, type ResumenTesoreria } from "@/features/tesoreria/domain";
 import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useSaldosCuentas } from "./useTesoreriaCuentas";

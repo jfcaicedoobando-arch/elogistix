@@ -82,7 +82,7 @@ export function calcularTotalesProforma(
 }
 
 // Re-export para compatibilidad con imports existentes que esperan estos símbolos
-// en `@/lib/domain/proforma`.
+// en `@/features/proformas/domain/proforma`.
 export {
   MULTI_CONTENEDOR,
   agruparProformasPendientes,

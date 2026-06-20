@@ -9,7 +9,7 @@ vi.mock("@/features/configuracion/hooks/useConfiguracionOrg", () => ({
   })),
 }));
 
-vi.mock("@/lib/domain/configuracion", () => ({
+vi.mock("@/features/configuracion/domain/configuracion", () => ({
   agruparConfigPorCategoria: vi.fn(() => ({ general: [{ clave: "test", valor: "val" }] })),
 }));
 

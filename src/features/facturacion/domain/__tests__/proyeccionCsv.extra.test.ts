@@ -4,7 +4,7 @@ import {
   buildProyeccionCsvFilename,
   buildProyeccionCsvRows,
 } from "@/features/facturacion/domain/proyeccionCsv";
-import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
+import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 
 // ── Fixture helper ──────────────────────────────────────────────────────────
 function makeGrupo(overrides: Partial<GrupoProyeccion> = {}): GrupoProyeccion {

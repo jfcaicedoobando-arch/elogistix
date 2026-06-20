@@ -5,7 +5,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
-import type { calcularTotalesProforma } from "@/lib/domain/proforma";
+import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 
 export function EstadoBadges({ estadoRev, facturada }: { estadoRev: string; facturada: boolean }) {
   return (

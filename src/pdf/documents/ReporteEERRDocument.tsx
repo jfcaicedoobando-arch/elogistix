@@ -3,7 +3,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { styles } from "@/pdf/theme/styles";
 import { Footer } from "@/pdf/components/Footer";
 import { DataTable, type PdfColumn } from "@/pdf/components/DataTable";
-import type { EstadoResultados, ModoColumna, FilaER } from "@/lib/domain/estadoResultados";
+import type { EstadoResultados, ModoColumna, FilaER } from "@/features/profit/domain/estadoResultados";
 
 interface Props {
   periodo: string; // YYYY-MM

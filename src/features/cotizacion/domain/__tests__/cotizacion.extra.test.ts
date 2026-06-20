@@ -5,7 +5,7 @@ import {
   mapCostosACostosEmbarque,
   calcularFechaVigencia,
   type CotizacionCostoLike,
-} from "@/lib/domain/cotizacion";
+} from "@/features/cotizacion/domain/cotizacion";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 const TASA = 0.16;

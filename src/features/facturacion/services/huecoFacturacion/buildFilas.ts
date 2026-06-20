@@ -1,7 +1,7 @@
 /**
  * Agregaciones puras (sin I/O) para el "Hueco de Facturación".
  */
-import { sumarConceptosEnMxn, sumarConceptosEnUsd } from "@/lib/domain/proyeccionFacturacion";
+import { sumarConceptosEnMxn, sumarConceptosEnUsd } from "@/features/facturacion/domain/proyeccionFacturacion";
 import type { EmbarqueHuecoRow } from "./fetchSources";
 
 export interface FilaHueco {

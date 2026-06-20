@@ -1,4 +1,4 @@
-import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type TotalER } from "@/lib/domain/estadoResultados";
+import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type TotalER } from "@/features/profit/domain/estadoResultados";
 import { fmt, pct } from "./EstadoResultadosTable.helpers";
 
 function Row({ label, fila }: { label: string; fila: FilaER }) {

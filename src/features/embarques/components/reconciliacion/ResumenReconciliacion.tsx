@@ -2,7 +2,7 @@
  * Bloque resumen totales + clasificación de la reconciliación a 3 columnas.
  */
 import { Badge } from "@/components/ui/badge";
-import type { ResumenReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
+import type { ResumenReconciliacion3C } from "@/features/cotizacion/domain/versionadoCotizacion";
 import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
 
 interface Props {

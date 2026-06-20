@@ -6,7 +6,7 @@
  * quede libre de `as Tables<X>` / `as X[]`.
  */
 import { num, str } from "./_helpers";
-import type { EmbarqueER } from "@/lib/domain/estadoResultados";
+import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 
 export interface FacturaRow {
   id: string;
