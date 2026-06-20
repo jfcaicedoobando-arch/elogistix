@@ -1,18 +1,14 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { UserPlus, Trash2, Globe, Mail } from "lucide-react";
-import { useToast } from "@/hooks/shared";
-import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/formatters";
 import {
   useClientUsers,
   useRevokeClientUser,
   useResendClientUserInvite,
 } from "@/features/cliente/hooks";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import type { ClientUserEnriched } from "@/features/cliente/services/usuarios";
 import PortalInviteDialog from "./PortalInviteDialog";
 import { useState } from "react";
@@ -48,7 +44,6 @@ function badgeEstado(u: ClientUserEnriched) {
 }
 
 export default function TabPortalCliente({ clienteId, organizationId, canEdit }: Props) {
-  const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const { data: clientUsers = [], isLoading } = useClientUsers(clienteId);
@@ -56,23 +51,16 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
   const revokeMutation = useRevokeClientUser(clienteId);
   const resendMutation = useResendClientUserInvite(clienteId);
 
+  // 13.85.10 — Los toasts los emiten los hooks (`useRevokeClientUser`, `useResendClientUserInvite`).
+  // No pasar callbacks de notificación aquí: causaría doble toast.
   const handleRevoke = (id: string) => {
-    revokeMutation.mutate(id, {
-      onSuccess: () => notifySuccess(toast, { title: "Acceso revocado" }),
-      onError: (err: unknown) =>
-        notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED }),
-    });
+    revokeMutation.mutate(id);
   };
 
   const handleResend = (u: ClientUserEnriched) => {
-    resendMutation.mutate(
-      { email: u.email, cliente_id: clienteId, organization_id: organizationId },
-      {
-        onSuccess: () => notifySuccess(toast, { title: "Invitación reenviada", description: `Se envió un nuevo correo a ${u.email}.` }),
-        onError: (err: unknown) => notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED }),
-      },
-    );
+    resendMutation.mutate({ email: u.email, cliente_id: clienteId, organization_id: organizationId });
   };
+
 
   const count = clientUsers.length;
   const countBadge = count === 0
