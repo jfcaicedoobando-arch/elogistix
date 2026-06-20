@@ -5,13 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/shared";
 import { Loader2 } from "lucide-react";
-import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
 import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 interface Props {
   open: boolean;
@@ -24,7 +21,6 @@ interface Props {
 export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizationId, existingUserIds, onAdded }: Props) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [role, setRole] = useState<AppRole>("coordinador_logistico");
-  const { toast } = useToast();
 
   const { data: allUsers = [], isLoading: loadingUsers } = useAvailableUsers(open);
   const addMember = useAddOrgMember();
@@ -35,19 +31,20 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
     [allUsers, existingUserIds],
   );
 
+  // 13.85.10 — Los toasts de éxito/error los emite `useAddOrgMember`.
+  // No duplicar aquí: causaría doble toast.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId) return;
     try {
       await addMember.mutateAsync({ organizationId, userId: selectedUserId, role });
-      const user = users.find((u) => u.id === selectedUserId);
-      notifySuccess(toast, { title: "Miembro agregado", description: `${user?.email ?? "Usuario"} agregado como ${role}` });
       onOpenChange(false);
       onAdded();
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SUBMIT" });
+    } catch {
+      // Notificación gestionada por el hook.
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
