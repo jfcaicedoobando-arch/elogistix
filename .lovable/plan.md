@@ -1,46 +1,68 @@
 ## Diagnóstico
 
-Hoy el cierre exige **estado = Entregado** en dos capas:
+El checklist no funciona por **dos bugs** que se combinan:
 
-- **Frontend** (`TabCierre.tsx` líneas 60 y 80): `estatus === "entregado"`.
-- **Backend** (`public.cerrar_embarque`): `IF v_emb.estado <> 'Entregado' THEN RAISE`.
+### Bug 1 — RPC `validar_cierre_embarque` referencia columnas que no existen
 
-Pero en marítimo el flujo natural es: `... → Entregado → EIR → Cerrado`. EIR (Equipment Interchange Receipt) es el último paso operativo del contenedor devuelto a la naviera. Los embarques marítimos quedan parados en EIR y la UI bloquea el cierre.
+La función SQL consulta `documentos_embarque.requerido` y `documentos_embarque.archivo_url`, pero la tabla real tiene columnas distintas:
 
-## Fix
+- columnas reales: `id, embarque_id, nombre, estado, archivo, notas, organization_id, created_at, deleted_at, deleted_by`
+- **no existen** `requerido` ni `archivo_url`
 
-Permitir cerrar desde **Entregado o EIR** en ambas capas. EIR sólo existe en marítimo, así que no afecta aéreo/terrestre.
-
-### 1) Migración: relajar la RPC
-
-```sql
-CREATE OR REPLACE FUNCTION public.cerrar_embarque(p_embarque_id uuid) ...
--- cambiar el guard:
-IF v_emb.estado::text NOT IN ('Entregado','EIR') THEN
-  RAISE EXCEPTION 'Solo se pueden cerrar embarques en estado Entregado o EIR (actual: %)', v_emb.estado::text;
-END IF;
+Resultado en red (confirmado en network log de este embarque):
+```
+POST /rpc/validar_cierre_embarque  →  400
+{"code":"42703","message":"column de.requerido does not exist"}
 ```
 
-Resto del cuerpo idéntico.
+Como `useValidacionCierre` es un `useQuery` (sin `notifyError`), el error se traga en silencio → `data` queda `undefined` → `checks = []` → la tarjeta muestra *"Sin datos."* y el botón **Cerrar embarque** queda permanentemente deshabilitado.
 
-### 2) `src/features/embarques/components/TabCierre.tsx`
+**Analogía:** es como pedir la lista de invitados (RPC) usando un campo "VIP" que nadie agregó al formulario; el sistema devuelve error, pero la pantalla solo dice "lista vacía".
 
-- Constante local `ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"])`.
-- Línea 60: `const puedeCerrar = (isAdmin || canEditFinance) && ESTADOS_LISTOS_PARA_CIERRE.has(estatus);`
-- Línea 80–86: condicional y mensaje:
-  > El embarque debe estar en estado **Entregado** o **EIR** para ejecutar el cierre.
+### Bug 2 — Prop `estatus` mal mapeado en `EmbarqueDetalleTabs.tsx`
 
-### 3) Tests
+```tsx
+<TabCierre estatus={(embarque as { estatus?: string }).estatus ?? ""} ... />
+```
 
-Actualizar `src/features/embarques/components/__tests__/TabCierre.rules.test.ts` y `services/__tests__/cierre.test.ts` para agregar caso EIR ⇒ permite.
+`embarques` no tiene columna `estatus`; la columna real es `estado`. El cast siempre regresa `undefined → ""`, por lo que `listoParaCierre` es **siempre `false`**, incluso cuando el embarque está en EIR o Entregado. Por eso siempre se muestra la alerta *"Aún no se puede cerrar"*.
 
-### 4) Changelog
+## Cambios
 
-Bump a `13.87.4` + entrada en `CHANGELOG.md` raíz:
-> fix(embarques/cierre) permitir cerrar embarques marítimos desde estado EIR (no sólo Entregado). UI y RPC `cerrar_embarque` actualizadas.
+### 1. Migración SQL — corregir `validar_cierre_embarque`
 
-## Sin cambios
+Reemplazar el bloque de "Documentos requeridos" para que use columnas reales. Como la tabla no tiene marcador de "requerido", la regla pasa a ser: **"todos los documentos cargados tienen archivo subido"** (un documento sin `archivo` es uno incompleto).
 
-- Validaciones de checklist intactas.
-- Flujo Aéreo/Terrestre intacto (no llegan a EIR).
-- Reapertura intacta.
+```sql
+SELECT COUNT(*) INTO v_docs_faltantes
+FROM documentos_embarque de
+WHERE de.embarque_id = p_embarque_id
+  AND de.deleted_at IS NULL
+  AND (de.archivo IS NULL OR de.archivo = '');
+```
+
+Todo lo demás de la función queda igual (CXC, CXP, PnL, comisión, contenedores FCL, conceptos venta/costo, liquidación).
+
+### 2. `src/features/embarques/components/EmbarqueDetalleTabs.tsx`
+
+Cambiar el prop:
+```tsx
+<TabCierre embarqueId={embarqueId} estatus={embarque.estado ?? ""} modo={embarque.modo} />
+```
+
+### 3. Robustecer feedback de error
+
+En `useCierreEmbarque.ts → useValidacionCierre`, agregar `meta: { errorMessage: ... }` o un `useEffect` que dispare `notifyError` cuando la query falle, para que el siguiente bug de RPC no vuelva a quedar invisible.
+
+### 4. Bump de versión + CHANGELOG
+
+- `APP_VERSION` → `13.87.6`
+- Entrada en `CHANGELOG.md` describiendo los dos fixes.
+
+## Validación esperada después del fix
+
+Al volver a `/embarques/c182b3f9-…?tab=cierre`:
+
+- la llamada a `validar_cierre_embarque` regresa 200 con un array de `checks`
+- la tarjeta muestra cada regla con ✅ / ❌
+- como el estado del embarque es `EIR`, la alerta *"Aún no se puede cerrar"* desaparece y el botón **Cerrar embarque** se habilita cuando todas las reglas son OK
