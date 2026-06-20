@@ -11,7 +11,7 @@ describe("lib/formatters/pnl", () => {
       expect(fmtPnl(null as unknown as number)).toMatch(/0/);
       expect(fmtPnl(undefined as unknown as number)).toMatch(/0/);
     });
-    it("respeta negativos", () => {
+    it("respeta negativos en fmtPnl", () => {
       expect(fmtPnl(-250)).toMatch(/250/);
     });
   });
