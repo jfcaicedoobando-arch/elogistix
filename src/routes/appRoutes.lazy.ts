@@ -20,15 +20,15 @@ export const EmbarqueDetalle = lazy(() => import("@/features/embarques/routes/Em
 export const NuevoEmbarque = lazy(() => import("@/features/embarques/routes/NuevoEmbarque"));
 export const EditarEmbarque = lazy(() => import("@/features/embarques/routes/EditarEmbarque"));
 
-export const Cotizaciones = lazy(() => import("@/pages/cotizaciones/Cotizaciones"));
-export const NuevaCotizacion = lazy(() => import("@/pages/cotizaciones/NuevaCotizacion"));
-export const NuevaCotizacionInformativa = lazy(() => import("@/pages/cotizaciones/NuevaCotizacionInformativa"));
-export const CotizacionDetalle = lazy(() => import("@/pages/cotizaciones/CotizacionDetalle"));
-export const EditarCotizacion = lazy(() => import("@/pages/cotizaciones/EditarCotizacion"));
+export const Cotizaciones = lazy(() => import("@/features/cotizacion/routes/Cotizaciones"));
+export const NuevaCotizacion = lazy(() => import("@/features/cotizacion/routes/NuevaCotizacion"));
+export const NuevaCotizacionInformativa = lazy(() => import("@/features/cotizacion/routes/NuevaCotizacionInformativa"));
+export const CotizacionDetalle = lazy(() => import("@/features/cotizacion/routes/CotizacionDetalle"));
+export const EditarCotizacion = lazy(() => import("@/features/cotizacion/routes/EditarCotizacion"));
 export const PdfPreviewCotizacion = lazy(() => import("@/pages/dev/PdfPreviewCotizacion"));
 
-export const Clientes = lazy(() => import("@/pages/clientes/Clientes"));
-export const ClienteDetalle = lazy(() => import("@/pages/clientes/ClienteDetalle"));
+export const Clientes = lazy(() => import("@/features/cliente/routes/Clientes"));
+export const ClienteDetalle = lazy(() => import("@/features/cliente/routes/ClienteDetalle"));
 export const Proveedores = lazy(() => import("@/pages/proveedores/Proveedores"));
 export const ProveedorDetalle = lazy(() => import("@/pages/proveedores/ProveedorDetalle"));
 export const Facturacion = lazy(() => import("@/features/facturacion/routes/Facturacion"));
