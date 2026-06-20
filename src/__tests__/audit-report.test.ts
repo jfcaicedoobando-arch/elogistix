@@ -15,8 +15,8 @@ const ROOT = process.cwd();
 
 // Sincronizado con PAGES_COMPONENTS_BASELINE en architecture-baseline.test.ts.
 const PAGES_COMPONENTS_BASELINE = new Set<string>([
-  "src/pages/auth/ForgotPasswordDialog.tsx",
-  "src/pages/auth/ResetPassword.tsx",
+  "src/features/auth/components/ForgotPasswordDialog.tsx",
+  "src/features/auth/routes/ResetPassword.tsx",
 ]);
 
 // Sincronizado con OVERSIZED_BASELINE en architecture-baseline.test.ts.

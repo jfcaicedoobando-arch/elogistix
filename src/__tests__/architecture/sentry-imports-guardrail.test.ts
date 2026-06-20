@@ -26,7 +26,7 @@ const ALLOWLIST = new Set<string>([
   // Widget de feedback: usa Sentry.getFeedback() — la API requiere import síncrono.
   "src/components/feedback/FeedbackButton.tsx",
   // Página interna de diagnóstico Sentry (sólo cargada bajo /admin/sentry).
-  "src/pages/admin/SentryDiagnostico.tsx",
+  "src/features/admin/routes/SentryDiagnostico.tsx",
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {
