@@ -46,7 +46,11 @@ function fmtPct(p: number): string {
 
 export function TabConciliacion({ embarqueId }: Props) {
   const { data: filas = [], isLoading } = useReconciliacionEmbarque(embarqueId);
+  const { data: tarifaInfo } = useEmbarqueTarifaInfo(embarqueId);
   const resumen = useMemo(() => calcularResumen(filas), [filas]);
+  const decisionLabel = tarifaInfo?.tarifa_decision
+    ? DECISION_NICE[tarifaInfo.tarifa_decision] ?? tarifaInfo.tarifa_decision
+    : null;
 
   const cols = useMemo<ColumnDef<FilaReconciliacion, unknown>[]>(() => defineColumns<FilaReconciliacion>([
     { id: "proveedor", header: "Proveedor", cell: ({ row }) => <span title={row.original.proveedor_nombre}>{toTitleCase(row.original.proveedor_nombre)}</span> },
