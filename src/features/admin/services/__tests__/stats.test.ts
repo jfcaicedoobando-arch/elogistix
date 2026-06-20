@@ -34,7 +34,7 @@ beforeEach(() => {
 
 describe("services/admin/stats", () => {
   it("fetchAdminOrgActivity agrega conteos por org", async () => {
-    mock.setRpc("fn_admin_org_activity", {
+    setRpc("fn_admin_org_activity", {
       data: [
         { id: "o1", nombre: "A", embarques: 2, cotizaciones: 1 },
         { id: "o2", nombre: "B", embarques: 1, cotizaciones: 0 },
@@ -49,7 +49,7 @@ describe("services/admin/stats", () => {
   });
 
   it("fetchAdminOrgActivity ignora filas sin organization_id", async () => {
-    mock.setRpc("fn_admin_org_activity", {
+    setRpc("fn_admin_org_activity", {
       data: [{ id: "o1", nombre: "A", embarques: 1, cotizaciones: 0 }],
       error: null,
     });
@@ -59,7 +59,7 @@ describe("services/admin/stats", () => {
 
 
   it("fetchAdminRecentOrgs devuelve filas", async () => {
-    mock.setTable("organizations", {
+    setTable("organizations", {
       data: [{ id: "o1", nombre: "A", plan: "pro", created_at: "2026-01-01" }],
       error: null,
     });
@@ -69,50 +69,50 @@ describe("services/admin/stats", () => {
   });
 
   it("fetchAdminRecentOrgs propaga error", async () => {
-    mock.setTable("organizations", { data: null, error: { message: "x" } });
+    setTable("organizations", { data: null, error: { message: "x" } });
     await expect(fetchAdminRecentOrgs()).rejects.toThrow();
   });
 
   it("fetchAdminDashboardStats devuelve totales", async () => {
-    mock.setTable("organizations", { data: null, count: 5, error: null });
-    mock.setTable("organization_members", { data: null, count: 20, error: null });
-    mock.setTable("embarques", { data: null, count: 100, error: null });
-    mock.setTable("cotizaciones", { data: null, count: 50, error: null });
+    setTable("organizations", { data: null, count: 5, error: null });
+    setTable("organization_members", { data: null, count: 20, error: null });
+    setTable("embarques", { data: null, count: 100, error: null });
+    setTable("cotizaciones", { data: null, count: 50, error: null });
     const r = await fetchAdminDashboardStats();
     expect(r).toEqual({ totalOrgs: 5, totalUsers: 20, totalEmbarques: 100, totalCotizaciones: 50 });
   });
 
   it("fetchAdminDashboardStats trata count null como 0", async () => {
-    mock.setTable("organizations", { data: null, error: null });
-    mock.setTable("organization_members", { data: null, error: null });
-    mock.setTable("embarques", { data: null, error: null });
-    mock.setTable("cotizaciones", { data: null, error: null });
+    setTable("organizations", { data: null, error: null });
+    setTable("organization_members", { data: null, error: null });
+    setTable("embarques", { data: null, error: null });
+    setTable("cotizaciones", { data: null, error: null });
     const r = await fetchAdminDashboardStats();
     expect(r.totalOrgs).toBe(0);
   });
 
   it("countOrgMembers devuelve count", async () => {
-    mock.setTable("organization_members", { data: null, count: 7, error: null });
+    setTable("organization_members", { data: null, count: 7, error: null });
     expect(await countOrgMembers("o1")).toBe(7);
   });
 
   it("countOrgEmbarques devuelve count", async () => {
-    mock.setTable("embarques", { data: null, count: 12, error: null });
+    setTable("embarques", { data: null, count: 12, error: null });
     expect(await countOrgEmbarques("o1")).toBe(12);
   });
 
   it("countOrgClientes devuelve count", async () => {
-    mock.setTable("clientes", { data: null, count: 3, error: null });
+    setTable("clientes", { data: null, count: 3, error: null });
     expect(await countOrgClientes("o1")).toBe(3);
   });
 
   it("countOrgCotizaciones devuelve count", async () => {
-    mock.setTable("cotizaciones", { data: null, count: 9, error: null });
+    setTable("cotizaciones", { data: null, count: 9, error: null });
     expect(await countOrgCotizaciones("o1")).toBe(9);
   });
 
   it("countByOrg propaga error", async () => {
-    mock.setTable("organization_members", { data: null, error: { message: "x" } });
+    setTable("organization_members", { data: null, error: { message: "x" } });
     await expect(countOrgMembers("o1")).rejects.toThrow();
   });
 });
