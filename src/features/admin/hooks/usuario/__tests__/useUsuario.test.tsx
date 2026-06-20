@@ -8,7 +8,7 @@ const { mockFetch, mockUpdate, mockDelete } = vi.hoisted(() => ({
   mockDelete: vi.fn(),
 }));
 
-vi.mock('@/services/usuario', () => ({
+vi.mock('@/features/admin/services/usuario', () => ({
   fetchUsuariosOrganizacion: mockFetch,
   updateUserRole: mockUpdate,
   deleteUserViaEdgeFunction: mockDelete,

@@ -5,11 +5,11 @@ import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import { Ship } from "lucide-react";
-import { type TrackingPublicoData } from "@/services/tracking";
-import { useTrackingPublicoPage } from "@/services/tracking/useTrackingPublicoPage";
-import { TrackingPublicoErrorCard } from "@/components/tracking/TrackingPublicoErrorCard";
-import { TrackingPublicoLoading } from "@/components/tracking/TrackingPublicoLoading";
-import { TrackingPublicoTimeline } from "@/components/tracking/TrackingPublicoTimeline";
+import { type TrackingPublicoData } from "@/features/embarques/services/tracking";
+import { useTrackingPublicoPage } from "@/features/embarques/services/tracking/useTrackingPublicoPage";
+import { TrackingPublicoErrorCard } from "@/features/embarques/components/tracking/TrackingPublicoErrorCard";
+import { TrackingPublicoLoading } from "@/features/embarques/components/tracking/TrackingPublicoLoading";
+import { TrackingPublicoTimeline } from "@/features/embarques/components/tracking/TrackingPublicoTimeline";
 import { Seo } from "@/components/seo/Seo";
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {

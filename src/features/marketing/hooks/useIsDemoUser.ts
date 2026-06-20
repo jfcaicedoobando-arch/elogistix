@@ -7,7 +7,7 @@ import {
   fetchIsDemoUser,
   getCurrentUserId,
   subscribeAuthUserId,
-} from "@/services/demoMode";
+} from "@/features/marketing/services/demoMode";
 
 export function useIsDemoUser(): boolean {
   const [isDemo, setIsDemo] = useState(false);

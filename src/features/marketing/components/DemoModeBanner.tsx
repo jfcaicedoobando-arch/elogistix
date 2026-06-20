@@ -3,7 +3,7 @@
  * Se monta globalmente; queda oculto si el usuario no pertenece a la org demo.
  */
 import { Sparkles } from "lucide-react";
-import { useIsDemoUser } from "@/hooks/useIsDemoUser";
+import { useIsDemoUser } from "@/features/marketing/hooks/useIsDemoUser";
 
 export function DemoModeBanner() {
   const isDemo = useIsDemoUser();

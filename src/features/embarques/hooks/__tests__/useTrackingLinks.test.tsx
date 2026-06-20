@@ -4,7 +4,7 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 
 const createTrackingLinkMock = vi.fn().mockResolvedValue({ id: "link-1", embarque_id: "emb-1" });
 
-vi.mock("@/services/tracking", () => ({
+vi.mock("@/features/embarques/services/tracking", () => ({
   createTrackingLink: (...args: unknown[]) => createTrackingLinkMock(...args),
 }));
 

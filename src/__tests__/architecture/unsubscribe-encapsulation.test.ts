@@ -22,7 +22,7 @@ describe("Fase 1 #4 — Unsubscribe encapsulado", () => {
     expect(src).not.toMatch(/VITE_SUPABASE_(PUBLISHABLE|ANON)_KEY/);
   });
 
-  it("usa el wrapper @/services/unsubscribeService", () => {
+  it("usa el wrapper @/features/auth/services/unsubscribeService", () => {
     expect(src).toMatch(/from\s+["']@\/services\/unsubscribeService["']/);
   });
 });

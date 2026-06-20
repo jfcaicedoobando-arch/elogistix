@@ -2,7 +2,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { UserRow } from "@/hooks/usuario";
+import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 

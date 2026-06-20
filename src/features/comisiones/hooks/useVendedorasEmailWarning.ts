@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { UNRESOLVED_EMAIL } from "@/services/usuario";
+import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 
 interface VendedoraLike { email: string }
 

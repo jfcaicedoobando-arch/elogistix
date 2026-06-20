@@ -6,7 +6,7 @@ import {
   insertBitacora,
   type EntradaBitacora,
   type FiltrosBitacora,
-} from "@/services/bitacora";
+} from "@/features/auditoria/services/bitacora";
 import { logger } from "@/lib/observability/logger";
 
 

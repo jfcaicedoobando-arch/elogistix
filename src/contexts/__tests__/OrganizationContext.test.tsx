@@ -11,7 +11,7 @@ vi.mock("@/contexts/AuthContext", () => ({
     loading: false,
   }),
 }));
-vi.mock("@/services/organization", () => ({
+vi.mock("@/features/admin/services/organization", () => ({
   listActiveOrganizations: vi.fn(async () => []),
 }));
 vi.mock("@/lib/browserStorage", () => ({

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MapPin } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/features/embarques/constants/embarqueConstants";
-import type { TrackingPublicoData } from "@/services/tracking";
+import type { TrackingPublicoData } from "@/features/embarques/services/tracking";
 
 type Evento = TrackingPublicoData["eventos"][number];
 

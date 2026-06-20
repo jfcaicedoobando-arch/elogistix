@@ -6,7 +6,7 @@ import { Loader2, CheckCircle2, XCircle, MailMinus } from "lucide-react";
 import {
   validateUnsubscribeToken,
   confirmUnsubscribe,
-} from "@/services/unsubscribeService";
+} from "@/features/auth/services/unsubscribeService";
 
 type Status = "loading" | "valid" | "invalid" | "already" | "confirming" | "success" | "error";
 

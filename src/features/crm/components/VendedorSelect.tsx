@@ -6,7 +6,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useUsuarios } from "@/hooks/usuario";
+import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { usePermissions } from "@/hooks/shared";
 
 interface Props {

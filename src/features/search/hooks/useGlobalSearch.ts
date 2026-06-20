@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { buscarGlobal } from "@/services/search";
+import { buscarGlobal } from "@/features/search/services";
 import type { GlobalSearchResult } from "@/types/search";
 
 export type { GlobalSearchResult } from "@/types/search";
