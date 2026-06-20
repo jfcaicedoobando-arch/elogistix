@@ -7,37 +7,35 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
-const hoisted = vi.hoisted(() => ({
+const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError } = vi.hoisted(() => ({
   findProveedorByRfcEnOrg: vi.fn(),
   procesarCsfUpload: vi.fn(),
   notifyError: vi.fn(),
 }));
-const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError } = hoisted;
+
+class ProveedorDuplicadoError extends Error {
+  existente: { id: string; nombre: string } | null;
+  rfcNormalizado: string;
+  constructor(existente: { id: string; nombre: string } | null, rfcNormalizado: string) {
+    super("dup");
+    this.existente = existente;
+    this.rfcNormalizado = rfcNormalizado;
+  }
+}
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
-vi.mock("@/features/proveedor/services", () => {
-  class ProveedorDuplicadoError extends Error {
-    existente: { id: string; nombre: string } | null;
-    rfcNormalizado: string;
-    constructor(existente: { id: string; nombre: string } | null, rfcNormalizado: string) {
-      super("dup");
-      this.existente = existente;
-      this.rfcNormalizado = rfcNormalizado;
-    }
-  }
-  return {
-    findProveedorByRfcEnOrg: hoisted.findProveedorByRfcEnOrg,
-    ProveedorDuplicadoError,
-  };
-});
+vi.mock("@/features/proveedor/services", () => ({
+  findProveedorByRfcEnOrg,
+  ProveedorDuplicadoError,
+}));
 
 vi.mock("@/hooks/shared", () => ({
   useOrgFilter: () => ({ organizationId: "org-1" }),
 }));
 
 vi.mock("../useNuevoProveedorController.csf", () => ({
-  procesarCsfUpload: hoisted.procesarCsfUpload,
+  procesarCsfUpload,
   mergeCsfPatch: (prev: Record<string, unknown>, patch: Record<string, unknown>) => ({
     ...prev,
     ...patch,
@@ -45,10 +43,9 @@ vi.mock("../useNuevoProveedorController.csf", () => ({
 }));
 
 vi.mock("@/components/shared/utils/appFeedback", () => ({
-  notifyError: hoisted.notifyError,
+  notifyError,
 }));
 
-import { ProveedorDuplicadoError } from "@/features/proveedor/services";
 import { useNuevoProveedorController } from "../useNuevoProveedorController";
 
 const fillStep1Logistico = (result: { current: ReturnType<typeof useNuevoProveedorController> }) => {
