@@ -7,11 +7,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
-const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError } = vi.hoisted(() => ({
+const hoisted = vi.hoisted(() => ({
   findProveedorByRfcEnOrg: vi.fn(),
   procesarCsfUpload: vi.fn(),
   notifyError: vi.fn(),
 }));
+const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError } = hoisted;
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
