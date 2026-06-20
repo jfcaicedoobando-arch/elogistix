@@ -1,57 +1,60 @@
-## Estado del plan original "Revalidación de tarifa + Reconciliación"
+## Diagnóstico
 
-### Implementado
+**Analogía:** la función `enviar-cotizacion-email` toca el timbre de `send-transactional-email` y le entrega la "llave maestra" (service role key). El portero (validación JWT) está intentando descifrar la llave consultando un servicio externo y no le funciona, así que devuelve **Forbidden** para todos los destinatarios.
 
+Evidencia en `cotizacion_envios`:
 
-| Pieza                                                                                                | Estado                            |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------- |
-| DB: columnas `tarifa_id_original/aplicada/decision/delta_jsonb/revalidada_*` en `embarques`          | ✅                                 |
-| DB: `estado_revalidacion` + campos en `cotizaciones`                                                 | ✅                                 |
-| RPC `revalidar_tarifa_cotizacion`                                                                    | ✅                                 |
-| RPC `crear_embarque_borrador_desde_cotizacion(p_decision,…)` con persistencia de decisión + bitácora | ✅                                 |
-| RPC `solicitar_reaprobacion_tarifa` (+ notificación interna al operador)                             | ✅                                 |
-| RPC `resolver_reaprobacion_tarifa`                                                                   | ✅                                 |
-| Configuración `tarifa_revalidacion_umbral_pct` + `tarifa_revalidacion_bloquea_si_vencida`            | ✅                                 |
-| Servicio `revalidacion/index.ts` + hook `useRevalidacionTarifa`                                      | ✅                                 |
-| `RevalidarTarifaModal` (componente)                                                                  | ✅ creado, ❌ NO integrado al flujo |
-| `ReaprobacionTarifaBanner` en `CotizacionDetalle`                                                    | ✅                                 |
-| Tests unitarios de delta + modal                                                                     | ✅                                 |
-| **Fase 2 extra:** Versionado (`recotizar_cotizacion`, `aceptar_cotizacion_version`, histórico)       | ✅                                 |
-| **Fase 2 extra:** Reconciliación 3 columnas (Cotizado/Refrescado/Real) + UI                          | ✅                                 |
-| Umbrales por organización (`/configuracion → Operaciones`)                                           | ✅                                 |
+```
+estado: "fallido"
+error: [{ "email": "...", "ok": false, "error": "Forbidden" }, ... ]
+```
 
+El 403 viene de `supabase/functions/send-transactional-email/index.ts` en `verifyServiceRoleOrFail`:
 
-### Pendiente del plan original
+```ts
+const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token)
+if (claimsError || claimsData?.claims?.role !== 'service_role') {
+  return corsResponse({ error: 'Forbidden' }, 403)
+}
+```
 
-1. **Integrar `RevalidarTarifaModal` en el flujo "Crear embarque"**
-  - Hoy `useCotizacionConversions` / `CotizacionDetalleSecciones` llaman directo a `crearEmbarqueBorradorDesdeCotizacion` sin pasar por el modal.
-  - Falta: interceptar el botón, llamar `revalidar_tarifa_cotizacion`, abrir modal según severidad (`sin_cambios` → continuar; `informativa` → modal con opciones mantener/refrescar/sustituir; `bloqueante` → forzar "Solicitar re-aprobación").
-  - El modal ya recibe la decisión; sólo falta cablearla a la RPC sobrecargada con `p_decision`, `p_tarifa_id_aplicada`, `p_delta_jsonb`.
-2. **Opción "Elegir otra tarifa" dentro del modal**
-  - Reabrir `BuscarTarifaDialog` desde `RevalidarTarifaModal` cuando operaciones quiera sustituir la tarifa. Hoy el modal sólo soporta mantener/refrescar/solicitar reaprobación.
-3. **Acciones del banner de re-aprobación que disparen efectos completos**
-  - "Re-cotizar con tarifa vigente" debe **actualizar `conceptos_venta` y `cotizacion_costos**` desde la tarifa vigente y **regenerar el PDF / marcar para reenvío al cliente**. Hoy `resolver_reaprobacion_tarifa` sólo cambia el estado; no refresca conceptos ni dispara PDF.
-  - "Mantener precio al cliente" → ya marca `reaprobada`; falta verificar que el flujo de conversión lea ese estado para permitir crear el embarque con `decision = 'reaprobada_ventas'`.
-4. **Badges en lista de cotizaciones**
-  - `⚠ Tarifa vencida` / `⚠ Precio cambió` en columnas de cotizaciones aceptadas. No existe (sólo hay banner de "cotización inactiva", que es distinto).
-5. **Widgets en dashboards**
-  - Dashboard de **operaciones**: contador "Cotizaciones aceptadas con tarifa desactualizada".
-  - Dashboard **comercial**: contador "Cotizaciones esperando mi re-aprobación" (`estado_revalidacion = 'pendiente_reaprobacion'` filtrado por `operador = auth.uid()`).
-6. **Sección "Origen de costos" en detalle de embarque**
-  - Mostrar `tarifa_id_original` vs `tarifa_id_aplicada`, `tarifa_decision` (con badge) y el histórico de decisiones / delta. No existe en `EmbarqueDetalle`.
-7. **Tarifa pestaña Conciliación (lo que mencionas)**
-  - La pestaña Conciliación HOY tiene dos secciones:
-    - **Reconciliación 3 columnas** (Cotizado → Refrescado → Real) — ya usa la versión **aceptada** de la cotización como columna Cotizado. ✅ Correcto para "ver desviación de lo cotizado contra el real".
-    - **Cotizado vs Real por concepto (facturas proveedor)** — la tabla original.
-  - **Pendiente menor**: cuando un embarque tenga `tarifa_decision != 'sin_cambios'`, mostrar en la pestaña un sub-encabezado tipo *"Se aplicó decisión: Refrescada / Sustituida / Reaprobada por ventas — ver Origen"* para que quede claro de dónde sale cada columna.
+`auth.getClaims()` valida JWTs con la clave pública asimétrica del proyecto. Cuando recibe el JWT estático del **service role** (HMAC, no asimétrico) en muchos proyectos Lovable Cloud no logra validarlo localmente y la verificación falla → todos los correos caen como `Forbidden`. El bug se introdujo con la versión actual de la validación; los logs de la edge function ni siquiera muestran el send porque rebota en el guard.
 
-### Recomendación de orden (lo que más valor entrega primero)
+## Cambio propuesto (1 archivo)
 
-1. **(7)** Sub-encabezado en pestaña Conciliación con la decisión aplicada — 15 min, alta claridad.
-2. **(1) + (2)** Cablear `RevalidarTarifaModal` al botón "Crear embarque" — cierra el flujo principal del plan.
-3. **(6)** Sección "Origen de costos" en `EmbarqueDetalle` — trazabilidad visible.
-4. **(3)** Hacer que "Re-cotizar con tarifa vigente" realmente refresque costos/PDF.
-5. **(4)** Badges en lista de cotizaciones.
-6. **(5)** Widgets de conteo en dashboards.
+`supabase/functions/send-transactional-email/index.ts` — reemplazar el `getClaims` por una comparación directa contra `SUPABASE_SERVICE_ROLE_KEY` (función llamada exclusivamente server-to-server por otras edge functions, no por el browser):
 
-¿Quieres que ataque los 6 puntos en ese orden en una sola tanda, o sólo el bloque crítico (1+2+6+7) y dejamos badges/dashboards para otra iteración? Todos los puntos
+```ts
+async function verifyServiceRoleOrFail(req: Request, env: EnvVars): Promise<Response | null> {
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return corsResponse({ error: 'Unauthorized' }, 401)
+  }
+  const token = authHeader.slice('Bearer '.length).trim()
+  if (token !== env.supabaseServiceKey) {
+    return corsResponse({ error: 'Forbidden' }, 403)
+  }
+  return null
+}
+```
+
+Por qué es seguro:
+- El service role key sólo está accesible dentro de edge functions (no se expone al cliente).
+- Una comparación exacta es estrictamente más estricta que `claims.role === 'service_role'` (sólo acepta *ese* key, no cualquier JWT firmado con role service_role).
+- Mantiene el mismo contrato externo: las funciones que ya llaman con `Bearer <SERVICE_ROLE_KEY>` siguen funcionando.
+
+## Verificación
+
+1. Probar reenviando la misma cotización; confirmar que `cotizacion_envios.estado = 'enviado'` y que los registros en `email_send_log` cambian a `pending` → `sent`.
+2. Confirmar que `useEnviarCotizacionEmail` ya no dispara `notifyError`.
+
+## Bitácora
+
+- `CHANGELOG.md`: agregar entrada `13.73.1 — fix(cotizaciones/email)`.
+- `APP_VERSION` → `13.73.1`.
+
+## Fuera de alcance
+
+- No se modifica `enviar-cotizacion-email/handlers.ts` ni el flujo de envío en el cliente.
+- No se cambia la lógica de plantillas, suppression list ni cola pgmq.
+- No se tocan otras edge functions con guardas similares (no hay reportes de fallo).
