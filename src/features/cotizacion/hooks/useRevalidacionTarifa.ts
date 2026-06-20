@@ -1,33 +1,22 @@
 /**
  * Hooks de revalidación de tarifa (Fase 1).
  *
- * - `useRevalidarTarifa`: query bajo demanda (no auto-refetch).
  * - `useSolicitarReaprobacion`: mutation que marca la cotización como
  *   pendiente de re-aprobación y notifica al operador comercial.
  * - `useResolverReaprobacion`: mutation que ventas resuelve.
  * - `useCrearEmbarqueBorradorConDecision`: mutation que crea el embarque
  *   pasando la decisión tomada (refrescada / mantenida / reaprobada_ventas…).
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import {
-  revalidarTarifa,
   solicitarReaprobacionVentas,
   resolverReaprobacion,
   crearEmbarqueBorradorConDecision,
 } from "@/features/cotizacion/services/revalidacion";
-import type { DecisionTarifa, ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
+import type { DecisionTarifa } from "@/features/cotizacion/domain/revalidacionTarifa";
 
-export function useRevalidarTarifa(cotizacionId: string | undefined, enabled = false) {
-  return useQuery<ResultadoRevalidacion>({
-    queryKey: ["cotizaciones", "revalidacion", cotizacionId],
-    queryFn: () => revalidarTarifa(cotizacionId as string),
-    enabled: Boolean(cotizacionId) && enabled,
-    staleTime: 0,
-    refetchOnWindowFocus: false,
-  });
-}
 
 export function useSolicitarReaprobacion() {
   const qc = useQueryClient();
