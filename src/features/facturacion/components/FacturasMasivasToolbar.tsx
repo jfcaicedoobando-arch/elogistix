@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Download, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchFacturasParaZip,
+  marcarFacturasComoEnviadas,
+} from "@/features/facturacion/services";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
@@ -30,11 +33,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   const descargarZip = async () => {
     setBusy("zip");
     try {
-      const { data, error } = await supabase
-        .from("facturas")
-        .select("numero, factura_pdf_url, factura_xml_url")
-        .in("id", ids);
-      if (error) throw error;
+      const data = await fetchFacturasParaZip(ids);
       const zip = new JSZip();
       const folder = zip.folder("facturas")!;
       let count = 0;
