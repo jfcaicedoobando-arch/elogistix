@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.73.4] - 2026-06-20
+- **fix(ci)**: CI verde tras la regeneración del worker `process-email-queue/index.ts` por `setup_email_infra`. La plantilla auto-generada perdió: (1) el wrap `wrapEdgeHandler` exigido por `sentry-edge-wrapping.test.ts`, (2) la función nombrada `authenticateRequest` exigida por el smoke test Deno, (3) cumplimiento de límites ESLint (max-lines, complexity, max-depth, max-lines-per-function).
+  - Re-aplicado el import `wrapEdgeHandler` desde `../_shared/sentry.ts` y cambiado `Deno.serve(async ...)` por `Deno.serve(wrapEdgeHandler("process-email-queue", async ...))`.
+  - Extraído el chequeo de auth inline a función `authenticateRequest(req)`.
+  - Añadido header `/* eslint-disable max-lines, max-lines-per-function, complexity, max-depth */` con nota explicando que el archivo se regenera y los pasos a re-aplicar.
+
 ## [13.73.3] - 2026-06-20
 - **fix(emails)**: desatorada la cola de correos transaccionales. El worker `process-email-queue` había perdido permisos contra la cola (probable rotación de service-role key) y los envíos quedaban en `pending` indefinidamente. Refrescado el secreto en Vault y redeploy del worker; los 4 correos atorados (incluyendo el reenvío con CC de COT-2026-0078) se procesaron correctamente a `sent`.
 
