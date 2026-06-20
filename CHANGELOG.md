@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.87.2] - 2026-06-20
+- **chore(coverage) ratchet de lines/statements 35→38**: tras la exclusión de `features/marketing/**` en `13.87.1`, coverage real lines/statements = 40.62% (margen 2.62 sobre 38). Por política ratchet ("subir sólo cuando real ≥ umbral + 2") se sube el piso de `lines` y `statements` en `vitest.config.ts` de 35 a 38. `functions: 52` y `branches: 72` se mantienen. Esto cierra el ciclo del plan de tests: QW1–QW6 + B2 + B3 + ratchet de lines en cuatro métricas.
+
 ## [13.87.1] - 2026-06-20
 - **chore(coverage) B1+B2 — exclusión de `src/features/marketing/**`**: el top de archivos 0% estaba dominado por copy/datos estáticos de marketing (`landingCopy.ts` 128 líneas, `guiaPuertosMexico.data.ts` 143, `guiaCartaPorte.data.ts`, `guiaIncoterms2020.data.ts`) y por las rutas estáticas de landing/guías SEO (`Landing.tsx`, `Guia*.tsx`). El exclude existente `src/pages/marketing/**` quedó obsoleto tras la migración a `features/`. Se añade `src/features/marketing/**` al `coverage.exclude` de `vitest.config.ts`. Estos archivos son texto/JSX declarativo cubierto por E2E + Lighthouse SEO; no aportan al numerador de unitarios. Esto libera ~500–700 líneas del denominador y acerca lines/statements al margen para subir el ratchet en el próximo bump.
 
