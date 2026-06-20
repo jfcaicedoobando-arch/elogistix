@@ -14,7 +14,7 @@ import { useFactura } from "@/features/facturacion/hooks";
 import { usePermissions, useToast } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";

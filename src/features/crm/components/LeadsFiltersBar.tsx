@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import {
   LEAD_ESTADOS, LEAD_FUENTES,

@@ -13,7 +13,7 @@ import {
   Collapsible, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useToast } from "@/hooks/shared";

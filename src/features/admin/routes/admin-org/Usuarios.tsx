@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
-import { getRoleLabel } from "@/components/shared/utils/uiMappings";
+import { getRoleLabel } from "@/lib/ui/uiMappings";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";

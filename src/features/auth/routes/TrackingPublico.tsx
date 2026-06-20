@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import { Ship } from "lucide-react";
@@ -10,7 +10,7 @@ import { useTrackingPublicoPage } from "@/features/embarques/services/tracking/u
 import { TrackingPublicoErrorCard } from "@/features/embarques/components/tracking/TrackingPublicoErrorCard";
 import { TrackingPublicoLoading } from "@/features/embarques/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/features/embarques/components/tracking/TrackingPublicoTimeline";
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.naviera || e.aerolinea || e.transportista || "—";

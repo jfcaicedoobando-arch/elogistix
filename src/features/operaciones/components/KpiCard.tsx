@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { kpiIconChipClasses, type KpiTone } from "@/components/shared/utils/kpiTones";
+import { kpiIconChipClasses, type KpiTone } from "@/lib/ui/kpiTones";
 
 /**
  * KpiCard — tarjeta de métrica unificada del sistema.

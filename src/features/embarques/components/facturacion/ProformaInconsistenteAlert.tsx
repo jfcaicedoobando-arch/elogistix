@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { asignarConceptosAProforma } from "@/features/proformas/services";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import type { Tables } from "@/types/db";
 
@@ -34,11 +34,7 @@ export function ProformaInconsistenteAlert({
   const asignar = useMutation({
     mutationFn: async () => {
       const ids = conceptosPendientes.map((c) => c.id);
-      const { error } = await supabase.rpc("asignar_conceptos_a_proforma", {
-        p_proforma_id: proformaBorrador.id,
-        p_concepto_ids: ids,
-      });
-      if (error) throw error;
+      await asignarConceptosAProforma(proformaBorrador.id, ids);
     },
     onSuccess: () => {
       toast.success(`Conceptos asignados a ${proformaBorrador.numero}`);

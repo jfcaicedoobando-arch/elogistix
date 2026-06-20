@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import type { EstatusCxP } from "@/features/cxp/services";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";

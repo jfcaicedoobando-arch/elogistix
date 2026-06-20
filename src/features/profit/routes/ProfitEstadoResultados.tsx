@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { useEstadoResultados } from "@/features/profit/hooks";
+import { useEstadoResultados } from "@/features/profit/hooks/useEstadoResultados";
 import {
   EstadoResultadosTable,
 } from "@/features/profit/components/EstadoResultadosTable";

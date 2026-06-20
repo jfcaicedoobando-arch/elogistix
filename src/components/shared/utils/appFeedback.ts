@@ -14,7 +14,7 @@
 import { toast as sonnerToast } from "sonner";
 import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "@/components/shared/utils/errorReport";
-import { openErrorReport } from "@/components/shared/utils/errorDetailsStore";
+import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 
 /**
  * Firma laxa retenida sólo por compatibilidad con call sites que aún pasan

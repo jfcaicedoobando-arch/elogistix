@@ -2,7 +2,7 @@
  * Landing pública. Compone las secciones de marketing.
  * SEO via index.html (defaults) + Helmet (canonical/og:url self-referente + FAQPage JSON-LD).
  */
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 import { LandingNav } from "../components/sections/LandingNav";
 import { LandingHero } from "../components/sections/LandingHero";
 import { LandingDemo } from "../components/sections/LandingDemo";

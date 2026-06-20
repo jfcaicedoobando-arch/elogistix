@@ -13,7 +13,7 @@ import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/e
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
   const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;

@@ -10,7 +10,7 @@
  * `code` por issue.
  */
 import { APP_VERSION } from "@/constants/appVersion";
-import { getAuthSnapshot } from "@/components/shared/utils/authSnapshot";
+import { getAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { extractErrorDetails, deriveErrorCode } from "./errorDetailsExtract";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import {
@@ -18,7 +18,7 @@ import {
   fmtErrorBlock,
   fmtContextBlock,
   fmtStackBlock,
-} from "./errorReportFormat";
+} from "@/lib/ui/errorReportFormat";
 
 export type { ErrorReportInput, ErrorReport } from "@/lib/diagnostics/errorReportTypes";
 import type { ErrorReport, ErrorReportInput } from "@/lib/diagnostics/errorReportTypes";

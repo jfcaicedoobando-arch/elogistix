@@ -4,7 +4,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
-import { getRoleLabel } from "@/components/shared/utils/uiMappings";
+import { getRoleLabel } from "@/lib/ui/uiMappings";
 
 export interface PendingRoleChange {
   user: UserRow;

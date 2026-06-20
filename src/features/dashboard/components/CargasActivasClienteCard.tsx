@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { EstadoFiltro } from "@/features/dashboard/hooks";
 
 export interface CargaCliente {

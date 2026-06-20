@@ -1,4 +1,4 @@
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";

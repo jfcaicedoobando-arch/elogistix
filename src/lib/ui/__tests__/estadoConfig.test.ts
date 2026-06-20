@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { getEstadoVisual, ESTADO_CONFIG } from "@/components/shared/utils/estadoConfig";
-import { kpiIconChipClasses } from "@/components/shared/utils/kpiTones";
+import { getEstadoVisual, ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
+import { kpiIconChipClasses } from "@/lib/ui/kpiTones";
 
 describe("getEstadoVisual", () => {
   it("retorna config específica para estados conocidos", () => {

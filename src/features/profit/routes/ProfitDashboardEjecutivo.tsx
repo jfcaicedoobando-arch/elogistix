@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks";
+import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
 import { SelectorPeriodo, type PresetPeriodo } from "@/features/dashboardEjecutivo/components/SelectorPeriodo";
 import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
 import { GraficoEERR12m } from "@/features/dashboardEjecutivo/components/GraficoEERR12m";

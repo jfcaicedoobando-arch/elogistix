@@ -7,3 +7,4 @@ export * from "./queries";
 export * from "./crud";
 export * from "./facturar";
 export * from "./consolidar";
+export { asignarConceptosAProforma } from "./asignarConceptos";

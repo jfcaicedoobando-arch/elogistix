@@ -12,7 +12,7 @@
  */
 import { toast as sonnerToast } from "sonner";
 import type { ReactNode } from "react";
-import { openErrorReport } from "@/components/shared/utils/errorDetailsStore";
+import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import type { ErrorReport } from "@/components/shared/utils/errorReport";
 
 type Variant = "default" | "destructive" | "warning" | "success";
