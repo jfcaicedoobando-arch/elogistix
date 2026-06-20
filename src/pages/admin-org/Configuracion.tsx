@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { Save, Building2, FileText, Anchor, Wrench } from "lucide-react";
+import { Save, Building2, FileText, Anchor, Wrench, Scale } from "lucide-react";
 import { useConfiguracionState } from "@/features/configuracion/hooks";
 import TabEmpresa from "@/features/configuracion/components/TabEmpresa";
 import TabFacturacion from "@/features/configuracion/components/TabFacturacion";
 import TabPuertos from "@/features/configuracion/components/TabPuertos";
+import TabOperaciones from "@/features/configuracion/components/TabOperaciones";
 import TabExportar from "@/features/admin/components/TabExportar";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
@@ -58,6 +59,7 @@ export default function Configuracion() {
           <TabsTrigger value="empresa" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Empresa</TabsTrigger>
           <TabsTrigger value="facturacion" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Facturación</TabsTrigger>
           <TabsTrigger value="catalogos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Catálogos</TabsTrigger>
+          <TabsTrigger value="operaciones" className="gap-1.5"><Scale className="h-3.5 w-3.5" /> Operaciones</TabsTrigger>
           <TabsTrigger value="herramientas" className="gap-1.5"><Wrench className="h-3.5 w-3.5" /> Herramientas</TabsTrigger>
         </TabsList>
 
@@ -76,6 +78,9 @@ export default function Configuracion() {
         </TabsContent>
         <TabsContent value="catalogos">
           <TabPuertos />
+        </TabsContent>
+        <TabsContent value="operaciones">
+          <TabOperaciones />
         </TabsContent>
         <TabsContent value="herramientas">
           <TabExportar />

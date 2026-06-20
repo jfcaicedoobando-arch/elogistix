@@ -1,6 +1,7 @@
 /**
- * Tab "Operaciones" en /admin/configuracion (Fase 2).
- * Permite ajustar los umbrales globales de reconciliación cotizado/refrescado/real.
+ * Tab "Operaciones" en /configuracion (por organización, Fase 2).
+ * Cada empresa define sus propios umbrales de varianza para la
+ * reconciliación Cotizado / Refrescado / Real.
  */
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,26 +9,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
-import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/features/configuracion/hooks";
+import { useConfigValue, useUpdateConfiguracion } from "@/features/configuracion/hooks/useConfiguracion";
 import { UMBRALES_DEFAULT } from "@/lib/domain/versionadoCotizacion";
 
-export default function TabOperacionesGlobal() {
-  const config = useConfigGlobalCategoria("operaciones");
-  const updateConfig = useUpdateConfiguracionGlobal();
+export default function TabOperaciones() {
+  const alertaActual = useConfigValue<number>(
+    "operaciones",
+    "reconciliacion_varianza_alerta_pct",
+    UMBRALES_DEFAULT.alerta_pct,
+  );
+  const criticaActual = useConfigValue<number>(
+    "operaciones",
+    "reconciliacion_varianza_critica_pct",
+    UMBRALES_DEFAULT.critica_pct,
+  );
+  const updateConfig = useUpdateConfiguracion();
 
-  const [alertaPct, setAlertaPct] = useState<number>(UMBRALES_DEFAULT.alerta_pct);
-  const [criticaPct, setCriticaPct] = useState<number>(UMBRALES_DEFAULT.critica_pct);
+  const [alertaPct, setAlertaPct] = useState<number>(alertaActual);
+  const [criticaPct, setCriticaPct] = useState<number>(criticaActual);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (initialized) return;
-    if (Object.keys(config).length === 0) return;
-    const a = Number(config.reconciliacion_varianza_alerta_pct);
-    const c = Number(config.reconciliacion_varianza_critica_pct);
-    if (Number.isFinite(a)) setAlertaPct(a);
-    if (Number.isFinite(c)) setCriticaPct(c);
+    setAlertaPct(Number(alertaActual));
+    setCriticaPct(Number(criticaActual));
     setInitialized(true);
-  }, [config, initialized]);
+  }, [alertaActual, criticaActual, initialized]);
 
   const valido = alertaPct >= 0 && criticaPct > alertaPct;
 
@@ -44,7 +51,8 @@ export default function TabOperacionesGlobal() {
       <CardHeader>
         <CardTitle>Reconciliación de embarques</CardTitle>
         <CardDescription>
-          Umbrales globales para clasificar las varianzas Cotizado → Real.
+          Define los umbrales de tu empresa para clasificar varianzas Cotizado → Real.
+          Aplican a la matriz de reconciliación de cada embarque.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useReconciliacion3Columnas } from "@/features/embarques/hooks/useReconciliacion3Columnas";
+import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbralesReconciliacion";
 import type {
   ClasificacionVarianza,
   FilaReconciliacion3C,
@@ -47,7 +48,8 @@ interface Props {
 
 export function ReconciliacionTresColumnas({ embarqueId }: Props) {
   const [soloVarianza, setSoloVarianza] = useState(false);
-  const { data, isLoading, error } = useReconciliacion3Columnas(embarqueId);
+  const umbrales = useUmbralesReconciliacion();
+  const { data, isLoading, error } = useReconciliacion3Columnas(embarqueId, umbrales);
 
   const filas = useMemo<FilaReconciliacion3C[]>(() => {
     if (!data) return [];
