@@ -36,14 +36,14 @@ export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
   onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar, onReabrir,
-  cierreEsSiguiente, rolPuedeCerrar, cierreMotivoBloqueo, onIrACierre,
+  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
   const navigate = useNavigate();
 
   // v13.89.1 — Si el siguiente estado es Cerrado y el rol no puede cerrar,
   // ocultamos el botón. El cierre se hace desde el Tab Cierre (o por admin).
   const ocultarAvance = cierreEsSiguiente && !rolPuedeCerrar;
-  const cierreBloqueadoPorChecklist = cierreEsSiguiente && rolPuedeCerrar && cierreMotivoBloqueo === "checklist";
+  const cierreBloqueadoPorChecklist = cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
   const avanzarDisabled = avanzandoEstado || bloqueadoPorDocs || cierreBloqueadoPorChecklist;
 
   const avanzarBtn = (
