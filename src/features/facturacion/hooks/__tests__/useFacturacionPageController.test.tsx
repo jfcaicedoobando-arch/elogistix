@@ -74,7 +74,7 @@ describe("useFacturacionPageController", () => {
     expect(result.current.paginatedFacturas).toHaveLength(2);
   });
 
-  it("handleMarcarPagado dispara mutate con el id y notifica éxito", () => {
+  it("handleMarcarPagado dispara mutate y registra actividad en éxito (toast lo emite el hook)", () => {
     marcarPagadoMutate.mockImplementation((_payload, opts) => opts?.onSuccess?.());
     const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
     act(() => result.current.handleMarcarPagado("gasto-1"));
@@ -82,15 +82,18 @@ describe("useFacturacionPageController", () => {
     expect(registrarActividadMutate).toHaveBeenCalledWith(expect.objectContaining({
       accion: "editar", modulo: "facturas", entidad_id: "gasto-1",
     }));
-    expect(notifySuccessMock).toHaveBeenCalled();
+    // 13.85.10 — el toast de éxito lo emite `useMarcarCostoPagado`, no el controller.
+    expect(notifySuccessMock).not.toHaveBeenCalled();
   });
 
-  it("handleMarcarPagado notifica error si el mutate falla", () => {
+  it("handleMarcarPagado no notifica en error (toast lo emite el hook)", () => {
     marcarPagadoMutate.mockImplementation((_p, opts) => opts?.onError?.(new Error("boom")));
     const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
     act(() => result.current.handleMarcarPagado("gasto-x"));
-    expect(notifyErrorMock).toHaveBeenCalled();
+    // 13.85.10 — el toast de error lo emite `useMarcarCostoPagado`, no el controller.
+    expect(notifyErrorMock).not.toHaveBeenCalled();
   });
+
 
   it("exportarFacturasCsv exporta con los headers esperados", () => {
     const { result } = renderHook(() => useFacturacionPageController(), { wrapper: createWrapper() });
