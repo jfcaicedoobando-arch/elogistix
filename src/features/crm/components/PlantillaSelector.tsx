@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/features/crm/hooks";
-import { insertBitacora } from "@/services/bitacora";
+import { insertBitacora } from "@/features/auditoria/services/bitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildWhatsappUrl } from "@/constants/externalUrls";
 

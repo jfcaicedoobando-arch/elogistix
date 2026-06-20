@@ -12,7 +12,7 @@ import { formatDate } from "@/lib/formatters";
 import {
   useNotificacionesInternas,
   type NotificacionInterna,
-} from "@/hooks/useNotificacionesInternas";
+} from "@/features/notificaciones/hooks/useNotificacionesInternas";
 
 export function NotificacionesPopover() {
   const navigate = useNavigate();

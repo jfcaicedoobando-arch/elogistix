@@ -23,7 +23,7 @@ import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersBar from "@/features/crm/components/OportunidadesFiltersBar";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { useOportunidades, useMoverEtapaConAutomatizacion, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
-import { useUsuarios } from "@/hooks/usuario";
+import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { oportunidadesColumns, activosFiltros } from "./oportunidadesTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 

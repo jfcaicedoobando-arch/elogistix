@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import type { UserRow } from "@/hooks/usuario";
+import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate } from "@/lib/formatters";
 import { ROLE_BADGE_CLASSES, ROLE_LABELS, ASSIGNABLE_ROLES_ADMIN_ORG, getRoleLabel } from "@/features/admin/domain/roles/roleCatalog";

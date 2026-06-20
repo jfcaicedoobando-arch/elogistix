@@ -4,7 +4,7 @@ import { renderHook, act } from "@testing-library/react";
 vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
-vi.mock("@/services/search", () => ({
+vi.mock("@/features/search/services", () => ({
   createDocumentoSignedUrl: vi.fn(),
 }));
 vi.mock("@/components/shared/utils/appFeedback", () => ({
@@ -14,7 +14,7 @@ vi.mock("@/lib/domain/errorCatalog", () => ({
   ERROR_CODES: { VALIDATION_FAILED: "VALIDATION_FAILED" },
 }));
 
-import { createDocumentoSignedUrl } from "@/services/search";
+import { createDocumentoSignedUrl } from "@/features/search/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { usePortalDocumentDownload } from "../usePortalDocumentDownload";
 

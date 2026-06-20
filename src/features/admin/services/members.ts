@@ -1,13 +1,13 @@
 /**
  * Miembros de organización y usuarios globales para la consola super admin.
  *
- * `fetchAvailableUsers`/`UserOption` viven ahora en `@/services/usuario/availableUsers`
+ * `fetchAvailableUsers`/`UserOption` viven ahora en `@/features/admin/services/usuario/availableUsers`
  * (v13.56.2 — auditoría paso 6). Aquí se re-exportan para mantener compatibilidad
  * con consumidores existentes (`useOrgMembersMutations`, tests).
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
-import { fetchAvailableUsers, type UserOption } from "@/services/usuario/availableUsers";
+import { fetchAvailableUsers, type UserOption } from "@/features/admin/services/usuario/availableUsers";
 
 export { fetchAvailableUsers };
 export type { UserOption };

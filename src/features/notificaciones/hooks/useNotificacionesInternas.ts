@@ -7,7 +7,7 @@ import {
   marcarTodasLeidas as svcMarcarTodas,
   subscribeNotificaciones,
   type NotificacionInterna,
-} from "@/services/notificaciones";
+} from "@/features/notificaciones/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
 export type { NotificacionInterna };

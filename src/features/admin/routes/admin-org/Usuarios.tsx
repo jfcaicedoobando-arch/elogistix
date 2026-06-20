@@ -3,16 +3,16 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/shared";
 import { ShieldCheck, UserPlus } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
-import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
+import NuevoUsuarioDialog from "@/features/admin/components/usuario/NuevoUsuarioDialog";
 import { DataTable } from "@/components/shared/DataTable";
-import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario";
+import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/features/admin/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
 import { getRoleLabel } from "@/components/shared/utils/uiMappings";
-import { UNRESOLVED_EMAIL } from "@/services/usuario";
+import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
 

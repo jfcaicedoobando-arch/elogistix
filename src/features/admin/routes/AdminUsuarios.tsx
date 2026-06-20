@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
-import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
+import NuevoUsuarioDialog from "@/features/admin/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminUsuariosController } from "@/features/admin/hooks";

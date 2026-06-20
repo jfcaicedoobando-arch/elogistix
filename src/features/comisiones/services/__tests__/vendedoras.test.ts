@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-vi.mock("@/services/usuario/availableUsers", () => ({
+vi.mock("@/features/admin/services/usuario/availableUsers", () => ({
   fetchAvailableUsers: vi.fn().mockResolvedValue([{ id: "u1", email: "u1@test.com" }])
 }));
 

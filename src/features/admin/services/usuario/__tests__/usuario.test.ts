@@ -25,7 +25,7 @@ import {
   createUserViaEdgeFunction,
   deleteUserViaEdgeFunctionAuth,
   UNRESOLVED_EMAIL,
-} from "@/services/usuario";
+} from "@/features/admin/services/usuario";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;

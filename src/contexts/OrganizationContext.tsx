@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { listActiveOrganizations } from "@/services/organization";
+import { listActiveOrganizations } from "@/features/admin/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { syncSentryActiveOrg } from "@/lib/observability/sentry/user";
 

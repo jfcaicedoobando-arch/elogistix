@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { useToast } from "@/hooks/shared";
-import { enterDemoMode } from "@/services/demoAccess";
+import { enterDemoMode } from "@/features/marketing/services/demoAccess";
 import { Loader2, Sparkles } from "lucide-react";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";

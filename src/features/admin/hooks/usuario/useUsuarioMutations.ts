@@ -4,7 +4,7 @@ import {
   createUserViaEdgeFunction,
   deleteUserViaEdgeFunctionAuth,
   type CreateUserParams,
-} from "@/services/usuario";
+} from "@/features/admin/services/usuario";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useCreateUser() {

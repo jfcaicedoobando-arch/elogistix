@@ -4,7 +4,7 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 
 const { mockCreateLink } = vi.hoisted(() => ({ mockCreateLink: vi.fn() }));
 
-vi.mock("@/services/tracking", () => ({
+vi.mock("@/features/embarques/services/tracking", () => ({
   createTrackingLink: mockCreateLink,
 }));
 

@@ -10,7 +10,7 @@ import {
   clearSnoozeRevision,
   snoozeRevision,
 } from "@/features/auditoria/services";
-import { insertBitacora } from "@/services/bitacora";
+import { insertBitacora } from "@/features/auditoria/services/bitacora";
 import { hallazgoHash } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";

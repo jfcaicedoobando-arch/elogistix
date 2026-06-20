@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
-vi.mock("@/services/tracking", () => ({ fetchTrackingPublico: fetchMock }));
+vi.mock("@/features/embarques/services/tracking", () => ({ fetchTrackingPublico: fetchMock }));
 
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useTrackingPublicoPage } from "../useTrackingPublicoPage";

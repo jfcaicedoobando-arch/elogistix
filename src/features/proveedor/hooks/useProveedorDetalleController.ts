@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/features/proveedor/hooks/useProveedores";
 import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/features/auditoria/hooks/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 

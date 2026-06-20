@@ -4,7 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/tracking";
+import { fetchTrackingPublico, type TrackingPublicoData } from "@/features/embarques/services/tracking";
 
 export function useTrackingPublicoPage(token: string | undefined) {
   return useQuery<TrackingPublicoData>({

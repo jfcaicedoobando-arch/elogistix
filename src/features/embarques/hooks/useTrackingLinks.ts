@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { createTrackingLink } from "@/services/tracking";
+import { createTrackingLink } from "@/features/embarques/services/tracking";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useCreateTrackingLink() {
