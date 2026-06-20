@@ -47,7 +47,7 @@ describe("revalidarTarifa", () => {
     expect(out.cambios).toEqual([]);
   });
 
-  it("propaga errores de la RPC", async () => {
+  it("propaga error de la RPC revalidar_tarifa_cotizacion", async () => {
     mock.setRpcResult("revalidar_tarifa_cotizacion", { data: null, error: { message: "boom" } });
     await expect(revalidarTarifa("cot-3")).rejects.toThrow("boom");
   });
@@ -61,7 +61,7 @@ describe("solicitarReaprobacionVentas", () => {
     expect(call).toBeTruthy();
     expect((call!.args as { p_delta_jsonb: unknown }).p_delta_jsonb).toEqual({ foo: 1 });
   });
-  it("propaga error", async () => {
+  it("propaga error de solicitarReaprobacionVentas", async () => {
     mock.setRpcResult("solicitar_reaprobacion_tarifa", { data: null, error: { message: "x" } });
     await expect(solicitarReaprobacionVentas("c", {})).rejects.toThrow("x");
   });
@@ -91,7 +91,7 @@ describe("crearEmbarqueBorradorConDecision", () => {
     expect(args.p_delta_jsonb).toEqual({ d: 1 });
   });
 
-  it("falla si la RPC no devuelve id", async () => {
+  it("falla si crearEmbarqueBorradorConDecision no devuelve id", async () => {
     mock.setRpcResult("crear_embarque_borrador_desde_cotizacion", { data: null, error: null });
     await expect(
       crearEmbarqueBorradorConDecision("cot-1", "sin_cambios", null, null),
