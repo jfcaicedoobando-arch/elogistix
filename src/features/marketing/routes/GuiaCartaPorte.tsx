@@ -3,7 +3,7 @@
  * Captura búsqueda orgánica sobre el complemento Carta Porte del SAT.
  */
 import { Link } from "react-router-dom";
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 import { LandingNav } from "../components/sections/LandingNav";
 import { LandingFooter } from "../components/sections/LandingFooter";
 import { Button } from "@/components/ui/button";

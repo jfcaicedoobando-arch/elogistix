@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useDebounce } from "@/hooks/shared";

@@ -6,7 +6,7 @@ import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Download } from "lucide-react";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {

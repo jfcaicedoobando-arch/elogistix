@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/components/shared/utils/brand";
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 
 export default function ResetPassword() {

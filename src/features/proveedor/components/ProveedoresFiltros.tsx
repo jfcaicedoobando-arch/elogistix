@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import type { Enums } from "@/types/db";

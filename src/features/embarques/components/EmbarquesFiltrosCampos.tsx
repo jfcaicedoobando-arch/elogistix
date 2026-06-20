@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 interface ClienteOption {

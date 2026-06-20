@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Users, Plus, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { useClientesPaginados } from "@/features/cliente/hooks";
 import { usePermissions } from "@/hooks/shared";
 import NuevoClienteDialog from "@/features/cliente/components/NuevoClienteDialog";

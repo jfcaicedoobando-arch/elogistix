@@ -6,7 +6,7 @@
  * Ruta: /logo-preview (pública, no indexable).
  */
 import { Link } from "react-router-dom";
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 import { useEffect } from "react";
 
 type Tone = "light" | "muted" | "navy" | "accent" | "image";

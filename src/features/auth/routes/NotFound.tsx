@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Compass, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/observability/logger";
-import { Seo } from "@/components/seo/Seo";
+import { Seo } from "@/components/shared/Seo";
 
 const NotFound = () => {
   const location = useLocation();

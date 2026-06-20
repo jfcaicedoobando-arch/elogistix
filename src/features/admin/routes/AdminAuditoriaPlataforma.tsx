@@ -12,7 +12,7 @@
 import { ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BackfillLegacyCard } from "./BackfillLegacyCard";
+import { BackfillLegacyCard } from "@/features/admin/components/BackfillLegacyCard";
 
 const KPIS_PREVISTOS = [
   "Uso por organización (embarques, cotizaciones, usuarios activos).",

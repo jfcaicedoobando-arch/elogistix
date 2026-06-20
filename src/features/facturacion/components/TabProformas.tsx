@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";

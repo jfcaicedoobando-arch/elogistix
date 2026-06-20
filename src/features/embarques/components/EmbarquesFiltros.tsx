@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import SearchInput from "@/components/selects/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { EmbarquesFiltrosCampos } from "./EmbarquesFiltrosCampos";
 import { EmbarquesFiltrosChips } from "./EmbarquesFiltrosChips";
 import { countActiveEmbarqueFilters } from "./embarquesFiltrosUtils";
