@@ -6,21 +6,17 @@
  * - Mías: filtradas por `operador = <email actual>` (dashboard comercial).
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  contarCotizacionesPendientesReaprobacion,
+  contarMisCotizacionesPendientesReaprobacion,
+} from "@/features/cotizacion/services/pendientesReaprobacion";
 
 export function useCotizacionesPendientesReaprobacion() {
   return useQuery<number>({
     queryKey: ["cotizaciones", "pendientes-reaprobacion", "all"],
     staleTime: 60_000,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("cotizaciones")
-        .select("id", { count: "exact", head: true })
-        .eq("estado_revalidacion", "pendiente_reaprobacion");
-      if (error) throw error;
-      return count ?? 0;
-    },
+    queryFn: () => contarCotizacionesPendientesReaprobacion(),
   });
 }
 
@@ -31,14 +27,6 @@ export function useMisCotizacionesPendientesReaprobacion() {
     queryKey: ["cotizaciones", "pendientes-reaprobacion", "mias", email],
     enabled: Boolean(email),
     staleTime: 60_000,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("cotizaciones")
-        .select("id", { count: "exact", head: true })
-        .eq("estado_revalidacion", "pendiente_reaprobacion")
-        .eq("operador", email as string);
-      if (error) throw error;
-      return count ?? 0;
-    },
+    queryFn: () => contarMisCotizacionesPendientesReaprobacion(email as string),
   });
 }
