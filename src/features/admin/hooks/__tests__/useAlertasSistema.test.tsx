@@ -11,7 +11,7 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
 vi.mock("@/features/admin/services", () => ({
   fetchAlertasPendingCount: vi.fn().mockResolvedValue(5),
   fetchAlertasSistema: vi.fn().mockResolvedValue([{ id: "1", mensaje: "Error" }]),
-  acknowledgeAlerta: vi.fn().mockResolvedValue({ success: true }),
+  reconocerAlerta: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 vi.mock("@/hooks/shared", () => ({
@@ -37,6 +37,6 @@ describe("useAlertasSistema", () => {
     
     await result.current.mutateAsync("1");
     
-    expect(adminService.acknowledgeAlerta).toHaveBeenCalledWith({ id: "1", userId: "test-user" });
+    expect(adminService.reconocerAlerta).toHaveBeenCalledWith({ id: "1", userId: "test-user" });
   });
 });

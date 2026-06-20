@@ -10,7 +10,7 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate } from "@/lib/formatters";
-import { ROLE_BADGE_CLASSES, ROLE_LABELS, ASSIGNABLE_ROLES_ADMIN_ORG, getRoleLabel } from "@/features/admin/domain/roles/roleCatalog";
+import { ROLE_BADGE_CLASSES, ROLE_LABELS, ASSIGNABLE_ROLES_ADMIN_ORG, obtenerEtiquetaRol } from "@/features/admin/domain/roles/roleCatalog";
 
 const roleBadge = ROLE_BADGE_CLASSES;
 
@@ -47,7 +47,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
       accessorFn: (u) => u.role, enableSorting: true,
       sortingFn: sortByString<UserRow>((u) => u.role),
       meta: { width: "w-[120px]" },
-      cell: ({ row }) => <Badge className={roleBadge[row.original.role]}>{getRoleLabel(row.original.role)}</Badge>,
+      cell: ({ row }) => <Badge className={roleBadge[row.original.role]}>{obtenerEtiquetaRol(row.original.role)}</Badge>,
     },
     {
       id: "change_role", header: "Cambiar rol", meta: { width: "w-[160px]" },

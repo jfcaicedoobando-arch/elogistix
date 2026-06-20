@@ -57,7 +57,7 @@ export async function updateAdminOrganization(
   if (error) throw error;
 }
 
-export async function setOrganizationActivo(id: string, activo: boolean): Promise<void> {
+export async function establecerOrganizacionActiva(id: string, activo: boolean): Promise<void> {
   const { error } = await supabase
     .from("organizations")
     .update({ activo })

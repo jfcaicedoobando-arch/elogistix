@@ -35,7 +35,7 @@ export async function fetchAlertasSistema(includeAcknowledged = false): Promise<
   return (data ?? []) as AlertaSistema[];
 }
 
-export async function acknowledgeAlerta(input: { id: string; userId: string | null }): Promise<void> {
+export async function reconocerAlerta(input: { id: string; userId: string | null }): Promise<void> {
   const { error } = await supabase
     .from("alertas_sistema")
     .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: input.userId })

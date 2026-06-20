@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   fetchAdminOrganization,
-  setOrganizationActivo,
+  establecerOrganizacionActiva,
   updateAdminOrganization,
 } from "@/features/admin/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
@@ -50,7 +50,7 @@ export function useAdminOrgInfo(id: string | undefined) {
   });
 
   const toggleActivo = useMutation({
-    mutationFn: (activo: boolean) => setOrganizationActivo(id!, activo),
+    mutationFn: (activo: boolean) => establecerOrganizacionActiva(id!, activo),
     onSuccess: (_, activo) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
       notifySuccess(toast, { title: activo ? "Organización activada" : "Organización desactivada" });

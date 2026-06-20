@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getRoleLabel } from "@/lib/ui/uiMappings";
+import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
 
 interface Props {
   search: string;
@@ -60,7 +60,7 @@ export function AdminUsuariosFilters({
         <SelectContent>
           <SelectItem value="todos">Todos los roles</SelectItem>
           {roles.map((r) => (
-            <SelectItem key={r} value={r}>{getRoleLabel(r)}</SelectItem>
+            <SelectItem key={r} value={r}>{obtenerEtiquetaRol(r)}</SelectItem>
           ))}
         </SelectContent>
       </Select>

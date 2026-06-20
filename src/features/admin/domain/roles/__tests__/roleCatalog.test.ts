@@ -5,7 +5,7 @@ import {
   ROLE_BADGE_CLASSES,
   ASSIGNABLE_ROLES_ADMIN_ORG,
   LEGACY_ROLES,
-  getRoleLabel,
+  obtenerEtiquetaRol,
 } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
 
@@ -62,18 +62,18 @@ describe("roleCatalog", () => {
     expect(LEGACY_ROLES).toEqual(["admin", "operador", "viewer"]);
   });
 
-  it("getRoleLabel devuelve '—' para null/undefined/vacío", () => {
-    expect(getRoleLabel(null)).toBe("—");
-    expect(getRoleLabel(undefined)).toBe("—");
-    expect(getRoleLabel("")).toBe("—");
+  it("obtenerEtiquetaRol devuelve '—' para null/undefined/vacío", () => {
+    expect(obtenerEtiquetaRol(null)).toBe("—");
+    expect(obtenerEtiquetaRol(undefined)).toBe("—");
+    expect(obtenerEtiquetaRol("")).toBe("—");
   });
 
-  it("getRoleLabel devuelve la etiqueta del catálogo para un rol válido", () => {
-    expect(getRoleLabel("admin_org")).toBe("Administrador");
-    expect(getRoleLabel("super_admin")).toBe("Super Admin");
+  it("obtenerEtiquetaRol devuelve la etiqueta del catálogo para un rol válido", () => {
+    expect(obtenerEtiquetaRol("admin_org")).toBe("Administrador");
+    expect(obtenerEtiquetaRol("super_admin")).toBe("Super Admin");
   });
 
-  it("getRoleLabel devuelve el string crudo si el rol es desconocido", () => {
-    expect(getRoleLabel("rol_inexistente")).toBe("rol_inexistente");
+  it("obtenerEtiquetaRol devuelve el string crudo si el rol es desconocido", () => {
+    expect(obtenerEtiquetaRol("rol_inexistente")).toBe("rol_inexistente");
   });
 });

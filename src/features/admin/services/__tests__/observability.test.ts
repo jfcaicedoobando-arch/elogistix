@@ -16,7 +16,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 import {
   fetchAlertasPendingCount,
   fetchAlertasSistema,
-  acknowledgeAlerta,
+  reconocerAlerta,
   fetchAppLogs,
   fetchAppLogsFnList,
   fetchAppLogsHealthSummary,
@@ -81,17 +81,17 @@ describe("fetchAlertasSistema", () => {
   });
 });
 
-describe("acknowledgeAlerta", () => {
+describe("reconocerAlerta", () => {
   it("update + eq con id", async () => {
     const q = chainResolve({ error: null });
     fromMock.mockReturnValue(q);
-    await acknowledgeAlerta({ id: "a-1", userId: "u-1" });
+    await reconocerAlerta({ id: "a-1", userId: "u-1" });
     expect(q.update).toHaveBeenCalled();
     expect(q.eq).toHaveBeenCalledWith("id", "a-1");
   });
   it("propaga error en ack", async () => {
     fromMock.mockReturnValue(chainResolve({ error: { message: "no" } }));
-    await expect(acknowledgeAlerta({ id: "a", userId: null })).rejects.toThrow();
+    await expect(reconocerAlerta({ id: "a", userId: null })).rejects.toThrow();
   });
 });
 
