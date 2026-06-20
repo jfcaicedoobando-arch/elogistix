@@ -27,7 +27,7 @@ vi.mock("@/features/proveedor/services", () => {
     }
   }
   return {
-    findProveedorByRfcEnOrg,
+    findProveedorByRfcEnOrg: hoisted.findProveedorByRfcEnOrg,
     ProveedorDuplicadoError,
   };
 });
@@ -37,7 +37,7 @@ vi.mock("@/hooks/shared", () => ({
 }));
 
 vi.mock("../useNuevoProveedorController.csf", () => ({
-  procesarCsfUpload,
+  procesarCsfUpload: hoisted.procesarCsfUpload,
   mergeCsfPatch: (prev: Record<string, unknown>, patch: Record<string, unknown>) => ({
     ...prev,
     ...patch,
@@ -45,7 +45,7 @@ vi.mock("../useNuevoProveedorController.csf", () => ({
 }));
 
 vi.mock("@/components/shared/utils/appFeedback", () => ({
-  notifyError,
+  notifyError: hoisted.notifyError,
 }));
 
 import { ProveedorDuplicadoError } from "@/features/proveedor/services";
