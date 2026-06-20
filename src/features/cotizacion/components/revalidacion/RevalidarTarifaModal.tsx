@@ -19,6 +19,7 @@ interface Props {
   resultado: ResultadoRevalidacion | null;
   onMantener: () => void;
   onRefrescar: () => void;
+  onSustituir?: () => void;
   onSolicitarReaprobacion: () => void;
   loading?: boolean;
 }
@@ -34,7 +35,7 @@ function formatMoney(n: number | null, moneda: "USD" | "MXN") {
 
 export function RevalidarTarifaModal({
   open, onOpenChange, resultado,
-  onMantener, onRefrescar, onSolicitarReaprobacion, loading,
+  onMantener, onRefrescar, onSustituir, onSolicitarReaprobacion, loading,
 }: Props) {
   if (!resultado) return null;
   const { severidad, cambios, tarifa_vigente, umbral_pct, max_delta_pct } = resultado;
@@ -111,6 +112,11 @@ export function RevalidarTarifaModal({
               <Button variant="outline" onClick={onMantener} disabled={loading}>
                 Mantener costos cotizados
               </Button>
+              {onSustituir && (
+                <Button variant="outline" onClick={onSustituir} disabled={loading}>
+                  Elegir otra tarifa…
+                </Button>
+              )}
               <Button onClick={onRefrescar} disabled={loading}>
                 <RefreshCw className="h-4 w-4 mr-2" aria-hidden />
                 Refrescar desde tarifa vigente

@@ -14,8 +14,17 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { useReconciliacionEmbarque, type FilaReconciliacion } from "@/features/embarques/hooks";
+import { useEmbarqueTarifaInfo } from "@/features/embarques/hooks/useEmbarqueTarifaInfo";
 import { calcularResumen } from "@/features/embarques/services/reconciliacionCostos";
 import { ReconciliacionTresColumnas } from "@/features/embarques/components/reconciliacion/ReconciliacionTresColumnas";
+
+const DECISION_NICE: Record<string, string> = {
+  sin_cambios: "Sin cambios respecto a la tarifa cotizada",
+  mantenida_por_operaciones: "Mantenida por operaciones (delta absorbido)",
+  refrescada: "Refrescada desde la tarifa vigente",
+  sustituida: "Sustituida por otra tarifa",
+  reaprobada_ventas: "Re-aprobada por ventas",
+};
 
 
 interface Props {
@@ -37,7 +46,11 @@ function fmtPct(p: number): string {
 
 export function TabConciliacion({ embarqueId }: Props) {
   const { data: filas = [], isLoading } = useReconciliacionEmbarque(embarqueId);
+  const { data: tarifaInfo } = useEmbarqueTarifaInfo(embarqueId);
   const resumen = useMemo(() => calcularResumen(filas), [filas]);
+  const decisionLabel = tarifaInfo?.tarifa_decision
+    ? DECISION_NICE[tarifaInfo.tarifa_decision] ?? tarifaInfo.tarifa_decision
+    : null;
 
   const cols = useMemo<ColumnDef<FilaReconciliacion, unknown>[]>(() => defineColumns<FilaReconciliacion>([
     { id: "proveedor", header: "Proveedor", cell: ({ row }) => <span title={row.original.proveedor_nombre}>{toTitleCase(row.original.proveedor_nombre)}</span> },
@@ -98,6 +111,13 @@ export function TabConciliacion({ embarqueId }: Props) {
 
   return (
     <div className="space-y-6">
+      {decisionLabel && (
+        <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-xs text-info-foreground flex items-center gap-2">
+          <span className="font-medium">Decisión aplicada:</span>
+          <span>{decisionLabel}</span>
+          <span className="text-muted-foreground">— ver pestaña Resumen → Origen de costos para el detalle.</span>
+        </div>
+      )}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Reconciliación 3 columnas (Cotizado · Refrescado · Real)</CardTitle>

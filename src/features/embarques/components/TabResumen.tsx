@@ -7,6 +7,7 @@ import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
 import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCard";
+import { OrigenCostosSection } from "./OrigenCostosSection";
 import { SeccionContenedoresReadonly } from "./contenedores/SeccionContenedoresReadonly";
 
 interface Props {
@@ -39,6 +40,14 @@ export function TabResumen({ embarque }: Props) {
       </div>
 
       {embarque.modo === "Marítimo" && <SeccionContenedoresReadonly embarqueId={embarque.id} />}
+
+      <OrigenCostosSection
+        tarifaIdOriginal={(embarque as { tarifa_id_original?: string | null }).tarifa_id_original}
+        tarifaIdAplicada={(embarque as { tarifa_id_aplicada?: string | null }).tarifa_id_aplicada}
+        decision={(embarque as { tarifa_decision?: string | null }).tarifa_decision}
+        deltaJsonb={(embarque as { tarifa_delta_jsonb?: unknown }).tarifa_delta_jsonb}
+        revalidadaEn={(embarque as { tarifa_revalidada_en?: string | null }).tarifa_revalidada_en}
+      />
 
       {relacionados.length > 1 && (
         <EmbarquesRelacionadosCard

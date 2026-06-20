@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.72.0] - 2026-06-20
+- **feat(cotizaciones/embarques/revalidacion-tarifa-ui)**: Cierre del plan original de revalidación de tarifa (Fase 1) en UI:
+  - **Crear embarque con revalidación**: nuevo `CrearEmbarqueConRevalidacion` intercepta el botón "Crear embarque" de la cotización aceptada, ejecuta `revalidar_tarifa_cotizacion` y según severidad: `sin_cambios` crea directo, `informativa` abre `RevalidarTarifaModal` con opciones Mantener / Refrescar / **Elegir otra tarifa…** (reabre `BuscarTarifaDialog`), `bloqueante` fuerza "Solicitar re-aprobación a ventas". Al crear se navega al embarque generado.
+  - **Origen de costos en embarque**: nueva sección `OrigenCostosSection` en la pestaña Resumen muestra tarifa cotizada vs aplicada, decisión (badge), fecha de revalidación y snapshot del delta.
+  - **Sub-encabezado en pestaña Conciliación**: cuando el embarque trae `tarifa_decision` muestra banner informativo ("Decisión aplicada: Refrescada / Sustituida / …") con link visual a Resumen → Origen de costos. Nuevo hook `useEmbarqueTarifaInfo`.
+  - **Badge en lista de cotizaciones**: las cotizaciones con `estado_revalidacion = pendiente_reaprobacion` muestran `⚠ Re-aprobación pendiente`. Se agrega `estado_revalidacion` a `COTIZACION_LIST_COLUMNS`.
+  - **Dashboards**:
+    - `/operaciones`: nuevo KPI "Tarifas a re-aprobar" (cuenta cotizaciones tenant-wide en `pendiente_reaprobacion`).
+    - `/dashboard`: banner amarillo para el comercial cuando tiene cotizaciones suyas pendientes de re-aprobar, con link directo a `/cotizaciones?reaprobacion=pendiente`.
+  - Hook compartido `usePendientesReaprobacion` (variantes global y "mías").
+  - `EMBARQUE_DETAIL_COLUMNS` extendido con `tarifa_id_original, tarifa_id_aplicada, tarifa_decision, tarifa_delta_jsonb, tarifa_revalidada_en/_por` para que el detalle del embarque exponga la decisión.
+  - **Pendientes documentados** (no entran en este release): que la acción "Re-cotizar con tarifa vigente" del banner refresque `conceptos_venta`/`cotizacion_costos` y regenere PDF (hoy sólo cambia estado); badges en tiempo real de "Tarifa vencida" / "Precio cambió" por fila (caros, requieren RPC batch). Ver `mem://features/revalidacion-tarifa-embarque`.
+
+
 ## [13.71.3] - 2026-06-20
 - **fix(configuracion/operaciones)**: Los umbrales de varianza de reconciliación (alerta/crítico) ahora se administran **por organización** en `/configuracion → Operaciones`, no en el panel Super Admin. Migración: la tabla `configuracion` cambia su unicidad de `(categoria, clave)` a `(organization_id, categoria, clave)` para permitir un valor distinto por empresa, RLS de lectura ahora filtra por `organization_id = current_user_org_id()`, y se siembran los defaults (10% alerta / 25% crítico) para todas las orgs existentes. Nuevo `useUmbralesReconciliacion` consume estos valores desde la reconciliación 3 columnas. Se elimina `TabOperacionesGlobal` y la pestaña "Operaciones" del Super Admin.
 

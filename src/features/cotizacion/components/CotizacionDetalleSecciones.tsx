@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/components/shared/utils/uiMappings";
 import { formatDate } from "@/lib/formatters";
 import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
+import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
 
 
 
@@ -94,15 +95,11 @@ function AccionesBorradorOEnviada({ onCambiarEstado }: { onCambiarEstado: Accion
 }
 
 function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: string; numContenedores: number }) {
-  const navigate = useNavigate();
   return (
-    <Button
-      size="sm"
-      onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
-    >
-      Crear embarque
-      {numContenedores > 1 && <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>}
-    </Button>
+    <CrearEmbarqueConRevalidacion
+      cotizacionId={cotizacionId}
+      numContenedores={numContenedores}
+    />
   );
 }
 

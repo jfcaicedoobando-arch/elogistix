@@ -1,5 +1,8 @@
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DashboardStatusCards } from "@/features/dashboard/components/DashboardStatusCards";
 import { AlertasDemoraCard } from "@/features/dashboard/components/AlertasDemoraCard";
@@ -9,6 +12,7 @@ import { EmbarquesActivosTable } from "@/features/dashboard/components/Embarques
 import { CargasActivasClienteCard } from "@/features/dashboard/components/CargasActivasClienteCard";
 import { MiOperacionSection } from "@/features/dashboard/components/operador/MiOperacionSection";
 import { useDashboardController, type DashboardScope } from "@/features/dashboard/hooks/useDashboardController";
+import { useMisCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
 
 export default function Dashboard() {
   const {
@@ -16,6 +20,8 @@ export default function Dashboard() {
     isOperador, canViewFinancials, hideFinancials, isLoading,
     cargasPorCliente, cargasActivasTotal, scoped, saludo, hoyStr,
   } = useDashboardController();
+  const { data: misReaprob = 0 } = useMisCotizacionesPendientesReaprobacion();
+
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -36,6 +42,16 @@ export default function Dashboard() {
             <TabsTrigger value="todos">Todos</TabsTrigger>
           </TabsList>
         </Tabs>
+      )}
+      {misReaprob > 0 && (
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Tienes {misReaprob} cotización{misReaprob === 1 ? "" : "es"} esperando tu re-aprobación</AlertTitle>
+          <AlertDescription>
+            Operaciones detectó cambios en la tarifa al crear el embarque.{" "}
+            <Link to="/cotizaciones?reaprobacion=pendiente" className="underline font-medium">Revisar ahora →</Link>
+          </AlertDescription>
+        </Alert>
       )}
 
       {isOperador && (

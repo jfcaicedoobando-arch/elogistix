@@ -33,7 +33,7 @@ Crear embarque → revalidar_tarifa_cotizacion(RPC)
 - `tarifa_revalidacion_umbral_pct` (default 5)
 - `tarifa_revalidacion_bloquea_si_vencida` (default true)
 
-Restricción única `(categoria, clave)` es global, no por org — sólo una fila por parámetro.
+Restricción única `(organization_id, categoria, clave)` desde 13.71.3 — un valor por org.
 
 ## Trazabilidad en `embarques`
 
@@ -41,16 +41,25 @@ Restricción única `(categoria, clave)` es global, no por org — sólo una fil
 - `tarifa_id_aplicada` = la que se usó (puede ser igual u otra vigente).
 - `tarifa_delta_jsonb` = snapshot completo del delta detectado.
 - `tarifa_decision` ∈ ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas').
+- Expuestos en `EMBARQUE_DETAIL_COLUMNS` y consumidos por `OrigenCostosSection` (pestaña Resumen) y banner de `TabConciliacion`.
 
 ## Archivos
 
 - Dominio puro: `src/lib/domain/revalidacionTarifa.ts`
 - Servicio: `src/features/cotizacion/services/revalidacion/index.ts`
-- Hooks: `src/features/cotizacion/hooks/useRevalidacionTarifa.ts`
-- UI: `src/features/cotizacion/components/revalidacion/{RevalidarTarifaModal,ReaprobacionTarifaBanner}.tsx`
+- Hooks: `src/features/cotizacion/hooks/useRevalidacionTarifa.ts`, `usePendientesReaprobacion.ts`, `embarques/hooks/useEmbarqueTarifaInfo.ts`
+- UI cotización: `src/features/cotizacion/components/revalidacion/{RevalidarTarifaModal,ReaprobacionTarifaBanner,CrearEmbarqueConRevalidacion}.tsx`
+- UI embarque: `src/features/embarques/components/OrigenCostosSection.tsx`
+- Dashboards: KPI en `/operaciones`, banner comercial en `/dashboard`
+- Lista cotizaciones: badge `⚠ Re-aprobación pendiente` cuando `estado_revalidacion='pendiente_reaprobacion'`
 
-## Out of scope (Fase 2 pendiente)
+## Pendientes conocidos (no implementados)
 
-- Versionado de `cotizacion_costos` con tabla histórica.
-- Reconciliación a 3 columnas: cotizado / refrescado / real.
+- `resolver_reaprobacion_tarifa(reaprobada)` sólo cambia el estado; NO refresca `conceptos_venta`/`cotizacion_costos` ni regenera el PDF para reenvío al cliente. Pendiente RPC nueva o flujo de re-cotizado automático.
+- Badges en lista de "Tarifa vencida" / "Precio cambió" en tiempo real por fila (requiere RPC batch para no degradar la lista).
 - Emails al cliente cuando ventas re-aprueba con cambio de precio.
+
+## Fase 2 implementada
+
+- Versionado de `cotizacion_costos` con `cotizacion_costos_historico` (ver mem://features/versionado-cotizaciones-reconciliacion).
+- Reconciliación a 3 columnas Cotizado / Refrescado / Real con umbrales por organización.

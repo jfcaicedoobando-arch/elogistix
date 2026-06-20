@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, AlertTriangle, Package, Container, Ship } from "lucide-react";
+import { TrendingUp, AlertTriangle, Package, Container, Ship, RefreshCw } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
@@ -12,6 +12,7 @@ import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/features/operaciones/components/DesempenoOperadores";
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
+import { useCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI.
 const OperacionesTendenciaChart = lazy(
@@ -27,6 +28,7 @@ export default function Operaciones() {
     creadasEsteMes, llegadasEsteMes,
     balancePct, contPct, totalAlertas,
   } = useOperacionesPageController();
+  const { data: pendientesReaprob = 0 } = useCotizacionesPendientesReaprobacion();
 
   function renderTendenciaChart() {
     if (isLoading) return <Skeleton className="h-[260px] w-full" />;
@@ -55,13 +57,21 @@ export default function Operaciones() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />
         <KpiCard titulo="Contenedores (TEU)" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
         <KpiCard titulo="Profit USD" valor={formatCurrencyCompact(global.totalProfit, "USD")} valorTooltip={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="success" loading={isLoading} />
         <KpiCard titulo="Alertas" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
+        <KpiCard
+          titulo="Tarifas a re-aprobar"
+          valor={pendientesReaprob}
+          subtitulo={pendientesReaprob > 0 ? "Cotizaciones esperando ventas" : "Al día"}
+          icono={RefreshCw}
+          color={pendientesReaprob > 0 ? "danger" : "info"}
+          loading={isLoading}
+        />
       </div>
 
       <DesempenoOperadores operadores={operadores} isLoading={isLoading} />

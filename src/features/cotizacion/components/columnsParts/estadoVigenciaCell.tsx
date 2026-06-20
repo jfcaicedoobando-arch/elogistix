@@ -57,6 +57,11 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
             Sin costos
           </Badge>
         )}
+        {(r as { estado_revalidacion?: string }).estado_revalidacion === "pendiente_reaprobacion" && (
+          <Badge variant="warning" className="w-fit text-[10px] whitespace-nowrap" title="Tarifa cambió: requiere re-aprobación de ventas">
+            ⚠ Re-aprobación pendiente
+          </Badge>
+        )}
       </div>
       {vigenciaNode && <span className="text-[10px] whitespace-nowrap">{vigenciaNode}</span>}
     </div>
