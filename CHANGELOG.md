@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.73.2] - 2026-06-20
+- **chore(ci/calidad)**: CI verde tras la feature de revalidación de tarifa.
+  - Lint: extraídos helpers `buildVigenciaNode`/`isTarifaVencida` en `estadoVigenciaCell.tsx` y subcomponentes `DeltaTable`/`extraerCambios` en `OrigenCostosSection.tsx` para bajar complejidad ciclomática a ≤16.
+  - Arquitectura: `useEmbarqueTarifaInfo` ya no toca `supabase/client` directo; consulta delegada a nuevo service `src/features/embarques/services/tarifaInfo.ts`.
+  - SAFE-CAST: marcadores agregados a los dos casts `as unknown as` de `reconciliacion3Columnas.ts`.
+  - Power of 10 (≤200 líneas): `ReconciliacionTresColumnas.tsx` partido en 3 archivos (`reconciliacionFormat.ts`, `ResumenReconciliacion.tsx`).
+  - Formatters centralizados: `RevalidarTarifaModal` ahora usa `formatCurrency` de `@/lib/formatters` en vez de declararlo local.
+  - Test hygiene: renombrados 4 títulos duplicados en tests de `revalidacion/index.test.ts`, `versionado/index.test.ts` y `revalidacionTarifa.test.ts` para evitar colisiones con tests preexistentes.
+
 ## [13.73.1] - 2026-06-20
 - **fix(cotizaciones/email)**: `send-transactional-email` rechazaba todos los correos con `403 Forbidden` porque `auth.getClaims()` no podía verificar localmente el JWT estático del service role en Lovable Cloud. Se reemplazó la verificación por comparación directa contra `SUPABASE_SERVICE_ROLE_KEY` — más estricto y server-to-server seguro. Ahora `enviar-cotizacion-email` puede invocar la cola de correos transaccionales y la cotización se manda correctamente al cliente y al CC.
 
