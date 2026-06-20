@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.85.2] - 2026-06-20
+- **test(business-logic) cobertura de reglas de negocio sin tests**: añadidos 3 archivos de test (19 casos, 100% verdes) para lógica pura que carecía de validación. `cotizacion/domain/lifecycle.ts`: reglas de estado inactivo (`Vencida`/`Archivada`) y `puedeReactivar` (5 casos cubren null/undefined/estados activos). `costeo/utils/tarifaFormatters.ts`: formateo USD-MXN (NaN/null/negativos) y `formatFechaMx` ISO→DD/MM/YYYY incluyendo casos de fallback (7 casos). `costeo/utils/rankingLabels.ts`: ranking de tarifas Top 3 — etiquetas "Mejor precio", "Más crédito", "Más días libres", "Tránsito más corto", `vencePronto` (7 días), delta vs ganador y manejo de `transit_time` null (7 casos). Sin cambios de código de producción.
+
 ## [13.85.1] - 2026-06-20
 - **fix(ci) test useEstadoResultados rompía por barrel eliminado**: tras eliminar `features/profit/services/index.ts` en Paso 6 de la auditoría (v13.84.0), el test `useProfit.test.tsx` seguía mockeando el path del barrel (`@/features/profit/services`) mientras que el hook importa los servicios desde paths profundos (`/services/estadoResultados` y `/services/estadoResultadosDevengado`). Como el mock no interceptaba, `fetchEstadoResultadosMes` y `fetchEstadoResultadosDevengado` reales se ejecutaban y los spies nunca se invocaban. Reescritos los `vi.mock` a las rutas profundas reales. Verificado 3/3 corridas estables.
 
