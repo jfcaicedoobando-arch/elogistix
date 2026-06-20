@@ -1,44 +1,46 @@
-## El bug (analogía)
+## Diagnóstico
 
-`supabase.rpc` es como un mesero: sabe llevarte el platillo, pero **necesita saber a qué mesa pertenece** (el `this`). En `versionado/index.ts` hacemos:
+Hoy el cierre exige **estado = Entregado** en dos capas:
 
-```ts
-function rpc(): RpcCaller {
-  return supabase.rpc as unknown as RpcCaller;  // ← lo arrancamos del restaurante
-}
-// luego:
-rpc()("recotizar_cotizacion", {...});  // mesero sin mesa → busca `this.rest` → undefined
+- **Frontend** (`TabCierre.tsx` líneas 60 y 80): `estatus === "entregado"`.
+- **Backend** (`public.cerrar_embarque`): `IF v_emb.estado <> 'Entregado' THEN RAISE`.
+
+Pero en marítimo el flujo natural es: `... → Entregado → EIR → Cerrado`. EIR (Equipment Interchange Receipt) es el último paso operativo del contenedor devuelto a la naviera. Los embarques marítimos quedan parados en EIR y la UI bloquea el cierre.
+
+## Fix
+
+Permitir cerrar desde **Entregado o EIR** en ambas capas. EIR sólo existe en marítimo, así que no afecta aéreo/terrestre.
+
+### 1) Migración: relajar la RPC
+
+```sql
+CREATE OR REPLACE FUNCTION public.cerrar_embarque(p_embarque_id uuid) ...
+-- cambiar el guard:
+IF v_emb.estado::text NOT IN ('Entregado','EIR') THEN
+  RAISE EXCEPTION 'Solo se pueden cerrar embarques en estado Entregado o EIR (actual: %)', v_emb.estado::text;
+END IF;
 ```
 
-Al guardar `supabase.rpc` como función suelta y llamarla después, **pierde el `this`**. Internamente Supabase intenta `this.rest...` y truena con:
-> Cannot read properties of undefined (reading 'rest')
+Resto del cuerpo idéntico.
 
-Por eso el tab de Conciliación falla: hace `obtenerCostosCotizacionVersion` → `rpc()(...)` → boom.
+### 2) `src/features/embarques/components/TabCierre.tsx`
 
-## Fix (1 línea)
+- Constante local `ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"])`.
+- Línea 60: `const puedeCerrar = (isAdmin || canEditFinance) && ESTADOS_LISTOS_PARA_CIERRE.has(estatus);`
+- Línea 80–86: condicional y mensaje:
+  > El embarque debe estar en estado **Entregado** o **EIR** para ejecutar el cierre.
 
-Archivo: `src/features/cotizacion/services/versionado/index.ts`
+### 3) Tests
 
-```ts
-function rpc(): RpcCaller {
-  // SAFE-CAST: RPCs nuevas (Fase 2) aún no están en los tipos generados.
-  return supabase.rpc.bind(supabase) as unknown as RpcCaller;
-}
-```
+Actualizar `src/features/embarques/components/__tests__/TabCierre.rules.test.ts` y `services/__tests__/cierre.test.ts` para agregar caso EIR ⇒ permite.
 
-`.bind(supabase)` le amarra la mesa al mesero. Mismo cast, mismo tipo, sin tocar nada más.
+### 4) Changelog
 
-## Validación
-
-1. Recargar `/embarques/.../?tab=conciliacion` → tabla debe renderizar (o mostrar "sin cotización" limpio).
-2. El embarque actual no tiene `version_aceptada` ni delta, así que `cotizados=[]`, `reales=[Flete Marítimo USD 912.81]` → debe mostrar 1 fila sólo en columna Real.
-
-## Changelog
-
-- Bump `APP_VERSION` patch y entrada en `CHANGELOG.md` raíz:
-  `Fix: tab Conciliación dejaba de cargar por pérdida de contexto en supabase.rpc del servicio de versionado.`
+Bump a `13.87.4` + entrada en `CHANGELOG.md` raíz:
+> fix(embarques/cierre) permitir cerrar embarques marítimos desde estado EIR (no sólo Entregado). UI y RPC `cerrar_embarque` actualizadas.
 
 ## Sin cambios
 
-- No se tocan tipos, RPCs, ni otros consumidores.
-- No se toca UI de TabConciliacion.
+- Validaciones de checklist intactas.
+- Flujo Aéreo/Terrestre intacto (no llegan a EIR).
+- Reapertura intacta.

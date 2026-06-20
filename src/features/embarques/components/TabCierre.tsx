@@ -45,6 +45,10 @@ const ETIQUETAS_REGLA: Record<string, string> = {
   costos_liquidados: "Todos los costos están liquidados (pagados al proveedor)",
 };
 
+// EIR sólo aplica al flujo marítimo (último paso operativo del contenedor).
+// Aéreo/terrestre cierran desde Entregado.
+const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
+
 interface Props {
   embarqueId: string;
   estatus: string;
@@ -57,12 +61,14 @@ export function TabCierre({ embarqueId, estatus }: Props) {
   const reabrirMut = useReabrirEmbarque(embarqueId);
   const { canEditFinance, isAdmin, isSuperAdmin } = usePermissions();
 
-  const puedeCerrar = (isAdmin || canEditFinance) && estatus === "entregado";
+  const estatusNormalizado = (estatus ?? "").toLowerCase();
+  const listoParaCierre = ESTADOS_LISTOS_PARA_CIERRE.has(estatusNormalizado);
+  const puedeCerrar = (isAdmin || canEditFinance) && listoParaCierre;
   const puedeReabrir = isSuperAdmin || isAdmin;
 
   const dlg = useCierreDialog();
 
-  const esCerrado = estatus === "cerrado";
+  const esCerrado = estatusNormalizado === "cerrado";
   const checks = validacion?.checks ?? [];
   const todoOk = validacion?.puede_cerrar === true;
 
@@ -77,11 +83,11 @@ export function TabCierre({ embarqueId, estatus }: Props) {
             La comisión devengada se marcó como definitiva.
           </AlertDescription>
         </Alert>
-      ) : estatus !== "entregado" ? (
+      ) : !listoParaCierre ? (
         <Alert>
           <AlertTitle>Aún no se puede cerrar</AlertTitle>
           <AlertDescription>
-            El embarque debe estar en estado <strong>Entregado</strong> para ejecutar el cierre.
+            El embarque debe estar en estado <strong>Entregado</strong> o <strong>EIR</strong> para ejecutar el cierre.
           </AlertDescription>
         </Alert>
       ) : null}

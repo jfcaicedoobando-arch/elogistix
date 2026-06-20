@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.87.4] - 2026-06-20
+- **fix(embarques/cierre) permitir cerrar desde EIR además de Entregado**: el flujo marítimo termina en `EIR` (devolución del contenedor a la naviera), pero `TabCierre` y la RPC `cerrar_embarque` exigían exactamente `Entregado`, dejando atorados los embarques marítimos. Ahora ambos aceptan `Entregado` o `EIR` (aéreo/terrestre siguen cerrando desde `Entregado`, EIR no aplica). Normalización a lowercase en el frontend para tolerar variantes de casing. Tests `TabCierre.rules` agregan el caso EIR.
+
 ## [13.87.3] - 2026-06-20
 - **fix(embarques/conciliación) `supabase.rpc` perdía contexto en `versionado/index.ts`**: el helper `rpc()` retornaba `supabase.rpc` sin bindear, así que al invocarlo el cliente Supabase intentaba leer `this.rest` y rompía con `Cannot read properties of undefined (reading 'rest')`. El tab Conciliación dejaba de cargar al llamar `obtener_costos_cotizacion_version`. Fix: `supabase.rpc.bind(supabase)`. No afecta tipos ni otros consumidores; también arregla `recotizar_cotizacion` y `aceptar_cotizacion_version`.
 
