@@ -3015,12 +3015,14 @@ export type Database = {
           estado: string
           fecha_deposito: string | null
           fecha_liberacion: string | null
+          fecha_limite_devolucion: string | null
           id: string
           monto_deposito_usd: number
           naviera_id: string | null
           notas: string | null
           organization_id: string
           proveedor_factura_id: string | null
+          referencia_deposito: string | null
           tiene_carta_garantia: boolean
           updated_at: string
         }
@@ -3031,12 +3033,14 @@ export type Database = {
           estado?: string
           fecha_deposito?: string | null
           fecha_liberacion?: string | null
+          fecha_limite_devolucion?: string | null
           id?: string
           monto_deposito_usd?: number
           naviera_id?: string | null
           notas?: string | null
           organization_id?: string
           proveedor_factura_id?: string | null
+          referencia_deposito?: string | null
           tiene_carta_garantia?: boolean
           updated_at?: string
         }
@@ -3047,12 +3051,14 @@ export type Database = {
           estado?: string
           fecha_deposito?: string | null
           fecha_liberacion?: string | null
+          fecha_limite_devolucion?: string | null
           id?: string
           monto_deposito_usd?: number
           naviera_id?: string | null
           notas?: string | null
           organization_id?: string
           proveedor_factura_id?: string | null
+          referencia_deposito?: string | null
           tiene_carta_garantia?: boolean
           updated_at?: string
         }
@@ -6403,6 +6409,7 @@ export type Database = {
         Returns: {
           embarques_demora: number
           facturas_vencidas: number
+          garantias_atoradas: number
         }[]
       }
       sincronizar_contenedores_embarque: {
