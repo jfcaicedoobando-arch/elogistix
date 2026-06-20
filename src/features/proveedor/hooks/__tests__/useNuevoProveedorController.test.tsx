@@ -13,14 +13,19 @@ const notifyError = vi.fn();
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
-vi.mock("@/features/proveedor/services", () => ({
-  findProveedorByRfcEnOrg: (...a: unknown[]) => findProveedorByRfcEnOrg(...a),
-  ProveedorDuplicadoError: class ProveedorDuplicadoError extends Error {
-    constructor(public id: string, public nombre: string) {
+vi.mock("@/features/proveedor/services", () => {
+  class ProveedorDuplicadoError extends Error {
+    existente: { id: string; nombre: string };
+    constructor(existente: { id: string; nombre: string }) {
       super("dup");
+      this.existente = existente;
     }
-  },
-}));
+  }
+  return {
+    findProveedorByRfcEnOrg: (...a: unknown[]) => findProveedorByRfcEnOrg(...a),
+    ProveedorDuplicadoError,
+  };
+});
 
 vi.mock("@/hooks/shared", () => ({
   useOrgFilter: () => ({ organizationId: "org-1" }),
