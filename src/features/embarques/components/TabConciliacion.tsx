@@ -14,8 +14,17 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { useReconciliacionEmbarque, type FilaReconciliacion } from "@/features/embarques/hooks";
+import { useEmbarqueTarifaInfo } from "@/features/embarques/hooks/useEmbarqueTarifaInfo";
 import { calcularResumen } from "@/features/embarques/services/reconciliacionCostos";
 import { ReconciliacionTresColumnas } from "@/features/embarques/components/reconciliacion/ReconciliacionTresColumnas";
+
+const DECISION_NICE: Record<string, string> = {
+  sin_cambios: "Sin cambios respecto a la tarifa cotizada",
+  mantenida_por_operaciones: "Mantenida por operaciones (delta absorbido)",
+  refrescada: "Refrescada desde la tarifa vigente",
+  sustituida: "Sustituida por otra tarifa",
+  reaprobada_ventas: "Re-aprobada por ventas",
+};
 
 
 interface Props {
