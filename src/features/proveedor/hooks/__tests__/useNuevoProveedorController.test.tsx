@@ -7,22 +7,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 
-const findProveedorByRfcEnOrg = vi.fn();
-const procesarCsfUpload = vi.fn();
-const notifyError = vi.fn();
+const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError } = vi.hoisted(() => ({
+  findProveedorByRfcEnOrg: vi.fn(),
+  procesarCsfUpload: vi.fn(),
+  notifyError: vi.fn(),
+}));
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 vi.mock("@/features/proveedor/services", () => {
   class ProveedorDuplicadoError extends Error {
-    existente: { id: string; nombre: string };
-    constructor(existente: { id: string; nombre: string }) {
+    existente: { id: string; nombre: string } | null;
+    rfcNormalizado: string;
+    constructor(existente: { id: string; nombre: string } | null, rfcNormalizado: string) {
       super("dup");
       this.existente = existente;
+      this.rfcNormalizado = rfcNormalizado;
     }
   }
   return {
-    findProveedorByRfcEnOrg: (...a: unknown[]) => findProveedorByRfcEnOrg(...a),
+    findProveedorByRfcEnOrg,
     ProveedorDuplicadoError,
   };
 });
@@ -32,7 +36,7 @@ vi.mock("@/hooks/shared", () => ({
 }));
 
 vi.mock("../useNuevoProveedorController.csf", () => ({
-  procesarCsfUpload: (...a: unknown[]) => procesarCsfUpload(...a),
+  procesarCsfUpload,
   mergeCsfPatch: (prev: Record<string, unknown>, patch: Record<string, unknown>) => ({
     ...prev,
     ...patch,
@@ -40,7 +44,7 @@ vi.mock("../useNuevoProveedorController.csf", () => ({
 }));
 
 vi.mock("@/components/shared/utils/appFeedback", () => ({
-  notifyError: (...a: unknown[]) => notifyError(...a),
+  notifyError,
 }));
 
 import { ProveedorDuplicadoError } from "@/features/proveedor/services";
