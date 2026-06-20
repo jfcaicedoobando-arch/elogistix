@@ -15,9 +15,9 @@ import EditarProveedorDialog from "@/features/proveedor/components/EditarProveed
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import EmptyState from "@/components/empty/EmptyState";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
-import { ProveedorOperacionesTable } from "./ProveedorOperacionesTable";
-import { ProveedorCsfUpdateButton } from "./ProveedorCsfUpdateButton";
-import { ProveedorDatosBancariosCard } from "./ProveedorDatosBancariosCard";
+import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
+import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
+import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();

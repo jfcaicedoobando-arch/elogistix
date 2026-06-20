@@ -3,20 +3,20 @@
  * SEO via index.html (defaults) + Helmet (canonical/og:url self-referente + FAQPage JSON-LD).
  */
 import { Seo } from "@/components/seo/Seo";
-import { LandingNav } from "./sections/LandingNav";
-import { LandingHero } from "./sections/LandingHero";
-import { LandingDemo } from "./sections/LandingDemo";
-import { LandingModulos } from "./sections/LandingModulos";
-import { LandingComoFunciona } from "./sections/LandingComoFunciona";
-import { LandingMexico } from "./sections/LandingMexico";
-import { LandingPortal } from "./sections/LandingPortal";
-import { LandingSeguridad } from "./sections/LandingSeguridad";
-import { LandingRecursos } from "./sections/LandingRecursos";
-import { LandingPrecio } from "./sections/LandingPrecio";
-import { LandingFaq } from "./sections/LandingFaq";
-import { LandingCtaFinal } from "./sections/LandingCtaFinal";
-import { LandingFooter } from "./sections/LandingFooter";
-import { MobileStickyCta } from "./sections/MobileStickyCta";
+import { LandingNav } from "../components/sections/LandingNav";
+import { LandingHero } from "../components/sections/LandingHero";
+import { LandingDemo } from "../components/sections/LandingDemo";
+import { LandingModulos } from "../components/sections/LandingModulos";
+import { LandingComoFunciona } from "../components/sections/LandingComoFunciona";
+import { LandingMexico } from "../components/sections/LandingMexico";
+import { LandingPortal } from "../components/sections/LandingPortal";
+import { LandingSeguridad } from "../components/sections/LandingSeguridad";
+import { LandingRecursos } from "../components/sections/LandingRecursos";
+import { LandingPrecio } from "../components/sections/LandingPrecio";
+import { LandingFaq } from "../components/sections/LandingFaq";
+import { LandingCtaFinal } from "../components/sections/LandingCtaFinal";
+import { LandingFooter } from "../components/sections/LandingFooter";
+import { MobileStickyCta } from "../components/sections/MobileStickyCta";
 import { FAQ } from "./landingCopy";
 
 const FAQ_JSONLD = {

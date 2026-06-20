@@ -5,9 +5,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/components/shared/utils/brand";
 import { Seo } from "@/components/seo/Seo";
-import { ForgotPasswordDialog } from "@/pages/auth/ForgotPasswordDialog";
-import { LoginForm } from "@/pages/auth/components/LoginForm";
-import { SignupForm } from "@/pages/auth/components/SignupForm";
+import { ForgotPasswordDialog } from "@/features/auth/components/ForgotPasswordDialog";
+import { LoginForm } from "@/features/auth/components/LoginForm";
+import { SignupForm } from "@/features/auth/components/SignupForm";
 
 type TabKey = "login" | "signup";
 

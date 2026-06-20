@@ -7,16 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NuevoProveedorDialog from "@/features/proveedor/components/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { usePermissions } from "@/hooks/shared";
-import { ProveedorTable } from "./ProveedorTable";
+import { ProveedorTable } from "../components/ProveedorTable";
 import {
   ProveedoresFiltros,
   type CategoriaTab,
   type OrigenFiltro,
   type TipoFiltro,
   type SubtipoFiltro,
-} from "./ProveedoresFiltros";
+} from "../components/ProveedoresFiltros";
 import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
-import { ProveedoresImportDialog } from "./ProveedoresImportDialog";
+import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
 
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
   { value: "todos", label: "Todos" },

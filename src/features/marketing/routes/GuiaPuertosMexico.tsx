@@ -5,8 +5,8 @@
  */
 import { Link } from "react-router-dom";
 import { Seo } from "@/components/seo/Seo";
-import { LandingNav } from "./sections/LandingNav";
-import { LandingFooter } from "./sections/LandingFooter";
+import { LandingNav } from "../components/sections/LandingNav";
+import { LandingFooter } from "../components/sections/LandingFooter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Anchor } from "lucide-react";
 import {
