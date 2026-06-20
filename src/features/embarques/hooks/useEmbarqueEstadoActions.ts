@@ -127,15 +127,21 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       setWarnDocsOpen(true);
       return;
     }
-    // 3) Soft warning de cierre sin proforma (preserva comportamiento previo).
-    if (siguiente === "Cerrado" && conceptosSinProforma > 0) {
-      setWarnCierreOpen(true);
+    // 3) v13.89.1 — Cierre: validación dura por rol y checklist administrativo.
+    if (siguiente === "Cerrado" && bloqueoCierreMotivo !== null) {
+      notifyError(toast, {
+        title: bloqueoCierreMotivo === "rol"
+          ? "Solo administración/finanzas pueden cerrar el embarque"
+          : "Pendientes administrativos. Revisa el Tab Cierre.",
+        method: "GATE_CERRAR_EMBARQUE",
+      });
       return;
     }
     await ejecutarAvance(siguiente);
   };
 
   const confirmarCierreSinProforma = useCallback(async () => {
+    // v13.89.1 — Mantiene compatibilidad de API; el flujo real ya valida server-side.
     setWarnCierreOpen(false);
     await ejecutarAvance("Cerrado");
   }, [ejecutarAvance]);
@@ -145,7 +151,6 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!embarque) return;
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
-    // Si después de docs queda el cierre sin proforma, ejecuta directo (ya advertimos docs).
     await ejecutarAvance(siguiente);
   }, [embarque, ejecutarAvance]);
 
@@ -185,5 +190,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     setBlockDocsOpen,
     confirmarAvanceConDocsPendientes,
     siguienteEstado,
+    // v13.89.1 — Cierre: visibilidad y bloqueo
+    cierreEsSiguiente: cierreVisible,
+    rolPuedeCerrar,
+    cierrePuedeAvanzar: cierreVisible && bloqueoCierreMotivo === null,
+    cierreMotivoBloqueo: bloqueoCierreMotivo,
   };
 }
