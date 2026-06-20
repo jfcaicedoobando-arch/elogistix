@@ -77,10 +77,13 @@ export default defineConfig({
         "src/**/*Columns.{ts,tsx}",
         "src/**/*columns.{ts,tsx}",
         "src/types/**",
-        // 13.85.7 — Páginas son orquestación JSX cubierta por E2E (mem note:
-        // pages = thin orchestration; hooks/services tienen la lógica). Excluirlas
-        // alinea el denominador con la realidad y permite sostener ratchet 35%.
+        // 13.85.7 — Páginas/rutas son orquestación JSX cubierta por E2E
+        // (mem note: pages = thin orchestration; hooks/services tienen la lógica).
+        // Excluirlas alinea el denominador con la realidad y permite sostener
+        // ratchet 35%. Aplica a páginas legadas (src/pages) y a las nuevas
+        // ubicaciones por feature (src/features/*/routes).
         "src/pages/**/*.tsx",
+        "src/features/*/routes/**/*.tsx",
         // Wrappers presentacionales sin lógica testeable unitariamente.
         "src/pdf/render/PdfPreview.tsx",
         "src/pdf/emisor.ts",
