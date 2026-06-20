@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, AlertCircle, RefreshCw } from "lucide-react";
 import type { ResultadoRevalidacion } from "@/lib/domain/revalidacionTarifa";
+import { formatCurrency } from "@/lib/formatters";
 
 interface Props {
   open: boolean;
@@ -24,14 +25,8 @@ interface Props {
   loading?: boolean;
 }
 
-function formatMoney(n: number | null, moneda: "USD" | "MXN") {
-  if (n == null) return "—";
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: moneda,
-    minimumFractionDigits: 2,
-  }).format(n);
-}
+const fmtMoney = (n: number | null, moneda: "USD" | "MXN"): string =>
+  n == null ? "—" : formatCurrency(n, moneda);
 
 export function RevalidarTarifaModal({
   open, onOpenChange, resultado,
