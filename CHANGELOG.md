@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.77.0] - 2026-06-20
+- **refactor(estructura) Paso 4 auditoría**: adelgazado `src/lib/` moviendo dominios específicos a sus features. `lib/facturacion/{huecoCsv,proyeccionCsv}.ts` → `features/facturacion/domain/`, `lib/operaciones/desempenoChart.ts` → `features/operaciones/domain/`, `lib/contacto/index.ts` → `features/cliente/domain/contacto.ts`. Tests movidos junto a sus módulos. Imports reescritos (`@/lib/<x>` → `@/features/<x>/domain/<x>`) en 5 hooks + 1 mapper. Carpetas `src/lib/{facturacion,operaciones,contacto}/` eliminadas. Verificado: 71/71 tests verdes en los dominios reubicados.
+
 ## [13.76.0] - 2026-06-20
 - **refactor(estructura) Paso 3 auditoría**: movidos los servicios de dominio fuera de `src/services/` hacia sus features correspondientes. `pagos-factura/` → `src/features/facturacion/services/pagos/`, `csf/` → `src/features/cliente/services/csf/`, `planes/` → `src/features/admin/services/planes/`. Actualizados todos los imports (`@/services/<x>` → `@/features/<feature>/services/<x>`) en hooks, páginas, tests y edge functions. `src/services/` queda solo con servicios transversales (auth, bitácora, search, storage, tracking, organization, notificaciones, observability, demoAccess, demoMode, usuario, unsubscribeService). Verificado: 8/8 archivos de test (33/33 tests) verdes; auditoría arquitectónica sin nuevos hallazgos.
 
