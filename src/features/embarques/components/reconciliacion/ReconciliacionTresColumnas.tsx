@@ -21,26 +21,9 @@ import {
 } from "@/components/ui/tooltip";
 import { useReconciliacion3Columnas } from "@/features/embarques/hooks/useReconciliacion3Columnas";
 import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbralesReconciliacion";
-import type {
-  ClasificacionVarianza,
-  FilaReconciliacion3C,
-} from "@/lib/domain/versionadoCotizacion";
-
-const fmt = (n: number, moneda: string) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: moneda || "USD" }).format(n);
-
-const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
-
-function colorPorClasificacion(c: ClasificacionVarianza): string {
-  switch (c) {
-    case "critica":
-      return "bg-destructive/10 text-destructive";
-    case "alerta":
-      return "bg-warning/10 text-warning-foreground";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-}
+import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
+import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
+import { ResumenReconciliacion } from "./ResumenReconciliacion";
 
 interface Props {
   embarqueId: string;
@@ -169,34 +152,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
           </TableBody>
         </Table>
 
-        <div className="rounded-md border p-3 text-sm">
-          <div className="flex justify-between">
-            <span>Total cotizado:</span>
-            <span>{fmt(data.resumen.total_cotizado, "USD")}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Total refrescado:</span>
-            <span>{fmt(data.resumen.total_refrescado, "USD")}</span>
-          </div>
-          <div className="flex justify-between font-semibold">
-            <span>Total real:</span>
-            <span>{fmt(data.resumen.total_real, "USD")}</span>
-          </div>
-          <div className="flex justify-between mt-1">
-            <span>Δ Cot. vs Real:</span>
-            <span>
-              {pct(data.resumen.delta_cot_vs_real.pct)}{" "}
-              <Badge className={colorPorClasificacion(data.resumen.clasificacion)}>
-                {data.resumen.clasificacion}
-              </Badge>
-            </span>
-          </div>
-          {data.version_aceptada != null && (
-            <div className="text-xs text-muted-foreground mt-2">
-              Versión cotizada aceptada: v{data.version_aceptada}
-            </div>
-          )}
-        </div>
+        <ResumenReconciliacion resumen={data.resumen} versionAceptada={data.version_aceptada} />
       </div>
     </TooltipProvider>
   );
