@@ -65,9 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
     const cb = () => {
       void import("@/features/embarques/routes/Embarques");
-      void import("@/pages/cotizaciones/Cotizaciones");
+      void import("@/features/cotizacion/routes/Cotizaciones");
       void import("@/pages/dashboard/Dashboard");
-      void import("@/pages/clientes/Clientes");
+      void import("@/features/cliente/routes/Clientes");
       void import("@/pages/proveedores/Proveedores");
       void import("@/features/facturacion/routes/Facturacion");
     };
