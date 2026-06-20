@@ -55,6 +55,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const eliminarProforma = useEliminarProforma();
   const { descargar: descargarProformaPdf } = useDescargarProformaPdf();
   const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
+  const { registerRef } = useFocusSection();
 
   const conceptosPendientes = useMemo(
     () => conceptos.filter(c => c.estado_facturacion !== 'en_proforma'),
