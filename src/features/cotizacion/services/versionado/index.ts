@@ -35,7 +35,9 @@ type RpcCaller = (fn: string, args: Record<string, unknown>) => Promise<RpcResp>
 
 function rpc(): RpcCaller {
   // SAFE-CAST: las RPCs nuevas (Fase 2) aún no están en los tipos generados.
-  return supabase.rpc as unknown as RpcCaller;
+  // .bind(supabase) preserva el contexto `this` (de lo contrario el cliente
+  // intenta leer `this.rest` y truena con "Cannot read properties of undefined").
+  return supabase.rpc.bind(supabase) as unknown as RpcCaller;
 }
 
 export async function recotizarCotizacion(
