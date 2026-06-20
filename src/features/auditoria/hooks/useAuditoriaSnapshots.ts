@@ -11,7 +11,7 @@ import {
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 
 
 export function useAuditoriaSnapshots(dias = 30) {

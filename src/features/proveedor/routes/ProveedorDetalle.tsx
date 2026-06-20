@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import {
   ArrowLeft, Truck, Pencil, Trash2, PackageX, MoreHorizontal,
 } from "lucide-react";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";

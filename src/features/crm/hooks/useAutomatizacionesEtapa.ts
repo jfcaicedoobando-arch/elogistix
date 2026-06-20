@@ -3,7 +3,7 @@
  * I/O y orquestación en `services/crm/automatizacionesEtapa`.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 import { moverEtapaOportunidad } from "@/features/crm/services/oportunidades";

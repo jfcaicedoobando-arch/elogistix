@@ -9,7 +9,7 @@ import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/f
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
 import { getRoleLabel } from "@/components/shared/utils/uiMappings";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";

@@ -11,7 +11,7 @@ import {
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { useConceptosForm } from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";

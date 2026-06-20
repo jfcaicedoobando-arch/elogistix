@@ -81,14 +81,14 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
     // Mantener mínimo; preferir crear un servicio en src/services/.
     const WHITELIST = new Set<string>([
       // Auth core — el cliente es parte del contrato de auth.
-      "src/contexts/auth/useAuthSession.ts",
-      "src/contexts/auth/useAuthProfile.ts",
-      "src/contexts/AuthContext.tsx",
+      "src/lib/contexts/auth/useAuthSession.ts",
+      "src/lib/contexts/auth/useAuthProfile.ts",
+      "src/lib/contexts/AuthContext.tsx",
     ]);
     const pattern = /from\s+["']@\/integrations\/supabase\/client["']/;
     const all = [
       ...walk("src/hooks"),
-      ...walk("src/contexts"),
+      ...walk("src/lib/contexts"),
       ...featureSubdirs("hooks").flatMap((d) => walk(d)),
     ];
     const violators = all.filter((f) => {
@@ -106,7 +106,7 @@ describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () 
   // fuera de src/lib y src/test. Permitido si la misma línea o la inmediata
   // anterior incluye el marcador `// SAFE-CAST:` (ver mem://principles/safe-cast).
   it("no hay `as unknown as` sin marcador SAFE-CAST fuera de src/lib y src/test", () => {
-    const roots = ["src/components", "src/hooks", "src/services", "src/pages", "src/contexts", "src/features"];
+    const roots = ["src/components", "src/hooks", "src/services", "src/pages", "src/lib/contexts", "src/features"];
     const offenders: string[] = [];
     for (const root of roots) {
       let files: string[] = [];

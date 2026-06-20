@@ -17,7 +17,7 @@ import { EmbarqueDetalleHeader } from "@/features/embarques/components/EmbarqueD
 import { EmbarqueDetalleTabs } from "@/features/embarques/components/EmbarqueDetalleTabs";
 import { LoadingState, NotFoundState } from "./EmbarqueDetalleStates";
 
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 // v13.66.15: reordenadas por flujo (operación → finanzas → cierre → bitácora)
 // y fusionadas (P&L+P&L Contenedor, Garantías+Demoras).

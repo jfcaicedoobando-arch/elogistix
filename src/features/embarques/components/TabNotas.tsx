@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Send, MessageSquare, Activity, History } from "lucide-react";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
 import { useCreateNotaEmbarque, useEventosEmbarque, useActividadEmbarque } from "@/features/embarques/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";

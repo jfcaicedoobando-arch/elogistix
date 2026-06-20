@@ -8,7 +8,7 @@ import { OrgMembersCard } from "@/features/admin/components/orgDetalle/OrgMember
 import { OrgConfigCard } from "@/features/admin/components/orgDetalle/OrgConfigCard";
 import { useAdminOrgDetalle } from "@/features/admin/hooks";
 
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();

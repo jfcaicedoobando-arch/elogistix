@@ -12,7 +12,7 @@ vi.mock("@/features/crm/services/leads", () => ({
   bulkCreateLeads,
 }));
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "user-1" } }),
 }));
 

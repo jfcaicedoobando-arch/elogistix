@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {

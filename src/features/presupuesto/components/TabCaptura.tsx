@@ -7,8 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   usePresupuestoCategorias,
   usePresupuestoMensualAnio,

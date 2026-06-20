@@ -16,7 +16,7 @@ import {
 } from "@/features/cliente/components/detalle/ClienteDetalleHeader";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { useClienteDetalleController } from "@/features/cliente/hooks";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();

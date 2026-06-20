@@ -2,7 +2,7 @@
  * Baseline de violaciones arquitectónicas.
  *
  * Complementa `architecture.test.ts` (que sólo cubre lib/ y services/) con
- * un control NO-REGRESSION sobre `src/hooks/**` y `src/contexts/**`:
+ * un control NO-REGRESSION sobre `src/hooks/** y src/lib/contexts/**`:
  * éstos no deberían importar `@/integrations/supabase/client` directamente
  * (Pages → Hooks → **Services** → Lib).
  *
@@ -71,7 +71,7 @@ function findCurrentViolators(roots: string[]): Set<string> {
 }
 
 describe("Arquitectura — baseline de imports directos a supabase/client", () => {
-  const current = findCurrentViolators(["src/hooks", "src/contexts"]);
+  const current = findCurrentViolators(["src/hooks", "src/lib/contexts"]);
 
   it("hooks/ y contexts/ no introducen NUEVOS imports directos al cliente Supabase", () => {
     const nuevos = [...current].filter((f) => !BASELINE.has(f)).sort();

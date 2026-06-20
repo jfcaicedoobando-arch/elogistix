@@ -4,7 +4,7 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEditarEmbarqueWizard } from "../useEditarEmbarqueWizard";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { email: "test@example.com" } }),
 }));
 

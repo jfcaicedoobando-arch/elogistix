@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { deleteAuditoriaRevision } from "@/features/auditoria/services";
 import { insertBitacora } from "@/features/auditoria/services/bitacora";
 import { logger } from "@/lib/observability/logger";

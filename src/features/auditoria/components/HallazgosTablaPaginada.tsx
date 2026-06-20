@@ -4,7 +4,7 @@
  * El estado vive en `useHallazgosTablaState`.
  */
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { revisionKey } from "@/features/auditoria/hooks";
 import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
 import { MarcarRevisadoDialog } from "@/features/auditoria/components/MarcarRevisadoDialog";

@@ -4,7 +4,7 @@ import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacion, useUpdateCotizacion } from "@/features/cotizacion/hooks";
 import { useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 import CotizacionWizardLayout from "@/features/cotizacion/components/CotizacionWizardLayout";
 

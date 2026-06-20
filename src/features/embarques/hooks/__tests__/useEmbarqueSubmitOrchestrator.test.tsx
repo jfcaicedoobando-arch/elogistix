@@ -10,7 +10,7 @@ const { createEmbarqueMock, resolverExpedienteMock, subirDocsMock } = vi.hoisted
   subirDocsMock: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { email: "test@example.com" } }),
 }));
 

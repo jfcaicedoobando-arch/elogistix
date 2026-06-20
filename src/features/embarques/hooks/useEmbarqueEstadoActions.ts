@@ -1,5 +1,5 @@
 import { useToast } from "@/hooks/shared";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";

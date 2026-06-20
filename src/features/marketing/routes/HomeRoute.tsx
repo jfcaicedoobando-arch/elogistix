@@ -7,7 +7,7 @@
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { lazy, Suspense } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 const Landing = lazy(() => import("./Landing"));
 

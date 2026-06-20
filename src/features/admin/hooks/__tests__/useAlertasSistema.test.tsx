@@ -4,7 +4,7 @@ import { useAlertasPendingCount, useAlertasSistemaList, useAcknowledgeAlerta } f
 import { createWrapper } from "@/test/utils/queryWrapper";
 import * as adminService from "@/features/admin/services";
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: vi.fn(() => ({ user: { id: "test-user" }, role: "super_admin" })),
 }));
 

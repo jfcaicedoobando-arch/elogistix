@@ -6,11 +6,11 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useOrgFilter } from "../useOrgFilter";
 
-vi.mock("@/contexts/OrganizationContext", () => ({
+vi.mock("@/lib/contexts/OrganizationContext", () => ({
   useOrganization: vi.fn(),
 }));
 
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 
 const useOrganizationMock = vi.mocked(useOrganization);
 

@@ -10,7 +10,7 @@ import { useEnvioCotizacionForm } from "@/features/cotizacion/hooks/useEnvioCoti
 import { useEnviarCotizacionEmail, type EnvioRow } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import { DestinatariosPicker } from "@/features/cotizacion/components/detalle/DestinatariosPicker";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 
 interface Props {

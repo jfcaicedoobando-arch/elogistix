@@ -13,7 +13,7 @@ import PortalCotizacionEstadoBanner from "@/features/portal/components/cotizacio
 import PortalCotizacionConfirmDialog from "@/features/portal/components/cotizacion/PortalCotizacionConfirmDialog";
 import DatosGeneralesCard from "@/features/portal/components/cotizacion/DatosGeneralesCard";
 
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();

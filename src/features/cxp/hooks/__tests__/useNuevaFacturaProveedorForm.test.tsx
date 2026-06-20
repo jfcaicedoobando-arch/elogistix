@@ -23,7 +23,7 @@ vi.mock("sonner", () => ({
     warning: (...a: unknown[]) => toastWarning(...a),
   },
 }));
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "u-1" } }),
 }));
 vi.mock("@/hooks/shared", () => ({

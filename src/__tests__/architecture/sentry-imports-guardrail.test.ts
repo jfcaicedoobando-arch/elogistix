@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
-const SCOPES = ["src/components", "src/pages", "src/contexts", "src/lib"];
+const SCOPES = ["src/components", "src/pages", "src/lib"];
 
 /** Archivos donde el import estático de @sentry/* es intencional y aceptado.
  *  Debe mantenerse sincronizado con la allowlist del bloque

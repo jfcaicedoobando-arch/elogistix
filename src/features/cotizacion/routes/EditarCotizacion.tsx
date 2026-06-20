@@ -5,14 +5,14 @@ import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/features/cotizacion/hooks";
 import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
 import { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 import CotizacionWizardLayout from "@/features/cotizacion/components/CotizacionWizardLayout";
 import type { NavigateFunction } from "react-router-dom";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks";
-import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
 export default function EditarCotizacion() {
   const { id } = useParams<{ id: string }>();

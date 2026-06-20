@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { APP_VERSION } from "@/constants/appVersion";
-import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { toast } from "@/hooks/shared";
 import { useSentryInfo, maskDsn } from "@/lib/observability/hooks";
 

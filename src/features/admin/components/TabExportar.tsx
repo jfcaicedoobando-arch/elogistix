@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Download, Loader2, FileArchive } from "lucide-react";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { exportOrganizationZip, EXPORT_TABLES, type ExportProgress } from "@/features/admin/services";
 import { toast } from "sonner";
 

@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import type { AppRole } from "@/types/appRole";
 import { anyRoleSatisfies } from "@/lib/auth/roleHierarchy";

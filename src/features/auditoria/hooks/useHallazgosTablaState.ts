@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useAuditoriaRevisiones } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,

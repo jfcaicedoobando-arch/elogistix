@@ -2,9 +2,9 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App.tsx";
 import "./index.css";
-import { AuthProvider } from "./contexts/AuthContext";
-import { OrganizationProvider } from "./contexts/OrganizationContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { AuthProvider } from "./lib/contexts/AuthContext";
+import { OrganizationProvider } from "./lib/contexts/OrganizationContext";
+import { ThemeProvider } from "./lib/contexts/ThemeContext";
 import { APP_VERSION } from "./constants/appVersion";
 import {
   clearChunkReloadFlag,
