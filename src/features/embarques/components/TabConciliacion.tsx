@@ -15,6 +15,8 @@ import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { useReconciliacionEmbarque, type FilaReconciliacion } from "@/features/embarques/hooks";
 import { calcularResumen } from "@/features/embarques/services/reconciliacionCostos";
+import { ReconciliacionTresColumnas } from "@/features/embarques/components/reconciliacion/ReconciliacionTresColumnas";
+
 
 interface Props {
   embarqueId: string;
