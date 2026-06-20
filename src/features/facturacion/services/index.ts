@@ -27,4 +27,11 @@ export type { FilaHueco, HuecoFacturacionResult } from "./huecoFacturacion";
 export { fetchHuecoFacturacion } from "./huecoFacturacion";
 export { fetchProyeccionMes } from "./proyeccion";
 export type { ProyeccionMesParams } from "./proyeccion";
+export { fetchFacturasParaZip, marcarFacturasComoEnviadas } from "./masivas";
+export type { FacturaParaZip } from "./masivas";
+export {
+  fetchClienteFiscal,
+  actualizarDatosTimbradoFactura,
+} from "./datosFiscalesCliente";
+export type { ClienteFiscalRow, DatosTimbradoPatch } from "./datosFiscalesCliente";
 export * from "./cobranza";
