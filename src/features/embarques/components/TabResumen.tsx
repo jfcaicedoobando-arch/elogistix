@@ -3,6 +3,7 @@ import { toTitleCase } from "@/lib/formatters";
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
+import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
