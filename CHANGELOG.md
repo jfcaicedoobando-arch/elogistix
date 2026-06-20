@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.85.0] - 2026-06-20
+- **refactor(admin) español en verbos mixtos (Paso 9, subset conservador)**: tras auditar consumidores reales (30+ archivos, 6 tests), se renombraron los 3 identificadores con mezcla más jarring de verbo inglés + sustantivo español. `acknowledgeAlerta` → `reconocerAlerta` (`features/admin/services/observability.ts` + 3 consumers). `setOrganizationActivo` → `establecerOrganizacionActiva` (`features/admin/services/organizations.ts` + 2 tests). `getRoleLabel` → `obtenerEtiquetaRol` (`features/admin/domain/roles/roleCatalog.ts` + 7 consumers incluyendo el re-export legacy en `lib/ui/uiMappings.ts`). Sin cambios funcionales. Tests: 160/160 verdes. **Deuda explícita registrada como no-se-hace**: renombre masivo de tipos/interfaces (`AdminOrgStats`, `OrgRow`, `OrganizationRow`, `GlobalUserRow`, etc.) y campos (`totalOrgs`, `totalUsers`) se descartó: tocaría 30+ archivos y 6 test files por estética; además `OrgRow` y `OrganizationRow` no son duplicados (shapes distintos: uno con `created_at` para CRUD admin, otro con `logo_url` para listado activo). Cierra auditoría arquitectónica.
+
 ## [13.84.2] - 2026-06-20
 - **refactor(embarques) helper puro para celda de contenedores (Paso 10B)**: extraída la derivación de estado de `ContenedorCell` (count, primero, incompletos, blFalta, pendientes, pendientesTitle) a `features/embarques/utils/estadoContenedorCell.ts`. El componente queda como vista fina sobre la función pura. Nuevos tests cubren BL Master en blanco/whitespace, modo Aéreo (no aplica BL), `legacyCount` como fallback y happy path.
 
