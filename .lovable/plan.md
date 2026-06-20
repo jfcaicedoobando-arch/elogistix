@@ -1,187 +1,193 @@
-
-# Revalidación de tarifa cotización → embarque
+# Fase 2 — Versionado de Cotizaciones y Reconciliación a 3 Columnas
 
 ## Objetivo
 
-Hacer del **embarque la fuente de verdad de costos**, manteniendo el **precio al cliente inmutable** salvo re-aprobación explícita de ventas. Al convertir una cotización aceptada en embarque, el sistema revalida la tarifa vinculada contra `costeo_tarifas_vigentes_v` y decide entre conversión directa, modal informativo o bloqueo con re-aprobación.
-
-## Fases
-
-Implementación dividida en 2 fases. Esta entrega cubre **Fase 1** completa. Fase 2 (versionado de cotizaciones + reconciliación a 3 columnas) queda esbozada al final como follow-up.
-
----
-
-## Fase 1 — Revalidación + trazabilidad (este plan)
-
-### 1. Base de datos (migración)
-
-Nueva migración con:
-
-- **Columnas en `embarques`**:
-  - `tarifa_id_original UUID` (FK `costeo_tarifas` ON DELETE SET NULL)
-  - `tarifa_id_aplicada UUID` (FK `costeo_tarifas` ON DELETE SET NULL)
-  - `tarifa_delta_jsonb JSONB` (snapshot del delta detectado)
-  - `tarifa_decision TEXT` con CHECK in (`sin_cambios`, `mantenida_por_operaciones`, `refrescada`, `sustituida`, `reaprobada_ventas`)
-  - `tarifa_revalidada_en TIMESTAMPTZ`
-  - `tarifa_revalidada_por UUID` (FK `auth.users`)
-
-- **Columnas en `cotizaciones`**:
-  - `estado_revalidacion TEXT` con CHECK in (`ninguna`, `pendiente_reaprobacion`, `reaprobada`, `rechazada`)
-  - `revalidacion_solicitada_en TIMESTAMPTZ`
-  - `revalidacion_resuelta_en TIMESTAMPTZ`
-
-- **Configuración** (rows en `configuracion`, categoría `operaciones`):
-  - `tarifa_revalidacion_umbral_pct` (default `5`)
-  - `tarifa_revalidacion_bloquea_si_vencida` (default `true`)
-
-- **RPC `revalidar_tarifa_cotizacion(p_cotizacion_id UUID)`** SECURITY DEFINER, org-scoped:
-  - Lee `cotizaciones.tarifa_id` + costos asociados.
-  - Consulta `costeo_tarifas_vigentes_v` y `costeo_tarifa_recargos` actuales.
-  - Devuelve JSON con: `tarifa_vigente` (bool), `cambios[]` (concepto, monto anterior/actual, delta absoluto y %), `severidad` (`sin_cambios` | `informativa` | `bloqueante`), `agente_sin_cupo` (bool).
-
-- **RPC `crear_embarque_borrador_desde_cotizacion` actualizada** para aceptar `p_decision TEXT` y `p_tarifa_id_aplicada UUID` opcionales y persistirlos en el embarque junto con `tarifa_delta_jsonb`.
-
-- **Trigger / función** que cuando `tarifa_decision = 'reaprobada_ventas'` inserta en `notificaciones_internas` un aviso al `cotizaciones.operador`.
-
-### 2. Servicios (TypeScript)
-
-- `src/features/cotizacion/services/revalidacion/index.ts`:
-  - `revalidarTarifa(cotizacionId: string): Promise<ResultadoRevalidacion>` — invoca RPC.
-  - `solicitarReaprobacionVentas(cotizacionId, delta)` — marca `estado_revalidacion = pendiente_reaprobacion`, crea bitácora.
-  - `resolverReaprobacion(cotizacionId, decision: 'reaprobada' | 'rechazada')` — actualiza estado + bitácora.
-
-- `src/features/cotizacion/services/conversiones/embarques.ts` (modificado): antes de llamar a la RPC, ejecuta `revalidarTarifa` y propaga el `ResultadoRevalidacion` al caller. Si `severidad === 'bloqueante'` y no hay decisión previa, lanza error tipado `RevalidacionRequeridaError` que la UI captura.
-
-- `src/lib/domain/revalidacionTarifa.ts` (puro, testeable):
-  - `clasificarSeveridad(cambios, umbralPct, vencida, bloqueaSiVencida)` → `'sin_cambios' | 'informativa' | 'bloqueante'`.
-  - `calcularDeltaPct(anterior, actual)`.
-  - `resumirDelta(cambios)` para bitácora.
-
-### 3. Hooks
-
-- `useRevalidarTarifa(cotizacionId)` — query con `staleTime` 0, no-auto-refetch.
-- `useCrearEmbarqueBorrador` (existente) extendido para aceptar `decision` y `tarifaIdAplicada`.
-- `useSolicitarReaprobacion`, `useResolverReaprobacion` — mutations con `notifyError/notifySuccess` y bitácora.
-
-### 4. UI
-
-- **`RevalidarTarifaModal.tsx`** (`src/features/cotizacion/components/revalidacion/`):
-  - 3 modos según severidad: sin cambios (auto-cierra), informativa (tabla de deltas + botones Mantener/Refrescar), bloqueante (mensaje + botón Solicitar re-aprobación).
-  - Tabla con concepto, monto cotización, monto vigente, delta MXN/USD, delta %.
-
-- **Integración en botones "Crear embarque"** (`CotizacionDetalle.tsx` y lista de cotizaciones): interceptan click, abren modal si revalidación lo requiere.
-
-- **Banner en `CotizacionDetalle.tsx`** cuando `estado_revalidacion = 'pendiente_reaprobacion'`: muestra delta y acciones para ventas (re-aprobar manteniendo precio cliente / re-cotizar / rechazar).
-
-- **Badge en lista de cotizaciones**: chip "Tarifa vencida" / "Pendiente re-aprobación".
-
-- **Sección "Origen de costos" en `EmbarqueDetalle.tsx`**: muestra `tarifa_decision`, link a tarifa original/aplicada, render del `tarifa_delta_jsonb` colapsable.
-
-### 5. Bitácora
-
-Todas las acciones (`revalidacion_detectada`, `tarifa_refrescada`, `tarifa_mantenida`, `reaprobacion_solicitada`, `reaprobacion_resuelta`) se registran vía `insertBitacora` con módulo `cotizaciones` o `embarques` y `detalles` con el delta resumido.
-
-### 6. Configuración
-
-Card nuevo en `/admin/configuracion` → categoría "Operaciones": editor de umbral % (slider 0-50) y switch "Bloquear si tarifa vencida". Schema Zod en `configSchemas.ts`.
-
----
-
-## Tests
-
-### Unit (Vitest)
-
-- `src/lib/domain/__tests__/revalidacionTarifa.test.ts`
-  - `clasificarSeveridad`: matriz (vencida sí/no × delta < / = / > umbral × bloqueaSiVencida sí/no).
-  - `calcularDeltaPct`: edge cases (anterior = 0, signos).
-  - `resumirDelta`: agrupa por moneda, orden estable.
-
-- `src/features/cotizacion/services/revalidacion/__tests__/index.test.ts`
-  - Mock supabase chain: rpc devuelve OK, error, payload mal formado.
-  - `solicitarReaprobacionVentas` escribe en `cotizaciones`, `bitacora_actividad` y `notificaciones_internas` (verifica payloads).
-  - `resolverReaprobacion` rechaza si estado != `pendiente_reaprobacion`.
-
-- `src/features/cotizacion/services/conversiones/__tests__/embarques.test.ts` (extiende existente)
-  - Caso `severidad = sin_cambios` → conversión directa.
-  - Caso `informativa` sin decisión → lanza `RevalidacionRequeridaError`.
-  - Caso `bloqueante` sin reaprobación → lanza.
-  - Caso `reaprobada_ventas` → RPC recibe `p_decision` y `p_tarifa_id_aplicada` correctos.
-
-- `src/features/cotizacion/hooks/__tests__/useRevalidarTarifa.test.tsx`
-  - Estado loading, success con cada severidad, error.
-
-- `src/features/cotizacion/components/revalidacion/__tests__/RevalidarTarifaModal.test.tsx`
-  - Render por severidad, botones disparan callback correcto, accesibilidad básica (roles, labels), cleanup tras cerrar.
-
-### Architecture
-
-- `src/__tests__/architecture/revalidacion-tarifa.test.ts`
-  - `services/revalidacion` no importa de `components/`.
-  - `RevalidarTarifaModal` no llama a `supabase` directo.
-  - RPC `revalidar_tarifa_cotizacion` mencionada en exactamente un servicio.
-
-### E2E (Playwright)
-
-- `e2e/specs/08-revalidacion-tarifa.spec.ts`
-  - Login → cotización con tarifa vigente → crear embarque → no aparece modal.
-  - Cotización con tarifa expirada → aparece modal bloqueante → solicitar re-aprobación → banner en detalle → ventas re-aprueba → permite crear embarque → verifica `tarifa_decision = reaprobada_ventas` en UI de embarque.
-  - Caso delta informativo → operación elige "Refrescar" → embarque queda con `tarifa_decision = refrescada` y `conceptos_costo` reflejan precios nuevos.
-
-### Canary
-
-- `src/test/canaries/revalidacionTarifaContract.test.ts` — schema Zod del payload de la RPC; falla si la BD agrega/quita campos sin actualizar el contrato TS.
-
----
-
-## Versionado y memoria
-
-- `APP_VERSION` → `13.70.0`.
-- `CHANGELOG.md`: nueva entrada `## [13.70.0] - 2026-06-19` con bullets de revalidación, modal, re-aprobación, trazabilidad, tests.
-- Nueva memoria `mem://features/revalidacion-tarifa-embarque` + entrada en `mem://index.md`.
-
----
-
-## Fuera de alcance (Fase 2, follow-up)
-
-- Versionado de `cotizacion_costos` con tabla histórica.
-- `cotizaciones.version` y `version_aceptada`.
-- Tab de reconciliación a 3 columnas (cotizado / refrescado / real).
-- Emails transaccionales al cliente cuando ventas re-aprueba con cambio de precio.
-
----
-
-## Detalles técnicos relevantes
+Cuando ventas re-cotiza una propuesta ya aceptada (o la operativa refresca tarifa), preservar el histórico de lo cotizado y permitir comparar **3 columnas** en reconciliación:
 
 ```text
-Flujo:
-  [Crear embarque] → revalidarTarifa(RPC)
-        ├─ sin_cambios     → RPC crear_embarque (p_decision='sin_cambios')
-        ├─ informativa     → Modal → operaciones elige
-        │     ├─ Mantener  → RPC (decision='mantenida_por_operaciones')
-        │     └─ Refrescar → RPC (decision='refrescada', tarifa_id_aplicada=vigente)
-        └─ bloqueante      → Modal → solicitar re-aprobación
-                              └─ notif interna a ventas
-                                    └─ ventas re-aprueba en banner
-                                          └─ RPC (decision='reaprobada_ventas')
+┌─────────────┬───────────────────────┬─────────────┐
+│  Cotizado   │  Refrescado al crear  │    Real     │
+│ (aceptado)  │      embarque         │ (facturado) │
+└─────────────┴───────────────────────┴─────────────┘
 ```
 
-Tipo TS principal:
+`cotizacion_costos` y `conceptos_venta` permanecen **inmutables** una vez aceptada la cotización: cualquier cambio crea una nueva versión.
 
-```ts
-interface ResultadoRevalidacion {
-  tarifa_vigente: boolean;
-  agente_sin_cupo: boolean;
-  severidad: 'sin_cambios' | 'informativa' | 'bloqueante';
-  cambios: Array<{
-    concepto: string;
-    moneda: 'USD' | 'MXN';
-    monto_anterior: number;
-    monto_actual: number;
-    delta_abs: number;
-    delta_pct: number;
-  }>;
-  umbral_pct: number;
-}
+---
+
+## 1. Base de datos (migración única)
+
+### 1.1 Versionado en `cotizaciones`
+
+```sql
+ALTER TABLE cotizaciones
+  ADD COLUMN version INT NOT NULL DEFAULT 1,
+  ADD COLUMN version_aceptada INT NULL,
+  ADD COLUMN aceptada_en TIMESTAMPTZ NULL,
+  ADD COLUMN aceptada_por UUID NULL REFERENCES auth.users(id);
 ```
 
-¿Apruebas para implementar Fase 1 completa con todos los tests?
+### 1.2 Tablas históricas (espejo + version)
+
+- `cotizacion_costos_historico` — espejo completo de `cotizacion_costos` + `cotizacion_id`, `version`, `archivada_en`, `archivada_por`.
+- `conceptos_venta_historico` — espejo completo de `conceptos_venta` + `version`, `archivada_en`, `archivada_por`.
+- `cotizacion_envios_historico` (opcional) — para auditar el PDF enviado por versión.
+
+RLS por `organization_id` heredado, GRANT `authenticated` y `service_role`.
+
+### 1.3 Trigger de versionado
+
+`fn_archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text)`:
+1. Copia filas vivas de `cotizacion_costos` y `conceptos_venta` a sus históricos con `version = cotizaciones.version`.
+2. Incrementa `cotizaciones.version`.
+3. Limpia tablas vivas (las nuevas filas se insertan después por el flujo de re-cotización).
+4. Registra bitácora `cotizacion.versionada`.
+
+Se invoca desde:
+- RPC `recotizar_cotizacion(p_cotizacion_id, p_motivo)` — uso explícito de ventas.
+- RPC `aceptar_cotizacion(p_cotizacion_id)` — fija `version_aceptada = version` y `aceptada_en/por`.
+
+### 1.4 RPC de lectura
+
+`obtener_cotizacion_version(p_cotizacion_id uuid, p_version int default null)`
+- `version = null` → última activa.
+- `version = version_aceptada` → la "verdad" para reconciliación.
+- Devuelve costos + conceptos de venta de esa versión (mezclando vivas e históricas).
+
+### 1.5 Reconciliación 3 columnas
+
+Vista `vw_reconciliacion_embarque` (o RPC) que entrega por embarque/concepto:
+- `cotizado` ← `cotizacion_costos_historico` filtrado por `cotizaciones.version_aceptada`.
+- `refrescado` ← `embarques.tarifa_delta_jsonb` aplicado sobre cotizado (de Fase 1).
+- `real` ← `conceptos_costo` actuales.
+- Deltas absolutos y porcentuales para cada par.
+
+---
+
+## 2. Servicios y dominio (TypeScript)
+
+- `src/lib/domain/versionadoCotizacion.ts`
+  - `calcularDeltaCotizadoVsReal(cotizado, real)`
+  - `calcularDeltaTresColumnas(cotizado, refrescado, real)`
+  - `clasificarVarianza(deltaPct)` → `dentro_rango` | `alerta` | `critica` (umbrales en `configuracion_global`).
+- `src/features/cotizacion/services/versionado/index.ts`
+  - `recotizarCotizacion(id, motivo)` → llama RPC, invalida queries.
+  - `aceptarCotizacion(id)` → fija versión aceptada.
+  - `obtenerVersionCotizacion(id, version?)`.
+- `src/features/embarques/services/reconciliacion.ts`
+  - `obtenerReconciliacion3Columnas(embarqueId)`.
+
+Errores tipados: `CotizacionYaAceptadaError`, `VersionNoEncontradaError`.
+
+---
+
+## 3. Hooks
+
+- `useRecotizarCotizacion`
+- `useAceptarCotizacion` (extiende el existente para fijar versión)
+- `useVersionCotizacion(id, version?)`
+- `useReconciliacion3Columnas(embarqueId)`
+- `useHistorialVersiones(cotizacionId)` — lista versiones con metadatos.
+
+---
+
+## 4. UI
+
+### 4.1 Cotización
+- Botón "Re-cotizar" en `CotizacionDetalle` (sólo si `estado = aceptada` y rol ventas). Modal pide motivo, confirma con tipear `RECOTIZAR`.
+- Selector de versión en header: "Versión 2 (activa) · Aceptada: v1".
+- Badge "Histórica" cuando se ve una versión anterior, todo en read-only.
+- Tab "Historial de versiones" con diff resumido.
+
+### 4.2 Embarque
+- Nueva tab "Reconciliación" (o sección en la actual) con tabla 3 columnas:
+
+```text
+Concepto      Cotizado    Refrescado    Real      Δ vs Cot    Δ vs Refr
+Flete         $1,200      $1,260        $1,310    +9.2%       +4.0%
+THC origen    $180        $180          $190      +5.6%       +5.6%
+...
+TOTAL         $2,450      $2,580        $2,720    +11.0%      +5.4%
+```
+
+- Tooltips por celda explicando el origen.
+- Filtros: "Sólo con varianza > X%", "Sólo bloqueantes".
+- Export a CSV.
+
+### 4.3 Configuración global (`/admin/configuracion`)
+- Card "Reconciliación de embarques": umbrales `varianza_alerta_pct` (default 5), `varianza_critica_pct` (default 15).
+
+---
+
+## 5. Bitácora y notificaciones
+
+- Eventos: `cotizacion.versionada`, `cotizacion.aceptada_version_fijada`, `reconciliacion.varianza_critica_detectada`.
+- Notificación interna a ventas y al owner del embarque cuando una varianza crítica se detecta al cerrar el embarque.
+
+---
+
+## 6. Tests
+
+### Unitarios (Vitest)
+- `versionadoCotizacion.test.ts` — math de deltas 2 y 3 columnas, clasificación.
+- `services/versionado/index.test.ts` — mocks Supabase, errores tipados.
+- `services/reconciliacion.test.ts` — combinación cotizado/refrescado/real.
+
+### Hooks
+- `useRecotizarCotizacion.test.tsx` — invalidación de queries, manejo de error `CotizacionYaAceptadaError`.
+- `useReconciliacion3Columnas.test.tsx`.
+
+### Componentes
+- `RecotizarModal.test.tsx` — bloquea sin motivo, requiere tipeo de confirmación.
+- `ReconciliacionTab.test.tsx` — render de 3 columnas, filtro por varianza, export CSV.
+
+### Arquitectura
+- Test que verifica que `cotizacion_costos` y `conceptos_venta` no se actualicen directamente fuera del flujo de versionado (regex en `src/`).
+
+### E2E (`tests/e2e/09-versionado-reconciliacion.spec.ts`)
+1. Ventas crea cotización → acepta → `version_aceptada = 1`.
+2. Ventas re-cotiza → `version = 2`, histórico v1 intacto.
+3. Operativa crea embarque, refresca tarifa (Fase 1).
+4. Captura conceptos reales → reconciliación muestra 3 columnas y deltas.
+5. Cambia umbrales en configuración → varianzas se reclasifican.
+
+### Canary
+- Contract test del RPC `obtener_cotizacion_version` (shape estable).
+- Snapshot del payload de `vw_reconciliacion_embarque` para un embarque seed.
+
+---
+
+## 7. Migración de datos existentes
+
+Backfill idempotente:
+- Para toda `cotizacion` con `estado = aceptada` y `version_aceptada IS NULL`:
+  - `version_aceptada = 1`, `aceptada_en = updated_at`, `aceptada_por = creada_por`.
+- No se copian filas al histórico (la v1 vive en las tablas vivas hasta la primera re-cotización).
+
+---
+
+## 8. Versionado y memoria
+
+- `APP_VERSION` → `13.71.0`.
+- `CHANGELOG.md`: entrada Fase 2.
+- Nueva memoria `mem://features/versionado-cotizaciones-reconciliacion` con el contrato (inmutabilidad, RPCs, 3 columnas).
+- Actualizar `mem://features/revalidacion-tarifa-embarque` para enlazar la columna "refrescado" con esta fase.
+
+---
+
+## 9. Orden de ejecución
+
+1. Migración SQL (tablas históricas + columnas + triggers + RPCs + vista + backfill).
+2. Tipos TS regenerados (automático tras aprobar migración).
+3. Dominio + servicios + tests unitarios.
+4. Hooks + tests.
+5. UI cotización (re-cotizar + selector versión + historial).
+6. UI embarque (tab reconciliación 3 columnas).
+7. Configuración de umbrales.
+8. E2E + canary.
+9. Bump versión + changelog + memoria.
+
+## Fuera de alcance (Fase 3 futura)
+- Diff visual entre versiones lado a lado.
+- Aprobación por flujo (workflow) de re-cotizaciones.
+- Reconciliación a nivel proveedor/factura.
