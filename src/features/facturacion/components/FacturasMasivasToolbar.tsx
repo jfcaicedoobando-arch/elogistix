@@ -74,11 +74,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
   const marcarEnviada = async () => {
     setBusy("mark");
     try {
-      const { error } = await supabase
-        .from("facturas")
-        .update({ enviada_cliente_at: new Date().toISOString() })
-        .in("id", ids);
-      if (error) throw error;
+      await marcarFacturasComoEnviadas(ids);
       toast.success(`${ids.length} factura(s) marcadas como enviadas`);
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       onClear();
