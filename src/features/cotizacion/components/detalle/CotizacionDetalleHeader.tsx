@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, FileDown, Mail } from "lucide-react";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase, formatDate } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 

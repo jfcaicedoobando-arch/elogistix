@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, X } from "lucide-react";
-import { useErrorReport, closeErrorReport } from "@/components/shared/utils/errorDetailsStore";
+import { useErrorReport, closeErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { formatReportMarkdown, formatReportJson } from "@/components/shared/utils/errorReport";
 import { toast as sonnerToast } from "sonner";
 

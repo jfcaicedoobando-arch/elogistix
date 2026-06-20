@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Receipt } from "lucide-react";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";

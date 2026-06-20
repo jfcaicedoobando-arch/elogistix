@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { getStepIndicatorCircleClass } from "@/components/shared/utils/uiMappings";
+import { getStepIndicatorCircleClass } from "@/lib/ui/uiMappings";
 
 interface Step {
   title: string;

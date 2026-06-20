@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { User } from "@supabase/supabase-js";
-import { buildAuthSnapshot, buildSentryUserContext } from "@/components/shared/utils/authSnapshotBuilder";
+import { buildAuthSnapshot, buildSentryUserContext } from "@/lib/auth/authSnapshotBuilder";
 
 const fakeUser = { id: "u1", email: "u@x.com" } as User;
 const profile = {

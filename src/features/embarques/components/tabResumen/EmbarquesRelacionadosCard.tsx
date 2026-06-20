@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatNumber } from "@/lib/formatters";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 // Exenta de no-restricted-imports vía eslint.config.js allowlist: render row custom para sub-tabla de embarques relacionados.
 import { TableRow, TableCell } from "@/components/ui/table";

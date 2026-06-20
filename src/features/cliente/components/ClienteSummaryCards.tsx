@@ -1,7 +1,7 @@
 import { Ship, FileText, Users, DollarSign, AlertCircle, TrendingUp } from "lucide-react";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import type { KpiTone } from "@/components/shared/utils/kpiTones";
+import type { KpiTone } from "@/lib/ui/kpiTones";
 
 interface Props {
   embarques: number;

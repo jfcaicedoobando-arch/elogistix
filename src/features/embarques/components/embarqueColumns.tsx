@@ -8,7 +8,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { calcularEstadoEmbarque } from "@/features/embarques/hooks";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { sortByString, sortByDate, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { REGLA_SHORT_LABELS, reglaShortLabel } from "../reglaLabels";
-import { REGLA_INFO } from "@/components/shared/utils/auditoriaConfig";
+import { REGLA_INFO } from "@/lib/ui/auditoriaConfig";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
 
 describe("reglaLabels", () => {

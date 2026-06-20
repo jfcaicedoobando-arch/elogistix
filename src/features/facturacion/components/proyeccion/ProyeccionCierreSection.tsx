@@ -3,7 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
-import { getProfitToneClass } from "@/components/shared/utils/uiMappings";
+import { getProfitToneClass } from "@/lib/ui/uiMappings";
 import { CierreCard } from "../CierreCard";
 
 interface Kpis {

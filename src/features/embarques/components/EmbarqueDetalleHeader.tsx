@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";

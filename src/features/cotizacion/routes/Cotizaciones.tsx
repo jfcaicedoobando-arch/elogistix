@@ -10,7 +10,7 @@ import SearchInput from "@/components/selects/SearchInput";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/components/shared/utils/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
