@@ -78,9 +78,9 @@ export function RevalidarTarifaModal({
                         <Badge variant="destructive" className="ml-2">Eliminado</Badge>
                       )}
                     </td>
-                    <td className="p-2 text-right">{formatMoney(c.monto_anterior, c.moneda)}</td>
-                    <td className="p-2 text-right">{formatMoney(c.monto_actual, c.moneda)}</td>
-                    <td className="p-2 text-right">{formatMoney(c.delta_abs, c.moneda)}</td>
+                    <td className="p-2 text-right">{fmtMoney(c.monto_anterior, c.moneda)}</td>
+                    <td className="p-2 text-right">{fmtMoney(c.monto_actual, c.moneda)}</td>
+                    <td className="p-2 text-right">{fmtMoney(c.delta_abs, c.moneda)}</td>
                     <td className="p-2 text-right">{c.delta_pct == null ? "—" : `${c.delta_pct}%`}</td>
                   </tr>
                 ))}
