@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.87.6] - 2026-06-20
+- **fix(embarques/cierre) checklist no cargaba y botón siempre deshabilitado**: dos bugs combinados. (1) La RPC `validar_cierre_embarque` referenciaba columnas inexistentes (`documentos_embarque.requerido` y `archivo_url`) y devolvía 400 `42703`; como `useValidacionCierre` no notificaba el error, la tarjeta mostraba "Sin datos." y el botón **Cerrar embarque** quedaba bloqueado para todos los embarques. Se actualizó la función SQL para usar la columna real `archivo` y se eliminó el filtro `requerido` (regla nueva: un documento se considera incompleto si su archivo no está subido). (2) `EmbarqueDetalleTabs.tsx` pasaba `embarque.estatus` (columna que no existe) a `TabCierre`, por lo que `estatus` llegaba siempre vacío y se mostraba la alerta "Aún no se puede cerrar" incluso en EIR/Entregado. Ahora se pasa `embarque.estado`.
+
 ## [13.87.5] - 2026-06-20
 - **ui(embarques/cierre) mensaje contextual según modo de transporte**: el alert de "Aún no se puede cerrar" ahora diferencia claramente: embarques **marítimos** requieren estado **EIR**; los demás modos requieren **Entregado**. Se pasa la prop `modo` desde `EmbarqueDetalleTabs` hasta `TabCierre`.
 
