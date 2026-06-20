@@ -12,6 +12,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { sortByString, sortByDate, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
+import { derivarEstadoContenedor } from "@/features/embarques/utils/estadoContenedorCell";
 
 export interface DocsInfo { pendientes: number; total: number }
 
@@ -35,15 +36,7 @@ interface ContenedorCellProps {
 }
 
 function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCellProps) {
-  const count = info?.count ?? legacyCount ?? 1;
-  const primero = info?.primero || e.contenedor || "";
-  const incompletos = info?.incompletos ?? 0;
-  const blFalta = e.modo === "Marítimo" && (!e.bl_master || e.bl_master.trim() === "");
-  const pendientes = incompletos > 0 || blFalta;
-  const pendientesTitle = [
-    blFalta ? "BL Master sin capturar" : null,
-    incompletos > 0 ? `${incompletos} contenedor(es) sin número o tipo` : null,
-  ].filter(Boolean).join(" · ");
+  const { count, primero, pendientes, pendientesTitle } = derivarEstadoContenedor(e, info, legacyCount);
   return (
     <span className="inline-flex items-center gap-1.5 flex-wrap">
       <span className="truncate max-w-[80px]" title={primero}>{primero || "-"}</span>
