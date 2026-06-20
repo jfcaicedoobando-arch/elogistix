@@ -1,68 +1,59 @@
-## Diagnóstico
+## Objetivo
 
-El checklist no funciona por **dos bugs** que se combinan:
+Mejorar el tab **Garantías** del detalle de embarque para que:
+1. La fecha de descarga se prellene desde la fecha de llegada real del embarque (editable).
+2. El operativo pueda capturar el depósito real cuando la naviera no tiene carta de garantía (monto USD, banco/folio, notas).
+3. Se calcule fecha límite de devolución del contenedor vacío y se muestre badge "vence en N días" / "vencido".
+4. El sidebar y un mini-KPI alerten depósitos pendientes >30 días y muestren días promedio para recuperar dinero por naviera.
 
-### Bug 1 — RPC `validar_cierre_embarque` referencia columnas que no existen
+## Analogía rápida
 
-La función SQL consulta `documentos_embarque.requerido` y `documentos_embarque.archivo_url`, pero la tabla real tiene columnas distintas:
-
-- columnas reales: `id, embarque_id, nombre, estado, archivo, notas, organization_id, created_at, deleted_at, deleted_by`
-- **no existen** `requerido` ni `archivo_url`
-
-Resultado en red (confirmado en network log de este embarque):
-```
-POST /rpc/validar_cierre_embarque  →  400
-{"code":"42703","message":"column de.requerido does not exist"}
-```
-
-Como `useValidacionCierre` es un `useQuery` (sin `notifyError`), el error se traga en silencio → `data` queda `undefined` → `checks = []` → la tarjeta muestra *"Sin datos."* y el botón **Cerrar embarque** queda permanentemente deshabilitado.
-
-**Analogía:** es como pedir la lista de invitados (RPC) usando un campo "VIP" que nadie agregó al formulario; el sistema devuelve error, pero la pantalla solo dice "lista vacía".
-
-### Bug 2 — Prop `estatus` mal mapeado en `EmbarqueDetalleTabs.tsx`
-
-```tsx
-<TabCierre estatus={(embarque as { estatus?: string }).estatus ?? ""} ... />
-```
-
-`embarques` no tiene columna `estatus`; la columna real es `estado`. El cast siempre regresa `undefined → ""`, por lo que `listoParaCierre` es **siempre `false`**, incluso cuando el embarque está en EIR o Entregado. Por eso siempre se muestra la alerta *"Aún no se puede cerrar"*.
+Hoy el tab es un tablero de "lectura": ves qué contenedor tiene carta y cuánto se depositó, pero no puedes anotar el pago ni saber cuándo vence el plazo para que te lo devuelvan. Vamos a convertirlo en una libreta donde anotas el depósito al pagarlo, el sistema cuenta los días libres por ti, y te avisa cuando un dinero lleva demasiado tiempo "atorado" con la naviera.
 
 ## Cambios
 
-### 1. Migración SQL — corregir `validar_cierre_embarque`
+### 1. Frontend — `TabGarantias.tsx`
 
-Reemplazar el bloque de "Documentos requeridos" para que use columnas reales. Como la tabla no tiene marcador de "requerido", la regla pasa a ser: **"todos los documentos cargados tienen archivo subido"** (un documento sin `archivo` es uno incompleto).
+- **Auto-prellenar fecha al cambiar estado**:
+  - `depositado` → `fecha_deposito` = fecha de llegada real del embarque (`embarque.fecha_llegada_real`) si existe, si no hoy.
+  - `liberado` → `fecha_liberacion` = hoy (sin cambios).
+  - Ambas siguen siendo editables manualmente (ver punto 2).
+- **Edición inline de monto y referencia** (solo si `canEdit` y `!tiene_carta_garantia`):
+  - Input numérico para `monto_deposito_usd`.
+  - Input de texto para `referencia_deposito` (folio/banco) — nueva columna.
+  - Botón "editar fechas" abre un mini-popover con dos DatePickers para ajustar `fecha_deposito` y `fecha_liberacion`.
+- **Nueva columna "Vence"**: si hay `fecha_deposito` y conocemos `dias_libres` de la naviera, mostrar fecha límite + badge:
+  - verde "ok" si faltan >3 días, ámbar "por vencer" ≤3, rojo "vencido" si pasó.
+- **Tarjetas KPI superiores**: agregar una cuarta "Días prom. recuperación" (promedio entre `fecha_deposito` y `fecha_liberacion` de los liberados de este embarque).
 
-```sql
-SELECT COUNT(*) INTO v_docs_faltantes
-FROM documentos_embarque de
-WHERE de.embarque_id = p_embarque_id
-  AND de.deleted_at IS NULL
-  AND (de.archivo IS NULL OR de.archivo = '');
-```
+### 2. Backend — migración
 
-Todo lo demás de la función queda igual (CXC, CXP, PnL, comisión, contenedores FCL, conceptos venta/costo, liquidación).
+- `embarque_garantias_contenedor`:
+  - `ADD COLUMN referencia_deposito text` (folio/banco/cuenta).
+  - `ADD COLUMN fecha_limite_devolucion date` generada por trigger = `fecha_deposito + dias_libres` (toma `dias_libres_demoras_default` de `costeo_navieras_condiciones` vía `naviera_id` y `organization_id`).
+- Vista/RPC `kpi_garantias_por_naviera`: devuelve por naviera el conteo de depósitos pendientes y el promedio de días entre depósito y liberación de los últimos 90 días. La usa la tarjeta KPI y el sidebar.
 
-### 2. `src/features/embarques/components/EmbarqueDetalleTabs.tsx`
+### 3. Sidebar — alerta nueva
 
-Cambiar el prop:
-```tsx
-<TabCierre embarqueId={embarqueId} estatus={embarque.estado ?? ""} modo={embarque.modo} />
-```
+- En `useSidebarAlerts`, agregar contador de garantías con `estado IN ('depositado')` y `fecha_deposito < hoy - 30 días`. Badge ámbar en el item "Embarques" (mismo patrón que demoras).
 
-### 3. Robustecer feedback de error
+### 4. Tests
 
-En `useCierreEmbarque.ts → useValidacionCierre`, agregar `meta: { errorMessage: ... }` o un `useEffect` que dispare `notifyError` cuando la query falle, para que el siguiente bug de RPC no vuelva a quedar invisible.
+- `garantias.test.ts`: agregar casos para `referencia_deposito` y para que `updateGarantia` permita pasar fecha_deposito explícita (ya existe parcial).
+- Nuevo `TabGarantias.test.tsx` mínimo que verifica que al cambiar estado a "depositado" sin `fecha_llegada_real` usa hoy, y con `fecha_llegada_real` usa esa fecha.
 
-### 4. Bump de versión + CHANGELOG
+### 5. Versionado + changelog
 
-- `APP_VERSION` → `13.87.6`
-- Entrada en `CHANGELOG.md` describiendo los dos fixes.
+- `APP_VERSION` → `13.88.0` (cambio de feature, no solo fix).
+- Entrada `[13.88.0]` en `CHANGELOG.md` describiendo las 4 mejoras.
 
-## Validación esperada después del fix
+## Validación
 
-Al volver a `/embarques/c182b3f9-…?tab=cierre`:
+1. En `/embarques/<id>?tab=garantias`, cambiar un contenedor a "depositado" → la `F. Depósito` se llena con la fecha de llegada real del embarque.
+2. Editar monto y referencia de un contenedor sin carta de garantía → persiste y se ve en la tabla.
+3. Si la naviera tiene `dias_libres_demoras_default = 7` y depositaste hace 8 días, la columna "Vence" muestra badge rojo "vencido".
+4. En sidebar, si hay ≥1 depósito >30 días sin liberar, aparece badge ámbar en Embarques.
 
-- la llamada a `validar_cierre_embarque` regresa 200 con un array de `checks`
-- la tarjeta muestra cada regla con ✅ / ❌
-- como el estado del embarque es `EIR`, la alerta *"Aún no se puede cerrar"* desaparece y el botón **Cerrar embarque** se habilita cuando todas las reglas son OK
+## Nota sobre tu duda
+
+Si la naviera **no** tiene carta de garantía, el depósito real se carga en ese mismo renglón del contenedor (el campo `monto_deposito_usd` que hoy sólo se ve, ahora será **editable**), más la nueva referencia bancaria. No es facturable y no entra al PnL del embarque (sigue siendo "dinero en custodia" que regresa al devolver el vacío).
