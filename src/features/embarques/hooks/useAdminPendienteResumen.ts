@@ -1,0 +1,21 @@
+/**
+ * v13.89.0 — Hook que devuelve el resumen de pendientes administrativos
+ * (CxC, CxP, documentos, venta no facturada) para un embarque.
+ *
+ * Solo tiene sentido en embarques con estado `Entregado` o `EIR`. Los
+ * consumidores deciden si renderizar el badge según el estado.
+ */
+import { useQuery } from "@tanstack/react-query";
+import {
+  fetchAdminPendientesResumen,
+  type AdminPendientesResumen,
+} from "@/features/embarques/services/cierre";
+
+export function useAdminPendienteResumen(embarqueId: string | undefined, enabled = true) {
+  return useQuery<AdminPendientesResumen>({
+    queryKey: ["embarque", embarqueId, "admin-pendientes"],
+    queryFn: () => fetchAdminPendientesResumen(embarqueId as string),
+    enabled: Boolean(embarqueId) && enabled,
+    staleTime: 30_000,
+  });
+}

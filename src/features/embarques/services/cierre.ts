@@ -69,3 +69,38 @@ export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry
   if (error) throw new Error(error.message);
   return ((data as unknown) as CierreLogEntry[]) ?? [];
 }
+
+// ============================================================
+// v13.89.0 — Cierre administrativo: resumen por embarque y conteo global
+// ============================================================
+
+export interface AdminPendientesResumen {
+  pendientes: number;
+  cxc_pendiente: number;
+  cxp_pendiente: number;
+  docs_faltantes: number;
+  venta_no_facturada: number;
+}
+
+export async function fetchAdminPendientesResumen(embarqueId: string): Promise<AdminPendientesResumen> {
+  // SAFE-CAST: RPC nueva tipada como Json en types.ts hasta regeneración.
+  const { data, error } = await supabase.rpc("embarque_admin_pendientes_resumen" as never, {
+    p_embarque_id: embarqueId,
+  } as never);
+  if (error) throw new Error(error.message);
+  const raw = (data ?? {}) as Partial<AdminPendientesResumen>;
+  return {
+    pendientes: Number(raw.pendientes ?? 0),
+    cxc_pendiente: Number(raw.cxc_pendiente ?? 0),
+    cxp_pendiente: Number(raw.cxp_pendiente ?? 0),
+    docs_faltantes: Number(raw.docs_faltantes ?? 0),
+    venta_no_facturada: Number(raw.venta_no_facturada ?? 0),
+  };
+}
+
+export async function fetchAdminPendientesCount(): Promise<number> {
+  // SAFE-CAST: RPC nueva no tipada aún.
+  const { data, error } = await supabase.rpc("embarques_admin_pendientes_count" as never);
+  if (error) throw new Error(error.message);
+  return Number(data ?? 0);
+}

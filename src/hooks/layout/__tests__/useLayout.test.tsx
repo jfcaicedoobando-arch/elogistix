@@ -13,6 +13,15 @@ vi.mock('@/features/admin/hooks', () => ({
 vi.mock('@/features/crm/hooks/useCrmDashboard', () => ({
   useActividadesVencidasCount: () => ({ data: 0 }),
 }));
+vi.mock('../useSidebarAlerts', () => ({
+  useSidebarAlerts: () => ({
+    totalAlertas: 0,
+    embarquesDemora: 0,
+    facturasVencidas: 0,
+    garantiasAtoradas: 0,
+    adminPendientes: 0,
+  }),
+}));
 
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useAppSidebarSections } from '../useAppSidebarSections';

@@ -2,6 +2,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAuditoriaCount } from "@/features/auditoria/hooks";
 import { useAlertasPendingCount } from "@/features/admin/hooks";
 import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboard";
+import { useSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
 import {
   SIDEBAR_DASHBOARD_ITEMS,
   SIDEBAR_GESTION_ITEMS,
@@ -151,6 +152,16 @@ function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
   ];
 }
 
+function patchEmbarquesBadge(sections: SidebarSection[], adminPendientes: number): SidebarSection[] {
+  if (adminPendientes <= 0) return sections;
+  return sections.map((sec) => ({
+    ...sec,
+    items: sec.items.map((it) =>
+      it.url === "/embarques" ? { ...it, badgeCount: adminPendientes } : it,
+    ),
+  }));
+}
+
 export function useAppSidebarSections(): SidebarSection[] {
   const { role, effectiveRole } = useAuth();
   const canVerAuditoria =
@@ -158,6 +169,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: auditoriaCount = 0 } = useAuditoriaCount({ enabled: canVerAuditoria });
   const { count: alertasSistemaCount } = useAlertasPendingCount();
   const { data: crmVencidas = 0 } = useActividadesVencidasCount();
+  const { adminPendientes } = useSidebarAlerts();
 
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
@@ -172,11 +184,11 @@ export function useAppSidebarSections(): SidebarSection[] {
 
   const deps: BuilderDeps = { crmItems, sistemaItems };
   const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
-  if (builder) return builder(deps);
+  if (builder) return patchEmbarquesBadge(builder(deps), adminPendientes);
 
   const sections = buildDefaultSections(deps);
   const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
-  return sections;
+  return patchEmbarquesBadge(sections, adminPendientes);
 }

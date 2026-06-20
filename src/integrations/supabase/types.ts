@@ -5956,6 +5956,10 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: undefined
       }
+      embarque_admin_pendientes_resumen: {
+        Args: { p_embarque_id: string }
+        Returns: Json
+      }
       embarque_docs_faltantes: {
         Args: { p_embarque_id: string; p_estado_destino: string }
         Returns: string[]
@@ -5964,6 +5968,7 @@ export type Database = {
         Args: { _embarque_id: string }
         Returns: Json
       }
+      embarques_admin_pendientes_count: { Args: never; Returns: number }
       embarques_list_extras: {
         Args: { p_ids: string[] }
         Returns: {
