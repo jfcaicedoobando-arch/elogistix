@@ -52,9 +52,10 @@ const ESTADOS_LISTOS_PARA_CIERRE = new Set(["entregado", "eir"]);
 interface Props {
   embarqueId: string;
   estatus: string;
+  modo?: string;
 }
 
-export function TabCierre({ embarqueId, estatus }: Props) {
+export function TabCierre({ embarqueId, estatus, modo }: Props) {
   const { data: validacion, isLoading } = useValidacionCierre(embarqueId);
   const { data: log = [] } = useCierreLog(embarqueId);
   const cerrarMut = useCerrarEmbarque(embarqueId);
@@ -87,7 +88,11 @@ export function TabCierre({ embarqueId, estatus }: Props) {
         <Alert>
           <AlertTitle>Aún no se puede cerrar</AlertTitle>
           <AlertDescription>
-            El embarque debe estar en estado <strong>Entregado</strong> o <strong>EIR</strong> para ejecutar el cierre.
+            {modo?.toLowerCase() === "marítimo" ? (
+              <>El embarque <strong>marítimo</strong> debe estar en estado <strong>EIR</strong> (Equipo Intercambio Reparado) para ejecutar el cierre.</>
+            ) : (
+              <>El embarque debe estar en estado <strong>Entregado</strong> para ejecutar el cierre.</>
+            )}
           </AlertDescription>
         </Alert>
       ) : null}
