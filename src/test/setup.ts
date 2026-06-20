@@ -130,6 +130,19 @@ afterEach(() => {
 });
 
 /**
+ * Cleanup defensivo ANTES de cada test (13.85.3 — quick win audit #2).
+ * `afterEach` ya limpia mocks tras el test previo, pero `beforeEach` blinda
+ * casos donde un archivo declara mocks a nivel módulo y deja contadores
+ * sucios al arrancar la suite, o cuando el archivo previo aborta sin pasar
+ * por su `afterEach`.
+ */
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+
+
+/**
  * Teardown final por archivo: aquí sí es seguro restaurar implementaciones
  * porque no quedan más tests en el archivo y el siguiente correrá en un fork
  * nuevo (vitest.config.ts: maxForks=1 + fileParallelism=false).
