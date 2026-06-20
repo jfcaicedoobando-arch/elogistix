@@ -1,59 +1,70 @@
-## Objetivo
 
-Mejorar el tab **Garantías** del detalle de embarque para que:
-1. La fecha de descarga se prellene desde la fecha de llegada real del embarque (editable).
-2. El operativo pueda capturar el depósito real cuando la naviera no tiene carta de garantía (monto USD, banco/folio, notas).
-3. Se calcule fecha límite de devolución del contenedor vacío y se muestre badge "vence en N días" / "vencido".
-4. El sidebar y un mini-KPI alerten depósitos pendientes >30 días y muestren días promedio para recuperar dinero por naviera.
+# Panel de Pendientes Administrativos (sin estado nuevo)
 
-## Analogía rápida
+Mantenemos los 7 estados actuales. Agregamos visibilidad sobre el "limbo administrativo" entre EIR/Entregado y Cerrado, reusando `validar_cierre_embarque` que ya valida CxC, CxP, documentos y comisiones.
 
-Hoy el tab es un tablero de "lectura": ves qué contenedor tiene carta y cuánto se depositó, pero no puedes anotar el pago ni saber cuándo vence el plazo para que te lo devuelvan. Vamos a convertirlo en una libreta donde anotas el depósito al pagarlo, el sistema cuenta los días libres por ti, y te avisa cuando un dinero lleva demasiado tiempo "atorado" con la naviera.
+## Qué se agrega
 
-## Cambios
+### 1. Sub-badge "Admin pendiente" en lista y detalle
+En embarques con estado **EIR** (marítimo) o **Entregado** (resto) que aún no están Cerrados:
+- Badge ámbar al lado del estado: `Admin pendiente · 2`
+- El número = cantidad de checks que fallan en `validar_cierre_embarque`.
+- Verde `Listo para cerrar` cuando todos los checks pasan.
 
-### 1. Frontend — `TabGarantias.tsx`
+### 2. Nueva pestaña "Cierre Administrativo" en el detalle del embarque
+Solo visible cuando estado ∈ {EIR, Entregado}. Muestra checklist en vivo:
 
-- **Auto-prellenar fecha al cambiar estado**:
-  - `depositado` → `fecha_deposito` = fecha de llegada real del embarque (`embarque.fecha_llegada_real`) si existe, si no hoy.
-  - `liberado` → `fecha_liberacion` = hoy (sin cambios).
-  - Ambas siguen siendo editables manualmente (ver punto 2).
-- **Edición inline de monto y referencia** (solo si `canEdit` y `!tiene_carta_garantia`):
-  - Input numérico para `monto_deposito_usd`.
-  - Input de texto para `referencia_deposito` (folio/banco) — nueva columna.
-  - Botón "editar fechas" abre un mini-popover con dos DatePickers para ajustar `fecha_deposito` y `fecha_liberacion`.
-- **Nueva columna "Vence"**: si hay `fecha_deposito` y conocemos `dias_libres` de la naviera, mostrar fecha límite + badge:
-  - verde "ok" si faltan >3 días, ámbar "por vencer" ≤3, rojo "vencido" si pasó.
-- **Tarjetas KPI superiores**: agregar una cuarta "Días prom. recuperación" (promedio entre `fecha_deposito` y `fecha_liberacion` de los liberados de este embarque).
+```
+✅  Documentos completos
+⚠   Cobranza pendiente — Factura F-001 ($12,400 MXN)     [Ir a CxC]
+⚠   Pago a proveedor pendiente — MAERSK ($2,400 USD)     [Ir a CxP]
+✅  Comisión calculada
+─────────────────────────────────────────
+        [ Cerrar embarque ]   (deshabilitado hasta que todo esté ✅)
+```
 
-### 2. Backend — migración
+Reutiliza `validarCierre(embarqueId)` que ya existe en `services/cierre.ts`.
 
-- `embarque_garantias_contenedor`:
-  - `ADD COLUMN referencia_deposito text` (folio/banco/cuenta).
-  - `ADD COLUMN fecha_limite_devolucion date` generada por trigger = `fecha_deposito + dias_libres` (toma `dias_libres_demoras_default` de `costeo_navieras_condiciones` vía `naviera_id` y `organization_id`).
-- Vista/RPC `kpi_garantias_por_naviera`: devuelve por naviera el conteo de depósitos pendientes y el promedio de días entre depósito y liberación de los últimos 90 días. La usa la tarjeta KPI y el sidebar.
+### 3. Filtros en lista de embarques
+Chip de filtro rápido:
+- `Listos para cerrar` (todos los checks ✅, aún no Cerrado)
+- `Admin pendiente` (al menos un check ⚠)
 
-### 3. Sidebar — alerta nueva
+### 4. Alerta en sidebar
+Nuevo contador en `useSidebarAlerts`:
+- **Administración/Finanzas (admin, contabilidad, cobranza):** ven todos los embarques con admin pendiente de su organización.
+- **Operativo:** ve solo embarques donde es responsable operativo + un badge informativo (no crítico, color gris).
+- **Vendedor:** ve solo embarques donde es el vendedor asignado (para seguimiento de comisión).
 
-- En `useSidebarAlerts`, agregar contador de garantías con `estado IN ('depositado')` y `fecha_deposito < hoy - 30 días`. Badge ámbar en el item "Embarques" (mismo patrón que demoras).
+Una sola RPC `embarques_admin_pendientes_count(p_scope)` que devuelve el conteo filtrado según rol/usuario.
 
-### 4. Tests
+### 5. Permiso de "Cerrar embarque"
+Solo roles administrativos pueden pulsar el botón final de Cerrar. El operativo ve el panel pero el botón está deshabilitado con tooltip "Solo administración puede cerrar".
 
-- `garantias.test.ts`: agregar casos para `referencia_deposito` y para que `updateGarantia` permita pasar fecha_deposito explícita (ya existe parcial).
-- Nuevo `TabGarantias.test.tsx` mínimo que verifica que al cambiar estado a "depositado" sin `fecha_llegada_real` usa hoy, y con `fecha_llegada_real` usa esa fecha.
+## Lo que NO cambia
+- Sin estado nuevo en `ESTADOS_EMBARQUE`.
+- Sin migración de datos.
+- Timeline de fases (Cotización → Confirmado → Tránsito → Llegada → Cerrado) intacto.
+- Reportes y filtros existentes siguen funcionando.
 
-### 5. Versionado + changelog
+## Detalle técnico
 
-- `APP_VERSION` → `13.88.0` (cambio de feature, no solo fix).
-- Entrada `[13.88.0]` en `CHANGELOG.md` describiendo las 4 mejoras.
+**Backend:**
+- Nueva RPC `embarques_admin_pendientes(p_org_id, p_scope_user_id)` que devuelve `{embarque_id, file, checks_pendientes[], cliente, monto_pendiente_cxc, monto_pendiente_cxp}` para listas y contadores. Reutiliza la misma lógica de `validar_cierre_embarque` aplicada a múltiples embarques.
+- Index parcial en `embarques (organization_id, estado) WHERE estado IN ('EIR','Entregado')` para acelerar.
 
-## Validación
+**Frontend:**
+- `src/features/embarques/components/TabCierreAdministrativo.tsx` (nuevo, ~150 líneas).
+- `src/features/embarques/components/EmbarqueDetalleTabs.tsx` — registrar la pestaña condicional.
+- `src/features/embarques/components/EmbarqueBadgeAdmin.tsx` (nuevo) — sub-badge reutilizable en lista y detalle.
+- `src/features/embarques/hooks/useAdminPendienteResumen.ts` (nuevo).
+- `src/hooks/layout/useSidebarAlerts.ts` — agregar `adminPendientesCount` con filtro por rol.
+- `src/components/layout/sidebarItems.ts` — badge en el item de Embarques.
+- `src/features/embarques/services/cierre.ts` — añadir `fetchAdminPendientes(scope)`.
 
-1. En `/embarques/<id>?tab=garantias`, cambiar un contenedor a "depositado" → la `F. Depósito` se llena con la fecha de llegada real del embarque.
-2. Editar monto y referencia de un contenedor sin carta de garantía → persiste y se ve en la tabla.
-3. Si la naviera tiene `dias_libres_demoras_default = 7` y depositaste hace 8 días, la columna "Vence" muestra badge rojo "vencido".
-4. En sidebar, si hay ≥1 depósito >30 días sin liberar, aparece badge ámbar en Embarques.
+**Versión y changelog:**
+- `APP_VERSION` → `13.89.0`
+- Entrada en `CHANGELOG.md`: panel de cierre administrativo, badges, filtros, alertas por rol.
 
-## Nota sobre tu duda
-
-Si la naviera **no** tiene carta de garantía, el depósito real se carga en ese mismo renglón del contenedor (el campo `monto_deposito_usd` que hoy sólo se ve, ahora será **editable**), más la nueva referencia bancaria. No es facturable y no entra al PnL del embarque (sigue siendo "dinero en custodia" que regresa al devolver el vacío).
+## Próximo paso después de implementar (no incluido aún)
+Notificación automática al admin cuando un embarque entra a EIR/Entregado con `admin_pendiente > 0` por más de N días. Lo dejamos para otra iteración.
