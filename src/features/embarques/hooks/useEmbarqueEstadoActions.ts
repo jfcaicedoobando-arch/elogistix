@@ -42,10 +42,25 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const reabrirEmbarque = useReabrirEmbarque();
   const syncEstado = useSyncEstadoEmbarque();
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
+  const { canEditFinance, isAdmin } = usePermissions();
 
   const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
   const { faltantes: docsFaltantes, bloqueante: docsBloqueantes } =
     useDocsFaltantesParaEstado(id, siguienteEstado);
+
+  // v13.89.1 — Validación dura para cierre: solo admin/finanzas pueden cerrar,
+  // y solo si todas las reglas del checklist (CxC, CxP, docs, etc.) pasan.
+  const cierreVisible = siguienteEstado === "Cerrado";
+  const { data: validacionCierre } = useValidacionCierre(cierreVisible ? id : undefined);
+  const rolPuedeCerrar = isAdmin || canEditFinance;
+  const validacionOk = validacionCierre?.puede_cerrar === true;
+  const bloqueoCierreMotivo = !cierreVisible
+    ? null
+    : !rolPuedeCerrar
+      ? "rol"
+      : !validacionOk
+        ? "checklist"
+        : null;
 
   // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
   const embarqueId = embarque?.id;
