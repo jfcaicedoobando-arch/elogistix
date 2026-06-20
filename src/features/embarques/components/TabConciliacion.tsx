@@ -111,6 +111,13 @@ export function TabConciliacion({ embarqueId }: Props) {
 
   return (
     <div className="space-y-6">
+      {decisionLabel && (
+        <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-xs text-info-foreground flex items-center gap-2">
+          <span className="font-medium">Decisión aplicada:</span>
+          <span>{decisionLabel}</span>
+          <span className="text-muted-foreground">— ver pestaña Resumen → Origen de costos para el detalle.</span>
+        </div>
+      )}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Reconciliación 3 columnas (Cotizado · Refrescado · Real)</CardTitle>
