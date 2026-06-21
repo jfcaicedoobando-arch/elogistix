@@ -27,6 +27,7 @@ import {
   Users,
   Anchor,
   Search,
+  Calendar,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -45,13 +46,15 @@ export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
 export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
-  { title: "Pre-Facturación", url: "/facturacion", icon: FileText },
+  { title: "Facturación", url: "/facturacion", icon: FileText },
+  { title: "Cobranza", url: "/cartera", icon: PiggyBank },
   { title: "Cuentas por Pagar", url: "/cxp", icon: Receipt },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
 
 export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
+  { title: "Cierre mensual", url: "/reportes/cierre-mensual", icon: Calendar },
   { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
 ];
 

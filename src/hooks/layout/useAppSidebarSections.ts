@@ -71,8 +71,7 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Mi bandeja", items: filterBandejas(["/facturacion/por-emitir", "/cartera"]) },
-  { label: "Gestión", items: filterGestion(["/facturacion", "/cxp", "/tesoreria", "/comisiones"]) },
+  { label: "Gestión", items: filterGestion(["/facturacion", "/cartera", "/cxp", "/tesoreria", "/comisiones"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
   { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
@@ -97,8 +96,7 @@ const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
 ];
 
 const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
-  { label: "Mi bandeja", items: filterBandejas(["/cartera"]) },
-  { label: "Gestión", items: filterGestion(["/facturacion"]) },
+  { label: "Gestión", items: filterGestion(["/cartera", "/facturacion"]) },
   { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
