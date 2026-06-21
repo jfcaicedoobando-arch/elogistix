@@ -1,90 +1,70 @@
-# Plan: Mejoras al tab Facturación del embarque
+# Bug: el checklist de cierre marca pendientes los conceptos ya facturados
 
-## Lo que me pediste explícitamente
+## Diagnóstico (la analogía)
 
-**Quitar las descargas inline.** Tanto en "Proformas Generadas" como en "Facturas del Embarque" las filas ya navegan (o navegarán) al detalle, donde el usuario descarga PDF/XML con contexto. Mantener botones aquí duplica acciones y satura la fila.
+Imagina que `conceptos_venta.estado_facturacion` es un semáforo con sólo **dos luces**: `pendiente` y `en_proforma`. No tiene luz verde de "facturado". Cuando emites la factura de una proforma, el sistema cambia la **proforma** a `estado_proforma = 'facturada'`, pero **no toca los conceptos** — siguen marcados en `en_proforma`.
 
-## Lo que no me gusta del tab actual (orden de impacto)
+- El **tab de Facturación** ya sabe esto: deriva el tercer estado "facturado" en el frontend cruzando concepto → proforma (lo arreglamos en 13.90.5). Por eso ahí se ve bien.
+- El **tab de Cierre** usa la RPC `validar_cierre_embarque` de la base de datos, y esa RPC sigue mirando sólo el semáforo crudo:
 
-1. **No hay narrativa de flujo.** Los tres cards (Conceptos → Proformas → Facturas) se ven como bloques sueltos del mismo peso. El usuario no percibe que es un proceso secuencial.
-2. **`HistorialFacturas` no es clickeable** mientras `HistorialProformas` sí lo es. Inconsistencia: una tabla te invita a clicar la fila, la otra no responde.
-3. **Botón "Eliminar" siempre visible** en cada fila de proforma. Es una acción destructiva, no necesita ese protagonismo — debería vivir en un menú kebab o aparecer en hover.
-4. **Columna "Operador" muestra el email completo** (`juanluis.martinez@elogistixshipping.com`) y empuja el ancho. Hay memoria del proyecto (`nombreDesdeEmail`) para mostrar el nombre.
-5. **Doble columna "Total USD" + "Total MXN"** desperdicia espacio: 99% de las proformas son monomoneda y la otra columna queda en `—`. Una sola columna "Total" con la moneda correcta sería suficiente.
-6. **Columna "Folio Factura" en proformas** duplica información que ya muestra la tabla de Facturas justo debajo.
-7. **Estado de proforma apilado (2 badges)** es ruidoso. "Aprobada + Facturada" se puede colapsar a un solo badge "Facturada" (el estado terminal manda).
-8. **Columna "Moneda" en Facturas** es redundante: el monto ya viene con prefijo USD/MXN.
-9. **Falta indicación visual de "esto es clickeable"**: ni cursor `pointer` ni chevron al hover en las filas con drill-down.
-10. **El header del tab no tiene contexto rápido** — no hay un resumen tipo "Facturado: USD 3,090 · Pendiente: 0" que rinda con un vistazo. El panel ya existe abajo pero queda enterrado.
+  ```sql
+  -- migración 20260621004725, líneas 175-190
+  COUNT(*) FILTER (WHERE estado_facturacion = 'pendiente'),
+  COUNT(*) FILTER (WHERE estado_facturacion = 'en_proforma')
+  ```
 
-## Cambios propuestos (UI únicamente, sin tocar lógica de datos)
+  Como tus conceptos están en `en_proforma` (aunque la proforma ya esté facturada), la regla `venta_conceptos_facturados` cuenta cada uno como pendiente y bloquea el cierre.
 
-### A. Limpieza de tablas
+Es exactamente el mismo bug que arreglamos visualmente, pero ahora del lado de la base de datos.
 
-**`HistorialProformas`:**
-- Eliminar columna "Acciones" completa.
-- Mover "Eliminar" a un menú kebab `MoreHorizontal` al final de la fila (visible sólo cuando `canEdit && !facturada && !consolidada`).
-- Eliminar columna "Folio Factura" (vive en la tabla de Facturas).
-- Fusionar "Total USD" + "Total MXN" en columna única "Total" con la moneda real.
-- Operador: aplicar `nombreDesdeEmail()` + `truncate` con tooltip del email completo.
-- Estado: si `facturada`, mostrar sólo el badge "Facturada"; si no, badge único de revisión.
-- Click en fila → `/proformas/:id` (ya funciona), añadir `cursor-pointer` + chevron sutil a la derecha al hacer hover.
+## Solución
 
-**`HistorialFacturas`:**
-- Eliminar columna "Archivos".
-- Eliminar columna "Moneda" (el monto ya tiene prefijo).
-- Hacer la fila clickeable: `onRowClick` → `/facturacion/:id`, con `cursor-pointer` + chevron al hover.
-- Columna "Proforma": link visible (no sólo texto) que también navega a `/proformas/:id` (con `e.stopPropagation()` para no entrar en conflicto con el row click).
+Alinear la RPC con la lógica derivada del frontend: un concepto cuenta como **facturado** si su proforma vinculada está en `estado_proforma = 'facturada'`. Sólo bloquear cuando queden conceptos verdaderamente pendientes.
 
-### B. Narrativa de flujo
+### Cambios
 
-Añadir un encabezado del tab con tres "pasos" mini-estado a la izquierda del card de Conceptos, mostrando el progreso del embarque:
+1. **Migración Postgres** — reescribir el bloque `venta_conceptos_facturados` dentro de `validar_cierre_embarque` (versión más reciente, `20260621004725_...sql`):
+   - `pendientes` = conceptos con `estado_facturacion = 'pendiente'` y sin `proforma_id`.
+   - `en_proforma` = conceptos con `estado_facturacion = 'en_proforma'` cuya proforma está en un estado **distinto** de `'facturada'`.
+   - La regla pasa (`ok = true`) cuando `pendientes = 0 AND en_proforma = 0`.
+   - El `detalle` mantiene la misma forma `{ pendientes, en_proforma }` para no romper los formatters de `cierreCheckMeta`.
 
-```text
-1. Conceptos     →   2. Proformas      →   3. Facturas
-   2 facturados      1 generada (PRO-…)    1 emitida (#902)
+2. **No tocar** `conceptos_venta.estado_facturacion` ni los enums: dejamos el campo binario como está; la fuente de verdad sigue siendo la proforma, igual que en el frontend. Cero backfill, cero riesgo en embarques históricos.
+
+3. **Tests**:
+   - `src/features/embarques/components/__tests__/TabCierre.rules.test.ts` no cambia (sigue validando la composición AND).
+   - Agregar un test del lado SQL no es viable aquí; documentamos el escenario en el changelog.
+
+4. **Versionado**:
+   - `src/constants/appVersion.ts` → bump a `13.90.7`.
+   - `CHANGELOG.md` (raíz) → entrada `## [13.90.7] - 2026-06-21` con `fix(embarque-cierre-regla-venta-facturados)` explicando el cruce con proforma facturada.
+
+### Detalle técnico (para referencia)
+
+SQL del bloque corregido (esqueleto):
+
+```sql
+SELECT
+  COUNT(*) FILTER (
+    WHERE cv.estado_facturacion = 'pendiente' AND cv.proforma_id IS NULL
+  ),
+  COUNT(*) FILTER (
+    WHERE cv.estado_facturacion = 'en_proforma'
+      AND COALESCE(p.estado_proforma, 'pendiente') <> 'facturada'
+  )
+INTO v_venta_pendientes, v_venta_en_proforma
+FROM conceptos_venta cv
+LEFT JOIN proformas p ON p.id = cv.proforma_id AND p.deleted_at IS NULL
+WHERE cv.embarque_id = p_embarque_id
+  AND cv.deleted_at IS NULL;
 ```
 
-Si un paso aún no aplica, queda en gris. Es puramente visual, no agrega cards nuevos.
+## Archivos a modificar
 
-### C. Eliminación de elementos no necesarios
+- Nueva migración Supabase: `CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(...)` con el bloque corregido (el resto idéntico a la versión vigente).
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
 
-- Quitar el `FacturaDownloadButton` de `HistorialProformas` (ya pidió drill-down).
-- Quitar el `Download` (botón Descargar PDF de proforma) — el drill-down a `/proformas/:id` ya ofrece "Descargar PDF" prominente.
-- Si después de quitar todo no queda ninguna acción inline para roles no-edit, el card se ve más limpio y rápido de escanear.
+## Resultado esperado
 
-### D. Detalles menores
-
-- `cursor-pointer` y `hover:bg-muted/40` consistentes en ambas tablas.
-- Tooltip "Ver detalle" en filas clickeables (primera vez para descubribilidad — opcional).
-- `Card` de Proformas: cuando hay ≥1, mostrar a la derecha del título un mini contador (`{n} proformas · {m} facturadas`).
-- `Card` de Facturas: igual (`{n} facturas · total USD …`).
-
-## Lo que NO incluye
-
-- No se cambia el schema, RLS, ni la lógica de cálculo de estados (eso quedó arreglado en 13.90.5).
-- No se rediseña visualmente (paleta, tipografía) — sigue siendo Libre Carga estándar.
-- No se tocan los flujos de "Generar proforma" ni "Facturar proforma".
-- No se borra ningún dato.
-
-## Verificación
-
-Playwright en `/embarques/7cbea742-…?tab=facturacion`:
-1. Screenshot antes/después.
-2. Confirmar que no hay botones de descarga en las dos tablas.
-3. Clic en una fila de Facturas navega a `/facturacion/:id`.
-4. Clic en una fila de Proformas navega a `/proformas/:id`.
-5. El menú kebab de proforma abre y muestra "Eliminar" cuando corresponde.
-6. Stepper visual muestra el progreso correcto.
-
-## Archivos a editar
-
-1. `src/features/embarques/components/facturacion/HistorialProformas.tsx` — limpieza de columnas, kebab menu, total único, nombreDesdeEmail.
-2. `src/features/embarques/components/facturacion/HistorialFacturas.tsx` — onRowClick, limpieza de columnas, link a proforma.
-3. `src/features/embarques/components/TabFacturacion.tsx` — añadir mini-stepper de flujo arriba.
-4. Posible nuevo helper `src/features/embarques/components/facturacion/FlujoFacturacionStepper.tsx` (3 pasos visuales).
-5. `appVersion.ts` → `13.90.6` + entrada en `CHANGELOG.md`.
-
-## Pregunta antes de empezar
-
-¿Quieres que también te muestre 2-3 direcciones visuales del **stepper de flujo** (por ejemplo: chips horizontales, breadcrumb con flechas, o tarjetas mini con números) antes de implementar? Si dices que sí, te las renderizo y eliges. Si dices que no, implemento directo el más limpio.
+Tras aplicar la migración, abrir el tab de Cierre del ELIMP00230: la regla "Todos los conceptos de venta facturados" pasa a verde y `puede_cerrar` deja de estar bloqueado por esa causa (otras reglas siguen evaluándose independientemente).
