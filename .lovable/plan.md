@@ -1,111 +1,89 @@
 
-# Rediseño del módulo Facturación (v13.92.0)
+# Plan: Factura manual sin proforma (v13.93.0)
 
-Objetivo: que Isela (contador) entre a un único lugar claro y vea **qué tiene que hacer hoy** + KPIs, en lugar de 6 tabs mezclados.
+## Contexto
 
-## 1. Cambios de navegación (sidebar)
+Hoy **toda factura nace de una proforma** (que a su vez nace de un embarque). Isela necesita poder emitir un CFDI suelto para casos como:
 
-**Antes** (grupo "Gestión"):
-- Pre-Facturación (6 tabs)
-- Cuentas por Pagar
-- Tesorería
-- Comisiones
+- Anticipos de cliente
+- Servicios extra fuera de embarque (asesoría, almacenaje suelto, gastos administrativos)
+- Refacturaciones / ajustes manuales
 
-**Después** (grupo "Gestión"):
-- **Facturación** (renombrado, ícono `FileText`)
-- Cobranza (CxC) — *promovido de tab a item; ya existe `/cartera`, solo se promueve en sidebar*
-- Cuentas por Pagar
-- Tesorería
-- Comisiones
+**Analogía:** hoy sólo puedes "facturar un viaje terminado". Queremos un botón "facturar otro cargo" para cobros que no son un embarque completo.
 
-**Grupo "Reportes"** (nuevo item):
-- Cierre mensual (proyección) — *se mueve tab 6 aquí, ruta `/reportes/cierre-mensual`*
-- Rentabilidad (ya existe)
+## Alcance
 
-**Grupo "Mi bandeja"**: se elimina "Por emitir (Facturación)" porque ahora es el landing por defecto de `/facturacion`.
+### 1. UI — Botón "Nueva factura manual"
 
-## 2. Nueva estructura de `/facturacion`
+- En `/facturacion` (dashboard) → botón primario arriba a la derecha: **"+ Nueva factura"** con menú:
+  - "Desde proforma aprobada" (flujo actual, lleva a tab "Por timbrar")
+  - "Factura manual (sin embarque)" → abre wizard nuevo
+- También botón en tab "1. Por timbrar" (empty state).
+- Visible solo si `canEmitirFactura` (admin / contador).
+
+### 2. Wizard `DialogNuevaFacturaManual` (3 pasos)
+
+1. **Cliente y datos fiscales** — selector de cliente existente; auto-llena RFC / régimen / CP / uso CFDI default. Validación: cliente debe tener datos fiscales completos.
+2. **Conceptos** — tabla editable (descripción, cantidad, precio unitario, clave SAT producto/servicio, clave unidad). Mínimo 1 concepto. Cálculo en vivo de subtotal, IVA (vía `useTasaIVA`), total. Moneda MXN o USD.
+3. **Condiciones de pago** — serie, forma de pago, método (PUE/PPD), días de crédito, fecha de emisión.
+
+Botón final: **"Guardar borrador"** (queda en "Por timbrar") o **"Guardar y timbrar"** (llama `facturapi-emitir`).
+
+### 3. Backend / DB
+
+- Nueva migración: hacer `proforma_id` y `embarque_id` **nullables** en `facturas` (si no lo son ya). Agregar columna `origen` (`'proforma' | 'manual'`, default `'proforma'`).
+- Nueva tabla `factura_conceptos_manuales` (id, factura_id FK cascade, descripcion, cantidad, precio_unitario, clave_sat_producto, clave_sat_unidad, importe). RLS + GRANT estándar multi-tenant.
+- Servicio nuevo `crearFacturaManual()` en `src/features/facturacion/services/facturaManual.ts`: inserta factura + conceptos, idempotente.
+- Edge function `facturapi-emitir` ya existe — ajustar para que si `factura.origen === 'manual'` lea conceptos de la nueva tabla en vez de la proforma.
+
+### 4. Listados
+
+- Tabs "Por timbrar" y "Emitidas" muestran facturas manuales con badge **"Manual"** junto al número, sin columna de expediente (queda vacía o muestra "—").
+- Filtro adicional en "Emitidas": chip "Solo manuales".
+
+### 5. Permisos y auditoría
+
+- Solo `canEmitirFactura` puede crear/timbrar.
+- Cada acción registra en `bitacora_actividad` con tipo `factura_manual_creada` / `factura_manual_timbrada`.
+
+### 6. Changelog y versión
+
+- Bump `APP_VERSION` → `13.93.0`.
+- Entrada en `CHANGELOG.md` raíz.
+
+## Lo que NO cambia
+
+- Flujo proforma → factura (sigue siendo el camino principal y recomendado).
+- Cancelación, REP, notas de crédito, cobranza: reutilizan la misma factura, no importa el origen.
+- Permisos de otros roles.
+- Cálculos financieros (IVA dinámico, USD/MXN, `currency.js`).
+
+## Riesgos
+
+- **Conceptos SAT:** Isela debe conocer la clave SAT producto/servicio. Mitigación: combobox con búsqueda + último usado por cliente como sugerencia.
+- **Falta de embarque** rompe reportes de rentabilidad por embarque. Mitigación: las facturas manuales se excluyen del reporte de rentabilidad y aparecen en una sección aparte "Cargos sin embarque".
+- **FacturAPI:** ya soporta emitir CFDI desde JSON arbitrario, no requiere cambios de configuración.
+
+## Detalles técnicos (referencia)
 
 ```text
-/facturacion                        ← Dashboard + Bandeja "Por timbrar"
-/facturacion/emitidas               ← CFDI vigentes (con su REP)
-/facturacion/notas-credito          ← Notas de crédito e historial de cancelaciones
-/facturacion/:id                    ← Detalle (sin cambio)
+src/features/facturacion/
+├── components/
+│   ├── DialogNuevaFacturaManual.tsx        (nuevo, wizard 3 pasos)
+│   └── BotonNuevaFactura.tsx               (nuevo, dropdown del dashboard)
+├── hooks/
+│   └── useCrearFacturaManual.ts            (nuevo)
+├── services/
+│   └── facturaManual.ts                    (nuevo, CRUD)
+└── routes/Facturacion.tsx                  (modificado, integra botón)
+
+supabase/migrations/
+└── <ts>_factura_manual.sql                 (nullable FKs + tabla conceptos + RLS/GRANTs)
+
+supabase/functions/facturapi-emitir/
+└── index.ts                                (rama por origen)
 ```
 
-**Landing `/facturacion`** (dashboard del contador):
+## Pregunta antes de implementar
 
-```text
-┌─ KPIs ─────────────────────────────────────────────┐
-│ Facturado mes │ Por timbrar │ Por cobrar │ REP    │
-│ MXN 46.2K     │ 22 proformas│ MXN 737.8K │ pend 3 │
-└────────────────────────────────────────────────────┘
-
-┌─ Bandeja: Por timbrar hoy ─────────────────────────┐
-│ Proforma │ Cliente │ Monto │ Embarque │ [Timbrar] │
-│ ...                                                 │
-└────────────────────────────────────────────────────┘
-
-┌─ Alertas ──────────────────────────────────────────┐
-│ • 3 REP vencen en ≤2 días (día 5)                  │
-│ • 1 factura pendiente desde hace 5 días            │
-│ • Hueco de facturación: 29 embarques cerrados sin  │
-│   factura (USD 202K + MXN 3.4M)  [Ver detalle]     │
-└────────────────────────────────────────────────────┘
-```
-
-## 3. Tabs internos (de 6 → 3)
-
-| Tab actual | Destino nuevo |
-|---|---|
-| 1. Por aprobar (22) | **Tab 1 "Por timbrar"** (fusionado con Pendientes de tab 2) |
-| 2. Proformas (136) | Filtro dentro de "Por timbrar" / "Emitidas" |
-| 3. Facturas emitidas | **Tab 2 "Emitidas"** (incluye sub-filtro "REP pendientes") |
-| 4. Cobranza (111) | Movido a `/cartera` |
-| 5. Pagos a proveedores | Movido a `/cxp` |
-| 6. Proyección | Movido a `/reportes/cierre-mensual` |
-| — | **Tab 3 "Notas de crédito"** (nuevo, hoy escondido en historial) |
-
-**REP**: queda como sub-filtro/chip dentro de "Emitidas" (no item propio del sidebar). Badge rojo si quedan ≤2 días para el día 5.
-
-## 4. Permisos (sin cambio funcional)
-
-Se respeta `usePermissions`:
-- `canEmitirFactura` (contador, admin_org) → ve tab "Por timbrar" + botón Timbrar.
-- `canViewFinancials` → ve KPIs.
-- Otros roles ven solo lo que ya veían (read-only).
-
-## 5. Plan de implementación (orden)
-
-1. **Sidebar**: editar `src/components/layout/sidebarItems.ts`
-   - Renombrar "Pre-Facturación" → "Facturación".
-   - Promover "Cartera" al grupo Gestión (ya está en `Mi Bandeja`, moverlo).
-   - Quitar "Por emitir (Facturación)" del bloque Mi Bandeja.
-   - Agregar "Cierre mensual" en Reportes.
-2. **Rutas**: `src/routes/appRoutes.tsx` añade `/facturacion/emitidas`, `/facturacion/notas-credito`, `/reportes/cierre-mensual`.
-3. **Landing**: refactor `routes/Facturacion.tsx` → componente `FacturacionDashboard.tsx` con:
-   - `KpiStrip` (reusa cards actuales).
-   - `BandejaPorTimbrar` (extraído de TabProformasPendientes).
-   - `AlertasFacturacion` (REP + hueco + atrasos).
-4. **Tab "Emitidas"**: mover `TabFacturasEmitidas` a `/facturacion/emitidas` como página.
-5. **Tab "Notas de crédito"**: extraer `HistorialNotasCredito` + `NotasCreditoRecientes` a `/facturacion/notas-credito`.
-6. **Mover tab "Proyección"** a `/reportes/cierre-mensual` (reusa `TabProyeccion.tsx`).
-7. **Eliminar tabs duplicadas**: borrar `TabCobranza` del módulo (la página `/cartera` ya la cubre) y la tab "Pagos a proveedores" (la página `/cxp` ya la cubre). Dejar redirects 301 internos por si alguien tiene URL vieja.
-8. **CHANGELOG.md** + bump `APP_VERSION` a `13.92.0`.
-9. **Test E2E**: actualizar `e2e/specs/03-factura.spec.ts` para nuevas tabs.
-
-## 6. Riesgos / qué confirmar
-
-- **No tocamos lógica de negocio** (timbrado, cancelación, REP, cálculos). Solo UI/ruteo.
-- **URLs viejas** `/facturacion?tab=cobranza` quedan rotas → meter redirect a `/cartera`.
-- **Roles que usaban tab "Pagos a proveedores"** (tesorero) ahora entran por `/cxp/por-pagar` que ya existe.
-
-## 7. Lo que NO cambia
-
-- Lógica de timbrado CFDI / REP.
-- Migraciones de BD.
-- Permisos (matriz de `usePermissions`).
-- Detalle de factura `/facturacion/:id`.
-- Cálculos financieros.
-
-¿Apruebas para implementar?
+Hay **un detalle de negocio** que necesito confirmar contigo antes de empezar: ¿la factura manual debe seguir requiriendo **cliente registrado en la BD**, o también permitir capturar RFC/datos fiscales libres (cliente "ocasional")? Lo más limpio y consistente con el resto del sistema es **siempre desde cliente registrado** — si necesitas facturar a alguien nuevo, primero lo das de alta en Clientes. Voy con esa opción salvo que prefieras lo contrario.
