@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.factura_conceptos_manuales CASCADE;

@@ -3466,59 +3466,6 @@ export type Database = {
           },
         ]
       }
-      factura_conceptos_manuales: {
-        Row: {
-          cantidad: number
-          clave_sat_producto: string
-          clave_sat_unidad: string
-          created_at: string
-          descripcion: string
-          factura_id: string
-          id: string
-          importe: number
-          orden: number
-          organization_id: string
-          precio_unitario: number
-          updated_at: string
-        }
-        Insert: {
-          cantidad?: number
-          clave_sat_producto?: string
-          clave_sat_unidad?: string
-          created_at?: string
-          descripcion: string
-          factura_id: string
-          id?: string
-          importe?: number
-          orden?: number
-          organization_id?: string
-          precio_unitario?: number
-          updated_at?: string
-        }
-        Update: {
-          cantidad?: number
-          clave_sat_producto?: string
-          clave_sat_unidad?: string
-          created_at?: string
-          descripcion?: string
-          factura_id?: string
-          id?: string
-          importe?: number
-          orden?: number
-          organization_id?: string
-          precio_unitario?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "factura_conceptos_manuales_factura_id_fkey"
-            columns: ["factura_id"]
-            isOneToOne: false
-            referencedRelation: "facturas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       factura_notas_credito: {
         Row: {
           aprobada_at: string | null
