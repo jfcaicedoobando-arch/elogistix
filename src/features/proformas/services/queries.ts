@@ -24,6 +24,8 @@ export type ProformaDetalleFull = ProformaConFactura & {
     estado: string;
     total: number;
     moneda: string;
+    fecha_emision: string | null;
+    uuid_fiscal: string | null;
     factura_pdf_url: string | null;
     factura_xml_url: string | null;
   } | null;
@@ -33,7 +35,7 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
   const { data, error } = await supabase
     .from("proformas")
     .select(
-      "*, facturas:factura_id(factura_pdf_url, factura_xml_url), facturas_full:factura_id(id, numero, estado, total, moneda, factura_pdf_url, factura_xml_url)",
+      "*, facturas:factura_id(factura_pdf_url, factura_xml_url), facturas_full:factura_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url)",
     )
     .eq("id", id)
     .maybeSingle();
