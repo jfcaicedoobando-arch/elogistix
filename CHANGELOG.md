@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.89.6] - 2026-06-21
+- **feat(dashboard) tarjeta de embarques pendientes admin para roles financieros**: contador / tesorero / ejecutivo de cobranza / auxiliar contable no tienen "Embarques" en el sidebar por diseño, así que no podían ver de un vistazo qué embarques estaban en `Entregado` o `EIR` esperando cierre administrativo. Se agrega `EmbarquesPendientesAdminCard` en `/inicio` (sólo lectura, visible únicamente para esos 4 roles) con dos KPIs (Entregados / En EIR) y un Top 10 más antiguos ordenado por `updated_at` ascendente. Hook `useEmbarquesPendientesAdmin` consulta `embarques` con select explícito (`id, expediente, cliente_nombre, estado, updated_at`), filtra por `estado in ('Entregado','EIR')`, `staleTime` de 5 min siguiendo el patrón de `useSidebarAlerts`. Sin cambios en RLS, rutas ni sidebar.
+
 ## [13.89.5] - 2026-06-21
 - **chore(ci) bajar complejidad de `TabCostos`**: el CI volvió a fallar en lint por `TabCostos` con complejidad ciclomática 18 (máx 16) — consecuencia de los deep-links de v13.89.3 que agregaron foco + filtro + chip + empty state contextual al mismo componente. Sin cambios funcionales. Se extrajo `ConceptosCostoCard` (`src/features/embarques/components/costos/ConceptosCostoCard.tsx`) que encapsula `useFocusSection`, el filtro derivado (`costoFocus → conceptosCostoFiltrados`), el chip "Filtrando: …" con botón "Limpiar" y el `EmptyState` con copy contextual. `TabCostos` baja a complejidad ~9.
 
