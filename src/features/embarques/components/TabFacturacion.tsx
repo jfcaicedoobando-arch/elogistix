@@ -58,6 +58,14 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
   const { registerRef } = useFocusSection();
 
+  // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
+  // El estado "facturado" se deriva cruzando con `proformas.estado_proforma`
+  // porque `conceptos_venta.estado_facturacion` es binario en BD.
+  const estadosConceptos = useMemo(
+    () => calcularEstadosConceptos(conceptos, proformas),
+    [conceptos, proformas]
+  );
+
   const conceptosPendientes = useMemo(
     () => conceptos.filter(c => c.estado_facturacion !== 'en_proforma'),
     [conceptos]
