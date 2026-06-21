@@ -42,33 +42,21 @@ export function EmbarqueDetalleHeaderActions({
   const cierreBloqueadoPorChecklist =
     cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
 
-  const mostrarAvanzar = canEdit && !!siguienteEstado && !ocultarAvance;
-  const mostrarEditarPrincipal = canEdit && (!siguienteEstado || ocultarAvance);
+  const accionPrincipal = renderAccionPrincipal({
+    canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
+    bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
+    onAvanzarEstado, onIrACierre, goEditar,
+  });
 
   return (
     <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
-      {mostrarAvanzar && siguienteEstado && (
-        <AvanzarEstadoButton
-          estadoVisual={estadoVisual}
-          siguienteEstado={siguienteEstado}
-          avanzandoEstado={avanzandoEstado}
-          bloqueadoPorDocs={bloqueadoPorDocs}
-          docsFaltantes={docsFaltantes}
-          cierreBloqueadoPorChecklist={cierreBloqueadoPorChecklist}
-          onAvanzarEstado={onAvanzarEstado}
-          onIrACierre={onIrACierre}
-        />
-      )}
-      {mostrarEditarPrincipal && (
-        <Button size="sm" onClick={goEditar}>
-          <Edit className="h-4 w-4 mr-1" /> Editar
-        </Button>
-      )}
+      {accionPrincipal}
       {canEdit && siguienteEstado && (
         <Button variant="outline" size="sm" onClick={goEditar}>
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>
       )}
+
 
       <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
         <Share2 className="h-4 w-4 mr-1" /> Compartir
