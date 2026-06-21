@@ -889,6 +889,13 @@ export type Database = {
             referencedRelation: "pagos_factura"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "comisiones_devengadas_pago_factura_id_fkey"
+            columns: ["pago_factura_id"]
+            isOneToOne: true
+            referencedRelation: "v_pagos_rep_pendientes"
+            referencedColumns: ["pago_id"]
+          },
         ]
       }
       conceptos_costo: {
@@ -4125,8 +4132,11 @@ export type Database = {
           deleted_by: string | null
           diferencia_cambiaria_mxn: number
           embarque_id: string | null
+          estado_rep: string
           factura_id: string
+          facturapi_rep_id: string | null
           fecha_pago: string
+          folio_rep: number | null
           forma_pago: string
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
@@ -4135,8 +4145,17 @@ export type Database = {
           notas: string
           organization_id: string
           referencia: string
+          rep_cancelado_en: string | null
+          rep_error: string | null
+          rep_motivo_cancel: string | null
+          rep_pdf_url: string | null
+          rep_xml_url: string | null
+          serie_rep: string | null
+          timbrado_rep_en: string | null
+          timbrado_rep_por: string | null
           tipo_cambio: number
           updated_at: string
+          uuid_rep: string | null
         }
         Insert: {
           created_at?: string
@@ -4145,8 +4164,11 @@ export type Database = {
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
           embarque_id?: string | null
+          estado_rep?: string
           factura_id: string
+          facturapi_rep_id?: string | null
           fecha_pago: string
+          folio_rep?: number | null
           forma_pago?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -4155,8 +4177,17 @@ export type Database = {
           notas?: string
           organization_id?: string
           referencia?: string
+          rep_cancelado_en?: string | null
+          rep_error?: string | null
+          rep_motivo_cancel?: string | null
+          rep_pdf_url?: string | null
+          rep_xml_url?: string | null
+          serie_rep?: string | null
+          timbrado_rep_en?: string | null
+          timbrado_rep_por?: string | null
           tipo_cambio?: number
           updated_at?: string
+          uuid_rep?: string | null
         }
         Update: {
           created_at?: string
@@ -4165,8 +4196,11 @@ export type Database = {
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number
           embarque_id?: string | null
+          estado_rep?: string
           factura_id?: string
+          facturapi_rep_id?: string | null
           fecha_pago?: string
+          folio_rep?: number | null
           forma_pago?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -4175,8 +4209,17 @@ export type Database = {
           notas?: string
           organization_id?: string
           referencia?: string
+          rep_cancelado_en?: string | null
+          rep_error?: string | null
+          rep_motivo_cancel?: string | null
+          rep_pdf_url?: string | null
+          rep_xml_url?: string | null
+          serie_rep?: string | null
+          timbrado_rep_en?: string | null
+          timbrado_rep_por?: string | null
           tipo_cambio?: number
           updated_at?: string
+          uuid_rep?: string | null
         }
         Relationships: [
           {
@@ -5464,6 +5507,47 @@ export type Database = {
             columns: ["tipo_contenedor_id"]
             isOneToOne: false
             referencedRelation: "tipos_contenedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_pagos_rep_pendientes: {
+        Row: {
+          cliente_id: string | null
+          dias_restantes: number | null
+          embarque_id: string | null
+          factura_id: string | null
+          factura_numero: string | null
+          factura_serie: string | null
+          factura_uuid: string | null
+          fecha_limite_rep: string | null
+          fecha_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"] | null
+          monto_aplicado_factura: number | null
+          organization_id: string | null
+          pago_id: string | null
+          tipo_cambio: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_factura_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
             referencedColumns: ["id"]
           },
         ]

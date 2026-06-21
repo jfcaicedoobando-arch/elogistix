@@ -7,7 +7,7 @@
 import {
   pick,
   fmtCxc, fmtCxp, fmtDocs, fmtMargen, fmtVentaPendientes,
-  fmtSinFactura, fmtContenedores,
+  fmtSinFactura, fmtContenedores, fmtRepPendientes,
 } from "./cierreCheckFormatters";
 
 export type ResponsableCierre =
@@ -75,7 +75,13 @@ const META: Record<string, CierreCheckMeta> = {
   },
   // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
   // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
-
+  rep_pendientes: {
+    label: "Complementos de Pago (REP) timbrados",
+    responsable: "Contador",
+    ruta: buildRuta("facturacion", "rep-pendientes"),
+    ctaLabel: "Ir a Facturación",
+    formatDetalle: fmtRepPendientes,
+  },
 };
 
 const FALLBACK: CierreCheckMeta = {

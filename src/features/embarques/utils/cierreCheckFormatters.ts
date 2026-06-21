@@ -84,3 +84,9 @@ export const fmtContenedores = (d: unknown): string | null => {
   if (sin > 0) return `${sin} contenedor(es) sin peso/volumen`;
   return null;
 };
+
+export const fmtRepPendientes = (d: unknown): string | null => {
+  const n = Number(pick(d, "pendientes") ?? 0);
+  if (n > 0) return `${n} pago(s) PPD sin REP timbrado`;
+  return null;
+};
