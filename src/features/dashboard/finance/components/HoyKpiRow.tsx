@@ -1,5 +1,5 @@
 import { FileText, Banknote, AlertCircle, Inbox } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiTile } from "./KpiTile";
 
 interface Props {
