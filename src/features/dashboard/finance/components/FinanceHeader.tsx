@@ -36,7 +36,7 @@ export function FinanceHeader({
   porPagarMxn,
   porTimbrar,
 }: Props) {
-  const chips: Chip[] = [
+  const rawChips: (Chip | null)[] = [
     vencidoMxn > 0
       ? {
           icon: <AlertCircle className="h-3.5 w-3.5" />,
@@ -58,7 +58,8 @@ export function FinanceHeader({
           className: "border-blue-300/50 bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300",
         }
       : null,
-  ].filter((c): c is Chip => c !== null);
+  ];
+  const chips: Chip[] = rawChips.filter((c): c is Chip => c !== null);
 
   const titulo = (
     <>
