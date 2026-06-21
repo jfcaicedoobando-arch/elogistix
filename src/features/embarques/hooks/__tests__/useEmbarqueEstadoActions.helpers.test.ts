@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveCierreGate, clasificarBloqueoAvance } from "../useEmbarqueEstadoActions";
+import { resolveCierreGate, clasificarBloqueoAvance } from "../useEmbarqueEstadoActions.helpers";
 
 describe("resolveCierreGate", () => {
   it("devuelve null cuando el cierre no es visible", () => {
