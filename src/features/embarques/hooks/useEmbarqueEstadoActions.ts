@@ -81,13 +81,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { data: validacionCierre } = useValidacionCierre(cierreVisible ? id : undefined);
   const rolPuedeCerrar = isAdmin || canEditFinance;
   const validacionOk = validacionCierre?.puede_cerrar === true;
-  const bloqueoCierreMotivo: "rol" | "checklist" | null = !cierreVisible
-    ? null
-    : !rolPuedeCerrar
-      ? "rol"
-      : !validacionOk
-        ? "checklist"
-        : null;
+  const bloqueoCierreMotivo = resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk);
 
   // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
   const embarqueId = embarque?.id;
