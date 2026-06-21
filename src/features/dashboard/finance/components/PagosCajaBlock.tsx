@@ -12,6 +12,7 @@ interface CxpItem {
   saldo: number;
   moneda: string;
   fecha_vencimiento: string | null;
+  embarque_id?: string | null;
 }
 
 interface Props {
