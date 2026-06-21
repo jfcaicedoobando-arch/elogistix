@@ -92,6 +92,13 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
 
   return (
     <div className="space-y-4">
+      <FlujoFacturacionStepper
+        conceptosCount={conceptos.length}
+        facturadosCount={Array.from(estadosConceptos.values()).filter(e => e === "facturado").length}
+        proformasCount={proformas.length}
+        proformasFacturadasCount={proformas.filter(p => p.estado_proforma === "facturada").length}
+        facturasCount={facturas.length}
+      />
       <div ref={registerRef("venta-pendientes")} data-focus="venta-pendientes">
         <ResumenConceptosVenta
           conceptos={conceptos}
