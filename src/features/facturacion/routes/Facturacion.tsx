@@ -32,11 +32,7 @@ import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFactur
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
 import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFacturacionCard";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
-import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
-import { DialogHistorialPagos } from "@/features/facturacion/components/DialogHistorialPagos";
-import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
-import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
-import { DialogNuevaFacturaManual } from "@/features/facturacion/components/DialogNuevaFacturaManual";
+import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
