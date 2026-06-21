@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { FileText, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,18 +32,21 @@ export function ResumenConceptosVenta({
   conceptos, contenedores, tasaIva, canEdit, estadosConceptos,
   onGenerarProforma, onGenerarProformaContenedor,
 }: Props) {
-  const estadoDe = (id: string): EstadoConcepto => estadosConceptos.get(id) ?? "pendiente";
+  const estadoDe = useCallback(
+    (id: string): EstadoConcepto => estadosConceptos.get(id) ?? "pendiente",
+    [estadosConceptos],
+  );
   const conceptosPendientes = useMemo(
     () => conceptos.filter(c => estadoDe(c.id) === "pendiente"),
-    [conceptos, estadosConceptos]
+    [conceptos, estadoDe]
   );
   const conceptosEnProforma = useMemo(
     () => conceptos.filter(c => estadoDe(c.id) === "en_proforma"),
-    [conceptos, estadosConceptos]
+    [conceptos, estadoDe]
   );
   const conceptosFacturados = useMemo(
     () => conceptos.filter(c => estadoDe(c.id) === "facturado"),
-    [conceptos, estadosConceptos]
+    [conceptos, estadoDe]
   );
 
   // v12.14.0: si hay ≥2 contenedores reales mostramos vista agrupada
