@@ -10,8 +10,9 @@ test.describe("Flujo 03 — Facturación", () => {
       timeout: 15_000,
     });
 
-    // Tabs típicas: Facturas / Proformas / Proyección.
-    await expect(page.getByRole("tab", { name: /facturas/i }).first()).toBeVisible();
-    await expect(page.getByRole("tab", { name: /proformas/i }).first()).toBeVisible();
+    // v13.92.0: rediseño a 3 tabs (Por timbrar / Emitidas / Notas de crédito).
+    await expect(page.getByRole("tab", { name: /por timbrar/i }).first()).toBeVisible();
+    await expect(page.getByRole("tab", { name: /emitidas/i }).first()).toBeVisible();
+    await expect(page.getByRole("tab", { name: /notas de cr/i }).first()).toBeVisible();
   });
 });

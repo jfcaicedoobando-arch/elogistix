@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.92.0] - 2026-06-21
+- **refactor(facturacion) rediseño del módulo: de 6 tabs confusas a dashboard + 3 tabs**: Pre-Facturación mezclaba operaciones que pertenecen a otros módulos (Cobranza, Pagos a proveedores, Proyección), duplicando funcionalidad de `/cartera` y `/cxp` y confundiendo al contador. Cambios:
+  - **Sidebar**: ítem renombrado a "Facturación" (antes "Pre-Facturación"). Se promovió "Cobranza" (`/cartera`) al grupo Gestión como ítem propio. Nuevo ítem "Cierre mensual" (`/reportes/cierre-mensual`) en Reportes. Para el rol `contador` se eliminó el bloque "Mi bandeja" duplicado: ahora entra directo al dashboard de `/facturacion`.
+  - **`/facturacion`**: ahora muestra siempre arriba el dashboard ejecutivo de KPIs + alerta de hueco de facturación. Tabs reducidas a **3**: (1) "Por timbrar" — bandeja del día con proformas pendientes de CFDI; (2) "Emitidas" — CFDI vigentes con sub-acciones REP; (3) "Notas de crédito" — historial.
+  - **Movidas fuera**: tab "Cobranza" → ya existía `/cartera`. Tab "Pagos a proveedores" → ya existía `/cxp/por-pagar`. Tab "Proyección" → nueva ruta `/reportes/cierre-mensual` (envuelve `TabProyeccion`).
+  - **URLs legacy**: `/facturacion?tab=cobranza|liquidacion|proyeccion` ejecutan `<Navigate replace>` al módulo correcto, sin romper bookmarks.
+  - **E2E**: `e2e/specs/03-factura.spec.ts` actualizado a las 3 tabs nuevas.
+
 ## [13.91.0] - 2026-06-21
 - **feat(facturacion/rep) módulo de Complemento de Pagos (REP) end-to-end**: el SAT obliga a emitir un Recibo Electrónico de Pago timbrado por cada cobro recibido sobre una factura PPD (Pago en Parcialidades o Diferido), dentro de los primeros 5 días naturales del mes siguiente al pago. Antes la app registraba el cobro en `pagos_factura` pero no timbraba nada — hueco fiscal. Cambios:
   - **DB**: 12 columnas nuevas en `pagos_factura` (`facturapi_rep_id`, `uuid_rep`, `folio_rep`, `serie_rep`, `rep_pdf_url`, `rep_xml_url`, `estado_rep`, `timbrado_rep_en/por`, `rep_error`, `rep_cancelado_en`, `rep_motivo_cancel`). Trigger `BEFORE INSERT` que setea `estado_rep` automáticamente: `Pendiente` si la factura es PPD y está timbrada, `NoAplica` en cualquier otro caso. Backfill aplicado a pagos existentes. Vista `v_pagos_rep_pendientes` con `fecha_limite_rep` (día 5 del mes siguiente) y `dias_restantes` para dashboards.
