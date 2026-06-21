@@ -21,7 +21,7 @@ export function badgeRep(estado: EstadoRep) {
 
 export interface PagoRowData {
   id: string;
-  fecha_pago: string | Date;
+  fecha_pago: string;
   monto: number | string;
   moneda: string;
   monto_aplicado_factura: number | string;
