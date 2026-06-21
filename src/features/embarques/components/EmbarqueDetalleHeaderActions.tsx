@@ -1,11 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, Share2, Copy, Unlock } from "lucide-react";
+import { Edit, Trash2, Share2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
+import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
 
 interface Props {
   expediente: string;
@@ -39,18 +36,18 @@ export function EmbarqueDetalleHeaderActions({
   cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
   const navigate = useNavigate();
+  const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
 
   const ocultarAvance = cierreEsSiguiente && !rolPuedeCerrar;
   const cierreBloqueadoPorChecklist =
     cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
 
-  const mostrarAvanzar = canEdit && siguienteEstado && !ocultarAvance;
-  const mostrarEditarSecundario = canEdit && siguienteEstado;
+  const mostrarAvanzar = canEdit && !!siguienteEstado && !ocultarAvance;
   const mostrarEditarPrincipal = canEdit && (!siguienteEstado || ocultarAvance);
 
   return (
     <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
-      {mostrarAvanzar && siguienteEstado ? (
+      {mostrarAvanzar && siguienteEstado && (
         <AvanzarEstadoButton
           estadoVisual={estadoVisual}
           siguienteEstado={siguienteEstado}
@@ -61,14 +58,14 @@ export function EmbarqueDetalleHeaderActions({
           onAvanzarEstado={onAvanzarEstado}
           onIrACierre={onIrACierre}
         />
-      ) : mostrarEditarPrincipal ? (
-        <Button size="sm" onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
+      )}
+      {mostrarEditarPrincipal && (
+        <Button size="sm" onClick={goEditar}>
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>
-      ) : null}
-
-      {mostrarEditarSecundario && (
-        <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
+      )}
+      {canEdit && siguienteEstado && (
+        <Button variant="outline" size="sm" onClick={goEditar}>
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>
       )}
@@ -84,25 +81,11 @@ export function EmbarqueDetalleHeaderActions({
       )}
 
       {puedeReabrir && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={reabriendoEstado}>
-              <Unlock className="h-4 w-4 mr-1" /> Reabrir
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reabrir embarque cerrado</AlertDialogTitle>
-              <AlertDialogDescription>
-                El embarque <strong>{expediente}</strong> regresará al estado <strong>Entregado</strong> para poder generar la proforma o ajustar facturación. La acción se registrará en la bitácora y en el tracking.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={onReabrir}>Reabrir</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ReabrirEmbarqueButton
+          expediente={expediente}
+          reabriendoEstado={reabriendoEstado}
+          onReabrir={onReabrir}
+        />
       )}
 
       {canEdit && (
