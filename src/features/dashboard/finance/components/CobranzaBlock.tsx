@@ -87,19 +87,26 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
           ) : (
             <ul className="divide-y rounded-md border">
               {facturasVencidas.map((f) => (
-                <li key={f.id} className="px-3 py-2 text-sm flex items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{f.numero}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {f.cliente_nombre}
-                    </p>
-                  </div>
-                  <span className="text-sm tabular-nums font-semibold">
-                    {formatCurrency(f.saldo, f.moneda)}
-                  </span>
-                  <Badge variant="outline" className="text-[10px] border-red-300 text-red-700">
-                    {f.dias_vencido} d
-                  </Badge>
+                <li key={f.id}>
+                  <Link
+                    to={`/facturacion/${f.id}`}
+                    className="px-3 py-2 text-sm flex items-center gap-3 hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors"
+                    aria-label={`Abrir factura ${f.numero}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{f.numero}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {f.cliente_nombre}
+                      </p>
+                    </div>
+                    <span className="text-sm tabular-nums font-semibold">
+                      {formatCurrency(f.saldo, f.moneda)}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] border-red-300 text-red-700">
+                      {f.dias_vencido} d
+                    </Badge>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </Link>
                 </li>
               ))}
             </ul>
