@@ -11,6 +11,7 @@ export * from './usePagosFactura';
 export * from './useFactura';
 export * from './useTimbrarFactura';
 export * from './useTimbrarRep';
+export * from './useCrearFacturaManual';
 
 export * from './useNotasCredito';
 export * from './useCobranza';

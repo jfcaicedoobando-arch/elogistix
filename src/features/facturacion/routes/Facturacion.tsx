@@ -19,7 +19,8 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { Info } from "lucide-react";
+import { Info, FilePlus2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,9 +36,11 @@ import { DialogRegistrarPago } from "@/features/facturacion/components/DialogReg
 import { DialogHistorialPagos } from "@/features/facturacion/components/DialogHistorialPagos";
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
 import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
+import { DialogNuevaFacturaManual } from "@/features/facturacion/components/DialogNuevaFacturaManual";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
+import { usePermissions } from "@/hooks/shared";
 import { buildFacturaColumns, type Factura } from "./facturacionColumns";
 
 type TabDef = { value: string; label: string; hint: string; badge?: number; tone?: "default" | "warn" };
