@@ -23,20 +23,26 @@ export function Layout() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const isMobile = useIsMobile();
+
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-40 h-11 sm:h-12 flex items-center gap-2 sm:gap-3 border-b border-border/60 bg-card/95 px-3 sm:px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-            <Tooltip delayDuration={300}>
-              <TooltipTrigger asChild>
-                <SidebarTrigger className="shrink-0" />
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                Colapsar / expandir menú · <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono">⌘B</kbd>
-              </TooltipContent>
-            </Tooltip>
+            {isMobile ? (
+              <SidebarTrigger className="shrink-0" aria-label="Colapsar o expandir menú" />
+            ) : (
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <SidebarTrigger className="shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Colapsar / expandir menú · <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono">⌘B</kbd>
+                </TooltipContent>
+              </Tooltip>
+            )}
             <div className="h-5 w-px bg-border shrink-0" aria-hidden />
             <Breadcrumbs />
             <div className="ml-auto flex items-center gap-0.5 sm:gap-2 shrink-0">
