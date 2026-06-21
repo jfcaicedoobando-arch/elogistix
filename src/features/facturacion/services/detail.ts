@@ -72,7 +72,7 @@ const COLUMNS = [
   "folio_fiscal",
   "serie",
   "facturapi_id",
-  "proformas:proformas(numero)",
+  "proformas:proformas!facturas_proforma_id_fkey(numero)",
 ].join(", ");
 
 export async function fetchFacturaById(id: string): Promise<FacturaDetalle | null> {

@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.90.4] - 2026-06-21
+- **fix(proformas) link a factura asociada roto**: el embed PostgREST `proformas:proformas(numero)` en `facturacion/services/detail.ts` era ambiguo (existen FKs en ambos sentidos `facturas.proforma_id` y `proformas.factura_id`) y devolvía HTTP 300, por lo que `/facturacion/:id` mostraba "Factura no encontrada o sin acceso". Se desambigua con `proformas:proformas!facturas_proforma_id_fkey(numero)`.
+- **ui(proformas) rediseño del detalle de proforma**: header unificado con total destacado a la derecha (estilo `FacturaDetalle`), barra de acciones secundarias debajo, datos generales con `truncate` + `nombreDesdeEmail` para evitar overflow del operador, y card de "Factura asociada" rediseñada con monto, fecha, folio y botón primario "Ver factura".
+
 ## [13.90.3] - 2026-06-21
 - **fix(cierre) documentos "No aplica" ya no se cuentan como faltantes**: las RPCs `validar_cierre_embarque` y `embarque_admin_pendientes_resumen` ahora excluyen del conteo de docs faltantes los renglones con `estado = 'No aplica'`, alineándose con `embarque_docs_faltantes`. En el frontend, el filtro `?focus=faltantes` de `TabDocumentos` también excluye los "No aplica" para no confundir al usuario. Caso reproducido en ELIMP00230 (5 docs "No aplica" se mostraban como faltantes en el tab de Cierre).
 
