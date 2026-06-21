@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.90.2] - 2026-06-21
+- **fix(dashboard) arreglar CI tras el dashboard financiero**: (1) `useEmbarquesPendientesAdmin` dejó de importar `@/integrations/supabase/client` directamente — la consulta se mueve al nuevo servicio `src/features/dashboard/services/embarquesPendientesAdmin.ts`, restaurando la regla de arquitectura Pages → Hooks → Services → Lib. (2) `FinanceDashboard` baja su complejidad ciclomática de 18 a ≤16 extrayendo un helper `toViewModel(dash)` que resuelve todos los `?? 0` antes del JSX. Sin cambios de UI ni comportamiento.
+
 ## [13.90.1] - 2026-06-21
 - **feat(dashboard) drilldown a embarques desde el dashboard financiero**: cada fila del top 10 de `EmbarquesPendientesAdminCard` es ahora un `<Link>` a `/embarques/:id` con hover, focus visible y `ChevronRight`. En `CobranzaBlock` las facturas vencidas enlazan a `/facturacion/:id`, y en `PagosCajaBlock` las facturas proveedor enlazan a `/embarques/:embarque_id` cuando existe el vínculo, fallback a `/cxp`. La ruta `/embarques/:id` ya estaba abierta a todos los roles autenticados (sin `guarded()`), así que los roles financieros pueden abrir el detalle aunque "Embarques" no aparezca en su sidebar.
 

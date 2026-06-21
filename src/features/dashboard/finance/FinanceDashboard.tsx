@@ -32,6 +32,31 @@ function firstName(email: string | null | undefined, fallback: string): string {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
+type FinanceDash = ReturnType<typeof useFinanceDashboard>;
+
+interface FinanceViewModel {
+  vencidoMxn: number;
+  vencidoUsd: number;
+  porPagarMxn: number;
+  porPagarUsd: number;
+  porTimbrar: number;
+  porCapturar: number;
+}
+
+function toViewModel(dash: FinanceDash): FinanceViewModel {
+  const cob = dash.cobranzaKpis;
+  const cxp = dash.cxpKpis;
+  const adm = dash.pendientesAdmin;
+  return {
+    vencidoMxn: cob?.vencido_mxn ?? 0,
+    vencidoUsd: cob?.vencido_usd ?? 0,
+    porPagarMxn: cxp?.por_pagar_mxn ?? 0,
+    porPagarUsd: cxp?.por_pagar_usd ?? 0,
+    porTimbrar: dash.hueco.total,
+    porCapturar: (adm?.entregadosCount ?? 0) + (adm?.eirCount ?? 0),
+  };
+}
+
 export function FinanceDashboard() {
   const { user } = useAuth();
   const dash = useFinanceDashboard();
@@ -42,10 +67,7 @@ export function FinanceDashboard() {
   );
 
   const nombre = firstName(user?.email, "");
-
-  const pendientesAdminCount =
-    (dash.pendientesAdmin?.entregadosCount ?? 0) +
-    (dash.pendientesAdmin?.eirCount ?? 0);
+  const vm = toViewModel(dash);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -53,18 +75,18 @@ export function FinanceDashboard() {
         saludo={saludo}
         nombre={nombre}
         hoyStr={hoyStr}
-        vencidoMxn={dash.cobranzaKpis?.vencido_mxn ?? 0}
-        porPagarMxn={dash.cxpKpis?.por_pagar_mxn ?? 0}
-        porTimbrar={dash.hueco.total}
+        vencidoMxn={vm.vencidoMxn}
+        porPagarMxn={vm.porPagarMxn}
+        porTimbrar={vm.porTimbrar}
       />
 
       <HoyKpiRow
-        porFacturar={dash.hueco.total}
-        porPagarMxn={dash.cxpKpis?.por_pagar_mxn ?? 0}
-        porPagarUsd={dash.cxpKpis?.por_pagar_usd ?? 0}
-        vencidoMxn={dash.cobranzaKpis?.vencido_mxn ?? 0}
-        vencidoUsd={dash.cobranzaKpis?.vencido_usd ?? 0}
-        porCapturar={pendientesAdminCount}
+        porFacturar={vm.porTimbrar}
+        porPagarMxn={vm.porPagarMxn}
+        porPagarUsd={vm.porPagarUsd}
+        vencidoMxn={vm.vencidoMxn}
+        vencidoUsd={vm.vencidoUsd}
+        porCapturar={vm.porCapturar}
         loading={dash.isLoading}
       />
 
