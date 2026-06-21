@@ -1,5 +1,4 @@
 import { lazy, Suspense } from "react";
-import { lazy, Suspense } from "react";
 import { Download, FileText, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
