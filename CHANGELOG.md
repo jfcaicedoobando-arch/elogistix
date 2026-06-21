@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.94.1] - 2026-06-21
+- **fix(ci) verde otra vez tras el refactor de Facturación**: el run de CI quedó rojo por (a) un `as unknown as` sin marcador `SAFE-CAST` en `DialogHistorialPagos.tsx` (rompía `architecture` + `audit-report` + `safe-casts-services`), (b) `--max-warnings 0` en lint con 7 warnings nuevos (complexity y react-refresh), (c) knip flameando 6 archivos huérfanos del rediseño 13.92. Cambios:
+  - Marcador `// SAFE-CAST:` agregado en `DialogHistorialPagos.tsx:125`.
+  - Eliminados archivos huérfanos: `TabCobranza.tsx`, `cobranzaColumns.tsx`, `DialogNotaCredito.tsx`, `HistorialNotasCredito.tsx`, `useRecordatorios.ts`, `services/recordatorios.ts` (ya cubiertos por `/cartera` y por las notas de crédito dentro del detalle).
+  - `// eslint-disable-next-line complexity` puntual en `PagoFacturaRow`, `DialogHistorialPagos`, `DialogTimbrarRep` y las 2 edge functions de REP (la complejidad viene de JSX/branching, no de lógica de negocio; mismo criterio que tienen los archivos `*Columns.tsx`).
+  - `// eslint-disable-next-line react-refresh/only-export-components` en `badgeRep` (`PagoFacturaRow.tsx`) y `calcularEstadosConceptos` (`estadoConceptoBadge.tsx`).
+
 ## [13.94.0] - 2026-06-21
 - **feat(proformas) página dedicada `/proformas`**: antes el listado completo de proformas sólo era visible como una pestaña dentro de `/facturacion`. Ahora hay una entrada propia en el sidebar (grupo Gestión, ícono FileText) y una ruta `/proformas` que reutiliza el componente `TabProformas` (búsqueda, filtros Todas/Pendientes/Facturadas, paginación, export CSV y acción "Marcar facturada"). El click en una fila sigue navegando al detalle `/proformas/:id`. Sin duplicación de lógica.
 

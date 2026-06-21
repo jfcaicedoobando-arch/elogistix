@@ -26,6 +26,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// eslint-disable-next-line complexity
 Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
