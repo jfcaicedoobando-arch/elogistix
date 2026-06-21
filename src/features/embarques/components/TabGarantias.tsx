@@ -12,7 +12,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { ShieldCheck } from "lucide-react";
 import { useGarantiasContenedor } from "@/features/embarques/hooks/useGarantiasContenedor";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import { diffDias } from "./garantias/VenceBadge";
+import { diffDias } from "./garantias/garantiasUtils";
 import { GarantiasKpiCards } from "./garantias/GarantiasKpiCards";
 import { useGarantiasColumns, type GarantiaRow } from "./garantias/useGarantiasColumns";
 

@@ -1,12 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/formatters";
-
-/** Diferencia en días entre dos fechas ISO (YYYY-MM-DD). */
-export function diffDias(desdeIso: string, hastaIso: string): number {
-  const a = new Date(desdeIso + "T00:00:00").getTime();
-  const b = new Date(hastaIso + "T00:00:00").getTime();
-  return Math.round((b - a) / (1000 * 60 * 60 * 24));
-}
+import { diffDias } from "./garantiasUtils";
 
 export function VenceBadge({ fechaLimite }: { fechaLimite: string | null }) {
   if (!fechaLimite) return <span className="text-muted-foreground">—</span>;
