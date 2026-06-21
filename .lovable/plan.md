@@ -1,101 +1,63 @@
-## Auditoría visual — `/facturacion`
+## Problema
 
-### 🔴 Hallazgo crítico: la guía "¿Cómo funciona este módulo?" está desactualizada
+En el header de `src/components/layout/Layout.tsx`, el `SidebarTrigger` (el ícono que abre/colapsa el menú) está envuelto en un `<Tooltip>` de Radix:
 
-`GuiaPrefacturacion.tsx` todavía describe el módulo **anterior al rediseño v13.92** (6 tabs). Hoy muestra 4 pasos que no coinciden con la realidad:
+```tsx
+<Tooltip delayDuration={300}>
+  <TooltipTrigger asChild>
+    <SidebarTrigger />
+  </TooltipTrigger>
+  <TooltipContent>Colapsar / expandir menú · ⌘B</TooltipContent>
+</Tooltip>
+```
 
-| Guía dice | Realidad actual |
-|---|---|
-| 1. Por aprobar → Consolidar | ✅ existe como tab "1. Por timbrar" |
-| 2. Proformas → Histórico | ❌ vive en `/proformas` (módulo aparte desde v13.94.0) |
-| 3. Facturas → Emitidas | ✅ tab "2. Emitidas" |
-| 4. Pagos prov. → Cuentas por pagar | ❌ vive en `/cxp/por-pagar` |
-| — (falta) | Tab "3. Notas de crédito" no aparece en la guía |
+En pantallas táctiles (tu viewport actual es 343×605, móvil), Radix Tooltip se comporta así: el **primer tap** abre el tooltip y el **segundo tap** activa el botón. Por eso necesitas hacer "doble clic" en móvil/tablet para que el sidebar se expanda.
 
-El texto del ciclo también miente: "registras los pagos a tus proveedores (navieras, agentes, etc.)" — eso ya no se hace aquí.
+En desktop con mouse no se nota porque el tooltip aparece con hover y el click pasa directo.
 
-### 🟡 Hallazgos visuales del dashboard
+**Analogía:** es como un portero que primero te pregunta "¿a qué vienes?" (tooltip) y solo en el segundo intento te deja pasar (click). En desktop ves el cartel del portero antes de tocar; en móvil tienes que tocar dos veces.
 
-1. **Stack vertical abrumador** — antes de ver datos hay 5 bloques apilados: PageHeader · Guía · KPIs · Alerta Hueco · DateRangeFilter (cada uno en su propio Card). Ocupa toda la pantalla en 1440px.
-2. **Redundancia "Por facturar" ↔ "Hueco de Facturación"** — el KPI amarillo (MXN 3.5M) y la alerta roja (MXN 3,493,590.66) muestran exactamente el mismo número. Es la misma información mostrada dos veces seguidas.
-3. **Etiqueta duplicada en la alerta Hueco**: `USD USD 202,356.65` y `MXN MXN 3,493,590.66` — la moneda aparece dos veces.
-4. **Mini-tendencia ilegible** — la columna de meses (`Ene · Feb · …`) se renderiza en stack vertical y se corta. Las barras de "Cobrado" quedan vacías cuando `cobrado_mes_mxn = 0` (sólo se ve la línea base). El componente no aclara la unidad ni el período exacto.
-5. **DateRangeFilter en Card propio** desperdicia ~80px de alto. Cabe perfecto inline con las tabs o como toolbar discreto.
-6. **Numeración redundante en tabs** — "1. Por timbrar / 2. Emitidas / 3. Notas de crédito": los íconos `Info` ya dan contexto, los prefijos numéricos son ruido (no son un wizard).
-7. **Toolbar interno del tab "Por timbrar"** está en dos filas con espaciado desbalanceado (buscar + 2 selects arriba, botones "Consolidar / Aprobar individual" abajo). Visualmente se siente desordenado.
-8. **KPI "Vencido (111)"** domina visualmente en rojo grande, pero `Por cobrar` y `Vencido` valen exactamente lo mismo (737.8K) — sugiere bug de datos o redundancia que el usuario no entiende.
-9. **Botón "Nueva factura manual"** vive arriba a la derecha, lejos de las tablas donde el usuario decide capturar manual. Útil pero no descubrible cuando se está dentro de una tab.
+## Solución propuesta
 
----
+Deshabilitar el tooltip en dispositivos táctiles, manteniéndolo en desktop donde sí aporta (muestra el atajo ⌘B). Dos opciones:
 
-## Propuesta de mejoras (alcance del cambio)
+### Opción A — Recomendada: ocultar el tooltip en touch
+Renderizar el `SidebarTrigger` sin `Tooltip` cuando el dispositivo es táctil/móvil, usando el hook `useIsMobile` que ya existe en el proyecto (`src/hooks/shared/useIsMobile.ts`).
 
-### A. Reescribir la guía (PRIORIDAD ALTA)
+```tsx
+const isMobile = useIsMobile();
 
-**Archivo:** `src/features/facturacion/components/GuiaPrefacturacion.tsx`
+{isMobile ? (
+  <SidebarTrigger className="shrink-0" aria-label="Colapsar o expandir menú" />
+) : (
+  <Tooltip delayDuration={300}>
+    <TooltipTrigger asChild>
+      <SidebarTrigger className="shrink-0" />
+    </TooltipTrigger>
+    <TooltipContent side="bottom" className="text-xs">
+      Colapsar / expandir menú · <kbd>⌘B</kbd>
+    </TooltipContent>
+  </Tooltip>
+)}
+```
 
-- Cambiar los 4 pasos por **3 pasos que reflejen las tabs actuales**:
-  1. **Por timbrar** — "Proformas aprobadas listas para emitir CFDI"
-  2. **Emitidas** — "CFDI vigentes + complemento de pagos (REP)"
-  3. **Notas de crédito** — "Cancelaciones y devoluciones"
-- Agregar una sección **"Esto ya no vive aquí"** con tres chips/links discretos:
-  - Cobranza de clientes → `/cartera`
-  - Pagos a proveedores → `/cxp/por-pagar`
-  - Proformas (histórico) → `/proformas`
-  - Proyección / cierre mensual → `/reportes/cierre-mensual`
-- Reescribir el párrafo "Ciclo" para que mencione: emisión → REP en PPD → notas de crédito cuando corresponda.
-- Mantener el callout amarillo del **Hueco de Facturación** (sigue siendo correcto).
+- Pros: el tap funciona al primer toque en móvil/tablet; el tooltip sigue intacto en desktop.
+- Cons: el `aria-label` reemplaza al tooltip como ayuda accesible en móvil (acepta lectores de pantalla).
 
-### B. Compactar el "above the fold"
+### Opción B — Quitar el Tooltip por completo
+Eliminar el `Tooltip` del trigger en todos los tamaños y mantener solo un `aria-label` + el atajo de teclado. Más simple pero pierdes la pista visual del atajo `⌘B` en desktop.
 
-**Archivo:** `src/features/facturacion/routes/Facturacion.tsx`
+Mi recomendación es **Opción A**.
 
-- Quitar el `Card` envoltorio del `DateRangeFilter` y moverlo a la **misma fila que `TabsList`** (tabs a la izquierda, filtro de fechas a la derecha). Ahorra un bloque vertical.
-- Cerrar la guía por defecto (ya es accordion) y bajar su prioridad visual a un link tipo "ℹ️ ¿Cómo funciona este módulo?" inline bajo el PageHeader.
+## Archivos a editar
 
-### C. Eliminar redundancia entre KPI y alerta de Hueco
+1. `src/components/layout/Layout.tsx` — aplicar el render condicional con `useIsMobile`.
+2. `src/constants/appVersion.ts` — bump `APP_VERSION` a `13.95.1`.
+3. `CHANGELOG.md` — entrada nueva: "Fix: el botón de expandir/colapsar el sidebar ya no requiere doble tap en dispositivos táctiles."
 
-**Archivos:** `DashboardEjecutivoFacturacion.tsx` + `HuecoFacturacionCard.tsx`
+## Verificación
 
-- Opción elegida: **quitar el KPI "Por facturar" del dashboard** y dejar sólo la alerta `HuecoFacturacionCard` (es más rica: tiene desglose USD/MXN, conteo y CTA "Ver detalle"). Reemplazar ese hueco en el dashboard por un KPI más útil: **"REP pendientes"** o **"Por timbrar (#)"**.
-- En `HuecoFacturacionCard`, arreglar el doble label: `USD 202,356.65` (no `USD USD …`) y `MXN 3,493,590.66`.
+- Probar con Playwright en viewport móvil (375×800): un solo tap sobre el ícono abre el `Sheet` del sidebar.
+- Probar en viewport desktop (1280×800): hover sigue mostrando el tooltip con el atajo, click abre/colapsa normal.
 
-### D. Mejorar la mini-tendencia
-
-**Archivo:** `DashboardEjecutivoFacturacion.tsx`
-
-- Mostrar las etiquetas de mes **debajo** de las barras (alineadas), no en columna lateral.
-- Cuando una serie es 0 en todo el rango, mostrar texto "Sin datos" en lugar de 6 líneas planas.
-- Agregar tooltip al hover con valor exacto por mes.
-
-### E. Limpiar tabs
-
-**Archivo:** `Facturacion.tsx`
-
-- Quitar prefijos "1. / 2. / 3." de los labels.
-- Mover el botón **"Nueva factura manual"** también como acción primaria dentro del toolbar del tab "Emitidas" (donde más sentido tiene), manteniéndolo arriba como atajo global.
-
-### F. Reordenar toolbar de "Por timbrar"
-
-**Archivo:** `TabProformasPendientes.tsx`
-
-- Una sola fila: `[Buscar] [Cliente] [Estado] · · · [N seleccionadas] [Aprobar individual] [Consolidar y aprobar]`.
-- "Consolidar y aprobar" como botón primario, "Aprobar individual" como secundario `outline`.
-
----
-
-## Fuera de alcance (lo menciono pero NO se toca)
-
-- El bug de datos donde `Por cobrar` = `Vencido` (mismo monto) — eso es un tema de lógica de `useCobranza`, no visual.
-- La lógica de generación de proformas, REP, o consolidación.
-- Cambios a `/proformas`, `/cartera`, `/cxp`.
-
-## Versionado
-
-- Bump `APP_VERSION` a `13.95.0` (es minor: rediseño visible del módulo).
-- Entrada en `CHANGELOG.md` agrupando los puntos A–F.
-
-## Validación
-
-- Screenshot before/after del above-the-fold (Playwright headless) para confirmar reducción de scroll y consistencia visual.
-- Verificar accordion abierto/cerrado, alerta sin doble label, tendencia legible.
+¿Aplico la Opción A?

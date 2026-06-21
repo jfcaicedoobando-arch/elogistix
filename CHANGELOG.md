@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.95.1] - 2026-06-21
+- **fix(layout) sidebar requería doble tap en móvil/tablet**: el `SidebarTrigger` estaba envuelto en un `<Tooltip>` de Radix, que en dispositivos táctiles consume el primer tap para mostrar el tooltip y recién al segundo tap dispara el click. Ahora en `useIsMobile()` se renderiza el botón sin Tooltip (con `aria-label` para accesibilidad); en desktop el tooltip con el atajo `⌘B` se conserva intacto. Archivo: `src/components/layout/Layout.tsx`.
+
 ## [13.95.0] - 2026-06-21
 - **refactor(facturacion) auditoría visual del dashboard**: rediseño del módulo `/facturacion` tras detectar inconsistencias entre la guía "¿Cómo funciona este módulo?" y las tabs actuales.
   - `GuiaPrefacturacion.tsx`: reescrita. Los 4 pasos viejos (Por aprobar / Proformas / Facturas / Pagos prov.) se reemplazan por los 3 actuales (Por timbrar / Emitidas / Notas de crédito) y se agrega un bloque "Esto ya no vive aquí" con links a `/cartera`, `/cxp/por-pagar`, `/proformas` y `/reportes/cierre-mensual`.
