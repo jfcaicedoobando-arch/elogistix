@@ -128,7 +128,14 @@ export default function Facturacion() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6">
-        <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
+          {canEmitirFactura && (
+            <Button onClick={() => setOpenFacturaManual(true)} className="shrink-0">
+              <FilePlus2 className="h-4 w-4 mr-2" /> Nueva factura manual
+            </Button>
+          )}
+        </div>
         <GuiaPrefacturacion />
 
         {/* Dashboard de KPIs (siempre visible) */}
@@ -192,6 +199,10 @@ export default function Facturacion() {
           numero={cancelarFactura?.numero}
           open={!!cancelarFactura}
           onOpenChange={(o) => !o && setCancelarFactura(null)}
+        />
+        <DialogNuevaFacturaManual
+          open={openFacturaManual}
+          onOpenChange={setOpenFacturaManual}
         />
       </div>
     </TooltipProvider>
