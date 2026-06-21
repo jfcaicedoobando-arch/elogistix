@@ -47,6 +47,7 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
+  { title: "Proformas", url: "/proformas", icon: FileText },
   { title: "Cobranza", url: "/cartera", icon: PiggyBank },
   { title: "Cuentas por Pagar", url: "/cxp", icon: Receipt },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },

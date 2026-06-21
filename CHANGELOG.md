@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.94.0] - 2026-06-21
+- **feat(proformas) página dedicada `/proformas`**: antes el listado completo de proformas sólo era visible como una pestaña dentro de `/facturacion`. Ahora hay una entrada propia en el sidebar (grupo Gestión, ícono FileText) y una ruta `/proformas` que reutiliza el componente `TabProformas` (búsqueda, filtros Todas/Pendientes/Facturadas, paginación, export CSV y acción "Marcar facturada"). El click en una fila sigue navegando al detalle `/proformas/:id`. Sin duplicación de lógica.
+
 ## [13.93.2] - 2026-06-21
 - **chore(facturacion) split de archivos > 200 líneas (regla Power of 10)**: el CI falló porque `DialogNuevaFacturaManual.tsx` (351), `DialogHistorialPagos.tsx` (279) y `Facturacion.tsx` (211) cruzaron el límite. Extraídos sin cambios funcionales:
   - `FacturaManualDatosFiscales.tsx` y `FacturaManualConceptosTable.tsx` (sub-componentes del wizard manual).

@@ -35,6 +35,7 @@ export const ProveedorDetalle = lazy(() => import("@/features/proveedor/routes/P
 export const Facturacion = lazy(() => import("@/features/facturacion/routes/Facturacion"));
 export const FacturaDetalle = lazy(() => import("@/features/facturacion/routes/FacturaDetalle"));
 export const ProformaDetalle = lazy(() => import("@/features/proformas/routes/ProformaDetalle"));
+export const ProformasListado = lazy(() => import("@/features/proformas/routes/ProformasListado"));
 export const ProfitProyeccion = lazy(() => import("@/features/profit/routes/ProfitProyeccion"));
 export const ProfitEstadoResultados = lazy(() => import("@/features/profit/routes/ProfitEstadoResultados"));
 export const ProfitPresupuesto = lazy(() => import("@/features/profit/routes/ProfitPresupuesto"));
