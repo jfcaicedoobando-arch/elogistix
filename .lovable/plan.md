@@ -1,62 +1,90 @@
-# Plan: Estado de conceptos en el tab Facturación
+# Plan: Mejoras al tab Facturación del embarque
 
-## Diagnóstico
+## Lo que me pediste explícitamente
 
-**No es un bug de datos — es una etiqueta engañosa.**
+**Quitar las descargas inline.** Tanto en "Proformas Generadas" como en "Facturas del Embarque" las filas ya navegan (o navegarán) al detalle, donde el usuario descarga PDF/XML con contexto. Mantener botones aquí duplica acciones y satura la fila.
 
-Analogía: imagina que la columna "Estado" del concepto sólo tiene dos cajones — "Pendiente" y "En proforma". Cuando la proforma se factura, el concepto sigue dentro del cajón "En proforma" (porque nunca se creó un cajón "Facturado"). El cajón de "Facturado" vive un piso abajo, en la tabla de proformas.
+## Lo que no me gusta del tab actual (orden de impacto)
 
-Técnico:
-- `conceptos_venta.estado_facturacion` es binario: `'pendiente'` | `'en_proforma'`. No existe `'facturado'`.
-- El estado de facturación real vive en `proformas.estado_proforma` (`pendiente` / `facturada`).
-- Cuando la proforma pasa a "Facturada", los conceptos vinculados (`proforma_id = <esa proforma>`) NO se actualizan — siguen mostrando el badge verde "En proforma".
-- Por eso ves la tabla con todo "En proforma" y, abajo, el historial muestra la proforma como "Facturada". Es consistente con la BD, pero confuso visualmente.
+1. **No hay narrativa de flujo.** Los tres cards (Conceptos → Proformas → Facturas) se ven como bloques sueltos del mismo peso. El usuario no percibe que es un proceso secuencial.
+2. **`HistorialFacturas` no es clickeable** mientras `HistorialProformas` sí lo es. Inconsistencia: una tabla te invita a clicar la fila, la otra no responde.
+3. **Botón "Eliminar" siempre visible** en cada fila de proforma. Es una acción destructiva, no necesita ese protagonismo — debería vivir en un menú kebab o aparecer en hover.
+4. **Columna "Operador" muestra el email completo** (`juanluis.martinez@elogistixshipping.com`) y empuja el ancho. Hay memoria del proyecto (`nombreDesdeEmail`) para mostrar el nombre.
+5. **Doble columna "Total USD" + "Total MXN"** desperdicia espacio: 99% de las proformas son monomoneda y la otra columna queda en `—`. Una sola columna "Total" con la moneda correcta sería suficiente.
+6. **Columna "Folio Factura" en proformas** duplica información que ya muestra la tabla de Facturas justo debajo.
+7. **Estado de proforma apilado (2 badges)** es ruidoso. "Aprobada + Facturada" se puede colapsar a un solo badge "Facturada" (el estado terminal manda).
+8. **Columna "Moneda" en Facturas** es redundante: el monto ya viene con prefijo USD/MXN.
+9. **Falta indicación visual de "esto es clickeable"**: ni cursor `pointer` ni chevron al hover en las filas con drill-down.
+10. **El header del tab no tiene contexto rápido** — no hay un resumen tipo "Facturado: USD 3,090 · Pendiente: 0" que rinda con un vistazo. El panel ya existe abajo pero queda enterrado.
 
-## Cambios (UI únicamente, sin cambios de BD)
+## Cambios propuestos (UI únicamente, sin tocar lógica de datos)
 
-### 1. Derivar un tercer estado en presentación
-En `TabFacturacion` calcular un `Map<conceptoId, 'pendiente'|'en_proforma'|'facturado'>` cruzando `conceptos` con `proformas`:
-- `pendiente` → `estado_facturacion !== 'en_proforma'`
-- `facturado` → tiene `proforma_id` y esa proforma tiene `estado_proforma === 'facturada'`
-- `en_proforma` → tiene `proforma_id` pero la proforma aún `pendiente`
+### A. Limpieza de tablas
 
-Pasar ese mapa a `ResumenConceptosVenta` y de ahí a `GrupoConceptosContenedor`.
+**`HistorialProformas`:**
+- Eliminar columna "Acciones" completa.
+- Mover "Eliminar" a un menú kebab `MoreHorizontal` al final de la fila (visible sólo cuando `canEdit && !facturada && !consolidada`).
+- Eliminar columna "Folio Factura" (vive en la tabla de Facturas).
+- Fusionar "Total USD" + "Total MXN" en columna única "Total" con la moneda real.
+- Operador: aplicar `nombreDesdeEmail()` + `truncate` con tooltip del email completo.
+- Estado: si `facturada`, mostrar sólo el badge "Facturada"; si no, badge único de revisión.
+- Click en fila → `/proformas/:id` (ya funciona), añadir `cursor-pointer` + chevron sutil a la derecha al hacer hover.
 
-### 2. Badge tri-estado en las tablas de conceptos
-Reemplazar la celda actual (`ResumenConceptosVenta.tsx` línea 158-165 y `GrupoConceptosContenedor.tsx` línea 79) por un helper que devuelve:
-- `Facturado` — badge `success` con ícono `Receipt`
-- `En proforma` — badge `info` con `FileText` (ya no `success`, así no compite con el "Facturado")
-- `Pendiente` — badge `neutral` con `Clock`
+**`HistorialFacturas`:**
+- Eliminar columna "Archivos".
+- Eliminar columna "Moneda" (el monto ya tiene prefijo).
+- Hacer la fila clickeable: `onRowClick` → `/facturacion/:id`, con `cursor-pointer` + chevron al hover.
+- Columna "Proforma": link visible (no sólo texto) que también navega a `/proformas/:id` (con `e.stopPropagation()` para no entrar en conflicto con el row click).
 
-### 3. Totales en `ResumenConceptosVentaTotales`
-Hoy muestra 2 columnas (Pendiente / En proforma). Cambiarlo a 3: Pendiente / En proforma / Facturado, calculando los montos respectivos en `ResumenConceptosVenta`.
+### B. Narrativa de flujo
 
-### 4. Sin tocar lógica de generación de proformas
-Los filtros `estado_facturacion !== 'en_proforma'` para "qué conceptos puedo meter en una proforma nueva" se mantienen — un concepto facturado tampoco debe reaparecer en el wizard de proforma (ya tiene `proforma_id`).
+Añadir un encabezado del tab con tres "pasos" mini-estado a la izquierda del card de Conceptos, mostrando el progreso del embarque:
 
-## No incluye
+```text
+1. Conceptos     →   2. Proformas      →   3. Facturas
+   2 facturados      1 generada (PRO-…)    1 emitida (#902)
+```
 
-- No se modifica el schema ni se agrega un valor `'facturado'` a `conceptos_venta.estado_facturacion`. El estado canónico sigue viviendo en `proformas` (única fuente de verdad).
-- No se tocan los datos existentes.
-- No se cambia el flujo de generar / facturar proforma.
+Si un paso aún no aplica, queda en gris. Es puramente visual, no agrega cards nuevos.
+
+### C. Eliminación de elementos no necesarios
+
+- Quitar el `FacturaDownloadButton` de `HistorialProformas` (ya pidió drill-down).
+- Quitar el `Download` (botón Descargar PDF de proforma) — el drill-down a `/proformas/:id` ya ofrece "Descargar PDF" prominente.
+- Si después de quitar todo no queda ninguna acción inline para roles no-edit, el card se ve más limpio y rápido de escanear.
+
+### D. Detalles menores
+
+- `cursor-pointer` y `hover:bg-muted/40` consistentes en ambas tablas.
+- Tooltip "Ver detalle" en filas clickeables (primera vez para descubribilidad — opcional).
+- `Card` de Proformas: cuando hay ≥1, mostrar a la derecha del título un mini contador (`{n} proformas · {m} facturadas`).
+- `Card` de Facturas: igual (`{n} facturas · total USD …`).
+
+## Lo que NO incluye
+
+- No se cambia el schema, RLS, ni la lógica de cálculo de estados (eso quedó arreglado en 13.90.5).
+- No se rediseña visualmente (paleta, tipografía) — sigue siendo Libre Carga estándar.
+- No se tocan los flujos de "Generar proforma" ni "Facturar proforma".
+- No se borra ningún dato.
 
 ## Verificación
 
-Con Playwright en `/embarques/7cbea742-…?tab=facturacion`:
+Playwright en `/embarques/7cbea742-…?tab=facturacion`:
 1. Screenshot antes/después.
-2. Confirmar que los conceptos cuya proforma está "Facturada" ahora muestran badge "Facturado" (verde con `Receipt`), y que los totales del card incluyen una tercera columna "Facturado" con el monto correcto.
-3. Confirmar que un embarque con proforma aún pendiente sigue mostrando "En proforma" en azul.
-
-## Changelog
-
-- `appVersion.ts` → `13.90.5`
-- `CHANGELOG.md` → entrada `[13.90.5] ui(embarque/facturacion) badge de conceptos refleja si la proforma ya fue facturada`.
+2. Confirmar que no hay botones de descarga en las dos tablas.
+3. Clic en una fila de Facturas navega a `/facturacion/:id`.
+4. Clic en una fila de Proformas navega a `/proformas/:id`.
+5. El menú kebab de proforma abre y muestra "Eliminar" cuando corresponde.
+6. Stepper visual muestra el progreso correcto.
 
 ## Archivos a editar
 
-1. `src/features/embarques/components/TabFacturacion.tsx` — calcular y pasar el mapa de estados.
-2. `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx` — recibir mapa + 3 totales.
-3. `src/features/embarques/components/facturacion/GrupoConceptosContenedor.tsx` — recibir mapa, badge tri-estado.
-4. `src/features/embarques/components/facturacion/ResumenConceptosVentaTotales.tsx` — tercera columna.
-5. Nuevo helper `src/features/embarques/components/facturacion/estadoConceptoBadge.tsx` para no duplicar JSX del badge.
-6. `appVersion.ts` + `CHANGELOG.md`.
+1. `src/features/embarques/components/facturacion/HistorialProformas.tsx` — limpieza de columnas, kebab menu, total único, nombreDesdeEmail.
+2. `src/features/embarques/components/facturacion/HistorialFacturas.tsx` — onRowClick, limpieza de columnas, link a proforma.
+3. `src/features/embarques/components/TabFacturacion.tsx` — añadir mini-stepper de flujo arriba.
+4. Posible nuevo helper `src/features/embarques/components/facturacion/FlujoFacturacionStepper.tsx` (3 pasos visuales).
+5. `appVersion.ts` → `13.90.6` + entrada en `CHANGELOG.md`.
+
+## Pregunta antes de empezar
+
+¿Quieres que también te muestre 2-3 direcciones visuales del **stepper de flujo** (por ejemplo: chips horizontales, breadcrumb con flechas, o tarjetas mini con números) antes de implementar? Si dices que sí, te las renderizo y eliges. Si dices que no, implemento directo el más limpio.
