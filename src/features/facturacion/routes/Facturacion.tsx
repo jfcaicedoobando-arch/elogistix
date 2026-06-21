@@ -81,6 +81,9 @@ export default function Facturacion() {
   const legacyTab = searchParams.get("tab");
   const redirectTo = legacyTab ? LEGACY_TAB_REDIRECTS[legacyTab] : undefined;
 
+  const { canEmitirFactura } = usePermissions();
+  const [openFacturaManual, setOpenFacturaManual] = useState(false);
+
   const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
   const [activeTab, setActiveTab] = useState<string>("pendientes");
 
