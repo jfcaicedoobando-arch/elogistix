@@ -49,7 +49,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
     <>
       <SidebarGroup>
         {!collapsed && (
-          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/65">
+          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/80">
             {label}
           </span>
         )}
