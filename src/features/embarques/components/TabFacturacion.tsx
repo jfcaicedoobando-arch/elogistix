@@ -97,6 +97,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
           contenedores={contenedores}
           tasaIva={tasaIva}
           canEdit={canEdit}
+          estadosConceptos={estadosConceptos}
           onGenerarProforma={() => {
             setDialogInitialFiltro('todos');
             setDialogOpen(true);
