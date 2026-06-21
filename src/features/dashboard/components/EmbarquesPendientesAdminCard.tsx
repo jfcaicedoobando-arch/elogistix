@@ -1,7 +1,8 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PackageCheck, Anchor } from "lucide-react";
+import { PackageCheck, Anchor, ChevronRight } from "lucide-react";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 
 interface Props {
@@ -56,29 +57,33 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
           ) : (
             <ul className="divide-y rounded-md border">
               {items.map((it) => (
-                <li
-                  key={it.id}
-                  className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{it.expediente ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {it.cliente_nombre}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={it.estado === "EIR" ? "outline" : "secondary"}
-                    className={
-                      it.estado === "EIR"
-                        ? "border-orange-300 text-orange-700"
-                        : "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
-                    }
+                <li key={it.id}>
+                  <Link
+                    to={`/embarques/${it.id}`}
+                    className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors"
+                    aria-label={`Abrir embarque ${it.expediente ?? it.id}`}
                   >
-                    {it.estado}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
-                    {it.diasEnEstado} d
-                  </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{it.expediente ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {it.cliente_nombre}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={it.estado === "EIR" ? "outline" : "secondary"}
+                      className={
+                        it.estado === "EIR"
+                          ? "border-orange-300 text-orange-700"
+                          : "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                      }
+                    >
+                      {it.estado}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
+                      {it.diasEnEstado} d
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </Link>
                 </li>
               ))}
             </ul>
