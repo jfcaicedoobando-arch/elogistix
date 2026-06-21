@@ -4,12 +4,14 @@
  */
 import { useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Download, Ship, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Ship, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
+import { formatCurrency, formatDate, formatDiasCredito, nombreDesdeEmail } from "@/lib/formatters";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useProformaDetalle } from "@/features/proformas/hooks/useProformaDetalle";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
