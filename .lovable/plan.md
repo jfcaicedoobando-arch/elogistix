@@ -1,47 +1,70 @@
-## Objetivo
+## Problema
 
-Isela (rol contador / tesorero / cobranza / auxiliar contable) no tiene "Embarques" en su menú lateral porque su perfil financiero no lo incluye por diseño. Le agregaremos visibilidad de los embarques **Entregado** y **EIR** desde su `/inicio` mediante una tarjeta de KPIs **de sólo lectura** (sin abrir el módulo Embarques).
+Hoy una sola persona cubre los 4 roles financieros (`contador`, `tesorero`, `ejecutivo_cobranza`, `auxiliar_contable`). El dashboard actual en `/inicio` está pensado para operaciones (alertas de demora, próximos arribos, profit table) y no le sirve. Necesita **un único dashboard financiero** que concentre todo lo accionable de los 4 frentes en una sola vista.
 
-## Alcance
+Más adelante, cuando se contraten roles separados, partimos este dashboard único en 4 vistas especializadas (queda fuera de alcance hoy).
 
-Sólo cambios de UI en el dashboard. No se modifican rutas, permisos, RLS, ni el módulo `/embarques`.
+## Diseño del dashboard financiero unificado
 
-## Qué se agrega
+Visible **sólo** cuando `effectiveRole` ∈ {contador, tesorero, ejecutivo_cobranza, auxiliar_contable}. Para los demás roles el dashboard operativo actual sigue intacto.
 
-Nueva tarjeta `EmbarquesPendientesAdminCard` visible **únicamente** para los roles financieros (`contador`, `tesorero`, `ejecutivo_cobranza`, `auxiliar_contable`). La tarjeta tiene dos KPIs:
+Estructura en **4 bloques verticales** ordenados por urgencia (lo más urgente arriba):
 
 ```text
-┌──────────────────────────────────────────────────┐
-│ Embarques pendientes administrativos             │
-├──────────────────────┬───────────────────────────┤
-│   Entregados   12    │   En EIR        5         │
-│   (esperan cierre)   │   (último paso marítimo)  │
-├──────────────────────┴───────────────────────────┤
-│ Top 10 más antiguos:                             │
-│  • LC-2410-0123  ACME S.A.   Entregado · 18 d    │
-│  • LC-2410-0098  Beta Corp   EIR        · 22 d   │
-│  ...                                             │
-└──────────────────────────────────────────────────┘
+┌─ Saludo personalizado ─────────────────────────────────────┐
+│  Buenos días Isela 👋   Domingo 21 de junio de 2026        │
+│  Resumen: $X vencido • $Y por pagar hoy • Z facturas       │
+└────────────────────────────────────────────────────────────┘
+
+┌─ Bloque 1 · Hoy ───────────────────────────────────────────┐
+│  [Por timbrar 8] [Por pagar hoy $X] [Vencido $Y] [Capt. 18]│
+│  4 KPI tiles grandes, click → página correspondiente       │
+└────────────────────────────────────────────────────────────┘
+
+┌─ Bloque 2 · Cobranza ──────────────────────────────────────┐
+│  Aging buckets (0-15 / 16-30 / 31-60 / 61-90 / 90+)        │
+│  Top 10 facturas vencidas (cliente, monto, días, últ. rec.)│
+└────────────────────────────────────────────────────────────┘
+
+┌─ Bloque 3 · Pagos & Caja ──────────────────────────────────┐
+│  Saldo total en bancos  |  mini chart entradas vs salidas  │
+│  Top 10 facturas proveedor "Por pagar" (vence, monto)      │
+└────────────────────────────────────────────────────────────┘
+
+┌─ Bloque 4 · Cierre administrativo ─────────────────────────┐
+│  - Embarques pendientes admin (la tarjeta ya existente)    │
+│  - Top conceptos de costo abiertos sin factura proveedor   │
+│  - Hueco de facturación (si lo hay)                        │
+└────────────────────────────────────────────────────────────┘
 ```
 
-Cada fila muestra: folio, cliente, estado (badge) y días en ese estado. **No** hay link a `/embarques/:id` (rol sin acceso); el contenido es informativo para que sepa qué reclamar a operaciones.
+Las tarjetas son sólo lectura desde el dashboard, pero cada fila/KPI **enlaza** a la página de detalle (`/cartera`, `/cxp/por-pagar`, `/facturacion/por-emitir`, `/cxp/por-capturar`, `/tesoreria`, etc.) — el rol ya tiene acceso a todas esas rutas.
 
-## Dónde encaja
+## Arquitectura
 
-- `src/features/dashboard/routes/Dashboard.tsx`: insertar la nueva tarjeta justo después de `DashboardStatusCards` cuando `effectiveRole` sea uno de los roles financieros.
-- `src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx` (nuevo): UI de la tarjeta.
-- `src/features/dashboard/hooks/useEmbarquesPendientesAdmin.ts` (nuevo): `useQuery` que llama a Supabase con `select` mínimo (`id, folio, estado, fecha_entrega_real, fecha_eir, cliente:clientes(nombre_comercial)`) filtrando `estado in ('Entregado','EIR')` y ordenando por antigüedad. Limita a 10 filas + `count: 'exact'` para los totales.
+- `src/features/dashboard/routes/Dashboard.tsx`: switch al inicio. Si rol es financiero → renderiza `<FinanceDashboard />`. Si no → flujo actual sin tocar.
+- Nuevos archivos bajo `src/features/dashboard/finance/`:
+  - `FinanceDashboard.tsx` — contenedor con los 4 bloques.
+  - `components/FinanceHeader.tsx` — saludo + resumen one-liner.
+  - `components/HoyKpiRow.tsx` — fila de 4 KPI tiles.
+  - `components/CobranzaBlock.tsx` — aging + top vencidas.
+  - `components/PagosCajaBlock.tsx` — saldo + flujo + top por pagar.
+  - `components/CierreAdminBlock.tsx` — reusa `EmbarquesPendientesAdminCard` + conceptos abiertos + hueco.
+  - `hooks/useFinanceDashboard.ts` — agrega los hooks ya existentes (`useCobranza`, `useResumenTesoreria`, `useDashboardEjecutivoFacturacion`, `useEmbarquesPendientesAdmin`, `useConceptosCostoAbiertos`, `useHuecoFacturacion`).
+- Reglas del proyecto: componentes ≤200 líneas, sin `any`, `select` explícito, React Query `staleTime` 5 min, sin `useEffect` innecesarios.
 
-## Detalles técnicos
+Pensado de origen para que cuando se dividan los roles, cada bloque se vuelva su propio dashboard (Cobranza → ejecutivo de cobranza, Pagos & Caja → tesorero, Cierre admin → contador, etc.).
 
-- Se reutiliza el patrón de selección explícita de columnas (regla del proyecto sobre query optimization).
-- Cálculo de "días en estado" en utilitario puro (regla de date-time standards, UTC).
-- Sin `useEffect`, sólo React Query con `staleTime: 5 min` (igual que `useSidebarAlerts`).
-- Componente <200 líneas, sin `any`, con cleanup implícito vía React Query.
-- Bump `APP_VERSION` y entrada en `CHANGELOG.md` (`## [13.89.6] - 2026-06-21`).
+## Implementación en una sola entrega
+
+Una sola versión (bump a `13.90.0`, cambio mayor de UX) con entrada en `CHANGELOG.md` describiendo los 4 bloques. Sin tests E2E nuevos — los hooks subyacentes ya están testeados.
 
 ## Lo que NO se hace
 
-- No se habilita `/embarques` para roles financieros.
-- No se agrega un nuevo item al sidebar.
-- No se tocan RLS ni se crean RPCs nuevas (la query usa la tabla `embarques` con el RLS existente, que ya permite SELECT a estos roles dentro de su organización).
+- No se tocan rutas, sidebar, RLS, ni el dashboard operativo de los demás roles.
+- No se crean RPCs nuevas — sólo composición de hooks existentes.
+- No se eliminan accesos: todas las páginas siguen disponibles desde el sidebar.
+
+## Confirmación antes de construir
+
+¿Avanzo con este dashboard unificado (4 bloques: Hoy / Cobranza / Pagos & Caja / Cierre administrativo) y bump a `13.90.0`?
