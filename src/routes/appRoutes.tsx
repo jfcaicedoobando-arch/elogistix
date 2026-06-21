@@ -11,7 +11,7 @@ import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import type { AppRole } from "@/types/appRole";
 import {
-  Dashboard, Operaciones, Reportes, Bitacora, Ayuda,
+  Dashboard, Operaciones, Reportes, CierreMensual, Bitacora, Ayuda,
   Papelera, Idempotencia, Auditoria, SentryDiagnostico,
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
@@ -87,6 +87,7 @@ export const appRoutes = (
     <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
     <Route path="/dev/pdf-preview/cotizacion/:id" element={<PdfPreviewCotizacion />} />
     <Route path="/reportes/rentabilidad" element={<Reportes />} />
+    <Route path="/reportes/cierre-mensual" element={<CierreMensual />} />
     <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
     <Route path="/ayuda" element={<Ayuda />} />
