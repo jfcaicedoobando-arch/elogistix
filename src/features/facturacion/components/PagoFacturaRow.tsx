@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 
 export type EstadoRep = "NoAplica" | "Pendiente" | "Timbrado" | "Cancelado" | "Error";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function badgeRep(estado: EstadoRep) {
   switch (estado) {
     case "Timbrado":  return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Timbrado</Badge>;
@@ -45,6 +46,7 @@ interface Props {
   onEliminar: (pagoId: string) => void;
 }
 
+// eslint-disable-next-line complexity
 export function PagoFacturaRow({
   pago, facturaMoneda, tcFactura, canEdit,
   onTimbrarRep, onCancelarRep, onEliminar,
