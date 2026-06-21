@@ -1,11 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, ChevronRight, Trash2, Share2, Copy, Unlock } from "lucide-react";
+import { Edit, Trash2, Share2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
+import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
 
 interface Props {
   expediente: string;
@@ -39,75 +36,27 @@ export function EmbarqueDetalleHeaderActions({
   cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
   const navigate = useNavigate();
+  const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
 
-  // v13.89.1 — Si el siguiente estado es Cerrado y el rol no puede cerrar,
-  // ocultamos el botón. El cierre se hace desde el Tab Cierre (o por admin).
   const ocultarAvance = cierreEsSiguiente && !rolPuedeCerrar;
-  const cierreBloqueadoPorChecklist = cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
-  const avanzarDisabled = avanzandoEstado || bloqueadoPorDocs || cierreBloqueadoPorChecklist;
+  const cierreBloqueadoPorChecklist =
+    cierreEsSiguiente && rolPuedeCerrar && !cierrePuedeAvanzar && cierreMotivoBloqueo === "checklist";
 
-  const avanzarBtn = (
-    <Button size="sm" disabled={avanzarDisabled}>
-      <ChevronRight className="h-4 w-4 mr-1" />
-      Avanzar a {siguienteEstado}
-    </Button>
-  );
-
-  const avanzarWithTooltip = bloqueadoPorDocs ? (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild><span tabIndex={0}>{avanzarBtn}</span></TooltipTrigger>
-        <TooltipContent>
-          <p className="text-xs">Faltan documentos para pasar a {siguienteEstado}:</p>
-          <p className="text-xs font-medium">{docsFaltantes.join(", ")}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  ) : cierreBloqueadoPorChecklist ? (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span tabIndex={0} onClick={onIrACierre} className="cursor-pointer">{avanzarBtn}</span>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="text-xs">Hay pendientes administrativos.</p>
-          <p className="text-xs font-medium">Click para ver el Tab Cierre.</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  ) : avanzarBtn;
+  const accionPrincipal = renderAccionPrincipal({
+    canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
+    bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
+    onAvanzarEstado, onIrACierre, goEditar,
+  });
 
   return (
     <div className="flex gap-1.5 flex-wrap lg:flex-nowrap lg:justify-end items-center">
-      {canEdit && siguienteEstado && !ocultarAvance ? (
-        bloqueadoPorDocs || cierreBloqueadoPorChecklist ? avanzarWithTooltip : (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>{avanzarWithTooltip}</AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
-                <AlertDialogDescription>
-                  ¿Estás seguro de cambiar el estado de <strong>{estadoVisual}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={onAvanzarEstado}>Confirmar</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )
-      ) : canEdit && (!siguienteEstado || ocultarAvance) ? (
-        <Button size="sm" onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
-          <Edit className="h-4 w-4 mr-1" /> Editar
-        </Button>
-      ) : null}
-
+      {accionPrincipal}
       {canEdit && siguienteEstado && (
-        <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
+        <Button variant="outline" size="sm" onClick={goEditar}>
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>
       )}
+
 
       <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
         <Share2 className="h-4 w-4 mr-1" /> Compartir
@@ -120,25 +69,11 @@ export function EmbarqueDetalleHeaderActions({
       )}
 
       {puedeReabrir && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={reabriendoEstado}>
-              <Unlock className="h-4 w-4 mr-1" /> Reabrir
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reabrir embarque cerrado</AlertDialogTitle>
-              <AlertDialogDescription>
-                El embarque <strong>{expediente}</strong> regresará al estado <strong>Entregado</strong> para poder generar la proforma o ajustar facturación. La acción se registrará en la bitácora y en el tracking.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={onReabrir}>Reabrir</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ReabrirEmbarqueButton
+          expediente={expediente}
+          reabriendoEstado={reabriendoEstado}
+          onReabrir={onReabrir}
+        />
       )}
 
       {canEdit && (
@@ -153,5 +88,42 @@ export function EmbarqueDetalleHeaderActions({
         </>
       )}
     </div>
+  );
+}
+
+interface AccionPrincipalArgs {
+  canEdit: boolean;
+  siguienteEstado: string | null;
+  ocultarAvance: boolean;
+  estadoVisual: string;
+  avanzandoEstado: boolean;
+  bloqueadoPorDocs: boolean;
+  docsFaltantes: string[];
+  cierreBloqueadoPorChecklist: boolean;
+  onAvanzarEstado: () => void;
+  onIrACierre: () => void;
+  goEditar: () => void;
+}
+
+function renderAccionPrincipal(a: AccionPrincipalArgs) {
+  if (!a.canEdit) return null;
+  if (a.siguienteEstado && !a.ocultarAvance) {
+    return (
+      <AvanzarEstadoButton
+        estadoVisual={a.estadoVisual}
+        siguienteEstado={a.siguienteEstado}
+        avanzandoEstado={a.avanzandoEstado}
+        bloqueadoPorDocs={a.bloqueadoPorDocs}
+        docsFaltantes={a.docsFaltantes}
+        cierreBloqueadoPorChecklist={a.cierreBloqueadoPorChecklist}
+        onAvanzarEstado={a.onAvanzarEstado}
+        onIrACierre={a.onIrACierre}
+      />
+    );
+  }
+  return (
+    <Button size="sm" onClick={a.goEditar}>
+      <Edit className="h-4 w-4 mr-1" /> Editar
+    </Button>
   );
 }

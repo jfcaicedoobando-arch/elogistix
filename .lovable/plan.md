@@ -1,78 +1,51 @@
-# Cierre: deep-links con foco y filtro exacto del pendiente
+## Contexto
 
-Hoy el botón **Resolver** lleva al tab correcto del embarque pero el usuario sigue teniendo que adivinar **qué fila** del tab atender. El siguiente nivel: el destino llega con el foco puesto en la sección/lista que corresponde al pendiente, pre-filtrada y resaltada.
+El CI del run subido falló por 3 cosas, todas introducidas en los cambios recientes (v13.89.1 + cierre administrativo):
 
-## Cómo funciona (UX)
+1. **Lint (max-warnings 0)** — `EmbarqueDetalleHeaderActions` tiene complejidad ciclomática 22 (máx 16).
+2. **Lint** — `useEmbarqueEstadoActions` tiene complejidad 18 (máx 16).
+3. **Tests** — `architecture-baseline.test.ts` y `audit-report.test.ts` fallan porque `TabGarantias.tsx` quedó en 258 líneas (Power of 10: ≤200).
 
-1. Click en "Resolver" del check ❌ → navega a `…?tab=<tab>&focus=<key>&…` (params extra según el pendiente, ej. `containerId`).
-2. El tab destino lee `focus`, hace **scroll suave** a la sección marcada con `data-focus="<key>"`, aplica un **ring resaltado** (animación de pulso ~2s) y, si aplica, **prefiltra** la tabla.
-3. Al cambiar el usuario cualquier filtro o pasar 4s, el highlight se desvanece para no estorbar.
+Edge Functions, typecheck y los 8 shards de tests pasan; solo se rompen estos 2 jobs.
 
-## Mapeo por regla → destino con filtro
+## Cambios propuestos
 
+### 1. `TabGarantias.tsx` → bajar a ≤200 líneas
 
-| Regla (RPC)                    | Destino                                     | Filtro / foco aplicado                                                             |
-| ------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `cxc_cobrada`                  | `?tab=facturacion&focus=cxc`                | Scroll a "Historial de facturas", resalta filas con saldo > 0 (estado ≠ Pagada)    |
-| `cxp_pagada`                   | `?tab=costos&focus=cxp`                     | Scroll a tabla de costos, prefiltra `estado_liquidacion ≠ Pagado`                  |
-| `docs_completos`               | `?tab=documentos&focus=faltantes`           | Prefiltra a documentos sin archivo subido                                          |
-| `venta_conceptos_facturados`   | `?tab=facturacion&focus=venta-pendientes`   | Scroll a "Resumen de conceptos de venta", filtro "Pendientes / En proforma" activo |
-| `costo_conceptos_con_factura`  | `?tab=costos&focus=costo-sin-factura`       | Filtra costos sin factura de proveedor ligada                                      |
-| `costos_liquidados`            | `?tab=costos&focus=costo-no-liquidado`      | Filtra `estado_liquidacion = Pendiente`                                            |
-| `pnl_margen_minimo`            | `?tab=pnl&focus=utilidad`                   | Scroll a tarjeta de Utilidad/Margen                                                |
-| `comision_calculada`           | `?tab=pnl&focus=comision`                   | Scroll a sección Comisión                                                          |
-| `contenedores_datos_completos` | `?tab=resumen&focus=contenedores&ids=<csv>` | Scroll a sección contenedores y resalta filas cuyo id esté en `ids`                |
+Extraer piezas auxiliares manteniendo el comportamiento idéntico:
 
+- **Nuevo** `src/features/embarques/components/garantias/VenceBadge.tsx` — el componente `VenceBadge` y helper `diffDias`.
+- **Nuevo** `src/features/embarques/components/garantias/GarantiasKpiCards.tsx` — las 4 cards de KPI (Depósito total, Por recuperar, Contenedores, Días prom. recuperación) recibiendo props simples (`totalDeposito`, `totalPendiente`, `count`, `diasPromRecuperacion`).
+- **Nuevo** `src/features/embarques/components/garantias/useGarantiasColumns.tsx` — hook que devuelve las `ColumnDef<Row>[]` y encapsula el estado `editing` + `handleSaveMonto`/`handleSaveReferencia`/`handleChangeEstado`.
+- `TabGarantias.tsx` queda como contenedor (~120 líneas): query de datos, cálculo de totales (memo), render de `GarantiasKpiCards` + `Card` con `DataTable`.
 
-Los `ids` y montos vienen del `detalle` de la RPC (ya los devuelve, ver `validar_cierre_embarque`).
+### 2. `EmbarqueDetalleHeaderActions.tsx` → complejidad ≤16
 
-## Cambios técnicos
+Extraer la lógica del botón "Avanzar":
 
-### Nuevo helper compartido
+- **Nuevo** `src/features/embarques/components/header/AvanzarEstadoButton.tsx` — recibe `{siguienteEstado, estadoVisual, avanzandoEstado, bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist, onAvanzarEstado, onIrACierre}` y devuelve el botón con tooltip + AlertDialog. Esto saca 3 ramas (`bloqueadoPorDocs` / `cierreBloqueadoPorChecklist` / normal) del componente padre, bajando la complejidad bajo el límite.
+- `EmbarqueDetalleHeaderActions` calcula `ocultarAvance`/`cierreBloqueadoPorChecklist` y delega: `{canEdit && siguienteEstado && !ocultarAvance ? <AvanzarEstadoButton .../> : <BotónEditar/>}`.
 
-- `src/features/embarques/hooks/useFocusSection.ts` — hook que:
-  - Lee `focus` (y opcional `ids`/`containerId`) de `useSearchParams`.
-  - Expone `{ focus, ids, registerRef(key) }`.
-  - `registerRef(key)` devuelve un callback ref que, cuando `focus === key`, hace `scrollIntoView({behavior:"smooth", block:"start"})` y añade clase `ring-2 ring-primary animate-pulse` por 2.5s; luego limpia el param `focus` con `setSearchParams`.
+### 3. `useEmbarqueEstadoActions.ts` → complejidad ≤16
 
-### `cierreCheckMeta.ts` (extender)
+`handleAvanzarEstado` concentra 4 ramas (docs hard, docs soft, gate de cierre por rol, gate por checklist) más la rama de `bloqueoCierreMotivo` ternaria anidada.
 
-- Cada regla devuelve `ruta(embarqueId, detalle)` ahora con `detalle` opcional, para poder anexar `ids` o `containerId` cuando exista.
-- `ctaLabel` por regla se mantiene; los focus keys nuevos se añaden a la cadena.
+- **Extraer** función pura `resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk)` al mismo archivo (top-level) que devuelve `"rol" | "checklist" | null`. Reemplaza el ternario anidado.
+- **Extraer** función pura `clasificarBloqueoAvance({docsBloqueantes, docsFaltantes, siguiente, bloqueoCierreMotivo})` → `"block_docs" | "warn_docs" | "gate_cierre" | "ok"`. `handleAvanzarEstado` queda como un `switch` de 4 casos, complejidad ~5.
 
-### `CierreCheckItem.tsx`
+### 4. Versión y changelog
 
-- Pasa `detalle` al construir la URL: `meta.ruta(embarqueId, detalle)`.
+- Bump `APP_VERSION` a `13.89.4`.
+- `CHANGELOG.md`: entrada `## [13.89.4] - 2026-06-20` — "CI fix: complejidad ciclomática de header/hook de estado + split de `TabGarantias` para cumplir Power of 10 (≤200 líneas). Sin cambios funcionales."
 
-### Tabs destino — pequeños refactors puntuales
+## Validación
 
-- `TabFacturacion.tsx`:
-  - Envuelve `ResumenConceptosVenta` con `<div ref={registerRef("venta-pendientes")} data-focus="venta-pendientes">`.
-  - Envuelve `HistorialFacturas` con `data-focus="cxc"` y le pasa una prop opcional `defaultFiltro="pendientes"` (o equivalente) cuando `focus==="cxc"` para resaltar/filtar facturas con saldo.
-- `TabCostos.tsx`:
-  - Envuelve la tabla de costos con `data-focus="cxp"/"costo-sin-factura"/"costo-no-liquidado"` y aplica prefiltro derivado del focus (memoización sobre `conceptosCosto`).
-  - Mostrar pill "Filtrando: <razón> (limpiar)" cuando el filtro venga de un focus.
-- `TabDocumentos.tsx`: prop `focus` que oculta documentos completos cuando vale `faltantes` y resalta los faltantes.
-- `TabPnl.tsx`: registrar refs para `utilidad` y `comision`.
-- `EmbarqueDetalleTabs.tsx`: solo orquesta — el hook ya lee la URL directo.
+- Build/typecheck corre solo al guardar (el harness lo dispara).
+- Tests críticos a verificar localmente tras el cambio: `architecture-baseline.test.ts`, `audit-report.test.ts`, y los tests existentes de `TabGarantias` / `useEmbarqueEstadoActions` si los hay.
+- No hay cambios de RPC, RLS, permisos ni UX visible.
 
-### Tests
+## Detalles técnicos
 
-- `cierreCheckMeta.test.ts` — extender: la regla `contenedores_datos_completos` con `{ids:[…]}` produce `?tab=resumen&focus=contenedores&ids=…`; `cxc_cobrada` produce `?focus=cxc`.
-- `useFocusSection.test.tsx` — render con `?focus=cxc`, ref recibido, scrollIntoView llamado, clase de pulso aplicada y luego removida.
-
-### Sin tocar
-
-- RPC `validar_cierre_embarque` — el `detalle` ya trae todo.
-- Permisos / RLS / BD.
-- Estructura de tabs (slugs siguen iguales).
-
-## Versionado
-
-`APP_VERSION` → `13.89.3` y entrada en `CHANGELOG.md` ("UX: deep-links de cierre con foco + prefiltro en el destino").
-
-## Lo que el usuario verá
-
-Isela ve `❌ Cuentas por cobrar al día — saldo $14,500` con botón "Ir a Facturación". Un click → tab Facturación abierto, la tabla **Historial de facturas** filtrada a "con saldo", resaltada con un ring azul que pulsa 2 segundos, y un chip "Filtrando: pendientes de cobro · limpiar".
-
-Que al acer click, se abra una ventana nueva. 
+- Los nuevos archivos viven bajo subcarpetas (`garantias/`, `header/`) — patrón ya usado en `components/cierre/`.
+- `useGarantiasColumns` mantiene `eslint-disable react-hooks/exhaustive-deps` actual.
+- Funciones puras (`resolveCierreGate`, `clasificarBloqueoAvance`) son trivialmente testeables; añadiré 1 test unitario corto por cada una en `src/features/embarques/hooks/__tests__/useEmbarqueEstadoActions.helpers.test.ts`.

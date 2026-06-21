@@ -2,7 +2,6 @@ import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 import {
   useAvanzarEstadoEmbarque,
   useReabrirEmbarque,
@@ -16,23 +15,18 @@ import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarqu
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useEffect, useState, useCallback } from "react";
+import {
+  getSiguienteEstado,
+  resolveCierreGate,
+  clasificarBloqueoAvance,
+} from "./useEmbarqueEstadoActions.helpers";
 
-export function getSiguienteEstado(estadoActual: string) {
-  const idx = (ESTADOS_EMBARQUE as readonly string[]).indexOf(estadoActual);
-  if (idx < 0 || idx >= ESTADOS_EMBARQUE.length - 1) return null;
-  return ESTADOS_EMBARQUE[idx + 1];
-}
+export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
 
 /**
  * Hook focalizado en la sincronización + avance de estado del embarque.
- * Separado de la gestión de documentos para mantener responsabilidades únicas.
- *
- * Candado de documentos al avanzar:
- *  - Estados bloqueantes (En Aduana, Llegada, Arribo, Entregado, EIR, Cerrado):
- *    si faltan documentos, abre BlockDocsDialog y NO avanza (el backend también rechaza).
- *  - Estados soft (Confirmado, En Tránsito): si faltan documentos, abre WarnDocsDialog
- *    y deja al usuario confirmar el avance.
- *  - Cierre con conceptos sin proforma: confirmación suave existente.
+ * Candado de documentos al avanzar (bloqueante en estados avanzados, suave en
+ * Confirmado/En Tránsito). Cierre: validación dura por rol + checklist.
  */
 export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: string | undefined) {
   const { toast } = useToast();
@@ -54,13 +48,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { data: validacionCierre } = useValidacionCierre(cierreVisible ? id : undefined);
   const rolPuedeCerrar = isAdmin || canEditFinance;
   const validacionOk = validacionCierre?.puede_cerrar === true;
-  const bloqueoCierreMotivo: "rol" | "checklist" | null = !cierreVisible
-    ? null
-    : !rolPuedeCerrar
-      ? "rol"
-      : !validacionOk
-        ? "checklist"
-        : null;
+  const bloqueoCierreMotivo = resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk);
 
   // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
   const embarqueId = embarque?.id;
@@ -117,27 +105,31 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
 
-    // 1) Candado HARD: faltan documentos para estado avanzado.
-    if (docsBloqueantes && docsFaltantes.length > 0) {
-      setBlockDocsOpen(true);
-      return;
+    const bloqueo = clasificarBloqueoAvance({
+      docsBloqueantes,
+      docsFaltantesCount: docsFaltantes.length,
+      siguiente,
+      bloqueoCierreMotivo,
+    });
+
+    switch (bloqueo) {
+      case "block_docs":
+        setBlockDocsOpen(true);
+        return;
+      case "warn_docs":
+        setWarnDocsOpen(true);
+        return;
+      case "gate_cierre":
+        notifyError(toast, {
+          title: bloqueoCierreMotivo === "rol"
+            ? "Solo administración/finanzas pueden cerrar el embarque"
+            : "Pendientes administrativos. Revisa el Tab Cierre.",
+          method: "GATE_CERRAR_EMBARQUE",
+        });
+        return;
+      case "ok":
+        await ejecutarAvance(siguiente);
     }
-    // 2) Candado SOFT por documentos: Confirmado / En Tránsito.
-    if (!docsBloqueantes && docsFaltantes.length > 0) {
-      setWarnDocsOpen(true);
-      return;
-    }
-    // 3) v13.89.1 — Cierre: validación dura por rol y checklist administrativo.
-    if (siguiente === "Cerrado" && bloqueoCierreMotivo !== null) {
-      notifyError(toast, {
-        title: bloqueoCierreMotivo === "rol"
-          ? "Solo administración/finanzas pueden cerrar el embarque"
-          : "Pendientes administrativos. Revisa el Tab Cierre.",
-        method: "GATE_CERRAR_EMBARQUE",
-      });
-      return;
-    }
-    await ejecutarAvance(siguiente);
   };
 
   const confirmarCierreSinProforma = useCallback(async () => {
