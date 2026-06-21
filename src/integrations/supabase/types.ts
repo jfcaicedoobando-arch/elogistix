@@ -6366,6 +6366,14 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recalcular_estado_liquidacion_concepto: {
+        Args: { p_concepto_id: string }
+        Returns: undefined
+      }
+      recalcular_estado_liquidacion_factura: {
+        Args: { p_factura_id: string }
+        Returns: undefined
+      }
       recotizar_cotizacion: {
         Args: { p_cotizacion_id: string; p_motivo: string }
         Returns: Json
