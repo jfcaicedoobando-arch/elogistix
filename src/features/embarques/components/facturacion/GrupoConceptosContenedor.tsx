@@ -3,11 +3,11 @@
  * bloque por contenedor (o por "Cargos generales del BL") con su mini-tabla
  * y subtotales. Sólo se usa cuando el embarque tiene ≥2 contenedores reales.
  */
-import { CheckCircle2, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
+import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge";
 import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
@@ -20,12 +20,14 @@ interface Props {
   onGenerar?: (() => void) | null;
   canEdit: boolean;
   pendientesCount: number;
+  estadosConceptos: Map<string, EstadoConcepto>;
 }
 
 export function GrupoConceptosContenedor({
-  titulo, subtitulo, conceptos, onGenerar, canEdit, pendientesCount,
+  titulo, subtitulo, conceptos, onGenerar, canEdit, pendientesCount, estadosConceptos,
 }: Props) {
-  const totales = sumarPorMoneda(conceptos.filter((c) => c.estado_facturacion !== "en_proforma"));
+  const estadoDe = (id: string): EstadoConcepto => estadosConceptos.get(id) ?? "pendiente";
+  const totales = sumarPorMoneda(conceptos.filter((c) => estadoDe(c.id) !== "pendiente"));
 
   return (
     <div className="border-t">
@@ -76,11 +78,7 @@ export function GrupoConceptosContenedor({
           { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
           {
             id: "estado", header: "Estado",
-            cell: ({ row }) => row.original.estado_facturacion === "en_proforma" ? (
-              <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" /> En proforma</Badge>
-            ) : (
-              <Badge variant="neutral"><Clock className="h-3 w-3 mr-1" /> Pendiente</Badge>
-            ),
+            cell: ({ row }) => <EstadoConceptoBadge estado={estadoDe(row.original.id)} />,
           },
         ]) as ColumnDef<ConceptoVenta, unknown>[]}
         data={conceptos}

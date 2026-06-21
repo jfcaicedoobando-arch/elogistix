@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.90.5] - 2026-06-21
+- **ui(embarque/facturacion) badge tri-estado de conceptos refleja si la proforma ya fue facturada**: `conceptos_venta.estado_facturacion` es binario en BD (`pendiente`/`en_proforma`) y nunca pasa a "facturado", por lo que después de facturar una proforma los conceptos seguían mostrando el badge verde "En proforma" aunque debajo la proforma figurara como "Facturada". Se deriva en presentación un tercer estado cruzando con `proformas.estado_proforma`: helper `calcularEstadosConceptos` + componente `EstadoConceptoBadge` (Pendiente / En proforma / Facturado), aplicado en `ResumenConceptosVenta` y `GrupoConceptosContenedor`. El panel de totales pasa de 2 a 3 columnas con monto facturado. Sin cambios de schema ni de flujo.
+
 ## [13.90.4] - 2026-06-21
 - **fix(proformas) link a factura asociada roto**: el embed PostgREST `proformas:proformas(numero)` en `facturacion/services/detail.ts` era ambiguo (existen FKs en ambos sentidos `facturas.proforma_id` y `proformas.factura_id`) y devolvía HTTP 300, por lo que `/facturacion/:id` mostraba "Factura no encontrada o sin acceso". Se desambigua con `proformas:proformas!facturas_proforma_id_fkey(numero)`.
 - **ui(proformas) rediseño del detalle de proforma**: header unificado con total destacado a la derecha (estilo `FacturaDetalle`), barra de acciones secundarias debajo, datos generales con `truncate` + `nombreDesdeEmail` para evitar overflow del operador, y card de "Factura asociada" rediseñada con monto, fecha, folio y botón primario "Ver factura".

@@ -20,6 +20,7 @@ import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
 import { esBorradorVacio } from "./facturacion/esBorradorVacio";
+import { calcularEstadosConceptos } from "./facturacion/estadoConceptoBadge";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
@@ -57,6 +58,14 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
   const { registerRef } = useFocusSection();
 
+  // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
+  // El estado "facturado" se deriva cruzando con `proformas.estado_proforma`
+  // porque `conceptos_venta.estado_facturacion` es binario en BD.
+  const estadosConceptos = useMemo(
+    () => calcularEstadosConceptos(conceptos, proformas),
+    [conceptos, proformas]
+  );
+
   const conceptosPendientes = useMemo(
     () => conceptos.filter(c => c.estado_facturacion !== 'en_proforma'),
     [conceptos]
@@ -88,6 +97,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
           contenedores={contenedores}
           tasaIva={tasaIva}
           canEdit={canEdit}
+          estadosConceptos={estadosConceptos}
           onGenerarProforma={() => {
             setDialogInitialFiltro('todos');
             setDialogOpen(true);

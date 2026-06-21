@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CheckCircle2, Clock, FileText, Receipt } from "lucide-react";
+import { FileText, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { GrupoConceptosContenedor } from "./GrupoConceptosContenedor";
 import { ResumenConceptosVentaTotales } from "./ResumenConceptosVentaTotales";
+import { EstadoConceptoBadge, type EstadoConcepto } from "./estadoConceptoBadge";
 import { agruparPorContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
@@ -19,6 +20,8 @@ interface Props {
   contenedores: EmbarqueContenedor[];
   tasaIva: number;
   canEdit: boolean;
+  /** Mapa concepto.id → estado tri-valor calculado por TabFacturacion. */
+  estadosConceptos: Map<string, EstadoConcepto>;
   /** Abre el diálogo con filtro 'todos'. */
   onGenerarProforma: () => void;
   /** v12.14.0: abre el diálogo con filtro fijado a un contenedor concreto. */
@@ -26,16 +29,21 @@ interface Props {
 }
 
 export function ResumenConceptosVenta({
-  conceptos, contenedores, tasaIva, canEdit,
+  conceptos, contenedores, tasaIva, canEdit, estadosConceptos,
   onGenerarProforma, onGenerarProformaContenedor,
 }: Props) {
+  const estadoDe = (id: string): EstadoConcepto => estadosConceptos.get(id) ?? "pendiente";
   const conceptosPendientes = useMemo(
-    () => conceptos.filter(c => c.estado_facturacion !== "en_proforma"),
-    [conceptos]
+    () => conceptos.filter(c => estadoDe(c.id) === "pendiente"),
+    [conceptos, estadosConceptos]
   );
   const conceptosEnProforma = useMemo(
-    () => conceptos.filter(c => c.estado_facturacion === "en_proforma"),
-    [conceptos]
+    () => conceptos.filter(c => estadoDe(c.id) === "en_proforma"),
+    [conceptos, estadosConceptos]
+  );
+  const conceptosFacturados = useMemo(
+    () => conceptos.filter(c => estadoDe(c.id) === "facturado"),
+    [conceptos, estadosConceptos]
   );
 
   // v12.14.0: si hay ≥2 contenedores reales mostramos vista agrupada
@@ -70,8 +78,9 @@ export function ResumenConceptosVenta({
     return {
       pendiente: sumByCurrency(conceptosPendientes),
       enProforma: sumByCurrency(conceptosEnProforma),
+      facturado: sumByCurrency(conceptosFacturados),
     };
-  }, [conceptosPendientes, conceptosEnProforma, tasaIva]);
+  }, [conceptosPendientes, conceptosEnProforma, conceptosFacturados, tasaIva]);
 
   return (
     <Card>
@@ -108,7 +117,7 @@ export function ResumenConceptosVenta({
                 {contenedoresActivos.map((cont) => {
                   const items = agrupacion.porContenedor[cont.id] ?? [];
                   if (items.length === 0) return null;
-                  const pendientes = items.filter((c) => c.estado_facturacion !== "en_proforma").length;
+                  const pendientes = items.filter((c) => estadoDe(c.id) === "pendiente").length;
                   const numero = cont.numero_contenedor?.trim() || `#${cont.orden}`;
                   return (
                     <GrupoConceptosContenedor
@@ -118,6 +127,7 @@ export function ResumenConceptosVenta({
                       conceptos={items}
                       canEdit={canEdit}
                       pendientesCount={pendientes}
+                      estadosConceptos={estadosConceptos}
                       onGenerar={onGenerarProformaContenedor ? () => onGenerarProformaContenedor(cont.id) : null}
                     />
                   );
@@ -128,7 +138,8 @@ export function ResumenConceptosVenta({
                     subtitulo="Aplican a todo el embarque"
                     conceptos={agrupacion.generales}
                     canEdit={canEdit}
-                    pendientesCount={agrupacion.generales.filter((c) => c.estado_facturacion !== "en_proforma").length}
+                    pendientesCount={agrupacion.generales.filter((c) => estadoDe(c.id) === "pendiente").length}
+                    estadosConceptos={estadosConceptos}
                     onGenerar={onGenerarProformaContenedor ? () => onGenerarProformaContenedor("generales") : null}
                   />
                 )}
@@ -157,11 +168,7 @@ export function ResumenConceptosVenta({
                   { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
                   {
                     id: "estado", header: "Estado",
-                    cell: ({ row }) => row.original.estado_facturacion === "en_proforma" ? (
-                      <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" /> En proforma</Badge>
-                    ) : (
-                      <Badge variant="neutral"><Clock className="h-3 w-3 mr-1" /> Pendiente</Badge>
-                    ),
+                    cell: ({ row }) => <EstadoConceptoBadge estado={estadoDe(row.original.id)} />,
                   },
                 ]) as ColumnDef<ConceptoVenta, unknown>[]}
                 data={conceptos}
@@ -174,6 +181,7 @@ export function ResumenConceptosVenta({
               totales={totales}
               pendientesCount={conceptosPendientes.length}
               enProformaCount={conceptosEnProforma.length}
+              facturadosCount={conceptosFacturados.length}
             />
           </>
         )}
