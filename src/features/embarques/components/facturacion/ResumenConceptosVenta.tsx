@@ -20,6 +20,8 @@ interface Props {
   contenedores: EmbarqueContenedor[];
   tasaIva: number;
   canEdit: boolean;
+  /** Mapa concepto.id → estado tri-valor calculado por TabFacturacion. */
+  estadosConceptos: Map<string, EstadoConcepto>;
   /** Abre el diálogo con filtro 'todos'. */
   onGenerarProforma: () => void;
   /** v12.14.0: abre el diálogo con filtro fijado a un contenedor concreto. */
