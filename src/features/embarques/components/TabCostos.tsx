@@ -2,15 +2,14 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { FileText, Receipt, X } from "lucide-react";
+import { Receipt } from "lucide-react";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
+import { ConceptosCostoCard } from "./costos/ConceptosCostoCard";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
 
 interface Props {
@@ -34,25 +33,7 @@ const kpiColors = [
 export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
-  const { focus, registerRef, clearFocus } = useFocusSection();
 
-  // Foco soportado en este tab: filtra la tabla de costos según el motivo del cierre.
-  // - "cxp" / "costo-no-liquidado" → estado_liquidacion = "Pendiente".
-  // - "costo-sin-factura" → no podemos verificar facturas client-side; sólo resaltamos la sección.
-  const costoFocus = focus && ["cxp", "costo-no-liquidado", "costo-sin-factura"].includes(focus)
-    ? focus
-    : null;
-  const conceptosCostoFiltrados = useMemo(() => {
-    if (costoFocus === "cxp" || costoFocus === "costo-no-liquidado") {
-      return conceptosCosto.filter(c => (c.estado_liquidacion ?? '').toLowerCase() !== 'pagado');
-    }
-    return conceptosCosto;
-  }, [conceptosCosto, costoFocus]);
-  const focusLabel: Record<string, string> = {
-    cxp: "facturas de proveedor por pagar",
-    "costo-no-liquidado": "costos pendientes de liquidación",
-    "costo-sin-factura": "costos sin factura de proveedor",
-  };
   const showContenedorCol = contenedores.length >= 2;
   const contenedorLabelById = useMemo(() => {
     const map = new Map<string, string>();
@@ -141,44 +122,12 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
         </CardContent>
       </Card>
 
-      <Card ref={registerRef(costoFocus ?? "")} data-focus={costoFocus ?? undefined}>
-        <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-          <CardTitle className="text-sm">Conceptos de Costo</CardTitle>
-          {costoFocus && (
-            <div className="flex items-center gap-2 text-xs">
-              <Badge variant="outline" className="border-primary text-primary">
-                Filtrando: {focusLabel[costoFocus]}
-              </Badge>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-xs"
-                onClick={clearFocus}
-              >
-                <X className="mr-1 h-3 w-3" /> Limpiar
-              </Button>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent className="p-0">
-          <DataTable
-            columns={costoColumns}
-            data={conceptosCostoFiltrados}
-            rowKey={(c) => c.id}
-            density="compact"
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={FileText}
-                  title={costoFocus ? "Sin coincidencias con el filtro" : "Sin conceptos de costo"}
-                  description={costoFocus ? "El filtro del checklist no encuentra costos pendientes; verifica si ya fueron atendidos." : (irACargarCostos ? "Haz clic en el ícono o en el botón para capturar los costos del embarque." : "Aún no se han registrado conceptos de costo para este embarque.")}
-                  primaryAction={costoFocus ? undefined : irACargarCostos}
-                />
-              </div>
-            }
-          />
-        </CardContent>
-      </Card>
+      <ConceptosCostoCard
+        conceptosCosto={conceptosCosto}
+        columns={costoColumns}
+        irACargarCostos={irACargarCostos}
+      />
     </div>
   );
 }
+
