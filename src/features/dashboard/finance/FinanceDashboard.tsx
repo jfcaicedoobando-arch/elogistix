@@ -33,7 +33,7 @@ function firstName(email: string | null | undefined, fallback: string): string {
 }
 
 export function FinanceDashboard() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const dash = useFinanceDashboard();
 
   const { saludo, hoyStr } = useMemo(
@@ -41,7 +41,7 @@ export function FinanceDashboard() {
     [],
   );
 
-  const nombre = profile?.nombre?.split(" ")[0] ?? firstName(user?.email, "");
+  const nombre = firstName(user?.email, "");
 
   const pendientesAdminCount =
     (dash.pendientesAdmin?.entregadosCount ?? 0) +
