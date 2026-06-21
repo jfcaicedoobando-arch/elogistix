@@ -1,65 +1,62 @@
-# Plan: Layout proforma + link factura roto
+# Plan: Estado de conceptos en el tab Facturación
 
 ## Diagnóstico
 
-**Bug del link a factura asociada** — Verificado con Playwright en `/facturacion/5854b3d0-...`. La petición a PostgREST responde **HTTP 300 Multiple Choices** (no 404), lo que hace que el hook devuelva `null` y la página muestre "Factura no encontrada o sin acceso".
+**No es un bug de datos — es una etiqueta engañosa.**
 
-Causa raíz: en `src/features/facturacion/services/detail.ts` el select usa `proformas:proformas(numero)` para incrustar la proforma. Como existen relaciones FK en ambos sentidos (`facturas.proforma_id → proformas` y `proformas.factura_id → facturas`), PostgREST no sabe cuál usar y devuelve 300.
+Analogía: imagina que la columna "Estado" del concepto sólo tiene dos cajones — "Pendiente" y "En proforma". Cuando la proforma se factura, el concepto sigue dentro del cajón "En proforma" (porque nunca se creó un cajón "Facturado"). El cajón de "Facturado" vive un piso abajo, en la tabla de proformas.
 
-Analogía: es como pedirle a alguien "tráeme el libro" cuando hay dos libros del mismo nombre — necesita que le digas cuál. Aquí le especificamos la FK exacta.
+Técnico:
+- `conceptos_venta.estado_facturacion` es binario: `'pendiente'` | `'en_proforma'`. No existe `'facturado'`.
+- El estado de facturación real vive en `proformas.estado_proforma` (`pendiente` / `facturada`).
+- Cuando la proforma pasa a "Facturada", los conceptos vinculados (`proforma_id = <esa proforma>`) NO se actualizan — siguen mostrando el badge verde "En proforma".
+- Por eso ves la tabla con todo "En proforma" y, abajo, el historial muestra la proforma como "Facturada". Es consistente con la BD, pero confuso visualmente.
 
-**Layout actual** (captura tomada):
-- El email del operador (`juanluis.martinez@elogistixshipping...`) se desborda y choca con "Días crédito"
-- "Volver" queda suelto arriba; el header no destaca el total
-- "Factura asociada" muestra poco contexto (sólo número y estado)
-- Mucho espacio vacío a la derecha en pantallas anchas
+## Cambios (UI únicamente, sin cambios de BD)
 
-## Cambios
+### 1. Derivar un tercer estado en presentación
+En `TabFacturacion` calcular un `Map<conceptoId, 'pendiente'|'en_proforma'|'facturado'>` cruzando `conceptos` con `proformas`:
+- `pendiente` → `estado_facturacion !== 'en_proforma'`
+- `facturado` → tiene `proforma_id` y esa proforma tiene `estado_proforma === 'facturada'`
+- `en_proforma` → tiene `proforma_id` pero la proforma aún `pendiente`
 
-### 1. Fix link factura (`src/features/facturacion/services/detail.ts`)
-- Cambiar embed a `"proformas:proformas!facturas_proforma_id_fkey(numero)"` para desambiguar la FK.
+Pasar ese mapa a `ResumenConceptosVenta` y de ahí a `GrupoConceptosContenedor`.
 
-### 2. Mejorar layout `src/features/proformas/routes/ProformaDetalle.tsx`
-- **Header unificado**: mover "Volver" a la misma fila que el título (chip secundario) y agregar el **total grande a la derecha** (estilo `FacturaDetalle`).
-- **Datos generales**: usar `nombreDesdeEmail(proforma.operador)` para evitar overflow; añadir `title` con el email completo; convertir el grid a `md:grid-cols-4` con `min-w-0` y `truncate` para que ningún campo invada al vecino.
-- **Acciones secundarias**: agrupar "Descargar PDF" / "Ver embarque" en una barra de acciones bajo el header (no apiñadas al lado del título).
-- **Factura asociada (rediseño)**:
-  - Título de card: "Factura asociada {numero}" con `Badge` de estado.
-  - Grid 2-col: monto, fecha de emisión, UUID fiscal (si existe), folio.
-  - Botón primario "Ver factura" (Link) + botones de PDF/XML.
-  - Si no hay factura pero `estado_proforma==='facturada'`, mostrar nota informativa.
-- **Reducir ancho contenedor** `max-w-5xl` y mantener spacing `space-y-4` para que se sienta menos vacío.
+### 2. Badge tri-estado en las tablas de conceptos
+Reemplazar la celda actual (`ResumenConceptosVenta.tsx` línea 158-165 y `GrupoConceptosContenedor.tsx` línea 79) por un helper que devuelve:
+- `Facturado` — badge `success` con ícono `Receipt`
+- `En proforma` — badge `info` con `FileText` (ya no `success`, así no compite con el "Facturado")
+- `Pendiente` — badge `neutral` con `Clock`
 
-### 3. Sin cambios de negocio
-- No se toca `useProformaDetalle`, totales, conceptos, ni RLS.
-- No se cambian rutas.
+### 3. Totales en `ResumenConceptosVentaTotales`
+Hoy muestra 2 columnas (Pendiente / En proforma). Cambiarlo a 3: Pendiente / En proforma / Facturado, calculando los montos respectivos en `ResumenConceptosVenta`.
+
+### 4. Sin tocar lógica de generación de proformas
+Los filtros `estado_facturacion !== 'en_proforma'` para "qué conceptos puedo meter en una proforma nueva" se mantienen — un concepto facturado tampoco debe reaparecer en el wizard de proforma (ya tiene `proforma_id`).
+
+## No incluye
+
+- No se modifica el schema ni se agrega un valor `'facturado'` a `conceptos_venta.estado_facturacion`. El estado canónico sigue viviendo en `proformas` (única fuente de verdad).
+- No se tocan los datos existentes.
+- No se cambia el flujo de generar / facturar proforma.
 
 ## Verificación
 
-Con Playwright, autenticado:
-1. Navegar a `/proformas/e553385d-74c6-4611-942a-4bb2bc54a4a2` → screenshot del nuevo layout (sin overflow del operador, header con total, card de factura completa).
-2. Hacer click en "Ver factura" → debe abrir `/facturacion/5854b3d0-...` y renderizar el detalle (no el mensaje de "no encontrada").
-3. Capturar respuesta de la query `facturas?select=...` → status 200 (no 300).
+Con Playwright en `/embarques/7cbea742-…?tab=facturacion`:
+1. Screenshot antes/después.
+2. Confirmar que los conceptos cuya proforma está "Facturada" ahora muestran badge "Facturado" (verde con `Receipt`), y que los totales del card incluyen una tercera columna "Facturado" con el monto correcto.
+3. Confirmar que un embarque con proforma aún pendiente sigue mostrando "En proforma" en azul.
 
-## Changelog / versión
+## Changelog
 
-- `src/constants/appVersion.ts` → `13.90.4`
-- `CHANGELOG.md` → entrada `[13.90.4]`:
-  - Fix: link a factura asociada desde proforma (embed FK explícita)
-  - UI: rediseño del detalle de proforma (header con total, datos generales sin overflow, card de factura asociada con más contexto)
+- `appVersion.ts` → `13.90.5`
+- `CHANGELOG.md` → entrada `[13.90.5] ui(embarque/facturacion) badge de conceptos refleja si la proforma ya fue facturada`.
 
-## Detalles técnicos
+## Archivos a editar
 
-```ts
-// detail.ts
-"proformas:proformas!facturas_proforma_id_fkey(numero)"
-```
-
-```tsx
-// Operador truncate
-<p className="truncate" title={proforma.operador ?? ''}>
-  {proforma.operador ? nombreDesdeEmail(proforma.operador) : '—'}
-</p>
-```
-
-Archivos editados: 3 (`detail.ts`, `ProformaDetalle.tsx`, `appVersion.ts`) + `CHANGELOG.md`.
+1. `src/features/embarques/components/TabFacturacion.tsx` — calcular y pasar el mapa de estados.
+2. `src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx` — recibir mapa + 3 totales.
+3. `src/features/embarques/components/facturacion/GrupoConceptosContenedor.tsx` — recibir mapa, badge tri-estado.
+4. `src/features/embarques/components/facturacion/ResumenConceptosVentaTotales.tsx` — tercera columna.
+5. Nuevo helper `src/features/embarques/components/facturacion/estadoConceptoBadge.tsx` para no duplicar JSX del badge.
+6. `appVersion.ts` + `CHANGELOG.md`.
