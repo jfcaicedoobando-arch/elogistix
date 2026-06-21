@@ -1,12 +1,18 @@
-import { Download, Loader2, Receipt, Trash2 } from "lucide-react";
+import { ChevronRight, MoreHorizontal, Receipt, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
+import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
 
@@ -14,54 +20,68 @@ interface Props {
   proformas: ProformaConFactura[];
   canEdit: boolean;
   isDeleting: boolean;
+  /** Mantengo la firma para no romper TabFacturacion; ya no se usa inline. */
   onDescargar: (proformaId: string) => void;
   onEliminar: (id: string, numero: string) => void;
 }
 
+function renderEstado(p: ProformaConFactura, proformas: ProformaConFactura[]) {
+  const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
+  const rev = p.estado_revision ?? "aprobada";
+  const vacio = esBorradorVacio(p);
+  if (facturada) return <Badge variant="success" className="w-fit">Facturada</Badge>;
+  if (vacio) return (
+    <Badge variant="outline" className="w-fit bg-warning/10 text-warning border-warning/30">
+      Borrador vacío
+    </Badge>
+  );
+  if (rev === "pendiente") return <Badge variant="warning" className="w-fit">Pendiente revisión</Badge>;
+  if (rev === "consolidada") {
+    const num = proformas.find(x => x.id === p.consolidada_en)?.numero;
+    return <Badge variant="info" className="w-fit">Consolidada{num ? ` en ${num}` : ""}</Badge>;
+  }
+  return <Badge variant="success" className="w-fit">Aprobada</Badge>;
+}
 
-export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar, onEliminar }: Props) {
-  const navigate = useNavigate();
-  const renderEstado = (p: ProformaConFactura) => {
-    const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
-    const rev = p.estado_revision ?? "aprobada";
-    const vacio = esBorradorVacio(p);
-    let badgeRevision;
-    if (vacio) {
-      badgeRevision = (
-        <Badge
-          variant="outline"
-          className="w-fit bg-warning/10 text-warning border-warning/30"
-          title="Borrador sin conceptos asignados y con total en cero"
-        >
-          Borrador vacío
-        </Badge>
-      );
-    } else if (rev === "pendiente") {
-      badgeRevision = <Badge variant="warning" className="w-fit">Pendiente de revisión</Badge>;
-    } else if (rev === "consolidada") {
-      const consolidadaNumero = proformas.find(x => x.id === p.consolidada_en)?.numero;
-      badgeRevision = (
-        <Badge variant="info" className="w-fit">
-          Consolidada{consolidadaNumero ? ` en ${consolidadaNumero}` : ""}
-        </Badge>
-      );
-    } else {
-      badgeRevision = <Badge variant="success" className="w-fit">Aprobada</Badge>;
-    }
+function totalUnico(p: ProformaConFactura) {
+  const usd = Number(p.total_usd);
+  const mxn = Number(p.total_mxn);
+  if (usd > 0 && mxn === 0) return formatCurrency(usd, "USD");
+  if (mxn > 0 && usd === 0) return formatCurrency(mxn, "MXN");
+  if (usd > 0 && mxn > 0) {
     return (
-      <div className="flex flex-col gap-1">
-        {badgeRevision}
-        {facturada
-          ? <Badge variant="success" className="w-fit">Facturada</Badge>
-          : <Badge variant="warning" className="w-fit">Pago pendiente</Badge>}
+      <div className="flex flex-col items-end leading-tight">
+        <span>{formatCurrency(usd, "USD")}</span>
+        <span className="text-xs text-muted-foreground">{formatCurrency(mxn, "MXN")}</span>
       </div>
     );
-  };
+  }
+  return <span className="text-muted-foreground">—</span>;
+}
+
+export function HistorialProformas({
+  proformas, canEdit, isDeleting, onEliminar,
+}: Props) {
+  const navigate = useNavigate();
+  const facturadasCount = proformas.filter(p => p.estado_proforma === "facturada").length;
 
   const columns: ColumnDef<ProformaConFactura, unknown>[] = defineColumns<ProformaConFactura>([
     { id: "numero", header: "Número", meta: { className: "font-medium" }, cell: ({ row }) => row.original.numero },
     { id: "fecha", header: "Fecha", cell: ({ row }) => formatDate(row.original.fecha_emision) },
-    { id: "operador", header: "Operador", meta: { className: "text-sm" }, cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span> },
+    {
+      id: "operador",
+      header: "Operador",
+      meta: { className: "text-sm max-w-[180px]" },
+      cell: ({ row }) => {
+        const email = row.original.operador;
+        if (!email) return <span className="text-muted-foreground">—</span>;
+        return (
+          <span className="truncate block" title={email}>
+            {nombreDesdeEmail(email)}
+          </span>
+        );
+      },
+    },
     {
       id: "credito",
       header: "Días Crédito",
@@ -69,56 +89,46 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
       cell: ({ row }) => formatDiasCredito(row.original.dias_credito),
     },
     {
-      id: "usd",
-      header: "Total USD",
-      meta: { align: "right" },
-      cell: ({ row }) => Number(row.original.total_usd) > 0 ? formatCurrency(Number(row.original.total_usd), "USD") : "—",
+      id: "total",
+      header: "Total",
+      meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) => totalUnico(row.original),
     },
-    {
-      id: "mxn",
-      header: "Total MXN",
-      meta: { align: "right" },
-      cell: ({ row }) => Number(row.original.total_mxn) > 0 ? formatCurrency(Number(row.original.total_mxn), "MXN") : "—",
-    },
-    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original) },
-    {
-      id: "folio",
-      header: "Folio Factura",
-      meta: { className: "text-xs" },
-      cell: ({ row }) => row.original.folio_factura_externa
-        ? <span className="font-mono">{row.original.folio_factura_externa}</span>
-        : <span className="text-muted-foreground">—</span>,
-    },
+    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas) },
     {
       id: "acciones",
-      header: "Acciones",
-      meta: { align: "right" },
+      header: "",
+      meta: { align: "right", className: "w-10" },
       cell: ({ row }) => {
         const p = row.original;
         const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
+        const consolidada = (p.estado_revision ?? "aprobada") === "consolidada";
+        const puedeEliminar = canEdit && !facturada && !consolidada;
+        if (!puedeEliminar) {
+          return <ChevronRight className="h-4 w-4 text-muted-foreground/40 ml-auto" />;
+        }
         return (
-          <div className="flex items-center justify-end gap-1">
-            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onDescargar(p.id); }}>
-              <Download className="h-3.5 w-3.5 mr-1" /> Descargar
-            </Button>
-            {p.facturas?.factura_pdf_url && (
-              <FacturaDownloadButton stored={p.facturas.factura_pdf_url} kind="pdf" className="h-8 w-8" />
-            )}
-            {p.facturas?.factura_xml_url && (
-              <FacturaDownloadButton stored={p.facturas.factura_xml_url} kind="xml" className="h-8 w-8" />
-            )}
-            {canEdit && !facturada && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => { e.stopPropagation(); onEliminar(p.id, p.numero); }}
-                disabled={isDeleting}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => e.stopPropagation()}
               >
-                {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar</>}
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
-            )}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                disabled={isDeleting}
+                onClick={(e) => { e.stopPropagation(); onEliminar(p.id, p.numero); }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-2" /> Eliminar proforma
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },
@@ -126,8 +136,14 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm">Proformas Generadas</CardTitle>
+        {proformas.length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            {proformas.length} proforma{proformas.length === 1 ? "" : "s"}
+            {facturadasCount > 0 && <> · {facturadasCount} facturada{facturadasCount === 1 ? "" : "s"}</>}
+          </span>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         <DataTable
@@ -136,6 +152,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
           rowKey={(p) => p.id}
           density="compact"
           onRowClick={(p) => navigate(`/proformas/${p.id}`)}
+          rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyState={<EmptyStateInline icon={Receipt} message="No hay proformas generadas para este embarque." />}
         />
       </CardContent>

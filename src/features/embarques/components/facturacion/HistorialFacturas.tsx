@@ -1,5 +1,5 @@
-import { Receipt } from "lucide-react";
-import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
+import { ChevronRight, Receipt } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,8 @@ interface Props {
 }
 
 export function HistorialFacturas({ facturas, proformas }: Props) {
+  const navigate = useNavigate();
+
   const columns: ColumnDef<Factura, unknown>[] = defineColumns<Factura>([
     { id: "numero", header: "# Factura", meta: { className: "font-medium" }, cell: ({ row }) => row.original.numero },
     {
@@ -34,35 +36,54 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
       meta: { className: "text-xs" },
       cell: ({ row }) => {
         const f = row.original;
-        const num = f.proforma_id ? proformas.find(p => p.id === f.proforma_id)?.numero : null;
-        return num ? <span className="font-mono">{num}</span> : <span className="text-muted-foreground">—</span>;
-      },
-    },
-    { id: "monto", header: "Monto", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.total), row.original.moneda) },
-    { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
-    { id: "fecha", header: "Fecha", cell: ({ row }) => formatDate(row.original.fecha_emision) },
-    { id: "estado", header: "Estado", cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado)}>{row.original.estado}</Badge> },
-    {
-      id: "archivos",
-      header: "Archivos",
-      cell: ({ row }) => {
-        const f = row.original;
-        return (!f.factura_pdf_url && !f.factura_xml_url) ? (
-          <span className="text-muted-foreground text-xs">—</span>
-        ) : (
-          <div className="flex items-center gap-1">
-            {f.factura_pdf_url && <FacturaDownloadButton stored={f.factura_pdf_url} kind="pdf" />}
-            {f.factura_xml_url && <FacturaDownloadButton stored={f.factura_xml_url} kind="xml" />}
-          </div>
+        if (!f.proforma_id) return <span className="text-muted-foreground">—</span>;
+        const num = proformas.find(p => p.id === f.proforma_id)?.numero;
+        if (!num) return <span className="text-muted-foreground">—</span>;
+        return (
+          <button
+            type="button"
+            className="font-mono text-info hover:underline"
+            onClick={(e) => { e.stopPropagation(); navigate(`/proformas/${f.proforma_id}`); }}
+          >
+            {num}
+          </button>
         );
       },
     },
+    {
+      id: "monto",
+      header: "Monto",
+      meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) => formatCurrency(Number(row.original.total), row.original.moneda),
+    },
+    { id: "fecha", header: "Fecha", cell: ({ row }) => formatDate(row.original.fecha_emision) },
+    {
+      id: "estado",
+      header: "Estado",
+      cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado)}>{row.original.estado}</Badge>,
+    },
+    {
+      id: "chevron",
+      header: "",
+      meta: { align: "right", className: "w-8" },
+      cell: () => <ChevronRight className="h-4 w-4 text-muted-foreground/40 ml-auto" />,
+    },
   ]);
+
+  const totalEmitido = facturas.reduce((acc, f) => acc + Number(f.total), 0);
 
   return (
     <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm">Facturas del Embarque</CardTitle>
+        {facturas.length > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {facturas.length} factura{facturas.length === 1 ? "" : "s"}
+            {totalEmitido > 0 && facturas[0]?.moneda && (
+              <> · {formatCurrency(totalEmitido, facturas[0].moneda)}</>
+            )}
+          </span>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         <DataTable
@@ -70,6 +91,8 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
           data={facturas}
           rowKey={(f) => f.id}
           density="compact"
+          onRowClick={(f) => navigate(`/facturacion/${f.id}`)}
+          rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyState={<EmptyStateInline icon={Receipt} message="No hay facturas generadas para este embarque." />}
         />
       </CardContent>
