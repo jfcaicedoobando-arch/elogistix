@@ -5587,10 +5587,6 @@ export type Database = {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
       }
-      _validar_cierre_embarque_base: {
-        Args: { p_embarque_id: string }
-        Returns: Json
-      }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
         Returns: Json
