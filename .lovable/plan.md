@@ -1,93 +1,32 @@
-# Derivar `estado_liquidacion` desde pagos de proveedor y reducir el checklist a 2 reglas en el bloque de costos
+## Reordenar el checklist de cierre según el workflow real de un embarque
 
-## Analogía
+Actualmente el checklist sale en el orden en que se escribió la función `validar_cierre_embarque`, no en el orden en el que ocurre la operación. Como resultado, lo último (datos de contenedores) aparece al final cuando en realidad es de los primeros pasos, y la utilidad/comisión aparecen a media lista cuando son el cierre financiero.
 
-Hoy hay dos personas marcando "pagado": la tesorería (registrando `pagos_proveedor`) y el operador (marcando el flag `estado_liquidacion` en cada concepto). Eso permite que se contradigan. La idea es que **sólo la tesorería mande**: cuando el saldo de la factura de proveedor llega a cero, todos sus conceptos quedan `Pagado` automáticamente; si se retira un pago, vuelven a `Pendiente`.
+### Nuevo orden propuesto (de inicio → fin del ciclo del embarque)
 
-## Cambios
+| # | Regla | Bloque | Responsable | Por qué va aquí |
+|---|---|---|---|---|
+| 1 | `contenedores_datos_completos` | Operación | Operador | Es lo primero que se captura al recibir/embarcar la carga (peso y volumen). |
+| 2 | `docs_completos` | Documentación | Coordinador logístico | Una vez en tránsito se suben BL, packing list, factura comercial, etc. |
+| 3 | `costo_conceptos_con_factura` | Costos | Auxiliar contable | Llegan las facturas de proveedores (naviera, agente, transporte). |
+| 4 | `cxp_pagada` | Costos | Tesorero | Se pagan esas facturas; al pagarlas la liquidación se deriva sola (v13.90.8). |
+| 5 | `venta_conceptos_facturados` | Venta | Contador | Con los costos cerrados se factura al cliente. |
+| 6 | `cxc_cobrada` | Venta | Cobranza | El cliente paga la factura. |
+| 7 | `pnl_margen_minimo` | Cierre financiero | Ventas | Con CxC y CxP cerrados, el P&L es definitivo y se valida el margen. |
+| 8 | `comision_calculada` | Cierre financiero | Sistema | Última pieza: se devenga comisión sobre la utilidad final. |
 
-### 1) Migración Postgres
+Visualmente queda: **Operación → Documentos → Costos (recibir+pagar) → Venta (facturar+cobrar) → P&L → Comisión**, que es exactamente el flujo natural de un embarque.
 
-a. **Función `recalcular_estado_liquidacion_concepto(p_concepto_id uuid)`** (`SECURITY DEFINER`, `search_path = public`):
-   - Considera el concepto **Pagado** si tiene al menos una factura vinculada y **todas** sus `proveedor_facturas` no canceladas están totalmente pagadas (`SUM(pagos_proveedor.monto) >= proveedor_facturas.total`).
-   - Si no tiene facturas o alguna factura tiene saldo, queda **Pendiente**.
-   - Actualiza `conceptos_costo.estado_liquidacion` y `fecha_pago` (la fecha del último pago aplicable, NULL si Pendiente).
+### Cambios técnicos
 
-b. **Función `recalcular_estado_liquidacion_factura(p_factura_id uuid)`**: recorre los conceptos vinculados a esa factura y llama a la función anterior.
+1. **Migración Postgres** que recrea `public.validar_cierre_embarque(uuid)` con los bloques en el nuevo orden. La lógica de cada bloque no cambia — solo se mueven de lugar los `v_checks := v_checks || …` para que el arreglo `checks` salga ordenado. `puede_cerrar` no se ve afectado porque sigue siendo un AND de todos los `v_ok`.
+2. **Sin cambios de frontend**: `TabCierre` y `CierreChecklistCard` ya renderizan en el orden en que vienen del RPC, así que basta con cambiar el orden en el backend para que la UI lo refleje.
+3. **Sin cambios de tests**: `TabCierre.rules.test.ts` y `cierreCheckMeta.test.ts` validan reglas individuales por clave, no el orden del arreglo.
+4. **Versión** → bump `APP_VERSION` a `13.90.9` y entrada en `CHANGELOG.md` describiendo la reordenación.
 
-c. **Triggers**:
-   - `AFTER INSERT OR UPDATE OR DELETE` en `pagos_proveedor` → recalcula por `proveedor_factura_id` (NEW y OLD).
-   - `AFTER INSERT OR UPDATE OR DELETE` en `proveedor_facturas_conceptos` → recalcula el `concepto_costo_id` afectado.
-   - `AFTER UPDATE` en `proveedor_facturas` cuando cambia `estado` o `total` → recalcula la factura.
+### Riesgos
 
-d. **Backfill único** dentro de la misma migración: ejecutar `recalcular_estado_liquidacion_concepto` para todo `conceptos_costo` existente, para que los datos vigentes queden sincronizados.
+- Ninguno funcional: el RPC sigue devolviendo el mismo set de reglas con la misma semántica; solo cambia el orden de presentación.
+- Si en el futuro alguien depende del índice (no del nombre) de una regla, se rompería; pero hoy todo el frontend usa el campo `regla` como llave.
 
-e. **Reescribir `validar_cierre_embarque`**: eliminar el bloque `costos_liquidados` y la variable `v_costos_pendientes`. El resto se mantiene idéntico (incluyendo el fix de `venta_conceptos_facturados` de 13.90.7).
-
-### 2) Frontend (limpieza menor)
-
-- `src/features/embarques/utils/cierreCheckMeta.ts`: borrar la entrada `costos_liquidados` (queda cubierta por `cxp_pagada`).
-- `src/features/embarques/components/__tests__/TabCierre.rules.test.ts`: remover los asserts de la regla `costos_liquidados` (etiqueta y AND).
-- **No tocar** los `UPDATE ... estado_liquidacion = 'Pagado'` manuales que viven en `cxp/services/conceptosCostoVinculables.ts` y `facturacion/services/facturasCrud.ts`: ya no son la fuente de verdad pero quedan compatibles porque el trigger los re-confirma. Son código legítimo de paths que también insertan el pago.
-
-### 3) Versionado
-
-- `src/constants/appVersion.ts` → `13.90.8`.
-- `CHANGELOG.md` raíz → entrada `## [13.90.8] - 2026-06-21` con `feat(cierre/costos-derivados)` explicando: liquidación derivada, triggers, backfill, eliminación de regla del checklist.
-
-## Detalle técnico (esqueleto SQL)
-
-```sql
-CREATE OR REPLACE FUNCTION public.recalcular_estado_liquidacion_concepto(p_concepto_id uuid)
-RETURNS void
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
-AS $$
-DECLARE v_pagado boolean; v_fecha date;
-BEGIN
-  IF p_concepto_id IS NULL THEN RETURN; END IF;
-
-  SELECT
-    EXISTS (
-      SELECT 1 FROM proveedor_facturas_conceptos pfc
-      JOIN proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
-      WHERE pfc.concepto_costo_id = p_concepto_id
-        AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada'
-    )
-    AND NOT EXISTS (
-      SELECT 1 FROM proveedor_facturas_conceptos pfc
-      JOIN proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
-      WHERE pfc.concepto_costo_id = p_concepto_id
-        AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada'
-        AND COALESCE(pf.total,0) > COALESCE((
-          SELECT SUM(pp.monto) FROM pagos_proveedor pp
-          WHERE pp.proveedor_factura_id = pf.id AND pp.deleted_at IS NULL
-        ),0) + 0.01
-    )
-  INTO v_pagado;
-
-  SELECT MAX(pp.fecha_pago) INTO v_fecha
-  FROM proveedor_facturas_conceptos pfc
-  JOIN pagos_proveedor pp ON pp.proveedor_factura_id = pfc.proveedor_factura_id
-  WHERE pfc.concepto_costo_id = p_concepto_id AND pp.deleted_at IS NULL;
-
-  UPDATE conceptos_costo
-     SET estado_liquidacion = CASE WHEN v_pagado THEN 'Pagado' ELSE 'Pendiente' END::estado_liquidacion,
-         fecha_pago = CASE WHEN v_pagado THEN v_fecha ELSE NULL END
-   WHERE id = p_concepto_id;
-END $$;
-```
-
-Triggers llaman al recálculo pasando `concepto_costo_id` (para `proveedor_facturas_conceptos`) o iterando los conceptos de la factura (para `pagos_proveedor` y `proveedor_facturas`).
-
-## Archivos a modificar
-
-- Migración Supabase nueva (funciones + triggers + backfill + `validar_cierre_embarque` actualizada).
-- `src/features/embarques/utils/cierreCheckMeta.ts`
-- `src/features/embarques/components/__tests__/TabCierre.rules.test.ts`
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
-
-## Resultado esperado
-
-- El checklist de Cierre muestra **2 reglas** en el bloque de costos: "Cuentas por pagar al día" y "Todos los costos tienen factura de proveedor recibida".
-- `conceptos_costo.estado_liquidacion` deja de ser manual: cualquier pago/eliminación de pago la actualiza sola, y los badges del Tab Costos siguen mostrando "Pagado/Pendiente" correctamente sin código nuevo en frontend.
+¿Procedo a implementarlo?
