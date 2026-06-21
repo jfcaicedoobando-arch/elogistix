@@ -174,31 +174,13 @@ export default function Facturacion() {
           </TabsContent>
         </Tabs>
 
-        <DialogRegistrarPago
-          open={!!pagoFactura}
-          onOpenChange={(o) => !o && setPagoFactura(null)}
-          factura={pagoFactura}
-        />
-        <DialogHistorialPagos
-          open={!!historialFactura}
-          onOpenChange={(o) => !o && setHistorialFactura(null)}
-          factura={historialFactura}
+        <FacturacionDialogs
+          pagoFactura={pagoFactura} setPagoFactura={setPagoFactura}
+          historialFactura={historialFactura} setHistorialFactura={setHistorialFactura}
+          timbrarFactura={timbrarFactura} setTimbrarFactura={setTimbrarFactura}
+          cancelarFactura={cancelarFactura} setCancelarFactura={setCancelarFactura}
+          openFacturaManual={openFacturaManual} setOpenFacturaManual={setOpenFacturaManual}
           canEdit={canEdit}
-        />
-        <DialogTimbrarFactura
-          facturaId={timbrarFactura?.id ?? null}
-          open={!!timbrarFactura}
-          onOpenChange={(o) => !o && setTimbrarFactura(null)}
-        />
-        <DialogCancelarFactura
-          facturaId={cancelarFactura?.id ?? null}
-          numero={cancelarFactura?.numero}
-          open={!!cancelarFactura}
-          onOpenChange={(o) => !o && setCancelarFactura(null)}
-        />
-        <DialogNuevaFacturaManual
-          open={openFacturaManual}
-          onOpenChange={setOpenFacturaManual}
         />
       </div>
     </TooltipProvider>
