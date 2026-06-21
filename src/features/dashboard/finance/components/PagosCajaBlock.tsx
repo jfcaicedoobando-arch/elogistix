@@ -77,27 +77,37 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
             </p>
           ) : (
             <ul className="divide-y rounded-md border">
-              {cxpPorPagar.map((f) => (
-                <li key={f.id} className="px-3 py-2 text-sm flex items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{f.folio_proveedor || "—"}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {f.proveedor_nombre}
-                    </p>
-                  </div>
-                  <span className="text-sm tabular-nums font-semibold">
-                    {formatCurrency(f.saldo, f.moneda)}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground w-20 text-right">
-                    {f.fecha_vencimiento
-                      ? new Date(f.fecha_vencimiento + "T00:00:00").toLocaleDateString("es-MX", {
-                          day: "2-digit",
-                          month: "short",
-                        })
-                      : "—"}
-                  </span>
-                </li>
-              ))}
+              {cxpPorPagar.map((f) => {
+                const to = f.embarque_id ? `/embarques/${f.embarque_id}` : "/cxp";
+                return (
+                  <li key={f.id}>
+                    <Link
+                      to={to}
+                      className="px-3 py-2 text-sm flex items-center gap-3 hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors"
+                      aria-label={`Abrir ${f.embarque_id ? "embarque" : "CxP"} ${f.folio_proveedor}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{f.folio_proveedor || "—"}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {f.proveedor_nombre}
+                        </p>
+                      </div>
+                      <span className="text-sm tabular-nums font-semibold">
+                        {formatCurrency(f.saldo, f.moneda)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground w-20 text-right">
+                        {f.fecha_vencimiento
+                          ? new Date(f.fecha_vencimiento + "T00:00:00").toLocaleDateString("es-MX", {
+                              day: "2-digit",
+                              month: "short",
+                            })
+                          : "—"}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
