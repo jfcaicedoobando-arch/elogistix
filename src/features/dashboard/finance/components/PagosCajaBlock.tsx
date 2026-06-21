@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Wallet, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowRight, Wallet, TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import type { ResumenTesoreria } from "@/features/tesoreria/domain";
 
