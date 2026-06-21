@@ -13,10 +13,10 @@ import { CargasActivasClienteCard } from "@/features/dashboard/components/Cargas
 import { MiOperacionSection } from "@/features/dashboard/components/operador/MiOperacionSection";
 import { useDashboardController, type DashboardScope } from "@/features/dashboard/hooks/useDashboardController";
 import { useMisCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
-import { EmbarquesPendientesAdminCard } from "@/features/dashboard/components/EmbarquesPendientesAdminCard";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { FinanceDashboard } from "@/features/dashboard/finance/FinanceDashboard";
 
-const ROLES_ADMIN_EMBARQUES = new Set([
+const ROLES_FINANCIEROS = new Set([
   "contador",
   "tesorero",
   "ejecutivo_cobranza",
@@ -24,14 +24,20 @@ const ROLES_ADMIN_EMBARQUES = new Set([
 ]);
 
 export default function Dashboard() {
+  const { effectiveRole } = useAuth();
+  if (effectiveRole && ROLES_FINANCIEROS.has(effectiveRole)) {
+    return <FinanceDashboard />;
+  }
+  return <OperationalDashboard />;
+}
+
+function OperationalDashboard() {
   const {
     scope, setScope, showScopeToggle, operadorEmail,
     isOperador, canViewFinancials, hideFinancials, isLoading,
     cargasPorCliente, cargasActivasTotal, scoped, saludo, hoyStr,
   } = useDashboardController();
   const { data: misReaprob = 0 } = useMisCotizacionesPendientesReaprobacion();
-  const { effectiveRole } = useAuth();
-  const showAdminEmbarques = !!effectiveRole && ROLES_ADMIN_EMBARQUES.has(effectiveRole);
 
 
   return (
@@ -73,9 +79,7 @@ export default function Dashboard() {
         />
       )}
 
-      {showAdminEmbarques && (
-        <EmbarquesPendientesAdminCard enabled={showAdminEmbarques} />
-      )}
+
 
       <DashboardStatusCards
         conteoPorEstado={scoped.conteoPorEstado}
