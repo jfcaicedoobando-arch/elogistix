@@ -11,7 +11,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
- * Controller para la página de Pre-Facturación.
+ * Controller para la página de Facturación.
  * Encapsula filtros, búsqueda, paginación, mutaciones y export CSV.
  */
 export function useFacturacionPageController(opts?: {

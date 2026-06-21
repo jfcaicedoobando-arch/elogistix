@@ -1,6 +1,6 @@
 /**
  * ProformaDetalle — página dedicada de una proforma individual.
- * Drilldown desde el tab Facturación del embarque y del módulo Pre-facturación.
+ * Drilldown desde el tab Facturación del embarque y del módulo Facturación.
  */
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";

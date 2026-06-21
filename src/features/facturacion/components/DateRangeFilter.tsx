@@ -1,5 +1,5 @@
 /**
- * Filtro de rango de fechas para el módulo de Pre-Facturación.
+ * Filtro de rango de fechas para el módulo de Facturación.
  * Dos calendarios (Desde / Hasta) + presets rápidos en es-MX.
  */
 import { format } from "date-fns";

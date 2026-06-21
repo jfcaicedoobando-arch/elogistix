@@ -54,12 +54,12 @@ export const MODULOS: AyudaModulo[] = [
   },
   {
     id: "facturacion",
-    titulo: "Pre-Facturación",
+    titulo: "Facturación",
     resumen: "Proformas, facturas y liquidación de gastos.",
     faqs: [
       { pregunta: "¿Diferencia entre proforma y factura?", respuesta: "La proforma es un borrador que envías al cliente para que apruebe los conceptos. La factura es el comprobante fiscal definitivo. Sólo se factura desde una proforma marcada como 'Aprobada por cliente'." },
       { pregunta: "¿Cómo consolido proformas?", respuesta: "Selecciona varias proformas del mismo cliente en la pestaña Pendientes → botón 'Consolidar'. Se genera una sola factura con todos los conceptos." },
-      { pregunta: "¿Cómo descargo el layout contable?", respuesta: "Pre-Facturación → tab Facturas → botón 'Layout contable'. Descarga un CSV con RFC, subtotal, IVA, uso CFDI y todos los campos que tu contador necesita para timbrar." },
+      { pregunta: "¿Cómo descargo el layout contable?", respuesta: "Facturación → tab Facturas → botón 'Layout contable'. Descarga un CSV con RFC, subtotal, IVA, uso CFDI y todos los campos que tu contador necesita para timbrar." },
       { pregunta: "¿Qué hago con la pestaña Liquidación de gastos?", respuesta: "Lista de conceptos de costo (cobros del proveedor) sin pagar. Marca 'Pagado' cuando emitiste la transferencia, opcionalmente con referencia bancaria." },
       { pregunta: "¿Qué es el 'Hueco de facturación'?", respuesta: "Embarques cuyo ETD pasó hace más de 5 días sin factura. Indica que el proveedor ya nos cobró pero el cliente no — riesgo de capital de trabajo." },
     ],
@@ -81,7 +81,7 @@ export const MODULOS: AyudaModulo[] = [
     resumen: "Búsqueda global, dashboard, alertas y atajos.",
     faqs: [
       { pregunta: "¿Cómo busco rápido un embarque?", respuesta: "Presiona Ctrl+K (Cmd+K en Mac) desde cualquier pantalla. Busca por expediente, cliente, BL, factura o folio de proforma." },
-      { pregunta: "¿Qué significan los badges de la barra lateral?", respuesta: "Rojo en Embarques = hay embarques en riesgo (demoras o sin movimiento >5 días). Rojo en Pre-Facturación = hay facturas vencidas." },
+      { pregunta: "¿Qué significan los badges de la barra lateral?", respuesta: "Rojo en Embarques = hay embarques en riesgo (demoras o sin movimiento >5 días). Rojo en Facturación = hay facturas vencidas." },
       { pregunta: "¿Dónde veo qué cambió alguien?", respuesta: "Bitácora — registra cada CRUD con diff de campos sensibles (qué cambió de qué a qué, quién lo hizo, cuándo)." },
       { pregunta: "¿Qué pasa si la app se cae?", respuesta: "Verás una pantalla con botón 'Reintentar'. El error se reporta automáticamente a logs internos. Si persiste, contacta al admin de tu organización." },
     ],
