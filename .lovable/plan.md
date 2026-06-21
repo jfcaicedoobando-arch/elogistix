@@ -1,70 +1,93 @@
-# Bug: el checklist de cierre marca pendientes los conceptos ya facturados
+# Derivar `estado_liquidacion` desde pagos de proveedor y reducir el checklist a 2 reglas en el bloque de costos
 
-## Diagnóstico (la analogía)
+## Analogía
 
-Imagina que `conceptos_venta.estado_facturacion` es un semáforo con sólo **dos luces**: `pendiente` y `en_proforma`. No tiene luz verde de "facturado". Cuando emites la factura de una proforma, el sistema cambia la **proforma** a `estado_proforma = 'facturada'`, pero **no toca los conceptos** — siguen marcados en `en_proforma`.
+Hoy hay dos personas marcando "pagado": la tesorería (registrando `pagos_proveedor`) y el operador (marcando el flag `estado_liquidacion` en cada concepto). Eso permite que se contradigan. La idea es que **sólo la tesorería mande**: cuando el saldo de la factura de proveedor llega a cero, todos sus conceptos quedan `Pagado` automáticamente; si se retira un pago, vuelven a `Pendiente`.
 
-- El **tab de Facturación** ya sabe esto: deriva el tercer estado "facturado" en el frontend cruzando concepto → proforma (lo arreglamos en 13.90.5). Por eso ahí se ve bien.
-- El **tab de Cierre** usa la RPC `validar_cierre_embarque` de la base de datos, y esa RPC sigue mirando sólo el semáforo crudo:
+## Cambios
 
-  ```sql
-  -- migración 20260621004725, líneas 175-190
-  COUNT(*) FILTER (WHERE estado_facturacion = 'pendiente'),
-  COUNT(*) FILTER (WHERE estado_facturacion = 'en_proforma')
-  ```
+### 1) Migración Postgres
 
-  Como tus conceptos están en `en_proforma` (aunque la proforma ya esté facturada), la regla `venta_conceptos_facturados` cuenta cada uno como pendiente y bloquea el cierre.
+a. **Función `recalcular_estado_liquidacion_concepto(p_concepto_id uuid)`** (`SECURITY DEFINER`, `search_path = public`):
+   - Considera el concepto **Pagado** si tiene al menos una factura vinculada y **todas** sus `proveedor_facturas` no canceladas están totalmente pagadas (`SUM(pagos_proveedor.monto) >= proveedor_facturas.total`).
+   - Si no tiene facturas o alguna factura tiene saldo, queda **Pendiente**.
+   - Actualiza `conceptos_costo.estado_liquidacion` y `fecha_pago` (la fecha del último pago aplicable, NULL si Pendiente).
 
-Es exactamente el mismo bug que arreglamos visualmente, pero ahora del lado de la base de datos.
+b. **Función `recalcular_estado_liquidacion_factura(p_factura_id uuid)`**: recorre los conceptos vinculados a esa factura y llama a la función anterior.
 
-## Solución
+c. **Triggers**:
+   - `AFTER INSERT OR UPDATE OR DELETE` en `pagos_proveedor` → recalcula por `proveedor_factura_id` (NEW y OLD).
+   - `AFTER INSERT OR UPDATE OR DELETE` en `proveedor_facturas_conceptos` → recalcula el `concepto_costo_id` afectado.
+   - `AFTER UPDATE` en `proveedor_facturas` cuando cambia `estado` o `total` → recalcula la factura.
 
-Alinear la RPC con la lógica derivada del frontend: un concepto cuenta como **facturado** si su proforma vinculada está en `estado_proforma = 'facturada'`. Sólo bloquear cuando queden conceptos verdaderamente pendientes.
+d. **Backfill único** dentro de la misma migración: ejecutar `recalcular_estado_liquidacion_concepto` para todo `conceptos_costo` existente, para que los datos vigentes queden sincronizados.
 
-### Cambios
+e. **Reescribir `validar_cierre_embarque`**: eliminar el bloque `costos_liquidados` y la variable `v_costos_pendientes`. El resto se mantiene idéntico (incluyendo el fix de `venta_conceptos_facturados` de 13.90.7).
 
-1. **Migración Postgres** — reescribir el bloque `venta_conceptos_facturados` dentro de `validar_cierre_embarque` (versión más reciente, `20260621004725_...sql`):
-   - `pendientes` = conceptos con `estado_facturacion = 'pendiente'` y sin `proforma_id`.
-   - `en_proforma` = conceptos con `estado_facturacion = 'en_proforma'` cuya proforma está en un estado **distinto** de `'facturada'`.
-   - La regla pasa (`ok = true`) cuando `pendientes = 0 AND en_proforma = 0`.
-   - El `detalle` mantiene la misma forma `{ pendientes, en_proforma }` para no romper los formatters de `cierreCheckMeta`.
+### 2) Frontend (limpieza menor)
 
-2. **No tocar** `conceptos_venta.estado_facturacion` ni los enums: dejamos el campo binario como está; la fuente de verdad sigue siendo la proforma, igual que en el frontend. Cero backfill, cero riesgo en embarques históricos.
+- `src/features/embarques/utils/cierreCheckMeta.ts`: borrar la entrada `costos_liquidados` (queda cubierta por `cxp_pagada`).
+- `src/features/embarques/components/__tests__/TabCierre.rules.test.ts`: remover los asserts de la regla `costos_liquidados` (etiqueta y AND).
+- **No tocar** los `UPDATE ... estado_liquidacion = 'Pagado'` manuales que viven en `cxp/services/conceptosCostoVinculables.ts` y `facturacion/services/facturasCrud.ts`: ya no son la fuente de verdad pero quedan compatibles porque el trigger los re-confirma. Son código legítimo de paths que también insertan el pago.
 
-3. **Tests**:
-   - `src/features/embarques/components/__tests__/TabCierre.rules.test.ts` no cambia (sigue validando la composición AND).
-   - Agregar un test del lado SQL no es viable aquí; documentamos el escenario en el changelog.
+### 3) Versionado
 
-4. **Versionado**:
-   - `src/constants/appVersion.ts` → bump a `13.90.7`.
-   - `CHANGELOG.md` (raíz) → entrada `## [13.90.7] - 2026-06-21` con `fix(embarque-cierre-regla-venta-facturados)` explicando el cruce con proforma facturada.
+- `src/constants/appVersion.ts` → `13.90.8`.
+- `CHANGELOG.md` raíz → entrada `## [13.90.8] - 2026-06-21` con `feat(cierre/costos-derivados)` explicando: liquidación derivada, triggers, backfill, eliminación de regla del checklist.
 
-### Detalle técnico (para referencia)
-
-SQL del bloque corregido (esqueleto):
+## Detalle técnico (esqueleto SQL)
 
 ```sql
-SELECT
-  COUNT(*) FILTER (
-    WHERE cv.estado_facturacion = 'pendiente' AND cv.proforma_id IS NULL
-  ),
-  COUNT(*) FILTER (
-    WHERE cv.estado_facturacion = 'en_proforma'
-      AND COALESCE(p.estado_proforma, 'pendiente') <> 'facturada'
-  )
-INTO v_venta_pendientes, v_venta_en_proforma
-FROM conceptos_venta cv
-LEFT JOIN proformas p ON p.id = cv.proforma_id AND p.deleted_at IS NULL
-WHERE cv.embarque_id = p_embarque_id
-  AND cv.deleted_at IS NULL;
+CREATE OR REPLACE FUNCTION public.recalcular_estado_liquidacion_concepto(p_concepto_id uuid)
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE v_pagado boolean; v_fecha date;
+BEGIN
+  IF p_concepto_id IS NULL THEN RETURN; END IF;
+
+  SELECT
+    EXISTS (
+      SELECT 1 FROM proveedor_facturas_conceptos pfc
+      JOIN proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
+      WHERE pfc.concepto_costo_id = p_concepto_id
+        AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada'
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM proveedor_facturas_conceptos pfc
+      JOIN proveedor_facturas pf ON pf.id = pfc.proveedor_factura_id
+      WHERE pfc.concepto_costo_id = p_concepto_id
+        AND pf.deleted_at IS NULL AND pf.estado <> 'Cancelada'
+        AND COALESCE(pf.total,0) > COALESCE((
+          SELECT SUM(pp.monto) FROM pagos_proveedor pp
+          WHERE pp.proveedor_factura_id = pf.id AND pp.deleted_at IS NULL
+        ),0) + 0.01
+    )
+  INTO v_pagado;
+
+  SELECT MAX(pp.fecha_pago) INTO v_fecha
+  FROM proveedor_facturas_conceptos pfc
+  JOIN pagos_proveedor pp ON pp.proveedor_factura_id = pfc.proveedor_factura_id
+  WHERE pfc.concepto_costo_id = p_concepto_id AND pp.deleted_at IS NULL;
+
+  UPDATE conceptos_costo
+     SET estado_liquidacion = CASE WHEN v_pagado THEN 'Pagado' ELSE 'Pendiente' END::estado_liquidacion,
+         fecha_pago = CASE WHEN v_pagado THEN v_fecha ELSE NULL END
+   WHERE id = p_concepto_id;
+END $$;
 ```
+
+Triggers llaman al recálculo pasando `concepto_costo_id` (para `proveedor_facturas_conceptos`) o iterando los conceptos de la factura (para `pagos_proveedor` y `proveedor_facturas`).
 
 ## Archivos a modificar
 
-- Nueva migración Supabase: `CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(...)` con el bloque corregido (el resto idéntico a la versión vigente).
+- Migración Supabase nueva (funciones + triggers + backfill + `validar_cierre_embarque` actualizada).
+- `src/features/embarques/utils/cierreCheckMeta.ts`
+- `src/features/embarques/components/__tests__/TabCierre.rules.test.ts`
 - `src/constants/appVersion.ts`
 - `CHANGELOG.md`
 
 ## Resultado esperado
 
-Tras aplicar la migración, abrir el tab de Cierre del ELIMP00230: la regla "Todos los conceptos de venta facturados" pasa a verde y `puede_cerrar` deja de estar bloqueado por esa causa (otras reglas siguen evaluándose independientemente).
+- El checklist de Cierre muestra **2 reglas** en el bloque de costos: "Cuentas por pagar al día" y "Todos los costos tienen factura de proveedor recibida".
+- `conceptos_costo.estado_liquidacion` deja de ser manual: cualquier pago/eliminación de pago la actualiza sola, y los badges del Tab Costos siguen mostrando "Pagado/Pendiente" correctamente sin código nuevo en frontend.
