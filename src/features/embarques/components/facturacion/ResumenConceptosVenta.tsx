@@ -117,7 +117,7 @@ export function ResumenConceptosVenta({
                 {contenedoresActivos.map((cont) => {
                   const items = agrupacion.porContenedor[cont.id] ?? [];
                   if (items.length === 0) return null;
-                  const pendientes = items.filter((c) => c.estado_facturacion !== "en_proforma").length;
+                  const pendientes = items.filter((c) => estadoDe(c.id) === "pendiente").length;
                   const numero = cont.numero_contenedor?.trim() || `#${cont.orden}`;
                   return (
                     <GrupoConceptosContenedor
@@ -127,6 +127,7 @@ export function ResumenConceptosVenta({
                       conceptos={items}
                       canEdit={canEdit}
                       pendientesCount={pendientes}
+                      estadosConceptos={estadosConceptos}
                       onGenerar={onGenerarProformaContenedor ? () => onGenerarProformaContenedor(cont.id) : null}
                     />
                   );
@@ -137,7 +138,8 @@ export function ResumenConceptosVenta({
                     subtitulo="Aplican a todo el embarque"
                     conceptos={agrupacion.generales}
                     canEdit={canEdit}
-                    pendientesCount={agrupacion.generales.filter((c) => c.estado_facturacion !== "en_proforma").length}
+                    pendientesCount={agrupacion.generales.filter((c) => estadoDe(c.id) === "pendiente").length}
+                    estadosConceptos={estadosConceptos}
                     onGenerar={onGenerarProformaContenedor ? () => onGenerarProformaContenedor("generales") : null}
                   />
                 )}
@@ -166,11 +168,7 @@ export function ResumenConceptosVenta({
                   { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
                   {
                     id: "estado", header: "Estado",
-                    cell: ({ row }) => row.original.estado_facturacion === "en_proforma" ? (
-                      <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" /> En proforma</Badge>
-                    ) : (
-                      <Badge variant="neutral"><Clock className="h-3 w-3 mr-1" /> Pendiente</Badge>
-                    ),
+                    cell: ({ row }) => <EstadoConceptoBadge estado={estadoDe(row.original.id)} />,
                   },
                 ]) as ColumnDef<ConceptoVenta, unknown>[]}
                 data={conceptos}
@@ -183,6 +181,7 @@ export function ResumenConceptosVenta({
               totales={totales}
               pendientesCount={conceptosPendientes.length}
               enProformaCount={conceptosEnProforma.length}
+              facturadosCount={conceptosFacturados.length}
             />
           </>
         )}
