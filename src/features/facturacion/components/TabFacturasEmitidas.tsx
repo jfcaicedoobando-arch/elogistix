@@ -1,5 +1,11 @@
 import { useMemo } from "react";
-import { Download } from "lucide-react";
+import { Download, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import SearchInput from "@/components/shared/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,16 +51,32 @@ export function TabFacturasEmitidas(p: Props) {
   return (
     <>
       <Card>
-        <CardContent className="p-4 flex flex-wrap gap-3">
+        <CardContent className="p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3">
           <SearchInput value={p.search} onChange={p.setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
-          <Button variant="outline" onClick={p.exportarFacturasCsv}>
+          {/* Mobile: un solo dropdown "Exportar ▾" para ahorrar ancho */}
+          <div className="sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <span className="flex items-center"><Download className="h-4 w-4 mr-2" /> Exportar</span>
+                  <ChevronDown className="h-4 w-4 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={p.exportarFacturasCsv}>CSV de facturas</DropdownMenuItem>
+                <DropdownMenuItem onClick={p.exportarLayoutContable}>Layout contable</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {/* Desktop: botones separados */}
+          <Button variant="outline" onClick={p.exportarFacturasCsv} className="hidden sm:inline-flex">
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-          <Button variant="outline" onClick={p.exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total — para el contador">
+          <Button variant="outline" onClick={p.exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total — para el contador" className="hidden sm:inline-flex">
             <Download className="h-4 w-4 mr-2" /> Layout contable
           </Button>
           <Select value={p.filterEstado} onValueChange={(v) => p.setFilter("estado", v)}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos</SelectItem>
               {ESTADOS_FACTURA.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}

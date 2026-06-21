@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.97.0] - 2026-06-21
+- **feat(mobile) auditoría visual — bloques P1 + P2 (sin bottom tab bar)**: segunda pasada de mejoras tras el bloque P0.
+  - `Layout.tsx`: los íconos del header (`GlobalSearch`, `NotificacionesPopover`, `FeedbackButton`, `ThemeToggle`) ahora cumplen el mínimo táctil de 44×44 px en `<sm` (`h-11 w-11`) y vuelven a `h-9 w-9` en escritorio — selector CSS `[&_button[aria-label]]:...` para no tocar cada componente.
+  - `HuecoFacturacionCard.tsx`: layout vertical en `<sm` (título / métricas / botón full-width con `h-9`). Se ocultan los separadores `·` en mobile para evitar ruido visual.
+  - `TabFacturasEmitidas.tsx`: en `<sm` los botones "Exportar CSV" y "Layout contable" se colapsan en un único `DropdownMenu` "Exportar ▾"; el `Select` de estado pasa a `w-full sm:w-[180px]`.
+  - `Reportes.tsx`: mismo patrón — botones "PDF" y "Exportar CSV" agrupados en `DropdownMenu` "Exportar ▾" en mobile, separados en desktop.
+  - `SidebarGroupBlock.tsx`: contraste de labels de grupo subido de `/65` a `/80` para mejor legibilidad.
+  - `ReportesTablaClientes.tsx`: tarjetas móviles ahora usan `text-xs` (antes `text-[11px]`) con `tabular-nums` en el profit para mejor escaneo.
+- **Diferido**: rediseño del aging chart de Inicio a barras horizontales (requiere exploración del componente `dashboard/finance`) — no se tocó en esta pasada.
+
 ## [13.96.0] - 2026-06-21
 - **feat(mobile) auditoría visual de vistas móvil — bloque P0**: tras capturar las 8 pantallas principales en viewport iPhone (390×844) se aplicaron correcciones de UI para que la app sea usable desde celular.
   - `PageHeader.tsx`: se elimina `[&>*]:flex-1` del contenedor de acciones — esa regla estiraba los botones icon-only (`MoreHorizontal`) de Cotizaciones/Embarques a 100% del ancho en mobile, generando un enorme bloque vacío con "..." centrado entre el título y el contenido. Ahora `justify-end` mantiene los iconos pegados a la derecha sin estirarse.
