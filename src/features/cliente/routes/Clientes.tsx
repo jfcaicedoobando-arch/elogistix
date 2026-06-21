@@ -9,7 +9,8 @@ import { usePermissions } from "@/hooks/shared";
 import NuevoClienteDialog from "@/features/cliente/components/NuevoClienteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useDebounce } from "@/hooks/shared";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { useListPageState } from "@/hooks/shared";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
@@ -118,7 +119,7 @@ export default function Clientes() {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={clientes as ClienteRow[]}
             isLoading={isLoading}
@@ -126,12 +127,30 @@ export default function Clientes() {
             onRowClick={(c) => navigate(`/clientes/${c.id}`)}
             rowKey={(c) => c.id}
             density="comfortable"
+            mobileCard={(c) => (
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <div className="font-semibold text-sm truncate">{toTitleCase(c.nombre)}</div>
+                <div className="text-[11px] font-mono text-muted-foreground truncate">
+                  {(c.rfc || "—").toUpperCase()}
+                </div>
+                {(c.ciudad || c.estado) && (
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    {[correctSpanishPlace(c.ciudad), correctSpanishPlace(c.estado)].filter(Boolean).join(", ")}
+                  </div>
+                )}
+                {(c.contacto || c.telefono) && (
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    {[toTitleCase(c.contacto), formatPhoneMx(c.telefono)].filter(Boolean).join(" · ")}
+                  </div>
+                )}
+              </div>
+            )}
             pagination={{
               page,
               totalPages,
               onPageChange: setPage,
               pageSize,
-              onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+              onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
             }}

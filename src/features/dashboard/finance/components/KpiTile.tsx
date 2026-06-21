@@ -43,7 +43,20 @@ export function KpiTile({
       {loading ? (
         <Skeleton className="h-7 w-20 mt-1.5" />
       ) : (
-        <p className="text-2xl font-semibold tabular-nums mt-1 truncate">{value}</p>
+        (() => {
+          // v13.96.0 (auditoría mobile): tipografía adaptativa para evitar
+          // "MXN 1,53…" truncado en pantallas angostas. Mismo criterio que KpiCard.
+          const valorStr = String(value ?? "");
+          const sizeClass =
+            valorStr.length <= 8 ? "text-2xl sm:text-3xl"
+            : valorStr.length <= 13 ? "text-xl sm:text-2xl"
+            : "text-lg sm:text-xl";
+          return (
+            <p className={`${sizeClass} font-semibold tabular-nums mt-1 truncate`} title={valorStr}>
+              {value}
+            </p>
+          );
+        })()
       )}
       {sublabel && (
         <p className="text-xs text-muted-foreground truncate mt-0.5">{sublabel}</p>

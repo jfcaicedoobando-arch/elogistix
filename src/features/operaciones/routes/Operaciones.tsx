@@ -47,7 +47,7 @@ export default function Operaciones() {
         description={hoyStr}
         actions={
           <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoFiltro)}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 w-auto min-w-[140px] gap-2"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="mes">Este mes</SelectItem>
               <SelectItem value="3meses">Últimos 3 meses</SelectItem>

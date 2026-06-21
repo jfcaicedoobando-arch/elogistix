@@ -6,8 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.96.0] - 2026-06-21
+- **feat(mobile) auditoría visual de vistas móvil — bloque P0**: tras capturar las 8 pantallas principales en viewport iPhone (390×844) se aplicaron correcciones de UI para que la app sea usable desde celular.
+  - `PageHeader.tsx`: se elimina `[&>*]:flex-1` del contenedor de acciones — esa regla estiraba los botones icon-only (`MoreHorizontal`) de Cotizaciones/Embarques a 100% del ancho en mobile, generando un enorme bloque vacío con "..." centrado entre el título y el contenido. Ahora `justify-end` mantiene los iconos pegados a la derecha sin estirarse.
+  - `FinanceHeader.tsx` (Inicio): el badge único "MXN 737,760 vencido · MXN 1,532 por pagar · 29 por timbrar" — que se rompía a 2 líneas dentro de una píldora sola — se reemplaza por **chips independientes** con icono y color semántico (rojo / ámbar / azul) y formato compacto (`737.8K`). El emoji 👋 se envuelve en `<span role="img">` con clase `font-emoji` para garantizar fallback en dispositivos sin Apple Color Emoji.
+  - `HoyKpiRow.tsx` + `KpiTile.tsx`: KPIs de Inicio ahora usan `formatCurrencyCompact` (`MXN 1.5K` en lugar de `MXN 1,532.32`) y tipografía **adaptativa** (`text-2xl sm:text-3xl` → `text-lg sm:text-xl` según longitud) para que ningún valor se trunque con "…" en pantallas angostas.
+  - `Clientes.tsx`: la tabla de clientes en mobile mostraba scroll horizontal forzado con columnas truncadas. Se migra de `DataTable` a `ResponsiveDataTable` con `mobileCard` (nombre + RFC + ciudad/estado + contacto/teléfono apilados) replicando el patrón ya estándar del proyecto (`ReportesTablaClientes`).
+  - `Operaciones.tsx`: el `Select` de periodo "Este mes" ocupaba 100% del ancho en mobile (heredado del fix anterior de PageHeader). Ahora `w-auto min-w-[140px]` lo deja como chip compacto.
+  - `Layout.tsx`: `SidebarTrigger` mobile pasa de `~32px` a `h-11 w-11` para cumplir el mínimo recomendado de tap target táctil (44×44 CSS px).
+
 ## [13.95.1] - 2026-06-21
 - **fix(layout) sidebar requería doble tap en móvil/tablet**: el `SidebarTrigger` estaba envuelto en un `<Tooltip>` de Radix, que en dispositivos táctiles consume el primer tap para mostrar el tooltip y recién al segundo tap dispara el click. Ahora en `useIsMobile()` se renderiza el botón sin Tooltip (con `aria-label` para accesibilidad); en desktop el tooltip con el atajo `⌘B` se conserva intacto. Archivo: `src/components/layout/Layout.tsx`.
+
 
 ## [13.95.0] - 2026-06-21
 - **refactor(facturacion) auditoría visual del dashboard**: rediseño del módulo `/facturacion` tras detectar inconsistencias entre la guía "¿Cómo funciona este módulo?" y las tabs actuales.

@@ -1,5 +1,5 @@
 import { FileText, Banknote, AlertCircle, Inbox } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiTile } from "./KpiTile";
 
 interface Props {
@@ -35,7 +35,7 @@ export function HoyKpiRow({
       <KpiTile
         icon={<Banknote className="h-4 w-4 text-indigo-600" />}
         label="Por pagar"
-        value={formatCurrency(porPagarMxn, "MXN")}
+        value={formatCurrencyCompact(porPagarMxn, "MXN")}
         sublabel={
           porPagarUsd > 0 ? `+ ${formatCurrency(porPagarUsd, "USD")}` : "Facturas proveedor"
         }
@@ -45,7 +45,7 @@ export function HoyKpiRow({
       <KpiTile
         icon={<AlertCircle className="h-4 w-4 text-red-600" />}
         label="Vencido (cartera)"
-        value={formatCurrency(vencidoMxn, "MXN")}
+        value={formatCurrencyCompact(vencidoMxn, "MXN")}
         sublabel={vencidoUsd > 0 ? `+ ${formatCurrency(vencidoUsd, "USD")}` : "Cobranza"}
         to="/cartera"
         tone={vencidoMxn > 0 || vencidoUsd > 0 ? "danger" : "success"}

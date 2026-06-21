@@ -50,7 +50,9 @@ export function PageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:flex-nowrap md:justify-end [&>*]:flex-1 sm:[&>*]:flex-none">
+        // En mobile: justify-end para que botones icon-only (`...`) no se estiren
+        // a 100% del ancho ni queden centrados. En md+: layout original.
+        <div className="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto md:flex-nowrap md:justify-end">
           {actions}
         </div>
       ) : null}
