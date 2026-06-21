@@ -20,6 +20,7 @@ import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
 import { esBorradorVacio } from "./facturacion/esBorradorVacio";
+import { calcularEstadosConceptos } from "./facturacion/estadoConceptoBadge";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
