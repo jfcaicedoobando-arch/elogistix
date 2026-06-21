@@ -1,41 +1,64 @@
-## Problema
+## Diagnóstico
 
-El CI más reciente está rojo por dos cosas, ambas en archivos que se crearon al armar el dashboard financiero:
+En el embarque **ELIMP00230** todos los documentos están en estado válido:
+- 2 con archivo (`Recibido`)
+- 5 marcados como `No aplica` (sin archivo) → Certificado de Origen, Factura Comercial, Ficha Técnica, Otros, Packing List
 
-1. **Test de arquitectura falla** — `src/features/dashboard/hooks/useEmbarquesPendientesAdmin.ts` importa `@/integrations/supabase/client` directo. La regla del proyecto dice que los hooks deben usar una capa de servicio (`features/*/services/`).
-2. **Lint falla** (`--max-warnings 0`) — `FinanceDashboard` tiene complejidad ciclomática 18, el máximo es 16. Demasiados `??` y ramas en línea dentro de un mismo render.
+El tab de Cierre dice "5 documentos faltantes" porque la regla `docs_completos` dentro de la función `validar_cierre_embarque` (y también `embarque_admin_pendientes_resumen`) cuenta como faltante **cualquier documento sin archivo**, sin importar si está marcado como `No aplica`:
 
-> Analogía: el primero es como cuando vas directo al almacén a sacar producto en vez de pedirlo en mostrador. El segundo es como tener una sola hoja de cálculo con demasiadas fórmulas anidadas — hay que repartirlas en celdas auxiliares.
+```sql
+WHERE (de.archivo IS NULL OR de.archivo = '')   -- ❌ no excluye 'No aplica'
+```
 
-Las advertencias antiguas de `EmbarqueDetalleHeaderActions` y `useEmbarqueEstadoActions` ya no aparecen en el último run, así que no se tocan.
+En cambio la función `embarque_docs_faltantes` (la que se usa para bloquear el avance de estado) **sí** trata `No aplica` como satisfecho. Las reglas están inconsistentes.
+
+Además, el filtro del frontend `TabDocumentos` (`?focus=faltantes`) usa el mismo criterio incorrecto: `!d.archivo`, así que cuando uno entra desde el cierre, "ve" los 5 docs en pantalla pero rotulados como `No aplica`, lo cual confunde.
+
+**Analogía:** es como si tu lista de pendientes contara las casillas marcadas como "no aplica" como pendientes. Las marcaste justo para que no contaran — la app no las está respetando.
 
 ## Cambios
 
-### 1. Mover la consulta a un servicio (arregla el test)
+### 1. Migración SQL — alinear las dos RPC de cierre con `embarque_docs_faltantes`
 
-**Crear** `src/features/dashboard/services/embarquesPendientesAdmin.ts`:
-- Mover ahí `fetchEmbarquesPendientesAdmin`, los tipos (`EmbarquePendienteAdminItem`, `EmbarquesPendientesAdminData`), las constantes `COLUMNS`/`ESTADOS` y el helper `diasDesde`.
-- Es el único archivo que importa `@/integrations/supabase/client`.
+Reemplazar el conteo de docs faltantes en:
 
-**Editar** `src/features/dashboard/hooks/useEmbarquesPendientesAdmin.ts`:
-- Borrar el import de `supabase` y la lógica de fetch.
-- Importar `fetchEmbarquesPendientesAdmin` y los tipos desde el nuevo servicio y re-exportar los tipos para no romper a los consumidores.
-- El hook se queda solo con `useQuery`.
+- `public.validar_cierre_embarque(uuid)` → regla `docs_completos`
+- `public.embarque_admin_pendientes_resumen(uuid)` → campo `docs_faltantes`
 
-### 2. Bajar la complejidad de `FinanceDashboard` (arregla el lint)
+Nuevo predicado (idéntico en ambas):
 
-Editar `src/features/dashboard/finance/FinanceDashboard.tsx`:
-- Extraer un helper `toViewModel(dash)` arriba del componente que aplique todos los `?? 0` y devuelva un objeto plano (`vencidoMxn`, `vencidoUsd`, `porPagarMxn`, `porPagarUsd`, `porTimbrar`, `porCapturar`, etc.).
-- El JSX queda pasando props ya resueltas, sin operadores de coalescencia inline.
-- Esto baja la complejidad a ≤16 sin cambiar comportamiento.
+```sql
+WHERE de.embarque_id = p_embarque_id
+  AND de.deleted_at IS NULL
+  AND de.archivo IS NULL
+  AND de.estado <> 'No aplica'
+```
 
-### 3. Versionado y changelog
+No se tocan grants, RLS ni el resto de la lógica. No se modifica `embarque_docs_faltantes` (ya estaba correcta).
 
-- `src/constants/appVersion.ts` → `13.90.2`.
-- `CHANGELOG.md` → entrada `## [13.90.2]` explicando: "Refactor: `useEmbarquesPendientesAdmin` ahora delega a la capa de servicio y `FinanceDashboard` reduce su complejidad. Arregla CI (test de arquitectura + lint)."
+### 2. Frontend — `TabDocumentos.tsx`
+
+Cambiar el filtro `filtrarFaltantes` para excluir también los `No aplica`, así cuando el usuario entre desde el deep-link `?focus=faltantes` vea sólo lo que realmente falta:
+
+```ts
+documentos.filter(d => (!d.archivo || d.archivo === '') && d.estado !== 'No aplica')
+```
+
+Si después de la fix no queda ninguno, el `emptyMessage` actual ("No hay documentos faltantes…") ya cubre el caso.
+
+### 3. Changelog + versión
+
+- `src/constants/appVersion.ts` → `13.90.3`
+- `CHANGELOG.md` → nueva entrada `[13.90.3]` describiendo el fix.
 
 ## Fuera de alcance
 
-- No se modifica UI, comportamiento, RPCs, RLS, ni los componentes hijos del dashboard.
-- No se tocan los hooks/handlers de embarques (sus warnings de complejidad ya no aparecen en el último run).
-- No se añaden pruebas nuevas; la suite existente debe pasar tal cual.
+- No se cambia la UI del tab Cierre, ni los meta del checklist, ni las otras reglas (`cxc`, `cxp`, etc.).
+- No se reescribe `embarque_docs_faltantes`.
+- No se modifican datos de embarques existentes — al recargar ELIMP00230, el contador bajará a 0 automáticamente.
+
+## Verificación
+
+1. Tras aplicar la migración, ejecutar `validar_cierre_embarque('7cbea742…')` y confirmar que el check `docs_completos` devuelve `ok: true` y `faltantes: 0`.
+2. En la UI, recargar el tab Cierre del embarque → el check de documentos debe aparecer en verde.
+3. Click en el CTA "Ir a Documentos" del check → ya no debería filtrar nada (todos los faltantes reales son cero).
