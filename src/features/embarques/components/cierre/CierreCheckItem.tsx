@@ -1,14 +1,12 @@
 /**
  * v13.89.2 — Tarjeta accionable por check del cierre.
- *
- * Reemplaza al `<li>` inline anterior. Muestra estado, etiqueta legible,
- * detalle formateado en español, chip de responsable y CTA "Resolver"
- * que lleva al tab correspondiente del mismo embarque.
+ * v13.90.10 — Drilldown: la fila completa es clickeable cuando hay ruta.
+ *             Se elimina el botón "Resolver" para alinear con el patrón
+ *             de navegación por renglón que usa el resto de la app.
  */
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, ExternalLink, XCircle } from "lucide-react";
+import { CheckCircle2, ExternalLink, XCircle } from "lucide-react";
 import { getCierreCheckMeta } from "@/features/embarques/utils/cierreCheckMeta";
 
 interface Props {
@@ -21,11 +19,11 @@ interface Props {
 export function CierreCheckItem({ regla, ok, detalle, embarqueId }: Props) {
   const meta = getCierreCheckMeta(regla);
   const detalleTxt = meta.formatDetalle(detalle);
-  const showCta = !ok && meta.ruta != null;
-  const href = showCta && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
+  const clickeable = !ok && meta.ruta != null;
+  const href = clickeable && meta.ruta ? meta.ruta(embarqueId, detalle) : null;
 
-  return (
-    <li className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between">
+  const inner = (
+    <>
       <div className="flex items-start gap-2">
         {ok ? (
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
@@ -50,20 +48,33 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId }: Props) {
           {ok ? "OK" : "Pendiente"}
         </Badge>
         {href && (
-          <Button asChild size="sm" variant="outline">
-            <Link
-              to={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Abrir en nueva pestaña"
-            >
-              {meta.ctaLabel}
-              <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              <ExternalLink className="ml-1 h-3 w-3 opacity-60" />
-            </Link>
-          </Button>
+          <ExternalLink
+            className="h-3.5 w-3.5 text-muted-foreground opacity-60"
+            aria-hidden="true"
+          />
         )}
       </div>
-    </li>
+    </>
   );
+
+  const baseCls =
+    "flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-start sm:justify-between";
+
+  if (href) {
+    return (
+      <li>
+        <Link
+          to={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`${meta.ctaLabel} (nueva pestaña)`}
+          className={`${baseCls} cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        >
+          {inner}
+        </Link>
+      </li>
+    );
+  }
+
+  return <li className={baseCls}>{inner}</li>;
 }
