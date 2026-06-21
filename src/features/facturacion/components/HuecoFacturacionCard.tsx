@@ -26,29 +26,29 @@ export function HuecoFacturacionCard() {
 
   return (
     <>
-      <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+      <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-2.5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-4 sm:gap-y-1.5 text-sm">
         <div className="flex items-center gap-2 shrink-0">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           <span className="font-semibold text-destructive">Hueco de Facturación</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 flex-1 min-w-0">
           <span className="text-muted-foreground">
             <span className="font-semibold text-destructive tabular-nums">
               {isLoading ? "…" : totalEmbarques}
             </span>{" "}
             embarque{totalEmbarques === 1 ? "" : "s"}
           </span>
-          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground hidden sm:inline">·</span>
           <span className="font-medium text-destructive tabular-nums">{formatCurrency(totalUsd, "USD")}</span>
-          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground hidden sm:inline">·</span>
           <span className="font-medium text-destructive tabular-nums">{formatCurrency(totalMxn, "MXN")}</span>
         </div>
 
         <Button
           variant="destructive"
           size="sm"
-          className="h-7"
+          className="h-9 sm:h-7 w-full sm:w-auto"
           onClick={() => setOpen(true)}
           disabled={totalEmbarques === 0}
         >
