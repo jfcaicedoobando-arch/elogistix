@@ -40,13 +40,9 @@ export function HuecoFacturacionCard() {
             embarque{totalEmbarques === 1 ? "" : "s"}
           </span>
           <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            USD <span className="font-medium text-destructive tabular-nums">{formatCurrency(totalUsd, "USD")}</span>
-          </span>
+          <span className="font-medium text-destructive tabular-nums">{formatCurrency(totalUsd, "USD")}</span>
           <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            MXN <span className="font-medium text-destructive tabular-nums">{formatCurrency(totalMxn, "MXN")}</span>
-          </span>
+          <span className="font-medium text-destructive tabular-nums">{formatCurrency(totalMxn, "MXN")}</span>
         </div>
 
         <Button
