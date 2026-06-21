@@ -79,9 +79,7 @@ function OperationalDashboard() {
         />
       )}
 
-      {showAdminEmbarques && (
-        <EmbarquesPendientesAdminCard enabled={showAdminEmbarques} />
-      )}
+
 
       <DashboardStatusCards
         conteoPorEstado={scoped.conteoPorEstado}
