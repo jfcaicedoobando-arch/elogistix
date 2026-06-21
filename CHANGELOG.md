@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.93.1] - 2026-06-21
+- **fix(facturacion) breadcrumb decía "Pre-Facturación"**: el `PageHeader` interno ya decía "Facturación" desde el rediseño 13.92, pero el breadcrumb superior seguía mostrando el nombre viejo. Cambiado en `Breadcrumbs.tsx`. Limpieza adicional de JSDoc y de la sección de Ayuda para que toda la nomenclatura visible diga "Facturación".
+
 ## [13.93.0] - 2026-06-21
 - **feat(facturacion) factura manual sin embarque/proforma**: el contador (Isela) sólo podía facturar embarques cerrados. Para anticipos, servicios extra o refacturaciones no había forma de emitir un CFDI dentro del sistema. Cambios:
   - **DB**: `facturas.embarque_id` ahora opcional; nuevo enum `origen_factura` ('proforma' | 'manual') y columna `facturas.origen` (default 'proforma') para distinguir el flujo.
