@@ -3643,7 +3643,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           dias_credito: number | null
-          embarque_id: string
+          embarque_id: string | null
           enviada_cliente_at: string | null
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
@@ -3661,6 +3661,7 @@ export type Database = {
           notas: string | null
           numero: string
           organization_id: string
+          origen: Database["public"]["Enums"]["origen_factura"]
           proforma_id: string | null
           referencia_bl: string | null
           rfc_cliente: string | null
@@ -3686,7 +3687,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           dias_credito?: number | null
-          embarque_id: string
+          embarque_id?: string | null
           enviada_cliente_at?: string | null
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -3704,6 +3705,7 @@ export type Database = {
           notas?: string | null
           numero: string
           organization_id?: string
+          origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
           referencia_bl?: string | null
           rfc_cliente?: string | null
@@ -3729,7 +3731,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           dias_credito?: number | null
-          embarque_id?: string
+          embarque_id?: string | null
           enviada_cliente_at?: string | null
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -3747,6 +3749,7 @@ export type Database = {
           notas?: string | null
           numero?: string
           organization_id?: string
+          origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
           referencia_bl?: string | null
           rfc_cliente?: string | null
@@ -6655,6 +6658,7 @@ export type Database = {
         | "ErrorFacturacion"
         | "Cancelacion"
         | "Otro"
+      origen_factura: "proforma" | "manual"
       origen_proveedor: "Nacional" | "Extranjero"
       subtipo_gasto_operativo:
         | "Renta"
@@ -6939,6 +6943,7 @@ export const Constants = {
         "Cancelacion",
         "Otro",
       ],
+      origen_factura: ["proforma", "manual"],
       origen_proveedor: ["Nacional", "Extranjero"],
       subtipo_gasto_operativo: [
         "Renta",

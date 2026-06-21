@@ -19,7 +19,8 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { Info } from "lucide-react";
+import { Info, FilePlus2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,9 +36,11 @@ import { DialogRegistrarPago } from "@/features/facturacion/components/DialogReg
 import { DialogHistorialPagos } from "@/features/facturacion/components/DialogHistorialPagos";
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
 import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
+import { DialogNuevaFacturaManual } from "@/features/facturacion/components/DialogNuevaFacturaManual";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
+import { usePermissions } from "@/hooks/shared";
 import { buildFacturaColumns, type Factura } from "./facturacionColumns";
 
 type TabDef = { value: string; label: string; hint: string; badge?: number; tone?: "default" | "warn" };
@@ -77,6 +80,9 @@ export default function Facturacion() {
   const [searchParams] = useSearchParams();
   const legacyTab = searchParams.get("tab");
   const redirectTo = legacyTab ? LEGACY_TAB_REDIRECTS[legacyTab] : undefined;
+
+  const { canEmitirFactura } = usePermissions();
+  const [openFacturaManual, setOpenFacturaManual] = useState(false);
 
   const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
   const [activeTab, setActiveTab] = useState<string>("pendientes");
@@ -122,7 +128,14 @@ export default function Facturacion() {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6">
-        <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
+          {canEmitirFactura && (
+            <Button onClick={() => setOpenFacturaManual(true)} className="shrink-0">
+              <FilePlus2 className="h-4 w-4 mr-2" /> Nueva factura manual
+            </Button>
+          )}
+        </div>
         <GuiaPrefacturacion />
 
         {/* Dashboard de KPIs (siempre visible) */}
@@ -186,6 +199,10 @@ export default function Facturacion() {
           numero={cancelarFactura?.numero}
           open={!!cancelarFactura}
           onOpenChange={(o) => !o && setCancelarFactura(null)}
+        />
+        <DialogNuevaFacturaManual
+          open={openFacturaManual}
+          onOpenChange={setOpenFacturaManual}
         />
       </div>
     </TooltipProvider>
