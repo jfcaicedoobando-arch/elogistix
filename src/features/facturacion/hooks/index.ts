@@ -9,6 +9,8 @@ export * from './useTabProformasState';
 export * from './useTabProyeccionController';
 export * from './usePagosFactura';
 export * from './useFactura';
+export * from './useTimbrarFactura';
+export * from './useTimbrarRep';
 
 export * from './useNotasCredito';
 export * from './useCobranza';

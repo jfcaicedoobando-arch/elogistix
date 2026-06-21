@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Receipt, FileText, FileCode, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -16,12 +17,18 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { DialogTimbrarRep } from "./DialogTimbrarRep";
+import { DialogCancelarRep } from "./DialogCancelarRep";
 
 interface Factura {
   id: string;
   numero: string;
   total: number;
   moneda: string;
+  cliente_id?: string;
+  uuid_fiscal?: string | null;
+  metodo_pago?: string | null;
+  rfc_cliente?: string | null;
   /** TC histórico de la factura (al momento de emisión). Sólo se usa para
    *  mostrar la conciliación cambiaria contra el TC de cada pago (I de la
    *  auditoría 13.49.0). */
@@ -35,17 +42,32 @@ interface Props {
   canEdit: boolean;
 }
 
+type EstadoRep = "NoAplica" | "Pendiente" | "Timbrado" | "Cancelado" | "Error";
+
+function badgeRep(estado: EstadoRep) {
+  switch (estado) {
+    case "Timbrado":  return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Timbrado</Badge>;
+    case "Pendiente": return <Badge variant="destructive">Pendiente</Badge>;
+    case "Cancelado": return <Badge variant="outline">Cancelado</Badge>;
+    case "Error":     return <Badge variant="destructive">Error</Badge>;
+    default:          return <Badge variant="outline" className="text-muted-foreground">N/A</Badge>;
+  }
+}
+
 export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: Props) {
   const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(factura?.id);
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [pagoATimbrarRep, setPagoATimbrarRep] = useState<string | null>(null);
+  const [pagoACancelarRep, setPagoACancelarRep] = useState<string | null>(null);
 
   if (!factura) return null;
 
   const tcFactura = factura?.tipo_cambio;
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0);
+  const esPPD = factura.metodo_pago === "PPD";
 
   const handleEliminar = async () => {
     if (!pagoAEliminar) return;
@@ -68,6 +90,16 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
     }
   };
 
+  const pagoSel = pagoATimbrarRep ? pagos.find((p) => p.id === pagoATimbrarRep) : null;
+  const facturaMin = {
+    id: factura.id,
+    numero: factura.numero,
+    cliente_id: factura.cliente_id ?? "",
+    uuid_fiscal: factura.uuid_fiscal ?? null,
+    metodo_pago: factura.metodo_pago ?? null,
+    rfc_cliente: factura.rfc_cliente ?? null,
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,6 +109,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
             <DialogDescription>
               Total facturado: <strong>{formatCurrency(factura.total, factura.moneda)}</strong> · Pagado:{" "}
               <strong>{formatCurrency(totalPagado, factura.moneda)}</strong>
+              {esPPD && <> · <span className="text-muted-foreground">Factura PPD — requiere REP por cada pago</span></>}
             </DialogDescription>
           </DialogHeader>
 
@@ -100,6 +133,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
                     )}
                     <th className="text-left py-2 px-2">Forma</th>
                     <th className="text-left py-2 px-2">Referencia</th>
+                    <th className="text-left py-2 px-2">REP</th>
                     {canEdit && <th className="w-10"></th>}
                   </tr>
                 </thead>
@@ -108,6 +142,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
                     const tcPago = Number(p.tipo_cambio) || 1;
                     const dif = Number(p.diferencia_cambiaria_mxn) || 0;
                     const tieneDif = Math.abs(dif) > 0.005;
+                    const estadoRep = (p.estado_rep ?? "NoAplica") as EstadoRep;
                     return (
                       <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
                         <td className="py-2 px-2 whitespace-nowrap">{formatDate(p.fecha_pago)}</td>
@@ -124,7 +159,59 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
                           </>
                         )}
                         <td className="py-2 px-2">{p.forma_pago}</td>
-                        <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia}>{p.referencia || "—"}</td>
+                        <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia ?? ""}>{p.referencia || "—"}</td>
+                        <td className="py-2 px-2">
+                          <div className="flex items-center gap-1">
+                            {badgeRep(estadoRep)}
+                            {canEdit && estadoRep === "Pendiente" && (
+                              <Button
+                                variant="ghost" size="icon" className="h-7 w-7"
+                                title="Timbrar REP"
+                                onClick={(e) => { e.stopPropagation(); setPagoATimbrarRep(p.id); }}
+                              >
+                                <Receipt className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canEdit && estadoRep === "Error" && (
+                              <Button
+                                variant="ghost" size="icon" className="h-7 w-7"
+                                title={`Reintentar REP — ${p.rep_error ?? "Error"}`}
+                                onClick={(e) => { e.stopPropagation(); setPagoATimbrarRep(p.id); }}
+                              >
+                                <Receipt className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                            {estadoRep === "Timbrado" && p.rep_pdf_url && (
+                              <a
+                                href={p.rep_pdf_url} target="_blank" rel="noopener noreferrer"
+                                title="Descargar PDF del REP"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <FileText className="h-4 w-4" />
+                              </a>
+                            )}
+                            {estadoRep === "Timbrado" && p.rep_xml_url && (
+                              <a
+                                href={p.rep_xml_url} target="_blank" rel="noopener noreferrer"
+                                title="Descargar XML del REP"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <FileCode className="h-4 w-4" />
+                              </a>
+                            )}
+                            {canEdit && estadoRep === "Timbrado" && (
+                              <Button
+                                variant="ghost" size="icon" className="h-7 w-7"
+                                title="Cancelar REP"
+                                onClick={(e) => { e.stopPropagation(); setPagoACancelarRep(p.id); }}
+                              >
+                                <Ban className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
                         {canEdit && (
                           <td className="py-2 px-2">
                             <Button
@@ -144,6 +231,27 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
           )}
         </DialogContent>
       </Dialog>
+
+      <DialogTimbrarRep
+        pago={pagoSel ? {
+          id: pagoSel.id,
+          monto: Number(pagoSel.monto),
+          moneda: pagoSel.moneda,
+          tipo_cambio: Number(pagoSel.tipo_cambio),
+          forma_pago: pagoSel.forma_pago ?? "",
+          fecha_pago: String(pagoSel.fecha_pago),
+        } : null}
+        factura={facturaMin}
+        open={!!pagoATimbrarRep}
+        onOpenChange={(o) => !o && setPagoATimbrarRep(null)}
+      />
+
+      <DialogCancelarRep
+        pagoId={pagoACancelarRep}
+        facturaId={factura.id}
+        open={!!pagoACancelarRep}
+        onOpenChange={(o) => !o && setPagoACancelarRep(null)}
+      />
 
       <AlertDialog open={!!pagoAEliminar} onOpenChange={(o) => !o && setPagoAEliminar(null)}>
         <AlertDialogContent>
