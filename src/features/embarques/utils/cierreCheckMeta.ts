@@ -73,11 +73,9 @@ const META: Record<string, CierreCheckMeta> = {
     ruta: buildRuta("costos", "costo-sin-factura"), ctaLabel: "Ir a Costos",
     formatDetalle: fmtSinFactura,
   },
-  costos_liquidados: {
-    label: "Todos los costos están liquidados (pagados al proveedor)", responsable: "Tesorero",
-    ruta: buildRuta("costos", "costo-no-liquidado"), ctaLabel: "Ir a Costos",
-    formatDetalle: fmtPendientesLiq,
-  },
+  // v13.90.8 — `costos_liquidados` se eliminó del RPC: la liquidación ahora se deriva
+  // automáticamente desde `pagos_proveedor` y queda cubierta por la regla `cxp_pagada`.
+
 };
 
 const FALLBACK: CierreCheckMeta = {
