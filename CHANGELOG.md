@@ -15,6 +15,8 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - `Operaciones.tsx`: el `Select` de periodo "Este mes" ocupaba 100% del ancho en mobile (heredado del fix anterior de PageHeader). Ahora `w-auto min-w-[140px]` lo deja como chip compacto.
   - `Layout.tsx`: `SidebarTrigger` mobile pasa de `~32px` a `h-11 w-11` para cumplir el mínimo recomendado de tap target táctil (44×44 CSS px).
 
+## [13.95.1] - 2026-06-21
+- **fix(layout) sidebar requería doble tap en móvil/tablet**: el `SidebarTrigger` estaba envuelto en un `<Tooltip>` de Radix, que en dispositivos táctiles consume el primer tap para mostrar el tooltip y recién al segundo tap dispara el click. Ahora en `useIsMobile()` se renderiza el botón sin Tooltip (con `aria-label` para accesibilidad); en desktop el tooltip con el atajo `⌘B` se conserva intacto. Archivo: `src/components/layout/Layout.tsx`.
 
 
 ## [13.95.0] - 2026-06-21
