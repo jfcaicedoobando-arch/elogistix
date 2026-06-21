@@ -17,7 +17,7 @@ export interface EmbarquesPendientesAdminData {
 }
 
 const COLUMNS = "id, expediente, cliente_nombre, estado, updated_at";
-const ESTADOS = ["Entregado", "EIR"] as const;
+const ESTADOS = ["Entregado", "EIR"] as const satisfies readonly ("Entregado" | "EIR")[];
 
 function diasDesde(iso: string | null | undefined): number {
   if (!iso) return 0;
@@ -32,7 +32,7 @@ async function fetchEmbarquesPendientesAdmin(): Promise<EmbarquesPendientesAdmin
   const { data, error } = await supabase
     .from("embarques")
     .select(COLUMNS)
-    .in("estado", ESTADOS as unknown as string[])
+    .in("estado", ESTADOS)
     .order("updated_at", { ascending: true })
     .limit(200);
   if (error) throw new Error(error.message);
