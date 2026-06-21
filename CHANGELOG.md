@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.94.2] - 2026-06-21
+- **fix(sidebar) Proformas no aparecía para contador / coordinador / ejecutivo de cobranza**: el sidebar arma el grupo "Gestión" por rol con una whitelist de URLs en `useAppSidebarSections.ts`. El ítem nuevo `/proformas` (13.94.0) no estaba en ninguna de esas listas, así que sólo lo veían `admin`/`gerente_operaciones` (que reciben el bloque completo). Agregado a las whitelists de `contador`, `coordinador_logistico`/`operador` y `ejecutivo_cobranza` — los mismos roles que ya tenían `/facturacion`.
+
 ## [13.94.1] - 2026-06-21
 - **fix(ci) verde otra vez tras el refactor de Facturación**: el run de CI quedó rojo por (a) un `as unknown as` sin marcador `SAFE-CAST` en `DialogHistorialPagos.tsx` (rompía `architecture` + `audit-report` + `safe-casts-services`), (b) `--max-warnings 0` en lint con 7 warnings nuevos (complexity y react-refresh), (c) knip flameando 6 archivos huérfanos del rediseño 13.92. Cambios:
   - Marcador `// SAFE-CAST:` agregado en `DialogHistorialPagos.tsx:125`.
