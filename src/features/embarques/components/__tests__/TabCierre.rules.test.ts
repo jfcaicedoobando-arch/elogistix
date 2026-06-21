@@ -89,8 +89,9 @@ describe("cierre — confirmación tipada", () => {
   });
 });
 
-describe("cierre — etiquetas de reglas RPC (v13.66.12)", () => {
+describe("cierre — etiquetas de reglas RPC (v13.90.8)", () => {
   // Replica el diccionario de TabCierre. Si cambia allá, debe cambiar aquí.
+  // v13.90.8: `costos_liquidados` se eliminó del RPC (derivado desde pagos_proveedor).
   const ETIQUETAS_REGLA: Record<string, string> = {
     cxc_sin_pendientes: "Cuentas por cobrar al día",
     cxc_cobrada: "Cuentas por cobrar al día",
@@ -103,7 +104,6 @@ describe("cierre — etiquetas de reglas RPC (v13.66.12)", () => {
     contenedores_datos_completos: "Datos de contenedores capturados (peso y volumen)",
     venta_conceptos_facturados: "Todos los conceptos de venta facturados",
     costo_conceptos_con_factura: "Todos los costos tienen factura de proveedor recibida",
-    costos_liquidados: "Todos los costos están liquidados (pagados al proveedor)",
   };
 
   // Reglas que el RPC `validar_cierre_embarque` puede devolver.
@@ -116,7 +116,6 @@ describe("cierre — etiquetas de reglas RPC (v13.66.12)", () => {
     "contenedores_datos_completos",
     "venta_conceptos_facturados",
     "costo_conceptos_con_factura",
-    "costos_liquidados",
   ];
 
   it("toda regla emitida por el RPC tiene etiqueta legible", () => {
@@ -139,7 +138,6 @@ describe("cierre — etiquetas de reglas RPC (v13.66.12)", () => {
       { regla: "comision_calculada", ok: true },
       { regla: "venta_conceptos_facturados", ok: false },
       { regla: "costo_conceptos_con_factura", ok: true },
-      { regla: "costos_liquidados", ok: true },
     ];
     expect(puedeCerrarRpc(checks)).toBe(false);
   });
@@ -153,21 +151,6 @@ describe("cierre — etiquetas de reglas RPC (v13.66.12)", () => {
       { regla: "comision_calculada", ok: true },
       { regla: "venta_conceptos_facturados", ok: true },
       { regla: "costo_conceptos_con_factura", ok: false },
-      { regla: "costos_liquidados", ok: true },
-    ];
-    expect(puedeCerrarRpc(checks)).toBe(false);
-  });
-
-  it("bloquea cierre si costos_liquidados=false", () => {
-    const checks = [
-      { regla: "cxc_cobrada", ok: true },
-      { regla: "cxp_pagada", ok: true },
-      { regla: "docs_completos", ok: true },
-      { regla: "pnl_margen_minimo", ok: true },
-      { regla: "comision_calculada", ok: true },
-      { regla: "venta_conceptos_facturados", ok: true },
-      { regla: "costo_conceptos_con_factura", ok: true },
-      { regla: "costos_liquidados", ok: false },
     ];
     expect(puedeCerrarRpc(checks)).toBe(false);
   });
@@ -181,7 +164,6 @@ describe("cierre — etiquetas de reglas RPC (v13.66.12)", () => {
       { regla: "comision_calculada", ok: true },
       { regla: "venta_conceptos_facturados", ok: true },
       { regla: "costo_conceptos_con_factura", ok: true },
-      { regla: "costos_liquidados", ok: true },
     ];
     expect(puedeCerrarRpc(checks)).toBe(true);
   });
