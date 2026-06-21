@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.94.3] - 2026-06-21
+- **fix(sidebar) "Por capturar (CxP)" no aparecía para Contador ni Tesorero**: el atajo a `/cxp/por-capturar` (Opción B del flujo de facturas de proveedor) sólo estaba en la bandeja de `auxiliar_contable`. Agregado a `buildContador` y `buildTesorero` en `useAppSidebarSections.ts`. Adicionalmente se incluyó `tesorero` en el guard de la ruta `/cxp/por-capturar` para que el enlace sea funcional (antes sólo tenía acceso a `/cxp/por-pagar`).
+
 ## [13.94.2] - 2026-06-21
 - **fix(sidebar) Proformas no aparecía para contador / coordinador / ejecutivo de cobranza**: el sidebar arma el grupo "Gestión" por rol con una whitelist de URLs en `useAppSidebarSections.ts`. El ítem nuevo `/proformas` (13.94.0) no estaba en ninguna de esas listas, así que sólo lo veían `admin`/`gerente_operaciones` (que reciben el bloque completo). Agregado a las whitelists de `contador`, `coordinador_logistico`/`operador` y `ejecutivo_cobranza` — los mismos roles que ya tenían `/facturacion`.
 

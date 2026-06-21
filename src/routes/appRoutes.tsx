@@ -52,7 +52,7 @@ export const appRoutes = (
     <Route path="/proformas/:id" element={<ProformaDetalle />} />
 
     <Route path="/cxp" element={guarded([...TESORERIA_ROLES, "auxiliar_contable"], <Cxp />)} />
-    <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable"], <CxpPorCapturar />)} />
+    <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero"], <CxpPorCapturar />)} />
     <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero"], <CxpPorPagar />)} />
     <Route path="/facturacion/por-emitir" element={guarded(["admin", "super_admin", "admin_org", "contador"], <FacturacionPorEmitir />)} />
     <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza"], <Cartera />)} />
