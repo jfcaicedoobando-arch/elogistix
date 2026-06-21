@@ -3466,6 +3466,59 @@ export type Database = {
           },
         ]
       }
+      factura_conceptos_manuales: {
+        Row: {
+          cantidad: number
+          clave_sat_producto: string
+          clave_sat_unidad: string
+          created_at: string
+          descripcion: string
+          factura_id: string
+          id: string
+          importe: number
+          orden: number
+          organization_id: string
+          precio_unitario: number
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          clave_sat_producto?: string
+          clave_sat_unidad?: string
+          created_at?: string
+          descripcion: string
+          factura_id: string
+          id?: string
+          importe?: number
+          orden?: number
+          organization_id?: string
+          precio_unitario?: number
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          clave_sat_producto?: string
+          clave_sat_unidad?: string
+          created_at?: string
+          descripcion?: string
+          factura_id?: string
+          id?: string
+          importe?: number
+          orden?: number
+          organization_id?: string
+          precio_unitario?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factura_conceptos_manuales_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       factura_notas_credito: {
         Row: {
           aprobada_at: string | null
@@ -3643,7 +3696,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           dias_credito: number | null
-          embarque_id: string
+          embarque_id: string | null
           enviada_cliente_at: string | null
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
@@ -3661,6 +3714,7 @@ export type Database = {
           notas: string | null
           numero: string
           organization_id: string
+          origen: Database["public"]["Enums"]["origen_factura"]
           proforma_id: string | null
           referencia_bl: string | null
           rfc_cliente: string | null
@@ -3686,7 +3740,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           dias_credito?: number | null
-          embarque_id: string
+          embarque_id?: string | null
           enviada_cliente_at?: string | null
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -3704,6 +3758,7 @@ export type Database = {
           notas?: string | null
           numero: string
           organization_id?: string
+          origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
           referencia_bl?: string | null
           rfc_cliente?: string | null
@@ -3729,7 +3784,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           dias_credito?: number | null
-          embarque_id?: string
+          embarque_id?: string | null
           enviada_cliente_at?: string | null
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -3747,6 +3802,7 @@ export type Database = {
           notas?: string | null
           numero?: string
           organization_id?: string
+          origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
           referencia_bl?: string | null
           rfc_cliente?: string | null
@@ -6655,6 +6711,7 @@ export type Database = {
         | "ErrorFacturacion"
         | "Cancelacion"
         | "Otro"
+      origen_factura: "proforma" | "manual"
       origen_proveedor: "Nacional" | "Extranjero"
       subtipo_gasto_operativo:
         | "Renta"
@@ -6939,6 +6996,7 @@ export const Constants = {
         "Cancelacion",
         "Otro",
       ],
+      origen_factura: ["proforma", "manual"],
       origen_proveedor: ["Nacional", "Extranjero"],
       subtipo_gasto_operativo: [
         "Renta",
