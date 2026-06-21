@@ -1,0 +1,74 @@
+import { useQuery } from "@tanstack/react-query";
+import { differenceInDays, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface EmbarquePendienteAdminItem {
+  id: string;
+  expediente: string | null;
+  cliente_nombre: string;
+  estado: "Entregado" | "EIR";
+  diasEnEstado: number;
+}
+
+export interface EmbarquesPendientesAdminData {
+  entregadosCount: number;
+  eirCount: number;
+  topAntiguos: EmbarquePendienteAdminItem[];
+}
+
+const COLUMNS = "id, expediente, cliente_nombre, estado, updated_at";
+const ESTADOS = ["Entregado", "EIR"] as const satisfies readonly ("Entregado" | "EIR")[];
+
+function diasDesde(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  try {
+    return Math.max(0, differenceInDays(new Date(), parseISO(iso)));
+  } catch {
+    return 0;
+  }
+}
+
+async function fetchEmbarquesPendientesAdmin(): Promise<EmbarquesPendientesAdminData> {
+  const { data, error } = await supabase
+    .from("embarques")
+    .select(COLUMNS)
+    .in("estado", ESTADOS)
+    .order("updated_at", { ascending: true })
+    .limit(200);
+  if (error) throw new Error(error.message);
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    expediente: string | null;
+    cliente_nombre: string | null;
+    estado: string;
+    updated_at: string | null;
+  }>;
+
+  let entregadosCount = 0;
+  let eirCount = 0;
+  for (const r of rows) {
+    if (r.estado === "Entregado") entregadosCount += 1;
+    else if (r.estado === "EIR") eirCount += 1;
+  }
+
+  const topAntiguos: EmbarquePendienteAdminItem[] = rows.slice(0, 10).map((r) => ({
+    id: r.id,
+    expediente: r.expediente,
+    cliente_nombre: r.cliente_nombre ?? "—",
+    estado: r.estado as "Entregado" | "EIR",
+    diasEnEstado: diasDesde(r.updated_at),
+  }));
+
+  return { entregadosCount, eirCount, topAntiguos };
+}
+
+export function useEmbarquesPendientesAdmin(enabled: boolean) {
+  return useQuery({
+    queryKey: ["dashboard", "embarques-pendientes-admin"],
+    queryFn: fetchEmbarquesPendientesAdmin,
+    enabled,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+}

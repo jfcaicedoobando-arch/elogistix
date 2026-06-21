@@ -13,6 +13,15 @@ import { CargasActivasClienteCard } from "@/features/dashboard/components/Cargas
 import { MiOperacionSection } from "@/features/dashboard/components/operador/MiOperacionSection";
 import { useDashboardController, type DashboardScope } from "@/features/dashboard/hooks/useDashboardController";
 import { useMisCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
+import { EmbarquesPendientesAdminCard } from "@/features/dashboard/components/EmbarquesPendientesAdminCard";
+import { useAuth } from "@/lib/contexts/AuthContext";
+
+const ROLES_ADMIN_EMBARQUES = new Set([
+  "contador",
+  "tesorero",
+  "ejecutivo_cobranza",
+  "auxiliar_contable",
+]);
 
 export default function Dashboard() {
   const {
@@ -21,6 +30,8 @@ export default function Dashboard() {
     cargasPorCliente, cargasActivasTotal, scoped, saludo, hoyStr,
   } = useDashboardController();
   const { data: misReaprob = 0 } = useMisCotizacionesPendientesReaprobacion();
+  const { effectiveRole } = useAuth();
+  const showAdminEmbarques = !!effectiveRole && ROLES_ADMIN_EMBARQUES.has(effectiveRole);
 
 
   return (
@@ -60,6 +71,10 @@ export default function Dashboard() {
           proximosArribos={scoped.proximosArribos}
           isLoading={isLoading}
         />
+      )}
+
+      {showAdminEmbarques && (
+        <EmbarquesPendientesAdminCard enabled={showAdminEmbarques} />
       )}
 
       <DashboardStatusCards

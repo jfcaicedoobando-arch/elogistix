@@ -1,51 +1,47 @@
-## Contexto
+## Objetivo
 
-El CI del run subido falló por 3 cosas, todas introducidas en los cambios recientes (v13.89.1 + cierre administrativo):
+Isela (rol contador / tesorero / cobranza / auxiliar contable) no tiene "Embarques" en su menú lateral porque su perfil financiero no lo incluye por diseño. Le agregaremos visibilidad de los embarques **Entregado** y **EIR** desde su `/inicio` mediante una tarjeta de KPIs **de sólo lectura** (sin abrir el módulo Embarques).
 
-1. **Lint (max-warnings 0)** — `EmbarqueDetalleHeaderActions` tiene complejidad ciclomática 22 (máx 16).
-2. **Lint** — `useEmbarqueEstadoActions` tiene complejidad 18 (máx 16).
-3. **Tests** — `architecture-baseline.test.ts` y `audit-report.test.ts` fallan porque `TabGarantias.tsx` quedó en 258 líneas (Power of 10: ≤200).
+## Alcance
 
-Edge Functions, typecheck y los 8 shards de tests pasan; solo se rompen estos 2 jobs.
+Sólo cambios de UI en el dashboard. No se modifican rutas, permisos, RLS, ni el módulo `/embarques`.
 
-## Cambios propuestos
+## Qué se agrega
 
-### 1. `TabGarantias.tsx` → bajar a ≤200 líneas
+Nueva tarjeta `EmbarquesPendientesAdminCard` visible **únicamente** para los roles financieros (`contador`, `tesorero`, `ejecutivo_cobranza`, `auxiliar_contable`). La tarjeta tiene dos KPIs:
 
-Extraer piezas auxiliares manteniendo el comportamiento idéntico:
+```text
+┌──────────────────────────────────────────────────┐
+│ Embarques pendientes administrativos             │
+├──────────────────────┬───────────────────────────┤
+│   Entregados   12    │   En EIR        5         │
+│   (esperan cierre)   │   (último paso marítimo)  │
+├──────────────────────┴───────────────────────────┤
+│ Top 10 más antiguos:                             │
+│  • LC-2410-0123  ACME S.A.   Entregado · 18 d    │
+│  • LC-2410-0098  Beta Corp   EIR        · 22 d   │
+│  ...                                             │
+└──────────────────────────────────────────────────┘
+```
 
-- **Nuevo** `src/features/embarques/components/garantias/VenceBadge.tsx` — el componente `VenceBadge` y helper `diffDias`.
-- **Nuevo** `src/features/embarques/components/garantias/GarantiasKpiCards.tsx` — las 4 cards de KPI (Depósito total, Por recuperar, Contenedores, Días prom. recuperación) recibiendo props simples (`totalDeposito`, `totalPendiente`, `count`, `diasPromRecuperacion`).
-- **Nuevo** `src/features/embarques/components/garantias/useGarantiasColumns.tsx` — hook que devuelve las `ColumnDef<Row>[]` y encapsula el estado `editing` + `handleSaveMonto`/`handleSaveReferencia`/`handleChangeEstado`.
-- `TabGarantias.tsx` queda como contenedor (~120 líneas): query de datos, cálculo de totales (memo), render de `GarantiasKpiCards` + `Card` con `DataTable`.
+Cada fila muestra: folio, cliente, estado (badge) y días en ese estado. **No** hay link a `/embarques/:id` (rol sin acceso); el contenido es informativo para que sepa qué reclamar a operaciones.
 
-### 2. `EmbarqueDetalleHeaderActions.tsx` → complejidad ≤16
+## Dónde encaja
 
-Extraer la lógica del botón "Avanzar":
-
-- **Nuevo** `src/features/embarques/components/header/AvanzarEstadoButton.tsx` — recibe `{siguienteEstado, estadoVisual, avanzandoEstado, bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist, onAvanzarEstado, onIrACierre}` y devuelve el botón con tooltip + AlertDialog. Esto saca 3 ramas (`bloqueadoPorDocs` / `cierreBloqueadoPorChecklist` / normal) del componente padre, bajando la complejidad bajo el límite.
-- `EmbarqueDetalleHeaderActions` calcula `ocultarAvance`/`cierreBloqueadoPorChecklist` y delega: `{canEdit && siguienteEstado && !ocultarAvance ? <AvanzarEstadoButton .../> : <BotónEditar/>}`.
-
-### 3. `useEmbarqueEstadoActions.ts` → complejidad ≤16
-
-`handleAvanzarEstado` concentra 4 ramas (docs hard, docs soft, gate de cierre por rol, gate por checklist) más la rama de `bloqueoCierreMotivo` ternaria anidada.
-
-- **Extraer** función pura `resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk)` al mismo archivo (top-level) que devuelve `"rol" | "checklist" | null`. Reemplaza el ternario anidado.
-- **Extraer** función pura `clasificarBloqueoAvance({docsBloqueantes, docsFaltantes, siguiente, bloqueoCierreMotivo})` → `"block_docs" | "warn_docs" | "gate_cierre" | "ok"`. `handleAvanzarEstado` queda como un `switch` de 4 casos, complejidad ~5.
-
-### 4. Versión y changelog
-
-- Bump `APP_VERSION` a `13.89.4`.
-- `CHANGELOG.md`: entrada `## [13.89.4] - 2026-06-20` — "CI fix: complejidad ciclomática de header/hook de estado + split de `TabGarantias` para cumplir Power of 10 (≤200 líneas). Sin cambios funcionales."
-
-## Validación
-
-- Build/typecheck corre solo al guardar (el harness lo dispara).
-- Tests críticos a verificar localmente tras el cambio: `architecture-baseline.test.ts`, `audit-report.test.ts`, y los tests existentes de `TabGarantias` / `useEmbarqueEstadoActions` si los hay.
-- No hay cambios de RPC, RLS, permisos ni UX visible.
+- `src/features/dashboard/routes/Dashboard.tsx`: insertar la nueva tarjeta justo después de `DashboardStatusCards` cuando `effectiveRole` sea uno de los roles financieros.
+- `src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx` (nuevo): UI de la tarjeta.
+- `src/features/dashboard/hooks/useEmbarquesPendientesAdmin.ts` (nuevo): `useQuery` que llama a Supabase con `select` mínimo (`id, folio, estado, fecha_entrega_real, fecha_eir, cliente:clientes(nombre_comercial)`) filtrando `estado in ('Entregado','EIR')` y ordenando por antigüedad. Limita a 10 filas + `count: 'exact'` para los totales.
 
 ## Detalles técnicos
 
-- Los nuevos archivos viven bajo subcarpetas (`garantias/`, `header/`) — patrón ya usado en `components/cierre/`.
-- `useGarantiasColumns` mantiene `eslint-disable react-hooks/exhaustive-deps` actual.
-- Funciones puras (`resolveCierreGate`, `clasificarBloqueoAvance`) son trivialmente testeables; añadiré 1 test unitario corto por cada una en `src/features/embarques/hooks/__tests__/useEmbarqueEstadoActions.helpers.test.ts`.
+- Se reutiliza el patrón de selección explícita de columnas (regla del proyecto sobre query optimization).
+- Cálculo de "días en estado" en utilitario puro (regla de date-time standards, UTC).
+- Sin `useEffect`, sólo React Query con `staleTime: 5 min` (igual que `useSidebarAlerts`).
+- Componente <200 líneas, sin `any`, con cleanup implícito vía React Query.
+- Bump `APP_VERSION` y entrada en `CHANGELOG.md` (`## [13.89.6] - 2026-06-21`).
+
+## Lo que NO se hace
+
+- No se habilita `/embarques` para roles financieros.
+- No se agrega un nuevo item al sidebar.
+- No se tocan RLS ni se crean RPCs nuevas (la query usa la tabla `embarques` con el RLS existente, que ya permite SELECT a estos roles dentro de su organización).
