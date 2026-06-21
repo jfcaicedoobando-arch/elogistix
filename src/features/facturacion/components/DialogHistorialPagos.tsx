@@ -122,6 +122,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
                   {pagos.map((p) => (
                     <PagoFacturaRow
                       key={p.id}
+                      // SAFE-CAST: usePagosFactura devuelve la fila tipada de Supabase; PagoRowData es un subset estrecho usado sólo para render.
                       pago={p as unknown as PagoRowData}
                       facturaMoneda={factura.moneda}
                       tcFactura={tcFactura}
