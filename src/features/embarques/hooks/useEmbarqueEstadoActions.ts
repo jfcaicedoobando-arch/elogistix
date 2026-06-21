@@ -138,27 +138,31 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
 
-    // 1) Candado HARD: faltan documentos para estado avanzado.
-    if (docsBloqueantes && docsFaltantes.length > 0) {
-      setBlockDocsOpen(true);
-      return;
+    const bloqueo = clasificarBloqueoAvance({
+      docsBloqueantes,
+      docsFaltantesCount: docsFaltantes.length,
+      siguiente,
+      bloqueoCierreMotivo,
+    });
+
+    switch (bloqueo) {
+      case "block_docs":
+        setBlockDocsOpen(true);
+        return;
+      case "warn_docs":
+        setWarnDocsOpen(true);
+        return;
+      case "gate_cierre":
+        notifyError(toast, {
+          title: bloqueoCierreMotivo === "rol"
+            ? "Solo administración/finanzas pueden cerrar el embarque"
+            : "Pendientes administrativos. Revisa el Tab Cierre.",
+          method: "GATE_CERRAR_EMBARQUE",
+        });
+        return;
+      case "ok":
+        await ejecutarAvance(siguiente);
     }
-    // 2) Candado SOFT por documentos: Confirmado / En Tránsito.
-    if (!docsBloqueantes && docsFaltantes.length > 0) {
-      setWarnDocsOpen(true);
-      return;
-    }
-    // 3) v13.89.1 — Cierre: validación dura por rol y checklist administrativo.
-    if (siguiente === "Cerrado" && bloqueoCierreMotivo !== null) {
-      notifyError(toast, {
-        title: bloqueoCierreMotivo === "rol"
-          ? "Solo administración/finanzas pueden cerrar el embarque"
-          : "Pendientes administrativos. Revisa el Tab Cierre.",
-        method: "GATE_CERRAR_EMBARQUE",
-      });
-      return;
-    }
-    await ejecutarAvance(siguiente);
   };
 
   const confirmarCierreSinProforma = useCallback(async () => {
