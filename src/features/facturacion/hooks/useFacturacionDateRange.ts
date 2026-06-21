@@ -1,6 +1,6 @@
 /**
  * Hook para sincronizar el rango de fechas (Desde / Hasta) del módulo de
- * Pre-Facturación con la URL (?desde=YYYY-MM-DD&hasta=YYYY-MM-DD).
+ * Facturación con la URL (?desde=YYYY-MM-DD&hasta=YYYY-MM-DD).
  *
  * Por defecto: mes en curso (día 1 → hoy).
  *

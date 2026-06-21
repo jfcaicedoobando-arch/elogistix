@@ -1,5 +1,5 @@
 /**
- * Controller de la tab "Proyección" de Pre-Facturación.
+ * Controller de la tab "Proyección" de Facturación.
  * Encapsula selección de mes (sincronizada con URL ?mes=YYYY-MM), filtros,
  * fetch del backend, KPIs y export a CSV.
  */

@@ -1,5 +1,5 @@
 /**
- * KPIs ejecutivos del módulo Pre-Facturación: facturado del mes,
+ * KPIs ejecutivos del módulo Facturación: facturado del mes,
  * cobrado del mes y tendencia de 6 meses (facturado vs cobrado en MXN
  * equivalente usando `tipo_cambio` de la factura).
  *

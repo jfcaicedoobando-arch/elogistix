@@ -1,5 +1,5 @@
 /**
- * Guía colapsable del módulo de Pre-Facturación.
+ * Guía colapsable del módulo de Facturación.
  * Explica el flujo de 5 pasos y el Hueco de Facturación.
  */
 import { ChevronRight, CheckCircle2, FileText, Receipt, Wallet, AlertTriangle } from "lucide-react";

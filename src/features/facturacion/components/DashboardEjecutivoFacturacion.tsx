@@ -1,5 +1,5 @@
 /**
- * Card superior del módulo Pre-Facturación: 5 KPIs ejecutivos + mini
+ * Card superior del módulo Facturación: 5 KPIs ejecutivos + mini
  * tendencia de 6 meses (facturado vs cobrado en MXN).
  *
  * Combina datos de tres hooks:
