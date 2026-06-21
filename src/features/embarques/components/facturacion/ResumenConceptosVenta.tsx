@@ -29,16 +29,21 @@ interface Props {
 }
 
 export function ResumenConceptosVenta({
-  conceptos, contenedores, tasaIva, canEdit,
+  conceptos, contenedores, tasaIva, canEdit, estadosConceptos,
   onGenerarProforma, onGenerarProformaContenedor,
 }: Props) {
+  const estadoDe = (id: string): EstadoConcepto => estadosConceptos.get(id) ?? "pendiente";
   const conceptosPendientes = useMemo(
-    () => conceptos.filter(c => c.estado_facturacion !== "en_proforma"),
-    [conceptos]
+    () => conceptos.filter(c => estadoDe(c.id) === "pendiente"),
+    [conceptos, estadosConceptos]
   );
   const conceptosEnProforma = useMemo(
-    () => conceptos.filter(c => c.estado_facturacion === "en_proforma"),
-    [conceptos]
+    () => conceptos.filter(c => estadoDe(c.id) === "en_proforma"),
+    [conceptos, estadosConceptos]
+  );
+  const conceptosFacturados = useMemo(
+    () => conceptos.filter(c => estadoDe(c.id) === "facturado"),
+    [conceptos, estadosConceptos]
   );
 
   // v12.14.0: si hay ≥2 contenedores reales mostramos vista agrupada
@@ -73,8 +78,9 @@ export function ResumenConceptosVenta({
     return {
       pendiente: sumByCurrency(conceptosPendientes),
       enProforma: sumByCurrency(conceptosEnProforma),
+      facturado: sumByCurrency(conceptosFacturados),
     };
-  }, [conceptosPendientes, conceptosEnProforma, tasaIva]);
+  }, [conceptosPendientes, conceptosEnProforma, conceptosFacturados, tasaIva]);
 
   return (
     <Card>
