@@ -1,32 +1,32 @@
-## Reordenar el checklist de cierre según el workflow real de un embarque
+## Objetivo
 
-Actualmente el checklist sale en el orden en que se escribió la función `validar_cierre_embarque`, no en el orden en el que ocurre la operación. Como resultado, lo último (datos de contenedores) aparece al final cuando en realidad es de los primeros pasos, y la utilidad/comisión aparecen a media lista cuando son el cierre financiero.
+Quitar el botón "Resolver" del checklist de cierre y hacer que **toda la fila del check** sea clickeable como drilldown al tab correspondiente — igual que el resto de la app, donde la navegación se hace tocando el renglón, no botones.
 
-### Nuevo orden propuesto (de inicio → fin del ciclo del embarque)
+## Alcance
 
-| # | Regla | Bloque | Responsable | Por qué va aquí |
-|---|---|---|---|---|
-| 1 | `contenedores_datos_completos` | Operación | Operador | Es lo primero que se captura al recibir/embarcar la carga (peso y volumen). |
-| 2 | `docs_completos` | Documentación | Coordinador logístico | Una vez en tránsito se suben BL, packing list, factura comercial, etc. |
-| 3 | `costo_conceptos_con_factura` | Costos | Auxiliar contable | Llegan las facturas de proveedores (naviera, agente, transporte). |
-| 4 | `cxp_pagada` | Costos | Tesorero | Se pagan esas facturas; al pagarlas la liquidación se deriva sola (v13.90.8). |
-| 5 | `venta_conceptos_facturados` | Venta | Contador | Con los costos cerrados se factura al cliente. |
-| 6 | `cxc_cobrada` | Venta | Cobranza | El cliente paga la factura. |
-| 7 | `pnl_margen_minimo` | Cierre financiero | Ventas | Con CxC y CxP cerrados, el P&L es definitivo y se valida el margen. |
-| 8 | `comision_calculada` | Cierre financiero | Sistema | Última pieza: se devenga comisión sobre la utilidad final. |
+Sólo presentación. Sin cambios de lógica, RPC, ni metadatos (`cierreCheckMeta.ts` se queda igual: las rutas y labels ya existen).
 
-Visualmente queda: **Operación → Documentos → Costos (recibir+pagar) → Venta (facturar+cobrar) → P&L → Comisión**, que es exactamente el flujo natural de un embarque.
+## Cambios
 
-### Cambios técnicos
+### `src/features/embarques/components/cierre/CierreCheckItem.tsx`
 
-1. **Migración Postgres** que recrea `public.validar_cierre_embarque(uuid)` con los bloques en el nuevo orden. La lógica de cada bloque no cambia — solo se mueven de lugar los `v_checks := v_checks || …` para que el arreglo `checks` salga ordenado. `puede_cerrar` no se ve afectado porque sigue siendo un AND de todos los `v_ok`.
-2. **Sin cambios de frontend**: `TabCierre` y `CierreChecklistCard` ya renderizan en el orden en que vienen del RPC, así que basta con cambiar el orden en el backend para que la UI lo refleje.
-3. **Sin cambios de tests**: `TabCierre.rules.test.ts` y `cierreCheckMeta.test.ts` validan reglas individuales por clave, no el orden del arreglo.
-4. **Versión** → bump `APP_VERSION` a `13.90.9` y entrada en `CHANGELOG.md` describiendo la reordenación.
+- Si el check está **pendiente** y tiene `ruta`: envolver toda la tarjeta en un `<Link>` (de `react-router-dom`) que apunta a `href`. La tarjeta entera se vuelve el área clickeable.
+  - Estilos hover sutiles (`hover:bg-accent/40 hover:border-primary/40 transition-colors cursor-pointer`).
+  - Mantiene `target="_blank"` (consistente con el comportamiento actual) y el icono pequeño `ExternalLink` discreto en la esquina superior derecha como pista visual de drilldown.
+  - Se elimina el `<Button>` "Resolver / Ir a …".
+- Si el check está **OK** o no tiene ruta: se renderiza como `<li>` normal sin link (no hay a dónde ir).
+- Se conserva: ícono de estado (✓/✗), label, badge de responsable, detalle formateado y badge "OK / Pendiente".
 
-### Riesgos
+### Bitácora
 
-- Ninguno funcional: el RPC sigue devolviendo el mismo set de reglas con la misma semántica; solo cambia el orden de presentación.
-- Si en el futuro alguien depende del índice (no del nombre) de una regla, se rompería; pero hoy todo el frontend usa el campo `regla` como llave.
+- `src/constants/appVersion.ts` → bump a `13.90.10`.
+- `CHANGELOG.md` → entrada `[13.90.10]` describiendo: checklist de cierre ahora navega haciendo click en la fila completa (drilldown), se eliminó el botón "Resolver".
 
-¿Procedo a implementarlo?
+## Lo que NO cambia
+
+- `cierreCheckMeta.ts`, `CierreChecklistCard.tsx`, el RPC `validar_cierre_embarque`, ni los tests de reglas.
+- Las rutas destino, los labels, los responsables y los formatters siguen idénticos.
+
+## Analogía
+
+Hoy el checklist es como una lista del súper donde cada renglón tiene un botoncito "abrir" al lado. Lo cambiamos a que el renglón completo sea el "abrir" — como cuando tocas una fila de tu lista de embarques y entras a su detalle. Menos ruido visual, mismo destino.

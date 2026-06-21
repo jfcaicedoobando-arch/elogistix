@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.90.10] - 2026-06-21
+- **ui(cierre/checklist-drilldown) la fila completa del checklist es ahora el área clickeable**: se eliminó el botón "Resolver / Ir a …" de cada `CierreCheckItem` y se envolvió toda la tarjeta del check pendiente en un `<Link>` que navega al tab correspondiente (Costos, Facturación, Documentos, Resumen o P&L). Hover sutil (`hover:bg-accent/40` + borde primario) y un icono `ExternalLink` discreto a la derecha indican que el renglón es navegable. Los checks en estado OK o sin ruta se renderizan sin link. Patrón consistente con el resto de la app, donde la navegación es drilldown por renglón en vez de botones. Sin cambios de lógica, rutas, RPC ni metadatos (`cierreCheckMeta.ts` intacto). Bump `APP_VERSION` 13.90.10.
+
 ## [13.90.9] - 2026-06-21
 - **chore(cierre/orden-checklist) el checklist de cierre ahora sigue el flujo real del embarque**: la RPC `validar_cierre_embarque` reconstruía el arreglo `checks` en el orden en que se programó, no en el orden operativo, por lo que "datos de contenedores" aparecía hasta el final y la utilidad/comisión a media lista. Se reordenaron los bloques sin tocar su lógica: (1) `contenedores_datos_completos`, (2) `docs_completos`, (3) `costo_conceptos_con_factura`, (4) `cxp_pagada`, (5) `venta_conceptos_facturados`, (6) `cxc_cobrada`, (7) `pnl_margen_minimo`, (8) `comision_calculada`. Lectura: Operación → Documentos → Costos (recibir + pagar) → Venta (facturar + cobrar) → P&L → Comisión. `puede_cerrar` y el contenido de cada regla son idénticos; sólo cambia el orden de presentación. Sin cambios de frontend ni tests. Bump `APP_VERSION` 13.90.9.
 
