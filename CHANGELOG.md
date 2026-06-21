@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.93.2] - 2026-06-21
+- **chore(facturacion) split de archivos > 200 líneas (regla Power of 10)**: el CI falló porque `DialogNuevaFacturaManual.tsx` (351), `DialogHistorialPagos.tsx` (279) y `Facturacion.tsx` (211) cruzaron el límite. Extraídos sin cambios funcionales:
+  - `FacturaManualDatosFiscales.tsx` y `FacturaManualConceptosTable.tsx` (sub-componentes del wizard manual).
+  - `PagoFacturaRow.tsx` (fila del historial de pagos).
+  - `FacturacionDialogs.tsx` (bundle de los 5 diálogos del módulo).
+  Todos los archivos quedan ahora ≤ 200 LOC.
+
 ## [13.93.1] - 2026-06-21
 - **fix(facturacion) breadcrumb decía "Pre-Facturación"**: el `PageHeader` interno ya decía "Facturación" desde el rediseño 13.92, pero el breadcrumb superior seguía mostrando el nombre viejo. Cambiado en `Breadcrumbs.tsx`. Limpieza adicional de JSDoc y de la sección de Ayuda para que toda la nomenclatura visible diga "Facturación".
 
