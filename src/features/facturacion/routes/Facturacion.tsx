@@ -21,7 +21,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Info, FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -111,9 +110,9 @@ export default function Facturacion() {
   );
 
   const tabs: TabDef[] = [
-    { value: "pendientes", label: "1. Por timbrar", hint: "Proformas aprobadas listas para emitir CFDI. Bandeja del día del contador.", badge: proformasPendientes.length, tone: proformasPendientes.length > 0 ? "warn" : "default" },
-    { value: "facturas", label: "2. Emitidas", hint: "CFDI vigentes. Incluye Complemento de Pagos (REP) para facturas PPD." },
-    { value: "notas", label: "3. Notas de crédito", hint: "Historial de notas de crédito emitidas y su estado." },
+    { value: "pendientes", label: "Por timbrar", hint: "Proformas aprobadas listas para emitir CFDI. Bandeja del día del contador.", badge: proformasPendientes.length, tone: proformasPendientes.length > 0 ? "warn" : "default" },
+    { value: "facturas", label: "Emitidas", hint: "CFDI vigentes. Incluye Complemento de Pagos (REP) para facturas PPD." },
+    { value: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito emitidas y su estado." },
   ];
 
   // Hooks must run before any early return. Redirect after hooks.
@@ -123,7 +122,7 @@ export default function Facturacion() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
           {canEmitirFactura && (
@@ -137,19 +136,18 @@ export default function Facturacion() {
         {/* Dashboard de KPIs (siempre visible) */}
         <DashboardEjecutivoFacturacion />
 
-        {/* Alerta global: Hueco de facturación */}
+        {/* Alerta global: Hueco de facturación (única fuente de "por facturar") */}
         <HuecoFacturacionCard />
 
-        <Card>
-          <CardContent className="p-3">
-            <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
-          </CardContent>
-        </Card>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
-          </TabsList>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b">
+            <TabsList className="bg-transparent border-0 p-0 h-auto">
+              {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
+            </TabsList>
+            <div className="pb-1">
+              <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
+            </div>
+          </div>
 
           <TabsContent value="pendientes" className="space-y-4">
             <TabProformasPendientes isInRange={isInRange} />

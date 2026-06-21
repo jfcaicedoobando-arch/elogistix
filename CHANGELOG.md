@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.95.0] - 2026-06-21
+- **refactor(facturacion) auditoría visual del dashboard**: rediseño del módulo `/facturacion` tras detectar inconsistencias entre la guía "¿Cómo funciona este módulo?" y las tabs actuales.
+  - `GuiaPrefacturacion.tsx`: reescrita. Los 4 pasos viejos (Por aprobar / Proformas / Facturas / Pagos prov.) se reemplazan por los 3 actuales (Por timbrar / Emitidas / Notas de crédito) y se agrega un bloque "Esto ya no vive aquí" con links a `/cartera`, `/cxp/por-pagar`, `/proformas` y `/reportes/cierre-mensual`.
+  - `DashboardEjecutivoFacturacion.tsx`: se quita el KPI duplicado "Por facturar" (ya está en la alerta de Hueco) y se reemplaza por "Por timbrar (#)". La mini-tendencia ahora muestra las etiquetas de mes debajo de las barras con tooltip de valor exacto y un estado "Sin datos" cuando la serie es 0.
+  - `HuecoFacturacionCard.tsx`: se elimina la duplicación de label de moneda (antes mostraba `USD USD 202,356.65` y `MXN MXN 3,493,590.66`).
+  - `Facturacion.tsx`: se quita el `Card` envoltorio del `DateRangeFilter` y se mueve a la misma fila que el `TabsList` para reducir scroll vertical. Se quitan los prefijos numéricos "1./2./3." de los labels de las tabs.
+
+
 ## [13.94.3] - 2026-06-21
 - **fix(sidebar) "Por capturar (CxP)" no aparecía para Contador ni Tesorero**: el atajo a `/cxp/por-capturar` (Opción B del flujo de facturas de proveedor) sólo estaba en la bandeja de `auxiliar_contable`. Agregado a `buildContador` y `buildTesorero` en `useAppSidebarSections.ts`. Adicionalmente se incluyó `tesorero` en el guard de la ruta `/cxp/por-capturar` para que el enlace sea funcional (antes sólo tenía acceso a `/cxp/por-pagar`).
 

@@ -1,17 +1,49 @@
 /**
  * Guía colapsable del módulo de Facturación.
- * Explica el flujo de 5 pasos y el Hueco de Facturación.
+ *
+ * Actualizada para reflejar el rediseño v13.92+: el módulo ahora SÓLO contiene
+ * emisión de CFDI, complementos de pago (REP) y notas de crédito. La cobranza,
+ * pagos a proveedores, histórico de proformas y proyección viven en otros módulos.
  */
-import { ChevronRight, CheckCircle2, FileText, Receipt, Wallet, AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  ChevronRight,
+  Receipt,
+  FileCheck2,
+  FileMinus2,
+  AlertTriangle,
+  ExternalLink,
+} from "lucide-react";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 
 const PASOS = [
-  { n: 1, icon: CheckCircle2, label: "Por aprobar", hint: "Consolidar y aprobar" },
-  { n: 2, icon: FileText, label: "Proformas", hint: "Histórico" },
-  { n: 3, icon: Receipt, label: "Facturas", hint: "Emitidas" },
-  { n: 4, icon: Wallet, label: "Pagos prov.", hint: "Cuentas por pagar" },
+  {
+    n: 1,
+    icon: FileCheck2,
+    label: "Por timbrar",
+    hint: "Proformas aprobadas → emitir CFDI",
+  },
+  {
+    n: 2,
+    icon: Receipt,
+    label: "Emitidas",
+    hint: "CFDI vigentes + complemento de pagos (REP)",
+  },
+  {
+    n: 3,
+    icon: FileMinus2,
+    label: "Notas de crédito",
+    hint: "Cancelaciones y devoluciones",
+  },
+] as const;
+
+const ENLACES_EXTERNOS = [
+  { to: "/cartera", label: "Cobranza a clientes" },
+  { to: "/cxp/por-pagar", label: "Pagos a proveedores" },
+  { to: "/proformas", label: "Histórico de proformas" },
+  { to: "/reportes/cierre-mensual", label: "Proyección / cierre mensual" },
 ] as const;
 
 export function GuiaPrefacturacion() {
@@ -27,7 +59,7 @@ export function GuiaPrefacturacion() {
               const Icon = paso.icon;
               return (
                 <div key={paso.n} className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-2 bg-background min-w-[120px]">
+                  <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-2 bg-background min-w-[140px]">
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
                       {paso.n}
                     </div>
@@ -50,8 +82,9 @@ export function GuiaPrefacturacion() {
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
               <span className="font-medium text-foreground">Ciclo:</span> el sistema genera proformas al cerrar
-              embarques → tú las revisas, consolidas y apruebas → se emiten como facturas → das seguimiento al
-              cobro al cliente → y registras los pagos a tus proveedores (navieras, agentes, etc.).
+              embarques → las apruebas (o consolidas varias en una) → se timbran como CFDI → si el método es
+              PPD, emites el complemento de pago (REP) cuando el cliente paga → si hay devolución, generas la
+              nota de crédito.
             </p>
             <p className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
@@ -61,6 +94,24 @@ export function GuiaPrefacturacion() {
                 capital propio financiando al cliente — atiéndelos cuanto antes.
               </span>
             </p>
+          </div>
+
+          <div className="rounded-md border bg-muted/30 px-3 py-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+              Esto ya no vive aquí
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ENLACES_EXTERNOS.map((e) => (
+                <Link
+                  key={e.to}
+                  to={e.to}
+                  className="inline-flex items-center gap-1 text-xs rounded-md border bg-background px-2 py-1 hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  {e.label}
+                  <ExternalLink className="h-3 w-3 opacity-60" />
+                </Link>
+              ))}
+            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
