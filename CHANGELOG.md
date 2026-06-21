@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.89.5] - 2026-06-21
+- **chore(ci) bajar complejidad de `TabCostos`**: el CI volvió a fallar en lint por `TabCostos` con complejidad ciclomática 18 (máx 16) — consecuencia de los deep-links de v13.89.3 que agregaron foco + filtro + chip + empty state contextual al mismo componente. Sin cambios funcionales. Se extrajo `ConceptosCostoCard` (`src/features/embarques/components/costos/ConceptosCostoCard.tsx`) que encapsula `useFocusSection`, el filtro derivado (`costoFocus → conceptosCostoFiltrados`), el chip "Filtrando: …" con botón "Limpiar" y el `EmptyState` con copy contextual. `TabCostos` baja a complejidad ~9.
+
 ## [13.89.4] - 2026-06-20
 - **chore(ci) arreglar lint complexity y arch baseline tras v13.89.1/v13.89.3**: el CI fallaba por (1) `EmbarqueDetalleHeaderActions` con complejidad ciclomática 22, (2) `useEmbarqueEstadoActions` con complejidad 18, y (3) `TabGarantias.tsx` excediendo 200 líneas (Power of 10). Sin cambios funcionales. Se extrajo `AvanzarEstadoButton` (`src/features/embarques/components/header/`) con las 3 ramas de tooltip/dialog del botón "Avanzar"; en el hook se añadieron dos funciones puras `resolveCierreGate` y `clasificarBloqueoAvance` que reemplazan el ternario anidado y el if/else de 4 ramas por un switch, con tests unitarios. `TabGarantias` se partió en `garantias/VenceBadge`, `garantias/GarantiasKpiCards` y el hook `garantias/useGarantiasColumns` (state inline + ColumnDef), quedando el contenedor en ~95 líneas.
 
