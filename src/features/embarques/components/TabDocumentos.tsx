@@ -39,7 +39,7 @@ export function TabDocumentos({
 
   const documentosVisibles = useMemo(() => {
     if (!filtrarFaltantes) return documentos;
-    return documentos.filter(d => !d.archivo || d.archivo === '');
+    return documentos.filter(d => (!d.archivo || d.archivo === '') && d.estado !== 'No aplica');
   }, [documentos, filtrarFaltantes]);
 
   const columns = useDocumentoColumns({
