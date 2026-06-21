@@ -10,6 +10,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { NotificacionesPopover } from "@/components/layout/NotificacionesPopover";
+import { useIsMobile } from "@/hooks/shared/useIsMobile";
 
 export function Layout() {
   // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
