@@ -1,17 +1,34 @@
-import { useMemo, useState } from "react";
+/**
+ * Módulo Facturación (v13.92.0 — rediseño).
+ *
+ * Antes: 6 tabs mezcladas (Por aprobar / Proformas / Emitidas / Cobranza /
+ * Pagos a proveedores / Proyección). Era confuso: duplicaba funcionalidad
+ * de /cartera, /cxp y reportes.
+ *
+ * Ahora: dashboard de KPIs siempre visible + 3 tabs claras:
+ *   1. Por timbrar    → proformas pendientes de aprobación / timbrado
+ *   2. Emitidas       → CFDI vigentes (incluye filtro REP pendientes)
+ *   3. Notas de crédito
+ *
+ * Tabs movidas:
+ *   - Cobranza         → /cartera
+ *   - Pagos proveedor  → /cxp/por-pagar
+ *   - Proyección       → /reportes/cierre-mensual
+ *
+ * URLs viejas (?tab=cobranza|liquidacion|proyeccion) hacen redirect.
+ */
+import { useEffect, useMemo, useState } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { TabProformas } from "@/features/facturacion/components/TabProformas";
 import { TabProformasPendientes } from "@/features/facturacion/components/TabProformasPendientes";
 import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
-import { TabCobranza } from "@/features/facturacion/components/TabCobranza";
-import { TabProyeccion } from "@/features/facturacion/components/TabProyeccion";
+import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
 import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFacturacionCard";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
@@ -20,16 +37,13 @@ import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTi
 import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
-import { useFacturacionPageController, useFacturacionDateRange, useCobranza } from "@/features/facturacion/hooks";
-import { buildFacturaColumns, buildGastoColumns, type Factura } from "./facturacionColumns";
+import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
+import { buildFacturaColumns, type Factura } from "./facturacionColumns";
 
-type TabDef = { value: string; label: string; hint: string; badge?: number; tone?: "default" | "danger" | "warn" };
+type TabDef = { value: string; label: string; hint: string; badge?: number; tone?: "default" | "warn" };
 
 function TabTriggerInfo({ tab }: { tab: TabDef }) {
-  const badgeCls =
-    tab.tone === "danger" ? "text-destructive font-semibold" :
-    tab.tone === "warn" ? "text-warning font-semibold" :
-    "text-muted-foreground";
+  const badgeCls = tab.tone === "warn" ? "text-warning font-semibold" : "text-muted-foreground";
   return (
     <TabsTrigger value={tab.value}>
       <span className="flex items-center gap-1.5">
@@ -52,7 +66,18 @@ function TabTriggerInfo({ tab }: { tab: TabDef }) {
   );
 }
 
+// Redirige URLs viejas a sus módulos correctos (Cobranza → /cartera, etc.).
+const LEGACY_TAB_REDIRECTS: Record<string, string> = {
+  cobranza: "/cartera",
+  liquidacion: "/cxp/por-pagar",
+  proyeccion: "/reportes/cierre-mensual",
+};
+
 export default function Facturacion() {
+  const [searchParams] = useSearchParams();
+  const legacyTab = searchParams.get("tab");
+  const redirectTo = legacyTab ? LEGACY_TAB_REDIRECTS[legacyTab] : undefined;
+
   const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
   const [activeTab, setActiveTab] = useState<string>("pendientes");
 
@@ -61,14 +86,11 @@ export default function Facturacion() {
     filterEstado, setFilter,
     page, setPage, pageSize, setPageSize,
     paginatedFacturas, totalPages,
-    gastosPendientes, proformasPendientes,
-    loadingFacturas, loadingGastos,
-    canEdit, marcarPagadoPending,
-    handleMarcarPagado, exportarFacturasCsv, exportarLayoutContable,
+    proformasPendientes,
+    loadingFacturas,
+    canEdit,
+    exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController({ isInRange, activeTab });
-
-  // Badge de cobranza vencida (comparte cache con TabCobranza)
-  const { kpis: cobranzaKpis } = useCobranza({ estatus: "todos", moneda: "todas" });
 
   const [pagoFactura, setPagoFactura] = useState<Factura | null>(null);
   const [historialFactura, setHistorialFactura] = useState<Factura | null>(null);
@@ -86,33 +108,29 @@ export default function Facturacion() {
     [canEdit],
   );
 
-  const gastoColumns = useMemo(
-    () => buildGastoColumns({ canEdit, marcarPagadoPending, handleMarcarPagado }),
-    [canEdit, marcarPagadoPending, handleMarcarPagado],
-  );
-
   const tabs: TabDef[] = [
-    { value: "pendientes", label: "1. Por aprobar", hint: "Proformas generadas pendientes de revisión. Consolida y aprueba aquí.", badge: proformasPendientes.length, tone: proformasPendientes.length > 0 ? "warn" : "default" },
-    { value: "proformas", label: "2. Proformas", hint: "Histórico completo de proformas (pendientes y facturadas)." },
-    { value: "facturas", label: "3. Facturas emitidas", hint: "Facturas ya generadas. Export CSV y layout contable para el contador.", badge: paginatedFacturas.length > 0 ? totalPages * pageSize : 0 },
-    { value: "cobranza", label: "4. Cobranza", hint: "Cartera por cobrar: saldos, vencimientos, pagos y notas de crédito.", badge: cobranzaKpis.facturas_vencidas, tone: cobranzaKpis.facturas_vencidas > 0 ? "danger" : "default" },
-    { value: "liquidacion", label: "5. Pagos a proveedores", hint: "Costos de proveedores pendientes de pago (cuentas por pagar).", badge: gastosPendientes.length },
-    { value: "proyeccion", label: "6. Proyección", hint: "Cierre proyectado del mes en curso con base en ETA de embarques." },
+    { value: "pendientes", label: "1. Por timbrar", hint: "Proformas aprobadas listas para emitir CFDI. Bandeja del día del contador.", badge: proformasPendientes.length, tone: proformasPendientes.length > 0 ? "warn" : "default" },
+    { value: "facturas", label: "2. Emitidas", hint: "CFDI vigentes. Incluye Complemento de Pagos (REP) para facturas PPD." },
+    { value: "notas", label: "3. Notas de crédito", hint: "Historial de notas de crédito emitidas y su estado." },
   ];
+
+  // Hooks must run before any early return. Redirect after hooks.
+  useEffect(() => { /* placeholder to keep hook order consistent */ }, []);
+
+  if (redirectTo) return <Navigate to={redirectTo} replace />;
 
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6">
-        <PageHeader title="Pre-Facturación" description="Control de proformas, facturas emitidas y gastos por liquidar" />
+        <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
         <GuiaPrefacturacion />
 
-        {/* Dashboard ejecutivo: KPIs facturado/cobrado/vencido + tendencia 6 meses */}
+        {/* Dashboard de KPIs (siempre visible) */}
         <DashboardEjecutivoFacturacion />
 
         {/* Alerta global: Hueco de facturación */}
         <HuecoFacturacionCard />
 
-        {/* Filtro de fechas global (aplica a todos los tabs salvo Cobranza, que tiene sus propios filtros) */}
         <Card>
           <CardContent className="p-3">
             <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
@@ -126,10 +144,6 @@ export default function Facturacion() {
 
           <TabsContent value="pendientes" className="space-y-4">
             <TabProformasPendientes isInRange={isInRange} />
-          </TabsContent>
-
-          <TabsContent value="proformas" className="space-y-4">
-            <TabProformas isInRange={isInRange} />
           </TabsContent>
 
           <TabsContent value="facturas" className="space-y-4">
@@ -146,27 +160,8 @@ export default function Facturacion() {
             />
           </TabsContent>
 
-          <TabsContent value="cobranza" className="space-y-4">
-            <TabCobranza />
-          </TabsContent>
-
-          <TabsContent value="liquidacion" className="space-y-4">
-            <Card>
-              <CardContent className="p-0">
-                <DataTable
-                  columns={gastoColumns}
-                  data={gastosPendientes}
-                  isLoading={loadingGastos}
-                  emptyMessage="No hay gastos pendientes"
-                  rowKey={(g) => g.id}
-                  density="comfortable"
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="proyeccion" className="space-y-4">
-            <TabProyeccion />
+          <TabsContent value="notas" className="space-y-4">
+            <NotasCreditoRecientes />
           </TabsContent>
         </Tabs>
 

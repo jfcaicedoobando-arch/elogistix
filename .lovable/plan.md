@@ -1,119 +1,111 @@
-## Contexto
 
-La app **ya tiene** un módulo de facturación CFDI 4.0 completo: edge functions `facturapi-emitir` y `facturapi-cancelar`, UI (`DialogTimbrarFactura`, `DialogCancelarFactura`), validaciones, catálogos SAT, datos fiscales por cliente, y campos fiscales en `facturas` (`uuid_fiscal`, `folio_fiscal`, `facturapi_id`, `factura_pdf_url`, `factura_xml_url`, etc.).
+# Rediseño del módulo Facturación (v13.92.0)
 
-**Lo que falta** es el **Complemento de Pagos (REP)**: cuando una factura es **PPD** (Pago en Parcialidades o Diferido) y el cliente paga, el SAT obliga a emitir un *Recibo Electrónico de Pago* timbrado dentro de los primeros 5 días naturales del mes siguiente al pago. Hoy `pagos_factura` se registra como dato contable interno, pero no se timbra nada con el SAT.
+Objetivo: que Isela (contador) entre a un único lugar claro y vea **qué tiene que hacer hoy** + KPIs, en lugar de 6 tabs mezclados.
 
-También se hará el cambio de ambiente para arrancar en **sandbox de Facturapi**.
+## 1. Cambios de navegación (sidebar)
 
-## Analogía
+**Antes** (grupo "Gestión"):
+- Pre-Facturación (6 tabs)
+- Cuentas por Pagar
+- Tesorería
+- Comisiones
 
-Hoy emitir una factura es como entregar un recibo oficial al cliente. Pero si le diste plazo para pagar (PPD), cada vez que él te abone una parte el SAT exige que entregues **otro recibo oficial** que diga "recibí este abono, aquí va el desglose, este es el saldo restante". A eso le llamamos REP. Hoy registramos el abono en nuestro cuaderno (`pagos_factura`) pero no le entregamos el recibo oficial al SAT.
+**Después** (grupo "Gestión"):
+- **Facturación** (renombrado, ícono `FileText`)
+- Cobranza (CxC) — *promovido de tab a item; ya existe `/cartera`, solo se promueve en sidebar*
+- Cuentas por Pagar
+- Tesorería
+- Comisiones
 
-## Alcance — 3 capas
+**Grupo "Reportes"** (nuevo item):
+- Cierre mensual (proyección) — *se mueve tab 6 aquí, ruta `/reportes/cierre-mensual`*
+- Rentabilidad (ya existe)
 
-### 1) Configuración (sandbox)
+**Grupo "Mi bandeja"**: se elimina "Por emitir (Facturación)" porque ahora es el landing por defecto de `/facturacion`.
 
-- Agregar dos secretos: `FACTURAPI_KEY` (sandbox) y `FACTURAPI_ENV` (`test` | `live`).
-- Cambiar `FACTURAPI_BASE` en `helpers.ts` para que respete `FACTURAPI_ENV`:
-  - `test` → `https://www.facturapi.io/v2` con la **test key** (Facturapi distingue por tipo de key, no por host; documentar esto).
-- En la UI, badge discreto "Modo pruebas" en `DialogTimbrarFactura` cuando `FACTURAPI_ENV=test`. Expuesto vía función read-only o env público no sensible.
+## 2. Nueva estructura de `/facturacion`
 
-### 2) Base de datos — REP en `pagos_factura`
-
-Nueva migración que añade a `pagos_factura`:
-
-```
-facturapi_rep_id     text
-uuid_rep             text
-folio_rep            integer
-serie_rep            text
-rep_pdf_url          text
-rep_xml_url          text
-estado_rep           text  -- 'NoAplica' | 'Pendiente' | 'Timbrado' | 'Cancelado' | 'Error'
-timbrado_rep_en      timestamptz
-timbrado_rep_por     uuid references auth.users
-rep_error            text
-rep_cancelado_en     timestamptz
-rep_motivo_cancel    text
+```text
+/facturacion                        ← Dashboard + Bandeja "Por timbrar"
+/facturacion/emitidas               ← CFDI vigentes (con su REP)
+/facturacion/notas-credito          ← Notas de crédito e historial de cancelaciones
+/facturacion/:id                    ← Detalle (sin cambio)
 ```
 
-Sin cambios destructivos. Default de `estado_rep`:
-- `'NoAplica'` si la factura asociada es **PUE** (no requiere REP).
-- `'Pendiente'` si la factura es **PPD**.
+**Landing `/facturacion`** (dashboard del contador):
 
-Trigger `AFTER INSERT` en `pagos_factura` que setea `estado_rep` según `facturas.metodo_pago`. Backfill en la misma migración para los pagos existentes.
+```text
+┌─ KPIs ─────────────────────────────────────────────┐
+│ Facturado mes │ Por timbrar │ Por cobrar │ REP    │
+│ MXN 46.2K     │ 22 proformas│ MXN 737.8K │ pend 3 │
+└────────────────────────────────────────────────────┘
 
-Vista helper `v_pagos_rep_pendientes` filtrando `estado_rep = 'Pendiente'` y `factura.estado IN ('Emitida','Parcial')`, para feeds y dashboards.
+┌─ Bandeja: Por timbrar hoy ─────────────────────────┐
+│ Proforma │ Cliente │ Monto │ Embarque │ [Timbrar] │
+│ ...                                                 │
+└────────────────────────────────────────────────────┘
 
-### 3) Edge functions REP
+┌─ Alertas ──────────────────────────────────────────┐
+│ • 3 REP vencen en ≤2 días (día 5)                  │
+│ • 1 factura pendiente desde hace 5 días            │
+│ • Hueco de facturación: 29 embarques cerrados sin  │
+│   factura (USD 202K + MXN 3.4M)  [Ver detalle]     │
+└────────────────────────────────────────────────────┘
+```
 
-Tres nuevas, espejo de las de emisión:
+## 3. Tabs internos (de 6 → 3)
 
-#### `facturapi-emitir-rep`
-- Entrada: `{ pago_id }`.
-- Carga `pagos_factura` + `facturas` + `clientes` + (si aplica) otros pagos previos para calcular `num_parcialidad` e `imp_saldo_anterior`.
-- Construye el payload del complemento de pago Facturapi v2 (`type: "P"`, `complements: [...]`).
-- Llama a Facturapi, persiste `facturapi_rep_id`, `uuid_rep`, `folio_rep`, `rep_pdf_url`, `rep_xml_url`, `estado_rep='Timbrado'`, `timbrado_rep_en/por`.
-- En error: `estado_rep='Error'`, `rep_error=...`, bitácora.
-- Validaciones espejo de `validateContext` adaptadas a REP (RFC, régimen, CP, moneda, tipo de cambio si ≠ MXN, monto pago > 0, factura debe tener `uuid_fiscal`).
+| Tab actual | Destino nuevo |
+|---|---|
+| 1. Por aprobar (22) | **Tab 1 "Por timbrar"** (fusionado con Pendientes de tab 2) |
+| 2. Proformas (136) | Filtro dentro de "Por timbrar" / "Emitidas" |
+| 3. Facturas emitidas | **Tab 2 "Emitidas"** (incluye sub-filtro "REP pendientes") |
+| 4. Cobranza (111) | Movido a `/cartera` |
+| 5. Pagos a proveedores | Movido a `/cxp` |
+| 6. Proyección | Movido a `/reportes/cierre-mensual` |
+| — | **Tab 3 "Notas de crédito"** (nuevo, hoy escondido en historial) |
 
-#### `facturapi-cancelar-rep`
-- Entrada: `{ pago_id, motivo: '01'|'02'|'03'|'04', sustituye_uuid? }`.
-- Cancela en Facturapi, marca `estado_rep='Cancelado'`, `rep_cancelado_en`, `rep_motivo_cancel`.
+**REP**: queda como sub-filtro/chip dentro de "Emitidas" (no item propio del sidebar). Badge rojo si quedan ≤2 días para el día 5.
 
-#### Helpers compartidos
-- Extraer `basicAuthHeader`, `FACTURAPI_BASE` y validadores comunes a `supabase/functions/_shared/facturapi.ts` (hoy viven en `facturapi-emitir/helpers.ts`). `facturapi-cancelar` y los nuevos REP importan de ahí.
+## 4. Permisos (sin cambio funcional)
 
-### 4) Servicios + hooks frontend
+Se respeta `usePermissions`:
+- `canEmitirFactura` (contador, admin_org) → ve tab "Por timbrar" + botón Timbrar.
+- `canViewFinancials` → ve KPIs.
+- Otros roles ven solo lo que ya veían (read-only).
 
-- `src/features/facturacion/services/repFacturapi.ts` con `emitirRep(pagoId)` y `cancelarRep(pagoId, motivo, sustituyeUuid?)` (espejo de `facturapi.ts`).
-- `src/features/facturacion/hooks/useTimbrarRep.ts` con `useTimbrarRep` y `useCancelarRep` (espejo de `useTimbrarFactura`).
-- `src/features/facturacion/utils/validarDatosTimbradoRep.ts` con `buildChecksTimbradoRep` (puro, testeable).
+## 5. Plan de implementación (orden)
 
-### 5) UI
+1. **Sidebar**: editar `src/components/layout/sidebarItems.ts`
+   - Renombrar "Pre-Facturación" → "Facturación".
+   - Promover "Cartera" al grupo Gestión (ya está en `Mi Bandeja`, moverlo).
+   - Quitar "Por emitir (Facturación)" del bloque Mi Bandeja.
+   - Agregar "Cierre mensual" en Reportes.
+2. **Rutas**: `src/routes/appRoutes.tsx` añade `/facturacion/emitidas`, `/facturacion/notas-credito`, `/reportes/cierre-mensual`.
+3. **Landing**: refactor `routes/Facturacion.tsx` → componente `FacturacionDashboard.tsx` con:
+   - `KpiStrip` (reusa cards actuales).
+   - `BandejaPorTimbrar` (extraído de TabProformasPendientes).
+   - `AlertasFacturacion` (REP + hueco + atrasos).
+4. **Tab "Emitidas"**: mover `TabFacturasEmitidas` a `/facturacion/emitidas` como página.
+5. **Tab "Notas de crédito"**: extraer `HistorialNotasCredito` + `NotasCreditoRecientes` a `/facturacion/notas-credito`.
+6. **Mover tab "Proyección"** a `/reportes/cierre-mensual` (reusa `TabProyeccion.tsx`).
+7. **Eliminar tabs duplicadas**: borrar `TabCobranza` del módulo (la página `/cartera` ya la cubre) y la tab "Pagos a proveedores" (la página `/cxp` ya la cubre). Dejar redirects 301 internos por si alguien tiene URL vieja.
+8. **CHANGELOG.md** + bump `APP_VERSION` a `13.92.0`.
+9. **Test E2E**: actualizar `e2e/specs/03-factura.spec.ts` para nuevas tabs.
 
-- `DialogTimbrarRep.tsx` (espejo de `DialogTimbrarFactura.tsx`): checklist de prerequisitos (UUID factura, moneda, tipo cambio, RFC receptor, monto>0), botón "Timbrar REP", muestra resultado.
-- `DialogCancelarRep.tsx`.
-- En `DialogHistorialPagos.tsx` agregar columna **Estado REP** con badge (`NoAplica`/`Pendiente`/`Timbrado`/`Cancelado`/`Error`), botón "Timbrar REP" cuando `Pendiente`, links a PDF/XML cuando `Timbrado`, botón "Cancelar REP" cuando `Timbrado`.
-- En `FacturaDetalle.tsx` (tab Pagos) mostrar el mismo estado REP por pago.
+## 6. Riesgos / qué confirmar
 
-### 6) Bandeja y dashboard
+- **No tocamos lógica de negocio** (timbrado, cancelación, REP, cálculos). Solo UI/ruteo.
+- **URLs viejas** `/facturacion?tab=cobranza` quedan rotas → meter redirect a `/cartera`.
+- **Roles que usaban tab "Pagos a proveedores"** (tesorero) ahora entran por `/cxp/por-pagar` que ya existe.
 
-- Nueva tarjeta en `DashboardEjecutivoFacturacion`: **"REP pendientes este mes"** (cuenta `estado_rep='Pendiente'`, agrupado por días restantes al 5 del mes siguiente, alerta roja si quedan ≤ 2 días).
-- Item en sidebar de Facturación: "REP pendientes (N)".
-- Toast/email opcional al cobrar un PPD recordando "Recuerda timbrar el REP" (deferido, sólo si el usuario lo pide).
+## 7. Lo que NO cambia
 
-### 7) Tests
+- Lógica de timbrado CFDI / REP.
+- Migraciones de BD.
+- Permisos (matriz de `usePermissions`).
+- Detalle de factura `/facturacion/:id`.
+- Cálculos financieros.
 
-- `validarDatosTimbradoRep.test.ts` — checks puros.
-- `repFacturapi.test.ts` — mock de `supabase.functions.invoke`.
-- `supabase/functions/_shared/facturapi.test.ts` — helpers compartidos.
-- `supabase/functions/facturapi-emitir-rep/helpers_test.ts` — construcción del payload REP (parcialidad, saldo anterior, IVA traslados/retenciones).
-- Regla nueva opcional en `validar_cierre_embarque`: bloquear cierre si hay pagos PPD con `estado_rep='Pendiente'` (a confirmar contigo si lo quieres dentro de esta entrega o aparte).
-
-### 8) Bitácora y changelog
-
-- `bitacora_actividad`: acciones `facturapi_rep_emitido`, `facturapi_rep_emitir_failed`, `facturapi_rep_cancelado`.
-- `CHANGELOG.md` entrada `[13.91.0]` describiendo el módulo REP y el toggle sandbox. Bump `APP_VERSION` 13.91.0.
-
-## Secretos a solicitar
-
-- `FACTURAPI_KEY` — la **test secret key** de tu organización Facturapi (la encuentras en facturapi.io → Dashboard → Configuración → API Keys → "Test Secret Key", empieza con `sk_test_`).
-- `FACTURAPI_ENV` — valor `test` por ahora. Cuando pasemos a vivo lo cambias a `live` y rotas la key a la `sk_live_...`.
-
-Te pediré ambos con el form seguro en cuanto apruebes el plan.
-
-## Lo que NO entra (lo dejamos fuera explícitamente)
-
-- Complemento Carta Porte (lo descartaste).
-- Facturas para clientes extranjeros / comerciales no fiscales.
-- Cambio de PAC.
-- Webhook de Facturapi para sincronizar cancelaciones automáticas (lo podemos sumar en una iteración aparte).
-- Sustitución de CFDI con relación 04 desde UI (sólo lo dejamos posible vía parámetro `sustituye_uuid` en cancelar).
-
-## Riesgos / cosas a confirmar contigo
-
-1. **Multi-tenant**: la `FACTURAPI_KEY` es por organización Facturapi. Si más de una `organization` tuya emite facturas, vamos a necesitar **una key por organización** (guardada por organización, no como secret global). ¿Hoy es un solo emisor o varios? Si es uno solo, dejamos un solo secret. Si son varios, agregamos columna `facturapi_test_key` / `facturapi_live_key` en `organizations` y el edge function la lee de ahí.
-2. **Regla de cierre**: ¿quieres que un embarque PPD no se pueda cerrar mientras tenga REPs pendientes? Mi recomendación: sí, lo metemos en el checklist de cierre.
-3. **Orden de implementación interno** una vez aprobado: (a) secretos + toggle sandbox, (b) migración DB, (c) helpers compartidos + edge functions, (d) servicios/hooks/utils, (e) UI dialogs + integración en DialogHistorialPagos + FacturaDetalle, (f) dashboard, (g) tests, (h) changelog. Todo en este plan, en este orden, en build mode.
+¿Apruebas para implementar?
