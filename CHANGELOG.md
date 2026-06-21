@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.93.0] - 2026-06-21
+- **feat(facturacion) factura manual sin embarque/proforma**: el contador (Isela) sólo podía facturar embarques cerrados. Para anticipos, servicios extra o refacturaciones no había forma de emitir un CFDI dentro del sistema. Cambios:
+  - **DB**: `facturas.embarque_id` ahora opcional; nuevo enum `origen_factura` ('proforma' | 'manual') y columna `facturas.origen` (default 'proforma') para distinguir el flujo.
+  - **UI**: botón "Nueva factura manual" en el header de `/facturacion` (visible sólo con `canEmitirFactura`). Abre wizard de una pantalla con selector de cliente, datos fiscales (serie, uso CFDI, forma/método de pago, moneda, TC, días crédito), tabla editable de conceptos (descripción + clave SAT + cantidad + precio) y cálculo en vivo de subtotal/IVA/total usando `useTasaIVA`.
+  - **Servicio**: `crearFacturaManual()` inserta la factura con `origen='manual'` y los renglones en `conceptos_factura`; rollback manual si fallan los conceptos. Hook `useCrearFacturaManual` ofrece "Guardar borrador" o "Crear y timbrar" (timbra inmediatamente vía edge function `facturapi-emitir` existente, sin cambios).
+  - **Validaciones**: bloquea timbrar si el cliente no tiene RFC/CP/régimen completos (puede guardar borrador y completar después en el detalle del cliente).
+
 ## [13.92.0] - 2026-06-21
 - **refactor(facturacion) rediseño del módulo: de 6 tabs confusas a dashboard + 3 tabs**: Pre-Facturación mezclaba operaciones que pertenecen a otros módulos (Cobranza, Pagos a proveedores, Proyección), duplicando funcionalidad de `/cartera` y `/cxp` y confundiendo al contador. Cambios:
   - **Sidebar**: ítem renombrado a "Facturación" (antes "Pre-Facturación"). Se promovió "Cobranza" (`/cartera`) al grupo Gestión como ítem propio. Nuevo ítem "Cierre mensual" (`/reportes/cierre-mensual`) en Reportes. Para el rol `contador` se eliminó el bloque "Mi bandeja" duplicado: ahora entra directo al dashboard de `/facturacion`.
