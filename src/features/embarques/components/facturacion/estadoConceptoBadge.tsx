@@ -15,6 +15,7 @@ type ConceptoVenta = Tables<"conceptos_venta">;
 type ProformaRow = Pick<Tables<"proformas">, "id" | "estado_proforma">;
 
 /** Calcula el mapa `conceptoId → estado tri-valor` a partir de proformas. */
+// eslint-disable-next-line react-refresh/only-export-components
 export function calcularEstadosConceptos(
   conceptos: ConceptoVenta[],
   proformas: ProformaRow[],

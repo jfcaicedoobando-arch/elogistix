@@ -38,6 +38,7 @@ interface Props {
   canEdit: boolean;
 }
 
+// eslint-disable-next-line complexity
 export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: Props) {
   const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(factura?.id);

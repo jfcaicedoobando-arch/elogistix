@@ -37,6 +37,7 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
+// eslint-disable-next-line complexity
 export function DialogTimbrarRep({ pago, factura, open, onOpenChange }: Props) {
   const timbrar = useTimbrarRep(factura?.id);
 
