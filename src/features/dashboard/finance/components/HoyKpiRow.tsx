@@ -3,7 +3,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { KpiTile } from "./KpiTile";
 
 interface Props {
-  porTimbrar: number;
+  porFacturar: number;
   porPagarMxn: number;
   porPagarUsd: number;
   vencidoMxn: number;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function HoyKpiRow({
-  porTimbrar,
+  porFacturar,
   porPagarMxn,
   porPagarUsd,
   vencidoMxn,
@@ -25,11 +25,11 @@ export function HoyKpiRow({
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <KpiTile
         icon={<FileText className="h-4 w-4 text-blue-600" />}
-        label="Por timbrar"
-        value={porTimbrar}
-        sublabel="Facturas pendientes"
-        to="/facturacion/por-emitir"
-        tone={porTimbrar > 0 ? "warning" : "default"}
+        label="Por facturar"
+        value={porFacturar}
+        sublabel="Embarques con hueco"
+        to="/facturacion"
+        tone={porFacturar > 0 ? "warning" : "default"}
         loading={loading}
       />
       <KpiTile
