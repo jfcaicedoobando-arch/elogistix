@@ -44,14 +44,36 @@ export default function Reportes() {
         title="Rentabilidad por Cliente"
         description="P&L agrupado por cuenta con filtros de periodo y modo"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!canExport}>
-              <FileText className="h-4 w-4 mr-2" /> PDF
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
-              <Download className="h-4 w-4 mr-2" /> Exportar CSV
-            </Button>
-          </div>
+          <>
+            {/* Mobile: un solo dropdown "Exportar ▾" */}
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={!canExport}>
+                    <Download className="h-4 w-4 mr-1" /> Exportar
+                    <ChevronDown className="h-3.5 w-3.5 ml-1 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleExportPdf}>
+                    <FileText className="h-4 w-4 mr-2" /> PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExport}>
+                    <Download className="h-4 w-4 mr-2" /> CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {/* Desktop */}
+            <div className="hidden sm:flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!canExport}>
+                <FileText className="h-4 w-4 mr-2" /> PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
+                <Download className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            </div>
+          </>
         }
       />
 
