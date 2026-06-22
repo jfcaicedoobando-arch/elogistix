@@ -9,6 +9,29 @@ export const TIPOS_PROVEEDOR: TipoProveedor[] = [
   'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos',
 ];
 
+/**
+ * Tipos permitidos para proveedores con `origen_proveedor = 'Extranjero'`.
+ * Los demás tipos sólo aplican a proveedores nacionales.
+ */
+export const TIPOS_PROVEEDOR_EXTRANJERO: TipoProveedor[] = [
+  'Naviera', 'Aerolínea', 'Agente de Carga',
+];
+
+/**
+ * Devuelve la lista de tipos disponible según el origen del proveedor.
+ * Si `tipoActual` no está en la lista filtrada (dato legacy), se incluye
+ * para no romper la edición de proveedores existentes.
+ */
+export function tiposProveedorPorOrigen(
+  origen: 'Nacional' | 'Extranjero' | null | undefined,
+  tipoActual?: TipoProveedor | null,
+): TipoProveedor[] {
+  if (origen !== 'Extranjero') return TIPOS_PROVEEDOR;
+  const base = [...TIPOS_PROVEEDOR_EXTRANJERO];
+  if (tipoActual && !base.includes(tipoActual)) base.push(tipoActual);
+  return base;
+}
+
 export const MONEDAS_PROVEEDOR: Moneda[] = ['MXN', 'USD', 'EUR'];
 
 export const PAISES_PROVEEDOR = [
