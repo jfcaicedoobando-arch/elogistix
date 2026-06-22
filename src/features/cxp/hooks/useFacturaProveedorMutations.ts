@@ -7,14 +7,14 @@ import {
   actualizarFacturaProveedor,
   SaldoNegativoError,
   type ActualizarFacturaPayload,
+  type NuevaFacturaProveedorPayload,
 } from "@/features/cxp/services";
-import type { TablesInsert } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export function useCrearFacturaProveedor() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: TablesInsert<"proveedor_facturas">) => crearFacturaProveedor(payload),
+    mutationFn: (payload: NuevaFacturaProveedorPayload) => crearFacturaProveedor(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       notifySuccess(undefined, { title: "Factura de proveedor creada" });
