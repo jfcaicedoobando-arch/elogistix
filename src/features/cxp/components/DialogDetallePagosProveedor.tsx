@@ -73,6 +73,7 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
                 />
                 <Kpi label="# Pagos" value={String(pagos.length)} />
               </div>
+              <HistorialFacturaSection facturaId={factura.id} />
             </>
           )}
 
