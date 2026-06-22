@@ -163,11 +163,11 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
               </div>
             )}
 
-            {factura && (
+            {f && (
               <NotasCreditoSection
-                facturaId={factura.id}
-                monedaFactura={factura.moneda}
-                saldoFactura={factura.saldo}
+                facturaId={f.id}
+                monedaFactura={f.moneda}
+                saldoFactura={f.saldo}
                 canEdit={canEdit}
               />
             )}
