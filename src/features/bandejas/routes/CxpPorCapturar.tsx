@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Coins, FileStack, Inbox, Package } from "lucide-react";
+import { Coins, FileStack, Inbox, Package, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpPorCapturarFilters } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
 import { resumirCxpPorCapturar } from "@/features/bandejas/domain/aggregates";
