@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
+import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
 import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
