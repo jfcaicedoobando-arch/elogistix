@@ -5,8 +5,10 @@ export interface CxpPorCapturarRow {
   expediente: string | null;
   cliente_nombre: string | null;
   costos_presupuestados: number;
+  monto_facturado: number;
   facturas_capturadas: number;
   ultima_factura_fecha: string | null;
+  dias_desde_ultima_factura: number | null;
 }
 
 export interface CxpPorPagarRow {

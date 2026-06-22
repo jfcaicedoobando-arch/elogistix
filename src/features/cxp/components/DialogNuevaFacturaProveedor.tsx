@@ -17,15 +17,17 @@ import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
+import type { EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  initialEmbarqueAdHoc?: EmbarqueSeleccionado | null;
 }
 
-export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
+export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqueAdHoc }: Props) {
   const cats = usePresupuestoCategorias(true);
-  const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false));
+  const ctl = useNuevaFacturaProveedorForm(() => onOpenChange(false), initialEmbarqueAdHoc);
 
   const sub = Number(ctl.values.subtotal) || 0;
   const iva = Number(ctl.values.iva) || 0;
