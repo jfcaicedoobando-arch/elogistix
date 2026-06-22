@@ -72,6 +72,8 @@ export const SENSITIVE_FIELDS = {
     "estado",
     "cp",
     "dias_credito",
+    "regimen_fiscal",
+    "uso_cfdi_default",
   ] as const,
   proveedor: [
     "nombre",
