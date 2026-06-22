@@ -9,12 +9,12 @@
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { DollarSign, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,9 +34,14 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   factura: FacturaCxP | null;
   canEdit: boolean;
+  onPagar?: (f: FacturaCxP) => void;
+  onEditar?: (f: FacturaCxP) => void;
+  onEliminar?: (f: FacturaCxP) => void;
 }
 
-export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEdit }: Props) {
+export function DialogDetallePagosProveedor({
+  open, onOpenChange, factura, canEdit, onPagar, onEditar, onEliminar,
+}: Props) {
   // Observamos la factura por id para que el badge de aprobación y el saldo
   // se mantengan frescos aunque la lista filtrada haya descartado la fila.
   const { data: facturaFresh } = useFacturaProveedor(factura?.id, factura ?? undefined);
@@ -47,16 +52,69 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
 
+  const aprobada = f?.estado_aprobacion === "aprobada";
+  const pagable = !!f && canEdit && f.saldo > 0 && f.estado !== "Borrador";
+  const puedeEliminar = !!f && canEdit && f.pagado <= 0;
+
   return (
     <TooltipProvider delayDuration={150}>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn(dialogSize["3xl"], "max-h-[90vh] flex flex-col gap-0 p-0")}>
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
-            <DialogTitle>Detalle de pagos</DialogTitle>
+            <DialogTitle>Detalle de factura de proveedor</DialogTitle>
             <DialogDescription className="font-mono uppercase tracking-wider text-xs">
               {f ? `${f.folio_interno} · Folio prov. ${f.folio_proveedor} — ${f.proveedor_nombre}` : ""}
             </DialogDescription>
           </DialogHeader>
+
+          {f && canEdit && (onPagar || onEditar || onEliminar) && (
+            <div className="px-6 py-3 border-b bg-muted/20 flex flex-wrap items-center gap-2">
+              {onPagar && pagable && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        size="sm"
+                        onClick={() => onPagar(f)}
+                        disabled={!aprobada}
+                      >
+                        <DollarSign className="h-3.5 w-3.5 mr-1" /> Registrar pago
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!aprobada && (
+                    <TooltipContent>Requiere aprobación antes de pagar</TooltipContent>
+                  )}
+                </Tooltip>
+              )}
+              {onEditar && (
+                <Button variant="outline" size="sm" onClick={() => onEditar(f)}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Editar factura
+                </Button>
+              )}
+              {onEliminar && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEliminar(f)}
+                        disabled={!puedeEliminar}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar factura
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!puedeEliminar && (
+                    <TooltipContent>No se puede eliminar: tiene pagos registrados</TooltipContent>
+                  )}
+                </Tooltip>
+              )}
+            </div>
+          )}
+
 
           {f && (
             <>
