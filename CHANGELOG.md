@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.98.5] - 2026-06-22
+- **feat(dashboard) rediseño del tooltip de Profit proyectado en "Arribos este mes"**: el tooltip ahora se lee como un mini estado de resultados. Se amplía a 320px, se separa el encabezado con subtítulo "Homologado a MXN", los totales se alinean en grid 2 columnas con monto a la derecha, el Profit se destaca en una caja con fondo suave (success/destructive) e incluye el margen % entre paréntesis, se añade una mini barra horizontal Costo vs Profit para visualizar la proporción, y el desglose por moneda origen se presenta como tabla de 3 columnas (Origen / Venta MXN / Costo MXN) ocultando filas en cero. Sin cambios de datos ni de lógica — solo `TooltipContent` de `ArribosCard.tsx`.
+
 ## [13.98.4] - 2026-06-22
+
 - **fix(sidebar) badge de "Principal" desglosado por módulo**: antes el ítem **Principal** (`/`) mostraba un badge agregado con la suma de 4 categorías (embarques en demora + facturas vencidas + garantías atoradas + pendientes administrativos), pero el dashboard `/inicio` sólo lista una categoría a la vez, generando confusión (sidebar mostraba 19, dashboard mostraba 3). Ahora:
   - **Principal** ya no muestra badge.
   - **Embarques** acumula `embarquesDemora + garantiasAtoradas + adminPendientes` (las 3 son alertas del ciclo de embarque).
