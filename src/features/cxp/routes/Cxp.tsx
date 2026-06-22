@@ -106,6 +106,7 @@ export default function Cxp() {
             estatus={f.estatus} onEstatusChange={f.setEstatus}
             moneda={f.moneda} onMonedaChange={f.setMoneda}
             origen={f.origen} onOrigenChange={f.setOrigen}
+            aprobacion={f.aprobacion} onAprobacionChange={f.setAprobacion}
             proveedorId={f.proveedorId} onProveedorChange={f.setProveedorId}
             fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
             fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
