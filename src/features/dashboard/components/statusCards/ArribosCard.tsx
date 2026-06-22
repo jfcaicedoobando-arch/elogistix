@@ -157,12 +157,13 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                                   <span className="text-[10px] uppercase text-muted-foreground text-right">Venta MXN</span>
                                   <span className="text-[10px] uppercase text-muted-foreground text-right">Costo MXN</span>
                                   {desglose.map((r) => (
-                                    <>
-                                      <span key={`${r.label}-l`} className="font-medium">{r.label}</span>
-                                      <span key={`${r.label}-v`} className="tabular-nums text-right">{formatCurrency(r.v, "MXN")}</span>
-                                      <span key={`${r.label}-c`} className="tabular-nums text-right text-muted-foreground">{formatCurrency(r.c, "MXN")}</span>
-                                    </>
+                                    <Fragment key={r.label}>
+                                      <span className="font-medium">{r.label}</span>
+                                      <span className="tabular-nums text-right">{formatCurrency(r.v, "MXN")}</span>
+                                      <span className="tabular-nums text-right text-muted-foreground">{formatCurrency(r.c, "MXN")}</span>
+                                    </Fragment>
                                   ))}
+
                                 </div>
                               </div>
                             )}
