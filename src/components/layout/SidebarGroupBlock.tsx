@@ -28,7 +28,6 @@ interface Props {
   items: SidebarItem[];
   collapsed: boolean;
   pathname: string;
-  totalAlertas: number;
 }
 
 function isActive(pathname: string, path: string): boolean {
@@ -40,7 +39,7 @@ function isActive(pathname: string, path: string): boolean {
  * Bloque memoizado de un grupo del sidebar. Evita reconstruir cada `renderGroup`
  * en cada navegación: solo el grupo cuyo `pathname` activo cambia se re-renderea.
  */
-function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas }: Props) {
+function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
   const { isMobile, setOpenMobile } = useSidebar();
   const handleNavigate = () => {
     if (isMobile) setOpenMobile(false);
@@ -57,12 +56,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
           <SidebarMenu>
             {items.map((item) => {
               const active = isActive(pathname, item.url);
-              const badge =
-                item.badgeCount !== undefined
-                  ? item.badgeCount
-                  : item.url === "/"
-                    ? totalAlertas
-                    : 0;
+              const badge = item.badgeCount ?? 0;
               return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton

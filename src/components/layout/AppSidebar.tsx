@@ -4,7 +4,7 @@ import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
-import { useSidebarAlerts } from "@/hooks/layout";
+
 import {
   Sidebar,
   SidebarContent,
@@ -40,7 +40,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   const collapsed = !isMobile && state === "collapsed";
   const { pathname } = useLocation();
   const { user, effectiveRole, signOut } = useAuth();
-  const { totalAlertas } = useSidebarAlerts();
+  
   const { theme, toggleTheme } = useTheme();
   const sections = useAppSidebarSections();
 
@@ -70,7 +70,6 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
             items={section.items}
             collapsed={collapsed}
             pathname={pathname}
-            totalAlertas={totalAlertas}
           />
         ))}
       </SidebarContent>
