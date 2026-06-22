@@ -10,7 +10,6 @@ import {
   TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
-  CATEGORIAS_PROVEEDOR,
   SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import { useEditarProveedorController } from "@/features/proveedor/hooks";
@@ -43,18 +42,6 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         <DialogDescription>Modifica la información fiscal y de contacto del proveedor.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Categoría *</Label>
-            <Select value={c.form.categoria} onValueChange={c.handleCategoriaChange}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {CATEGORIAS_PROVEEDOR.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-2">
             <Label>Origen *</Label>
             <Select

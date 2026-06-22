@@ -18,8 +18,6 @@ import {
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
-type CategoriaProveedor = Enums<"categoria_proveedor">;
-type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 
 export type { Proveedor, ProveedorListItem, ProveedorOperacion, ProveedorLite };
 
@@ -29,8 +27,6 @@ interface UseProveedoresPaginadosParams {
   page: number;
   pageSize: number;
   origen?: "Nacional" | "Extranjero" | "todos";
-  categoria?: CategoriaProveedor | "todos";
-  subtipoGasto?: SubtipoGasto | null;
 }
 
 export function useProveedoresPaginados({
@@ -39,16 +35,14 @@ export function useProveedoresPaginados({
   page,
   pageSize,
   origen,
-  categoria,
-  subtipoGasto,
 }: UseProveedoresPaginadosParams) {
   const { organizationId } = useOrgFilter();
-  const filters = { tipo, search, page, pageSize, organizationId, origen, categoria, subtipoGasto };
+  const filters = { tipo, search, page, pageSize, organizationId, origen };
 
   return useQuery({
     queryKey: queryKeys.proveedores.list(filters),
     queryFn: () =>
-      fetchProveedoresPaginados({ tipo, search, page, pageSize, organizationId, origen, categoria, subtipoGasto }),
+      fetchProveedoresPaginados({ tipo, search, page, pageSize, organizationId, origen }),
     placeholderData: (prev) => prev,
   });
 }

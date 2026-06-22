@@ -171,28 +171,38 @@ export function FacturaProveedorFormFields({
 
       <Separator />
 
+      <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
+        <div className="space-y-1">
+          <Label>Categoría contable<RequiredMark /></Label>
+          <Select
+            value={values.categoriaId || ""}
+            onValueChange={(v) => onChange("categoriaId", v)}
+          >
+            <SelectTrigger aria-required="true">
+              <SelectValue placeholder="Selecciona la categoría contable de esta factura" />
+            </SelectTrigger>
+            <SelectContent>
+              {categorias.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-muted-foreground">
+            Un mismo proveedor puede emitir facturas para distintas categorías (COGS, gastos operativos, OpEx).
+          </p>
+          <FieldError msg={errors.categoriaId} />
+        </div>
+      </FormSection>
+
+      <Separator />
+
       <Collapsible open={openDetalles} onOpenChange={setOpenDetalles}>
         <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
           <FileText className="h-3.5 w-3.5 text-primary/70" />
-          Detalles adicionales (opcional)
+          Notas (opcional)
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDetalles ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-3 pt-3">
-          <div className="space-y-1">
-            <Label>Categoría presupuestal</Label>
-            <Select
-              value={values.categoriaId || "ninguna"}
-              onValueChange={(v) => onChange("categoriaId", v === "ninguna" ? "" : v)}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ninguna">Sin categoría</SelectItem>
-                {categorias.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-1">
             <Label>Notas</Label>
             <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2}

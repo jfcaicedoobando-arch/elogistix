@@ -25,7 +25,7 @@ export interface ActualizarFacturaPayload {
   subtotal: number;
   iva: number;
   retenciones: number;
-  categoria_presupuesto_id: string | null;
+  categoria_presupuesto_id: string;
   notas: string;
 }
 

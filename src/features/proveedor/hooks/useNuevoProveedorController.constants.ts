@@ -26,7 +26,7 @@ export const DOCS_EXTRANJERO = [
 
 export const EMPTY_PROVEEDOR_FORM = {
   nombre: "",
-  categoria: "" as CategoriaProveedor | "",
+  categoria: "Logistico" as CategoriaProveedor | "",
   tipo: null as TipoProveedor | null,
   subtipo_gasto: null as SubtipoGasto | null,
   pais: "",

@@ -4699,7 +4699,7 @@ export type Database = {
           aprobada_por: string | null
           archivo_pdf_url: string | null
           archivo_xml_url: string | null
-          categoria_presupuesto_id: string | null
+          categoria_presupuesto_id: string
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -4734,7 +4734,7 @@ export type Database = {
           aprobada_por?: string | null
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
-          categoria_presupuesto_id?: string | null
+          categoria_presupuesto_id: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -4769,7 +4769,7 @@ export type Database = {
           aprobada_por?: string | null
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
-          categoria_presupuesto_id?: string | null
+          categoria_presupuesto_id?: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -4955,7 +4955,7 @@ export type Database = {
           banco_intermediario_swift: string | null
           banco_pais: string | null
           beneficiario: string | null
-          categoria: Database["public"]["Enums"]["categoria_proveedor"]
+          categoria: Database["public"]["Enums"]["categoria_proveedor"] | null
           ciudad: string | null
           clabe: string | null
           contacto: string
@@ -4992,7 +4992,7 @@ export type Database = {
           banco_intermediario_swift?: string | null
           banco_pais?: string | null
           beneficiario?: string | null
-          categoria?: Database["public"]["Enums"]["categoria_proveedor"]
+          categoria?: Database["public"]["Enums"]["categoria_proveedor"] | null
           ciudad?: string | null
           clabe?: string | null
           contacto?: string
@@ -5029,7 +5029,7 @@ export type Database = {
           banco_intermediario_swift?: string | null
           banco_pais?: string | null
           beneficiario?: string | null
-          categoria?: Database["public"]["Enums"]["categoria_proveedor"]
+          categoria?: Database["public"]["Enums"]["categoria_proveedor"] | null
           ciudad?: string | null
           clabe?: string | null
           contacto?: string
@@ -5701,7 +5701,7 @@ export type Database = {
           aprobada_por: string | null
           archivo_pdf_url: string | null
           archivo_xml_url: string | null
-          categoria_presupuesto_id: string | null
+          categoria_presupuesto_id: string
           created_at: string
           created_by: string | null
           deleted_at: string | null

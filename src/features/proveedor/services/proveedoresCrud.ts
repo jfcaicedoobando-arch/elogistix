@@ -20,7 +20,7 @@ export type ProveedorListItem = Pick<
   "id" | "nombre" | "tipo" | "rfc" | "contacto" | "moneda_preferida"
 > & {
   origen_proveedor: "Nacional" | "Extranjero" | null;
-  categoria: CategoriaProveedor;
+  categoria: CategoriaProveedor | null;
   subtipo_gasto: SubtipoGasto | null;
   total_operaciones: number;
   monto_pendiente: number;
@@ -44,14 +44,12 @@ export interface FetchProveedoresParams {
   pageSize: number;
   organizationId: string | null;
   origen?: "Nacional" | "Extranjero" | "todos";
-  categoria?: CategoriaProveedor | "todos";
-  subtipoGasto?: SubtipoGasto | null;
 }
 
 export async function fetchProveedoresPaginados(
   params: FetchProveedoresParams,
 ): Promise<{ data: ProveedorListItem[]; count: number }> {
-  const { tipo, search, page, pageSize, organizationId, origen, categoria, subtipoGasto } = params;
+  const { tipo, search, page, pageSize, organizationId, origen } = params;
   const offset = page * pageSize;
   const { data, error } = await supabase.rpc("proveedores_listado", {
     p_organization_id: organizationId ?? undefined,
@@ -60,8 +58,6 @@ export async function fetchProveedoresPaginados(
     p_offset: offset,
     p_limit: pageSize,
     p_origen: origen && origen !== "todos" ? origen : undefined,
-    p_categoria: categoria && categoria !== "todos" ? categoria : undefined,
-    p_subtipo_gasto: subtipoGasto || undefined,
     // SAFE-CAST: la firma del RPC tipado en Supabase aún no recoge los nuevos parámetros.
   } as unknown as Parameters<typeof supabase.rpc<"proveedores_listado">>[1]);
   if (error) throw error;
@@ -75,7 +71,7 @@ export async function fetchProveedoresPaginados(
     moneda_preferida: Proveedor["moneda_preferida"];
     pais: string | null;
     origen_proveedor: "Nacional" | "Extranjero" | null;
-    categoria: CategoriaProveedor;
+    categoria: CategoriaProveedor | null;
     subtipo_gasto: SubtipoGasto | null;
     total_operaciones: number | string;
     monto_pendiente: number | string;

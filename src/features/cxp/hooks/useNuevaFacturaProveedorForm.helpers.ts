@@ -55,6 +55,7 @@ export function validateFactura(
   const next: Partial<Record<keyof FacturaFormValues, string>> = {};
   if (!values.provId) next.provId = "Selecciona un proveedor";
   if (!values.folio.trim()) next.folio = "Captura el folio del proveedor";
+  if (!values.categoriaId) next.categoriaId = "Selecciona una categoría contable";
   if (total <= 0) next.subtotal = "El total debe ser mayor a 0";
   if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
     next.tc = "Captura el tipo de cambio";
@@ -92,7 +93,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
     total,
     estado: "Vigente" as const,
     notas: values.notas,
-    categoria_presupuesto_id: values.categoriaId || null,
+    categoria_presupuesto_id: values.categoriaId,
     created_by: userId,
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
