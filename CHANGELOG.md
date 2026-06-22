@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.103.2] - 2026-06-22
+- **fix(tests/rls)**: `test_rls_financiero_critico` aprueba la factura de proveedor antes de insertar el pago, alineándose con el trigger `tg_pagos_proveedor_requiere_aprobacion`.
+
 ## [13.103.1] - 2026-06-22
 - **fix(cxp)**: las filas de `/cxp/por-pagar` ahora son clickeables y abren el detalle de la factura (`/cxp?factura={id}`) para aprobar y registrar pagos. El link al embarque preserva su navegación con `stopPropagation`.
 
