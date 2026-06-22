@@ -5,3 +5,4 @@ export * from "./useNuevaFacturaProveedorForm";
 export * from "./useConceptosCostoAbiertos";
 export * from "./useSugerirEmbarques";
 export * from "./useCxpPageState";
+export * from "./useCxpPendientesAprobacion";
