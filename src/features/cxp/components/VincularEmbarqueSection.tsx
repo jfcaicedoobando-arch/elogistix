@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
+import { SugerirEmbarqueBlock, type EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
 export interface SeleccionLinea {
   monto: number;
@@ -21,11 +22,14 @@ export interface SeleccionLinea {
 
 interface Props {
   proveedorId: string;
+  proveedorNombre: string;
   organizationId: string | null;
   /** Map conceptoCostoId → {monto} (solo presentes los marcados). */
   seleccion: Record<string, SeleccionLinea>;
   onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
+  embarqueAdHoc: EmbarqueSeleccionado | null;
+  onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
 }
 
 interface Grupo {
