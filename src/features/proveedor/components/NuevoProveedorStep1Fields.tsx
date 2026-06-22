@@ -84,13 +84,14 @@ export function CsfUploader({ c }: { c: Controller }) {
 }
 
 export function TipoLogisticoSelect({ c }: { c: Controller }) {
+  const tipos = tiposProveedorPorOrigen(c.form.origen_proveedor, c.form.tipo);
   return (
     <div className="space-y-2">
       <Label>Tipo *</Label>
       <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
         <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
         <SelectContent>
-          {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          {tipos.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
         </SelectContent>
       </Select>
     </div>
