@@ -21,6 +21,7 @@ export interface ArribosEsteMes {
   costoMxnFromEur: number;
   ventaMxnNative: number;
   costoMxnNative: number;
+  gastosOperativosMXN: number;
 }
 
 interface Props {
@@ -30,9 +31,23 @@ interface Props {
 }
 
 export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false }: Props) {
-  const pct = arribosEsteMes.total > 0
-    ? Math.round((arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100)
-    : 0;
+  const gastos = arribosEsteMes.gastosOperativosMXN;
+  const profitPositivo = Math.max(arribosEsteMes.profitMXN, 0);
+  const pctReal = gastos > 0 ? Math.round((profitPositivo / gastos) * 100) : 0;
+  const pctBarra = Math.min(100, pctReal);
+  const faltante = Math.max(gastos - profitPositivo, 0);
+  const sinGastos = gastos <= 0;
+  const perdida = arribosEsteMes.profitMXN < 0;
+  const barColor = perdida || pctReal < 50
+    ? "[&>div]:bg-destructive"
+    : pctReal < 100
+      ? "[&>div]:bg-warning"
+      : "[&>div]:bg-success";
+  const pctTextColor = perdida || pctReal < 50
+    ? "text-destructive"
+    : pctReal < 100
+      ? "text-warning"
+      : "text-success";
 
   return (
     <Card>
@@ -186,15 +201,64 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
             )}
           </div>
 
-          <div className="flex items-center gap-2 xl:w-40 shrink-0">
-            <Progress
-              value={pct}
-              className="h-2 flex-1 [&>div]:bg-kpi-secondary"
-            />
-            <span className="text-xs text-muted-foreground font-medium w-8 text-right">
-              {pct}%
-            </span>
+          <div className="flex flex-col gap-0.5 xl:w-48 shrink-0">
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="flex items-center gap-2 cursor-help w-full">
+                    <Progress
+                      value={pctBarra}
+                      className={`h-2 flex-1 ${barColor}`}
+                    />
+                    <span className={`text-xs font-semibold tabular-nums w-12 text-right ${pctTextColor}`}>
+                      {sinGastos ? "—" : `${pctReal}%`}
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="w-[280px] p-3">
+                  <div className="space-y-2">
+                    <div className="text-sm font-semibold leading-tight">
+                      Cobertura de gastos fijos
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs">
+                      <span className="text-muted-foreground">Profit proyectado</span>
+                      <span className="tabular-nums font-medium text-right">
+                        {formatCurrency(arribosEsteMes.profitMXN, "MXN")}
+                      </span>
+                      <span className="text-muted-foreground">Gastos operativos del mes</span>
+                      <span className="tabular-nums font-medium text-right">
+                        {formatCurrency(gastos, "MXN")}
+                      </span>
+                    </div>
+                    {sinGastos ? (
+                      <p className="text-[11px] text-muted-foreground italic border-t pt-1.5">
+                        Aún no hay gastos operativos capturados este mes.
+                      </p>
+                    ) : perdida ? (
+                      <p className="text-[11px] text-destructive border-t pt-1.5">
+                        Pérdida proyectada: aún no cubres nada de los gastos fijos.
+                      </p>
+                    ) : pctReal >= 100 ? (
+                      <p className="text-[11px] text-success border-t pt-1.5">
+                        Ya cubriste tus gastos fijos del mes. El excedente es utilidad neta.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground border-t pt-1.5">
+                        Faltan <span className="font-semibold text-foreground">{formatCurrency(faltante, "MXN")}</span> de profit para cubrir tus gastos fijos.
+                      </p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground italic">
+                      Gastos = facturas de proveedor "Gasto operativo" + comisiones del mes.
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Gastos fijos cubiertos
+            </p>
           </div>
+
         </div>
       </CardContent>
     </Card>

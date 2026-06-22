@@ -89,6 +89,7 @@ export interface ArribosEsteMes {
   costoMxnFromEur: number;
   ventaMxnNative: number;
   costoMxnNative: number;
+  gastosOperativosMXN: number;
 }
 
 export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
@@ -116,6 +117,7 @@ export const EMPTY_ARRIBOS: ArribosEsteMes = {
   costoMxnFromEur: 0,
   ventaMxnNative: 0,
   costoMxnNative: 0,
+  gastosOperativosMXN: 0,
 };
 
 export const EMPTY_RESUMEN: ResumenFacturacion = {

@@ -37,6 +37,7 @@ export const arribosEsteMesSchema = z
     costoMxnFromEur: numOrCoerce,
     ventaMxnNative: numOrCoerce,
     costoMxnNative: numOrCoerce,
+    gastosOperativosMXN: numOrCoerce.optional().default(0),
   })
   .passthrough();
 
