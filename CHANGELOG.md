@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.111.1] - 2026-06-22
+- **ui(proveedores)**: el dropdown de **Tipo** para proveedores con origen **Extranjero** ahora sólo muestra los tipos que realmente usamos: **Naviera**, **Aerolínea** y **Agente de Carga**. Para proveedores **Nacionales** la lista completa sigue igual. Si un proveedor extranjero ya tenía un tipo legacy (p. ej. Aseguradora), ese valor se conserva visible al editarlo para no romper datos históricos. Analogía: es como un menú que cambia según la mesa — la mesa "extranjera" sólo ve los 3 platillos que sí se piden.
+
 ## [13.111.0] - 2026-06-22
 - **feat(cxp)**: la **categoría contable** se desvincula del proveedor y ahora es **obligatoria por factura**. Antes el proveedor cargaba una clasificación contable (Logístico/Administrativo) que se confundía con la categoría real del gasto; ahora cada factura del mismo proveedor puede ir a una categoría distinta (COGS, gastos operativos, OpEx, etc.) y se valida en el formulario. Analogía: antes el restaurante decidía si tu cuenta era "comida" o "bebida" sólo por el mesero que te atendió; ahora cada platillo lleva su propia etiqueta contable.
 - **fix(cxp)**: la columna `proveedor_facturas.categoria_presupuesto_id` pasa a `NOT NULL`. Las 2 facturas históricas sin categoría se reasignaron a una categoría "Sin categoría" auto-creada por organización (backfill defensivo).

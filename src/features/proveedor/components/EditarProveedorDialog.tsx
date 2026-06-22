@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Enums, Tables, TablesUpdate } from "@/types/db";
 import {
-  TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
   SUBTIPOS_GASTO_OPERATIVO,
+  tiposProveedorPorOrigen,
 } from "@/constants/proveedorConstants";
 import { useEditarProveedorController } from "@/features/proveedor/hooks";
 import EditarProveedorGastoFiscalFields from "./EditarProveedorGastoFiscalFields";
@@ -73,7 +73,9 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
               <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
                 <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
                 <SelectContent>
-                  {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {tiposProveedorPorOrigen(c.form.origen_proveedor, c.form.tipo).map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FieldError message={c.fieldErrorMessage("tipo")} />

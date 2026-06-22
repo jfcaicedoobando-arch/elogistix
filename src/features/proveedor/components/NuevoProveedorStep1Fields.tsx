@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Upload } from "lucide-react";
 import { useRef } from "react";
 import {
-  TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   CATEGORIAS_PROVEEDOR,
   SUBTIPOS_GASTO_OPERATIVO,
+  tiposProveedorPorOrigen,
 } from "@/constants/proveedorConstants";
 import type { Enums } from "@/types/db";
 import type { useNuevoProveedorController } from "@/features/proveedor/hooks";
@@ -84,13 +84,14 @@ export function CsfUploader({ c }: { c: Controller }) {
 }
 
 export function TipoLogisticoSelect({ c }: { c: Controller }) {
+  const tipos = tiposProveedorPorOrigen(c.form.origen_proveedor, c.form.tipo);
   return (
     <div className="space-y-2">
       <Label>Tipo *</Label>
       <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
         <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
         <SelectContent>
-          {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          {tipos.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
         </SelectContent>
       </Select>
     </div>
