@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import SearchInput from "@/components/shared/SearchInput";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
+import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import type { EstatusCxP } from "@/features/cxp/services";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields, ESTATUS } from "./CxpFiltrosSheetFields";
