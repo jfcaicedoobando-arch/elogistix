@@ -32,54 +32,42 @@ export interface CxpFiltrosChipsProps {
 
 interface ChipDef { key: string; label: string; value: string; onRemove: () => void }
 
-export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
+/**
+ * Helper puro: construye la lista de chips a partir de los props.
+ * Se extrajo del componente para mantener su complejidad ciclomática ≤ 16.
+ */
+function buildChips(p: CxpFiltrosChipsProps): ChipDef[] {
   const chips: ChipDef[] = [];
+  const push = (c: ChipDef) => chips.push(c);
 
   if (p.estatus && p.estatus !== "todos") {
-    chips.push({
-      key: "estatus", label: "Estatus", value: p.estatus,
-      onRemove: () => p.onEstatusChange("todos"),
-    });
+    push({ key: "estatus", label: "Estatus", value: p.estatus, onRemove: () => p.onEstatusChange("todos") });
   }
   if (p.moneda && p.moneda !== "todas") {
-    chips.push({
-      key: "moneda", label: "Moneda", value: p.moneda,
-      onRemove: () => p.onMonedaChange("todas"),
-    });
+    push({ key: "moneda", label: "Moneda", value: p.moneda, onRemove: () => p.onMonedaChange("todas") });
   }
   if (p.origen && p.origen !== "todos") {
-    chips.push({
-      key: "origen", label: "Origen", value: p.origen,
-      onRemove: () => p.onOrigenChange("todos"),
-    });
+    push({ key: "origen", label: "Origen", value: p.origen, onRemove: () => p.onOrigenChange("todos") });
   }
   if (p.proveedorId && p.proveedorId !== "todos") {
     const prov = p.proveedores.find((x) => x.id === p.proveedorId);
-    chips.push({
-      key: "proveedor", label: "Proveedor", value: prov?.nombre ?? "—",
-      onRemove: () => p.onProveedorChange("todos"),
-    });
+    push({ key: "proveedor", label: "Proveedor", value: prov?.nombre ?? "—", onRemove: () => p.onProveedorChange("todos") });
   }
   if (p.categoriaPresupuestoId && p.categoriaPresupuestoId !== "todas") {
     const cat = p.categorias.find((x) => x.id === p.categoriaPresupuestoId);
-    chips.push({
-      key: "categoria", label: "Categoría", value: cat?.nombre ?? "—",
-      onRemove: () => p.onCategoriaPresupuestoChange("todas"),
-    });
+    push({ key: "categoria", label: "Categoría", value: cat?.nombre ?? "—", onRemove: () => p.onCategoriaPresupuestoChange("todas") });
   }
   if (p.fechaDesde) {
-    chips.push({
-      key: "fechaDesde", label: "Emisión desde", value: formatDate(p.fechaDesde),
-      onRemove: () => p.onFechaDesdeChange(""),
-    });
+    push({ key: "fechaDesde", label: "Emisión desde", value: formatDate(p.fechaDesde), onRemove: () => p.onFechaDesdeChange("") });
   }
   if (p.fechaHasta) {
-    chips.push({
-      key: "fechaHasta", label: "Emisión hasta", value: formatDate(p.fechaHasta),
-      onRemove: () => p.onFechaHastaChange(""),
-    });
+    push({ key: "fechaHasta", label: "Emisión hasta", value: formatDate(p.fechaHasta), onRemove: () => p.onFechaHastaChange("") });
   }
+  return chips;
+}
 
+export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
+  const chips = buildChips(p);
   if (chips.length === 0) return null;
 
   return (
