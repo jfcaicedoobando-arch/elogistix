@@ -1,51 +1,41 @@
-## Problema
+## Mejorar tooltip de "Profit MXN proyectado"
 
-El sidebar muestra un badge rojo en **"Principal"** con el total agregado de 4 categorías de alertas (`totalAlertas = embarquesDemora + facturasVencidas + garantiasAtoradas + adminPendientes` → 19), pero la página `/inicio` sólo muestra los embarques en demora (3). El usuario lee 19 en el sidebar y espera ver 19 en el dashboard.
+Rediseñar el contenido del `TooltipContent` en `ArribosCard.tsx` para que la información se lea como un mini estado de resultados, no como un bloque denso de texto. Sin cambios de lógica ni de datos.
 
-## Solución: desglosar el badge por módulo
+### Cambios visuales
 
-Quitar el badge agregado de **"Principal"** y exponer cada categoría como un badge sobre el ítem del sidebar al que pertenece, igual que ya se hace con `/embarques` (admin pendientes), `/auditoria` y `/crm`. Cada número en el sidebar coincidirá con el módulo donde se ve el detalle.
+1. **Ancho y respiración**
+   - `max-w-xs` → `w-[320px]` con `p-3` para que las dos columnas (label / valor) nunca se compriman.
+   - Usar `grid grid-cols-[1fr_auto] gap-x-4 gap-y-1` en cada bloque para alinear todos los montos a la derecha en una sola columna numérica.
 
-### Mapeo
+2. **Encabezado más claro**
+   - Título: "Profit proyectado del mes" en `text-sm font-semibold`.
+   - Subtítulo pequeño: "Homologado a MXN" en `text-[10px] text-muted-foreground uppercase tracking-wide`.
 
-| Categoría | Origen actual | Ítem del sidebar |
-|---|---|---|
-| `embarquesDemora` | `fetchSidebarAlertCounts` | `/embarques` (se **suma** al badge actual de adminPendientes) |
-| `facturasVencidas` | `fetchSidebarAlertCounts` | `/facturacion` |
-| `garantiasAtoradas` | `fetchSidebarAlertCounts` | `/embarques` (también vinculado a embarques) — alternativa: `/cxp` |
-| `adminPendientes` | `fetchAdminPendientesCount` | `/embarques` (ya existente) |
-| **Principal** (`/`) | — | **sin badge** |
+3. **Bloque resumen (totales)**
+   - Filas Venta / Costo / Profit con jerarquía:
+     - Venta y Costo: `text-xs` normal.
+     - Profit: fila destacada con fondo sutil (`bg-muted/40 rounded-md px-2 py-1.5`), label en `font-semibold`, monto en `text-base font-bold` con color success/destructive.
+   - Mostrar el margen % entre paréntesis junto al profit (calculado: `profit / venta`).
 
-`embarquesDemora`, `garantiasAtoradas` y `adminPendientes` se acumulan todos sobre `/embarques` (los tres son alertas del ciclo de embarque). `facturasVencidas` se va a `/facturacion`.
+4. **Mini barra de composición Venta vs Costo**
+   - Una barra horizontal de 6px (`h-1.5 rounded-full bg-muted`) con dos segmentos: costo (warning) y profit (success/destructive) en proporción.
+   - Ayuda a "ver" el margen sin leer los números.
+
+5. **Desglose por moneda origen — como tabla**
+   - Convertir las tres filas (USD, EUR, MXN) en una mini-tabla de 3 columnas: `Origen | Venta MXN | Costo MXN`, con header en `text-[10px] uppercase text-muted-foreground` y filas en `tabular-nums text-[11px]`.
+   - Ocultar filas con venta y costo en 0 para reducir ruido.
+
+6. **Footer**
+   - Mantener la nota "Conversión con TC guardado en cada embarque" en `text-[10px] italic text-muted-foreground` separada por un `border-t`.
 
 ### Archivos a tocar
 
-1. **`src/components/layout/SidebarGroupBlock.tsx`** (líneas 60-65)
-   - Eliminar el fallback `item.url === "/" ? totalAlertas : 0`. El badge sólo se mostrará cuando el ítem tenga `badgeCount` explícito.
-   - Quitar la prop `totalAlertas` (ya no se usa).
-
-2. **`src/components/layout/AppSidebar.tsx`**
-   - Quitar el paso de `totalAlertas` a `SidebarGroupBlock` y la lectura de `useSidebarAlerts()` (a menos que se use en otro lado — verificar).
-
-3. **`src/hooks/layout/useAppSidebarSections.ts`**
-   - Renombrar `patchEmbarquesBadge` a `patchSidebarBadges`.
-   - El nuevo `patchSidebarBadges` recibe `{ embarquesAlertas, facturasVencidas }` y aplica:
-     - `/embarques` → `embarquesAlertas` (suma de `embarquesDemora + garantiasAtoradas + adminPendientes`)
-     - `/facturacion` → `facturasVencidas`
-   - Leer las 4 piezas de `useSidebarAlerts()` y construir `embarquesAlertas` antes de invocarlo.
-
-4. **`src/hooks/layout/__tests__/useLayout.test.tsx`** — actualizar el mock de `useSidebarAlerts` si valida el badge.
-
-5. **`src/constants/appVersion.ts`** → `13.98.4`.
-6. **`CHANGELOG.md`** → entrada `[13.98.4]` describiendo el cambio.
+- `src/features/dashboard/components/statusCards/ArribosCard.tsx` — solo el `<TooltipContent>` (líneas 88-124) y un pequeño cálculo de margen %.
+- `CHANGELOG.md` — entrada nueva.
+- `src/constants/appVersion.ts` — bump a `13.98.5`.
 
 ### Verificación
 
-- `bunx vitest run` (todos).
-- Visual en `/inicio`: el ítem **Principal** ya no muestra badge; **Embarques** muestra la suma 3 + demoras + garantías; **Facturación** muestra el conteo de facturas vencidas.
-
-### Lo que NO cambia
-
-- Las queries de Supabase (`fetchSidebarAlertCounts`, `fetchAdminPendientesCount`) intactas.
-- Lógica de las páginas `/inicio`, `/embarques`, `/facturacion` intactas.
-- Permisos y rutas intactos.
+- `bunx vitest run` (no debería romper nada — cambio puramente visual).
+- Inspección manual en `/inicio`: pasar el cursor sobre el monto de profit para ver el tooltip rediseñado.
