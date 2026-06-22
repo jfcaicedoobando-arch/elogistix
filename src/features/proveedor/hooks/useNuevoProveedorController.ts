@@ -39,8 +39,6 @@ export function useNuevoProveedorController(
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
   const [csfLoading, setCsfLoading] = useState(false);
-
-
   const isLogistico = form.categoria === "Logistico";
   const isGasto = form.categoria === "GastoOperativo";
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
@@ -77,7 +75,6 @@ export function useNuevoProveedorController(
     }));
   };
 
-
   const handleTipoChange = (valorSeleccionado: string) => {
     setForm((prev) => ({
       ...prev,
@@ -96,7 +93,6 @@ export function useNuevoProveedorController(
     setDocumentos(lista.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
   };
-
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos((prev) =>
@@ -166,7 +162,6 @@ export function useNuevoProveedorController(
       setSaving(false);
     }
   };
-
 
   const handleCsfUpload = async (file: File) => {
     setCsfLoading(true);
