@@ -52,11 +52,14 @@ export function useEditarProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
+  const esExtranjero = form.origen_proveedor === "Extranjero";
+
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
     if (!form.origen_proveedor) e.origen_proveedor = "El origen es requerido";
     if (!form.nombre.trim()) e.nombre = "El nombre es requerido";
-    if (isLogistico && !form.tipo) e.tipo = "El tipo es requerido";
+    // El tipo sólo se requiere para proveedores extranjeros logísticos.
+    if (isLogistico && esExtranjero && !form.tipo) e.tipo = "El tipo es requerido";
     if (isGasto && !form.subtipo_gasto) e.subtipo_gasto = "El subtipo de gasto es requerido";
     if (!form.rfc.trim()) {
       e.rfc = `El ${form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC"} es requerido`;
@@ -64,7 +67,7 @@ export function useEditarProveedorController(
     if (isAgenteCarga && !form.pais) e.pais = "El país es requerido";
     if (form.email && !EMAIL_RE.test(form.email)) e.email = "Email inválido";
     return e;
-  }, [form.origen_proveedor, form.nombre, form.rfc, form.pais, form.email, form.tipo, form.subtipo_gasto, isAgenteCarga, isLogistico, isGasto]);
+  }, [form.origen_proveedor, form.nombre, form.rfc, form.pais, form.email, form.tipo, form.subtipo_gasto, isAgenteCarga, isLogistico, isGasto, esExtranjero]);
 
   const isValid = Object.keys(errors).length === 0;
 
@@ -72,14 +75,22 @@ export function useEditarProveedorController(
     setTouched((prev) => ({ ...prev, [field]: true }));
 
   const setField = <K extends keyof Proveedor>(field: K, value: Proveedor[K]) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value } as Proveedor;
+      if (field === "origen_proveedor" && value === "Nacional") {
+        next.tipo = null;
+        next.pais = "";
+      }
+      return next;
+    });
 
   const handleCategoriaChange = (valor: string) => {
     const next = valor as CategoriaProveedor;
     setForm((prev) => ({
       ...prev,
       categoria: next,
-      tipo: next === "Logistico" ? (prev.tipo ?? "Naviera") : null,
+      // No autoseleccionamos tipo; sólo aplica para Extranjero y lo elige el usuario.
+      tipo: next === "Logistico" ? prev.tipo : null,
       subtipo_gasto: next === "GastoOperativo" ? (prev.subtipo_gasto ?? "Otros") : null,
       pais: next === "Logistico" ? prev.pais : "",
     }));
