@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.104.1] - 2026-06-22
+- **fix(sidebar)**: la rueda del mouse ahora hace scroll vertical cuando el sidebar está colapsado (modo icono). Se quitó el override `overflow-hidden` que recortaba los íconos inferiores y bloqueaba el wheel.
+
 ## [13.104.0] - 2026-06-22
 - **feat(cxp)**: nueva sección "Historial" plegable en el dialog de detalle de factura de proveedor. Línea de tiempo unificada con captura, aprobación/rechazo (con motivo), pagos (monto + método + referencia), notas de crédito y eliminación. Emails de los actores resueltos en BD vía RPC `historial_proveedor_factura` (SECURITY DEFINER con check de membresía organizacional). Se invalida automáticamente al aprobar, pagar o aplicar notas.
 
