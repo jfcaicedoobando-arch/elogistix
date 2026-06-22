@@ -15,7 +15,7 @@ export async function aprobarFacturaProveedor(
   const { data, error } = await supabase.rpc("aprobar_factura_proveedor", {
     p_id: id,
     p_aprobar: aprobar,
-    p_motivo: motivo ?? null,
+    p_motivo: motivo,
   });
   if (error) throw error;
   return data as unknown as Tables<"proveedor_facturas">;
