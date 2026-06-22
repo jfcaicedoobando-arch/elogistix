@@ -14,6 +14,7 @@ import {
   type TipoProveedor,
 } from "./useNuevoProveedorController.constants";
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
+import { preparePayload } from "./useNuevoProveedorController.helpers";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 export {
