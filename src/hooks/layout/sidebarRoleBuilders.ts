@@ -8,6 +8,7 @@ import {
   SIDEBAR_SISTEMA_ITEMS,
   SIDEBAR_COSTEO_ITEMS,
   SIDEBAR_BANDEJAS_ITEMS,
+  SIDEBAR_COMPRAS_HUB,
 } from "@/components/layout/sidebarItems";
 
 export interface SidebarSection {
