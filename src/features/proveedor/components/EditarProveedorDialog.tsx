@@ -10,7 +10,6 @@ import {
   TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
-  CATEGORIAS_PROVEEDOR,
   SUBTIPOS_GASTO_OPERATIVO,
 } from "@/constants/proveedorConstants";
 import { useEditarProveedorController } from "@/features/proveedor/hooks";
