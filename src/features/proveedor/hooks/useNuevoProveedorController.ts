@@ -75,7 +75,6 @@ export function useNuevoProveedorController(
     }));
   };
 
-
   const handleTipoChange = (valorSeleccionado: string) => {
     setForm((prev) => ({
       ...prev,
@@ -94,7 +93,6 @@ export function useNuevoProveedorController(
     setDocumentos(lista.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
   };
-
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos((prev) =>
@@ -164,7 +162,6 @@ export function useNuevoProveedorController(
       setSaving(false);
     }
   };
-
 
   const handleCsfUpload = async (file: File) => {
     setCsfLoading(true);
