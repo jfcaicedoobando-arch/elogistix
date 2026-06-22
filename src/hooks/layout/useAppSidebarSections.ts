@@ -153,6 +153,33 @@ const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
 ];
 
+const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  {
+    label: "Compras",
+    items: [
+      ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]),
+      ...filterGestion(["/cxp"]),
+      ...filterDirectorio(["/proveedores"]),
+    ],
+  },
+  {
+    label: "Facturación",
+    items: [
+      ...filterBandejas(["/facturacion/por-emitir"]),
+      ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]),
+    ],
+  },
+  { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+  { label: "CRM", items: crmItems },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Sistema", items: sistemaItems },
+];
+
 const ROLE_BUILDERS: Record<string, Builder> = {
   vendedor: buildVendedor,
   customer_service: buildCustomerService,
@@ -166,6 +193,8 @@ const ROLE_BUILDERS: Record<string, Builder> = {
   ejecutivo_cobranza: buildEjecutivoCobranza,
   gerente_comercial: buildGerenteComercial,
   gerente_operaciones: buildGerenteOperaciones,
+  admin: buildAdmin,
+  admin_org: buildAdmin,
 };
 
 function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
