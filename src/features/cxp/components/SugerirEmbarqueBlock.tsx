@@ -90,7 +90,7 @@ export function SugerirEmbarqueBlock({
         </Label>
       </div>
       <p className="text-xs text-muted-foreground">
-        Liga la factura a un embarque y crearemos el concepto de costo automáticamente.
+        Liga la factura a un embarque y crearemos el costo directo del embarque automáticamente.
       </p>
 
       <div className="relative">

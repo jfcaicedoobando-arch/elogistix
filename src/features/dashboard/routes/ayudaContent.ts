@@ -32,7 +32,7 @@ export const GLOSARIO: GlossaryTerm[] = [
   { termino: "Proforma", definicion: "Documento previo a la factura que envías al cliente para que apruebe los conceptos antes de timbrar. No tiene valor fiscal." },
   { termino: "Factura", definicion: "Comprobante fiscal con valor legal (en México requiere timbrado SAT con CFDI 4.0). Aquí se genera y se conserva en PDF/XML." },
   { termino: "Demoras", definicion: "Cargos que cobra la naviera o el puerto cuando el contenedor se queda más días de los gratuitos (típico 7-10 días)." },
-  { termino: "Liquidación", definicion: "Pago a proveedores (navieras, aduanas, fletes locales). En el ERP se marca cada concepto de costo como Pagado/Pendiente." },
+  { termino: "Liquidación", definicion: "Pago a proveedores (navieras, aduanas, fletes locales). En el ERP se marca cada costo directo como Pagado/Pendiente." },
   { termino: "Hueco de facturación", definicion: "Embarques cuyo ETD ya pasó hace más de 5 días y no tienen factura emitida — el proveedor ya nos cobró pero no hemos facturado al cliente. Indicador clave de capital de trabajo." },
   { termino: "Aging de cartera", definicion: "Clasificación de facturas pendientes por antigüedad (0-30, 31-60, 61-90, 90+ días). Mide la calidad de la cobranza." },
   { termino: "Tipo de cambio", definicion: "Conversión USD→MXN o EUR→MXN que se aplica al embarque. Se obtiene en vivo de Frankfurter.app con caché de 1 hora; se puede sobrescribir manualmente." },

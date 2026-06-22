@@ -61,7 +61,7 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{categoria ? "Editar" : "Nueva"} categoría</DialogTitle>
-          <DialogDescription>Categorías de gasto operativo para el presupuesto.</DialogDescription>
+          <DialogDescription>Categorías de gasto de administración para el presupuesto.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
