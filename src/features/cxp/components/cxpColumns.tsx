@@ -29,11 +29,12 @@ export interface CxPColumnsOptions {
   canEdit: boolean;
   onRegistrarPago: (f: FacturaCxP) => void;
   onVerDetalle: (f: FacturaCxP) => void;
+  onEditar: (f: FacturaCxP) => void;
   onEliminar: (f: FacturaCxP) => void;
 }
 
 export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, unknown>[] {
-  const { canEdit, onRegistrarPago, onVerDetalle, onEliminar } = opts;
+  const { canEdit, onRegistrarPago, onVerDetalle, onEditar, onEliminar } = opts;
   return defineColumns<FacturaCxP>([
     {
       id: "folio", header: "Folio proveedor",
