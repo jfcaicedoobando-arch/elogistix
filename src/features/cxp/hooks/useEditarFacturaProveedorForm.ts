@@ -145,7 +145,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       subtotal: Number(values.subtotal) || 0,
       iva: Number(values.iva) || 0,
       retenciones: Number(values.retenciones) || 0,
-      categoria_presupuesto_id: values.categoriaId || null,
+      categoria_presupuesto_id: values.categoriaId,
       notas: values.notas,
     };
     try {
