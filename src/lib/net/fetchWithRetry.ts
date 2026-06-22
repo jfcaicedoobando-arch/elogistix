@@ -26,11 +26,48 @@ const DEFAULT_BACKOFF = [1000, 3000];
 function isTransientError(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
   if (err.name === "AbortError") return true;
-  if (err.name === "TypeError" && /failed to fetch|network/i.test(err.message)) return true;
-  return false;
+  return err.name === "TypeError" && /failed to fetch|network/i.test(err.message);
+}
+
+function describeError(err: unknown): string {
+  return err instanceof Error ? `${err.name}:${err.message}` : "unknown";
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+interface AttemptResult {
+  /** Si está definido, el loop debe terminar y devolver esto. */
+  finalResponse?: Response;
+  /** Si está definido, el loop debe terminar y lanzar. */
+  fatalError?: unknown;
+  /** Si está definido, hubo un fallo retryable; el loop continúa. */
+  retryReason?: string;
+}
+
+async function runAttempt(
+  url: string,
+  buildInit: () => RequestInit,
+  timeoutMs: number,
+  isLast: boolean,
+): Promise<AttemptResult> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const init = buildInit();
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
+    if (res.ok || !RETRYABLE_STATUS.has(res.status) || isLast) {
+      return { finalResponse: res };
+    }
+    return { retryReason: `http_${res.status}` };
+  } catch (err) {
+    if (!isTransientError(err) || isLast) {
+      return { fatalError: err };
+    }
+    return { retryReason: describeError(err) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export async function fetchWithRetry(
   url: string,
@@ -42,36 +79,14 @@ export async function fetchWithRetry(
   const backoff = opts.backoffMs ?? DEFAULT_BACKOFF;
   const buildInit = typeof initOrBuilder === "function" ? initOrBuilder : () => initOrBuilder;
 
-  let lastErr: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-    try {
-      const init = buildInit();
-      const res = await fetch(url, { ...init, signal: ctrl.signal });
-      clearTimeout(timer);
-
-      if (res.ok || !RETRYABLE_STATUS.has(res.status) || attempt === maxAttempts) {
-        return res;
-      }
-      // 5xx/408/429 con intentos restantes → retry.
-      opts.onRetry?.({ attempt, reason: `http_${res.status}` });
-    } catch (err) {
-      clearTimeout(timer);
-      lastErr = err;
-      const transient = isTransientError(err);
-      if (!transient || attempt === maxAttempts) {
-        throw err;
-      }
-      opts.onRetry?.({
-        attempt,
-        reason: err instanceof Error ? `${err.name}:${err.message}` : "unknown",
-      });
-    }
-
+    const result = await runAttempt(url, buildInit, timeoutMs, attempt === maxAttempts);
+    if (result.finalResponse) return result.finalResponse;
+    if (result.fatalError !== undefined) throw result.fatalError;
+    opts.onRetry?.({ attempt, reason: result.retryReason ?? "unknown" });
     const pause = backoff[attempt - 1] ?? backoff[backoff.length - 1] ?? 1000;
     await sleep(pause);
   }
-  // Inalcanzable, pero TS lo exige.
-  throw lastErr ?? new Error("fetchWithRetry: agotó intentos");
+  // Inalcanzable: el último intento siempre cierra con finalResponse o fatalError.
+  throw new Error("fetchWithRetry: agotó intentos sin resultado");
 }
