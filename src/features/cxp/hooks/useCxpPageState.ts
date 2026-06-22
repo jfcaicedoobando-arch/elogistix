@@ -31,6 +31,7 @@ export function useCxpPageState() {
     origen !== "todos" ||
     aprobacion !== "todos" ||
     proveedorId !== "todos" ||
+    categoriaPresupuestoId !== "todas" ||
     fechaDesde !== "" ||
     fechaHasta !== "";
 
@@ -41,6 +42,7 @@ export function useCxpPageState() {
     origen,
     aprobacion,
     proveedor_id: proveedorId === "todos" ? undefined : proveedorId,
+    categoria_presupuesto_id: categoriaPresupuestoId === "todas" ? undefined : categoriaPresupuestoId,
     fecha_desde: fechaDesde || undefined,
     fecha_hasta: fechaHasta || undefined,
   };
@@ -53,6 +55,7 @@ export function useCxpPageState() {
     origen, setOrigen,
     aprobacion, setAprobacion,
     proveedorId, setProveedorId,
+    categoriaPresupuestoId, setCategoriaPresupuestoId,
     fechaDesde, setFechaDesde,
     fechaHasta, setFechaHasta,
     hayFiltros,
