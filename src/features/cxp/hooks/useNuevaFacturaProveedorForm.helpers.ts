@@ -55,6 +55,7 @@ export function validateFactura(
   const next: Partial<Record<keyof FacturaFormValues, string>> = {};
   if (!values.provId) next.provId = "Selecciona un proveedor";
   if (!values.folio.trim()) next.folio = "Captura el folio del proveedor";
+  if (!values.categoriaId) next.categoriaId = "Selecciona una categoría contable";
   if (total <= 0) next.subtotal = "El total debe ser mayor a 0";
   if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
     next.tc = "Captura el tipo de cambio";
