@@ -3,9 +3,17 @@
  *
  * Lista facturas de proveedor con saldo calculado (vía v_proveedor_facturas_saldo),
  * KPIs (por pagar / vencido / por vencer 7d) y CRUD básico.
+ *
+ * Lógica pura (clasificación, mapeo, filtros cliente) en `./proveedorFacturas.helpers`.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import {
+  PROVEEDOR_FACTURAS_SELECT,
+  mapJoinedRow,
+  aplicarFiltrosCliente,
+  type Joined,
+} from "./proveedorFacturas.helpers";
 
 export type ProveedorFacturaRow = Tables<"proveedor_facturas">;
 export type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
@@ -44,43 +52,10 @@ export interface FetchCxPFiltros {
   fecha_hasta?: string;
 }
 
-function diasVencido(fechaVenc: string | null): number {
-  if (!fechaVenc) return 0;
-  const venc = new Date(fechaVenc + "T00:00:00");
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  return Math.floor((hoy.getTime() - venc.getTime()) / 86_400_000);
-}
-
-function clasificar(saldo: number, dias: number, estado: EstadoProveedorFactura): EstatusCxP {
-  if (estado === "Pagada") return "Pagada";
-  if (saldo <= 0.01) return "Sin saldo";
-  if (dias > 0) return "Vencida";
-  if (dias >= -3) return "Por vencer";
-  return "Vigente";
-}
-
-type Joined = Pick<
-  ProveedorFacturaRow,
-  | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor"
-  | "fecha_emision" | "fecha_vencimiento" | "moneda" | "total" | "estado" | "tipo_cambio_usd"
-  | "estado_aprobacion" | "motivo_rechazo"
-> & {
-  pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
-  proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
-  proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
-};
-
 export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
   let q = supabase
     .from("proveedor_facturas")
-    .select(`
-      id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
-      fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
-      estado_aprobacion, motivo_rechazo,
-      pagos_proveedor(monto, deleted_at),
-      proveedor_notas_credito(monto, estado, deleted_at),
-      proveedores(origen_proveedor)
-    `)
+    .select(PROVEEDOR_FACTURAS_SELECT)
     .neq("estado", "Cancelada")
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
     .limit(2000);
@@ -111,63 +86,13 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
 export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | null> {
   const { data, error } = await supabase
     .from("proveedor_facturas")
-    .select(`
-      id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
-      fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
-      estado_aprobacion, motivo_rechazo,
-      pagos_proveedor(monto, deleted_at),
-      proveedor_notas_credito(monto, estado, deleted_at),
-      proveedores(origen_proveedor)
-    `)
+    .select(PROVEEDOR_FACTURAS_SELECT)
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   // SAFE-CAST: mismo shape `Joined` validado por el select de arriba.
   return mapJoinedRow(data as unknown as Joined);
-}
-
-function mapJoinedRow(f: Joined): FacturaCxP {
-  const pagado = (f.pagos_proveedor ?? [])
-    .filter(p => !p.deleted_at)
-    .reduce((s, p) => s + Number(p.monto), 0);
-  const nc = (f.proveedor_notas_credito ?? [])
-    .filter(n => !n.deleted_at && n.estado === "Aplicada")
-    .reduce((s, n) => s + Number(n.monto), 0);
-  const total = Number(f.total);
-  const saldo = Math.max(0, total - pagado - nc);
-  // Una factura ya pagada (o sin saldo) nunca debe mostrar días vencidos.
-  const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
-  const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
-  return {
-    id: f.id,
-    proveedor_id: f.proveedor_id,
-    proveedor_nombre: f.proveedor_nombre,
-    proveedor_origen: f.proveedores?.origen_proveedor ?? null,
-    embarque_id: f.embarque_id,
-    folio_proveedor: f.folio_proveedor,
-    fecha_emision: f.fecha_emision,
-    fecha_vencimiento: f.fecha_vencimiento,
-    dias_vencido: Math.max(0, dv),
-    moneda: f.moneda,
-    total,
-    pagado,
-    notas_credito: nc,
-    saldo,
-    estado: f.estado,
-    estatus: clasificar(saldo, dv, f.estado),
-    tipo_cambio_usd: Number(f.tipo_cambio_usd),
-    estado_aprobacion: f.estado_aprobacion,
-    motivo_rechazo: f.motivo_rechazo,
-  };
-}
-
-function aplicarFiltrosCliente(rows: FacturaCxP[], filtros: FetchCxPFiltros): FacturaCxP[] {
-  let r = rows;
-  if (filtros.estatus && filtros.estatus !== "todos") r = r.filter(x => x.estatus === filtros.estatus);
-  if (filtros.origen && filtros.origen !== "todos") r = r.filter(x => x.proveedor_origen === filtros.origen);
-  if (filtros.aprobacion && filtros.aprobacion !== "todos") r = r.filter(x => x.estado_aprobacion === filtros.aprobacion);
-  return r;
 }
 
 export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";
@@ -204,8 +129,6 @@ export async function existeFacturaDuplicada(
   return (data ?? []).length > 0;
 }
 
-
-
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
   const { error } = await supabase
     .from("proveedor_facturas")
@@ -213,5 +136,3 @@ export async function softDeleteFacturaProveedor(id: string, userId: string | nu
     .eq("id", id);
   if (error) throw error;
 }
-
-
