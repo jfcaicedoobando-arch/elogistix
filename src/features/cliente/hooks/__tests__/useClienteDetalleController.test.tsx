@@ -59,6 +59,8 @@ describe("useClienteDetalleController", () => {
       contacto: "Cont",
       email: "email@test.com",
       telefono: "123",
+      regimen_fiscal: "601",
+      uso_cfdi_default: "G03",
     };
     
     await act(async () => {

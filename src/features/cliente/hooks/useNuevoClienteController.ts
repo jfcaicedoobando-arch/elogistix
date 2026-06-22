@@ -10,6 +10,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
+  regimen_fiscal: "", uso_cfdi_default: "G03",
 };
 
 export const DOCS_OBLIGATORIOS = [
@@ -43,7 +44,7 @@ export function useNuevoClienteController(onClose: () => void) {
     setForm(prev => ({ ...prev, [field]: value }));
 
   const isStep1Valid = () =>
-    Boolean(form.nombre.trim() && form.rfc.trim() && form.cp.trim());
+    Boolean(form.nombre.trim() && form.rfc.trim() && form.cp.trim() && form.regimen_fiscal.trim());
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
@@ -123,6 +124,7 @@ export function useNuevoClienteController(onClose: () => void) {
         direccion: datos.direccion || prev.direccion,
         ciudad: datos.ciudad || prev.ciudad,
         estado: datos.estado || prev.estado,
+        regimen_fiscal: datos.regimen_fiscal || prev.regimen_fiscal,
       }));
 
       setCsfFile(file);

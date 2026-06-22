@@ -161,6 +161,8 @@ export default function ClienteDetalle() {
           contacto: cliente.contacto,
           email: cliente.email,
           telefono: cliente.telefono,
+          regimen_fiscal: cliente.regimen_fiscal ?? "",
+          uso_cfdi_default: cliente.uso_cfdi_default ?? "",
         }}
         contactDialogOpen={contactDialogOpen}
         setContactDialogOpen={setContactDialogOpen}

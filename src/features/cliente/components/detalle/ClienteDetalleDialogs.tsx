@@ -12,6 +12,8 @@ interface Cliente {
   contacto: string;
   email: string;
   telefono: string;
+  regimen_fiscal: string;
+  uso_cfdi_default: string;
 }
 
 interface Props {

@@ -20,6 +20,8 @@ export const CLIENTE_TEMPLATE_HEADERS = [
   "estado",
   "cp",
   "dias_credito",
+  "regimen_fiscal",
+  "uso_cfdi_default",
 ] as const;
 
 const clienteRowSchema = z.object({
@@ -45,6 +47,8 @@ const clienteRowSchema = z.object({
       (v) => v === undefined || v === "" || /^\d+$/.test(v),
       "Días de crédito: debe ser entero.",
     ),
+  regimen_fiscal: z.string().trim().max(10).optional(),
+  uso_cfdi_default: z.string().trim().max(10).optional(),
 });
 
 export function mapClienteRows(
@@ -73,6 +77,8 @@ export function mapClienteRows(
       estado: optional(v.estado) ?? "",
       cp: optional(v.cp) ?? "",
       dias_credito: v.dias_credito ? Number(v.dias_credito) : null,
+      regimen_fiscal: optional(v.regimen_fiscal) ?? null,
+      uso_cfdi_default: optional(v.uso_cfdi_default) ?? null,
       ...(organizationId ? { organization_id: organizationId } : {}),
     };
     valid.push({ rowNumber, payload });
