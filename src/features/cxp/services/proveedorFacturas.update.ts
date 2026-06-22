@@ -57,6 +57,8 @@ export async function fetchFacturaParaEdicion(id: string): Promise<FacturaParaEd
   if (error) throw error;
   // SAFE-CAST: select acotado al subset declarado en FacturaParaEdicion.
   return (data as FacturaParaEdicion | null) ?? null;
+}
+
 
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
