@@ -162,6 +162,10 @@ export default function Cxp() {
       </Card>
 
       <DialogNuevaFacturaProveedor open={f.openNueva} onOpenChange={f.setOpenNueva} />
+      <DialogEditarFacturaProveedor
+        factura={f.editar ? data.find((d) => d.id === f.editar!.id) ?? f.editar : null}
+        onOpenChange={(o) => !o && f.setEditar(null)}
+      />
       <DialogRegistrarPagoProveedor
         open={!!f.pagar}
         onOpenChange={(o) => !o && f.setPagar(null)}
