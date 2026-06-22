@@ -63,6 +63,10 @@ const META: Record<string, CierreCheckMeta> = {
     label: "Datos de contenedores capturados (peso y volumen)", responsable: "Operador",
     ruta: rutaContenedores, ctaLabel: "Ir a Resumen", formatDetalle: fmtContenedores,
   },
+  contenedores_fechas_completas: {
+    label: "Fechas de descarga y devolución capturadas", responsable: "Operador",
+    ruta: rutaContenedores, ctaLabel: "Ir a Resumen", formatDetalle: fmtContenedoresFechas,
+  },
   venta_conceptos_facturados: {
     label: "Todos los conceptos de venta facturados", responsable: "Contador",
     ruta: buildRuta("facturacion", "venta-pendientes"), ctaLabel: "Ir a Facturación",
