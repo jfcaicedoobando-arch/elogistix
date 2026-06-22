@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.102.3] - 2026-06-22
+- **fix(lint)**: `fetchFacturasCxP` excedía complejidad ciclomática (17 > 16) por el nuevo filtro `aprobacion`. Extraídos los filtros post-query a helper `aplicarFiltrosCliente`.
+
 ## [13.102.2] - 2026-06-22
 - **fix(power-of-10)**: `proveedorFacturas.ts` rebasaba 200 líneas tras Fase B. Extraída `fetchPendientesAprobacionCount` a nuevo módulo `cxpAprobacionCount.ts` (re-exportado desde el barrel).
 
