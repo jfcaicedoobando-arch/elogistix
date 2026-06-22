@@ -68,7 +68,11 @@ describe("fetchWithRetry", () => {
 
   it("propaga el error si todos los intentos fallan con TypeError", async () => {
     const failure = new TypeError("Failed to fetch");
-    const fetchSpy = vi.fn().mockRejectedValue(failure);
+    const fetchSpy = vi
+      .fn()
+      .mockRejectedValueOnce(failure)
+      .mockRejectedValueOnce(failure)
+      .mockRejectedValueOnce(failure);
     vi.stubGlobal("fetch", fetchSpy);
     await expect(
       runWithTimers(
