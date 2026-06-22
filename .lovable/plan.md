@@ -1,64 +1,32 @@
-## Problema
+## Bug
 
-El Paso 2 del wizard "Nuevo proveedor" sólo ofrece banco mexicano (lista `BANCOS_MEXICO`) y CLABE de 18 dígitos. Para proveedores **Extranjeros** (transferencias internacionales) esos campos no aplican: necesitan SWIFT/BIC, IBAN o account number, dirección del banco, etc.
+Al crear un proveedor (nacional o internacional) aparecen **dos toasts** de éxito apilados:
 
-Analogía: hoy el formulario es como un sobre con casilla "código postal mexicano". Si el destinatario vive en otro país, esa casilla estorba — hay que mostrar la dirección internacional en su lugar.
+1. `useProveedores.ts` línea 63 — el `onSuccess` de la mutación `addProveedorMutation` lanza `"Proveedor creado"`.
+2. `useProveedoresCrear.ts` línea 30 — el wrapper que usa la página `Proveedores` lanza además `"Proveedor creado correctamente"` tras el `await`.
 
-## Solución
+Analogía: es como si el horno sonara cuando termina el pan, y además el panadero gritara "¡listo!" — dos avisos para el mismo evento.
 
-Mostrar campos diferentes en Paso 2 según `origen_proveedor`:
+El mismo doble toast ocurre en `CrearProveedorDesdeCfdiDialog.tsx` (línea 51 lanza `"Proveedor creado"` después del `await addProveedor`).
 
-**Si `Nacional`** (igual que hoy):
-- Banco (select `BANCOS_MEXICO`)
-- CLABE interbancaria (18 dígitos)
+## Fix
 
-**Si `Extranjero`** (nuevo):
-- Nombre del banco (texto libre)
-- País del banco (texto libre)
-- SWIFT / BIC (8 u 11 caracteres alfanuméricos)
-- IBAN o número de cuenta (texto libre)
-- ABA / Routing number (opcional, para EE.UU.)
-- Dirección del banco (opcional, textarea)
-- Banco intermediario y su SWIFT (opcionales, un solo input cada uno)
-- Beneficiario (texto, default = nombre del proveedor)
-- Referencia / notas para el pago (opcional)
+Quitar el toast del `onSuccess` dentro de la mutación y dejar que cada call site (que ya tiene contexto del flujo: creación normal, vinculación desde CFDI, etc.) emita su propio mensaje. Es el patrón ya usado para los toasts de error (el wrapper decide).
 
-Todo opcional — el wizard sigue permitiendo guardar sin datos bancarios.
+### Cambios
 
-## Cambios técnicos
+1. **`src/features/proveedor/hooks/useProveedores.ts`** — eliminar la línea `notifySuccess(undefined, { title: "Proveedor creado" })` del `onSuccess` de `addProveedorMutation`. Conservar la invalidación de queries.
 
-### 1. Migración de base de datos
-Agregar columnas nullable a `public.proveedores`:
-- `banco_pais` text
-- `swift_bic` text
-- `iban` text
-- `aba_routing` text
-- `banco_direccion` text
-- `banco_intermediario` text
-- `banco_intermediario_swift` text
-- `beneficiario` text
-- `referencia_pago` text
+2. **Versionado**
+   - `src/constants/appVersion.ts` → `13.105.1`
+   - `CHANGELOG.md` → entrada `## [13.105.1]` describiendo el fix de doble toast al crear proveedor.
 
-(Reutilizamos `banco` como nombre del banco — funciona para nacionales e internacionales.)
+### Fuera de alcance
 
-### 2. Frontend
-- **`useNuevoProveedorController.constants.ts`**: agregar los 9 campos al `EMPTY_PROVEEDOR_FORM`.
-- **`NuevoProveedorStep2.tsx`**: split en dos sub-componentes (`Step2DatosNacional`, `Step2DatosInternacional`) y elegir según `c.form.origen_proveedor`. Mantener archivo ≤200 líneas.
-- **`useNuevoProveedorController.ts`**: validar SWIFT con regex `/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/` (sólo si se capturó), y omitir la validación de CLABE cuando es extranjero.
-- **`proveedoresCrud.ts`**: agregar los nuevos campos al `SELECT` constante.
-- **`EditarProveedorDialog.tsx` + `useEditarProveedorController.ts`**: replicar los mismos campos condicionales para editar.
-- **`ProveedorDatosBancariosCard.tsx`**: mostrar bloque internacional cuando el proveedor tenga SWIFT/IBAN, ocultando los campos vacíos.
+- No se tocan los toasts de `updateProveedor` / `deleteProveedor` (no presentan el bug porque sus call sites no duplican el toast).
+- No se cambia el texto de los mensajes existentes en los call sites.
 
-### 3. Tests
-Actualizar `useNuevoProveedorController.test.tsx` y `useEditarProveedorController.test.tsx` para cubrir:
-- Extranjero sin CLABE pasa validación.
-- SWIFT inválido bloquea guardado.
+### Verificación
 
-### 4. Versionado y changelog
-- `APP_VERSION` → `13.105.0` (feat).
-- Entrada `[13.105.0]` en `CHANGELOG.md` describiendo soporte de datos bancarios internacionales.
-
-## Fuera de alcance
-- No tocamos el módulo de Pagos (CxP). Hoy `pagos_proveedor` ya guarda monto/moneda/método/referencia sin validar contra los datos bancarios; eso sigue igual.
-- No agregamos validación de IBAN por país (sólo formato libre).
-- No migramos proveedores existentes — las columnas quedan en `NULL` y se llenan al editar.
+- Crear un proveedor internacional desde el wizard → debe aparecer un solo toast `"Proveedor creado correctamente"`.
+- Crear proveedor desde el diálogo CFDI → un solo toast `"Proveedor creado"`.
