@@ -1,83 +1,92 @@
-## Objetivo
+# Auditoría: Módulo de Compras
 
-Convertir la tabla "CxP — Por capturar" de una lista plana en una bandeja de trabajo: filtros útiles, búsqueda, ordenamiento, acción directa para capturar factura por fila y mejor jerarquía visual.
+Alcance auditado: **Proveedores** (`/proveedores`), **Facturas de proveedor / CxP** (`/cxp`), **Por capturar** (`/cxp/por-capturar`).
 
-## Cambios visibles
+---
 
-1. **Toolbar arriba de la tabla**
-   - Buscador de texto (expediente, cliente) con debounce 250ms.
-   - Chips de filtro:
-     - **Estatus de captura**: Todos · Sin facturas · Con facturas parciales · Con facturas
-     - **Antigüedad última factura**: Todos · Sin captura · >7 días · >30 días
-   - Botón "Ordenar por" (expediente, antigüedad, monto, # facturas) ↑↓.
-   - Contador "N de M embarques" a la derecha.
+## 1. Diagnóstico — ¿qué tan complicado/confuso está?
 
-2. **Tabla mejorada**
-   - Zebra-striping + densidad cómoda (h-10).
-   - Nueva columna **Avance** con `Progress` bar (facturas vs presupuestado en %, basado en `costos_presupuestados` y `monto_facturado_acum` que ya viene en `proveedor_facturas`).  
-     *Nota:* la RPC actual no expone `monto_facturado`. Lo agregamos al RPC (ver sección técnica).
-   - Badges contextuales:
-     - "Sin captura" (gris) si `facturas_capturadas = 0`
-     - "Parcial" (ámbar) si hay facturas pero `monto_facturado < costos_presupuestados`
-     - "Completo" (verde) si `monto_facturado >= costos_presupuestados`
-   - Columna "Última factura" muestra fecha + chip relativo ("hace 3 d", "hace 25 d" en ámbar si >7).
-   - Header sticky para que se mantenga visible al hacer scroll.
+### Lo que SÍ está bien
 
-3. **Acción por fila: "Capturar factura"**
-   - Botón primario compacto al final de cada renglón (`<Button size="sm">`).
-   - Abre el modal `DialogNuevaFacturaProveedor` ya conocido, pero con el embarque **pre-seleccionado** (vía nueva prop `initialEmbarqueAdHoc`). El bloque `VincularEmbarqueSection` arranca con ese embarque listo.
-   - Acción secundaria "Ver embarque" sigue accesible vía el link del expediente (igual que hoy).
+- Captura de factura con CFDI XML auto-llenado (mejor que muchos ERPs SMB).
+- Vínculo factura↔embarque desde el mismo diálogo.
+- Bandeja "Por capturar" partiendo del presupuesto del embarque (flujo correcto).
+- Separación limpia: rutas cortas (<200 líneas), hooks aislados, tests.
+- KPIs y filtros ya existen en CxP.
 
-4. **Estados vacíos y carga**
-   - Skeleton rows (5) en loading en vez de "Cargando…" centrado.
-   - `EmptyState` reutilizable con icono `Inbox`, título "Sin embarques pendientes de captura" y CTA "Ver todos los embarques".
-   - Empty filtrado: "Ningún embarque coincide con los filtros" + botón "Limpiar filtros".
+### Fricciones / confusiones detectadas
 
-5. **Cards superiores afinadas**
-   - Mantener las 3 cards pero alinear tipografía, agregar icono e indicar moneda MXN explícitamente.
 
-## Fuera de alcance
+| #   | Problema                                                                                                                                                 | Dónde se siente                |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| F1  | **Tres rutas separadas sin "hub" de Compras.** El usuario no percibe que Proveedores + CxP + Por capturar son el mismo módulo.                           | Sidebar / navegación           |
+| F2  | **No hay Orden de Compra (PO).** Se salta del presupuesto a la factura. Sin PO no hay aprobación previa ni *three-way match* (PO ↔ recepción ↔ factura). | Flujo completo                 |
+| F3  | **No hay flujo de aprobación** de facturas (>X monto requiere visto bueno).                                                                              | `DialogNuevaFacturaProveedor`  |
+| F4  | **Pagos = registro manual.** No hay propuesta de pago / lote de pagos / generación de layout bancario (SPEI BBVA, aunque ya existe `bbva_movimientos`).  | `DialogRegistrarPagoProveedor` |
+| F5  | **Conciliación bancaria desconectada.** `bbva_movimientos` existe pero no se ata a `pagos_proveedor`.                                                    | Backend                        |
+| F6  | **Notas de crédito de proveedor** existen en tabla (`proveedor_notas_credito`) pero no hay UI para aplicarlas contra factura.                            | UI                             |
+| F7  | **Sin antigüedad de saldos (aging 0-30/31-60/61-90/90+).** Solo hay total pendiente.                                                                     | CxP                            |
+| F8  | **Sin cierre/bloqueo por periodo.** Cualquiera puede editar facturas de meses cerrados.                                                                  | Backend                        |
+| F9  | **Validación de duplicados débil.** No se bloquea capturar dos veces el mismo `folio + RFC + fecha`.                                                     | `useNuevaFacturaProveedorForm` |
+| F10 | **Por capturar y CxP usan diseños distintos** (Table vanilla vs DataTable, headers distintos, KPIs distintos). Rompe consistencia.                       | UX                             |
+| F11 | **Acciones en fila escondidas**: en CxP el botón "Capturar factura" está arriba; en Por capturar está por fila. Inconsistente.                           | UX                             |
+| F12 | **Sin búsqueda global por RFC/folio** que cruce los 3 submódulos.                                                                                        | Navegación                     |
+| F13 | **Catálogo de proveedores sin "salud del proveedor"**: días promedio de pago, % facturas con problemas, saldo vivo. Hoy solo es directorio.              | `/proveedores/:id`             |
+| F14 | **Sin recordatorios de retenciones/DIOT** (México). El usuario captura IVA/ret pero no hay reporte DIOT ni complemento de pago tracking.                 | Reportes                       |
+| F15 | **Complemento de Pago (CFDI 4.0)** — no se registra ni se solicita al proveedor. Es obligatorio en MX.                                                   | Backend + UI                   |
 
-- Paginación (con `LIMIT 500` actual y filtros locales basta; lo dejamos para una iteración futura).
-- Exportar a CSV.
-- Nuevas columnas tipo ruta/ETA/proveedores pendientes (rechazado: "redesign completo" no fue la opción elegida).
-- Cambios al modal de captura más allá de aceptar el embarque inicial.
 
-## Detalles técnicos
+### Veredicto
 
-**Backend (nueva migración):**
-- Actualizar RPC `cxp_por_capturar` para devolver además:
-  - `monto_facturado` numeric — suma de `proveedor_facturas.total` (no canceladas) del embarque.
-  - `dias_desde_ultima_factura` integer.
-- Mantener `SECURITY INVOKER` y `GRANT EXECUTE ... TO authenticated`.
-- Migración nombrada con timestamp + uuid (formato del proyecto).
+No está "muy complicado": el problema es **incompleto, no enredado**. Está al nivel de **un buen QuickBooks/Contpaq básico**, pero le faltan piezas para estar al nivel de **SAP Business One / Odoo / NetSuite**: PO, aprobaciones, three-way match, propuesta de pago, conciliación bancaria, DIOT/complementos de pago.
 
-**Tipos:**
-- Extender `CxpPorCapturarRow` en `src/features/bandejas/services/bandejas.ts`.
-- Regenerar `supabase/types.ts` (la edición manual del file está prohibida en general, pero al cambiar el RETURNS del RPC sí se actualiza automáticamente).
+---
 
-**Frontend:**
-- `src/features/bandejas/routes/CxpPorCapturar.tsx`: reescritura para usar nueva toolbar, ordenamiento y acción.
-- `src/features/bandejas/components/CxpPorCapturarToolbar.tsx` (nuevo) — buscador, chips, sort.
-- `src/features/bandejas/components/CxpPorCapturarRow.tsx` (nuevo) — renglón con badge, progress y botón.
-- `src/features/bandejas/hooks/useCxpPorCapturarFilters.ts` (nuevo) — estado local: query, estatus, antigüedad, sort. Memoiza el resultado filtrado.
-- `src/features/cxp/components/DialogNuevaFacturaProveedor.tsx`: nueva prop opcional `initialEmbarqueAdHoc?: EmbarqueSeleccionado` que se pasa al hook.
-- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts`: aceptar `initialEmbarqueAdHoc` y semillar el estado en el primer render.
+## 2. Hoja de ruta priorizada (de mayor impacto a menor)
 
-**Power of 10:**
-- `CxpPorCapturar.tsx` queda <200 líneas al delegar toolbar/row a componentes.
-- Cada componente nuevo es focalizado (<150 líneas).
+### Fase A — Coherencia (1-2 entregas, sin backend)
 
-**Tests:**
-- Nuevo test puro para `useCxpPorCapturarFilters` (filtros y ordenamiento) en `__tests__/`.
-- No test visual de la tabla (presentacional).
+1. **Hub de Compras**: ruta `/compras` con tabs (Resumen · Proveedores · Por capturar · Facturas · Pagos). Mantener rutas actuales como deep-links.
+2. **Unificar UI**: que `CxpPorCapturar` use `DataTable`, `PageHeader` y `KpiCards` igual que `Cxp.tsx`.
+3. **Búsqueda global** (Ctrl+K) que indexe RFC, folio proveedor, nombre.
+4. **Validar duplicados** en captura: `unique (organization_id, proveedor_id, folio_proveedor, fecha)`.
 
-**Changelog + APP_VERSION:**
-- Bump a `13.99.4`.
-- Entrada en `CHANGELOG.md` raíz describiendo toolbar, filtros, ordenamiento, columna Avance, acción "Capturar factura" pre-seleccionando embarque, y campo nuevo `monto_facturado` en la RPC.
+### Fase B — Operación (cambios backend + UI)
 
-## ASCII de la fila final
+5. **Aging de CxP** (0-30/31-60/61-90/90+) en KPIs y reporte PDF.
+6. **Aprobación de facturas**: campos `aprobada_por`, `aprobada_at`, umbral configurable; bloqueo de pago si no está aprobada.
+7. **Notas de crédito**: UI para emitir/aplicar contra factura, afectando saldo.
+8. **Salud del proveedor** en `/proveedores/:id`: DPO, saldo vivo, top conceptos, últimos pagos.
 
-```text
-[Expediente] [Cliente]  [Avance ▓▓▓░░ 60%]  [Costo $]  [Facturas]  [Última fact.]  [⟶ Capturar]
-```
+### Fase C — Diferenciadores ERP
+
+9. **Órdenes de Compra (PO)**: nueva entidad `ordenes_compra` ligada a embarque/presupuesto → recepción → factura (three-way match).
+10. **Propuesta de pago semanal**: selecciona facturas vencidas/por vencer, agrupa por proveedor, genera layout SPEI BBVA y registra pagos en lote.
+11. **Conciliación bancaria**: matching automático `bbva_movimientos` ↔ `pagos_proveedor` por monto/referencia/fecha.
+12. **Cierre de periodo**: tabla `periodos_contables` + RLS que bloquea edición de facturas con fecha en periodo cerrado.
+
+### Fase D — Cumplimiento México
+
+13. **Complemento de Pago CFDI 4.0**: solicitud, recepción XML, validación contra pago.
+14. **Reporte DIOT** mensual (proveedores, retenciones, tipo de operación).
+15. **Validación de RFC en lista 69/69-B SAT** (EFOS) al alta de proveedor.
+
+---
+
+## 3. Quick wins (1-2 horas cada uno) si quieres empezar ya
+
+- Unificar header/KPIs/tabla de **Por capturar** con el patrón de `Cxp.tsx` (`PageHeader`, `CxpKpiCards`, `DataTable`).
+- Agregar columna **antigüedad** y badge "Vencida X días" en `cxpColumns.tsx`.
+- Validar `folio_proveedor + proveedor + fecha` duplicado antes de insertar.
+- Reporte PDF con **aging buckets** en `ReporteCarteraDocument`.
+- Botón "Ver factura" en cada fila de **Por capturar** cuando ya tiene factura capturada (hoy solo muestra contador).
+
+---
+
+## 4. ¿Qué te recomiendo hacer primero?
+
+Sugerencia: arrancar con **Fase A (coherencia) + 3 quick wins**. Eso da sensación de "módulo completo" sin tocar backend pesado. Luego decides si vamos a Órdenes de Compra (es el salto grande hacia ERP real).
+
+¿Quieres que prepare el plan de implementación de la Fase A, o prefieres atacar primero alguna fase/punto específico (ej. Órdenes de Compra, o el reporte DIOT)?
+
+NO VAMOS A IMPLEMENTAR ORDENES DE COMPRA POR AHORA.
