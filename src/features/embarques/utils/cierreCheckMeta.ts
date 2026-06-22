@@ -7,7 +7,7 @@
 import {
   pick,
   fmtCxc, fmtCxp, fmtDocs, fmtMargen, fmtVentaPendientes,
-  fmtSinFactura, fmtContenedores, fmtRepPendientes,
+  fmtSinFactura, fmtContenedores, fmtContenedoresFechas, fmtRepPendientes,
 } from "./cierreCheckFormatters";
 
 export type ResponsableCierre =
