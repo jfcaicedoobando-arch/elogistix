@@ -93,6 +93,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     setPendingCfdi(null);
     setAskCrearProv(null);
     setVinculos({});
+    setEmbarqueAdHoc(null);
   };
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
