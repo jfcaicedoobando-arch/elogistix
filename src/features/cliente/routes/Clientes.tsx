@@ -85,31 +85,14 @@ export default function Clientes() {
       <Card>
         <CardContent className="p-0">
           <ResponsiveDataTable
-            columns={columns}
+            columns={clientesColumns}
             data={clientes as ClienteRow[]}
             isLoading={isLoading}
             emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
             onRowClick={(c) => navigate(`/clientes/${c.id}`)}
             rowKey={(c) => c.id}
             density="comfortable"
-            mobileCard={(c) => (
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <div className="font-semibold text-sm truncate">{toTitleCase(c.nombre)}</div>
-                <div className="text-[11px] font-mono text-muted-foreground truncate">
-                  {(c.rfc || "—").toUpperCase()}
-                </div>
-                {(c.ciudad || c.estado) && (
-                  <div className="text-[11px] text-muted-foreground truncate">
-                    {[correctSpanishPlace(c.ciudad), correctSpanishPlace(c.estado)].filter(Boolean).join(", ")}
-                  </div>
-                )}
-                {(c.contacto || c.telefono) && (
-                  <div className="text-[11px] text-muted-foreground truncate">
-                    {[toTitleCase(c.contacto), formatPhoneMx(c.telefono)].filter(Boolean).join(" · ")}
-                  </div>
-                )}
-              </div>
-            )}
+            mobileCard={(c) => <ClienteMobileCard c={c} />}
             pagination={{
               page,
               totalPages,
