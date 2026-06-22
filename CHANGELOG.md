@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.98.1] - 2026-06-22
+- **feat(sidebar) reagrupación estilo Odoo para admins**: `admin`, `admin_org` y `super_admin` ahora también ven los cajones **Compras** (CxP + bandejas + proveedores), **Facturación** (facturas, proformas, cartera, comisiones, bandeja por emitir) y **Tesorería** como bloques propios, en lugar de todo apilado bajo "Gestión". Se conservan Dashboards, Costeo, Profit, CRM, Reportes, Directorio, Sistema y los bloques extra de Administración / Super Admin al final.
+
 ## [13.98.0] - 2026-06-22
 - **feat(sidebar) reagrupación estilo Odoo para roles contables**: los perfiles `contador`, `tesorero`, `auxiliar_contable` y `ejecutivo_cobranza` ya no ven todo apilado bajo "Gestión". Ahora hay dos cajones claros — **Compras** (CxP, bandejas CxP, proveedores) y **Facturación** (facturas emitidas, proformas, cobranza, comisiones, bandeja "por emitir"). Tesorería queda como bloque propio. Sólo cambia el agrupamiento visual en `useAppSidebarSections`; rutas, permisos y badges siguen iguales. Roles operativos/comerciales no se tocaron.
 
