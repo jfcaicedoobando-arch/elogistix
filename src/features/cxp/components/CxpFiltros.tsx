@@ -42,14 +42,20 @@ interface Props {
 export function CxpFiltros(props: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { data: proveedores = [] } = useProveedoresLite();
+  const { data: categorias = [] } = usePresupuestoCategorias();
 
   const proveedoresOpts = useMemo(
     () => proveedores.map((p) => ({ id: p.id, nombre: p.nombre })),
     [proveedores],
   );
+  const categoriasOpts = useMemo(
+    () => categorias.map((c) => ({ id: c.id, nombre: c.nombre })),
+    [categorias],
+  );
 
   const secondaryActive =
     (props.proveedorId && props.proveedorId !== "todos" ? 1 : 0) +
+    (props.categoriaPresupuestoId && props.categoriaPresupuestoId !== "todas" ? 1 : 0) +
     (props.fechaDesde ? 1 : 0) + (props.fechaHasta ? 1 : 0);
 
   const totalActive =
@@ -65,6 +71,7 @@ export function CxpFiltros(props: Props) {
     props.onOrigenChange("todos");
     props.onAprobacionChange("todos");
     props.onProveedorChange("todos");
+    props.onCategoriaPresupuestoChange("todas");
     props.onFechaDesdeChange("");
     props.onFechaHastaChange("");
   };
