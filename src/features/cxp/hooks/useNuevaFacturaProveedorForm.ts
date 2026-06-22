@@ -11,6 +11,7 @@ import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {
   subirArchivosCfdiFactura,
   vincularFacturaAConceptos,
+  crearConceptoCostoYVincular,
   type CfdiParsedResponse,
   type ConceptoCostoAbierto,
 } from "@/features/cxp/services";
@@ -18,6 +19,7 @@ import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
 import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
+import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   type PendingCfdi,
