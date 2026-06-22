@@ -1,68 +1,66 @@
-## Objetivo
+# Auditoría de permisos: Gerente Comercial / Gerente de Operaciones
 
-Hacer que la subida de CSF (PDF) y de CFDI (XML) sea resistente a fallos de red transitorios (WiFi inestable, proxy corporativo). Hoy, si la conexión se cae a mitad del request, el usuario ve `TypeError: Failed to fetch` y tiene que reintentar manualmente.
+## Hallazgos
 
-## Analogía
+Comparé el catálogo de roles (`roleCatalog.ts`), la matriz `usePermissions`, el sidebar (`sidebarRoleBuilders.ts`) y los guards de ruta (`appRoutes.tsx`). Hay **desalineación entre lo que el sidebar muestra y lo que las rutas permiten** — los gerentes ven entradas en el menú que, al hacer clic, los redirigen a `/` por `ProtectedRoute`.
 
-Como cuando llamas por teléfono y se corta la señal: en vez de hacerte marcar tú otra vez, el teléfono vuelve a marcar solo 1–2 veces, espera un poquito entre intentos, y si después de 60 segundos sigue sin contestar, te avisa.
+### Gerente de Operaciones (descripción: "Supervisa la operación diaria. Lee finanzas y aprueba")
 
-## Cambios
+Sidebar muestra estos items, pero las rutas los bloquean:
 
-### 1. Nuevo helper compartido: `src/lib/net/fetchWithRetry.ts`
-Función `fetchWithRetry(url, init, opts)` que:
-- Aplica `AbortController` con timeout configurable (default 60s).
-- Reintenta hasta 2 veces (3 intentos totales) sólo si el error es `TypeError: Failed to fetch`, `AbortError` por timeout, o respuesta HTTP 5xx/408/429.
-- Backoff: 1s, luego 3s.
-- NO reintenta en 4xx (errores de validación del servidor) ni si el body ya se consumió.
-- NO reintenta uploads con `FormData` que contengan un `File` ya leído… en realidad sí podemos reintentar porque el `File` es re-leíble desde disco; sólo armamos el `FormData` dentro del closure de cada intento.
+| Item del sidebar | Ruta | Roles permitidos hoy | Resultado |
+|---|---|---|---|
+| Facturas de proveedor | `/cxp` | admin, super_admin, contador, tesorero, auxiliar_contable | Redirige |
+| Tesorería | `/tesoreria` y `/tesoreria/*` | admin, super_admin, contador, tesorero | Redirige |
+| Cobranza | `/cartera` | admin, super_admin, admin_org, contador, ejecutivo_cobranza | Redirige |
+| Profit › Dashboard Ejecutivo | `/profit/dashboard` | TESORERIA_ROLES | Redirige |
+| Profit › Presupuesto | `/profit/presupuesto` | TESORERIA_ROLES | Redirige |
 
-### 2. `src/features/cliente/services/csf/index.ts`
-Reemplazar el `fetch` directo por `fetchWithRetry`. El `FormData` se construye dentro del callback de reintento para evitar consumir el stream del PDF en el primer intento fallido.
+### Gerente Comercial (descripción: "Ve CRM completo, cotizaciones con márgenes, clientes y comisiones; sin tesorería")
 
-### 3. `src/features/cxp/services/parseCfdi.ts`
-Mismo cambio en `callEdgeFunction`. Mantener los breadcrumbs de Sentry existentes y agregar uno extra por reintento (`parse_cfdi_xml.retry` con `attempt` y `reason`).
+| Item del sidebar | Ruta | Estado |
+|---|---|---|
+| Profit › Dashboard Ejecutivo | `/profit/dashboard` | Bloqueado |
+| Profit › Presupuesto | `/profit/presupuesto` | Bloqueado |
 
-### 4. Tests
-- `src/lib/net/__tests__/fetchWithRetry.test.ts`: cubre éxito al 1er intento, éxito tras retry, falla definitiva tras agotar intentos, timeout, no-reintento en 4xx.
-- Actualizar `parseCfdi.test.ts` y `csf/__tests__/index.test.ts` para confirmar que siguen pasando (mismo contrato externo).
+El resto (Cotizaciones, Embarques, Comisiones, Costeo, Reportes, Directorio, Estado de Resultados, Proyección) sí funciona.
 
-### 5. Versionado y changelog
-- `APP_VERSION` → `13.114.0`.
-- Entrada en `CHANGELOG.md` describiendo la mejora de resiliencia.
+### Lo que sí está bien
 
-## Detalles técnicos
+- `usePermissions` ya incluye ambos roles en `FINANCE_VIEWERS`, `OPERATIONS` (operaciones) y `SALES`/`OVERRIDE_TARIFA_PRICING` (comercial). El catálogo y la jerarquía (`roleHierarchy.ts`) son consistentes.
+- Sidebar no muestra Administración/Configuración/Usuarios (correcto).
+- Gerente Comercial no ve Tesorería en sidebar (correcto).
 
-```ts
-// src/lib/net/fetchWithRetry.ts (firma)
-export interface RetryOptions {
-  timeoutMs?: number;        // default 60_000
-  maxAttempts?: number;      // default 3
-  backoffMs?: number[];      // default [1000, 3000]
-  buildInit?: () => RequestInit; // para FormData fresca por intento
-}
-export async function fetchWithRetry(
-  url: string,
-  initOrBuilder: RequestInit | (() => RequestInit),
-  opts?: RetryOptions,
-): Promise<Response>;
-```
+## Cambios propuestos (solo `appRoutes.tsx`)
 
-Criterio de reintento:
-```ts
-const isTransient =
-  err?.name === "TypeError" && /failed to fetch/i.test(err.message)
-  || err?.name === "AbortError"
-  || (res && [408, 429, 500, 502, 503, 504].includes(res.status));
-```
+Analogía: la sidebar es el menú del restaurante y las rutas son las puertas a la cocina. Hoy el menú ofrece platillos cuyas puertas están cerradas para estos dos gerentes — hay que abrirles las puertas de **lectura** que su rol justifica.
 
-## Lo que NO se toca
+1. **Definir un guard reutilizable** `FINANCE_READ_ROLES` que incluya: `admin`, `super_admin`, `admin_org`, `contador`, `tesorero`, `auxiliar_contable`, `ejecutivo_cobranza`, `gerente_operaciones`, `gerente_visor`. (Refleja `FINANCE_VIEWERS` de `usePermissions`.)
 
-- Edge functions `parse-csf` y `parse-cfdi-xml` (backend ya está sano).
-- UI de los componentes (`CargaCfdiSection`, wizards de cliente/proveedor): siguen mostrando el toast de error existente si los 3 intentos fallan.
-- Otros llamados a `fetch` en el proyecto (fuera de alcance).
+2. **Agregar `gerente_operaciones` (y `gerente_visor`) a las rutas de lectura financiera**:
+   - `/cxp`, `/compras`, `/compras/aging`, `/cxp/por-capturar`, `/cxp/por-pagar`
+   - `/tesoreria`, `/tesoreria/cuentas`, `/tesoreria/conciliacion`, `/tesoreria/flujo`
+   - `/cartera`, `/facturacion/por-emitir`
+   - `/profit/dashboard`, `/profit/presupuesto`
 
-## Validación
+3. **Agregar `gerente_comercial` a las rutas de Profit** (`/profit/dashboard`, `/profit/presupuesto`) ya que el sidebar lo expone y la descripción incluye "cotizaciones con márgenes".
 
-- Tests unitarios del helper y de los servicios afectados pasan.
-- Build limpio.
-- Manual: simular red caída con DevTools throttling "Offline" y verificar que se vean 2 reintentos en consola antes del error final.
+4. **No tocar** la lógica de escritura: las mutaciones de tesorería/CXP siguen restringidas por `usePermissions` (`canEditFinance`, `canPagarProveedor`, etc.), donde estos gerentes no figuran.
+
+5. **Sidebar**: no requiere cambios — ya refleja la intención del catálogo.
+
+## Verificación
+
+- Ajustar `src/routes/__tests__/appRoutes.smoke.test.tsx` para los nuevos `allowedRoles`.
+- Ejecutar `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx src/hooks/layout/__tests__/useLayout.test.tsx src/lib/auth/__tests__/roleHierarchy.test.ts`.
+- Smoke manual con Playwright opcional iniciando sesión como gerente_operaciones y navegando a `/tesoreria` y `/profit/dashboard` (debe renderizar, no redirigir).
+
+## Versionado y changelog
+
+- Bump `APP_VERSION` a `13.114.3`.
+- Entrada en `CHANGELOG.md`: "Alinear permisos de Gerente Comercial y Gerente de Operaciones con el catálogo: lectura financiera (CXP, tesorería, cartera, profit) habilitada por ruta."
+
+## Fuera de alcance
+
+- Auditoría operativa (`/auditoria`) sigue restringida a admin; si quieres que los gerentes la vean en modo lectura, lo trato como cambio aparte.
+- Permisos a nivel componente (botones de aprobar/pagar) no se modifican.
