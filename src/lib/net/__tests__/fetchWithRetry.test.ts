@@ -15,6 +15,9 @@ afterEach(() => {
 });
 
 async function runWithTimers<T>(p: Promise<T>): Promise<T> {
+  // Adjuntamos un handler temprano para evitar "unhandled rejection" mientras
+  // avanzan los timers virtuales antes de que el caller haga await.
+  p.catch(() => {});
   await vi.runAllTimersAsync();
   return p;
 }

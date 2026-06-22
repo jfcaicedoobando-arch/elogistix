@@ -35,6 +35,7 @@ vi.mock("@/features/proveedor/services", () => ({
 vi.mock("@/features/cxp/services", () => ({
   subirArchivosCfdiFactura: (...a: unknown[]) => subirArchivos(...a),
   vincularFacturaAConceptos: (...a: unknown[]) => vincular(...a),
+  existeFacturaDuplicada: vi.fn().mockResolvedValue(false),
 }));
 vi.mock("@/features/cxp/hooks", () => ({
   useCrearFacturaProveedor: () => ({ mutateAsync, isPending: false }),
@@ -99,6 +100,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleChange("folio", "F-001");
       result.current.handleChange("subtotal", "1000");
       result.current.handleChange("iva", "160");
+      result.current.handleChange("categoriaId", "cat-1");
     });
     await act(async () => { await result.current.submit(); });
     expect(mutateAsync).toHaveBeenCalledTimes(1);
@@ -119,6 +121,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleProveedor("p1", "ACME");
       result.current.handleChange("folio", "F-1");
       result.current.handleChange("subtotal", "100");
+      result.current.handleChange("categoriaId", "cat-1");
     });
     await act(async () => { await result.current.submit(); });
     expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i), expect.anything());

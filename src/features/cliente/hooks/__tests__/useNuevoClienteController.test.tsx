@@ -32,6 +32,7 @@ describe("useNuevoClienteController", () => {
       result.current.handleChange("nombre", "Cliente Test");
       result.current.handleChange("rfc", "TEST123456");
       result.current.handleChange("cp", "12345");
+      result.current.handleChange("regimen_fiscal", "601");
     });
     
     act(() => {
