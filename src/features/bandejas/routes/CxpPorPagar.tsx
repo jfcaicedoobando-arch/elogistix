@@ -6,6 +6,7 @@ import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatt
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
+import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 
 export default function CxpPorPagar() {
   const { data = [], isLoading } = useCxpPorPagar();
@@ -19,6 +20,9 @@ export default function CxpPorPagar() {
           Facturas de proveedor vigentes con saldo. Programa y registra los pagos.
         </p>
       </div>
+
+      <ComprasTabStrip />
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

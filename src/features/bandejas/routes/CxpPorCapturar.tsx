@@ -86,6 +86,9 @@ export default function CxpPorCapturar() {
         description="Embarques con costos presupuestados. Captura las facturas de proveedor y concílialas contra el embarque."
       />
 
+      <ComprasTabStrip />
+
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <KPICard
           icon={<Package className="h-3.5 w-3.5" />}
