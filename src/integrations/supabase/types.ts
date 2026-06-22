@@ -4385,6 +4385,7 @@ export type Database = {
           nombre: string
           orden: number
           organization_id: string
+          tipo_contable: Database["public"]["Enums"]["tipo_contable_categoria"]
           updated_at: string
         }
         Insert: {
@@ -4394,6 +4395,7 @@ export type Database = {
           nombre: string
           orden?: number
           organization_id?: string
+          tipo_contable?: Database["public"]["Enums"]["tipo_contable_categoria"]
           updated_at?: string
         }
         Update: {
@@ -4403,6 +4405,7 @@ export type Database = {
           nombre?: string
           orden?: number
           organization_id?: string
+          tipo_contable?: Database["public"]["Enums"]["tipo_contable_categoria"]
           updated_at?: string
         }
         Relationships: []
@@ -6830,6 +6833,10 @@ export type Database = {
         | "Marketing"
         | "Viaticos"
         | "Otros"
+      tipo_contable_categoria:
+        | "CostoDirectoEmbarque"
+        | "IndirectoOperacion"
+        | "Administracion"
       tipo_contacto: "Proveedor" | "Exportador" | "Importador"
       tipo_evento_tracking:
         | "Zarpe"
@@ -7120,6 +7127,11 @@ export const Constants = {
         "Marketing",
         "Viaticos",
         "Otros",
+      ],
+      tipo_contable_categoria: [
+        "CostoDirectoEmbarque",
+        "IndirectoOperacion",
+        "Administracion",
       ],
       tipo_contacto: ["Proveedor", "Exportador", "Importador"],
       tipo_evento_tracking: [

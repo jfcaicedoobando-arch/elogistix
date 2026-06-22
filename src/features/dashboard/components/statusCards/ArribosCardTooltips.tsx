@@ -111,12 +111,12 @@ export function CoberturaTooltipContent({
       <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs">
         <span className="text-muted-foreground">Profit proyectado</span>
         <span className="tabular-nums font-medium text-right">{formatCurrency(profitMXN, "MXN")}</span>
-        <span className="text-muted-foreground">Gastos de administración del mes</span>
+        <span className="text-muted-foreground">Gastos fijos del mes</span>
         <span className="tabular-nums font-medium text-right">{formatCurrency(gastos, "MXN")}</span>
       </div>
       {sinGastos ? (
         <p className="text-[11px] text-muted-foreground italic border-t pt-1.5">
-          Aún no hay gastos de administración capturados este mes.
+          Aún no hay gastos fijos capturados este mes.
         </p>
       ) : perdida ? (
         <p className="text-[11px] text-destructive border-t pt-1.5">
@@ -132,7 +132,7 @@ export function CoberturaTooltipContent({
         </p>
       )}
       <p className="text-[10px] text-muted-foreground italic">
-        Gastos = facturas de proveedor "Gasto de administración" + comisiones del mes.
+        Gastos fijos = facturas con categoría <strong>Indirecto de operación</strong> o <strong>Administración</strong> + comisiones del mes.
       </p>
     </div>
   );

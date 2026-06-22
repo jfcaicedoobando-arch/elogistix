@@ -10,12 +10,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useCrearCategoriaPresupuesto, useActualizarCategoriaPresupuesto,
 } from "@/features/presupuesto/hooks";
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
+import type { Enums } from "@/integrations/supabase/types";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+
+type TipoContable = Enums<"tipo_contable_categoria">;
+
+const TIPO_CONTABLE_OPCIONES: { value: TipoContable; label: string; descripcion: string }[] = [
+  { value: "CostoDirectoEmbarque", label: "Costo directo de embarque", descripcion: "COGS: flete, maniobras, demoras, comisiones. Va directo al costo del embarque, no cuenta como gasto fijo." },
+  { value: "IndirectoOperacion", label: "Indirecto de operación", descripcion: "Sueldos operativos, sistemas, oficina operativa. Cuenta como gasto fijo." },
+  { value: "Administracion", label: "Administración", descripcion: "Renta, nómina admin, contador, papelería, marketing. Cuenta como gasto fijo." },
+];
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -28,14 +39,16 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
   const [nombre, setNombre] = useState("");
   const [orden, setOrden] = useState(50);
   const [activa, setActiva] = useState(true);
+  const [tipoContable, setTipoContable] = useState<TipoContable>("Administracion");
 
   useEffect(() => {
     if (categoria) {
       setNombre(categoria.nombre);
       setOrden(categoria.orden);
       setActiva(categoria.activa);
+      setTipoContable(categoria.tipo_contable ?? "Administracion");
     } else {
-      setNombre(""); setOrden(50); setActiva(true);
+      setNombre(""); setOrden(50); setActiva(true); setTipoContable("Administracion");
     }
   }, [categoria, open]);
 
@@ -43,10 +56,10 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
     if (!nombre.trim()) return notifyError(toast, { title: "Nombre requerido", method: "FEATURES_PRESUPUESTO_COMPONENTS_DIALOGCATEGORIA_1" });
     try {
       if (categoria) {
-        await actualizar.mutateAsync({ id: categoria.id, patch: { nombre: nombre.trim(), orden, activa } });
+        await actualizar.mutateAsync({ id: categoria.id, patch: { nombre: nombre.trim(), orden, activa, tipo_contable: tipoContable } });
         toast.success("Categoría actualizada");
       } else {
-        await crear.mutateAsync({ nombre: nombre.trim(), orden, activa });
+        await crear.mutateAsync({ nombre: nombre.trim(), orden, activa, tipo_contable: tipoContable });
         toast.success("Categoría creada");
       }
       onOpenChange(false);
@@ -56,17 +69,31 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
     }
   };
 
+  const tipoActual = TIPO_CONTABLE_OPCIONES.find((o) => o.value === tipoContable);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{categoria ? "Editar" : "Nueva"} categoría</DialogTitle>
-          <DialogDescription>Categorías de gasto de administración para el presupuesto.</DialogDescription>
+          <DialogDescription>Categorías de gasto para el presupuesto y el cálculo de cobertura de gastos fijos del dashboard.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
             <Label>Nombre *</Label>
             <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Servicios profesionales" />
+          </div>
+          <div>
+            <Label>Tipo contable *</Label>
+            <Select value={tipoContable} onValueChange={(v) => setTipoContable(v as TipoContable)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TIPO_CONTABLE_OPCIONES.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {tipoActual && <p className="text-[11px] text-muted-foreground mt-1">{tipoActual.descripcion}</p>}
           </div>
           <div>
             <Label>Orden</Label>
