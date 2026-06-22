@@ -102,10 +102,14 @@ export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | nu
 
 export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";
 
-export async function crearFacturaProveedor(payload: TablesInsert<"proveedor_facturas">) {
+// folio_interno se asigna en el trigger BEFORE INSERT de la BD; el caller no lo manda.
+export type NuevaFacturaProveedorPayload =
+  Omit<TablesInsert<"proveedor_facturas">, "folio_interno"> & { folio_interno?: string };
+
+export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayload) {
   const { data, error } = await supabase
     .from("proveedor_facturas")
-    .insert(payload)
+    .insert(payload as TablesInsert<"proveedor_facturas">)
     .select()
     .single();
   if (error) throw error;
