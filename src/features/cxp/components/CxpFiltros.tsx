@@ -31,6 +31,8 @@ interface Props {
   onAprobacionChange: (v: "todos" | "pendiente" | "aprobada" | "rechazada") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
+  categoriaPresupuestoId: string;
+  onCategoriaPresupuestoChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
