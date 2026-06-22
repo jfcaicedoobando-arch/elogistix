@@ -27,9 +27,11 @@ interface Props {
 export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Props) {
   const registrar = useRegistrarPagoProveedor();
   const f = usePagoProveedorForm(factura, open);
+  const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";
 
   const submit = async () => {
     if (!factura) return;
+    if (noAprobada) return notifyError(toast, { title: "La factura debe estar aprobada antes de registrar pagos", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_0" });
     if (f.montoNum <= 0) return notifyError(toast, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
     if (f.excede) return notifyError(toast, { title: "El monto excede el saldo pendiente", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
     try {
