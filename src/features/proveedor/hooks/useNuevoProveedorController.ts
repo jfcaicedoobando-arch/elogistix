@@ -145,32 +145,18 @@ export function useNuevoProveedorController(
   }, [form.rfc, organizationId]);
 
   const handleSave = async () => {
-    const esExtranjero = form.origen_proveedor === "Extranjero";
-    const clabeTrim = form.clabe.trim();
-    const swiftTrim = form.swift_bic.trim().toUpperCase();
-    if (!esExtranjero && clabeTrim && !/^\d{18}$/.test(clabeTrim)) {
-      notifyError(toast, { title: "La CLABE debe tener exactamente 18 dígitos numéricos.", method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_1" });
-      return;
-    }
-    if (esExtranjero && swiftTrim && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(swiftTrim)) {
-      notifyError(toast, { title: "El SWIFT/BIC debe tener 8 u 11 caracteres alfanuméricos.", method: "FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_2" });
+    const validacion = preparePayload(form);
+    if (!validacion.ok) {
+      notifyError(toast, { title: validacion.mensaje, method: `FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_${validacion.motivo === "clabe" ? 1 : 2}` });
       return;
     }
     setSaving(true);
     try {
-      // En Extranjero limpiamos los campos nacionales para no guardar basura.
-      const payload = esExtranjero
-        ? { ...form, clabe: "", swift_bic: swiftTrim }
-        : { ...form, clabe: clabeTrim };
-      await onSave(payload as TablesInsert<"proveedores">);
+      await onSave(validacion.payload);
       reset();
       onClose();
     } catch (err) {
-      if (err instanceof ProveedorDuplicadoError) {
-        // El parent ya mostró el toast con CTA; mantener el diálogo abierto.
-        return;
-      }
-      // Otros errores: el parent decide UI; no cerramos.
+      if (err instanceof ProveedorDuplicadoError) return;
     } finally {
       setSaving(false);
     }
