@@ -181,6 +181,9 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
                 </DropdownMenuItem>
                 {canEdit && (
                   <>
+                    <DropdownMenuItem onClick={() => onEditar(f)}>
+                      <Pencil className="h-4 w-4 mr-2" /> Editar factura
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onEliminar(f)}
