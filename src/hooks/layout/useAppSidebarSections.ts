@@ -244,8 +244,8 @@ export function useAppSidebarSections(): SidebarSection[] {
   const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
   if (builder) return patchEmbarquesBadge(builder(deps), adminPendientes);
 
-  const sections = buildDefaultSections(deps);
   const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
+  const sections = isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
   return patchEmbarquesBadge(sections, adminPendientes);
