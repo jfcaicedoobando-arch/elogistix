@@ -11,7 +11,7 @@ type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
 
 /** Select reutilizado por list + single fetch (evita duplicar el embed). */
 export const PROVEEDOR_FACTURAS_SELECT = `
-  id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
+  id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, folio_interno,
   fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
   estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
   pagos_proveedor(monto, deleted_at),
@@ -21,7 +21,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
 
 export type Joined = Pick<
   ProveedorFacturaRow,
-  | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor"
+  | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor" | "folio_interno"
   | "fecha_emision" | "fecha_vencimiento" | "moneda" | "total" | "estado" | "tipo_cambio_usd"
   | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
 > & {
@@ -64,6 +64,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     proveedor_origen: f.proveedores?.origen_proveedor ?? null,
     embarque_id: f.embarque_id,
     folio_proveedor: f.folio_proveedor,
+    folio_interno: f.folio_interno,
     fecha_emision: f.fecha_emision,
     fecha_vencimiento: f.fecha_vencimiento,
     dias_vencido: Math.max(0, dv),

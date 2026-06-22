@@ -26,6 +26,7 @@ export interface FacturaCxP {
   proveedor_origen: "Nacional" | "Extranjero" | null;
   embarque_id: string | null;
   folio_proveedor: string;
+  folio_interno: string;
   fecha_emision: string;
   fecha_vencimiento: string | null;
   dias_vencido: number;
@@ -70,7 +71,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   if (filtros.fecha_desde) q = q.gte("fecha_emision", filtros.fecha_desde);
   if (filtros.fecha_hasta) q = q.lte("fecha_emision", filtros.fecha_hasta);
   if (filtros.search) {
-    q = q.or(`folio_proveedor.ilike.%${filtros.search}%,proveedor_nombre.ilike.%${filtros.search}%`);
+    q = q.or(`folio_interno.ilike.%${filtros.search}%,folio_proveedor.ilike.%${filtros.search}%,proveedor_nombre.ilike.%${filtros.search}%`);
   }
 
   const { data, error } = await q;
@@ -102,10 +103,14 @@ export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | nu
 
 export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";
 
-export async function crearFacturaProveedor(payload: TablesInsert<"proveedor_facturas">) {
+// folio_interno se asigna en el trigger BEFORE INSERT de la BD; el caller no lo manda.
+export type NuevaFacturaProveedorPayload =
+  Omit<TablesInsert<"proveedor_facturas">, "folio_interno"> & { folio_interno?: string };
+
+export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayload) {
   const { data, error } = await supabase
     .from("proveedor_facturas")
-    .insert(payload)
+    .insert(payload as TablesInsert<"proveedor_facturas">)
     .select()
     .single();
   if (error) throw error;

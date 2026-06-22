@@ -1,42 +1,71 @@
-## Problema
+## Objetivo
 
-En el diálogo **Editar factura** el bloque de proveedor sale duplicado y contradictorio:
+Agregar un **folio interno único por organización** a las facturas de proveedor con formato `FP-000001`, asignado automáticamente al capturar, inmutable, visible en toda la UI de CXP.
 
-1. Banner gris superior: "PROVEEDOR (NO EDITABLE) — COSCO SHIPPING LINES…"
-2. Inmediatamente debajo, sección "Proveedor y folio" con un **combobox de proveedor** que visualmente parece editable (cursor pointer, ícono chevron).
+## 1) Migración (DB)
 
-Causa: el dialog reusa `FacturaProveedorFormFields`, que siempre renderiza el `ProveedorCombobox`. En modo edición no hay forma de ocultarlo.
+Una sola migración con:
 
-## Solución
+### a) Schema
+- `proveedor_facturas.folio_interno text` (nullable inicialmente para backfill, luego `NOT NULL`).
+- Índice único: `UNIQUE (organization_id, folio_interno)` donde `deleted_at IS NULL` (partial index — permite reusar folio si se borra lógico, pero en la práctica nunca lo reusaremos).
 
-Pequeña refactor visual sin tocar lógica de negocio.
+### b) Contador por tenant
+Tabla `folio_secuencias`:
 
-### 1) `src/features/cxp/components/FacturaProveedorFormFields.tsx`
-- Agregar prop opcional `proveedorReadOnly?: boolean` (default `false`).
-- Cuando es `true`:
-  - Cambiar el título de la sección de "Proveedor y folio" → **"Folio del proveedor"**.
-  - Reemplazar el `<ProveedorCombobox>` por una línea estática read-only: chip pequeño `Proveedor: <nombre>` con `bg-muted` y `text-muted-foreground`, sin chevron ni cursor pointer. Mantiene el contexto pero deja claro que no es interactivo.
-  - El input de Folio toma la columna completa (deja de ser grid 2-col).
-- Comportamiento por default (modo crear) sin cambios.
+```text
+organization_id uuid
+tipo            text     -- 'factura_proveedor' (extensible a futuro)
+ultimo_numero   bigint   default 0
+PRIMARY KEY (organization_id, tipo)
+```
 
-### 2) `src/features/cxp/components/DialogEditarFacturaProveedor.tsx`
-- Eliminar el banner separado "PROVEEDOR (NO EDITABLE) — …" (ahora la sección del form ya lo comunica).
-- Pasar `proveedorReadOnly={true}` a `<FacturaProveedorFormFields>`.
-- Mantener banners amarillo (tiene pagos) y azul (requiere re-aprobación).
+Con GRANTs estándar y RLS (sólo `service_role`; los usuarios no la tocan directo).
 
-### 3) Versionado
-- `src/constants/appVersion.ts`: `13.107.0` → `13.107.1`.
-- `CHANGELOG.md`: entry breve "fix(cxp/editar): elimina el combobox de proveedor en el modal de edición — ahora se muestra como campo read-only y desaparece el banner duplicado".
+### c) RPC atómica `siguiente_folio_proveedor(p_org_id uuid) returns text`
+- `SECURITY DEFINER`, `search_path=public`.
+- `INSERT ... ON CONFLICT ... DO UPDATE SET ultimo_numero = folio_secuencias.ultimo_numero + 1 RETURNING ultimo_numero`.
+- Devuelve `'FP-' || lpad(ultimo_numero::text, 6, '0')`.
+- `GRANT EXECUTE TO authenticated`.
 
-## Verificación
+### d) Trigger `BEFORE INSERT`
+- Si `NEW.folio_interno IS NULL`, lo calcula con la RPC. Garantiza que cualquier insert (UI, edge function, import) reciba folio.
 
-- Tomar screenshot del modal después del cambio: debe haber **un solo** indicador de proveedor (read-only) y debajo el folio editable a todo lo ancho.
-- Modal de **Capturar factura** (`Nueva`) debe verse igual que antes (sin regresiones).
+### e) Backfill de las 12 facturas existentes
+- Ordenadas por `created_at ASC`, asignar `FP-000001…FP-000012`. Actualizar contador a `12`.
+- Luego `ALTER COLUMN folio_interno SET NOT NULL`.
 
-## Fuera de scope
+## 2) Cambios de código
 
-No tocar el flujo de negocio, ni las validaciones, ni el banner amarillo/azul. Sólo el bloque de proveedor.
+### Tipos & servicios
+- Esperar regeneración automática de `src/integrations/supabase/types.ts` tras la migración.
+- `src/features/cxp/services/proveedorFacturas.ts`: incluir `folio_interno` en los SELECT (`COLUMNAS_FACTURA_CXP`).
+- `FacturaCxP` type: agregar `folio_interno: string`.
 
-## Analogía 🩹
+### Captura nueva (`useNuevaFacturaProveedorForm`)
+- **No cambia**: el trigger asigna el folio. Tras `INSERT`, el `RETURNING` ya trae `folio_interno` para mostrarlo en el toast de éxito ("Capturada como FP-000013").
 
-Era como un letrero que dice "NO TOCAR" pegado encima de un botón rojo que parece presionable. Vamos a quitar el botón y dejar sólo el letrero, así nadie duda.
+### UI
+- **`cxpColumns.tsx`** — nueva columna **Folio interno** a la izquierda de "Folio prov." (50–90px, `font-mono`, badge sutil).
+- **`DialogDetallePagosProveedor`** y **`DialogEditarFacturaProveedor`** — header muestra `FP-000013 · Folio prov. A-12345`.
+- **`DialogEditarFacturaProveedor`** — agregar `folio_interno` al banner read-only (junto al proveedor).
+- **PDF comprobante de pago** (`src/features/cxp/pdf/...` si existe) — incluir folio interno como referencia primaria.
+- **Búsqueda CXP** (filtro de texto en `useCxpFiltros` / RPC de operadores) — buscar también por `folio_interno`.
+- **Bitácora**: los `descripcion` de eventos CXP referencian `folio_proveedor`; cambiar a `folio_interno (folio prov.)` en los nuevos eventos. Eventos viejos quedan como están.
+
+### Versionado
+- `APP_VERSION` → `13.108.0` (feature).
+- `CHANGELOG.md`: entrada explicando que ahora cada factura de proveedor tiene un folio interno `FP-XXXXXX` único por organización, autoincremental, usado en tabla, modales, PDFs y búsqueda. Las 12 facturas existentes recibieron folio en orden cronológico.
+
+### Memoria
+- Guardar `mem://features/folio-interno-cxp` con: formato, RPC `siguiente_folio_proveedor`, tabla `folio_secuencias`, política inmutable (nunca actualizar `folio_interno`), trigger BEFORE INSERT.
+
+## 3) Fuera de scope
+
+- Folios internos para **facturas de venta** (`facturas`), proformas, embarques o cotizaciones. Si después quieres replicar el patrón, la tabla `folio_secuencias` ya soporta más tipos.
+- Configurar formato custom por organización (prefijo/longitud). Por ahora fijo `FP-` + 6 dígitos.
+- Reasignar folios después de borrado lógico.
+
+## Analogía 🎟️
+
+Es como darle a cada factura un **número de ticket de taquilla** propio cuando entra al sistema. El folio del proveedor sigue ahí (como el nombre impreso en el boleto), pero internamente cada documento tiene un número único, corto y consecutivo que nadie más puede repetir — perfecto para ponerlo en una transferencia bancaria o referenciarlo por WhatsApp.

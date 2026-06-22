@@ -50,7 +50,7 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <DialogTitle>
-                Editar factura — {factura?.folio_proveedor ?? ""}
+                Editar factura — {factura?.folio_interno ?? ""}{factura?.folio_proveedor ? <span className="text-muted-foreground font-normal text-base"> · Folio prov. {factura.folio_proveedor}</span> : null}
               </DialogTitle>
               <DialogDescription>
                 Corrige folio, fechas o importes. El proveedor y el CFDI fiscal no se pueden cambiar.
