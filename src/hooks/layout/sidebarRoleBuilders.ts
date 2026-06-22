@@ -121,21 +121,8 @@ export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  {
-    label: "Compras",
-    items: [
-      ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]),
-      ...filterGestion(["/cxp"]),
-      ...filterDirectorio(["/proveedores"]),
-    ],
-  },
-  {
-    label: "Facturación",
-    items: [
-      ...filterBandejas(["/facturacion/por-emitir"]),
-      ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]),
-    ],
-  },
+  { label: "Compras", items: [...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Facturación", items: [...filterBandejas(["/facturacion/por-emitir"]), ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"])] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "CRM", items: crmItems },
