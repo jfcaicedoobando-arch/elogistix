@@ -1,97 +1,83 @@
-# Fase A — Coherencia del módulo de Compras
+## Fase B — Control financiero del módulo de Compras
 
-Lo ya entregado en quick wins queda fuera: UI unificada de Por capturar (✅) y validación de duplicados (✅). Esto cubre los 2 ítems restantes de la Fase A.
-
----
-
-## 1. Hub de Compras (`/compras`)
-
-Nueva ruta pública dentro del módulo. **No duplica páginas**: actúa como landing + barra de pestañas que navega a las rutas existentes.
-
-### 1a. Página `Compras.tsx` (Resumen)
-- `PageHeader` con icono `ShoppingCart`, título "Compras", descripción "Gestión de proveedores, facturas y pagos".
-- **Tab strip** (NavLink horizontal) visible en todas las sub-rutas del módulo:
-  - Resumen → `/compras`
-  - Proveedores → `/proveedores`
-  - Por capturar → `/cxp/por-capturar`
-  - Facturas → `/cxp`
-  - Por pagar → `/cxp/por-pagar`
-- **KPIs cruzados** del módulo (4 cards):
-  - Proveedores activos (count en `proveedores` no borrados)
-  - Embarques por capturar (count de `cxp_por_capturar` RPC)
-  - Facturas por pagar (count + total MXN homologado)
-  - Vencido total (count + MXN/USD)
-- **Tarjetas de acceso rápido** (1 por submódulo) con: icono + título + 1 KPI + CTA "Ir a…".
-- **Atajos** sección con botones: "Capturar factura" (abre `DialogNuevaFacturaProveedor`), "Nuevo proveedor", "Importar CSV proveedores".
-
-### 1b. Componente `ComprasTabStrip`
-Tira de NavLinks reutilizable que **se inyecta arriba** en cada página del módulo (Compras, Proveedores, CxP, CxpPorCapturar, CxpPorPagar) para que el usuario siempre vea las 5 pestañas y sepa que está en el mismo módulo. Implementación: componente shared con `useLocation` para marcar la activa.
-
-### 1c. Sidebar reorganizado
-- Nuevo grupo **"Compras"** con: Resumen, Proveedores, Por capturar, Facturas, Por pagar.
-- Quitar "Proveedores" de `SIDEBAR_DIRECTORIO_ITEMS` (Directorio queda solo con Clientes).
-- Quitar "Facturas de proveedor" de `SIDEBAR_GESTION_ITEMS`.
-- Quitar "Por capturar" y "Por pagar" de `SIDEBAR_BANDEJAS_ITEMS` (Bandejas queda con Por emitir y Cartera).
-- Actualizar `sidebarRoleBuilders.ts` para incluir el nuevo grupo Compras según el rol (mismos permisos que cada item original).
-
-### 1d. Routing
-- `/compras` → `Compras.tsx` (lazy)
-- Permisos: mismos que `/cxp` (tesorero, contador, admin_org, admin, super_admin, auxiliar_contable).
+Objetivo: llevar el módulo al estándar ERP con **aging de cuentas por pagar, flujo de aprobación de facturas, notas de crédito de proveedor y salud del proveedor**. Todo respeta multi-tenant (organization_id), RLS, y los estándares ya definidos (DataTable, PageHeader, financialUtils, fechas UTC).
 
 ---
 
-## 2. Búsqueda global de facturas de proveedor
+### 1. Aging de Cuentas por Pagar (CxP)
 
-### 2a. Extender RPC `busqueda_global`
-Migración: agregar un `UNION ALL` más al `busqueda_global` para incluir `proveedor_facturas`:
-- Busca por `folio_proveedor`, `proveedor_nombre`, o RFC del proveedor (join a `proveedores`).
-- Tipo: `factura_proveedor`.
-- URL: `/cxp?factura={id}` (la página CxP abrirá el detalle si recibe ese param).
-- Excluye canceladas y borradas, scope por organization_id.
+**Qué construye:** vista de antigüedad de saldos por proveedor con cubetas estándar.
 
-### 2b. `GlobalSearch.tsx`
-- Agregar `factura_proveedor` a `typeIcons` (icono `Receipt`) y `typeLabels` ("Facturas de proveedor").
-- Tipo `GlobalSearchResult["type"]` en `src/types/search.ts` debe incluir `"factura_proveedor"`.
+- Nueva RPC `cxp_aging_proveedores(p_org uuid, p_fecha date)` que devuelve por proveedor:
+  - `saldo_total`, `vigente` (0 días vencido), `1_30`, `31_60`, `61_90`, `mas_90`
+  - Calcula desde `proveedor_facturas` (saldo_pendiente > 0) usando `fecha_vencimiento` vs `p_fecha`.
+- Nueva pestaña **"Antigüedad"** en `ComprasTabStrip` → ruta `/compras/aging`.
+- Página `CxpAging.tsx`:
+  - PageHeader + 5 KPI cards (una por cubeta, totales en MXN).
+  - DataTable con columnas: Proveedor, Vigente, 1-30, 31-60, 61-90, >90, Total. Click en proveedor → `/cxp?proveedor={id}`.
+  - Gráfica de barras apiladas (recharts) por las 5 cubetas top 10 proveedores.
+  - Botón "Exportar CSV".
 
-### 2c. `Cxp.tsx` lee `?factura={id}`
-- `useSearchParams`: si llega `factura`, busca la factura en `data` y abre `DialogDetallePagosProveedor`.
+### 2. Flujo de aprobación de facturas de proveedor
+
+**Qué construye:** estado de aprobación antes de programar pago.
+
+- Migración: añadir a `proveedor_facturas`:
+  - `estado_aprobacion` enum (`pendiente`, `aprobada`, `rechazada`) default `pendiente`
+  - `aprobada_por uuid`, `aprobada_at timestamptz`, `motivo_rechazo text`
+- Backfill: facturas existentes con pagos > 0 → `aprobada`; resto → `pendiente`.
+- RPC `aprobar_factura_proveedor(p_id, p_aprobar bool, p_motivo text)` con check de rol (admin/finanzas).
+- UI en `DialogDetallePagosProveedor`:
+  - Badge de estado de aprobación arriba.
+  - Botones **Aprobar** / **Rechazar** (solo roles autorizados, solo si `pendiente`).
+  - Bloquear creación de pagos si `estado_aprobacion != 'aprobada'`.
+- Nueva tab/filtro "Por aprobar" en `/cxp` con badge contador en sidebar.
+- Registrar en `bitacora_actividad`.
+
+### 3. Notas de crédito de proveedor
+
+**Qué construye:** aplicar NC del proveedor contra una factura para reducir saldo.
+
+- La tabla `proveedor_notas_credito` ya existe (17 columnas). Verificar campos y RLS.
+- Servicio `proveedorNotasCredito.ts` (CRUD + aplicar/cancelar).
+- UI dentro de `DialogDetallePagosProveedor`:
+  - Sección "Notas de crédito" con tabla (folio, fecha, monto, aplicado, saldo).
+  - Botón "Registrar nota de crédito" → dialog con folio, fecha, monto, motivo, archivo XML/PDF opcional.
+  - Botón "Aplicar a factura" → reduce `saldo_pendiente` y marca NC como aplicada.
+- Recalcular `saldo_pendiente` de la factura usando `pagos + notas_credito_aplicadas`.
+- Reflejar en aging y en "Por pagar".
+
+### 4. Salud del Proveedor
+
+**Qué construye:** scorecard por proveedor.
+
+- RPC `proveedor_salud(p_proveedor_id uuid)` que devuelve:
+  - Facturas últimos 12 meses (count, monto), saldo actual, días promedio de pago,
+  - % facturas pagadas a tiempo, NC emitidas, embarques activos.
+- Nueva pestaña **"Salud"** en la página de detalle de proveedor (`ProveedorDetalle`):
+  - 6 KPI cards + gráfica de barras de gasto mensual (últimos 12 meses) + tabla últimas 10 facturas con estado.
+  - Indicador semáforo (verde/amarillo/rojo) basado en % pagadas a tiempo.
+
+### 5. Hub `/compras` — actualización
+
+- Sumar KPI "Por aprobar" y "Saldo vencido (>30d)" al resumen.
+- Quick action "Revisar aging".
 
 ---
 
-## Detalles técnicos
+### Detalles técnicos
 
-**Archivos a crear**
-- `src/features/cxp/routes/Compras.tsx` (hub, ≤200 líneas)
-- `src/features/cxp/components/ComprasTabStrip.tsx` (tira de pestañas, ~60 líneas)
-- `src/features/cxp/components/ComprasResumenKpis.tsx` (4 KPI cards, ~80 líneas)
-- `src/features/cxp/components/ComprasQuickActions.tsx` (atajos, ~60 líneas)
-- Hook `useComprasResumen.ts` (agrega counts de las 3 fuentes)
-- Migración SQL: `CREATE OR REPLACE FUNCTION busqueda_global` con el UNION extra
+- **Migración SQL única** con: alter `proveedor_facturas`, las 3 nuevas RPCs (`cxp_aging_proveedores`, `aprobar_factura_proveedor`, `proveedor_salud`), GRANTs y RLS donde aplique. Las RPCs son SECURITY DEFINER con check de membresía via `organization_members`.
+- **Archivos nuevos:** `CxpAging.tsx`, `cxpAgingColumns.tsx`, `useCxpAging.ts`, `DialogNotaCreditoProveedor.tsx`, `proveedorNotasCredito.ts`, `useProveedorSalud.ts`, `ProveedorSaludTab.tsx`, `BotonesAprobacionFactura.tsx`.
+- **Archivos editados:** `ComprasTabStrip.tsx` (+Antigüedad), `Compras.tsx` (+KPIs), `Cxp.tsx` (+filtro aprobación), `DialogDetallePagosProveedor.tsx` (aprobación + NC), `ProveedorDetalle.tsx` (+tab Salud), `sidebarItems.ts` (badge "Por aprobar"), `appRoutes.tsx`+lazy+smoke, `CHANGELOG.md`, `appVersion.ts` → `13.101.0`.
+- Cálculos monetarios siempre con `financialUtils.ts` y `currency.js`. Fechas con utilidades UTC ya estandarizadas.
+- Cleanup en `useEffect` con canales realtime si se añaden.
+- Componentes ≤200 líneas (Power of 10).
 
-**Archivos a editar**
-- `src/routes/appRoutes.tsx` + `appRoutes.lazy.ts` (registrar `/compras`)
-- `src/routes/__tests__/appRoutes.smoke.test.tsx` (agregar ruta + roles)
-- `src/components/layout/sidebarItems.ts` (nuevo `SIDEBAR_COMPRAS_ITEMS`)
-- `src/hooks/layout/sidebarRoleBuilders.ts` (insertar grupo Compras en cada rol)
-- `src/components/shared/GlobalSearch.tsx` (icono/label del nuevo tipo)
-- `src/types/search.ts` (tipo `factura_proveedor`)
-- `src/features/cxp/routes/Cxp.tsx` (leer `?factura=`)
-- `src/features/cxp/routes/Cxp.tsx`, `CxpPorCapturar.tsx`, `CxpPorPagar.tsx`, `proveedor/routes/Proveedores.tsx` (inyectar `<ComprasTabStrip />` debajo del PageHeader)
-- `CHANGELOG.md` + `appVersion.ts` (bump a `13.100.0`, salto menor por el hub nuevo)
+### Fuera de alcance (Fase C/D)
 
-**Backend**
-- 1 migración: redefinición de `busqueda_global` (es SECURITY DEFINER, mantiene firma).
+Órdenes de compra, recepción de mercancía, propuesta de pago, conciliación bancaria, DIOT, CFDI 4.0 complemento de pagos, validación 69-B SAT, 3-way matching.
 
-**Riesgos / qué evitar**
-- No romper deep-links existentes (`/cxp`, `/cxp/por-capturar`, `/proveedores`, etc.). Todas siguen funcionando.
-- Sidebar: validar que `sidebarRoleBuilders` siga filtrando por permisos para cada rol.
-- Búsqueda global: la RPC ya es `SECURITY DEFINER` con filtro `current_user_org_id()`; el UNION nuevo debe respetar el mismo patrón.
+¿Procedo con esta Fase B completa, o prefieres dividirla (ej. solo Aging + Aprobación primero, luego NC + Salud)? Completa
 
----
-
-## Lo que NO entra en esta fase
-- Orden de Compra (explícitamente excluida).
-- Aprobación de facturas, aging extra, notas de crédito UI, propuesta de pago, conciliación bancaria → Fase B/C.
-- DIOT, complemento de pago, validación 69-B → Fase D.
-
-**Entregable**: módulo de Compras que el usuario percibe como una unidad coherente y donde puede buscar cualquier factura de proveedor por folio o RFC desde Ctrl+K.
+&nbsp;
