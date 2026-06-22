@@ -65,6 +65,7 @@ export function useCxpPageState() {
     openNueva, setOpenNueva,
     pagar, setPagar,
     detalle, setDetalle,
+    editar, setEditar,
     aEliminar, setAEliminar,
   };
 }
