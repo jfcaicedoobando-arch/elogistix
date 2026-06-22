@@ -1,63 +1,41 @@
-## Reacomodo sidebar — perfiles contables al estilo Odoo
+## Objetivo
+Reorganizar el sidebar de los roles **admin**, **admin_org** y **super_admin** para que también sigan el patrón tipo Odoo (Compras / Facturación / Tesorería), igual que contador y tesorero.
 
-Hoy los roles contables (`contador`, `tesorero`, `auxiliar_contable`, `ejecutivo_cobranza`) ven todo apilado bajo "Gestión". En Odoo el menú separa claramente **Compras** (lo que pagas a proveedores) y **Facturación** (lo que cobras a clientes). Replicamos esa lógica.
+## Acomodo propuesto para admins
 
-### Mapeo de módulos existentes a los nuevos grupos
+1. **Dashboards**
+2. **Gestión operativa** — Cotizaciones, Embarques
+3. **Costeo**
+4. **Compras** — Bandeja CxP por capturar, Bandeja CxP por pagar, CxP, Proveedores
+5. **Facturación** — Bandeja por emitir, Facturación, Proformas, Cartera, Comisiones
+6. **Tesorería**
+7. **Profit**
+8. **CRM**
+9. **Reportes**
+10. **Directorio** — Clientes
+11. **Sistema** — Configuración, Ayuda, Auditoría, Bitácora
+12. **Administración** (solo admin / admin_org / super_admin)
+13. **Super Admin** (solo super_admin)
 
-```text
-Compras          → /cxp, /cxp/por-capturar, /cxp/por-pagar, /proveedores
-Facturación      → /facturacion, /facturacion/por-emitir, /proformas,
-                   /cartera (cobranza), /comisiones
-Tesorería        → /tesoreria
-```
+## Cambios técnicos
 
-`Profit`, `Reportes`, `Directorio` (clientes) y `Sistema` quedan como bloques propios.
+Archivo: `src/hooks/layout/useAppSidebarSections.ts`
 
-### Nuevo orden por rol
+- Crear `buildAdmin: Builder` que devuelve las 11 secciones base de arriba.
+- Registrar en `ROLE_BUILDERS`: `admin: buildAdmin`, `admin_org: buildAdmin`.
+- Para `super_admin` (que no pasa por `ROLE_BUILDERS` porque no tiene `effectiveRole` propio), ajustar la rama final de `useAppSidebarSections`:
+  - Si `isAdmin`, usar `buildAdmin(deps)` en lugar de `buildDefaultSections(deps)`.
+  - Mantener el push de `Administración` y `Super Admin` al final.
+- `buildDefaultSections` se conserva como fallback para roles no mapeados.
 
-**Contador** (visión completa)
-1. Dashboards
-2. **Compras** — Por capturar (CxP) · CxP · Proveedores
-3. **Facturación** — Por emitir · Facturación · Proformas · Cobranza · Comisiones
-4. Tesorería
-5. Profit
-6. Reportes
-7. Directorio (Clientes)
-8. Sistema (Ayuda · Bitácora)
+Archivo: `src/hooks/layout/__tests__/useLayout.test.tsx` (si existe el caso): actualizar el orden esperado para admin.
 
-**Tesorero** (foco en pagos y bancos)
-1. Dashboards
-2. **Compras** — Por capturar · Por pagar · CxP · Proveedores
-3. Tesorería
-4. **Facturación** — Cobranza · Comisiones
-5. Profit · Reportes
-6. Sistema
+## Versionado
 
-**Auxiliar contable** (captura)
-1. **Compras** — Por capturar · CxP · Proveedores
-2. Sistema
+- `src/constants/appVersion.ts` → `13.98.1`
+- `CHANGELOG.md` → entrada `[13.98.1] - 22/06/2026`: "Sidebar de admin/admin_org/super_admin reorganizado con secciones Compras, Facturación y Tesorería tipo Odoo."
 
-**Ejecutivo de cobranza**
-1. **Facturación** — Cobranza · Facturación · Proformas
-2. Directorio (Clientes)
-3. Sistema
+## Verificación
 
-Roles no contables (vendedor, customer service, coordinador, pricing, gerentes, admin) se quedan igual — el cambio sólo aplica a los 4 perfiles financieros.
-
-### Detalles técnicos
-
-- Editar `src/hooks/layout/useAppSidebarSections.ts`:
-  - Añadir dos helpers `filterCompras(urls)` y `filterFacturacion(urls)` que filtren sobre `SIDEBAR_GESTION_ITEMS` + `SIDEBAR_BANDEJAS_ITEMS` + `SIDEBAR_DIRECTORIO_ITEMS` según el grupo.
-  - Reescribir `buildContador`, `buildTesorero`, `buildAuxiliarContable` y `buildEjecutivoCobranza` con el nuevo orden.
-- **No** cambiar `sidebarItems.ts`, rutas ni permisos: sólo el agrupamiento visual del menú.
-- Actualizar el test `src/hooks/layout/__tests__/useLayout.test.tsx` para reflejar los nuevos labels (`Compras`, `Facturación`) por rol.
-- `APP_VERSION` → `13.98.0` (cambio de UX visible) y entrada en `CHANGELOG.md`.
-
-### Validación
-
-- `bunx vitest run src/hooks/layout` debe pasar.
-- Smoke visual: entrar como Contador / Tesorero / Auxiliar / Cobranza y verificar el nuevo orden y que cada link sigue navegando a su ruta.
-
-Analogía: hoy todo está en un cajón llamado "Gestión". Vamos a separar en dos cajones — uno para lo que **pagas** (Compras) y otro para lo que **cobras** (Facturación), igual que Odoo.
-
-¿Procedo con esta agrupación o quieres ajustar qué módulos van en cada cajón?
+- `bunx vitest run src/hooks/layout`
+- Revisar visualmente en `/inicio` que aparezcan las nuevas secciones.

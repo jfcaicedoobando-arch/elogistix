@@ -153,6 +153,33 @@ const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
 ];
 
+const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  {
+    label: "Compras",
+    items: [
+      ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]),
+      ...filterGestion(["/cxp"]),
+      ...filterDirectorio(["/proveedores"]),
+    ],
+  },
+  {
+    label: "Facturación",
+    items: [
+      ...filterBandejas(["/facturacion/por-emitir"]),
+      ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]),
+    ],
+  },
+  { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
+  { label: "CRM", items: crmItems },
+  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Sistema", items: sistemaItems },
+];
+
 const ROLE_BUILDERS: Record<string, Builder> = {
   vendedor: buildVendedor,
   customer_service: buildCustomerService,
@@ -166,6 +193,8 @@ const ROLE_BUILDERS: Record<string, Builder> = {
   ejecutivo_cobranza: buildEjecutivoCobranza,
   gerente_comercial: buildGerenteComercial,
   gerente_operaciones: buildGerenteOperaciones,
+  admin: buildAdmin,
+  admin_org: buildAdmin,
 };
 
 function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
@@ -215,8 +244,8 @@ export function useAppSidebarSections(): SidebarSection[] {
   const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
   if (builder) return patchEmbarquesBadge(builder(deps), adminPendientes);
 
-  const sections = buildDefaultSections(deps);
   const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
+  const sections = isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
   return patchEmbarquesBadge(sections, adminPendientes);
