@@ -1,54 +1,64 @@
-## Hallazgo
+# Completar datos fiscales del cliente para CFDI 4.0
 
-El dashboard (`Arribos este mes → Gastos fijos cubiertos`) sigue calculando los **gastos operativos del mes** desde la columna **vieja** `proveedores.categoria = 'GastoOperativo'`. Como la categoría contable ya migró a las facturas (`proveedor_facturas.categoria_presupuesto_id`), ese filtro quedó huérfano: las facturas nuevas, donde el proveedor ya no tiene categoría asignada, **no se cuentan** en la barra y el porcentaje de cobertura sale más alto de lo real.
+## Problema
 
-El resto de la app (vsReal, edición/captura de facturas, filtros CxP) ya usa `categoria_presupuesto_id`. El único punto pendiente de propagación es la RPC `public.dashboard_summary`, más una pieza faltante: hoy las categorías presupuestales no tienen forma de distinguir qué cuenta como "gasto fijo" (indirecto + administración) y qué no (COGS / comisiones variables).
+La tabla `clientes` ya tiene las columnas `regimen_fiscal` y `uso_cfdi_default`, pero el wizard de alta y el diálogo de edición no las capturan. Resultado: cada factura nueva pide capturar régimen y uso CFDI a mano porque vienen vacíos del cliente.
 
-## Cambio propuesto
+Además, `parse-csf` ya devuelve `regimen_fiscal` de la Constancia de Situación Fiscal, pero el controller lo descarta.
 
-### 1. Clasificación contable por categoría
+## Alcance
 
-Nuevo enum `public.tipo_contable_categoria` con tres valores:
+Solo clientes nacionales (mexicanos). Captura mínima para que el módulo de timbrado deje de bloquearse.
 
-- `CostoDirectoEmbarque` — COGS: flete, THC, BL, maniobras, almacenajes, demoras, custodia, agente. Va directo al costo del embarque, **no** entra a gastos fijos.
-- `IndirectoOperacion` — sueldos operativos, sistemas, oficina operativa. **Sí** entra a gastos fijos.
-- `Administracion` — renta, nómina admin, contador, papelería, marketing, etc. **Sí** entra a gastos fijos.
+## Cambios
 
-Se agrega columna `tipo_contable` (NOT NULL DEFAULT `'Administracion'`) en `public.presupuesto_categorias`. Backfill por nombre:
+### 1. Wizard "Nuevo Cliente" (paso 1)
 
-| Nombre actual | tipo_contable |
-|---|---|
-| Nómina | IndirectoOperacion |
-| Renta, Servicios, Marketing, Otros, Sin categoría | Administracion |
-| Comisiones | CostoDirectoEmbarque |
+Archivo: `src/features/cliente/hooks/useNuevoClienteController.ts` y el componente del paso 1.
 
-### 2. RPC `dashboard_summary`
+- Agregar al estado `EMPTY_CLIENTE` los campos `regimen_fiscal: ""` y `uso_cfdi_default: ""`.
+- En `handleCsfUpload`, mapear `datos.regimen_fiscal` al form (ya viene de la edge function).
+- En el paso 1 de la UI, agregar dos `Select`:
+  - **Régimen fiscal SAT** — usando el catálogo `src/constants/regimenFiscalSAT.ts`.
+  - **Uso CFDI por defecto** — usando los usos vigentes en `src/constants/catalogosSAT.ts` (G03, P01, S01, etc.).
+- Validación: para `isStep1Valid` agregar `regimen_fiscal` como obligatorio (uso CFDI puede quedar opcional con `G03` por defecto, a confirmar abajo).
 
-Cambiar el CTE `gastos_op_facturas` para sumar `proveedor_facturas` cuyo `categoria_presupuesto_id` apunte a una categoría con `tipo_contable IN ('IndirectoOperacion','Administracion')`, en lugar de filtrar por `p.categoria='GastoOperativo'`. Mantener el sumando de `liquidaciones_comision` aparte (siguen siendo OpEx variable que el negocio quiere ver dentro de la cobertura de gastos fijos del mes).
+### 2. Diálogo "Editar Cliente"
 
-### 3. UI Configuración de categorías
+Archivo: `src/features/cliente/components/DialogEditarCliente.tsx` y su tipo `ClienteData` en `useClienteDetalleController.types.ts`.
 
-- `DialogCategoria.tsx`: agregar selector "Tipo contable" (3 opciones con descripción corta debajo).
-- `TabCategorias.tsx`: nueva columna "Tipo contable" en la tabla con etiqueta legible.
-- `services/categorias.ts`: el tipo `CategoriaPresupuesto` ya viene de DB types, no requiere cambio manual; sólo asegurar que `crearCategoria`/`actualizarCategoria` acepten `tipo_contable`.
+- Agregar los mismos dos selects.
+- Permitir corregir clientes existentes que tengan estos campos vacíos.
 
-### 4. Tooltip del dashboard
+### 3. Servicio de creación / actualización
 
-En `ArribosCardTooltips.tsx`, ajustar el texto de "Cobertura de gastos fijos" para aclarar que incluye **gastos indirectos de operación + gastos de administración + comisiones del mes** (excluye COGS).
+Archivo: `src/features/cliente/services/crud.ts`.
 
-### 5. Versionado
+- Asegurar que `regimen_fiscal` y `uso_cfdi_default` viajen en el `insert` y `update`.
+- Confirmar que `clienteInsertSchema` / `clienteUpdateSchema` aceptan ambos campos (revisar `src/lib/validation/mutationSchemas.ts`).
 
-- `APP_VERSION` → `13.112.0` (cambia BD y semántica del dashboard).
-- Entrada en `CHANGELOG.md` explicando el fix con analogía.
+### 4. Importación CSV de clientes
+
+Archivo: `src/lib/csv/importSchemaCliente.ts`.
+
+- Agregar columnas opcionales `regimen_fiscal` y `uso_cfdi_default` a `CLIENTE_TEMPLATE_HEADERS` y al schema Zod.
+
+### 5. Tests
+
+- Actualizar `useNuevoClienteController.test.tsx` para cubrir el caso de CSF con régimen y el caso manual.
+
+### 6. Changelog y versión
+
+- `APP_VERSION` → `13.113.0`.
+- Entrada en `CHANGELOG.md` describiendo la captura obligatoria de régimen fiscal y opcional de uso CFDI.
 
 ## Fuera de alcance
 
-- No se borra `proveedores.categoria` ni el enum `categoria_proveedor` (datos históricos intactos).
-- No se cambia la UI del directorio de proveedores (ya migrada en 13.111.x).
-- No se altera el módulo de Presupuesto vs Real (ya usa `categoria_presupuesto_id`).
-- No se exponen reportes nuevos por bucket; sólo se corrige el cálculo del progress bar.
+- Forma de pago / método de pago SAT (se capturan por factura, no por cliente).
+- Migración masiva para llenar clientes históricos (se irán completando al editarlos o al timbrar).
+- Clientes extranjeros (no aplican RFC/régimen SAT).
 
-## Riesgos
+## Preguntas antes de implementar
 
-- Categorías custom creadas por usuarios quedarán por defecto en `Administracion` (lo más conservador, entra a gastos fijos). El usuario puede reclasificarlas desde Configuración.
-- Si una factura no tiene `categoria_presupuesto_id` (no debería pasar tras `13.111.0` que lo hizo NOT NULL), no se cuenta. Está bien.
+1. ¿El **uso CFDI** debe ser obligatorio en el alta o lo dejamos opcional con `G03 – Gastos en general` por defecto? G03
+2. Para los **clientes existentes** sin régimen, ¿quieres que aparezca una alerta visible en el detalle del cliente y/o un badge en el listado, o basta con que el módulo de facturación lo siga pidiendo al momento de timbrar? manejamos algo visible
