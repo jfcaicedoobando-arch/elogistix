@@ -5,3 +5,4 @@ export * from "./cfdiStorage";
 export * from "./conceptosCostoVinculables";
 export * from "./sugerirEmbarques";
 export * from "./cxpAprobacionCount";
+export * from "./historialFactura";
