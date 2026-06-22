@@ -29,6 +29,8 @@ export interface FacturaCxP {
   estado: EstadoProveedorFactura;
   estatus: EstatusCxP;
   tipo_cambio_usd: number;
+  estado_aprobacion: "pendiente" | "aprobada" | "rechazada";
+  motivo_rechazo: string | null;
 }
 
 export interface FetchCxPFiltros {
@@ -60,6 +62,7 @@ type Joined = Pick<
   ProveedorFacturaRow,
   | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor"
   | "fecha_emision" | "fecha_vencimiento" | "moneda" | "total" | "estado" | "tipo_cambio_usd"
+  | "estado_aprobacion" | "motivo_rechazo"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
@@ -72,6 +75,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
     .select(`
       id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
       fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
+      estado_aprobacion, motivo_rechazo,
       pagos_proveedor(monto, deleted_at),
       proveedor_notas_credito(monto, estado, deleted_at),
       proveedores(origen_proveedor)
@@ -122,6 +126,8 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
       estado: f.estado,
       estatus: clasificar(saldo, dv, f.estado),
       tipo_cambio_usd: Number(f.tipo_cambio_usd),
+      estado_aprobacion: f.estado_aprobacion,
+      motivo_rechazo: f.motivo_rechazo,
     };
   });
 
