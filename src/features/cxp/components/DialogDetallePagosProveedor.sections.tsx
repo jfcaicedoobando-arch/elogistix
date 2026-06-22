@@ -2,7 +2,6 @@
  * Sub-componentes presentacionales extraídos de DialogDetallePagosProveedor
  * para mantener su complejidad ciclomática ≤ 16 y tamaño ≤ 200 líneas.
  */
-import { format } from "date-fns";
 import { DollarSign, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,20 +11,10 @@ import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { BotonesAprobacionFactura } from "./BotonesAprobacionFactura";
 import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { InfoFacturaSection } from "./InfoFacturaSection";
+import { PagoFila, type PagoRow } from "./DialogDetallePagosProveedor.fila";
 import type { FacturaCxP } from "@/features/cxp/services";
-
 import type { FacturaFlags } from "./DialogDetallePagosProveedor.flags";
 
-interface PagoRow {
-  id: string;
-  fecha_pago: string;
-  metodo_pago: string;
-  referencia?: string | null;
-  monto: number | string;
-  moneda: string;
-  tipo_cambio_usd?: number | string | null;
-  diferencia_cambiaria_mxn?: number | string | null;
-}
 
 interface ToolbarProps {
   factura: FacturaCxP;
