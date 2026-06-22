@@ -9,6 +9,7 @@ import { Inbox } from "lucide-react";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 
 export default function CxpPorPagar() {
+  const navigate = useNavigate();
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
 
