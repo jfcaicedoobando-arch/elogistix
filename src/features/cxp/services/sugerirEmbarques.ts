@@ -87,7 +87,7 @@ export async function crearConceptoCostoYVincular(
 ): Promise<{ conceptoId: string }> {
   const { data: cc, error: errCc } = await supabase
     .from("conceptos_costo")
-    .insert({
+    .insert([{
       embarque_id: input.embarqueId,
       organization_id: input.organizationId,
       proveedor_id: input.proveedorId,
@@ -98,7 +98,7 @@ export async function crearConceptoCostoYVincular(
       estado_liquidacion: "Pagado",
       fecha_pago: input.fechaEmision,
       referencia_pago: input.folio,
-    })
+    }])
     .select("id")
     .single();
   if (errCc) throw errCc;
