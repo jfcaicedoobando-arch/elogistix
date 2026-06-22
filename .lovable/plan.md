@@ -1,83 +1,47 @@
-## Fase B — Control financiero del módulo de Compras
+## Pendientes del módulo de Compras
 
-Objetivo: llevar el módulo al estándar ERP con **aging de cuentas por pagar, flujo de aprobación de facturas, notas de crédito de proveedor y salud del proveedor**. Todo respeta multi-tenant (organization_id), RLS, y los estándares ya definidos (DataTable, PageHeader, financialUtils, fechas UTC).
+La Fase B se entregó en su mayoría (Aging, RPC de aprobación, NC de proveedor y tab Salud). Quedaron sueltos varios "enganches" de UI/UX y reglas que el plan original sí contemplaba.
 
----
+### 1. Tab "Por aprobar" en `/cxp`
 
-### 1. Aging de Cuentas por Pagar (CxP)
+- Añadir filtro `estado_aprobacion` en `CxpFiltros` (chips: Todas / Pendientes / Aprobadas / Rechazadas).
+- Columna nueva "Aprobación" con badge en `cxpColumns`.
+- Quick filter "Por aprobar" en el hub.
 
-**Qué construye:** vista de antigüedad de saldos por proveedor con cubetas estándar.
+### 2. Badge contador en sidebar
 
-- Nueva RPC `cxp_aging_proveedores(p_org uuid, p_fecha date)` que devuelve por proveedor:
-  - `saldo_total`, `vigente` (0 días vencido), `1_30`, `31_60`, `61_90`, `mas_90`
-  - Calcula desde `proveedor_facturas` (saldo_pendiente > 0) usando `fecha_vencimiento` vs `p_fecha`.
-- Nueva pestaña **"Antigüedad"** en `ComprasTabStrip` → ruta `/compras/aging`.
-- Página `CxpAging.tsx`:
-  - PageHeader + 5 KPI cards (una por cubeta, totales en MXN).
-  - DataTable con columnas: Proveedor, Vigente, 1-30, 31-60, 61-90, >90, Total. Click en proveedor → `/cxp?proveedor={id}`.
-  - Gráfica de barras apiladas (recharts) por las 5 cubetas top 10 proveedores.
-  - Botón "Exportar CSV".
+- RPC liviana `cxp_pendientes_aprobacion_count()` (o query directa).
+- Hook `useCxpPendientesAprobacion` y badge numérico en el item "Compras" del sidebar (`sidebarItems.ts` / `sidebarRoleBuilders.ts`).
 
-### 2. Flujo de aprobación de facturas de proveedor
+### 3. Bloqueo de pagos si no está aprobada
 
-**Qué construye:** estado de aprobación antes de programar pago.
+- En `DialogRegistrarPagoProveedor` y en el botón "Registrar pago" de `cxpColumns`: deshabilitar + tooltip "Requiere aprobación" cuando `estado_aprobacion !== 'aprobada'`.
+- Validación server-side: chequeo dentro del insert de `pagos_proveedor` (trigger BEFORE INSERT) para que ningún cliente lo saltee.
 
-- Migración: añadir a `proveedor_facturas`:
-  - `estado_aprobacion` enum (`pendiente`, `aprobada`, `rechazada`) default `pendiente`
-  - `aprobada_por uuid`, `aprobada_at timestamptz`, `motivo_rechazo text`
-- Backfill: facturas existentes con pagos > 0 → `aprobada`; resto → `pendiente`.
-- RPC `aprobar_factura_proveedor(p_id, p_aprobar bool, p_motivo text)` con check de rol (admin/finanzas).
-- UI en `DialogDetallePagosProveedor`:
-  - Badge de estado de aprobación arriba.
-  - Botones **Aprobar** / **Rechazar** (solo roles autorizados, solo si `pendiente`).
-  - Bloquear creación de pagos si `estado_aprobacion != 'aprobada'`.
-- Nueva tab/filtro "Por aprobar" en `/cxp` con badge contador en sidebar.
-- Registrar en `bitacora_actividad`.
+### 4. KPIs nuevos en el hub `/compras`
 
-### 3. Notas de crédito de proveedor
+- "Por aprobar" (count + monto).
+- "Saldo vencido > 30 días" (suma cubetas 31-60, 61-90, >90 desde `cxp_aging_proveedores`).
+- Quick action "Revisar aging" → `/compras/aging`.
 
-**Qué construye:** aplicar NC del proveedor contra una factura para reducir saldo.
+### 5. Backfill de facturas existentes
 
-- La tabla `proveedor_notas_credito` ya existe (17 columnas). Verificar campos y RLS.
-- Servicio `proveedorNotasCredito.ts` (CRUD + aplicar/cancelar).
-- UI dentro de `DialogDetallePagosProveedor`:
-  - Sección "Notas de crédito" con tabla (folio, fecha, monto, aplicado, saldo).
-  - Botón "Registrar nota de crédito" → dialog con folio, fecha, monto, motivo, archivo XML/PDF opcional.
-  - Botón "Aplicar a factura" → reduce `saldo_pendiente` y marca NC como aplicada.
-- Recalcular `saldo_pendiente` de la factura usando `pagos + notas_credito_aplicadas`.
-- Reflejar en aging y en "Por pagar".
+- Migración: `UPDATE proveedor_facturas SET estado_aprobacion='aprobada' WHERE pagado > 0`.
+- Resto queda `pendiente` (ya es el default).
 
-### 4. Salud del Proveedor
+### 6. Limpieza / consistencia
 
-**Qué construye:** scorecard por proveedor.
+- Pestaña "Antigüedad" ya existe en `ComprasTabStrip` ✔.
+- Registrar aprobación/rechazo en `bitacora_actividad` (verificar que el RPC ya lo haga; si no, añadirlo).
 
-- RPC `proveedor_salud(p_proveedor_id uuid)` que devuelve:
-  - Facturas últimos 12 meses (count, monto), saldo actual, días promedio de pago,
-  - % facturas pagadas a tiempo, NC emitidas, embarques activos.
-- Nueva pestaña **"Salud"** en la página de detalle de proveedor (`ProveedorDetalle`):
-  - 6 KPI cards + gráfica de barras de gasto mensual (últimos 12 meses) + tabla últimas 10 facturas con estado.
-  - Indicador semáforo (verde/amarillo/rojo) basado en % pagadas a tiempo.
+### Archivos a tocar
 
-### 5. Hub `/compras` — actualización
+- **SQL (1 migración):** trigger `pagos_proveedor_requiere_aprobacion`, RPC `cxp_pendientes_aprobacion_count`, backfill UPDATE.
+- **Edit:** `CxpFiltros.tsx`, `cxpColumns.tsx`, `Cxp.tsx`, `Compras.tsx`, `DialogRegistrarPagoProveedor.tsx`, `sidebarItems.ts`, `sidebarRoleBuilders.ts`, `CHANGELOG.md`, `appVersion.ts` → `13.102.0`.
+- **Nuevo:** `useCxpPendientesAprobacion.ts`.
 
-- Sumar KPI "Por aprobar" y "Saldo vencido (>30d)" al resumen.
-- Quick action "Revisar aging".
+### Fuera de alcance (Fase C)
 
----
+Órdenes de compra, recepción, propuesta de pago, conciliación bancaria, DIOT, CFDI 4.0 complemento, 3-way matching.
 
-### Detalles técnicos
-
-- **Migración SQL única** con: alter `proveedor_facturas`, las 3 nuevas RPCs (`cxp_aging_proveedores`, `aprobar_factura_proveedor`, `proveedor_salud`), GRANTs y RLS donde aplique. Las RPCs son SECURITY DEFINER con check de membresía via `organization_members`.
-- **Archivos nuevos:** `CxpAging.tsx`, `cxpAgingColumns.tsx`, `useCxpAging.ts`, `DialogNotaCreditoProveedor.tsx`, `proveedorNotasCredito.ts`, `useProveedorSalud.ts`, `ProveedorSaludTab.tsx`, `BotonesAprobacionFactura.tsx`.
-- **Archivos editados:** `ComprasTabStrip.tsx` (+Antigüedad), `Compras.tsx` (+KPIs), `Cxp.tsx` (+filtro aprobación), `DialogDetallePagosProveedor.tsx` (aprobación + NC), `ProveedorDetalle.tsx` (+tab Salud), `sidebarItems.ts` (badge "Por aprobar"), `appRoutes.tsx`+lazy+smoke, `CHANGELOG.md`, `appVersion.ts` → `13.101.0`.
-- Cálculos monetarios siempre con `financialUtils.ts` y `currency.js`. Fechas con utilidades UTC ya estandarizadas.
-- Cleanup en `useEffect` con canales realtime si se añaden.
-- Componentes ≤200 líneas (Power of 10).
-
-### Fuera de alcance (Fase C/D)
-
-Órdenes de compra, recepción de mercancía, propuesta de pago, conciliación bancaria, DIOT, CFDI 4.0 complemento de pagos, validación 69-B SAT, 3-way matching.
-
-¿Procedo con esta Fase B completa, o prefieres dividirla (ej. solo Aging + Aprobación primero, luego NC + Salud)? Completa
-
-&nbsp;
+¿Avanzo con todos los pendientes en una sola entrega, o prefieres priorizar (ej. primero badge + bloqueo de pago, después KPIs del hub)?  Todos
