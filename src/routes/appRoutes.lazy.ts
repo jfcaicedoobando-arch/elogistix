@@ -41,6 +41,7 @@ export const ProfitEstadoResultados = lazy(() => import("@/features/profit/route
 export const ProfitPresupuesto = lazy(() => import("@/features/profit/routes/ProfitPresupuesto"));
 export const ProfitDashboardEjecutivo = lazy(() => import("@/features/profit/routes/ProfitDashboardEjecutivo"));
 export const Cxp = lazy(() => import("@/features/cxp/routes/Cxp"));
+export const Compras = lazy(() => import("@/features/cxp/routes/Compras"));
 export const CxpPorCapturar = lazy(() => import("@/features/bandejas/routes/CxpPorCapturar"));
 export const CxpPorPagar = lazy(() => import("@/features/bandejas/routes/CxpPorPagar"));
 export const FacturacionPorEmitir = lazy(() => import("@/features/bandejas/routes/FacturacionPorEmitir"));

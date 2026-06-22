@@ -18,6 +18,7 @@ const typeIcons = {
   cliente: Users,
   proveedor: Truck,
   factura: FileText,
+  factura_proveedor: Receipt,
   cotizacion: ClipboardList,
   proforma: Receipt,
 };
@@ -27,6 +28,7 @@ const typeLabels = {
   cliente: "Clientes",
   proveedor: "Proveedores",
   factura: "Facturas",
+  factura_proveedor: "Facturas de proveedor",
   cotizacion: "Cotizaciones",
   proforma: "Proformas",
 };
