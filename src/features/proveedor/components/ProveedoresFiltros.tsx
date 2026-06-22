@@ -7,19 +7,11 @@ import SearchInput from "@/components/shared/SearchInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import type { Enums } from "@/types/db";
-import {
-  TIPOS_PROVEEDOR,
-  SUBTIPOS_GASTO_OPERATIVO,
-  labelSubtipoGasto,
-} from "@/constants/proveedorConstants";
+import { TIPOS_PROVEEDOR } from "@/constants/proveedorConstants";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
-type CategoriaProveedor = Enums<"categoria_proveedor">;
-type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
-export type CategoriaTab = "todos" | CategoriaProveedor;
 export type OrigenFiltro = "todos" | "Nacional" | "Extranjero";
 export type TipoFiltro = "todos" | TipoProveedor;
-export type SubtipoFiltro = "todos" | SubtipoGasto;
 
 interface Props {
   search: string;
@@ -28,29 +20,16 @@ interface Props {
   onOrigenChange: (v: OrigenFiltro) => void;
   tipoFiltro: TipoFiltro;
   onTipoChange: (v: TipoFiltro) => void;
-  subtipoFiltro: SubtipoFiltro;
-  onSubtipoChange: (v: SubtipoFiltro) => void;
-  categoriaTab: CategoriaTab;
   onLimpiar: () => void;
 }
 
 export function ProveedoresFiltros(props: Props) {
-  const {
-    search, onSearchChange, origen, onOrigenChange,
-    tipoFiltro, onTipoChange, subtipoFiltro, onSubtipoChange,
-    categoriaTab, onLimpiar,
-  } = props;
-
+  const { search, onSearchChange, origen, onOrigenChange, tipoFiltro, onTipoChange, onLimpiar } = props;
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const filtrosActivos: { label: string; onClear: () => void }[] = [];
   if (origen !== "todos") filtrosActivos.push({ label: `Origen: ${origen}`, onClear: () => onOrigenChange("todos") });
-  if (tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo") {
-    filtrosActivos.push({ label: `Tipo: ${tipoFiltro}`, onClear: () => onTipoChange("todos") });
-  }
-  if (subtipoFiltro !== "todos" && categoriaTab !== "Logistico") {
-    filtrosActivos.push({ label: `Gasto: ${labelSubtipoGasto(subtipoFiltro)}`, onClear: () => onSubtipoChange("todos") });
-  }
+  if (tipoFiltro !== "todos") filtrosActivos.push({ label: `Tipo: ${tipoFiltro}`, onClear: () => onTipoChange("todos") });
 
   const selectsContent = (
     <>
@@ -63,27 +42,13 @@ export function ProveedoresFiltros(props: Props) {
         </SelectContent>
       </Select>
 
-      {categoriaTab !== "GastoOperativo" && (
-        <Select value={tipoFiltro} onValueChange={(v) => onTipoChange(v as TipoFiltro)}>
-          <SelectTrigger className="h-9 w-full md:w-[200px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Tipo logístico: todos</SelectItem>
-            {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      )}
-
-      {categoriaTab !== "Logistico" && (
-        <Select value={subtipoFiltro} onValueChange={(v) => onSubtipoChange(v as SubtipoFiltro)}>
-          <SelectTrigger className="h-9 w-full md:w-[220px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Tipo de gasto: todos</SelectItem>
-            {SUBTIPOS_GASTO_OPERATIVO.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      <Select value={tipoFiltro} onValueChange={(v) => onTipoChange(v as TipoFiltro)}>
+        <SelectTrigger className="h-9 w-full md:w-[200px]"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Tipo: todos</SelectItem>
+          {TIPOS_PROVEEDOR.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+        </SelectContent>
+      </Select>
     </>
   );
 

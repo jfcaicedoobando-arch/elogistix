@@ -3,34 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NuevoProveedorDialog from "@/features/proveedor/components/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { usePermissions } from "@/hooks/shared";
 import { ProveedorTable } from "../components/ProveedorTable";
 import {
   ProveedoresFiltros,
-  type CategoriaTab,
   type OrigenFiltro,
   type TipoFiltro,
-  type SubtipoFiltro,
 } from "../components/ProveedoresFiltros";
 import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
 import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 
-const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "Logistico", label: "Logísticos" },
-  { value: "GastoOperativo", label: "Gastos de administración" },
-];
-
 export default function Proveedores() {
   const [search, setSearch] = useState("");
-  const [categoriaTab, setCategoriaTab] = useState<CategoriaTab>("todos");
   const [origen, setOrigen] = useState<OrigenFiltro>("todos");
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
-  const [subtipoFiltro, setSubtipoFiltro] = useState<SubtipoFiltro>("todos");
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const navigate = useNavigate();
@@ -40,23 +29,6 @@ export default function Proveedores() {
   const limpiarFiltros = () => {
     setOrigen("todos");
     setTipoFiltro("todos");
-    setSubtipoFiltro("todos");
-  };
-
-  // Cuando se cambia de tab limpiamos filtros incompatibles
-  const handleCategoriaChange = (next: CategoriaTab) => {
-    setCategoriaTab(next);
-    if (next !== "Logistico") setTipoFiltro("todos");
-    if (next !== "GastoOperativo") setSubtipoFiltro("todos");
-  };
-
-  const tableProps = {
-    categoria: categoriaTab,
-    tipo: tipoFiltro !== "todos" && categoriaTab !== "GastoOperativo" ? tipoFiltro : null,
-    subtipoGasto: subtipoFiltro !== "todos" && categoriaTab !== "Logistico" ? subtipoFiltro : null,
-    search,
-    origen,
-    onSelect: (id: string) => navigate(`/proveedores/${id}`),
   };
 
   return (
@@ -66,7 +38,7 @@ export default function Proveedores() {
       <PageHeader
         icon={<Truck className="h-6 w-6 text-accent" />}
         title="Proveedores"
-        description="Directorio de proveedores logísticos y de gastos de administración"
+        description="Directorio único de proveedores. La categoría contable de cada gasto se asigna por factura."
         actions={
           canEdit ? (
             <div className="hidden sm:flex gap-2">
@@ -90,27 +62,15 @@ export default function Proveedores() {
         onOrigenChange={setOrigen}
         tipoFiltro={tipoFiltro}
         onTipoChange={setTipoFiltro}
-        subtipoFiltro={subtipoFiltro}
-        onSubtipoChange={setSubtipoFiltro}
-        categoriaTab={categoriaTab}
         onLimpiar={limpiarFiltros}
       />
 
-      <Tabs value={categoriaTab} onValueChange={(v) => handleCategoriaChange(v as CategoriaTab)}>
-        <TabsList className="h-auto">
-          {CATEGORIA_TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="text-sm">
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {CATEGORIA_TABS.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="mt-4">
-            {categoriaTab === tab.value && <ProveedorTable {...tableProps} />}
-          </TabsContent>
-        ))}
-      </Tabs>
+      <ProveedorTable
+        tipo={tipoFiltro !== "todos" ? tipoFiltro : null}
+        search={search}
+        origen={origen}
+        onSelect={(id) => navigate(`/proveedores/${id}`)}
+      />
 
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
 
