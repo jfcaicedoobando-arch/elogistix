@@ -1,75 +1,38 @@
+## Problema
 
-## Objetivo
-
-Reorganizar el drawer **Compras** del sidebar para todos los roles financieros (admin, admin_org, super_admin, contador, tesorero, auxiliar_contable) siguiendo el estilo de Odoo, dejando un flujo claro: **bandejas operativas primero → registro maestro → catálogo de proveedores**.
-
-## Problema actual
-
-Hoy los 3 ítems aparecen juntos pero con nombres confusos:
-
-- `CxP — Por capturar` (bandeja: embarques sin factura capturada)
-- `CxP — Por pagar` (bandeja: facturas con saldo por liquidar)
-- `Cuentas por Pagar` (módulo maestro CRUD)
-
-El usuario no distingue cuál es bandeja operativa y cuál es el registro contable completo.
-
-## Cambios propuestos
-
-### 1. Renombrar los 3 ítems en `src/components/layout/sidebarItems.ts`
-
-| Antes | Después | Notas |
-|---|---|---|
-| `Por capturar (CxP)` | `Por capturar` | bandeja |
-| `Por pagar (CxP)` | `Por pagar` | bandeja |
-| `Cuentas por Pagar` | `Facturas de proveedor` | registro maestro |
-| `Proveedores` | `Proveedores` | catálogo (sin cambios) |
-
-El prefijo "CxP —" se vuelve redundante porque ya viven dentro del drawer **Compras**.
-
-### 2. Orden estándar dentro del drawer "Compras"
-
-Aplicado a contador, tesorero, auxiliar_contable, admin, admin_org y super_admin (los que ya muestran el drawer):
+El job **Lint, typecheck, unused code & build** falla porque `src/hooks/layout/useAppSidebarSections.ts` creció a **253 líneas** tras agregar `buildAdmin`, y el test `architecture-baseline` (Power of 10) exige ≤ 200 líneas en archivos productivos.
 
 ```
-Compras
-├── Por capturar          (bandeja — recibir facturas nuevas)
-├── Por pagar             (bandeja — programar pagos, solo si rol lo permite)
-├── Facturas de proveedor (registro maestro CRUD)
-└── Proveedores           (catálogo)
+- src/hooks/layout/useAppSidebarSections.ts (253 líneas): expected [...] to deeply equal []
 ```
 
-Lógica por rol (sin cambiar permisos, solo orden):
+## Solución
 
-- **contador / auxiliar_contable**: Por capturar → Facturas de proveedor → Proveedores
-- **tesorero**: Por capturar → Por pagar → Facturas de proveedor → Proveedores
-- **admin / admin_org / super_admin**: Por capturar → Por pagar → Facturas de proveedor → Proveedores
+Extraer los **13 builders por rol** a un módulo nuevo, dejando `useAppSidebarSections.ts` como orquestador pequeño.
 
-### 3. Agregar subtítulo descriptivo opcional (solo si cabe)
+### Archivos
 
-Mantener simple: solo renombrar e reordenar. Sin tooltips nuevos en esta iteración.
+1. **Nuevo: `src/hooks/layout/sidebarRoleBuilders.ts`** (~170 líneas)
+   - Exporta tipos `SidebarSection`, `BuilderDeps`, `Builder`.
+   - Exporta los helpers `filterBandejas`, `filterGestion`, `filterSistema`, `filterDirectorio`.
+   - Exporta los 11 builders: `buildVendedor`, `buildCustomerService`, `buildCoordinador`, `buildEjecutivoPricing`, `buildContador`, `buildTesorero`, `buildAuxiliarContable`, `buildEjecutivoCobranza`, `buildGerenteComercial`, `buildGerenteOperaciones`, `buildAdmin`.
+   - Exporta `ROLE_BUILDERS` y `buildDefaultSections`.
 
-## Archivos a tocar
+2. **Editar: `src/hooks/layout/useAppSidebarSections.ts`** (queda ~60 líneas)
+   - Solo conserva el hook `useAppSidebarSections`, el helper `patchEmbarquesBadge` y los `useQuery` de badges.
+   - Importa todo lo demás del nuevo módulo.
 
-1. `src/components/layout/sidebarItems.ts`
-   - Renombrar `"Por capturar (CxP)"` → `"Por capturar"`
-   - Renombrar `"Por pagar (CxP)"` → `"Por pagar"`
-   - Renombrar `"Cuentas por Pagar"` → `"Facturas de proveedor"`
-2. `src/hooks/layout/useAppSidebarSections.ts`
-   - En cada builder con drawer **Compras** (`buildContador`, `buildTesorero`, `buildAuxiliarContable`, `buildAdmin`), reordenar `items` para que el orden sea: bandejas → `/cxp` → `/proveedores`.
-3. `CHANGELOG.md` + `src/constants/appVersion.ts`
-   - Bump a `13.98.2` con entrada describiendo la reorganización.
-4. Verificar tests:
-   - `src/routes/__tests__/appRoutes.smoke.test.tsx` (no debe romperse, solo cambia labels)
-   - `src/hooks/layout/__tests__/useLayout.test.tsx` si valida labels específicos.
+3. **`src/constants/appVersion.ts`** → `13.98.3`.
 
-## Lo que NO se cambia
+4. **`CHANGELOG.md`** → entrada `[13.98.3]` describiendo el split (chore/refactor sin cambios funcionales).
 
-- Rutas (`/cxp`, `/cxp/por-capturar`, `/cxp/por-pagar`) intactas.
-- Permisos por rol intactos (mismo `guarded(...)` en `appRoutes.tsx`).
-- Títulos internos de cada página (PageHeader) intactos — solo cambian las etiquetas del sidebar.
-- Drawers Facturación, Tesorería, Profit, etc. sin tocar.
+### Verificación
 
-## Verificación
+- `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture-baseline.test.ts`
+- Smoke: `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx` y `src/hooks/layout/__tests__/useLayout.test.tsx` (si existe).
 
-- `bunx vitest run` debe pasar.
-- Visual: entrar como contador, tesorero y admin a `/inicio` y confirmar que el drawer Compras muestra los 4 ítems en el orden definido y con los nuevos nombres.
+### Lo que NO cambia
+
+- Comportamiento del sidebar para ningún rol.
+- API pública del hook `useAppSidebarSections()`.
+- Etiquetas/rutas/permisos.

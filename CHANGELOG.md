@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.98.3] - 2026-06-22
+- **chore(refactor) split `useAppSidebarSections.ts`**: el archivo quedó en 253 líneas tras agregar `buildAdmin`, rompiendo el baseline Power of 10 (≤200 líneas) en CI (`audit-report` y `architecture-baseline`). Se movieron los 11 builders por rol + `ROLE_BUILDERS` + `buildDefaultSections` a un módulo nuevo `src/hooks/layout/sidebarRoleBuilders.ts`. El hook queda como orquestador (~60 líneas) y solo conserva `patchEmbarquesBadge` y las queries de badges. Sin cambios funcionales.
+
 ## [13.98.2] - 2026-06-22
 - **feat(sidebar) renombrado de ítems de Compras**: dentro del cajón **Compras** los 3 ítems se renombran para evitar el prefijo redundante "CxP —" y aclarar la diferencia entre bandejas operativas y registro maestro. Aplica para `contador`, `auxiliar_contable`, `tesorero`, `admin`, `admin_org` y `super_admin`.
   - `Por capturar (CxP)` → **Por capturar** (bandeja: embarques con costos presupuestados pendientes de capturar factura del proveedor).
