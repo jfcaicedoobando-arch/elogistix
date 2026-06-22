@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.103.1] - 2026-06-22
+- **fix(cxp)**: las filas de `/cxp/por-pagar` ahora son clickeables y abren el detalle de la factura (`/cxp?factura={id}`) para aprobar y registrar pagos. El link al embarque preserva su navegación con `stopPropagation`.
+
 ## [13.103.0] - 2026-06-22
 - **seguridad(roles)**: `public.has_role()` sincronizada con `roleHierarchy.ts` del frontend. Se agregan agrupaciones para `contador`, `tesorero`, `auxiliar_contable` y `ejecutivo_cobranza` (admin_org y super_admin las satisfacen automáticamente), y `auxiliar_contable` + `ejecutivo_cobranza` quedan dentro del grupo `viewer`. Cierra el "agujero futuro" donde una política RLS que pidiera sólo un rol financiero específico bloquearía a admin_org pese a tener el permiso en la UI.
 
