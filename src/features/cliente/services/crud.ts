@@ -10,7 +10,7 @@ export type Cliente = Tables<"clientes">;
 
 
 export const CLIENTE_DETAIL_COLUMNS =
-  "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, organization_id, created_at, updated_at" as const;
+  "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, regimen_fiscal, uso_cfdi_default, organization_id, created_at, updated_at" as const;
 
 // ============================================================
 // Listados / búsqueda
