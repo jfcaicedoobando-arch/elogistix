@@ -81,16 +81,7 @@ export default function Cxp() {
     f.setAEliminar(fact);
   }, [f]);
 
-  const columns = useMemo(
-    () => buildCxPColumns({
-      canEdit,
-      onRegistrarPago: f.setPagar,
-      onVerDetalle: f.setDetalle,
-      onEditar: f.setEditar,
-      onEliminar,
-    }),
-    [canEdit, f.setPagar, f.setDetalle, f.setEditar, onEliminar],
-  );
+  const columns = useMemo(() => buildCxPColumns(), []);
 
   return (
     <div className="space-y-4">
@@ -176,7 +167,11 @@ export default function Cxp() {
         onOpenChange={(o) => !o && f.setDetalle(null)}
         factura={f.detalle ? data.find((d) => d.id === f.detalle!.id) ?? f.detalle : null}
         canEdit={canEdit}
+        onPagar={(fact) => { f.setDetalle(null); f.setPagar(fact); }}
+        onEditar={(fact) => { f.setDetalle(null); f.setEditar(fact); }}
+        onEliminar={(fact) => { f.setDetalle(null); onEliminar(fact); }}
       />
+
       <DoubleConfirmDeleteDialog
         open={!!f.aEliminar}
         onOpenChange={(o) => !o && f.setAEliminar(null)}

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.109.0] - 2026-06-22
+- **refactor(cxp)**: la tabla de Cuentas por Pagar elimina la columna **Acciones**. Las acciones (Registrar pago, Editar factura, Eliminar factura) ahora viven dentro del modal de detalle, que se renombra a **"Detalle de factura de proveedor"**. Al elegir cualquier acción el modal se cierra y abre el diálogo correspondiente, evitando modales encimados. Reglas heredadas: Pagar se bloquea hasta que la factura esté aprobada y Eliminar se bloquea si tiene pagos registrados (con tooltips explicativos).
+
 ## [13.108.0] - 2026-06-22
 - **feat(cxp)**: cada factura de proveedor ahora tiene un **folio interno** único por organización con formato `FP-000001`, asignado automáticamente al capturar mediante un trigger BD (RPC atómica `siguiente_folio_proveedor` + tabla `folio_secuencias`). Es inmutable: ni el editor ni los servicios pueden cambiarlo. Las 12 facturas existentes recibieron folio en orden cronológico (`FP-000001` … `FP-000012`). El folio interno aparece en la tabla CXP (nueva columna a la izquierda), en los headers de los modales *Detalle de pagos* y *Editar factura*, y se puede buscar desde el filtro de texto.
 

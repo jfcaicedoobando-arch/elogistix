@@ -1,10 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { DollarSign, Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -25,16 +19,7 @@ const APROB_COLOR: Record<EstadoAprob, string> = {
 };
 const APROB_LABEL: Record<EstadoAprob, string> = { pendiente: "Por aprobar", aprobada: "Aprobada", rechazada: "Rechazada" };
 
-export interface CxPColumnsOptions {
-  canEdit: boolean;
-  onRegistrarPago: (f: FacturaCxP) => void;
-  onVerDetalle: (f: FacturaCxP) => void;
-  onEditar: (f: FacturaCxP) => void;
-  onEliminar: (f: FacturaCxP) => void;
-}
-
-export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, unknown>[] {
-  const { canEdit, onRegistrarPago, onVerDetalle, onEditar, onEliminar } = opts;
+export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
   return defineColumns<FacturaCxP>([
     {
       id: "folio_interno", header: "Folio",
@@ -152,57 +137,6 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
           >
             {APROB_LABEL[ap]}
           </Badge>
-        );
-      },
-    },
-    {
-      id: "acciones", header: "Acciones",
-      meta: { width: "w-[150px]" },
-      cell: ({ row }) => {
-        const f = row.original;
-        const aprobada = f.estado_aprobacion === "aprobada";
-        const pagable = canEdit && f.saldo > 0 && f.estado !== "Borrador";
-        const pagoBloqueado = pagable && !aprobada;
-        return (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            {pagable && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onRegistrarPago(f)}
-                disabled={!aprobada}
-                title={pagoBloqueado ? "Requiere aprobación antes de pagar" : "Registrar pago"}
-              >
-                <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" title="Más acciones">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => onVerDetalle(f)}>
-                  <Eye className="h-4 w-4 mr-2" /> Ver detalle de pagos
-                </DropdownMenuItem>
-                {canEdit && (
-                  <>
-                    <DropdownMenuItem onClick={() => onEditar(f)}>
-                      <Pencil className="h-4 w-4 mr-2" /> Editar factura
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => onEliminar(f)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" /> Eliminar factura
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         );
       },
     },
