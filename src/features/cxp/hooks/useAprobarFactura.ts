@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { aprobarFacturaProveedor } from "@/features/cxp/services/aprobacionFactura";
 import { queryKeys } from "@/lib/query";
 
@@ -10,10 +10,14 @@ export function useAprobarFactura() {
       aprobarFacturaProveedor(id, aprobar, motivo),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      toast.success(vars.aprobar ? "Factura aprobada" : "Factura rechazada");
+      notifySuccess(undefined, { title: vars.aprobar ? "Factura aprobada" : "Factura rechazada" });
     },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "No se pudo actualizar la factura");
+    onError: (error: Error) => {
+      notifyError(undefined, {
+        title: `No se pudo actualizar la factura: ${error.message}`,
+        error,
+        method: "APROBAR_FACTURA_PROVEEDOR",
+      });
     },
   });
 }
