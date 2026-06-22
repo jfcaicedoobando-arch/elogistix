@@ -41,7 +41,16 @@ export interface FacturaCxP {
   estado_aprobacion: "pendiente" | "aprobada" | "rechazada";
   motivo_rechazo: string | null;
   categoria_presupuesto_id: string | null;
+  categoria_nombre: string | null;
+  subtotal: number;
+  iva: number;
+  retenciones: number;
+  rfc_proveedor: string | null;
+  uuid_fiscal: string | null;
+  dias_credito: number | null;
+  notas: string | null;
 }
+
 
 export interface FetchCxPFiltros {
   search?: string;

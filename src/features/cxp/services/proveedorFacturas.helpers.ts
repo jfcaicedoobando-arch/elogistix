@@ -12,23 +12,28 @@ type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
 /** Select reutilizado por list + single fetch (evita duplicar el embed). */
 export const PROVEEDOR_FACTURAS_SELECT = `
   id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, folio_interno,
-  fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
+  fecha_emision, fecha_vencimiento, moneda, subtotal, iva, retenciones, total,
+  estado, tipo_cambio_usd, rfc_proveedor, uuid_fiscal, dias_credito, notas,
   estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
-  proveedores(origen_proveedor)
+  proveedores(origen_proveedor),
+  presupuesto_categorias!categoria_presupuesto_id(nombre)
 ` as const;
 
 export type Joined = Pick<
   ProveedorFacturaRow,
   | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor" | "folio_interno"
-  | "fecha_emision" | "fecha_vencimiento" | "moneda" | "total" | "estado" | "tipo_cambio_usd"
+  | "fecha_emision" | "fecha_vencimiento" | "moneda" | "subtotal" | "iva" | "retenciones" | "total"
+  | "estado" | "tipo_cambio_usd" | "rfc_proveedor" | "uuid_fiscal" | "dias_credito" | "notas"
   | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
   proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
+  presupuesto_categorias: { nombre: string } | null;
 };
+
 
 export function diasVencido(fechaVenc: string | null): number {
   if (!fechaVenc) return 0;
@@ -79,8 +84,17 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     estado_aprobacion: f.estado_aprobacion,
     motivo_rechazo: f.motivo_rechazo,
     categoria_presupuesto_id: f.categoria_presupuesto_id,
+    categoria_nombre: f.presupuesto_categorias?.nombre ?? null,
+    subtotal: Number(f.subtotal ?? 0),
+    iva: Number(f.iva ?? 0),
+    retenciones: Number(f.retenciones ?? 0),
+    rfc_proveedor: f.rfc_proveedor,
+    uuid_fiscal: f.uuid_fiscal,
+    dias_credito: f.dias_credito,
+    notas: f.notas,
   };
 }
+
 
 export function aplicarFiltrosCliente(rows: FacturaCxP[], filtros: FetchCxPFiltros): FacturaCxP[] {
   let r = rows;
