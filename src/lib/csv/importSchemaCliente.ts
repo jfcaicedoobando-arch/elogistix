@@ -20,6 +20,8 @@ export const CLIENTE_TEMPLATE_HEADERS = [
   "estado",
   "cp",
   "dias_credito",
+  "regimen_fiscal",
+  "uso_cfdi_default",
 ] as const;
 
 const clienteRowSchema = z.object({
