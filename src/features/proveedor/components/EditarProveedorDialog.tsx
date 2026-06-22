@@ -73,7 +73,9 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
               <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
                 <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
                 <SelectContent>
-                  {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {tiposProveedorPorOrigen(c.form.origen_proveedor, c.form.tipo).map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FieldError message={c.fieldErrorMessage("tipo")} />
