@@ -141,40 +141,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   return filtradas;
 }
 
-export interface KPIsCxP {
-  por_pagar_mxn: number;
-  por_pagar_usd: number;
-  vencido_mxn: number;
-  vencido_usd: number;
-  por_vencer_7d_mxn: number;
-  por_vencer_7d_usd: number;
-  facturas_vencidas: number;
-}
-
-export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
-  const k: KPIsCxP = {
-    por_pagar_mxn: 0, por_pagar_usd: 0,
-    vencido_mxn: 0, vencido_usd: 0,
-    por_vencer_7d_mxn: 0, por_vencer_7d_usd: 0,
-    facturas_vencidas: 0,
-  };
-  for (const f of filas) {
-    if (f.saldo <= 0) continue;
-    const usd = f.moneda === "USD";
-    if (usd) k.por_pagar_usd += f.saldo; else k.por_pagar_mxn += f.saldo;
-    if (f.estatus === "Vencida") {
-      k.facturas_vencidas++;
-      if (usd) k.vencido_usd += f.saldo; else k.vencido_mxn += f.saldo;
-    }
-    if (f.dias_vencido === 0 && f.fecha_vencimiento) {
-      const dv = diasVencido(f.fecha_vencimiento);
-      if (dv >= -7 && dv <= 0) {
-        if (usd) k.por_vencer_7d_usd += f.saldo; else k.por_vencer_7d_mxn += f.saldo;
-      }
-    }
-  }
-  return k;
-}
+export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";
 
 export async function crearFacturaProveedor(payload: TablesInsert<"proveedor_facturas">) {
   const { data, error } = await supabase

@@ -18,5 +18,6 @@ export async function aprobarFacturaProveedor(
     p_motivo: motivo,
   });
   if (error) throw error;
+  // SAFE-CAST: la RPC retorna el row completo de proveedor_facturas; Supabase tipa el `data` como genérico.
   return data as unknown as Tables<"proveedor_facturas">;
 }
