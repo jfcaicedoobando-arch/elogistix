@@ -65,18 +65,18 @@ export const appRoutes = (
     <Route path="/proformas" element={<ProformasListado />} />
     <Route path="/proformas/:id" element={<ProformaDetalle />} />
 
-    <Route path="/compras" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org"], <Compras />)} />
-    <Route path="/compras/aging" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org"], <CxpAging />)} />
-    <Route path="/cxp" element={guarded([...TESORERIA_ROLES, "auxiliar_contable"], <Cxp />)} />
-    <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero"], <CxpPorCapturar />)} />
-    <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero"], <CxpPorPagar />)} />
-    <Route path="/facturacion/por-emitir" element={guarded(["admin", "super_admin", "admin_org", "contador"], <FacturacionPorEmitir />)} />
-    <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza"], <Cartera />)} />
+    <Route path="/compras" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"], <Compras />)} />
+    <Route path="/compras/aging" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"], <CxpAging />)} />
+    <Route path="/cxp" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
+    <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorCapturar />)} />
+    <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorPagar />)} />
+    <Route path="/facturacion/por-emitir" element={guarded(["admin", "super_admin", "admin_org", "contador", "gerente_operaciones", "gerente_visor"], <FacturacionPorEmitir />)} />
+    <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <Cartera />)} />
 
-    <Route path="/tesoreria" element={guarded(TESORERIA_ROLES, <Tesoreria />)} />
-    <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_ROLES, <TesoreriaCuentas />)} />
-    <Route path="/tesoreria/conciliacion" element={guarded(TESORERIA_ROLES, <TesoreriaConciliacion />)} />
-    <Route path="/tesoreria/flujo" element={guarded(TESORERIA_ROLES, <TesoreriaFlujo />)} />
+    <Route path="/tesoreria" element={guarded(TESORERIA_READ_ROLES, <Tesoreria />)} />
+    <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_READ_ROLES, <TesoreriaCuentas />)} />
+    <Route path="/tesoreria/conciliacion" element={guarded(TESORERIA_READ_ROLES, <TesoreriaConciliacion />)} />
+    <Route path="/tesoreria/flujo" element={guarded(TESORERIA_READ_ROLES, <TesoreriaFlujo />)} />
 
     <Route path="/comisiones" element={<Comisiones />} />
     <Route path="/costeo" element={<Navigate to="/costeo/tarifas" replace />} />
@@ -88,10 +88,11 @@ export const appRoutes = (
     <Route path="/costeo/demoras-venta" element={<CosteoDemorasVenta />} />
 
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
-    <Route path="/profit/dashboard" element={guarded(TESORERIA_ROLES, <ProfitDashboardEjecutivo />)} />
+    <Route path="/profit/dashboard" element={guarded(PROFIT_READ_ROLES, <ProfitDashboardEjecutivo />)} />
     <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
-    <Route path="/profit/presupuesto" element={guarded(TESORERIA_ROLES, <ProfitPresupuesto />)} />
+    <Route path="/profit/presupuesto" element={guarded(PROFIT_READ_ROLES, <ProfitPresupuesto />)} />
+
 
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
