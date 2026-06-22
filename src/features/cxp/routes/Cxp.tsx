@@ -27,10 +27,26 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { data = [], isLoading, kpis } = useFacturasCxP(f.queryArgs);
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
+
+  // Deep-link desde búsqueda global: /cxp?factura={id} abre el detalle.
+  useEffect(() => {
+    const id = searchParams.get("factura");
+    if (!id || isLoading) return;
+    const found = data.find((row) => row.id === id);
+    if (found) {
+      f.setDetalle(found);
+      setSearchParams((sp) => {
+        const next = new URLSearchParams(sp);
+        next.delete("factura");
+        return next;
+      }, { replace: true });
+    }
+  }, [searchParams, data, isLoading, f, setSearchParams]);
 
   const handlePdf = async () => {
     await descargarPdf(
@@ -78,6 +94,8 @@ export default function Cxp() {
           </div>
         }
       />
+
+      <ComprasTabStrip />
 
       <CxpKpiCards kpis={kpis} data={data} />
 
