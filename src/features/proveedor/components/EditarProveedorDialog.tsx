@@ -43,18 +43,6 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Categoría *</Label>
-            <Select value={c.form.categoria} onValueChange={c.handleCategoriaChange}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {CATEGORIAS_PROVEEDOR.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
             <Label>Origen *</Label>
             <Select
               value={c.form.origen_proveedor || ""}
