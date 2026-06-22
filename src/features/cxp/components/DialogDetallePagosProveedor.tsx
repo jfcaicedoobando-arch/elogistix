@@ -37,8 +37,12 @@ interface Props {
 }
 
 export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEdit }: Props) {
-  const { data: pagos = [], isLoading } = usePagosProveedor(factura?.id);
-  const eliminar = useEliminarPagoProveedor(factura?.id ?? "");
+  // Observamos la factura por id para que el badge de aprobación y el saldo
+  // se mantengan frescos aunque la lista filtrada haya descartado la fila.
+  const { data: facturaFresh } = useFacturaProveedor(factura?.id, factura ?? undefined);
+  const f = facturaFresh ?? factura;
+  const { data: pagos = [], isLoading } = usePagosProveedor(f?.id);
+  const eliminar = useEliminarPagoProveedor(f?.id ?? "");
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
