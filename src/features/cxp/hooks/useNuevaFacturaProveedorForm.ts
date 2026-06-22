@@ -44,6 +44,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
   const [vinculos, setVinculos] = useState<VinculosState>({});
+  const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(null);
 
   const total = useMemo(() => calcularTotal(values), [values]);
 
