@@ -21,16 +21,22 @@ describe("bandejas/domain/aggregates", () => {
     expect(r).toEqual({ total: 3, totalSaldo: 350, vencidas: 2, vencidoSaldo: 250 });
   });
 
-  it("resumirCxpPorPagar cuenta vencidas (dias_para_vencer<0)", () => {
+  it("resumirCxpPorPagar homologa a MXN usando TC y reporta faltantes", () => {
     const r = resumirCxpPorPagar([
-      // @ts-expect-error fixture parcial
-      { saldo: 100, dias_para_vencer: 3 },
-      // @ts-expect-error fixture parcial
-      { saldo: 200, dias_para_vencer: -1 },
-      // @ts-expect-error fixture parcial
-      { saldo: 50, dias_para_vencer: null },
+      // @ts-expect-error fixture parcial - MXN
+      { saldo: 100, moneda: "MXN", dias_para_vencer: 3, tipo_cambio_usd: null },
+      // @ts-expect-error fixture parcial - USD vencida con TC
+      { saldo: 200, moneda: "USD", dias_para_vencer: -1, tipo_cambio_usd: 20 },
+      // @ts-expect-error fixture parcial - USD sin TC
+      { saldo: 50, moneda: "USD", dias_para_vencer: null, tipo_cambio_usd: null },
+      // @ts-expect-error fixture parcial - EUR (sin TC siempre)
+      { saldo: 30, moneda: "EUR", dias_para_vencer: 5, tipo_cambio_usd: null },
     ]);
-    expect(r).toEqual({ total: 3, totalSaldo: 350, vencidas: 1 });
+    expect(r.total).toBe(4);
+    expect(r.vencidas).toBe(1);
+    expect(r.saldoMXN).toBe(100 + 200 * 20); // 4100
+    expect(r.porMoneda).toEqual({ MXN: 100, USD: 250, EUR: 30 });
+    expect(r.faltaTipoCambio).toBe(2); // 1 USD sin TC + 1 EUR
   });
 
   it("variantDiasParaVencer mapea rangos", () => {

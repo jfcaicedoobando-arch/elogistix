@@ -37,18 +37,41 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
 // ===== CxP por pagar =====
 export interface CxpPagarSummary {
   total: number;
-  totalSaldo: number;
   vencidas: number;
+  /** Saldo homologado a MXN (USD * TC, MXN tal cual). EUR sin TC queda fuera. */
+  saldoMXN: number;
+  /** Suma por moneda nativa (sin conversión). */
+  porMoneda: { MXN: number; USD: number; EUR: number };
+  /** Cantidad de facturas en moneda extranjera sin tipo de cambio capturado. */
+  faltaTipoCambio: number;
 }
 
 export function resumirCxpPorPagar(rows: CxpPorPagarRow[]): CxpPagarSummary {
-  let totalSaldo = 0;
   let vencidas = 0;
+  let saldoMXN = 0;
+  let faltaTipoCambio = 0;
+  const porMoneda = { MXN: 0, USD: 0, EUR: 0 };
+
   for (const r of rows) {
-    totalSaldo += num(r.saldo);
+    const saldo = num(r.saldo);
+    const moneda = (r.moneda ?? "MXN").toUpperCase();
     if ((r.dias_para_vencer ?? 0) < 0) vencidas += 1;
+
+    if (moneda === "MXN") {
+      porMoneda.MXN += saldo;
+      saldoMXN += saldo;
+    } else if (moneda === "USD") {
+      porMoneda.USD += saldo;
+      const tc = num(r.tipo_cambio_usd);
+      if (tc > 0) saldoMXN += saldo * tc;
+      else faltaTipoCambio += 1;
+    } else if (moneda === "EUR") {
+      porMoneda.EUR += saldo;
+      faltaTipoCambio += 1; // EUR no tiene TC en proveedor_facturas todavía
+    }
   }
-  return { total: rows.length, totalSaldo, vencidas };
+
+  return { total: rows.length, vencidas, saldoMXN, porMoneda, faltaTipoCambio };
 }
 
 /** Variante visual del badge según días para vencer. */

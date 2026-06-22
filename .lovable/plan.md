@@ -1,118 +1,94 @@
-## Objetivo
+## Problema
 
-Cambiar la barra del card **"Arribos este mes"** para que muestre **qué % de los gastos operativos del mes ya está cubierto por el profit proyectado**. Sirve como semáforo del punto de equilibrio mensual: "¿ya pagué la nómina, renta, servicios, comisiones, etc. con lo que voy a ganar este mes?".
+El card **"Saldo total"** de `/cxp/por-pagar` suma `saldo` de todas las facturas sin importar la moneda y muestra el resultado como si fuera MXN. Si hay facturas en USD y MXN mezcladas se están sumando "peras con manzanas" y el número está inflado/mal.
 
-Decisiones tomadas:
-- **Comportamiento de la barra:** se llena máximo al 100%. El número al lado muestra el % real (puede ser 150%, 200%…).
-- **Origen del denominador:** **gastos reales del mes** = facturas de proveedor con categoría "GastoOperativo" + liquidaciones de comisión del mes (no incluye costos logísticos del embarque, esos ya están restados dentro del profit).
+## Solución
 
-## Fórmula
+Mostrar el saldo total **homologado a MXN en grande**, con **chips chiquitos abajo desglosando por moneda nativa** (`MXN $X · USD $Y · EUR $Z`).
 
-```text
-% cubierto = ( profitMXN_proyectado / gastosOperativosMXN_del_mes ) * 100
+### 1. Backend — exponer `tipo_cambio_usd` en el RPC
 
-barra_visual = min(100, % cubierto)
-etiqueta     = "{% real} % de gastos fijos cubierto"
+Migración que reemplaza `public.cxp_por_pagar()` añadiendo dos columnas al RETURNS:
+- `tipo_cambio_usd numeric` — desde `proveedor_facturas.tipo_cambio_usd`
+- `tipo_cambio_eur numeric` — desde `proveedor_facturas.tipo_cambio_eur`
+
+No cambia ningún dato existente, solo añade columnas.
+
+### 2. Tipos y servicio
+
+`src/features/bandejas/services/bandejas.ts` → añadir `tipo_cambio_usd: number | null` y `tipo_cambio_eur: number | null` a `CxpPorPagarRow`.
+
+### 3. Función de agregación pura
+
+Reemplazar `resumirCxpPorPagar` en `src/features/bandejas/domain/aggregates.ts`:
+
+```ts
+export interface CxpPagarSummary {
+  total: number;
+  vencidas: number;
+  saldoMXN: number;       // homologado
+  porMoneda: { MXN: number; USD: number; EUR: number };
+  faltaTipoCambio: number; // count de facturas USD/EUR sin TC (no contadas en saldoMXN)
+}
 ```
 
-Casos borde:
-- `gastosOperativosMXN = 0` → barra al 0%, label "Sin gastos operativos del mes".
-- `profitMXN < 0` (pérdida) → barra al 0%, color destructive, label "0% — pérdida proyectada".
+Reglas:
+- Suma nativa por moneda → `porMoneda[r.moneda]`.
+- Para homologar:
+  - `MXN` → suma tal cual.
+  - `USD` → `saldo * tipo_cambio_usd` (si TC nulo o 0 → no suma al homologado, incrementa `faltaTipoCambio`).
+  - `EUR` → análogo con `tipo_cambio_eur`.
 
-## Pasos
+### 4. UI del card "Saldo total"
 
-### 1. Backend — exponer `gastosOperativosMXN` en `dashboard_summary()`
-
-Migración nueva que reemplaza `public.dashboard_summary()` y añade un CTE `gastos_op_mes` dentro del bloque `arribosEsteMes`:
-
-```sql
-gastos_op_mes AS (
-  SELECT
-    COALESCE(SUM(
-      CASE WHEN pf.moneda = 'MXN' THEN pf.total
-           WHEN pf.tipo_cambio_usd IS NOT NULL THEN pf.total * pf.tipo_cambio_usd
-           ELSE pf.total END
-    ), 0)
-    +
-    COALESCE((SELECT SUM(total_mxn) FROM liquidaciones_comision
-              WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
-                AND (organization_id = current_user_org_id()
-                     OR has_role(auth.uid(), 'super_admin'))), 0)
-    AS val
-  FROM proveedor_facturas pf
-  JOIN proveedores p ON p.id = pf.proveedor_id
-  WHERE p.categoria = 'GastoOperativo'
-    AND pf.deleted_at IS NULL
-    AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
-    AND (pf.organization_id = current_user_org_id()
-         OR has_role(auth.uid(), 'super_admin'))
-)
+```tsx
+<Card>
+  <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
+  <CardContent>
+    <div className="text-2xl font-semibold tabular-nums">
+      {formatCurrency(saldoMXN, "MXN")}
+    </div>
+    <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-1">
+      {porMoneda.MXN > 0 && <span>MXN {formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
+      {porMoneda.USD > 0 && <span>· USD {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}
+      {porMoneda.EUR > 0 && <span>· EUR {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
+    </div>
+    {faltaTipoCambio > 0 && (
+      <p className="text-[10px] text-warning mt-0.5">
+        {faltaTipoCambio} factura{faltaTipoCambio>1?"s":""} sin TC capturado — no incluida{faltaTipoCambio>1?"s":""} en homologado.
+      </p>
+    )}
+  </CardContent>
+</Card>
 ```
 
-Agregar al JSON de `arribos_mes`:
-```sql
-'gastosOperativosMXN', COALESCE((SELECT val FROM gastos_op_mes), 0)
-```
+### 5. Tests
 
-### 2. Parser y tipo
+Actualizar `src/features/bandejas/domain/__tests__/aggregates.test.ts` con casos:
+- Solo MXN.
+- USD con TC → suma homologado correcto.
+- USD sin TC → no suma, incrementa `faltaTipoCambio`.
+- Mezcla MXN + USD + EUR.
 
-- `src/features/dashboard/domain/parsers/dashboardTypes.ts`: añadir `gastosOperativosMXN: number` a `ArribosEsteMes` + `EMPTY_ARRIBOS`.
-- `src/features/dashboard/domain/parsers/dashboardSchemas.ts`: añadir `gastosOperativosMXN: numOrCoerce` al schema.
-- `src/features/dashboard/domain/parsers/dashboard.ts`: incluirlo en el mapeo de `parseArribosEsteMes`.
+### 6. Changelog + versión
 
-### 3. `ArribosCard.tsx`
-
-- Añadir campo `gastosOperativosMXN` al interface local `ArribosEsteMes`.
-- Reemplazar el cálculo de `pct` (que hoy es `yaLlegaron/total`) por:
-  ```ts
-  const gastos = arribosEsteMes.gastosOperativosMXN;
-  const profit = Math.max(arribosEsteMes.profitMXN, 0);
-  const pctReal = gastos > 0 ? Math.round((profit / gastos) * 100) : 0;
-  const pctBarra = Math.min(100, pctReal);
-  ```
-- El componente `Progress` usa `value={pctBarra}` con color dinámico:
-  - `pctReal >= 100` → verde (success)
-  - `pctReal >= 50` → ámbar (warning)
-  - `pctReal < 50` o pérdida → rojo (destructive)
-- A la derecha de la barra mostrar `{pctReal}%` (puede ser > 100).
-- Agregar un **Tooltip** sobre la barra explicando:
-  - "Profit proyectado: $X MXN"
-  - "Gastos operativos del mes: $Y MXN"
-  - "Cubres el Z% de los gastos fijos"
-  - Si Z ≥ 100: "Ya cubriste tus gastos fijos del mes. Lo demás es utilidad neta."
-  - Si Z < 100: "Faltan $ (gastos − profit) MXN para cubrir tus gastos fijos."
-
-### 4. Texto pequeño debajo (label)
-
-Cambiar el `<p>` actual ("totales del mes" o equivalente) por:
-- `"% de gastos fijos cubierto"` (a la derecha del % numérico).
-
-### 5. Changelog y versión
-
-- `appVersion.ts` → `13.99.0` (cambio semántico de la barra).
-- `CHANGELOG.md` entrada `[13.99.0] - 2026-06-22` describiendo el cambio + nuevo dato `gastosOperativosMXN` del RPC.
-
-## Detalles técnicos
-
-- La migración solo toca `dashboard_summary()` (no `dashboard_stats` legacy ni `dashboard_details`, ya que el front consume summary+details combinados y `arribosEsteMes` viene de summary).
-- `liquidaciones_comision.periodo` ya es formato `YYYY-MM` (mismo que usa `vsReal.ts`).
-- Filtrar `proveedor_facturas` por `categoria = 'GastoOperativo'` evita sumar costos logísticos (esos ya viven dentro de `costoMXN` del embarque y por tanto ya restan en el profit).
-- No se toca lógica de profit, conversión de divisas ni tooltip de profit (el rediseñado en 13.98.5 queda intacto).
+- `appVersion.ts` → `13.99.1`.
+- Entrada en `CHANGELOG.md` describiendo el bug y el fix.
 
 ## Archivos afectados
 
 ```text
-supabase/migrations/<nuevo>.sql            (CREATE OR REPLACE dashboard_summary)
-src/features/dashboard/domain/parsers/dashboardTypes.ts
-src/features/dashboard/domain/parsers/dashboardSchemas.ts
-src/features/dashboard/domain/parsers/dashboard.ts
-src/features/dashboard/components/statusCards/ArribosCard.tsx
+supabase/migrations/<nuevo>.sql                        (CREATE OR REPLACE cxp_por_pagar)
+src/features/bandejas/services/bandejas.ts             (tipos)
+src/features/bandejas/domain/aggregates.ts             (resumirCxpPorPagar)
+src/features/bandejas/domain/__tests__/aggregates.test.ts
+src/features/bandejas/routes/CxpPorPagar.tsx           (card Saldo total)
 src/constants/appVersion.ts
 CHANGELOG.md
 ```
 
 ## Verificación
 
-1. `bunx vitest run src/features/dashboard/domain/parsers/__tests__/dashboardSchemas.test.ts` (extender el test para validar el nuevo campo).
-2. Playwright en `/inicio` para confirmar visualmente que la barra y el % se actualizan.
-3. `psql -c "SELECT dashboard_summary()->'arribosEsteMes'->>'gastosOperativosMXN';"` para confirmar el valor en DB real.
+1. `bunx vitest run src/features/bandejas/domain/__tests__/aggregates.test.ts`.
+2. `psql -c "SELECT moneda, sum(saldo) FROM cxp_por_pagar() GROUP BY moneda;"` para confirmar montos por moneda.
+3. Inspección visual en `/cxp/por-pagar`.
