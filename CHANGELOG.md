@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.99.7] - 2026-06-22
+- **ux(compras/por-capturar) unificación con el patrón estándar de CxP**: la bandeja "Por capturar" ahora usa `PageHeader` (con icono `Package`) y `DataTable` igual que `/cxp`, en vez de `<Table>` vanilla. Se mantienen toolbar (búsqueda, chips, ordenamiento) y KPIs compactos, pero ahora el ordenamiento por columna (Expediente · Facturas · Última factura) está integrado al header de `DataTable` con `controlledSort` (server mode) sincronizado con el hook `useCxpPorCapturarFilters`. Sin cambios de backend.
+- **ux(compras/por-capturar) link "Ver facturas" en columna Facturas**: cuando un embarque ya tiene facturas capturadas, el contador es ahora un link al detalle del embarque (`/embarques/:id`) para revisar las facturas vinculadas sin abandonar la bandeja.
+- **feat(compras/factura-proveedor) bloqueo de duplicados al capturar**: nueva función `existeFacturaDuplicada(proveedorId, folio, fechaEmision)` en `proveedorFacturas.ts`. Antes de insertar la factura, el controller `useNuevaFacturaProveedorForm` verifica que no exista otra activa con el mismo proveedor + folio + fecha de emisión; si existe, marca el campo `folio` con error inline y muestra toast "Factura duplicada" sin guardar. El UNIQUE de `uuid_fiscal` sigue siendo la red de seguridad final para CFDI.
+
 ## [13.99.5] - 2026-06-22
 - **ux(bandejas/cxp) ordenar por expediente desde el encabezado de columna**: el título "Expediente" ahora es clickeable. Al primer click ordena ascendente (A→Z), al segundo invierte a descendente (Z→A), y se muestra una flechita (`ArrowUp` / `ArrowDown`) junto al texto para indicar la dirección activa.
 
