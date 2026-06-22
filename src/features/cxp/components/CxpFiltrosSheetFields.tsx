@@ -12,6 +12,7 @@ import type { EstatusCxP } from "@/features/cxp/services";
 const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
 
 interface ProveedorOpt { id: string; nombre: string }
+interface CategoriaOpt { id: string; nombre: string }
 
 interface Props {
   includePrimary: boolean;
@@ -21,11 +22,14 @@ interface Props {
   onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
+  categoriaPresupuestoId: string;
+  onCategoriaPresupuestoChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
   onFechaHastaChange: (v: string) => void;
   proveedoresOpts: ProveedorOpt[];
+  categoriasOpts: CategoriaOpt[];
 }
 
 export function CxpFiltrosSheetFields(props: Props) {
@@ -68,6 +72,21 @@ export function CxpFiltrosSheetFields(props: Props) {
             <SelectItem value="todos">Todos los proveedores</SelectItem>
             {props.proveedoresOpts.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label>Categoría de presupuesto</Label>
+        <Select
+          value={props.categoriaPresupuestoId || "todas"}
+          onValueChange={props.onCategoriaPresupuestoChange}
+        >
+          <SelectTrigger><SelectValue placeholder="Todas las categorías" /></SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="todas">Todas las categorías</SelectItem>
+            {props.categoriasOpts.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
             ))}
           </SelectContent>
         </Select>

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.8] - 2026-06-22
+- **feat(cxp)**: nuevo filtro **"Categoría de presupuesto"** en la lista de Cuentas por Pagar (`/compras`). Permite al contador aislar facturas de gastos administrativos internos (renta, nómina, papelería, servicios, etc.) cruzando con rango de emisión (p.ej. 01–30 de junio) para exportar/auditar gastos operativos del mes. El servicio `fetchFacturasCxP` acepta `categoria_presupuesto_id`, el estado de página lo persiste y los chips de filtros activos lo reflejan.
+
 ## [13.106.7] - 2026-06-22
 - **refactor(cxp)**: dividido `services/proveedorFacturas.ts` (218 líneas) en `proveedorFacturas.ts` (service + tipos públicos) y `proveedorFacturas.helpers.ts` (puras: `mapJoinedRow`, `clasificar`, `diasVencido`, `aplicarFiltrosCliente` + constante `PROVEEDOR_FACTURAS_SELECT`). Cumple Power of 10 #4 (≤200 líneas). Sin cambios de comportamiento ni API pública.
 

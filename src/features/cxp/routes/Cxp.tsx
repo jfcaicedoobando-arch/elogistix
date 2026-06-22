@@ -122,6 +122,7 @@ export default function Cxp() {
             origen={f.origen} onOrigenChange={f.setOrigen}
             aprobacion={f.aprobacion} onAprobacionChange={f.setAprobacion}
             proveedorId={f.proveedorId} onProveedorChange={f.setProveedorId}
+            categoriaPresupuestoId={f.categoriaPresupuestoId} onCategoriaPresupuestoChange={f.setCategoriaPresupuestoId}
             fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
             fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
           />

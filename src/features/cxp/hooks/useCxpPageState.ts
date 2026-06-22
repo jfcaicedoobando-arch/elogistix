@@ -15,6 +15,7 @@ export function useCxpPageState() {
   const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("todos");
   const [proveedorId, setProveedorId] = useState<string>("todos");
+  const [categoriaPresupuestoId, setCategoriaPresupuestoId] = useState<string>("todas");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
@@ -30,6 +31,7 @@ export function useCxpPageState() {
     origen !== "todos" ||
     aprobacion !== "todos" ||
     proveedorId !== "todos" ||
+    categoriaPresupuestoId !== "todas" ||
     fechaDesde !== "" ||
     fechaHasta !== "";
 
@@ -40,6 +42,7 @@ export function useCxpPageState() {
     origen,
     aprobacion,
     proveedor_id: proveedorId === "todos" ? undefined : proveedorId,
+    categoria_presupuesto_id: categoriaPresupuestoId === "todas" ? undefined : categoriaPresupuestoId,
     fecha_desde: fechaDesde || undefined,
     fecha_hasta: fechaHasta || undefined,
   };
@@ -52,6 +55,7 @@ export function useCxpPageState() {
     origen, setOrigen,
     aprobacion, setAprobacion,
     proveedorId, setProveedorId,
+    categoriaPresupuestoId, setCategoriaPresupuestoId,
     fechaDesde, setFechaDesde,
     fechaHasta, setFechaHasta,
     hayFiltros,

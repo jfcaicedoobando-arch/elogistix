@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import SearchInput from "@/components/shared/SearchInput";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
+import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import type { EstatusCxP } from "@/features/cxp/services";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields, ESTATUS } from "./CxpFiltrosSheetFields";
@@ -30,6 +31,8 @@ interface Props {
   onAprobacionChange: (v: "todos" | "pendiente" | "aprobada" | "rechazada") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
+  categoriaPresupuestoId: string;
+  onCategoriaPresupuestoChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
@@ -39,14 +42,20 @@ interface Props {
 export function CxpFiltros(props: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { data: proveedores = [] } = useProveedoresLite();
+  const { data: categorias = [] } = usePresupuestoCategorias();
 
   const proveedoresOpts = useMemo(
     () => proveedores.map((p) => ({ id: p.id, nombre: p.nombre })),
     [proveedores],
   );
+  const categoriasOpts = useMemo(
+    () => categorias.map((c) => ({ id: c.id, nombre: c.nombre })),
+    [categorias],
+  );
 
   const secondaryActive =
     (props.proveedorId && props.proveedorId !== "todos" ? 1 : 0) +
+    (props.categoriaPresupuestoId && props.categoriaPresupuestoId !== "todas" ? 1 : 0) +
     (props.fechaDesde ? 1 : 0) + (props.fechaHasta ? 1 : 0);
 
   const totalActive =
@@ -62,6 +71,7 @@ export function CxpFiltros(props: Props) {
     props.onOrigenChange("todos");
     props.onAprobacionChange("todos");
     props.onProveedorChange("todos");
+    props.onCategoriaPresupuestoChange("todas");
     props.onFechaDesdeChange("");
     props.onFechaHastaChange("");
   };
@@ -143,10 +153,10 @@ export function CxpFiltros(props: Props) {
           </SheetHeader>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="md:hidden">
-              <CxpFiltrosSheetFields includePrimary {...props} proveedoresOpts={proveedoresOpts} />
+              <CxpFiltrosSheetFields includePrimary {...props} proveedoresOpts={proveedoresOpts} categoriasOpts={categoriasOpts} />
             </div>
             <div className="hidden md:block">
-              <CxpFiltrosSheetFields includePrimary={false} {...props} proveedoresOpts={proveedoresOpts} />
+              <CxpFiltrosSheetFields includePrimary={false} {...props} proveedoresOpts={proveedoresOpts} categoriasOpts={categoriasOpts} />
             </div>
           </div>
           <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
