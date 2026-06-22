@@ -39,6 +39,15 @@ describe('useLayout Hooks', () => {
     expect(labels).toContain('Administración');
   });
 
+  it('returns administración section for admin_org', () => {
+    (useAuth as any).mockReturnValue({ role: 'admin', effectiveRole: 'admin_org' });
+    const { result } = renderHook(() => useAppSidebarSections());
+
+    const labels = result.current.map(s => s.label);
+    expect(labels).toContain('Administración');
+    expect(result.current.some(section => section.items.some(item => item.url === '/usuarios'))).toBe(true);
+  });
+
   it('returns restricted sections for vendedor', () => {
     (useAuth as any).mockReturnValue({ role: 'vendedor', effectiveRole: 'vendedor' });
     const { result } = renderHook(() => useAppSidebarSections());

@@ -44,6 +44,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { role, effectiveRole } = useAuth();
   const canVerAuditoria =
     role === "super_admin" || effectiveRole === "admin" || effectiveRole === "admin_org";
+  const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
   const { data: auditoriaCount = 0 } = useAuditoriaCount({ enabled: canVerAuditoria });
   const { count: alertasSistemaCount } = useAlertasPendingCount();
   const { data: crmVencidas = 0 } = useActividadesVencidasCount();
@@ -64,9 +65,13 @@ export function useAppSidebarSections(): SidebarSection[] {
 
   const deps: BuilderDeps = { crmItems, sistemaItems };
   const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
-  if (builder) return patchSidebarBadges(builder(deps), badgeCounts);
+  if (builder) {
+    const sections = builder(deps);
+    if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
+    if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
+    return patchSidebarBadges(sections, badgeCounts);
+  }
 
-  const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
   const sections = isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });

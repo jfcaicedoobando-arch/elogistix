@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.3] - 2026-06-22
+- **fix(sidebar/rbac)**: la sección **Administración** ahora se agrega también cuando el rol usa un builder específico (`admin`/`admin_org`). Antes el hook regresaba antes de anexarla, por eso `/usuarios` podía abrir directo pero no aparecía en el menú lateral para `admin_org`.
+
 ## [13.106.2] - 2026-06-22
 - **fix(rbac)**: los roles `admin_org` y `super_admin` ahora pueden entrar a `/usuarios` y `/configuracion`. La sidebar ya mostraba la sección Administración para esos roles, pero el guard de ruta solo aceptaba `admin`, así que al hacer clic la página los rechazaba. Actualizado también el smoke test de rutas.
 
