@@ -1,4 +1,5 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, FileText, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRe
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
 import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
+import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
@@ -25,10 +27,26 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { data = [], isLoading, kpis } = useFacturasCxP(f.queryArgs);
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
+
+  // Deep-link desde búsqueda global: /cxp?factura={id} abre el detalle.
+  useEffect(() => {
+    const id = searchParams.get("factura");
+    if (!id || isLoading) return;
+    const found = data.find((row) => row.id === id);
+    if (found) {
+      f.setDetalle(found);
+      setSearchParams((sp) => {
+        const next = new URLSearchParams(sp);
+        next.delete("factura");
+        return next;
+      }, { replace: true });
+    }
+  }, [searchParams, data, isLoading, f, setSearchParams]);
 
   const handlePdf = async () => {
     await descargarPdf(
@@ -76,6 +94,8 @@ export default function Cxp() {
           </div>
         }
       />
+
+      <ComprasTabStrip />
 
       <CxpKpiCards kpis={kpis} data={data} />
 

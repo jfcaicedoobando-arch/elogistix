@@ -18,7 +18,7 @@ import {
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
   Facturacion, FacturaDetalle, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
-  Cxp, CxpPorCapturar, CxpPorPagar, FacturacionPorEmitir, Cartera,
+  Cxp, Compras, CxpPorCapturar, CxpPorPagar, FacturacionPorEmitir, Cartera,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
   Usuarios, Configuracion,
@@ -51,6 +51,7 @@ export const appRoutes = (
     <Route path="/proformas" element={<ProformasListado />} />
     <Route path="/proformas/:id" element={<ProformaDetalle />} />
 
+    <Route path="/compras" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org"], <Compras />)} />
     <Route path="/cxp" element={guarded([...TESORERIA_ROLES, "auxiliar_contable"], <Cxp />)} />
     <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero"], <CxpPorCapturar />)} />
     <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero"], <CxpPorPagar />)} />

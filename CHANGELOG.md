@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.100.0] - 2026-06-22
+- **feat(compras) hub unificado del módulo en `/compras`**: nueva ruta landing con `PageHeader`, KPIs cruzados (embarques por capturar, facturas con saldo, vencidas, por vencer 7 días) y 4 tarjetas de acceso rápido a Proveedores · Por capturar · Facturas · Por pagar. Botón "Capturar factura" en el header abre `DialogNuevaFacturaProveedor` directamente. Permisos iguales a `/cxp` (incluye `admin_org`).
+- **feat(compras) tira de pestañas `ComprasTabStrip` compartida**: inyectada en `/compras`, `/proveedores`, `/cxp`, `/cxp/por-capturar` y `/cxp/por-pagar`. NavLinks horizontales (Resumen · Proveedores · Por capturar · Facturas · Por pagar) que marcan la activa con borde inferior `primary`. Hace que el usuario perciba las 5 páginas como un solo módulo y pueda saltar entre ellas sin volver al sidebar.
+- **feat(sidebar) hub `Resumen Compras` agregado a todos los grupos "Compras" del sidebar**: roles `admin`, `admin_org`, `contador`, `tesorero` y `auxiliar_contable` ven ahora la entrada `/compras` como primer item del grupo Compras.
+- **feat(busqueda-global) facturas de proveedor encontrables desde Ctrl+K**: la RPC `busqueda_global` ahora hace un `UNION ALL` extra contra `proveedor_facturas` (join a `proveedores` para RFC), retornando tipo `factura_proveedor` con URL `/cxp?factura={id}`. Excluye canceladas y borradas, respeta scope por organización. `GlobalSearch.tsx` mapea el nuevo tipo a icono `Receipt` y etiqueta "Facturas de proveedor".
+- **feat(cxp) deep-link `?factura={id}`**: la página `/cxp` lee el query param y abre automáticamente `DialogDetallePagosProveedor` para esa factura, luego limpia el param de la URL. Permite que la búsqueda global aterrice directo en el detalle de pagos.
+
 ## [13.99.7] - 2026-06-22
 - **ux(compras/por-capturar) unificación con el patrón estándar de CxP**: la bandeja "Por capturar" ahora usa `PageHeader` (con icono `Package`) y `DataTable` igual que `/cxp`, en vez de `<Table>` vanilla. Se mantienen toolbar (búsqueda, chips, ordenamiento) y KPIs compactos, pero ahora el ordenamiento por columna (Expediente · Facturas · Última factura) está integrado al header de `DataTable` con `controlledSort` (server mode) sincronizado con el hook `useCxpPorCapturarFilters`. Sin cambios de backend.
 - **ux(compras/por-capturar) link "Ver facturas" en columna Facturas**: cuando un embarque ya tiene facturas capturadas, el contador es ahora un link al detalle del embarque (`/embarques/:id`) para revisar las facturas vinculadas sin abandonar la bandeja.

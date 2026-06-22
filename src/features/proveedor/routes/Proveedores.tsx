@@ -17,6 +17,7 @@ import {
 } from "../components/ProveedoresFiltros";
 import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
 import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
+import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -79,6 +80,8 @@ export default function Proveedores() {
           ) : null
         }
       />
+
+      <ComprasTabStrip />
 
       <ProveedoresFiltros
         search={search}
