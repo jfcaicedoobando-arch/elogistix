@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.98.4] - 2026-06-22
+- **fix(sidebar) badge de "Principal" desglosado por módulo**: antes el ítem **Principal** (`/`) mostraba un badge agregado con la suma de 4 categorías (embarques en demora + facturas vencidas + garantías atoradas + pendientes administrativos), pero el dashboard `/inicio` sólo lista una categoría a la vez, generando confusión (sidebar mostraba 19, dashboard mostraba 3). Ahora:
+  - **Principal** ya no muestra badge.
+  - **Embarques** acumula `embarquesDemora + garantiasAtoradas + adminPendientes` (las 3 son alertas del ciclo de embarque).
+  - **Facturación** muestra `facturasVencidas`.
+  Cada número del sidebar coincide con lo que se ve al entrar al módulo. Se removió la prop `totalAlertas` de `SidebarGroupBlock` y se renombró `patchEmbarquesBadge` → `patchSidebarBadges` en `useAppSidebarSections`. Sin cambios en RPCs ni en las páginas.
+
 ## [13.98.3] - 2026-06-22
 - **chore(refactor) split `useAppSidebarSections.ts`**: el archivo quedó en 253 líneas tras agregar `buildAdmin`, rompiendo el baseline Power of 10 (≤200 líneas) en CI (`audit-report` y `architecture-baseline`). Se movieron los 11 builders por rol + `ROLE_BUILDERS` + `buildDefaultSections` a un módulo nuevo `src/hooks/layout/sidebarRoleBuilders.ts`. El hook queda como orquestador (~60 líneas) y solo conserva `patchEmbarquesBadge` y las queries de badges. Sin cambios funcionales.
 

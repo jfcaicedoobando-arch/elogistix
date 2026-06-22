@@ -19,13 +19,21 @@ import {
 
 export type { SidebarSection } from "@/hooks/layout/sidebarRoleBuilders";
 
-function patchEmbarquesBadge(sections: SidebarSection[], adminPendientes: number): SidebarSection[] {
-  if (adminPendientes <= 0) return sections;
+interface BadgeCounts {
+  embarquesAlertas: number;
+  facturasVencidas: number;
+}
+
+function patchSidebarBadges(sections: SidebarSection[], counts: BadgeCounts): SidebarSection[] {
+  const { embarquesAlertas, facturasVencidas } = counts;
+  if (embarquesAlertas <= 0 && facturasVencidas <= 0) return sections;
   return sections.map((sec) => ({
     ...sec,
-    items: sec.items.map((it) =>
-      it.url === "/embarques" ? { ...it, badgeCount: adminPendientes } : it,
-    ),
+    items: sec.items.map((it) => {
+      if (it.url === "/embarques" && embarquesAlertas > 0) return { ...it, badgeCount: embarquesAlertas };
+      if (it.url === "/facturacion" && facturasVencidas > 0) return { ...it, badgeCount: facturasVencidas };
+      return it;
+    }),
   }));
 }
 
@@ -36,7 +44,9 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: auditoriaCount = 0 } = useAuditoriaCount({ enabled: canVerAuditoria });
   const { count: alertasSistemaCount } = useAlertasPendingCount();
   const { data: crmVencidas = 0 } = useActividadesVencidasCount();
-  const { adminPendientes } = useSidebarAlerts();
+  const { embarquesDemora, facturasVencidas, garantiasAtoradas, adminPendientes } = useSidebarAlerts();
+  const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
+  const badgeCounts: BadgeCounts = { embarquesAlertas, facturasVencidas };
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,
@@ -50,11 +60,11 @@ export function useAppSidebarSections(): SidebarSection[] {
 
   const deps: BuilderDeps = { crmItems, sistemaItems };
   const builder = effectiveRole ? ROLE_BUILDERS[effectiveRole] : undefined;
-  if (builder) return patchEmbarquesBadge(builder(deps), adminPendientes);
+  if (builder) return patchSidebarBadges(builder(deps), badgeCounts);
 
   const isAdmin = effectiveRole === "admin" || effectiveRole === "admin_org" || role === "super_admin";
   const sections = isAdmin ? buildAdmin(deps) : buildDefaultSections(deps);
   if (isAdmin) sections.push({ label: "Administración", items: SIDEBAR_ADMIN_ITEMS });
   if (role === "super_admin") sections.push({ label: "Super Admin", items: superAdminItems });
-  return patchEmbarquesBadge(sections, adminPendientes);
+  return patchSidebarBadges(sections, badgeCounts);
 }

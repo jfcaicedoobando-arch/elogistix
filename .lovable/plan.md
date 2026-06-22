@@ -1,38 +1,51 @@
 ## Problema
 
-El job **Lint, typecheck, unused code & build** falla porque `src/hooks/layout/useAppSidebarSections.ts` creció a **253 líneas** tras agregar `buildAdmin`, y el test `architecture-baseline` (Power of 10) exige ≤ 200 líneas en archivos productivos.
+El sidebar muestra un badge rojo en **"Principal"** con el total agregado de 4 categorías de alertas (`totalAlertas = embarquesDemora + facturasVencidas + garantiasAtoradas + adminPendientes` → 19), pero la página `/inicio` sólo muestra los embarques en demora (3). El usuario lee 19 en el sidebar y espera ver 19 en el dashboard.
 
-```
-- src/hooks/layout/useAppSidebarSections.ts (253 líneas): expected [...] to deeply equal []
-```
+## Solución: desglosar el badge por módulo
 
-## Solución
+Quitar el badge agregado de **"Principal"** y exponer cada categoría como un badge sobre el ítem del sidebar al que pertenece, igual que ya se hace con `/embarques` (admin pendientes), `/auditoria` y `/crm`. Cada número en el sidebar coincidirá con el módulo donde se ve el detalle.
 
-Extraer los **13 builders por rol** a un módulo nuevo, dejando `useAppSidebarSections.ts` como orquestador pequeño.
+### Mapeo
 
-### Archivos
+| Categoría | Origen actual | Ítem del sidebar |
+|---|---|---|
+| `embarquesDemora` | `fetchSidebarAlertCounts` | `/embarques` (se **suma** al badge actual de adminPendientes) |
+| `facturasVencidas` | `fetchSidebarAlertCounts` | `/facturacion` |
+| `garantiasAtoradas` | `fetchSidebarAlertCounts` | `/embarques` (también vinculado a embarques) — alternativa: `/cxp` |
+| `adminPendientes` | `fetchAdminPendientesCount` | `/embarques` (ya existente) |
+| **Principal** (`/`) | — | **sin badge** |
 
-1. **Nuevo: `src/hooks/layout/sidebarRoleBuilders.ts`** (~170 líneas)
-   - Exporta tipos `SidebarSection`, `BuilderDeps`, `Builder`.
-   - Exporta los helpers `filterBandejas`, `filterGestion`, `filterSistema`, `filterDirectorio`.
-   - Exporta los 11 builders: `buildVendedor`, `buildCustomerService`, `buildCoordinador`, `buildEjecutivoPricing`, `buildContador`, `buildTesorero`, `buildAuxiliarContable`, `buildEjecutivoCobranza`, `buildGerenteComercial`, `buildGerenteOperaciones`, `buildAdmin`.
-   - Exporta `ROLE_BUILDERS` y `buildDefaultSections`.
+`embarquesDemora`, `garantiasAtoradas` y `adminPendientes` se acumulan todos sobre `/embarques` (los tres son alertas del ciclo de embarque). `facturasVencidas` se va a `/facturacion`.
 
-2. **Editar: `src/hooks/layout/useAppSidebarSections.ts`** (queda ~60 líneas)
-   - Solo conserva el hook `useAppSidebarSections`, el helper `patchEmbarquesBadge` y los `useQuery` de badges.
-   - Importa todo lo demás del nuevo módulo.
+### Archivos a tocar
 
-3. **`src/constants/appVersion.ts`** → `13.98.3`.
+1. **`src/components/layout/SidebarGroupBlock.tsx`** (líneas 60-65)
+   - Eliminar el fallback `item.url === "/" ? totalAlertas : 0`. El badge sólo se mostrará cuando el ítem tenga `badgeCount` explícito.
+   - Quitar la prop `totalAlertas` (ya no se usa).
 
-4. **`CHANGELOG.md`** → entrada `[13.98.3]` describiendo el split (chore/refactor sin cambios funcionales).
+2. **`src/components/layout/AppSidebar.tsx`**
+   - Quitar el paso de `totalAlertas` a `SidebarGroupBlock` y la lectura de `useSidebarAlerts()` (a menos que se use en otro lado — verificar).
+
+3. **`src/hooks/layout/useAppSidebarSections.ts`**
+   - Renombrar `patchEmbarquesBadge` a `patchSidebarBadges`.
+   - El nuevo `patchSidebarBadges` recibe `{ embarquesAlertas, facturasVencidas }` y aplica:
+     - `/embarques` → `embarquesAlertas` (suma de `embarquesDemora + garantiasAtoradas + adminPendientes`)
+     - `/facturacion` → `facturasVencidas`
+   - Leer las 4 piezas de `useSidebarAlerts()` y construir `embarquesAlertas` antes de invocarlo.
+
+4. **`src/hooks/layout/__tests__/useLayout.test.tsx`** — actualizar el mock de `useSidebarAlerts` si valida el badge.
+
+5. **`src/constants/appVersion.ts`** → `13.98.4`.
+6. **`CHANGELOG.md`** → entrada `[13.98.4]` describiendo el cambio.
 
 ### Verificación
 
-- `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture-baseline.test.ts`
-- Smoke: `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx` y `src/hooks/layout/__tests__/useLayout.test.tsx` (si existe).
+- `bunx vitest run` (todos).
+- Visual en `/inicio`: el ítem **Principal** ya no muestra badge; **Embarques** muestra la suma 3 + demoras + garantías; **Facturación** muestra el conteo de facturas vencidas.
 
 ### Lo que NO cambia
 
-- Comportamiento del sidebar para ningún rol.
-- API pública del hook `useAppSidebarSections()`.
-- Etiquetas/rutas/permisos.
+- Las queries de Supabase (`fetchSidebarAlertCounts`, `fetchAdminPendientesCount`) intactas.
+- Lógica de las páginas `/inicio`, `/embarques`, `/facturacion` intactas.
+- Permisos y rutas intactos.
