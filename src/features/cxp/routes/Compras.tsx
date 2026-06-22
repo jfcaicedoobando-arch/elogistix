@@ -73,19 +73,26 @@ export default function Compras() {
   const { canEdit } = usePermissions();
   const { data: cxp = [], kpis } = useFacturasCxP();
   const { data: porCapturar = [] } = useCxpPorCapturar();
+  const { totales: agingTotales } = useCxpAging();
+  const { data: pendientesAprob = 0 } = useCxpPendientesAprobacion();
   const [openNueva, setOpenNueva] = useState(false);
 
   const metrics = useMemo(() => {
     const conSaldo = cxp.filter((f) => f.saldo > 0.01);
     const vencidas = conSaldo.filter((f) => f.estatus === "Vencida").length;
+    const porAprobarMonto = cxp
+      .filter((f) => f.estado_aprobacion === "pendiente")
+      .reduce((s, f) => s + Number(f.total), 0);
     return {
       facturasConSaldo: conSaldo.length,
       vencidas,
       embarquesPorCapturar: porCapturar.length,
+      porAprobarMonto,
     };
   }, [cxp, porCapturar]);
 
-  const vencidoTotal = kpis.vencido_mxn + kpis.vencido_usd; // referencia visual; chip aparte
+  const vencidoMas30 = agingTotales.d_31_60 + agingTotales.d_61_90 + agingTotales.mas_90;
+  const vencidoTotal = kpis.vencido_mxn + kpis.vencido_usd;
 
   return (
     <div className="space-y-4">
@@ -102,11 +109,17 @@ export default function Compras() {
 
       <ComprasTabStrip />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         <KpiCard
           label="Embarques por capturar"
           value={metrics.embarquesPorCapturar}
           sub="presupuesto sin factura"
+        />
+        <KpiCard
+          label="Por aprobar"
+          value={pendientesAprob}
+          sub={pendientesAprob > 0 ? formatCurrencyCompact(metrics.porAprobarMonto, "MXN") : "Sin pendientes"}
+          tone={pendientesAprob > 0 ? "warn" : "default"}
         />
         <KpiCard
           label="Facturas con saldo"
@@ -118,6 +131,12 @@ export default function Compras() {
           value={metrics.vencidas}
           sub={`${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`}
           tone={vencidoTotal > 0 ? "danger" : "default"}
+        />
+        <KpiCard
+          label="Vencido > 30 días"
+          value={formatCurrencyCompact(vencidoMas30, "MXN")}
+          sub="Cubetas 31-60, 61-90 y >90"
+          tone={vencidoMas30 > 0 ? "danger" : "default"}
         />
         <KpiCard
           label="Por vencer 7 días"
