@@ -132,17 +132,15 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
     };
   });
 
-  let filtradas = rows;
-  if (filtros.estatus && filtros.estatus !== "todos") {
-    filtradas = filtradas.filter(r => r.estatus === filtros.estatus);
-  }
-  if (filtros.origen && filtros.origen !== "todos") {
-    filtradas = filtradas.filter(r => r.proveedor_origen === filtros.origen);
-  }
-  if (filtros.aprobacion && filtros.aprobacion !== "todos") {
-    filtradas = filtradas.filter(r => r.estado_aprobacion === filtros.aprobacion);
-  }
-  return filtradas;
+  return aplicarFiltrosCliente(rows, filtros);
+}
+
+function aplicarFiltrosCliente(rows: FacturaCxP[], filtros: FetchCxPFiltros): FacturaCxP[] {
+  let r = rows;
+  if (filtros.estatus && filtros.estatus !== "todos") r = r.filter(x => x.estatus === filtros.estatus);
+  if (filtros.origen && filtros.origen !== "todos") r = r.filter(x => x.proveedor_origen === filtros.origen);
+  if (filtros.aprobacion && filtros.aprobacion !== "todos") r = r.filter(x => x.estado_aprobacion === filtros.aprobacion);
+  return r;
 }
 
 export { calcularKPIsCxP, type KPIsCxP } from "./cxpKpis";
