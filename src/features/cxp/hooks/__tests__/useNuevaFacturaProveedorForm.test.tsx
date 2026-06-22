@@ -121,6 +121,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleProveedor("p1", "ACME");
       result.current.handleChange("folio", "F-1");
       result.current.handleChange("subtotal", "100");
+      result.current.handleChange("categoriaId", "cat-1");
     });
     await act(async () => { await result.current.submit(); });
     expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/UUID fiscal/i), expect.anything());
