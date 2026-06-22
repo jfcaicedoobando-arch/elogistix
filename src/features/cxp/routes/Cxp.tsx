@@ -86,9 +86,10 @@ export default function Cxp() {
       canEdit,
       onRegistrarPago: f.setPagar,
       onVerDetalle: f.setDetalle,
+      onEditar: f.setEditar,
       onEliminar,
     }),
-    [canEdit, f.setPagar, f.setDetalle, onEliminar],
+    [canEdit, f.setPagar, f.setDetalle, f.setEditar, onEliminar],
   );
 
   return (
