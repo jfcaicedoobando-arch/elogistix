@@ -29,6 +29,37 @@ export interface ActualizarFacturaPayload {
   notas: string;
 }
 
+/** Subconjunto de columnas necesario para precargar el form de edición. */
+export type FacturaParaEdicion = Pick<
+  ProveedorFacturaRow,
+  | "id" | "proveedor_id" | "proveedor_nombre" | "folio_proveedor"
+  | "fecha_emision" | "fecha_vencimiento" | "dias_credito"
+  | "moneda" | "tipo_cambio_usd"
+  | "subtotal" | "iva" | "retenciones" | "total"
+  | "categoria_presupuesto_id" | "notas" | "estado_aprobacion"
+>;
+
+const FACTURA_EDIT_SELECT = `
+  id, proveedor_id, proveedor_nombre, folio_proveedor,
+  fecha_emision, fecha_vencimiento, dias_credito,
+  moneda, tipo_cambio_usd,
+  subtotal, iva, retenciones, total,
+  categoria_presupuesto_id, notas, estado_aprobacion
+` as const;
+
+/** Carga una factura de proveedor con los campos que el form de edición necesita. */
+export async function fetchFacturaParaEdicion(id: string): Promise<FacturaParaEdicion | null> {
+  const { data, error } = await supabase
+    .from("proveedor_facturas")
+    .select(FACTURA_EDIT_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  // SAFE-CAST: select acotado al subset declarado en FacturaParaEdicion.
+  return (data as FacturaParaEdicion | null) ?? null;
+}
+
+
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
   totalPagado: number;
@@ -50,7 +81,9 @@ function detectarCambioSensible(
   payload: ActualizarFacturaPayload,
 ): boolean {
   return CAMPOS_SENSIBLES.some((k) => {
+    // SAFE-CAST: lectura indexada por key tipada de objetos planos.
     const a = (actual as unknown as Record<string, unknown>)[k];
+    // SAFE-CAST: lectura indexada por key tipada de objetos planos.
     const b = (payload as unknown as Record<string, unknown>)[k];
     if (typeof a === "number" || typeof b === "number") return Number(a) !== Number(b);
     return a !== b;

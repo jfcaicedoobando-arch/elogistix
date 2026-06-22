@@ -3,23 +3,20 @@
  * Inputs numéricos sin spinners (NumericInput), secciones con iconos
  * y agrupación moneda+importes. El total vive en el header del dialog.
  */
-import { useState } from "react";
-import { Building2, CalendarDays, Coins, FileText, ChevronDown } from "lucide-react";
+import { CalendarDays, Coins, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { NumericInput } from "@/components/shared/NumericInput";
-import { ProveedorCombobox } from "./ProveedorCombobox";
 import type { Database } from "@/integrations/supabase/types";
 import {
   FormSection, FieldError, RequiredMark,
   type FacturaFormValues, type CategoriaPresupuestoLite,
 } from "./facturaFormPrimitives";
+import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -44,46 +41,18 @@ export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
   proveedorReadOnly = false, proveedorNombre,
 }: Props) {
-  const [openDetalles, setOpenDetalles] = useState(false);
   const showTc = values.moneda !== "MXN";
 
   return (
     <div className="space-y-5">
-      <FormSection
-        title={proveedorReadOnly ? "Folio del proveedor" : "Proveedor y folio"}
-        icon={<Building2 className="h-3.5 w-3.5" />}
-      >
-        {proveedorReadOnly ? (
-          <div className="space-y-3">
-            <div className="rounded-md border bg-muted/40 px-3 py-2">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Proveedor (no editable)
-              </div>
-              <div className="mt-0.5 text-sm font-medium text-foreground truncate">
-                {proveedorNombre ?? "—"}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label>Folio del proveedor<RequiredMark /></Label>
-              <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
-              <FieldError msg={errors.folio} />
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Proveedor<RequiredMark /></Label>
-              <ProveedorCombobox value={values.provId} onChange={onProveedor} className="w-full" />
-              <FieldError msg={errors.provId} />
-            </div>
-            <div className="space-y-1">
-              <Label>Folio del proveedor<RequiredMark /></Label>
-              <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
-              <FieldError msg={errors.folio} />
-            </div>
-          </div>
-        )}
-      </FormSection>
+      <ProveedorYFolioSection
+        values={values}
+        onChange={onChange}
+        onProveedor={onProveedor}
+        errors={errors}
+        proveedorReadOnly={proveedorReadOnly}
+        proveedorNombre={proveedorNombre}
+      />
 
       <Separator />
 
@@ -140,30 +109,15 @@ export function FacturaProveedorFormFields({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label>Subtotal<RequiredMark /></Label>
-            <NumericInput
-              value={toNum(values.subtotal)}
-              onChange={(n) => onChange("subtotal", fromNum(n))}
-              decimals
-              aria-label="Subtotal"
-            />
+            <NumericInput value={toNum(values.subtotal)} onChange={(n) => onChange("subtotal", fromNum(n))} decimals aria-label="Subtotal" />
           </div>
           <div className="space-y-1">
             <Label>IVA</Label>
-            <NumericInput
-              value={toNum(values.iva)}
-              onChange={(n) => onChange("iva", fromNum(n))}
-              decimals
-              aria-label="IVA"
-            />
+            <NumericInput value={toNum(values.iva)} onChange={(n) => onChange("iva", fromNum(n))} decimals aria-label="IVA" />
           </div>
           <div className="space-y-1">
             <Label>Retenciones</Label>
-            <NumericInput
-              value={toNum(values.retenciones)}
-              onChange={(n) => onChange("retenciones", fromNum(n))}
-              decimals
-              aria-label="Retenciones"
-            />
+            <NumericInput value={toNum(values.retenciones)} onChange={(n) => onChange("retenciones", fromNum(n))} decimals aria-label="Retenciones" />
           </div>
         </div>
         <FieldError msg={errors.subtotal} />
@@ -174,10 +128,7 @@ export function FacturaProveedorFormFields({
       <FormSection title="Categoría contable" icon={<FileText className="h-3.5 w-3.5" />}>
         <div className="space-y-1">
           <Label>Categoría contable<RequiredMark /></Label>
-          <Select
-            value={values.categoriaId || ""}
-            onValueChange={(v) => onChange("categoriaId", v)}
-          >
+          <Select value={values.categoriaId || ""} onValueChange={(v) => onChange("categoriaId", v)}>
             <SelectTrigger aria-required="true">
               <SelectValue placeholder="Selecciona la categoría contable de esta factura" />
             </SelectTrigger>
@@ -196,20 +147,7 @@ export function FacturaProveedorFormFields({
 
       <Separator />
 
-      <Collapsible open={openDetalles} onOpenChange={setOpenDetalles}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
-          <FileText className="h-3.5 w-3.5 text-primary/70" />
-          Notas (opcional)
-          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDetalles ? "rotate-180" : ""}`} />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-3 pt-3">
-          <div className="space-y-1">
-            <Label>Notas</Label>
-            <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2}
-              placeholder="Observaciones internas…" />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      <NotasSection value={values.notas} onChange={(v) => onChange("notas", v)} />
     </div>
   );
 }

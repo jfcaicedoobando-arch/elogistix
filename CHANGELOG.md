@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.1] - 2026-06-22
+- **chore(arquitectura)**: refactor de 3 archivos productivos que superaban las 200 líneas (regla Power of 10 #4): `FacturaProveedorFormFields.tsx`, `DialogDetallePagosProveedor.sections.tsx` y `useNuevoProveedorController.ts`. Se extrajeron sub-secciones a archivos hermanos (`.sections.tsx`, `.fila.tsx`, `.helpers.ts`) sin cambiar comportamiento. Analogía: como dividir una libreta de 210 hojas en dos libretas más delgadas — el contenido es el mismo, pero cada una cabe en el bolsillo.
+- **chore(arquitectura)**: `useEditarFacturaProveedorForm` ya no toca Supabase directamente; ahora usa `fetchFacturaParaEdicion` desde `@/features/cxp/services` (jerarquía Hooks→Services).
+- **chore**: se añadieron marcadores `// SAFE-CAST:` a dos casts `as unknown as Record<string, unknown>` en `proveedorFacturas.update.ts` (lectura indexada por key tipada).
+
 ## [13.114.0] - 2026-06-22
 - **fix(red)**: la subida de **CSF (PDF)** y de **CFDI (XML)** ahora resiste cortes de red transitorios. Antes, si el WiFi parpadeaba a mitad del upload, el usuario veía `Failed to fetch` y tenía que volver a seleccionar el archivo. Ahora se reintenta automáticamente hasta 2 veces (con pausas de 1s y 3s) y se aplica un timeout de 60s por intento. Sólo se reintenta en errores transitorios (caída de red, timeouts, 5xx/408/429); errores de validación (4xx) se reportan al primer intento. Analogía: como cuando se corta una llamada y el teléfono vuelve a marcar solo 1-2 veces antes de avisarte.
 - **chore**: nuevo helper `src/lib/net/fetchWithRetry.ts` con tests unitarios para reuso en futuros endpoints.

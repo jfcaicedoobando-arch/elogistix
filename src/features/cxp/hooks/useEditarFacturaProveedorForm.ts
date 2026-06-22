@@ -8,12 +8,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useActualizarFacturaProveedor } from "@/features/cxp/hooks";
-import type {
-  ActualizarFacturaPayload,
-  ProveedorFacturaRow,
-  FacturaCxP,
+import {
+  fetchFacturaParaEdicion,
+  type ActualizarFacturaPayload,
+  type FacturaCxP,
+  type FacturaParaEdicion,
 } from "@/features/cxp/services";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import {
@@ -23,32 +23,7 @@ import {
 } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
-type RowLite = Pick<
-  ProveedorFacturaRow,
-  | "id" | "proveedor_id" | "proveedor_nombre" | "folio_proveedor"
-  | "fecha_emision" | "fecha_vencimiento" | "dias_credito"
-  | "moneda" | "tipo_cambio_usd"
-  | "subtotal" | "iva" | "retenciones" | "total"
-  | "categoria_presupuesto_id" | "notas" | "estado_aprobacion"
->;
-
-const ROW_SELECT = `
-  id, proveedor_id, proveedor_nombre, folio_proveedor,
-  fecha_emision, fecha_vencimiento, dias_credito,
-  moneda, tipo_cambio_usd,
-  subtotal, iva, retenciones, total,
-  categoria_presupuesto_id, notas, estado_aprobacion
-` as const;
-
-async function fetchRowParaEdicion(id: string): Promise<RowLite | null> {
-  const { data, error } = await supabase
-    .from("proveedor_facturas")
-    .select(ROW_SELECT)
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as RowLite | null) ?? null;
-}
+type RowLite = FacturaParaEdicion;
 
 function fromRow(r: RowLite): FacturaFormValues {
   const sub = Number(r.subtotal) || 0;
@@ -81,7 +56,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
   const actualizar = useActualizarFacturaProveedor();
   const { data: row, isLoading: isLoadingRow, isError: isErrorRow } = useQuery({
     queryKey: ["cxp", "factura-edit-row", factura?.id ?? null] as const,
-    queryFn: () => fetchRowParaEdicion(factura!.id),
+    queryFn: () => fetchFacturaParaEdicion(factura!.id),
     enabled: !!factura?.id,
     staleTime: 10_000,
   });
