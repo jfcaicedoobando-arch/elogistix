@@ -64,6 +64,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     proveedor_origen: f.proveedores?.origen_proveedor ?? null,
     embarque_id: f.embarque_id,
     folio_proveedor: f.folio_proveedor,
+    folio_interno: f.folio_interno,
     fecha_emision: f.fecha_emision,
     fecha_vencimiento: f.fecha_vencimiento,
     dias_vencido: Math.max(0, dv),
