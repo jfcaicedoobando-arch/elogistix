@@ -54,7 +54,7 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle>Detalle de pagos</DialogTitle>
             <DialogDescription className="font-mono uppercase tracking-wider text-xs">
-              {f ? `${f.folio_proveedor} — ${f.proveedor_nombre}` : ""}
+              {f ? `${f.folio_interno} · Folio prov. ${f.folio_proveedor} — ${f.proveedor_nombre}` : ""}
             </DialogDescription>
           </DialogHeader>
 
