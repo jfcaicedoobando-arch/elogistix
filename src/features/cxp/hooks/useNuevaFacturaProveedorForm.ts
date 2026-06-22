@@ -217,6 +217,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     total, pendingCfdi, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
     vinculos, toggleVinculo, setVinculoMonto,
+    embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit,
     isPending: crear.isPending,
     organizationId,
