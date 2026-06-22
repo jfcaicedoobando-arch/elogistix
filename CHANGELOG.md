@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.3] - 2026-06-22
+- **fix(permisos)**: los roles **Gerente de Operaciones** y **Gerente Comercial** veían entradas en el menú lateral (Tesorería, CXP, Cartera, Profit Dashboard, Presupuesto) que al hacer clic los regresaban a `/` porque las rutas tenían un guard más estrecho que el sidebar. Se alinearon los `allowedRoles` de las rutas de **lectura financiera** con `FINANCE_VIEWERS` de `usePermissions`: ahora ambos gerentes pueden abrir esas pantallas en modo lectura (las mutaciones siguen restringidas a finanzas). Analogía: el menú del restaurante anunciaba platillos, pero las puertas de la cocina estaban cerradas para los gerentes — ahora les dejan **mirar** la cocina, pero no cocinar.
+
 ## [13.114.2] - 2026-06-22
 - **fix(tests)**: 4 tests rotos en CI tras los cambios de validación (categoría contable en facturas de proveedor, tipo obligatorio para proveedor extranjero, régimen fiscal obligatorio en alta de cliente) y un *unhandled rejection* en el test de `fetchWithRetry`. Se actualizaron los fixtures para incluir los nuevos campos requeridos y se añadió un `.catch()` temprano al helper `runWithTimers` para silenciar rechazos antes del `await`. Analogía: los tests usaban un formulario viejo que ya no cumple con los nuevos campos obligatorios; ahora rellenan también la casilla nueva.
 
