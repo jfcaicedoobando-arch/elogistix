@@ -9,11 +9,8 @@ import { usePermissions } from "@/hooks/shared";
 import NuevoClienteDialog from "@/features/cliente/components/NuevoClienteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useDebounce } from "@/hooks/shared";
-import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
-import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { useListPageState } from "@/hooks/shared";
-import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import {
@@ -27,43 +24,11 @@ import { createCliente } from "@/features/cliente/services";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useRegistrarActividad } from "@/hooks/shared";
-
-type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
-
-const columns: ColumnDef<ClienteRow, unknown>[] = defineColumns<ClienteRow>([
-  {
-    id: "nombre",
-    header: "Nombre",
-    accessorFn: (c) => c.nombre,
-    enableSorting: true,
-    sortingFn: sortByString<ClienteRow>((c) => c.nombre),
-    meta: { width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate" },
-    cell: ({ row }) => {
-      const nombre = toTitleCase(row.original.nombre);
-      return <span title={nombre}>{nombre}</span>;
-    },
-  },
-  {
-    id: "rfc",
-    header: "RFC",
-    accessorFn: (c) => c.rfc,
-    enableSorting: true,
-    sortingFn: sortByString<ClienteRow>((c) => c.rfc),
-    meta: { width: "w-[130px]", className: "text-xs font-mono" },
-    cell: ({ row }) => (row.original.rfc || "").toUpperCase(),
-  },
-  {
-    id: "ciudad",
-    header: "Ciudad",
-    accessorFn: (c) => c.ciudad,
-    enableSorting: true,
-    sortingFn: sortByString<ClienteRow>((c) => c.ciudad),
-    meta: { width: "w-[150px]", className: "text-xs" },
-    cell: ({ row }) => `${correctSpanishPlace(row.original.ciudad)}, ${correctSpanishPlace(row.original.estado)}`,
-  },
-  { id: "contacto", header: "Contacto", meta: { width: "w-[140px]", className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto) },
-  { id: "telefono", header: "Teléfono", meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap" }, cell: ({ row }) => formatPhoneMx(row.original.telefono) },
-]);
+import {
+  clientesColumns,
+  ClienteMobileCard,
+  type ClienteRow,
+} from "@/features/cliente/components/clientesTableConfig";
 
 export default function Clientes() {
   const navigate = useNavigate();
