@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.2] - 2026-06-22
+- **fix(rbac)**: los roles `admin_org` y `super_admin` ahora pueden entrar a `/usuarios` y `/configuracion`. La sidebar ya mostraba la sección Administración para esos roles, pero el guard de ruta solo aceptaba `admin`, así que al hacer clic la página los rechazaba. Actualizado también el smoke test de rutas.
+
 ## [13.106.1] - 2026-06-22
 - **feat(embarques/cierre)**: en embarques ya cerrados, el checklist se presenta en modo **informativo**. Los ítems no cumplidos se muestran en muted (gris) con badge "No aplica" en vez del rojo "Pendiente", y sin link de acción. Se agrega nota: "Este embarque se cerró antes de que existieran algunas de estas reglas". Esto elimina el ruido visual en embarques legacy donde las reglas nuevas no podían cumplirse.
 
