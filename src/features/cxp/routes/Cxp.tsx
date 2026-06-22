@@ -11,6 +11,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
+import { DialogEditarFacturaProveedor } from "@/features/cxp/components/DialogEditarFacturaProveedor";
 import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRegistrarPagoProveedor";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
