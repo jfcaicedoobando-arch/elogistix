@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.102.2] - 2026-06-22
+- **fix(power-of-10)**: `proveedorFacturas.ts` rebasaba 200 líneas tras Fase B. Extraída `fetchPendientesAprobacionCount` a nuevo módulo `cxpAprobacionCount.ts` (re-exportado desde el barrel).
+
 ## [13.102.1] - 2026-06-22
 - **fix(arquitectura)**: `useCxpPendientesAprobacion` ya no toca `supabase/client` directo; pasa por nuevo `fetchPendientesAprobacionCount` en services (cumple capa Pages→Hooks→Services).
 - **fix(power-of-10)**: `cxpColumns.tsx` baja de 204 a 199 líneas compactando los maps de estatus/aprobación.
