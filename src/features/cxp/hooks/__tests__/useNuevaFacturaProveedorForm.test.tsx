@@ -100,6 +100,7 @@ describe("useNuevaFacturaProveedorForm", () => {
       result.current.handleChange("folio", "F-001");
       result.current.handleChange("subtotal", "1000");
       result.current.handleChange("iva", "160");
+      result.current.handleChange("categoriaId", "cat-1");
     });
     await act(async () => { await result.current.submit(); });
     expect(mutateAsync).toHaveBeenCalledTimes(1);
