@@ -21,7 +21,7 @@ const TABLAS: { value: SoftTable; label: string }[] = [
   { value: "cotizacion_costos", label: "Costos de cotización" },
   { value: "proformas", label: "Proformas" },
   { value: "proforma_conceptos_consolidados", label: "Conceptos de proforma" },
-  { value: "conceptos_costo", label: "Conceptos de costo" },
+  { value: "conceptos_costo", label: "Costos directos del embarque" },
   { value: "conceptos_venta", label: "Conceptos de venta" },
 ];
 

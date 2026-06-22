@@ -15,7 +15,7 @@ export default function ProfitPresupuesto() {
     <div className="space-y-4">
       <PageHeader
         title="Presupuesto vs Real"
-        description="Control mensual de gasto operativo por categoría."
+        description="Control mensual de gasto de administración por categoría."
       />
       <Tabs defaultValue="captura" className="space-y-3">
         <TabsList>

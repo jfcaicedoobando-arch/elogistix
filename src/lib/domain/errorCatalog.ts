@@ -57,7 +57,7 @@ export const FIELD_LABELS = {
   tcUSD: "Tipo de cambio USD",
   tcEUR: "Tipo de cambio EUR",
   ventas: "Conceptos de venta",
-  costos: "Conceptos de costo",
+  costos: "Costos directos del embarque",
 } as const;
 
 // ── Diccionario estático ───────────────────────────────────────────────
@@ -122,7 +122,7 @@ const DYNAMIC = {
   "4.venta.invalid": (p: { id: number }) =>
     formatValidationMessage(`Concepto de venta #${p.id}`, "cantidad ≥ 1 y precio ≥ 0"),
   "4.costo.invalid": (p: { id: number }) =>
-    formatValidationMessage(`Concepto de costo #${p.id}`, "monto no puede ser negativo"),
+    formatValidationMessage(`Costo directo #${p.id}`, "monto no puede ser negativo"),
 } as const;
 
 export type DynamicErrorKey = keyof typeof DYNAMIC;

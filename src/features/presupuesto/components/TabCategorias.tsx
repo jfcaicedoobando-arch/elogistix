@@ -58,7 +58,7 @@ export function TabCategorias() {
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-semibold">Categorías de gasto operativo</h3>
+        <h3 className="text-sm font-semibold">Categorías de gasto de administración</h3>
         <div className="flex gap-2">
           {sinDatos && (
             <Button variant="outline" size="sm" onClick={handleSeed}>

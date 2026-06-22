@@ -132,7 +132,7 @@ export function CoberturaTooltipContent({
         </p>
       )}
       <p className="text-[10px] text-muted-foreground italic">
-        Gastos = facturas de proveedor "Gasto operativo" + comisiones del mes.
+        Gastos = facturas de proveedor "Gasto de administración" + comisiones del mes.
       </p>
     </div>
   );

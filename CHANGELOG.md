@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.10] - 2026-06-22
+- **chore(ui)**: cobertura completa del renombrado contable. 12 etiquetas faltantes en filtro de categoría de proveedor, header de Presupuesto vs Real, tab Categorías, diálogo de categoría, descripción de alta de proveedor, tooltip de Arribos, catálogo de errores (`errorCatalog`), filtro de Papelera, sugerencia de embarque en CxP, glosario de Ayuda y aria-label de eliminar fila de costo.
+
 ## [13.106.9] - 2026-06-22
 - **chore(ui)**: renombrado contable de etiquetas: "Conceptos de Costo" → "Costos directos del embarque" (wizard, tarjetas, conciliación); "Gastos operativos" → "Gastos de administración" (tab Proveedores, detalle, tooltip dashboard); "Liquidación de gastos" → "Liquidación de costos" (Ayuda). Sólo copy en UI; sin cambios en BD, enums ni lógica.
 
