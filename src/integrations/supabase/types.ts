@@ -3810,6 +3810,27 @@ export type Database = {
           },
         ]
       }
+      folio_secuencias: {
+        Row: {
+          organization_id: string
+          tipo: string
+          ultimo_numero: number
+          updated_at: string
+        }
+        Insert: {
+          organization_id: string
+          tipo: string
+          ultimo_numero?: number
+          updated_at?: string
+        }
+        Update: {
+          organization_id?: string
+          tipo?: string
+          ultimo_numero?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           created_at: string
@@ -4690,6 +4711,7 @@ export type Database = {
           estado_captura: string
           fecha_emision: string
           fecha_vencimiento: string | null
+          folio_interno: string
           folio_proveedor: string
           id: string
           iva: number
@@ -4724,6 +4746,7 @@ export type Database = {
           estado_captura?: string
           fecha_emision?: string
           fecha_vencimiento?: string | null
+          folio_interno: string
           folio_proveedor: string
           id?: string
           iva?: number
@@ -4758,6 +4781,7 @@ export type Database = {
           estado_captura?: string
           fecha_emision?: string
           fecha_vencimiento?: string | null
+          folio_interno?: string
           folio_proveedor?: string
           id?: string
           iva?: number
@@ -5689,6 +5713,7 @@ export type Database = {
           estado_captura: string
           fecha_emision: string
           fecha_vencimiento: string | null
+          folio_interno: string
           folio_proveedor: string
           id: string
           iva: number
@@ -6625,6 +6650,7 @@ export type Database = {
           garantias_atoradas: number
         }[]
       }
+      siguiente_folio_proveedor: { Args: { p_org_id: string }; Returns: string }
       sincronizar_contenedores_embarque: {
         Args: { p_contenedores: Json; p_embarque_id: string }
         Returns: {
