@@ -42,9 +42,19 @@ export const EMPTY_PROVEEDOR_FORM = {
   ciudad: "",
   estado: "",
   regimen_fiscal: "",
-  // Datos bancarios — opcionales (paso 2).
+  // Datos bancarios nacionales (paso 2) — opcionales.
   banco: "",
   clabe: "",
+  // Datos bancarios internacionales (paso 2) — opcionales.
+  banco_pais: "",
+  swift_bic: "",
+  iban: "",
+  aba_routing: "",
+  banco_direccion: "",
+  banco_intermediario: "",
+  banco_intermediario_swift: "",
+  beneficiario: "",
+  referencia_pago: "",
 };
 
 export type NuevoProveedorForm = typeof EMPTY_PROVEEDOR_FORM;

@@ -4924,7 +4924,13 @@ export type Database = {
       }
       proveedores: {
         Row: {
+          aba_routing: string | null
           banco: string | null
+          banco_direccion: string | null
+          banco_intermediario: string | null
+          banco_intermediario_swift: string | null
+          banco_pais: string | null
+          beneficiario: string | null
           categoria: Database["public"]["Enums"]["categoria_proveedor"]
           ciudad: string | null
           clabe: string | null
@@ -4934,6 +4940,7 @@ export type Database = {
           direccion: string | null
           email: string
           estado: string | null
+          iban: string | null
           id: string
           moneda_preferida: Database["public"]["Enums"]["moneda"]
           nombre: string
@@ -4942,17 +4949,25 @@ export type Database = {
             | Database["public"]["Enums"]["origen_proveedor"]
             | null
           pais: string | null
+          referencia_pago: string | null
           regimen_fiscal: string | null
           rfc: string
           subtipo_gasto:
             | Database["public"]["Enums"]["subtipo_gasto_operativo"]
             | null
+          swift_bic: string | null
           telefono: string
           tipo: Database["public"]["Enums"]["tipo_proveedor"] | null
           updated_at: string
         }
         Insert: {
+          aba_routing?: string | null
           banco?: string | null
+          banco_direccion?: string | null
+          banco_intermediario?: string | null
+          banco_intermediario_swift?: string | null
+          banco_pais?: string | null
+          beneficiario?: string | null
           categoria?: Database["public"]["Enums"]["categoria_proveedor"]
           ciudad?: string | null
           clabe?: string | null
@@ -4962,6 +4977,7 @@ export type Database = {
           direccion?: string | null
           email?: string
           estado?: string | null
+          iban?: string | null
           id?: string
           moneda_preferida?: Database["public"]["Enums"]["moneda"]
           nombre: string
@@ -4970,17 +4986,25 @@ export type Database = {
             | Database["public"]["Enums"]["origen_proveedor"]
             | null
           pais?: string | null
+          referencia_pago?: string | null
           regimen_fiscal?: string | null
           rfc?: string
           subtipo_gasto?:
             | Database["public"]["Enums"]["subtipo_gasto_operativo"]
             | null
+          swift_bic?: string | null
           telefono?: string
           tipo?: Database["public"]["Enums"]["tipo_proveedor"] | null
           updated_at?: string
         }
         Update: {
+          aba_routing?: string | null
           banco?: string | null
+          banco_direccion?: string | null
+          banco_intermediario?: string | null
+          banco_intermediario_swift?: string | null
+          banco_pais?: string | null
+          beneficiario?: string | null
           categoria?: Database["public"]["Enums"]["categoria_proveedor"]
           ciudad?: string | null
           clabe?: string | null
@@ -4990,6 +5014,7 @@ export type Database = {
           direccion?: string | null
           email?: string
           estado?: string | null
+          iban?: string | null
           id?: string
           moneda_preferida?: Database["public"]["Enums"]["moneda"]
           nombre?: string
@@ -4998,11 +5023,13 @@ export type Database = {
             | Database["public"]["Enums"]["origen_proveedor"]
             | null
           pais?: string | null
+          referencia_pago?: string | null
           regimen_fiscal?: string | null
           rfc?: string
           subtipo_gasto?:
             | Database["public"]["Enums"]["subtipo_gasto_operativo"]
             | null
+          swift_bic?: string | null
           telefono?: string
           tipo?: Database["public"]["Enums"]["tipo_proveedor"] | null
           updated_at?: string

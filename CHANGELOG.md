@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.105.0] - 2026-06-22
+- **feat(proveedores)**: el Paso 2 del wizard "Nuevo proveedor" y el dialog de edición ahora muestran campos distintos según el origen. Para `Extranjero` se capturan datos de transferencia internacional (beneficiario, banco, país, SWIFT/BIC, IBAN o cuenta, ABA/Routing, banco intermediario y su SWIFT, dirección del banco y referencia de pago); para `Nacional` se mantiene banco mexicano + CLABE. La CLABE solo se valida en nacionales y el SWIFT se valida (8 u 11 chars) en extranjeros. Nuevas columnas opcionales en `proveedores`: `banco_pais`, `swift_bic`, `iban`, `aba_routing`, `banco_direccion`, `banco_intermediario`, `banco_intermediario_swift`, `beneficiario`, `referencia_pago`. La tarjeta "Datos bancarios" del detalle se adapta automáticamente.
+
 ## [13.104.1] - 2026-06-22
 - **fix(sidebar)**: la rueda del mouse ahora hace scroll vertical cuando el sidebar está colapsado (modo icono). Se quitó el override `overflow-hidden` que recortaba los íconos inferiores y bloqueaba el wheel.
 

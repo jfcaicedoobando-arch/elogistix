@@ -35,6 +35,15 @@ export function useEditarProveedorController(
     regimen_fiscal: p.regimen_fiscal ?? "",
     banco: p.banco ?? "",
     clabe: p.clabe ?? "",
+    banco_pais: p.banco_pais ?? "",
+    swift_bic: p.swift_bic ?? "",
+    iban: p.iban ?? "",
+    aba_routing: p.aba_routing ?? "",
+    banco_direccion: p.banco_direccion ?? "",
+    banco_intermediario: p.banco_intermediario ?? "",
+    banco_intermediario_swift: p.banco_intermediario_swift ?? "",
+    beneficiario: p.beneficiario ?? "",
+    referencia_pago: p.referencia_pago ?? "",
   });
 
   const [form, setForm] = useState<Proveedor>(() => normalizar(proveedor));

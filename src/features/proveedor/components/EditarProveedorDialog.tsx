@@ -15,6 +15,7 @@ import {
 } from "@/constants/proveedorConstants";
 import { useEditarProveedorController } from "@/features/proveedor/hooks";
 import EditarProveedorGastoFiscalFields from "./EditarProveedorGastoFiscalFields";
+import EditarProveedorBancariosFields from "./EditarProveedorBancariosFields";
 
 type Proveedor = Tables<"proveedores">;
 type Moneda = Enums<"moneda">;
@@ -165,6 +166,8 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
               </SelectContent>
             </Select>
           </div>
+
+          <EditarProveedorBancariosFields c={c} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

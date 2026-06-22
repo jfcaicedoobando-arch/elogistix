@@ -140,7 +140,20 @@ export default function ProveedorDetalle() {
         </div>
       </div>
 
-      <ProveedorDatosBancariosCard banco={proveedor.banco} clabe={proveedor.clabe} />
+      <ProveedorDatosBancariosCard
+        banco={proveedor.banco}
+        clabe={proveedor.clabe}
+        origen={proveedor.origen_proveedor}
+        bancoPais={proveedor.banco_pais}
+        swiftBic={proveedor.swift_bic}
+        iban={proveedor.iban}
+        abaRouting={proveedor.aba_routing}
+        bancoDireccion={proveedor.banco_direccion}
+        bancoIntermediario={proveedor.banco_intermediario}
+        bancoIntermediarioSwift={proveedor.banco_intermediario_swift}
+        beneficiario={proveedor.beneficiario}
+        referenciaPago={proveedor.referencia_pago}
+      />
 
       <Tabs defaultValue="operaciones">
         <TabsList>

@@ -12,7 +12,7 @@ type CategoriaProveedor = Enums<"categoria_proveedor">;
 type SubtipoGasto = Enums<"subtipo_gasto_operativo">;
 
 const PROVEEDOR_DETAIL_COLUMNS =
-  "id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, categoria, subtipo_gasto, organization_id, cp, direccion, ciudad, estado, regimen_fiscal, banco, clabe, created_at, updated_at" as const;
+  "id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, categoria, subtipo_gasto, organization_id, cp, direccion, ciudad, estado, regimen_fiscal, banco, clabe, banco_pais, swift_bic, iban, aba_routing, banco_direccion, banco_intermediario, banco_intermediario_swift, beneficiario, referencia_pago, created_at, updated_at" as const;
 
 export type Proveedor = Tables<"proveedores">;
 export type ProveedorListItem = Pick<
