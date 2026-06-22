@@ -3,6 +3,7 @@ import { useAuditoriaCount } from "@/features/auditoria/hooks";
 import { useAlertasPendingCount } from "@/features/admin/hooks";
 import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboard";
 import { useSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
+import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import {
   SIDEBAR_CRM_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
@@ -22,16 +23,18 @@ export type { SidebarSection } from "@/hooks/layout/sidebarRoleBuilders";
 interface BadgeCounts {
   embarquesAlertas: number;
   facturasVencidas: number;
+  cxpPorAprobar: number;
 }
 
 function patchSidebarBadges(sections: SidebarSection[], counts: BadgeCounts): SidebarSection[] {
-  const { embarquesAlertas, facturasVencidas } = counts;
-  if (embarquesAlertas <= 0 && facturasVencidas <= 0) return sections;
+  const { embarquesAlertas, facturasVencidas, cxpPorAprobar } = counts;
+  if (embarquesAlertas <= 0 && facturasVencidas <= 0 && cxpPorAprobar <= 0) return sections;
   return sections.map((sec) => ({
     ...sec,
     items: sec.items.map((it) => {
       if (it.url === "/embarques" && embarquesAlertas > 0) return { ...it, badgeCount: embarquesAlertas };
       if (it.url === "/facturacion" && facturasVencidas > 0) return { ...it, badgeCount: facturasVencidas };
+      if (it.url === "/compras" && cxpPorAprobar > 0) return { ...it, badgeCount: cxpPorAprobar };
       return it;
     }),
   }));
