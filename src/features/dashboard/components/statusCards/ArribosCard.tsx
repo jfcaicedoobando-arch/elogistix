@@ -21,6 +21,7 @@ export interface ArribosEsteMes {
   costoMxnFromEur: number;
   ventaMxnNative: number;
   costoMxnNative: number;
+  gastosOperativosMXN: number;
 }
 
 interface Props {
@@ -30,9 +31,23 @@ interface Props {
 }
 
 export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false }: Props) {
-  const pct = arribosEsteMes.total > 0
-    ? Math.round((arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100)
-    : 0;
+  const gastos = arribosEsteMes.gastosOperativosMXN;
+  const profitPositivo = Math.max(arribosEsteMes.profitMXN, 0);
+  const pctReal = gastos > 0 ? Math.round((profitPositivo / gastos) * 100) : 0;
+  const pctBarra = Math.min(100, pctReal);
+  const faltante = Math.max(gastos - profitPositivo, 0);
+  const sinGastos = gastos <= 0;
+  const perdida = arribosEsteMes.profitMXN < 0;
+  const barColor = perdida || pctReal < 50
+    ? "[&>div]:bg-destructive"
+    : pctReal < 100
+      ? "[&>div]:bg-warning"
+      : "[&>div]:bg-success";
+  const pctTextColor = perdida || pctReal < 50
+    ? "text-destructive"
+    : pctReal < 100
+      ? "text-warning"
+      : "text-success";
 
   return (
     <Card>
