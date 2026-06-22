@@ -5,7 +5,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, ArrowRight,
+  ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, ArrowRight, LayoutList, ShieldCheck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
+import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
+import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { usePermissions } from "@/hooks/shared";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
