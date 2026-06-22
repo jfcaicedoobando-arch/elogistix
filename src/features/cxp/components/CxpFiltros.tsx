@@ -26,6 +26,8 @@ interface Props {
   onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
   origen: "Nacional" | "Extranjero" | "todos";
   onOrigenChange: (v: "Nacional" | "Extranjero" | "todos") => void;
+  aprobacion: "todos" | "pendiente" | "aprobada" | "rechazada";
+  onAprobacionChange: (v: "todos" | "pendiente" | "aprobada" | "rechazada") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
   fechaDesde: string;
@@ -51,12 +53,14 @@ export function CxpFiltros(props: Props) {
     secondaryActive +
     (props.estatus !== "todos" ? 1 : 0) +
     (props.moneda !== "todas" ? 1 : 0) +
-    (props.origen !== "todos" ? 1 : 0);
+    (props.origen !== "todos" ? 1 : 0) +
+    (props.aprobacion !== "todos" ? 1 : 0);
 
   const clearAll = () => {
     props.onEstatusChange("todos");
     props.onMonedaChange("todas");
     props.onOrigenChange("todos");
+    props.onAprobacionChange("todos");
     props.onProveedorChange("todos");
     props.onFechaDesdeChange("");
     props.onFechaHastaChange("");
@@ -115,6 +119,21 @@ export function CxpFiltros(props: Props) {
               <SelectItem value="EUR">EUR</SelectItem>
             </SelectContent>
           </Select>
+          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
+            {([
+              { v: 'todos', l: 'Todas' },
+              { v: 'pendiente', l: 'Por aprobar' },
+              { v: 'aprobada', l: 'Aprobadas' },
+              { v: 'rechazada', l: 'Rechazadas' },
+            ] as const).map(({ v, l }) => (
+              <Button key={v} type="button"
+                variant={props.aprobacion === v ? "default" : "ghost"}
+                size="sm" className="h-8 px-3 text-xs"
+                onClick={() => props.onAprobacionChange(v)}>
+                {l}
+              </Button>
+            ))}
+          </div>
           <FilterButton count={secondaryActive} />
         </div>
 

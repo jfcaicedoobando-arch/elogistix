@@ -48,6 +48,20 @@ export default function Cxp() {
     }
   }, [searchParams, data, isLoading, f, setSearchParams]);
 
+  // Deep-link: /cxp?aprobacion=pendiente activa el chip "Por aprobar".
+  useEffect(() => {
+    const ap = searchParams.get("aprobacion");
+    if (ap === "pendiente" || ap === "aprobada" || ap === "rechazada") {
+      f.setAprobacion(ap);
+      setSearchParams((sp) => {
+        const next = new URLSearchParams(sp);
+        next.delete("aprobacion");
+        return next;
+      }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handlePdf = async () => {
     await descargarPdf(
       <ReporteCarteraDocument
@@ -106,6 +120,7 @@ export default function Cxp() {
             estatus={f.estatus} onEstatusChange={f.setEstatus}
             moneda={f.moneda} onMonedaChange={f.setMoneda}
             origen={f.origen} onOrigenChange={f.setOrigen}
+            aprobacion={f.aprobacion} onAprobacionChange={f.setAprobacion}
             proveedorId={f.proveedorId} onProveedorChange={f.setProveedorId}
             fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
             fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}

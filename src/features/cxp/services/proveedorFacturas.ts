@@ -39,6 +39,7 @@ export interface FetchCxPFiltros {
   moneda?: ProveedorFacturaRow["moneda"] | "todas";
   estatus?: EstatusCxP | "todos";
   origen?: "Nacional" | "Extranjero" | "todos";
+  aprobacion?: "todos" | "pendiente" | "aprobada" | "rechazada";
   fecha_desde?: string;
   fecha_hasta?: string;
 }
@@ -137,6 +138,9 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   }
   if (filtros.origen && filtros.origen !== "todos") {
     filtradas = filtradas.filter(r => r.proveedor_origen === filtros.origen);
+  }
+  if (filtros.aprobacion && filtros.aprobacion !== "todos") {
+    filtradas = filtradas.filter(r => r.estado_aprobacion === filtros.aprobacion);
   }
   return filtradas;
 }

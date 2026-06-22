@@ -18,6 +18,17 @@ const ESTATUS_COLOR: Record<EstatusCxP, string> = {
   "Sin saldo": "bg-muted text-muted-foreground border-border",
 };
 
+const APROB_COLOR: Record<"pendiente" | "aprobada" | "rechazada", string> = {
+  pendiente: "bg-warning/10 text-warning border-warning/20",
+  aprobada: "bg-success/10 text-success border-success/20",
+  rechazada: "bg-destructive/10 text-destructive border-destructive/20",
+};
+const APROB_LABEL: Record<"pendiente" | "aprobada" | "rechazada", string> = {
+  pendiente: "Por aprobar",
+  aprobada: "Aprobada",
+  rechazada: "Rechazada",
+};
+
 export interface CxPColumnsOptions {
   canEdit: boolean;
   onRegistrarPago: (f: FacturaCxP) => void;
@@ -123,15 +134,41 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
       ),
     },
     {
+      id: "aprobacion", header: "Aprobación",
+      accessorFn: (f) => f.estado_aprobacion, enableSorting: true,
+      sortingFn: sortByString<FacturaCxP>((f) => f.estado_aprobacion),
+      meta: { width: "w-[110px]" },
+      cell: ({ row }) => {
+        const ap = row.original.estado_aprobacion;
+        return (
+          <Badge
+            variant="outline"
+            className={APROB_COLOR[ap]}
+            title={ap === "rechazada" && row.original.motivo_rechazo ? row.original.motivo_rechazo : undefined}
+          >
+            {APROB_LABEL[ap]}
+          </Badge>
+        );
+      },
+    },
+    {
       id: "acciones", header: "Acciones",
       meta: { width: "w-[150px]" },
       cell: ({ row }) => {
         const f = row.original;
+        const aprobada = f.estado_aprobacion === "aprobada";
         const pagable = canEdit && f.saldo > 0 && f.estado !== "Borrador";
+        const pagoBloqueado = pagable && !aprobada;
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
             {pagable && (
-              <Button variant="outline" size="sm" onClick={() => onRegistrarPago(f)} title="Registrar pago">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRegistrarPago(f)}
+                disabled={!aprobada}
+                title={pagoBloqueado ? "Requiere aprobación antes de pagar" : "Registrar pago"}
+              >
                 <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
               </Button>
             )}

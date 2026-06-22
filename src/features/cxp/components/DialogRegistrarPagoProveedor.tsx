@@ -27,9 +27,11 @@ interface Props {
 export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Props) {
   const registrar = useRegistrarPagoProveedor();
   const f = usePagoProveedorForm(factura, open);
+  const noAprobada = !!factura && factura.estado_aprobacion !== "aprobada";
 
   const submit = async () => {
     if (!factura) return;
+    if (noAprobada) return notifyError(toast, { title: "La factura debe estar aprobada antes de registrar pagos", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_0" });
     if (f.montoNum <= 0) return notifyError(toast, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
     if (f.excede) return notifyError(toast, { title: "El monto excede el saldo pendiente", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
     try {
@@ -64,13 +66,23 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
           {factura && <PagoFacturaHeaderInfo factura={factura} />}
         </DialogHeader>
 
+        {noAprobada && (
+          <div className="mx-6 mt-4 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+            Esta factura no está aprobada. Solicita la aprobación en el detalle de la factura antes de registrar pagos.
+          </div>
+        )}
+
         <PagoProveedorFormBody factura={factura} {...f} />
 
         <div className="px-6 py-4 border-t flex justify-end gap-2 bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
             Cancelar
           </Button>
-          <Button onClick={submit} disabled={registrar.isPending || f.excede || f.montoNum <= 0}>
+          <Button
+            onClick={submit}
+            disabled={registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada}
+            title={noAprobada ? "Requiere aprobación" : undefined}
+          >
             {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {registrar.isPending ? "Guardando…" : "Registrar pago"}
           </Button>
