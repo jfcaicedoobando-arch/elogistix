@@ -90,10 +90,10 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
               <Stat label="Descarga" value={last.fecha_descarga ? formatDate(last.fecha_descarga) : '—'} />
               <Stat label="Devolución" value={last.fecha_devolucion ? formatDate(last.fecha_devolucion) : '—'} />
-              <Stat label="Días puerto" value={last.dias_en_puerto.toString()} />
-              <Stat label="Días libres" value={last.dias_libres.toString()} />
-              <Stat label="Excedidos" value={last.dias_excedidos.toString()}
-                className={last.dias_excedidos > 0 ? 'text-destructive font-bold' : ''} />
+              <Stat label="Días puerto" value={(last.dias_en_puerto ?? 0).toString()} />
+              <Stat label="Días libres" value={(last.dias_libres ?? 0).toString()} />
+              <Stat label="Excedidos" value={(last.dias_excedidos ?? 0).toString()}
+                className={(last.dias_excedidos ?? 0) > 0 ? 'text-destructive font-bold' : ''} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-md border p-3">
