@@ -133,27 +133,52 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   };
 
   const vincularSafe = async (createdId: string) => {
+    if (!organizationId) return;
+    // Caso 1: vínculos a conceptos_costo existentes.
     const lineas = Object.entries(vinculos).map(([conceptoCostoId, v]) => ({
       conceptoCostoId,
       descripcion: v.descripcion,
       monto: v.monto,
       montoOriginal: v.montoOriginal,
     }));
-    if (lineas.length === 0 || !organizationId) return;
-    try {
-      const res = await vincularFacturaAConceptos({
-        facturaId: createdId,
-        organizationId,
-        folio: values.folio.trim(),
-        fechaEmision: values.emision,
-        lineas,
-      });
-      if (res.liquidados.length > 0) {
-        toast.success(`${res.liquidados.length} concepto(s) marcados como pagados`);
+    if (lineas.length > 0) {
+      try {
+        const res = await vincularFacturaAConceptos({
+          facturaId: createdId,
+          organizationId,
+          folio: values.folio.trim(),
+          fechaEmision: values.emision,
+          lineas,
+        });
+        if (res.liquidados.length > 0) {
+          toast.success(`${res.liquidados.length} concepto(s) marcados como pagados`);
+        }
+      } catch (linkErr) {
+        const err = linkErr as { message?: string };
+        toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
       }
-    } catch (linkErr) {
-      const err = linkErr as { message?: string };
-      toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
+      return;
+    }
+    // Caso 2: creación ad-hoc de concepto_costo desde la sugerencia.
+    if (embarqueAdHoc && values.provId) {
+      try {
+        await crearConceptoCostoYVincular({
+          facturaId: createdId,
+          organizationId,
+          embarqueId: embarqueAdHoc.embarqueId,
+          proveedorId: values.provId,
+          proveedorNombre: values.provNombre,
+          concepto: embarqueAdHoc.concepto || `Servicios ${values.provNombre}`,
+          monto: total,
+          moneda: values.moneda,
+          folio: values.folio.trim(),
+          fechaEmision: values.emision,
+        });
+        toast.success(`Concepto creado en embarque ${embarqueAdHoc.expediente}`);
+      } catch (e) {
+        const err = e as { message?: string };
+        toast.warning(`Factura guardada pero no se pudo crear el concepto: ${err.message ?? "error"}`);
+      }
     }
   };
 
