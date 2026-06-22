@@ -13,6 +13,8 @@ import {
   Trash2,
   Circle,
   ChevronDown,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import {
   Collapsible,
@@ -20,6 +22,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
@@ -97,7 +100,14 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
 
 export function HistorialFacturaSection({ facturaId }: Props) {
   const [open, setOpen] = useState(false);
-  const { data: eventos = [], isLoading } = useHistorialFactura(facturaId, open);
+  const {
+    data: eventos = [],
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useHistorialFactura(facturaId, open);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="border-b">
@@ -124,16 +134,46 @@ export function HistorialFacturaSection({ facturaId }: Props) {
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
-        ) : eventos.length === 0 ? (
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-2 py-4 text-center">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <p className="text-sm text-destructive font-medium">
+              No se pudo cargar el historial.
+            </p>
+            {error instanceof Error && (
+              <p className="text-xs text-muted-foreground max-w-md truncate">
+                {error.message}
+              </p>
+            )}
+            <Button size="sm" variant="outline" onClick={() => refetch()}>
+              Reintentar
+            </Button>
+          </div>
+        ) : eventos.length === 0 && !isFetching ? (
           <p className="text-sm text-muted-foreground text-center py-4">
             Sin eventos registrados aún.
           </p>
         ) : (
-          <ol className="relative border-l-2 border-border ml-3 space-y-4 pl-1 mt-2">
-            {eventos.map((ev, i) => (
-              <FilaEvento key={`${ev.tipo}-${ev.ts}-${i}`} ev={ev} />
-            ))}
-          </ol>
+          <>
+            {isFetching && eventos.length > 0 && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground italic mb-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Actualizando…</span>
+              </div>
+            )}
+            {eventos.length === 0 ? (
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : (
+              <ol className="relative border-l-2 border-border ml-3 space-y-4 pl-1 mt-2">
+                {eventos.map((ev, i) => (
+                  <FilaEvento key={`${ev.tipo}-${ev.ts}-${i}`} ev={ev} />
+                ))}
+              </ol>
+            )}
+          </>
         )}
       </CollapsibleContent>
     </Collapsible>
