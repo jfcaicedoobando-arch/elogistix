@@ -119,6 +119,21 @@ export function CxpFiltros(props: Props) {
               <SelectItem value="EUR">EUR</SelectItem>
             </SelectContent>
           </Select>
+          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
+            {([
+              { v: 'todos', l: 'Todas' },
+              { v: 'pendiente', l: 'Por aprobar' },
+              { v: 'aprobada', l: 'Aprobadas' },
+              { v: 'rechazada', l: 'Rechazadas' },
+            ] as const).map(({ v, l }) => (
+              <Button key={v} type="button"
+                variant={props.aprobacion === v ? "default" : "ghost"}
+                size="sm" className="h-8 px-3 text-xs"
+                onClick={() => props.onAprobacionChange(v)}>
+                {l}
+              </Button>
+            ))}
+          </div>
           <FilterButton count={secondaryActive} />
         </div>
 
