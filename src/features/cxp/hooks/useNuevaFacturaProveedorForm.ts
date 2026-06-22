@@ -32,7 +32,10 @@ import {
 
 type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
 
-export function useNuevaFacturaProveedorForm(onDone: () => void) {
+export function useNuevaFacturaProveedorForm(
+  onDone: () => void,
+  initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
+) {
   const { user } = useAuth();
   const { organizationId } = useOrgFilter();
   const crear = useCrearFacturaProveedor();
@@ -42,7 +45,9 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
   const [vinculos, setVinculos] = useState<VinculosState>({});
-  const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(null);
+  const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(
+    initialEmbarqueAdHoc ?? null,
+  );
 
   const total = useMemo(() => calcularTotal(values), [values]);
 
@@ -91,7 +96,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     setPendingCfdi(null);
     setAskCrearProv(null);
     setVinculos({});
-    setEmbarqueAdHoc(null);
+    setEmbarqueAdHoc(initialEmbarqueAdHoc ?? null);
   };
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {

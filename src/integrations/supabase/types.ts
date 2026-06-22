@@ -5999,9 +5999,11 @@ export type Database = {
         Returns: {
           cliente_nombre: string
           costos_presupuestados: number
+          dias_desde_ultima_factura: number
           embarque_id: string
           expediente: string
           facturas_capturadas: number
+          monto_facturado: number
           ultima_factura_fecha: string
         }[]
       }

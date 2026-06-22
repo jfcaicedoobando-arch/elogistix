@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.99.4] - 2026-06-22
+- **feat(bandejas/cxp) "Por capturar" como bandeja de trabajo**: la tabla pasa de lista plana a workspace con toolbar (buscador por expediente/cliente, chips de filtro por estatus y antigüedad, ordenamiento por antigüedad/expediente/monto/#facturas con dirección asc/desc, contador "N de M"), nueva columna **Avance** con `Progress` (monto facturado vs presupuestado) y badge contextual (Sin captura · Parcial · Completo), columna "Última factura" con chip relativo ámbar/rojo según antigüedad, skeleton rows en loading, empty state con CTA y empty filtrado con "Limpiar filtros".
+- **feat(bandejas/cxp) acción "Capturar factura" por fila**: botón primario en cada renglón abre el modal `DialogNuevaFacturaProveedor` con el embarque pre-seleccionado vía nueva prop `initialEmbarqueAdHoc`, eliminando los clics extra para encontrar el embarque.
+- **backend**: `cxp_por_capturar()` ahora devuelve `monto_facturado` (suma de `proveedor_facturas.total` no canceladas) y `dias_desde_ultima_factura`. Sigue siendo `SECURITY INVOKER` y respeta RLS de embarques.
+- **tests**: nuevo test puro de `useCxpPorCapturarFilters` cubriendo estatus, antigüedad >30d, búsqueda y ordenamiento.
+
 ## [13.99.3] - 2026-06-22
 - **ux(cxp) rediseño del modal "Capturar factura de proveedor"**: se eliminaron las flechitas (spinners) molestas de Subtotal, IVA, Retenciones, Días crédito y Tipo de cambio reemplazando los `<Input type="number">` por el `NumericInput` compartido (auto-select al enfocar, sin scroll-to-change, alineación tabular). El Total ahora vive en el header del modal en grande y se mantiene visible, con un desglose Subtotal · IVA · Ret · Total en el footer sobre los botones. Las secciones llevan iconos (Building2, CalendarDays, Coins) y separadores sutiles; Categoría y Notas se agruparon en un bloque colapsable "Detalles adicionales" cerrado por defecto para reducir ruido visual. Errores inline con icono `AlertCircle` y asterisco rojo consistente en campos obligatorios. Sin cambios de lógica ni backend.
 
