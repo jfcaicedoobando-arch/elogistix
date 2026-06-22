@@ -26,6 +26,7 @@ export interface FacturaCxP {
   proveedor_origen: "Nacional" | "Extranjero" | null;
   embarque_id: string | null;
   folio_proveedor: string;
+  folio_interno: string;
   fecha_emision: string;
   fecha_vencimiento: string | null;
   dias_vencido: number;
