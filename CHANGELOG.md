@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.6] - 2026-06-22
+- **fix(cxp/aprobacion)**: el badge de aprobación dentro del diálogo "Detalle de pagos" ya no se queda en "Por aprobar" después de aprobar. El padre venía resolviendo la factura con `data.find(...) ?? snapshot`, pero cuando el filtro activo era "Por aprobar" la fila desaparecía de la lista y el diálogo caía al snapshot viejo. Nuevo hook `useFacturaProveedor(id)` + service `fetchFacturaProveedor(id)` que consultan la fila individual; `useAprobarFactura` invalida también `queryKeys.cxp.factura(id)` para que el diálogo se rehidrate sin importar el filtro.
+
 ## [13.106.5] - 2026-06-22
 - **fix(rbac/db)**: `current_user_org_id()` ahora tiene `GRANT EXECUTE` explícito sólo a `authenticated` (y revocado de `anon`/`PUBLIC`). Esto elimina los errores `permission denied for function current_user_org_id` que aparecían en Sentry cuando una consulta de CXP corría sin sesión activa.
 - **chore(observability/sentry)**: agregados patrones a `ignoreErrors` para silenciar el ruido del Web Locks API (`AbortError: Lock broken by another request`) que dispara el cliente Supabase al sincronizar el token entre pestañas. No es un bug, sólo telemetría sucia.
