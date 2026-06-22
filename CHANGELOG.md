@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.5] - 2026-06-22
+- **fix(rbac/db)**: `current_user_org_id()` ahora tiene `GRANT EXECUTE` explícito sólo a `authenticated` (y revocado de `anon`/`PUBLIC`). Esto elimina los errores `permission denied for function current_user_org_id` que aparecían en Sentry cuando una consulta de CXP corría sin sesión activa.
+- **chore(observability/sentry)**: agregados patrones a `ignoreErrors` para silenciar el ruido del Web Locks API (`AbortError: Lock broken by another request`) que dispara el cliente Supabase al sincronizar el token entre pestañas. No es un bug, sólo telemetría sucia.
+
 ## [13.106.4] - 2026-06-22
 - **feat(embarques/cierre)**: el cierre de embarques pasa de finanzas a operaciones. Ahora pueden cerrar **coordinador logístico** y **gerente de operaciones** (más admin/admin_org/super_admin como respaldo). El equipo financiero (contador/tesorero/auxiliar/cobranza) ya **no** puede cerrar; ven el checklist informativo con mensaje aclarando que la acción es responsabilidad del coordinador logístico. El botón sigue deshabilitado mientras el checklist no esté 100% en verde. Cambio aplicado tanto en UI (`TabCierre`, nuevo derivado `canCerrarEmbarque` en `usePermissions`) como en la RPC `cerrar_embarque`.
 
