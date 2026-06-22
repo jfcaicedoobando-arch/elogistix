@@ -136,6 +136,7 @@ export function usePermissions() {
   const canCapturarFacturaProveedor = has(CAPTURAR_FACTURA_PROVEEDOR, roleStr);
   const canPagarProveedor = has(PAGAR_PROVEEDOR, roleStr);
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
+  const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
   const isAdmin = canAdminTenant;
@@ -162,5 +163,6 @@ export function usePermissions() {
     canCapturarFacturaProveedor,
     canPagarProveedor,
     canRegistrarCobro,
+    canCerrarEmbarque,
   };
 }
