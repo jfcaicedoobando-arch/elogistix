@@ -134,6 +134,7 @@ describe("useNuevoProveedorController — handleNext y documentos", () => {
     const { result } = renderHook(() => useNuevoProveedorController(vi.fn(), vi.fn()));
     fillStep1Logistico(result);
     act(() => result.current.setField("origen_proveedor", "Extranjero"));
+    act(() => result.current.handleTipoChange("Naviera"));
     act(() => result.current.handleNext());
     expect(result.current.documentos).toHaveLength(6);
   });
