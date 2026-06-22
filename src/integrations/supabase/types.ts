@@ -6549,6 +6549,23 @@ export type Database = {
         Args: { p_cotizacion_id: string; p_delta_jsonb: Json }
         Returns: undefined
       }
+      sugerir_embarques_para_proveedor: {
+        Args: {
+          _limit?: number
+          _organization_id: string
+          _proveedor_id: string
+        }
+        Returns: {
+          cliente_nombre: string
+          embarque_id: string
+          estado: string
+          eta: string
+          etd: string
+          expediente: string
+          match_tipo: string
+          score: number
+        }[]
+      }
       validar_cierre_embarque: {
         Args: { p_embarque_id: string }
         Returns: Json
