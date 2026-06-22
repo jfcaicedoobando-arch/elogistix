@@ -1,47 +1,33 @@
-## Pendientes del módulo de Compras
+## Hallazgos de la auditoría de permisos para admins
 
-La Fase B se entregó en su mayoría (Aging, RPC de aprobación, NC de proveedor y tab Salud). Quedaron sueltos varios "enganches" de UI/UX y reglas que el plan original sí contemplaba.
+Revisé las tres capas donde se evalúan permisos: `usePermissions.ts` (UI), `roleHierarchy.ts` (guardas de rutas frontend) y la función `public.has_role()` + políticas RLS en la base de datos.
 
-### 1. Tab "Por aprobar" en `/cxp`
+### Resultado: admin_org y super_admin SÍ tienen todos los permisos habilitados
 
-- Añadir filtro `estado_aprobacion` en `CxpFiltros` (chips: Todas / Pendientes / Aprobadas / Rechazadas).
-- Columna nueva "Aprobación" con badge en `cxpColumns`.
-- Quick filter "Por aprobar" en el hub.
+**Frontend (`usePermissions.ts`)** — Las 6 capacidades operativas y las 4 del Bloque Q (emitir factura, capturar factura proveedor, pagar proveedor, registrar cobro) incluyen explícitamente `super_admin`, `admin_org` y `admin` en cada lista. ✓
 
-### 2. Badge contador en sidebar
+**Guardas de ruta (`roleHierarchy.ts`)** — `admin_org` satisface `admin`, `operador`, `viewer`, `vendedor`, `contador`, `tesorero`, `auxiliar_contable` y `ejecutivo_cobranza`. `super_admin` satisface todo lo anterior. ✓
 
-- RPC liviana `cxp_pendientes_aprobacion_count()` (o query directa).
-- Hook `useCxpPendientesAprobacion` y badge numérico en el item "Compras" del sidebar (`sidebarItems.ts` / `sidebarRoleBuilders.ts`).
+**Base de datos (RLS)** — Revisé las políticas que usan `has_role('contador'|'operador'|'vendedor'|...)`: todas ellas también incluyen `has_role('admin')` u `has_role('admin_org')` en el mismo OR, y la función `has_role` agrupa `admin` → `[admin, admin_org, super_admin]`. Por lo tanto admin_org y super_admin pasan todas las políticas RLS revisadas. ✓
 
-### 3. Bloqueo de pagos si no está aprobada
+### Inconsistencias menores detectadas (no bloquean a admin, pero conviene anotarlas)
 
-- En `DialogRegistrarPagoProveedor` y en el botón "Registrar pago" de `cxpColumns`: deshabilitar + tooltip "Requiere aprobación" cuando `estado_aprobacion !== 'aprobada'`.
-- Validación server-side: chequeo dentro del insert de `pagos_proveedor` (trigger BEFORE INSERT) para que ningún cliente lo saltee.
+La función `public.has_role()` en BD **no está sincronizada** con `roleHierarchy.ts` del frontend para los roles nuevos del Bloque Q:
 
-### 4. KPIs nuevos en el hub `/compras`
+1. **Grupo `viewer` en BD** no incluye `auxiliar_contable` ni `ejecutivo_cobranza` (el frontend sí).
+2. **No hay agrupaciones en BD** para `contador`, `tesorero`, `auxiliar_contable`, `ejecutivo_cobranza` (caen al ELSE = sólo coincidencia exacta). El frontend asume que `admin_org`/`super_admin` los satisfacen.
+3. Esto **no afecta a admin_org hoy** porque cada política RLS también acepta `has_role('admin')`. Pero si en el futuro alguien escribe una política que sólo pida, por ejemplo, `has_role('tesorero')` sin incluir admin, admin_org no pasaría a nivel BD aunque el frontend le muestre el botón.
 
-- "Por aprobar" (count + monto).
-- "Saldo vencido > 30 días" (suma cubetas 31-60, 61-90, >90 desde `cxp_aging_proveedores`).
-- Quick action "Revisar aging" → `/compras/aging`.
+### Qué propongo hacer
 
-### 5. Backfill de facturas existentes
+**Opción A — Sólo confirmar (no tocar nada).** Admin tiene todos los permisos hoy; cierro la revisión con esta nota.
 
-- Migración: `UPDATE proveedor_facturas SET estado_aprobacion='aprobada' WHERE pagado > 0`.
-- Resto queda `pendiente` (ya es el default).
+**Opción B — Sincronizar el agrupador de BD con el frontend** (1 migración corta). Actualizar `public.has_role()` para:
+- Agregar `auxiliar_contable` y `ejecutivo_cobranza` al grupo `viewer`.
+- Agregar grupos para `contador`, `tesorero`, `auxiliar_contable`, `ejecutivo_cobranza` que incluyan `admin_org` y `super_admin` (espejo de `roleHierarchy.ts`).
+- Sin cambios en políticas RLS ni en UI.
+- Actualizar `CHANGELOG.md` + `APP_VERSION`.
 
-### 6. Limpieza / consistencia
+Esto previene el "agujero futuro" descrito en el punto 3 y deja una única fuente de verdad lógica entre front y BD.
 
-- Pestaña "Antigüedad" ya existe en `ComprasTabStrip` ✔.
-- Registrar aprobación/rechazo en `bitacora_actividad` (verificar que el RPC ya lo haga; si no, añadirlo).
-
-### Archivos a tocar
-
-- **SQL (1 migración):** trigger `pagos_proveedor_requiere_aprobacion`, RPC `cxp_pendientes_aprobacion_count`, backfill UPDATE.
-- **Edit:** `CxpFiltros.tsx`, `cxpColumns.tsx`, `Cxp.tsx`, `Compras.tsx`, `DialogRegistrarPagoProveedor.tsx`, `sidebarItems.ts`, `sidebarRoleBuilders.ts`, `CHANGELOG.md`, `appVersion.ts` → `13.102.0`.
-- **Nuevo:** `useCxpPendientesAprobacion.ts`.
-
-### Fuera de alcance (Fase C)
-
-Órdenes de compra, recepción, propuesta de pago, conciliación bancaria, DIOT, CFDI 4.0 complemento, 3-way matching.
-
-¿Avanzo con todos los pendientes en una sola entrega, o prefieres priorizar (ej. primero badge + bloqueo de pago, después KPIs del hub)?  Todos
+¿Quieres que aplique la **Opción B** o prefieres dejarlo como está (Opción A)?
