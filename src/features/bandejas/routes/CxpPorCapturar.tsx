@@ -6,6 +6,7 @@ import { Inbox, Package, Coins, FileStack } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, type SortDir } from "@/components/shared/DataTable";
+import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpPorCapturarFilters, type OrdenarPor } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
