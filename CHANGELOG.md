@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.99.1] - 2026-06-22
+- **fix(cxp/por-pagar) Saldo total mezclaba monedas**: el card "Saldo total" sumaba el `saldo` de cada factura sin importar la moneda y lo mostraba como MXN, inflando el número cuando había facturas en USD. Ahora se homologa a MXN multiplicando cada factura USD por su `tipo_cambio_usd` capturado, y abajo del monto en grande se muestran chips por moneda nativa (`MXN $X · USD $Y · EUR $Z`). Si alguna factura USD/EUR no tiene TC, no se incluye en el homologado y aparece una nota en ámbar indicando cuántas quedaron fuera.
+- **backend**: `cxp_por_pagar()` ahora devuelve `tipo_cambio_usd` por factura. Sin cambios de datos, solo agrega columna al RETURNS.
+
 ## [13.99.0] - 2026-06-22
 - **feat(dashboard) barra del card "Arribos este mes" ahora mide cobertura de gastos fijos**: antes la barra mostraba `ya llegaron / total` (avance operativo de arribos), un dato redundante porque ya se ve en los conteos "Total / Ya llegaron / En camino". Ahora mide **`profit proyectado MXN / gastos operativos del mes`**, que responde la pregunta de negocio: *¿con lo que voy a ganar este mes ya cubrí mis gastos fijos (nómina, renta, servicios, comisiones)?*. Comportamiento: la barra se llena máximo al 100% (verde si ≥100%, ámbar 50-99%, rojo <50% o pérdida) y a la derecha aparece el % real (puede ser >100%). Tooltip con desglose: profit proyectado, gastos del mes, mensaje contextual ("Ya cubriste tus gastos fijos" / "Faltan $X MXN" / "Pérdida proyectada") y nota explicando qué entra en gastos. Label inferior: "Gastos fijos cubiertos".
 - **backend**: `dashboard_summary()` ahora expone `arribosEsteMes.gastosOperativosMXN` = `SUM(proveedor_facturas.total ⨯ TC)` filtrado por `proveedores.categoria = 'GastoOperativo'` y `fecha_emision` en el mes, más `SUM(liquidaciones_comision.total_mxn)` del periodo. Schema Zod (`arribosEsteMesSchema`) y tipo `ArribosEsteMes` actualizados (`gastosOperativosMXN: number`).
