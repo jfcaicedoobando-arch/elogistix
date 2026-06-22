@@ -94,6 +94,29 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
                   <Input value={c.form[field]} onChange={(e) => c.handleChange(field, e.target.value)} className="mt-1" />
                 </div>
               ))}
+
+              <div>
+                <Label className="text-xs">Régimen Fiscal SAT<span className="text-destructive ml-0.5">*</span></Label>
+                <Select value={c.form.regimen_fiscal || undefined} onValueChange={(v) => c.handleChange("regimen_fiscal", v)}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona régimen" /></SelectTrigger>
+                  <SelectContent>
+                    {REGIMENES_FISCALES_SAT.map((r) => (
+                      <SelectItem key={r.clave} value={r.clave}>{r.clave} — {r.descripcion}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Uso CFDI por defecto</Label>
+                <Select value={c.form.uso_cfdi_default || undefined} onValueChange={(v) => c.handleChange("uso_cfdi_default", v)}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona uso CFDI" /></SelectTrigger>
+                  <SelectContent>
+                    {USOS_CFDI_SAT.map((u) => (
+                      <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         )}
