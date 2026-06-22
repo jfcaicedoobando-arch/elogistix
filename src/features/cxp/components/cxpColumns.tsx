@@ -37,10 +37,17 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
   const { canEdit, onRegistrarPago, onVerDetalle, onEditar, onEliminar } = opts;
   return defineColumns<FacturaCxP>([
     {
-      id: "folio", header: "Folio proveedor",
+      id: "folio_interno", header: "Folio",
+      accessorFn: (f) => f.folio_interno, enableSorting: true,
+      sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
+      meta: { width: "w-[100px]", className: "font-mono text-xs font-semibold whitespace-nowrap" },
+      cell: ({ row }) => row.original.folio_interno,
+    },
+    {
+      id: "folio", header: "Folio prov.",
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
-      meta: { width: "w-[140px]", className: "font-medium whitespace-nowrap" },
+      meta: { width: "w-[120px]", className: "whitespace-nowrap text-xs text-muted-foreground" },
       cell: ({ row }) => row.original.folio_proveedor,
     },
     {
