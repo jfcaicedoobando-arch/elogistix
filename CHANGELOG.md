@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.103.0] - 2026-06-22
+- **seguridad(roles)**: `public.has_role()` sincronizada con `roleHierarchy.ts` del frontend. Se agregan agrupaciones para `contador`, `tesorero`, `auxiliar_contable` y `ejecutivo_cobranza` (admin_org y super_admin las satisfacen automáticamente), y `auxiliar_contable` + `ejecutivo_cobranza` quedan dentro del grupo `viewer`. Cierra el "agujero futuro" donde una política RLS que pidiera sólo un rol financiero específico bloquearía a admin_org pese a tener el permiso en la UI.
+
 ## [13.102.3] - 2026-06-22
 - **fix(lint)**: `fetchFacturasCxP` excedía complejidad ciclomática (17 > 16) por el nuevo filtro `aprobacion`. Extraídos los filtros post-query a helper `aplicarFiltrosCliente`.
 
