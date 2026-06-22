@@ -14,10 +14,12 @@ import { formatCurrency, toTitleCase, formatPhoneMx } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import EmptyState from "@/components/empty/EmptyState";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorDetalleController } from "@/features/proveedor/hooks";
 import { ProveedorOperacionesTable } from "../components/ProveedorOperacionesTable";
 import { ProveedorCsfUpdateButton } from "../components/ProveedorCsfUpdateButton";
 import { ProveedorDatosBancariosCard } from "../components/ProveedorDatosBancariosCard";
+import { ProveedorSaludTab } from "../components/ProveedorSaludTab";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -140,12 +142,23 @@ export default function ProveedorDetalle() {
 
       <ProveedorDatosBancariosCard banco={proveedor.banco} clabe={proveedor.clabe} />
 
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Historial de Operaciones</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <ProveedorOperacionesTable operaciones={operaciones} />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="operaciones">
+        <TabsList>
+          <TabsTrigger value="operaciones">Operaciones</TabsTrigger>
+          <TabsTrigger value="salud">Salud</TabsTrigger>
+        </TabsList>
+        <TabsContent value="operaciones" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Historial de Operaciones</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <ProveedorOperacionesTable operaciones={operaciones} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="salud" className="mt-4">
+          <ProveedorSaludTab proveedorId={proveedor.id} />
+        </TabsContent>
+      </Tabs>
 
       <EditarProveedorDialog
         proveedor={proveedor}
