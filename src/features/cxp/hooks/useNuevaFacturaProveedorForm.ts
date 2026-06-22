@@ -135,6 +135,21 @@ export function useNuevaFacturaProveedorForm(
       notifyError(toast, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
       return;
     }
+    // Bloqueo de duplicados: mismo proveedor + folio + fecha emisión.
+    try {
+      const dup = await existeFacturaDuplicada(values.provId, values.folio, values.emision);
+      if (dup) {
+        setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." }));
+        notifyError(toast, {
+          title: "Factura duplicada",
+          description: `Ya capturaste el folio ${values.folio.trim()} de este proveedor el ${values.emision}.`,
+          method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP",
+        });
+        return;
+      }
+    } catch {
+      // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
+    }
     try {
       const created = await crear.mutateAsync(
         buildPayload({ values, total, userId: user?.id, pendingCfdi, vinculos }),
