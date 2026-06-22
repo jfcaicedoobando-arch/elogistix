@@ -31,49 +31,49 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
           {row.original.proveedor_nombre}
         </Link>
       ),
-      meta: { sortable: true },
+      enableSorting: true,
     },
     {
       id: "num_facturas",
       header: "Facturas",
       accessorKey: "num_facturas",
       cell: ({ row }) => <span className="tabular-nums">{row.original.num_facturas}</span>,
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
     {
       id: "vigente",
       header: "Vigente",
       accessorKey: "vigente",
       cell: ({ row }) => <Money value={row.original.vigente} />,
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
     {
       id: "d_1_30",
       header: "1-30 días",
       accessorKey: "d_1_30",
       cell: ({ row }) => <Money value={row.original.d_1_30} danger={row.original.d_1_30 > 0} />,
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
     {
       id: "d_31_60",
       header: "31-60 días",
       accessorKey: "d_31_60",
       cell: ({ row }) => <Money value={row.original.d_31_60} danger={row.original.d_31_60 > 0} />,
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
     {
       id: "d_61_90",
       header: "61-90 días",
       accessorKey: "d_61_90",
       cell: ({ row }) => <Money value={row.original.d_61_90} danger={row.original.d_61_90 > 0} />,
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
     {
       id: "mas_90",
       header: ">90 días",
       accessorKey: "mas_90",
       cell: ({ row }) => <Money value={row.original.mas_90} danger={row.original.mas_90 > 0} />,
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
     {
       id: "saldo_total",
@@ -84,7 +84,7 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
           {formatCurrency(row.original.saldo_total, "MXN")}
         </span>
       ),
-      meta: { align: "right", sortable: true },
+      enableSorting: true, meta: { align: "right" },
     },
   ]);
 }
