@@ -146,7 +146,28 @@ export default function Compras() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <QuickLink
+          to="/cxp?aprobacion=pendiente"
+          icon={<ShieldCheck className="h-5 w-5" />}
+          title="Revisar por aprobar"
+          description="Facturas a la espera de validación contable."
+          kpi={`${pendientesAprob} pendiente${pendientesAprob === 1 ? "" : "s"}`}
+        />
+        <QuickLink
+          to="/compras/aging"
+          icon={<LayoutList className="h-5 w-5" />}
+          title="Revisar antigüedad"
+          description="Cubetas de saldos vencidos por proveedor."
+          kpi={vencidoMas30 > 0 ? `${formatCurrencyCompact(vencidoMas30, "MXN")} > 30 días` : "Sin vencidos > 30 días"}
+        />
+        <QuickLink
+          to="/cxp/por-pagar"
+          icon={<Landmark className="h-5 w-5" />}
+          title="Por pagar"
+          description="Programa y registra pagos a proveedores."
+          kpi={`${metrics.facturasConSaldo} con saldo`}
+        />
         <QuickLink
           to="/proveedores"
           icon={<Truck className="h-5 w-5" />}
@@ -167,13 +188,6 @@ export default function Compras() {
           title="Facturas"
           description="Listado y captura de facturas recibidas."
           kpi={`${cxp.length} factura${cxp.length === 1 ? "" : "s"}`}
-        />
-        <QuickLink
-          to="/cxp/por-pagar"
-          icon={<Landmark className="h-5 w-5" />}
-          title="Por pagar"
-          description="Programa y registra pagos a proveedores."
-          kpi={`${metrics.facturasConSaldo} con saldo`}
         />
       </div>
 
