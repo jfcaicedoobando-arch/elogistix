@@ -1,41 +1,75 @@
+
 ## Objetivo
-Reorganizar el sidebar de los roles **admin**, **admin_org** y **super_admin** para que también sigan el patrón tipo Odoo (Compras / Facturación / Tesorería), igual que contador y tesorero.
 
-## Acomodo propuesto para admins
+Reorganizar el drawer **Compras** del sidebar para todos los roles financieros (admin, admin_org, super_admin, contador, tesorero, auxiliar_contable) siguiendo el estilo de Odoo, dejando un flujo claro: **bandejas operativas primero → registro maestro → catálogo de proveedores**.
 
-1. **Dashboards**
-2. **Gestión operativa** — Cotizaciones, Embarques
-3. **Costeo**
-4. **Compras** — Bandeja CxP por capturar, Bandeja CxP por pagar, CxP, Proveedores
-5. **Facturación** — Bandeja por emitir, Facturación, Proformas, Cartera, Comisiones
-6. **Tesorería**
-7. **Profit**
-8. **CRM**
-9. **Reportes**
-10. **Directorio** — Clientes
-11. **Sistema** — Configuración, Ayuda, Auditoría, Bitácora
-12. **Administración** (solo admin / admin_org / super_admin)
-13. **Super Admin** (solo super_admin)
+## Problema actual
 
-## Cambios técnicos
+Hoy los 3 ítems aparecen juntos pero con nombres confusos:
 
-Archivo: `src/hooks/layout/useAppSidebarSections.ts`
+- `CxP — Por capturar` (bandeja: embarques sin factura capturada)
+- `CxP — Por pagar` (bandeja: facturas con saldo por liquidar)
+- `Cuentas por Pagar` (módulo maestro CRUD)
 
-- Crear `buildAdmin: Builder` que devuelve las 11 secciones base de arriba.
-- Registrar en `ROLE_BUILDERS`: `admin: buildAdmin`, `admin_org: buildAdmin`.
-- Para `super_admin` (que no pasa por `ROLE_BUILDERS` porque no tiene `effectiveRole` propio), ajustar la rama final de `useAppSidebarSections`:
-  - Si `isAdmin`, usar `buildAdmin(deps)` en lugar de `buildDefaultSections(deps)`.
-  - Mantener el push de `Administración` y `Super Admin` al final.
-- `buildDefaultSections` se conserva como fallback para roles no mapeados.
+El usuario no distingue cuál es bandeja operativa y cuál es el registro contable completo.
 
-Archivo: `src/hooks/layout/__tests__/useLayout.test.tsx` (si existe el caso): actualizar el orden esperado para admin.
+## Cambios propuestos
 
-## Versionado
+### 1. Renombrar los 3 ítems en `src/components/layout/sidebarItems.ts`
 
-- `src/constants/appVersion.ts` → `13.98.1`
-- `CHANGELOG.md` → entrada `[13.98.1] - 22/06/2026`: "Sidebar de admin/admin_org/super_admin reorganizado con secciones Compras, Facturación y Tesorería tipo Odoo."
+| Antes | Después | Notas |
+|---|---|---|
+| `Por capturar (CxP)` | `Por capturar` | bandeja |
+| `Por pagar (CxP)` | `Por pagar` | bandeja |
+| `Cuentas por Pagar` | `Facturas de proveedor` | registro maestro |
+| `Proveedores` | `Proveedores` | catálogo (sin cambios) |
+
+El prefijo "CxP —" se vuelve redundante porque ya viven dentro del drawer **Compras**.
+
+### 2. Orden estándar dentro del drawer "Compras"
+
+Aplicado a contador, tesorero, auxiliar_contable, admin, admin_org y super_admin (los que ya muestran el drawer):
+
+```
+Compras
+├── Por capturar          (bandeja — recibir facturas nuevas)
+├── Por pagar             (bandeja — programar pagos, solo si rol lo permite)
+├── Facturas de proveedor (registro maestro CRUD)
+└── Proveedores           (catálogo)
+```
+
+Lógica por rol (sin cambiar permisos, solo orden):
+
+- **contador / auxiliar_contable**: Por capturar → Facturas de proveedor → Proveedores
+- **tesorero**: Por capturar → Por pagar → Facturas de proveedor → Proveedores
+- **admin / admin_org / super_admin**: Por capturar → Por pagar → Facturas de proveedor → Proveedores
+
+### 3. Agregar subtítulo descriptivo opcional (solo si cabe)
+
+Mantener simple: solo renombrar e reordenar. Sin tooltips nuevos en esta iteración.
+
+## Archivos a tocar
+
+1. `src/components/layout/sidebarItems.ts`
+   - Renombrar `"Por capturar (CxP)"` → `"Por capturar"`
+   - Renombrar `"Por pagar (CxP)"` → `"Por pagar"`
+   - Renombrar `"Cuentas por Pagar"` → `"Facturas de proveedor"`
+2. `src/hooks/layout/useAppSidebarSections.ts`
+   - En cada builder con drawer **Compras** (`buildContador`, `buildTesorero`, `buildAuxiliarContable`, `buildAdmin`), reordenar `items` para que el orden sea: bandejas → `/cxp` → `/proveedores`.
+3. `CHANGELOG.md` + `src/constants/appVersion.ts`
+   - Bump a `13.98.2` con entrada describiendo la reorganización.
+4. Verificar tests:
+   - `src/routes/__tests__/appRoutes.smoke.test.tsx` (no debe romperse, solo cambia labels)
+   - `src/hooks/layout/__tests__/useLayout.test.tsx` si valida labels específicos.
+
+## Lo que NO se cambia
+
+- Rutas (`/cxp`, `/cxp/por-capturar`, `/cxp/por-pagar`) intactas.
+- Permisos por rol intactos (mismo `guarded(...)` en `appRoutes.tsx`).
+- Títulos internos de cada página (PageHeader) intactos — solo cambian las etiquetas del sidebar.
+- Drawers Facturación, Tesorería, Profit, etc. sin tocar.
 
 ## Verificación
 
-- `bunx vitest run src/hooks/layout`
-- Revisar visualmente en `/inicio` que aparezcan las nuevas secciones.
+- `bunx vitest run` debe pasar.
+- Visual: entrar como contador, tesorero y admin a `/inicio` y confirmar que el drawer Compras muestra los 4 ítems en el orden definido y con los nuevos nombres.
