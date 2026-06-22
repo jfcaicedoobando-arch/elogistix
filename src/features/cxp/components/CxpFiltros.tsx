@@ -177,11 +177,14 @@ export function CxpFiltros(props: Props) {
         onOrigenChange={(v) => props.onOrigenChange(v as "Nacional" | "Extranjero" | "todos")}
         proveedorId={props.proveedorId}
         onProveedorChange={props.onProveedorChange}
+        categoriaPresupuestoId={props.categoriaPresupuestoId}
+        onCategoriaPresupuestoChange={props.onCategoriaPresupuestoChange}
         fechaDesde={props.fechaDesde}
         onFechaDesdeChange={props.onFechaDesdeChange}
         fechaHasta={props.fechaHasta}
         onFechaHastaChange={props.onFechaHastaChange}
         proveedores={proveedoresOpts}
+        categorias={categoriasOpts}
         onClearAll={clearAll}
       />
     </div>
