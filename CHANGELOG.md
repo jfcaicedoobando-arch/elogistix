@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.110.0] - 2026-06-22
+## [13.111.0] - 2026-06-22
+- **feat(cxp)**: la **categoría contable** se desvincula del proveedor y ahora es **obligatoria por factura**. Antes el proveedor cargaba una clasificación contable (Logístico/Administrativo) que se confundía con la categoría real del gasto; ahora cada factura del mismo proveedor puede ir a una categoría distinta (COGS, gastos operativos, OpEx, etc.) y se valida en el formulario. Analogía: antes el restaurante decidía si tu cuenta era "comida" o "bebida" sólo por el mesero que te atendió; ahora cada platillo lleva su propia etiqueta contable.
+- **fix(cxp)**: la columna `proveedor_facturas.categoria_presupuesto_id` pasa a `NOT NULL`. Las 2 facturas históricas sin categoría se reasignaron a una categoría "Sin categoría" auto-creada por organización (backfill defensivo).
+- **ui(cxp)**: en el formulario de captura/edición de factura, la **Categoría contable** sale del bloque colapsable "Detalles adicionales" y queda como sección propia con asterisco de requerido, mensaje de error y descripción ("Un mismo proveedor puede emitir facturas para distintas categorías"). Se eliminó la opción "Sin categoría".
+- **ui(cxp)**: el filtro **Categoría** ahora también aparece como chip activo en la barra de filtros.
+- **ui(proveedores)**: se elimina del directorio de proveedores el selector y el tab por **Categoría / Subtipo de gasto** (alta, edición, filtros, columna de la tabla). Los datos en BD se conservan; `proveedores.categoria` queda como columna nullable. Lectura más simple: un solo listado de proveedores filtrable por origen y tipo.
+
+
 - **fix(cxp)**: el historial de la factura de proveedor fallaba por dos motivos en la RPC `historial_proveedor_factura`: (1) comparaba `nc.motivo <> ''` contra una columna enum y (2) `ts` resultaba ambiguo entre la columna del CTE y el parámetro de retorno de la función. Se castea el motivo a texto y se renombran las columnas del CTE (`ev_ts`, `ev_tipo`…) para eliminar la ambigüedad. Analogía: era como pedirle al mesero "tráeme el plato" cuando hay dos platos en la mesa; ahora le decimos "tráeme **este** plato".
 - **feat(cxp)**: el modal **Detalle de factura de proveedor** ahora muestra una sección "Información de la factura" con categoría contable (nombre, no UUID), RFC del proveedor, UUID fiscal (CFDI), desglose Subtotal / IVA / Retenciones, moneda con TC, días de crédito, embarque vinculado y notas. Sólo lectura; las ediciones siguen viviendo en el diálogo de edición.
 
