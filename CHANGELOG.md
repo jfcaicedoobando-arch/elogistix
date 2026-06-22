@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.1] - 2026-06-22
+- **feat(embarques/cierre)**: en embarques ya cerrados, el checklist se presenta en modo **informativo**. Los ítems no cumplidos se muestran en muted (gris) con badge "No aplica" en vez del rojo "Pendiente", y sin link de acción. Se agrega nota: "Este embarque se cerró antes de que existieran algunas de estas reglas". Esto elimina el ruido visual en embarques legacy donde las reglas nuevas no podían cumplirse.
+
 ## [13.106.0] - 2026-06-22
 - **feat(embarques/cierre)**: nueva regla en el checklist de cierre — para embarques marítimos FCL, todos los contenedores deben tener capturadas la fecha de descarga y la fecha de devolución. La regla `contenedores_fechas_completas` aparece en TabCierre con responsable "Operador" y enlaza al tab Resumen con los contenedores afectados. Es bloqueante: sin ambas fechas no se puede cerrar el embarque.
 
