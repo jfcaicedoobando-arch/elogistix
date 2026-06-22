@@ -1,33 +1,39 @@
-## Problema
+## Diagnóstico
 
-En `/cxp/por-pagar` las filas de la tabla **no son clickeables**. Hoy solo el expediente del embarque tiene link. No hay forma de abrir la factura para aprobarla ni registrar su pago.
+**Por qué el estado "no cambia" tras aprobar:**
+- La RPC `aprobar_factura_proveedor` sí actualiza la BD correctamente (verificado).
+- El hook `useAprobarFactura` invalida la query lista (`["cxp"]`) y se refetchea.
+- **Pero** el `DialogDetallePagosProveedor` recibe la factura desde `f.detalle` (estado local seteado al hacer click en la fila). Ese snapshot no se refresca cuando llega data nueva, así que el badge en el dialog sigue mostrando "Pendiente" aunque la fila de la tabla detrás ya cambió.
 
-En cambio, en `/cxp` cada fila abre `DialogDetallePagosProveedor`, que ya contiene los botones de **Aprobar / Rechazar** (`BotonesAprobacionFactura`) y el botón para **Registrar pago**.
+Analogía: la lista es una pizarra que se borra y se vuelve a escribir; el dialog está mirando una foto vieja de esa pizarra.
 
-Analogía: la bandeja "Por pagar" es como una lista de pendientes, pero no tiene "puerta" para entrar a cada pendiente. Vamos a abrirle la puerta.
+## Solución
 
-## Solución (mínima, solo UI)
+### 1. Sincronizar el dialog con la query (`src/features/cxp/routes/Cxp.tsx`)
+Derivar la factura "viva" buscándola por id en `data` (refetch-aware), con fallback al snapshot mientras llega la actualización:
 
-Hacer que cada fila de `src/features/bandejas/routes/CxpPorPagar.tsx` redirija al detalle existente reutilizando el deep-link que ya tiene `/cxp` (`?factura={id}`), el cual abre automáticamente el dialog de detalle.
+```ts
+const detalleLive = f.detalle
+  ? data.find((d) => d.id === f.detalle!.id) ?? f.detalle
+  : null;
+```
+y pasar `factura={detalleLive}` a `DialogDetallePagosProveedor`.
 
-### Cambios
+Aplicar el mismo patrón al `DialogRegistrarPagoProveedor` (`factura={pagarLive}`) para que el badge de aprobación y los saldos del header siempre estén al día.
 
-1. **`src/features/bandejas/routes/CxpPorPagar.tsx`**
-   - Importar `useNavigate` de `react-router-dom`.
-   - Añadir `onClick` en `<TableRow>` que navegue a `/cxp?factura=${row.factura_id}`.
-   - Añadir `cursor-pointer` y mantener `hover:bg-muted/50`.
-   - En la celda del embarque (que ya tiene `<Link>`), envolver con `onClick={(e) => e.stopPropagation()}` para que el click en el link al embarque no dispare la navegación de la fila (regla del proyecto: dropdowns/links dentro de filas usan `stopPropagation`).
+### 2. Mejorar el aspecto del toast (`src/components/ui/sonner.tsx`)
+- Activar `richColors` para que success/error/warning tengan paleta consistente y un icono propio.
+- Subir `duration` a 4000ms para éxito.
+- Pulir clases: bordes más finos, sombra `shadow-xl`, padding mayor, tipografía `text-sm font-medium` para el título, descripción `text-xs`.
+- Mantener `position="top-right"`, `closeButton`, y los tap-targets del actionButton.
 
-2. **`CHANGELOG.md`** + **`src/constants/appVersion.ts`**
-   - Bump de versión patch (ej. `13.103.1`).
-   - Entrada: "Fix: drilldown de filas en CxP → Por pagar; ahora abren el detalle de factura para aprobar y registrar pagos."
+Resultado: toasts con franja de color por severidad, icono nativo de Sonner, y mejor jerarquía visual entre título y descripción — sin cambiar la API que ya usan `notifySuccess` / `notifyError`.
 
-### Por qué reutilizar el deep-link y no abrir el dialog localmente
-
-- El dialog `DialogDetallePagosProveedor` requiere el objeto `FacturaCxP` completo (no el row reducido de la vista `v_bandeja_cxp_por_pagar`). Replicar el fetch en esta página duplicaría lógica.
-- El deep-link `/cxp?factura={id}` ya está implementado y probado en `Cxp.tsx` (líneas 37-49).
+### 3. Versionado
+- `APP_VERSION` → `13.103.3`.
+- Entrada en `CHANGELOG.md`: fix de sincronización del detalle CxP tras aprobar/rechazar + mejora visual del Toaster.
 
 ### Fuera de alcance
-
-- Permisos: ya están correctos. `tesorero`, `admin`, `admin_org`, `super_admin` tienen acceso a `/cxp/por-pagar` y a `/cxp`; el botón "Registrar pago" se muestra cuando `canEdit` es true, y los botones de aprobar/rechazar respetan `puedeAprobar` dentro del dialog.
-- No se tocan servicios, RLS, ni hooks de datos.
+- No se toca la RPC ni el trigger (funcionan).
+- No se toca el flujo de permisos (`puedeAprobar`).
+- No se cambia la API de `notifySuccess`/`notifyError`.

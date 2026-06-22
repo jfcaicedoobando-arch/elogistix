@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.103.3] - 2026-06-22
+- **fix(cxp)**: el dialog de detalle ahora deriva la factura desde la query refetched, por lo que el badge "Pendiente/Aprobada/Rechazada" y los saldos del header se actualizan en vivo tras aprobar, rechazar o pagar.
+- **ui(toaster)**: Sonner con `richColors` + `expand`, mejor jerarquía título/descripción y sombra refinada.
+
 ## [13.103.2] - 2026-06-22
 - **fix(tests/rls)**: `test_rls_financiero_critico` aprueba la factura de proveedor antes de insertar el pago, alineándose con el trigger `tg_pagos_proveedor_requiere_aprobacion`.
 

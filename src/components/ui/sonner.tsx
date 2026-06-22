@@ -24,28 +24,23 @@ export function Toaster() {
     <SonnerToaster
       position="top-right"
       closeButton
-      richColors={false}
+      richColors
+      expand
+      duration={4000}
       swipeDirections={["right"]}
       toastOptions={{
-        // Reduce sensibilidad del swipe-dismiss para no robar taps al actionButton.
-        // El umbral por defecto (~45px) puede dispararse con un tap+drag accidental.
         // @ts-expect-error sonner permite estas keys en runtime aunque el d.ts las marca a nivel <Toaster>
         swipeThreshold: 80,
         classNames: {
           toast:
-            "group toast bg-background text-foreground border-border shadow-lg",
-          description: "text-muted-foreground",
+            "group toast border shadow-xl rounded-lg px-4 py-3 gap-3 backdrop-blur-sm",
+          title: "text-sm font-semibold leading-tight",
+          description: "text-xs text-muted-foreground leading-snug mt-0.5",
+          icon: "shrink-0",
           actionButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-primary !text-primary-foreground !text-sm !font-medium !rounded-md",
           cancelButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
-          error:
-            "!bg-destructive !text-destructive-foreground !border-destructive [&_[data-description]]:!text-destructive-foreground/90",
-          success:
-            "!bg-success/10 !text-success-foreground !border-success/60",
-          warning:
-            "!bg-warning/10 !text-warning-foreground !border-warning/60",
-          info: "!bg-background !text-foreground",
         },
       }}
     />

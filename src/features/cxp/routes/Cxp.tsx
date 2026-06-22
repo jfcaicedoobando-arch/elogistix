@@ -162,12 +162,12 @@ export default function Cxp() {
       <DialogRegistrarPagoProveedor
         open={!!f.pagar}
         onOpenChange={(o) => !o && f.setPagar(null)}
-        factura={f.pagar}
+        factura={f.pagar ? data.find((d) => d.id === f.pagar!.id) ?? f.pagar : null}
       />
       <DialogDetallePagosProveedor
         open={!!f.detalle}
         onOpenChange={(o) => !o && f.setDetalle(null)}
-        factura={f.detalle}
+        factura={f.detalle ? data.find((d) => d.id === f.detalle!.id) ?? f.detalle : null}
         canEdit={canEdit}
       />
       <DoubleConfirmDeleteDialog
