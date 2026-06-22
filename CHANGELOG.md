@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.11] - 2026-06-22
+- **fix(cxp)**: la sección **Historial** del modal *Detalle de pagos* dejó de mostrar "Sin eventos" cuando la RPC falla o se está refetcheando. Ahora distingue cuatro estados (cargando, error, vacío real, lista) con botón **Reintentar** y `placeholderData` en `useHistorialFactura` para evitar parpadeo al cerrar/abrir el collapsible.
+
 ## [13.106.10] - 2026-06-22
 - **chore(ui)**: cobertura completa del renombrado contable. 12 etiquetas faltantes en filtro de categoría de proveedor, header de Presupuesto vs Real, tab Categorías, diálogo de categoría, descripción de alta de proveedor, tooltip de Arribos, catálogo de errores (`errorCatalog`), filtro de Papelera, sugerencia de embarque en CxP, glosario de Ayuda y aria-label de eliminar fila de costo.
 
