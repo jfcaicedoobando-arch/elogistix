@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.102.1] - 2026-06-22
+- **fix(arquitectura)**: `useCxpPendientesAprobacion` ya no toca `supabase/client` directo; pasa por nuevo `fetchPendientesAprobacionCount` en services (cumple capa Pages→Hooks→Services).
+- **fix(power-of-10)**: `cxpColumns.tsx` baja de 204 a 199 líneas compactando los maps de estatus/aprobación.
+- **fix(tests)**: `useLayout.test.tsx` mockea `useCxpPendientesAprobacion` para no exigir `QueryClientProvider`.
+
 ## [13.102.0] - 2026-06-22
 - **feat(compras) cierre de pendientes Fase B**: enganches finales para que el flujo de aprobación rinda en el día a día.
 - **feat(cxp/aprobacion) tab "Por aprobar" en `/cxp`**: nuevo chip group (Todas · Por aprobar · Aprobadas · Rechazadas) en `CxpFiltros` + nueva columna "Aprobación" con badge de color en la tabla. Deep-link `/cxp?aprobacion=pendiente` activa el chip automáticamente.
