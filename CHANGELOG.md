@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.102.0] - 2026-06-22
+- **feat(compras) cierre de pendientes Fase B**: enganches finales para que el flujo de aprobación rinda en el día a día.
+- **feat(cxp/aprobacion) tab "Por aprobar" en `/cxp`**: nuevo chip group (Todas · Por aprobar · Aprobadas · Rechazadas) en `CxpFiltros` + nueva columna "Aprobación" con badge de color en la tabla. Deep-link `/cxp?aprobacion=pendiente` activa el chip automáticamente.
+- **feat(sidebar) badge de "Por aprobar" en el item `Resumen Compras`**: nuevo hook `useCxpPendientesAprobacion` + RPC `cxp_pendientes_aprobacion_count()` (SECURITY DEFINER, scoped por `organization_members`). El número se inyecta como `badgeCount` igual que CRM, Embarques y Facturación.
+- **feat(cxp/pagos) bloqueo de pagos sin aprobación**: el botón "Pagar" en la tabla queda deshabilitado con tooltip y el dialog `DialogRegistrarPagoProveedor` muestra banner amarillo + botón deshabilitado cuando `estado_aprobacion !== 'aprobada'`. Refuerzo server-side: trigger `pagos_proveedor_requiere_aprobacion` que lanza `check_violation` si se intenta insertar un pago contra factura no aprobada.
+- **feat(compras) hub `/compras` con KPIs nuevos**: tarjetas "Por aprobar" (count + monto) y "Vencido > 30 días" (suma de cubetas 31-60 + 61-90 + >90 desde aging). Nuevos quick-links "Revisar por aprobar" y "Revisar antigüedad" como tarjetas destacadas del hub.
+- **chore(db) backfill**: facturas con pagos previos quedan como `aprobada` automáticamente; el resto sigue `pendiente`.
+
 ## [13.101.0] - 2026-06-22
 - **feat(compras) Fase B — control financiero**: cuatro mejoras grandes para llevar el módulo de compras al estándar ERP.
 - **feat(compras/aging) nueva página `/compras/aging`**: antigüedad de saldos por proveedor en cubetas Vigente · 1-30 · 31-60 · 61-90 · >90 días. Cinco KPIs totales (MXN), tabla `DataTable` con saldo desglosado y exportación a CSV. Link por proveedor a `/cxp?proveedor={id}`. Nueva RPC `cxp_aging_proveedores(p_org, p_fecha)` SECURITY DEFINER que calcula saldo = total − pagos − NC aplicadas y clasifica por días vencidos.
