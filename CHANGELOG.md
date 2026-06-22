@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.97.2] - 2026-06-22
+- **fix(ci) Power of 10 — `Clientes.tsx` > 200 líneas**: tras los cambios mobile el archivo creció a 211 líneas y rompió los tests `audit-report` y `architecture-baseline`. Se extrajo la config de columnas y la tarjeta mobile a `src/features/cliente/components/clientesTableConfig.tsx`. El route queda en 158 líneas.
+
 ## [13.97.1] - 2026-06-22
 - **fix(rpc) `embarque_admin_pendientes_resumen` / `embarques_admin_pendientes_count`**: las funciones sumaban `monto_total` de `conceptos_venta`, columna que no existe (la real es `total`). Esto reventaba la carga del resumen administrativo del embarque desde `/inicio` (Sentry `JAVASCRIPT-REACT-15`, 4 ocurrencias en `13.96.0`). Se recrearon ambas RPCs con la columna correcta y se añadió filtro `deleted_at IS NULL` en `conceptos_venta`. Validado ejecutando el RPC contra un embarque real.
 
