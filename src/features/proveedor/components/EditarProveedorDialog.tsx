@@ -67,7 +67,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
             <FieldError message={c.fieldErrorMessage("nombre")} />
           </div>
 
-          {c.isLogistico && (
+          {c.isLogistico && c.form.origen_proveedor === "Extranjero" && (
             <div className="space-y-2">
               <Label>Tipo *</Label>
               <Select value={c.form.tipo ?? ""} onValueChange={c.handleTipoChange}>
