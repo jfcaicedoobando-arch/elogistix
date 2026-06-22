@@ -28,6 +28,7 @@ import {
   Anchor,
   Search,
   Calendar,
+  ShoppingCart,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -102,3 +103,8 @@ export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
   { title: "Por emitir (Facturación)", url: "/facturacion/por-emitir", icon: FileText },
   { title: "Cartera", url: "/cartera", icon: PiggyBank },
 ];
+
+// v13.100.0 — Bloque Compras: hub `/compras` para acceso rápido al módulo.
+export const SIDEBAR_COMPRAS_HUB: SidebarItem = {
+  title: "Resumen Compras", url: "/compras", icon: ShoppingCart,
+};
