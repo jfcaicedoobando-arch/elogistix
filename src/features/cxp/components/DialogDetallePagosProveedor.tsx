@@ -1,10 +1,7 @@
 /**
  * Detalle de pagos de una factura de proveedor.
- * Diseño "Densa + tooltips": header con folio en mono, 4 KPIs semánticos,
- * tabla con tooltips, eliminación de pago con doble confirmación typable.
- *
- * Toolbar y tabla extraídos a `DialogDetallePagosProveedor.sections.tsx`
- * para mantener este archivo ≤ 200 líneas y complejidad ≤ 16.
+ * Toolbar, resumen, tabla y fila están en `.sections.tsx` para mantener este
+ * archivo ≤ 200 líneas y complejidad ≤ 16.
  */
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -17,13 +14,10 @@ import { Button } from "@/components/ui/button";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
-import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
-import { Kpi } from "./DialogDetallePagosProveedor.parts";
-import { FacturaToolbar, PagosTable } from "./DialogDetallePagosProveedor.sections";
-import { BotonesAprobacionFactura } from "./BotonesAprobacionFactura";
-import { HistorialFacturaSection } from "./HistorialFacturaSection";
-import { InfoFacturaSection } from "./InfoFacturaSection";
+import {
+  FacturaToolbar, FacturaResumen, PagosTable, computeFacturaFlags,
+} from "./DialogDetallePagosProveedor.sections";
 import { NotasCreditoSection } from "./NotasCreditoSection";
 import { usePermissions } from "@/hooks/shared";
 
@@ -35,6 +29,11 @@ interface Props {
   onPagar?: (f: FacturaCxP) => void;
   onEditar?: (f: FacturaCxP) => void;
   onEliminar?: (f: FacturaCxP) => void;
+}
+
+function tituloDescripcion(f: FacturaCxP | null): string {
+  if (!f) return "";
+  return `${f.folio_interno} · Folio prov. ${f.folio_proveedor} — ${f.proveedor_nombre}`;
 }
 
 export function DialogDetallePagosProveedor({
@@ -49,10 +48,13 @@ export function DialogDetallePagosProveedor({
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
+  const flags = computeFacturaFlags(f, canEdit);
 
-  const aprobada = f?.estado_aprobacion === "aprobada";
-  const pagable = !!f && canEdit && f.saldo > 0 && f.estado !== "Borrador";
-  const puedeEliminar = !!f && canEdit && f.pagado <= 0;
+  const handleConfirmEliminar = async () => {
+    if (!pagoAEliminar) return;
+    await eliminar.mutateAsync(pagoAEliminar);
+    setPagoAEliminar(null);
+  };
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -61,7 +63,7 @@ export function DialogDetallePagosProveedor({
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle>Detalle de factura de proveedor</DialogTitle>
             <DialogDescription className="font-mono uppercase tracking-wider text-xs">
-              {f ? `${f.folio_interno} · Folio prov. ${f.folio_proveedor} — ${f.proveedor_nombre}` : ""}
+              {tituloDescripcion(f)}
             </DialogDescription>
           </DialogHeader>
 
@@ -69,9 +71,7 @@ export function DialogDetallePagosProveedor({
             <FacturaToolbar
               factura={f}
               canEdit={canEdit}
-              aprobada={aprobada}
-              pagable={pagable}
-              puedeEliminar={puedeEliminar}
+              flags={flags}
               onPagar={onPagar}
               onEditar={onEditar}
               onEliminar={onEliminar}
@@ -79,28 +79,7 @@ export function DialogDetallePagosProveedor({
           )}
 
           {f && (
-            <>
-              <div className="px-6 pt-4 pb-3 border-b">
-                <BotonesAprobacionFactura
-                  facturaId={f.id}
-                  estado={f.estado_aprobacion}
-                  motivoRechazo={f.motivo_rechazo}
-                  puedeAprobar={puedeAprobar}
-                />
-              </div>
-              <div className="px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-b">
-                <Kpi label="Total Factura" value={formatCurrency(f.total, f.moneda)} />
-                <Kpi label="Total Pagado" value={formatCurrency(f.pagado, f.moneda)} tone="success" />
-                <Kpi
-                  label="Saldo Pendiente"
-                  value={formatCurrency(f.saldo, f.moneda)}
-                  tone={f.saldo > 0 ? "warn" : "default"}
-                />
-                <Kpi label="# Pagos" value={String(pagos.length)} />
-              </div>
-              <InfoFacturaSection factura={f} />
-              <HistorialFacturaSection facturaId={f.id} />
-            </>
+            <FacturaResumen f={f} pagosCount={pagos.length} puedeAprobar={puedeAprobar} />
           )}
 
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
@@ -129,16 +108,12 @@ export function DialogDetallePagosProveedor({
 
       <DoubleConfirmDeleteDialog
         open={!!pagoAEliminar}
-        onOpenChange={(o) => !o && setPagoAEliminar(null)}
+        onOpenChange={(o) => { if (!o) setPagoAEliminar(null); }}
         entityName="el pago"
         description="El pago será eliminado y el saldo de la factura se recalculará."
         finalDescription="Esta acción no se puede deshacer fácilmente."
         isPending={eliminar.isPending}
-        onConfirm={async () => {
-          if (!pagoAEliminar) return;
-          await eliminar.mutateAsync(pagoAEliminar);
-          setPagoAEliminar(null);
-        }}
+        onConfirm={handleConfirmEliminar}
       />
     </TooltipProvider>
   );
