@@ -81,10 +81,14 @@ export default function CxpPorPagar() {
                 const dias = row.dias_para_vencer ?? 0;
                 const variant = variantDiasParaVencer(dias);
                 return (
-                  <TableRow key={row.factura_id} className="hover:bg-muted/50">
+                  <TableRow
+                    key={row.factura_id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/cxp?factura=${row.factura_id}`)}
+                  >
                     <TableCell>{row.proveedor_nombre ?? "—"}</TableCell>
                     <TableCell>{row.folio_proveedor ?? "—"}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {row.embarque_id ? (
                         <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">
                           {row.expediente ?? "—"}
