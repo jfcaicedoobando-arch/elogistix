@@ -13,7 +13,7 @@ type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
 export const PROVEEDOR_FACTURAS_SELECT = `
   id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
   fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
-  estado_aprobacion, motivo_rechazo,
+  estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor)
@@ -23,7 +23,7 @@ export type Joined = Pick<
   ProveedorFacturaRow,
   | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor"
   | "fecha_emision" | "fecha_vencimiento" | "moneda" | "total" | "estado" | "tipo_cambio_usd"
-  | "estado_aprobacion" | "motivo_rechazo"
+  | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
