@@ -56,7 +56,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
   const actualizar = useActualizarFacturaProveedor();
   const { data: row, isLoading: isLoadingRow, isError: isErrorRow } = useQuery({
     queryKey: ["cxp", "factura-edit-row", factura?.id ?? null] as const,
-    queryFn: () => fetchRowParaEdicion(factura!.id),
+    queryFn: () => fetchFacturaParaEdicion(factura!.id),
     enabled: !!factura?.id,
     staleTime: 10_000,
   });
