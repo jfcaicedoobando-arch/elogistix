@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.2] - 2026-06-22
+- **fix(tests)**: 4 tests rotos en CI tras los cambios de validación (categoría contable en facturas de proveedor, tipo obligatorio para proveedor extranjero, régimen fiscal obligatorio en alta de cliente) y un *unhandled rejection* en el test de `fetchWithRetry`. Se actualizaron los fixtures para incluir los nuevos campos requeridos y se añadió un `.catch()` temprano al helper `runWithTimers` para silenciar rechazos antes del `await`. Analogía: los tests usaban un formulario viejo que ya no cumple con los nuevos campos obligatorios; ahora rellenan también la casilla nueva.
+
 ## [13.114.1] - 2026-06-22
 - **chore(arquitectura)**: refactor de 3 archivos productivos que superaban las 200 líneas (regla Power of 10 #4): `FacturaProveedorFormFields.tsx`, `DialogDetallePagosProveedor.sections.tsx` y `useNuevoProveedorController.ts`. Se extrajeron sub-secciones a archivos hermanos (`.sections.tsx`, `.fila.tsx`, `.helpers.ts`) sin cambiar comportamiento. Analogía: como dividir una libreta de 210 hojas en dos libretas más delgadas — el contenido es el mismo, pero cada una cabe en el bolsillo.
 - **chore(arquitectura)**: `useEditarFacturaProveedorForm` ya no toca Supabase directamente; ahora usa `fetchFacturaParaEdicion` desde `@/features/cxp/services` (jerarquía Hooks→Services).
