@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
@@ -9,6 +9,7 @@ import { Inbox } from "lucide-react";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 
 export default function CxpPorPagar() {
+  const navigate = useNavigate();
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
 
@@ -80,10 +81,14 @@ export default function CxpPorPagar() {
                 const dias = row.dias_para_vencer ?? 0;
                 const variant = variantDiasParaVencer(dias);
                 return (
-                  <TableRow key={row.factura_id} className="hover:bg-muted/50">
+                  <TableRow
+                    key={row.factura_id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/cxp?factura=${row.factura_id}`)}
+                  >
                     <TableCell>{row.proveedor_nombre ?? "—"}</TableCell>
                     <TableCell>{row.folio_proveedor ?? "—"}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {row.embarque_id ? (
                         <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">
                           {row.expediente ?? "—"}
