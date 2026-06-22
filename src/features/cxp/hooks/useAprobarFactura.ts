@@ -10,6 +10,7 @@ export function useAprobarFactura() {
       aprobarFacturaProveedor(id, aprobar, motivo),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: ["cxp", "pendientes-aprobacion-count"] });
       notifySuccess(undefined, { title: vars.aprobar ? "Factura aprobada" : "Factura rechazada" });
     },
     onError: (error: Error) => {
