@@ -7,11 +7,14 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import {
   useNuevoClienteController,
   type ClienteForm,
 } from "@/features/cliente/hooks";
+import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
+import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
 
 const FORM_FIELDS: { label: string; field: keyof ClienteForm; full?: boolean; required?: boolean }[] = [
   { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
