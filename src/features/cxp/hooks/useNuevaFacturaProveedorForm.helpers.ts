@@ -93,7 +93,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
     total,
     estado: "Vigente" as const,
     notas: values.notas,
-    categoria_presupuesto_id: values.categoriaId || null,
+    categoria_presupuesto_id: values.categoriaId,
     created_by: userId,
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
