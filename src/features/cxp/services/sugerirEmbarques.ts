@@ -94,7 +94,7 @@ export async function crearConceptoCostoYVincular(
       proveedor_nombre: input.proveedorNombre,
       concepto: input.concepto,
       monto: input.monto,
-      moneda: input.moneda,
+      moneda: input.moneda as "MXN" | "USD" | "EUR",
       estado_liquidacion: "Pagado",
       fecha_pago: input.fechaEmision,
       referencia_pago: input.folio,
