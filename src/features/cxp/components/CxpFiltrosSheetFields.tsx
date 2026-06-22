@@ -76,6 +76,21 @@ export function CxpFiltrosSheetFields(props: Props) {
           </SelectContent>
         </Select>
       </div>
+      <div className="space-y-1">
+        <Label>Categoría de presupuesto</Label>
+        <Select
+          value={props.categoriaPresupuestoId || "todas"}
+          onValueChange={props.onCategoriaPresupuestoChange}
+        >
+          <SelectTrigger><SelectValue placeholder="Todas las categorías" /></SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="todas">Todas las categorías</SelectItem>
+            {props.categoriasOpts.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Emisión desde</Label>
