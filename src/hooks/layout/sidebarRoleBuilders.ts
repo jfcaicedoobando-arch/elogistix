@@ -64,7 +64,7 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Compras", items: [...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
   { label: "Facturación", items: [...filterBandejas(["/facturacion/por-emitir"]), ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"])] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
@@ -75,7 +75,7 @@ const buildContador: Builder = ({ sistemaItems }) => [
 
 const buildTesorero: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Compras", items: [...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Facturación", items: filterGestion(["/cartera", "/comisiones"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
@@ -84,7 +84,7 @@ const buildTesorero: Builder = ({ sistemaItems }) => [
 ];
 
 const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
-  { label: "Compras", items: [...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
@@ -122,7 +122,7 @@ export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Compras", items: [...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
   { label: "Facturación", items: [...filterBandejas(["/facturacion/por-emitir"]), ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"])] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
