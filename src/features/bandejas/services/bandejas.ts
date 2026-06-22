@@ -23,6 +23,7 @@ export interface CxpPorPagarRow {
   pagado: number;
   saldo: number;
   estado_captura: string;
+  tipo_cambio_usd: number | null;
 }
 
 export interface FacturacionPorEmitirRow {
