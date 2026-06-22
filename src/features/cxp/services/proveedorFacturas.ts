@@ -180,6 +180,28 @@ export async function crearFacturaProveedor(payload: TablesInsert<"proveedor_fac
   return data;
 }
 
+/**
+ * Verifica si ya existe una factura con el mismo proveedor + folio + fecha emisión
+ * (excluyendo canceladas y borradas). Bloquea capturas duplicadas accidentales.
+ */
+export async function existeFacturaDuplicada(
+  proveedorId: string,
+  folioProveedor: string,
+  fechaEmision: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("proveedor_facturas")
+    .select("id")
+    .eq("proveedor_id", proveedorId)
+    .eq("folio_proveedor", folioProveedor.trim())
+    .eq("fecha_emision", fechaEmision)
+    .neq("estado", "Cancelada")
+    .is("deleted_at", null)
+    .limit(1);
+  if (error) throw error;
+  return (data ?? []).length > 0;
+}
+
 
 
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
