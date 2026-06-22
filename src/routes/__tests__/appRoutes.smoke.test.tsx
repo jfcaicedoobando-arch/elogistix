@@ -57,6 +57,13 @@ function getRolesFor(records: RouteRecord[], path: string): AppRole[] | null {
 
 const records = collectRoutes(appRoutes);
 const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
+const FINANCE_READ_ROLES: AppRole[] = [
+  "admin", "super_admin", "admin_org",
+  "contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
+  "gerente_operaciones", "gerente_visor",
+];
+const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
+const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
 
 describe("routes/appRoutes — envoltura raíz", () => {
   it("la raíz envuelve Layout con ProtectedRoute (sin allowedRoles → cualquier autenticado)", () => {
@@ -107,19 +114,19 @@ describe("routes/appRoutes — paths críticos presentes", () => {
 
 describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
   const CASES: Array<[string, AppRole[]]> = [
-    ["/cxp", [...TESORERIA_ROLES, "auxiliar_contable"]],
-    ["/compras", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org"]],
-    ["/compras/aging", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org"]],
-    ["/cxp/por-capturar", ["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero"]],
-    ["/cxp/por-pagar", ["admin", "super_admin", "admin_org", "tesorero"]],
-    ["/facturacion/por-emitir", ["admin", "super_admin", "admin_org", "contador"]],
-    ["/cartera", ["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza"]],
-    ["/tesoreria", TESORERIA_ROLES],
-    ["/tesoreria/cuentas", TESORERIA_ROLES],
-    ["/tesoreria/conciliacion", TESORERIA_ROLES],
-    ["/tesoreria/flujo", TESORERIA_ROLES],
-    ["/profit/dashboard", TESORERIA_ROLES],
-    ["/profit/presupuesto", TESORERIA_ROLES],
+    ["/cxp", FINANCE_READ_ROLES],
+    ["/compras", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"]],
+    ["/compras/aging", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"]],
+    ["/cxp/por-capturar", ["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"]],
+    ["/cxp/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
+    ["/facturacion/por-emitir", ["admin", "super_admin", "admin_org", "contador", "gerente_operaciones", "gerente_visor"]],
+    ["/cartera", ["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"]],
+    ["/tesoreria", TESORERIA_READ_ROLES],
+    ["/tesoreria/cuentas", TESORERIA_READ_ROLES],
+    ["/tesoreria/conciliacion", TESORERIA_READ_ROLES],
+    ["/tesoreria/flujo", TESORERIA_READ_ROLES],
+    ["/profit/dashboard", PROFIT_READ_ROLES],
+    ["/profit/presupuesto", PROFIT_READ_ROLES],
     ["/papelera", ["admin", "super_admin"]],
     ["/idempotencia", ["admin", "super_admin"]],
     ["/auditoria", ["admin", "admin_org", "viewer", "customer_service"]],
