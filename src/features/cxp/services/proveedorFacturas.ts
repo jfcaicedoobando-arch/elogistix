@@ -39,6 +39,7 @@ export interface FacturaCxP {
   tipo_cambio_usd: number;
   estado_aprobacion: "pendiente" | "aprobada" | "rechazada";
   motivo_rechazo: string | null;
+  categoria_presupuesto_id: string | null;
 }
 
 export interface FetchCxPFiltros {
@@ -48,6 +49,7 @@ export interface FetchCxPFiltros {
   estatus?: EstatusCxP | "todos";
   origen?: "Nacional" | "Extranjero" | "todos";
   aprobacion?: "todos" | "pendiente" | "aprobada" | "rechazada";
+  categoria_presupuesto_id?: string;
   fecha_desde?: string;
   fecha_hasta?: string;
 }
