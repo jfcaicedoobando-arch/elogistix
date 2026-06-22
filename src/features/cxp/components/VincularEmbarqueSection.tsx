@@ -54,7 +54,8 @@ function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
 }
 
 export function VincularEmbarqueSection({
-  proveedorId, organizationId, seleccion, onToggle, onChangeMonto,
+  proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
+  embarqueAdHoc, onEmbarqueAdHoc,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
@@ -67,7 +68,17 @@ export function VincularEmbarqueSection({
       </div>
     );
   }
-  if (grupos.length === 0) return null;
+  if (grupos.length === 0) {
+    return (
+      <SugerirEmbarqueBlock
+        proveedorId={proveedorId}
+        proveedorNombre={proveedorNombre}
+        organizationId={organizationId}
+        seleccionado={embarqueAdHoc}
+        onSeleccionar={onEmbarqueAdHoc}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">
