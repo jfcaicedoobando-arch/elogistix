@@ -218,8 +218,8 @@ export async function actualizarFacturaProveedor(
 
   // 4) ¿Hubo cambio sensible? → re-aprobación si estaba aprobada.
   const sensibleCambio = CAMPOS_SENSIBLES.some((k) => {
-    const a = (actual as Record<string, unknown>)[k as string];
-    const b = (payload as Record<string, unknown>)[k as string];
+    const a = (actual as unknown as Record<string, unknown>)[k];
+    const b = (payload as unknown as Record<string, unknown>)[k];
     if (typeof a === "number" || typeof b === "number") return Number(a) !== Number(b);
     return a !== b;
   });
