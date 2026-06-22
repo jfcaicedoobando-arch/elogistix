@@ -85,43 +85,96 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                         <Info className="h-3 w-3 text-muted-foreground/70" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      <div className="space-y-1.5 text-xs">
-                        <div className="font-semibold border-b pb-1 mb-1">Profit homologado a MXN</div>
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Venta total:</span>
-                          <span className="tabular-nums font-medium">{formatCurrency(arribosEsteMes.ventaMXN, "MXN")}</span>
-                        </div>
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Costo total:</span>
-                          <span className="tabular-nums font-medium">{formatCurrency(arribosEsteMes.costoMXN, "MXN")}</span>
-                        </div>
-                        <div className="flex justify-between gap-3 border-t pt-1 mt-1">
-                          <span className="font-medium">Profit:</span>
-                          <span className={`tabular-nums font-bold ${arribosEsteMes.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
-                            {formatCurrency(arribosEsteMes.profitMXN, "MXN")}
-                          </span>
-                        </div>
-                        <div className="border-t pt-1.5 mt-1.5 space-y-0.5 text-[11px] text-muted-foreground">
-                          <div className="font-medium text-foreground/80 mb-0.5">Desglose por moneda origen:</div>
-                          <div className="flex justify-between gap-3">
-                            <span>Desde USD:</span>
-                            <span className="tabular-nums">V {formatCurrency(arribosEsteMes.ventaMxnFromUsd, "MXN")} · C {formatCurrency(arribosEsteMes.costoMxnFromUsd, "MXN")}</span>
+                    <TooltipContent side="bottom" className="w-[320px] p-3">
+                      {(() => {
+                        const venta = arribosEsteMes.ventaMXN;
+                        const costo = arribosEsteMes.costoMXN;
+                        const profit = arribosEsteMes.profitMXN;
+                        const margenPct = venta > 0 ? (profit / venta) * 100 : 0;
+                        const profitPositivo = profit >= 0;
+                        const profitColor = profitPositivo ? "text-success" : "text-destructive";
+                        const profitBg = profitPositivo ? "bg-success/10" : "bg-destructive/10";
+                        // Proporciones para la barra costo vs profit (sobre venta)
+                        const total = Math.max(venta, costo + Math.max(profit, 0));
+                        const costoPct = total > 0 ? Math.min(100, (costo / total) * 100) : 0;
+                        const profitBarPct = total > 0 ? Math.min(100 - costoPct, (Math.max(profit, 0) / total) * 100) : 0;
+                        const desglose = [
+                          { label: "USD", v: arribosEsteMes.ventaMxnFromUsd, c: arribosEsteMes.costoMxnFromUsd },
+                          { label: "EUR", v: arribosEsteMes.ventaMxnFromEur, c: arribosEsteMes.costoMxnFromEur },
+                          { label: "MXN", v: arribosEsteMes.ventaMxnNative, c: arribosEsteMes.costoMxnNative },
+                        ].filter((r) => r.v !== 0 || r.c !== 0);
+
+                        return (
+                          <div className="space-y-3">
+                            {/* Header */}
+                            <div>
+                              <div className="text-sm font-semibold leading-tight">Profit proyectado del mes</div>
+                              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                                Homologado a MXN
+                              </div>
+                            </div>
+
+                            {/* Totales */}
+                            <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs">
+                              <span className="text-muted-foreground">Venta total</span>
+                              <span className="tabular-nums font-medium text-right">{formatCurrency(venta, "MXN")}</span>
+                              <span className="text-muted-foreground">Costo total</span>
+                              <span className="tabular-nums font-medium text-right">{formatCurrency(costo, "MXN")}</span>
+                            </div>
+
+                            {/* Profit destacado */}
+                            <div className={`rounded-md px-2.5 py-2 ${profitBg}`}>
+                              <div className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline">
+                                <span className="text-xs font-semibold">
+                                  Profit
+                                  <span className="ml-1.5 text-[10px] font-normal text-muted-foreground tabular-nums">
+                                    ({margenPct.toFixed(1)}%)
+                                  </span>
+                                </span>
+                                <span className={`text-base font-bold tabular-nums text-right ${profitColor}`}>
+                                  {formatCurrency(profit, "MXN")}
+                                </span>
+                              </div>
+                              {/* Mini barra costo vs profit */}
+                              <div className="mt-1.5 h-1.5 w-full rounded-full bg-muted overflow-hidden flex">
+                                <div className="h-full bg-warning" style={{ width: `${costoPct}%` }} />
+                                <div className={`h-full ${profitPositivo ? "bg-success" : "bg-destructive"}`} style={{ width: `${profitBarPct}%` }} />
+                              </div>
+                              <div className="mt-1 flex justify-between text-[9px] text-muted-foreground uppercase tracking-wide">
+                                <span>Costo</span>
+                                <span>{profitPositivo ? "Profit" : "Pérdida"}</span>
+                              </div>
+                            </div>
+
+                            {/* Desglose por moneda origen */}
+                            {desglose.length > 0 && (
+                              <div className="border-t pt-2">
+                                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                                  Desglose por moneda origen
+                                </div>
+                                <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-0.5 text-[11px]">
+                                  <span className="text-[10px] uppercase text-muted-foreground">Origen</span>
+                                  <span className="text-[10px] uppercase text-muted-foreground text-right">Venta MXN</span>
+                                  <span className="text-[10px] uppercase text-muted-foreground text-right">Costo MXN</span>
+                                  {desglose.map((r) => (
+                                    <>
+                                      <span key={`${r.label}-l`} className="font-medium">{r.label}</span>
+                                      <span key={`${r.label}-v`} className="tabular-nums text-right">{formatCurrency(r.v, "MXN")}</span>
+                                      <span key={`${r.label}-c`} className="tabular-nums text-right text-muted-foreground">{formatCurrency(r.c, "MXN")}</span>
+                                    </>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="text-[10px] text-muted-foreground italic border-t pt-1.5">
+                              Conversión con TC guardado en cada embarque.
+                            </div>
                           </div>
-                          <div className="flex justify-between gap-3">
-                            <span>Desde EUR:</span>
-                            <span className="tabular-nums">V {formatCurrency(arribosEsteMes.ventaMxnFromEur, "MXN")} · C {formatCurrency(arribosEsteMes.costoMxnFromEur, "MXN")}</span>
-                          </div>
-                          <div className="flex justify-between gap-3">
-                            <span>Nativo MXN:</span>
-                            <span className="tabular-nums">V {formatCurrency(arribosEsteMes.ventaMxnNative, "MXN")} · C {formatCurrency(arribosEsteMes.costoMxnNative, "MXN")}</span>
-                          </div>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground italic pt-1 border-t mt-1">
-                          Conversión con TC guardado en cada embarque.
-                        </div>
-                      </div>
+                        );
+                      })()}
                     </TooltipContent>
+
                   </Tooltip>
                 </TooltipProvider>
               )}
