@@ -2,14 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 
 export default function CxpPorPagar() {
   const { data = [], isLoading } = useCxpPorPagar();
-  const { totalSaldo, vencidas } = resumirCxpPorPagar(data);
+  const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
 
   return (
     <div className="p-6 space-y-4">
@@ -27,7 +27,19 @@ export default function CxpPorPagar() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{formatCurrency(totalSaldo, "MXN")}</CardContent>
+          <CardContent>
+            <div className="text-2xl font-semibold tabular-nums">{formatCurrency(saldoMXN, "MXN")}</div>
+            <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-1">
+              {porMoneda.MXN > 0 && <span>MXN {formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
+              {porMoneda.USD > 0 && <span>· USD {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}
+              {porMoneda.EUR > 0 && <span>· EUR {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
+            </div>
+            {faltaTipoCambio > 0 && (
+              <p className="text-[10px] text-warning mt-0.5">
+                {faltaTipoCambio} factura{faltaTipoCambio > 1 ? "s" : ""} sin TC capturado — no incluida{faltaTipoCambio > 1 ? "s" : ""} en homologado.
+              </p>
+            )}
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Vencidas</CardTitle></CardHeader>
