@@ -90,6 +90,9 @@ export function initSentry(): void {
       /ChunkLoadError/i,
       /Should have a queue\. This is likely a bug in React/i,
       /Invalid Refresh Token: Refresh Token Not Found/i,
+      // Web Locks API del cliente Supabase entre pestañas — ruido conocido.
+      /AbortError: Lock broken by another request/i,
+      /Lock broken by another request with the 'steal' option/i,
     ],
     beforeSend(event, hint) {
       const originalMsg =
