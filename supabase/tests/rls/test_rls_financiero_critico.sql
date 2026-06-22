@@ -184,6 +184,11 @@ BEGIN
   -- =========================================================================
   -- TEST 7: pagos_proveedor aislamiento
   -- =========================================================================
+  -- v13.103.2: el trigger tg_pagos_proveedor_requiere_aprobacion exige factura aprobada.
+  UPDATE public.proveedor_facturas
+     SET estado_aprobacion = 'aprobada', aprobada_at = now()
+   WHERE id = pf_a;
+
   INSERT INTO public.pagos_proveedor(
     id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
     metodo_pago, referencia, notas
