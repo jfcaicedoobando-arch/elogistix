@@ -35,6 +35,22 @@ export function estatusDeFila(row: CxpPorCapturarRow): EstatusFiltro {
   return "parcial";
 }
 
+function coincideQuery(r: CxpPorCapturarRow, q: string): boolean {
+  if (!q) return true;
+  const exp = (r.expediente ?? "").toLowerCase();
+  const cli = (r.cliente_nombre ?? "").toLowerCase();
+  return exp.includes(q) || cli.includes(q);
+}
+
+function coincideAntiguedad(r: CxpPorCapturarRow, a: AntiguedadFiltro): boolean {
+  if (a === "todos") return true;
+  const d = r.dias_desde_ultima_factura;
+  if (a === "sin_captura") return d == null;
+  if (a === "gt7") return d != null && d > 7;
+  if (a === "gt30") return d != null && d > 30;
+  return true;
+}
+
 /** Aplica filtros y orden a la lista. Función pura. */
 export function aplicarFiltros(
   rows: CxpPorCapturarRow[],
@@ -42,18 +58,9 @@ export function aplicarFiltros(
 ): CxpPorCapturarRow[] {
   const q = f.query.trim().toLowerCase();
   const filtradas = rows.filter((r) => {
-    if (q) {
-      const exp = (r.expediente ?? "").toLowerCase();
-      const cli = (r.cliente_nombre ?? "").toLowerCase();
-      if (!exp.includes(q) && !cli.includes(q)) return false;
-    }
+    if (!coincideQuery(r, q)) return false;
     if (f.estatus !== "todos" && estatusDeFila(r) !== f.estatus) return false;
-    if (f.antiguedad !== "todos") {
-      const d = r.dias_desde_ultima_factura;
-      if (f.antiguedad === "sin_captura" && d != null) return false;
-      if (f.antiguedad === "gt7" && (d == null || d <= 7)) return false;
-      if (f.antiguedad === "gt30" && (d == null || d <= 30)) return false;
-    }
+    if (!coincideAntiguedad(r, f.antiguedad)) return false;
     return true;
   });
 
