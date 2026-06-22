@@ -1,46 +1,42 @@
-## Problema 1 — Error en Historial
+## Objetivo
 
-El RPC `historial_proveedor_factura` revienta con:
-```
-invalid input value for enum motivo_nota_credito_proveedor: ""
-```
-Causa: en la rama "Notas de crédito" compara `nc.motivo <> ''`, pero `motivo` es un enum, no texto. Postgres intenta convertir `''` al enum y falla.
+Un mismo proveedor puede emitir facturas para distintos tipos de gasto (COGS, indirectos, OpEx). Por eso la **categoría contable se decide a nivel de cada factura**, no del proveedor.
 
-**Fix**: nueva migración que reemplaza el RPC con `nc.motivo::text <> ''` (cast explícito a texto). Misma firma, mismo retorno, sin cambios en el cliente.
+## Cambios
 
-## Problema 2 — Más información de la factura
+### 1. Proveedor — quitar categoría/subtipo del UI (datos en BD se conservan)
 
-Hoy el modal sólo muestra KPIs (Total / Pagado / Saldo / # Pagos). Vamos a agregar una sección **"Información de la factura"** arriba del Historial con:
+- `ProveedorTable.tsx`: quitar columna "Categoría / Subtipo".
+- `ProveedoresFiltros.tsx` y filtros relacionados (`useProveedores`, hooks de filtro): quitar el filtro por categoría/subtipo.
+- Alta/edición de proveedor (`useNuevoProveedorController.*`, `useEditarProveedorController.ts`, formulario): retirar los selects de Categoría y Subtipo de gasto. Al guardar, dejar `categoria` y `subtipo_gasto` como `null` para nuevos registros.
+- Migración: `ALTER TABLE public.proveedores ALTER COLUMN categoria DROP NOT NULL;` (subtipo ya es nullable). No se borran datos.
 
-- **Categoría contable** (nombre, no UUID)
-- **RFC proveedor** y **UUID fiscal (CFDI)**
-- **Subtotal, IVA, Retenciones, Total** desglosados
-- **Moneda y TC USD** (cuando aplique)
-- **Días de crédito** y **embarque vinculado** (si existe)
-- **Notas** (si existen, en bloque colapsable)
+### 2. Factura de proveedor — categoría contable **obligatoria**
 
-### Cambios técnicos
+- `FacturaProveedorFormFields.tsx`: marcar el select de Categoría como requerido (asterisco + `aria-required`) y subir su prioridad visual (junto a Proveedor / Folio).
+- `useNuevaFacturaProveedorForm.helpers.ts` y `useEditarFacturaProveedorForm.ts`: agregar validación Zod `categoria_presupuesto_id: z.string().uuid({ message: "Selecciona una categoría contable" })`. Bloquea submit en alta y edición.
+- Migración: `ALTER TABLE public.proveedor_facturas ALTER COLUMN categoria_presupuesto_id SET NOT NULL;` precedido de un backfill defensivo a la categoría "Sin categoría" (creada por organización si no existe) para evitar romper datos legados.
 
-1. `src/features/cxp/services/proveedorFacturas.helpers.ts`
-   - Extender `PROVEEDOR_FACTURAS_SELECT` para incluir: `subtotal, iva, retenciones, rfc_proveedor, uuid_fiscal, dias_credito, notas, presupuesto_categorias!categoria_presupuesto_id(nombre)`.
-   - Extender `Joined` y `mapJoinedRow` con esos campos + `categoria_nombre`.
+### 3. CxP — filtro por categoría contable
 
-2. `src/features/cxp/services/proveedorFacturas.ts`
-   - Agregar a la interface `FacturaCxP`: `subtotal, iva, retenciones, rfc_proveedor, uuid_fiscal, dias_credito, notas, categoria_nombre`.
+- `CxpFiltros.tsx` / `CxpFiltrosSheetFields.tsx`: nuevo select con la lista de `presupuesto_categorias` de la organización + opción "Todas".
+- `useCxpPageState.ts` / `useFacturasCxP.ts` / `proveedorFacturas.helpers.ts`: agregar `categoriaId?: string` a `FetchCxPFiltros` y aplicar `eq('categoria_presupuesto_id', ...)` en la query del servicio.
+- `InfoFacturaSection.tsx` ya muestra la categoría; sin cambios.
 
-3. `src/features/cxp/components/DialogDetallePagosProveedor.tsx`
-   - Nuevo bloque `InfoFacturaSection` (mismo archivo, ≤200 líneas; si crece, archivo aparte) entre los KPIs y el Historial: grid 2 cols con etiquetas pequeñas y valores en mono/tabular, montos formateados con `formatCurrency`. Notas en bloque pleno cuando existan.
+### 4. Constantes / limpieza
 
-4. Migración SQL — `CREATE OR REPLACE FUNCTION public.historial_proveedor_factura` con el cast `nc.motivo::text <> ''`. Resto idéntico.
+- `proveedorConstants.ts`: las constantes `CATEGORIAS_PROVEEDOR` y `SUBTIPOS_GASTO_OPERATIVO` quedan referenciadas sólo desde lugares que se eliminan. Mantener el archivo pero marcar export como `@deprecated` para no romper imports residuales detectados por `knip`.
 
-5. `src/constants/appVersion.ts` → `13.110.0`.
+### 5. Versionado y changelog
 
-6. `CHANGELOG.md` — entrada `[13.110.0]`:
-   - Fix: historial de factura de proveedor (cast enum motivo).
-   - Mejora: modal "Detalle de factura de proveedor" muestra categoría contable, RFC, UUID fiscal, desglose fiscal, días de crédito y notas.
+- `src/constants/appVersion.ts` → `13.111.0`.
+- `CHANGELOG.md` entrada `[13.111.0] - 2026-06-22`:
+  - Cambio: la categoría contable ya no se asigna al proveedor; se elige en cada factura (obligatoria).
+  - Mejora: filtro por categoría contable en CxP.
+  - BD: `proveedores.categoria` ahora nullable; `proveedor_facturas.categoria_presupuesto_id` ahora NOT NULL (con backfill).
 
-### Fuera de alcance
+## Fuera de alcance
 
-- No se tocan permisos, RLS, ni el flujo de aprobación.
-- No se agregan ediciones inline; la sección es sólo de lectura.
-- Tabla de pagos y sección de Notas de crédito quedan igual.
+- No se tocan permisos/RLS ni el flujo de aprobación.
+- No se modifican pagos, notas de crédito, ni historial.
+- No se borra ningún dato existente de proveedores.
