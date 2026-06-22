@@ -102,6 +102,7 @@ describe("cierre — etiquetas de reglas RPC (v13.90.8)", () => {
     pnl_margen_minimo: "Utilidad mínima alcanzada",
     comision_calculada: "Comisión devengada calculada",
     contenedores_datos_completos: "Datos de contenedores capturados (peso y volumen)",
+    contenedores_fechas_completas: "Fechas de descarga y devolución capturadas",
     venta_conceptos_facturados: "Todos los conceptos de venta facturados",
     costo_conceptos_con_factura: "Todos los costos tienen factura de proveedor recibida",
   };
@@ -114,6 +115,7 @@ describe("cierre — etiquetas de reglas RPC (v13.90.8)", () => {
     "pnl_margen_minimo",
     "comision_calculada",
     "contenedores_datos_completos",
+    "contenedores_fechas_completas",
     "venta_conceptos_facturados",
     "costo_conceptos_con_factura",
   ];
