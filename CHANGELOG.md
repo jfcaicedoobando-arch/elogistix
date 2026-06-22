@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.4] - 2026-06-22
+- **feat(embarques/cierre)**: el cierre de embarques pasa de finanzas a operaciones. Ahora pueden cerrar **coordinador logístico** y **gerente de operaciones** (más admin/admin_org/super_admin como respaldo). El equipo financiero (contador/tesorero/auxiliar/cobranza) ya **no** puede cerrar; ven el checklist informativo con mensaje aclarando que la acción es responsabilidad del coordinador logístico. El botón sigue deshabilitado mientras el checklist no esté 100% en verde. Cambio aplicado tanto en UI (`TabCierre`, nuevo derivado `canCerrarEmbarque` en `usePermissions`) como en la RPC `cerrar_embarque`.
+
 ## [13.106.3] - 2026-06-22
 - **fix(sidebar/rbac)**: la sección **Administración** ahora se agrega también cuando el rol usa un builder específico (`admin`/`admin_org`). Antes el hook regresaba antes de anexarla, por eso `/usuarios` podía abrir directo pero no aparecía en el menú lateral para `admin_org`.
 
