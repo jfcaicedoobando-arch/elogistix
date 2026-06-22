@@ -37,31 +37,12 @@ export function useEditarProveedorController(
   onSave: (id: string, data: TablesUpdate<"proveedores">) => void,
   onClose: () => void,
 ) {
-  // Campos string que deben renderse como "" (no null) para mantener
-  // los inputs/selects controlados.
-  const STRING_FIELDS = [
-    "nombre", "rfc", "contacto", "email", "telefono", "pais",
-    "cp", "direccion", "ciudad", "estado", "regimen_fiscal",
-    "banco", "clabe", "banco_pais", "swift_bic", "iban", "aba_routing",
-    "banco_direccion", "banco_intermediario", "banco_intermediario_swift",
-    "beneficiario", "referencia_pago",
-  ] as const satisfies ReadonlyArray<keyof Proveedor>;
-
-  const normalizar = (p: Proveedor): Proveedor => {
-    const overrides: Partial<Proveedor> = {};
-    for (const f of STRING_FIELDS) {
-      // SAFE-CAST: cada f está acotado a keys cuyo tipo en DB es `string | null`.
-      (overrides as Record<string, string>)[f] = (p[f] as string | null) ?? "";
-    }
-    return { ...p, ...overrides };
-  };
-
-  const [form, setForm] = useState<Proveedor>(() => normalizar(proveedor));
+  const [form, setForm] = useState<Proveedor>(() => normalizarProveedor(proveedor));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (open) {
-      setForm(normalizar(proveedor));
+      setForm(normalizarProveedor(proveedor));
       setTouched({});
     }
   }, [open, proveedor]);
