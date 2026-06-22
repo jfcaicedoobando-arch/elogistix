@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.0] - 2026-06-22
+- **feat(embarques/cierre)**: nueva regla en el checklist de cierre — para embarques marítimos FCL, todos los contenedores deben tener capturadas la fecha de descarga y la fecha de devolución. La regla `contenedores_fechas_completas` aparece en TabCierre con responsable "Operador" y enlaza al tab Resumen con los contenedores afectados. Es bloqueante: sin ambas fechas no se puede cerrar el embarque.
+
 ## [13.105.1] - 2026-06-22
 - **fix(proveedores)**: al crear un proveedor (nacional o internacional) ya no aparecen dos toasts de éxito apilados. Se eliminó el `notifySuccess` del `onSuccess` de la mutación `addProveedor`; cada call site (wizard normal y diálogo "Crear desde CFDI") sigue emitiendo su propio toast con el mensaje correcto al contexto.
 
