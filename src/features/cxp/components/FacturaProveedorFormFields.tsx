@@ -1,19 +1,23 @@
 /**
  * Campos del formulario de captura de factura de proveedor.
- * Layout en secciones titulares + panel de Total destacado.
- * Es un componente controlado: el dialog dueño maneja estado y submit.
+ * Inputs numéricos sin spinners (NumericInput), secciones con iconos
+ * y agrupación moneda+importes. El total vive en el header del dialog.
  */
+import { useState } from "react";
+import { Building2, CalendarDays, Coins, FileText, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { NumericInput } from "@/components/shared/NumericInput";
 import { ProveedorCombobox } from "./ProveedorCombobox";
-import { formatCurrency } from "@/lib/formatters";
 import type { Database } from "@/integrations/supabase/types";
 import {
-  FormSection, FieldError,
+  FormSection, FieldError, RequiredMark,
   type FacturaFormValues, type CategoriaPresupuestoLite,
 } from "./facturaFormPrimitives";
 
@@ -30,27 +34,35 @@ interface Props {
   errors?: Partial<Record<keyof FacturaFormValues, string>>;
 }
 
+const toNum = (s: string) => (s === "" ? 0 : Number(s) || 0);
+const fromNum = (n: number) => (n === 0 ? "" : String(n));
+
 export function FacturaProveedorFormFields({
-  values, onChange, onProveedor, categorias, total, errors = {},
+  values, onChange, onProveedor, categorias, errors = {},
 }: Props) {
+  const [openDetalles, setOpenDetalles] = useState(false);
   const showTc = values.moneda !== "MXN";
 
   return (
-    <div className="space-y-6">
-      <FormSection title="Proveedor y folio">
-        <div className="space-y-1">
-          <Label>Proveedor *</Label>
-          <ProveedorCombobox value={values.provId} onChange={onProveedor} className="w-full" />
-          <FieldError msg={errors.provId} />
-        </div>
-        <div className="space-y-1">
-          <Label>Folio del proveedor *</Label>
-          <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
-          <FieldError msg={errors.folio} />
+    <div className="space-y-5">
+      <FormSection title="Proveedor y folio" icon={<Building2 className="h-3.5 w-3.5" />}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Proveedor<RequiredMark /></Label>
+            <ProveedorCombobox value={values.provId} onChange={onProveedor} className="w-full" />
+            <FieldError msg={errors.provId} />
+          </div>
+          <div className="space-y-1">
+            <Label>Folio del proveedor<RequiredMark /></Label>
+            <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
+            <FieldError msg={errors.folio} />
+          </div>
         </div>
       </FormSection>
 
-      <FormSection title="Fechas y crédito">
+      <Separator />
+
+      <FormSection title="Fechas y crédito" icon={<CalendarDays className="h-3.5 w-3.5" />}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label>Emisión</Label>
@@ -58,8 +70,11 @@ export function FacturaProveedorFormFields({
           </div>
           <div className="space-y-1">
             <Label>Días crédito</Label>
-            <Input type="number" min={0} value={values.diasCredito}
-              onChange={(e) => onChange("diasCredito", Number(e.target.value))} />
+            <NumericInput
+              value={values.diasCredito}
+              onChange={(n) => onChange("diasCredito", n)}
+              aria-label="Días de crédito"
+            />
           </div>
           <div className="space-y-1">
             <Label>Vencimiento</Label>
@@ -68,8 +83,10 @@ export function FacturaProveedorFormFields({
         </div>
       </FormSection>
 
-      <FormSection title="Moneda">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Separator />
+
+      <FormSection title="Moneda e importes" icon={<Coins className="h-3.5 w-3.5" />}>
+        <div className={`grid grid-cols-1 gap-3 ${showTc ? "sm:grid-cols-2" : ""}`}>
           <div className="space-y-1">
             <Label>Moneda</Label>
             <Select value={values.moneda} onValueChange={(v) => onChange("moneda", v as Moneda)}>
@@ -83,62 +100,81 @@ export function FacturaProveedorFormFields({
           </div>
           {showTc && (
             <div className="space-y-1">
-              <Label>Tipo de cambio a MXN</Label>
-              <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-                value={values.tc} onChange={(e) => onChange("tc", e.target.value)} />
+              <Label>Tipo de cambio a MXN<RequiredMark /></Label>
+              <NumericInput
+                value={toNum(values.tc)}
+                onChange={(n) => onChange("tc", fromNum(n))}
+                decimals
+                aria-label="Tipo de cambio a MXN"
+              />
               <FieldError msg={errors.tc} />
             </div>
           )}
         </div>
-      </FormSection>
 
-      <FormSection title="Importes">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
-            <Label>Subtotal</Label>
-            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={values.subtotal} onChange={(e) => onChange("subtotal", e.target.value)} />
+            <Label>Subtotal<RequiredMark /></Label>
+            <NumericInput
+              value={toNum(values.subtotal)}
+              onChange={(n) => onChange("subtotal", fromNum(n))}
+              decimals
+              aria-label="Subtotal"
+            />
           </div>
           <div className="space-y-1">
             <Label>IVA</Label>
-            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={values.iva} onChange={(e) => onChange("iva", e.target.value)} />
+            <NumericInput
+              value={toNum(values.iva)}
+              onChange={(n) => onChange("iva", fromNum(n))}
+              decimals
+              aria-label="IVA"
+            />
           </div>
           <div className="space-y-1">
             <Label>Retenciones</Label>
-            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={values.retenciones} onChange={(e) => onChange("retenciones", e.target.value)} />
+            <NumericInput
+              value={toNum(values.retenciones)}
+              onChange={(n) => onChange("retenciones", fromNum(n))}
+              decimals
+              aria-label="Retenciones"
+            />
           </div>
-        </div>
-        <div className="mt-3 rounded-lg border bg-muted/40 px-4 py-3 flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Total a pagar</span>
-          <span className="text-xl font-semibold tabular-nums">{formatCurrency(total, values.moneda)}</span>
         </div>
         <FieldError msg={errors.subtotal} />
       </FormSection>
 
-      <FormSection title="Categorización (opcional)">
-        <div className="space-y-1">
-          <Label>Categoría presupuestal</Label>
-          <Select
-            value={values.categoriaId || "ninguna"}
-            onValueChange={(v) => onChange("categoriaId", v === "ninguna" ? "" : v)}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ninguna">Sin categoría</SelectItem>
-              {categorias.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label>Notas</Label>
-          <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2}
-            placeholder="Observaciones internas…" />
-        </div>
-      </FormSection>
+      <Separator />
+
+      <Collapsible open={openDetalles} onOpenChange={setOpenDetalles}>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
+          <FileText className="h-3.5 w-3.5 text-primary/70" />
+          Detalles adicionales (opcional)
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${openDetalles ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-3">
+          <div className="space-y-1">
+            <Label>Categoría presupuestal</Label>
+            <Select
+              value={values.categoriaId || "ninguna"}
+              onValueChange={(v) => onChange("categoriaId", v === "ninguna" ? "" : v)}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ninguna">Sin categoría</SelectItem>
+                {categorias.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Notas</Label>
+            <Textarea value={values.notas} onChange={(e) => onChange("notas", e.target.value)} rows={2}
+              placeholder="Observaciones internas…" />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.99.3] - 2026-06-22
+- **ux(cxp) rediseño del modal "Capturar factura de proveedor"**: se eliminaron las flechitas (spinners) molestas de Subtotal, IVA, Retenciones, Días crédito y Tipo de cambio reemplazando los `<Input type="number">` por el `NumericInput` compartido (auto-select al enfocar, sin scroll-to-change, alineación tabular). El Total ahora vive en el header del modal en grande y se mantiene visible, con un desglose Subtotal · IVA · Ret · Total en el footer sobre los botones. Las secciones llevan iconos (Building2, CalendarDays, Coins) y separadores sutiles; Categoría y Notas se agruparon en un bloque colapsable "Detalles adicionales" cerrado por defecto para reducir ruido visual. Errores inline con icono `AlertCircle` y asterisco rojo consistente en campos obligatorios. Sin cambios de lógica ni backend.
+
 ## [13.99.2] - 2026-06-22
 - **feat(cxp) sugerencia automática de embarque al capturar factura de proveedor**: antes, si operaciones no había pre-cargado los `conceptos_costo` en el embarque, el bloque "Vincular a costos de embarque" quedaba vacío y la factura se guardaba sin embarque, rompiendo la rentabilidad real vs cotizado. Ahora, al seleccionar un proveedor sin conceptos pendientes, se muestra un bloque nuevo `SugerirEmbarqueBlock` con:
   - **Sugerencias automáticas** vía nueva RPC `sugerir_embarques_para_proveedor` (SECURITY DEFINER, scoped por org). Rankea embarques activos por match directo de nombre en `agente/naviera/transportista/aerolinea` (score 100) y por tarifa aplicada → `costeo_agentes.proveedor_id` / `costeo_navieras_condiciones.proveedor_id` (score 80).
