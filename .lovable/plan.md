@@ -1,58 +1,83 @@
 ## Objetivo
 
-Modernizar el modal de captura de factura de proveedor para que se sienta más ágil y profesional, eliminando las flechitas (spinners) molestas en los campos numéricos y reorganizando la jerarquía visual. No tocamos la lógica de IVA: sigue siendo captura manual.
+Convertir la tabla "CxP — Por capturar" de una lista plana en una bandeja de trabajo: filtros útiles, búsqueda, ordenamiento, acción directa para capturar factura por fila y mejor jerarquía visual.
 
-## Cambios visibles para ti
+## Cambios visibles
 
-1. **Header sticky con Total en vivo**
-   - El total deja de estar "perdido" al final del bloque Importes. Aparece grande en la parte superior del modal, junto al título, y se queda visible al hacer scroll.
-   - Analogía: como el subtotal del carrito en Amazon que te sigue mientras navegas.
+1. **Toolbar arriba de la tabla**
+   - Buscador de texto (expediente, cliente) con debounce 250ms.
+   - Chips de filtro:
+     - **Estatus de captura**: Todos · Sin facturas · Con facturas parciales · Con facturas
+     - **Antigüedad última factura**: Todos · Sin captura · >7 días · >30 días
+   - Botón "Ordenar por" (expediente, antigüedad, monto, # facturas) ↑↓.
+   - Contador "N de M embarques" a la derecha.
 
-2. **Inputs numéricos sin flechitas**
-   - Subtotal, IVA, Retenciones, Días crédito y Tipo de cambio usarán el componente `NumericInput` que ya existe en el proyecto (`src/components/shared/NumericInput.tsx`).
-   - Beneficios: sin spinners, sin cambio accidental por scroll del mouse, auto-selección al hacer foco (escribes y se reemplaza el `0`), alineación a la derecha con tipografía tabular.
+2. **Tabla mejorada**
+   - Zebra-striping + densidad cómoda (h-10).
+   - Nueva columna **Avance** con `Progress` bar (facturas vs presupuestado en %, basado en `costos_presupuestados` y `monto_facturado_acum` que ya viene en `proveedor_facturas`).  
+     *Nota:* la RPC actual no expone `monto_facturado`. Lo agregamos al RPC (ver sección técnica).
+   - Badges contextuales:
+     - "Sin captura" (gris) si `facturas_capturadas = 0`
+     - "Parcial" (ámbar) si hay facturas pero `monto_facturado < costos_presupuestados`
+     - "Completo" (verde) si `monto_facturado >= costos_presupuestados`
+   - Columna "Última factura" muestra fecha + chip relativo ("hace 3 d", "hace 25 d" en ámbar si >7).
+   - Header sticky para que se mantenga visible al hacer scroll.
 
-3. **Reorganización de secciones**
-   - Se agrupa Moneda + Tipo de cambio dentro de la misma sección que Importes (van de la mano conceptualmente).
-   - Fechas y crédito en una sola fila más compacta.
-   - La sección de Categorización + Notas se mueve al final dentro de un bloque colapsable "Detalles adicionales" (cerrado por defecto) para reducir ruido.
+3. **Acción por fila: "Capturar factura"**
+   - Botón primario compacto al final de cada renglón (`<Button size="sm">`).
+   - Abre el modal `DialogNuevaFacturaProveedor` ya conocido, pero con el embarque **pre-seleccionado** (vía nueva prop `initialEmbarqueAdHoc`). El bloque `VincularEmbarqueSection` arranca con ese embarque listo.
+   - Acción secundaria "Ver embarque" sigue accesible vía el link del expediente (igual que hoy).
 
-4. **Jerarquía visual mejorada**
-   - Títulos de sección con icono pequeño (lucide-react) para escaneo rápido.
-   - Separadores sutiles entre secciones en lugar de sólo whitespace.
-   - Campos obligatorios marcados con asterisco rojo consistente.
-   - Errores inline con icono `AlertCircle` en vez de sólo texto rojo.
+4. **Estados vacíos y carga**
+   - Skeleton rows (5) en loading en vez de "Cargando…" centrado.
+   - `EmptyState` reutilizable con icono `Inbox`, título "Sin embarques pendientes de captura" y CTA "Ver todos los embarques".
+   - Empty filtrado: "Ningún embarque coincide con los filtros" + botón "Limpiar filtros".
 
-5. **Footer con resumen de desglose**
-   - Junto a los botones Cancelar/Guardar, una mini-tabla pegada arriba muestra: Subtotal · IVA · Ret · **Total**, todo con `tabular-nums` para que los números alineen perfectamente.
+5. **Cards superiores afinadas**
+   - Mantener las 3 cards pero alinear tipografía, agregar icono e indicar moneda MXN explícitamente.
 
 ## Fuera de alcance
 
-- Auto-cálculo de IVA (tú confirmaste: sin auto-IVA).
-- Cambios al flujo de carga CFDI (`CargaCfdiSection`).
-- Cambios a `VincularEmbarqueSection` (ya se rediseñó en la versión anterior).
-- Cambios a backend, validaciones de negocio, o estructura de `useNuevaFacturaProveedorForm`.
+- Paginación (con `LIMIT 500` actual y filtros locales basta; lo dejamos para una iteración futura).
+- Exportar a CSV.
+- Nuevas columnas tipo ruta/ETA/proveedores pendientes (rechazado: "redesign completo" no fue la opción elegida).
+- Cambios al modal de captura más allá de aceptar el embarque inicial.
 
 ## Detalles técnicos
 
-**Archivos a editar:**
-- `src/features/cxp/components/FacturaProveedorFormFields.tsx` — reemplazar `<Input type="number">` por `NumericInput`, reorganizar secciones, agregar iconos a títulos.
-- `src/features/cxp/components/DialogNuevaFacturaProveedor.tsx` — header sticky con total, footer con desglose, hacer la sección "Detalles adicionales" colapsable con `<Collapsible>` de shadcn.
-- `src/features/cxp/components/facturaFormPrimitives.tsx` — `FormSection` acepta `icon` opcional y prop `divider` para separador.
+**Backend (nueva migración):**
+- Actualizar RPC `cxp_por_capturar` para devolver además:
+  - `monto_facturado` numeric — suma de `proveedor_facturas.total` (no canceladas) del embarque.
+  - `dias_desde_ultima_factura` integer.
+- Mantener `SECURITY INVOKER` y `GRANT EXECUTE ... TO authenticated`.
+- Migración nombrada con timestamp + uuid (formato del proyecto).
 
-**Archivos a crear:**
-- Ninguno. Reutilizamos `NumericInput`, `Collapsible`, `Separator` ya existentes.
+**Tipos:**
+- Extender `CxpPorCapturarRow` en `src/features/bandejas/services/bandejas.ts`.
+- Regenerar `supabase/types.ts` (la edición manual del file está prohibida en general, pero al cambiar el RETURNS del RPC sí se actualiza automáticamente).
 
-**Consideración con `NumericInput`:**
-- Hoy los importes en `FacturaFormValues` se almacenan como `string` (subtotal, iva, retenciones, tc). `NumericInput` trabaja con `number`. Adaptación: wrapper local en el componente que convierte `string ↔ number` sin tocar el hook ni los helpers (`buildPayload`, `calcularTotal` ya hacen `Number(values.subtotal)`).
-- Para `diasCredito` ya es `number`, encaja directo.
-
-**Versión y changelog:**
-- Bump `APP_VERSION` a `13.99.3` en `src/constants/appVersion.ts`.
-- Agregar entrada `## [13.99.3] - 2026-06-22` en `CHANGELOG.md` raíz con: "Rediseño del modal de captura de factura de proveedor: inputs numéricos sin spinners, total sticky, mejor jerarquía visual y detalles colapsables."
-
-**Sin tests nuevos:** el cambio es puramente presentacional; no se altera lógica ni helpers. Los tests existentes de `useNuevaFacturaProveedorForm` siguen aplicando.
+**Frontend:**
+- `src/features/bandejas/routes/CxpPorCapturar.tsx`: reescritura para usar nueva toolbar, ordenamiento y acción.
+- `src/features/bandejas/components/CxpPorCapturarToolbar.tsx` (nuevo) — buscador, chips, sort.
+- `src/features/bandejas/components/CxpPorCapturarRow.tsx` (nuevo) — renglón con badge, progress y botón.
+- `src/features/bandejas/hooks/useCxpPorCapturarFilters.ts` (nuevo) — estado local: query, estatus, antigüedad, sort. Memoiza el resultado filtrado.
+- `src/features/cxp/components/DialogNuevaFacturaProveedor.tsx`: nueva prop opcional `initialEmbarqueAdHoc?: EmbarqueSeleccionado` que se pasa al hook.
+- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts`: aceptar `initialEmbarqueAdHoc` y semillar el estado en el primer render.
 
 **Power of 10:**
-- `FacturaProveedorFormFields.tsx` se mantiene <200 líneas (hoy 144).
-- `DialogNuevaFacturaProveedor.tsx` se mantiene <200 líneas (hoy ~90).
+- `CxpPorCapturar.tsx` queda <200 líneas al delegar toolbar/row a componentes.
+- Cada componente nuevo es focalizado (<150 líneas).
+
+**Tests:**
+- Nuevo test puro para `useCxpPorCapturarFilters` (filtros y ordenamiento) en `__tests__/`.
+- No test visual de la tabla (presentacional).
+
+**Changelog + APP_VERSION:**
+- Bump a `13.99.4`.
+- Entrada en `CHANGELOG.md` raíz describiendo toolbar, filtros, ordenamiento, columna Avance, acción "Capturar factura" pre-seleccionando embarque, y campo nuevo `monto_facturado` en la RPC.
+
+## ASCII de la fila final
+
+```text
+[Expediente] [Cliente]  [Avance ▓▓▓░░ 60%]  [Costo $]  [Facturas]  [Última fact.]  [⟶ Capturar]
+```
