@@ -50,7 +50,9 @@ function detectarCambioSensible(
   payload: ActualizarFacturaPayload,
 ): boolean {
   return CAMPOS_SENSIBLES.some((k) => {
+    // SAFE-CAST: lectura indexada por key tipada de objetos planos.
     const a = (actual as unknown as Record<string, unknown>)[k];
+    // SAFE-CAST: lectura indexada por key tipada de objetos planos.
     const b = (payload as unknown as Record<string, unknown>)[k];
     if (typeof a === "number" || typeof b === "number") return Number(a) !== Number(b);
     return a !== b;
