@@ -6063,6 +6063,7 @@ export type Database = {
           vigente: number
         }[]
       }
+      cxp_pendientes_aprobacion_count: { Args: never; Returns: number }
       cxp_por_capturar: {
         Args: never
         Returns: {
