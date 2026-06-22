@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters";
 
 interface ProveedorOption { id: string; nombre: string }
+interface CategoriaOption { id: string; nombre: string }
 
 export interface CxpFiltrosChipsProps {
   estatus: string;
@@ -18,11 +19,14 @@ export interface CxpFiltrosChipsProps {
   onOrigenChange: (v: string) => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
+  categoriaPresupuestoId: string;
+  onCategoriaPresupuestoChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
   onFechaHastaChange: (v: string) => void;
   proveedores: ProveedorOption[];
+  categorias: CategoriaOption[];
   onClearAll: () => void;
 }
 
@@ -54,6 +58,13 @@ export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
     chips.push({
       key: "proveedor", label: "Proveedor", value: prov?.nombre ?? "—",
       onRemove: () => p.onProveedorChange("todos"),
+    });
+  }
+  if (p.categoriaPresupuestoId && p.categoriaPresupuestoId !== "todas") {
+    const cat = p.categorias.find((x) => x.id === p.categoriaPresupuestoId);
+    chips.push({
+      key: "categoria", label: "Categoría", value: cat?.nombre ?? "—",
+      onRemove: () => p.onCategoriaPresupuestoChange("todas"),
     });
   }
   if (p.fechaDesde) {
