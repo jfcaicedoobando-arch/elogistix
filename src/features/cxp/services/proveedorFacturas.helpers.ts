@@ -77,6 +77,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     tipo_cambio_usd: Number(f.tipo_cambio_usd),
     estado_aprobacion: f.estado_aprobacion,
     motivo_rechazo: f.motivo_rechazo,
+    categoria_presupuesto_id: f.categoria_presupuesto_id,
   };
 }
 
