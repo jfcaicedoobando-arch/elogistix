@@ -26,6 +26,7 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { BotonesAprobacionFactura } from "./BotonesAprobacionFactura";
 import { HistorialFacturaSection } from "./HistorialFacturaSection";
+import { InfoFacturaSection } from "./InfoFacturaSection";
 import { NotasCreditoSection } from "./NotasCreditoSection";
 import { usePermissions } from "@/hooks/shared";
 
@@ -136,6 +137,7 @@ export function DialogDetallePagosProveedor({
                 />
                 <Kpi label="# Pagos" value={String(pagos.length)} />
               </div>
+              <InfoFacturaSection factura={f} />
               <HistorialFacturaSection facturaId={f.id} />
             </>
           )}
