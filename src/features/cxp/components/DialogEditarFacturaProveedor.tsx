@@ -80,12 +80,6 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
 
           {!ctl.isLoadingRow && v && factura && (
             <>
-              {/* Proveedor read-only */}
-              <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs">
-                <div className="font-semibold text-muted-foreground uppercase tracking-wide">Proveedor (no editable)</div>
-                <div className="mt-0.5 text-sm font-medium text-foreground">{factura.proveedor_nombre}</div>
-              </div>
-
               {tienePagos && (
                 <div className="flex gap-2 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-warning">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -112,6 +106,8 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
                 categorias={cats.data ?? []}
                 total={ctl.total}
                 errors={ctl.errors}
+                proveedorReadOnly
+                proveedorNombre={factura.proveedor_nombre}
               />
             </>
           )}

@@ -32,6 +32,9 @@ interface Props {
   categorias: CategoriaPresupuestoLite[];
   total: number;
   errors?: Partial<Record<keyof FacturaFormValues, string>>;
+  /** Modo edición: oculta el combobox y muestra el proveedor como read-only. */
+  proveedorReadOnly?: boolean;
+  proveedorNombre?: string;
 }
 
 const toNum = (s: string) => (s === "" ? 0 : Number(s) || 0);
@@ -39,25 +42,47 @@ const fromNum = (n: number) => (n === 0 ? "" : String(n));
 
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
+  proveedorReadOnly = false, proveedorNombre,
 }: Props) {
   const [openDetalles, setOpenDetalles] = useState(false);
   const showTc = values.moneda !== "MXN";
 
   return (
     <div className="space-y-5">
-      <FormSection title="Proveedor y folio" icon={<Building2 className="h-3.5 w-3.5" />}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Proveedor<RequiredMark /></Label>
-            <ProveedorCombobox value={values.provId} onChange={onProveedor} className="w-full" />
-            <FieldError msg={errors.provId} />
+      <FormSection
+        title={proveedorReadOnly ? "Folio del proveedor" : "Proveedor y folio"}
+        icon={<Building2 className="h-3.5 w-3.5" />}
+      >
+        {proveedorReadOnly ? (
+          <div className="space-y-3">
+            <div className="rounded-md border bg-muted/40 px-3 py-2">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Proveedor (no editable)
+              </div>
+              <div className="mt-0.5 text-sm font-medium text-foreground truncate">
+                {proveedorNombre ?? "—"}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Folio del proveedor<RequiredMark /></Label>
+              <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
+              <FieldError msg={errors.folio} />
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label>Folio del proveedor<RequiredMark /></Label>
-            <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
-            <FieldError msg={errors.folio} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Proveedor<RequiredMark /></Label>
+              <ProveedorCombobox value={values.provId} onChange={onProveedor} className="w-full" />
+              <FieldError msg={errors.provId} />
+            </div>
+            <div className="space-y-1">
+              <Label>Folio del proveedor<RequiredMark /></Label>
+              <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
+              <FieldError msg={errors.folio} />
+            </div>
           </div>
-        </div>
+        )}
       </FormSection>
 
       <Separator />
