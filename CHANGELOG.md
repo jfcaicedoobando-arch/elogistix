@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.0] - 2026-06-22
+- **fix(red)**: la subida de **CSF (PDF)** y de **CFDI (XML)** ahora resiste cortes de red transitorios. Antes, si el WiFi parpadeaba a mitad del upload, el usuario veía `Failed to fetch` y tenía que volver a seleccionar el archivo. Ahora se reintenta automáticamente hasta 2 veces (con pausas de 1s y 3s) y se aplica un timeout de 60s por intento. Sólo se reintenta en errores transitorios (caída de red, timeouts, 5xx/408/429); errores de validación (4xx) se reportan al primer intento. Analogía: como cuando se corta una llamada y el teléfono vuelve a marcar solo 1-2 veces antes de avisarte.
+- **chore**: nuevo helper `src/lib/net/fetchWithRetry.ts` con tests unitarios para reuso en futuros endpoints.
+
 ## [13.113.1] - 2026-06-22
 - **fix(embarques)**: la sección **Demoras automáticas** dejaba caer el detalle del embarque con `Cannot read properties of undefined (reading 'toString')` cuando la RPC devolvía un desglose sin `dias_en_puerto / dias_libres / dias_excedidos` (típicamente cuando faltan eventos parciales en el timeline). Ahora se usan `?? 0` antes de convertir a texto. Analogía: antes el componente asumía que el plato siempre traía cubiertos; si llegaba sin tenedor, todo se caía. Ahora si falta el tenedor, asume 0 y sigue sirviendo.
 

@@ -1,64 +1,68 @@
-# Completar datos fiscales del cliente para CFDI 4.0
+## Objetivo
 
-## Problema
+Hacer que la subida de CSF (PDF) y de CFDI (XML) sea resistente a fallos de red transitorios (WiFi inestable, proxy corporativo). Hoy, si la conexión se cae a mitad del request, el usuario ve `TypeError: Failed to fetch` y tiene que reintentar manualmente.
 
-La tabla `clientes` ya tiene las columnas `regimen_fiscal` y `uso_cfdi_default`, pero el wizard de alta y el diálogo de edición no las capturan. Resultado: cada factura nueva pide capturar régimen y uso CFDI a mano porque vienen vacíos del cliente.
+## Analogía
 
-Además, `parse-csf` ya devuelve `regimen_fiscal` de la Constancia de Situación Fiscal, pero el controller lo descarta.
-
-## Alcance
-
-Solo clientes nacionales (mexicanos). Captura mínima para que el módulo de timbrado deje de bloquearse.
+Como cuando llamas por teléfono y se corta la señal: en vez de hacerte marcar tú otra vez, el teléfono vuelve a marcar solo 1–2 veces, espera un poquito entre intentos, y si después de 60 segundos sigue sin contestar, te avisa.
 
 ## Cambios
 
-### 1. Wizard "Nuevo Cliente" (paso 1)
+### 1. Nuevo helper compartido: `src/lib/net/fetchWithRetry.ts`
+Función `fetchWithRetry(url, init, opts)` que:
+- Aplica `AbortController` con timeout configurable (default 60s).
+- Reintenta hasta 2 veces (3 intentos totales) sólo si el error es `TypeError: Failed to fetch`, `AbortError` por timeout, o respuesta HTTP 5xx/408/429.
+- Backoff: 1s, luego 3s.
+- NO reintenta en 4xx (errores de validación del servidor) ni si el body ya se consumió.
+- NO reintenta uploads con `FormData` que contengan un `File` ya leído… en realidad sí podemos reintentar porque el `File` es re-leíble desde disco; sólo armamos el `FormData` dentro del closure de cada intento.
 
-Archivo: `src/features/cliente/hooks/useNuevoClienteController.ts` y el componente del paso 1.
+### 2. `src/features/cliente/services/csf/index.ts`
+Reemplazar el `fetch` directo por `fetchWithRetry`. El `FormData` se construye dentro del callback de reintento para evitar consumir el stream del PDF en el primer intento fallido.
 
-- Agregar al estado `EMPTY_CLIENTE` los campos `regimen_fiscal: ""` y `uso_cfdi_default: ""`.
-- En `handleCsfUpload`, mapear `datos.regimen_fiscal` al form (ya viene de la edge function).
-- En el paso 1 de la UI, agregar dos `Select`:
-  - **Régimen fiscal SAT** — usando el catálogo `src/constants/regimenFiscalSAT.ts`.
-  - **Uso CFDI por defecto** — usando los usos vigentes en `src/constants/catalogosSAT.ts` (G03, P01, S01, etc.).
-- Validación: para `isStep1Valid` agregar `regimen_fiscal` como obligatorio (uso CFDI puede quedar opcional con `G03` por defecto, a confirmar abajo).
+### 3. `src/features/cxp/services/parseCfdi.ts`
+Mismo cambio en `callEdgeFunction`. Mantener los breadcrumbs de Sentry existentes y agregar uno extra por reintento (`parse_cfdi_xml.retry` con `attempt` y `reason`).
 
-### 2. Diálogo "Editar Cliente"
+### 4. Tests
+- `src/lib/net/__tests__/fetchWithRetry.test.ts`: cubre éxito al 1er intento, éxito tras retry, falla definitiva tras agotar intentos, timeout, no-reintento en 4xx.
+- Actualizar `parseCfdi.test.ts` y `csf/__tests__/index.test.ts` para confirmar que siguen pasando (mismo contrato externo).
 
-Archivo: `src/features/cliente/components/DialogEditarCliente.tsx` y su tipo `ClienteData` en `useClienteDetalleController.types.ts`.
+### 5. Versionado y changelog
+- `APP_VERSION` → `13.114.0`.
+- Entrada en `CHANGELOG.md` describiendo la mejora de resiliencia.
 
-- Agregar los mismos dos selects.
-- Permitir corregir clientes existentes que tengan estos campos vacíos.
+## Detalles técnicos
 
-### 3. Servicio de creación / actualización
+```ts
+// src/lib/net/fetchWithRetry.ts (firma)
+export interface RetryOptions {
+  timeoutMs?: number;        // default 60_000
+  maxAttempts?: number;      // default 3
+  backoffMs?: number[];      // default [1000, 3000]
+  buildInit?: () => RequestInit; // para FormData fresca por intento
+}
+export async function fetchWithRetry(
+  url: string,
+  initOrBuilder: RequestInit | (() => RequestInit),
+  opts?: RetryOptions,
+): Promise<Response>;
+```
 
-Archivo: `src/features/cliente/services/crud.ts`.
+Criterio de reintento:
+```ts
+const isTransient =
+  err?.name === "TypeError" && /failed to fetch/i.test(err.message)
+  || err?.name === "AbortError"
+  || (res && [408, 429, 500, 502, 503, 504].includes(res.status));
+```
 
-- Asegurar que `regimen_fiscal` y `uso_cfdi_default` viajen en el `insert` y `update`.
-- Confirmar que `clienteInsertSchema` / `clienteUpdateSchema` aceptan ambos campos (revisar `src/lib/validation/mutationSchemas.ts`).
+## Lo que NO se toca
 
-### 4. Importación CSV de clientes
+- Edge functions `parse-csf` y `parse-cfdi-xml` (backend ya está sano).
+- UI de los componentes (`CargaCfdiSection`, wizards de cliente/proveedor): siguen mostrando el toast de error existente si los 3 intentos fallan.
+- Otros llamados a `fetch` en el proyecto (fuera de alcance).
 
-Archivo: `src/lib/csv/importSchemaCliente.ts`.
+## Validación
 
-- Agregar columnas opcionales `regimen_fiscal` y `uso_cfdi_default` a `CLIENTE_TEMPLATE_HEADERS` y al schema Zod.
-
-### 5. Tests
-
-- Actualizar `useNuevoClienteController.test.tsx` para cubrir el caso de CSF con régimen y el caso manual.
-
-### 6. Changelog y versión
-
-- `APP_VERSION` → `13.113.0`.
-- Entrada en `CHANGELOG.md` describiendo la captura obligatoria de régimen fiscal y opcional de uso CFDI.
-
-## Fuera de alcance
-
-- Forma de pago / método de pago SAT (se capturan por factura, no por cliente).
-- Migración masiva para llenar clientes históricos (se irán completando al editarlos o al timbrar).
-- Clientes extranjeros (no aplican RFC/régimen SAT).
-
-## Preguntas antes de implementar
-
-1. ¿El **uso CFDI** debe ser obligatorio en el alta o lo dejamos opcional con `G03 – Gastos en general` por defecto? G03
-2. Para los **clientes existentes** sin régimen, ¿quieres que aparezca una alerta visible en el detalle del cliente y/o un badge en el listado, o basta con que el módulo de facturación lo siga pidiendo al momento de timbrar? manejamos algo visible
+- Tests unitarios del helper y de los servicios afectados pasan.
+- Build limpio.
+- Manual: simular red caída con DevTools throttling "Offline" y verificar que se vean 2 reintentos en consola antes del error final.
