@@ -1,41 +1,59 @@
-## Diagnóstico real (confirmado en BD)
+## Objetivo
 
-La factura sigue en `pendiente` aunque el toast verde aparezca porque la RPC `public.aprobar_factura_proveedor`:
+Sección **"Historial"** plegable dentro del dialog de detalle de factura (debajo de los KPIs) que muestre, como línea de tiempo unificada:
 
-1. Ejecuta correctamente el `UPDATE proveedor_facturas SET estado_aprobacion='aprobada' ...`
-2. Luego intenta insertar en `public.bitacora_actividad` usando columnas que **no existen** en esa tabla:
-   - RPC escribe: `user_id, accion, entidad, entidad_id, descripcion, metadata`
-   - Columnas reales: `usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles` (y `usuario_email`/`modulo` son `NOT NULL`)
-3. El INSERT lanza `undefined_column`. La RPC tiene `EXCEPTION WHEN undefined_table OR undefined_column THEN RETURN v_row` al final. En plpgsql, cualquier bloque con `EXCEPTION` está envuelto en una **subtransacción implícita**: al capturar la excepción, **se hace rollback de toda la subtransacción** — incluido el UPDATE.
-4. La función retorna `v_row` (la fila vieja, ya cargada en memoria antes del UPDATE) **sin error**, así que el cliente cree que aprobó y muestra toast verde.
+- Captura de la factura (fecha + quién — si está disponible).
+- Aprobación / Rechazo (fecha + email + motivo).
+- Pagos registrados (fecha + monto + método + email).
+- Notas de crédito aplicadas.
+- Eliminación / restauración (soft delete).
 
-Analogía: la RPC mete el cambio en un cajón, pero al cerrar el cajón se atora una bisagra (la bitácora) y el cajón rebota abierto — pero le dice al usuario "listo, guardado".
+## Por qué una vista en BD
 
-## Solución (1 migración)
+Los eventos viven en 4 tablas distintas (`proveedor_facturas`, `bitacora_actividad`, `pagos_proveedor`, `proveedor_notas_credito`) y los emails de los usuarios viven en `auth.users` — que el cliente no puede leer directamente. Una **función SQL `SECURITY DEFINER`** unifica todo y resuelve los emails una sola vez.
 
-Reescribir `public.aprobar_factura_proveedor` para que el INSERT en `bitacora_actividad` use los **nombres reales** de columnas:
+## Cambios
 
-```sql
-INSERT INTO public.bitacora_actividad
-  (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
-VALUES (
-  v_row.organization_id,
-  v_uid,
-  COALESCE((SELECT email FROM auth.users WHERE id = v_uid), ''),
-  CASE WHEN p_aprobar THEN 'aprobar_factura_proveedor' ELSE 'rechazar_factura_proveedor' END,
-  'cxp',
-  v_row.id,
-  'Factura ' || v_row.folio_proveedor || ' de ' || v_row.proveedor_nombre,
-  jsonb_build_object('motivo', p_motivo, 'total', v_row.total)
-);
-```
+### 1. Migración: `public.historial_proveedor_factura(p_id uuid)`
 
-Además, **eliminar el handler peligroso** `EXCEPTION WHEN undefined_table OR undefined_column THEN RETURN v_row`: silenciar undefined_column es exactamente lo que escondió este bug. Si la bitácora alguna vez se quita o cambia, queremos un error claro, no un éxito falso. Como compromiso, envolver SOLO la bitácora en su propio bloque `BEGIN ... EXCEPTION WHEN OTHERS THEN RAISE WARNING ...; END;` para que un fallo de bitácora nunca derribe la aprobación, pero quede registrado en logs.
+Función `SECURITY DEFINER` que retorna `TABLE (ts timestamptz, tipo text, descripcion text, actor_email text, monto numeric, moneda text, detalles jsonb)` y hace `UNION ALL` de:
 
-### Versionado
-- `APP_VERSION` → `13.103.4`
-- Entrada en `CHANGELOG.md`: "fix(cxp): `aprobar_factura_proveedor` ya persiste el cambio — la bitácora usaba columnas inexistentes y el handler `WHEN undefined_column` deshacía el UPDATE silenciosamente."
+- `proveedor_facturas.created_at` → tipo `creada`, actor desde `created_by` join `auth.users`.
+- `proveedor_facturas.aprobada_at` cuando `estado_aprobacion <> 'pendiente'` → tipo `aprobada` o `rechazada`.
+- `bitacora_actividad` con `entidad_id = p_id` y `modulo='cxp'` → tipo derivado de `accion` (cubre acciones futuras).
+- `pagos_proveedor` (no eliminados) → tipo `pago`, monto/moneda/método.
+- `proveedor_notas_credito` → tipo `nota_credito`.
+- `proveedor_facturas.deleted_at` cuando `IS NOT NULL` → tipo `eliminada`.
 
-### Fuera de alcance
-- Frontend: no cambia (ya invalida queries correctamente; el problema era 100% BD).
-- Toast: el verde era correcto desde la perspectiva del cliente; ahora también lo será desde la BD.
+**Seguridad**: la función primero verifica que el usuario pertenezca a la `organization_id` de la factura (`SELECT organization_id ... WHERE id=p_id` + `EXISTS organization_members`). Si no, `RAISE EXCEPTION`. `GRANT EXECUTE ... TO authenticated`. `REVOKE` a `anon`.
+
+Orden de retorno: `ORDER BY ts ASC`.
+
+### 2. Service & hook
+
+- `src/features/cxp/services/historialFactura.ts` — `fetchHistorialFactura(facturaId)` que invoca la RPC.
+- `src/features/cxp/hooks/useHistorialFactura.ts` — `useQuery` con key `["cxp","historial",facturaId]`. Invalidación al aprobar/rechazar/pagar (se añade en los hooks existentes).
+
+### 3. UI: `HistorialFacturaSection.tsx`
+
+- `<Collapsible>` (shadcn) con header "Historial" + contador de eventos + icono `History`.
+- Body: línea de tiempo vertical (reusa estilo de `BitacoraActividad`: borde izquierdo + dots por tipo de evento).
+- Cada fila: icono según `tipo`, `formatDate(ts)` relativo + absoluto en tooltip, descripción, `actor_email` (badge), y para pagos: `formatCurrency(monto, moneda)`.
+- Estado vacío: "Sin eventos registrados aún".
+
+Iconos por tipo: `FilePlus2` (creada), `Check` (aprobada), `X` (rechazada), `Banknote` (pago), `FileMinus2` (nota_credito), `Trash2` (eliminada).
+
+### 4. Insertar en el dialog
+
+En `DialogDetallePagosProveedor.tsx`, debajo del grid de KPIs (línea 65-74), montar `<HistorialFacturaSection facturaId={factura.id} />` envuelto en su propio `border-b` para separación visual. Colapsado por defecto para no agrandar el dialog en vista normal.
+
+### 5. Versionado
+
+- `APP_VERSION` → `13.104.0` (minor: nueva feature).
+- Entrada en `CHANGELOG.md`.
+
+## Fuera de alcance
+
+- Filtros / búsqueda dentro del historial (volumen esperado <50 por factura).
+- Exportar historial a PDF.
+- Edición o reversión de eventos desde la línea de tiempo.

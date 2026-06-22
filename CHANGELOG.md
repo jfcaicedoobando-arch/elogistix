@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.104.0] - 2026-06-22
+- **feat(cxp)**: nueva sección "Historial" plegable en el dialog de detalle de factura de proveedor. Línea de tiempo unificada con captura, aprobación/rechazo (con motivo), pagos (monto + método + referencia), notas de crédito y eliminación. Emails de los actores resueltos en BD vía RPC `historial_proveedor_factura` (SECURITY DEFINER con check de membresía organizacional). Se invalida automáticamente al aprobar, pagar o aplicar notas.
+
 ## [13.103.4] - 2026-06-22
 - **fix(cxp/RPC)**: `aprobar_factura_proveedor` ahora persiste el cambio. El INSERT en `bitacora_actividad` usaba nombres de columnas inexistentes (`user_id`, `entidad`, `descripcion`, `metadata`) y el handler `EXCEPTION WHEN undefined_column` deshacía toda la subtransacción — incluyendo el UPDATE — pero retornaba éxito al cliente (toast verde, BD sin cambios). Se corrigen los nombres (`usuario_id`, `usuario_email`, `modulo`, `entidad_nombre`, `detalles`) y se aísla la bitácora en su propio bloque para que un fallo no derribe la aprobación.
 

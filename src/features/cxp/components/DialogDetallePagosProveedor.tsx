@@ -24,6 +24,7 @@ import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { BotonesAprobacionFactura } from "./BotonesAprobacionFactura";
+import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { NotasCreditoSection } from "./NotasCreditoSection";
 import { usePermissions } from "@/hooks/shared";
 
@@ -72,6 +73,7 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
                 />
                 <Kpi label="# Pagos" value={String(pagos.length)} />
               </div>
+              <HistorialFacturaSection facturaId={factura.id} />
             </>
           )}
 

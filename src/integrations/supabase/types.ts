@@ -6320,6 +6320,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      historial_proveedor_factura: {
+        Args: { p_id: string }
+        Returns: {
+          actor_email: string
+          descripcion: string
+          detalles: Json
+          moneda: string
+          monto: number
+          tipo: string
+          ts: string
+        }[]
+      }
       idempotency_claim: { Args: { _fn: string; _key: string }; Returns: Json }
       idempotency_store: {
         Args: { _key: string; _response: Json }
