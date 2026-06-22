@@ -12,6 +12,7 @@ import type { EstatusCxP } from "@/features/cxp/services";
 const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
 
 interface ProveedorOpt { id: string; nombre: string }
+interface CategoriaOpt { id: string; nombre: string }
 
 interface Props {
   includePrimary: boolean;
@@ -21,11 +22,14 @@ interface Props {
   onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
+  categoriaPresupuestoId: string;
+  onCategoriaPresupuestoChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
   onFechaHastaChange: (v: string) => void;
   proveedoresOpts: ProveedorOpt[];
+  categoriasOpts: CategoriaOpt[];
 }
 
 export function CxpFiltrosSheetFields(props: Props) {
