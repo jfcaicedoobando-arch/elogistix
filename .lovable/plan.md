@@ -1,23 +1,33 @@
-## Plan: corregir error Sentry `column "monto_total" does not exist`
+## Diagnóstico
 
-### Diagnóstico
+Solo falló el job **Lint** con 1 warning tratado como error:
 
-Las RPCs `embarque_admin_pendientes_resumen(uuid)` y `embarques_admin_pendientes_count()` consultan `SUM(monto_total) FROM conceptos_venta`, pero esa tabla tiene columna `total`, no `monto_total`. Cualquier vista que abre el resumen de pendientes admin (incluyendo `/inicio` desde el menú móvil que carga el embarque actual) revienta con el error.
+```
+src/features/cliente/components/clientesTableConfig.tsx:15
+warning: Fast refresh only works when a file only exports components.
+Use a new file to share constants or functions between components
+(react-refresh/only-export-components)
+```
 
-**Analogía**: es como pedir la "talla XXL" en una tienda donde sólo existe "XL" — el sistema responde "no tengo esa columna".
+El archivo exporta a la vez una constante (`clientesColumns`) y un componente (`ClienteMobileCard`), lo cual rompe HMR de React y dispara la regla. Tests, edge functions y coverage pasaron en verde.
 
-### Solución
+Analogía: es como tener en la misma caja el manual de instrucciones y el control remoto — la regla pide cajas separadas.
 
-Crear una nueva migración que **reemplaza ambas funciones** sustituyendo `SUM(monto_total)` por `SUM(total)` (3 ocurrencias). Mantengo el resto del cuerpo idéntico — sin tocar grants, lógica ni firmas.
+## Solución
 
-### Archivos
+Separar en dos archivos dentro de `src/features/cliente/components/`:
 
-- **Nuevo**: `supabase/migrations/<timestamp>_fix_conceptos_venta_total_column.sql` — recrea las 2 funciones con la columna correcta.
-- `src/constants/appVersion.ts` → `13.97.1` (patch).
-- `CHANGELOG.md` → entrada `fix(rpc) embarque_admin_pendientes_*: corrige referencia a columna inexistente`.
+1. **`clientesTableConfig.tsx`** (queda) → sólo `ClienteRow` (type) y `clientesColumns` (const).
+2. **`ClienteMobileCard.tsx`** (nuevo) → sólo el componente.
 
-### Validación
+Actualizar el import en `src/features/cliente/routes/Clientes.tsx` para tomar `ClienteMobileCard` del nuevo archivo (el resto desde `clientesTableConfig`).
 
-- `supabase--migration` aplica el cambio.
-- Smoke test con `supabase--read_query` invocando ambas RPCs sobre un embarque real para confirmar que ya no truenan.
-- El error en Sentry quedará resuelto en el próximo deploy; opcionalmente puedo cerrarlo después con `update_issue`.
+## Versionado
+
+- `APP_VERSION` → `13.97.3`
+- Entrada nueva en `CHANGELOG.md`: `fix(cliente): separa ClienteMobileCard para satisfacer react-refresh/only-export-components`
+
+## Validación
+
+- `bun run lint -- --max-warnings 0` debe pasar.
+- Sin cambios funcionales: el listado de clientes y la tarjeta móvil renderizan igual.
