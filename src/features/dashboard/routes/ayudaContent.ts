@@ -55,12 +55,12 @@ export const MODULOS: AyudaModulo[] = [
   {
     id: "facturacion",
     titulo: "Facturación",
-    resumen: "Proformas, facturas y liquidación de gastos.",
+    resumen: "Proformas, facturas y liquidación de costos.",
     faqs: [
       { pregunta: "¿Diferencia entre proforma y factura?", respuesta: "La proforma es un borrador que envías al cliente para que apruebe los conceptos. La factura es el comprobante fiscal definitivo. Sólo se factura desde una proforma marcada como 'Aprobada por cliente'." },
       { pregunta: "¿Cómo consolido proformas?", respuesta: "Selecciona varias proformas del mismo cliente en la pestaña Pendientes → botón 'Consolidar'. Se genera una sola factura con todos los conceptos." },
       { pregunta: "¿Cómo descargo el layout contable?", respuesta: "Facturación → tab Facturas → botón 'Layout contable'. Descarga un CSV con RFC, subtotal, IVA, uso CFDI y todos los campos que tu contador necesita para timbrar." },
-      { pregunta: "¿Qué hago con la pestaña Liquidación de gastos?", respuesta: "Lista de conceptos de costo (cobros del proveedor) sin pagar. Marca 'Pagado' cuando emitiste la transferencia, opcionalmente con referencia bancaria." },
+      { pregunta: "¿Qué hago con la pestaña Liquidación de costos?", respuesta: "Lista de costos directos del embarque (cobros del proveedor) sin pagar. Marca 'Pagado' cuando emitiste la transferencia, opcionalmente con referencia bancaria." },
       { pregunta: "¿Qué es el 'Hueco de facturación'?", respuesta: "Embarques cuyo ETD pasó hace más de 5 días sin factura. Indica que el proveedor ya nos cobró pero el cliente no — riesgo de capital de trabajo." },
     ],
   },

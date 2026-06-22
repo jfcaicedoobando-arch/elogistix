@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.106.9] - 2026-06-22
+- **chore(ui)**: renombrado contable de etiquetas: "Conceptos de Costo" → "Costos directos del embarque" (wizard, tarjetas, conciliación); "Gastos operativos" → "Gastos de administración" (tab Proveedores, detalle, tooltip dashboard); "Liquidación de gastos" → "Liquidación de costos" (Ayuda). Sólo copy en UI; sin cambios en BD, enums ni lógica.
+
 ## [13.106.8] - 2026-06-22
 - **feat(cxp)**: nuevo filtro **"Categoría de presupuesto"** en la lista de Cuentas por Pagar (`/compras`). Permite al contador aislar facturas de gastos administrativos internos (renta, nómina, papelería, servicios, etc.) cruzando con rango de emisión (p.ej. 01–30 de junio) para exportar/auditar gastos operativos del mes. El servicio `fetchFacturasCxP` acepta `categoria_presupuesto_id`, el estado de página lo persiste y los chips de filtros activos lo reflejan.
 

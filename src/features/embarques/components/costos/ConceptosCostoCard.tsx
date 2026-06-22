@@ -32,17 +32,17 @@ export function ConceptosCostoCard({ conceptosCosto, columns, irACargarCostos }:
     return conceptosCosto;
   }, [conceptosCosto, costoFocus]);
 
-  const emptyTitle = costoFocus ? "Sin coincidencias con el filtro" : "Sin conceptos de costo";
+  const emptyTitle = costoFocus ? "Sin coincidencias con el filtro" : "Sin costos directos del embarque";
   const emptyDescription = costoFocus
     ? "El filtro del checklist no encuentra costos pendientes; verifica si ya fueron atendidos."
     : (irACargarCostos
         ? "Haz clic en el ícono o en el botón para capturar los costos del embarque."
-        : "Aún no se han registrado conceptos de costo para este embarque.");
+        : "Aún no se han registrado costos directos para este embarque.");
 
   return (
     <Card ref={registerRef(costoFocus ?? "")} data-focus={costoFocus ?? undefined}>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm">Conceptos de Costo</CardTitle>
+        <CardTitle className="text-sm">Costos directos del embarque</CardTitle>
         {costoFocus && (
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline" className="border-primary text-primary">
