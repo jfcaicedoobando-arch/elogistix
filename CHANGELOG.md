@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.110.0] - 2026-06-22
+- **fix(cxp)**: el historial de la factura de proveedor fallaba con `invalid input value for enum motivo_nota_credito_proveedor` porque la RPC comparaba `nc.motivo <> ''` contra una columna de tipo enum. Se castea el motivo a texto (`nc.motivo::text`) en la RPC `historial_proveedor_factura`. Analogía: era como tratar de comparar manzanas (enum) con cadenas vacías; ahora primero las convertimos a etiqueta de texto.
+- **feat(cxp)**: el modal **Detalle de factura de proveedor** ahora muestra una sección "Información de la factura" con categoría contable (nombre, no UUID), RFC del proveedor, UUID fiscal (CFDI), desglose Subtotal / IVA / Retenciones, moneda con TC, días de crédito, embarque vinculado y notas. Sólo lectura; las ediciones siguen viviendo en el diálogo de edición.
+
 ## [13.109.0] - 2026-06-22
 - **refactor(cxp)**: la tabla de Cuentas por Pagar elimina la columna **Acciones**. Las acciones (Registrar pago, Editar factura, Eliminar factura) ahora viven dentro del modal de detalle, que se renombra a **"Detalle de factura de proveedor"**. Al elegir cualquier acción el modal se cierra y abre el diálogo correspondiente, evitando modales encimados. Reglas heredadas: Pagar se bloquea hasta que la factura esté aprobada y Eliminar se bloquea si tiene pagos registrados (con tooltips explicativos).
 
