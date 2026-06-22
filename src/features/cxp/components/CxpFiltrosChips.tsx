@@ -32,38 +32,69 @@ export interface CxpFiltrosChipsProps {
 
 interface ChipDef { key: string; label: string; value: string; onRemove: () => void }
 
-/**
- * Helper puro: construye la lista de chips a partir de los props.
- * Se extrajo del componente para mantener su complejidad ciclomática ≤ 16.
- */
-function buildChips(p: CxpFiltrosChipsProps): ChipDef[] {
-  const chips: ChipDef[] = [];
-  const push = (c: ChipDef) => chips.push(c);
+interface FilterRule {
+  key: string;
+  label: string;
+  isActive: (p: CxpFiltrosChipsProps) => boolean;
+  getValue: (p: CxpFiltrosChipsProps) => string;
+  reset: (p: CxpFiltrosChipsProps) => void;
+}
 
-  if (p.estatus && p.estatus !== "todos") {
-    push({ key: "estatus", label: "Estatus", value: p.estatus, onRemove: () => p.onEstatusChange("todos") });
-  }
-  if (p.moneda && p.moneda !== "todas") {
-    push({ key: "moneda", label: "Moneda", value: p.moneda, onRemove: () => p.onMonedaChange("todas") });
-  }
-  if (p.origen && p.origen !== "todos") {
-    push({ key: "origen", label: "Origen", value: p.origen, onRemove: () => p.onOrigenChange("todos") });
-  }
-  if (p.proveedorId && p.proveedorId !== "todos") {
-    const prov = p.proveedores.find((x) => x.id === p.proveedorId);
-    push({ key: "proveedor", label: "Proveedor", value: prov?.nombre ?? "—", onRemove: () => p.onProveedorChange("todos") });
-  }
-  if (p.categoriaPresupuestoId && p.categoriaPresupuestoId !== "todas") {
-    const cat = p.categorias.find((x) => x.id === p.categoriaPresupuestoId);
-    push({ key: "categoria", label: "Categoría", value: cat?.nombre ?? "—", onRemove: () => p.onCategoriaPresupuestoChange("todas") });
-  }
-  if (p.fechaDesde) {
-    push({ key: "fechaDesde", label: "Emisión desde", value: formatDate(p.fechaDesde), onRemove: () => p.onFechaDesdeChange("") });
-  }
-  if (p.fechaHasta) {
-    push({ key: "fechaHasta", label: "Emisión hasta", value: formatDate(p.fechaHasta), onRemove: () => p.onFechaHastaChange("") });
-  }
-  return chips;
+const FILTER_RULES: FilterRule[] = [
+  {
+    key: "estatus", label: "Estatus",
+    isActive: (p) => !!p.estatus && p.estatus !== "todos",
+    getValue: (p) => p.estatus,
+    reset: (p) => p.onEstatusChange("todos"),
+  },
+  {
+    key: "moneda", label: "Moneda",
+    isActive: (p) => !!p.moneda && p.moneda !== "todas",
+    getValue: (p) => p.moneda,
+    reset: (p) => p.onMonedaChange("todas"),
+  },
+  {
+    key: "origen", label: "Origen",
+    isActive: (p) => !!p.origen && p.origen !== "todos",
+    getValue: (p) => p.origen,
+    reset: (p) => p.onOrigenChange("todos"),
+  },
+  {
+    key: "proveedor", label: "Proveedor",
+    isActive: (p) => !!p.proveedorId && p.proveedorId !== "todos",
+    getValue: (p) => p.proveedores.find((x) => x.id === p.proveedorId)?.nombre ?? "—",
+    reset: (p) => p.onProveedorChange("todos"),
+  },
+  {
+    key: "categoria", label: "Categoría",
+    isActive: (p) => !!p.categoriaPresupuestoId && p.categoriaPresupuestoId !== "todas",
+    getValue: (p) => p.categorias.find((x) => x.id === p.categoriaPresupuestoId)?.nombre ?? "—",
+    reset: (p) => p.onCategoriaPresupuestoChange("todas"),
+  },
+  {
+    key: "fechaDesde", label: "Emisión desde",
+    isActive: (p) => !!p.fechaDesde,
+    getValue: (p) => formatDate(p.fechaDesde),
+    reset: (p) => p.onFechaDesdeChange(""),
+  },
+  {
+    key: "fechaHasta", label: "Emisión hasta",
+    isActive: (p) => !!p.fechaHasta,
+    getValue: (p) => formatDate(p.fechaHasta),
+    reset: (p) => p.onFechaHastaChange(""),
+  },
+];
+
+/** Helper puro data-driven: filtra reglas activas y arma los chips. */
+function buildChips(p: CxpFiltrosChipsProps): ChipDef[] {
+  return FILTER_RULES
+    .filter((r) => r.isActive(p))
+    .map((r) => ({
+      key: r.key,
+      label: r.label,
+      value: r.getValue(p),
+      onRemove: () => r.reset(p),
+    }));
 }
 
 export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
