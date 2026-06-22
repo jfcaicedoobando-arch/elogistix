@@ -146,13 +146,6 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
       handleSubmitError(e);
     }
   };
-      toast.success("Factura de proveedor capturada");
-      reset();
-      onDone();
-    } catch (e) {
-      handleSubmitError(e);
-    }
-  };
 
   return {
     values, errors, mode, setMode,
