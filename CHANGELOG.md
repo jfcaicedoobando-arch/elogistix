@@ -7,7 +7,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
 ## [13.110.0] - 2026-06-22
-- **fix(cxp)**: el historial de la factura de proveedor fallaba con `invalid input value for enum motivo_nota_credito_proveedor` porque la RPC comparaba `nc.motivo <> ''` contra una columna de tipo enum. Se castea el motivo a texto (`nc.motivo::text`) en la RPC `historial_proveedor_factura`. Analogía: era como tratar de comparar manzanas (enum) con cadenas vacías; ahora primero las convertimos a etiqueta de texto.
+- **fix(cxp)**: el historial de la factura de proveedor fallaba por dos motivos en la RPC `historial_proveedor_factura`: (1) comparaba `nc.motivo <> ''` contra una columna enum y (2) `ts` resultaba ambiguo entre la columna del CTE y el parámetro de retorno de la función. Se castea el motivo a texto y se renombran las columnas del CTE (`ev_ts`, `ev_tipo`…) para eliminar la ambigüedad. Analogía: era como pedirle al mesero "tráeme el plato" cuando hay dos platos en la mesa; ahora le decimos "tráeme **este** plato".
 - **feat(cxp)**: el modal **Detalle de factura de proveedor** ahora muestra una sección "Información de la factura" con categoría contable (nombre, no UUID), RFC del proveedor, UUID fiscal (CFDI), desglose Subtotal / IVA / Retenciones, moneda con TC, días de crédito, embarque vinculado y notas. Sólo lectura; las ediciones siguen viviendo en el diálogo de edición.
 
 ## [13.109.0] - 2026-06-22
