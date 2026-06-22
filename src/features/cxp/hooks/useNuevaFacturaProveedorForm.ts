@@ -63,6 +63,7 @@ export function useNuevaFacturaProveedorForm(onDone: () => void) {
     setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
     if (errors.provId) setErrors((e) => ({ ...e, provId: undefined }));
     setVinculos({});
+    setEmbarqueAdHoc(null);
   };
 
   const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
