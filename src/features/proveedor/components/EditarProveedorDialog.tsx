@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Enums, Tables, TablesUpdate } from "@/types/db";
 import {
-  TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
   SUBTIPOS_GASTO_OPERATIVO,
+  tiposProveedorPorOrigen,
 } from "@/constants/proveedorConstants";
 import { useEditarProveedorController } from "@/features/proveedor/hooks";
 import EditarProveedorGastoFiscalFields from "./EditarProveedorGastoFiscalFields";
