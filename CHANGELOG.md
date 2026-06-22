@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.103.4] - 2026-06-22
+- **fix(cxp/RPC)**: `aprobar_factura_proveedor` ahora persiste el cambio. El INSERT en `bitacora_actividad` usaba nombres de columnas inexistentes (`user_id`, `entidad`, `descripcion`, `metadata`) y el handler `EXCEPTION WHEN undefined_column` deshacía toda la subtransacción — incluyendo el UPDATE — pero retornaba éxito al cliente (toast verde, BD sin cambios). Se corrigen los nombres (`usuario_id`, `usuario_email`, `modulo`, `entidad_nombre`, `detalles`) y se aísla la bitácora en su propio bloque para que un fallo no derribe la aprobación.
+
 ## [13.103.3] - 2026-06-22
 - **fix(cxp)**: el dialog de detalle ahora deriva la factura desde la query refetched, por lo que el badge "Pendiente/Aprobada/Rechazada" y los saldos del header se actualizan en vivo tras aprobar, rechazar o pagar.
 - **ui(toaster)**: Sonner con `richColors` + `expand`, mejor jerarquía título/descripción y sombra refinada.
