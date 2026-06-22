@@ -16,8 +16,9 @@ import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hook
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
 import {
-  FacturaToolbar, FacturaResumen, PagosTable, computeFacturaFlags,
+  FacturaToolbar, FacturaResumen, PagosTable,
 } from "./DialogDetallePagosProveedor.sections";
+import { computeFacturaFlags } from "./DialogDetallePagosProveedor.flags";
 import { NotasCreditoSection } from "./NotasCreditoSection";
 import { usePermissions } from "@/hooks/shared";
 

@@ -14,6 +14,8 @@ import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { InfoFacturaSection } from "./InfoFacturaSection";
 import type { FacturaCxP } from "@/features/cxp/services";
 
+import type { FacturaFlags } from "./DialogDetallePagosProveedor.flags";
+
 interface PagoRow {
   id: string;
   fecha_pago: string;
@@ -23,22 +25,6 @@ interface PagoRow {
   moneda: string;
   tipo_cambio_usd?: number | string | null;
   diferencia_cambiaria_mxn?: number | string | null;
-}
-
-/** Bandera derivada para saber qué acciones puede tomar el usuario sobre la factura. */
-export interface FacturaFlags {
-  aprobada: boolean;
-  pagable: boolean;
-  puedeEliminar: boolean;
-}
-
-export function computeFacturaFlags(f: FacturaCxP | null, canEdit: boolean): FacturaFlags {
-  if (!f) return { aprobada: false, pagable: false, puedeEliminar: false };
-  return {
-    aprobada: f.estado_aprobacion === "aprobada",
-    pagable: canEdit && f.saldo > 0 && f.estado !== "Borrador",
-    puedeEliminar: canEdit && f.pagado <= 0,
-  };
 }
 
 interface ToolbarProps {
