@@ -47,11 +47,11 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
   const { data: log = [] } = useCierreLog(embarqueId);
   const cerrarMut = useCerrarEmbarque(embarqueId);
   const reabrirMut = useReabrirEmbarque(embarqueId);
-  const { canEditFinance, isAdmin, isSuperAdmin } = usePermissions();
+  const { canCerrarEmbarque, isAdmin, isSuperAdmin } = usePermissions();
 
   const estatusNormalizado = (estatus ?? "").toLowerCase();
   const listoParaCierre = ESTADOS_LISTOS_PARA_CIERRE.has(estatusNormalizado);
-  const puedeCerrar = (isAdmin || canEditFinance) && listoParaCierre;
+  const puedeCerrar = canCerrarEmbarque && listoParaCierre;
   const puedeReabrir = isSuperAdmin || isAdmin;
 
   const dlg = useCierreDialog();
