@@ -32,6 +32,20 @@ const guarded = (roles: AppRole[], element: ReactNode) => (
 
 const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
 
+/**
+ * Lectura financiera (CXP, tesorería, cartera, profit). Refleja `FINANCE_VIEWERS`
+ * de `usePermissions`: incluye gerentes (operaciones, visor, comercial) que
+ * supervisan sin ejecutar mutaciones. Las acciones de escritura siguen
+ * restringidas vía hooks de permisos a nivel componente.
+ */
+const FINANCE_READ_ROLES: AppRole[] = [
+  "admin", "super_admin", "admin_org",
+  "contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
+  "gerente_operaciones", "gerente_visor",
+];
+const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
+const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
+
 export const appRoutes = (
   <Route
     element={
