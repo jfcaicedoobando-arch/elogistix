@@ -60,6 +60,7 @@ export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
     costoMxnFromEur: r.costoMxnFromEur,
     ventaMxnNative: r.ventaMxnNative,
     costoMxnNative: r.costoMxnNative,
+    gastosOperativosMXN: r.gastosOperativosMXN,
   };
 }
 
