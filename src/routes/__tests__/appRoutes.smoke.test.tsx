@@ -77,7 +77,7 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/inicio", "/operaciones", "/embarques", "/embarques/nuevo",
     "/embarques/:id", "/embarques/:id/editar",
     "/facturacion", "/facturacion/:id", "/proformas/:id",
-    "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/compras",
+    "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/compras", "/compras/aging",
     "/facturacion/por-emitir", "/cartera",
     "/tesoreria", "/tesoreria/cuentas", "/tesoreria/conciliacion", "/tesoreria/flujo",
     "/comisiones",
@@ -109,6 +109,7 @@ describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
   const CASES: Array<[string, AppRole[]]> = [
     ["/cxp", [...TESORERIA_ROLES, "auxiliar_contable"]],
     ["/compras", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org"]],
+    ["/compras/aging", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org"]],
     ["/cxp/por-capturar", ["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero"]],
     ["/cxp/por-pagar", ["admin", "super_admin", "admin_org", "tesorero"]],
     ["/facturacion/por-emitir", ["admin", "super_admin", "admin_org", "contador"]],
