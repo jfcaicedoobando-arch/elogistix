@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.113.1] - 2026-06-22
+- **fix(embarques)**: la sección **Demoras automáticas** dejaba caer el detalle del embarque con `Cannot read properties of undefined (reading 'toString')` cuando la RPC devolvía un desglose sin `dias_en_puerto / dias_libres / dias_excedidos` (típicamente cuando faltan eventos parciales en el timeline). Ahora se usan `?? 0` antes de convertir a texto. Analogía: antes el componente asumía que el plato siempre traía cubiertos; si llegaba sin tenedor, todo se caía. Ahora si falta el tenedor, asume 0 y sigue sirviendo.
+
 ## [13.113.0] - 2026-06-22
 - **feat(clientes)**: el alta y la edición de cliente ahora capturan **Régimen Fiscal SAT** (obligatorio) y **Uso CFDI por defecto** (opcional, default `G03 — Gastos en general`). Sin estos datos no se puede timbrar CFDI 4.0. El parser de la **Constancia de Situación Fiscal (CSF)** ya devolvía el régimen pero se descartaba; ahora se prellena automáticamente al subir el PDF. Analogía: antes guardábamos el nombre y la dirección del cliente pero olvidábamos su "tipo de contribuyente"; ahora lo pedimos desde el primer día para que la factura salga sin tropiezos.
 - **ui(clientes)**: el diálogo **Editar Cliente** muestra una alerta roja cuando faltan datos fiscales (régimen o uso CFDI), para que los clientes históricos se completen al editarlos.
