@@ -1,63 +1,58 @@
-## Problema
+## Objetivo
 
-Hoy, al capturar una factura de proveedor (CxP), el bloque "Vincular a costos de embarque" sólo lista `conceptos_costo` que operaciones ya pre-cargó para ese proveedor. Si operaciones no los capturó, la sección **queda vacía** y la factura termina sin embarque asociado → se rompe la rentabilidad real vs cotizado.
+Modernizar el modal de captura de factura de proveedor para que se sienta más ágil y profesional, eliminando las flechitas (spinners) molestas en los campos numéricos y reorganizando la jerarquía visual. No tocamos la lógica de IVA: sigue siendo captura manual.
 
-## Solución: sugerencia inteligente de embarque + crear concepto al vuelo
+## Cambios visibles para ti
 
-Cambiamos `VincularEmbarqueSection` para que, cuando no haya `conceptos_costo` pendientes, **busque embarques candidatos** donde ese proveedor probablemente participe, y permita crear el `concepto_costo` al momento de capturar la factura.
+1. **Header sticky con Total en vivo**
+   - El total deja de estar "perdido" al final del bloque Importes. Aparece grande en la parte superior del modal, junto al título, y se queda visible al hacer scroll.
+   - Analogía: como el subtotal del carrito en Amazon que te sigue mientras navegas.
 
-### 1. Detección automática del embarque (en orden de prioridad)
+2. **Inputs numéricos sin flechitas**
+   - Subtotal, IVA, Retenciones, Días crédito y Tipo de cambio usarán el componente `NumericInput` que ya existe en el proyecto (`src/components/shared/NumericInput.tsx`).
+   - Beneficios: sin spinners, sin cambio accidental por scroll del mouse, auto-selección al hacer foco (escribes y se reemplaza el `0`), alineación a la derecha con tipografía tabular.
 
-Una RPC nueva `sugerir_embarques_para_proveedor(proveedor_id, organization_id, limit)` devuelve embarques activos (estado ≠ Cerrado/Cancelado) rankeados por:
+3. **Reorganización de secciones**
+   - Se agrupa Moneda + Tipo de cambio dentro de la misma sección que Importes (van de la mano conceptualmente).
+   - Fechas y crédito en una sola fila más compacta.
+   - La sección de Categorización + Notas se mueve al final dentro de un bloque colapsable "Detalles adicionales" (cerrado por defecto) para reducir ruido.
 
-1. **Match directo**: `embarques.agente`, `embarques.naviera`, `embarques.transportista`, `embarques.aerolinea` = nombre del proveedor (case-insensitive). Score 100.
-2. **Tarifa vinculada**: el embarque usa una `costeo_tarifas` cuyo agente/naviera = proveedor. Score 80.
-3. **Histórico**: en los últimos 90 días este proveedor facturó embarques del mismo cliente/ruta. Score 50.
-4. **Recientes activos** del tenant como fallback. Score 10.
+4. **Jerarquía visual mejorada**
+   - Títulos de sección con icono pequeño (lucide-react) para escaneo rápido.
+   - Separadores sutiles entre secciones en lugar de sólo whitespace.
+   - Campos obligatorios marcados con asterisco rojo consistente.
+   - Errores inline con icono `AlertCircle` en vez de sólo texto rojo.
 
-### 2. UI nueva en `VincularEmbarqueSection`
+5. **Footer con resumen de desglose**
+   - Junto a los botones Cancelar/Guardar, una mini-tabla pegada arriba muestra: Subtotal · IVA · Ret · **Total**, todo con `tabular-nums` para que los números alineen perfectamente.
 
-```text
-┌─ Vincular a costos de embarque ──────────────────────────┐
-│ ● Conceptos pendientes (caso actual, sin cambios)         │
-│                                                            │
-│ ── o ──                                                    │
-│                                                            │
-│ ○ Buscar embarque manualmente  [expediente / BL / cliente]│
-│                                                            │
-│ ★ Sugeridos para "DHL Global Forwarding":                 │
-│   ┌──────────────────────────────────────────────────┐   │
-│   │ MX-2026-0142 · Cliente ACME · ETA 25/06/2026     │   │
-│   │ Match: agente directo               [Vincular]   │   │
-│   ├──────────────────────────────────────────────────┤   │
-│   │ MX-2026-0138 · Cliente XPTO · En tránsito        │   │
-│   │ Match: tarifa vinculada             [Vincular]   │   │
-│   └──────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────┘
-```
+## Fuera de alcance
 
-Al clic en "Vincular":
-- Si el embarque YA tiene `conceptos_costo` pendientes de ese proveedor → se muestran y se preseleccionan con el monto de la factura distribuido proporcionalmente.
-- Si NO los tiene → se ofrece **crear un concepto_costo nuevo** con: `concepto = línea CFDI` (o "Servicios proveedor"), `monto = total factura`, `proveedor_id`, `embarque_id`. Se inserta en `conceptos_costo` y se vincula automáticamente al guardar.
+- Auto-cálculo de IVA (tú confirmaste: sin auto-IVA).
+- Cambios al flujo de carga CFDI (`CargaCfdiSection`).
+- Cambios a `VincularEmbarqueSection` (ya se rediseñó en la versión anterior).
+- Cambios a backend, validaciones de negocio, o estructura de `useNuevaFacturaProveedorForm`.
 
-### 3. Bandeja "Facturas sin embarque" (visibilidad)
+## Detalles técnicos
 
-En `/cxp/por-pagar` agregar chip `Sin embarque` que filtra `proveedor_facturas` donde no existe ninguna fila en `proveedor_facturas_conceptos`. Permite re-abrir la factura y vincularla después.
+**Archivos a editar:**
+- `src/features/cxp/components/FacturaProveedorFormFields.tsx` — reemplazar `<Input type="number">` por `NumericInput`, reorganizar secciones, agregar iconos a títulos.
+- `src/features/cxp/components/DialogNuevaFacturaProveedor.tsx` — header sticky con total, footer con desglose, hacer la sección "Detalles adicionales" colapsable con `<Collapsible>` de shadcn.
+- `src/features/cxp/components/facturaFormPrimitives.tsx` — `FormSection` acepta `icon` opcional y prop `divider` para separador.
 
-## Archivos a tocar
+**Archivos a crear:**
+- Ninguno. Reutilizamos `NumericInput`, `Collapsible`, `Separator` ya existentes.
 
-- **Migración nueva**: RPC `sugerir_embarques_para_proveedor` (SECURITY DEFINER, scoped por `organization_id`).
-- `src/features/cxp/services/sugerirEmbarques.ts` (nuevo) + test.
-- `src/features/cxp/hooks/useSugerirEmbarques.ts` (nuevo).
-- `src/features/cxp/components/VincularEmbarqueSection.tsx` — agregar sub-componente `SugerirEmbarqueBlock` (buscador + lista sugeridos).
-- `src/features/cxp/services/conceptosCostoVinculables.ts` — agregar `crearConceptoCostoYVincular()`.
-- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts` — soportar estado `embarqueSeleccionadoAdHoc` y meterlo al submit.
-- `src/features/bandejas/routes/CxpPorPagar.tsx` — chip filtro `Sin embarque`.
-- Tests: aggregates, vinculables y RPC suggest.
-- `CHANGELOG.md` + `APP_VERSION` → `13.99.2`.
+**Consideración con `NumericInput`:**
+- Hoy los importes en `FacturaFormValues` se almacenan como `string` (subtotal, iva, retenciones, tc). `NumericInput` trabaja con `number`. Adaptación: wrapper local en el componente que convierte `string ↔ number` sin tocar el hook ni los helpers (`buildPayload`, `calcularTotal` ya hacen `Number(values.subtotal)`).
+- Para `diasCredito` ya es `number`, encaja directo.
 
-## Fuera de alcance (lo dejamos para después)
+**Versión y changelog:**
+- Bump `APP_VERSION` a `13.99.3` en `src/constants/appVersion.ts`.
+- Agregar entrada `## [13.99.3] - 2026-06-22` en `CHANGELOG.md` raíz con: "Rediseño del modal de captura de factura de proveedor: inputs numéricos sin spinners, total sticky, mejor jerarquía visual y detalles colapsables."
 
-- Fuzzy match por nombre cuando el RFC no coincide.
-- Split automático multi-línea CFDI con IVA fino.
-- Reglas por categoría (ej. siempre flete marítimo → naviera).
+**Sin tests nuevos:** el cambio es puramente presentacional; no se altera lógica ni helpers. Los tests existentes de `useNuevaFacturaProveedorForm` siguen aplicando.
+
+**Power of 10:**
+- `FacturaProveedorFormFields.tsx` se mantiene <200 líneas (hoy 144).
+- `DialogNuevaFacturaProveedor.tsx` se mantiene <200 líneas (hoy ~90).
