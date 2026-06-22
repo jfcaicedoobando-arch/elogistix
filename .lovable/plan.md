@@ -1,46 +1,55 @@
-## Hallazgos del dashboard de Sentry (últimas 24h)
+## Bug
 
-Tres issues nuevas, sólo una requiere fix de código:
+En `/cxp`, al aprobar una factura desde el diálogo "Detalle de pagos":
 
-### 🔴 Issue 16 — `permission denied for function current_user_org_id` (CXP, 4 eventos)
-- **Causa**: la función `public.current_user_org_id()` es `SECURITY DEFINER` pero **nunca se le otorgó `EXECUTE`** a ningún rol. PostgREST la invoca desde RLS de `facturas`/`proveedor_facturas`; cuando un cliente no autenticado (o con sesión expirada) consulta CXP, el motor explota antes de evaluar la política.
-- **Síntoma adicional en el evento**: `url: librecarga.com/login`, `effective_role: none` → React Query corrió la consulta de CXP en una pestaña sin sesión.
+1. La RPC `aprobar_factura_proveedor` sí actualiza la base (toast verde correcto).
+2. `useAprobarFactura` invalida `["cxp"]`, la lista refetchea bien.
+3. **Pero** el padre (`Cxp.tsx`) pasa la factura al diálogo así: `data.find(d => d.id === detalle.id) ?? detalle`. Si el usuario filtró por "Por aprobar", la factura ya aprobada desaparece de `data`, el `find` retorna `undefined`, y el diálogo se queda con el snapshot original donde `estado_aprobacion === "pendiente"`.
 
-### 🟡 Issues 17 y 18 — `AbortError: Lock broken by another request with the 'steal' option.`
-- **Causa**: Web Locks API del cliente Supabase cuando hay múltiples pestañas. Es comportamiento esperado del refresh del token; no representa un bug en la app.
-- Sin stacktrace propio, no se puede actuar; lo correcto es **silenciarlo** en `ignoreErrors`.
+Resultado: badge "Pendiente" persiste dentro del diálogo aun cuando la BD ya marca "aprobada". También afectaría a Pagos: el botón "Pagar" se mantendría bloqueado por requerir aprobación.
 
-## Cambios
+## Fix
 
-### 1. Migración SQL — `GRANT EXECUTE` defensivo
+### 1. Nuevo service — `fetchFacturaProveedor(id)`
+Archivo: `src/features/cxp/services/proveedorFacturas.ts`
+Lee el row individual de `proveedor_facturas` con join mínimo (mismo shape `FacturaCxP` que retorna `fetchFacturasCxP`, pero para un solo id). Reutiliza el mapeador existente.
 
-```sql
-GRANT EXECUTE ON FUNCTION public.current_user_org_id() TO authenticated;
-REVOKE EXECUTE ON FUNCTION public.current_user_org_id() FROM anon, public;
-```
+### 2. Nuevo hook — `useFacturaProveedor(id, initialData?)`
+Archivo: `src/features/cxp/hooks/useFacturaProveedor.ts`
+- `queryKey: queryKeys.cxp.factura(id)`.
+- `enabled: !!id`.
+- `initialData` opcional para arrancar con el snapshot que llega del padre y evitar flash.
 
-Con esto, sesiones autenticadas legítimas dejan de romper; las llamadas anónimas siguen bloqueadas (correcto) pero sin spamear Sentry.
-
-### 2. `src/lib/observability/sentry/core.ts` — añadir patrones a `ignoreErrors`
-
+### 3. `useAprobarFactura` — escribir el row fresco en caché
+Archivo: `src/features/cxp/hooks/useAprobarFactura.ts`
+En `onSuccess`, además de las invalidaciones actuales, hacer:
 ```ts
-/AbortError: Lock broken by another request/i,
-/permission denied for function current_user_org_id/i, // ya cubierto por GRANT, doble red
+qc.setQueryData(queryKeys.cxp.factura(vars.id), mapRowToFacturaCxP(data));
 ```
+Esto garantiza que cualquier consumidor del hook individual reciba el nuevo `estado_aprobacion` aunque la lista filtrada lo haya descartado.
 
-(El segundo patrón se puede quitar después si confirmamos que el GRANT eliminó el ruido.)
+### 4. `DialogDetallePagosProveedor` — leer del hook, no del prop
+Archivo: `src/features/cxp/components/DialogDetallePagosProveedor.tsx`
+Sustituir el uso directo de `factura` por:
+```ts
+const { data: facturaFresh } = useFacturaProveedor(factura?.id, factura ?? undefined);
+const f = facturaFresh ?? factura;
+```
+Y pasar `f.estado_aprobacion`, `f.motivo_rechazo`, `f.saldo`, etc. al `BotonesAprobacionFactura` y a los KPIs.
 
-### 3. Versionado + changelog
-- `APP_VERSION` → `13.106.5`
-- Entrada `[13.106.5]` en `CHANGELOG.md` describiendo ambos arreglos.
+### 5. Versionado + changelog
+- `APP_VERSION` → `13.106.6`.
+- Entrada `[13.106.6]` en `CHANGELOG.md` describiendo el fix.
 
 ## Verificación
 
-1. Tras la migración, ejecutar `select public.current_user_org_id();` como rol `authenticated` (no debe fallar por permisos).
-2. Recargar `/cxp` autenticado y confirmar que la lista carga sin errores nuevos en Sentry.
-3. Abrir dos pestañas y refrescar; el `AbortError` debe seguir ocurriendo en consola pero **no** llegar a Sentry.
+1. Filtrar la lista CxP por **Aprobación = Por aprobar**.
+2. Abrir el diálogo de una factura → aprobarla.
+3. El badge dentro del diálogo debe cambiar a **Aprobada** en verde sin necesidad de cerrar/abrir.
+4. La fila desaparece de la lista filtrada (comportamiento esperado).
+5. Sin filtros, mismo flujo: badge se actualiza también.
 
 ## Fuera de alcance
 
-- Resolver/cerrar las 3 issues en el dashboard de Sentry — sugiero cerrarlas a mano después de desplegar para verificar que no reaparecen.
-- No se cambia la lógica de auth ni el query client; sólo permisos y filtros de telemetría.
+- No se toca la RPC ni los GRANTs (ya funcionan).
+- No se cambia el filtrado de la lista — desaparecer la fila cuando ya no cumple el filtro es lo correcto.

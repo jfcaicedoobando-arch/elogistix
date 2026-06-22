@@ -11,6 +11,10 @@ export function useAprobarFactura() {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: ["cxp", "pendientes-aprobacion-count"] });
+      // Forzar refetch del row individual aunque la lista filtrada lo descarte
+      // (p.ej. al aprobar bajo filtro "Por aprobar" la fila desaparece de la lista
+      // pero el diálogo abierto sigue suscrito a esta query y debe refrescar).
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });
       notifySuccess(undefined, { title: vars.aprobar ? "Factura aprobada" : "Factura rechazada" });
     },
     onError: (error: Error) => {

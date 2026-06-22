@@ -97,42 +97,69 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   if (error) throw error;
 
   // SAFE-CAST: tipo `Joined` modela el shape del select con embeds; Supabase devuelve unknown.
-  const rows = ((data as unknown as Joined[] | null) ?? []).map((f): FacturaCxP => {
-    const pagado = (f.pagos_proveedor ?? [])
-      .filter(p => !p.deleted_at)
-      .reduce((s, p) => s + Number(p.monto), 0);
-    const nc = (f.proveedor_notas_credito ?? [])
-      .filter(n => !n.deleted_at && n.estado === "Aplicada")
-      .reduce((s, n) => s + Number(n.monto), 0);
-    const total = Number(f.total);
-    const saldo = Math.max(0, total - pagado - nc);
-    // Una factura ya pagada (o sin saldo) nunca debe mostrar días vencidos.
-    const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
-    const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
-    return {
-      id: f.id,
-      proveedor_id: f.proveedor_id,
-      proveedor_nombre: f.proveedor_nombre,
-      proveedor_origen: f.proveedores?.origen_proveedor ?? null,
-      embarque_id: f.embarque_id,
-      folio_proveedor: f.folio_proveedor,
-      fecha_emision: f.fecha_emision,
-      fecha_vencimiento: f.fecha_vencimiento,
-      dias_vencido: Math.max(0, dv),
-      moneda: f.moneda,
-      total,
-      pagado,
-      notas_credito: nc,
-      saldo,
-      estado: f.estado,
-      estatus: clasificar(saldo, dv, f.estado),
-      tipo_cambio_usd: Number(f.tipo_cambio_usd),
-      estado_aprobacion: f.estado_aprobacion,
-      motivo_rechazo: f.motivo_rechazo,
-    };
-  });
+  const rows = ((data as unknown as Joined[] | null) ?? []).map(mapJoinedRow);
 
   return aplicarFiltrosCliente(rows, filtros);
+}
+
+/**
+ * Lee una factura individual con el mismo shape `FacturaCxP` que la lista.
+ * Permite que el diálogo de detalle observe datos frescos vía React Query
+ * aunque la lista filtrada haya descartado la fila (p.ej. al cambiar el
+ * estado_aprobacion de "pendiente" a "aprobada" bajo el filtro "Por aprobar").
+ */
+export async function fetchFacturaProveedor(id: string): Promise<FacturaCxP | null> {
+  const { data, error } = await supabase
+    .from("proveedor_facturas")
+    .select(`
+      id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
+      fecha_emision, fecha_vencimiento, moneda, total, estado, tipo_cambio_usd,
+      estado_aprobacion, motivo_rechazo,
+      pagos_proveedor(monto, deleted_at),
+      proveedor_notas_credito(monto, estado, deleted_at),
+      proveedores(origen_proveedor)
+    `)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  // SAFE-CAST: mismo shape `Joined` validado por el select de arriba.
+  return mapJoinedRow(data as unknown as Joined);
+}
+
+function mapJoinedRow(f: Joined): FacturaCxP {
+  const pagado = (f.pagos_proveedor ?? [])
+    .filter(p => !p.deleted_at)
+    .reduce((s, p) => s + Number(p.monto), 0);
+  const nc = (f.proveedor_notas_credito ?? [])
+    .filter(n => !n.deleted_at && n.estado === "Aplicada")
+    .reduce((s, n) => s + Number(n.monto), 0);
+  const total = Number(f.total);
+  const saldo = Math.max(0, total - pagado - nc);
+  // Una factura ya pagada (o sin saldo) nunca debe mostrar días vencidos.
+  const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
+  const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
+  return {
+    id: f.id,
+    proveedor_id: f.proveedor_id,
+    proveedor_nombre: f.proveedor_nombre,
+    proveedor_origen: f.proveedores?.origen_proveedor ?? null,
+    embarque_id: f.embarque_id,
+    folio_proveedor: f.folio_proveedor,
+    fecha_emision: f.fecha_emision,
+    fecha_vencimiento: f.fecha_vencimiento,
+    dias_vencido: Math.max(0, dv),
+    moneda: f.moneda,
+    total,
+    pagado,
+    notas_credito: nc,
+    saldo,
+    estado: f.estado,
+    estatus: clasificar(saldo, dv, f.estado),
+    tipo_cambio_usd: Number(f.tipo_cambio_usd),
+    estado_aprobacion: f.estado_aprobacion,
+    motivo_rechazo: f.motivo_rechazo,
+  };
 }
 
 function aplicarFiltrosCliente(rows: FacturaCxP[], filtros: FetchCxPFiltros): FacturaCxP[] {

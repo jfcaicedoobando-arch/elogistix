@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
+import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
 import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
@@ -36,8 +37,12 @@ interface Props {
 }
 
 export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEdit }: Props) {
-  const { data: pagos = [], isLoading } = usePagosProveedor(factura?.id);
-  const eliminar = useEliminarPagoProveedor(factura?.id ?? "");
+  // Observamos la factura por id para que el badge de aprobación y el saldo
+  // se mantengan frescos aunque la lista filtrada haya descartado la fila.
+  const { data: facturaFresh } = useFacturaProveedor(factura?.id, factura ?? undefined);
+  const f = facturaFresh ?? factura;
+  const { data: pagos = [], isLoading } = usePagosProveedor(f?.id);
+  const eliminar = useEliminarPagoProveedor(f?.id ?? "");
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
@@ -49,31 +54,31 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
             <DialogTitle>Detalle de pagos</DialogTitle>
             <DialogDescription className="font-mono uppercase tracking-wider text-xs">
-              {factura ? `${factura.folio_proveedor} — ${factura.proveedor_nombre}` : ""}
+              {f ? `${f.folio_proveedor} — ${f.proveedor_nombre}` : ""}
             </DialogDescription>
           </DialogHeader>
 
-          {factura && (
+          {f && (
             <>
               <div className="px-6 pt-4 pb-3 border-b">
                 <BotonesAprobacionFactura
-                  facturaId={factura.id}
-                  estado={factura.estado_aprobacion}
-                  motivoRechazo={factura.motivo_rechazo}
+                  facturaId={f.id}
+                  estado={f.estado_aprobacion}
+                  motivoRechazo={f.motivo_rechazo}
                   puedeAprobar={puedeAprobar}
                 />
               </div>
               <div className="px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-b">
-                <Kpi label="Total Factura" value={formatCurrency(factura.total, factura.moneda)} />
-                <Kpi label="Total Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
+                <Kpi label="Total Factura" value={formatCurrency(f.total, f.moneda)} />
+                <Kpi label="Total Pagado" value={formatCurrency(f.pagado, f.moneda)} tone="success" />
                 <Kpi
                   label="Saldo Pendiente"
-                  value={formatCurrency(factura.saldo, factura.moneda)}
-                  tone={factura.saldo > 0 ? "warn" : "default"}
+                  value={formatCurrency(f.saldo, f.moneda)}
+                  tone={f.saldo > 0 ? "warn" : "default"}
                 />
                 <Kpi label="# Pagos" value={String(pagos.length)} />
               </div>
-              <HistorialFacturaSection facturaId={factura.id} />
+              <HistorialFacturaSection facturaId={f.id} />
             </>
           )}
 
@@ -158,11 +163,11 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
               </div>
             )}
 
-            {factura && (
+            {f && (
               <NotasCreditoSection
-                facturaId={factura.id}
-                monedaFactura={factura.moneda}
-                saldoFactura={factura.saldo}
+                facturaId={f.id}
+                monedaFactura={f.moneda}
+                saldoFactura={f.saldo}
                 canEdit={canEdit}
               />
             )}
