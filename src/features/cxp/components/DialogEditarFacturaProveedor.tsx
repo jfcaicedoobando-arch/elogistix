@@ -22,13 +22,6 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-const SENSIBLES: Array<keyof ReturnType<typeof initialPick>> = [
-  "folio", "emision", "moneda", "tc", "subtotal", "iva", "retenciones",
-];
-function initialPick(v: { folio: string; emision: string; moneda: string; tc: string; subtotal: string; iva: string; retenciones: string }) {
-  return v;
-}
-
 export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
   const open = !!factura;
   const cats = usePresupuestoCategorias(true);
@@ -45,16 +38,9 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
 
   const tienePagos = !!factura && factura.pagado > 0;
   const estabaAprobada = factura?.estado_aprobacion === "aprobada";
-  const requiereReaprobacion =
-    estabaAprobada && !!v && !!factura && SENSIBLES.some((k) => {
-      // Compara contra los valores actuales de la factura (proxy: comparamos
-      // contra el snapshot inicial cargado del form).
-      // Si cambia cualquiera de estos, dispara re-aprobación.
-      return false; // placeholder, ver abajo
-    });
-  // Heurística simple: si hubo cambios y la factura estaba aprobada, advertir
-  // que probablemente se regresará a "Por aprobar". El backend hace la decisión
-  // real comparando sólo campos sensibles; aquí mostramos un aviso conservador.
+  // Aviso conservador: si la factura estaba aprobada y hubo cualquier cambio,
+  // advertir que el backend puede regresarla a "Por aprobar" (sólo lo hace
+  // si cambia un campo sensible: folio, emisión, moneda, TC o importes).
   const aviso = estabaAprobada && ctl.hayCambios;
 
   return (
