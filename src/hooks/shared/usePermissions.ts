@@ -104,6 +104,17 @@ const REGISTRAR_COBRO: readonly AppRole[] = [
   "ejecutivo_cobranza",
 ];
 
+// v13.106.4 — El cierre de embarques pasa de finanzas a operaciones.
+// Coordinador logístico ejecuta el cierre cuando el checklist está completo;
+// gerente de operaciones y admins quedan como respaldo gerencial.
+const CERRAR_EMBARQUE: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_operaciones",
+  "coordinador_logistico",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
