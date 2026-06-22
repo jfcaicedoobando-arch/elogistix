@@ -44,12 +44,15 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
+  const esExtranjero = form.origen_proveedor === "Extranjero";
+
   const isStep1Valid = (): boolean => {
     if (!form.categoria) return false;
     if (!form.nombre.trim()) return false;
     if (!form.origen_proveedor) return false;
     if (isLogistico) {
-      if (!form.tipo) return false;
+      // El tipo sólo se requiere para proveedores extranjeros.
+      if (esExtranjero && !form.tipo) return false;
       if (isAgenteCarga && !form.pais) return false;
     }
     if (isGasto && !form.subtipo_gasto) return false;
@@ -58,7 +61,15 @@ export function useNuevoProveedorController(
   };
 
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value } as NuevoProveedorForm;
+      // Al cambiar a Nacional, limpiamos `tipo` porque ya no aplica.
+      if (field === "origen_proveedor" && value === "Nacional") {
+        next.tipo = null;
+        next.pais = "";
+      }
+      return next;
+    });
 
   const handleCategoriaChange = (valor: string) => {
     const next = valor as CategoriaProveedor;
@@ -66,7 +77,9 @@ export function useNuevoProveedorController(
     setForm((prev) => ({
       ...prev,
       categoria: next,
-      tipo: next === "Logistico" ? (prev.tipo ?? "Naviera") : null,
+      // No autoseleccionamos tipo: para Nacional ya no aplica, para Extranjero
+      // el usuario debe elegir entre Naviera/Aerolínea/Agente de Carga.
+      tipo: next === "Logistico" ? null : null,
       subtipo_gasto: esGasto ? (prev.subtipo_gasto ?? "Otros") : null,
       pais: next === "Logistico" ? prev.pais : "",
       // Gasto operativo: siempre nacional y siempre MXN.
