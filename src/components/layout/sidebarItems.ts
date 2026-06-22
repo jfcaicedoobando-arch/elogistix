@@ -49,7 +49,7 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Facturación", url: "/facturacion", icon: FileText },
   { title: "Proformas", url: "/proformas", icon: FileText },
   { title: "Cobranza", url: "/cartera", icon: PiggyBank },
-  { title: "Cuentas por Pagar", url: "/cxp", icon: Receipt },
+  { title: "Facturas de proveedor", url: "/cxp", icon: Receipt },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
@@ -97,8 +97,8 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
 
 // v13.54.0 — Bloque Q: bandejas por rol financiero.
 export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
-  { title: "Por capturar (CxP)", url: "/cxp/por-capturar", icon: Receipt },
-  { title: "Por pagar (CxP)", url: "/cxp/por-pagar", icon: Landmark },
+  { title: "Por capturar", url: "/cxp/por-capturar", icon: Receipt },
+  { title: "Por pagar", url: "/cxp/por-pagar", icon: Landmark },
   { title: "Por emitir (Facturación)", url: "/facturacion/por-emitir", icon: FileText },
   { title: "Cartera", url: "/cartera", icon: PiggyBank },
 ];
