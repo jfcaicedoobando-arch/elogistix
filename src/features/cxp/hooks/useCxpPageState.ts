@@ -22,6 +22,7 @@ export function useCxpPageState() {
   const [openNueva, setOpenNueva] = useState(false);
   const [pagar, setPagar] = useState<FacturaCxP | null>(null);
   const [detalle, setDetalle] = useState<FacturaCxP | null>(null);
+  const [editar, setEditar] = useState<FacturaCxP | null>(null);
   const [aEliminar, setAEliminar] = useState<FacturaCxP | null>(null);
 
   const hayFiltros =
@@ -64,6 +65,7 @@ export function useCxpPageState() {
     openNueva, setOpenNueva,
     pagar, setPagar,
     detalle, setDetalle,
+    editar, setEditar,
     aEliminar, setAEliminar,
   };
 }

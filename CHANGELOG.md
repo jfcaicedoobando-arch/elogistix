@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.107.0] - 2026-06-22
+- **feat(cxp)**: nueva acción **Editar factura** en el menú de fila de `/cxp`. Permite corregir folio, fechas, días de crédito, moneda, TC e importes (subtotal/IVA/retenciones), categoría presupuestal y notas sin borrar y recapturar. El proveedor y el CFDI fiscal siguen siendo no editables (rompen trazabilidad). El nuevo total no puede quedar por debajo de lo ya pagado y, si cambian campos sensibles en una factura aprobada, se regresa automáticamente a "Por aprobar". Revalida duplicado (proveedor+folio+emisión) excluyendo la propia factura.
+
 ## [13.106.11] - 2026-06-22
 - **fix(cxp)**: la sección **Historial** del modal *Detalle de pagos* dejó de mostrar "Sin eventos" cuando la RPC falla o se está refetcheando. Ahora distingue cuatro estados (cargando, error, vacío real, lista) con botón **Reintentar** y `placeholderData` en `useHistorialFactura` para evitar parpadeo al cerrar/abrir el collapsible.
 

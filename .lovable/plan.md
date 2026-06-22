@@ -1,44 +1,95 @@
 ## Bug
 
-En `DialogDetallePagosProveedor` → sección **Historial**: al cerrar/abrir el collapsible, a veces aparece "Sin eventos registrados aún." aunque la factura sí tenga eventos.
+No existe flujo para editar facturas de proveedor. Una vez capturada, sólo se puede ver, pagar o eliminar (y reemplazar es un viaje de ida y vuelta que pierde historial). Esto fuerza a borrar+recrear ante un typo en folio, fecha o monto.
 
-## Causa raíz
+## Alcance
 
-`src/features/cxp/components/HistorialFacturaSection.tsx` ignora `isError`/`error`/`isFetching` del hook. El UI sólo distingue dos estados (`isLoading` → skeleton, resto → lista o "Sin eventos"). Cuando:
+Agregar **Editar factura de proveedor** como acción nueva en el menú de la fila, reusando el mismo formulario que ya usa "Nueva factura" (`FacturaProveedorFormFields`).
 
-- la RPC `historial_proveedor_factura` regresa error (token caduco, red, etc.), `data` queda `undefined` → `eventos = []` → muestra "Sin eventos" **silenciosamente** (sin manera de saber que falló).
-- el collapsible re-habilita la query y se dispara un refetch en background, `isLoading` ya es `false` (sólo es `true` la primera vez); si el refetch termina con error o tarda, la UI parpadea a "Sin eventos".
+### Campos editables (todos los del formulario actual)
+- Folio del proveedor, Emisión, Días crédito → recalcula Vencimiento
+- Moneda, Tipo de cambio a MXN (si ≠ MXN)
+- Subtotal, IVA, Retenciones → recalcula Total
+- Categoría presupuestal, Notas
+
+### Campos NO editables (con justificación visible en el dialog)
+- Proveedor (cambiarlo rompe trazabilidad con pagos/embarques). Si el usuario lo necesita, debe borrar y recrear.
+- UUID fiscal, RFC, archivos PDF/XML del CFDI (vienen del XML original).
+- Total/Pagado/Saldo (computados).
+- Vínculos a embarque y conceptos de costo (se manejan en su propia sección).
+
+### Reglas de negocio
+1. **Bloqueo blando**: si la factura ya tiene pagos, mostrar banner amarillo "Esta factura tiene N pago(s) registrado(s) por X. Cambiar el total puede afectar el saldo." y validar que `nuevo_total >= total_pagado` (si no, error inline en Subtotal).
+2. **Reaprobación automática**: si la factura estaba `aprobada` y se modifica algún importe (subtotal/iva/retenciones/tc/moneda) o el folio/emisión, regresar `estado_aprobacion = 'pendiente'`, limpiar `aprobada_por` y `aprobada_at`, e informar en banner "Los cambios requieren nueva aprobación".
+3. **Duplicados**: revalidar (proveedor + folio + emisión) excluyendo la propia factura por id.
+4. **Soft-deleted**: RLS ya bloquea (deleted_at IS NULL).
 
 ## Cambios
 
-### 1. `src/features/cxp/components/HistorialFacturaSection.tsx`
-- Destructurar también `error`, `isError`, `isFetching`, `refetch` del hook.
-- Nuevo orden de estados:
-  1. `isLoading` (primera carga) → skeleton actual.
-  2. `isError` → mensaje rojo "No se pudo cargar el historial." + botón **Reintentar** que llama `refetch()`. Muestra `error.message` truncado en `text-xs` para diagnóstico.
-  3. `eventos.length === 0 && !isFetching` → "Sin eventos registrados aún." (el real "no data").
-  4. lista de eventos (mostrar también un indicador sutil `…actualizando` si `isFetching && eventos.length > 0`).
+### Servicio nuevo
+**`src/features/cxp/services/proveedorFacturas.update.ts`** (≤120 líneas)
+- `actualizarFacturaProveedor(id, payload)`:
+  - Lee la factura actual (para detectar si hubo cambios "sensibles" que disparan re-aprobación).
+  - Verifica duplicado con `existeFacturaDuplicada(proveedor, folio, emision, excluirId=id)` — extender la función existente con parámetro opcional `excluirId` (cambio aditivo, default conserva comportamiento).
+  - Verifica `nuevo_total >= sum(pagos.monto)`; si no, lanza error tipado `SALDO_NEGATIVO`.
+  - Hace `UPDATE` con los campos editables + `updated_at = now()`.
+  - Si hubo cambio sensible y estado era `aprobada`, en el mismo UPDATE: `estado_aprobacion='pendiente', aprobada_por=NULL, aprobada_at=NULL`.
+  - Retorna la fila actualizada.
 
-### 2. `src/features/cxp/hooks/useHistorialFactura.ts`
-- Agregar `placeholderData: (prev) => prev` (equivalente a `keepPreviousData` en RQ v5) para que al re-habilitar la query (cerrar/abrir collapsible) los eventos previos sigan visibles durante el refetch en lugar de parpadear a vacío.
-- Mantener `staleTime: 30_000`.
+### Hook
+**`src/features/cxp/hooks/useActualizarFacturaProveedor.ts`** (≤40 líneas)
+- `useMutation` envolviendo el servicio.
+- `onSuccess`: invalida `["cxp", "facturas"]`, `["cxp", "factura", id]`, `["cxp", "historial", id]`, `["bandejas", "cxp"]`.
+- `onError`: toast con mensaje según código (`SALDO_NEGATIVO` → "El nuevo total no puede ser menor a lo ya pagado").
 
-### 3. Tests rápidos
-- No agregar tests nuevos en este parche (la sección no tiene tests existentes). Verificar manualmente:
-  - Abrir Detalle de pagos de la factura USD 62 30/03/2026 → expandir Historial → ver 4 eventos (creada, aprobada, pago, bitácora).
-  - Cerrar/abrir el collapsible varias veces → los eventos deben permanecer visibles sin parpadear a "Sin eventos".
-  - Simular error (devtools → Network → bloquear request `historial_proveedor_factura`) → ver mensaje rojo + botón Reintentar.
+### Hook de formulario
+**`src/features/cxp/hooks/useEditarFacturaProveedorForm.ts`** (≤120 líneas)
+- Similar a `useNuevaFacturaProveedorForm` pero:
+  - Recibe `factura: FacturaCxP` y precarga `values` desde ella (mapeando montos a strings, fecha a YYYY-MM-DD, etc.).
+  - Reusa helpers existentes (`validateFactura`, `calcularTotal`, `addDays`).
+  - `submit()` llama al nuevo hook `useActualizarFacturaProveedor` en vez de `useCrearFacturaProveedor`.
+  - No incluye lógica de CFDI ni vínculos a embarque (esos sectores se quedan fuera del scope de edit).
 
-### 4. Versionado y changelog
-- `src/constants/appVersion.ts`: `13.106.10` → `13.106.11`
-- `CHANGELOG.md`: `## [13.106.11] - 2026-06-22` → "**fix(cxp)**: la sección Historial del modal Detalle de pagos ya no muestra 'Sin eventos' cuando la RPC falla o se está refetcheando. Surface explícito de errores con botón Reintentar y `placeholderData` para evitar parpadeo al cerrar/abrir el collapsible."
+### Componente nuevo
+**`src/features/cxp/components/DialogEditarFacturaProveedor.tsx`** (≤150 líneas)
+- Dialog `dialogSize["xl"]`, header "Editar factura — {folio_proveedor}".
+- Si `pagado > 0`: banner amarillo con conteo y monto pagado.
+- Si va a forzar re-aprobación: banner azul "Los cambios requieren nueva aprobación".
+- Reusa `<FacturaProveedorFormFields>` directamente.
+- Sub-header con `<ProveedorCombobox disabled value=...>` (read-only del proveedor) para que el usuario entienda por qué no puede cambiarlo.
+- Footer: Cancelar + "Guardar cambios" (disabled si no hay diff).
+
+### Wire-up
+**`src/features/cxp/components/cxpColumns.tsx`**
+- Agregar `onEditar: (f: FacturaCxP) => void` a `CxPColumnsOptions`.
+- Nuevo `<DropdownMenuItem>` "Editar factura" con ícono `Pencil`, entre "Ver detalle de pagos" y "Eliminar factura", dentro del bloque `{canEdit && ...}`.
+
+**`src/features/cxp/hooks/useCxpPageState.ts`**
+- Agregar `editar: FacturaCxP | null` + `setEditar`.
+
+**`src/features/cxp/routes/Cxp.tsx`**
+- Importar `DialogEditarFacturaProveedor`.
+- Pasar `onEditar: f.setEditar` a `buildCxPColumns` + dependencia en `useMemo`.
+- Renderizar `<DialogEditarFacturaProveedor factura={f.editar} onOpenChange={(o) => !o && f.setEditar(null)} />`.
+
+### Versionado y changelog
+- `src/constants/appVersion.ts`: `13.106.11` → `13.107.0` (minor: feature nueva).
+- `CHANGELOG.md`: `## [13.107.0] - 2026-06-22` → "**feat(cxp)**: nueva acción **Editar factura** en /cxp. Permite corregir folio, fechas, días de crédito, moneda, TC y importes (subtotal/IVA/retenciones), categoría y notas sin borrar y recapturar. Valida que el nuevo total no quede por debajo de lo ya pagado, fuerza re-aprobación si cambian importes en facturas aprobadas y revalida duplicados (proveedor+folio+emisión)."
+
+## Verificación
+
+- Editar una factura sin pagos: cambiar folio/notas → guarda OK, lista refresca, historial agrega entrada `evento` desde bitácora.
+- Editar una factura con pagos: ver banner amarillo. Intentar bajar el total por debajo del pagado → error rojo "El nuevo total no puede ser menor a lo ya pagado".
+- Editar una factura aprobada cambiando subtotal → ver banner azul. Tras guardar, badge cambia a "Por aprobar".
+- Intentar editar con un folio que ya existe en otra factura del mismo proveedor y fecha → error inline "Ya existe…".
+- Confirmar que tests de arquitectura siguen pasando: `bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts`.
 
 ## No se toca
 
-- La RPC `public.historial_proveedor_factura` está bien (devuelve los 4 eventos esperados; los GRANTs a `authenticated` están).
-- La query key, el `staleTime` ni la lógica de `enabled` cambian.
-- El resto del `DialogDetallePagosProveedor`.
+- Esquema BD ni RLS (las políticas existentes ya autorizan UPDATE a admin/contador/super_admin).
+- Flujo CFDI ni de vínculos a embarque (fuera de scope).
+- Lógica de pagos, NC ni historial (sólo se invalidan sus queries para refrescar).
 
-## Analogía 🛎️
+## Analogía 🩹
 
-Es como un timbre que sólo suena la primera vez que tocan la puerta: si después llega alguien y no abren, asumes "no hay nadie". Lo que vamos a hacer es: 1) que el timbre suene también cuando hay un problema (mostrar el error), y 2) que la mirilla recuerde quién vino la última vez mientras vuelves a revisar (`placeholderData`), en lugar de ponerse en blanco.
+Hoy una factura es como un cheque escrito a tinta: si te equivocas en un dato, lo único que puedes hacer es romperlo y escribir otro. Vamos a darte un lápiz con goma: puedes corregir lo que tenga sentido (importe, fecha, folio), pero el "destinatario" (proveedor) y la firma del banco (CFDI fiscal) siguen siendo intocables porque cambiarlos rompería trazabilidad legal.

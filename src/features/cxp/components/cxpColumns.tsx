@@ -4,7 +4,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { DollarSign, Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { DollarSign, Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -29,11 +29,12 @@ export interface CxPColumnsOptions {
   canEdit: boolean;
   onRegistrarPago: (f: FacturaCxP) => void;
   onVerDetalle: (f: FacturaCxP) => void;
+  onEditar: (f: FacturaCxP) => void;
   onEliminar: (f: FacturaCxP) => void;
 }
 
 export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, unknown>[] {
-  const { canEdit, onRegistrarPago, onVerDetalle, onEliminar } = opts;
+  const { canEdit, onRegistrarPago, onVerDetalle, onEditar, onEliminar } = opts;
   return defineColumns<FacturaCxP>([
     {
       id: "folio", header: "Folio proveedor",
@@ -180,6 +181,9 @@ export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, 
                 </DropdownMenuItem>
                 {canEdit && (
                   <>
+                    <DropdownMenuItem onClick={() => onEditar(f)}>
+                      <Pencil className="h-4 w-4 mr-2" /> Editar factura
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onEliminar(f)}

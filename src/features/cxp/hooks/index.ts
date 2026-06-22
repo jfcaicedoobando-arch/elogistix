@@ -7,3 +7,4 @@ export * from "./useSugerirEmbarques";
 export * from "./useCxpPageState";
 export * from "./useCxpPendientesAprobacion";
 export * from "./useHistorialFactura";
+export * from "./useEditarFacturaProveedorForm";

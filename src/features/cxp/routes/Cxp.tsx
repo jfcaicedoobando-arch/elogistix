@@ -11,6 +11,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
+import { DialogEditarFacturaProveedor } from "@/features/cxp/components/DialogEditarFacturaProveedor";
 import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRegistrarPagoProveedor";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
@@ -85,9 +86,10 @@ export default function Cxp() {
       canEdit,
       onRegistrarPago: f.setPagar,
       onVerDetalle: f.setDetalle,
+      onEditar: f.setEditar,
       onEliminar,
     }),
-    [canEdit, f.setPagar, f.setDetalle, onEliminar],
+    [canEdit, f.setPagar, f.setDetalle, f.setEditar, onEliminar],
   );
 
   return (
@@ -160,6 +162,10 @@ export default function Cxp() {
       </Card>
 
       <DialogNuevaFacturaProveedor open={f.openNueva} onOpenChange={f.setOpenNueva} />
+      <DialogEditarFacturaProveedor
+        factura={f.editar ? data.find((d) => d.id === f.editar!.id) ?? f.editar : null}
+        onOpenChange={(o) => !o && f.setEditar(null)}
+      />
       <DialogRegistrarPagoProveedor
         open={!!f.pagar}
         onOpenChange={(o) => !o && f.setPagar(null)}

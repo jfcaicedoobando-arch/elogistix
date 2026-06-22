@@ -120,8 +120,9 @@ export async function existeFacturaDuplicada(
   proveedorId: string,
   folioProveedor: string,
   fechaEmision: string,
+  excluirId?: string,
 ): Promise<boolean> {
-  const { data, error } = await supabase
+  let q = supabase
     .from("proveedor_facturas")
     .select("id")
     .eq("proveedor_id", proveedorId)
@@ -130,6 +131,8 @@ export async function existeFacturaDuplicada(
     .neq("estado", "Cancelada")
     .is("deleted_at", null)
     .limit(1);
+  if (excluirId) q = q.neq("id", excluirId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []).length > 0;
 }
@@ -141,3 +144,4 @@ export async function softDeleteFacturaProveedor(id: string, userId: string | nu
     .eq("id", id);
   if (error) throw error;
 }
+
