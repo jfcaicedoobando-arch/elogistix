@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
+import { SugerirEmbarqueBlock, type EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
 export interface SeleccionLinea {
   monto: number;
@@ -21,11 +22,14 @@ export interface SeleccionLinea {
 
 interface Props {
   proveedorId: string;
+  proveedorNombre: string;
   organizationId: string | null;
   /** Map conceptoCostoId → {monto} (solo presentes los marcados). */
   seleccion: Record<string, SeleccionLinea>;
   onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
+  embarqueAdHoc: EmbarqueSeleccionado | null;
+  onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
 }
 
 interface Grupo {
@@ -50,7 +54,8 @@ function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
 }
 
 export function VincularEmbarqueSection({
-  proveedorId, organizationId, seleccion, onToggle, onChangeMonto,
+  proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
+  embarqueAdHoc, onEmbarqueAdHoc,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
@@ -63,7 +68,17 @@ export function VincularEmbarqueSection({
       </div>
     );
   }
-  if (grupos.length === 0) return null;
+  if (grupos.length === 0) {
+    return (
+      <SugerirEmbarqueBlock
+        proveedorId={proveedorId}
+        proveedorNombre={proveedorNombre}
+        organizationId={organizationId}
+        seleccionado={embarqueAdHoc}
+        onSeleccionar={onEmbarqueAdHoc}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">

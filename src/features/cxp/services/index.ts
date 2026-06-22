@@ -3,3 +3,4 @@ export * from "./pagosProveedor";
 export * from "./parseCfdi";
 export * from "./cfdiStorage";
 export * from "./conceptosCostoVinculables";
+export * from "./sugerirEmbarques";

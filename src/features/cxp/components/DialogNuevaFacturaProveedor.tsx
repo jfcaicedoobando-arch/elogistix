@@ -65,10 +65,13 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange }: Props) {
 
             <VincularEmbarqueSection
               proveedorId={ctl.values.provId}
+              proveedorNombre={ctl.values.provNombre}
               organizationId={ctl.organizationId}
               seleccion={ctl.vinculos}
               onToggle={ctl.toggleVinculo}
               onChangeMonto={ctl.setVinculoMonto}
+              embarqueAdHoc={ctl.embarqueAdHoc}
+              onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
             />
           </div>
 

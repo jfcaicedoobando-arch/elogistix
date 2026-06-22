@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.99.2] - 2026-06-22
+- **feat(cxp) sugerencia automática de embarque al capturar factura de proveedor**: antes, si operaciones no había pre-cargado los `conceptos_costo` en el embarque, el bloque "Vincular a costos de embarque" quedaba vacío y la factura se guardaba sin embarque, rompiendo la rentabilidad real vs cotizado. Ahora, al seleccionar un proveedor sin conceptos pendientes, se muestra un bloque nuevo `SugerirEmbarqueBlock` con:
+  - **Sugerencias automáticas** vía nueva RPC `sugerir_embarques_para_proveedor` (SECURITY DEFINER, scoped por org). Rankea embarques activos por match directo de nombre en `agente/naviera/transportista/aerolinea` (score 100) y por tarifa aplicada → `costeo_agentes.proveedor_id` / `costeo_navieras_condiciones.proveedor_id` (score 80).
+  - **Búsqueda manual** por expediente, BL master/house o cliente.
+  - Al elegir un embarque, se permite editar la descripción del concepto y al guardar la factura se crea automáticamente un `conceptos_costo` (marcado como Pagado) y se vincula a la factura vía `proveedor_facturas_conceptos`.
+- **refactor**: el controller `useNuevaFacturaProveedorForm` ahora delega `uploadCfdiSafe` y `vincularSafe` a un módulo nuevo `useNuevaFacturaProveedorForm.sideEffects.ts` para mantenerse bajo el límite Power of 10 (≤200 líneas).
+
 ## [13.99.1] - 2026-06-22
 - **fix(cxp/por-pagar) Saldo total mezclaba monedas**: el card "Saldo total" sumaba el `saldo` de cada factura sin importar la moneda y lo mostraba como MXN, inflando el número cuando había facturas en USD. Ahora se homologa a MXN multiplicando cada factura USD por su `tipo_cambio_usd` capturado, y abajo del monto en grande se muestran chips por moneda nativa (`MXN $X · USD $Y · EUR $Z`). Si alguna factura USD/EUR no tiene TC, no se incluye en el homologado y aparece una nota en ámbar indicando cuántas quedaron fuera.
 - **backend**: `cxp_por_pagar()` ahora devuelve `tipo_cambio_usd` por factura. Sin cambios de datos, solo agrega columna al RETURNS.

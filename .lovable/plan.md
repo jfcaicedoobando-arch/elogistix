@@ -1,94 +1,63 @@
 ## Problema
 
-El card **"Saldo total"** de `/cxp/por-pagar` suma `saldo` de todas las facturas sin importar la moneda y muestra el resultado como si fuera MXN. Si hay facturas en USD y MXN mezcladas se están sumando "peras con manzanas" y el número está inflado/mal.
+Hoy, al capturar una factura de proveedor (CxP), el bloque "Vincular a costos de embarque" sólo lista `conceptos_costo` que operaciones ya pre-cargó para ese proveedor. Si operaciones no los capturó, la sección **queda vacía** y la factura termina sin embarque asociado → se rompe la rentabilidad real vs cotizado.
 
-## Solución
+## Solución: sugerencia inteligente de embarque + crear concepto al vuelo
 
-Mostrar el saldo total **homologado a MXN en grande**, con **chips chiquitos abajo desglosando por moneda nativa** (`MXN $X · USD $Y · EUR $Z`).
+Cambiamos `VincularEmbarqueSection` para que, cuando no haya `conceptos_costo` pendientes, **busque embarques candidatos** donde ese proveedor probablemente participe, y permita crear el `concepto_costo` al momento de capturar la factura.
 
-### 1. Backend — exponer `tipo_cambio_usd` en el RPC
+### 1. Detección automática del embarque (en orden de prioridad)
 
-Migración que reemplaza `public.cxp_por_pagar()` añadiendo dos columnas al RETURNS:
-- `tipo_cambio_usd numeric` — desde `proveedor_facturas.tipo_cambio_usd`
-- `tipo_cambio_eur numeric` — desde `proveedor_facturas.tipo_cambio_eur`
+Una RPC nueva `sugerir_embarques_para_proveedor(proveedor_id, organization_id, limit)` devuelve embarques activos (estado ≠ Cerrado/Cancelado) rankeados por:
 
-No cambia ningún dato existente, solo añade columnas.
+1. **Match directo**: `embarques.agente`, `embarques.naviera`, `embarques.transportista`, `embarques.aerolinea` = nombre del proveedor (case-insensitive). Score 100.
+2. **Tarifa vinculada**: el embarque usa una `costeo_tarifas` cuyo agente/naviera = proveedor. Score 80.
+3. **Histórico**: en los últimos 90 días este proveedor facturó embarques del mismo cliente/ruta. Score 50.
+4. **Recientes activos** del tenant como fallback. Score 10.
 
-### 2. Tipos y servicio
-
-`src/features/bandejas/services/bandejas.ts` → añadir `tipo_cambio_usd: number | null` y `tipo_cambio_eur: number | null` a `CxpPorPagarRow`.
-
-### 3. Función de agregación pura
-
-Reemplazar `resumirCxpPorPagar` en `src/features/bandejas/domain/aggregates.ts`:
-
-```ts
-export interface CxpPagarSummary {
-  total: number;
-  vencidas: number;
-  saldoMXN: number;       // homologado
-  porMoneda: { MXN: number; USD: number; EUR: number };
-  faltaTipoCambio: number; // count de facturas USD/EUR sin TC (no contadas en saldoMXN)
-}
-```
-
-Reglas:
-- Suma nativa por moneda → `porMoneda[r.moneda]`.
-- Para homologar:
-  - `MXN` → suma tal cual.
-  - `USD` → `saldo * tipo_cambio_usd` (si TC nulo o 0 → no suma al homologado, incrementa `faltaTipoCambio`).
-  - `EUR` → análogo con `tipo_cambio_eur`.
-
-### 4. UI del card "Saldo total"
-
-```tsx
-<Card>
-  <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
-  <CardContent>
-    <div className="text-2xl font-semibold tabular-nums">
-      {formatCurrency(saldoMXN, "MXN")}
-    </div>
-    <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-1">
-      {porMoneda.MXN > 0 && <span>MXN {formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
-      {porMoneda.USD > 0 && <span>· USD {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}
-      {porMoneda.EUR > 0 && <span>· EUR {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
-    </div>
-    {faltaTipoCambio > 0 && (
-      <p className="text-[10px] text-warning mt-0.5">
-        {faltaTipoCambio} factura{faltaTipoCambio>1?"s":""} sin TC capturado — no incluida{faltaTipoCambio>1?"s":""} en homologado.
-      </p>
-    )}
-  </CardContent>
-</Card>
-```
-
-### 5. Tests
-
-Actualizar `src/features/bandejas/domain/__tests__/aggregates.test.ts` con casos:
-- Solo MXN.
-- USD con TC → suma homologado correcto.
-- USD sin TC → no suma, incrementa `faltaTipoCambio`.
-- Mezcla MXN + USD + EUR.
-
-### 6. Changelog + versión
-
-- `appVersion.ts` → `13.99.1`.
-- Entrada en `CHANGELOG.md` describiendo el bug y el fix.
-
-## Archivos afectados
+### 2. UI nueva en `VincularEmbarqueSection`
 
 ```text
-supabase/migrations/<nuevo>.sql                        (CREATE OR REPLACE cxp_por_pagar)
-src/features/bandejas/services/bandejas.ts             (tipos)
-src/features/bandejas/domain/aggregates.ts             (resumirCxpPorPagar)
-src/features/bandejas/domain/__tests__/aggregates.test.ts
-src/features/bandejas/routes/CxpPorPagar.tsx           (card Saldo total)
-src/constants/appVersion.ts
-CHANGELOG.md
+┌─ Vincular a costos de embarque ──────────────────────────┐
+│ ● Conceptos pendientes (caso actual, sin cambios)         │
+│                                                            │
+│ ── o ──                                                    │
+│                                                            │
+│ ○ Buscar embarque manualmente  [expediente / BL / cliente]│
+│                                                            │
+│ ★ Sugeridos para "DHL Global Forwarding":                 │
+│   ┌──────────────────────────────────────────────────┐   │
+│   │ MX-2026-0142 · Cliente ACME · ETA 25/06/2026     │   │
+│   │ Match: agente directo               [Vincular]   │   │
+│   ├──────────────────────────────────────────────────┤   │
+│   │ MX-2026-0138 · Cliente XPTO · En tránsito        │   │
+│   │ Match: tarifa vinculada             [Vincular]   │   │
+│   └──────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────┘
 ```
 
-## Verificación
+Al clic en "Vincular":
+- Si el embarque YA tiene `conceptos_costo` pendientes de ese proveedor → se muestran y se preseleccionan con el monto de la factura distribuido proporcionalmente.
+- Si NO los tiene → se ofrece **crear un concepto_costo nuevo** con: `concepto = línea CFDI` (o "Servicios proveedor"), `monto = total factura`, `proveedor_id`, `embarque_id`. Se inserta en `conceptos_costo` y se vincula automáticamente al guardar.
 
-1. `bunx vitest run src/features/bandejas/domain/__tests__/aggregates.test.ts`.
-2. `psql -c "SELECT moneda, sum(saldo) FROM cxp_por_pagar() GROUP BY moneda;"` para confirmar montos por moneda.
-3. Inspección visual en `/cxp/por-pagar`.
+### 3. Bandeja "Facturas sin embarque" (visibilidad)
+
+En `/cxp/por-pagar` agregar chip `Sin embarque` que filtra `proveedor_facturas` donde no existe ninguna fila en `proveedor_facturas_conceptos`. Permite re-abrir la factura y vincularla después.
+
+## Archivos a tocar
+
+- **Migración nueva**: RPC `sugerir_embarques_para_proveedor` (SECURITY DEFINER, scoped por `organization_id`).
+- `src/features/cxp/services/sugerirEmbarques.ts` (nuevo) + test.
+- `src/features/cxp/hooks/useSugerirEmbarques.ts` (nuevo).
+- `src/features/cxp/components/VincularEmbarqueSection.tsx` — agregar sub-componente `SugerirEmbarqueBlock` (buscador + lista sugeridos).
+- `src/features/cxp/services/conceptosCostoVinculables.ts` — agregar `crearConceptoCostoYVincular()`.
+- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts` — soportar estado `embarqueSeleccionadoAdHoc` y meterlo al submit.
+- `src/features/bandejas/routes/CxpPorPagar.tsx` — chip filtro `Sin embarque`.
+- Tests: aggregates, vinculables y RPC suggest.
+- `CHANGELOG.md` + `APP_VERSION` → `13.99.2`.
+
+## Fuera de alcance (lo dejamos para después)
+
+- Fuzzy match por nombre cuando el RFC no coincide.
+- Split automático multi-línea CFDI con IVA fino.
+- Reglas por categoría (ej. siempre flete marítimo → naviera).
