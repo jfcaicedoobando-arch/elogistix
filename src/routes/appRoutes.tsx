@@ -101,7 +101,7 @@ export const appRoutes = (
     <Route path="/papelera" element={guarded(["admin", "super_admin"], <Papelera />)} />
     <Route path="/idempotencia" element={guarded(["admin", "super_admin"], <Idempotencia />)} />
     <Route path="/auditoria" element={guarded(["admin", "admin_org", "viewer", "customer_service"], <Auditoria />)} />
-    <Route path="/usuarios" element={guarded(["admin"], <Usuarios />)} />
-    <Route path="/configuracion" element={guarded(["admin"], <Configuracion />)} />
+    <Route path="/usuarios" element={guarded(["admin", "admin_org", "super_admin"], <Usuarios />)} />
+    <Route path="/configuracion" element={guarded(["admin", "admin_org", "super_admin"], <Configuracion />)} />
   </Route>
 );

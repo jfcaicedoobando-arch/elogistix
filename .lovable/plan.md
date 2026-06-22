@@ -1,39 +1,37 @@
-## Objetivo
-
-Para embarques ya cerrados, el checklist debe mostrarse como **informativo**: visible pero sin badges rojos de "incompleto", sin alertas, y con una nota explícita de que las reglas pueden no aplicar porque el embarque se cerró antes de que existieran.
-
 ## Diagnóstico
 
-Hoy, en `TabCierre.tsx`, cuando un embarque está `Cerrado` se muestra un alert ("Embarque cerrado") y debajo el mismo `CierreChecklistCard` con los ítems en rojo si faltan datos. Esto genera "ruido visual" en embarques antiguos donde nunca hubo oportunidad de cumplir las reglas nuevas.
-
-No se toca el RPC ni los datos: el cierre ya está hecho, las reglas son moot. Solo cambia la presentación.
+`/usuarios` y `/configuracion` están guardadas en `src/routes/appRoutes.tsx` con solo `["admin"]`. El `useAppSidebarSections` muestra la sección **Administración** para `admin`, `admin_org` y `super_admin`, así que el usuario `hector@lopezbenavides.com` (rol `admin_org`) ve el ítem pero al entrar choca con el guard de la ruta.
 
 ## Cambios
 
-### 1. `CierreChecklistCard.tsx`
-- Nueva prop opcional `informativo?: boolean`.
-- Si es `true`:
-  - Título cambia a `"Checklist de cierre (informativo)"`.
-  - Se agrega una nota muted arriba de la lista: *"Este embarque se cerró antes de que existieran algunas de estas reglas. La lista es solo referencial."*
-  - Se pasa `informativo` a cada `CierreCheckItem`.
+### 1. `src/routes/appRoutes.tsx` — ampliar guards
+Cambiar los dos guards para incluir `admin_org` y `super_admin` (mismo patrón ya usado en `/cxp/por-capturar`, `/facturacion/por-emitir`, etc.):
 
-### 2. `CierreCheckItem.tsx`
-- Nueva prop opcional `informativo?: boolean`.
-- Cuando `informativo` y `!ok`: usar ícono y color **muted** (gris/`text-muted-foreground`) en lugar del rojo destructivo. Ocultar el botón CTA "Ir a…" para que no invite a acciones inútiles. El texto del detalle se mantiene pero en muted.
-- Cuando `ok`: sin cambios (check verde).
+```tsx
+<Route path="/usuarios" element={guarded(["admin", "admin_org", "super_admin"], <Usuarios />)} />
+<Route path="/configuracion" element={guarded(["admin", "admin_org", "super_admin"], <Configuracion />)} />
+```
 
-### 3. `TabCierre.tsx`
-- Pasar `informativo={esCerrado}` al `CierreChecklistCard`.
+`/papelera` e `/idempotencia` se quedan como `["admin", "super_admin"]` (operaciones destructivas a nivel sistema, no para admin_org).
 
-### 4. Tests
-- Agregar 2 casos en `cierreCheckMeta.test.ts` o un test nuevo del componente verificando que `informativo` oculta el CTA y aplica la clase muted.
+### 2. `src/routes/__tests__/appRoutes.smoke.test.tsx`
+Actualizar las dos entradas del array `[ruta, rolesPermitidos]` para reflejar los nuevos roles:
+- `["/usuarios", ["admin", "admin_org", "super_admin"]]`
+- `["/configuracion", ["admin", "admin_org", "super_admin"]]`
 
-### 5. Versionado y changelog
-- Bump `APP_VERSION` (patch → `13.106.1`).
-- Entrada en `CHANGELOG.md` describiendo el cambio.
+### 3. Versionado y changelog
+- Bump `APP_VERSION` → `13.106.2` (patch / bugfix).
+- Entrada en `CHANGELOG.md`:
+  - `fix(rbac)`: el rol `admin_org` (y `super_admin`) ahora puede entrar a `/usuarios` y `/configuracion`. Antes la sidebar los mostraba pero la ruta los rechazaba.
+
+## Verificación
+
+Después de aplicar:
+1. Login con `hector@lopezbenavides.com` (admin_org) → clic en sidebar **Administración → Usuarios** → debe abrir la página sin redirección.
+2. Misma verificación con **Configuración**.
+3. Correr `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx`.
 
 ## Notas
 
-- No se requiere migración ni cambios al RPC `validar_cierre_embarque`.
-- Aplica automáticamente a todos los embarques históricos cerrados; no hace falta marcar nada manualmente.
-- Embarques abiertos antiguos no se ven afectados: si quieres también ocultar bloqueo ahí, se hace en un siguiente paso con una fecha de corte configurable.
+- No requiere migración ni cambios en backend; es solo gating de UI/ruta.
+- No se modifica `usePermissions`: la lógica fina dentro de `Usuarios` (por ejemplo, quién puede crear/eliminar) ya distingue roles internamente.
