@@ -18,6 +18,17 @@ const ESTATUS_COLOR: Record<EstatusCxP, string> = {
   "Sin saldo": "bg-muted text-muted-foreground border-border",
 };
 
+const APROB_COLOR: Record<"pendiente" | "aprobada" | "rechazada", string> = {
+  pendiente: "bg-warning/10 text-warning border-warning/20",
+  aprobada: "bg-success/10 text-success border-success/20",
+  rechazada: "bg-destructive/10 text-destructive border-destructive/20",
+};
+const APROB_LABEL: Record<"pendiente" | "aprobada" | "rechazada", string> = {
+  pendiente: "Por aprobar",
+  aprobada: "Aprobada",
+  rechazada: "Rechazada",
+};
+
 export interface CxPColumnsOptions {
   canEdit: boolean;
   onRegistrarPago: (f: FacturaCxP) => void;
