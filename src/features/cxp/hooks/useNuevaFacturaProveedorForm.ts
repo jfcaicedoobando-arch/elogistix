@@ -9,9 +9,6 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {
-  subirArchivosCfdiFactura,
-  vincularFacturaAConceptos,
-  crearConceptoCostoYVincular,
   type CfdiParsedResponse,
   type ConceptoCostoAbierto,
 } from "@/features/cxp/services";
@@ -21,6 +18,7 @@ import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
 import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { uploadCfdiSafe, vincularSafe } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
   type PendingCfdi,
   type VinculoLinea,
