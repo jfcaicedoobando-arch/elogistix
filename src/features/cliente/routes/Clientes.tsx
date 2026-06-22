@@ -26,9 +26,9 @@ import { notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useRegistrarActividad } from "@/hooks/shared";
 import {
   clientesColumns,
-  ClienteMobileCard,
   type ClienteRow,
 } from "@/features/cliente/components/clientesTableConfig";
+import { ClienteMobileCard } from "@/features/cliente/components/ClienteMobileCard";
 
 export default function Clientes() {
   const navigate = useNavigate();
