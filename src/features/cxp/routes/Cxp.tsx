@@ -167,7 +167,11 @@ export default function Cxp() {
         onOpenChange={(o) => !o && f.setDetalle(null)}
         factura={f.detalle ? data.find((d) => d.id === f.detalle!.id) ?? f.detalle : null}
         canEdit={canEdit}
+        onPagar={(fact) => { f.setDetalle(null); f.setPagar(fact); }}
+        onEditar={(fact) => { f.setDetalle(null); f.setEditar(fact); }}
+        onEliminar={(fact) => { f.setDetalle(null); onEliminar(fact); }}
       />
+
       <DoubleConfirmDeleteDialog
         open={!!f.aEliminar}
         onOpenChange={(o) => !o && f.setAEliminar(null)}
