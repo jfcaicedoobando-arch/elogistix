@@ -1,71 +1,37 @@
 ## Objetivo
 
-Agregar un **folio interno único por organización** a las facturas de proveedor con formato `FP-000001`, asignado automáticamente al capturar, inmutable, visible en toda la UI de CXP.
+Limpiar la tabla CxP eliminando la columna **Acciones** y mover esas acciones (Pagar, Editar factura, Eliminar factura) dentro del modal que se abre al hacer clic en la fila, además de renombrarlo a **"Detalle de factura de proveedor"**.
 
-## 1) Migración (DB)
+## Cambios
 
-Una sola migración con:
+### 1) `src/features/cxp/components/cxpColumns.tsx`
+- Eliminar la columna `acciones` (botón Pagar + dropdown Ver detalle / Editar / Eliminar).
+- Eliminar de `CxPColumnsOptions` las callbacks `onRegistrarPago`, `onEditar`, `onEliminar` (ya no se usan desde la tabla). También `canEdit` puede eliminarse de la firma.
+- La tabla queda con: Folio, Folio prov., Proveedor, Emisión, Vencimiento, Días vencido, Mon., Total, Pagado, Saldo, Estatus, Aprobación.
 
-### a) Schema
-- `proveedor_facturas.folio_interno text` (nullable inicialmente para backfill, luego `NOT NULL`).
-- Índice único: `UNIQUE (organization_id, folio_interno)` donde `deleted_at IS NULL` (partial index — permite reusar folio si se borra lógico, pero en la práctica nunca lo reusaremos).
+### 2) `src/features/cxp/routes/Cxp.tsx`
+- Quitar las callbacks que ya no recibe `buildCxPColumns`.
+- Pasar al modal de detalle nuevas callbacks: `onPagar`, `onEditar`, `onEliminar` → reusan `f.setPagar`, `f.setEditar` y `onEliminar` existente.
 
-### b) Contador por tenant
-Tabla `folio_secuencias`:
+### 3) `src/features/cxp/components/DialogDetallePagosProveedor.tsx`
+- **Renombrar título** a "Detalle de factura de proveedor". La descripción (folio interno · folio prov · proveedor) se mantiene.
+- **Nuevos props**: `onPagar(f)`, `onEditar(f)`, `onEliminar(f)`.
+- **Nuevo toolbar de acciones** justo después del header (antes de los botones de aprobación), agrupado a la derecha con separador visual:
+  - **Registrar pago** (verde primario). Sólo visible si `canEdit && f.saldo > 0 && f.estado !== "Borrador"`. Deshabilitado con tooltip "Requiere aprobación antes de pagar" si `estado_aprobacion !== "aprobada"`.
+  - **Editar factura** (outline). Sólo si `canEdit`.
+  - **Eliminar factura** (outline destructivo). Sólo si `canEdit`. Cierra este modal y abre el confirm de eliminar.
+- Al hacer clic en cualquier acción que abre otro diálogo (Pagar/Editar/Eliminar), cerrar el modal de detalle primero para evitar dos diálogos modales encimados.
 
-```text
-organization_id uuid
-tipo            text     -- 'factura_proveedor' (extensible a futuro)
-ultimo_numero   bigint   default 0
-PRIMARY KEY (organization_id, tipo)
-```
+### 4) Versionado
+- `APP_VERSION` → `13.109.0`.
+- Entrada en `CHANGELOG.md` describiendo el rediseño: tabla más limpia, acciones consolidadas en el modal de detalle, nuevo nombre.
 
-Con GRANTs estándar y RLS (sólo `service_role`; los usuarios no la tocan directo).
+## Fuera de scope
 
-### c) RPC atómica `siguiente_folio_proveedor(p_org_id uuid) returns text`
-- `SECURITY DEFINER`, `search_path=public`.
-- `INSERT ... ON CONFLICT ... DO UPDATE SET ultimo_numero = folio_secuencias.ultimo_numero + 1 RETURNING ultimo_numero`.
-- Devuelve `'FP-' || lpad(ultimo_numero::text, 6, '0')`.
-- `GRANT EXECUTE TO authenticated`.
+- No tocar `useCxpPageState` ni los demás diálogos (Nueva, Editar, Pagar, Confirm eliminar) — sólo se invocan diferente.
+- No cambiar `DoubleConfirmDeleteDialog` ni la lógica de "no se puede eliminar si tiene pagos" (toast informativo se mantiene).
+- No renombrar el archivo `DialogDetallePagosProveedor.tsx` para evitar churn en imports/tests; sólo cambia el título visible.
 
-### d) Trigger `BEFORE INSERT`
-- Si `NEW.folio_interno IS NULL`, lo calcula con la RPC. Garantiza que cualquier insert (UI, edge function, import) reciba folio.
+## Analogía 🍽️
 
-### e) Backfill de las 12 facturas existentes
-- Ordenadas por `created_at ASC`, asignar `FP-000001…FP-000012`. Actualizar contador a `12`.
-- Luego `ALTER COLUMN folio_interno SET NOT NULL`.
-
-## 2) Cambios de código
-
-### Tipos & servicios
-- Esperar regeneración automática de `src/integrations/supabase/types.ts` tras la migración.
-- `src/features/cxp/services/proveedorFacturas.ts`: incluir `folio_interno` en los SELECT (`COLUMNAS_FACTURA_CXP`).
-- `FacturaCxP` type: agregar `folio_interno: string`.
-
-### Captura nueva (`useNuevaFacturaProveedorForm`)
-- **No cambia**: el trigger asigna el folio. Tras `INSERT`, el `RETURNING` ya trae `folio_interno` para mostrarlo en el toast de éxito ("Capturada como FP-000013").
-
-### UI
-- **`cxpColumns.tsx`** — nueva columna **Folio interno** a la izquierda de "Folio prov." (50–90px, `font-mono`, badge sutil).
-- **`DialogDetallePagosProveedor`** y **`DialogEditarFacturaProveedor`** — header muestra `FP-000013 · Folio prov. A-12345`.
-- **`DialogEditarFacturaProveedor`** — agregar `folio_interno` al banner read-only (junto al proveedor).
-- **PDF comprobante de pago** (`src/features/cxp/pdf/...` si existe) — incluir folio interno como referencia primaria.
-- **Búsqueda CXP** (filtro de texto en `useCxpFiltros` / RPC de operadores) — buscar también por `folio_interno`.
-- **Bitácora**: los `descripcion` de eventos CXP referencian `folio_proveedor`; cambiar a `folio_interno (folio prov.)` en los nuevos eventos. Eventos viejos quedan como están.
-
-### Versionado
-- `APP_VERSION` → `13.108.0` (feature).
-- `CHANGELOG.md`: entrada explicando que ahora cada factura de proveedor tiene un folio interno `FP-XXXXXX` único por organización, autoincremental, usado en tabla, modales, PDFs y búsqueda. Las 12 facturas existentes recibieron folio en orden cronológico.
-
-### Memoria
-- Guardar `mem://features/folio-interno-cxp` con: formato, RPC `siguiente_folio_proveedor`, tabla `folio_secuencias`, política inmutable (nunca actualizar `folio_interno`), trigger BEFORE INSERT.
-
-## 3) Fuera de scope
-
-- Folios internos para **facturas de venta** (`facturas`), proformas, embarques o cotizaciones. Si después quieres replicar el patrón, la tabla `folio_secuencias` ya soporta más tipos.
-- Configurar formato custom por organización (prefijo/longitud). Por ahora fijo `FP-` + 6 dígitos.
-- Reasignar folios después de borrado lógico.
-
-## Analogía 🎟️
-
-Es como darle a cada factura un **número de ticket de taquilla** propio cuando entra al sistema. El folio del proveedor sigue ahí (como el nombre impreso en el boleto), pero internamente cada documento tiene un número único, corto y consecutivo que nadie más puede repetir — perfecto para ponerlo en una transferencia bancaria o referenciarlo por WhatsApp.
+Era como un menú de restaurante donde cada plato traía sus propios cubiertos en la mesa (pesado, mucho ruido visual). Ahora la mesa queda despejada y los cubiertos llegan **junto con el plato** cuando lo pides — todas las acciones aparecen al abrir el detalle de la factura.

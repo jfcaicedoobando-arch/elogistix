@@ -1,10 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { DollarSign, Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -25,16 +19,7 @@ const APROB_COLOR: Record<EstadoAprob, string> = {
 };
 const APROB_LABEL: Record<EstadoAprob, string> = { pendiente: "Por aprobar", aprobada: "Aprobada", rechazada: "Rechazada" };
 
-export interface CxPColumnsOptions {
-  canEdit: boolean;
-  onRegistrarPago: (f: FacturaCxP) => void;
-  onVerDetalle: (f: FacturaCxP) => void;
-  onEditar: (f: FacturaCxP) => void;
-  onEliminar: (f: FacturaCxP) => void;
-}
-
-export function buildCxPColumns(opts: CxPColumnsOptions): ColumnDef<FacturaCxP, unknown>[] {
-  const { canEdit, onRegistrarPago, onVerDetalle, onEditar, onEliminar } = opts;
+export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
   return defineColumns<FacturaCxP>([
     {
       id: "folio_interno", header: "Folio",
