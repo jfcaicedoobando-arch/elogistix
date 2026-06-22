@@ -4,7 +4,7 @@
  */
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Truck, Inbox, Receipt, Landmark } from "lucide-react";
+import { LayoutDashboard, Truck, Inbox, Receipt, Landmark, LayoutList } from "lucide-react";
 
 const TABS = [
   { to: "/compras", label: "Resumen", icon: LayoutDashboard, match: (p: string) => p === "/compras" },
@@ -12,6 +12,7 @@ const TABS = [
   { to: "/cxp/por-capturar", label: "Por capturar", icon: Inbox, match: (p: string) => p === "/cxp/por-capturar" },
   { to: "/cxp", label: "Facturas", icon: Receipt, match: (p: string) => p === "/cxp" },
   { to: "/cxp/por-pagar", label: "Por pagar", icon: Landmark, match: (p: string) => p === "/cxp/por-pagar" },
+  { to: "/compras/aging", label: "Antigüedad", icon: LayoutList, match: (p: string) => p === "/compras/aging" },
 ];
 
 export function ComprasTabStrip() {

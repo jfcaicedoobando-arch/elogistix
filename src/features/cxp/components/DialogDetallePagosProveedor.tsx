@@ -23,6 +23,9 @@ import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hook
 import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
+import { BotonesAprobacionFactura } from "./BotonesAprobacionFactura";
+import { NotasCreditoSection } from "./NotasCreditoSection";
+import { usePermissions } from "@/hooks/shared";
 
 interface Props {
   open: boolean;
@@ -35,6 +38,8 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
   const { data: pagos = [], isLoading } = usePagosProveedor(factura?.id);
   const eliminar = useEliminarPagoProveedor(factura?.id ?? "");
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const { canEditFinance, isAdmin } = usePermissions();
+  const puedeAprobar = canEditFinance || isAdmin;
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -48,19 +53,29 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
           </DialogHeader>
 
           {factura && (
-            <div className="px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-b">
-              <Kpi label="Total Factura" value={formatCurrency(factura.total, factura.moneda)} />
-              <Kpi label="Total Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
-              <Kpi
-                label="Saldo Pendiente"
-                value={formatCurrency(factura.saldo, factura.moneda)}
-                tone={factura.saldo > 0 ? "warn" : "default"}
-              />
-              <Kpi label="# Pagos" value={String(pagos.length)} />
-            </div>
+            <>
+              <div className="px-6 pt-4 pb-3 border-b">
+                <BotonesAprobacionFactura
+                  facturaId={factura.id}
+                  estado={factura.estado_aprobacion}
+                  motivoRechazo={factura.motivo_rechazo}
+                  puedeAprobar={puedeAprobar}
+                />
+              </div>
+              <div className="px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-b">
+                <Kpi label="Total Factura" value={formatCurrency(factura.total, factura.moneda)} />
+                <Kpi label="Total Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
+                <Kpi
+                  label="Saldo Pendiente"
+                  value={formatCurrency(factura.saldo, factura.moneda)}
+                  tone={factura.saldo > 0 ? "warn" : "default"}
+                />
+                <Kpi label="# Pagos" value={String(pagos.length)} />
+              </div>
+            </>
           )}
 
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             {isLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-9 w-full" />
@@ -139,6 +154,15 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {factura && (
+              <NotasCreditoSection
+                facturaId={factura.id}
+                monedaFactura={factura.moneda}
+                saldoFactura={factura.saldo}
+                canEdit={canEdit}
+              />
             )}
           </div>
 

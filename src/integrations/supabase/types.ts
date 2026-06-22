@@ -4674,6 +4674,8 @@ export type Database = {
       }
       proveedor_facturas: {
         Row: {
+          aprobada_at: string | null
+          aprobada_por: string | null
           archivo_pdf_url: string | null
           archivo_xml_url: string | null
           categoria_presupuesto_id: string | null
@@ -4684,6 +4686,7 @@ export type Database = {
           dias_credito: number
           embarque_id: string | null
           estado: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura: string
           fecha_emision: string
           fecha_vencimiento: string | null
@@ -4691,6 +4694,7 @@ export type Database = {
           id: string
           iva: number
           moneda: Database["public"]["Enums"]["moneda"]
+          motivo_rechazo: string | null
           notas: string
           organization_id: string
           proveedor_id: string
@@ -4704,6 +4708,8 @@ export type Database = {
           uuid_fiscal: string | null
         }
         Insert: {
+          aprobada_at?: string | null
+          aprobada_por?: string | null
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
           categoria_presupuesto_id?: string | null
@@ -4714,6 +4720,7 @@ export type Database = {
           dias_credito?: number
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_aprobacion?: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura?: string
           fecha_emision?: string
           fecha_vencimiento?: string | null
@@ -4721,6 +4728,7 @@ export type Database = {
           id?: string
           iva?: number
           moneda?: Database["public"]["Enums"]["moneda"]
+          motivo_rechazo?: string | null
           notas?: string
           organization_id?: string
           proveedor_id: string
@@ -4734,6 +4742,8 @@ export type Database = {
           uuid_fiscal?: string | null
         }
         Update: {
+          aprobada_at?: string | null
+          aprobada_por?: string | null
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
           categoria_presupuesto_id?: string | null
@@ -4744,6 +4754,7 @@ export type Database = {
           dias_credito?: number
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_aprobacion?: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura?: string
           fecha_emision?: string
           fecha_vencimiento?: string | null
@@ -4751,6 +4762,7 @@ export type Database = {
           id?: string
           iva?: number
           moneda?: Database["public"]["Enums"]["moneda"]
+          motivo_rechazo?: string | null
           notas?: string
           organization_id?: string
           proveedor_id?: string
@@ -5631,6 +5643,49 @@ export type Database = {
           warns: number
         }[]
       }
+      aprobar_factura_proveedor: {
+        Args: { p_aprobar: boolean; p_id: string; p_motivo?: string }
+        Returns: {
+          aprobada_at: string | null
+          aprobada_por: string | null
+          archivo_pdf_url: string | null
+          archivo_xml_url: string | null
+          categoria_presupuesto_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number
+          embarque_id: string | null
+          estado: Database["public"]["Enums"]["estado_proveedor_factura"]
+          estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
+          estado_captura: string
+          fecha_emision: string
+          fecha_vencimiento: string | null
+          folio_proveedor: string
+          id: string
+          iva: number
+          moneda: Database["public"]["Enums"]["moneda"]
+          motivo_rechazo: string | null
+          notas: string
+          organization_id: string
+          proveedor_id: string
+          proveedor_nombre: string
+          retenciones: number
+          rfc_proveedor: string | null
+          subtotal: number
+          tipo_cambio_usd: number
+          total: number
+          updated_at: string
+          uuid_fiscal: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "proveedor_facturas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       aprobar_nota_credito_proveedor: {
         Args: { _nc_id: string }
         Returns: undefined
@@ -5994,6 +6049,20 @@ export type Database = {
       }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
+      cxp_aging_proveedores: {
+        Args: { p_fecha?: string; p_org?: string }
+        Returns: {
+          d_1_30: number
+          d_31_60: number
+          d_61_90: number
+          mas_90: number
+          num_facturas: number
+          proveedor_id: string
+          proveedor_nombre: string
+          saldo_total: number
+          vigente: number
+        }[]
+      }
       cxp_por_capturar: {
         Args: never
         Returns: {
@@ -6406,6 +6475,7 @@ export type Database = {
           venta_usd: number
         }[]
       }
+      proveedor_salud: { Args: { p_proveedor_id: string }; Returns: Json }
       proveedores_listado: {
         Args: {
           p_categoria?: string
@@ -6609,6 +6679,10 @@ export type Database = {
         | "Llamada en frío"
         | "Evento"
         | "Otro"
+      estado_aprobacion_factura_proveedor:
+        | "pendiente"
+        | "aprobada"
+        | "rechazada"
       estado_comision: "Devengada" | "Liquidada" | "Cancelada"
       estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado"
       estado_cotizacion:
@@ -6886,6 +6960,11 @@ export const Constants = {
         "Llamada en frío",
         "Evento",
         "Otro",
+      ],
+      estado_aprobacion_factura_proveedor: [
+        "pendiente",
+        "aprobada",
+        "rechazada",
       ],
       estado_comision: ["Devengada", "Liquidada", "Cancelada"],
       estado_conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
