@@ -71,34 +71,63 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Mi bandeja", items: filterBandejas(["/cxp/por-capturar"]) },
-  { label: "Gestión", items: filterGestion(["/facturacion", "/proformas", "/cartera", "/cxp", "/tesoreria", "/comisiones"]) },
+  {
+    label: "Compras",
+    items: [
+      ...filterBandejas(["/cxp/por-capturar"]),
+      ...filterGestion(["/cxp"]),
+      ...filterDirectorio(["/proveedores"]),
+    ],
+  },
+  {
+    label: "Facturación",
+    items: [
+      ...filterBandejas(["/facturacion/por-emitir"]),
+      ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]),
+    ],
+  },
+  { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
 
 const buildTesorero: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Mi bandeja", items: filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]) },
-  { label: "Gestión", items: filterGestion(["/cxp", "/tesoreria", "/comisiones"]) },
+  {
+    label: "Compras",
+    items: [
+      ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]),
+      ...filterGestion(["/cxp"]),
+      ...filterDirectorio(["/proveedores"]),
+    ],
+  },
+  { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
+  { label: "Facturación", items: filterGestion(["/cartera", "/comisiones"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
 
 
 const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
-  { label: "Mi bandeja", items: filterBandejas(["/cxp/por-capturar"]) },
-  { label: "Gestión", items: filterGestion(["/cxp"]) },
-  { label: "Directorio", items: filterDirectorio(["/proveedores"]) },
+  {
+    label: "Compras",
+    items: [
+      ...filterBandejas(["/cxp/por-capturar"]),
+      ...filterGestion(["/cxp"]),
+      ...filterDirectorio(["/proveedores"]),
+    ],
+  },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
-  { label: "Gestión", items: filterGestion(["/cartera", "/facturacion", "/proformas"]) },
+  {
+    label: "Facturación",
+    items: filterGestion(["/cartera", "/facturacion", "/proformas"]),
+  },
   { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];

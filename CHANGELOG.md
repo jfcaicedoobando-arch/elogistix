@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.98.0] - 2026-06-22
+- **feat(sidebar) reagrupación estilo Odoo para roles contables**: los perfiles `contador`, `tesorero`, `auxiliar_contable` y `ejecutivo_cobranza` ya no ven todo apilado bajo "Gestión". Ahora hay dos cajones claros — **Compras** (CxP, bandejas CxP, proveedores) y **Facturación** (facturas emitidas, proformas, cobranza, comisiones, bandeja "por emitir"). Tesorería queda como bloque propio. Sólo cambia el agrupamiento visual en `useAppSidebarSections`; rutas, permisos y badges siguen iguales. Roles operativos/comerciales no se tocaron.
+
 ## [13.97.3] - 2026-06-22
 - **fix(lint) `clientesTableConfig.tsx` — react-refresh**: el archivo exportaba la const `clientesColumns` junto al componente `ClienteMobileCard`, lo que disparaba el warning `react-refresh/only-export-components` y rompía el job de Lint (`--max-warnings 0`). Se movió `ClienteMobileCard` a su propio archivo `src/features/cliente/components/ClienteMobileCard.tsx` y se actualizó el import en `Clientes.tsx`.
 
