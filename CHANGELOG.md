@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.97.3] - 2026-06-22
+- **fix(lint) `clientesTableConfig.tsx` — react-refresh**: el archivo exportaba la const `clientesColumns` junto al componente `ClienteMobileCard`, lo que disparaba el warning `react-refresh/only-export-components` y rompía el job de Lint (`--max-warnings 0`). Se movió `ClienteMobileCard` a su propio archivo `src/features/cliente/components/ClienteMobileCard.tsx` y se actualizó el import en `Clientes.tsx`.
+
 ## [13.97.2] - 2026-06-22
 - **fix(ci) Power of 10 — `Clientes.tsx` > 200 líneas**: tras los cambios mobile el archivo creció a 211 líneas y rompió los tests `audit-report` y `architecture-baseline`. Se extrajo la config de columnas y la tarjeta mobile a `src/features/cliente/components/clientesTableConfig.tsx`. El route queda en 158 líneas.
 
