@@ -6,11 +6,14 @@
 import { useState } from "react";
 import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
 
+export type AprobacionFiltro = "todos" | "pendiente" | "aprobada" | "rechazada";
+
 export function useCxpPageState() {
   const [search, setSearch] = useState("");
   const [estatus, setEstatus] = useState<EstatusCxP | "todos">("todos");
   const [moneda, setMoneda] = useState<"todas" | "MXN" | "USD" | "EUR">("todas");
   const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
+  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("todos");
   const [proveedorId, setProveedorId] = useState<string>("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
@@ -25,6 +28,7 @@ export function useCxpPageState() {
     estatus !== "todos" ||
     moneda !== "todas" ||
     origen !== "todos" ||
+    aprobacion !== "todos" ||
     proveedorId !== "todos" ||
     fechaDesde !== "" ||
     fechaHasta !== "";
@@ -34,6 +38,7 @@ export function useCxpPageState() {
     estatus,
     moneda,
     origen,
+    aprobacion,
     proveedor_id: proveedorId === "todos" ? undefined : proveedorId,
     fecha_desde: fechaDesde || undefined,
     fecha_hasta: fechaHasta || undefined,
@@ -45,6 +50,7 @@ export function useCxpPageState() {
     estatus, setEstatus,
     moneda, setMoneda,
     origen, setOrigen,
+    aprobacion, setAprobacion,
     proveedorId, setProveedorId,
     fechaDesde, setFechaDesde,
     fechaHasta, setFechaHasta,
