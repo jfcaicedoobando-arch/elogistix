@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.113.0] - 2026-06-22
+- **feat(clientes)**: el alta y la edición de cliente ahora capturan **Régimen Fiscal SAT** (obligatorio) y **Uso CFDI por defecto** (opcional, default `G03 — Gastos en general`). Sin estos datos no se puede timbrar CFDI 4.0. El parser de la **Constancia de Situación Fiscal (CSF)** ya devolvía el régimen pero se descartaba; ahora se prellena automáticamente al subir el PDF. Analogía: antes guardábamos el nombre y la dirección del cliente pero olvidábamos su "tipo de contribuyente"; ahora lo pedimos desde el primer día para que la factura salga sin tropiezos.
+- **ui(clientes)**: el diálogo **Editar Cliente** muestra una alerta roja cuando faltan datos fiscales (régimen o uso CFDI), para que los clientes históricos se completen al editarlos.
+- **csv(clientes)**: la plantilla de importación masiva acepta columnas opcionales `regimen_fiscal` y `uso_cfdi_default`.
+
 ## [13.112.0] - 2026-06-22
 - **fix(dashboard)**: la barra **"Gastos fijos cubiertos"** en *Arribos este mes* ahora calcula los gastos del mes desde la **categoría contable de cada factura** (no desde el proveedor). Antes sumaba sólo facturas cuyo proveedor tenía la categoría vieja `GastoOperativo`, que ya no se asigna — el resultado era que muchas facturas reales no contaban y el % aparecía inflado. Analogía: antes contábamos los gastos del mes mirando la camiseta del repartidor; ahora miramos la etiqueta de cada factura, que es donde realmente vive la clasificación.
 - **feat(presupuesto)**: las **categorías presupuestales** ahora tienen un campo **Tipo contable** con 3 opciones: *Costo directo de embarque* (COGS, va al embarque), *Indirecto de operación* (sueldos operativos, sistemas) y *Administración* (renta, contador, marketing). Sólo *Indirecto* y *Administración* cuentan como gastos fijos. Backfill automático por nombre: Nómina → Indirecto, Comisiones → Costo directo, el resto → Administración. Editable desde **Configuración → Categorías**.
