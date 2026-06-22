@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.105.1] - 2026-06-22
+- **fix(proveedores)**: al crear un proveedor (nacional o internacional) ya no aparecen dos toasts de éxito apilados. Se eliminó el `notifySuccess` del `onSuccess` de la mutación `addProveedor`; cada call site (wizard normal y diálogo "Crear desde CFDI") sigue emitiendo su propio toast con el mensaje correcto al contexto.
+
 ## [13.105.0] - 2026-06-22
 - **feat(proveedores)**: el Paso 2 del wizard "Nuevo proveedor" y el dialog de edición ahora muestran campos distintos según el origen. Para `Extranjero` se capturan datos de transferencia internacional (beneficiario, banco, país, SWIFT/BIC, IBAN o cuenta, ABA/Routing, banco intermediario y su SWIFT, dirección del banco y referencia de pago); para `Nacional` se mantiene banco mexicano + CLABE. La CLABE solo se valida en nacionales y el SWIFT se valida (8 u 11 chars) en extranjeros. Nuevas columnas opcionales en `proveedores`: `banco_pais`, `swift_bic`, `iban`, `aba_routing`, `banco_direccion`, `banco_intermediario`, `banco_intermediario_swift`, `beneficiario`, `referencia_pago`. La tarjeta "Datos bancarios" del detalle se adapta automáticamente.
 
