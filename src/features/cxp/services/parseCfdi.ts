@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
+import { fetchWithRetry } from "@/lib/net/fetchWithRetry";
 
 export interface CfdiConceptoParsed {
   descripcion: string;
