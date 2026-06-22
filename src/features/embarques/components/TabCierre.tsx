@@ -84,7 +84,7 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
         </Alert>
       ) : null}
 
-      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} />
+      <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} informativo={esCerrado} />
 
       <div className="flex flex-wrap gap-2">
         {!esCerrado && (isAdmin || canEditFinance) && (
