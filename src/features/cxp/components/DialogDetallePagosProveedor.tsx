@@ -75,7 +75,7 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
             </>
           )}
 
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             {isLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-9 w-full" />
@@ -154,6 +154,15 @@ export function DialogDetallePagosProveedor({ open, onOpenChange, factura, canEd
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {factura && (
+              <NotasCreditoSection
+                facturaId={factura.id}
+                monedaFactura={factura.moneda}
+                saldoFactura={factura.saldo}
+                canEdit={canEdit}
+              />
             )}
           </div>
 
