@@ -77,21 +77,32 @@ async function callEdgeFunction(
   file: File,
   categorias: { id: string; nombre: string }[],
 ): Promise<CfdiParsedResponse> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("categorias", JSON.stringify(categorias));
-
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
   }
 
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-cfdi-xml`,
+    () => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("categorias", JSON.stringify(categorias));
+      return {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: formData,
+      };
+    },
     {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session.access_token}` },
-      body: formData,
+      onRetry: ({ attempt, reason }) => {
+        Sentry.addBreadcrumb({
+          category: "cfdi",
+          message: "parse_cfdi_xml.retry",
+          level: "warning",
+          data: { attempt, reason },
+        });
+      },
     },
   );
 
