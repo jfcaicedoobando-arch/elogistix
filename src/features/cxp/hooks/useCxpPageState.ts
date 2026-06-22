@@ -15,6 +15,7 @@ export function useCxpPageState() {
   const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
   const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("todos");
   const [proveedorId, setProveedorId] = useState<string>("todos");
+  const [categoriaPresupuestoId, setCategoriaPresupuestoId] = useState<string>("todas");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
