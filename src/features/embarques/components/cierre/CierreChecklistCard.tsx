@@ -1,10 +1,6 @@
 /**
  * Subcomponente presentacional: tarjeta del checklist de validaciones de cierre.
- * Extraído de `TabCierre.tsx` (Auditoría arquitectónica 13.56.6 / paso 15).
- *
- * v13.89.2 — Cada item es ahora un `CierreCheckItem` con deep-link al tab
- * correspondiente del embarque. La prop `etiquetas` se conserva por
- * compatibilidad pero ya no se usa (los labels viven en `cierreCheckMeta`).
+ * v13.106.1 — Modo `informativo` para embarques ya cerrados (legacy).
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CierreCheckItem } from "./CierreCheckItem";
@@ -19,17 +15,27 @@ interface Props {
   isLoading: boolean;
   checks: CierreCheck[];
   embarqueId: string;
-  /** @deprecated — los labels están en `cierreCheckMeta`. Se acepta para no romper consumidores. */
+  /** Si true, presenta el checklist como referencia (sin badges rojos ni CTAs). */
+  informativo?: boolean;
+  /** @deprecated — los labels están en `cierreCheckMeta`. */
   etiquetas?: Record<string, string>;
 }
 
-export function CierreChecklistCard({ isLoading, checks, embarqueId }: Props) {
+export function CierreChecklistCard({ isLoading, checks, embarqueId, informativo = false }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Checklist de cierre</CardTitle>
+        <CardTitle className="text-base">
+          {informativo ? "Checklist de cierre (informativo)" : "Checklist de cierre"}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {informativo && (
+          <p className="text-xs text-muted-foreground">
+            Este embarque se cerró antes de que existieran algunas de estas reglas.
+            La lista es solo referencial; no requiere acción.
+          </p>
+        )}
         {isLoading && <p className="text-sm text-muted-foreground">Validando…</p>}
         {!isLoading && checks.length === 0 && (
           <p className="text-sm text-muted-foreground">Sin datos.</p>
@@ -42,6 +48,7 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId }: Props) {
               ok={c.ok}
               detalle={c.detalle}
               embarqueId={embarqueId}
+              informativo={informativo}
             />
           ))}
         </ul>
