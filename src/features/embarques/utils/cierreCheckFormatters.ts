@@ -85,6 +85,12 @@ export const fmtContenedores = (d: unknown): string | null => {
   return null;
 };
 
+export const fmtContenedoresFechas = (d: unknown): string | null => {
+  const sin = Number(pick(d, "contenedores_sin_fechas") ?? 0);
+  if (sin > 0) return `${sin} contenedor(es) sin fecha de descarga o devolución`;
+  return null;
+};
+
 export const fmtRepPendientes = (d: unknown): string | null => {
   const n = Number(pick(d, "pendientes") ?? 0);
   if (n > 0) return `${n} pago(s) PPD sin REP timbrado`;
