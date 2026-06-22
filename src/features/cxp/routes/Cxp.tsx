@@ -81,16 +81,7 @@ export default function Cxp() {
     f.setAEliminar(fact);
   }, [f]);
 
-  const columns = useMemo(
-    () => buildCxPColumns({
-      canEdit,
-      onRegistrarPago: f.setPagar,
-      onVerDetalle: f.setDetalle,
-      onEditar: f.setEditar,
-      onEliminar,
-    }),
-    [canEdit, f.setPagar, f.setDetalle, f.setEditar, onEliminar],
-  );
+  const columns = useMemo(() => buildCxPColumns(), []);
 
   return (
     <div className="space-y-4">
