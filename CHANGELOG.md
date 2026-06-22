@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.97.1] - 2026-06-22
+- **fix(rpc) `embarque_admin_pendientes_resumen` / `embarques_admin_pendientes_count`**: las funciones sumaban `monto_total` de `conceptos_venta`, columna que no existe (la real es `total`). Esto reventaba la carga del resumen administrativo del embarque desde `/inicio` (Sentry `JAVASCRIPT-REACT-15`, 4 ocurrencias en `13.96.0`). Se recrearon ambas RPCs con la columna correcta y se añadió filtro `deleted_at IS NULL` en `conceptos_venta`. Validado ejecutando el RPC contra un embarque real.
+
 ## [13.97.0] - 2026-06-21
 - **feat(mobile) auditoría visual — bloques P1 + P2 (sin bottom tab bar)**: segunda pasada de mejoras tras el bloque P0.
   - `Layout.tsx`: los íconos del header (`GlobalSearch`, `NotificacionesPopover`, `FeedbackButton`, `ThemeToggle`) ahora cumplen el mínimo táctil de 44×44 px en `<sm` (`h-11 w-11`) y vuelven a `h-9 w-9` en escritorio — selector CSS `[&_button[aria-label]]:...` para no tocar cada componente.
