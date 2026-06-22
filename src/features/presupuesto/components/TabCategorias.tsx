@@ -82,27 +82,39 @@ export function TabCategorias() {
               <thead className="bg-muted/50 text-xs text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 text-left">Nombre</th>
+                  <th className="px-3 py-2 text-left">Tipo contable</th>
                   <th className="px-3 py-2 text-right">Orden</th>
                   <th className="px-3 py-2">Activa</th>
                   <th className="px-3 py-2 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {(cats.data ?? []).map((c, i) => (
-                  <tr key={c.id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
-                    <td className="px-3 py-2 font-medium">{c.nombre}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{c.orden}</td>
-                    <td className="px-3 py-2 text-center">{c.activa ? "Sí" : "No"}</td>
-                    <td className="px-3 py-2 text-right space-x-1">
-                      <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {(cats.data ?? []).map((c, i) => {
+                  const tipoLabel = c.tipo_contable === "CostoDirectoEmbarque" ? "Costo directo de embarque"
+                    : c.tipo_contable === "IndirectoOperacion" ? "Indirecto de operación"
+                    : "Administración";
+                  const esGastoFijo = c.tipo_contable !== "CostoDirectoEmbarque";
+                  return (
+                    <tr key={c.id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
+                      <td className="px-3 py-2 font-medium">{c.nombre}</td>
+                      <td className="px-3 py-2">
+                        <span className={`inline-block text-[11px] px-2 py-0.5 rounded ${esGastoFijo ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-700"}`}>
+                          {tipoLabel}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">{c.orden}</td>
+                      <td className="px-3 py-2 text-center">{c.activa ? "Sí" : "No"}</td>
+                      <td className="px-3 py-2 text-right space-x-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

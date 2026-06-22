@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.112.0] - 2026-06-22
+- **fix(dashboard)**: la barra **"Gastos fijos cubiertos"** en *Arribos este mes* ahora calcula los gastos del mes desde la **categoría contable de cada factura** (no desde el proveedor). Antes sumaba sólo facturas cuyo proveedor tenía la categoría vieja `GastoOperativo`, que ya no se asigna — el resultado era que muchas facturas reales no contaban y el % aparecía inflado. Analogía: antes contábamos los gastos del mes mirando la camiseta del repartidor; ahora miramos la etiqueta de cada factura, que es donde realmente vive la clasificación.
+- **feat(presupuesto)**: las **categorías presupuestales** ahora tienen un campo **Tipo contable** con 3 opciones: *Costo directo de embarque* (COGS, va al embarque), *Indirecto de operación* (sueldos operativos, sistemas) y *Administración* (renta, contador, marketing). Sólo *Indirecto* y *Administración* cuentan como gastos fijos. Backfill automático por nombre: Nómina → Indirecto, Comisiones → Costo directo, el resto → Administración. Editable desde **Configuración → Categorías**.
+- **db**: nuevo enum `tipo_contable_categoria` y columna `presupuesto_categorias.tipo_contable` (default `Administracion`). RPC `dashboard_summary` actualizada para hacer join contra `presupuesto_categorias` por `tipo_contable`.
+
 ## [13.111.2] - 2026-06-22
 - **ui(proveedores)**: para proveedores con origen **Nacional** se elimina el campo **Tipo** (Naviera, Transportista, etc.). Ya no se pide en el alta ni en la edición, y deja de validarse. La clasificación contable ahora vive en cada factura, por lo que el "tipo" del proveedor nacional dejó de aportar información útil. Para proveedores **Extranjeros** sigue igual (Naviera / Aerolínea / Agente de Carga). Los datos existentes en BD se conservan intactos. Analogía: antes le poníamos una etiqueta al proveedor "este vende fletes", aunque luego nos facturara mantenimiento; ahora la etiqueta va en cada factura, no en el proveedor.
 
