@@ -22,7 +22,7 @@ import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
   { value: "todos", label: "Todos" },
   { value: "Logistico", label: "Logísticos" },
-  { value: "GastoOperativo", label: "Gastos operativos" },
+  { value: "GastoOperativo", label: "Gastos de administración" },
 ];
 
 export default function Proveedores() {
@@ -66,7 +66,7 @@ export default function Proveedores() {
       <PageHeader
         icon={<Truck className="h-6 w-6 text-accent" />}
         title="Proveedores"
-        description="Directorio de proveedores logísticos y de gastos operativos"
+        description="Directorio de proveedores logísticos y de gastos de administración"
         actions={
           canEdit ? (
             <div className="hidden sm:flex gap-2">

@@ -70,7 +70,7 @@ export default function ProveedorDetalle() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold" title={proveedor.nombre}>{nombreFmt}</h1>
             <Badge variant="secondary">
-              {proveedor.categoria === "GastoOperativo" ? (proveedor.subtipo_gasto ?? "Gasto operativo") : (proveedor.tipo ?? "—")}
+              {proveedor.categoria === "GastoOperativo" ? (proveedor.subtipo_gasto ?? "Gasto de administración") : (proveedor.tipo ?? "—")}
             </Badge>
           </div>
         </div>

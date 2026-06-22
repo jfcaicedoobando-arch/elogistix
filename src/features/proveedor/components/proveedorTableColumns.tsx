@@ -24,7 +24,7 @@ function ClasificacionCell({ row }: { row: { original: ProveedorListItem } }) {
     return (
       <div className="flex flex-col gap-0.5">
         <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 w-fit">
-          Gasto operativo
+          Gasto de administración
         </Badge>
         <span className="text-xs text-muted-foreground">{labelSubtipoGasto(p.subtipo_gasto)}</span>
       </div>

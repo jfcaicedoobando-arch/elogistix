@@ -151,7 +151,7 @@ export function TabConciliacion({ embarqueId }: Props) {
                 <EmptyState
                   icon={Scale}
                   title={isLoading ? "Cargando conciliación…" : "Sin costos para conciliar"}
-                  description="Carga conceptos de costo y vincúlalos desde las facturas de proveedor para ver la comparación cotizado vs real."
+                  description="Carga costos directos y vincúlalos desde las facturas de proveedor para ver la comparación cotizado vs real."
                 />
               </div>
             }
