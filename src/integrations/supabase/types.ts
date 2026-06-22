@@ -6020,6 +6020,7 @@ export type Database = {
           pagado: number
           proveedor_nombre: string
           saldo: number
+          tipo_cambio_usd: number
           total: number
         }[]
       }
