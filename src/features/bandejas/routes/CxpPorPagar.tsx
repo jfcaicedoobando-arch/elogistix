@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
