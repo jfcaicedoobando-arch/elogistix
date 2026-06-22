@@ -59,8 +59,9 @@ export function useProveedorMutations() {
   const addProveedorMutation = useMutation({
     mutationFn: (prov: TablesInsert<"proveedores">) => insertProveedor(prov),
     onSuccess: () => {
+      // Toast de éxito lo emite cada call site (useProveedoresCrear /
+      // CrearProveedorDesdeCfdiDialog) para evitar avisos duplicados.
       queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
-      notifySuccess(undefined, { title: "Proveedor creado" });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al crear proveedor: ${error.message}`, error, method: "CREATE_PROVEEDOR" });
