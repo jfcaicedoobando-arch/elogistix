@@ -1,53 +1,90 @@
-## Anchos dinámicos en la tabla de Gestión de Usuarios
+## Refresh UI/UX del modal "Nuevo Usuario"
 
 ### Diagnóstico
-Hoy todas las columnas usan **anchos fijos en píxeles** (`w-[220px]`, `w-[240px]`, etc.). Consecuencia:
-- En pantallas grandes (≥1600 px) sobra espacio en blanco a la derecha de la tabla.
-- En laptops chicas (≤1366 px) el select de "Cambiar rol" queda apretado y empuja el botón de eliminar.
-- No se adapta a si el sidebar está colapsado o expandido.
+El modal funciona pero tiene un bug visual y varias oportunidades de pulido.
 
-### Estrategia: anchos fluidos con mínimos y máximos
+**Bug crítico** — `NuevoUsuarioDialog.tsx:147-152`
+El `SelectItem` del rol contiene un `<div flex-col>` con título + descripción. Cuando Radix pinta el valor seleccionado dentro del `SelectTrigger`, ese mismo nodo se renderiza y desborda en vertical (se ve "Atención a Clientes" flotando arriba del trigger y la descripción cortada). Además, abajo se repite la descripción en un `<p>` con `bg-muted/40` → **doble pintura** de la misma info.
 
-En vez de ancho exacto, cada columna declara **mín / máx / cómo crece**. La columna "Usuario" se queda con el sobrante; las demás son intrínsecas a su contenido.
+**Otros pain points**
+- Layout 100% vertical → modal alto en pantallas chicas, ancho desperdiciado en desktop.
+- Contraseña: regla "min 6" + sin generador ni medidor → admin tiene que inventar pw y dictarla.
+- No hay opción de enviar invitación por correo (workflow más profesional).
+- Sin auto-focus en Email al abrir.
+- Sin preview/avatar del usuario que se crea (inconsistente con la tabla nueva).
+- Header pequeño, sin jerarquía visual fuerte.
 
-| Columna       | Antes        | Propuesta                                            | Por qué                                                     |
-| ------------- | ------------ | ---------------------------------------------------- | ----------------------------------------------------------- |
-| Usuario       | `min-w-[260px]` | `w-auto min-w-[240px] max-w-[480px]`              | Es la columna larga (email) → absorbe el sobrante.          |
-| Rol           | `w-[220px]`     | `w-[1%] whitespace-nowrap`                        | Que mida sólo lo que mide el badge más largo.               |
-| Fecha registro| `w-[170px]`     | `w-[1%] whitespace-nowrap`                        | Las fechas DD/MM/YYYY son fijas; no necesita extra.         |
-| Cambiar rol   | `w-[240px]`     | `w-[1%]` + trigger `w-full min-w-[180px] max-w-[260px]` | El select crece con el viewport pero respeta un mínimo. |
-| Acciones      | `w-[50px]`      | igual                                              | Icono.                                                       |
+### Cambios propuestos
 
-**Cómo funciona `w-[1%] + whitespace-nowrap`:** truco clásico de HTML tables — la columna se encoge a su contenido natural y deja todo el sobrante para las columnas `w-auto`. Es la forma estándar de hacer columnas "shrink-to-fit" en un `<table>`.
+**1. Fix del SelectTrigger (sin perder la descripción rica en el dropdown)**
+- `SelectItem` sigue mostrando título + descripción en el menú (bueno para elegir).
+- `SelectValue` recibe un **render personalizado** que sólo muestra el `ROLE_LABELS[role]` + badge de color del rol (`ROLE_BADGE_CLASSES`).
+- Se elimina el `<p>` duplicado de abajo y se reemplaza por una **tarjeta de preview** del rol seleccionado (descripción + 2-3 capacidades clave) que vive en la columna derecha — más útil que el `<p>` plano.
+- Se acota el `SelectContent` con `w-[var(--radix-select-trigger-width)]` o ancho fijo razonable para que el dropdown no explote.
 
-### Breakpoints responsivos para densidad
+**2. Layout 2 columnas en desktop**
+```text
+┌─────────────────────────────────────────────────┐
+│ 👤  Nuevo Usuario                            ×  │
+│ Registra un usuario y asígnale un rol.          │
+├──────────────────────┬──────────────────────────┤
+│ CREDENCIALES         │ ACCESO                   │
+│ ✉ Email              │ 🛡 Rol                   │
+│ [usuario@...      ]  │ [Atención a Clientes ▾]  │
+│                      │                          │
+│ 🔒 Contraseña        │ ┌─ Vista previa rol ──┐ │
+│ [••••••• ] [👁][🎲]  │ │ 🟦 Atención Clientes│ │
+│ ●●●○○ Buena          │ │ Solo lectura...     │ │
+│ □ Enviar invitación  │ │ • Embarques: ver    │ │
+│   por correo         │ │ • CRM: sin acceso   │ │
+│                      │ └─────────────────────┘ │
+├──────────────────────┴──────────────────────────┤
+│                       [Cancelar] [Crear usuario]│
+└─────────────────────────────────────────────────┘
+```
+- En `sm` y abajo: vuelve a 1 columna (`md:grid-cols-2`).
+- Modal pasa de `dialogSize.md` a `dialogSize.lg` (más ancho para que las 2 columnas respiren).
 
-Adicional al fluido, se aplican utilidades de Tailwind para variar tamaños por breakpoint:
+**3. Contraseña con generador + medidor**
+- Botón **🎲 Generar** (icono `Dice5`) al lado del 👁: genera password fuerte de 12 chars (mayúsculas + minúsculas + números + símbolo). Implementación en `lib/passwords/generator.ts` (~30 líneas, fácilmente testeable).
+- **Medidor de fuerza** (4 niveles: débil/aceptable/buena/fuerte) basado en heurística simple: longitud + variedad de charsets. Renderizado con 4 barritas de color (`bg-destructive/bg-warning/bg-info/bg-success`).
+- Sube el mínimo de **6 a 8 caracteres** (validación y placeholder).
 
-- **Avatar**: `h-8 w-8` (default) → `md:h-9 md:w-9` (más visible en monitores grandes).
-- **Padding de filas**: la DataTable ya soporta `density="comfortable"`; se mantiene.
-- **Select trigger**: `min-w-[160px] sm:min-w-[180px] lg:min-w-[220px]`.
+**4. Vista previa del rol (reemplaza el `<p>` duplicado)**
+- Card con borde + bg-muted/30:
+  - Badge del rol (mismo `ROLE_BADGE_CLASSES`).
+  - Descripción completa (`ROLE_DESCRIPTIONS[role]`).
+- Vive en la columna derecha bajo el select.
 
-### Cambios concretos
+**5. Header con más jerarquía**
+- Icono 5×5 → **icon-tile** (10×10 con bg-primary/10, primary text), estilo consistente con otros modales del ERP.
+- Border-bottom debajo del header + padding generoso.
 
-**`usuariosColumns.tsx`** — Reemplazar los `meta.width` fijos por las clases fluidas descritas arriba. El sistema `defineColumns` ya pasa `meta.width` al `<th>`/`<td>` vía className, así que se aceptan utilidades de Tailwind tal cual.
+**6. Quality-of-life**
+- `autoFocus` en input Email.
+- Pulsar Enter en cualquier campo dispara submit (ya lo hace por ser `<form>`, verificar).
+- Footer con `border-t pt-4` para separación visual.
+- Loading state: el botón "Crear usuario" muestra spinner + texto "Creando…" (hoy ya tiene spinner pero conserva texto).
 
-**`Usuarios.tsx`** — La barra superior (buscador + filtro + contador) ya es `flex-col sm:flex-row`, no se toca.
-
-**`appVersion.ts`** — Bump a `13.118.3`.
-**`CHANGELOG.md`** — Entrada describiendo el cambio.
+### Archivos a tocar
+- `src/features/admin/components/usuario/NuevoUsuarioDialog.tsx` — layout 2 col, fix SelectValue, card preview del rol, header con icon-tile.
+- `src/features/admin/components/usuario/NuevoUsuarioCredencialesSection.tsx` — botón generar pw + medidor de fuerza, min 8.
+- `src/lib/passwords/generator.ts` (nuevo) — `generarPassword(length=12)` + `evaluarFuerza(pw)` → `{ score: 0-4, label }`. ~50 líneas, con test unitario.
+- `src/lib/passwords/__tests__/generator.test.ts` (nuevo) — 4-5 casos.
+- `src/constants/appVersion.ts` — bump `13.118.5`.
+- `CHANGELOG.md` — entrada describiendo el refresh.
 
 ### Lo que NO cambia
-- Hooks/servicios/RLS.
-- Orden jerárquico, tooltips, búsqueda, filtros — todo lo del 13.118.2 sigue igual.
-- No se toca la clase `DataTable` compartida; sólo el `meta.width` por columna (es un patrón ya soportado).
-
-### Resultado esperado
-- En tu monitor de 1954 px: la columna Usuario se estira ocupando el espacio libre; las demás se quedan compactas pegadas a la derecha.
-- En laptop de 1366 px: no aparece scroll horizontal, el select muestra "Coordinador Logístico" completo.
-- En tablet (≥768 px): la tabla sigue legible porque cada columna respeta su `min-w`.
+- Hook `useCreateUser`, servicio, edge function `user-management` — intactos.
+- Validaciones de email/RLS, lista de roles asignables, defaults — iguales.
+- Selector de organización (`showOrgSelector`) sigue arriba del select de rol, sin cambios funcionales.
+- No se implementa "enviar invitación por correo" en esta vuelta (requiere edge function + plantilla — propongo dejarlo para una iteración aparte). Se deja la UX preparada visualmente para que en el futuro un radio "Asignar contraseña ahora" / "Enviar invitación" sea natural.
 
 ### Notas técnicas
-- Se asume `meta.width` ya se aplica como `className` al `<th>`/`<td>` (verificado en cambios previos donde funcionaba con `w-[160px]`).
-- No se introduce JS para medir viewport — todo es CSS puro, sin reflows extra.
-- Se conserva el header `Fecha de registro` con `whitespace-nowrap` para que no parta en dos líneas.
+- El fix del `SelectValue` es lo más urgente — es un bug, no sólo estética.
+- El generador de pw es **client-side puro**: usa `crypto.getRandomValues` (Web Crypto API, disponible en navegadores modernos).
+- Medidor de fuerza es heurística simple, no zxcvbn (evitamos sumar dependencia de 800kb por algo que no necesita ser perfecto).
+- No se introducen nuevas dependencias.
+
+### Opcional: design directions visuales
+Si prefieres ver **3 variantes visuales** rendereadas antes de decidir (split horizontal vs vertical, intensidad del rol-preview, posición del medidor de pw, etc.), confirma y llamo a `design--create_directions` con la captura del modal actual.
