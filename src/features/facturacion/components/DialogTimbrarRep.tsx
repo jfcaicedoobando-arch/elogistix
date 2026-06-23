@@ -1,12 +1,12 @@
 /**
  * DialogTimbrarRep — Diálogo para timbrar el Recibo Electrónico de Pago (REP)
  * de un pago aplicado a una factura PPD.
- * v13.91.0
+ * Migrado a `FormDialogShell` (v13.120.0).
  */
 import { Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 import { buildChecksRep } from "@/features/facturacion/utils/validarDatosTimbradoRep";
 import { useQuery } from "@tanstack/react-query";
@@ -65,43 +65,40 @@ export function DialogTimbrarRep({ pago, factura, open, onOpenChange }: Props) {
     timbrar.mutate(pago.id, { onSuccess: () => onOpenChange(false) });
   };
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button onClick={onConfirm} disabled={!puedeTimbrar || timbrar.isPending}>
+        {timbrar.isPending ? "Timbrando…" : "Timbrar REP"}
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" /> Timbrar REP — Factura {factura.numero}
-          </DialogTitle>
-          <DialogDescription>
-            Emite el Recibo Electrónico de Pago (Complemento de Pagos) ante el SAT por este abono.
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Receipt}
+      title={`Timbrar REP — Factura ${factura.numero}`}
+      description="Emite el Recibo Electrónico de Pago (Complemento de Pagos) ante el SAT por este abono."
+      size="md"
+      footer={footer}
+    >
+      <ul className="text-sm space-y-1">
+        {checks.map((c, i) => (
+          <li key={i} className={c.ok ? "text-emerald-700" : "text-destructive"}>
+            {c.ok ? "✓" : "✗"} {c.label}
+          </li>
+        ))}
+      </ul>
 
-        <div className="space-y-3">
-          <ul className="text-sm space-y-1">
-            {checks.map((c, i) => (
-              <li key={i} className={c.ok ? "text-emerald-700" : "text-destructive"}>
-                {c.ok ? "✓" : "✗"} {c.label}
-              </li>
-            ))}
-          </ul>
-
-          {!puedeTimbrar && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                Completa los datos fiscales del pago y del cliente antes de timbrar el REP.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={onConfirm} disabled={!puedeTimbrar || timbrar.isPending}>
-            {timbrar.isPending ? "Timbrando…" : "Timbrar REP"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {!puedeTimbrar && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Completa los datos fiscales del pago y del cliente antes de timbrar el REP.
+          </AlertDescription>
+        </Alert>
+      )}
+    </FormDialogShell>
   );
 }

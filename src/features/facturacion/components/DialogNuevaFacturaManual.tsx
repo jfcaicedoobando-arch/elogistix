@@ -1,13 +1,11 @@
 /**
  * Wizard de factura manual (sin embarque/proforma).
  * Casos: anticipos, servicios extra, refacturaciones sin embarque cerrado.
+ * Migrado a `FormDialogShell` (v13.120.0).
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FilePlus2 } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
@@ -115,69 +114,63 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
     );
   };
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
+      <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || crear.isPending}>
+        Guardar borrador
+      </Button>
+      <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || crear.isPending}>
+        {crear.isPending ? "Procesando…" : "Crear y timbrar"}
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FilePlus2 className="h-5 w-5" /> Nueva factura manual
-          </DialogTitle>
-          <DialogDescription>
-            Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado.
-            Lo normal es facturar desde una proforma aprobada.
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={FilePlus2}
+      title="Nueva factura manual"
+      description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
+      size="xl"
+      footer={footer}
+    >
+      <div>
+        <Label>Cliente *</Label>
+        <Select value={clienteId} onValueChange={onClienteChange}>
+          <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+          <SelectContent>
+            {clientes.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.nombre} {c.rfc ? `· ${c.rfc}` : "· sin RFC"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {clienteIncompleto && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertDescription>
+              Este cliente no tiene datos fiscales completos (RFC, CP y régimen).
+              Puedes guardar borrador, pero no podrás timbrar hasta completarlos en el detalle del cliente.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
 
-        <div className="space-y-5">
-          <div>
-            <Label>Cliente *</Label>
-            <Select value={clienteId} onValueChange={onClienteChange}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
-              <SelectContent>
-                {clientes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nombre} {c.rfc ? `· ${c.rfc}` : "· sin RFC"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {clienteIncompleto && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertDescription>
-                  Este cliente no tiene datos fiscales completos (RFC, CP y régimen).
-                  Puedes guardar borrador, pero no podrás timbrar hasta completarlos en el detalle del cliente.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+      <FacturaManualDatosFiscales value={fiscal} onChange={updateFiscal} />
 
-          <FacturaManualDatosFiscales value={fiscal} onChange={updateFiscal} />
+      <FacturaManualConceptosTable
+        conceptos={conceptos}
+        moneda={fiscal.moneda}
+        tasaIva={tasaIva}
+        onChange={setConceptos}
+      />
 
-          <FacturaManualConceptosTable
-            conceptos={conceptos}
-            moneda={fiscal.moneda}
-            tasaIva={tasaIva}
-            onChange={setConceptos}
-          />
-
-          <div>
-            <Label>Notas (opcional)</Label>
-            <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
-          </div>
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>
-            Cancelar
-          </Button>
-          <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || crear.isPending}>
-            Guardar borrador
-          </Button>
-          <Button onClick={() => handleSubmit(true)} disabled={!puedeTimbrar || crear.isPending}>
-            {crear.isPending ? "Procesando…" : "Crear y timbrar"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <div>
+        <Label>Notas (opcional)</Label>
+        <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
+      </div>
+    </FormDialogShell>
   );
 }
