@@ -27,6 +27,10 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   initial?: Partial<TarifaInput>;
   tarifaId?: string;
+  /** Si se provee, bloquea el Select de agente y oculta la lógica de selección manual. */
+  agenteIdFijo?: string;
+  /** Override del título del modal (e.g. cuando es desde el portal del agente). */
+  tituloOverride?: string;
 }
 
 function calcularErrores(form: TarifaInput): Record<string, boolean> {
@@ -41,22 +45,24 @@ function calcularErrores(form: TarifaInput): Record<string, boolean> {
   };
 }
 
-export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
+export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, tituloOverride }: Props) {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: rutas = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
   const { data: tipos = [] } = useTiposContenedor();
   const { crear, actualizar } = useCosteoTarifaMutations();
 
-  const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
+  const [form, setForm] = useState<TarifaInput>(() =>
+    buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial),
+  );
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialForm(initial));
+      setForm(buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial));
       setIntentoEnvio(false);
     }
-  }, [open, initial]);
+  }, [open, initial, agenteIdFijo]);
 
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
@@ -83,7 +89,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       icon={Tag}
-      title={esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)"}
+      title={tituloOverride ?? (esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)")}
       description="Captura o edita la tarifa marítima con sus costos y condiciones."
       size="2xl"
       headerAside={
@@ -102,7 +108,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
-        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} />
+        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} agenteIdFijo={agenteIdFijo} />
         <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} errores={errores} />
         <NumerosFields form={form} setForm={setForm} errores={errores} />
         <VigenciaFields form={form} setForm={setForm} errores={errores} />

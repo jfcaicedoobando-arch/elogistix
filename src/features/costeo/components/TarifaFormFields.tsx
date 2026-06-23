@@ -17,17 +17,24 @@ interface EntidadesProps {
   agentes: CatalogosRow[];
   navieras: CatalogosRow[];
   errores?: Record<string, boolean>;
+  /** Si se provee, el Select de agente queda bloqueado (uso del portal del agente). */
+  agenteIdFijo?: string;
 }
 
 const invalidCls = (invalid?: boolean) =>
   invalid ? "border-destructive focus-visible:ring-destructive" : undefined;
 
-export function EntidadesFields({ form, setForm, agentes, navieras, errores }: EntidadesProps) {
+export function EntidadesFields({ form, setForm, agentes, navieras, errores, agenteIdFijo }: EntidadesProps) {
+  const agenteBloqueado = Boolean(agenteIdFijo);
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
         <Label htmlFor="tarifa-agente">Agente *</Label>
-        <Select value={form.agente_id} onValueChange={(v) => setForm({ ...form, agente_id: v })}>
+        <Select
+          value={form.agente_id}
+          onValueChange={(v) => { if (!agenteBloqueado) setForm({ ...form, agente_id: v }); }}
+          disabled={agenteBloqueado}
+        >
           <SelectTrigger
             id="tarifa-agente"
             aria-invalid={errores?.agente_id || undefined}
@@ -36,11 +43,16 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores }: E
             <SelectValue placeholder="Selecciona agente" />
           </SelectTrigger>
           <SelectContent>
-            {agentes.filter((a) => a.activo).map((a) => (
+            {agentes.filter((a) => a.activo || a.id === agenteIdFijo).map((a) => (
               <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {agenteBloqueado && (
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Las tarifas que captures quedan a tu nombre automáticamente.
+          </p>
+        )}
       </div>
       <div>
         <Label htmlFor="tarifa-naviera">Naviera *</Label>

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.129.0] - 2026-06-23
+- **feat(portal-agente)**: El agente ya puede **capturar y mantener sus propias tarifas marítimas, su carta garantía y su tabulador de demoras desde el portal** (antes era sólo lectura). En `/agente/tarifas` aparece el botón **Nueva tarifa** y cada renglón gana un menú con **Editar** (sólo borradores/rechazadas) y **Duplicar como nueva** (para crear una versión nueva de una tarifa vigente sin tocar la original). El formulario reutiliza el de operaciones pero deja el **campo Agente bloqueado** al agente autenticado. En `/agente/garantias` se reemplazó el placeholder por el flujo completo de condiciones por naviera (carta garantía + tabulador escalonado de demoras), reutilizando `NavieraCondicionForm` y `DemorasTarifaEditor`. **Flujo de aprobación**: cualquier tarifa que el agente capture o edite nace/vuelve a `borrador` automáticamente — un nuevo trigger `costeo_tarifas_agente_force_borrador` lo fuerza en BD y bloquea de tajo la edición de tarifas `vigente`/`reemplazada` (defensa en profundidad sobre la RLS existente). Para cambiar una tarifa vigente, el agente debe duplicarla. Bump APP_VERSION → 13.129.0. Analogía: antes el agente sólo podía mirar el menú del restaurante desde la ventana; ahora ya tiene la libreta para anotar sus platillos y entregárselos al chef (operaciones), pero el chef sigue siendo quien decide qué plato sale a la mesa.
+
 ## [13.128.2] - 2026-06-23
 - **chore(portal-agente)**: El usuario demo `agente.demo@librecarga.com` ya no contamina LONGSAIL — ahora apunta a un proveedor + agente ficticio **AGENTEPRUEBA** (CN, Agente de Carga). Al entrar al portal verá tarifas/embarques vacíos, ideal para pruebas sin tocar datos reales.
 
