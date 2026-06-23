@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.11] - 2026-06-23
+- **chore(arch/power-of-10)**: tras 13.114.9 dos archivos productivos rebasaron las 200 líneas (regla Power of 10) y rompieron CI (`architecture-baseline` y `audit-report`). Splits: (1) `errorDetailsExtract.ts` (222 → 132 líneas) — `deriveErrorCode` + helpers extraídos a `errorCodeDerive.ts`, y `findZodError` compartido movido a `errorDetailsExtract.internal.ts`. La API pública (`extractErrorDetails`, `deriveErrorCode`) se preserva vía re-export. (2) `CargaCfdiSection.tsx` (215 → 147 líneas) — toda la lógica de subida/red/toasts movida al hook `useCargaCfdi.ts`; el componente quedó como pura presentación. Sin cambios de comportamiento; los 28 tests afectados pasan.
+
 ## [13.114.10] - 2026-06-23
 - **feat(cxp/permisos)**: tesorero y auxiliar contable ahora pueden **capturar, editar y eliminar facturas de proveedor** en CXP. Antes la política RLS `Tenant CRUD proveedor_facturas` (y su gemela en `proveedor_facturas_conceptos`) sólo permitía a `admin`, `super_admin` y `contador`; cualquier intento de guardar desde el modal "Nueva factura de proveedor" con rol tesorero/auxiliar reventaba con `new row violates row-level security policy`. Cambio: ambas políticas se ampliaron añadiendo `auxiliar_contable` y `tesorero` al bloque de roles permitidos, preservando el aislamiento por `organization_id`. Analogía: la caja fuerte de facturas de proveedor tenía 3 llaves; ahora hay 5, misma chapa, más gente autorizada a abrirla.
 
