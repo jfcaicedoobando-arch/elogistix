@@ -9,10 +9,14 @@
 export const TOLERANCIA_MONTO_MXN = 1;
 export const TOLERANCIA_DIAS = 5;
 
-/** True si la diferencia absoluta de monto está dentro de la tolerancia (inclusivo). */
+/** True si la diferencia absoluta de monto está dentro de la tolerancia (inclusivo).
+ *  Diferencia y tolerancia se redondean a centavos para evitar el clásico float
+ *  drift (`100.01 - 100 === 0.0100000…0005`). */
 export function dentroDeTolerancia(montoA: number, montoB: number, tolerancia = TOLERANCIA_MONTO_MXN): boolean {
   if (!Number.isFinite(montoA) || !Number.isFinite(montoB)) return false;
-  return Math.abs(montoA - montoB) <= tolerancia;
+  const delta = Math.round(Math.abs(montoA - montoB) * 100) / 100;
+  const tol = Math.round(tolerancia * 100) / 100;
+  return delta <= tol;
 }
 
 /** Días absolutos entre dos fechas ISO `YYYY-MM-DD` (UTC, redondeado). */
