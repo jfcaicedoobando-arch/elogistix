@@ -40,7 +40,14 @@ Introducido en v13.128.0. Editor de tarifas + garantías desde portal en v13.129
 - Guard: `src/features/auth/components/AgenteProtectedRoute.tsx`.
 - Routes: `src/routes/agenteRoutes.tsx` incluidas en `src/routes.tsx`.
 
+**Flujo de aprobación (v13.130.0)**:
+- RPC `agente_aprobar_tarifa(_tarifa_id, _estado, _motivo)` — `_motivo` requerido si `_estado='rechazada'` (≥5 chars). Aprobar setea `aprobada_por`/`aprobada_en` y limpia motivo. Reactivar pasa a `borrador`.
+- `costeo_tarifas` columnas: `motivo_rechazo`, `aprobada_por`, `aprobada_en`.
+- Operaciones: `/costeo/tarifas` con filtro Aprobación (Pendientes por defecto + count), columna *Aprobación* (`EstadoAprobacionBadge`) y botones ✓/✗/↺ por fila. Hook `useAprobacionTarifa` invalida `costeo-tarifas` y `portal-agente.tarifas`.
+- Notificación interna automática: el RPC inserta en `notificaciones_internas` para el `agente_users.user_id` vinculado (tipo `tarifa_aprobada`/`tarifa_rechazada`).
+- Trigger `costeo_tarifas_agente_force_borrador` también limpia `motivo_rechazo` cuando el agente reedita.
+
 **Pendiente**:
-- Notificación interna automática al subir tarifa (`notificaciones_internas`).
-- UI inline de aprobar/rechazar en `/costeo/tarifas` (tab "Borradores") — el RPC ya existe.
 - Upload del PDF de carta garantía al bucket privado `agente-cartas-garantia` (hoy el campo es sólo metadatos: vigencia, folio, notas).
+- Email real al agente además de la notificación in-app.
+
