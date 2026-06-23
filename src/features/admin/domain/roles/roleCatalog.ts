@@ -34,18 +34,18 @@ export const ROLE_LABELS: Record<AppRole, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   super_admin: "Acceso total a la plataforma e impersonación cross-tenant.",
-  admin_org: "Dueño o gerente general de la organización. Administra usuarios, configuración y todos los módulos.",
-  gerente_operaciones: "Supervisa la operación diaria. Lee finanzas y aprueba, sin tocar configuración ni usuarios.",
-  gerente_visor: "Gerente en modo solo lectura. Ve toda la operación y finanzas, sin crear, editar ni aprobar.",
-  gerente_comercial: "Supervisa al equipo de ventas. Ve CRM completo, cotizaciones con márgenes, clientes y comisiones de la organización; sin configuración, usuarios ni tesorería.",
-  coordinador_logistico: "Opera cotizaciones, embarques y documentación. No ve márgenes ni costos internos.",
-  ejecutivo_pricing: "Arma cotizaciones con costos y P&L preliminar. Visibilidad financiera limitada a sus cotizaciones.",
-  contador: "Emite facturas a cliente, aprueba notas de crédito y supervisa EERR. Acceso financiero completo.",
-  tesorero: "Ejecuta pagos a proveedores, conciliación bancaria y liquidación de comisiones.",
-  auxiliar_contable: "Captura facturas de proveedor (XML/PDF) y las concilia contra los costos del embarque. No autoriza pagos.",
-  ejecutivo_cobranza: "Da seguimiento a cartera vencida, registra promesas de pago, envía recordatorios y captura cobros recibidos. No emite facturas.",
-  vendedor: "Trabaja CRM y ve embarques/cobranza de sus cuentas asignadas.",
-  customer_service: "Solo lectura operativa (embarques, tracking, clientes). Sin acceso financiero.",
+  admin_org: "Dueño funcional de la organización. Administra usuarios, configuración, catálogos y todos los módulos.",
+  gerente_operaciones: "Supervisa embarques, documentación y operativo diario. Lee finanzas y aprueba; no toca configuración ni usuarios.",
+  gerente_visor: "Ve toda la operación y finanzas de la organización. No crea, edita ni aprueba nada. Ideal para auditoría o dirección.",
+  gerente_comercial: "Supervisa al equipo de ventas. Ve CRM completo, cotizaciones con márgenes, clientes y comisiones. Sin tesorería ni usuarios.",
+  coordinador_logistico: "Opera cotizaciones, embarques, tracking y documentos. No ve márgenes, costos internos ni datos financieros.",
+  ejecutivo_pricing: "Arma cotizaciones con costos y P&L preliminar. Ve márgenes de sus cotizaciones; sin acceso a tesorería ni facturación.",
+  contador: "Emite facturas a cliente, aprueba notas de crédito y supervisa el estado de resultados. Acceso financiero completo.",
+  tesorero: "Ejecuta pagos a proveedores, conciliación bancaria y liquidación de comisiones. No emite facturas.",
+  auxiliar_contable: "Captura facturas de proveedor (XML/PDF) y las concilia contra costos del embarque. No autoriza pagos.",
+  ejecutivo_cobranza: "Da seguimiento a cartera vencida, registra promesas de pago y captura cobros. No emite facturas ni autoriza pagos.",
+  vendedor: "Trabaja CRM (leads, oportunidades, actividades) y ve embarques y cobranza de sus cuentas asignadas.",
+  customer_service: "Solo lectura operativa: embarques, tracking, clientes. Sin acceso a finanzas, configuración ni CRM.",
   cliente: "Acceso restringido al portal del cliente.",
   admin: "Rol legado. Usar Administrador en su lugar.",
   operador: "Rol legado. Usar Coordinador Logístico en su lugar.",
@@ -72,21 +72,29 @@ export const ROLE_BADGE_CLASSES: Record<AppRole, string> = {
   viewer: "bg-muted text-muted-foreground",
 };
 
-/** Roles asignables desde la UI de administración del tenant. */
-export const ASSIGNABLE_ROLES_ADMIN_ORG: readonly AppRole[] = [
-  "admin_org",
-  "gerente_operaciones",
-  "gerente_visor",
-  "gerente_comercial",
-  "coordinador_logistico",
-  "ejecutivo_pricing",
-  "contador",
-  "tesorero",
-  "auxiliar_contable",
-  "ejecutivo_cobranza",
-  "vendedor",
-  "customer_service",
+/** Grupo de roles asignables, agrupados por área funcional para la UI. */
+export interface RoleGroup {
+  label: string;
+  roles: readonly AppRole[];
+}
+
+/**
+ * Grupos asignables desde la UI de administración del tenant.
+ * Orden interno: del más amplio (gerencia) al más operativo.
+ */
+export const ASSIGNABLE_ROLE_GROUPS: readonly RoleGroup[] = [
+  { label: "Administración", roles: ["admin_org"] },
+  { label: "Operaciones", roles: ["gerente_operaciones", "gerente_visor", "coordinador_logistico"] },
+  { label: "Comercial", roles: ["gerente_comercial", "ejecutivo_pricing", "vendedor"] },
+  { label: "Finanzas", roles: ["contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza"] },
+  { label: "Soporte", roles: ["customer_service"] },
 ];
+
+/** Roles asignables desde la UI de administración del tenant (derivado de los grupos). */
+export const ASSIGNABLE_ROLES_ADMIN_ORG: readonly AppRole[] = ASSIGNABLE_ROLE_GROUPS.flatMap(
+  (g) => g.roles,
+);
+
 
 /** Roles legacy que se conservan en BD pero no se muestran como opción nueva. */
 export const LEGACY_ROLES: readonly AppRole[] = ["admin", "operador", "viewer"];
