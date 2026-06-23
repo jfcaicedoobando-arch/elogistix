@@ -1,11 +1,13 @@
 /**
  * Wrapper de TarifaForm para el portal del agente.
- * Inyecta `agenteIdFijo` desde el contexto del agente autenticado y muestra un aviso
- * de "la tarifa queda en borrador". El trigger en BD fuerza estado_aprobacion='borrador'
- * de todas formas; aquí sólo cuidamos la UX.
+ * Inyecta `agenteIdFijo`, `agenteNombreFijo` y las rutas de la organización vinculada
+ * (no usa OrganizationContext porque el usuario agente no es miembro del tenant).
+ * El trigger en BD fuerza estado_aprobacion='borrador'.
  */
+import { useQuery } from "@tanstack/react-query";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
+import { fetchCosteoRutas } from "@/features/costeo/services/rutas";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 
 interface Props {
@@ -24,6 +26,14 @@ const TITULOS: Record<Props["modo"], string> = {
 
 export function AgenteTarifaForm({ open, onOpenChange, initial, tarifaId, modo }: Props) {
   const { data: ctx } = useAgenteContext();
+
+  const { data: rutas = [] } = useQuery({
+    queryKey: ["portal-agente", "rutas", ctx?.organizationId],
+    queryFn: () => fetchCosteoRutas(ctx!.organizationId),
+    enabled: !!ctx?.organizationId && open,
+    staleTime: 5 * 60 * 1000,
+  });
+
   if (!ctx) return null;
 
   return (
@@ -34,7 +44,9 @@ export function AgenteTarifaForm({ open, onOpenChange, initial, tarifaId, modo }
       initial={initial}
       tarifaId={modo === "duplicar" ? undefined : tarifaId}
       agenteIdFijo={ctx.agenteId}
+      agenteNombreFijo={ctx.agenteNombre}
       tituloOverride={TITULOS[modo]}
+      rutasOverride={rutas}
     />
   );
 }
