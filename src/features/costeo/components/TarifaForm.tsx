@@ -45,7 +45,7 @@ function calcularErrores(form: TarifaInput): Record<string, boolean> {
   };
 }
 
-export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
+export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, tituloOverride }: Props) {
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: rutas = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
