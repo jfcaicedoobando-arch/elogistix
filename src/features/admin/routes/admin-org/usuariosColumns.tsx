@@ -76,7 +76,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
             const unresolved = u.email === "No disponible";
             return (
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8 shrink-0">
+                <Avatar className="h-8 w-8 shrink-0 md:h-9 md:w-9">
                   <AvatarFallback className="bg-muted text-[11px] font-semibold text-muted-foreground">
                     {inicialesDeEmail(u.email)}
                   </AvatarFallback>
