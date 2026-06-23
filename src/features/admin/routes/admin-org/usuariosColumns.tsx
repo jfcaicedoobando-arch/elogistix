@@ -107,16 +107,17 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           accessorFn: (u) => u.role,
           enableSorting: true,
           sortingFn: sortByRoleHierarchy,
-          meta: { width: "w-[180px]" },
+          meta: { width: "w-[220px]" },
           cell: ({ row }) => {
             const role = row.original.role;
             return (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge className={`${roleBadge[role]} cursor-help`}>
+                  <Badge className={`${roleBadge[role]} cursor-help whitespace-nowrap`}>
                     {obtenerEtiquetaRol(role)}
                   </Badge>
                 </TooltipTrigger>
+
                 <TooltipContent side="top" className="max-w-xs">
                   <p className="text-xs leading-snug">{ROLE_DESCRIPTIONS[role]}</p>
                 </TooltipContent>
