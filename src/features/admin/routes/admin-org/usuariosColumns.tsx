@@ -69,14 +69,14 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
             const eb = b.original.email ?? "";
             return ea.localeCompare(eb, "es-MX", { sensitivity: "base" });
           },
-          meta: { width: "min-w-[260px]" },
+          meta: { width: "w-auto min-w-[240px] max-w-[480px]" },
           cell: ({ row }) => {
             const u = row.original;
             const isSelf = u.user_id === currentUserId;
             const unresolved = u.email === "No disponible";
             return (
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8 shrink-0">
+                <Avatar className="h-8 w-8 shrink-0 md:h-9 md:w-9">
                   <AvatarFallback className="bg-muted text-[11px] font-semibold text-muted-foreground">
                     {inicialesDeEmail(u.email)}
                   </AvatarFallback>
@@ -107,7 +107,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           accessorFn: (u) => u.role,
           enableSorting: true,
           sortingFn: sortByRoleHierarchy,
-          meta: { width: "w-[220px]" },
+          meta: { width: "w-[1%] whitespace-nowrap" },
           cell: ({ row }) => {
             const role = row.original.role;
             return (
@@ -131,7 +131,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           accessorFn: (u) => u.created_at,
           enableSorting: true,
           sortingFn: sortByDate<UserRow>((u) => u.created_at),
-          meta: { width: "w-[170px]", className: "text-xs text-muted-foreground whitespace-nowrap" },
+          meta: { width: "w-[1%] whitespace-nowrap", className: "text-xs text-muted-foreground whitespace-nowrap" },
           cell: ({ row }) => (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -146,7 +146,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
         {
           id: "change_role",
           header: "Cambiar rol",
-          meta: { width: "w-[240px]" },
+          meta: { width: "w-[1%]" },
           cell: ({ row }) => {
             const u = row.original;
             const isSelf = u.user_id === currentUserId;
@@ -160,7 +160,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
                   onPendingRole(u, newRole);
                 }}
               >
-                <SelectTrigger className="w-[220px]">
+                <SelectTrigger className="w-full min-w-[160px] sm:min-w-[180px] lg:min-w-[220px] max-w-[260px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
