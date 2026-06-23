@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, UserPlus } from "lucide-react";
 
 export interface AgenteRow {
   id: string;
@@ -25,6 +25,7 @@ interface Props {
   isLoading: boolean;
   onEditar: (a: AgenteRow) => void;
   onEliminar: (a: { id: string; nombre: string }) => void;
+  onInvitarPortal: (a: AgenteRow) => void;
 }
 
 export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar }: Props) {
