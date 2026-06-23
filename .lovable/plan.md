@@ -1,80 +1,95 @@
-# Plan — Auditoría de **calidad** de tests (no de cobertura)
 
-## Contexto
+# Plan — Mejora de calidad de tests (3 sprints consolidados)
 
-509 tests frontend + 29 tests Deno (edge). Distribución cargada hacia embarques (85), cotización (44), CRM (37), facturación (30). El número es sano pero la **calidad** es lo que decide si los tests funcionan como red de seguridad o como ruido que se ignora.
+Ejecuta de raíz los 3 problemas detectados en la auditoría: **patrones sistémicos**, **huecos críticos sin test** y **fragilidad/over-mocking**. Una sola entrega, una sola versión.
 
-## Objetivo
+## Analogía
 
-Identificar tests que:
-- **No prueban lógica de negocio** (sólo asertan mocks o tautologías como `expect(true).toBe(true)`)
-- **No fallarían si la app se rompe** (sobre-mockeados — el mock devuelve lo que el test espera)
-- **Frágiles** (acoplados a strings exactos de UI, orden de queries, IDs internos)
-- **Duplicados o redundantes** (mismo escenario probado en 3 capas)
-- **Cubren happy path pero NO casos críticos** (errores, edge cases financieros, race conditions)
-- **Sin assertion de invariantes** (suma de IVA, redondeo MXN/USD, transiciones de estado prohibidas)
+Hoy los tests son como una alarma que suena cuando cambias el foco del techo, pero NO suena cuando entra un ladrón. Vamos a invertirlo: que la alarma suene cuando algo importante se rompe y se calle cuando sólo cambias copy.
 
-NO se mide cobertura de líneas. NO se proponen tests nuevos masivos. La auditoría es **diagnóstica**.
+---
 
-## Metodología — 3 sub-agentes en paralelo
+## Sprint 1 — Patrones sistémicos (arreglar de raíz)
 
-### Sub-agente 1 — Tests de lógica de negocio crítica
-Foco: `src/features/{embarques,cotizacion,facturacion,costeo,cxp,tesoreria,profit,comisiones}/`
+### 1.1 Eliminar "tests de grep" en edge functions (5 archivos)
+Archivos: `cxc-recordatorios/index_test.ts`, `demo-access/index_test.ts`, y 3 más que sólo hacen `assertStringIncludes(source, "authenticateRequest")`.
 
-Busca:
-- Tests que mockean Supabase y luego asertan exactamente lo que el mock devolvió → no prueban nada
-- Tests sin assertion de invariantes financieros (totales, IVA, conversión de divisas, redondeo)
-- Tests que no cubren: transiciones de estado inválidas, candados (locks), permisos por rol, RLS
-- Tests donde un cambio breaking en la lógica no haría fallar el test (lo cazaríamos pasando un Error como mock y viendo si el test sigue verde)
+Acción: reemplazar por tests que **invocan el handler** con un Request falso y asertan:
+- 401 sin Authorization
+- 403 si el JWT no tiene el rol esperado
+- 200 con payload válido
 
-### Sub-agente 2 — Tests de hooks / componentes / servicios genéricos
-Foco: `src/features/*/hooks/__tests__/`, `src/components/`, `src/lib/`
+### 1.2 "Spy sin payload" en mutaciones (≥6 servicios)
+Archivos como `embarques/services/mutations.test.ts:150`, `tesoreria/services/conciliacion.test.ts`.
 
-Busca:
-- Tests de hooks que sólo verifican `render` sin interacción (low signal)
-- Tests con assertions de DOM frágiles (`getByText('exactamente esto')` cuando el copy cambia seguido)
-- Tests con timers/setTimeout/setInterval sin `vi.useFakeTimers` (flaky por diseño)
-- Tests que mockean tantas cosas que el SUT real no se ejecuta
-- `expect(spy).toHaveBeenCalled()` sin verificar argumentos → permite que el SUT llame mal
-- Mocks de Supabase sin la cadena thenable correcta (ver `mem://technical/testing-mock-patterns`)
+Acción: cambiar `expect(spy).toHaveBeenCalled()` por aserciones de **qué columna y qué valor** se escribió. Helper nuevo `assertUpdatePayload(mock, table, expectedFields)` para no repetir.
 
-### Sub-agente 3 — Edge functions + guardrails de arquitectura
-Foco: `supabase/functions/*/index_test.ts`, `src/__tests__/architecture/`
+### 1.3 Guardrails de arquitectura con exhaustividad
+Archivos: `sentry-edge-wrapping.test.ts`, `sentry-edge-coverage.test.ts`, `sentry-imports-guardrail.test.ts`, `safe-casts-services.test.ts`.
 
-Busca:
-- Edge function tests que sólo verifican CORS preflight (poca señal de negocio)
-- Tests de arquitectura (Power of 10, sentry-edge-*) que se pueden burlar con comentarios o paths alternos
-- Falta de tests para invariantes críticos: `wrapEdgeHandler` en funciones nuevas, scrub PII en `extra`, RLS en RPCs públicas
-- Tests Deno que no consumen response body (memory leak — ver useful-context)
+Acción: añadir un test que escanea `supabase/functions/*/index.ts` y verifica que **toda función** está en una de las dos listas (wrap o manual). Hoy una función nueva pasa invisible.
 
-## Formato del reporte (lo que el usuario recibe)
+### 1.4 Tests de transiciones inválidas (estados)
+Archivos: `cotizacion/services/mutations/estado.test.ts` documenta que "acepta cualquier estado" — eso es un bug, no un feature.
 
-Cada sub-agente devuelve una tabla:
+Acción: añadir guard en el servicio + test que asegure que transiciones imposibles (`Cerrada → Borrador`, `Pagada → Pendiente`, etc.) **lanzan**. Aplica a cotización (5 estados) y embarques (7 estados).
 
-| # | Severidad | Archivo:línea | Anti-patrón | Por qué no avisa cuando algo se rompe | Acción sugerida |
+---
 
-Y al cierre, una sección **"Patrones sistémicos detectados"** con los 3-5 problemas que se repiten en muchos tests (ataque de raíz vs caso por caso).
+## Sprint 2 — Huecos críticos sin test (los que duelen en producción)
 
-Severidades:
-- 🔴 **CRÍTICO** — el test pasa aunque el código esté roto
-- 🟠 **MEDIO** — el test rompe por razones equivocadas (frágil), o no cubre el caso que más duele
-- 🟡 **BAJO** — redundante, lento, o de bajo valor pero no peligroso
+### 2.1 Acceso anónimo con SERVICE_ROLE
+Test: para cada edge function que usa `SUPABASE_SERVICE_ROLE_KEY`, un test que llama sin Authorization y espera 401.
 
-## Excluido del scope (lo digo explícito)
+### 2.2 División por cero / arrays vacíos
+Archivo: `embarques/services/pnlPorContenedor.ts`.
+Test: contenedor vacío, contenedor con cero TEUs, montos en 0 → no NaN, no Infinity.
 
-- ❌ Cobertura de líneas/branches
-- ❌ Tests nuevos (sólo se proponen si cierran un hueco crítico)
-- ❌ Refactor de la infra de testing (mocks compartidos, setup) — eso ya tiene memorias propias (`testing-cleanup-protocol`, `testing-mock-patterns`)
-- ❌ PDF leak canary y similares ya auditados — no se re-auditan
+### 2.3 Modos no marítimos (Aéreo, Terrestre)
+Hoy los tests asumen marítimo. Añadir casos para los otros 2 modos en funciones de embarque, tracking y cálculo de demoras.
 
-## Entregable final
+### 2.4 Precisión decimal en comisiones y fees
+Extender el modelo de `financialUtils.edge.test.ts` a `comisiones/services/devengadas.ts` y `cxp/services/*`.
 
-Un único informe consolidado con:
-1. **Top 10 tests más peligrosos** (los que dan falsa seguridad — pasan siempre)
-2. **Patrones sistémicos** (qué arreglar de raíz)
-3. **Top 5 huecos críticos sin test** (lógica de negocio importante que rompería en silencio)
-4. **Lista verde** — qué dominios tienen tests sólidos (para usar de modelo)
+### 2.5 Helper de fake timers
+Reemplazar `new Date()` por `vi.useFakeTimers()` + fecha fija en `devengadas.test.ts` y otros 4 archivos con dependencia de tiempo real (flaky a las 23:59).
 
-NO se ejecuta nada — sólo lectura. Al aprobar, se lanzan los 3 sub-agentes en paralelo.
+---
 
-¿Apruebas?
+## Sprint 3 — Fragilidad y over-mocking
+
+### 3.1 Quitar mocks de pura lógica
+Archivo prototipo: `useAdminOrgConfig.test.tsx` mockea `agruparConfigPorCategoria` (función pura). Acción: ejecutarla de verdad.
+
+### 3.2 Reemplazar copy literal en español
+Reemplazar `getByText('Guardar cambios')` por `getByRole('button', { name: /guardar/i })` o `data-testid`. Aplicar en los 10 archivos con más copy literal.
+
+### 3.3 Tests que asertan lo que el mock devuelve
+Marcar y eliminar tests donde `mock.returns(X); expect(result).toBe(X)` — son tautologías.
+
+---
+
+## Validación
+
+Después de cada sprint:
+- `bun run test` (suite completa verde)
+- `bun run audit:tests` (higiene en 0)
+- Inyectar 1 bug intencional en `pnlPorContenedor` y verificar que un test del Sprint 2 lo caza (prueba de "mutation testing" manual).
+
+## Versionado y changelog
+
+- `APP_VERSION` → `13.115.0` (minor, no patch — es un refactor grande de tests)
+- `CHANGELOG.md` → entrada única `## [13.115.0]` con las 3 secciones (Sistémicos, Huecos, Fragilidad)
+- `.lovable/plan.md` se actualiza con avance
+
+## Fuera de scope
+
+- Cobertura de líneas/branches
+- Tests E2E nuevos (los `e2e/specs/*` ya existentes no se tocan)
+- Refactor de `_supabaseChainMock` (ya tiene memoria propia)
+
+## Estimación
+
+~25-35 archivos tocados, ~80-120 assertions nuevas o reescritas, ~15-20 tests eliminados por redundantes. Suite final más pequeña pero con **mucha más señal**.
+
+¿Apruebas para implementar todo en una sola entrega?

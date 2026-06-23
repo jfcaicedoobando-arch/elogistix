@@ -90,11 +90,33 @@ describe("conciliacion service", () => {
   });
 
   describe("conciliarConPago", () => {
-    it("actualiza movimiento con pago_factura_id para cxc", async () => {
+    it("escribe pago_factura_id (no pago_proveedor_id) cuando tipo=cxc", async () => {
       mock.setTableResult("bbva_movimientos", { data: [], error: null });
       await conciliarConPago("m1", "cxc", "p1", "u1");
-      const call = mock.tableCalls.find(c => c.table === "bbva_movimientos");
-      expect(call?.ops).toContain("update");
+      const { assertUpdatePayload, assertEq, findTableCall } = await import(
+        "@/test/helpers/assertMutation"
+      );
+      const call = findTableCall(mock, "bbva_movimientos");
+      assertUpdatePayload(call, {
+        pago_factura_id: "p1",
+        pago_proveedor_id: null,
+        estado_conciliacion: "Conciliado",
+        conciliado_por: "u1",
+      });
+      assertEq(call, "id", "m1");
+    });
+
+    it("escribe pago_proveedor_id (no pago_factura_id) cuando tipo=cxp", async () => {
+      mock.setTableResult("bbva_movimientos", { data: [], error: null });
+      await conciliarConPago("m2", "cxp", "p2", "u1");
+      const { assertUpdatePayload, findTableCall } = await import(
+        "@/test/helpers/assertMutation"
+      );
+      assertUpdatePayload(findTableCall(mock, "bbva_movimientos"), {
+        pago_proveedor_id: "p2",
+        pago_factura_id: null,
+        estado_conciliacion: "Conciliado",
+      });
     });
   });
 });
