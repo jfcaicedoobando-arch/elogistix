@@ -25,6 +25,8 @@ const CRITICAL = [
   "supabase/functions/handle-email-unsubscribe/index.ts",
   "supabase/functions/preview-transactional-email/index.ts",
   "supabase/functions/exchange-rates/index.ts",
+  // 13.114.5 — CFDI upload (visibilidad server-side de "Failed to fetch")
+  "supabase/functions/parse-cfdi-xml/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
