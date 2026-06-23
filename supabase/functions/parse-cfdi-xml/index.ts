@@ -170,7 +170,7 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   return jsonResponse({ cfdi, ai: aiResult.result }, 200, cors);
 }
 
-serve(async (req) => {
+Deno.serve(wrapEdgeHandler("parse-cfdi-xml", async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
@@ -185,4 +185,4 @@ serve(async (req) => {
     if (status >= 500) await captureEdgeException(e, { fn: "parse-cfdi-xml", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
-});
+}));
