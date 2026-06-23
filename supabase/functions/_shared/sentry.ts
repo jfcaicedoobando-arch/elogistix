@@ -86,10 +86,39 @@ export interface EdgeErrorContext {
  *  recortamos a un placeholder; los detalles relevantes deberían ir en `tags`. */
 const MAX_EXTRA_BYTES = 32_000;
 
+/** 13.114.18: lista negra de claves cuyo valor se redacta antes de enviar a
+ *  Sentry. Coincide case-insensitive y por substring para cubrir variantes
+ *  comunes (`api_key`, `apiKey`, `accessToken`, etc.). */
+const SENSITIVE_KEY_PATTERNS = [
+  /password/i,
+  /secret/i,
+  /token/i,
+  /apikey/i,
+  /api[_-]key/i,
+  /authorization/i,
+  /cookie/i,
+  /bearer/i,
+];
+
+function isSensitiveKey(key: string): boolean {
+  return SENSITIVE_KEY_PATTERNS.some((re) => re.test(key));
+}
+
+function scrubExtraDeep(value: unknown, depth = 0): unknown {
+  if (depth > 6 || value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map((v) => scrubExtraDeep(v, depth + 1));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    out[k] = isSensitiveKey(k) ? "[Filtered]" : scrubExtraDeep(v, depth + 1);
+  }
+  return out;
+}
+
 function truncatedExtra(extra: Record<string, unknown>): Record<string, unknown> {
+  const scrubbed = scrubExtraDeep(extra) as Record<string, unknown>;
   try {
-    const serialized = JSON.stringify(extra);
-    if (serialized.length <= MAX_EXTRA_BYTES) return extra;
+    const serialized = JSON.stringify(scrubbed);
+    if (serialized.length <= MAX_EXTRA_BYTES) return scrubbed;
     return {
       _truncated: true,
       _original_bytes: serialized.length,

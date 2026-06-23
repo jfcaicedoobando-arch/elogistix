@@ -11,23 +11,37 @@ import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 function reportQueryError(
   err: unknown,
   kind: "query" | "mutation",
+  rootKey: string | undefined,
   meta?: Record<string, unknown>,
 ): void {
+  // 13.114.18: queryKey[0] y mutationKey[0] se promueven a `tags` para poder
+  // filtrar/agrupar en Sentry (los `extra` no son indexables).
+  const tags: Record<string, string> = { feature: "react_query", kind };
+  if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   void import("@sentry/react")
     .then(({ captureException }) =>
-      captureException(err, { tags: { feature: "react_query", kind }, extra: meta }),
+      captureException(err, { tags, extra: meta }),
     )
     .catch(() => undefined);
 }
 
+const rootOf = (k: unknown): string | undefined => {
+  const arr = k as unknown[] | undefined;
+  if (!Array.isArray(arr) || arr.length === 0) return undefined;
+  const v = arr[0];
+  return typeof v === "string" ? v : undefined;
+};
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (err, query) =>
-      reportQueryError(err, "query", { queryKey: query.queryKey }),
+      reportQueryError(err, "query", rootOf(query.queryKey), { queryKey: query.queryKey }),
   }),
   mutationCache: new MutationCache({
     onError: (err, _vars, _ctx, mutation) =>
-      reportQueryError(err, "mutation", { mutationKey: mutation.options.mutationKey }),
+      reportQueryError(err, "mutation", rootOf(mutation.options.mutationKey), {
+        mutationKey: mutation.options.mutationKey,
+      }),
   }),
   defaultOptions: {
     queries: {

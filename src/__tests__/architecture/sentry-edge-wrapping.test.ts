@@ -16,6 +16,9 @@ const CRITICAL = [
   // Fase C (13.62.0)
   "supabase/functions/facturapi-emitir/index.ts",
   "supabase/functions/facturapi-cancelar/index.ts",
+  // 13.114.18 — REP fiscal (complementos de pago)
+  "supabase/functions/facturapi-emitir-rep/index.ts",
+  "supabase/functions/facturapi-cancelar-rep/index.ts",
   // F1 (13.65.0) — email/queue/sales/cron/exchange-rates
   "supabase/functions/send-transactional-email/index.ts",
   "supabase/functions/process-email-queue/index.ts",

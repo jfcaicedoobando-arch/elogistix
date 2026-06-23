@@ -109,6 +109,8 @@ export function sampleByRoute(ctx: {
     "";
 
   if (/^\/(landing|privacidad|terminos|guia|tracking)?\/?$/i.test(path)) return 0;
+  // 13.114.18: páginas estáticas legales / recursos no aportan señal accionable.
+  if (/^\/(legal|recursos)(\/|$)/i.test(path)) return 0;
 
   if (/\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturas\/nueva|conciliacion)/i.test(path)) {
     return 1.0;
@@ -121,7 +123,10 @@ export function sampleByRoute(ctx: {
 
   // F5 (13.65.0): ampliar muestreo en flujos de reportes y auditoría.
   if (/^\/reportes/i.test(path)) return 0.5;
-  if (/^\/(profit|tesoreria|comisiones|cxc|cxp)/i.test(path)) return 0.5;
+  // 13.114.18: añadir /cartera y /proformas (documentos financieros) al grupo 50%.
+  if (/^\/(profit|tesoreria|comisiones|cxc|cxp|cartera|proformas)/i.test(path)) return 0.5;
+  // 13.114.18: portal del cliente final tiene alto impacto en NPS.
+  if (/^\/portal/i.test(path)) return 0.5;
   if (/^\/(auditoria|admin)/i.test(path)) return 0.3;
 
   if (/^\/(dashboard|embarques|clientes|proveedores)\/?$/i.test(path)) return 0.05;
