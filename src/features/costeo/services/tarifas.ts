@@ -6,11 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa, CosteoTarifaRecargo, CosteoTarifaRow } from "@/features/costeo/types";
 
 const SELECT = `
-  id, organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
-  moneda, flete_base, dias_libres_demoras, dias_libres_almacenaje_lcl,
-  vigente_desde, vigente_hasta, transit_time_dias, notas,
-  estado, estado_aprobacion, motivo_rechazo, aprobada_por, aprobada_en,
-  reemplazada_por, frecuencia_override, created_at, updated_at,
+  *,
   costeo_agentes:agente_id(nombre),
   navieras:naviera_id(name),
   tipos_contenedor:tipo_contenedor_id(name),
