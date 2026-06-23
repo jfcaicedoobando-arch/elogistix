@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.123.0] - 2026-06-23
+- **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Embarques** (4 modales). Migrados: `DialogDuplicarEmbarque` (icon `Copy`, `3xl`), `DialogSeguroForm` con modo crear/editar (icon `Shield`, `2xl`), `DialogGenerarProforma` ahora usa el `FormDialogStepper` real del shell con labels "Selección / Confirmación" en vez del badge manual "Paso X de 2" (icon `FileText`, `3xl`) y `AgregarDocumentoDialog` (icon `FilePlus`, `lg`). Cero cambios en controllers/hooks/RLS. Analogía: ya pintamos con la misma papelería los formularios de operación financiera, comerciales y de administración; ahora también los del módulo de embarques (duplicar, asegurar, proforma, documentos) comparten el mismo membrete — y la proforma además gana el stepper segmentado visual en vez del badgecito ad-hoc.
+
 ## [13.122.0] - 2026-06-23
 - **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Admin + Clientes/Contactos** (6 modales). Migrados: `NuevaOrganizacionDialog` (icon `Building2`, `md`), `AgregarMiembroOrgDialog` (icon `UserPlus`, `md`), `NuevoUsuarioDialog` (icon `UserPlus`, `2xl` — se elimina el icon-tile hecho a mano y queda usando el shell), `DialogContacto` de cliente (icon `Users`, `lg`), `PortalInviteDialog` (icon `Send`, `md`) y `EditarContactoDialog` del portal (icon `UserCog`, `md`). Mismo lenguaje visual: icon-tile en header, descripción contextual, body scrollable y footer sticky. Cero cambios en hooks/validaciones/RLS. Analogía: ya pintamos con la misma papelería los formularios de operación financiera y comerciales; ahora también los de administración de organizaciones, usuarios y contactos del cliente comparten el mismo membrete.
 

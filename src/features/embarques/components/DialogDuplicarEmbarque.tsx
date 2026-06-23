@@ -3,19 +3,10 @@
  *
  * v12.1.0: lógica de estado/validación movida a `useDuplicarEmbarqueDialog`
  * y la fila por copia a `CopiaContenedorRow` para cumplir Power of 10.
- *
- * Permite editar tipo_contenedor (catálogo), peso_kg, volumen_m3 y piezas
- * por copia. Pre-llena con los datos del embarque origen y delega al RPC
- * `duplicar_embarque_completo`.
  */
-import { Loader2, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
-  DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Loader2, Plus, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { CopiaContenedorRow } from "./duplicarEmbarque/CopiaContenedorRow";
 import { useDuplicarEmbarqueDialog } from "./duplicarEmbarque/useDuplicarEmbarqueDialog";
@@ -36,42 +27,15 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   } = useDuplicarEmbarqueDialog({ embarque, open, onOpenChange });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("max-w-3xl", scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>Duplicar embarque {embarque.expediente}</DialogTitle>
-          <DialogDescription>
-            Se crearán nuevos embarques con los mismos datos (cliente, ruta, contenedores
-            hijos, conceptos de venta/costo, documentos). Los conceptos asignados a un
-            contenedor específico mantienen su asignación al contenedor copiado.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="max-h-[420px] overflow-y-auto pr-1 space-y-3">
-          {copias.map((copia, idx) => (
-            <CopiaContenedorRow
-              key={idx}
-              idx={idx}
-              copia={copia}
-              tiposContenedor={tiposContenedor}
-              canRemove={copias.length > 1}
-              onChange={(campo, value) => updateCampo(idx, campo, value)}
-              onRemove={() => handleQuitar(idx)}
-            />
-          ))}
-        </div>
-
-        <Button
-          type="button" variant="outline" size="sm"
-          onClick={handleAgregar}
-          disabled={copias.length >= MAX_COPIAS}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Agregar copia ({copias.length}/{MAX_COPIAS})
-        </Button>
-
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Copy}
+      title={`Duplicar embarque ${embarque.expediente}`}
+      description="Se crearán nuevos embarques con los mismos datos (cliente, ruta, contenedores hijos, conceptos de venta/costo, documentos). Los conceptos asignados a un contenedor específico mantienen su asignación al contenedor copiado."
+      size="3xl"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
@@ -79,8 +43,32 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
             {isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
             Duplicar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        {copias.map((copia, idx) => (
+          <CopiaContenedorRow
+            key={idx}
+            idx={idx}
+            copia={copia}
+            tiposContenedor={tiposContenedor}
+            canRemove={copias.length > 1}
+            onChange={(campo, value) => updateCampo(idx, campo, value)}
+            onRemove={() => handleQuitar(idx)}
+          />
+        ))}
+      </div>
+
+      <Button
+        type="button" variant="outline" size="sm"
+        onClick={handleAgregar}
+        disabled={copias.length >= MAX_COPIAS}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-1" />
+        Agregar copia ({copias.length}/{MAX_COPIAS})
+      </Button>
+    </FormDialogShell>
   );
 }

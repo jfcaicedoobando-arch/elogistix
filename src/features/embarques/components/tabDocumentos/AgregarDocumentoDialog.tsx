@@ -1,25 +1,21 @@
 import { useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { useCreateDocumentoEmbarque } from "@/features/embarques/hooks";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
-
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { cn } from "@/lib/utils";
-import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
+
 const OTRO_VALUE = "__otro__";
 
 interface Props {
@@ -65,53 +61,15 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetForm(); }}>
-      <DialogContent className={cn(scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>Agregar documento</DialogTitle>
-          <DialogDescription>
-            Crea una nueva entrada en el checklist para luego adjuntar el archivo.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-nombre">Tipo de documento</Label>
-            <Select value={nombreSel} onValueChange={setNombreSel}>
-              <SelectTrigger id="doc-nombre">
-                <SelectValue placeholder="Selecciona un documento estándar" />
-              </SelectTrigger>
-              <SelectContent>
-                {sugerencias.map((n) => (
-                  <SelectItem key={n} value={n}>{n}</SelectItem>
-                ))}
-                <SelectItem value={OTRO_VALUE}>Otro (nombre personalizado)…</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {nombreSel === OTRO_VALUE && (
-            <div className="space-y-1.5">
-              <Label htmlFor="doc-nombre-libre">Nombre personalizado</Label>
-              <Input
-                id="doc-nombre-libre"
-                value={nombreLibre}
-                onChange={(e) => setNombreLibre(e.target.value)}
-                placeholder="Ej. Pedimento, Certificado fitosanitario…"
-                maxLength={120}
-              />
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-notas">Notas (opcional)</Label>
-            <Textarea
-              id="doc-notas"
-              value={notasNuevo}
-              onChange={(e) => setNotasNuevo(e.target.value)}
-              placeholder="Referencias, instrucciones, etc."
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={(o) => { onOpenChange(o); if (!o) resetForm(); }}
+      icon={FilePlus}
+      title="Agregar documento"
+      description="Crea una nueva entrada en el checklist para luego adjuntar el archivo."
+      size="lg"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={createDoc.isPending}>
             Cancelar
           </Button>
@@ -119,8 +77,45 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
             {createDoc.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
             Agregar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="doc-nombre">Tipo de documento</Label>
+        <Select value={nombreSel} onValueChange={setNombreSel}>
+          <SelectTrigger id="doc-nombre">
+            <SelectValue placeholder="Selecciona un documento estándar" />
+          </SelectTrigger>
+          <SelectContent>
+            {sugerencias.map((n) => (
+              <SelectItem key={n} value={n}>{n}</SelectItem>
+            ))}
+            <SelectItem value={OTRO_VALUE}>Otro (nombre personalizado)…</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {nombreSel === OTRO_VALUE && (
+        <div className="space-y-1.5">
+          <Label htmlFor="doc-nombre-libre">Nombre personalizado</Label>
+          <Input
+            id="doc-nombre-libre"
+            value={nombreLibre}
+            onChange={(e) => setNombreLibre(e.target.value)}
+            placeholder="Ej. Pedimento, Certificado fitosanitario…"
+            maxLength={120}
+          />
+        </div>
+      )}
+      <div className="space-y-1.5">
+        <Label htmlFor="doc-notas">Notas (opcional)</Label>
+        <Textarea
+          id="doc-notas"
+          value={notasNuevo}
+          onChange={(e) => setNotasNuevo(e.target.value)}
+          placeholder="Referencias, instrucciones, etc."
+          rows={3}
+        />
+      </div>
+    </FormDialogShell>
   );
 }
