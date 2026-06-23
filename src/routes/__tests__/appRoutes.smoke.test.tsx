@@ -120,7 +120,7 @@ describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
     ["/cxp/por-capturar", ["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"]],
     ["/cxp/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
     ["/facturacion/por-emitir", ["admin", "super_admin", "admin_org", "contador", "gerente_operaciones", "gerente_visor"]],
-    ["/cartera", ["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"]],
+    ["/cartera", ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"]],
     ["/tesoreria", TESORERIA_READ_ROLES],
     ["/tesoreria/cuentas", TESORERIA_READ_ROLES],
     ["/tesoreria/conciliacion", TESORERIA_READ_ROLES],
