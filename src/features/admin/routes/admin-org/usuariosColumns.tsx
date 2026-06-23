@@ -69,7 +69,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
             const eb = b.original.email ?? "";
             return ea.localeCompare(eb, "es-MX", { sensitivity: "base" });
           },
-          meta: { width: "min-w-[260px]" },
+          meta: { width: "w-auto min-w-[240px] max-w-[480px]" },
           cell: ({ row }) => {
             const u = row.original;
             const isSelf = u.user_id === currentUserId;
