@@ -6835,7 +6835,7 @@ export type Database = {
         | "Otros"
       tipo_contable_categoria:
         | "CostoDirectoEmbarque"
-        | "IndirectoOperacion"
+        | "Venta"
         | "Administracion"
       tipo_contacto: "Proveedor" | "Exportador" | "Importador"
       tipo_evento_tracking:
@@ -7130,7 +7130,7 @@ export const Constants = {
       ],
       tipo_contable_categoria: [
         "CostoDirectoEmbarque",
-        "IndirectoOperacion",
+        "Venta",
         "Administracion",
       ],
       tipo_contacto: ["Proveedor", "Exportador", "Importador"],
