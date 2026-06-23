@@ -2,12 +2,13 @@
  * Bloque R — Diálogo para crear/editar una póliza de seguro de carga.
  */
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateSeguro, useUpdateSeguro } from "@/features/embarques/hooks/useSegurosEmbarque";
 import type { MonedaSeguro, SeguroEmbarque, SeguroEmbarqueInput } from "@/features/embarques/services/seguros";
 
@@ -79,89 +80,89 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Editar póliza" : "Nueva póliza de seguro"}</DialogTitle>
-        </DialogHeader>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 grid grid-cols-2 gap-4">
-            <div>
-              <Label>Aseguradora *</Label>
-              <Input value={form.aseguradora} onChange={(e) => setField("aseguradora", e.target.value)} />
-            </div>
-            <div>
-              <Label>Número de póliza *</Label>
-              <Input value={form.numero_poliza} onChange={(e) => setField("numero_poliza", e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <Label>Vigencia desde *</Label>
-            <Input type="date" value={form.vigencia_desde} onChange={(e) => setField("vigencia_desde", e.target.value)} />
-          </div>
-          <div>
-            <Label>Vigencia hasta *</Label>
-            <Input type="date" value={form.vigencia_hasta} onChange={(e) => setField("vigencia_hasta", e.target.value)} />
-          </div>
-
-          <div>
-            <Label>Moneda</Label>
-            <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as MonedaSeguro)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MXN">MXN</SelectItem>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="EUR">EUR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Prima (costo) *</Label>
-            <Input type="number" min={0} step={0.01} value={form.prima}
-              onChange={(e) => setField("prima", Number(e.target.value))} />
-          </div>
-
-          <div>
-            <Label>Suma asegurada</Label>
-            <Input type="number" min={0} step={0.01} value={form.suma_asegurada}
-              onChange={(e) => setField("suma_asegurada", Number(e.target.value))} />
-          </div>
-          <div>
-            <Label>Deducible</Label>
-            <Input type="number" min={0} step={0.01} value={form.deducible}
-              onChange={(e) => setField("deducible", Number(e.target.value))} />
-          </div>
-
-          <div className="col-span-2">
-            <Label>Cobertura</Label>
-            <Textarea rows={2} value={form.cobertura_descripcion ?? ""}
-              onChange={(e) => setField("cobertura_descripcion", e.target.value || null)} />
-          </div>
-
-          <div>
-            <Label>Certificado (URL)</Label>
-            <Input value={form.certificado_url ?? ""}
-              onChange={(e) => setField("certificado_url", e.target.value || null)} />
-          </div>
-          <div>
-            <Label>Contacto</Label>
-            <Input value={form.contacto ?? ""} onChange={(e) => setField("contacto", e.target.value || null)} />
-          </div>
-
-          <div className="col-span-2">
-            <Label>Notas</Label>
-            <Textarea rows={2} value={form.notas ?? ""}
-              onChange={(e) => setField("notas", e.target.value || null)} />
-          </div>
-        </div>
-
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Shield}
+      title={isEdit ? "Editar póliza" : "Nueva póliza de seguro"}
+      description="Datos de la aseguradora, vigencia, prima y coberturas para la carga."
+      size="2xl"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={busy}>{isEdit ? "Guardar cambios" : "Registrar póliza"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Aseguradora *</Label>
+          <Input value={form.aseguradora} onChange={(e) => setField("aseguradora", e.target.value)} />
+        </div>
+        <div>
+          <Label>Número de póliza *</Label>
+          <Input value={form.numero_poliza} onChange={(e) => setField("numero_poliza", e.target.value)} />
+        </div>
+
+        <div>
+          <Label>Vigencia desde *</Label>
+          <Input type="date" value={form.vigencia_desde} onChange={(e) => setField("vigencia_desde", e.target.value)} />
+        </div>
+        <div>
+          <Label>Vigencia hasta *</Label>
+          <Input type="date" value={form.vigencia_hasta} onChange={(e) => setField("vigencia_hasta", e.target.value)} />
+        </div>
+
+        <div>
+          <Label>Moneda</Label>
+          <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as MonedaSeguro)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MXN">MXN</SelectItem>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Prima (costo) *</Label>
+          <Input type="number" min={0} step={0.01} value={form.prima}
+            onChange={(e) => setField("prima", Number(e.target.value))} />
+        </div>
+
+        <div>
+          <Label>Suma asegurada</Label>
+          <Input type="number" min={0} step={0.01} value={form.suma_asegurada}
+            onChange={(e) => setField("suma_asegurada", Number(e.target.value))} />
+        </div>
+        <div>
+          <Label>Deducible</Label>
+          <Input type="number" min={0} step={0.01} value={form.deducible}
+            onChange={(e) => setField("deducible", Number(e.target.value))} />
+        </div>
+
+        <div className="col-span-2">
+          <Label>Cobertura</Label>
+          <Textarea rows={2} value={form.cobertura_descripcion ?? ""}
+            onChange={(e) => setField("cobertura_descripcion", e.target.value || null)} />
+        </div>
+
+        <div>
+          <Label>Certificado (URL)</Label>
+          <Input value={form.certificado_url ?? ""}
+            onChange={(e) => setField("certificado_url", e.target.value || null)} />
+        </div>
+        <div>
+          <Label>Contacto</Label>
+          <Input value={form.contacto ?? ""} onChange={(e) => setField("contacto", e.target.value || null)} />
+        </div>
+
+        <div className="col-span-2">
+          <Label>Notas</Label>
+          <Textarea rows={2} value={form.notas ?? ""}
+            onChange={(e) => setField("notas", e.target.value || null)} />
+        </div>
+      </div>
+    </FormDialogShell>
   );
 }
