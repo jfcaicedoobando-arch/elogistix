@@ -143,10 +143,12 @@ BEGIN
   INSERT INTO public.proveedor_facturas(
     id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
     fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva,
-    retenciones, total, estado
+    retenciones, total, estado, categoria_presupuesto_id
   ) VALUES
-    (pf_a, org_a, prov_a, 'Prov TAR A', 'PF-A-001', CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente'),
-    (pf_b, org_b, prov_b, 'Prov TAR B', 'PF-B-001', CURRENT_DATE, 30, 'MXN', 1, 5000, 800, 0, 5800, 'Vigente');
+    (pf_a, org_a, prov_a, 'Prov TAR A', 'PF-A-001', CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)),
+    (pf_b, org_b, prov_b, 'Prov TAR B', 'PF-B-001', CURRENT_DATE, 30, 'MXN', 1, 5000, 800, 0, 5800, 'Vigente',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_b AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
 
   INSERT INTO public.proveedor_notas_credito(
