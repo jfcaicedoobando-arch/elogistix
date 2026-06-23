@@ -6357,7 +6357,13 @@ export type Database = {
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
       get_top_tarifas: {
-        Args: { _limit?: number; _ruta_id: string; _tipo_contenedor_id: string }
+        Args: {
+          p_fecha?: string
+          p_organization_id?: string
+          p_puerto_destino_id: string
+          p_puerto_origen_id: string
+          p_tipo_contenedor_id: string
+        }
         Returns: {
           agente_id: string | null
           agente_nombre: string | null
