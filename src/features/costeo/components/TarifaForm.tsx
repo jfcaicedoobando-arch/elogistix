@@ -52,15 +52,17 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const { data: tipos = [] } = useTiposContenedor();
   const { crear, actualizar } = useCosteoTarifaMutations();
 
-  const [form, setForm] = useState<TarifaInput>(() => buildInitialForm(initial));
+  const [form, setForm] = useState<TarifaInput>(() =>
+    buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial),
+  );
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialForm(initial));
+      setForm(buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial));
       setIntentoEnvio(false);
     }
-  }, [open, initial]);
+  }, [open, initial, agenteIdFijo]);
 
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = esFormValido(form);
