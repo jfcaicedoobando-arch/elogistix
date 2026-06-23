@@ -1,10 +1,15 @@
 /**
  * Sección de información adicional de una factura de proveedor:
- * categoría contable, datos fiscales, desglose y notas.
+ * categoría contable, datos fiscales, desglose, CFDI adjuntos y notas.
  * Sólo lectura.
  */
-import { Info } from "lucide-react";
+import { Info, FileCode, FileText, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { formatCurrency } from "@/lib/formatters";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { openFacturaInNewTab } from "@/services/storage/facturas";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -20,6 +25,47 @@ function Field({ label, value, mono = false }: { label: string; value: React.Rea
       <span className={`text-sm text-foreground truncate ${mono ? "font-mono" : ""}`}>
         {value ?? <span className="text-muted-foreground">—</span>}
       </span>
+    </div>
+  );
+}
+
+async function handleAbrir(path: string, tipo: "XML" | "PDF") {
+  try {
+    await openFacturaInNewTab(path);
+  } catch (e) {
+    notifyError(toast, {
+      title: `No se pudo abrir el ${tipo} del CFDI`,
+      error: e,
+      method: "FEATURES_CXP_INFOFACTURA_OPEN_CFDI",
+    });
+  }
+}
+
+function AdjuntoRow({
+  label, icon, path, tipo,
+}: { label: string; icon: React.ReactNode; path: string | null; tipo: "XML" | "PDF" }) {
+  const adjunto = !!path;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border bg-background px-3 py-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-muted-foreground">{icon}</span>
+        <span className="text-sm font-medium">{label}</span>
+        {adjunto ? (
+          <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600">Adjunto</Badge>
+        ) : (
+          <Badge variant="secondary">No adjunto</Badge>
+        )}
+      </div>
+      {adjunto && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleAbrir(path, tipo)}
+          className="h-8"
+        >
+          <ExternalLink className="h-3.5 w-3.5 mr-1" /> Abrir
+        </Button>
+      )}
     </div>
   );
 }
@@ -61,6 +107,26 @@ export function InfoFacturaSection({ factura: f }: Props) {
           label="Embarque"
           value={f.embarque_id ? <span className="font-mono text-xs">{f.embarque_id.slice(0, 8)}…</span> : null}
         />
+      </div>
+
+      <div className="mt-4 pt-3 border-t">
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium block mb-2">
+          CFDI adjuntos
+        </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <AdjuntoRow
+            label="XML"
+            icon={<FileCode className="h-4 w-4" />}
+            path={f.archivo_xml_url}
+            tipo="XML"
+          />
+          <AdjuntoRow
+            label="PDF"
+            icon={<FileText className="h-4 w-4" />}
+            path={f.archivo_pdf_url}
+            tipo="PDF"
+          />
+        </div>
       </div>
 
       {f.notas && (
