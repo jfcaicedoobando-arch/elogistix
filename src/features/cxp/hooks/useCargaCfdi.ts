@@ -67,10 +67,28 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
       };
       const richCtx = e instanceof CfdiUploadError ? { ...baseCtx, ...e.context } : baseCtx;
       const isTimeout = msg === "CLIENT_TIMEOUT";
+
+      // 13.114.11: mensaje del toast por fase para que el usuario sepa
+      // si revisar su red, una extensión del navegador, o esperar al
+      // servidor.
+      let title: string;
+      if (isTimeout) {
+        title = "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.";
+      } else if (e instanceof CfdiUploadError) {
+        const phaseHint: Record<typeof e.context.phase, string> = {
+          preflight: "El navegador bloqueó la conexión (revisa extensiones o tu red corporativa).",
+          request: e.context.online
+            ? "No se pudo contactar el servidor. Reintenta en unos segundos."
+            : "Sin conexión a internet. Revisa tu red y reintenta.",
+          response: `El servidor respondió con error (HTTP ${e.context.lastStatus ?? "?"}).`,
+        };
+        title = phaseHint[e.context.phase];
+      } else {
+        title = msg;
+      }
+
       notifyError(toast, {
-        title: isTimeout
-          ? "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual."
-          : msg,
+        title,
         error: e,
         context: richCtx,
         method: isTimeout
