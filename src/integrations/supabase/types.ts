@@ -1658,6 +1658,8 @@ export type Database = {
       costeo_tarifas: {
         Row: {
           agente_id: string
+          aprobada_en: string | null
+          aprobada_por: string | null
           creado_por: string | null
           created_at: string
           dias_libres_almacenaje_lcl: number | null
@@ -1668,6 +1670,7 @@ export type Database = {
           frecuencia_override: string | null
           id: string
           moneda: string
+          motivo_rechazo: string | null
           naviera_id: string
           notas: string | null
           organization_id: string
@@ -1681,6 +1684,8 @@ export type Database = {
         }
         Insert: {
           agente_id: string
+          aprobada_en?: string | null
+          aprobada_por?: string | null
           creado_por?: string | null
           created_at?: string
           dias_libres_almacenaje_lcl?: number | null
@@ -1691,6 +1696,7 @@ export type Database = {
           frecuencia_override?: string | null
           id?: string
           moneda?: string
+          motivo_rechazo?: string | null
           naviera_id: string
           notas?: string | null
           organization_id: string
@@ -1704,6 +1710,8 @@ export type Database = {
         }
         Update: {
           agente_id?: string
+          aprobada_en?: string | null
+          aprobada_por?: string | null
           creado_por?: string | null
           created_at?: string
           dias_libres_almacenaje_lcl?: number | null
@@ -1714,6 +1722,7 @@ export type Database = {
           frecuencia_override?: string | null
           id?: string
           moneda?: string
+          motivo_rechazo?: string | null
           naviera_id?: string
           notas?: string | null
           organization_id?: string
@@ -5716,10 +5725,12 @@ export type Database = {
         }
         Returns: Json
       }
-      agente_aprobar_tarifa: {
-        Args: { _estado: string; _tarifa_id: string }
-        Returns: undefined
-      }
+      agente_aprobar_tarifa:
+        | { Args: { _estado: string; _tarifa_id: string }; Returns: undefined }
+        | {
+            Args: { _estado: string; _motivo?: string; _tarifa_id: string }
+            Returns: undefined
+          }
       alertas_sistema_pending_count: { Args: never; Returns: number }
       app_logs_health_summary: {
         Args: { p_hours?: number }
