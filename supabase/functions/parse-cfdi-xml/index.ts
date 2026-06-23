@@ -7,12 +7,11 @@
  *  - El parser es regex puro, sin DOM. La AI sólo recibe descripciones de
  *    conceptos + nombres de categorías para sugerir matcheo.
  */
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
 import { parseCfdi } from "./parser.ts";
 import {
   fallbackResult,
