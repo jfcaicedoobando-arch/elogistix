@@ -71,7 +71,7 @@ export const appRoutes = (
     <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorCapturar />)} />
     <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorPagar />)} />
     <Route path="/facturacion/por-emitir" element={guarded(["admin", "super_admin", "admin_org", "contador", "gerente_operaciones", "gerente_visor"], <FacturacionPorEmitir />)} />
-    <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <Cartera />)} />
+    <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <Cartera />)} />
 
     <Route path="/tesoreria" element={guarded(TESORERIA_READ_ROLES, <Tesoreria />)} />
     <Route path="/tesoreria/cuentas" element={guarded(TESORERIA_READ_ROLES, <TesoreriaCuentas />)} />
