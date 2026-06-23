@@ -12,61 +12,77 @@ const supabaseMock = vi.hoisted(() => ({
       data: { session: { access_token: "tok-abc" } },
     }),
   },
+  functions: {
+    invoke: vi.fn(),
+  },
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: supabaseMock }));
 
-import { parseCfdiXml } from "@/features/cxp/services/parseCfdi";
+import { parseCfdiXml, CfdiUploadError } from "@/features/cxp/services/parseCfdi";
+import {
+  FunctionsHttpError,
+  FunctionsFetchError,
+} from "@supabase/supabase-js";
 
 const xmlFile = () =>
   new File(["<cfdi/>"], "factura.xml", { type: "application/xml" });
 
 beforeEach(() => {
-  vi.stubEnv("VITE_SUPABASE_URL", "https://example.supabase.co");
-});
-afterEach(() => {
-  vi.restoreAllMocks();
   supabaseMock.auth.getSession.mockResolvedValue({
     data: { session: { access_token: "tok-abc" } },
   });
+  supabaseMock.functions.invoke.mockReset();
+});
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("parseCfdiXml", () => {
-  it("envía multipart con Authorization Bearer y devuelve el JSON parseado", async () => {
+  it("invoca la edge function 'parse-cfdi-xml' con FormData y devuelve el JSON parseado", async () => {
     const payload = { cfdi: { uuid: "abc" }, ai: { categoria_id: null, notas: "" } };
-    const fetchSpy = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => payload,
-    });
-    vi.stubGlobal("fetch", fetchSpy);
+    supabaseMock.functions.invoke.mockResolvedValue({ data: payload, error: null });
 
     const result = await parseCfdiXml(xmlFile(), [{ id: "c1", nombre: "Fletes" }]);
 
     expect(result).toEqual(payload);
-    const [url, init] = fetchSpy.mock.calls[0];
-    expect(url).toBe("https://example.supabase.co/functions/v1/parse-cfdi-xml");
-    expect((init as RequestInit).method).toBe("POST");
-    expect((init as RequestInit & { headers: Record<string, string> }).headers.Authorization)
-      .toBe("Bearer tok-abc");
+    expect(supabaseMock.functions.invoke).toHaveBeenCalledWith(
+      "parse-cfdi-xml",
+      expect.objectContaining({ body: expect.any(FormData) }),
+    );
   });
 
-  it("propaga error con el mensaje del servidor cuando ok=false", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      json: async () => ({ error: "XML malformado" }),
-    }));
-    await expect(parseCfdiXml(xmlFile(), [])).rejects.toThrow("XML malformado");
+  it("envuelve FunctionsHttpError como CfdiUploadError fase 'response' con status", async () => {
+    const fakeResponse = new Response(JSON.stringify({ error: "XML malformado" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+    const httpError = new FunctionsHttpError(fakeResponse);
+    supabaseMock.functions.invoke.mockResolvedValue({ data: null, error: httpError });
+
+    await expect(parseCfdiXml(xmlFile(), [])).rejects.toMatchObject({
+      name: "CfdiUploadError",
+      context: { phase: "response", lastStatus: 400 },
+    });
   });
 
-  it("usa mensaje genérico si el servidor no devuelve JSON", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      json: async () => { throw new Error("not json"); },
-    }));
-    await expect(parseCfdiXml(xmlFile(), [])).rejects.toThrow("Error al procesar el XML");
-  });
+  it("reintenta y envuelve FunctionsFetchError como fase 'request'", async () => {
+    const fetchError = new FunctionsFetchError(new TypeError("Failed to fetch"));
+    supabaseMock.functions.invoke.mockResolvedValue({ data: null, error: fetchError });
+
+    let caught: unknown;
+    try {
+      await parseCfdiXml(xmlFile(), []);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(CfdiUploadError);
+    expect((caught as CfdiUploadError).context.phase).toBe("request");
+    expect((caught as CfdiUploadError).context.attemptCount).toBe(3);
+  }, 15_000);
 
   it("falla si no hay sesión activa", async () => {
     supabaseMock.auth.getSession.mockResolvedValueOnce({ data: { session: null } });
     await expect(parseCfdiXml(xmlFile(), [])).rejects.toThrow();
+    expect(supabaseMock.functions.invoke).not.toHaveBeenCalled();
   });
 });
