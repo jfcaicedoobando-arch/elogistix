@@ -46,9 +46,12 @@ Deno.test("facturapi-emitir: orden estricto auth → load → llamada externa", 
   // pagada por requests no autorizadas.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
   const loadIdx = indexSource.indexOf('.from("facturas")');
-  const fapiIdx = indexSource.indexOf("await fetch(`${FACTURAPI_BASE}/invoices`");
-  assertEquals(authIdx > 0 && loadIdx > authIdx && fapiIdx > loadIdx, true,
-    `Orden requerido: getUser(${authIdx}) → load facturas(${loadIdx}) → call Facturapi(${fapiIdx})`);
+  const fapiIdx = indexSource.indexOf("/invoices`");
+  if (authIdx <= 0 || loadIdx <= authIdx || fapiIdx <= loadIdx) {
+    throw new Error(
+      `Orden inválido: getUser=${authIdx} load=${loadIdx} fapi=${fapiIdx}`,
+    );
+  }
 });
 
 Deno.test("facturapi-emitir: wrapped en Sentry", () => {
