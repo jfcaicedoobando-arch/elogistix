@@ -31,7 +31,7 @@ const SUPABASE_HELPER_REGEX = /createSupabaseMock|_supabaseChainMock/;
 // Detecta el inicio de un caso de test (no `describe`, no `.skip/.only/.todo`).
 const TEST_START_REGEX = /^\s*(it|test)\(\s*(['"`])([^'"`]+)\2/;
 // Heurística de aserción: expect(...), assert*, expectTypeOf, toThrow vía cualquier matcher.
-const ASSERTION_REGEX = /\b(expect|expectTypeOf|assert|assertEquals|assertExists|assertRejects|assertThrows)\s*[(.]/;
+const ASSERTION_REGEX = /\b(expect|expectTypeOf|assert\w*)\s*[(.]/;
 
 /**
  * Quita el contenido de strings (', ", `), regex literals (/.../) y
