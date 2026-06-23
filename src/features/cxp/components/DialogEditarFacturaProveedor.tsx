@@ -4,15 +4,12 @@
  * useEditarFacturaProveedorForm. Muestra banners cuando la factura tiene pagos
  * o cuando los cambios fuerzan re-aprobación.
  *
- * Sub-componentes presentacionales locales para mantener complejidad ≤ 16.
+ * Migrado a `FormDialogShell` para alinear con los modales hermanos
+ * (Nuevo/Editar Cliente, Nuevo/Editar Proveedor, Nueva Factura).
  */
-import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { Loader2, AlertTriangle, ShieldAlert, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { useEditarFacturaProveedorForm } from "@/features/cxp/hooks";
@@ -29,41 +26,6 @@ interface DerivedTotales {
   iva: number;
   ret: number;
   moneda: string;
-}
-
-function HeaderTitulo({ factura, total, moneda }: { factura: FacturaCxP; total: number; moneda: string }) {
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <DialogTitle>
-          Editar factura — {factura.folio_interno ?? ""}
-          {factura.folio_proveedor ? (
-            <span className="text-muted-foreground font-normal text-base"> · Folio prov. {factura.folio_proveedor}</span>
-          ) : null}
-        </DialogTitle>
-        <DialogDescription>
-          Corrige folio, fechas o importes. El proveedor y el CFDI fiscal no se pueden cambiar.
-        </DialogDescription>
-      </div>
-      <div className="text-right shrink-0">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total</div>
-        <div className="text-2xl font-bold tabular-nums leading-tight">
-          {formatCurrency(total, moneda)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TotalesFooter({ tot, total }: { tot: DerivedTotales; total: number }) {
-  return (
-    <div className="px-6 pt-3 pb-2 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs tabular-nums">
-      <span className="text-muted-foreground">Subtotal: <span className="text-foreground font-medium">{formatCurrency(tot.sub, tot.moneda)}</span></span>
-      <span className="text-muted-foreground">IVA: <span className="text-foreground font-medium">{formatCurrency(tot.iva, tot.moneda)}</span></span>
-      <span className="text-muted-foreground">Ret: <span className="text-foreground font-medium">{formatCurrency(tot.ret, tot.moneda)}</span></span>
-      <span className="text-muted-foreground">Total: <span className="text-foreground font-semibold">{formatCurrency(total, tot.moneda)}</span></span>
-    </div>
-  );
 }
 
 function BannerPagos({ factura }: { factura: FacturaCxP }) {
@@ -142,44 +104,66 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
 
   const tot = deriveTotales(ctl.values, factura?.moneda ?? "MXN");
 
+  const title = factura ? (
+    <>
+      Editar factura — {factura.folio_interno ?? ""}
+      {factura.folio_proveedor && (
+        <span className="text-muted-foreground font-normal"> · Folio prov. {factura.folio_proveedor}</span>
+      )}
+    </>
+  ) : "Editar factura";
+
+  const headerAside = factura ? (
+    <>
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total {tot.moneda}</div>
+      <div className="text-2xl font-bold tabular-nums leading-tight">{formatCurrency(ctl.total, tot.moneda)}</div>
+    </>
+  ) : undefined;
+
+  const footer = (
+    <div className="w-full flex flex-col gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs tabular-nums">
+        <span className="text-muted-foreground">Subtotal: <span className="text-foreground font-medium">{formatCurrency(tot.sub, tot.moneda)}</span></span>
+        <span className="text-muted-foreground">IVA: <span className="text-foreground font-medium">{formatCurrency(tot.iva, tot.moneda)}</span></span>
+        <span className="text-muted-foreground">Ret: <span className="text-foreground font-medium">{formatCurrency(tot.ret, tot.moneda)}</span></span>
+        <span className="text-muted-foreground">Total <span className="font-medium">{tot.moneda}</span>: <span className="text-foreground text-base font-bold">{formatCurrency(ctl.total, tot.moneda)}</span></span>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>Cancelar</Button>
+        <Button onClick={ctl.submit} disabled={ctl.isPending || !ctl.hayCambios || !ctl.values} className="shadow-sm">
+          {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          {ctl.isPending ? "Guardando…" : "Guardar cambios"}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onOpenChange(false); }}>
-      <DialogContent className={cn(dialogSize.xl, "max-h-[90vh] flex flex-col gap-0 p-0")}>
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          {factura && <HeaderTitulo factura={factura} total={ctl.total} moneda={tot.moneda} />}
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          {ctl.isLoadingRow && (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando factura…
-            </div>
-          )}
-
-          {ctl.isErrorRow && (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              No se pudo cargar la factura. Cierra y vuelve a abrir el diálogo.
-            </div>
-          )}
-
-          {!ctl.isLoadingRow && factura && (
-            <EditorBody factura={factura} ctl={ctl} categorias={cats.data ?? []} />
-          )}
+    <FormDialogShell
+      open={open}
+      onOpenChange={(o) => { if (!o) onOpenChange(false); }}
+      icon={FileSpreadsheet}
+      title={title}
+      description="Corrige folio, fechas o importes. El proveedor y el CFDI fiscal no se pueden cambiar."
+      size="xl"
+      headerAside={headerAside}
+      footer={footer}
+    >
+      {ctl.isLoadingRow && (
+        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando factura…
         </div>
+      )}
 
-        <div className="border-t bg-background">
-          <TotalesFooter tot={tot} total={ctl.total} />
-          <div className="px-6 py-3 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
-              Cancelar
-            </Button>
-            <Button onClick={ctl.submit} disabled={ctl.isPending || !ctl.hayCambios || !ctl.values}>
-              {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {ctl.isPending ? "Guardando…" : "Guardar cambios"}
-            </Button>
-          </div>
+      {ctl.isErrorRow && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          No se pudo cargar la factura. Cierra y vuelve a abrir el diálogo.
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+
+      {!ctl.isLoadingRow && factura && (
+        <EditorBody factura={factura} ctl={ctl} categorias={cats.data ?? []} />
+      )}
+    </FormDialogShell>
   );
 }
