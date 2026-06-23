@@ -1,48 +1,80 @@
-# Plan — Auditoría Sentry → `13.114.20`
+# Plan — Auditoría de **calidad** de tests (no de cobertura)
 
-Dos sub-agentes auditaron el SDK frontend y las 21 edge functions sobre `13.114.19`. Lo bueno: init inmediato sin ventana ciega, scrub PII robusto (incluye Luhn para tarjetas), React Query con tags filtrables, ErrorBoundaries en dos niveles, 0 funciones edge sin instrumentar, 0 mismatches en tests guardrail. Lo malo: el toast unificado `notifyError` (340 call sites en 198 archivos) **no** reporta a Sentry — toda la app tira errores en silencio salvo que el usuario abra "Ver detalles" y los pegue. Eso es la fuga grande. Además quedaron tres edge functions con el filtro viejo `>= 500` (no se actualizaron en `13.114.19`) y dos crons con errores silenciados.
+## Contexto
 
-## Hallazgos a corregir
+509 tests frontend + 29 tests Deno (edge). Distribución cargada hacia embarques (85), cotización (44), CRM (37), facturación (30). El número es sano pero la **calidad** es lo que decide si los tests funcionan como red de seguridad o como ruido que se ignora.
 
-| # | Sev | Archivo | Problema | Fix |
-|---|---|---|---|---|
-| 1 | 🔴 ALTA | `src/components/shared/utils/appFeedback.ts:42` | `notifyError` arma el debug pero **nunca llama a Sentry**. 340 call sites afectados. | Añadir `reportCaughtError(error, { feature: phase ?? 'ui_notify', op: method ?? 'unknown' }, { ...context, step, errorCode })` cuando `error` esté presente (skip si no, para no inflar con errores de validación de form). |
-| 2 | 🔴 ALTA | `supabase/functions/parse-cfdi-xml/index.ts:187` | Catch raíz filtra `status >= 500`; los 4xx (validación, authz) no llegan a Sentry. Inconsistente con el patrón de `13.114.19`. | Cambiar a `>= 400`. |
-| 3 | 🔴 ALTA | `supabase/functions/parse-csf/index.ts:168` | Mismo patrón viejo `>= 500`. | Cambiar a `>= 400`. |
-| 4 | 🔴 ALTA | `supabase/functions/process-email-queue/queueProcessor.ts:63` | Si `read_email_batch` falla, `console.error` + `return {totalProcessed:0}` → la cola se detiene en silencio (cron no levanta alarma). | Llamar `captureEdgeException(readError, { fn: 'process-email-queue', extra: { phase:'read_batch', queue }})` antes del return. |
-| 5 | 🟠 MEDIA | `supabase/functions/tracking-public/index.ts:63` | Error de RPC `get_tracking_public` devuelve 500 manual sin pasar por el catch global → no llega a Sentry. | `await captureEdgeException(error, { fn:'tracking-public', status_code:500, extra:{phase:'rpc'}})` antes del `errorResponse`. |
-| 6 | 🟠 MEDIA | `supabase/functions/preview-transactional-email/index.ts` (loop de plantillas) | Errores por-plantilla sólo se `console.error`; no se sabe qué template está roto. | `captureEdgeException` por iteración con `extra:{template_key}`. |
-| 7 | 🟡 BAJA | `supabase/functions/enviar-cotizacion-email/handlers.ts` (loop destinatarios) | Errores de envío por destinatario acumulados sin reporte. | `captureEdgeException` por fallo individual con `extra:{recipient_index}`. |
-| 8 | 🟡 BAJA | `src/features/tesoreria/services/conciliacion.ts:101` | Usa `Sentry.metrics?.count?.()` — API removida del SDK v8. Hoy es no-op silencioso. | Reemplazar por `Sentry.captureMessage('conciliacion.failed', { level:'warning', tags:{tipo, reason}})` o eliminar si no se consume en dashboards. |
+## Objetivo
 
-## Descartado (con justificación)
+Identificar tests que:
+- **No prueban lógica de negocio** (sólo asertan mocks o tautologías como `expect(true).toBe(true)`)
+- **No fallarían si la app se rompe** (sobre-mockeados — el mock devuelve lo que el test espera)
+- **Frágiles** (acoplados a strings exactos de UI, orden de queries, IDs internos)
+- **Duplicados o redundantes** (mismo escenario probado en 3 capas)
+- **Cubren happy path pero NO casos críticos** (errores, edge cases financieros, race conditions)
+- **Sin assertion de invariantes** (suma de IVA, redondeo MXN/USD, transiciones de estado prohibidas)
 
-- **`useAuthSession.ts:64`** (el auditor lo marcó como gap): falsa alarma — las líneas 66-68 ya hacen `import('@sentry/react').captureException`. Cobertura correcta.
-- **Ampliar `httpClientIntegration` a `[[400,599]]`**: los 401/403 de Supabase son ruido por diseño (sesión expirada, RLS bloqueando lectura intencional). Inflaría cuota sin señal accionable. Mantener `[500,599]`.
-- **Capturar chunk errors antes del reload (`main.tsx:46`)**: ya están en `ignoreErrors` por decisión consciente (`13.63.0`); auto-recuperan con reload y no aportan señal.
-- **Migrar `parse-csf`/`auditoria-explicar-hallazgo` de `serve()` legacy**: cambio estructural ya descartado en rondas previas.
+NO se mide cobertura de líneas. NO se proponen tests nuevos masivos. La auditoría es **diagnóstica**.
 
-## Versionado
+## Metodología — 3 sub-agentes en paralelo
 
-- `src/constants/appVersion.ts` → `13.114.20`
-- `CHANGELOG.md` → entrada `## [13.114.20] - 2026-06-23`
+### Sub-agente 1 — Tests de lógica de negocio crítica
+Foco: `src/features/{embarques,cotizacion,facturacion,costeo,cxp,tesoreria,profit,comisiones}/`
 
-## Validación
+Busca:
+- Tests que mockean Supabase y luego asertan exactamente lo que el mock devolvió → no prueban nada
+- Tests sin assertion de invariantes financieros (totales, IVA, conversión de divisas, redondeo)
+- Tests que no cubren: transiciones de estado inválidas, candados (locks), permisos por rol, RLS
+- Tests donde un cambio breaking en la lógica no haría fallar el test (lo cazaríamos pasando un Error como mock y viendo si el test sigue verde)
 
-- `vitest run` sobre `src/lib/observability/**` (no debería cambiar nada)
-- Smoke manual: disparar un `notifyError` con `error: new Error('test')` y verificar que el sub-import a `@sentry/react` corre (en dev no envía, sólo log).
-- `deno test` en `process-email-queue` si tiene tests.
+### Sub-agente 2 — Tests de hooks / componentes / servicios genéricos
+Foco: `src/features/*/hooks/__tests__/`, `src/components/`, `src/lib/`
 
-## Archivos a tocar (9)
+Busca:
+- Tests de hooks que sólo verifican `render` sin interacción (low signal)
+- Tests con assertions de DOM frágiles (`getByText('exactamente esto')` cuando el copy cambia seguido)
+- Tests con timers/setTimeout/setInterval sin `vi.useFakeTimers` (flaky por diseño)
+- Tests que mockean tantas cosas que el SUT real no se ejecuta
+- `expect(spy).toHaveBeenCalled()` sin verificar argumentos → permite que el SUT llame mal
+- Mocks de Supabase sin la cadena thenable correcta (ver `mem://technical/testing-mock-patterns`)
 
-1. `src/components/shared/utils/appFeedback.ts`
-2. `supabase/functions/parse-cfdi-xml/index.ts`
-3. `supabase/functions/parse-csf/index.ts`
-4. `supabase/functions/process-email-queue/queueProcessor.ts`
-5. `supabase/functions/tracking-public/index.ts`
-6. `supabase/functions/preview-transactional-email/index.ts`
-7. `supabase/functions/enviar-cotizacion-email/handlers.ts`
-8. `src/features/tesoreria/services/conciliacion.ts`
-9. `src/constants/appVersion.ts` + `CHANGELOG.md`
+### Sub-agente 3 — Edge functions + guardrails de arquitectura
+Foco: `supabase/functions/*/index_test.ts`, `src/__tests__/architecture/`
 
-¿Apruebas para implementar?
+Busca:
+- Edge function tests que sólo verifican CORS preflight (poca señal de negocio)
+- Tests de arquitectura (Power of 10, sentry-edge-*) que se pueden burlar con comentarios o paths alternos
+- Falta de tests para invariantes críticos: `wrapEdgeHandler` en funciones nuevas, scrub PII en `extra`, RLS en RPCs públicas
+- Tests Deno que no consumen response body (memory leak — ver useful-context)
+
+## Formato del reporte (lo que el usuario recibe)
+
+Cada sub-agente devuelve una tabla:
+
+| # | Severidad | Archivo:línea | Anti-patrón | Por qué no avisa cuando algo se rompe | Acción sugerida |
+
+Y al cierre, una sección **"Patrones sistémicos detectados"** con los 3-5 problemas que se repiten en muchos tests (ataque de raíz vs caso por caso).
+
+Severidades:
+- 🔴 **CRÍTICO** — el test pasa aunque el código esté roto
+- 🟠 **MEDIO** — el test rompe por razones equivocadas (frágil), o no cubre el caso que más duele
+- 🟡 **BAJO** — redundante, lento, o de bajo valor pero no peligroso
+
+## Excluido del scope (lo digo explícito)
+
+- ❌ Cobertura de líneas/branches
+- ❌ Tests nuevos (sólo se proponen si cierran un hueco crítico)
+- ❌ Refactor de la infra de testing (mocks compartidos, setup) — eso ya tiene memorias propias (`testing-cleanup-protocol`, `testing-mock-patterns`)
+- ❌ PDF leak canary y similares ya auditados — no se re-auditan
+
+## Entregable final
+
+Un único informe consolidado con:
+1. **Top 10 tests más peligrosos** (los que dan falsa seguridad — pasan siempre)
+2. **Patrones sistémicos** (qué arreglar de raíz)
+3. **Top 5 huecos críticos sin test** (lógica de negocio importante que rompería en silencio)
+4. **Lista verde** — qué dominios tienen tests sólidos (para usar de modelo)
+
+NO se ejecuta nada — sólo lectura. Al aprobar, se lanzan los 3 sub-agentes en paralelo.
+
+¿Apruebas?
