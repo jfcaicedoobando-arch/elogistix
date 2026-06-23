@@ -1,37 +1,41 @@
 /**
- * Smoke test para sentry-tunnel — valida parser de envelope sin red.
- * No importa `index.ts` directamente porque tiene `Deno.serve()` top-level
- * que arrancaría un servidor. Para probar `parseEnvelopeDsn` lo hacemos
- * vía import dinámico controlado: leemos la función y la reimplementamos
- * espejando el contrato. La cobertura real corre cuando la función está
- * desplegada (smoke post-deploy).
- *
- * El test de contrato (este archivo) asegura que la lógica de parseo del
- * DSN existe y que la whitelist está presente.
+ * Tests del sentry-tunnel: validación del header DSN y rate-limit en memoria.
+ * 13.114.17: añade cobertura del rate-limit (60 req/min/IP).
  */
-import { assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
+import { parseEnvelopeDsn, checkRateLimit } from "./index.ts";
 
-const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
-
-Deno.test("sentry-tunnel exporta parseEnvelopeDsn", () => {
-  assertStringIncludes(indexSource, "export function parseEnvelopeDsn");
+Deno.test("parseEnvelopeDsn extrae host y projectId del header", () => {
+  const header = JSON.stringify({
+    dsn: "https://abc@o123.ingest.us.sentry.io/456",
+    sent_at: "2026-06-23T00:00:00Z",
+  });
+  const got = parseEnvelopeDsn(header);
+  assertEquals(got, { host: "o123.ingest.us.sentry.io", projectId: "456" });
 });
 
-Deno.test("sentry-tunnel rechaza primera línea no JSON", () => {
-  // El contrato: try/catch alrededor de JSON.parse devuelve null.
-  assertStringIncludes(indexSource, "JSON.parse(firstLine)");
+Deno.test("parseEnvelopeDsn retorna null si el header no tiene DSN", () => {
+  assertEquals(parseEnvelopeDsn(JSON.stringify({ sent_at: "x" })), null);
 });
 
-Deno.test("sentry-tunnel whitelist de hosts está poblada", () => {
-  assertStringIncludes(indexSource, "ALLOWED_HOSTS");
-  assertStringIncludes(indexSource, "ingest");
+Deno.test("parseEnvelopeDsn retorna null si el JSON es inválido", () => {
+  assertEquals(parseEnvelopeDsn("not-json"), null);
 });
 
-Deno.test("sentry-tunnel responde a OPTIONS con CORS", () => {
-  assertStringIncludes(indexSource, "OPTIONS");
-  assertStringIncludes(indexSource, "Access-Control-Allow-Origin");
+Deno.test("checkRateLimit permite hasta 60 requests por IP", () => {
+  const ip = `test-ip-${crypto.randomUUID()}`;
+  const t0 = Date.now();
+  for (let i = 0; i < 60; i++) {
+    assertEquals(checkRateLimit(ip, t0 + i), true, `req ${i} debería pasar`);
+  }
+  assertEquals(checkRateLimit(ip, t0 + 60), false, "req 61 debería bloquearse");
 });
 
-Deno.test("sentry-tunnel sólo acepta POST", () => {
-  assertStringIncludes(indexSource, '"POST"');
+Deno.test("checkRateLimit libera la ventana después de 60s", () => {
+  const ip = `test-ip-${crypto.randomUUID()}`;
+  const t0 = Date.now();
+  for (let i = 0; i < 60; i++) checkRateLimit(ip, t0 + i);
+  assertEquals(checkRateLimit(ip, t0 + 60), false);
+  // Ventana expirada → nuevo bucket.
+  assertEquals(checkRateLimit(ip, t0 + 60_001), true);
 });

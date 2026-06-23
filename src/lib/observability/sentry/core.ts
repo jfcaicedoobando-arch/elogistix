@@ -69,9 +69,24 @@ export function initSentry(): void {
   // No inicializar en desarrollo: las sesiones locales generan ruido por HMR.
   if (import.meta.env.MODE === "development") return;
   initialized = true;
+  // 13.114.17: warn si se está usando el DSN hardcodeado en producción real
+  // (no preview). Permite detectar configuración faltante sin romper.
+  if (!import.meta.env.VITE_SENTRY_DSN && resolveEnvironment() === "production") {
+     
+    console.warn("[sentry] VITE_SENTRY_DSN no configurado, usando DEFAULT_DSN hardcodeado");
+  }
+  // 13.114.17: `dist` para distinguir builds de la misma versión semver
+  // (hotfixes rápidos). Usa VITE_BUILD_HASH si está disponible.
+  const buildHash = (import.meta.env.VITE_BUILD_HASH as string | undefined) ?? undefined;
+  // 13.114.17: tag PWA — segmenta errores que sólo ocurren con la app instalada.
+  const isPwa =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(display-mode: standalone)").matches;
   Sentry.init({
     dsn: DSN,
     release: `libre-carga@${APP_VERSION}`,
+    dist: buildHash,
     environment: resolveEnvironment(),
     tracesSampler: sampleByRoute,
     tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
@@ -79,6 +94,7 @@ export function initSentry(): void {
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
     tunnel: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentry-tunnel`,
+
 
     // Defensa en profundidad: estos errores de Vite (chunk viejo cacheado)
     // se auto-recuperan con reload y no aportan señal.
@@ -178,7 +194,9 @@ export function initSentry(): void {
       }),
     ],
   });
+  Sentry.setTag("is_pwa", isPwa ? "true" : "false");
 }
+
 
 /** True una vez `initSentry()` se ha invocado al menos una vez. */
 export function isSentryReady(): boolean {

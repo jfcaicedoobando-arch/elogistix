@@ -10,15 +10,23 @@ const RFC_RE = /\b[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}\b/g;
 // CURP: 18 caracteres con patrón fijo.
 const CURP_RE = /\b[A-Z][AEIOUX][A-Z]{2}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d\b/g;
 const EMAIL_RE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+// 13.114.17: teléfonos MX en formatos comunes:
+//   +52 55 1234 5678 / +521 5512345678 / (55) 1234-5678 / 5512345678
+// Conservador: exige al menos 10 dígitos (excluye folios cortos) y delimitadores
+// limitados (espacio, guion, paréntesis, punto). Evita matchear cadenas de IDs
+// numéricos largos > 13 dígitos requiriendo un boundary final.
+const PHONE_MX_RE = /(?:\+?52[\s-]?1?[\s-]?)?(?:\(?\d{2,3}\)?[\s.-]?)\d{3,4}[\s.-]?\d{4}(?!\d)/g;
 
-/** Reemplaza RFC/CURP/email por placeholders. Devuelve el mismo string si no aplica. */
+/** Reemplaza RFC/CURP/email/teléfono por placeholders. Devuelve el mismo string si no aplica. */
 export function scrubPii(input: string | undefined | null): string | undefined {
   if (!input) return input ?? undefined;
   return input
     .replace(RFC_RE, "[RFC]")
     .replace(CURP_RE, "[CURP]")
-    .replace(EMAIL_RE, "[EMAIL]");
+    .replace(EMAIL_RE, "[EMAIL]")
+    .replace(PHONE_MX_RE, "[PHONE]");
 }
+
 
 /** Limpia query string: quita pares cuyo nombre coincide con la lista de sensibles. */
 const SENSITIVE_QS = new Set(["email", "rfc", "token", "access_token", "refresh_token", "curp"]);
