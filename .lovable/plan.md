@@ -1,57 +1,62 @@
-# Auditoría de permisos — todos los roles
 
-Comparé `roleCatalog.ts` (descripciones), `usePermissions.ts` (matriz lógica), `sidebarRoleBuilders.ts` (menú) y `appRoutes.tsx` (guards de ruta) para los 13 roles activos + 3 legacy.
+## Diagnóstico
 
-## Resultado por rol
+Sentry reporta **2 issues** activos, ambos de la **misma causa raíz**:
 
-| Rol | Sidebar coherente con rutas | Notas |
-|---|---|---|
-| super_admin | ✓ | Usa `buildDefaultSections` + Admin + Super Admin |
-| admin / admin_org | ✓ | `buildAdmin`, todas las rutas alcanzables |
-| gerente_operaciones | ✓ | Corregido en 13.114.3 |
-| gerente_comercial | ✓ | Corregido en 13.114.3 |
-| gerente_visor | ✓ | Sin builder dedicado → cae a default (full lectura). Ya está en todos los guards de lectura financiera |
-| coordinador_logistico | ✓ | Gestión, Costeo, Directorio — todo sin guard o permitido |
-| ejecutivo_pricing | ✓ | Gestión, Costeo, Reportes — todo accesible |
-| contador | ✓ | En todos los guards que necesita (CXP, Tesorería, Facturación, Cartera, Profit) |
-| **tesorero** | **❌** | Sidebar muestra **Cobranza (`/cartera`)** pero la ruta no lo permite — clic redirige a `/` |
-| auxiliar_contable | ✓ | Compras + Sistema |
-| ejecutivo_cobranza | ✓ | Cartera, Facturación, Clientes |
-| vendedor | ✓ | CRM + Clientes + Ayuda |
-| customer_service | ✓ | Dashboards, Gestión limitada, Clientes, Auditoría |
-| cliente | ✓ | Redirigido a `/portal`, fuera del flujo |
-| Legacy (admin/operador/viewer) | ✓ | `admin`→buildAdmin, `operador`→buildCoordinador, `viewer`→buildCustomerService |
+- `JAVASCRIPT-REACT-1B` — release `13.114.2`, `/cxp`
+- `JAVASCRIPT-REACT-19` — release `13.103.0`, `/embarques/.../`
 
-## Hallazgos accionables
+```
+TypeError: Failed to fetch (eorqadkulqtneqjbsblk.supabase.co/functions/v1/parse-cfdi-xml)
+feature: cfdi_upload  ·  user: contador  ·  xml_size: 13 KB
+latencias observadas: 5.1 s y 11.5 s
+```
 
-### 1. Bug confirmado — Tesorero no puede abrir Cobranza
+### Qué está pasando (analogía)
 
-`buildTesorero` lista "Cobranza" (`/cartera`) pero el guard actual es `["admin","super_admin","admin_org","contador","ejecutivo_cobranza","gerente_operaciones","gerente_visor"]` — sin `tesorero`. Tiene sentido funcional darle **lectura** porque concilia depósitos bancarios con cobros (descripción: "conciliación bancaria y liquidación de comisiones").
+Tu app es un mesero que pide un platillo (parsear XML CFDI) a la cocina (edge function `parse-cfdi-xml`). La cocina a su vez le pide al sommelier (AI Gateway de Lovable) que recomiende una categoría. Cuando el sommelier tarda demasiado, **toda la mesa se desespera y se va antes de que llegue el platillo** — eso es el `Failed to fetch` del browser.
 
-**Fix:** agregar `tesorero` a `allowedRoles` de `/cartera` en `appRoutes.tsx` y al test `appRoutes.smoke.test.tsx`.
+Evidencia técnica:
+1. En el evento más reciente (13.114.2) ya está activo `fetchWithRetry` con 3 intentos × 60 s de timeout. Aún así falla → no es timeout del cliente, es **el edge function el que cierra la conexión** (cold start + AI gateway lento + CPU wall-limit de Supabase).
+2. Los logs de `parse-cfdi-xml` muestran **boot en `2026-06-23T00:43:19Z`**, exactamente cuando falló el request — confirma cold start.
+3. `parse-cfdi-xml` **NO está envuelto en `wrapEdgeHandler`** → los crashes del lado servidor son invisibles en Sentry, sólo vemos el síntoma del browser.
 
-### 2. Rutas sin guard (decisión, no bug)
+## Solución propuesta
 
-Estas rutas no tienen `ProtectedRoute` con roles → cualquier usuario autenticado las abre escribiendo la URL, aunque el sidebar las oculte para algunos roles:
+### 1. Visibilidad: envolver `parse-cfdi-xml` con `wrapEdgeHandler`
 
-- `/comisiones` — Vendedor podría entrar (no aparece en su sidebar)
-- `/bitacora`, `/sentry` — Cualquier rol entra escribiendo URL
-- `/reportes/*` — Cualquier rol entra
-- `/profit/proyeccion`, `/profit/estado-resultados` — Cualquier rol entra
-- `/clientes`, `/proveedores`, `/cotizaciones`, `/embarques`, `/facturacion`, `/proformas`, `/operaciones` — Roles "cliente" y casos extremos están protegidos por `ProtectedRoute` raíz; el resto entra
+Agregar a `CRITICAL` en `src/__tests__/architecture/sentry-edge-wrapping.test.ts` y refactorizar `supabase/functions/parse-cfdi-xml/index.ts` para usar `Deno.serve(wrapEdgeHandler("parse-cfdi-xml", handler))` (mismo patrón que `facturapi-emitir`). Así, la próxima vez que el edge function crashee, veremos el stack real en Sentry server-side, no sólo el "Failed to fetch" del browser.
 
-**No es estrictamente un bug** porque la RLS de la BD limita los datos que se ven, pero sí es una superficie de UX inconsistente. Hay dos caminos:
+### 2. Resiliencia: bajar el riesgo del AI Gateway colgado
 
-- **(A) Mínimo (recomendado para esta tarea):** solo corregir el bug del tesorero. Mantener las rutas abiertas como están.
-- **(B) Endurecer:** agregar guards de ruta a `/comisiones` (excluir vendedor/customer_service), `/bitacora` (solo admin/contador/tesorero/gerentes), `/sentry` (solo admin/super_admin), `/profit/proyeccion` y `/profit/estado-resultados` (mismos roles que `/profit/dashboard`).
+En `supabase/functions/parse-cfdi-xml/index.ts`:
+- Reducir el timeout del fetch al AI gateway de **8 s → 5 s** (línea 71). El AI es opcional — si tarda, devolvemos `fallbackResult` y seguimos. Mejor responder en 6 s sin sugerencia de categoría que colgar 11 s y morir.
+- Garantizar que `errorResponse` siempre incluya headers CORS (ya lo hace via `buildCors`, pero validar que `handlePreflightStrict` no rechace silenciosamente).
 
-## Plan propuesto (opción A)
+### 3. Cliente: breadcrumb con `outcome` del retry
 
-1. Editar `src/routes/appRoutes.tsx`: sumar `"tesorero"` al `allowedRoles` de `/cartera`.
-2. Actualizar el caso correspondiente en `src/routes/__tests__/appRoutes.smoke.test.tsx`.
-3. Bump `APP_VERSION` a `13.114.4` y agregar entrada en `CHANGELOG.md` (analogía: "el tesorero veía el botón de Cobranza pero estaba pintado en una puerta cerrada — ahora la puerta abre en modo lectura").
-4. Ejecutar `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx src/hooks/layout/__tests__/useLayout.test.tsx`.
+En `src/features/cxp/services/parseCfdi.ts`, ya se reportan retries vía `onRetry`. Añadir un breadcrumb final con `attempt_count` cuando el último intento falla, para distinguir "falló al primer intento" vs "fallaron los 3" en Sentry.
 
-## Pregunta para ti
+### 4. Bump versión + changelog
 
-¿Voy con la **opción A** (solo arreglar el bug del tesorero, mínimo invasivo) o quieres también la **opción B** (endurecer las rutas hoy abiertas)? Si eliges B, dime si la lista de roles que propongo arriba te parece bien o quieres ajustarla.
+- `APP_VERSION` → `13.114.5`
+- `CHANGELOG.md`: entrada `[13.114.5] - 2026-06-23` con `fix(cfdi): reducir timeout AI gateway y envolver edge function en wrapEdgeHandler para visibilidad Sentry`.
+
+### 5. Resolver los issues en Sentry
+
+Marcar `JAVASCRIPT-REACT-1B` y `JAVASCRIPT-REACT-19` como `resolvedInNextRelease` apuntando a `libre-carga@13.114.5` (vía `update_issue`).
+
+## Verificación
+
+- `bunx vitest run src/__tests__/architecture/sentry-edge-wrapping.test.ts` debe pasar con `parse-cfdi-xml` en la lista CRITICAL.
+- `bunx vitest run supabase/functions/parse-cfdi-xml/index_test.ts` (si existe) o ejecutar el deno test si está.
+
+## Detalles técnicos (referencia)
+
+| Archivo | Cambio |
+|---|---|
+| `supabase/functions/parse-cfdi-xml/index.ts` | Reemplazar `serve(async (req) => {...})` por `Deno.serve(wrapEdgeHandler("parse-cfdi-xml", handler))`. Bajar AbortController timeout 8000 → 5000. |
+| `src/__tests__/architecture/sentry-edge-wrapping.test.ts` | Agregar `"supabase/functions/parse-cfdi-xml/index.ts"` al array `CRITICAL`. |
+| `src/features/cxp/services/parseCfdi.ts` | En el `catch` del callEdgeFunction, agregar breadcrumb `parse_cfdi_xml.exhausted` con `attempt_count`. |
+| `src/constants/appVersion.ts` | `APP_VERSION = "13.114.5"`. |
+| `CHANGELOG.md` | Nueva entrada `[13.114.5]`. |
