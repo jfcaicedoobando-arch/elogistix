@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.128.2] - 2026-06-23
+- **chore(portal-agente)**: El usuario demo `agente.demo@librecarga.com` ya no contamina LONGSAIL — ahora apunta a un proveedor + agente ficticio **AGENTEPRUEBA** (CN, Agente de Carga). Al entrar al portal verá tarifas/embarques vacíos, ideal para pruebas sin tocar datos reales.
+
 ## [13.128.1] - 2026-06-23
 - **chore(portal-agente)**: Usuario de prueba para el Portal del Agente — `agente.demo@librecarga.com` / `AgenteDemo2026!`, rol `agente_carga`, vinculado al agente **LONGSAIL**. Permite validar el flujo end-to-end (login → `/agente` → ver tarifas/embarques filtrados por RLS) sin esperar el correo de invitación.
 
