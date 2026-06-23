@@ -1,5 +1,5 @@
 import * as React from 'npm:react@18.3.1'
-import { wrapEdgeHandler } from "../_shared/sentry.ts"
+import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
@@ -74,6 +74,12 @@ Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
       console.error('Failed to render template for preview', {
         template: name,
         error: err,
+      })
+      // 13.114.20: antes el loop sólo logueaba — no se sabía qué plantilla
+      // estaba rota. Capturamos por iteración con el `template_key` en extra.
+      await captureEdgeException(err, {
+        fn: 'preview-transactional-email',
+        extra: { phase: 'render_template', template_key: name },
       })
       results.push({
         templateName: name,

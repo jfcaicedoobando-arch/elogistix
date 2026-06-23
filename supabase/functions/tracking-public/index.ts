@@ -62,6 +62,13 @@ Deno.serve(async (req) => {
     const { data, error } = await supabase.rpc("get_tracking_public", { p_token: token });
     if (error) {
       log.finish(500, "rpc_error", { payload: { error: error.message } });
+      // 13.114.20: el `errorResponse` corta el flujo antes del catch global —
+      // capturamos explícitamente para no perder fallos de la RPC pública.
+      await captureEdgeException(error, {
+        fn: "tracking-public",
+        status_code: 500,
+        extra: { phase: "rpc_get_tracking_public" },
+      });
       return errorResponse("Error consultando tracking", 500);
     }
 

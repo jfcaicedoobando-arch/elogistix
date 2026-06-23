@@ -15,6 +15,7 @@ import { toast as sonnerToast } from "sonner";
 import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "@/components/shared/utils/errorReport";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 /**
  * Firma laxa retenida sólo por compatibilidad con call sites que aún pasan
@@ -77,6 +78,22 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
       onClick: () => openErrorReport(debug),
     },
   });
+
+  // 13.114.20: cierre del gap principal de la auditoría — `notifyError` es el
+  // toast unificado (340 call sites). Antes sólo armaba el payload de debug:
+  // sin que el usuario abriera "Ver detalles" Sentry nunca veía el error.
+  // Reportamos sólo cuando hay `error` real (skip puro form-validation que
+  // pasa `errors`/`message` sin objeto Error, para no inflar la cuota).
+  if (error !== undefined && error !== null) {
+    reportCaughtError(
+      error,
+      {
+        feature: phase ?? "ui_notify",
+        op: method ?? (typeof step === "number" ? `step_${step}` : "unknown"),
+      },
+      { ...(context ?? {}), step, errorCode, title: computedTitle, description },
+    );
+  }
 }
 
 /** Emite un toast de advertencia (no bloquea). */

@@ -96,10 +96,13 @@ export async function conciliarConPago(
     })
     .eq("id", movId);
   if (error) {
-    // P3: métrica de negocio — tasa de fallos de conciliación por código de error.
+    // 13.114.20: `Sentry.metrics?.count` se removió en SDK v8 — antes esto
+    // era un no-op silencioso. Reportamos como `captureMessage` warning con
+    // tags filtrables (`tipo`, `reason`) para mantener la métrica de negocio.
     try {
-      Sentry.metrics?.count?.("conciliacion.failed", 1, {
-        attributes: { tipo, reason: error.code ?? "unknown" },
+      Sentry.captureMessage("conciliacion.failed", {
+        level: "warning",
+        tags: { tipo, reason: error.code ?? "unknown" },
       });
     } catch { /* best-effort */ }
     throw error;
