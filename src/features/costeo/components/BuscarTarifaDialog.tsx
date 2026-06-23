@@ -1,16 +1,17 @@
 /**
  * Dialog reutilizable para buscar Top 3 tarifas marítimas y opcionalmente
  * devolver la elegida al caller (usado en /costeo/buscar y en wizard cotización).
+ * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useState } from "react";
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "./TarifaResultCard";
@@ -108,62 +109,65 @@ export function BuscarTarifaDialog({
   const puertosDestinoList = puertosMX.length ? puertosMX : puertos;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col gap-0 p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>Buscar tarifa marítima (Top 3)</DialogTitle>
-          <DialogDescription>Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada.</DialogDescription>
-        </DialogHeader>
-
-        <div className="overflow-y-auto px-6 pb-6 space-y-4">
-          <div role="search" aria-label="Filtros de búsqueda de tarifa" className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div>
-              <Label htmlFor="td-origen">Puerto origen (CN)</Label>
-              <Select value={origen} onValueChange={setOrigen}>
-                <SelectTrigger id="td-origen"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                <SelectContent>
-                  {puertosOrigenList.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="td-destino">Puerto destino (MX)</Label>
-              <Select value={destino} onValueChange={setDestino}>
-                <SelectTrigger id="td-destino"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                <SelectContent>
-                  {puertosDestinoList.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="td-tipo">Tipo contenedor</Label>
-              <Select value={tipo} onValueChange={setTipo}>
-                <SelectTrigger id="td-tipo"><SelectValue placeholder="Selecciona" /></SelectTrigger>
-                <SelectContent>
-                  {tipos.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="td-fecha">Fecha</Label>
-              <Input id="td-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-            </div>
-          </div>
-
-          <ResultadosBody
-            origen={origen} destino={destino} tipo={tipo}
-            isFetching={isFetching} tarifas={tarifas}
-            onElegir={onElegir} onOpenChange={onOpenChange}
-            selectLabel={selectLabel}
-          />
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Search}
+      title="Buscar tarifa marítima (Top 3)"
+      description="Busca las tres mejores tarifas marítimas disponibles para la ruta seleccionada."
+      size="4xl"
+      footer={
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          Cerrar
+        </Button>
+      }
+    >
+      <div role="search" aria-label="Filtros de búsqueda de tarifa" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div>
+          <Label htmlFor="td-origen">Puerto origen (CN)</Label>
+          <Select value={origen} onValueChange={setOrigen}>
+            <SelectTrigger id="td-origen"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+            <SelectContent>
+              {puertosOrigenList.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </DialogContent>
-    </Dialog>
+        <div>
+          <Label htmlFor="td-destino">Puerto destino (MX)</Label>
+          <Select value={destino} onValueChange={setDestino}>
+            <SelectTrigger id="td-destino"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+            <SelectContent>
+              {puertosDestinoList.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="td-tipo">Tipo contenedor</Label>
+          <Select value={tipo} onValueChange={setTipo}>
+            <SelectTrigger id="td-tipo"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+            <SelectContent>
+              {tipos.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="td-fecha">Fecha</Label>
+          <Input id="td-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </div>
+      </div>
+
+      <ResultadosBody
+        origen={origen} destino={destino} tipo={tipo}
+        isFetching={isFetching} tarifas={tarifas}
+        onElegir={onElegir} onOpenChange={onOpenChange}
+        selectLabel={selectLabel}
+      />
+    </FormDialogShell>
   );
 }

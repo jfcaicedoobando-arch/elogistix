@@ -1,64 +1,56 @@
-## Estado actual
+## Contexto
 
-**Ola 1: COMPLETA.** Migrados al `FormDialogShell` los 6 modales hermanos (Nuevo + Editar) de Cliente, Proveedor y Factura de proveedor.
+Embarques ya quedó migrado completo en el turno anterior (`13.123.0`). Los `Dialog` que quedan dentro de `src/features/embarques` (`TabCierre`) y `src/features/operaciones` (`EmbarquesEstadoDialog`) son **paneles de lectura / diálogos de avance de estado**, no formularios — quedan fuera del shell (igual que `DialogMarcarFacturada`, `DialogEliminarEmbarque`, etc.).
 
-```
-src/components/shared/FormDialogShell.tsx
-src/components/shared/FormDialogSection.tsx
-src/components/shared/FormDialogStepper.tsx
-src/features/cliente/components/NuevoClienteDialog.tsx
-src/features/cliente/components/DialogEditarCliente.tsx
-src/features/proveedor/components/NuevoProveedorDialog.tsx
-src/features/proveedor/components/EditarProveedorDialog.tsx
-src/features/cxp/components/DialogNuevaFacturaProveedor.tsx
-src/features/cxp/components/DialogEditarFacturaProveedor.tsx
-```
+Los pendientes reales del plan original son **Costeo (3)** + **Cotización/CRM extras (4)**. Aprovecho para incluir también dos modales de Costeo que salieron en la auditoría pero no estaban listados: el `Dialog` inline de **CosteoNavieras** (carta-garantía / tabulador) y el de **CosteoDemorasVenta**.
 
-## Lo que quedó pendiente
+## Alcance — 9 modales en 2 sub-grupos
 
-### Ola 2 — Formularios de entidades (≈25 modales, agrupados por dominio)
+### Sub-grupo A · Costeo (5)
 
-Un sub-PR por dominio para que cada cambio sea revisable de forma aislada.
+| Modal | Icon sugerido | Size |
+|---|---|---|
+| `RutaFormDialog` | `Route` | `lg` |
+| `TarifaForm` | `Tag` | `2xl` |
+| `CosteoAgenteFormDialog` | `Users` | `xl` |
+| `BuscarTarifaDialog` | `Search` | `2xl` |
+| Dialog inline de **CosteoNavieras** (carta garantía + tabulador escalonado) | `FileSignature` | `xl` |
+| Dialog inline de **CosteoDemorasVenta** | `Timer` | `lg` |
 
-- **CRM / Comercial**: `ConvertirLeadDialog`, `DialogConvertirProspecto`, `NuevaActividadDialog`, `EnviarCotizacionDialog`, `RecotizarModal`, `RevalidarTarifaModal`, `BuscarTarifaDialog`.
-- **Admin / Org**: `NuevaOrganizacionDialog`, `AgregarMiembroOrgDialog`, `NuevoUsuarioDialog` (ya tiene icon-tile hecho a mano — quitar duplicación).
-- **Clientes / Contactos**: `DialogContacto`, `EditarContactoDialog`, `PortalInviteDialog`.
-- **CXP / Facturación**: `DialogRegistrarPago`, `DialogRegistrarPagoProveedor`, `DialogNotaCreditoProveedor`, `DialogNuevaFacturaManual`, `DialogTimbrarFactura`, `DialogTimbrarRep`, `CrearProveedorDesdeCfdiDialog`.
-- **Embarques**: `DialogDuplicarEmbarque`, `DialogSeguroForm`, `DialogGenerarProforma`, `AgregarDocumentoDialog`.
-- **Costeo**: `RutaFormDialog`, `TarifaForm`, `CosteoAgenteFormDialog`.
-- **Presupuesto**: `DialogCategoria`.
-- **Auth / Perfil**: `ForgotPasswordDialog`, `CambiarPasswordDialog`.
-- **Operaciones**: `DialogGenerarLiquidacion`.
+> Si el dialog inline de Costeo tiene mucha lógica acoplada a la ruta, se extrae a `src/features/costeo/components/` como componente propio antes de migrarlo (mantengo el límite Power-of-10 de ≤200 líneas).
 
-### Ola 3 — Wizards multi-paso (con `FormDialogStepper`)
+### Sub-grupo B · Cotización / CRM extras (4)
 
-Donde el stepper aporta valor real:
+| Modal | Icon sugerido | Size | Wizard? |
+|---|---|---|---|
+| `DialogConvertirProspecto` | `UserCheck` | `lg` | no |
+| `EnviarCotizacionDialog` | `Send` | `xl` | no |
+| `RecotizarModal` | `RefreshCw` | `2xl` | no |
+| `RevalidarTarifaModal` | `ShieldCheck` | `2xl` | no |
 
-- `BulkImportDialog` (validar → mapear → confirmar).
-- `ImportarLeadsCsvDialog`.
-- `DialogGenerarLiquidacion`.
-- `ConvertirLeadDialog` (también aparece en Ola 2; va aquí si se trata como wizard).
+## Reglas comunes (idénticas a Olas anteriores)
 
-### Memoria / convención (pendiente)
+- Sólo **presentación**: nada de cambios en hooks, servicios, RLS, validaciones, atajos de teclado o controllers.
+- Header con icon-tile + descripción contextual, body scrolleable, footer sticky.
+- Donde haya resumen vivo (totales, badges de validación), va en `headerAside`.
+- Confirmaciones cortas siguen como `AlertDialog` — no migrar.
+- Sin nuevos tokens de color.
 
-- Guardar regla en `mem://` que obligue a usar `FormDialogShell` para modales tipo formulario nuevos. Aún no se creó la memoria.
+## Validación
 
-### NO migrar (recordatorio)
+- `tsgo` y suite de tests verde por sub-grupo antes de subir versión.
+- Smoke visual en preview de 2 modales por sub-grupo: abrir → cancelar → cerrar sin errores en consola.
 
-Alerts y confirmaciones cortas: `DoubleConfirmDeleteDialog`, `ConfirmDeleteAlert`, `RoleChangeAlertDialog`, `TrackingConfirmFechaLlegadaDialog`, `DialogEliminarEmbarque`, `DialogMarcarFacturada`, `ErrorDetailsDialog`, `PortalCotizacionConfirmDialog`, `MarcarRevisadoDialog` y todo lo basado en `alert-dialog`.
+## Entregables por sub-grupo
 
-## Sugerencia de próximo paso
+1. Sub-PR A (Costeo): bump a `13.124.0` + entrada en `CHANGELOG.md`.
+2. Sub-PR B (Cotización): bump a `13.125.0` + entrada en `CHANGELOG.md`.
 
-Pelar **Ola 2 por dominio** en este orden (de mayor a menor uso diario):
+## Después de esto queda pendiente (Ola 2 + Ola 3)
 
-1. CXP (7 modales) — el dominio más tocado.
-2. CRM (7).
-3. Embarques (4).
-4. Admin (3) + Clientes/Contactos (3).
-5. Costeo (3) + Presupuesto/Auth/Operaciones (3).
-
-Después Ola 3 (wizards) y por último guardar la memoria de convención.
+- **Presupuesto** (`DialogCategoria`), **Auth/Perfil** (`ForgotPasswordDialog`, `CambiarPasswordDialog`), **Comisiones** (`DialogGenerarLiquidacion`, `DialogRegistrarPagoLiquidacion`), **Auditoría** (`AsignarResponsableDialog`).
+- **Ola 3 wizards reales**: `BulkImportDialog` (validar → mapear → confirmar) + revisar si `DialogGenerarLiquidacion` se trata como wizard.
 
 ## Pregunta
 
-¿Por dónde arrancamos: **CXP primero**, **CRM primero**, **todo Ola 2 de corrido**, o **sólo guardar la memoria** y migrar orgánicamente?
+¿Arranco con **Sub-grupo A (Costeo, 5 modales)** primero y dejo Cotización para el siguiente turno, o **los 9 en un solo turno**?

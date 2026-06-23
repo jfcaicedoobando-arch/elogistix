@@ -1,16 +1,16 @@
 /**
  * Diálogo para alta de una nueva ruta CN → MX.
- * Extraído de `CosteoRutas.tsx` en v13.56.4 (auditoría — paso 14).
+ * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useMemo, useState } from "react";
+import { Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import type { useCosteoRutaMutations } from "@/features/costeo/hooks/useCosteoRutas";
 import { usePuertos } from "@/features/catalogos/hooks/usePuertos";
 import type { CosteoRuta } from "@/features/costeo/types";
@@ -37,6 +37,13 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
     [puertos],
   );
 
+  const rutaDuplicada = rutas.some(
+    (ruta) => ruta.puerto_origen_id === origenId && ruta.puerto_destino_id === destinoId,
+  );
+  const mostrarDuplicada = !!origenId && !!destinoId && rutaDuplicada;
+  const origenInvalido = intentoEnvio && !origenId;
+  const destinoInvalido = intentoEnvio && !destinoId;
+
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
@@ -52,21 +59,27 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
     }
   };
 
-  const origenInvalido = intentoEnvio && !origenId;
-  const destinoInvalido = intentoEnvio && !destinoId;
-  const rutaDuplicada = rutas.some(
-    (ruta) => ruta.puerto_origen_id === origenId && ruta.puerto_destino_id === destinoId,
-  );
-  const mostrarDuplicada = !!origenId && !!destinoId && rutaDuplicada;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nueva ruta CN → MX</DialogTitle>
-          <DialogDescription>Agrega una nueva ruta de origen en China a destino en México.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleGuardar} className="space-y-3">
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Route}
+      title="Nueva ruta CN → MX"
+      description="Agrega una nueva ruta de origen en China a destino en México."
+      size="lg"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="ruta-form" disabled={crear.isPending || rutaDuplicada}>
+            Guardar
+          </Button>
+        </>
+      }
+    >
+      <form id="ruta-form" onSubmit={handleGuardar} className="space-y-4">
+        <FormDialogSection cols={1} flat>
           <div>
             <Label htmlFor="ruta-origen">Puerto de origen (China) *</Label>
             <Select value={origenId} onValueChange={setOrigenId}>
@@ -110,16 +123,8 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
               Esta ruta CN → MX ya está registrada. No necesitas volver a crearla.
             </p>
           )}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={crear.isPending || rutaDuplicada}>
-              Guardar
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </FormDialogSection>
+      </form>
+    </FormDialogShell>
   );
 }
