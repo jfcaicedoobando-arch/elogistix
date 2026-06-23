@@ -265,9 +265,10 @@ BEGIN
 
   PERFORM pg_temp.assert_insert_blocked(
     format(
-      'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas)
-       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L)',
-      org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', ''
+      'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas, categoria_presupuesto_id)
+       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L, %L)',
+      org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', '',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)
     ),
     'proveedor_facturas acepta INSERT con organization_id ajeno'
   );
