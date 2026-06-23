@@ -22,6 +22,7 @@ const OPERATIONS: readonly AppRole[] = [
   "coordinador_logistico",
   "operador",
   "ejecutivo_pricing",
+  "vendedor",
 ];
 const FINANCE: readonly AppRole[] = [
   "super_admin",
@@ -44,6 +45,7 @@ const FINANCE_VIEWERS: readonly AppRole[] = [
   "auxiliar_contable",
   "ejecutivo_cobranza",
   "ejecutivo_pricing",
+  "vendedor",
 ];
 const SALES: readonly AppRole[] = [
   "super_admin",
