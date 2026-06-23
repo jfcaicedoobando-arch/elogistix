@@ -25,6 +25,45 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+/**
+ * 13.114.17: rate-limit en memoria por IP para evitar abuso del túnel.
+ * Cada isolate mantiene su ventana deslizante de 60 segundos; un atacante con
+ * DSN válido necesitaría coordinar muchas IPs para drenar la cuota Sentry.
+ *
+ * Límite por defecto: 60 requests / minuto / IP. Devuelve 429 al exceder.
+ */
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 60;
+const rateBuckets = new Map<string, number[]>();
+
+function getClientIp(req: Request): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+export function checkRateLimit(ip: string, now: number = Date.now()): boolean {
+  const cutoff = now - RATE_LIMIT_WINDOW_MS;
+  const bucket = (rateBuckets.get(ip) ?? []).filter((t) => t > cutoff);
+  if (bucket.length >= RATE_LIMIT_MAX) {
+    rateBuckets.set(ip, bucket);
+    return false;
+  }
+  bucket.push(now);
+  rateBuckets.set(ip, bucket);
+  // GC barato: si crecemos demasiado, limpiar IPs sin actividad reciente.
+  if (rateBuckets.size > 5000) {
+    for (const [k, v] of rateBuckets) {
+      if (v.length === 0 || v[v.length - 1] < cutoff) rateBuckets.delete(k);
+    }
+  }
+  return true;
+}
+
+
 interface EnvelopeHeader {
   dsn?: string;
   [k: string]: unknown;
@@ -56,6 +95,12 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("method_not_allowed", { status: 405, headers: corsHeaders });
   }
+
+  const ip = getClientIp(req);
+  if (!checkRateLimit(ip)) {
+    return new Response("rate_limited", { status: 429, headers: { ...corsHeaders, "Retry-After": "60" } });
+  }
+
 
   try {
     const body = await req.text();
