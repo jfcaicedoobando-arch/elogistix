@@ -1,66 +1,57 @@
-# Auditoría de permisos: Gerente Comercial / Gerente de Operaciones
+# Auditoría de permisos — todos los roles
 
-## Hallazgos
+Comparé `roleCatalog.ts` (descripciones), `usePermissions.ts` (matriz lógica), `sidebarRoleBuilders.ts` (menú) y `appRoutes.tsx` (guards de ruta) para los 13 roles activos + 3 legacy.
 
-Comparé el catálogo de roles (`roleCatalog.ts`), la matriz `usePermissions`, el sidebar (`sidebarRoleBuilders.ts`) y los guards de ruta (`appRoutes.tsx`). Hay **desalineación entre lo que el sidebar muestra y lo que las rutas permiten** — los gerentes ven entradas en el menú que, al hacer clic, los redirigen a `/` por `ProtectedRoute`.
+## Resultado por rol
 
-### Gerente de Operaciones (descripción: "Supervisa la operación diaria. Lee finanzas y aprueba")
-
-Sidebar muestra estos items, pero las rutas los bloquean:
-
-| Item del sidebar | Ruta | Roles permitidos hoy | Resultado |
-|---|---|---|---|
-| Facturas de proveedor | `/cxp` | admin, super_admin, contador, tesorero, auxiliar_contable | Redirige |
-| Tesorería | `/tesoreria` y `/tesoreria/*` | admin, super_admin, contador, tesorero | Redirige |
-| Cobranza | `/cartera` | admin, super_admin, admin_org, contador, ejecutivo_cobranza | Redirige |
-| Profit › Dashboard Ejecutivo | `/profit/dashboard` | TESORERIA_ROLES | Redirige |
-| Profit › Presupuesto | `/profit/presupuesto` | TESORERIA_ROLES | Redirige |
-
-### Gerente Comercial (descripción: "Ve CRM completo, cotizaciones con márgenes, clientes y comisiones; sin tesorería")
-
-| Item del sidebar | Ruta | Estado |
+| Rol | Sidebar coherente con rutas | Notas |
 |---|---|---|
-| Profit › Dashboard Ejecutivo | `/profit/dashboard` | Bloqueado |
-| Profit › Presupuesto | `/profit/presupuesto` | Bloqueado |
+| super_admin | ✓ | Usa `buildDefaultSections` + Admin + Super Admin |
+| admin / admin_org | ✓ | `buildAdmin`, todas las rutas alcanzables |
+| gerente_operaciones | ✓ | Corregido en 13.114.3 |
+| gerente_comercial | ✓ | Corregido en 13.114.3 |
+| gerente_visor | ✓ | Sin builder dedicado → cae a default (full lectura). Ya está en todos los guards de lectura financiera |
+| coordinador_logistico | ✓ | Gestión, Costeo, Directorio — todo sin guard o permitido |
+| ejecutivo_pricing | ✓ | Gestión, Costeo, Reportes — todo accesible |
+| contador | ✓ | En todos los guards que necesita (CXP, Tesorería, Facturación, Cartera, Profit) |
+| **tesorero** | **❌** | Sidebar muestra **Cobranza (`/cartera`)** pero la ruta no lo permite — clic redirige a `/` |
+| auxiliar_contable | ✓ | Compras + Sistema |
+| ejecutivo_cobranza | ✓ | Cartera, Facturación, Clientes |
+| vendedor | ✓ | CRM + Clientes + Ayuda |
+| customer_service | ✓ | Dashboards, Gestión limitada, Clientes, Auditoría |
+| cliente | ✓ | Redirigido a `/portal`, fuera del flujo |
+| Legacy (admin/operador/viewer) | ✓ | `admin`→buildAdmin, `operador`→buildCoordinador, `viewer`→buildCustomerService |
 
-El resto (Cotizaciones, Embarques, Comisiones, Costeo, Reportes, Directorio, Estado de Resultados, Proyección) sí funciona.
+## Hallazgos accionables
 
-### Lo que sí está bien
+### 1. Bug confirmado — Tesorero no puede abrir Cobranza
 
-- `usePermissions` ya incluye ambos roles en `FINANCE_VIEWERS`, `OPERATIONS` (operaciones) y `SALES`/`OVERRIDE_TARIFA_PRICING` (comercial). El catálogo y la jerarquía (`roleHierarchy.ts`) son consistentes.
-- Sidebar no muestra Administración/Configuración/Usuarios (correcto).
-- Gerente Comercial no ve Tesorería en sidebar (correcto).
+`buildTesorero` lista "Cobranza" (`/cartera`) pero el guard actual es `["admin","super_admin","admin_org","contador","ejecutivo_cobranza","gerente_operaciones","gerente_visor"]` — sin `tesorero`. Tiene sentido funcional darle **lectura** porque concilia depósitos bancarios con cobros (descripción: "conciliación bancaria y liquidación de comisiones").
 
-## Cambios propuestos (solo `appRoutes.tsx`)
+**Fix:** agregar `tesorero` a `allowedRoles` de `/cartera` en `appRoutes.tsx` y al test `appRoutes.smoke.test.tsx`.
 
-Analogía: la sidebar es el menú del restaurante y las rutas son las puertas a la cocina. Hoy el menú ofrece platillos cuyas puertas están cerradas para estos dos gerentes — hay que abrirles las puertas de **lectura** que su rol justifica.
+### 2. Rutas sin guard (decisión, no bug)
 
-1. **Definir un guard reutilizable** `FINANCE_READ_ROLES` que incluya: `admin`, `super_admin`, `admin_org`, `contador`, `tesorero`, `auxiliar_contable`, `ejecutivo_cobranza`, `gerente_operaciones`, `gerente_visor`. (Refleja `FINANCE_VIEWERS` de `usePermissions`.)
+Estas rutas no tienen `ProtectedRoute` con roles → cualquier usuario autenticado las abre escribiendo la URL, aunque el sidebar las oculte para algunos roles:
 
-2. **Agregar `gerente_operaciones` (y `gerente_visor`) a las rutas de lectura financiera**:
-   - `/cxp`, `/compras`, `/compras/aging`, `/cxp/por-capturar`, `/cxp/por-pagar`
-   - `/tesoreria`, `/tesoreria/cuentas`, `/tesoreria/conciliacion`, `/tesoreria/flujo`
-   - `/cartera`, `/facturacion/por-emitir`
-   - `/profit/dashboard`, `/profit/presupuesto`
+- `/comisiones` — Vendedor podría entrar (no aparece en su sidebar)
+- `/bitacora`, `/sentry` — Cualquier rol entra escribiendo URL
+- `/reportes/*` — Cualquier rol entra
+- `/profit/proyeccion`, `/profit/estado-resultados` — Cualquier rol entra
+- `/clientes`, `/proveedores`, `/cotizaciones`, `/embarques`, `/facturacion`, `/proformas`, `/operaciones` — Roles "cliente" y casos extremos están protegidos por `ProtectedRoute` raíz; el resto entra
 
-3. **Agregar `gerente_comercial` a las rutas de Profit** (`/profit/dashboard`, `/profit/presupuesto`) ya que el sidebar lo expone y la descripción incluye "cotizaciones con márgenes".
+**No es estrictamente un bug** porque la RLS de la BD limita los datos que se ven, pero sí es una superficie de UX inconsistente. Hay dos caminos:
 
-4. **No tocar** la lógica de escritura: las mutaciones de tesorería/CXP siguen restringidas por `usePermissions` (`canEditFinance`, `canPagarProveedor`, etc.), donde estos gerentes no figuran.
+- **(A) Mínimo (recomendado para esta tarea):** solo corregir el bug del tesorero. Mantener las rutas abiertas como están.
+- **(B) Endurecer:** agregar guards de ruta a `/comisiones` (excluir vendedor/customer_service), `/bitacora` (solo admin/contador/tesorero/gerentes), `/sentry` (solo admin/super_admin), `/profit/proyeccion` y `/profit/estado-resultados` (mismos roles que `/profit/dashboard`).
 
-5. **Sidebar**: no requiere cambios — ya refleja la intención del catálogo.
+## Plan propuesto (opción A)
 
-## Verificación
+1. Editar `src/routes/appRoutes.tsx`: sumar `"tesorero"` al `allowedRoles` de `/cartera`.
+2. Actualizar el caso correspondiente en `src/routes/__tests__/appRoutes.smoke.test.tsx`.
+3. Bump `APP_VERSION` a `13.114.4` y agregar entrada en `CHANGELOG.md` (analogía: "el tesorero veía el botón de Cobranza pero estaba pintado en una puerta cerrada — ahora la puerta abre en modo lectura").
+4. Ejecutar `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx src/hooks/layout/__tests__/useLayout.test.tsx`.
 
-- Ajustar `src/routes/__tests__/appRoutes.smoke.test.tsx` para los nuevos `allowedRoles`.
-- Ejecutar `bunx vitest run src/routes/__tests__/appRoutes.smoke.test.tsx src/hooks/layout/__tests__/useLayout.test.tsx src/lib/auth/__tests__/roleHierarchy.test.ts`.
-- Smoke manual con Playwright opcional iniciando sesión como gerente_operaciones y navegando a `/tesoreria` y `/profit/dashboard` (debe renderizar, no redirigir).
+## Pregunta para ti
 
-## Versionado y changelog
-
-- Bump `APP_VERSION` a `13.114.3`.
-- Entrada en `CHANGELOG.md`: "Alinear permisos de Gerente Comercial y Gerente de Operaciones con el catálogo: lectura financiera (CXP, tesorería, cartera, profit) habilitada por ruta."
-
-## Fuera de alcance
-
-- Auditoría operativa (`/auditoria`) sigue restringida a admin; si quieres que los gerentes la vean en modo lectura, lo trato como cambio aparte.
-- Permisos a nivel componente (botones de aprobar/pagar) no se modifican.
+¿Voy con la **opción A** (solo arreglar el bug del tesorero, mínimo invasivo) o quieres también la **opción B** (endurecer las rutas hoy abiertas)? Si eliges B, dime si la lista de roles que propongo arriba te parece bien o quieres ajustarla.
