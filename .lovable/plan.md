@@ -1,72 +1,64 @@
+## Estado actual
 
-## Respuesta corta
+**Ola 1: COMPLETA.** Migrados al `FormDialogShell` los 6 modales hermanos (Nuevo + Editar) de Cliente, Proveedor y Factura de proveedor.
 
-**Sí, en muchos lugares.** La app tiene **79 archivos** que usan `DialogContent + DialogHeader`. De esos, ~30-40 son **modales de formulario** que son candidatos directos al `FormDialogShell`. Los ~40 restantes son alerts/confirmaciones/popovers que **no deben** migrar (alteraría su intención: avisos cortos, no formularios).
+```
+src/components/shared/FormDialogShell.tsx
+src/components/shared/FormDialogSection.tsx
+src/components/shared/FormDialogStepper.tsx
+src/features/cliente/components/NuevoClienteDialog.tsx
+src/features/cliente/components/DialogEditarCliente.tsx
+src/features/proveedor/components/NuevoProveedorDialog.tsx
+src/features/proveedor/components/EditarProveedorDialog.tsx
+src/features/cxp/components/DialogNuevaFacturaProveedor.tsx
+src/features/cxp/components/DialogEditarFacturaProveedor.tsx
+```
 
-## Candidatos clasificados
+## Lo que quedó pendiente
 
-### Tier 1 — Pareja directa de los 3 ya migrados (impacto alto, riesgo bajo)
+### Ola 2 — Formularios de entidades (≈25 modales, agrupados por dominio)
 
-Son los "editar" equivalentes de lo que ya rehicimos. Mismo controller/datos, sólo cambia el modo. Ideal para mantener consistencia visual entre "Nuevo X" y "Editar X".
+Un sub-PR por dominio para que cada cambio sea revisable de forma aislada.
 
-- `DialogEditarCliente` → icon `UserCog`
-- `EditarProveedorDialog` → icon `Building2`
-- `DialogEditarFacturaProveedor` → icon `FileSpreadsheet`
+- **CRM / Comercial**: `ConvertirLeadDialog`, `DialogConvertirProspecto`, `NuevaActividadDialog`, `EnviarCotizacionDialog`, `RecotizarModal`, `RevalidarTarifaModal`, `BuscarTarifaDialog`.
+- **Admin / Org**: `NuevaOrganizacionDialog`, `AgregarMiembroOrgDialog`, `NuevoUsuarioDialog` (ya tiene icon-tile hecho a mano — quitar duplicación).
+- **Clientes / Contactos**: `DialogContacto`, `EditarContactoDialog`, `PortalInviteDialog`.
+- **CXP / Facturación**: `DialogRegistrarPago`, `DialogRegistrarPagoProveedor`, `DialogNotaCreditoProveedor`, `DialogNuevaFacturaManual`, `DialogTimbrarFactura`, `DialogTimbrarRep`, `CrearProveedorDesdeCfdiDialog`.
+- **Embarques**: `DialogDuplicarEmbarque`, `DialogSeguroForm`, `DialogGenerarProforma`, `AgregarDocumentoDialog`.
+- **Costeo**: `RutaFormDialog`, `TarifaForm`, `CosteoAgenteFormDialog`.
+- **Presupuesto**: `DialogCategoria`.
+- **Auth / Perfil**: `ForgotPasswordDialog`, `CambiarPasswordDialog`.
+- **Operaciones**: `DialogGenerarLiquidacion`.
 
-### Tier 2 — Formularios de entidades (impacto alto)
+### Ola 3 — Wizards multi-paso (con `FormDialogStepper`)
 
-Modales tipo "crear/editar entidad" con varios campos. Ganarían mucho con el icon-tile + footer sticky.
+Donde el stepper aporta valor real:
 
-- **CRM / Comercial**: `ConvertirLeadDialog`, `DialogConvertirProspecto`, `NuevaActividadDialog`, `EnviarCotizacionDialog`, `RecotizarModal`, `RevalidarTarifaModal`, `BuscarTarifaDialog`
-- **Admin / Org**: `NuevaOrganizacionDialog`, `AgregarMiembroOrgDialog`, `NuevoUsuarioDialog` (ya tiene icon-tile a mano — migrar al shell elimina duplicación)
-- **Clientes / Contactos**: `DialogContacto`, `EditarContactoDialog`, `PortalInviteDialog`
-- **CXP / Facturación**: `DialogRegistrarPago`, `DialogRegistrarPagoProveedor`, `DialogNotaCreditoProveedor`, `DialogNuevaFacturaManual`, `DialogTimbrarFactura`, `DialogTimbrarRep`, `CrearProveedorDesdeCfdiDialog`
-- **Embarques**: `DialogDuplicarEmbarque`, `DialogSeguroForm`, `DialogGenerarProforma`, `AgregarDocumentoDialog`
-- **Costeo**: `RutaFormDialog`, `TarifaForm`, `CosteoAgenteFormDialog`
-- **Presupuesto / Importadores**: `DialogCategoria`, `BulkImportDialog`, `ImportarLeadsCsvDialog`
-- **Auth / Perfil**: `ForgotPasswordDialog`, `CambiarPasswordDialog`
-- **Operaciones**: `DialogGenerarLiquidacion`
+- `BulkImportDialog` (validar → mapear → confirmar).
+- `ImportarLeadsCsvDialog`.
+- `DialogGenerarLiquidacion`.
+- `ConvertirLeadDialog` (también aparece en Ola 2; va aquí si se trata como wizard).
 
-### Tier 3 — Wizards de varios pasos (mejor con `stepper`)
+### Memoria / convención (pendiente)
 
-Donde el `FormDialogStepper` brilla más:
+- Guardar regla en `mem://` que obligue a usar `FormDialogShell` para modales tipo formulario nuevos. Aún no se creó la memoria.
 
-- `BulkImportDialog` (validar → mapear → confirmar)
-- `ImportarLeadsCsvDialog`
-- `DialogGenerarLiquidacion`
-- `ConvertirLeadDialog`
+### NO migrar (recordatorio)
 
-### NO migrar (queda como está)
+Alerts y confirmaciones cortas: `DoubleConfirmDeleteDialog`, `ConfirmDeleteAlert`, `RoleChangeAlertDialog`, `TrackingConfirmFechaLlegadaDialog`, `DialogEliminarEmbarque`, `DialogMarcarFacturada`, `ErrorDetailsDialog`, `PortalCotizacionConfirmDialog`, `MarcarRevisadoDialog` y todo lo basado en `alert-dialog`.
 
-Son alerts/confirmaciones cortas, no formularios. Forzar el shell los volvería pesados:
+## Sugerencia de próximo paso
 
-- `DoubleConfirmDeleteDialog`, `ConfirmDeleteAlert`, `RoleChangeAlertDialog`, `TrackingConfirmFechaLlegadaDialog`, `DialogEliminarEmbarque`, `DialogMarcarFacturada`, `ErrorDetailsDialog`, `ReabrirEmbarqueButton` (confirm), `AvanzarEstadoButton` (confirm), `PortalCotizacionConfirmDialog`, `MarcarRevisadoDialog`, todo lo que use `alert-dialog`.
+Pelar **Ola 2 por dominio** en este orden (de mayor a menor uso diario):
 
-## Beneficios concretos de migrar
+1. CXP (7 modales) — el dominio más tocado.
+2. CRM (7).
+3. Embarques (4).
+4. Admin (3) + Clientes/Contactos (3).
+5. Costeo (3) + Presupuesto/Auth/Operaciones (3).
 
-1. **Consistencia visual** — un mismo "lenguaje" para todo el back-office (header con icono semántico, footer sticky, stepper).
-2. **Borrado neto de código** — cada migración quita ~15-30 líneas de boilerplate (`DialogContent` + `DialogHeader` + footer manual + clases de tamaño).
-3. **Ayuda con Power-of-10** — varios de estos archivos están cerca del límite de 200 líneas; el shell les quita 20-40.
-4. **Accesibilidad** — el shell garantiza `DialogTitle` y `DialogDescription` correctos.
-5. **Refactors futuros más baratos** — cambiar un detalle visual (e.g. color del icon-tile, animación) se hace en un solo archivo.
+Después Ola 3 (wizards) y por último guardar la memoria de convención.
 
-## Recomendación
+## Pregunta
 
-Migrar **por olas**, no todo de golpe:
-
-- **Ola 1 (siguiente PR, ~1 hora)**: Tier 1 — los 3 "Editar" hermanos de los ya hechos. Garantiza paridad visual entre Nuevo/Editar.
-- **Ola 2**: Tier 2 dividido en sub-grupos por dominio (1 PR por dominio: CRM, Admin, Clientes, CXP, Embarques, Costeo). Cada sub-grupo ~30-45 min.
-- **Ola 3**: Tier 3 stepper-driven (los wizards de import/liquidación).
-
-Además: agregar a `mem://` una regla "use `FormDialogShell` para modales tipo formulario" para que futuras pantallas no se construyan a mano.
-
-## Pregunta antes de implementar
-
-Necesito que me digas el alcance:
-
-1. **Sólo la Ola 1** (los 3 modales "Editar" — paridad inmediata con lo recién hecho).
-2. **Ola 1 + Ola 2 completa** (los ~25 formularios). Cambio grande pero acotado a presentación.
-3. **Sólo dejar la guía + memoria** y que cada modal migre cuando lo toquemos por otra razón (adopción orgánica, riesgo cero).
-4. **Sub-grupo específico** que tú elijas (e.g. "sólo los de CXP" o "sólo los de Admin").
-
-No realizaré cambios hasta confirmar opción.
+¿Por dónde arrancamos: **CXP primero**, **CRM primero**, **todo Ola 2 de corrido**, o **sólo guardar la memoria** y migrar orgánicamente?
