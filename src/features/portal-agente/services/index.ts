@@ -50,6 +50,8 @@ export interface AgenteTarifaRow {
   vigente_hasta: string;
   estado: string;
   estado_aprobacion: string;
+  motivo_rechazo: string | null;
+  aprobada_en: string | null;
   agente_nombre: string;
   naviera_nombre: string;
   tipo_contenedor_nombre: string;
@@ -64,6 +66,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     .select(`
       id, ruta_id, naviera_id, tipo_contenedor_id, moneda, flete_base,
       vigente_desde, vigente_hasta, estado, estado_aprobacion,
+      motivo_rechazo, aprobada_en,
       costeo_agentes:agente_id(nombre),
       navieras:naviera_id(name),
       tipos_contenedor:tipo_contenedor_id(name),
@@ -80,6 +83,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     id: string; ruta_id: string; naviera_id: string; tipo_contenedor_id: string;
     moneda: string; flete_base: number;
     vigente_desde: string; vigente_hasta: string; estado: string; estado_aprobacion: string;
+    motivo_rechazo: string | null; aprobada_en: string | null;
     costeo_agentes?: { nombre?: string } | null;
     navieras?: { name?: string } | null;
     tipos_contenedor?: { name?: string } | null;
@@ -99,6 +103,8 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
     vigente_hasta: r.vigente_hasta,
     estado: r.estado,
     estado_aprobacion: r.estado_aprobacion,
+    motivo_rechazo: r.motivo_rechazo,
+    aprobada_en: r.aprobada_en,
     agente_nombre: r.costeo_agentes?.nombre ?? "—",
     naviera_nombre: r.navieras?.name ?? "—",
     tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
