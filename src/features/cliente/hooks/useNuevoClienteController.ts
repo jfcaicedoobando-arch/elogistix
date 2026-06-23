@@ -150,6 +150,7 @@ export function useNuevoClienteController(onClose: () => void) {
     documentos,
     modoAlta,
     parsingCsf,
+    csfFile,
     isSaving: createCliente.isPending,
     isStep1Valid: isStep1Valid(),
     allDocsAdjuntados,
@@ -163,3 +164,4 @@ export function useNuevoClienteController(onClose: () => void) {
     resetAndClose,
   };
 }
+
