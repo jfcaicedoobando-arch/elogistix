@@ -122,7 +122,7 @@ export default function CosteoAgentes() {
 
       <InvitarAgentePortalDialog
         agente={invitarAgente}
-        onOpenChange={(o) => !o && setInvitarAgente(null)}
+        onOpenChange={(o: boolean) => !o && setInvitarAgente(null)}
       />
     </div>
   );
