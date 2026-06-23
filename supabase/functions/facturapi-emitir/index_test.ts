@@ -45,10 +45,10 @@ Deno.test("facturapi-emitir: orden estricto auth → load → llamada externa", 
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
   // pagada por requests no autorizadas.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
-  const loadIdx = indexSource.indexOf('"facturas"');
-  const fapiIdx = indexSource.indexOf("FACTURAPI_BASE");
+  const loadIdx = indexSource.indexOf('.from("facturas")');
+  const fapiIdx = indexSource.indexOf("await fetch(`${FACTURAPI_BASE}/invoices`");
   assertEquals(authIdx > 0 && loadIdx > authIdx && fapiIdx > loadIdx, true,
-    "Orden requerido: getUser → load factura → call Facturapi");
+    `Orden requerido: getUser(${authIdx}) → load facturas(${loadIdx}) → call Facturapi(${fapiIdx})`);
 });
 
 Deno.test("facturapi-emitir: wrapped en Sentry", () => {
