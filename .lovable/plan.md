@@ -1,90 +1,37 @@
-## Problema
+## Crear usuario de prueba para el Portal del Agente
 
-Hoy las tarifas marítimas (rutas, fletes, recargos, carta garantía, demoras) las captura tu equipo de operaciones a partir de lo que cada agente de carga manda por correo o Excel. Eso es lento, se traduce mal y envejece rápido.
+**Analogía:** es como hacer una llave de prueba para entrar al portal — la creamos manualmente esta vez para no esperar el correo de invitación.
 
-La idea: que el agente entre con su propio usuario, suba/edite sus tarifas, las deje listas, y operaciones sólo apruebe.
+### Lo que voy a hacer
 
-**Analogía:** hoy operaciones es como un mesero que toma el pedido del cliente y luego lo escribe en la comanda. Vamos a darle al cliente (agente) el menú digital para que él mismo capture su pedido y el mesero sólo lo confirme.
+1. **Crear el usuario en la base** con email y contraseña fijos (ya confirmado, sin necesidad de correo de activación).
+2. **Asignarle el rol `agente_carga`** en `user_roles`.
+3. **Vincularlo a un agente existente** en `agente_users` para que la RLS lo deje ver sus datos. Sugiero usar **LONGSAIL** (el primero activo) — si prefieres otro, dímelo.
+4. **Verificar** que al iniciar sesión aterriza en `/agente`.
 
-## Alcance (lo que acordamos)
+### Credenciales propuestas
 
-1. **Subir/editar sus tarifas marítimas** (flete + recargos en `costeo_tarifas` + `costeo_tarifa_recargos`).
-2. **Cargar carta garantía y condiciones de demoras** (PDF + tabulador en `costeo_navieras_condiciones` + `costeo_naviera_demoras_tarifa`).
-3. **Ver sus embarques** (solo lectura básica, sin costos ni cliente final).
-4. **Recibir RFQ por correo** (sin bandeja en esta versión; sólo notificación con link al portal para que actualicen la tarifa).
+- **Email:** `agente.demo@librecarga.com`
+- **Contraseña:** `AgenteDemo2026!`
+- **Agente vinculado:** LONGSAIL (organización dueña de ese agente)
 
-**Aprobación:** toda tarifa nueva o editada queda en estado `borrador`. Operaciones la revisa y la pasa a `vigente` desde el módulo existente de Costeo. Mientras esté en borrador no aparece en cotizaciones.
+### Detalles técnicos
 
-**Aislamiento:** RLS estricta. Cada agente sólo ve sus propios datos. Cero visibilidad de competidores.
+- Una sola migración SQL que:
+  - Inserta en `auth.users` vía `extensions` con `email_confirmed_at = now()` y password hasheado (`crypt`).
+  - Inserta en `public.user_roles (user_id, role='agente_carga')`.
+  - Inserta en `public.agente_users (user_id, agente_id, organization_id)` apuntando a LONGSAIL.
+- No toca código frontend ni edge functions — el portal `/agente` ya existe (v13.128.0).
+- Bumpeo `APP_VERSION` a `13.128.1` y agrego entrada al `CHANGELOG.md`.
 
-**Acceso:** 1 usuario por agente (igual que invitamos a clientes hoy, pero rol distinto). Lo invita un admin desde el módulo Proveedores.
+### Cómo probarlo después
 
-**Ruta:** portal separado bajo `/agente`, con layout/nav propio (mismo patrón que `/portal` cliente).
+1. Cerrar sesión actual.
+2. Ir al login y entrar con las credenciales de arriba.
+3. Debería redirigir automáticamente a `/agente` (Inicio del portal).
+4. En **Embarques** verás sólo los embarques cuyo campo `agente` sea "LONGSAIL"; en **Tarifas** sólo las suyas.
 
-## Cambios técnicos
+### Confirma antes de implementar
 
-### 1. Base de datos (1 migración)
-
-- **Nuevo rol** en enum `app_role`: `agente_carga`.
-- **Nueva tabla `agente_users`** (espejo de `client_users`): `user_id` ↔ `proveedor_id` ↔ `organization_id`. Un proveedor = un usuario.
-- **Nueva columna `estado_aprobacion`** en `costeo_tarifas`: `borrador | vigente | rechazada`. Las existentes se migran a `vigente`. La vista `costeo_tarifas_vigentes_v` filtra `estado_aprobacion = 'vigente'` (igual sigue filtrando por vigencia de fechas).
-- **Storage bucket `agente-cartas-garantia`** (privado) para PDFs de carta garantía subidos desde el portal.
-- **RLS nueva en `costeo_tarifas`, `costeo_tarifa_recargos`, `costeo_navieras_condiciones`, `costeo_naviera_demoras_tarifa`, `embarques`**: el rol `agente_carga` sólo ve filas donde `proveedor_id` (o `agente_id` en embarques) coincide con su `agente_users.proveedor_id`. Sin acceso a costos de venta, conceptos, márgenes ni cliente final en embarques.
-- **RPC `agente_aprobar_tarifa(tarifa_id, estado)`** SECURITY DEFINER, sólo para roles internos.
-- **GRANTs** explícitos a `authenticated` y `service_role` (regla del proyecto).
-
-### 2. Edge function
-
-Extender `user-management` con dos acciones nuevas:
-- `invite-agente` (crea usuario, vincula a proveedor, asigna rol `agente_carga`).
-- `list-agentes` (lista usuarios portal de un proveedor).
-
-### 3. Frontend — Portal del agente (`/agente`)
-
-Layout nuevo bajo `src/features/portal-agente/`:
-
-```text
-/agente                → Inicio (KPIs: tarifas vigentes, próximas a vencer, RFQs recibidos)
-/agente/tarifas        → Lista de sus tarifas + filtros + botón "Nueva tarifa"
-/agente/tarifas/:id    → Editor (reutiliza componentes del wizard de Costeo)
-/agente/garantias      → Cartas garantía + tabulador de demoras
-/agente/embarques      → Lista solo lectura (BL, ETD/ETA, status)
-/agente/perfil         → Datos de contacto + cambio de contraseña
-```
-
-- Guard: `AgenteProtectedRoute` (rol = `agente_carga`, sino redirige).
-- Reutilizar `FormDialogShell`, `DataTable`, hooks de tarifas existentes — sólo con datos filtrados por RLS.
-- Logo y nav propios (color base del proyecto). Sin acceso al menú de operaciones.
-
-### 4. Lado interno (operaciones)
-
-- En `/proveedores/:id` agregar tab **"Acceso al portal"** con botón "Invitar agente" (mismo patrón que el portal cliente).
-- En `/costeo/tarifas` agregar columna `Estado` (borrador/vigente/rechazada) y acción **"Aprobar"** / **"Rechazar"** visible sólo para operaciones.
-- Notificación interna (`notificaciones_internas`) cuando un agente sube/edita una tarifa.
-
-### 5. Login unificado
-
-`resolveLandingRoute` ya mapea por rol. Agregar caso: `agente_carga → /agente`.
-
-### 6. Routing post-login
-
-- `src/lib/domain/auth.ts`: agregar `agente_carga` al tipo y a la función.
-- `src/routes.tsx`: agregar grupo `agenteRoutes`.
-
-## Fuera de alcance (próximas fases)
-
-- Bandeja estructurada de RFQ con respuesta y aceptación in-app.
-- Captura de eventos de tracking por el agente.
-- Chat interno agente↔operaciones.
-- Comisiones / scoring de agentes.
-- Tarifas aéreas y terrestres (sólo marítimo en v1).
-
-## Entregables
-
-- Migración + tipos regenerados.
-- Edge function actualizada.
-- Portal `/agente` funcional con las 6 vistas.
-- Tab "Acceso al portal" en proveedores + flujo de aprobación en `/costeo/tarifas`.
-- Tests: RLS cross-org (un agente no ve tarifas de otro), `resolveLandingRoute`, hook de invitación.
-- Bump a `13.128.0` (minor: feature nueva grande), entrada en `CHANGELOG.md`.
-- Memoria nueva `mem://features/portal-agente-carga` documentando contrato (rol, estados, RLS).
+- ¿Email/contraseña sugeridos están bien o quieres otros?
+- ¿Vinculo a **LONGSAIL** o prefieres otro agente (SHENZHEN GOLDEN o CTL LOGISTICS MEXICO)?
