@@ -15,6 +15,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   fecha_emision, fecha_vencimiento, moneda, subtotal, iva, retenciones, total,
   estado, tipo_cambio_usd, rfc_proveedor, uuid_fiscal, dias_credito, notas,
   estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
+  archivo_xml_url, archivo_pdf_url,
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
@@ -27,6 +28,7 @@ export type Joined = Pick<
   | "fecha_emision" | "fecha_vencimiento" | "moneda" | "subtotal" | "iva" | "retenciones" | "total"
   | "estado" | "tipo_cambio_usd" | "rfc_proveedor" | "uuid_fiscal" | "dias_credito" | "notas"
   | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
+  | "archivo_xml_url" | "archivo_pdf_url"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
