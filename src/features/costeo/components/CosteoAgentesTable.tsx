@@ -28,7 +28,7 @@ interface Props {
   onInvitarPortal: (a: AgenteRow) => void;
 }
 
-export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar }: Props) {
+export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, onInvitarPortal }: Props) {
   return (
     <Card>
       <Table>
@@ -71,6 +71,15 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar }:
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => onInvitarPortal(a)}
+                    aria-label={`Invitar al portal del agente ${a.nombre}`}
+                    title="Invitar al portal del agente"
+                  >
+                    <UserPlus className="size-4 text-accent" />
+                  </Button>
                   <Button
                     size="icon"
                     variant="ghost"
