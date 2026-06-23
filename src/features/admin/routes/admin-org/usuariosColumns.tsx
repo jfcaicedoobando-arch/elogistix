@@ -126,11 +126,11 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
         },
         {
           id: "created_at",
-          header: "Fecha de registro",
+          header: () => <span className="whitespace-nowrap">Fecha de registro</span>,
           accessorFn: (u) => u.created_at,
           enableSorting: true,
           sortingFn: sortByDate<UserRow>((u) => u.created_at),
-          meta: { width: "w-[160px]", className: "text-xs text-muted-foreground" },
+          meta: { width: "w-[170px]", className: "text-xs text-muted-foreground whitespace-nowrap" },
           cell: ({ row }) => (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -145,7 +145,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
         {
           id: "change_role",
           header: "Cambiar rol",
-          meta: { width: "w-[180px]" },
+          meta: { width: "w-[240px]" },
           cell: ({ row }) => {
             const u = row.original;
             const isSelf = u.user_id === currentUserId;
@@ -159,10 +159,11 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
                   onPendingRole(u, newRole);
                 }}
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-[220px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+
                   {ASSIGNABLE_ROLE_GROUPS.map((group) => (
                     <SelectGroup key={group.label}>
                       <SelectLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
