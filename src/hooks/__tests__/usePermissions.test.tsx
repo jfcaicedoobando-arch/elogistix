@@ -43,6 +43,24 @@ describe("usePermissions", () => {
     expect(result.current.canCotizarSinDesglose).toBe(false);
   });
 
+  // v13.118.0 — Vendedor arma cotizaciones con P&L preliminar y hace handoff.
+  it("vendedor → canEditOperations, canViewFinancials y canHandoffCotizacion true", () => {
+    mockUseAuth.mockReturnValue({ role: "vendedor", effectiveRole: "vendedor" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canEditOperations).toBe(true);
+    expect(result.current.canViewFinancials).toBe(true);
+    expect(result.current.canHandoffCotizacion).toBe(true);
+  });
+
+  // v13.118.0 — Pricing trabaja Costeo y negocia tarifas; sigue viendo finanzas.
+  it("ejecutivo_pricing → canEditOperations y canViewFinancials true; NO handoff", () => {
+    mockUseAuth.mockReturnValue({ role: "ejecutivo_pricing", effectiveRole: "ejecutivo_pricing" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canEditOperations).toBe(true);
+    expect(result.current.canViewFinancials).toBe(true);
+    expect(result.current.canHandoffCotizacion).toBe(false);
+  });
+
   // v13.54.0 — Bloque Q: separación de responsabilidades financieras
   it("contador → emite, captura y cobra; NO paga proveedor", () => {
     mockUseAuth.mockReturnValue({ role: "contador", effectiveRole: "contador" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);

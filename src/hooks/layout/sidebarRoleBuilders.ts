@@ -33,7 +33,11 @@ const filterDirectorio = (urls: string[]) =>
   SIDEBAR_DIRECTORIO_ITEMS.filter((it) => urls.includes(it.url));
 
 const buildVendedor: Builder = ({ crmItems, sistemaItems }) => [
+  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "CRM", items: crmItems },
+  { label: "Gestión", items: filterGestion(["/cotizaciones"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
@@ -55,10 +59,10 @@ const buildCoordinador: Builder = ({ sistemaItems }) => [
 
 const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
+  { label: "Gestión", items: filterGestion(["/cotizaciones"]) },
+  { label: "Directorio", items: filterDirectorio(["/proveedores", "/clientes"]) },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 

@@ -117,6 +117,18 @@ const CERRAR_EMBARQUE: readonly AppRole[] = [
   "coordinador_logistico",
 ];
 
+// v13.118.0 — Handoff cotización → embarque (Vendedor confirma con cliente y
+// pasa el balón al Coordinador Logístico para ejecutar).
+const HANDOFF_COTIZACION: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+  "gerente_operaciones",
+  "coordinador_logistico",
+  "vendedor",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
@@ -139,6 +151,7 @@ export function usePermissions() {
   const canPagarProveedor = has(PAGAR_PROVEEDOR, roleStr);
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
+  const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
   const isAdmin = canAdminTenant;
@@ -166,5 +179,6 @@ export function usePermissions() {
     canPagarProveedor,
     canRegistrarCobro,
     canCerrarEmbarque,
+    canHandoffCotizacion,
   };
 }
