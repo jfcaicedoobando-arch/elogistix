@@ -1,29 +1,19 @@
 /**
  * Diálogo para convertir un Lead en (opcional) Cliente + Oportunidad (CRM Fase 2).
  * Si el lead ya está convertido, muestra los IDs resultantes en lugar del form.
+ * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
@@ -71,90 +61,93 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
     }
   };
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
+      {!yaConvertido && (
+        <Button onClick={handle} disabled={convertir.isPending}>
+          {convertir.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+          Convertir
+        </Button>
+      )}
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle>Convertir lead</DialogTitle>
-          <DialogDescription>
-            {yaConvertido
-              ? "Este lead ya fue convertido."
-              : "Crea opcionalmente un cliente y genera la primera oportunidad asociada."}
-          </DialogDescription>
-        </DialogHeader>
-
-        {yaConvertido ? (
-          <div className="space-y-3 text-sm">
-            {lead.cliente_convertido_id && (
-              <Button variant="outline" className="w-full justify-between" onClick={() => navigate(`/clientes/${lead.cliente_convertido_id}`)}>
-                Ver cliente <ArrowRight className="h-4 w-4" />
-              </Button>
-            )}
-            {lead.oportunidad_convertida_id && (
-              <Button variant="outline" className="w-full justify-between" onClick={() => navigate(`/crm/oportunidades/${lead.oportunidad_convertida_id}`)}>
-                Ver oportunidad <ArrowRight className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 rounded-md border p-3">
-              <Checkbox
-                id="crear-cliente"
-                checked={crearCliente}
-                onCheckedChange={(c) => setCrearCliente(!!c)}
-                disabled={!!lead.cliente_convertido_id}
-              />
-              <Label htmlFor="crear-cliente" className="text-sm font-normal cursor-pointer">
-                Crear cliente "{lead.empresa}" en el directorio
-              </Label>
-            </div>
-
-            <div className="space-y-1">
-              <Label>Nombre de la oportunidad</Label>
-              <Input value={nombre} onChange={(e) => setNombre(e.target.value)} />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1 col-span-2">
-                <Label>Monto estimado</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={monto}
-                  onChange={(e) => setMonto(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Moneda</Label>
-                <Select value={moneda} onValueChange={(v) => setMoneda(v as typeof moneda)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MXN">MXN</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label>Fecha estimada de cierre</Label>
-              <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-            </div>
-          </div>
-        )}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
-          {!yaConvertido && (
-            <Button onClick={handle} disabled={convertir.isPending}>
-              {convertir.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              Convertir
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={UserPlus}
+      title="Convertir lead"
+      description={
+        yaConvertido
+          ? "Este lead ya fue convertido."
+          : "Crea opcionalmente un cliente y genera la primera oportunidad asociada."
+      }
+      size="xl"
+      footer={footer}
+    >
+      {yaConvertido ? (
+        <div className="space-y-3 text-sm">
+          {lead.cliente_convertido_id && (
+            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(`/clientes/${lead.cliente_convertido_id}`)}>
+              Ver cliente <ArrowRight className="h-4 w-4" />
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          {lead.oportunidad_convertida_id && (
+            <Button variant="outline" className="w-full justify-between" onClick={() => navigate(`/crm/oportunidades/${lead.oportunidad_convertida_id}`)}>
+              Ver oportunidad <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-2 rounded-md border p-3">
+            <Checkbox
+              id="crear-cliente"
+              checked={crearCliente}
+              onCheckedChange={(c) => setCrearCliente(!!c)}
+              disabled={!!lead.cliente_convertido_id}
+            />
+            <Label htmlFor="crear-cliente" className="text-sm font-normal cursor-pointer">
+              Crear cliente "{lead.empresa}" en el directorio
+            </Label>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Nombre de la oportunidad</Label>
+            <Input value={nombre} onChange={(e) => setNombre(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1 col-span-2">
+              <Label>Monto estimado</Label>
+              <Input
+                type="number"
+                min={0}
+                value={monto}
+                onChange={(e) => setMonto(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Moneda</Label>
+              <Select value={moneda} onValueChange={(v) => setMoneda(v as typeof moneda)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MXN">MXN</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Fecha estimada de cierre</Label>
+            <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          </div>
+        </>
+      )}
+    </FormDialogShell>
   );
 }
