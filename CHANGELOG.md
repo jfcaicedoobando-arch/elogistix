@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.5] - 2026-06-23
+- **fix(cfdi)**: dos issues activos en Sentry (`JAVASCRIPT-REACT-1B` y `JAVASCRIPT-REACT-19`) reportaban `TypeError: Failed to fetch` al subir un XML CFDI en **CXP → Nueva factura de proveedor** (rol contador, latencias 5–11 s). Causa raíz: el edge function `parse-cfdi-xml` esperaba hasta 8 s al **AI Gateway** (sugerencia de categoría) y, combinado con cold start, agotaba el wall-time del runtime — el browser veía la conexión caer. Cambios: (1) timeout del AI bajado a **5 s** (el AI es opcional, hay `fallbackResult`); (2) edge function ahora envuelto con `wrapEdgeHandler` para que los crashes server-side también lleguen a Sentry, no sólo el síntoma del browser; (3) nuevo breadcrumb `parse_cfdi_xml.exhausted` con `attempt_count` para distinguir "falló al primer intento" vs "fallaron los 3". Analogía: la cocina ya no espera tanto al sommelier — si tarda, sirve el platillo sin recomendación de vino en vez de cerrar la cocina.
+
 ## [13.114.4] - 2026-06-22
 - **fix(permisos)**: auditoría cruzada de los 13 roles activos + 3 legacy comparando catálogo, `usePermissions`, sidebar y guards de ruta. Único desajuste encontrado: el rol **Tesorero** veía la entrada **Cobranza** (`/cartera`) en su menú lateral, pero el guard de la ruta no lo incluía y el clic lo regresaba a `/`. Se sumó `tesorero` a `allowedRoles` de `/cartera` (lectura) porque concilia depósitos bancarios con cobros. Resto de roles ya quedaron alineados en 13.114.3. Analogía: el tesorero veía el botón de Cobranza pero estaba pintado sobre una puerta cerrada — ahora la puerta abre en modo sólo lectura.
 

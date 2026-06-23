@@ -7,12 +7,11 @@
  *  - El parser es regex puro, sin DOM. La AI sólo recibe descripciones de
  *    conceptos + nombres de categorías para sugerir matcheo.
  */
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
 import { parseCfdi } from "./parser.ts";
 import {
   fallbackResult,
@@ -21,7 +20,9 @@ import {
   type Categoria,
 } from "./aiHelpers.ts";
 
-initSentryEdge("parse-cfdi-xml");
+// 13.114.5: `wrapEdgeHandler` reemplaza `initSentryEdge` + try/catch manual
+// para que excepciones no controladas (cold start, CPU wall-limit) lleguen
+// también a Sentry server-side, no sólo el "Failed to fetch" del browser.
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -68,7 +69,10 @@ async function sugerirCategoria(
   let result: { categoria_id: string | null; notas: string };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  // 13.114.5: bajado de 8s → 5s. El AI es opcional (hay fallbackResult),
+  // pero su latencia bloquea la respuesta al browser y se acumula con el
+  // cold start del edge function — combinación que dispara "Failed to fetch".
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -166,7 +170,7 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   return jsonResponse({ cfdi, ai: aiResult.result }, 200, cors);
 }
 
-serve(async (req) => {
+Deno.serve(wrapEdgeHandler("parse-cfdi-xml", async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
@@ -181,4 +185,4 @@ serve(async (req) => {
     if (status >= 500) await captureEdgeException(e, { fn: "parse-cfdi-xml", status_code: status });
     return errorResponse(rest.join(":") || message, status, cors);
   }
-});
+}));
