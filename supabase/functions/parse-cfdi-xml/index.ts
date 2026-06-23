@@ -20,7 +20,9 @@ import {
   type Categoria,
 } from "./aiHelpers.ts";
 
-initSentryEdge("parse-cfdi-xml");
+// 13.114.5: `wrapEdgeHandler` reemplaza `initSentryEdge` + try/catch manual
+// para que excepciones no controladas (cold start, CPU wall-limit) lleguen
+// también a Sentry server-side, no sólo el "Failed to fetch" del browser.
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
