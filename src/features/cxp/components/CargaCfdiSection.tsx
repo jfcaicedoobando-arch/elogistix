@@ -66,10 +66,26 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
       toast.success("CFDI procesado");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando XML";
+      const baseCtx = {
+        xmlName: xml.name,
+        xmlSize: xml.size,
+        online: typeof navigator !== "undefined" ? navigator.onLine : true,
+      };
+      const richCtx = e instanceof CfdiUploadError ? { ...baseCtx, ...e.context } : baseCtx;
       if (msg === "CLIENT_TIMEOUT") {
-        notifyError(toast, { title: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.", error: e, method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_3" });
+        notifyError(toast, {
+          title: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.",
+          error: e,
+          context: richCtx,
+          method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_3",
+        });
       } else {
-        notifyError(toast, { title: msg, method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_4" });
+        notifyError(toast, {
+          title: msg,
+          error: e,
+          context: richCtx,
+          method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_4",
+        });
       }
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
