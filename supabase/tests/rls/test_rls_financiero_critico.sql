@@ -113,12 +113,15 @@ BEGIN
   -- =========================================================================
   INSERT INTO public.proveedor_facturas(
     id, organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
-    fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas
+    fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas,
+    categoria_presupuesto_id
   ) VALUES
     (pf_a, org_a, prov_a, 'ProvFC A', emb_a, 'PV-A-001',
-      CURRENT_DATE, 30, 'MXN', 0, 1000, 160, 0, 1160, 'Vigente', ''),
+      CURRENT_DATE, 30, 'MXN', 0, 1000, 160, 0, 1160, 'Vigente', '',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)),
     (pf_b, org_b, prov_b, 'ProvFC B', emb_b, 'PV-B-001',
-      CURRENT_DATE, 30, 'MXN', 0, 2000, 320, 0, 2320, 'Vigente', '');
+      CURRENT_DATE, 30, 'MXN', 0, 2000, 320, 0, 2320, 'Vigente', '',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_b AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
   PERFORM pg_temp.as_user(user_a);
   SELECT count(*) INTO visible FROM public.proveedor_facturas;
