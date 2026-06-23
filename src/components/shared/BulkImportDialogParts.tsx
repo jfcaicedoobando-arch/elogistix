@@ -72,21 +72,19 @@ export function BulkImportFooter<T>({
 }: FooterProps<T>) {
   if (step === "preview") {
     return (
-      <DialogFooter className="gap-2 sm:gap-0">
+      <>
         <Button variant="outline" onClick={onReset}>Cambiar archivo</Button>
         <Button onClick={onCommit} disabled={!preview || preview.valid.length === 0}>
           Importar {preview?.valid.length ?? 0} válidos
         </Button>
-      </DialogFooter>
+      </>
     );
   }
   if (step === "upload" || step === "done") {
     return (
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button variant="outline" onClick={onClose}>
-          {step === "done" ? "Cerrar" : "Cancelar"}
-        </Button>
-      </DialogFooter>
+      <Button variant="outline" onClick={onClose}>
+        {step === "done" ? "Cerrar" : "Cancelar"}
+      </Button>
     );
   }
   return null;
