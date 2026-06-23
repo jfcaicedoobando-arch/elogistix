@@ -218,6 +218,45 @@ export type Database = {
         }
         Relationships: []
       }
+      agente_users: {
+        Row: {
+          agente_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          agente_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          agente_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agente_users_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agente_users_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alertas_sistema: {
         Row: {
           acknowledged_at: string | null
@@ -1624,6 +1663,7 @@ export type Database = {
           dias_libres_almacenaje_lcl: number | null
           dias_libres_demoras: number
           estado: string
+          estado_aprobacion: string
           flete_base: number
           frecuencia_override: string | null
           id: string
@@ -1646,6 +1686,7 @@ export type Database = {
           dias_libres_almacenaje_lcl?: number | null
           dias_libres_demoras?: number
           estado?: string
+          estado_aprobacion?: string
           flete_base: number
           frecuencia_override?: string | null
           id?: string
@@ -1668,6 +1709,7 @@ export type Database = {
           dias_libres_almacenaje_lcl?: number | null
           dias_libres_demoras?: number
           estado?: string
+          estado_aprobacion?: string
           flete_base?: number
           frecuencia_override?: string | null
           id?: string
@@ -5674,6 +5716,10 @@ export type Database = {
         }
         Returns: Json
       }
+      agente_aprobar_tarifa: {
+        Args: { _estado: string; _tarifa_id: string }
+        Returns: undefined
+      }
       alertas_sistema_pending_count: { Args: never; Returns: number }
       app_logs_health_summary: {
         Args: { p_hours?: number }
@@ -6102,6 +6148,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_agente_id: { Args: never; Returns: string }
+      current_agente_org: { Args: never; Returns: string }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
       cxp_aging_proveedores: {
@@ -6309,13 +6357,7 @@ export type Database = {
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
       get_top_tarifas: {
-        Args: {
-          p_fecha?: string
-          p_organization_id?: string
-          p_puerto_destino_id: string
-          p_puerto_origen_id: string
-          p_tipo_contenedor_id: string
-        }
+        Args: { _limit?: number; _ruta_id: string; _tipo_contenedor_id: string }
         Returns: {
           agente_id: string | null
           agente_nombre: string | null
