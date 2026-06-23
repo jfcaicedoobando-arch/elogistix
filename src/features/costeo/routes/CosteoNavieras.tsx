@@ -9,11 +9,9 @@ import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings2 } from "lucide-react";
+import { Settings2, FileSignature } from "lucide-react";
 import {
   useCondicionesNaviera,
   useNavierasCatalogo,
@@ -96,47 +94,47 @@ export default function CosteoNavieras() {
         </Table>
       </Card>
 
-      <Dialog open={!!seleccion} onOpenChange={(o) => !o && setSeleccion(null)}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Condiciones — {seleccion?.naviera_nombre}</DialogTitle>
-            <DialogDescription>
-              Carta garantía, días libres y tabulador de demoras por tipo de contenedor.
-            </DialogDescription>
-          </DialogHeader>
-          {seleccion && (
-            <Tabs defaultValue="condiciones">
-              <TabsList>
-                <TabsTrigger value="condiciones">Condiciones</TabsTrigger>
-                <TabsTrigger
-                  value="demoras"
-                  disabled={!seleccion.condicion}
-                  title={!seleccion.condicion ? "Primero guarda las condiciones generales para habilitar el tabulador" : undefined}
-                >
-                  Tabulador de demoras
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="condiciones" className="pt-4">
-                <NavieraCondicionForm
-                  navieraId={seleccion.naviera_id}
-                  navieraNombre={seleccion.naviera_nombre}
-                  existente={seleccion.condicion}
-                  onSaved={() => setSeleccion(null)}
-                />
-              </TabsContent>
-              <TabsContent value="demoras" className="pt-4">
-                {seleccion.condicion ? (
-                  <DemorasTarifaEditor navieraCondicionId={seleccion.condicion.id} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Primero guarda las condiciones generales para habilitar el tabulador.
-                  </p>
-                )}
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
+      <FormDialogShell
+        open={!!seleccion}
+        onOpenChange={(o) => !o && setSeleccion(null)}
+        icon={FileSignature}
+        title={seleccion ? `Condiciones — ${seleccion.naviera_nombre}` : "Condiciones"}
+        description="Carta garantía, días libres y tabulador de demoras por tipo de contenedor."
+        size="3xl"
+        footer={null}
+      >
+        {seleccion && (
+          <Tabs defaultValue="condiciones">
+            <TabsList>
+              <TabsTrigger value="condiciones">Condiciones</TabsTrigger>
+              <TabsTrigger
+                value="demoras"
+                disabled={!seleccion.condicion}
+                title={!seleccion.condicion ? "Primero guarda las condiciones generales para habilitar el tabulador" : undefined}
+              >
+                Tabulador de demoras
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="condiciones" className="pt-4">
+              <NavieraCondicionForm
+                navieraId={seleccion.naviera_id}
+                navieraNombre={seleccion.naviera_nombre}
+                existente={seleccion.condicion}
+                onSaved={() => setSeleccion(null)}
+              />
+            </TabsContent>
+            <TabsContent value="demoras" className="pt-4">
+              {seleccion.condicion ? (
+                <DemorasTarifaEditor navieraCondicionId={seleccion.condicion.id} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Primero guarda las condiciones generales para habilitar el tabulador.
+                </p>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
+      </FormDialogShell>
     </div>
   );
 }
