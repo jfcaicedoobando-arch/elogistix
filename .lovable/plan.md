@@ -1,38 +1,35 @@
-## Problema
+# Reubicar `agente.demo@librecarga.com` a Elogistix
 
-En el portal del agente, el modal "Nueva tarifa (queda en borrador)" tiene 3 fallos:
+## Diagnóstico (analogía)
+Imagina que el usuario tiene dos credenciales colgadas al cuello: una de "empleado interno con llave maestra" (membresía admin en *Mi organización*) y otra de "agente externo de Elogistix". La app revisa la credencial interna primero, por eso entra al dashboard completo en vez de al portal del agente.
 
-1. **Agente vacío**: El Select de agente está bloqueado pero no muestra el nombre. Causa: el form usa `useCosteoAgentes()` que depende de `useOrganization()`, y el usuario agente no tiene esa organización en contexto → la lista llega vacía → el `SelectValue` no encuentra label.
-2. **Ruta no funciona**: Mismo problema con `useCosteoRutas()` — el dropdown se renderiza vacío.
-3. **Flechitas (spinners) en "Días libres demoras"**: el `<Input type="number">` muestra los controles nativos del navegador.
+Vamos a quitarle la credencial interna, dejarle solo la de Elogistix, y además poner un guardia en la puerta para que aunque tenga otra credencial en el futuro, siempre lo manden al portal del agente.
 
-## Cambios (sólo UI / capa de presentación)
+## Cambios
 
-### 1. `AgenteTarifaForm.tsx` — inyectar datos desde el contexto del agente
-- Obtener `agenteNombre` y `organizationId` del `useAgenteContext()`.
-- Llamar a los servicios `fetchCosteoRutas(orgId)` y `fetchNavieras()` / `fetchTiposContenedor()` ya existentes, vía `useQuery` propio del portal, usando la `organizationId` del agente (no la del `OrganizationContext`).
-- Pasar `rutas`, `navieras`, `tipos` y `agenteNombre` como nuevos props opcionales a `TarifaForm`.
+### 1. Migración SQL (datos)
+- Borrar la membresía admin en *Mi organización* (`organization_members` user_id=fde67321… / org=7688c69a…).
+- Borrar la organización huérfana *Mi organización* (es el único miembro, se creó por el trigger `handle_new_user_signup` al registrarse).
+- Insertar membresía en **Elogistix** (`00000000-0000-0000-0000-000000000001`) con rol `viewer` para que el `orgRole` sea consistente con el portal externo (no admin).
+- Verificar/asegurar `agente_users` ya apunta a Elogistix (ya está, no se toca).
 
-### 2. `TarifaForm.tsx` — aceptar overrides opcionales
-Nuevos props opcionales (no rompen el uso actual desde operaciones):
-- `rutasOverride?`, `navierasOverride?`, `tiposOverride?` — si vienen, se usan en lugar de los hooks internos.
-- `agenteNombreFijo?: string` — cuando `agenteIdFijo` está presente, se renderiza un `<Input disabled>` con el nombre del agente en vez del `<Select>`.
+### 2. Guardia en el frontend (`src/features/auth/components/ProtectedRoute.tsx`)
+Agregar redirección defensiva al inicio del componente:
 
-### 3. `TarifaFormFields.tsx` — dos ajustes visuales
-- En `EntidadesFields`, si llega `agenteNombreFijo`, reemplazar el Select por un Input readonly con el nombre (mantiene el `agente_id` ya seteado en el form).
-- En `NumerosFields`, al Input de "Días libres demoras" agregar las clases de Tailwind que ocultan los spinners:
-  ```
-  [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
-  ```
-  (aplicar también al de "Tránsito (días)" y "Flete base" para consistencia visual).
+```tsx
+if (role === "agente_carga" && !location.pathname.startsWith("/agente")) {
+  return <Navigate to="/agente" replace />;
+}
+```
 
-### 4. Sin migración, sin cambios de lógica de negocio
-RLS ya permite al agente leer `costeo_rutas`, `navieras` y `tipos_contenedor` de su organización vinculada (las consultas funcionan; sólo faltaba pasarles la `organizationId` correcta).
+Esto evita que cualquier usuario con rol global `agente_carga` (presente o futuro) entre al área interna aunque por error tenga membresía en otra org.
 
-### 5. Versión + changelog
-- `APP_VERSION` → `13.130.1` (patch UI).
-- Entrada en `CHANGELOG.md` describiendo los 3 fixes.
+### 3. Versionado
+- Bump `APP_VERSION` → `13.130.2`.
+- Entrada en `CHANGELOG.md`:
+  - Reubicación de `agente.demo` a Elogistix y limpieza de organización huérfana.
+  - Guardia de ruta para rol `agente_carga` (siempre redirige a `/agente`).
 
 ## Fuera de alcance
-- No se toca el flujo de aprobación ni la lógica de mutaciones.
-- No se modifica el formulario para el editor de operaciones (`/costeo/tarifas`).
+- No tocar `handle_new_user_signup` (eso requiere una decisión más amplia sobre cómo se crean orgs al registrarse agentes — lo dejamos para otro turno si lo pides).
+- No cambia RLS ni edge functions.
