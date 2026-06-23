@@ -99,7 +99,35 @@ export const ASSIGNABLE_ROLES_ADMIN_ORG: readonly AppRole[] = ASSIGNABLE_ROLE_GR
 /** Roles legacy que se conservan en BD pero no se muestran como opción nueva. */
 export const LEGACY_ROLES: readonly AppRole[] = ["admin", "operador", "viewer"];
 
+/**
+ * Orden jerárquico canónico de roles, usado para ordenar la tabla de
+ * "Gestión de Usuarios" y cualquier listado donde se muestre el rol.
+ * Va del más amplio (plataforma) al más restringido (cliente), y deja los
+ * roles legacy al final.
+ */
+export const ROLE_HIERARCHY_ORDER: readonly AppRole[] = [
+  "super_admin",
+  ...ASSIGNABLE_ROLE_GROUPS.flatMap((g) => g.roles),
+  "cliente",
+  ...LEGACY_ROLES,
+];
+
+const ROLE_HIERARCHY_INDEX: Record<string, number> = ROLE_HIERARCHY_ORDER.reduce(
+  (acc, role, idx) => {
+    acc[role] = idx;
+    return acc;
+  },
+  {} as Record<string, number>,
+);
+
+export const obtenerRangoRol = (role: string | null | undefined): number => {
+  if (!role) return Number.MAX_SAFE_INTEGER;
+  const idx = ROLE_HIERARCHY_INDEX[role];
+  return idx == null ? Number.MAX_SAFE_INTEGER : idx;
+};
+
 export const obtenerEtiquetaRol = (role: string | null | undefined): string => {
   if (!role) return "—";
   return ROLE_LABELS[role as AppRole] ?? role;
 };
+
