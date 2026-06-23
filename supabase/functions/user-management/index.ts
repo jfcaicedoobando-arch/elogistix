@@ -30,6 +30,7 @@ import {
   handleInviteClient,
   handleListClients,
 } from "./handlers.ts";
+import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
 
 initSentryEdge("user-management");
 
