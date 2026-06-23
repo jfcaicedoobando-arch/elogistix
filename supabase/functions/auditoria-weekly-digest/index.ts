@@ -6,7 +6,7 @@
  * en logs sin fallar.
  */
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { wrapEdgeHandler } from "../_shared/sentry.ts"
+import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
