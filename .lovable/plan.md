@@ -1,100 +1,93 @@
-# Reorganizar dropdown de rol en "Nuevo Usuario"
+# Reasignar responsabilidades: Ejecutivo de Pricing ↔ Vendedor / KAM
 
-## Problema
-Hoy el `<Select>` de rol en `NuevoUsuarioDialog.tsx` muestra los 12 roles asignables en una lista plana, sin agrupar y sin jerarquía visual. Es difícil escanear y decidir.
+## Cambio de responsabilidades
+
+| Rol | Antes | Ahora |
+|---|---|---|
+| **Ejecutivo de Pricing** | Armaba cotizaciones con P&L | **Trabaja Costeo y negocia tarifas con partners (navieras / agentes / transportistas).** Mantiene cotizaciones y comisiones, pero su día a día es Costeo + Proveedores. |
+| **Vendedor / KAM** | CRM + sus embarques/cobranza | **Arma cotizaciones con costos y P&L preliminar de sus cuentas, ve márgenes de sus cotizaciones, y hace handoff al Coordinador Logístico cuando el cliente confirma.** |
 
 ## Analogía
-Imagínate el menú de un restaurante con 12 platillos en una sola columna sin secciones. Ahora lo vamos a separar en "Entradas / Platos fuertes / Postres" — los mismos platillos, pero encuentras lo que buscas en segundos.
+Hoy ambos puestos competían por la misma silla de "armador de cotización". Vamos a separarlos: Pricing se queda en la **cocina** (negociando ingredientes con proveedores y armando la receta de costos base). Vendedor se sienta en la **caja registradora con la receta lista** (arma la cotización al cliente con márgenes, y cuando el cliente acepta se la pasa al mesero — Coordinador Logístico — que la ejecuta).
 
 ---
 
-## 1) Agrupar los roles por área funcional
+## 1) Permisos (matriz)
 
-Reorganizar `ASSIGNABLE_ROLES_ADMIN_ORG` en **5 grupos** usando `<SelectGroup>` + `<SelectLabel>` de shadcn (componentes ya existen, sólo no se están usando):
+Archivo: `src/hooks/shared/usePermissions.ts`
 
+**Ejecutivo de Pricing**
+- Sigue en `OPERATIONS` (necesita editar Costeo, que vive en gestión).
+- Sigue en `SALES` (puede ver/colaborar en cotizaciones, pero ya no es su foco).
+- Sigue en `FINANCE_VIEWERS` (necesita ver márgenes para negociar).
+- **Se mantiene** `OVERRIDE_TARIFA_PRICING`: queda en `["super_admin","admin_org","admin","gerente_comercial"]` (no cambia — el override sigue siendo de Gerente Comercial; pricing **propone**, comercial **aprueba**).
+
+**Vendedor / KAM**
+- Agregar a `OPERATIONS` → ahora puede operar cotizaciones (no embarques completos; el módulo de embarques sigue siendo del coordinador para el handoff).
+- Agregar a `FINANCE_VIEWERS` → ve márgenes y P&L preliminar **de sus cotizaciones** (filtro por owner ya existe a nivel de query en cotizaciones / oportunidades).
+- Sigue en `SALES`.
+
+**Nueva capacidad: `canHandoffCotizacion`** — habilita el botón "Convertir a embarque / handoff" en el detalle de cotización confirmada. Roles permitidos: `vendedor`, `gerente_comercial`, `gerente_operaciones`, `coordinador_logistico`, admins. (Hoy el flujo de cotización→embarque ya existe; sólo formalizamos el permiso.)
+
+> Nota: el filtrado fino "ve sólo márgenes de **sus** cotizaciones" se hace en data (RLS / filtros por `creado_por` o `vendedor_email`), no aquí. Esta matriz sólo abre la capacidad de UI. Si una RLS restringe más, manda RLS.
+
+---
+
+## 2) Sidebar
+
+Archivo: `src/hooks/layout/sidebarRoleBuilders.ts`
+
+**`buildEjecutivoPricing`** — pasa de generalista a especialista de costos:
 ```text
-ADMINISTRACIÓN
-  • Administrador (admin_org)
+Dashboards
+Costeo                  ← principal
+Gestión: Cotizaciones   (vista para consultar referencias, no su foco)
+Directorio: Proveedores, Clientes   ← agregar Proveedores (partners)
+Reportes
+Sistema: Ayuda
+```
+Se quita "embarques" del filtro de Gestión (ya no opera embarques).
 
-OPERACIONES
-  • Gerente de Operaciones
-  • Gerente Visor (solo lectura)
-  • Coordinador Logístico
-
-COMERCIAL
-  • Gerente Comercial
-  • Ejecutivo de Pricing
-  • Vendedor / KAM
-
-FINANZAS
-  • Contador
-  • Tesorero
-  • Auxiliar Contable
-  • Ejecutivo de Cobranza
-
-SOPORTE
-  • Atención a Clientes
+**`buildVendedor`** — gana cotizaciones, costeo limitado y profit:
+```text
+Dashboards               ← agregar
+CRM
+Gestión: Cotizaciones    ← agregar (su nueva responsabilidad principal)
+Costeo                   ← agregar (para usar tarifas vigentes al armar)
+Profit                   ← agregar (P&L preliminar de sus cotizaciones)
+Directorio: Clientes
+Sistema: Ayuda
 ```
 
-Orden dentro de cada grupo: del más amplio (gerente) al más operativo.
+---
 
-## 2) Refinar las descripciones para que sean homogéneas
+## 3) Descripciones del catálogo
 
-Las actuales (`ROLE_DESCRIPTIONS` en `roleCatalog.ts`) son aceptables pero mezclan tono y largo. Reescribirlas con un patrón consistente: **"Qué hace · Qué ve · Qué NO puede"** en 1–2 frases, máximo ~140 caracteres para que entren bien en el item del Select sin truncarse demasiado.
+Archivo: `src/features/admin/domain/roles/roleCatalog.ts`
 
-Ejemplos del nuevo formato (las 12 asignables; legacy se conservan sin tocar):
+- **`ejecutivo_pricing`**: "Negocia y mantiene tarifas con partners (navieras, agentes, transportistas). Trabaja el módulo de Costeo y propone overrides; el Gerente Comercial los aprueba."
+- **`vendedor`**: "Arma cotizaciones con costos y P&L preliminar de sus cuentas, ve sus márgenes y hace handoff al Coordinador Logístico al confirmarse. Trabaja CRM (leads, oportunidades, actividades) y ve embarques y cobranza de sus cuentas."
 
-| Rol | Nueva descripción |
-|---|---|
-| Administrador | Dueño funcional de la organización. Administra usuarios, configuración, catálogos y todos los módulos. |
-| Gerente de Operaciones | Supervisa embarques, documentación y operativo diario. Lee finanzas y aprueba; no toca configuración ni usuarios. |
-| Gerente Visor (solo lectura) | Ve toda la operación y finanzas de la organización. No crea, edita ni aprueba nada. Ideal para auditoría o dirección. |
-| Coordinador Logístico | Opera cotizaciones, embarques, tracking y documentos. No ve márgenes, costos internos ni datos financieros. |
-| Gerente Comercial | Supervisa al equipo de ventas. Ve CRM completo, cotizaciones con márgenes, clientes y comisiones. Sin tesorería ni usuarios. |
-| Ejecutivo de Pricing | Arma cotizaciones con costos y P&L preliminar. Ve márgenes de sus cotizaciones; sin acceso a tesorería ni facturación. |
-| Vendedor / KAM | Trabaja CRM (leads, oportunidades, actividades) y ve embarques y cobranza de sus cuentas asignadas. |
-| Contador | Emite facturas a cliente, aprueba notas de crédito y supervisa el estado de resultados. Acceso financiero completo. |
-| Tesorero | Ejecuta pagos a proveedores, conciliación bancaria y liquidación de comisiones. No emite facturas. |
-| Auxiliar Contable | Captura facturas de proveedor (XML/PDF) y las concilia contra costos del embarque. No autoriza pagos. |
-| Ejecutivo de Cobranza | Da seguimiento a cartera vencida, registra promesas de pago y captura cobros. No emite facturas ni autoriza pagos. |
-| Atención a Clientes | Solo lectura operativa: embarques, tracking, clientes. Sin acceso a finanzas, configuración ni CRM. |
+---
 
-> El bloque inferior del modal (`<p className="rounded-md border …">{ROLE_DESCRIPTIONS[role]}</p>`) seguirá mostrando la descripción **completa** del rol seleccionado, así que dentro del dropdown podemos seguir usando `line-clamp-2` (subir de `line-clamp-1` actual a 2 líneas para que se lea mejor el resumen sin saturar).
+## 4) Filtros existentes que ya quedan bien
 
-## 3) Detalles de implementación
+- `VendedorSelect.tsx` y `Oportunidades.tsx` ya incluyen `vendedor` — no cambia.
+- `dashboard/hooks/useDashboardController.ts:35` (`role === "vendedor"` para `showScopeToggle`) sigue funcionando.
+- `lib/auth/roleHierarchy.ts` — sin cambios: pricing sigue satisfaciendo `operador` (necesario para Costeo).
 
-**Archivos a editar:**
+---
 
-- `src/features/admin/domain/roles/roleCatalog.ts`
-  - Reemplazar los strings de `ROLE_DESCRIPTIONS` para los 12 roles asignables (no tocar `super_admin`, `cliente`, ni los 3 legacy — no aparecen en este modal).
-  - Agregar y exportar:
-    ```ts
-    export interface RoleGroup { label: string; roles: readonly AppRole[]; }
-    export const ASSIGNABLE_ROLE_GROUPS: readonly RoleGroup[] = [
-      { label: "Administración", roles: ["admin_org"] },
-      { label: "Operaciones", roles: ["gerente_operaciones","gerente_visor","coordinador_logistico"] },
-      { label: "Comercial", roles: ["gerente_comercial","ejecutivo_pricing","vendedor"] },
-      { label: "Finanzas", roles: ["contador","tesorero","auxiliar_contable","ejecutivo_cobranza"] },
-      { label: "Soporte", roles: ["customer_service"] },
-    ];
-    ```
-  - Mantener `ASSIGNABLE_ROLES_ADMIN_ORG` (la usan otros lugares) — derivarla de los grupos para que no se desincronicen:
-    ```ts
-    export const ASSIGNABLE_ROLES_ADMIN_ORG = ASSIGNABLE_ROLE_GROUPS.flatMap(g => g.roles);
-    ```
+## 5) Versionado
 
-- `src/features/admin/components/usuario/NuevoUsuarioDialog.tsx`
-  - Importar `SelectGroup`, `SelectLabel`, `SelectSeparator` desde `@/components/ui/select`.
-  - Importar `ASSIGNABLE_ROLE_GROUPS` en lugar de iterar la lista plana.
-  - Renderizar `<SelectGroup>` por cada grupo con su `<SelectLabel>` y un `<SelectSeparator />` entre grupos (excepto el último).
-  - Cambiar `line-clamp-1` a `line-clamp-2` en la descripción dentro del item.
+- Bump `APP_VERSION` → `13.118.0` (cambio de capacidades visibles, minor).
+- Entrada en `CHANGELOG.md` con resumen breve y analogía cocina/caja.
 
-**Sin cambios en BD, sin migraciones, sin hooks, sin nuevas dependencias.** `Select*` ya está en shadcn (`src/components/ui/select.tsx`).
+## 6) Pruebas
 
-**Compatibilidad:** `ASSIGNABLE_ROLES_ADMIN_ORG` mantiene su tipo y contenido (mismos roles, mismo orden derivado). Cualquier otro consumidor (tests, otros componentes) sigue funcionando.
+- `src/hooks/__tests__/usePermissions.test.tsx` — agregar 2 casos:
+  - `vendedor` ahora tiene `canEditOperations === true` y `canViewFinancials === true`.
+  - `ejecutivo_pricing` mantiene `canEditOperations === true` y `canViewFinancials === true`.
+- `src/features/admin/domain/roles/__tests__/roleCatalog.test.ts` — actualizar el snapshot/string de descripción si el test compara strings exactos (revisar; si sólo verifica presencia de la key, no toca nada).
 
-**Versionado:**
-- Bump `APP_VERSION` → `13.117.4` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md`: "Admin: dropdown de rol en *Nuevo Usuario* agrupado por área (Administración / Operaciones / Comercial / Finanzas / Soporte) con descripciones homogéneas."
-
-**Pruebas:** no se agregan tests nuevos (cambio de presentación + texto). Si existen snapshots del modal, se actualizan al correr la suite.
+**Sin migraciones de BD.** El enum `app_role` ya soporta ambos roles. Las RLS que filtran por owner siguen como están.
