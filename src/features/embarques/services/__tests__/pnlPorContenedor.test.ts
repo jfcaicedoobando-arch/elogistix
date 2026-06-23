@@ -164,4 +164,65 @@ describe("calcularPnlPorContenedor (v13.66.14)", () => {
     });
     expect(r.USD[0].ventaTotal).toBe(100);
   });
+
+  // Sprint 2.2 (13.115.0): edge cases — sin estos tests, un cambio que
+  // introduzca división por cero o NaN pasaría desapercibido.
+  describe("edge cases — robustez numérica", () => {
+    it("0 contenedores activos: no produce NaN ni Infinity", () => {
+      const r = calcularPnlPorContenedor({
+        expediente: "EXP",
+        contenedores: [],
+        conceptosVenta: [mkVenta(100, "USD")],
+        conceptosCosto: [mkCosto(50, "USD")],
+      });
+      const filas = r.USD ?? [];
+      for (const f of filas) {
+        expect(Number.isFinite(f.ventaTotal)).toBe(true);
+        expect(Number.isFinite(f.costoTotal)).toBe(true);
+        expect(Number.isFinite(f.utilidad)).toBe(true);
+        expect(Number.isFinite(f.margenPct)).toBe(true);
+        expect(Number.isNaN(f.margenPct)).toBe(false);
+      }
+    });
+
+    it("venta = 0: margen es 0 (no NaN por división)", () => {
+      const c = mkCont("a", 1);
+      const r = calcularPnlPorContenedor({
+        expediente: "EXP",
+        contenedores: [c],
+        conceptosVenta: [],
+        conceptosCosto: [mkCosto(100, "USD", "a")],
+      });
+      expect(r.USD[0].ventaTotal).toBe(0);
+      expect(r.USD[0].margenPct).toBe(0);
+      expect(Number.isNaN(r.USD[0].margenPct)).toBe(false);
+    });
+
+    it("todos los montos en 0: filas existen y son ceros limpios", () => {
+      const c = mkCont("a", 1);
+      const r = calcularPnlPorContenedor({
+        expediente: "EXP",
+        contenedores: [c],
+        conceptosVenta: [mkVenta(0, "USD", "a")],
+        conceptosCosto: [mkCosto(0, "USD", "a")],
+      });
+      const fila = r.USD[0];
+      expect(fila.ventaTotal).toBe(0);
+      expect(fila.costoTotal).toBe(0);
+      expect(fila.utilidad).toBe(0);
+      expect(fila.margenPct).toBe(0);
+    });
+
+    it("contenedor con id duplicado en concepto: no genera división rara", () => {
+      const c = mkCont("a", 1);
+      const r = calcularPnlPorContenedor({
+        expediente: "EXP",
+        contenedores: [c],
+        conceptosVenta: [mkVenta(33.33, "USD", "a"), mkVenta(33.33, "USD", "a"), mkVenta(33.34, "USD", "a")],
+        conceptosCosto: [],
+      });
+      // 33.33 + 33.33 + 33.34 = 100, no debe haber drift de redondeo > 0.01
+      expect(Math.abs(r.USD[0].ventaTotal - 100)).toBeLessThanOrEqual(0.01);
+    });
+  });
 });
