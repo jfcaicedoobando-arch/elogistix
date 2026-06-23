@@ -89,7 +89,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       open={open}
       onOpenChange={onOpenChange}
       icon={Tag}
-      title={esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)"}
+      title={tituloOverride ?? (esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)")}
       description="Captura o edita la tarifa marítima con sus costos y condiciones."
       size="2xl"
       headerAside={
