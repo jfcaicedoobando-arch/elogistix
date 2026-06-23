@@ -3,7 +3,7 @@
  * Migrado a `FormDialogShell` (v13.120.0) — paridad visual con resto de modales CXP.
  */
 import { toast } from "sonner";
-import { Loader2, BanknoteArrowUp } from "lucide-react";
+import { Loader2, ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarPagoProveedor } from "@/features/cxp/hooks";
@@ -70,7 +70,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
-      icon={BanknoteArrowUp}
+      icon={ArrowUpFromLine}
       title="Registrar pago a proveedor"
       description={factura ? `Factura ${factura.folio_proveedor} — ${factura.proveedor_nombre}` : undefined}
       size="lg"

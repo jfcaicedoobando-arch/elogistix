@@ -3,7 +3,7 @@
  * Migrado a `FormDialogShell` (v13.120.0).
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, BanknoteArrowDown } from "lucide-react";
+import { Loader2, ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
@@ -132,7 +132,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
-      icon={BanknoteArrowDown}
+      icon={ArrowDownToLine}
       title={`Registrar pago — Factura ${factura.numero}`}
       description="Captura el abono recibido del cliente."
       headerAside={headerAside}
