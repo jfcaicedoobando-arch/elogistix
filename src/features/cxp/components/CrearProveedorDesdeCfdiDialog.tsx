@@ -1,17 +1,15 @@
 /**
  * Mini-diálogo para crear un proveedor a partir de los datos del CFDI
  * cuando el RFC del emisor no matchea ningún proveedor existente.
+ * Migrado a `FormDialogShell` (v13.120.0).
  */
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useProveedorMutations } from "@/features/proveedor/hooks";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
@@ -54,7 +52,6 @@ export function CrearProveedorDesdeCfdiDialog({
     } catch (e) {
       const err = e as { name?: string; message?: string; existente?: { id: string; nombre: string } | null };
       if (err.name === "ProveedorDuplicadoError" && err.existente) {
-        // Vincular al proveedor existente directamente.
         toast.success(`Vinculado al proveedor existente: ${err.existente.nombre}`);
         onCreated(err.existente.id, err.existente.nombre);
         onOpenChange(false);
@@ -64,38 +61,37 @@ export function CrearProveedorDesdeCfdiDialog({
     }
   };
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isAdding}>Cancelar</Button>
+      <Button onClick={submit} disabled={isAdding}>
+        {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        Crear proveedor
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Crear proveedor desde CFDI</DialogTitle>
-          <DialogDescription>
-            El RFC del emisor no existe en tu catálogo. Crea el proveedor para vincular la factura.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label>Razón social *</Label>
-            <Input value={n} onChange={(e) => setN(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>RFC *</Label>
-            <Input value={r} onChange={(e) => setR(e.target.value.toUpperCase())} maxLength={13} />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tipo: Agente de Carga · País: México · Moneda: MXN (puedes ajustarlo después en Proveedores).
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isAdding}>
-            Cancelar
-          </Button>
-          <Button onClick={submit} disabled={isAdding}>
-            {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Crear proveedor
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Building2}
+      title="Crear proveedor desde CFDI"
+      description="El RFC del emisor no existe en tu catálogo. Crea el proveedor para vincular la factura."
+      size="md"
+      footer={footer}
+    >
+      <div className="space-y-1">
+        <Label>Razón social *</Label>
+        <Input value={n} onChange={(e) => setN(e.target.value)} />
+      </div>
+      <div className="space-y-1">
+        <Label>RFC *</Label>
+        <Input value={r} onChange={(e) => setR(e.target.value.toUpperCase())} maxLength={13} />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Tipo: Agente de Carga · País: México · Moneda: MXN (puedes ajustarlo después en Proveedores).
+      </p>
+    </FormDialogShell>
   );
 }

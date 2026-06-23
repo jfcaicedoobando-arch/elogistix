@@ -1,23 +1,18 @@
 /**
  * Registrar pago a proveedor.
- * Refactor v12.95.23: estado movido a `usePagoProveedorForm` y cuerpo del
- * formulario a `PagoProveedorFormBody`. Este archivo sólo orquesta.
+ * Migrado a `FormDialogShell` (v13.120.0) — paridad visual con resto de modales CXP.
  */
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { Loader2, ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarPagoProveedor } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "./usePagoProveedorForm";
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
-
 import { notifyError } from "@/components/shared/utils/appFeedback";
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -55,39 +50,41 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
     }
   };
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
+        Cancelar
+      </Button>
+      <Button
+        onClick={submit}
+        disabled={registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada}
+        title={noAprobada ? "Requiere aprobación" : undefined}
+      >
+        {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        {registrar.isPending ? "Guardando…" : "Registrar pago"}
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(dialogSize.lg, "max-h-[90vh] flex flex-col gap-0 p-0")}>
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle>Registrar pago a proveedor</DialogTitle>
-          <DialogDescription>
-            {factura ? `Factura ${factura.folio_proveedor} — ${factura.proveedor_nombre}` : ""}
-          </DialogDescription>
-          {factura && <PagoFacturaHeaderInfo factura={factura} />}
-        </DialogHeader>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={ArrowUpFromLine}
+      title="Registrar pago a proveedor"
+      description={factura ? `Factura ${factura.folio_proveedor} — ${factura.proveedor_nombre}` : undefined}
+      size="lg"
+      footer={footer}
+    >
+      {factura && <PagoFacturaHeaderInfo factura={factura} />}
 
-        {noAprobada && (
-          <div className="mx-6 mt-4 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
-            Esta factura no está aprobada. Solicita la aprobación en el detalle de la factura antes de registrar pagos.
-          </div>
-        )}
-
-        <PagoProveedorFormBody factura={factura} {...f} />
-
-        <div className="px-6 py-4 border-t flex justify-end gap-2 bg-background">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={submit}
-            disabled={registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada}
-            title={noAprobada ? "Requiere aprobación" : undefined}
-          >
-            {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {registrar.isPending ? "Guardando…" : "Registrar pago"}
-          </Button>
+      {noAprobada && (
+        <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+          Esta factura no está aprobada. Solicita la aprobación en el detalle de la factura antes de registrar pagos.
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+
+      <PagoProveedorFormBody factura={factura} {...f} />
+    </FormDialogShell>
   );
 }

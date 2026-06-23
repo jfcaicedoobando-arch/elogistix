@@ -1,11 +1,11 @@
+/**
+ * Registrar pago a factura del cliente.
+ * Migrado a `FormDialogShell` (v13.120.0).
+ */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { useRegistrarPagoFactura, usePagosFactura } from "@/features/facturacion/hooks";
@@ -110,43 +110,47 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     }
   };
 
+  const headerAside = (
+    <div className="text-xs text-muted-foreground space-y-0.5">
+      <div>Total: <strong className="text-foreground">{formatCurrency(factura.total, factura.moneda)}</strong></div>
+      <div>Pagado: <strong className="text-foreground">{formatCurrency(totalPagado, factura.moneda)}</strong></div>
+      <div>Saldo: <strong className={saldo > 0 ? "text-warning" : "text-success"}>{formatCurrency(saldo, factura.moneda)}</strong></div>
+    </div>
+  );
+
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>Cancelar</Button>
+      <Button onClick={handleGuardar} disabled={invalido || registrar.isPending}>
+        {registrar.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+        Registrar pago
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>Registrar pago — Factura {factura.numero}</DialogTitle>
-          <DialogDescription>
-            Total: <strong>{formatCurrency(factura.total, factura.moneda)}</strong> · Pagado:{" "}
-            <strong>{formatCurrency(totalPagado, factura.moneda)}</strong> · Saldo:{" "}
-            <strong className={saldo > 0 ? "text-warning" : "text-success"}>
-              {formatCurrency(saldo, factura.moneda)}
-            </strong>
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={ArrowDownToLine}
+      title={`Registrar pago — Factura ${factura.numero}`}
+      description="Captura el abono recibido del cliente."
+      headerAside={headerAside}
+      size="md"
+      footer={footer}
+    >
+      <PagoFormFields values={values} onChange={handleChange} />
 
-        <PagoFormFields values={values} onChange={handleChange} />
-
-        {values.moneda !== factura.moneda && montoNum > 0 && (
-          <p className="text-xs text-muted-foreground">
-            Equivalente: {formatCurrency(montoAplicado, factura.moneda)} (TC: {tipoCambio.toFixed(4)})
-          </p>
-        )}
-        {excede && (
-          <p className="text-xs text-destructive">
-            El monto excede el saldo pendiente ({formatCurrency(saldo, factura.moneda)}).
-          </p>
-        )}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
-            Cancelar
-          </Button>
-          <Button onClick={handleGuardar} disabled={invalido || registrar.isPending}>
-            {registrar.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-            Registrar pago
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {values.moneda !== factura.moneda && montoNum > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Equivalente: {formatCurrency(montoAplicado, factura.moneda)} (TC: {tipoCambio.toFixed(4)})
+        </p>
+      )}
+      {excede && (
+        <p className="text-xs text-destructive">
+          El monto excede el saldo pendiente ({formatCurrency(saldo, factura.moneda)}).
+        </p>
+      )}
+    </FormDialogShell>
   );
 }
