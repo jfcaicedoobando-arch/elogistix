@@ -27,6 +27,10 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   initial?: Partial<TarifaInput>;
   tarifaId?: string;
+  /** Si se provee, bloquea el Select de agente y oculta la lógica de selección manual. */
+  agenteIdFijo?: string;
+  /** Override del título del modal (e.g. cuando es desde el portal del agente). */
+  tituloOverride?: string;
 }
 
 function calcularErrores(form: TarifaInput): Record<string, boolean> {
