@@ -2,20 +2,17 @@
  * Sección de carga de XML CFDI para el modal de captura de factura.
  * - Toggle Manual / Cargar XML.
  * - Drop zone para XML (obligatorio) + adjunto opcional de PDF.
- * - Al procesar: llama edge function parse-cfdi-xml y entrega el resultado
- *   al padre (que prellena el formulario y, si hace falta, ofrece crear
- *   un proveedor nuevo con los datos del XML).
+ * - La lógica de subida/red/toast vive en `useCargaCfdi`; aquí sólo
+ *   presentación.
  */
-import { useCallback, useRef, useState } from "react";
+import { useRef } from "react";
 import { Upload, FileText, Loader2, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { parseCfdiXml, type CfdiParsedResponse } from "@/features/cxp/services";
-import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
-import { toast } from "sonner";
+import type { CfdiParsedResponse } from "@/features/cxp/services";
+import { useCargaCfdi } from "@/features/cxp/hooks/useCargaCfdi";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
 export type CargaMode = "manual" | "cfdi";
 
 interface Props {
@@ -27,71 +24,12 @@ interface Props {
 }
 
 export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfdiReady }: Props) {
-  const [xml, setXml] = useState<File | null>(null);
-  const [pdf, setPdf] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { xml, pdf, loading, setXml, setPdf, reset, handleXml, procesar } = useCargaCfdi({
+    categorias,
+    onParsed,
+  });
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
-
-  const reset = useCallback(() => {
-    setXml(null); setPdf(null);
-  }, []);
-
-  const handleXml = (f: File | null) => {
-    if (!f) return;
-    if (!f.name.toLowerCase().endsWith(".xml")) {
-      notifyError(toast, { title: "El archivo debe ser .xml", method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_1" });
-      return;
-    }
-    if (f.size > 2 * 1024 * 1024) {
-      notifyError(toast, { title: "XML excede 2 MB", method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_2" });
-      return;
-    }
-    setXml(f);
-  };
-
-  const procesar = async () => {
-    if (!xml) return;
-    setLoading(true);
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error("CLIENT_TIMEOUT")), 15000);
-      });
-      const data = await Promise.race([
-        parseCfdiXml(xml, categorias),
-        timeoutPromise,
-      ]);
-      onParsed(data, { xml, pdf });
-      toast.success("CFDI procesado");
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Error procesando XML";
-      const baseCtx = {
-        xmlName: xml.name,
-        xmlSize: xml.size,
-        online: typeof navigator !== "undefined" ? navigator.onLine : true,
-      };
-      const richCtx = e instanceof CfdiUploadError ? { ...baseCtx, ...e.context } : baseCtx;
-      if (msg === "CLIENT_TIMEOUT") {
-        notifyError(toast, {
-          title: "Tiempo de espera agotado al procesar el XML. Inténtalo de nuevo o usa Captura manual.",
-          error: e,
-          context: richCtx,
-          method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_3",
-        });
-      } else {
-        notifyError(toast, {
-          title: msg,
-          error: e,
-          context: richCtx,
-          method: "FEATURES_CXP_COMPONENTS_CARGACFDISECTION_4",
-        });
-      }
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="rounded-lg border bg-muted/30">
@@ -127,7 +65,6 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
             </div>
           )}
 
-          {/* Dropzone XML */}
           <div
             onClick={() => xmlInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); }}
@@ -169,7 +106,6 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
             )}
           </div>
 
-          {/* PDF opcional */}
           <div className="flex items-center gap-2">
             <input
               ref={pdfInputRef}
@@ -178,10 +114,7 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
               className="hidden"
               onChange={(e) => setPdf(e.target.files?.[0] ?? null)}
             />
-            <Button
-              type="button" variant="outline" size="sm"
-              onClick={() => pdfInputRef.current?.click()}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => pdfInputRef.current?.click()}>
               <FileText className="h-4 w-4 mr-1.5" />
               {pdf ? `PDF: ${pdf.name}` : "Adjuntar PDF (opcional)"}
             </Button>
