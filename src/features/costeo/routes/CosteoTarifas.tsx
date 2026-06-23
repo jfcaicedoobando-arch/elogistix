@@ -1,6 +1,6 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
- * v13.68.1: dividida en sub-componentes para cumplir Power of 10 (≤200 líneas).
+ * v13.130.0: añade flujo de aprobación (Pendientes por defecto).
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -18,13 +18,16 @@ import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAl
 import { CosteoTarifasFiltros } from "@/features/costeo/components/CosteoTarifasFiltros";
 import { CosteoTarifasTable } from "@/features/costeo/components/CosteoTarifasTable";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-import { buildInitialFromTarifa, type EstadoFiltro } from "./CosteoTarifas.helpers";
+import {
+  buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
+} from "./CosteoTarifas.helpers";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CosteoTarifas() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rutaIdFromUrl = searchParams.get("ruta") ?? undefined;
-  const [estado, setEstado] = useState<EstadoFiltro>("vigente");
+  const [estado, setEstado] = useState<EstadoFiltro>("todas");
+  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("borrador");
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
   const [open, setOpen] = useState(false);
@@ -45,6 +48,16 @@ export default function CosteoTarifas() {
   );
   const { data: tarifas = [], isLoading } = useCosteoTarifas(tarifaFilters);
   const { eliminar } = useCosteoTarifaMutations();
+
+  const tarifasFiltradas = useMemo(() => {
+    if (aprobacion === "todas") return tarifas;
+    return tarifas.filter((t) => (t.estado_aprobacion ?? "vigente") === aprobacion);
+  }, [tarifas, aprobacion]);
+
+  const pendientesCount = useMemo(
+    () => tarifas.filter((t) => (t.estado_aprobacion ?? "vigente") === "borrador").length,
+    [tarifas],
+  );
 
   const duplicar = (id: string) => {
     const t = tarifas.find((x) => x.id === id);
@@ -71,7 +84,7 @@ export default function CosteoTarifas() {
     <div className="p-6 space-y-4">
       <PageHeader
         title="Tarifas marítimas (USD)"
-        description="Matriz CN → MX por agente, naviera, ruta y tipo de contenedor. El total comparable suma flete + recargos."
+        description="Matriz CN → MX por agente, naviera, ruta y tipo de contenedor. Aprueba o rechaza las tarifas que envían los agentes."
         actions={<Button onClick={nuevo}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
       />
 
@@ -100,16 +113,19 @@ export default function CosteoTarifas() {
       <CosteoTarifasFiltros
         estado={estado}
         onEstadoChange={setEstado}
+        aprobacion={aprobacion}
+        onAprobacionChange={setAprobacion}
         agenteId={agenteId}
         onAgenteChange={setAgenteId}
         tipoId={tipoId}
         onTipoChange={setTipoId}
         agentes={agentes}
         tipos={tipos}
+        pendientesCount={pendientesCount}
       />
 
       <CosteoTarifasTable
-        tarifas={tarifas}
+        tarifas={tarifasFiltradas}
         isLoading={isLoading}
         onEditar={editar}
         onDuplicar={duplicar}
