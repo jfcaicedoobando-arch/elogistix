@@ -1,0 +1,69 @@
+/**
+ * Perfil del agente: datos de contacto + cambio de contraseña.
+ */
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useAgenteContext } from "@/features/portal-agente/hooks";
+
+export default function AgentePerfil() {
+  const { data: ctx } = useAgenteContext();
+  const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
+
+  const cambiarPassword = async () => {
+    if (password.length < 8) {
+      notifyError(undefined, { title: "La contraseña debe tener al menos 8 caracteres" });
+      return;
+    }
+    setPending(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setPending(false);
+    if (error) {
+      notifyError(undefined, { title: `Error al cambiar contraseña: ${error.message}`, error, method: "AGENTE_CHANGE_PASSWORD" });
+    } else {
+      notifySuccess(undefined, { title: "Contraseña actualizada" });
+      setPassword("");
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-xl">
+      <PageHeader title="Mi perfil" description="Datos de tu cuenta de agente y cambio de contraseña." />
+
+      <Card className="p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className="text-xs text-muted-foreground">Agente</p>
+            <p className="font-medium">{ctx?.agenteNombre ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Email</p>
+            <p className="font-medium">{ctx?.email ?? "—"}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-4 space-y-3">
+        <h2 className="text-sm font-semibold">Cambiar contraseña</h2>
+        <div className="space-y-2">
+          <Label>Nueva contraseña</Label>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mínimo 8 caracteres"
+          />
+        </div>
+        <Button onClick={cambiarPassword} disabled={pending || !password}>
+          {pending ? "Guardando…" : "Actualizar contraseña"}
+        </Button>
+      </Card>
+    </div>
+  );
+}

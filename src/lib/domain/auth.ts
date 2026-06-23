@@ -1,7 +1,14 @@
 /**
  * Lógica pura de routing post-login. Sin acceso a datos.
  */
-export type PostLoginRole = "super_admin" | "cliente" | "operador" | "admin" | "viewer" | null;
+export type PostLoginRole =
+  | "super_admin"
+  | "cliente"
+  | "operador"
+  | "admin"
+  | "viewer"
+  | "agente_carga"
+  | null;
 
 /**
  * Resuelve la ruta a la que debe ser enviado un usuario tras iniciar sesión
@@ -10,5 +17,6 @@ export type PostLoginRole = "super_admin" | "cliente" | "operador" | "admin" | "
 export function resolveLandingRoute(role: PostLoginRole): string {
   if (role === "super_admin") return "/admin";
   if (role === "cliente") return "/portal";
+  if (role === "agente_carga") return "/agente";
   return "/inicio";
 }
