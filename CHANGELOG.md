@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.8] - 2026-06-23
+- **fix(dashboard)**: el dashboard de `/inicio` aparecía **vacío de embarques** (timelines, próximos arribos y barras de utilidad sin datos). Causa: la migración 13.114.6 renombró el valor del enum `tipo_contable_categoria` de `IndirectoOperacion → Venta`, pero la función `dashboard_summary` aún filtraba con el literal viejo, así que el RPC fallaba con HTTP 400 (`invalid input value for enum tipo_contable_categoria: "IndirectoOperacion"`) y el front no podía pintar nada. Fix: recreada `public.dashboard_summary()` cambiando `WHERE pc.tipo_contable IN ('IndirectoOperacion','Administracion')` por `('Venta','Administracion')`. El resto del cuerpo se preserva idéntico. Analogía: cambiamos la etiqueta de la caja a "Venta" en toda la bodega, pero el contador todavía pedía la caja vieja por su nombre anterior — al no encontrarla, se iba sin entregar el reporte.
+
 ## [13.114.7] - 2026-06-23
 - **fix(ci/rls)**: las suites `financiero_critico` y `tarifas_y_costeo` fallaban en CI con `null value in column "categoria_presupuesto_id" of relation "proveedor_facturas" violates not-null constraint`. Causa: la migración 20260622201238 hizo `categoria_presupuesto_id` NOT NULL, pero los tests insertaban facturas de proveedor sin esa columna. Fix: ambos tests ahora siembran las 3 categorías canónicas con `seed_presupuesto_categorias(org)` y enlazan cada `proveedor_facturas` (incluido el `assert_insert_blocked` de financiero_critico) a la categoría `CostoDirectoEmbarque` correspondiente. Verificado localmente: las 7 suites RLS pasan. Analogía: el formulario ahora exige llenar la casilla de "categoría contable" — los tests también tienen que llenarla.
 
