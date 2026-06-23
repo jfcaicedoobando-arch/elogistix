@@ -39,6 +39,9 @@ interface Args<T> {
   /** Si false, omite `getSortedRowModel` (útil para tablas virtualizadas que
    *  no necesitan sort interno). */
   enableSorting?: boolean;
+  /** Orden inicial para modo client. Ignorado en server-sort (la fuente
+   *  de verdad vive en el page-state). */
+  initialSort?: { key: string; dir: SortDir };
 }
 
 function fromControlled(sort: ControlledSort | undefined): SortingState {
@@ -58,6 +61,7 @@ export function useTableInstance<T>({
   onSortChange,
   getRowId,
   enableSorting = true,
+  initialSort,
 }: Args<T>) {
   const isServer = sortMode === "server";
 
@@ -85,7 +89,9 @@ export function useTableInstance<T>({
   // (invocado por `getToggleSortingHandler`) tenga efecto. Pasar ambos como
   // `undefined` deja el `setSorting` interno en no-op y los headers no
   // ordenan al hacer click.
-  const [internalSorting, setInternalSorting] = useState<SortingState>([]);
+  const [internalSorting, setInternalSorting] = useState<SortingState>(
+    () => (initialSort?.key ? [{ id: initialSort.key, desc: initialSort.dir === "desc" }] : []),
+  );
 
   const sorting: SortingState = isServer ? (sortingState ?? []) : internalSorting;
   const onSortingChange: OnChangeFn<SortingState> = isServer

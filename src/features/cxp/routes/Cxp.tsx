@@ -146,6 +146,7 @@ export default function Cxp() {
               emptyMessage="No hay facturas que coincidan con los filtros"
               rowKey={(f) => f.id}
               density="compact"
+              initialSort={{ key: "folio_interno", dir: "desc" }}
               onRowClick={(fact) => f.setDetalle(fact)}
             />
           )}

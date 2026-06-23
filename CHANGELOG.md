@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.117.2] - 2026-06-23
+- **feat(cxp/ux)**: la tabla de *Facturas de proveedor* (`/cxp`) ahora carga ordenada por **Folio interno descendente** por defecto (la factura más reciente —FP-XXXXXX más alto— aparece arriba). Se sigue pudiendo reordenar haciendo click en cualquier encabezado. Implementado vía nueva prop opcional `initialSort` en `DataTable` (retro-compatible: aplica sólo a `sortMode="client"`, en server-sort el orden sigue viviendo en el page-state). Analogía: como abrir el archivero y que el cajón ya venga con las facturas más nuevas hasta arriba en lugar de un orden aleatorio.
+
 ## [13.117.1] - 2026-06-23
 - **fix(dashboard/mobile)**: los tooltips de "Profit MXN proyectado" y "Gastos fijos cubiertos" del card *Arribos este mes* ahora abren con tap en mobile (antes usaban `Tooltip` de Radix, que sólo responde a hover/focus — en pantalla táctil casi nunca se mostraban). En desktop sigue siendo hover. Además el ancho se acota a `min(320px, 100vw - 2rem)` con `collisionPadding` para que ya no se salga del viewport de 343px. Analogía: antes el cartel sólo aparecía si "pasabas el dedo por encima sin tocar"; ahora se abre cuando lo tocas y se acomoda al ancho de la pantalla.
 
