@@ -29,8 +29,9 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   icon: LucideIcon;
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
+
   size?: Size;
   /** Slot derecho del header (p.ej. chip de Total en facturas). */
   headerAside?: ReactNode;

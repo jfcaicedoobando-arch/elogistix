@@ -1,80 +1,72 @@
-## Diagnóstico actual
 
-Los 3 modales hoy se ven como hijos de proyectos distintos:
+## Respuesta corta
 
+**Sí, en muchos lugares.** La app tiene **79 archivos** que usan `DialogContent + DialogHeader`. De esos, ~30-40 son **modales de formulario** que son candidatos directos al `FormDialogShell`. Los ~40 restantes son alerts/confirmaciones/popovers que **no deben** migrar (alteraría su intención: avisos cortos, no formularios).
 
-| Modal                       | Header                                                         | Footer                                                   | Layout                                    | Tamaño | Progreso                |
-| --------------------------- | -------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------- | ------ | ----------------------- |
-| **Nuevo Cliente**           | Título plano + descripción                                     | Plano, sin separador                                     | 2 columnas básicas, sin agrupar secciones | `lg`   | Texto "Paso 1 de 2"     |
-| **Nuevo Proveedor**         | Título plano + descripción                                     | Plano, sin separador                                     | Delegado a `Step1/Step2` (también plano)  | `md`   | Texto "Paso 1 de 2"     |
-| **Nueva Factura Proveedor** | Título + **chip de Total** a la derecha, borde inferior, `p-0` | **Sticky** con resumen Subtotal/IVA/Ret/Total, separador | Secciones bien delimitadas                | `xl`   | Sin pasos (single page) |
+## Candidatos clasificados
 
+### Tier 1 — Pareja directa de los 3 ya migrados (impacto alto, riesgo bajo)
 
-La **factura** ya tiene el "look" más maduro. La propuesta es subir Cliente y Proveedor a ese mismo nivel y, de paso, limar 4-5 detalles de UX.
+Son los "editar" equivalentes de lo que ya rehicimos. Mismo controller/datos, sólo cambia el modo. Ideal para mantener consistencia visual entre "Nuevo X" y "Editar X".
 
-## Lenguaje visual unificado
+- `DialogEditarCliente` → icon `UserCog`
+- `EditarProveedorDialog` → icon `Building2`
+- `DialogEditarFacturaProveedor` → icon `FileSpreadsheet`
 
-Crear un **shell de diálogo** compartido (`FormDialogShell`) que estandarice:
+### Tier 2 — Formularios de entidades (impacto alto)
 
-1. **Header con "icon-tile"**: un cuadradito redondeado con el ícono de la entidad (👤 cliente, 🏢 proveedor, 📄 factura) + Título grande + descripción tenue.
-2. **Slot derecho** opcional para un "resumen vivo" (Total en factura, "RFC detectado ✓" en cliente cuando se sube CSF, "Datos OK" en proveedor).
-3. **Stepper visual** (dots o barra segmentada) en lugar del texto "Paso X de 2", reutilizable para wizards de 2-3 pasos.
-4. **Cuerpo scrolleable** con `px-6 py-5 space-y-5` y borde inferior fijo del header (como hoy hace factura).
-5. **Footer sticky** con separador, alineado a la derecha, con loader unificado y botón principal con color de acción.
-6. **Tamaños consistentes** por complejidad: `md` (proveedor), `lg` (cliente), `xl` (factura).
+Modales tipo "crear/editar entidad" con varios campos. Ganarían mucho con el icon-tile + footer sticky.
 
-Sin tocar tokens de color/tipo — todo con tokens semánticos existentes (`bg-primary/10`, `text-primary`, `border`, etc.).
+- **CRM / Comercial**: `ConvertirLeadDialog`, `DialogConvertirProspecto`, `NuevaActividadDialog`, `EnviarCotizacionDialog`, `RecotizarModal`, `RevalidarTarifaModal`, `BuscarTarifaDialog`
+- **Admin / Org**: `NuevaOrganizacionDialog`, `AgregarMiembroOrgDialog`, `NuevoUsuarioDialog` (ya tiene icon-tile a mano — migrar al shell elimina duplicación)
+- **Clientes / Contactos**: `DialogContacto`, `EditarContactoDialog`, `PortalInviteDialog`
+- **CXP / Facturación**: `DialogRegistrarPago`, `DialogRegistrarPagoProveedor`, `DialogNotaCreditoProveedor`, `DialogNuevaFacturaManual`, `DialogTimbrarFactura`, `DialogTimbrarRep`, `CrearProveedorDesdeCfdiDialog`
+- **Embarques**: `DialogDuplicarEmbarque`, `DialogSeguroForm`, `DialogGenerarProforma`, `AgregarDocumentoDialog`
+- **Costeo**: `RutaFormDialog`, `TarifaForm`, `CosteoAgenteFormDialog`
+- **Presupuesto / Importadores**: `DialogCategoria`, `BulkImportDialog`, `ImportarLeadsCsvDialog`
+- **Auth / Perfil**: `ForgotPasswordDialog`, `CambiarPasswordDialog`
+- **Operaciones**: `DialogGenerarLiquidacion`
 
-## Mejoras específicas por modal
+### Tier 3 — Wizards de varios pasos (mejor con `stepper`)
 
-### Nuevo Cliente
+Donde el `FormDialogStepper` brilla más:
 
-- Convertir la fila de botones "Manual / Subir CSF" en un **toggle segmentado** (estilo Tabs) más limpio.
-- **Agrupar campos** en 2 bloques visibles: "Datos fiscales" (RFC, Régimen, Uso CFDI, CP) y "Datos de contacto" (Nombre, Dirección, Ciudad, Estado, Contacto, Email, Teléfono).
-- Mostrar **badge "Prellenado desde CSF"** sobre los campos que vinieron del PDF, para que el usuario sepa qué confiar.
-- En el área de drop del CSF: hacerla **drag-and-drop real** (no solo botón) y mostrar el nombre del PDF parseado.
-- Validar **formato de RFC** y CP en vivo con mensaje inline.
+- `BulkImportDialog` (validar → mapear → confirmar)
+- `ImportarLeadsCsvDialog`
+- `DialogGenerarLiquidacion`
+- `ConvertirLeadDialog`
 
-### Nuevo Proveedor
+### NO migrar (queda como está)
 
-- Adoptar el mismo `FormDialogShell` con icon-tile + stepper.
-- En el Step 1: separar "Identificación" (Tipo, RFC/Tax ID, Razón social) de "Contacto" (Email, Teléfono, Dirección).
-- Igual que cliente: validación de RFC/Tax ID inline y autodetección de tipo (Nacional/Extranjero) a partir del RFC.
-- Step 2: agrupar visualmente "Bancarios" vs "Comerciales" con sub-encabezados pequeños.
+Son alerts/confirmaciones cortas, no formularios. Forzar el shell los volvería pesados:
 
-### Nueva Factura de Proveedor
+- `DoubleConfirmDeleteDialog`, `ConfirmDeleteAlert`, `RoleChangeAlertDialog`, `TrackingConfirmFechaLlegadaDialog`, `DialogEliminarEmbarque`, `DialogMarcarFacturada`, `ErrorDetailsDialog`, `ReabrirEmbarqueButton` (confirm), `AvanzarEstadoButton` (confirm), `PortalCotizacionConfirmDialog`, `MarcarRevisadoDialog`, todo lo que use `alert-dialog`.
 
-Ya es la referencia, pero pulir:
+## Beneficios concretos de migrar
 
-- Mover el chip de Total al **icon-tile header** estándar para que se vea igual de bien en los otros 2.
-- En la sección "Carga CFDI": cuando el XML se parsea, mostrar **mini-resumen** (RFC emisor, folio, fecha, total) antes de prellenar el form, para que el usuario confirme.
-- En el resumen del footer, marcar **Total** con un peso visual mayor (ya es semibold, subirlo a `text-base font-bold`) y añadir el símbolo de moneda al lado del label.
-- El botón "Guardar factura" en variante `default` con un sutil `shadow-sm`; cuando hay errores, deshabilitar y mostrar tooltip con la lista.
+1. **Consistencia visual** — un mismo "lenguaje" para todo el back-office (header con icono semántico, footer sticky, stepper).
+2. **Borrado neto de código** — cada migración quita ~15-30 líneas de boilerplate (`DialogContent` + `DialogHeader` + footer manual + clases de tamaño).
+3. **Ayuda con Power-of-10** — varios de estos archivos están cerca del límite de 200 líneas; el shell les quita 20-40.
+4. **Accesibilidad** — el shell garantiza `DialogTitle` y `DialogDescription` correctos.
+5. **Refactors futuros más baratos** — cambiar un detalle visual (e.g. color del icon-tile, animación) se hace en un solo archivo.
 
-## Estructura técnica (para el dev)
+## Recomendación
 
-```text
-src/components/shared/
-  FormDialogShell.tsx       ← nuevo, ≤200 líneas
-    props: { open, onOpenChange, icon, title, description,
-             size, step?, totalSteps?, headerSlot?, footer, children }
-  FormDialogStepper.tsx     ← nuevo, dots/segmentos
-  FormDialogSection.tsx     ← wrapper con sub-título + grid responsive
-```
+Migrar **por olas**, no todo de golpe:
 
-Refactorizar los 3 modales para consumir `FormDialogShell`. Los controllers/hooks NO cambian — sigue siendo solo UI/presentación.
+- **Ola 1 (siguiente PR, ~1 hora)**: Tier 1 — los 3 "Editar" hermanos de los ya hechos. Garantiza paridad visual entre Nuevo/Editar.
+- **Ola 2**: Tier 2 dividido en sub-grupos por dominio (1 PR por dominio: CRM, Admin, Clientes, CXP, Embarques, Costeo). Cada sub-grupo ~30-45 min.
+- **Ola 3**: Tier 3 stepper-driven (los wizards de import/liquidación).
 
-## Fuera de alcance
+Además: agregar a `mem://` una regla "use `FormDialogShell` para modales tipo formulario" para que futuras pantallas no se construyan a mano.
 
-- Cambios en validaciones de negocio, RLS, RPCs o esquema.
-- Tocar EditarCliente/EditarProveedor/EditarFactura (se haría en una segunda iteración una vez aprobado el shell).
-- Cambios de paleta o tipografía.
+## Pregunta antes de implementar
 
-## Entregable
+Necesito que me digas el alcance:
 
-- 3 archivos nuevos en `src/components/shared/`.
-- 3 modales refactorizados al nuevo shell.
-- Captura de pantalla antes/después de los 3 para validar el lenguaje común.
-- Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+1. **Sólo la Ola 1** (los 3 modales "Editar" — paridad inmediata con lo recién hecho).
+2. **Ola 1 + Ola 2 completa** (los ~25 formularios). Cambio grande pero acotado a presentación.
+3. **Sólo dejar la guía + memoria** y que cada modal migre cuando lo toquemos por otra razón (adopción orgánica, riesgo cero).
+4. **Sub-grupo específico** que tú elijas (e.g. "sólo los de CXP" o "sólo los de Admin").
 
-No olvides que, al final, usarás tus herramientas para verificarse visualmente y hacer los cambios que consideres necesarios. 
+No realizaré cambios hasta confirmar opción.
