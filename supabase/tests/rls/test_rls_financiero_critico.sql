@@ -72,6 +72,10 @@ BEGIN
       (prov_a, 'ProvFC A', org_a, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor),
       (prov_b, 'ProvFC B', org_b, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 
+  -- Seed canonical presupuesto_categorias (categoria_presupuesto_id es NOT NULL).
+  PERFORM public.seed_presupuesto_categorias(org_a);
+  PERFORM public.seed_presupuesto_categorias(org_b);
+
   -- =========================================================================
   -- TEST 1: cuentas_bancarias aislamiento
   -- =========================================================================
@@ -109,12 +113,15 @@ BEGIN
   -- =========================================================================
   INSERT INTO public.proveedor_facturas(
     id, organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor,
-    fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas
+    fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas,
+    categoria_presupuesto_id
   ) VALUES
     (pf_a, org_a, prov_a, 'ProvFC A', emb_a, 'PV-A-001',
-      CURRENT_DATE, 30, 'MXN', 0, 1000, 160, 0, 1160, 'Vigente', ''),
+      CURRENT_DATE, 30, 'MXN', 0, 1000, 160, 0, 1160, 'Vigente', '',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)),
     (pf_b, org_b, prov_b, 'ProvFC B', emb_b, 'PV-B-001',
-      CURRENT_DATE, 30, 'MXN', 0, 2000, 320, 0, 2320, 'Vigente', '');
+      CURRENT_DATE, 30, 'MXN', 0, 2000, 320, 0, 2320, 'Vigente', '',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_b AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
   PERFORM pg_temp.as_user(user_a);
   SELECT count(*) INTO visible FROM public.proveedor_facturas;
@@ -258,9 +265,10 @@ BEGIN
 
   PERFORM pg_temp.assert_insert_blocked(
     format(
-      'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas)
-       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L)',
-      org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', ''
+      'INSERT INTO public.proveedor_facturas(organization_id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva, retenciones, total, estado, notas, categoria_presupuesto_id)
+       VALUES (%L, %L, %L, %L, %L, CURRENT_DATE, 30, %L, 0, 100, 16, 0, 116, %L, %L, %L)',
+      org_a, prov_a, 'HACK', emb_a, 'HACK-001', 'MXN', 'Vigente', '',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)
     ),
     'proveedor_facturas acepta INSERT con organization_id ajeno'
   );

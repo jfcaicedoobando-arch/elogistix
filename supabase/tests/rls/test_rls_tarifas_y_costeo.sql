@@ -86,6 +86,10 @@ BEGIN
     (prov_a, 'Prov TAR A', 'RTA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor),
     (prov_b, 'Prov TAR B', 'RTB010101BBB', 'C', 'b@b', '555', 'USD', org_b, 'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 
+  -- Seed canonical presupuesto_categorias (categoria_presupuesto_id NOT NULL).
+  PERFORM public.seed_presupuesto_categorias(org_a);
+  PERFORM public.seed_presupuesto_categorias(org_b);
+
   INSERT INTO public.costeo_agentes(
     id, organization_id, proveedor_id, nombre, pais, dias_credito, activo
   ) VALUES
@@ -139,10 +143,12 @@ BEGIN
   INSERT INTO public.proveedor_facturas(
     id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
     fecha_emision, dias_credito, moneda, tipo_cambio_usd, subtotal, iva,
-    retenciones, total, estado
+    retenciones, total, estado, categoria_presupuesto_id
   ) VALUES
-    (pf_a, org_a, prov_a, 'Prov TAR A', 'PF-A-001', CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente'),
-    (pf_b, org_b, prov_b, 'Prov TAR B', 'PF-B-001', CURRENT_DATE, 30, 'MXN', 1, 5000, 800, 0, 5800, 'Vigente');
+    (pf_a, org_a, prov_a, 'Prov TAR A', 'PF-A-001', CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)),
+    (pf_b, org_b, prov_b, 'Prov TAR B', 'PF-B-001', CURRENT_DATE, 30, 'MXN', 1, 5000, 800, 0, 5800, 'Vigente',
+      (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_b AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
 
   INSERT INTO public.proveedor_notas_credito(
