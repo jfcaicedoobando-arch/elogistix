@@ -86,3 +86,17 @@ Deno.test("buildCors: incluye Max-Age", () => {
   const c = buildCors(req("https://librecarga.com"));
   assertEquals(c["Access-Control-Max-Age"], "86400");
 });
+
+Deno.test("corsHeaders: permite headers de Sentry (sentry-trace, baggage)", () => {
+  // 13.114.13: regresión — en `librecarga.com` Sentry adjunta estos headers
+  // a las llamadas a edge functions; sin permitirlos el navegador cancela
+  // el POST después del OPTIONS.
+  assert(corsHeaders["Access-Control-Allow-Headers"].includes("sentry-trace"));
+  assert(corsHeaders["Access-Control-Allow-Headers"].includes("baggage"));
+});
+
+Deno.test("buildCors: permite headers de Sentry desde librecarga.com", () => {
+  const c = buildCors(req("https://librecarga.com"));
+  assert(c["Access-Control-Allow-Headers"].includes("sentry-trace"));
+  assert(c["Access-Control-Allow-Headers"].includes("baggage"));
+});
