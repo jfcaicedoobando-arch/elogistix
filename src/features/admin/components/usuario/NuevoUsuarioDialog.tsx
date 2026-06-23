@@ -1,17 +1,8 @@
 import { useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/shared";
 import { Loader2, UserPlus } from "lucide-react";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateUser } from "@/features/admin/hooks/usuario";
 import { useOrganizationsList } from "@/features/admin/hooks";
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -69,8 +60,7 @@ export default function NuevoUsuarioDialog({
     setTouched({ email: false, password: false });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setTouched({ email: true, password: true });
     if (!email || !password) return;
     if (!EMAIL_REGEX.test(email)) return;
@@ -106,77 +96,66 @@ export default function NuevoUsuarioDialog({
   };
 
   return (
-    <Dialog
+    <FormDialogShell
       open={open}
       onOpenChange={(o) => {
         if (!o) reset();
         onOpenChange(o);
       }}
+      icon={UserPlus}
+      title={showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}
+      description={
+        showOrgSelector
+          ? "Registra un usuario y asígnalo a una organización."
+          : "Registra un usuario para tu organización y asígnale un rol."
+      }
+      size="2xl"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={createUser.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} disabled={createUser.isPending}>
+            {createUser.isPending ? (
+              <>
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                Creando…
+              </>
+            ) : (
+              "Crear usuario"
+            )}
+          </Button>
+        </>
+      }
     >
-      <DialogContent className={cn(dialogSize["2xl"], scrollableDialog)}>
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <UserPlus className="h-5 w-5" />
-            </span>
-            <span className="flex flex-col">
-              <span>{showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}</span>
-              <DialogDescription className="font-normal">
-                {showOrgSelector
-                  ? "Registra un usuario y asígnalo a una organización."
-                  : "Registra un usuario para tu organización y asígnale un rol."}
-              </DialogDescription>
-            </span>
-          </DialogTitle>
-        </DialogHeader>
+      <div className="grid gap-5 md:grid-cols-2">
+        <NuevoUsuarioCredencialesSection
+          email={email}
+          password={password}
+          showPassword={showPassword}
+          emailError={emailError}
+          passwordError={passwordError}
+          onEmailChange={setEmail}
+          onPasswordChange={setPassword}
+          onToggleShowPassword={() => setShowPassword((v) => !v)}
+          onEmailBlur={() => setTouched((t) => ({ ...t, email: true }))}
+          onPasswordBlur={() => setTouched((t) => ({ ...t, password: true }))}
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-5 md:grid-cols-2">
-            <NuevoUsuarioCredencialesSection
-              email={email}
-              password={password}
-              showPassword={showPassword}
-              emailError={emailError}
-              passwordError={passwordError}
-              onEmailChange={setEmail}
-              onPasswordChange={setPassword}
-              onToggleShowPassword={() => setShowPassword((v) => !v)}
-              onEmailBlur={() => setTouched((t) => ({ ...t, email: true }))}
-              onPasswordBlur={() => setTouched((t) => ({ ...t, password: true }))}
-            />
-
-            <NuevoUsuarioAccesoSection
-              role={role}
-              onRoleChange={setRole}
-              showOrgSelector={showOrgSelector}
-              orgId={orgId}
-              onOrgIdChange={setOrgId}
-              orgs={orgs}
-            />
-          </div>
-
-          <DialogFooter className="border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={createUser.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={createUser.isPending}>
-              {createUser.isPending ? (
-                <>
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  Creando…
-                </>
-              ) : (
-                "Crear usuario"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <NuevoUsuarioAccesoSection
+          role={role}
+          onRoleChange={setRole}
+          showOrgSelector={showOrgSelector}
+          orgId={orgId}
+          onOrgIdChange={setOrgId}
+          orgs={orgs}
+        />
+      </div>
+    </FormDialogShell>
   );
 }

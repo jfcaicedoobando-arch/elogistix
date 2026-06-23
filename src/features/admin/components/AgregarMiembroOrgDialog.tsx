@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
-import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useAvailableUsers, useAddOrgMember } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
 import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
@@ -31,68 +30,68 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
     [allUsers, existingUserIds],
   );
 
-  // 13.85.10 — Los toasts de éxito/error los emite `useAddOrgMember`.
-  // No duplicar aquí: causaría doble toast.
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 13.85.10 — Los toasts viven en `useAddOrgMember`.
+  const handleSubmit = async () => {
     if (!selectedUserId) return;
     try {
       await addMember.mutateAsync({ organizationId, userId: selectedUserId, role });
       onOpenChange(false);
       onAdded();
     } catch {
-      // Notificación gestionada por el hook.
+      // notificación gestionada por hook
     }
   };
 
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>Agregar miembro</DialogTitle>
-          <DialogDescription>Selecciona un usuario existente para agregarlo a esta organización.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Usuario</Label>
-            {loadingUsers ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Cargando usuarios…
-              </div>
-            ) : users.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-2">No hay usuarios disponibles para agregar.</p>
-            ) : (
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar usuario" /></SelectTrigger>
-                <SelectContent>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>Rol en la organización</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={UserPlus}
+      title="Agregar miembro"
+      description="Selecciona un usuario existente para agregarlo a esta organización."
+      size="md"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={loading || !selectedUserId}>
+            {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+            Agregar
+          </Button>
+        </>
+      }
+    >
+      <FormDialogSection flat>
+        <div className="space-y-1.5">
+          <Label>Usuario</Label>
+          {loadingUsers ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando usuarios…
+            </div>
+          ) : users.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-2">No hay usuarios disponibles para agregar.</p>
+          ) : (
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar usuario" /></SelectTrigger>
               <SelectContent>
-                {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
-                  <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
-            <Button type="submit" disabled={loading || !selectedUserId}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Agregar
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <Label>Rol en la organización</Label>
+          <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
+                <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </FormDialogSection>
+    </FormDialogShell>
   );
 }
