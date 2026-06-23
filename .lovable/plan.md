@@ -1,62 +1,38 @@
-## Objetivo
+## Problema
 
-Cerrar el ciclo de aprobación de tarifas marítimas. Hoy el agente puede crear/editar tarifas en `borrador` y el RPC `agente_aprobar_tarifa(_tarifa_id, _estado)` ya existe (v13.128), pero **no hay UI en `/costeo/tarifas` para que operaciones apruebe o rechace**, y el agente no ve por qué le rechazaron una tarifa.
+En el portal del agente, el modal "Nueva tarifa (queda en borrador)" tiene 3 fallos:
 
-## Alcance
+1. **Agente vacío**: El Select de agente está bloqueado pero no muestra el nombre. Causa: el form usa `useCosteoAgentes()` que depende de `useOrganization()`, y el usuario agente no tiene esa organización en contexto → la lista llega vacía → el `SelectValue` no encuentra label.
+2. **Ruta no funciona**: Mismo problema con `useCosteoRutas()` — el dropdown se renderiza vacío.
+3. **Flechitas (spinners) en "Días libres demoras"**: el `<Input type="number">` muestra los controles nativos del navegador.
 
-### 1. Base de datos (1 migración)
-- Agregar columnas a `costeo_tarifas`:
-  - `motivo_rechazo text` — texto libre que escribe operaciones al rechazar.
-  - `aprobada_por uuid` (FK `auth.users`), `aprobada_en timestamptz` — auditoría.
-- Reemplazar `agente_aprobar_tarifa(_tarifa_id, _estado)` por una versión con tercer parámetro opcional `_motivo text`:
-  - Si `_estado='rechazada'` exige motivo no vacío.
-  - Si `_estado='vigente'` limpia `motivo_rechazo` y registra `aprobada_por = auth.uid()`, `aprobada_en = now()`.
-  - Mantiene la misma comprobación de roles (`admin`, `admin_org`, `gerente_operaciones`, `coordinador_logistico`, `ejecutivo_pricing`, `operador`, `super_admin`).
-- Insertar fila en `notificaciones_internas` para el agente cuando se aprueba o rechaza (canal interno, ya existe la tabla).
+## Cambios (sólo UI / capa de presentación)
 
-### 2. UI operaciones — `/costeo/tarifas`
-- **Filtro de aprobación** en `CosteoTarifasFiltros`: chips Pendientes (borrador) / Aprobadas (vigente) / Rechazadas / Todas. Por defecto **Pendientes** para que operaciones vea la bandeja de trabajo al entrar.
-- **Columna "Aprobación"** en `CosteoTarifasTable` con `EstadoAprobacionBadge` (mismo componente que el portal del agente).
-- **Acciones por fila** cuando `estado_aprobacion === 'borrador'`:
-  - Botón ✓ Aprobar (verde) → llama RPC con `vigente`.
-  - Botón ✗ Rechazar (rojo) → abre `DialogRechazarTarifa` que pide motivo (textarea, min 5 chars) y llama RPC con `rechazada` + motivo.
-- Cuando `estado_aprobacion === 'rechazada'`: mostrar tooltip con el motivo en el badge y botón "Reactivar como borrador".
-- Toast de éxito + invalidación de la query `costeo_tarifas` y la del portal del agente.
+### 1. `AgenteTarifaForm.tsx` — inyectar datos desde el contexto del agente
+- Obtener `agenteNombre` y `organizationId` del `useAgenteContext()`.
+- Llamar a los servicios `fetchCosteoRutas(orgId)` y `fetchNavieras()` / `fetchTiposContenedor()` ya existentes, vía `useQuery` propio del portal, usando la `organizationId` del agente (no la del `OrganizationContext`).
+- Pasar `rutas`, `navieras`, `tipos` y `agenteNombre` como nuevos props opcionales a `TarifaForm`.
 
-### 3. Hook + servicio
-- Nuevo `src/features/costeo/services/aprobacion.ts` con `aprobarTarifa(id)`, `rechazarTarifa(id, motivo)`, `reactivarTarifa(id)` (wrappers del RPC).
-- Nuevo hook `useAprobacionTarifa()` con las 3 mutations + invalidación de `['costeo-tarifas']` y `['portal-agente','tarifas']`.
+### 2. `TarifaForm.tsx` — aceptar overrides opcionales
+Nuevos props opcionales (no rompen el uso actual desde operaciones):
+- `rutasOverride?`, `navierasOverride?`, `tiposOverride?` — si vienen, se usan en lugar de los hooks internos.
+- `agenteNombreFijo?: string` — cuando `agenteIdFijo` está presente, se renderiza un `<Input disabled>` con el nombre del agente en vez del `<Select>`.
 
-### 4. UI agente — `/agente/tarifas` y `/agente/inicio`
-- `AgenteTarifas.tsx`: en filas con `estado_aprobacion === 'rechazada'` mostrar el `motivo_rechazo` debajo (texto pequeño rojo) y mantener el botón Editar para corregir y reenviar (al guardar el trigger vuelve a `borrador` y limpia motivo).
-- `AgenteInicio.tsx`: en el alert de rechazadas listar las primeras 3 rutas + motivo abreviado.
-- Extender `fetchTarifasAgente` y su tipo para devolver `motivo_rechazo`, `aprobada_en`.
+### 3. `TarifaFormFields.tsx` — dos ajustes visuales
+- En `EntidadesFields`, si llega `agenteNombreFijo`, reemplazar el Select por un Input readonly con el nombre (mantiene el `agente_id` ya seteado en el form).
+- En `NumerosFields`, al Input de "Días libres demoras" agregar las clases de Tailwind que ocultan los spinners:
+  ```
+  [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
+  ```
+  (aplicar también al de "Tránsito (días)" y "Flete base" para consistencia visual).
 
-### 5. Reenvío automático
-- Trigger `costeo_tarifas_agente_force_borrador` (creado en v13.129): ampliarlo para que al cambiar `estado_aprobacion` de `rechazada` → `borrador` limpie `motivo_rechazo`.
+### 4. Sin migración, sin cambios de lógica de negocio
+RLS ya permite al agente leer `costeo_rutas`, `navieras` y `tipos_contenedor` de su organización vinculada (las consultas funcionan; sólo faltaba pasarles la `organizationId` correcta).
 
-### 6. Versionado y memoria
-- `APP_VERSION` → `13.130.0`.
-- Entrada en `CHANGELOG.md`.
-- Actualizar `.lovable/memories/features/portal-agente-carga.md` con el ciclo completo.
-
-## Detalles técnicos
-
-```text
-Operaciones                            Agente
-───────────                            ──────
-/costeo/tarifas  (tab Pendientes)
-  │ Aprobar ─────► RPC vigente ─────► toast + portal ve "Vigente"
-  │ Rechazar(motivo) ─► RPC rechazada
-  │                       │
-  │                       └─► notificaciones_internas ─► /agente/inicio alert
-  │                                                       /agente/tarifas badge + motivo
-  Agente edita rechazada ─► trigger fuerza borrador, limpia motivo
-  │
-  └► vuelve a Pendientes
-```
+### 5. Versión + changelog
+- `APP_VERSION` → `13.130.1` (patch UI).
+- Entrada en `CHANGELOG.md` describiendo los 3 fixes.
 
 ## Fuera de alcance
-- Emails reales (sólo notificaciones in-app).
-- Aprobación masiva.
-- Historial de cambios de estado (sólo última aprobación queda registrada).
+- No se toca el flujo de aprobación ni la lógica de mutaciones.
+- No se modifica el formulario para el editor de operaciones (`/costeo/tarifas`).
