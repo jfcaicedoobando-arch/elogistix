@@ -6237,6 +6237,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur: number
           tipo_cambio_usd: number
+          tipo_carga: string
           tipo_contenedor: string
           total_count: number
         }[]
