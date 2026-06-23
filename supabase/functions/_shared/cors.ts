@@ -12,8 +12,14 @@
  *
  * Headers `x-supabase-client-*` requeridos por SDK v2.95+.
  */
+// 13.114.13: agregados `sentry-trace` y `baggage`. En producción
+// (`librecarga.com`) Sentry adjunta automáticamente esos headers a fetches
+// que matchean `tracePropagationTargets` (incluye `*.supabase.co/functions/v1`).
+// Sin permitirlos en el preflight, el navegador cancelaba el POST y el
+// edge function nunca recibía la invocación — síntoma: `FunctionsFetchError`
+// con `lastStatus: null` sólo en el dominio custom (preview no lo dispara).
 const ALLOW_HEADERS =
-  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version";
+  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, sentry-trace, baggage";
 
 const ALLOW_METHODS = "GET, POST, OPTIONS";
 const MAX_AGE = "86400";
