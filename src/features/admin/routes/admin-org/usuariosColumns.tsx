@@ -131,7 +131,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           accessorFn: (u) => u.created_at,
           enableSorting: true,
           sortingFn: sortByDate<UserRow>((u) => u.created_at),
-          meta: { width: "w-[170px]", className: "text-xs text-muted-foreground whitespace-nowrap" },
+          meta: { width: "w-[1%] whitespace-nowrap", className: "text-xs text-muted-foreground whitespace-nowrap" },
           cell: ({ row }) => (
             <Tooltip>
               <TooltipTrigger asChild>
