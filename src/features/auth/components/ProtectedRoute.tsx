@@ -30,6 +30,14 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/portal" replace />;
   }
 
+  // Agente de carga accediendo a rutas internas → redirigir a /agente
+  // Defensa en profundidad: aunque el usuario tenga una membresía admin/viewer
+  // en alguna organización (por ejemplo el trigger handle_new_user_signup), su
+  // rol global `agente_carga` siempre lo confina al portal del agente.
+  if (role === "agente_carga" && !location.pathname.startsWith("/agente")) {
+    return <Navigate to="/agente" replace />;
+  }
+
   // Super admin accessing regular app routes → redirect to /admin
   const isSuperAdmin = role === "super_admin";
   if (isSuperAdmin && !location.pathname.startsWith("/admin")) {
