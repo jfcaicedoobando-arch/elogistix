@@ -137,7 +137,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
                 <span className="cursor-help">{formatDate(row.original.created_at)}</span>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">{formatDateTime(row.original.created_at)}</p>
+                <p className="text-xs">{formatDateTimeShort(row.original.created_at)}</p>
               </TooltipContent>
             </Tooltip>
           ),
