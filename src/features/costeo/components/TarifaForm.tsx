@@ -1,17 +1,14 @@
 /**
  * Formulario de alta/edición de tarifa marítima con sub-editor de recargos.
  * Todas las tarifas se capturan en USD (Fase 3).
- * Sub-componentes en `TarifaFormFields.tsx`, helpers en `TarifaForm.helpers.ts`.
+ * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useMemo, useState } from "react";
+import { Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useCosteoRutas } from "@/features/costeo/hooks/useCosteoRutas";
 import { useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
@@ -82,49 +79,49 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("sm:max-w-2xl", scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>
-            {esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)"}
-          </DialogTitle>
-          <DialogDescription>Captura o edita la tarifa marítima con sus costos y condiciones.</DialogDescription>
-        </DialogHeader>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Tag}
+      title={esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)"}
+      description="Captura o edita la tarifa marítima con sus costos y condiciones."
+      size="2xl"
+      headerAside={
+        <div className="text-right">
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Total comparable</div>
+          <div className="text-lg font-semibold text-foreground tabular-nums">{usdFormatter(total)}</div>
+        </div>
+      }
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button type="submit" form="tarifa-form" disabled={pendiente}>
+            {pendiente ? "Guardando…" : esEdicion ? "Guardar cambios" : "Guardar tarifa"}
+          </Button>
+        </>
+      }
+    >
+      <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
+        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} />
+        <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} errores={errores} />
+        <NumerosFields form={form} setForm={setForm} errores={errores} />
+        <VigenciaFields form={form} setForm={setForm} errores={errores} />
 
-        <form onSubmit={guardar} className="space-y-3">
-          <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} />
-          <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} errores={errores} />
-          <NumerosFields form={form} setForm={setForm} errores={errores} />
-          <VigenciaFields form={form} setForm={setForm} errores={errores} />
+        <TarifaRecargosEditor
+          value={form.recargos}
+          onChange={(recargos: TarifaRecargoInput[]) => setForm({ ...form, recargos })}
+        />
 
-          <TarifaRecargosEditor
-            value={form.recargos}
-            onChange={(recargos: TarifaRecargoInput[]) => setForm({ ...form, recargos })}
+        <div>
+          <Label htmlFor="tarifa-notas">Notas</Label>
+          <Textarea
+            id="tarifa-notas"
+            value={form.notas ?? ""}
+            onChange={(e) => setForm({ ...form, notas: e.target.value })}
+            placeholder="Condiciones, restricciones, comentarios del agente…"
           />
-
-          <div>
-            <Label htmlFor="tarifa-notas">Notas</Label>
-            <Textarea
-              id="tarifa-notas"
-              value={form.notas ?? ""}
-              onChange={(e) => setForm({ ...form, notas: e.target.value })}
-              placeholder="Condiciones, restricciones, comentarios del agente…"
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border">
-            <span className="text-sm text-muted-foreground">Total comparable (flete + recargos)</span>
-            <span className="text-lg font-semibold text-foreground">{usdFormatter(total)}</span>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={pendiente}>
-              {pendiente ? "Guardando…" : esEdicion ? "Guardar cambios" : "Guardar tarifa"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </form>
+    </FormDialogShell>
   );
 }

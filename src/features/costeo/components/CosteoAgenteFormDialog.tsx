@@ -1,16 +1,17 @@
 /**
- * Diálogo de alta/edición de Agente de costeo — extraído de CosteoAgentes.tsx.
+ * Diálogo de alta/edición de Agente de costeo.
+ * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
+import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import type { CosteoAgenteInput } from "@/features/costeo/services/agentes";
 
 interface ProveedorAgente {
@@ -38,17 +39,30 @@ export function CosteoAgenteFormDialog({
   const nombreInvalido = intentoEnvio && !form.nombre.trim();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{editando ? "Editar agente" : "Nuevo agente"}</DialogTitle>
-          <DialogDescription>
-            {editando
-              ? "Modifica los datos del agente de carga."
-              : "Registra un nuevo agente de carga con sus datos de contacto."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-3">
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Users}
+      title={editando ? "Editar agente" : "Nuevo agente"}
+      description={
+        editando
+          ? "Modifica los datos del agente de carga."
+          : "Registra un nuevo agente de carga con sus datos de contacto."
+      }
+      size="xl"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="agente-form" disabled={isPending}>
+            {editando ? "Actualizar" : "Guardar"}
+          </Button>
+        </>
+      }
+    >
+      <form id="agente-form" onSubmit={onSubmit} className="space-y-4">
+        <FormDialogSection cols={1} flat>
           <div>
             <Label htmlFor="agente-proveedor">Proveedor (Agente de Carga) *</Label>
             <Select
@@ -94,6 +108,9 @@ export function CosteoAgenteFormDialog({
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             />
           </div>
+        </FormDialogSection>
+
+        <FormDialogSection cols={2} flat>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="agente-pais">País</Label>
@@ -114,6 +131,9 @@ export function CosteoAgenteFormDialog({
               />
             </div>
           </div>
+        </FormDialogSection>
+
+        <FormDialogSection cols={1} flat>
           <div>
             <Label htmlFor="agente-contacto">Contacto</Label>
             <Input
@@ -139,16 +159,8 @@ export function CosteoAgenteFormDialog({
             />
             <Label htmlFor="agente-activo">Activo</Label>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {editando ? "Actualizar" : "Guardar"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </FormDialogSection>
+      </form>
+    </FormDialogShell>
   );
 }
