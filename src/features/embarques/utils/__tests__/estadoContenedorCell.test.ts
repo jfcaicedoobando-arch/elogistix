@@ -48,4 +48,26 @@ describe("derivarEstadoContenedor", () => {
     expect(r.pendientes).toBe(false);
     expect(r.pendientesTitle).toBe("");
   });
+
+  it("LCL con contenedores incompletos → pendientes=false (contenedor opcional)", () => {
+    const r = derivarEstadoContenedor(
+      { ...baseMaritimo, tipo_carga: "LCL" },
+      { count: 1, primero: "", incompletos: 1 },
+    );
+    expect(r.esLcl).toBe(true);
+    expect(r.incompletos).toBe(0);
+    expect(r.pendientes).toBe(false);
+  });
+
+  it("LCL sin BL Master → pendientes=true sólo por BL", () => {
+    const r = derivarEstadoContenedor(
+      { ...baseMaritimo, bl_master: "", tipo_carga: "LCL" },
+      { count: 1, primero: "", incompletos: 2 },
+    );
+    expect(r.blFalta).toBe(true);
+    expect(r.incompletos).toBe(0);
+    expect(r.pendientes).toBe(true);
+    expect(r.pendientesTitle).toBe("BL Master sin capturar");
+  });
 });
+
