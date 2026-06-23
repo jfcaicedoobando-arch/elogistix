@@ -26,6 +26,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   vendedor: "Vendedor / KAM",
   customer_service: "Atención a Clientes",
   cliente: "Cliente",
+  agente_carga: "Agente de Carga",
   // Legacy (no asignables desde UI, pero soportados)
   admin: "Admin (legacy)",
   operador: "Operador (legacy)",
