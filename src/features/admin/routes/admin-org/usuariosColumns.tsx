@@ -146,7 +146,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
         {
           id: "change_role",
           header: "Cambiar rol",
-          meta: { width: "w-[240px]" },
+          meta: { width: "w-[1%]" },
           cell: ({ row }) => {
             const u = row.original;
             const isSelf = u.user_id === currentUserId;
