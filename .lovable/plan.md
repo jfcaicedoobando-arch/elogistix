@@ -1,67 +1,42 @@
-# Ola 3 — Wizards reales con FormDialogShell + FormDialogStepper
+## Problema
 
-Alcance aprobado: **los tres** (BulkImport + Liquidación + ImportarLeadsCsv).
+En la tabla de embarques, el embarque 273 (LCL) muestra "datos pendientes" en la columna **Contenedores** porque la lógica actual cuenta como "incompleto" cualquier contenedor hijo sin número o sin tipo. En LCL eso es normal: el agente de carga consolida nuestra mercancía con la de otros clientes y muchas veces nunca nos comparte el número/tipo del contenedor físico.
 
-## Objetivo
+**Analogía:** es como pedirle al chofer de un Uber Pool la placa del coche cuando todavía no llega — para los demás pasajeros (FCL) sí tiene sentido exigirlo, pero para ti que vas en pool (LCL) ese dato no depende de ti.
 
-Llevar los modales **multi-paso** al mismo lenguaje visual del resto del back-office: icon-tile en el header, stepper segmentado arriba del cuerpo, body scrolleable y footer sticky con acciones. Toda la lógica (hooks, mutaciones, parsing CSV) queda intacta — sólo cambia la cáscara.
+## Solución elegida
 
-## Trabajo por modal
+**Opcional total en LCL.** Cuando `tipo_carga === "LCL"`:
+- No marcar como "datos pendientes" por contenedor faltante.
+- El **BL Master** sigue siendo obligatorio en marítimo (igual que hoy) — eso no cambia.
+- La celda muestra `LCL · sin contenedor asignado` (con guion `—` para el número) en lugar del badge naranja de pendientes.
 
-### 1. `BulkImportDialog` (genérico) — el grande
+Para FCL marítimo y todo lo demás, la lógica actual se queda intacta.
 
-Hoy maneja 4 estados internos (`upload → preview → committing → done`) cambiando el body a mano. Migración:
+## Cambios técnicos
 
-- Envolver en `FormDialogShell` con `icon=Upload`, `size="2xl"`.
-- Mapear estados a 3 pasos visibles del `FormDialogStepper`:
-  - **Paso 1 · Cargar archivo** (`upload`)
-  - **Paso 2 · Revisar** (`preview`, `committing` muestra spinner dentro del paso 2)
-  - **Paso 3 · Confirmar** (`done`)
-- Mover los botones de `BulkImportFooter` al slot `footer` del shell. `BulkImportBody` se queda como está (sólo pierde el `DialogHeader` que ya no le toca).
-- Beneficio en cascada: `ProveedoresImportDialog`, importador de clientes y cualquier otro consumidor heredan el nuevo look sin tocarse.
+1. **`src/features/embarques/utils/estadoContenedorCell.ts`**
+   - Aceptar `tipo_carga` en el `Pick<EmbarqueRow, ...>` del argumento.
+   - Si `tipo_carga === "LCL"`: forzar `incompletos = 0` y no incluir el aviso de contenedores en `pendientesTitle`. `blFalta` (BL Master) sigue calculándose igual.
 
-### 2. `ImportarLeadsCsvDialog` (CRM)
+2. **`src/features/embarques/components/embarqueColumns.tsx`**
+   - Pasar `tipo_carga` del row a `derivarEstadoContenedor`.
+   - En el render de la celda, si LCL y no hay número, mostrar `LCL` como etiqueta secundaria en vez de "1 contenedor pendiente".
 
-Tiene su propio hook `useImportarLeadsCsv` y vive aparte del `BulkImportDialog` genérico. No lo fusionamos (riesgo alto y fuera de alcance), pero le damos **el mismo look**:
+3. **`src/features/embarques/services/columns.ts`**
+   - Verificar que `tipo_carga` ya viene en el SELECT del listado (sí está en `EMBARQUE_LIST_COLUMNS` según la búsqueda). Si falta en alguna query del listado, agregarlo.
 
-- Envolver en `FormDialogShell` con `icon=UserPlus` (o `FileSpreadsheet`), `size="2xl"`.
-- `FormDialogStepper` de 2 pasos: **Cargar → Revisar e importar**.
-- Footer sticky con `Cancelar` + `Importar N leads`.
-- Conservar `useImportarLeadsCsv`, validaciones y `notifySuccess/notifyError`.
+4. **`src/features/embarques/utils/__tests__/estadoContenedorCell.test.ts`**
+   - Agregar 2 casos: LCL con contenedores incompletos → `pendientes=false`; LCL sin BL Master → `pendientes=true` (solo por BL, no por contenedor).
 
-### 3. `DialogGenerarLiquidacion` (Comisiones) — auditar y decidir
+## Fuera de alcance
 
-Revisión con el código en mano:
-
-- Si el formulario actual (período + filtros + botón generar) se siente cómodo en un solo paso → **se queda como está** desde Ola 2, sólo se documenta la decisión en el CHANGELOG.
-- Si tiene fricción real (ej. el usuario no entiende qué va a generarse antes de confirmar) → se parte en wizard de 2 pasos: **Definir período → Revisar comisiones a liquidar**, manteniendo el mismo `headerAside` con totales.
-
-Criterio: no inflar UX por inflar. Power-of-10 manda.
-
-## Reglas comunes (idénticas a Olas 1 y 2)
-
-- Sólo presentación. Cero cambios en hooks, servicios, RLS, validaciones o atajos.
-- Sin nuevos tokens de color.
-- Confirmaciones cortas siguen como `AlertDialog`.
-- Componentes ≤200 líneas; si algún wizard se infla, extraer pasos a archivos hermanos.
-
-## Validación
-
-- `tsgo` verde.
-- Suite de tests verde (los de importación de proveedores/leads deberían seguir pasando sin tocarlos).
-- Smoke visual en preview:
-  1. Abrir importador de proveedores → cargar CSV de ejemplo → ver el stepper iluminar pasos 1→2→3.
-  2. Abrir importador de leads (CRM) → mismo flujo.
-  3. Abrir `DialogGenerarLiquidacion` y validar la decisión tomada.
+- Validaciones del wizard de embarque (paso 1) y de proforma (`validarContenedoresFCL.ts`) — ya excluyen LCL por su nombre, no se tocan.
+- Lógica de cierre (`cierreCheckFormatters.ts`) — sigue contando contenedores incompletos donde aplique; revisarla sería otro alcance.
+- Aéreo y terrestre — no afectados.
 
 ## Entregables
 
-- Bump a `13.128.0`.
-- Entrada en `CHANGELOG.md` listando los 2-3 modales migrados y la decisión sobre Liquidación.
-- Actualización de `mem://style/form-dialog-shell` añadiendo `BulkImportDialog` e `ImportarLeadsCsvDialog` a la lista de referencia de wizards migrados.
-
-## Después de Ola 3 (fuera de alcance)
-
-- Paneles de lectura (`TabCierre`, `EmbarquesEstadoDialog`) — no son formularios, se quedan.
-- Wizards de página completa (cotización, embarques) — no son `Dialog`, no aplican al shell.
-- Confirmaciones cortas — siguen como `AlertDialog`.
+- Bump a `13.127.1` (parche, cambio de presentación + lógica de derivación).
+- Entrada en `CHANGELOG.md`: "LCL: contenedor opcional, ya no marca datos pendientes."
+- `tsgo` y vitest del archivo modificado en verde.
