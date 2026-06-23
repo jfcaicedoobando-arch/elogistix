@@ -1,61 +1,54 @@
-## Problema
+## Cambio
 
-El reporte que te llegó tiene `errorDetails: {}` vacío y `errorCode: "UNKNOWN"`, así que no se puede saber:
-- Si fue red caída del usuario, edge function caída, CORS, o timeout.
-- En qué intento murió (1ª, 2ª, 3ª) ni después de cuánto tiempo.
-- Si el navegador reportaba `online: false` en ese momento.
+Ampliar la política RLS **`Tenant CRUD proveedor_facturas`** para incluir a **`auxiliar_contable`** y **`tesorero`** además de los roles actuales (`admin`, `super_admin`, `contador`).
 
-Causa: en `CargaCfdiSection.tsx` línea 71 (rama `_4`), `notifyError` recibe sólo `{ title: msg, method }`. **No se pasa `error: e` ni `context`**, así que `extractErrorDetails` regresa `{}` y `deriveErrorCode` no puede inferir nada del `TypeError`.
+Hoy, si un tesorero o auxiliar contable abre el modal "Nueva factura de proveedor" e intenta guardar, Postgres rechaza con `new row violates row-level security policy` aunque la UI les permita capturar.
 
-## Cambios
+## Migración SQL
 
-**1) `src/features/cxp/services/parseCfdi.ts`**
-- Capturar `attemptCount`, `latencyMs`, `navigator.onLine` y, si hubo respuesta HTTP fallida, `lastStatus`.
-- Cuando `callEdgeFunction` falla, envolver el error original en una nueva clase `CfdiUploadError extends Error` que:
-  - Preserva el error original como `cause` (así no se pierde el `TypeError: Failed to fetch`).
-  - Expone `context` con `{ attemptCount, latencyMs, online, xmlSize, lastStatus? }`.
-  - Mensaje legible: `"No se pudo procesar el CFDI (3 intentos · 8.4s · offline): Failed to fetch"`.
+```sql
+DROP POLICY "Tenant CRUD proveedor_facturas" ON public.proveedor_facturas;
 
-**2) `src/features/cxp/components/CargaCfdiSection.tsx`** (rama `_4`)
-- Pasar `error: e` y `context: (e as CfdiUploadError).context ?? {...mínimo}` a `notifyError`.
-- Incluir siempre como contexto mínimo: `{ xmlName, xmlSize, online: navigator.onLine }` aun para errores no envueltos.
-
-**3) `src/components/shared/utils/errorDetailsExtract.ts`**
-- Cuando el error tiene `cause` (Error o objeto), agregar `errorDetails.cause = { name, message, code, status }` sin recursión profunda (1 nivel basta — es el caso 99%). Así el reporte muestra el `TypeError` interno aunque venga envuelto.
-- Si la cadena `cause` es un `TypeError` con `/fetch|network/i`, `deriveErrorCode` también debe poder derivar `NETWORK_ERROR` mirando el cause (no sólo el error superior).
-
-**4) Versionado**
-- `APP_VERSION` → `13.114.9`
-- `CHANGELOG.md`: una entrada describiendo qué se gana en el reporte y por qué.
-
-## Resultado esperado en el próximo reporte
-
-```json
-{
-  "errorCode": "NETWORK_ERROR",
-  "title": "No se pudo procesar el CFDI (3 intentos · 12.3s · online): Failed to fetch",
-  "errorDetails": {
-    "name": "CfdiUploadError",
-    "message": "...",
-    "cause": { "name": "TypeError", "message": "Failed to fetch" }
-  },
-  "context": {
-    "attemptCount": 3,
-    "latencyMs": 12340,
-    "online": true,
-    "xmlName": "factura-foo.xml",
-    "xmlSize": 8421,
-    "lastStatus": null
-  }
-}
+CREATE POLICY "Tenant CRUD proveedor_facturas"
+ON public.proveedor_facturas
+FOR ALL
+USING (
+  ((organization_id = current_user_org_id()) OR has_role(auth.uid(), 'super_admin'))
+  AND (
+    has_role(auth.uid(), 'admin')
+    OR has_role(auth.uid(), 'super_admin')
+    OR has_role(auth.uid(), 'contador')
+    OR has_role(auth.uid(), 'auxiliar_contable')
+    OR has_role(auth.uid(), 'tesorero')
+  )
+)
+WITH CHECK (
+  ((organization_id = current_user_org_id()) OR has_role(auth.uid(), 'super_admin'))
+  AND (
+    has_role(auth.uid(), 'admin')
+    OR has_role(auth.uid(), 'super_admin')
+    OR has_role(auth.uid(), 'contador')
+    OR has_role(auth.uid(), 'auxiliar_contable')
+    OR has_role(auth.uid(), 'tesorero')
+  )
+);
 ```
+
+## Tablas relacionadas a revisar/alinear
+
+Para que el flujo completo de capturar factura funcione end-to-end para los nuevos roles, también necesitan poder escribir en las tablas hijas:
+
+- `proveedor_facturas_conceptos` — revisar y ampliar si tiene la misma lista de roles.
+- `pagos_proveedor` — opcional (tesorero ya suele tener acceso; auxiliar quizá no debería). **Sugerencia: dejar `pagos_proveedor` como está y sólo tocar las dos tablas de captura.**
+
+Voy a revisar `proveedor_facturas_conceptos` en la misma migración y, si su política excluye a estos roles, la amplío con el mismo patrón.
 
 ## Verificación
 
-- Tests existentes: `parseCfdi.test.ts`, `errorDetailsExtract.test.ts`, `appFeedback.test.ts`, `sentry-edge-wrapping.test.ts`.
-- Agregar/ajustar caso en `errorDetailsExtract.test.ts`: verificar que `cause` se serializa y que `deriveErrorCode` mira el `cause` para `NETWORK_ERROR`.
-- Agregar caso en `parseCfdi.test.ts`: que ante `TypeError: Failed to fetch` se lance `CfdiUploadError` con `context.attemptCount === 3` y `cause.name === "TypeError"`.
+- Suites RLS: `test_rls_financiero_critico.sql` y `test_rls_tarifas_y_costeo.sql` ya siembran categorías y un usuario `contador` — agregar dos asserts: tesorero y auxiliar_contable pueden insertar `proveedor_facturas`, viewer/vendedor siguen bloqueados.
+- `APP_VERSION` → `13.114.10`
+- Entrada en `CHANGELOG.md`.
 
 ## Analogía
 
-Hoy cuando el sistema marca error es como una llamada al 911 que sólo dice "algo pasó". Después de este cambio, la misma llamada dirá "intenté llegar 3 veces durante 12 segundos, tenía internet, el archivo pesaba 8KB y la respuesta final fue 'no pude conectar'." Con eso ya puedes saber si culpas a la red del usuario, al edge function o al CORS.
+Hoy la caja fuerte de "facturas de proveedor" tiene tres llaves (admin, contador, super_admin). Vamos a copiar dos llaves más para el tesorero y el auxiliar contable — la chapa sigue siendo la misma, sólo hay más gente autorizada a abrirla.
