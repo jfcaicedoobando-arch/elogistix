@@ -69,7 +69,10 @@ async function sugerirCategoria(
   let result: { categoria_id: string | null; notas: string };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  // 13.114.5: bajado de 8s → 5s. El AI es opcional (hay fallbackResult),
+  // pero su latencia bloquea la respuesta al browser y se acumula con el
+  // cold start del edge function — combinación que dispara "Failed to fetch".
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
