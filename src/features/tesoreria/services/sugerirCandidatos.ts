@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
+import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso, deltaDiasIso } from "./tolerancia";
 
 export interface Candidato {
   tipo: "cxc" | "cxp";
@@ -17,21 +18,14 @@ export interface Candidato {
   delta_monto: number;
 }
 
-const TOLERANCIA_MONTO = 1;
-const TOLERANCIA_DIAS = 5;
-
 export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[]> {
   const monto = Number(mov.cargo) > 0 ? Number(mov.cargo) : Number(mov.abono);
   if (monto <= 0) return [];
   const esCargo = Number(mov.cargo) > 0;
 
-  const fecha = new Date(mov.fecha + "T00:00:00");
-  const desde = new Date(fecha); desde.setDate(desde.getDate() - TOLERANCIA_DIAS);
-  const hasta = new Date(fecha); hasta.setDate(hasta.getDate() + TOLERANCIA_DIAS);
-  const desdeIso = desde.toISOString().slice(0, 10);
-  const hastaIso = hasta.toISOString().slice(0, 10);
-  const min = monto - TOLERANCIA_MONTO;
-  const max = monto + TOLERANCIA_MONTO;
+  const { desde: desdeIso, hasta: hastaIso } = rangoFechasIso(mov.fecha, TOLERANCIA_DIAS);
+  const min = monto - TOLERANCIA_MONTO_MXN;
+  const max = monto + TOLERANCIA_MONTO_MXN;
 
   const candidatos: Candidato[] = [];
 
@@ -56,7 +50,7 @@ export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[
         monto: Number(p.monto),
         moneda: p.moneda,
         contraparte: pf?.proveedor_nombre ?? "—",
-        delta_dias: Math.abs(Math.round((new Date(p.fecha_pago + "T00:00:00").getTime() - fecha.getTime()) / 86_400_000)),
+        delta_dias: deltaDiasIso(p.fecha_pago, mov.fecha),
         delta_monto: Math.abs(Number(p.monto) - monto),
       });
     }
@@ -81,7 +75,7 @@ export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[
         monto: Number(p.monto),
         moneda: p.moneda,
         contraparte: f?.cliente_nombre ?? "—",
-        delta_dias: Math.abs(Math.round((new Date(p.fecha_pago + "T00:00:00").getTime() - fecha.getTime()) / 86_400_000)),
+        delta_dias: deltaDiasIso(p.fecha_pago, mov.fecha),
         delta_monto: Math.abs(Number(p.monto) - monto),
       });
     }

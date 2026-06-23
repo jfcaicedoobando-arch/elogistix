@@ -1,95 +1,80 @@
+# Pendientes de las 2 auditorías de calidad de tests
 
-# Plan — Mejora de calidad de tests (3 sprints consolidados)
-
-Ejecuta de raíz los 3 problemas detectados en la auditoría: **patrones sistémicos**, **huecos críticos sin test** y **fragilidad/over-mocking**. Una sola entrega, una sola versión.
-
-## Analogía
-
-Hoy los tests son como una alarma que suena cuando cambias el foco del techo, pero NO suena cuando entra un ladrón. Vamos a invertirlo: que la alarma suene cuando algo importante se rompe y se calle cuando sólo cambias copy.
+Resumen de lo que quedó **diferido a propósito** o **no se pudo ejecutar** en `13.115.0` (auditoría 1) y `13.116.0` (auditoría 2). Ordenado por impacto/riesgo.
 
 ---
 
-## Sprint 1 — Patrones sistémicos (arreglar de raíz)
+## 🔴 Alto impacto — bugs latentes que ningún test caza hoy
 
-### 1.1 Eliminar "tests de grep" en edge functions (5 archivos)
-Archivos: `cxc-recordatorios/index_test.ts`, `demo-access/index_test.ts`, y 3 más que sólo hacen `assertStringIncludes(source, "authenticateRequest")`.
+1. **`useEmbarquesListData.test.ts:15-33` redefine `buildLiquidacionMap` internamente**
+   El test prueba su propia copia de la función. Si el código real cambia, el test sigue verde. **Pendiente:** importar la función real y matar la copia local.
 
-Acción: reemplazar por tests que **invocan el handler** con un Request falso y asertan:
-- 401 sin Authorization
-- 403 si el JWT no tiene el rol esperado
-- 200 con payload válido
+2. **`facturapi-emitir` no tiene test de auth anónima**
+   Usa `SERVICE_ROLE_KEY` y emite CFDIs. Si alguien quita el check de Authorization, cualquiera podría timbrar facturas. **Pendiente:** test estructural tipo `facturapi-cancelar/index_test.ts`.
 
-### 1.2 "Spy sin payload" en mutaciones (≥6 servicios)
-Archivos como `embarques/services/mutations.test.ts:150`, `tesoreria/services/conciliacion.test.ts`.
+3. **`proformas/services/facturar.ts:106` — idempotencia parcial USD+MXN**
+   Si el update final falla después de timbrar, un retry duplica la factura en Facturapi. **Pendiente:** test de "fallo entre timbrado y update" + posiblemente migrar a transacción o flag de idempotencia.
 
-Acción: cambiar `expect(spy).toHaveBeenCalled()` por aserciones de **qué columna y qué valor** se escribió. Helper nuevo `assertUpdatePayload(mock, table, expectedFields)` para no repetir.
+4. **`tesoreria/services/sugerirCandidatos.ts` — tolerancia ±$1 sin tests de borde**
+   Igual que `decidirEstadoFactura` ahora: un cambio de `<=` a `<` rompería la conciliación silenciosa. **Pendiente:** extraer a helper puro + 6-8 tests de borde (exacto, ±$0.99, ±$1.01, cambio de moneda).
 
-### 1.3 Guardrails de arquitectura con exhaustividad
-Archivos: `sentry-edge-wrapping.test.ts`, `sentry-edge-coverage.test.ts`, `sentry-imports-guardrail.test.ts`, `safe-casts-services.test.ts`.
-
-Acción: añadir un test que escanea `supabase/functions/*/index.ts` y verifica que **toda función** está en una de las dos listas (wrap o manual). Hoy una función nueva pasa invisible.
-
-### 1.4 Tests de transiciones inválidas (estados)
-Archivos: `cotizacion/services/mutations/estado.test.ts` documenta que "acepta cualquier estado" — eso es un bug, no un feature.
-
-Acción: añadir guard en el servicio + test que asegure que transiciones imposibles (`Cerrada → Borrador`, `Pagada → Pendiente`, etc.) **lanzan**. Aplica a cotización (5 estados) y embarques (7 estados).
+5. **`facturacion/services/pagos/index.ts:38` — `registrarPagoFactura` ignora resultado del insert**
+   Si la BD falla, el código sigue como si todo bien. **Pendiente:** verificar `error` y test que falle si no se valida.
 
 ---
 
-## Sprint 2 — Huecos críticos sin test (los que duelen en producción)
+## 🟠 Cobertura crítica que no se hizo en auditoría 2
 
-### 2.1 Acceso anónimo con SERVICE_ROLE
-Test: para cada edge function que usa `SUPABASE_SERVICE_ROLE_KEY`, un test que llama sin Authorization y espera 401.
+6. **`embarques/services/pnlFinanciero.ts` — sólo wrapper testeado**
+   La RPC `pnl_financiero_embarque` (lógica real en SQL) no tiene tests pgTAP. **Pendiente:** o bien tests pgTAP en `supabase/tests/rls/`, o tests de integración que invoquen la RPC con fixtures.
 
-### 2.2 División por cero / arrays vacíos
-Archivo: `embarques/services/pnlPorContenedor.ts`.
-Test: contenedor vacío, contenedor con cero TEUs, montos en 0 → no NaN, no Infinity.
+7. **`facturapi.ts` — responses 402/429 (cuota, rate-limit) no testeadas**
+   En producción, un 429 hace que el toast diga "error desconocido". **Pendiente:** tests de cada código de error de Facturapi → mensaje legible al usuario.
 
-### 2.3 Modos no marítimos (Aéreo, Terrestre)
-Hoy los tests asumen marítimo. Añadir casos para los otros 2 modos en funciones de embarque, tracking y cálculo de demoras.
+8. **`cotizacion/services/bitacoraTarifa.ts` — sin tests**
+   Audita cambios de precio. Si rompe, perdemos historial sin saber. **Pendiente:** test de happy path + payload escrito.
 
-### 2.4 Precisión decimal en comisiones y fees
-Extender el modelo de `financialUtils.edge.test.ts` a `comisiones/services/devengadas.ts` y `cxp/services/*`.
-
-### 2.5 Helper de fake timers
-Reemplazar `new Date()` por `vi.useFakeTimers()` + fecha fija en `devengadas.test.ts` y otros 4 archivos con dependencia de tiempo real (flaky a las 23:59).
+9. **`profit/services/estadoResultados.ts` — diferencia cambiaria real no testeada**
+   Caso clave: factura emitida con TC=17.5, pago cobrado con TC=18.2. La diferencia debe ir a "Otros ingresos/egresos". Hoy `estadoResultados.test.ts` sólo verifica que se consulten las tablas. **Pendiente:** 3-4 tests con fixtures que ejerciten diferencia cambiaria positiva, negativa, y misma moneda (no aplica).
 
 ---
 
-## Sprint 3 — Fragilidad y over-mocking
+## 🟡 Patrones sistémicos pendientes
 
-### 3.1 Quitar mocks de pura lógica
-Archivo prototipo: `useAdminOrgConfig.test.tsx` mockea `agruparConfigPorCategoria` (función pura). Acción: ejecutarla de verdad.
+10. **`useEmbarqueEstadoActions.test.tsx:86` — verifica toast pero no su mensaje**
+    Un error mostrado como éxito sería invisible. **Pendiente:** assertion sobre `getByText` del mensaje real, o pattern `expect(toast).toHaveBeenCalledWith({variant:'destructive', ...})`.
 
-### 3.2 Reemplazar copy literal en español
-Reemplazar `getByText('Guardar cambios')` por `getByRole('button', { name: /guardar/i })` o `data-testid`. Aplicar en los 10 archivos con más copy literal.
+11. **Tests con copy literal en español (`getByText('Guardar cambios')`)**
+    Cambiar "Guardar" → "Guardar cambios" rompe tests sin valor. **Pendiente:** sweep para reemplazar por `getByRole('button', { name: /guardar/i })`. Auditoría 1 lo mencionó como Sprint 3, no se ejecutó.
 
-### 3.3 Tests que asertan lo que el mock devuelve
-Marcar y eliminar tests donde `mock.returns(X); expect(result).toBe(X)` — son tautologías.
+12. **Tests tautológicos `mock.returns(X); expect(result).toBe(X)`**
+    Auditoría 1 los identificó pero no los eliminó. **Pendiente:** sweep + delete.
+
+13. **Tests con `new Date()` real (potencial flakiness a medianoche)**
+    Sólo `devengadas.test.ts` migró a `vi.useFakeTimers()`. **Pendiente:** auditar resto y crear helper compartido `withFrozenClock(date, fn)`.
+
+14. **Mocks "auto-resolve" en hooks de mutación**
+    `mutate` que dispara `onSuccess` sin validar payload. **Pendiente:** aplicar helper `assertUpdatePayload` cuando se identifiquen los hooks reales (los referidos en la auditoría 1 — `usePresupuesto`, `usePlanes` — no existen; hay que volver a buscar los hooks de mutación con tests "blind").
 
 ---
 
-## Validación
+## 🟢 Mejoras estructurales (nice-to-have)
 
-Después de cada sprint:
-- `bun run test` (suite completa verde)
-- `bun run audit:tests` (higiene en 0)
-- Inyectar 1 bug intencional en `pnlPorContenedor` y verificar que un test del Sprint 2 lo caza (prueba de "mutation testing" manual).
+15. **Refactor de `_supabaseChainMock`** — explícitamente fuera de scope en auditoría 1, sigue pendiente. Patrón thenable largo y difícil de leer; podría simplificarse.
 
-## Versionado y changelog
+16. **Invocación real de handlers Deno** — hoy todos los `index_test.ts` de edge functions son grep estructural mejorado. Lo "correcto" sería invocar `Deno.serve` con `Request` mock. Diferido en ambas auditorías por requerir harness no trivial.
 
-- `APP_VERSION` → `13.115.0` (minor, no patch — es un refactor grande de tests)
-- `CHANGELOG.md` → entrada única `## [13.115.0]` con las 3 secciones (Sistémicos, Huecos, Fragilidad)
-- `.lovable/plan.md` se actualiza con avance
+17. **Zod schema en `parseVentaRow`** (auditoría 2 lo identificó pero diferido). Hoy hace coerción `Number()` defensiva — riesgo bajo, pero si el shape del JSONB cambia silenciosamente, los conceptos de venta se importan mal sin que ningún test grite.
 
-## Fuera de scope
+---
 
-- Cobertura de líneas/branches
-- Tests E2E nuevos (los `e2e/specs/*` ya existentes no se tocan)
-- Refactor de `_supabaseChainMock` (ya tiene memoria propia)
+## Propuesta de ejecución
 
-## Estimación
+Recomiendo agrupar en **2 sprints** focalizados (no los 3 grandes de antes):
 
-~25-35 archivos tocados, ~80-120 assertions nuevas o reescritas, ~15-20 tests eliminados por redundantes. Suite final más pequeña pero con **mucha más señal**.
+- **Sprint Seguridad/Dinero (4-6h)**: items 1, 2, 3, 4, 5, 9 — todo lo que toca dinero, idempotencia o auth.
+- **Sprint Robustez (3-4h)**: items 6, 7, 8, 10, 13 — cobertura de RPCs financieras + flakiness.
 
-¿Apruebas para implementar todo en una sola entrega?
+Los items 11, 12, 14, 15, 16, 17 son barridos/refactors largos — proponer en una iteración posterior.
+
+**¿Procedo con Sprint Seguridad/Dinero solo, los dos juntos, o un subconjunto específico (dime los números)?**
