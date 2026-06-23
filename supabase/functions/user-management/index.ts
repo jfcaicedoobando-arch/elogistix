@@ -30,12 +30,28 @@ import {
   handleInviteClient,
   handleListClients,
 } from "./handlers.ts";
+import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
 
 initSentryEdge("user-management");
 
-export type Action = "list" | "create" | "delete" | "invite-client" | "list-clients";
+export type Action =
+  | "list"
+  | "create"
+  | "delete"
+  | "invite-client"
+  | "list-clients"
+  | "invite-agente"
+  | "list-agentes";
 
-const ACTIONS = new Set<Action>(["list", "create", "delete", "invite-client", "list-clients"]);
+const ACTIONS = new Set<Action>([
+  "list",
+  "create",
+  "delete",
+  "invite-client",
+  "list-clients",
+  "invite-agente",
+  "list-agentes",
+]);
 
 export function parseAction(raw: unknown): Action | null {
   if (!raw || typeof raw !== "object") return null;
@@ -56,7 +72,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | create | delete | invite-client | list-clients",
+        "action inválida. Use: list | create | delete | invite-client | list-clients | invite-agente | list-agentes",
         400,
         cors,
       );
@@ -75,6 +91,10 @@ Deno.serve(async (req) => {
         return await handleInviteClient(ctx, await checkAdminAccess(adminClient, callerId));
       case "list-clients":
         return await handleListClients(ctx);
+      case "invite-agente":
+        return await handleInviteAgente(ctx, await checkAdminAccess(adminClient, callerId));
+      case "list-agentes":
+        return await handleListAgentes(ctx);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
