@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { CosteoAgentesTable, type AgenteRow } from "@/features/costeo/components/CosteoAgentesTable";
 import { CosteoAgenteFormDialog } from "@/features/costeo/components/CosteoAgenteFormDialog";
+import { InvitarAgentePortalDialog } from "@/features/costeo/components/InvitarAgentePortalDialog";
 
 const EMPTY: CosteoAgenteInput = {
   nombre: "",
@@ -32,6 +33,7 @@ export default function CosteoAgentes() {
   const [form, setForm] = useState<CosteoAgenteInput>(EMPTY);
   const [aEliminar, setAEliminar] = useState<{ id: string; nombre: string } | null>(null);
   const [intentoEnvio, setIntentoEnvio] = useState(false);
+  const [invitarAgente, setInvitarAgente] = useState<AgenteRow | null>(null);
 
   const valido = form.nombre.trim().length > 0 && form.proveedor_id.length > 0;
 
@@ -90,6 +92,7 @@ export default function CosteoAgentes() {
         isLoading={isLoading}
         onEditar={abrirEditar}
         onEliminar={setAEliminar}
+        onInvitarPortal={(a) => setInvitarAgente(a)}
       />
 
       <CosteoAgenteFormDialog
@@ -115,6 +118,11 @@ export default function CosteoAgentes() {
             eliminar.mutate(aEliminar.id, { onSuccess: () => setAEliminar(null) });
           }
         }}
+      />
+
+      <InvitarAgentePortalDialog
+        agente={invitarAgente}
+        onOpenChange={(o) => !o && setInvitarAgente(null)}
       />
     </div>
   );
