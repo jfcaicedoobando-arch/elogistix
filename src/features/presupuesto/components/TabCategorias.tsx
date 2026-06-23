@@ -90,9 +90,9 @@ export function TabCategorias() {
               </thead>
               <tbody>
                 {(cats.data ?? []).map((c, i) => {
-                  const tipoLabel = c.tipo_contable === "CostoDirectoEmbarque" ? "Costo directo de embarque"
-                    : c.tipo_contable === "IndirectoOperacion" ? "Indirecto de operación"
-                    : "Administración";
+                  const tipoLabel = c.tipo_contable === "CostoDirectoEmbarque" ? "Costos directos de embarque (COGS)"
+                    : c.tipo_contable === "Venta" ? "Gastos de venta"
+                    : "Gastos de administración";
                   const esGastoFijo = c.tipo_contable !== "CostoDirectoEmbarque";
                   return (
                     <tr key={c.id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
