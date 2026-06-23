@@ -22,9 +22,9 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 type TipoContable = Enums<"tipo_contable_categoria">;
 
 const TIPO_CONTABLE_OPCIONES: { value: TipoContable; label: string; descripcion: string }[] = [
-  { value: "CostoDirectoEmbarque", label: "Costo directo de embarque", descripcion: "COGS: flete, maniobras, demoras, comisiones. Va directo al costo del embarque, no cuenta como gasto fijo." },
-  { value: "IndirectoOperacion", label: "Indirecto de operación", descripcion: "Sueldos operativos, sistemas, oficina operativa. Cuenta como gasto fijo." },
-  { value: "Administracion", label: "Administración", descripcion: "Renta, nómina admin, contador, papelería, marketing. Cuenta como gasto fijo." },
+  { value: "CostoDirectoEmbarque", label: "Costos directos de embarque (COGS)", descripcion: "COGS: flete, maniobras, demoras, comisiones. Va directo al costo del embarque, no cuenta como gasto fijo." },
+  { value: "Administracion", label: "Gastos de administración", descripcion: "Renta, nómina admin, contador, papelería. Cuenta como gasto fijo." },
+  { value: "Venta", label: "Gastos de venta", descripcion: "Comisiones de vendedor, marketing, viáticos comerciales. Cuenta como gasto fijo." },
 ];
 
 interface Props {
