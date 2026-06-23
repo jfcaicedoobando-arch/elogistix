@@ -1,18 +1,12 @@
 /**
  * Diálogo para crear / editar una Oportunidad CRM.
  * Form fields en `nuevaOportunidad/OportunidadFormFields`; estado en `useOportunidadForm`.
+ * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
@@ -27,8 +21,8 @@ import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
 import { useOportunidadForm } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
-
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -104,33 +98,36 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
 
   const pending = crear.isPending || actualizar.isPending;
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button onClick={handleSubmit} disabled={pending}>
+        {pending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+        {isEdit ? "Guardar cambios" : "Crear oportunidad"}
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[680px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Editar oportunidad" : "Nueva oportunidad"}</DialogTitle>
-          <DialogDescription>Captura los datos comerciales y la etapa del pipeline.</DialogDescription>
-        </DialogHeader>
-
-        <OportunidadFormFields
-          form={form}
-          setForm={setForm}
-          set={set}
-          etapas={etapas}
-          clientes={clientes}
-          isEdit={isEdit}
-          autoActividad={autoActividad}
-          setAutoActividad={setAutoActividad}
-        />
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={pending}>
-            {pending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-            {isEdit ? "Guardar cambios" : "Crear oportunidad"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Briefcase}
+      title={isEdit ? "Editar oportunidad" : "Nueva oportunidad"}
+      description="Captura los datos comerciales y la etapa del pipeline."
+      size="2xl"
+      footer={footer}
+    >
+      <OportunidadFormFields
+        form={form}
+        setForm={setForm}
+        set={set}
+        etapas={etapas}
+        clientes={clientes}
+        isEdit={isEdit}
+        autoActividad={autoActividad}
+        setAutoActividad={setAutoActividad}
+      />
+    </FormDialogShell>
   );
 }

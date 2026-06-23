@@ -1,19 +1,18 @@
 /**
  * NuevaActividadDialog — alta rápida de actividad para Lead u Oportunidad.
  * Usado por QuickAddMenu y por cualquier flujo que necesite crear una tarea.
+ * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState, useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
@@ -23,8 +22,8 @@ import {
 } from "@/features/crm/hooks";
 import { useLeads } from "@/features/crm/hooks";
 import { useOportunidades } from "@/features/crm/hooks";
-
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -81,74 +80,77 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     }
   };
 
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button onClick={handleSubmit} disabled={crear.isPending}>
+        {crear.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Crear
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Nueva actividad</DialogTitle>
-          <DialogDescription>Registra una tarea, llamada, reunión o nota.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          {!defaultEntidad && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Tipo de entidad</Label>
-                <Select value={entidadTipo} onValueChange={(v) => { setEntidadTipo(v as CrmEntidadTipo); setEntidadId(""); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lead">Lead</SelectItem>
-                    <SelectItem value="oportunidad">Oportunidad</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>{entidadTipo === "lead" ? "Lead" : "Oportunidad"}</Label>
-                <Select value={entidadId || undefined} onValueChange={setEntidadId}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
-                  <SelectContent>
-                    {opciones.map((o) => (
-                      <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
-                    ))}
-                    {opciones.length === 0 && <div className="p-2 text-xs text-muted-foreground">Sin registros</div>}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          {defaultEntidad?.label && (
-            <div className="text-xs text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Tipo</Label>
-              <Select value={tipo} onValueChange={(v) => setTipo(v as CrmActividadTipo)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Fecha programada</Label>
-              <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-            </div>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={ClipboardList}
+      title="Nueva actividad"
+      description="Registra una tarea, llamada, reunión o nota."
+      size="md"
+      footer={footer}
+    >
+      {!defaultEntidad && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Tipo de entidad</Label>
+            <Select value={entidadTipo} onValueChange={(v) => { setEntidadTipo(v as CrmEntidadTipo); setEntidadId(""); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lead">Lead</SelectItem>
+                <SelectItem value="oportunidad">Oportunidad</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
-            <Label>Asunto</Label>
-            <Input value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente, enviar cotización…" />
-          </div>
-          <div className="space-y-1">
-            <Label>Descripción</Label>
-            <Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <Label>{entidadTipo === "lead" ? "Lead" : "Oportunidad"}</Label>
+            <Select value={entidadId || undefined} onValueChange={setEntidadId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+              <SelectContent>
+                {opciones.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                ))}
+                {opciones.length === 0 && <div className="p-2 text-xs text-muted-foreground">Sin registros</div>}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={crear.isPending}>
-            {crear.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Crear
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      )}
+      {defaultEntidad?.label && (
+        <div className="text-xs text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
+      )}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>Tipo</Label>
+          <Select value={tipo} onValueChange={(v) => setTipo(v as CrmActividadTipo)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Fecha programada</Label>
+          <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label>Asunto</Label>
+        <Input value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente, enviar cotización…" />
+      </div>
+      <div className="space-y-1">
+        <Label>Descripción</Label>
+        <Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} />
+      </div>
+    </FormDialogShell>
   );
 }

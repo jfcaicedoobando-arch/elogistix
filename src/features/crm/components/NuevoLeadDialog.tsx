@@ -1,13 +1,12 @@
 /**
  * Diálogo para crear un nuevo Lead (CRM Fase 2).
  * Formulario simple — los campos avanzados se editan en LeadDetalle.
+ * Migrado a `FormDialogShell` (v13.121.0).
  */
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
@@ -15,8 +14,8 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
-
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -82,37 +81,37 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
     }
   };
 
+  const handleOpenChange = (o: boolean) => {
+    if (!o) setForm(EMPTY);
+    onOpenChange(o);
+  };
+
+  const footer = (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button onClick={handleSubmit} disabled={crear.isPending}>
+        {crear.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+        Crear lead
+      </Button>
+    </>
+  );
+
   return (
-    <Dialog
+    <FormDialogShell
       open={open}
-      onOpenChange={(o) => {
-        if (!o) setForm(EMPTY);
-        onOpenChange(o);
-      }}
+      onOpenChange={handleOpenChange}
+      icon={Target}
+      title="Nuevo Lead"
+      description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
+      size="2xl"
+      footer={footer}
     >
-      <DialogContent className="sm:max-w-[640px]">
-        <DialogHeader>
-          <DialogTitle>Nuevo Lead</DialogTitle>
-          <DialogDescription>
-            Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha.
-          </DialogDescription>
-        </DialogHeader>
-
-        <NuevoLeadForm
-          form={form}
-          setForm={setForm}
-          autoActividad={autoActividad}
-          setAutoActividad={setAutoActividad}
-        />
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={crear.isPending}>
-            {crear.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-            Crear lead
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <NuevoLeadForm
+        form={form}
+        setForm={setForm}
+        autoActividad={autoActividad}
+        setAutoActividad={setAutoActividad}
+      />
+    </FormDialogShell>
   );
 }
