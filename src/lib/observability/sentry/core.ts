@@ -27,6 +27,7 @@ import {
   sampleByRoute,
   scrubEventPii,
 } from "./helpers";
+import { FEEDBACK_INTEGRATION_OPTIONS } from "./feedbackConfig";
 
 export {
   isReactRefreshHmrError,
@@ -130,6 +131,9 @@ export function initSentry(): void {
     // navegación. `beforeSend` sólo se ejecuta para ErrorEvent — reutilizamos
     // `scrubEventPii` para cerrar la fuga en eventos de tipo transaction.
     beforeSendTransaction(event) {
+      // SAFE-CAST: TransactionEvent y ErrorEvent comparten la forma scrubbeable
+      // (request, breadcrumbs, user). `scrubEventPii` sólo lee/escribe campos
+      // comunes; el doble cast evita duplicar la lógica de redacción.
       return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
     },
     beforeBreadcrumb(breadcrumb) {
@@ -177,28 +181,7 @@ export function initSentry(): void {
         maskAllText: true,
         blockAllMedia: true,
       }),
-      Sentry.feedbackIntegration({
-        autoInject: false,
-        colorScheme: "light",
-        showBranding: false,
-        showName: false,
-        showEmail: false,
-        enableScreenshot: true,
-        triggerLabel: "Reportar bug o sugerencia",
-        formTitle: "Reportar bug o sugerencia",
-        submitButtonLabel: "Enviar reporte",
-        cancelButtonLabel: "Cancelar",
-        addScreenshotButtonLabel: "Agregar captura",
-        removeScreenshotButtonLabel: "Quitar captura",
-        nameLabel: "Nombre",
-        namePlaceholder: "Tu nombre",
-        emailLabel: "Correo",
-        emailPlaceholder: "tu@correo.com",
-        messageLabel: "Descripción",
-        messagePlaceholder: "Cuéntanos qué pasó. Incluye pasos para reproducirlo.",
-        successMessageText: "¡Gracias! Recibimos tu reporte.",
-        isRequiredLabel: "(obligatorio)",
-      }),
+      Sentry.feedbackIntegration(FEEDBACK_INTEGRATION_OPTIONS),
     ],
   });
   Sentry.setTag("is_pwa", isPwa ? "true" : "false");
