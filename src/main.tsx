@@ -58,15 +58,18 @@ window.addEventListener("load", () => {
  * critical path. Esto saca `@sentry/react` (~150 KB) y
  * `@tanstack/react-query-persist-client` (~25 KB) del bundle inicial.
  *
- * 13.63.0: en lugar de esperar al `requestIdleCallback` para iniciar la
- * descarga (lo que dejaba una ventana ciega de hasta 3s al arrancar la app),
- * disparamos `import()` INMEDIATAMENTE — el browser baja el chunk en paralelo
- * con el render — y sólo diferimos la EJECUCIÓN de `initSentry()` /
- * `bootstrapQueryPersister()` al idle. Resultado: misma cobertura, menor
- * latencia hasta que Sentry empieza a capturar.
+ * 13.114.19: `initSentry()` ahora se dispara INMEDIATAMENTE (sin esperar
+ * `requestIdleCallback`) para cerrar la ventana ciega ~1.5 s en la que los
+ * crashes del primer render no llegaban a Sentry. La carga del módulo sigue
+ * siendo dinámica (chunk separado, no bloquea el bundle inicial); sólo se
+ * remueve el `scheduleIdle` que retrasaba la EJECUCIÓN. El persister sí
+ * sigue al idle porque hidratar el cache no es crítico para captura de
+ * errores.
  */
 const sentryModulePromise = import("./lib/observability/sentry/core");
 const persisterModulePromise = import("./lib/query/persistBootstrap");
+
+void sentryModulePromise.then((m) => m.initSentry()).catch(() => undefined);
 
 const scheduleIdle = (cb: () => void) => {
   const w = window as Window & {
@@ -80,7 +83,6 @@ const scheduleIdle = (cb: () => void) => {
 };
 
 scheduleIdle(() => {
-  void sentryModulePromise.then((m) => m.initSentry()).catch(() => undefined);
   void persisterModulePromise
     .then((m) => m.bootstrapQueryPersister(queryClient))
     .catch(() => undefined);

@@ -17,10 +17,40 @@ const EMAIL_RE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 // numéricos largos > 13 dígitos requiriendo un boundary final.
 const PHONE_MX_RE = /(?:\+?52[\s-]?1?[\s-]?)?(?:\(?\d{2,3}\)?[\s.-]?)\d{3,4}[\s.-]?\d{4}(?!\d)/g;
 
-/** Reemplaza RFC/CURP/email/teléfono por placeholders. Devuelve el mismo string si no aplica. */
+// 13.114.19: PAN (tarjeta bancaria) — 13 a 19 dígitos con espacios/guiones
+// opcionales cada 4. Validamos Luhn para evitar falsos positivos en folios,
+// trackings y RFCs numéricos largos. Captura grupo 1 = los dígitos crudos.
+const CARD_RE = /\b((?:\d[ -]?){12,18}\d)\b/g;
+
+function luhnValid(digits: string): boolean {
+  let sum = 0;
+  let alt = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = digits.charCodeAt(i) - 48;
+    if (n < 0 || n > 9) return false;
+    if (alt) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    alt = !alt;
+  }
+  return sum > 0 && sum % 10 === 0;
+}
+
+function scrubCards(input: string): string {
+  return input.replace(CARD_RE, (match, raw: string) => {
+    const digits = raw.replace(/[ -]/g, "");
+    if (digits.length < 13 || digits.length > 19) return match;
+    return luhnValid(digits) ? "[CARD]" : match;
+  });
+}
+
+/** Reemplaza RFC/CURP/email/teléfono/PAN por placeholders. Devuelve el mismo string si no aplica. */
 export function scrubPii(input: string | undefined | null): string | undefined {
   if (!input) return input ?? undefined;
-  return input
+  const withoutCards = scrubCards(input);
+  return withoutCards
     .replace(RFC_RE, "[RFC]")
     .replace(CURP_RE, "[CURP]")
     .replace(EMAIL_RE, "[EMAIL]")

@@ -6,7 +6,7 @@
  * en logs sin fallar.
  */
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { wrapEdgeHandler } from "../_shared/sentry.ts"
+import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
@@ -124,6 +124,13 @@ async function processOrg(admin: SupabaseClient, org: OrgRow, lovableKey: string
   const { data: reporte, error: rpcErr } = await admin.rpc("auditoria_embarques_org", { p_organization_id: org.id });
   if (rpcErr) {
     console.error(`[auditoria-weekly-digest] RPC error org=${org.id}:`, rpcErr);
+    // 13.114.19: errores por-org no escapaban del `processOrg` (devolvía 200 al cron).
+    // Capturar explícitamente para que Sentry vea cada fallo individual.
+    await captureEdgeException(rpcErr, {
+      fn: "auditoria-weekly-digest",
+      organization_id: org.id,
+      extra: { organization_nombre: org.nombre, phase: "rpc_auditoria" },
+    });
     return { org: org.nombre, destinatarios: 0, enviado: false, error: `RPC: ${rpcErr.message}` };
   }
   const emails = await resolveAdminEmails(admin, org.id);

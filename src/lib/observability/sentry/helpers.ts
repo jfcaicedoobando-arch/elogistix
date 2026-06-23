@@ -111,6 +111,9 @@ export function sampleByRoute(ctx: {
   if (/^\/(landing|privacidad|terminos|guia|tracking)?\/?$/i.test(path)) return 0;
   // 13.114.18: páginas estáticas legales / recursos no aportan señal accionable.
   if (/^\/(legal|recursos)(\/|$)/i.test(path)) return 0;
+  // 13.114.19: `/dev/*` son previews internos (PDFs, sandboxes) que sólo
+  // consumen cuota sin valor de producción.
+  if (/^\/dev(\/|$)/i.test(path)) return 0;
 
   if (/\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturas\/nueva|conciliacion)/i.test(path)) {
     return 1.0;
@@ -121,6 +124,11 @@ export function sampleByRoute(ctx: {
   if (/^\/crm\/(leads|oportunidades)\//i.test(path)) return 1.0;
   if (/^\/crm/i.test(path)) return 0.5;
 
+  // 13.114.19: detalle de embarque/cotización/factura del portal de cliente
+  // final → 100%. Es la pantalla con mayor impacto en NPS y la más expuesta
+  // a errores de RLS/permisos.
+  if (/^\/portal\/(embarques|cotizaciones|facturas)\/[^/]+/i.test(path)) return 1.0;
+
   // F5 (13.65.0): ampliar muestreo en flujos de reportes y auditoría.
   if (/^\/reportes/i.test(path)) return 0.5;
   // 13.114.18: añadir /cartera y /proformas (documentos financieros) al grupo 50%.
@@ -130,6 +138,9 @@ export function sampleByRoute(ctx: {
   if (/^\/(auditoria|admin)/i.test(path)) return 0.3;
 
   if (/^\/(dashboard|embarques|clientes|proveedores)\/?$/i.test(path)) return 0.05;
+  // 13.114.19: `/inicio` es el dashboard real post-login; cae al 5% (no al
+  // 10% default) porque es el primer hit de cada sesión y antes inflaba cuota.
+  if (/^\/inicio\/?$/i.test(path)) return 0.05;
 
   return 0.1;
 }

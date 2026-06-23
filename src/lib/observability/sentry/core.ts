@@ -125,6 +125,13 @@ export function initSentry(): void {
 
       return scrubEventPii(event);
     },
+    // 13.114.19: las transactions también pueden traer PII en `request.url`
+    // (query strings con `?email=`, `?rfc=`, etc.) y en breadcrumbs de
+    // navegación. `beforeSend` sólo se ejecuta para ErrorEvent — reutilizamos
+    // `scrubEventPii` para cerrar la fuga en eventos de tipo transaction.
+    beforeSendTransaction(event) {
+      return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
+    },
     beforeBreadcrumb(breadcrumb) {
       if (breadcrumb.category === "console" && breadcrumb.level === "log") return null;
       if ((breadcrumb.category === "fetch" || breadcrumb.category === "xhr") && breadcrumb.data) {
