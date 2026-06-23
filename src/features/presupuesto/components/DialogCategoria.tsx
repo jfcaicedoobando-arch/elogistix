@@ -3,14 +3,13 @@
  */
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
+import { FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import {
   useCrearCategoriaPresupuesto, useActualizarCategoriaPresupuesto,
 } from "@/features/presupuesto/hooks";
@@ -72,42 +71,45 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
   const tipoActual = TIPO_CONTABLE_OPCIONES.find((o) => o.value === tipoContable);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{categoria ? "Editar" : "Nueva"} categoría</DialogTitle>
-          <DialogDescription>Categorías de gasto para el presupuesto y el cálculo de cobertura de gastos fijos del dashboard.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Nombre *</Label>
-            <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Servicios profesionales" />
-          </div>
-          <div>
-            <Label>Tipo contable *</Label>
-            <Select value={tipoContable} onValueChange={(v) => setTipoContable(v as TipoContable)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TIPO_CONTABLE_OPCIONES.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {tipoActual && <p className="text-[11px] text-muted-foreground mt-1">{tipoActual.descripcion}</p>}
-          </div>
-          <div>
-            <Label>Orden</Label>
-            <Input type="number" value={orden} onChange={(e) => setOrden(Number(e.target.value))} />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={activa} onCheckedChange={(v) => setActiva(!!v)} /> Activa
-          </label>
-        </div>
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={FolderTree}
+      title={`${categoria ? "Editar" : "Nueva"} categoría`}
+      description="Categorías de gasto para el presupuesto y el cálculo de cobertura de gastos fijos del dashboard."
+      size="lg"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={crear.isPending || actualizar.isPending}>Guardar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <div>
+          <Label>Nombre *</Label>
+          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Servicios profesionales" />
+        </div>
+        <div>
+          <Label>Tipo contable *</Label>
+          <Select value={tipoContable} onValueChange={(v) => setTipoContable(v as TipoContable)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {TIPO_CONTABLE_OPCIONES.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {tipoActual && <p className="text-[11px] text-muted-foreground mt-1">{tipoActual.descripcion}</p>}
+        </div>
+        <div>
+          <Label>Orden</Label>
+          <Input type="number" value={orden} onChange={(e) => setOrden(Number(e.target.value))} />
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox checked={activa} onCheckedChange={(v) => setActiva(!!v)} /> Activa
+        </label>
+      </div>
+    </FormDialogShell>
   );
 }

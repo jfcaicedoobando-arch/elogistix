@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, BadgeDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { useRegistrarPagoLiquidacion } from "@/features/comisiones/hooks";
 import type { LiquidacionRow } from "@/features/comisiones/services";
@@ -32,48 +30,51 @@ export function DialogRegistrarPagoLiquidacion({
     );
   };
 
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Registrar pago de liquidación · {liq.periodo}</DialogTitle>
-          <DialogDescription>Registra el pago de la liquidación de comisiones del período seleccionado.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <p className="text-sm text-muted-foreground">
-            Total a pagar: <strong className="text-foreground">{formatCurrency(Number(liq.total_mxn), "MXN")}</strong>
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Fecha</Label>
-              <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>Método</Label>
-              <Select value={metodo} onValueChange={setMetodo}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Transferencia">Transferencia</SelectItem>
-                  <SelectItem value="Cheque">Cheque</SelectItem>
-                  <SelectItem value="Efectivo">Efectivo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label>Referencia</Label>
-            <Input value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="No. operación o cheque" />
-          </div>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={BadgeDollarSign}
+      title={`Registrar pago de liquidación · ${liq.periodo}`}
+      description="Registra el pago de la liquidación de comisiones del período seleccionado."
+      size="lg"
+      headerAside={
+        <div className="text-right">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Total a pagar</div>
+          <div className="text-sm font-semibold tabular-nums">{formatCurrency(Number(liq.total_mxn), "MXN")}</div>
         </div>
-        <DialogFooter>
+      }
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={reg.isPending}>
             {reg.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
             Registrar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>Fecha</Label>
+          <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label>Método</Label>
+          <Select value={metodo} onValueChange={setMetodo}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Transferencia">Transferencia</SelectItem>
+              <SelectItem value="Cheque">Cheque</SelectItem>
+              <SelectItem value="Efectivo">Efectivo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label>Referencia</Label>
+        <Input value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="No. operación o cheque" />
+      </div>
+    </FormDialogShell>
   );
 }

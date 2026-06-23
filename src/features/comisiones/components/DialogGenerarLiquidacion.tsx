@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
 
@@ -31,34 +29,39 @@ export function DialogGenerarLiquidacion({
     );
   };
 
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Generar liquidación de comisiones</DialogTitle><DialogDescription>Genera la liquidación de comisiones para los agentes en el período indicado.</DialogDescription></DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1">
-            <Label>Vendedora</Label>
-            <Select value={vendedoraId} onValueChange={setVendedoraId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-              <SelectContent>
-                {vendedoras.map((v) => <SelectItem key={v.id} value={v.id}>{v.nombre}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>Periodo (YYYY-MM)</Label>
-            <Input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} />
-          </div>
-        </div>
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Wallet}
+      title="Generar liquidación de comisiones"
+      description="Genera la liquidación de comisiones para los agentes en el período indicado."
+      size="md"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={submit} disabled={!vendedoraId || gen.isPending}>
             {gen.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
             Generar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label>Vendedora</Label>
+          <Select value={vendedoraId} onValueChange={setVendedoraId}>
+            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
+            <SelectContent>
+              {vendedoras.map((v) => <SelectItem key={v.id} value={v.id}>{v.nombre}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Periodo (YYYY-MM)</Label>
+          <Input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} />
+        </div>
+      </div>
+    </FormDialogShell>
   );
 }
