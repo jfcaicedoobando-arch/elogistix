@@ -183,12 +183,16 @@ describe("eliminarEmbarqueRpc", () => {
 });
 
 describe("actualizarEstadoEmbarque", () => {
-  it("ejecuta update().eq sobre embarques", async () => {
+  it("escribe el estado correcto en la columna y filtra por id (sprint 1.2)", async () => {
     mock.setTableResult("embarques", { data: null, error: null });
     await actualizarEstadoEmbarque(UUID, "Confirmado");
-    const call = mock.tableCalls.at(-1);
-    expect(call?.table).toBe("embarques");
-    expect(call?.ops).toEqual(expect.arrayContaining(["update", "eq"]));
+    const { assertUpdatePayload, assertEq, findTableCall } = await import(
+      "@/test/helpers/assertMutation"
+    );
+    const call = findTableCall(mock, "embarques");
+    // Antes el test pasaba con `update({ estado: null })`. Ahora valida payload real.
+    assertUpdatePayload(call, { estado: "Confirmado" });
+    assertEq(call, "id", UUID);
   });
 });
 

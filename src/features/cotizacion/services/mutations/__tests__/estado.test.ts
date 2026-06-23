@@ -1,7 +1,8 @@
 /**
  * Tests para `updateEstadoCotizacion`.
- * NOTA: el service NO valida transiciones de estado — esa responsabilidad
- * es de la capa que invoca. Este test documenta el comportamiento actual.
+ *
+ * 13.115.0 (Sprint 1.4): el service ahora valida que `estado` sea uno del
+ * enum `estado_cotizacion`. Antes aceptaba cualquier string y fallaba en BD.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -11,25 +12,20 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { updateEstadoCotizacion } from "../estado";
+import { updateEstadoCotizacion, ESTADOS_COTIZACION_VALIDOS } from "../estado";
+import { assertUpdatePayload, assertEq, findTableCall } from "@/test/helpers/assertMutation";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
 });
 
 describe("updateEstadoCotizacion", () => {
-  it.each([
-    ["Aceptada"],
-    ["Rechazada"],
-    ["Borrador"],
-    ["Enviada"],
-    ["Vencida"],
-    ["En operación"],
-  ])("happy path: estado %s", async (estado) => {
+  it.each(ESTADOS_COTIZACION_VALIDOS)("happy path: acepta estado válido %s", async (estado) => {
     mock.setTableResult("cotizaciones", { data: null, error: null });
     await expect(updateEstadoCotizacion("cot-1", estado)).resolves.toBeUndefined();
-    expect(mock.tableCalls[0]?.table).toBe("cotizaciones");
-    expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq"]);
+    const call = findTableCall(mock, "cotizaciones");
+    assertUpdatePayload(call, { estado });
+    assertEq(call, "id", "cot-1");
   });
 
   it("propaga error de Supabase al cambiar estado", async () => {
@@ -37,8 +33,34 @@ describe("updateEstadoCotizacion", () => {
     await expect(updateEstadoCotizacion("cot-x", "Aceptada")).rejects.toThrow();
   });
 
-  it("acepta estado arbitrario sin guard (responsabilidad del caller)", async () => {
+  it("rechaza estado inválido SIN tocar la BD", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: null });
-    await expect(updateEstadoCotizacion("cot-1", "EstadoInexistente")).resolves.toBeUndefined();
+    await expect(
+      updateEstadoCotizacion("cot-1", "EstadoInexistente"),
+    ).rejects.toThrow(/inválido/i);
+    // Nada llegó a Supabase.
+    expect(mock.tableCalls.length).toBe(0);
+  });
+
+  it("rechaza string vacío", async () => {
+    await expect(updateEstadoCotizacion("cot-1", "")).rejects.toThrow(/inválido/i);
+  });
+
+  it("acepta embarqueId opcional y lo envía en el payload", async () => {
+    mock.setTableResult("cotizaciones", { data: null, error: null });
+    await updateEstadoCotizacion("cot-1", "En operación", "emb-123");
+    assertUpdatePayload(findTableCall(mock, "cotizaciones"), {
+      estado: "En operación",
+      embarque_id: "emb-123",
+    });
+  });
+
+  it("acepta embarqueId null para limpiar el vínculo", async () => {
+    mock.setTableResult("cotizaciones", { data: null, error: null });
+    await updateEstadoCotizacion("cot-1", "Borrador", null);
+    assertUpdatePayload(findTableCall(mock, "cotizaciones"), {
+      estado: "Borrador",
+      embarque_id: null,
+    });
   });
 });
