@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.124.0] - 2026-06-23
+- **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Costeo** (6 modales). Migrados: `RutaFormDialog` (icon `Route`, `lg`), `TarifaForm` con resumen vivo de Total comparable en `headerAside` (icon `Tag`, `2xl`), `CosteoAgenteFormDialog` (icon `Users`, `xl`), `BuscarTarifaDialog` (icon `Search`, `4xl`), el diálogo inline de **CosteoNavieras** para carta-garantía + tabulador escalonado (icon `FileSignature`, `3xl`) y el diálogo inline de **CosteoDemorasVenta** (icon `Timer`, `lg`). Mismo lenguaje visual: icon-tile en header, body scrollable y footer sticky. Cero cambios en hooks/RLS/validaciones. Analogía: ya teníamos pintada con la misma papelería la oficina de operaciones, ventas y administración; ahora el área de costeo (rutas, tarifas, agentes, búsqueda Top 3 y condiciones por naviera) usa el mismo membrete.
+
 ## [13.123.0] - 2026-06-23
 - **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Embarques** (4 modales). Migrados: `DialogDuplicarEmbarque` (icon `Copy`, `3xl`), `DialogSeguroForm` con modo crear/editar (icon `Shield`, `2xl`), `DialogGenerarProforma` ahora usa el `FormDialogStepper` real del shell con labels "Selección / Confirmación" en vez del badge manual "Paso X de 2" (icon `FileText`, `3xl`) y `AgregarDocumentoDialog` (icon `FilePlus`, `lg`). Cero cambios en controllers/hooks/RLS. Analogía: ya pintamos con la misma papelería los formularios de operación financiera, comerciales y de administración; ahora también los del módulo de embarques (duplicar, asegurar, proforma, documentos) comparten el mismo membrete — y la proforma además gana el stepper segmentado visual en vez del badgecito ad-hoc.
 
