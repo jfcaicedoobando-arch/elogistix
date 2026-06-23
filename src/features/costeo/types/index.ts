@@ -55,6 +55,10 @@ export interface CosteoTarifa {
   transit_time_dias: number | null;
   notas: string | null;
   estado: CosteoTarifaEstado;
+  estado_aprobacion?: string;
+  motivo_rechazo?: string | null;
+  aprobada_por?: string | null;
+  aprobada_en?: string | null;
   reemplazada_por: string | null;
   created_at: string;
   updated_at: string;

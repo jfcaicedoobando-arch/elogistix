@@ -1,67 +1,62 @@
+## Objetivo
 
-# Editor de tarifas en el Portal del Agente
+Cerrar el ciclo de aprobación de tarifas marítimas. Hoy el agente puede crear/editar tarifas en `borrador` y el RPC `agente_aprobar_tarifa(_tarifa_id, _estado)` ya existe (v13.128), pero **no hay UI en `/costeo/tarifas` para que operaciones apruebe o rechace**, y el agente no ve por qué le rechazaron una tarifa.
 
-Hoy `/agente/tarifas` es sólo lectura. Vamos a habilitar que el agente cree y mantenga sus tarifas, sus recargos, su carta garantía y su tabulador de demoras — siempre dejando el estado en **borrador** para que operaciones apruebe.
+## Alcance
 
-## Qué verá el agente
+### 1. Base de datos (1 migración)
+- Agregar columnas a `costeo_tarifas`:
+  - `motivo_rechazo text` — texto libre que escribe operaciones al rechazar.
+  - `aprobada_por uuid` (FK `auth.users`), `aprobada_en timestamptz` — auditoría.
+- Reemplazar `agente_aprobar_tarifa(_tarifa_id, _estado)` por una versión con tercer parámetro opcional `_motivo text`:
+  - Si `_estado='rechazada'` exige motivo no vacío.
+  - Si `_estado='vigente'` limpia `motivo_rechazo` y registra `aprobada_por = auth.uid()`, `aprobada_en = now()`.
+  - Mantiene la misma comprobación de roles (`admin`, `admin_org`, `gerente_operaciones`, `coordinador_logistico`, `ejecutivo_pricing`, `operador`, `super_admin`).
+- Insertar fila en `notificaciones_internas` para el agente cuando se aprueba o rechaza (canal interno, ya existe la tabla).
 
-En `/agente/tarifas` aparecerá un botón **"Nueva tarifa"** arriba a la derecha y, en cada fila, un menú con **Editar** (sólo si la tarifa está en *borrador* o *rechazada*) y **Duplicar** (para revisar una vigente sin tocarla).
+### 2. UI operaciones — `/costeo/tarifas`
+- **Filtro de aprobación** en `CosteoTarifasFiltros`: chips Pendientes (borrador) / Aprobadas (vigente) / Rechazadas / Todas. Por defecto **Pendientes** para que operaciones vea la bandeja de trabajo al entrar.
+- **Columna "Aprobación"** en `CosteoTarifasTable` con `EstadoAprobacionBadge` (mismo componente que el portal del agente).
+- **Acciones por fila** cuando `estado_aprobacion === 'borrador'`:
+  - Botón ✓ Aprobar (verde) → llama RPC con `vigente`.
+  - Botón ✗ Rechazar (rojo) → abre `DialogRechazarTarifa` que pide motivo (textarea, min 5 chars) y llama RPC con `rechazada` + motivo.
+- Cuando `estado_aprobacion === 'rechazada'`: mostrar tooltip con el motivo en el badge y botón "Reactivar como borrador".
+- Toast de éxito + invalidación de la query `costeo_tarifas` y la del portal del agente.
 
-El modal de captura reutiliza el formulario de operaciones (`TarifaForm` + `TarifaRecargosEditor`), pero adaptado:
+### 3. Hook + servicio
+- Nuevo `src/features/costeo/services/aprobacion.ts` con `aprobarTarifa(id)`, `rechazarTarifa(id, motivo)`, `reactivarTarifa(id)` (wrappers del RPC).
+- Nuevo hook `useAprobacionTarifa()` con las 3 mutations + invalidación de `['costeo-tarifas']` y `['portal-agente','tarifas']`.
 
-- El campo "Agente" queda **fijo y bloqueado** al agente logueado (no puede capturar tarifas a nombre de otro).
-- El estado de aprobación se fija siempre a **borrador**; el agente nunca lo elige.
-- Al guardar, aparece un aviso: *"Tu tarifa quedó en borrador. Operaciones la revisará y te avisará cuando esté vigente."*
+### 4. UI agente — `/agente/tarifas` y `/agente/inicio`
+- `AgenteTarifas.tsx`: en filas con `estado_aprobacion === 'rechazada'` mostrar el `motivo_rechazo` debajo (texto pequeño rojo) y mantener el botón Editar para corregir y reenviar (al guardar el trigger vuelve a `borrador` y limpia motivo).
+- `AgenteInicio.tsx`: en el alert de rechazadas listar las primeras 3 rutas + motivo abreviado.
+- Extender `fetchTarifasAgente` y su tipo para devolver `motivo_rechazo`, `aprobada_en`.
 
-En `/agente/garantias` (hoy placeholder) se habilita:
+### 5. Reenvío automático
+- Trigger `costeo_tarifas_agente_force_borrador` (creado en v13.129): ampliarlo para que al cambiar `estado_aprobacion` de `rechazada` → `borrador` limpie `motivo_rechazo`.
 
-- Subida de la **carta garantía** (PDF) al bucket privado `agente-cartas-garantia` bajo la carpeta `{agente_id}/`.
-- Captura del **tabulador escalonado de demoras** (rangos de días + tarifa USD por contenedor) usando la tabla `costeo_naviera_demoras_tarifa` ya existente.
-- Vínculo con la naviera y vigencia, igual que en el módulo de operaciones.
-
-## Reglas de edición (importante)
-
-| Estado actual | ¿Puede editar? | ¿Puede borrar? |
-|---|---|---|
-| Borrador | Sí | Sí |
-| Rechazada | Sí (al guardar vuelve a borrador) | Sí |
-| Vigente | **No** — sólo puede **Duplicar** para crear una nueva versión | No |
-| Reemplazada | No | No |
-
-Esto cumple lo que pediste: una tarifa ya aprobada queda congelada. Para cambiarla, se duplica y la nueva versión entra como borrador para re-aprobación.
+### 6. Versionado y memoria
+- `APP_VERSION` → `13.130.0`.
+- Entrada en `CHANGELOG.md`.
+- Actualizar `.lovable/memories/features/portal-agente-carga.md` con el ciclo completo.
 
 ## Detalles técnicos
 
-**Frontend** (`src/features/portal-agente/`):
+```text
+Operaciones                            Agente
+───────────                            ──────
+/costeo/tarifas  (tab Pendientes)
+  │ Aprobar ─────► RPC vigente ─────► toast + portal ve "Vigente"
+  │ Rechazar(motivo) ─► RPC rechazada
+  │                       │
+  │                       └─► notificaciones_internas ─► /agente/inicio alert
+  │                                                       /agente/tarifas badge + motivo
+  Agente edita rechazada ─► trigger fuerza borrador, limpia motivo
+  │
+  └► vuelve a Pendientes
+```
 
-- `routes/AgenteTarifas.tsx`: agregar botón "Nueva tarifa", menú de acciones por fila, y montar el modal.
-- `components/AgenteTarifaForm.tsx` (nuevo): wrapper sobre `TarifaForm` que:
-  - Inyecta `agente_id` desde `useAgenteContext()` y lo pasa como prop bloqueada.
-  - Fuerza `estado_aprobacion: 'borrador'` en el payload.
-  - Usa hooks propios del portal (no los de operaciones) para no exponer mutations cross-org.
-- `components/AgenteTarifaForm.tsx` necesita una pequeña modificación a `TarifaForm` para aceptar `agenteIdFijo?: string` que oculte/deshabilite el `Select` de agente. Cambio retro-compatible.
-- `hooks/index.ts`: añadir `useAgenteTarifaMutations()` (crear/actualizar/eliminar) que llaman a un service nuevo.
-- `services/index.ts`: añadir `insertAgenteTarifa`, `updateAgenteTarifa`, `deleteAgenteTarifa`, `duplicateAgenteTarifa`. Reutilizan la lógica de `services/tarifas.ts` pero forzando `agente_id = current_agente_id()` y `estado_aprobacion='borrador'`.
-- `routes/AgenteGarantias.tsx`: reemplazar placeholder por:
-  - Listado de garantías vigentes del agente (`costeo_navieras_condiciones`).
-  - Form `AgenteGarantiaForm.tsx` con upload del PDF + sub-editor de tramos de demoras.
-
-**Backend / RLS**:
-
-- Las policies actuales ya permiten al rol `agente_carga` `INSERT/UPDATE/DELETE` en `costeo_tarifas`, `costeo_tarifa_recargos`, `costeo_navieras_condiciones`, `costeo_naviera_demoras_tarifa` siempre que `agente_id = current_agente_id()`.
-- **Falta endurecer** dos cosas vía migración:
-  1. Trigger `costeo_tarifas_agente_borrador_check`: si el caller tiene rol `agente_carga`, forzar `estado_aprobacion='borrador'` en INSERT y bloquear UPDATE cuando el estado actual sea `vigente` o `reemplazada`.
-  2. Policy de `storage.objects` en bucket `agente-cartas-garantia`: confirmar que la carpeta raíz coincide con `current_agente_id()::text` para INSERT/UPDATE/DELETE/SELECT.
-
-**Sin cambios** en operaciones: el RPC `agente_aprobar_tarifa` y el flujo de aprobación ya existen y siguen igual.
-
-## Versionado y memoria
-
-- Bump `APP_VERSION` → `13.129.0` (feature nuevo).
-- Entrada en `CHANGELOG.md`.
-- Actualizar `mem://features/portal-agente-carga` quitando del bloque "Pendiente" lo que se entrega.
-
-## Lo que NO entra en esta iteración
-
-- Notificación interna automática al subir tarifa (queda como TODO en la memoria).
-- UI inline de aprobar/rechazar en `/costeo/tarifas` para operaciones (ya existe el RPC, falta el botón — siguiente sprint).
+## Fuera de alcance
+- Emails reales (sólo notificaciones in-app).
+- Aprobación masiva.
+- Historial de cambios de estado (sólo última aprobación queda registrada).

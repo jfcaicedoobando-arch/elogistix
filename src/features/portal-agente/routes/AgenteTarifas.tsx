@@ -109,7 +109,14 @@ export default function AgenteTarifas() {
               const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
               return (
                 <TableRow key={t.id}>
-                  <TableCell className="text-sm">{t.puerto_origen_nombre} → {t.puerto_destino_nombre}</TableCell>
+                  <TableCell className="text-sm">
+                    {t.puerto_origen_nombre} → {t.puerto_destino_nombre}
+                    {t.estado_aprobacion === "rechazada" && t.motivo_rechazo && (
+                      <p className="text-xs text-destructive mt-1">
+                        <strong>Motivo:</strong> {t.motivo_rechazo}
+                      </p>
+                    )}
+                  </TableCell>
                   <TableCell>{t.naviera_nombre}</TableCell>
                   <TableCell>{t.tipo_contenedor_nombre}</TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -133,7 +140,7 @@ export default function AgenteTarifas() {
                           disabled={!editable}
                           onClick={() => setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t) })}
                         >
-                          Editar
+                          {t.estado_aprobacion === "rechazada" ? "Corregir y reenviar" : "Editar"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setEditor({ open: true, modo: "duplicar", initial: toInitial(t) })}

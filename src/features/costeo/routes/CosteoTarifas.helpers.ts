@@ -4,6 +4,7 @@ export const usdFormatter = new Intl.NumberFormat("es-MX", { style: "currency", 
 export const usd = (n: number) => usdFormatter.format(n);
 
 export type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
+export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";
 
 type TarifaRow = {
   agente_id: string;

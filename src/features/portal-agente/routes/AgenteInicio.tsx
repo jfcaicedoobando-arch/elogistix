@@ -38,11 +38,22 @@ export default function AgenteInicio() {
       </div>
 
       {rechazadas > 0 && (
-        <Card className="p-4 border-destructive/40 bg-destructive/5">
+        <Card className="p-4 border-destructive/40 bg-destructive/5 space-y-2">
           <p className="text-sm">
             Tienes <strong>{rechazadas}</strong> tarifa(s) rechazada(s) por operaciones.
             <Link to="/agente/tarifas" className="text-accent ml-1 underline">Revisarlas</Link>
           </p>
+          <ul className="text-xs space-y-1 list-disc pl-5">
+            {tarifas
+              .filter((t) => t.estado_aprobacion === "rechazada")
+              .slice(0, 3)
+              .map((t) => (
+                <li key={t.id}>
+                  <strong>{t.puerto_origen_nombre} → {t.puerto_destino_nombre}</strong>
+                  {t.motivo_rechazo ? `: ${t.motivo_rechazo}` : ""}
+                </li>
+              ))}
+          </ul>
         </Card>
       )}
 
