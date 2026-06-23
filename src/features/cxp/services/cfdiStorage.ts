@@ -11,7 +11,10 @@ export async function subirArchivosCfdiFactura(params: {
   xmlFile: File;
   pdfFile: File | null;
 }): Promise<void> {
-  const base = `cfdi/${params.organizationId ?? "org"}/${params.facturaId}`;
+  // 13.114.14: el primer segmento DEBE ser el organization_id para satisfacer
+  // la política RLS del bucket `facturas` (`foldername(name)[1] = org_id`).
+  // Antes era `cfdi/<org>/<facturaId>` y RLS rechazaba el INSERT con 403.
+  const base = `${params.organizationId ?? "org"}/cfdi/${params.facturaId}`;
   const xmlPath = `${base}/${sanitizeFileName(params.xmlFile.name)}`;
   const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
     contentType: "application/xml", upsert: true,
