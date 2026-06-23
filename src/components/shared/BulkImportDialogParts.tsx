@@ -3,7 +3,6 @@
  * Extraídos en 11.60.0 (Bloque B3) para mantener el dialog ≤200 líneas.
  */
 import { Loader2, CheckCircle2 } from "lucide-react";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UploadStep, PreviewStep } from "@/components/shared/BulkImportSteps";
 import type { ImportPreview } from "@/lib/csv/importSchemas";
