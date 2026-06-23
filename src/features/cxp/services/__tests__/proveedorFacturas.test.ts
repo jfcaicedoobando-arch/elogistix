@@ -41,4 +41,18 @@ describe("proveedorFacturas service", () => {
     const res = await crearFacturaProveedor({ folio_proveedor: "X" } as any);
     expect(res.id).toBe("f1");
   });
+
+  it("fetchFacturasCxP expone archivo_xml_url y archivo_pdf_url en el shape FacturaCxP", async () => {
+    mock.setTableResult("proveedor_facturas", {
+      data: [{
+        id: "f2", total: 100,
+        archivo_xml_url: "org/cfdi/f2/factura.xml",
+        archivo_pdf_url: null,
+      }],
+      error: null,
+    });
+    const res = await fetchFacturasCxP();
+    expect(res[0].archivo_xml_url).toBe("org/cfdi/f2/factura.xml");
+    expect(res[0].archivo_pdf_url).toBeNull();
+  });
 });

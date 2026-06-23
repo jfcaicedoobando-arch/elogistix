@@ -49,6 +49,8 @@ export interface FacturaCxP {
   uuid_fiscal: string | null;
   dias_credito: number | null;
   notas: string | null;
+  archivo_xml_url: string | null;
+  archivo_pdf_url: string | null;
 }
 
 
