@@ -1,11 +1,11 @@
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useEnvioCotizacionForm } from "@/features/cotizacion/hooks/useEnvioCotizacionForm";
 import { useEnviarCotizacionEmail, type EnvioRow } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
 import { DestinatariosPicker } from "@/features/cotizacion/components/detalle/DestinatariosPicker";
@@ -57,67 +57,15 @@ export function EnviarCotizacionDialog({ open, onOpenChange, cotizacion, totalMx
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            {esReenvio ? "Reenviar cotización por correo" : "Enviar cotización por correo"}
-          </DialogTitle>
-          <DialogDescription>
-            Se enviará un correo branded al cliente con el PDF y un botón al portal.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-          <DestinatariosPicker
-            contactos={form.contactos}
-            loadingContactos={form.loadingContactos}
-            seleccionados={form.seleccionados}
-            onToggle={(id, v) => form.setSeleccionados((s) => ({ ...s, [id]: v }))}
-            emailManual={form.emailManual}
-            setEmailManual={form.setEmailManual}
-            emailsManualesAgregados={form.emailsManualesAgregados}
-            agregarManual={form.agregarManual}
-            quitarManual={form.quitarManual}
-          />
-
-          <div className="space-y-2">
-            <Label>Copia (CC)</Label>
-            <div className="flex flex-wrap gap-1 mb-1">
-              {form.userEmail && <Badge variant="outline">{form.userEmail} (tú)</Badge>}
-            </div>
-            <Input
-              placeholder="emails adicionales separados por coma"
-              value={form.ccManual}
-              onChange={(e) => form.setCcManual(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Asunto</Label>
-            <Input value={form.asunto} onChange={(e) => form.setAsunto(e.target.value)} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Mensaje (opcional)</Label>
-            <Textarea
-              rows={4}
-              value={form.mensaje}
-              onChange={(e) => form.setMensaje(e.target.value)}
-              placeholder="Mensaje personalizado para el cliente…"
-            />
-          </div>
-
-          {cotizacion.estado === "Borrador" && (
-            <label className="flex items-center gap-2">
-              <Checkbox checked={form.marcarEnviada} onCheckedChange={(v) => form.setMarcarEnviada(!!v)} />
-              <span className="text-sm">Marcar la cotización como <strong>Enviada</strong></span>
-            </label>
-          )}
-        </div>
-
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Send}
+      title={esReenvio ? "Reenviar cotización por correo" : "Enviar cotización por correo"}
+      description="Se enviará un correo branded al cliente con el PDF y un botón al portal."
+      size="2xl"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
             Cancelar
           </Button>
@@ -125,8 +73,54 @@ export function EnviarCotizacionDialog({ open, onOpenChange, cotizacion, totalMx
             {mutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
             {esReenvio ? "Reenviar" : "Enviar"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <DestinatariosPicker
+        contactos={form.contactos}
+        loadingContactos={form.loadingContactos}
+        seleccionados={form.seleccionados}
+        onToggle={(id, v) => form.setSeleccionados((s) => ({ ...s, [id]: v }))}
+        emailManual={form.emailManual}
+        setEmailManual={form.setEmailManual}
+        emailsManualesAgregados={form.emailsManualesAgregados}
+        agregarManual={form.agregarManual}
+        quitarManual={form.quitarManual}
+      />
+
+      <div className="space-y-2">
+        <Label>Copia (CC)</Label>
+        <div className="flex flex-wrap gap-1 mb-1">
+          {form.userEmail && <Badge variant="outline">{form.userEmail} (tú)</Badge>}
+        </div>
+        <Input
+          placeholder="emails adicionales separados por coma"
+          value={form.ccManual}
+          onChange={(e) => form.setCcManual(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Asunto</Label>
+        <Input value={form.asunto} onChange={(e) => form.setAsunto(e.target.value)} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Mensaje (opcional)</Label>
+        <Textarea
+          rows={4}
+          value={form.mensaje}
+          onChange={(e) => form.setMensaje(e.target.value)}
+          placeholder="Mensaje personalizado para el cliente…"
+        />
+      </div>
+
+      {cotizacion.estado === "Borrador" && (
+        <label className="flex items-center gap-2">
+          <Checkbox checked={form.marcarEnviada} onCheckedChange={(v) => form.setMarcarEnviada(!!v)} />
+          <span className="text-sm">Marcar la cotización como <strong>Enviada</strong></span>
+        </label>
+      )}
+    </FormDialogShell>
   );
 }

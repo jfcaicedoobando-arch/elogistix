@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.125.0] - 2026-06-23
+- **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Cotización** (4 modales). Migrados: `DialogConvertirProspecto` (icon `UserCheck`, `lg`), `EnviarCotizacionDialog` (icon `Send`, `2xl`), `RecotizarModal` (icon `RefreshCw`, `2xl`) y `RevalidarTarifaModal` (icon `ShieldCheck`, `2xl`, conserva los íconos de severidad inline en el título). Cero cambios en hooks/mutaciones/servicios — sólo presentación. Analogía: ahora también el área comercial-cotizadora (convertir prospecto, enviar al cliente, re-cotizar y revalidar tarifa) usa el mismo membrete que el resto del back-office.
+
 ## [13.124.0] - 2026-06-23
 - **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Costeo** (6 modales). Migrados: `RutaFormDialog` (icon `Route`, `lg`), `TarifaForm` con resumen vivo de Total comparable en `headerAside` (icon `Tag`, `2xl`), `CosteoAgenteFormDialog` (icon `Users`, `xl`), `BuscarTarifaDialog` (icon `Search`, `4xl`), el diálogo inline de **CosteoNavieras** para carta-garantía + tabulador escalonado (icon `FileSignature`, `3xl`) y el diálogo inline de **CosteoDemorasVenta** (icon `Timer`, `lg`). Mismo lenguaje visual: icon-tile en header, body scrollable y footer sticky. Cero cambios en hooks/RLS/validaciones. Analogía: ya teníamos pintada con la misma papelería la oficina de operaciones, ventas y administración; ahora el área de costeo (rutas, tarifas, agentes, búsqueda Top 3 y condiciones por naviera) usa el mismo membrete.
 
