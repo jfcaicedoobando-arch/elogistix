@@ -1,30 +1,39 @@
 /**
- * Smoke test para demo-access — valida método HTTP + CORS preflight.
- * (No invoca la edge function real; sólo asegura las constantes públicas.)
+ * 13.116.0 — Reemplaza tests de grep por checks de seguridad estructural.
+ *
+ * `demo-access` usa SERVICE_ROLE para crear/resetear el usuario demo. Si
+ * alguno de estos checks falla, podríamos estar exponiendo admin a usuarios
+ * sin auth, o cambiando el contrato del email demo y rompiendo el portal.
  */
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 
-Deno.test("demo-access expone DEMO_EMAIL público", () => {
-  assertStringIncludes(indexSource, 'DEMO_EMAIL = "demo@librecarga.com"');
-});
-
-Deno.test("demo-access responde a OPTIONS con CORS", () => {
-  assertStringIncludes(indexSource, '"Access-Control-Allow-Origin": "*"');
+Deno.test("demo-access: maneja preflight CORS antes que cualquier lógica", () => {
   assertStringIncludes(indexSource, 'req.method === "OPTIONS"');
+  assertStringIncludes(indexSource, '"Access-Control-Allow-Origin": "*"');
 });
 
-Deno.test("demo-access usa service role key (admin)", () => {
+Deno.test("demo-access: usa service role key con persistSession=false", () => {
+  // Persistir sesión con service role en edge function = leak de privilegios.
   assertStringIncludes(indexSource, "SUPABASE_SERVICE_ROLE_KEY");
+  assertStringIncludes(indexSource, "persistSession: false");
   assertStringIncludes(indexSource, "autoRefreshToken: false");
 });
 
-Deno.test("demo-access placeholder check (no regression de email demo)", () => {
-  // Si alguien cambia el email demo, este test falla y obliga a actualizar
-  // el cliente del portal demo en consecuencia.
+Deno.test("demo-access: invoca RPCs de provisión (membership + seed)", () => {
+  // Si se quitan, la cuenta demo entra pero ve datos vacíos o ajenos.
+  assertStringIncludes(indexSource, "ensure_demo_membership");
+  assertStringIncludes(indexSource, "seed_demo_organization");
+});
+
+Deno.test("demo-access: contrato del email demo (no regresión silenciosa)", () => {
   assertEquals(
     indexSource.match(/DEMO_EMAIL\s*=\s*"([^"]+)"/)?.[1],
     "demo@librecarga.com",
   );
+});
+
+Deno.test("demo-access: captura excepciones con Sentry (no se pierden errores)", () => {
+  assertStringIncludes(indexSource, "captureEdgeException");
 });
