@@ -15,17 +15,6 @@ import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
 import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
 import type { ClienteForm } from "@/features/cliente/hooks";
 
-const RFC_RX = /^([A-ZÑ&]{3,4})\d{6}([A-Z0-9]{2,3})$/i;
-
-/** True si el RFC tiene la forma estructural correcta (no valida dígito verificador). */
-export function rfcLooksValid(rfc: string): boolean {
-  return RFC_RX.test(rfc.trim());
-}
-
-/** True cuando el CP son exactamente 5 dígitos. */
-export function cpLooksValid(cp: string): boolean {
-  return /^\d{5}$/.test(cp.trim());
-}
 
 interface CsfDropZoneProps {
   parsingCsf: boolean;

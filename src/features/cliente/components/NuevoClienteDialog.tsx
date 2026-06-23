@@ -17,9 +17,9 @@ import {
   ModoAltaTabs,
   ClienteField,
   ClienteFiscalSelects,
-  rfcLooksValid,
-  cpLooksValid,
 } from "./NuevoClienteFormPieces";
+import { rfcLooksValid, cpLooksValid } from "./nuevoClienteValidators";
+
 
 interface Props {
   open: boolean;
