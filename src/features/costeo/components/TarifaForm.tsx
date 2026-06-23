@@ -108,7 +108,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
-        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} />
+        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} agenteIdFijo={agenteIdFijo} />
         <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} errores={errores} />
         <NumerosFields form={form} setForm={setForm} errores={errores} />
         <VigenciaFields form={form} setForm={setForm} errores={errores} />
