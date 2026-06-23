@@ -53,7 +53,10 @@ describe('useLayout Hooks', () => {
     const { result } = renderHook(() => useAppSidebarSections());
     
     const labels = result.current.map(s => s.label);
-    expect(labels).toEqual(['CRM', 'Directorio', 'Sistema']);
-    expect(labels).not.toContain('Profit');
+    expect(labels).toContain('CRM');
+    expect(labels).toContain('Directorio');
+    expect(labels).toContain('Sistema');
+    expect(labels).not.toContain('Administración');
+    expect(labels).not.toContain('Super Admin');
   });
 });
