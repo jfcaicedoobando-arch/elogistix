@@ -72,6 +72,10 @@ BEGIN
       (prov_a, 'ProvFC A', org_a, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor),
       (prov_b, 'ProvFC B', org_b, 'Naviera'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 
+  -- Seed canonical presupuesto_categorias (categoria_presupuesto_id es NOT NULL).
+  PERFORM public.seed_presupuesto_categorias(org_a);
+  PERFORM public.seed_presupuesto_categorias(org_b);
+
   -- =========================================================================
   -- TEST 1: cuentas_bancarias aislamiento
   -- =========================================================================
