@@ -19,39 +19,53 @@ interface EntidadesProps {
   errores?: Record<string, boolean>;
   /** Si se provee, el Select de agente queda bloqueado (uso del portal del agente). */
   agenteIdFijo?: string;
+  /** Nombre del agente a mostrar como readonly cuando agenteIdFijo está presente. */
+  agenteNombreFijo?: string;
 }
 
 const invalidCls = (invalid?: boolean) =>
   invalid ? "border-destructive focus-visible:ring-destructive" : undefined;
 
-export function EntidadesFields({ form, setForm, agentes, navieras, errores, agenteIdFijo }: EntidadesProps) {
+const noSpinnerCls =
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+
+export function EntidadesFields({ form, setForm, agentes, navieras, errores, agenteIdFijo, agenteNombreFijo }: EntidadesProps) {
   const agenteBloqueado = Boolean(agenteIdFijo);
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
         <Label htmlFor="tarifa-agente">Agente *</Label>
-        <Select
-          value={form.agente_id}
-          onValueChange={(v) => { if (!agenteBloqueado) setForm({ ...form, agente_id: v }); }}
-          disabled={agenteBloqueado}
-        >
-          <SelectTrigger
-            id="tarifa-agente"
-            aria-invalid={errores?.agente_id || undefined}
-            className={invalidCls(errores?.agente_id)}
+        {agenteBloqueado ? (
+          <>
+            <Input
+              id="tarifa-agente"
+              value={agenteNombreFijo ?? agentes.find((a) => a.id === agenteIdFijo)?.nombre ?? "Tu agencia"}
+              readOnly
+              disabled
+              className="bg-muted/40"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Las tarifas que captures quedan a tu nombre automáticamente.
+            </p>
+          </>
+        ) : (
+          <Select
+            value={form.agente_id}
+            onValueChange={(v) => setForm({ ...form, agente_id: v })}
           >
-            <SelectValue placeholder="Selecciona agente" />
-          </SelectTrigger>
-          <SelectContent>
-            {agentes.filter((a) => a.activo || a.id === agenteIdFijo).map((a) => (
-              <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {agenteBloqueado && (
-          <p className="text-[10px] text-muted-foreground mt-1">
-            Las tarifas que captures quedan a tu nombre automáticamente.
-          </p>
+            <SelectTrigger
+              id="tarifa-agente"
+              aria-invalid={errores?.agente_id || undefined}
+              className={invalidCls(errores?.agente_id)}
+            >
+              <SelectValue placeholder="Selecciona agente" />
+            </SelectTrigger>
+            <SelectContent>
+              {agentes.filter((a) => a.activo).map((a) => (
+                <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </div>
       <div>
@@ -137,7 +151,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
           id="tarifa-flete"
           type="number" min={0} step="0.01" value={form.flete_base}
           aria-invalid={errores?.flete_base || undefined}
-          className={invalidCls(errores?.flete_base)}
+          className={`${invalidCls(errores?.flete_base) ?? ""} ${noSpinnerCls}`}
           onChange={(e) => setForm({ ...form, flete_base: Number(e.target.value) || 0 })}
         />
       </div>
@@ -146,6 +160,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Input
           id="tarifa-dias-libres"
           type="number" min={0} value={form.dias_libres_demoras}
+          className={noSpinnerCls}
           onChange={(e) => setForm({ ...form, dias_libres_demoras: Number(e.target.value) || 0 })}
         />
       </div>
@@ -154,6 +169,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Input
           id="tarifa-transito"
           type="number" min={0} value={form.transit_time_dias ?? ""}
+          className={noSpinnerCls}
           onChange={(e) => setForm({ ...form, transit_time_dias: e.target.value ? Number(e.target.value) : null })}
         />
       </div>

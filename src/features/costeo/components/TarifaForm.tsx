@@ -29,8 +29,12 @@ interface Props {
   tarifaId?: string;
   /** Si se provee, bloquea el Select de agente y oculta la lógica de selección manual. */
   agenteIdFijo?: string;
+  /** Nombre del agente a mostrar como readonly cuando agenteIdFijo está presente. */
+  agenteNombreFijo?: string;
   /** Override del título del modal (e.g. cuando es desde el portal del agente). */
   tituloOverride?: string;
+  /** Rutas a usar en lugar de useCosteoRutas() (útil cuando no hay OrganizationContext). */
+  rutasOverride?: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
 }
 
 function calcularErrores(form: TarifaInput): Record<string, boolean> {
@@ -45,12 +49,14 @@ function calcularErrores(form: TarifaInput): Record<string, boolean> {
   };
 }
 
-export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, tituloOverride }: Props) {
-  const { data: agentes = [] } = useCosteoAgentes();
-  const { data: rutas = [] } = useCosteoRutas();
+export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
+  const { data: agentesData = [] } = useCosteoAgentes();
+  const { data: rutasData = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
   const { data: tipos = [] } = useTiposContenedor();
   const { crear, actualizar } = useCosteoTarifaMutations();
+  const agentes = agentesData;
+  const rutas = rutasOverride ?? rutasData;
 
   const [form, setForm] = useState<TarifaInput>(() =>
     buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial),
@@ -108,7 +114,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
-        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} agenteIdFijo={agenteIdFijo} />
+        <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} agenteIdFijo={agenteIdFijo} agenteNombreFijo={agenteNombreFijo} />
         <RutaTipoFields form={form} setForm={setForm} rutas={rutas} tipos={tipos} errores={errores} />
         <NumerosFields form={form} setForm={setForm} errores={errores} />
         <VigenciaFields form={form} setForm={setForm} errores={errores} />
