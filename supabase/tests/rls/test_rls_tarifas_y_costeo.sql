@@ -86,6 +86,10 @@ BEGIN
     (prov_a, 'Prov TAR A', 'RTA010101AAA', 'C', 'a@a', '555', 'USD', org_a, 'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor),
     (prov_b, 'Prov TAR B', 'RTB010101BBB', 'C', 'b@b', '555', 'USD', org_b, 'Agente de Carga'::tipo_proveedor, 'Logistico'::categoria_proveedor);
 
+  -- Seed canonical presupuesto_categorias (categoria_presupuesto_id NOT NULL).
+  PERFORM public.seed_presupuesto_categorias(org_a);
+  PERFORM public.seed_presupuesto_categorias(org_b);
+
   INSERT INTO public.costeo_agentes(
     id, organization_id, proveedor_id, nombre, pais, dias_credito, activo
   ) VALUES
