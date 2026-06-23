@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const sentryMock = vi.hoisted(() => ({
   init: vi.fn(),
+  setTag: vi.fn(),
   reactRouterV6BrowserTracingIntegration: vi.fn(() => ({ name: "tracing" })),
   replayIntegration: vi.fn(() => ({ name: "replay" })),
   feedbackIntegration: vi.fn(() => ({ name: "feedback" })),
@@ -18,6 +19,7 @@ const sentryMock = vi.hoisted(() => ({
   thirdPartyErrorFilterIntegration: vi.fn(() => ({ name: "tpe" })),
   captureConsoleIntegration: vi.fn(() => ({ name: "console" })),
 }));
+
 
 vi.mock("@sentry/react", () => sentryMock);
 
