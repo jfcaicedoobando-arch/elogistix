@@ -1,32 +1,25 @@
-import { ArrowLeft, ArrowRight, Loader2, Upload, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
-import { Input } from "@/components/ui/input";
+/**
+ * Modal "Nuevo Cliente" — wizard de 2 pasos sobre `FormDialogShell`.
+ * Paso 1: Datos fiscales + contacto (con opción de prellenar desde CSF).
+ * Paso 2: Checklist documental.
+ *
+ * Mantiene el controller intacto y delega secciones a `NuevoClienteFormPieces`.
+ */
+import { useRef } from "react";
+import { ArrowLeft, ArrowRight, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
+import { useNuevoClienteController } from "@/features/cliente/hooks";
 import {
-  useNuevoClienteController,
-  type ClienteForm,
-} from "@/features/cliente/hooks";
-import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
-import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
-
-const FORM_FIELDS: { label: string; field: keyof ClienteForm; full?: boolean; required?: boolean }[] = [
-  { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
-  { label: "RFC", field: "rfc", required: true },
-  { label: "Código Postal", field: "cp", required: true },
-  { label: "Dirección", field: "direccion", full: true },
-  { label: "Ciudad", field: "ciudad" },
-  { label: "Estado", field: "estado" },
-  { label: "Contacto", field: "contacto" },
-  { label: "Email", field: "email" },
-  { label: "Teléfono", field: "telefono" },
-];
+  CsfDropZone,
+  ModoAltaTabs,
+  ClienteField,
+  ClienteFiscalSelects,
+  rfcLooksValid,
+  cpLooksValid,
+} from "./NuevoClienteFormPieces";
 
 interface Props {
   open: boolean;
@@ -35,122 +28,109 @@ interface Props {
 
 export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
   const c = useNuevoClienteController(() => onOpenChange(false));
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerCsfUpload = (file: File | null) => {
+    if (!file || !fileInputRef.current) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInputRef.current.files = dt.files;
+    fileInputRef.current.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+
+  const prefilled = !!c.csfFile;
+
+  const headerAside = prefilled ? (
+    <div className="flex flex-col items-end gap-0.5">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">CSF detectada</span>
+      <span className="text-xs text-muted-foreground truncate max-w-[180px]">{c.csfFile?.name}</span>
+    </div>
+  ) : undefined;
 
   return (
-    <Dialog
+    <FormDialogShell
       open={open}
-      onOpenChange={(abierto) => {
-        if (!abierto) c.resetAndClose();
-        else onOpenChange(abierto);
-      }}
+      onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}
+      icon={UserPlus}
+      title="Nuevo Cliente"
+      description={
+        c.step === 1
+          ? "Captura los datos del cliente o sube su CSF para prellenar el formulario."
+          : "Adjunta todos los documentos obligatorios para crear el cliente."
+      }
+      size="lg"
+      step={c.step}
+      totalSteps={2}
+      stepLabels={["Datos del cliente", "Documentación"]}
+      headerAside={headerAside}
+      footer={c.step === 1 ? (
+        <>
+          <Button variant="outline" onClick={c.resetAndClose}>Cancelar</Button>
+          <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
+            Siguiente <ArrowRight className="h-4 w-4 ml-1" />
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="outline" onClick={() => c.setStep(1)}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
+          </Button>
+          <Button onClick={c.handleSave} disabled={!c.allDocsAdjuntados || c.isSaving}>
+            {c.isSaving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+            {c.isSaving ? "Creando…" : "Crear cliente"}
+          </Button>
+        </>
+      )}
     >
-      <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>Nuevo Cliente — Paso {c.step} de 2</DialogTitle>
-          <DialogDescription>
-            {c.step === 1
-              ? 'Ingresa los datos del nuevo cliente o sube su Constancia de Situación Fiscal (CSF).'
-              : 'Adjunta todos los documentos obligatorios para crear el cliente.'}
-          </DialogDescription>
-        </DialogHeader>
+      {c.step === 1 && (
+        <>
+          {/* Input oculto que canaliza al handler original del controller. */}
+          <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={c.handleCsfUpload} />
 
-        {c.step === 1 && (
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Button type="button" variant={c.modoAlta === "manual" ? "default" : "outline"} size="sm" onClick={() => c.setModoAlta("manual")}>
-                <FileText className="h-4 w-4 mr-1" /> Manual
-              </Button>
-              <Button type="button" variant={c.modoAlta === "csf" ? "default" : "outline"} size="sm" onClick={() => c.setModoAlta("csf")}>
-                <Upload className="h-4 w-4 mr-1" /> Subir CSF
-              </Button>
-            </div>
+          <FormDialogSection flat title="Modo de captura">
+            <ModoAltaTabs modo={c.modoAlta} onChange={c.setModoAlta} />
+          </FormDialogSection>
 
-            {c.modoAlta === "csf" && (
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center space-y-2">
-                {c.parsingCsf ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Extrayendo datos del CSF…</p>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Sube la Constancia de Situación Fiscal (PDF) para pre-llenar los datos</p>
-                    <label className="cursor-pointer">
-                      <Button type="button" variant="outline" size="sm" asChild>
-                        <span>Seleccionar PDF</span>
-                      </Button>
-                      <input type="file" accept="application/pdf" className="hidden" onChange={c.handleCsfUpload} />
-                    </label>
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              {FORM_FIELDS.map(({ label, field, full, required }) => (
-                <div key={field} className={full ? "col-span-2" : ""}>
-                  <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
-                  <Input value={c.form[field]} onChange={(e) => c.handleChange(field, e.target.value)} className="mt-1" />
-                </div>
-              ))}
-
-              <div>
-                <Label className="text-xs">Régimen Fiscal SAT<span className="text-destructive ml-0.5">*</span></Label>
-                <Select value={c.form.regimen_fiscal || undefined} onValueChange={(v) => c.handleChange("regimen_fiscal", v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona régimen" /></SelectTrigger>
-                  <SelectContent>
-                    {REGIMENES_FISCALES_SAT.map((r) => (
-                      <SelectItem key={r.clave} value={r.clave}>{r.clave} — {r.descripcion}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Uso CFDI por defecto</Label>
-                <Select value={c.form.uso_cfdi_default || undefined} onValueChange={(v) => c.handleChange("uso_cfdi_default", v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona uso CFDI" /></SelectTrigger>
-                  <SelectContent>
-                    {USOS_CFDI_SAT.map((u) => (
-                      <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {c.step === 2 && (
-          <DocumentChecklist
-            documentos={c.documentos}
-            onFileChange={c.handleFileChange}
-            descripcion="Todos los documentos deben estar adjuntados para poder crear el cliente."
-          />
-        )}
-
-        <DialogFooter>
-          {c.step === 1 && (
-            <>
-              <Button variant="outline" onClick={c.resetAndClose}>Cancelar</Button>
-              <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
-                Siguiente <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </>
+          {c.modoAlta === "csf" && (
+            <FormDialogSection flat>
+              <CsfDropZone
+                parsingCsf={c.parsingCsf}
+                fileName={c.csfFile?.name ?? null}
+                onFile={triggerCsfUpload}
+              />
+            </FormDialogSection>
           )}
-          {c.step === 2 && (
-            <>
-              <Button variant="outline" onClick={() => c.setStep(1)}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
-              </Button>
-              <Button onClick={c.handleSave} disabled={!c.allDocsAdjuntados || c.isSaving}>
-                {c.isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                Crear
-              </Button>
-            </>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+          <FormDialogSection title="Datos fiscales" description="Información requerida para facturación SAT.">
+            <ClienteField label="RFC" field="rfc" form={c.form} onChange={c.handleChange} required
+              prefilledFromCsf={prefilled} validate={(v) => (!rfcLooksValid(v) ? "Formato de RFC inválido" : null)} />
+            <ClienteField label="Código Postal" field="cp" form={c.form} onChange={c.handleChange} required
+              prefilledFromCsf={prefilled} validate={(v) => (!cpLooksValid(v) ? "Deben ser 5 dígitos" : null)} />
+            <ClienteFiscalSelects form={c.form} onChange={c.handleChange} prefilledRegimen={prefilled} />
+          </FormDialogSection>
+
+          <FormDialogSection title="Datos generales y contacto">
+            <ClienteField className="md:col-span-2" label="Nombre / Razón Social" field="nombre"
+              form={c.form} onChange={c.handleChange} required prefilledFromCsf={prefilled} />
+            <ClienteField className="md:col-span-2" label="Dirección" field="direccion"
+              form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
+            <ClienteField label="Ciudad" field="ciudad" form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
+            <ClienteField label="Estado" field="estado" form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
+            <ClienteField label="Contacto" field="contacto" form={c.form} onChange={c.handleChange} />
+            <ClienteField label="Email" field="email" form={c.form} onChange={c.handleChange}
+              validate={(v) => (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? "Email inválido" : null)} />
+            <ClienteField label="Teléfono" field="telefono" form={c.form} onChange={c.handleChange} />
+          </FormDialogSection>
+        </>
+      )}
+
+      {c.step === 2 && (
+        <DocumentChecklist
+          documentos={c.documentos}
+          onFileChange={c.handleFileChange}
+          descripcion="Todos los documentos deben estar adjuntados para poder crear el cliente."
+        />
+      )}
+    </FormDialogShell>
   );
 }
