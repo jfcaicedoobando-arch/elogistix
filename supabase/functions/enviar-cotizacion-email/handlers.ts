@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { captureEdgeException } from '../_shared/sentry.ts';
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
@@ -65,6 +66,13 @@ async function sendEmailsToRecipients(
       const ok = resp.ok && (out?.success !== false || out?.queued === true);
       resultados.push({ email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) });
     } catch (e) {
+      // 13.114.20: antes los fallos de red por destinatario quedaban sólo en
+      // `resultados` (visibles para el caller pero no para ops). Capturamos
+      // por iteración con índice + tipo (to/cc), sin el email (PII).
+      await captureEdgeException(e, {
+        fn: 'enviar-cotizacion-email',
+        extra: { phase: 'send_recipient', recipient_index: resultados.length, recipient_type: r.tipo, cot_id: cotId },
+      });
       resultados.push({ email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message });
     }
   }

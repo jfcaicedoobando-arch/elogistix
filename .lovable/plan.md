@@ -1,49 +1,48 @@
-# Plan — Auditoría Sentry → versión `13.114.19`
+# Plan — Auditoría Sentry → `13.114.20`
 
-Dos sub-agentes revisaron el SDK frontend y las 21 edge functions. La instrumentación base está sólida (ErrorBoundary en 3 niveles, `wrapEdgeHandler`, scrub PII, tunnel con rate-limit, 0 funciones sin Sentry, 0 mismatches en tests guardrail). Hay **8 huecos reales** que cerrar — todos de bajo riesgo, sin cambios de semántica.
+Dos sub-agentes auditaron el SDK frontend y las 21 edge functions sobre `13.114.19`. Lo bueno: init inmediato sin ventana ciega, scrub PII robusto (incluye Luhn para tarjetas), React Query con tags filtrables, ErrorBoundaries en dos niveles, 0 funciones edge sin instrumentar, 0 mismatches en tests guardrail. Lo malo: el toast unificado `notifyError` (340 call sites en 198 archivos) **no** reporta a Sentry — toda la app tira errores en silencio salvo que el usuario abra "Ver detalles" y los pegue. Eso es la fuga grande. Además quedaron tres edge functions con el filtro viejo `>= 500` (no se actualizaron en `13.114.19`) y dos crons con errores silenciados.
 
 ## Hallazgos a corregir
 
 | # | Sev | Archivo | Problema | Fix |
 |---|---|---|---|---|
-| 1 | 🔴 ALTA | `supabase/functions/auditoria-weekly-digest/index.ts` (~L126) | `processOrg()` serializa el error y devuelve 200 al cron → fallo por org invisible en Sentry | `captureEdgeException(rpcErr, { fn, extra:{ organization_id }})` antes del `return { error }` |
-| 2 | 🟠 MEDIA | `src/main.tsx` (L82-83) | `initSentry()` en `requestIdleCallback` → ventana ciega ~1.5 s; crashes tempranos del primer render no llegan | Inicializar Sentry **antes** de `createRoot()` (mantener el lazy import dinámico, sólo eliminar el `requestIdleCallback`) |
-| 3 | 🟠 MEDIA | `src/lib/observability/sentry/core.ts` | `beforeSend` sólo scrubea `ErrorEvent`; las transactions con PII en URL no se filtran | Añadir `beforeSendTransaction` reutilizando `scrubEventPii` |
-| 4 | 🟠 MEDIA | `supabase/functions/client-error-log/index.ts` | Handler sin try/catch externo: errores en `createClient` o rate-limit escapan | Envolver el body del handler en try/catch con `captureEdgeException` (más simple que migrar a `wrapEdgeHandler`) |
-| 5 | 🟠 MEDIA | `src/features/cotizacion/services/candadoCostos.ts` (L19) | `console.error` en catch sin reporte a Sentry | Usar `reportCaughtError` / `logger.error` con tag `feature: 'cotizacion'` |
-| 6 | 🟠 MEDIA | `src/lib/observability/piiScrub.ts` | Falta regex de tarjetas bancarias (PAN) | Añadir `CARD_RE` con validación Luhn para evitar falsos positivos en folios largos |
-| 7 | 🟡 BAJA | `src/lib/observability/sentry/helpers.ts` `sampleByRoute` | `/inicio` (dashboard real) cae al 10% default; `/dev/*` (preview PDF interno) consume cuota; portal detalle merece 100% | `/inicio` → 0.05, `/dev/` → 0, `/portal/(embarques\|cotizaciones\|facturas)/:id` → 1.0 |
-| 8 | 🟡 BAJA | `supabase/functions/user-management/index.ts` y `auditoria-explicar-hallazgo/index.ts` | Sólo capturan cuando `status >= 500`; 4xx inesperados son invisibles | Capturar también en `status >= 400` (o sin condición de status en el catch raíz) |
+| 1 | 🔴 ALTA | `src/components/shared/utils/appFeedback.ts:42` | `notifyError` arma el debug pero **nunca llama a Sentry**. 340 call sites afectados. | Añadir `reportCaughtError(error, { feature: phase ?? 'ui_notify', op: method ?? 'unknown' }, { ...context, step, errorCode })` cuando `error` esté presente (skip si no, para no inflar con errores de validación de form). |
+| 2 | 🔴 ALTA | `supabase/functions/parse-cfdi-xml/index.ts:187` | Catch raíz filtra `status >= 500`; los 4xx (validación, authz) no llegan a Sentry. Inconsistente con el patrón de `13.114.19`. | Cambiar a `>= 400`. |
+| 3 | 🔴 ALTA | `supabase/functions/parse-csf/index.ts:168` | Mismo patrón viejo `>= 500`. | Cambiar a `>= 400`. |
+| 4 | 🔴 ALTA | `supabase/functions/process-email-queue/queueProcessor.ts:63` | Si `read_email_batch` falla, `console.error` + `return {totalProcessed:0}` → la cola se detiene en silencio (cron no levanta alarma). | Llamar `captureEdgeException(readError, { fn: 'process-email-queue', extra: { phase:'read_batch', queue }})` antes del return. |
+| 5 | 🟠 MEDIA | `supabase/functions/tracking-public/index.ts:63` | Error de RPC `get_tracking_public` devuelve 500 manual sin pasar por el catch global → no llega a Sentry. | `await captureEdgeException(error, { fn:'tracking-public', status_code:500, extra:{phase:'rpc'}})` antes del `errorResponse`. |
+| 6 | 🟠 MEDIA | `supabase/functions/preview-transactional-email/index.ts` (loop de plantillas) | Errores por-plantilla sólo se `console.error`; no se sabe qué template está roto. | `captureEdgeException` por iteración con `extra:{template_key}`. |
+| 7 | 🟡 BAJA | `supabase/functions/enviar-cotizacion-email/handlers.ts` (loop destinatarios) | Errores de envío por destinatario acumulados sin reporte. | `captureEdgeException` por fallo individual con `extra:{recipient_index}`. |
+| 8 | 🟡 BAJA | `src/features/tesoreria/services/conciliacion.ts:101` | Usa `Sentry.metrics?.count?.()` — API removida del SDK v8. Hoy es no-op silencioso. | Reemplazar por `Sentry.captureMessage('conciliacion.failed', { level:'warning', tags:{tipo, reason}})` o eliminar si no se consume en dashboards. |
 
-## No incluido (justificación)
+## Descartado (con justificación)
 
-- **CORS `*` en `sentry-tunnel`**: restringir rompería previews de Lovable (`*.lovable.app` cambian de subdominio). Ya hay rate-limit + whitelist de hosts destino. Se queda como está.
-- **Migrar a `createBrowserRouter`** para nombres de ruta parametrizados: cambio invasivo, no es un gap de cobertura sino de calidad de señal.
-- **`captureConsoleIntegration`**: aumentaría ruido y cuota; el `logger` y los `reportCaughtError` ya cubren los caminos importantes.
-- **Migrar `parse-csf` / `auditoria-explicar-hallazgo` de `serve()` legacy a `Deno.serve(wrapEdgeHandler)`**: cambio de estructura mayor, ya tienen catch manual.
+- **`useAuthSession.ts:64`** (el auditor lo marcó como gap): falsa alarma — las líneas 66-68 ya hacen `import('@sentry/react').captureException`. Cobertura correcta.
+- **Ampliar `httpClientIntegration` a `[[400,599]]`**: los 401/403 de Supabase son ruido por diseño (sesión expirada, RLS bloqueando lectura intencional). Inflaría cuota sin señal accionable. Mantener `[500,599]`.
+- **Capturar chunk errors antes del reload (`main.tsx:46`)**: ya están en `ignoreErrors` por decisión consciente (`13.63.0`); auto-recuperan con reload y no aportan señal.
+- **Migrar `parse-csf`/`auditoria-explicar-hallazgo` de `serve()` legacy**: cambio estructural ya descartado en rondas previas.
 
 ## Versionado
 
-- `src/constants/appVersion.ts` → `13.114.19`
-- `CHANGELOG.md` → entrada `## [13.114.19] - 2026-06-23` con bullets por hallazgo
+- `src/constants/appVersion.ts` → `13.114.20`
+- `CHANGELOG.md` → entrada `## [13.114.20] - 2026-06-23`
 
 ## Validación
 
-- `vitest run` sobre `src/lib/observability/**` y `src/__tests__/architecture/sentry-*`
-- Añadir test unitario para `beforeSendTransaction` (scrub PII en URL de transaction) y para el reporte de `processOrg` en `weekly-digest`
-- `deno test` en `auditoria-weekly-digest` (si tiene `digest_test.ts`)
+- `vitest run` sobre `src/lib/observability/**` (no debería cambiar nada)
+- Smoke manual: disparar un `notifyError` con `error: new Error('test')` y verificar que el sub-import a `@sentry/react` corre (en dev no envía, sólo log).
+- `deno test` en `process-email-queue` si tiene tests.
 
-## Archivos a tocar (10)
+## Archivos a tocar (9)
 
-1. `supabase/functions/auditoria-weekly-digest/index.ts`
-2. `supabase/functions/client-error-log/index.ts`
-3. `supabase/functions/user-management/index.ts`
-4. `supabase/functions/auditoria-explicar-hallazgo/index.ts`
-5. `src/main.tsx`
-6. `src/lib/observability/sentry/core.ts`
-7. `src/lib/observability/sentry/helpers.ts`
-8. `src/lib/observability/piiScrub.ts`
-9. `src/features/cotizacion/services/candadoCostos.ts`
-10. `src/constants/appVersion.ts` + `CHANGELOG.md`
+1. `src/components/shared/utils/appFeedback.ts`
+2. `supabase/functions/parse-cfdi-xml/index.ts`
+3. `supabase/functions/parse-csf/index.ts`
+4. `supabase/functions/process-email-queue/queueProcessor.ts`
+5. `supabase/functions/tracking-public/index.ts`
+6. `supabase/functions/preview-transactional-email/index.ts`
+7. `supabase/functions/enviar-cotizacion-email/handlers.ts`
+8. `src/features/tesoreria/services/conciliacion.ts`
+9. `src/constants/appVersion.ts` + `CHANGELOG.md`
 
 ¿Apruebas para implementar?

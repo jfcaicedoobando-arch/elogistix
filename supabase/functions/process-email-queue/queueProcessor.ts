@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { captureEdgeException } from '../_shared/sentry.ts'
 import { processMessage, ProcessCtx, QueueMessage } from './processItem.ts'
 
 export interface QueueResult {
@@ -62,6 +63,12 @@ export async function processQueue(
   })
   if (readError) {
     console.error('Failed to read email batch', { queue, error: readError })
+    // 13.114.20: si la cola falla al leer batch, el cron termina sin error pero
+    // SIN PROCESAR. Antes era invisible — ahora Sentry recibe alerta.
+    await captureEdgeException(readError, {
+      fn: 'process-email-queue',
+      extra: { phase: 'read_batch', queue },
+    })
     return { totalProcessed: 0 }
   }
   if (!messages?.length) return { totalProcessed: 0 }
