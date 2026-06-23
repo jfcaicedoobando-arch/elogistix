@@ -76,18 +76,23 @@ Deno.test({
       `Content-Type no es JSON (probable HTML de error): ${contentType}`,
     );
 
-    // 2. Body parsea como JSON
-    let body: Record<string, unknown>;
+    // 2. Body parsea como JSON (puede ser array directo o { users: [...] } / { error })
+    let body: unknown;
     try {
-      body = JSON.parse(rawBody) as Record<string, unknown>;
+      body = JSON.parse(rawBody);
     } catch {
       throw new Error(`Body no es JSON válido: ${rawBody.slice(0, 200)}`);
     }
 
-    // 3. Demo es rol 'cliente': esperamos 200 con users[] o 401/403 con { error }
+    // 3. Demo es rol 'cliente': esperamos 200 con array de users o 401/403 con { error }
     if (res.status === 200) {
-      const users = (body as { users?: unknown }).users;
-      assert(Array.isArray(users), "200 sin array `users` en el body");
+      const users = Array.isArray(body)
+        ? body
+        : (body as { users?: unknown }).users;
+      assert(
+        Array.isArray(users),
+        `200 sin array de users en el body: ${rawBody.slice(0, 200)}`,
+      );
       for (const u of users as Array<Record<string, unknown>>) {
         const userId = u.user_id ?? u.id;
         if (typeof userId === "string" && UUID_RE.test(userId)) {
