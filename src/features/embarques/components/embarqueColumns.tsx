@@ -36,10 +36,16 @@ interface ContenedorCellProps {
 }
 
 function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCellProps) {
-  const { count, primero, pendientes, pendientesTitle } = derivarEstadoContenedor(e, info, legacyCount);
+  const { count, primero, pendientes, pendientesTitle, esLcl } = derivarEstadoContenedor(e, info, legacyCount);
+  const mostrarLcl = esLcl && !primero;
   return (
     <span className="inline-flex items-center gap-1.5 flex-wrap">
-      <span className="truncate max-w-[80px]" title={primero}>{primero || "-"}</span>
+      <span className="truncate max-w-[80px]" title={primero || (mostrarLcl ? "LCL · sin contenedor asignado" : "")}>
+        {primero || (mostrarLcl ? "—" : "-")}
+      </span>
+      {mostrarLcl && (
+        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title="LCL · sin contenedor asignado">LCL</Badge>
+      )}
       {count > 1 && (
         <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
       )}
@@ -58,6 +64,7 @@ function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCellProps)
     </span>
   );
 }
+
 
 /**
  * Columnas nativas TanStack (`ColumnDef<EmbarqueRow>`) usadas por
