@@ -83,9 +83,11 @@ async function callEdgeFunction(
     throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
   }
 
+  let attemptCount = 0;
   const res = await fetchWithRetry(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-cfdi-xml`,
     () => {
+      attemptCount += 1;
       const formData = new FormData();
       formData.append("file", file);
       formData.append("categorias", JSON.stringify(categorias));
@@ -105,7 +107,18 @@ async function callEdgeFunction(
         });
       },
     },
-  );
+  ).catch((err) => {
+    // 13.114.5: breadcrumb final con cuántos intentos se agotaron antes de
+    // que el último throw llegue al captureException superior. Sin esto no
+    // distinguimos "falló al primer intento" vs "fallaron los 3".
+    Sentry.addBreadcrumb({
+      category: "cfdi",
+      message: "parse_cfdi_xml.exhausted",
+      level: "error",
+      data: { attempt_count: attemptCount },
+    });
+    throw err;
+  });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Error al procesar el XML" }));
