@@ -1,56 +1,67 @@
-## Contexto
+# Ola 3 — Wizards reales con FormDialogShell + FormDialogStepper
 
-Embarques ya quedó migrado completo en el turno anterior (`13.123.0`). Los `Dialog` que quedan dentro de `src/features/embarques` (`TabCierre`) y `src/features/operaciones` (`EmbarquesEstadoDialog`) son **paneles de lectura / diálogos de avance de estado**, no formularios — quedan fuera del shell (igual que `DialogMarcarFacturada`, `DialogEliminarEmbarque`, etc.).
+Alcance aprobado: **los tres** (BulkImport + Liquidación + ImportarLeadsCsv).
 
-Los pendientes reales del plan original son **Costeo (3)** + **Cotización/CRM extras (4)**. Aprovecho para incluir también dos modales de Costeo que salieron en la auditoría pero no estaban listados: el `Dialog` inline de **CosteoNavieras** (carta-garantía / tabulador) y el de **CosteoDemorasVenta**.
+## Objetivo
 
-## Alcance — 9 modales en 2 sub-grupos
+Llevar los modales **multi-paso** al mismo lenguaje visual del resto del back-office: icon-tile en el header, stepper segmentado arriba del cuerpo, body scrolleable y footer sticky con acciones. Toda la lógica (hooks, mutaciones, parsing CSV) queda intacta — sólo cambia la cáscara.
 
-### Sub-grupo A · Costeo (5)
+## Trabajo por modal
 
-| Modal | Icon sugerido | Size |
-|---|---|---|
-| `RutaFormDialog` | `Route` | `lg` |
-| `TarifaForm` | `Tag` | `2xl` |
-| `CosteoAgenteFormDialog` | `Users` | `xl` |
-| `BuscarTarifaDialog` | `Search` | `2xl` |
-| Dialog inline de **CosteoNavieras** (carta garantía + tabulador escalonado) | `FileSignature` | `xl` |
-| Dialog inline de **CosteoDemorasVenta** | `Timer` | `lg` |
+### 1. `BulkImportDialog` (genérico) — el grande
 
-> Si el dialog inline de Costeo tiene mucha lógica acoplada a la ruta, se extrae a `src/features/costeo/components/` como componente propio antes de migrarlo (mantengo el límite Power-of-10 de ≤200 líneas).
+Hoy maneja 4 estados internos (`upload → preview → committing → done`) cambiando el body a mano. Migración:
 
-### Sub-grupo B · Cotización / CRM extras (4)
+- Envolver en `FormDialogShell` con `icon=Upload`, `size="2xl"`.
+- Mapear estados a 3 pasos visibles del `FormDialogStepper`:
+  - **Paso 1 · Cargar archivo** (`upload`)
+  - **Paso 2 · Revisar** (`preview`, `committing` muestra spinner dentro del paso 2)
+  - **Paso 3 · Confirmar** (`done`)
+- Mover los botones de `BulkImportFooter` al slot `footer` del shell. `BulkImportBody` se queda como está (sólo pierde el `DialogHeader` que ya no le toca).
+- Beneficio en cascada: `ProveedoresImportDialog`, importador de clientes y cualquier otro consumidor heredan el nuevo look sin tocarse.
 
-| Modal | Icon sugerido | Size | Wizard? |
-|---|---|---|---|
-| `DialogConvertirProspecto` | `UserCheck` | `lg` | no |
-| `EnviarCotizacionDialog` | `Send` | `xl` | no |
-| `RecotizarModal` | `RefreshCw` | `2xl` | no |
-| `RevalidarTarifaModal` | `ShieldCheck` | `2xl` | no |
+### 2. `ImportarLeadsCsvDialog` (CRM)
 
-## Reglas comunes (idénticas a Olas anteriores)
+Tiene su propio hook `useImportarLeadsCsv` y vive aparte del `BulkImportDialog` genérico. No lo fusionamos (riesgo alto y fuera de alcance), pero le damos **el mismo look**:
 
-- Sólo **presentación**: nada de cambios en hooks, servicios, RLS, validaciones, atajos de teclado o controllers.
-- Header con icon-tile + descripción contextual, body scrolleable, footer sticky.
-- Donde haya resumen vivo (totales, badges de validación), va en `headerAside`.
-- Confirmaciones cortas siguen como `AlertDialog` — no migrar.
+- Envolver en `FormDialogShell` con `icon=UserPlus` (o `FileSpreadsheet`), `size="2xl"`.
+- `FormDialogStepper` de 2 pasos: **Cargar → Revisar e importar**.
+- Footer sticky con `Cancelar` + `Importar N leads`.
+- Conservar `useImportarLeadsCsv`, validaciones y `notifySuccess/notifyError`.
+
+### 3. `DialogGenerarLiquidacion` (Comisiones) — auditar y decidir
+
+Revisión con el código en mano:
+
+- Si el formulario actual (período + filtros + botón generar) se siente cómodo en un solo paso → **se queda como está** desde Ola 2, sólo se documenta la decisión en el CHANGELOG.
+- Si tiene fricción real (ej. el usuario no entiende qué va a generarse antes de confirmar) → se parte en wizard de 2 pasos: **Definir período → Revisar comisiones a liquidar**, manteniendo el mismo `headerAside` con totales.
+
+Criterio: no inflar UX por inflar. Power-of-10 manda.
+
+## Reglas comunes (idénticas a Olas 1 y 2)
+
+- Sólo presentación. Cero cambios en hooks, servicios, RLS, validaciones o atajos.
 - Sin nuevos tokens de color.
+- Confirmaciones cortas siguen como `AlertDialog`.
+- Componentes ≤200 líneas; si algún wizard se infla, extraer pasos a archivos hermanos.
 
 ## Validación
 
-- `tsgo` y suite de tests verde por sub-grupo antes de subir versión.
-- Smoke visual en preview de 2 modales por sub-grupo: abrir → cancelar → cerrar sin errores en consola.
+- `tsgo` verde.
+- Suite de tests verde (los de importación de proveedores/leads deberían seguir pasando sin tocarlos).
+- Smoke visual en preview:
+  1. Abrir importador de proveedores → cargar CSV de ejemplo → ver el stepper iluminar pasos 1→2→3.
+  2. Abrir importador de leads (CRM) → mismo flujo.
+  3. Abrir `DialogGenerarLiquidacion` y validar la decisión tomada.
 
-## Entregables por sub-grupo
+## Entregables
 
-1. Sub-PR A (Costeo): bump a `13.124.0` + entrada en `CHANGELOG.md`.
-2. Sub-PR B (Cotización): bump a `13.125.0` + entrada en `CHANGELOG.md`.
+- Bump a `13.128.0`.
+- Entrada en `CHANGELOG.md` listando los 2-3 modales migrados y la decisión sobre Liquidación.
+- Actualización de `mem://style/form-dialog-shell` añadiendo `BulkImportDialog` e `ImportarLeadsCsvDialog` a la lista de referencia de wizards migrados.
 
-## Después de esto queda pendiente (Ola 2 + Ola 3)
+## Después de Ola 3 (fuera de alcance)
 
-- **Presupuesto** (`DialogCategoria`), **Auth/Perfil** (`ForgotPasswordDialog`, `CambiarPasswordDialog`), **Comisiones** (`DialogGenerarLiquidacion`, `DialogRegistrarPagoLiquidacion`), **Auditoría** (`AsignarResponsableDialog`).
-- **Ola 3 wizards reales**: `BulkImportDialog` (validar → mapear → confirmar) + revisar si `DialogGenerarLiquidacion` se trata como wizard.
-
-## Pregunta
-
-¿Arranco con **Sub-grupo A (Costeo, 5 modales)** primero y dejo Cotización para el siguiente turno, o **los 9 en un solo turno**?
+- Paneles de lectura (`TabCierre`, `EmbarquesEstadoDialog`) — no son formularios, se quedan.
+- Wizards de página completa (cotización, embarques) — no son `Dialog`, no aplican al shell.
+- Confirmaciones cortas — siguen como `AlertDialog`.
