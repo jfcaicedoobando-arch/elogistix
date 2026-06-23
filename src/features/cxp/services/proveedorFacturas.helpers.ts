@@ -94,6 +94,8 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     uuid_fiscal: f.uuid_fiscal,
     dias_credito: f.dias_credito,
     notas: f.notas,
+    archivo_xml_url: f.archivo_xml_url,
+    archivo_pdf_url: f.archivo_pdf_url,
   };
 }
 
