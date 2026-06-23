@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { decidirEstadoFactura, type EstadoFacturaProveedor } from "./estadoFacturaProveedor";
 
 export type PagoProveedor = Tables<"pagos_proveedor">;
 
@@ -91,9 +92,11 @@ async function recalcularEstadoFactura(facturaId: string) {
     .maybeSingle();
   if (e2) throw e2;
   if (!fact) return;
-  if (fact.estado === "Cancelada" || fact.estado === "Borrador") return;
   const saldo = Number(saldoRow?.saldo ?? 0);
-  const nuevoEstado: "Pagada" | "Vigente" = saldo <= 0.01 ? "Pagada" : "Vigente";
+  const nuevoEstado = decidirEstadoFactura(
+    fact.estado as EstadoFacturaProveedor,
+    saldo,
+  );
   if (nuevoEstado !== fact.estado) {
     await supabase.from("proveedor_facturas").update({ estado: nuevoEstado }).eq("id", facturaId);
   }
