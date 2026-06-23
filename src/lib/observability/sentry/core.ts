@@ -194,7 +194,9 @@ export function initSentry(): void {
       }),
     ],
   });
+  Sentry.setTag("is_pwa", isPwa ? "true" : "false");
 }
+
 
 /** True una vez `initSentry()` se ha invocado al menos una vez. */
 export function isSentryReady(): boolean {
