@@ -107,7 +107,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           accessorFn: (u) => u.role,
           enableSorting: true,
           sortingFn: sortByRoleHierarchy,
-          meta: { width: "w-[220px]" },
+          meta: { width: "w-[1%] whitespace-nowrap" },
           cell: ({ row }) => {
             const role = row.original.role;
             return (
