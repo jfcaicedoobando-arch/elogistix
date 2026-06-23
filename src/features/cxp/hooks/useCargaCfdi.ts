@@ -83,5 +83,5 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
     }
   }, [xml, pdf, categorias, onParsed]);
 
-  return { xml, pdf, loading, setPdf, reset, handleXml, procesar };
+  return { xml, pdf, loading, setXml, setPdf, reset, handleXml, procesar };
 }
