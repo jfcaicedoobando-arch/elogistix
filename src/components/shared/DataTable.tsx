@@ -35,6 +35,9 @@ interface DataTableProps<T> {
   rowClassName?: (item: T) => string;
   sortMode?: "client" | "server";
   controlledSort?: { key: string | null; dir: SortDir };
+  /** Orden inicial sólo para `sortMode="client"` (default). En server-sort
+   *  el orden vive en el page-state y se pasa vía `controlledSort`. */
+  initialSort?: { key: string; dir: SortDir };
   onSortChange?: (key: string | null, dir: SortDir) => void;
   density?: TableDensity;
   striped?: boolean;
