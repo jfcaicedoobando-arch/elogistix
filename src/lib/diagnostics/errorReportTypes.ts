@@ -56,6 +56,12 @@ export interface ErrorReport {
     hint?: string;
     stack?: string;
     validationErrors?: ValidationIssue[];
+    cause?: {
+      name?: string;
+      message?: string;
+      code?: string | number;
+      status?: number;
+    };
   };
   context?: Record<string, unknown>;
 }

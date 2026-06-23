@@ -120,6 +120,33 @@ function fromObject(err: unknown): Details {
   };
 }
 
+/** Extrae 1 nivel de `cause` como objeto plano (sin recursión profunda). */
+function extractCause(err: unknown): Details["cause"] | undefined {
+  if (!err || typeof err !== "object") return undefined;
+  const c = (err as { cause?: unknown }).cause;
+  if (!c) return undefined;
+  if (c instanceof Error) {
+    const anyC = c as Error & MaybePostgrestError;
+    return {
+      name: c.name,
+      message: c.message,
+      code: codeOr(anyC.code),
+      status: statusOr(anyC.status),
+    };
+  }
+  if (typeof c === "object") {
+    const o = c as MaybePostgrestError;
+    return {
+      name: strOr(o.name),
+      message: strOr(o.message),
+      code: codeOr(o.code),
+      status: statusOr(o.status),
+    };
+  }
+  if (typeof c === "string") return { message: c };
+  return undefined;
+}
+
 export function extractErrorDetails(err: unknown): Details {
   if (err == null) return {};
   if (typeof err === "string") return { message: err };
@@ -134,6 +161,8 @@ export function extractErrorDetails(err: unknown): Details {
     base.validationErrors = mapValidationIssues(zod);
     if (!base.name || base.name === "Error") base.name = "ZodError";
   }
+  const cause = extractCause(err);
+  if (cause) base.cause = cause;
   return base;
 }
 
@@ -156,6 +185,19 @@ function fromHttpStatus(status: number): AppErrorCode | null {
   return null;
 }
 
+/** ¿Es un TypeError de red ("Failed to fetch" / "network")? */
+function isNetworkTypeError(v: unknown): boolean {
+  if (!v) return false;
+  if (v instanceof TypeError && /fetch|network/i.test(v.message)) return true;
+  if (typeof v === "object") {
+    const o = v as { name?: unknown; message?: unknown };
+    if (o.name === "TypeError" && typeof o.message === "string" && /fetch|network/i.test(o.message)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Deriva un `errorCode` estable a partir de la forma del error. */
 export function deriveErrorCode(err: unknown): AppErrorCode {
   if (err == null) return ERROR_CODES.UNKNOWN;
@@ -172,7 +214,7 @@ export function deriveErrorCode(err: unknown): AppErrorCode {
     const mapped = fromHttpStatus(status);
     if (mapped) return mapped;
   }
-  if (err instanceof TypeError && /fetch|network/i.test(err.message)) {
+  if (isNetworkTypeError(err) || isNetworkTypeError(e.cause)) {
     return ERROR_CODES.NETWORK_ERROR;
   }
   return ERROR_CODES.UNKNOWN;
