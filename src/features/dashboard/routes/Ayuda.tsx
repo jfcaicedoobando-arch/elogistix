@@ -12,8 +12,9 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { GLOSARIO, MODULOS } from "./ayudaContent";
 
 /**
- * Página /ayuda — onboarding y referencia rápida para operadores.
- * Contenido en src/content/ayudaContent.ts (separado para mantener <200 líneas).
+ * Página /ayuda — onboarding y referencia rápida para el usuario final.
+ * Contenido en src/features/dashboard/routes/ayudaContent.ts.
+ * v13.118.1 — Glosario expandido y 12 módulos por rol con índice clickeable.
  */
 export default function Ayuda() {
   const [search, setSearch] = useState("");
@@ -71,6 +72,27 @@ export default function Ayuda() {
         </TabsList>
 
         <TabsContent value="faq" className="space-y-4">
+          {!search && (
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                  Ir a una sección
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {MODULOS.map((m) => (
+                    <a
+                      key={m.id}
+                      href={`#${m.id}`}
+                      className="inline-flex items-center px-3 py-1 text-xs rounded-md border border-border bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                    >
+                      {m.titulo}
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {modulosFiltrados.length === 0 ? (
             <Card>
               <CardContent className="p-6">
@@ -79,11 +101,18 @@ export default function Ayuda() {
             </Card>
           ) : (
             modulosFiltrados.map((modulo) => (
-              <Card key={modulo.id}>
+              <Card key={modulo.id} id={modulo.id} className="scroll-mt-20">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-base">
-                    <span>{modulo.titulo}</span>
-                    <Badge variant="secondary">{modulo.faqs.length}</Badge>
+                  <CardTitle className="flex items-start justify-between gap-3 text-base">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span>{modulo.titulo}</span>
+                      {modulo.audiencia && modulo.audiencia.length > 0 && (
+                        <span className="text-[11px] font-normal text-muted-foreground">
+                          Para: {modulo.audiencia.join(" · ")}
+                        </span>
+                      )}
+                    </div>
+                    <Badge variant="secondary" className="shrink-0">{modulo.faqs.length}</Badge>
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">{modulo.resumen}</p>
                 </CardHeader>
@@ -138,12 +167,13 @@ export default function Ayuda() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
-            Contacta al administrador de tu organización (sección <strong>Usuarios</strong> del menú lateral)
-            o al super-admin del sistema para reportar un problema o sugerir mejoras.
+            Usa el botón flotante de <strong>Feedback</strong> (esquina inferior) para reportar un problema
+            o sugerir mejora; el equipo lo recibe con captura de pantalla y contexto automático.
           </p>
           <p>
-            El registro completo de cambios y nuevas funcionalidades vive en el archivo{" "}
-            <code>CHANGELOG.md</code> del repositorio.
+            El registro completo de cambios y funciones nuevas vive en <code>CHANGELOG.md</code>.
+            Si eres administrador de la organización, también puedes consultar <strong>/auditoria</strong>{" "}
+            para ver el estado técnico del sistema.
           </p>
         </CardContent>
       </Card>

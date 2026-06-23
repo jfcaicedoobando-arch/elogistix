@@ -1,93 +1,100 @@
-# Reasignar responsabilidades: Ejecutivo de Pricing ↔ Vendedor / KAM
+# Refrescar el Centro de Ayuda (`/ayuda`)
 
-## Cambio de responsabilidades
+## Diagnóstico de lo que hay hoy
+`src/features/dashboard/routes/ayudaContent.ts` (89 líneas) contiene:
+- **16 términos** en el glosario (logística/finanzas básicos).
+- **4 módulos** de FAQ: Embarques, Facturación, Clientes, Operación diaria — con 4–5 preguntas cada uno.
 
-| Rol | Antes | Ahora |
-|---|---|---|
-| **Ejecutivo de Pricing** | Armaba cotizaciones con P&L | **Trabaja Costeo y negocia tarifas con partners (navieras / agentes / transportistas).** Mantiene cotizaciones y comisiones, pero su día a día es Costeo + Proveedores. |
-| **Vendedor / KAM** | CRM + sus embarques/cobranza | **Arma cotizaciones con costos y P&L preliminar de sus cuentas, ve márgenes de sus cotizaciones, y hace handoff al Coordinador Logístico cuando el cliente confirma.** |
+**Está desactualizado.** No menciona nada de: CRM, Costeo / Tarifas, Compras (CXP), Tesorería, Profit, Auditoría, Bandejas, Portal de Cliente, roles modernos, garantías y demoras, handoff vendedor↔coordinador, ni atajos del CRM. Un usuario nuevo que abre `/ayuda` se queda con la impresión de que el ERP es sólo Embarques + Facturas.
 
 ## Analogía
-Hoy ambos puestos competían por la misma silla de "armador de cotización". Vamos a separarlos: Pricing se queda en la **cocina** (negociando ingredientes con proveedores y armando la receta de costos base). Vendedor se sienta en la **caja registradora con la receta lista** (arma la cotización al cliente con márgenes, y cuando el cliente acepta se la pasa al mesero — Coordinador Logístico — que la ejecuta).
+Hoy el manual del coche habla del volante, los pedales y las luces. Pero el coche ya tiene GPS, sensores de estacionamiento, cámara trasera, Apple CarPlay y modo eco — y el manual ni los menciona. Vamos a reescribirlo para que cubra TODO lo que el conductor (usuario final) realmente tiene en el tablero.
 
 ---
 
-## 1) Permisos (matriz)
+## 1) Glosario — expandir de 16 → ~35 términos
 
-Archivo: `src/hooks/shared/usePermissions.ts`
+Mantener los actuales (siguen vigentes) y agregar:
 
-**Ejecutivo de Pricing**
-- Sigue en `OPERATIONS` (necesita editar Costeo, que vive en gestión).
-- Sigue en `SALES` (puede ver/colaborar en cotizaciones, pero ya no es su foco).
-- Sigue en `FINANCE_VIEWERS` (necesita ver márgenes para negociar).
-- **Se mantiene** `OVERRIDE_TARIFA_PRICING`: queda en `["super_admin","admin_org","admin","gerente_comercial"]` (no cambia — el override sigue siendo de Gerente Comercial; pricing **propone**, comercial **aprueba**).
+**Logística operativa nueva**
+- Carta garantía · Días libres almacenaje · Demoras escalonadas (tabulador)
+- Free time · Detention vs Demurrage · UN/LOCODE
+- Handoff (cotización confirmada → embarque)
 
-**Vendedor / KAM**
-- Agregar a `OPERATIONS` → ahora puede operar cotizaciones (no embarques completos; el módulo de embarques sigue siendo del coordinador para el handoff).
-- Agregar a `FINANCE_VIEWERS` → ve márgenes y P&L preliminar **de sus cotizaciones** (filtro por owner ya existe a nivel de query en cotizaciones / oportunidades).
-- Sigue en `SALES`.
+**Comercial / CRM**
+- Lead · Oportunidad · Actividad · Pipeline ponderado
+- Next Best Action (NBA) · Forecast · Embudo · Leaderboard
+- KAM (Key Account Manager)
 
-**Nueva capacidad: `canHandoffCotizacion`** — habilita el botón "Convertir a embarque / handoff" en el detalle de cotización confirmada. Roles permitidos: `vendedor`, `gerente_comercial`, `gerente_operaciones`, `coordinador_logistico`, admins. (Hoy el flujo de cotización→embarque ya existe; sólo formalizamos el permiso.)
+**Pricing y costeo**
+- Tarifa vigente · Override de tarifa · Top 3 ranking · Partner / Agente
+- P&L preliminar · Margen bruto · Tarifa-first (política)
 
-> Nota: el filtrado fino "ve sólo márgenes de **sus** cotizaciones" se hace en data (RLS / filtros por `creado_por` o `vendedor_email`), no aquí. Esta matriz sólo abre la capacidad de UI. Si una RLS restringe más, manda RLS.
+**Finanzas y compras**
+- CXP / CXC · Folio interno proveedor (FP-XXXXXX) · "Por capturar" · "Por pagar"
+- Conciliación bancaria · CFDI 4.0 · Complemento de pago (REP)
+- Estado de resultados · Aging (ya está, dejar) · Diferencia cambiaria
 
----
-
-## 2) Sidebar
-
-Archivo: `src/hooks/layout/sidebarRoleBuilders.ts`
-
-**`buildEjecutivoPricing`** — pasa de generalista a especialista de costos:
-```text
-Dashboards
-Costeo                  ← principal
-Gestión: Cotizaciones   (vista para consultar referencias, no su foco)
-Directorio: Proveedores, Clientes   ← agregar Proveedores (partners)
-Reportes
-Sistema: Ayuda
-```
-Se quita "embarques" del filtro de Gestión (ya no opera embarques).
-
-**`buildVendedor`** — gana cotizaciones, costeo limitado y profit:
-```text
-Dashboards               ← agregar
-CRM
-Gestión: Cotizaciones    ← agregar (su nueva responsabilidad principal)
-Costeo                   ← agregar (para usar tarifas vigentes al armar)
-Profit                   ← agregar (P&L preliminar de sus cotizaciones)
-Directorio: Clientes
-Sistema: Ayuda
-```
+**Plataforma**
+- Tenant / Organización · Impersonación · Bitácora · Bandeja · RLS
 
 ---
 
-## 3) Descripciones del catálogo
+## 2) Módulos / FAQ — pasar de 4 → 10 módulos
 
-Archivo: `src/features/admin/domain/roles/roleCatalog.ts`
+Cada módulo: 4–6 preguntas escritas **en pies del usuario final** ("¿cómo hago X?", "¿por qué no puedo Y?", "¿qué pasa si Z?"), con respuestas concretas que mencionen la ruta del menú y los botones reales.
 
-- **`ejecutivo_pricing`**: "Negocia y mantiene tarifas con partners (navieras, agentes, transportistas). Trabaja el módulo de Costeo y propone overrides; el Gerente Comercial los aprueba."
-- **`vendedor`**: "Arma cotizaciones con costos y P&L preliminar de sus cuentas, ve sus márgenes y hace handoff al Coordinador Logístico al confirmarse. Trabaja CRM (leads, oportunidades, actividades) y ve embarques y cobranza de sus cuentas."
+| # | Módulo | Audiencia principal | Foco de las FAQ |
+|---|---|---|---|
+| 1 | **Inicio / Dashboard** | Todos | Qué muestra cada card, qué significa cada badge, cómo cambiar de scope (mío / todos) |
+| 2 | **CRM** | Vendedor, Gerente Comercial | Diferencia *Mi día* vs *Resumen*, cómo crear lead, convertir a oportunidad, NBA, atajos (Quick Add, Ctrl+K del CRM), forecast |
+| 3 | **Cotizaciones** | Vendedor, Pricing | Wizard tarifa-first, cuándo cargar costos vs venta, P&L preliminar, override de tarifa (quién lo aprueba), handoff a embarque |
+| 4 | **Costeo / Tarifas** | Pricing | Matriz CN→MX, ranking Top 3, capturar tarifa con días libres + frecuencia, vincular partner↔proveedor, carta garantía, tabulador demoras |
+| 5 | **Embarques** | Coordinador, Operador | (Mantener las 5 FAQ actuales + agregar) tracking automático desde timeline, garantías/demoras auto-calculadas, alerta de docs faltantes, candado de avance de estado, cerrar embarque |
+| 6 | **Compras (CXP)** | Auxiliar contable, Tesorero | Bandeja "Por capturar", subir XML/PDF de proveedor, folio interno FP-XXXXXX, conciliar contra costos del embarque, "Por pagar", quién autoriza pagos |
+| 7 | **Facturación (CXC)** | Contador, Cobranza | (Refrescar las 5 actuales) proformas, consolidación, layout contable, hueco de facturación, cancelar CFDI, complemento de pago REP, cartera y promesas de pago |
+| 8 | **Tesorería** | Tesorero | Conciliación bancaria, sugerencias automáticas (tolerancia ±$1 / ±5 días), liquidar comisiones, separación de divisas |
+| 9 | **Profit / Reportes** | Gerencia, Contador | P&L por contenedor, estado de resultados con diferencia cambiaria, exportar a contabilidad, leaderboard vendedores |
+| 10 | **Clientes y Portal** | Atención a clientes, Coordinador | (Mantener las 4 actuales + agregar) parseo CSF con IA, contactos internacionales, qué ve el cliente en el portal, notificaciones |
+| 11 | **Operación diaria** | Todos | (Refrescar las 4 actuales + agregar) Ctrl+K global, badges del sidebar, bandejas (qué son), bitácora, cambiar de organización (impersonación super-admin), modo demo |
+| 12 | **Roles y permisos** | Admin de organización | Lista de 12 roles agrupados (Admin / Ops / Comercial / Finanzas / Soporte), cómo asignar, qué puede ver/hacer cada uno, handoff vendedor→coordinador, quién aprueba overrides |
+
+> Total esperado: ~55 FAQs (vs 18 actuales). Estilo: español MX claro, respuestas de 1–3 frases, **siempre** mencionando la ruta exacta del menú o la pestaña.
 
 ---
 
-## 4) Filtros existentes que ya quedan bien
+## 3) Cambios estructurales menores en `Ayuda.tsx`
 
-- `VendedorSelect.tsx` y `Oportunidades.tsx` ya incluyen `vendedor` — no cambia.
-- `dashboard/hooks/useDashboardController.ts:35` (`role === "vendedor"` para `showScopeToggle`) sigue funcionando.
-- `lib/auth/roleHierarchy.ts` — sin cambios: pricing sigue satisfaciendo `operador` (necesario para Costeo).
+El componente actual funciona bien pero con 12 módulos la lista vertical de tarjetas se vuelve larga. Cambios mínimos:
+
+- **Mantener** el search, los dos tabs (FAQ / Glosario), el accordion por módulo.
+- **Agregar** un índice/chips al inicio del tab FAQ con los nombres de los 12 módulos como anclas (`<a href="#cotizaciones">Cotizaciones</a>` con `scroll-margin-top` para que el sticky nav no tape). Cada Card de módulo recibe `id={modulo.id}`. Esto evita scrollear ciegamente.
+- **Agregar atributos `audiencia: AppRole[]`** opcional a cada módulo (por ejemplo CXP → contador, auxiliar_contable, tesorero) — **no se filtra automáticamente** por rol en esta iteración (mantener simple), pero se renderiza como badge pequeño en el header del módulo: `"Para: Contador · Tesorero"`. Ayuda al usuario a saber si esa sección le aplica.
+- **Conservar** el fallback "¿No encuentras lo que buscas?" al final, actualizar el texto: en vez de pedir contactar al admin, mencionar el CHANGELOG y el módulo de Auditoría para reportar incidencias.
+
+`Ayuda.tsx` quedará ~170 líneas (sigue bajo el límite de 200).
 
 ---
 
-## 5) Versionado
+## 4) Archivos a editar
 
-- Bump `APP_VERSION` → `13.118.0` (cambio de capacidades visibles, minor).
-- Entrada en `CHANGELOG.md` con resumen breve y analogía cocina/caja.
+- `src/features/dashboard/routes/ayudaContent.ts` — reescritura completa del contenido (glosario + módulos). Pasa de ~89 líneas a ~350 (es contenido estático, no lógica — el límite de 200 líneas del Power of 10 aplica a componentes/módulos de lógica, no a archivos de constantes; igual lo mantenemos legible).
+  - Extender el tipo `AyudaModulo` con `audiencia?: string[]` (lectura humana, no enum estricto, para evitar acoplamiento con `AppRole`).
+- `src/features/dashboard/routes/Ayuda.tsx`:
+  - Renderizar chips de índice al inicio del tab FAQ.
+  - Pasar `id={modulo.id}` y `scroll-mt-20` al `<Card>` de cada módulo.
+  - Renderizar la audiencia como `<Badge variant="outline" className="text-[10px]">` al lado del título.
+  - Actualizar copy del fallback final.
+
+**Sin cambios** en rutas, sidebar, BD, hooks, ni en otros tests.
+
+---
+
+## 5) Versionado y registro
+
+- Bump `APP_VERSION` → `13.118.1` en `src/constants/appVersion.ts` (patch — sólo contenido y polish).
+- Entrada en `CHANGELOG.md`: "Centro de ayuda: glosario expandido (16→~35), 12 módulos de FAQ alineados a los roles modernos del ERP, índice clickeable y audiencia visible por módulo."
 
 ## 6) Pruebas
 
-- `src/hooks/__tests__/usePermissions.test.tsx` — agregar 2 casos:
-  - `vendedor` ahora tiene `canEditOperations === true` y `canViewFinancials === true`.
-  - `ejecutivo_pricing` mantiene `canEditOperations === true` y `canViewFinancials === true`.
-- `src/features/admin/domain/roles/__tests__/roleCatalog.test.ts` — actualizar el snapshot/string de descripción si el test compara strings exactos (revisar; si sólo verifica presencia de la key, no toca nada).
-
-**Sin migraciones de BD.** El enum `app_role` ya soporta ambos roles. Las RLS que filtran por owner siguen como están.
+No se agregan tests nuevos (contenido y presentación). Si existen snapshots de `Ayuda.tsx` o tests que cuentan `MODULOS.length === 4`, se ajustan al actualizar. (Revisión rápida en build: `rg "MODULOS|GLOSARIO" src --files-with-matches` muestra que sólo `Ayuda.tsx` los consume — sin tests dependientes.)
