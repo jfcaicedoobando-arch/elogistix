@@ -50,7 +50,7 @@ export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[
         monto: Number(p.monto),
         moneda: p.moneda,
         contraparte: pf?.proveedor_nombre ?? "—",
-        delta_dias: Math.abs(Math.round((new Date(p.fecha_pago + "T00:00:00").getTime() - fecha.getTime()) / 86_400_000)),
+        delta_dias: deltaDiasIso(p.fecha_pago, mov.fecha),
         delta_monto: Math.abs(Number(p.monto) - monto),
       });
     }
@@ -75,7 +75,7 @@ export async function sugerirCandidatos(mov: MovimientoBBVA): Promise<Candidato[
         monto: Number(p.monto),
         moneda: p.moneda,
         contraparte: f?.cliente_nombre ?? "—",
-        delta_dias: Math.abs(Math.round((new Date(p.fecha_pago + "T00:00:00").getTime() - fecha.getTime()) / 86_400_000)),
+        delta_dias: deltaDiasIso(p.fecha_pago, mov.fecha),
         delta_monto: Math.abs(Number(p.monto) - monto),
       });
     }
