@@ -64,6 +64,7 @@ function DataTableInner<T>({
   sortMode = "client",
   controlledSort,
   onSortChange,
+  initialSort,
   density = "comfortable",
   striped = true,
   hoverable = true,
@@ -78,6 +79,7 @@ function DataTableInner<T>({
     sortMode,
     controlledSort,
     onSortChange,
+    initialSort,
     getRowId: (row, index) => rowKey(row) ?? String(index),
   });
 
