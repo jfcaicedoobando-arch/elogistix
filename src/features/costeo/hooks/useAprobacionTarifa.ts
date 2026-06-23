@@ -1,0 +1,40 @@
+/**
+ * Hook: mutaciones de aprobación/rechazo/reactivación de tarifas para operaciones.
+ */
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { aprobarTarifa, rechazarTarifa, reactivarTarifa } from "@/features/costeo/services/aprobacion";
+
+function describeError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "object" && e && "message" in e) return String((e as { message: unknown }).message);
+  return "Error desconocido";
+}
+
+export function useAprobacionTarifa() {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["costeo-tarifas"] });
+    qc.invalidateQueries({ queryKey: ["portal-agente", "tarifas"] });
+  };
+
+  const aprobar = useMutation({
+    mutationFn: (id: string) => aprobarTarifa(id),
+    onSuccess: () => { invalidate(); toast.success("Tarifa aprobada — ahora está vigente."); },
+    onError: (e) => toast.error(`No se pudo aprobar: ${describeError(e)}`),
+  });
+
+  const rechazar = useMutation({
+    mutationFn: ({ id, motivo }: { id: string; motivo: string }) => rechazarTarifa(id, motivo),
+    onSuccess: () => { invalidate(); toast.success("Tarifa rechazada — el agente fue notificado."); },
+    onError: (e) => toast.error(`No se pudo rechazar: ${describeError(e)}`),
+  });
+
+  const reactivar = useMutation({
+    mutationFn: (id: string) => reactivarTarifa(id),
+    onSuccess: () => { invalidate(); toast.success("Tarifa devuelta a borrador."); },
+    onError: (e) => toast.error(`No se pudo reactivar: ${describeError(e)}`),
+  });
+
+  return { aprobar, rechazar, reactivar };
+}
