@@ -48,6 +48,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   vendedor: "Arma cotizaciones de sus cuentas con costos y P&L preliminar, ve sus márgenes y hace handoff al Coordinador Logístico al confirmarse. Trabaja CRM completo.",
   customer_service: "Solo lectura operativa: embarques, tracking, clientes. Sin acceso a finanzas, configuración ni CRM.",
   cliente: "Acceso restringido al portal del cliente.",
+  agente_carga: "Acceso al portal del agente: sube tarifas marítimas, carta garantía y demoras de su propio agente. No ve datos comerciales internos.",
   admin: "Rol legado. Usar Administrador en su lugar.",
   operador: "Rol legado. Usar Coordinador Logístico en su lugar.",
   viewer: "Rol legado. Usar Atención a Clientes en su lugar.",
