@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.16] - 2026-06-23
+- **fix(cxp/sugerir-embarques)**: Sentry reportaba 6 eventos del issue `JAVASCRIPT-REACT-16` en `/cxp` (release 13.114.13, 2 usuarios afectados, regresión) con `code: 42804` y `details: "Returned type estado_embarque does not match expected type text in column 4."`. La RPC `public.sugerir_embarques_para_proveedor` declaraba la columna 4 como `text` pero las tres ramas del `UNION ALL` devolvían `e.estado`, que es del tipo enum `estado_embarque`; Postgres rechazaba la consulta. Fix: nueva migración que castea `e.estado::text` en los tres SELECTs (rama nombre directo, rama tarifa-agente, rama tarifa-naviera) sin cambiar firma ni GRANTs. Analogía: el molde de galletas prometía "texto" en la cuarta casilla pero el horno entregaba una "etiqueta enumerada"; ahora se moldea explícitamente a texto antes de salir.
+
 ## [13.114.15] - 2026-06-23
 - **feat(cxp/detalle-factura)**: en el modal "Detalle de factura de proveedor" ahora se ve un bloque **"CFDI adjuntos"** con dos filas (XML y PDF). Cada una muestra badge verde "Adjunto" + botón **Abrir** (URL firmada de 5 min sobre el bucket privado `facturas`), o badge gris "No adjunto" si el archivo no se cargó. Cambios: (1) `PROVEEDOR_FACTURAS_SELECT` ahora trae `archivo_xml_url` y `archivo_pdf_url`; (2) interfaz `FacturaCxP` expone ambos campos; (3) `InfoFacturaSection.tsx` agrega el bloque usando el helper `openFacturaInNewTab` ya existente. Analogía: antes el folder de la factura no tenía índice — había que abrirla para saber si traía papeles adjuntos; ahora la portada ya te dice "trae XML y PDF" con su botón para sacarlos.
 
