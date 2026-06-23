@@ -4,6 +4,10 @@
  * en vez de `wrapEdgeHandler`. El test garantiza que nadie borre el catch o
  * la llamada a Sentry de estas funciones críticas para la operación.
  *
+ * 13.115.0 (Sprint 1.3): añadido test de **exhaustividad** — toda edge function
+ * con `index.ts` debe estar listada en `MANUAL_COVERAGE` o en la lista CRITICAL
+ * de `sentry-edge-wrapping.test.ts`. Antes una función nueva pasaba invisible.
+ *
  * Si añades una función nueva con manejo manual, agrégala a `MANUAL_COVERAGE`.
  * Si la migras a `wrapEdgeHandler`, muévela a `sentry-edge-wrapping.test.ts`.
  */
@@ -12,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
+const FUNCTIONS_DIR = path.join(ROOT, "supabase/functions");
 
 const MANUAL_COVERAGE = [
   "supabase/functions/user-management/index.ts",
@@ -23,6 +28,30 @@ const MANUAL_COVERAGE = [
   "supabase/functions/demo-access/index.ts",
   "supabase/functions/client-error-log/index.ts",
 ];
+
+// Sincronizado con CRITICAL en sentry-edge-wrapping.test.ts.
+const WRAPPED_COVERAGE = [
+  "supabase/functions/facturapi-emitir/index.ts",
+  "supabase/functions/facturapi-cancelar/index.ts",
+  "supabase/functions/facturapi-emitir-rep/index.ts",
+  "supabase/functions/facturapi-cancelar-rep/index.ts",
+  "supabase/functions/send-transactional-email/index.ts",
+  "supabase/functions/process-email-queue/index.ts",
+  "supabase/functions/enviar-cotizacion-email/index.ts",
+  "supabase/functions/auditoria-weekly-digest/index.ts",
+  "supabase/functions/handle-email-suppression/index.ts",
+  "supabase/functions/handle-email-unsubscribe/index.ts",
+  "supabase/functions/preview-transactional-email/index.ts",
+  "supabase/functions/exchange-rates/index.ts",
+  "supabase/functions/parse-cfdi-xml/index.ts",
+];
+
+// Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia
+// que pueda fallar de modo recuperable). Si se añade lógica de negocio, sacar
+// de esta lista y añadir a manual o wrapped.
+const SENTRY_EXEMPT = new Set<string>([
+  "supabase/functions/sentry-tunnel/index.ts",
+]);
 
 describe("Edge functions con manejo manual de Sentry", () => {
   it.each(MANUAL_COVERAGE)("%s importa y llama captureEdgeException", (rel) => {
@@ -38,5 +67,30 @@ describe("Edge functions con manejo manual de Sentry", () => {
     // 2) Inicializa Sentry y captura excepciones en al menos un punto.
     expect(src).toMatch(/initSentryEdge\(/);
     expect(src).toMatch(/captureEdgeException\(/);
+  });
+
+  // Sprint 1.3 (13.115.0): exhaustividad. Antes, una función nueva podía
+  // omitir Sentry sin que ningún test fallara.
+  it("toda edge function con index.ts está cubierta (manual, wrapped o exenta)", () => {
+    const covered = new Set<string>([
+      ...MANUAL_COVERAGE,
+      ...WRAPPED_COVERAGE,
+      ...SENTRY_EXEMPT,
+    ]);
+    const allIndexFiles: string[] = [];
+    for (const name of fs.readdirSync(FUNCTIONS_DIR)) {
+      if (name.startsWith("_")) continue; // _shared, _utils, etc.
+      const indexPath = path.join(FUNCTIONS_DIR, name, "index.ts");
+      if (fs.existsSync(indexPath)) {
+        allIndexFiles.push(`supabase/functions/${name}/index.ts`);
+      }
+    }
+    const missing = allIndexFiles.filter((f) => !covered.has(f));
+    expect(
+      missing,
+      `Edge functions sin cobertura Sentry declarada:\n${missing.join("\n")}\n\n` +
+        `Agrégalas a MANUAL_COVERAGE, a CRITICAL en sentry-edge-wrapping.test.ts, ` +
+        `o (si son proxy puro) a SENTRY_EXEMPT.`,
+    ).toEqual([]);
   });
 });
