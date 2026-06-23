@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.126.0] - 2026-06-23
+- **refactor(ui)**: Ola 2 cierre — sub-grupo **Presupuesto + Auth/Perfil + Comisiones + Auditoría** (6 modales). Migrados: `DialogCategoria` de presupuesto (icon `FolderTree`, `lg`), `ForgotPasswordDialog` (icon `KeyRound`, `md`), `CambiarPasswordDialog` del portal (icon `KeyRound`, `md`), `DialogGenerarLiquidacion` de comisiones (icon `Wallet`, `md`), `DialogRegistrarPagoLiquidacion` con Total a pagar en `headerAside` (icon `BadgeDollarSign`, `lg`) y `AsignarResponsableDialog` de auditoría (icon `UserPlus`, `lg`). Cero cambios en hooks/mutaciones/controllers. Pendiente para Ola 3: `BulkImportDialog` (wizard multi-paso real). Analogía: con esto el back-office completo (cotizar, costear, embarcar, facturar, pagar comisiones, asignar auditorías y hasta cambiar contraseña) habla el mismo lenguaje visual de modales.
+
 ## [13.125.0] - 2026-06-23
 - **refactor(ui)**: Ola 2 de migración a `FormDialogShell` — sub-grupo **Cotización** (4 modales). Migrados: `DialogConvertirProspecto` (icon `UserCheck`, `lg`), `EnviarCotizacionDialog` (icon `Send`, `2xl`), `RecotizarModal` (icon `RefreshCw`, `2xl`) y `RevalidarTarifaModal` (icon `ShieldCheck`, `2xl`, conserva los íconos de severidad inline en el título). Cero cambios en hooks/mutaciones/servicios — sólo presentación. Analogía: ahora también el área comercial-cotizadora (convertir prospecto, enviar al cliente, re-cotizar y revalidar tarifa) usa el mismo membrete que el resto del back-office.
 

@@ -1,22 +1,13 @@
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCambiarPasswordPortal } from "@/features/portal/hooks";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
-import { cn } from "@/lib/utils";
-import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -60,37 +51,15 @@ export function CambiarPasswordDialog({ open, onOpenChange }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("sm:max-w-md", scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>Cambiar contraseña</DialogTitle>
-          <DialogDescription>Ingresa tu nueva contraseña (mínimo 8 caracteres).</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="perfil-pass-nueva">Nueva contraseña</Label>
-            <Input
-              id="perfil-pass-nueva"
-              type="password"
-              value={nueva}
-              onChange={(e) => setNueva(e.target.value)}
-              autoComplete="new-password"
-              maxLength={72}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="perfil-pass-confirma">Confirmar contraseña</Label>
-            <Input
-              id="perfil-pass-confirma"
-              type="password"
-              value={confirma}
-              onChange={(e) => setConfirma(e.target.value)}
-              autoComplete="new-password"
-              maxLength={72}
-            />
-          </div>
-        </div>
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={KeyRound}
+      title="Cambiar contraseña"
+      description="Ingresa tu nueva contraseña (mínimo 8 caracteres)."
+      size="md"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancelar
           </Button>
@@ -98,8 +67,33 @@ export function CambiarPasswordDialog({ open, onOpenChange }: Props) {
             {isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
             Guardar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="perfil-pass-nueva">Nueva contraseña</Label>
+          <Input
+            id="perfil-pass-nueva"
+            type="password"
+            value={nueva}
+            onChange={(e) => setNueva(e.target.value)}
+            autoComplete="new-password"
+            maxLength={72}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="perfil-pass-confirma">Confirmar contraseña</Label>
+          <Input
+            id="perfil-pass-confirma"
+            type="password"
+            value={confirma}
+            onChange={(e) => setConfirma(e.target.value)}
+            autoComplete="new-password"
+            maxLength={72}
+          />
+        </div>
+      </div>
+    </FormDialogShell>
   );
 }
