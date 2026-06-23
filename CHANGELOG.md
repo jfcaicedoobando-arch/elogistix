@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.118.4] - 2026-06-23
+- **refactor(arquitectura)**: 3 archivos rompieron el límite de **200 líneas** del Power of 10 tras los cambios recientes. Se dividen sin cambiar comportamiento: (1) `ayudaContent.ts` (261) → barrel mínimo (11) + `ayudaTypes.ts` + `ayudaGlosario.ts` + `ayudaModulos.ts`; (2) `Usuarios.tsx` (217) → extrae `UsuariosToolbar.tsx` (buscador + filtro + contador); (3) `usuariosColumns.tsx` (220) → extrae `usuariosCells.tsx` con `UsuarioCell` (avatar+email+chip Tú) y `ChangeRoleCell` (select agrupado). Tests de arquitectura ahora pasan (`architecture-baseline`, `audit-report`). Sin cambios visuales ni de lógica. Analogía: un cuaderno se volvió muy grueso para hojear; lo partimos en tres separadores temáticos sin perder una sola página.
+
 ## [13.118.3] - 2026-06-23
+
 - **style(usuarios)**: anchos de columna **fluidos** en la tabla de `/usuarios`. Antes cada columna tenía un ancho fijo en píxeles (`w-[220px]`, `w-[240px]`…) y, en monitores grandes, quedaba un hueco vacío a la derecha; en laptops chicas el select de cambiar rol quedaba apretado. Ahora cada columna declara *cómo* debe comportarse: **Usuario** usa `w-auto min-w-[240px] max-w-[480px]` y absorbe el sobrante (es la columna larga), **Rol / Fecha / Cambiar rol** usan el truco `w-[1%] whitespace-nowrap` para encogerse a su contenido natural, y el trigger del select crece con el viewport (`w-full min-w-[160px] sm:min-w-[180px] lg:min-w-[220px] max-w-[260px]`). Avatares ahora escalan: `h-8 w-8` por defecto, `md:h-9 md:w-9` en monitores ≥768px. Resultado: en monitores 4K la tabla aprovecha todo el ancho; en 1366px no hay scroll horizontal y los selects muestran "Coordinador Logístico" completo. Sin JS extra, todo CSS puro. Analogía: antes la mesa tenía sillas atornilladas al piso; ahora las sillas se acomodan según cuánta gente venga a comer.
 
 ## [13.118.2] - 2026-06-23

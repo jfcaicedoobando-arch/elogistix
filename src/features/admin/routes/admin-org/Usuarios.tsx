@@ -1,17 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
-import { Search, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { ShieldCheck, UserPlus } from "lucide-react";
 import NuevoUsuarioDialog from "@/features/admin/components/usuario/NuevoUsuarioDialog";
 import { DataTable } from "@/components/shared/DataTable";
 import {
@@ -28,13 +18,8 @@ import { notifyWarning } from "@/components/shared/utils/appFeedback";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
-import {
-  ASSIGNABLE_ROLE_GROUPS,
-  ROLE_LABELS,
-  obtenerRangoRol,
-} from "@/features/admin/domain/roles/roleCatalog";
-
-const TODOS = "todos" as const;
+import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
+import { TODOS, UsuariosToolbar } from "./UsuariosToolbar";
 
 export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -153,48 +138,15 @@ export default function Usuarios() {
         onCancel={() => setPendingRole(null)}
       />
 
-      {/* Barra de búsqueda + filtro + resumen */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative flex-1 sm:max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por correo…"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select value={filtroRol} onValueChange={setFiltroRol}>
-            <SelectTrigger className="sm:w-[220px]">
-              <SelectValue placeholder="Filtrar por rol" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todos los roles</SelectItem>
-              {ASSIGNABLE_ROLE_GROUPS.map((group) => (
-                <SelectGroup key={group.label}>
-                  <SelectLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {group.label}
-                  </SelectLabel>
-                  {group.roles.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {ROLE_LABELS[r]}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Users className="h-4 w-4" />
-          <span>
-            <strong className="text-foreground">{usuariosFiltrados.length}</strong> de{" "}
-            {users.length} usuario{users.length === 1 ? "" : "s"} · {rolesPresentes} rol
-            {rolesPresentes === 1 ? "" : "es"}
-          </span>
-        </div>
-      </div>
+      <UsuariosToolbar
+        busqueda={busqueda}
+        onBusquedaChange={setBusqueda}
+        filtroRol={filtroRol}
+        onFiltroRolChange={setFiltroRol}
+        totalFiltrados={usuariosFiltrados.length}
+        total={users.length}
+        rolesPresentes={rolesPresentes}
+      />
 
       <div className="rounded-md border">
         <DataTable
