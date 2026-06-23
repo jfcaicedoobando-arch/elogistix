@@ -1,58 +1,26 @@
-## Problema
-
-El modal "Nueva factura de proveedor" lanza `Failed to fetch` al subir XML. El edge function `parse-cfdi-xml` nunca se ejecuta (no hay logs en la hora del error). Causas probables, en orden:
-
-1. **Falta el header `apikey`** en el `fetch` directo desde `src/features/cxp/services/parseCfdi.ts`. El gateway de Supabase Edge Functions exige `apikey` además de `Authorization`; sin él el request puede rechazarse antes de llegar al handler.
-2. **Llamada al AI Gateway en el camino crítico**. Cuando el modelo se cuelga (timeout de 5–8 s) sumado al cold-start, el browser tira "Failed to fetch". Ya tenemos `fallbackResult`, pero hoy la llamada se *espera* aunque el resultado sea opcional.
-3. **Diagnóstico ciego**: hoy sólo sabemos `lastStatus: null`. No distinguimos preflight CORS vs POST vs DNS.
-
 ## Plan
 
-### 1. Reemplazar `fetch` crudo por `supabase.functions.invoke`
-- En `src/features/cxp/services/parseCfdi.ts`, sustituir el `fetchWithRetry` directo por `supabase.functions.invoke('parse-cfdi-xml', { body: formData })`.
-- El cliente Supabase inyecta `apikey` + `Authorization` automáticamente, maneja CORS y devuelve `{ data, error }` con campos diagnósticos.
-- Conservar la lógica de reintentos envolviéndola alrededor de `invoke` (3 intentos, backoff 1s/3s).
-- Conservar `CfdiUploadError` y su `context`, agregando dos campos: `phase` (`"preflight" | "request" | "response"`) y `errorName` (e.g. `"FunctionsFetchError"`).
+1. **Corregir la causa raíz de producción**
+   - Actualizar `supabase/functions/_shared/cors.ts` para permitir los headers que Sentry agrega en producción: `sentry-trace` y `baggage`.
+   - Esto aplica a `parse-cfdi-xml` porque usa `handlePreflightStrict()` y `buildCors()`.
 
-### 2. Hacer la sugerencia de IA no bloqueante
-En `supabase/functions/parse-cfdi-xml/index.ts`:
-- Bajar el timeout AI de 5s a **2s** (es opcional, ya hay `fallbackResult`).
-- Si el AI tarda más, devolver inmediatamente el CFDI parseado con `ai.categoria_id = null` y `ai.notas = primer concepto`.
-- Resultado: la respuesta nunca tarda más de ~3s aún con cold-start + AI muerto.
+2. **Blindar con pruebas**
+   - Actualizar `supabase/functions/_shared/cors_test.ts` para verificar que el preflight desde `https://librecarga.com` acepta:
+     - headers del SDK (`authorization`, `apikey`, `x-client-info`, etc.)
+     - headers de Sentry (`sentry-trace`, `baggage`)
 
-### 3. Mejorar el toast con la fase de la falla
-En `src/features/cxp/components/CargaCfdiSection.tsx` (o el hook `useCargaCfdi`):
-- Mostrar mensajes distintos según `error.context.phase`:
-  - `preflight` → "El navegador bloqueó la conexión (revisa extensiones/red corporativa)"
-  - `request` → "No se pudo contactar el servidor (revisa internet)"
-  - `response` → "El servidor respondió con error HTTP {status}"
-- Botón "Copiar diagnóstico" que incluye `phase`, `errorName`, `attemptCount`, `latencyMs`, `online`, `lastStatus`.
+3. **Mantener trazabilidad sin romper CORS**
+   - Revisar `src/lib/observability/sentry/core.ts`: hoy `tracePropagationTargets` incluye `*.supabase.co/functions/v1`, por eso Sentry adjunta esos headers a la llamada del CFDI.
+   - No quitaría la trazabilidad si el CORS ya la permite; sólo documentaría el motivo para evitar regresiones.
 
-### 4. Verificación
-- `bunx vitest run src/features/cxp` para asegurar que los tests pasan.
-- Probar el modal en `/cxp` con un XML real y revisar `edge_function_logs` confirmando invocación.
-- Bump `APP_VERSION` a `13.114.11`, entrada nueva en `CHANGELOG.md`.
+4. **Versionado y changelog**
+   - Subir `APP_VERSION`.
+   - Agregar entrada en `CHANGELOG.md` explicando que en `librecarga.com` el navegador cancelaba el POST después del OPTIONS porque el preflight no autorizaba `sentry-trace`/`baggage`.
 
-## Detalles técnicos
+5. **Verificación**
+   - Validar el preflight real contra `parse-cfdi-xml` desde `https://librecarga.com` con `sentry-trace,baggage`.
+   - Ejecutar pruebas relevantes de CORS/edge function si están disponibles.
 
-```text
-ANTES                                    DESPUÉS
-─────────────────────────────────        ─────────────────────────────────
-fetch(URL, {                             supabase.functions.invoke(
-  headers: { Authorization }                'parse-cfdi-xml',
-  body: formData                            { body: formData }
-})                                       )
-  ↓                                        ↓
-gateway puede rechazar                   apikey + auth + CORS automáticos
-sin apikey → "Failed to fetch"           errores tipados con status/body
-```
+## Diagnóstico breve
 
-```text
-AI flow:
-  ANTES: await sugerirCategoria (5s timeout) → bloquea respuesta
-  DESPUÉS: Promise.race([sugerirCategoria, sleep(2000)]) → siempre <2s
-```
-
-## Analogía
-
-Hoy el modal es como mandar un paquete por mensajería sin la guía del cliente (`apikey`): a veces pasa, a veces lo regresan en la puerta sin explicación. El plan es (1) poner siempre la guía completa, (2) no esperar al sello opcional del notario (la IA) si tarda, y (3) si algo falla, anotar en qué punto del recorrido se cayó.
+El preview no fallaba porque ahí Sentry/tracing no se comporta igual. En `librecarga.com`, Sentry agrega dos “etiquetas de rastreo” al paquete (`sentry-trace` y `baggage`), pero el backend no las tenía en la lista de invitados de CORS. Analogía: el mensajero llegaba a recepción, pero traía dos gafetes extra no registrados; seguridad lo detenía antes de entregar el paquete real.
