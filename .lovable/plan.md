@@ -1,59 +1,53 @@
-## Mejoras a la tabla de Gestión de Usuarios (`/usuarios`)
+## Anchos dinámicos en la tabla de Gestión de Usuarios
 
-### Estado actual
-- 5 columnas planas: Email · Fecha registro · Rol actual (badge) · Cambiar rol (select) · Eliminar.
-- Orden por defecto alfabético por email.
-- El select de cambiar rol muestra los roles "en plano" sin agrupar.
-- Sin búsqueda, sin contador, sin tooltip sobre qué hace cada rol.
-- No se distingue visualmente al usuario actual ("Tú").
+### Diagnóstico
+Hoy todas las columnas usan **anchos fijos en píxeles** (`w-[220px]`, `w-[240px]`, etc.). Consecuencia:
+- En pantallas grandes (≥1600 px) sobra espacio en blanco a la derecha de la tabla.
+- En laptops chicas (≤1366 px) el select de "Cambiar rol" queda apretado y empuja el botón de eliminar.
+- No se adapta a si el sidebar está colapsado o expandido.
 
-### Qué voy a mejorar
+### Estrategia: anchos fluidos con mínimos y máximos
 
-**1. Orden jerárquico por rol (default)**
-Usaré el mismo orden que ya define `ASSIGNABLE_ROLE_GROUPS` en `roleCatalog.ts`, ampliado con `super_admin` arriba y los roles legacy (`admin`, `operador`, `viewer`) al final:
+En vez de ancho exacto, cada columna declara **mín / máx / cómo crece**. La columna "Usuario" se queda con el sobrante; las demás son intrínsecas a su contenido.
 
-```text
-super_admin → admin_org → gerente_operaciones → gerente_visor →
-coordinador_logistico → gerente_comercial → ejecutivo_pricing → vendedor →
-contador → tesorero → auxiliar_contable → ejecutivo_cobranza →
-customer_service → cliente → legacy
-```
+| Columna       | Antes        | Propuesta                                            | Por qué                                                     |
+| ------------- | ------------ | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Usuario       | `min-w-[260px]` | `w-auto min-w-[240px] max-w-[480px]`              | Es la columna larga (email) → absorbe el sobrante.          |
+| Rol           | `w-[220px]`     | `w-[1%] whitespace-nowrap`                        | Que mida sólo lo que mide el badge más largo.               |
+| Fecha registro| `w-[170px]`     | `w-[1%] whitespace-nowrap`                        | Las fechas DD/MM/YYYY son fijas; no necesita extra.         |
+| Cambiar rol   | `w-[240px]`     | `w-[1%]` + trigger `w-full min-w-[180px] max-w-[260px]` | El select crece con el viewport pero respeta un mínimo. |
+| Acciones      | `w-[50px]`      | igual                                              | Icono.                                                       |
 
-Se aplicará como `sortingFn` personalizado en la columna **Rol** y será el orden inicial de la tabla (`defaultSorting`). Dentro del mismo rol, se ordena alfabéticamente por email.
+**Cómo funciona `w-[1%] + whitespace-nowrap`:** truco clásico de HTML tables — la columna se encoge a su contenido natural y deja todo el sobrante para las columnas `w-auto`. Es la forma estándar de hacer columnas "shrink-to-fit" en un `<table>`.
 
-**2. Columna "Usuario" enriquecida** (reemplaza "Email" pelado)
-- Avatar circular con iniciales del email + color derivado del rol.
-- Email en negrita; debajo, chip pequeño "Tú" si es el usuario en sesión.
-- Si el email es "No disponible", se conserva el estilo italic actual.
+### Breakpoints responsivos para densidad
 
-**3. Badge de rol con tooltip**
-- Hover sobre el badge muestra la descripción del rol (`ROLE_DESCRIPTIONS[role]`) para que el admin sepa qué implica antes de cambiarlo.
+Adicional al fluido, se aplican utilidades de Tailwind para variar tamaños por breakpoint:
 
-**4. Select "Cambiar rol" agrupado**
-- Reemplazo `SelectItem` plano por `SelectGroup` + `SelectLabel` usando los grupos `ASSIGNABLE_ROLE_GROUPS` (Administración, Operaciones, Comercial, Finanzas, Soporte).
-- El usuario actual no puede degradarse a sí mismo (ya bloqueado en otra capa); aquí solo deshabilito visualmente las acciones sobre la propia fila para evitar confusión.
+- **Avatar**: `h-8 w-8` (default) → `md:h-9 md:w-9` (más visible en monitores grandes).
+- **Padding de filas**: la DataTable ya soporta `density="comfortable"`; se mantiene.
+- **Select trigger**: `min-w-[160px] sm:min-w-[180px] lg:min-w-[220px]`.
 
-**5. Barra superior con resumen + búsqueda**
-- Encima de la tabla: contador "X usuarios · Y roles distintos" + input de búsqueda por email (filtra en cliente, debounced 200 ms).
-- Filtro adicional por rol (Select "Todos los roles" + opciones agrupadas).
+### Cambios concretos
 
-**6. Fecha de registro**
-- Mantengo `formatDate` pero agrego tooltip con fecha+hora completa al hover.
+**`usuariosColumns.tsx`** — Reemplazar los `meta.width` fijos por las clases fluidas descritas arriba. El sistema `defineColumns` ya pasa `meta.width` al `<th>`/`<td>` vía className, así que se aceptan utilidades de Tailwind tal cual.
 
-**7. UI/accesibilidad**
-- Marca de la fila del usuario actual con un borde-izquierdo `border-l-2 border-primary`.
-- Acción Eliminar con tooltip "Eliminar usuario" (además del `aria-label` que ya existe).
-- Sin cambios de lógica de permisos ni de mutaciones (solo presentación/orden/filtros cliente).
+**`Usuarios.tsx`** — La barra superior (buscador + filtro + contador) ya es `flex-col sm:flex-row`, no se toca.
 
-### Archivos a tocar
-- `src/features/admin/routes/admin-org/usuariosColumns.tsx` — nueva columna Usuario, sorting jerárquico, tooltips, select agrupado.
-- `src/features/admin/routes/admin-org/Usuarios.tsx` — barra de resumen + filtros, default sorting, filtrado cliente, resaltado de fila propia.
-- `src/features/admin/domain/roles/roleCatalog.ts` — exportar `ROLE_HIERARCHY_ORDER: AppRole[]` (constante derivada de `ASSIGNABLE_ROLE_GROUPS` + legacy) para reusarse desde el `sortingFn`.
-- `src/constants/appVersion.ts` — bump a `13.118.2`.
-- `CHANGELOG.md` — entrada `[13.118.2]`.
+**`appVersion.ts`** — Bump a `13.118.3`.
+**`CHANGELOG.md`** — Entrada describiendo el cambio.
+
+### Lo que NO cambia
+- Hooks/servicios/RLS.
+- Orden jerárquico, tooltips, búsqueda, filtros — todo lo del 13.118.2 sigue igual.
+- No se toca la clase `DataTable` compartida; sólo el `meta.width` por columna (es un patrón ya soportado).
+
+### Resultado esperado
+- En tu monitor de 1954 px: la columna Usuario se estira ocupando el espacio libre; las demás se quedan compactas pegadas a la derecha.
+- En laptop de 1366 px: no aparece scroll horizontal, el select muestra "Coordinador Logístico" completo.
+- En tablet (≥768 px): la tabla sigue legible porque cada columna respeta su `min-w`.
 
 ### Notas técnicas
-- No se modifican hooks ni servicios (`useUsuarios`, `fetchUsuariosOrganizacion`), `UserRow` se conserva igual.
-- No se cambian permisos, RLS, ni la edge function `user-management`.
-- Filtros y orden son 100% cliente — la lista de miembros por org es pequeña, no requiere server-side pagination.
-- Sin cambios en tests existentes; los del hook siguen pasando.
+- Se asume `meta.width` ya se aplica como `className` al `<th>`/`<td>` (verificado en cambios previos donde funcionaba con `w-[160px]`).
+- No se introduce JS para medir viewport — todo es CSS puro, sin reflows extra.
+- Se conserva el header `Fecha de registro` con `whitespace-nowrap` para que no parta en dos líneas.
