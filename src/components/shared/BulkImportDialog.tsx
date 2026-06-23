@@ -13,20 +13,13 @@
  * El diálogo es agnóstico de la entidad: clientes y proveedores lo consumen
  * pasando su mapper y su acción de inserción.
  *
- * 11.60.0 (Bloque B3): `BulkImportBody`/`Footer` y `downloadCsvTemplate`
- * extraídos a archivos hermanos para mantener este componente ≤200 líneas.
+ * 13.127.0 (Ola 3): migrado a `FormDialogShell` + `FormDialogStepper` real
+ * (3 pasos visibles: Cargar → Revisar → Confirmar). Cero cambios en lógica.
  */
-import { useBulkImport } from "@/components/shared/useBulkImport";
+import { Upload } from "lucide-react";
+import { useBulkImport, type Step } from "@/components/shared/useBulkImport";
 import { BulkImportBody, BulkImportFooter } from "@/components/shared/BulkImportDialogParts";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
-import { cn } from "@/lib/utils";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { downloadCsvTemplate } from "@/lib/csv/downloadCsvTemplate";
 import type { ImportPreview } from "@/lib/csv/importSchemas";
 
@@ -42,6 +35,14 @@ export interface BulkImportDialogProps<T> {
   /** Inserta los payloads válidos. Debe lanzar si falla. */
   onCommit: (payloads: T[]) => Promise<void>;
   onSuccess?: (insertedCount: number) => void;
+}
+
+const STEP_LABELS = ["Cargar archivo", "Revisar", "Confirmar"];
+
+function stepToIndex(step: Step): number {
+  if (step === "upload") return 1;
+  if (step === "done") return 3;
+  return 2; // preview | committing
 }
 
 export function BulkImportDialog<T>({
@@ -71,36 +72,17 @@ export function BulkImportDialog<T>({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className={cn(dialogSize["2xl"], scrollableDialog)}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
-        </DialogHeader>
-
-        <BulkImportBody
-          step={step}
-          preview={preview}
-          fileName={fileName}
-          error={error}
-          insertedCount={insertedCount}
-          templateHeaders={templateHeaders}
-          onDownloadTemplate={onDownloadTemplate}
-          onPick={() => inputRef.current?.click()}
-          onReset={reset}
-        />
-
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void handleFile(file);
-          }}
-        />
-
+    <FormDialogShell
+      open={open}
+      onOpenChange={handleOpenChange}
+      icon={Upload}
+      title={title}
+      description={description}
+      size="2xl"
+      step={stepToIndex(step)}
+      totalSteps={3}
+      stepLabels={STEP_LABELS}
+      footer={
         <BulkImportFooter
           step={step}
           preview={preview}
@@ -108,7 +90,30 @@ export function BulkImportDialog<T>({
           onCommit={handleCommit}
           onClose={() => handleOpenChange(false)}
         />
-      </DialogContent>
-    </Dialog>
+      }
+    >
+      <BulkImportBody
+        step={step}
+        preview={preview}
+        fileName={fileName}
+        error={error}
+        insertedCount={insertedCount}
+        templateHeaders={templateHeaders}
+        onDownloadTemplate={onDownloadTemplate}
+        onPick={() => inputRef.current?.click()}
+        onReset={reset}
+      />
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv,text/csv"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleFile(file);
+        }}
+      />
+    </FormDialogShell>
   );
 }

@@ -44,6 +44,9 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
       title="Importar leads desde CSV"
       description="Importa múltiples leads de forma masiva desde un archivo CSV."
       size="3xl"
+      step={rows.length === 0 ? 1 : 2}
+      totalSteps={2}
+      stepLabels={["Cargar archivo", "Revisar e importar"]}
       footer={footer}
     >
       <p className="text-xs text-muted-foreground">
