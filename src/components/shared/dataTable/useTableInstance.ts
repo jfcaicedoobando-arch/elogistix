@@ -39,6 +39,9 @@ interface Args<T> {
   /** Si false, omite `getSortedRowModel` (útil para tablas virtualizadas que
    *  no necesitan sort interno). */
   enableSorting?: boolean;
+  /** Orden inicial para modo client. Ignorado en server-sort (la fuente
+   *  de verdad vive en el page-state). */
+  initialSort?: { key: string; dir: SortDir };
 }
 
 function fromControlled(sort: ControlledSort | undefined): SortingState {
