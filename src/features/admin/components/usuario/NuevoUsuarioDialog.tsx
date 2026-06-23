@@ -5,14 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 // Input se usa dentro de NuevoUsuarioCredencialesSection.
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
 import { Loader2, UserPlus, Building2, ShieldCheck } from "lucide-react";
 import { useCreateUser } from "@/features/admin/hooks/usuario";
 import { useOrganizationsList } from "@/features/admin/hooks";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { ASSIGNABLE_ROLES_ADMIN_ORG, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
+import { ASSIGNABLE_ROLE_GROUPS, ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 
@@ -135,14 +135,24 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
               <Label className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Rol</Label>
               <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="max-h-80">
-                  {ASSIGNABLE_ROLES_ADMIN_ORG.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      <div className="flex flex-col py-0.5">
-                        <span className="font-medium">{ROLE_LABELS[r]}</span>
-                        <span className="text-xs text-muted-foreground line-clamp-1">{ROLE_DESCRIPTIONS[r]}</span>
-                      </div>
-                    </SelectItem>
+                <SelectContent className="max-h-96">
+                  {ASSIGNABLE_ROLE_GROUPS.map((group, gi) => (
+                    <div key={group.label}>
+                      {gi > 0 && <SelectSeparator />}
+                      <SelectGroup>
+                        <SelectLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          {group.label}
+                        </SelectLabel>
+                        {group.roles.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            <div className="flex flex-col py-0.5">
+                              <span className="font-medium">{ROLE_LABELS[r]}</span>
+                              <span className="text-xs text-muted-foreground line-clamp-2">{ROLE_DESCRIPTIONS[r]}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </div>
                   ))}
                 </SelectContent>
               </Select>
