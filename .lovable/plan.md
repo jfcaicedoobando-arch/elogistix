@@ -1,100 +1,59 @@
-# Refrescar el Centro de Ayuda (`/ayuda`)
+## Mejoras a la tabla de Gestión de Usuarios (`/usuarios`)
 
-## Diagnóstico de lo que hay hoy
-`src/features/dashboard/routes/ayudaContent.ts` (89 líneas) contiene:
-- **16 términos** en el glosario (logística/finanzas básicos).
-- **4 módulos** de FAQ: Embarques, Facturación, Clientes, Operación diaria — con 4–5 preguntas cada uno.
+### Estado actual
+- 5 columnas planas: Email · Fecha registro · Rol actual (badge) · Cambiar rol (select) · Eliminar.
+- Orden por defecto alfabético por email.
+- El select de cambiar rol muestra los roles "en plano" sin agrupar.
+- Sin búsqueda, sin contador, sin tooltip sobre qué hace cada rol.
+- No se distingue visualmente al usuario actual ("Tú").
 
-**Está desactualizado.** No menciona nada de: CRM, Costeo / Tarifas, Compras (CXP), Tesorería, Profit, Auditoría, Bandejas, Portal de Cliente, roles modernos, garantías y demoras, handoff vendedor↔coordinador, ni atajos del CRM. Un usuario nuevo que abre `/ayuda` se queda con la impresión de que el ERP es sólo Embarques + Facturas.
+### Qué voy a mejorar
 
-## Analogía
-Hoy el manual del coche habla del volante, los pedales y las luces. Pero el coche ya tiene GPS, sensores de estacionamiento, cámara trasera, Apple CarPlay y modo eco — y el manual ni los menciona. Vamos a reescribirlo para que cubra TODO lo que el conductor (usuario final) realmente tiene en el tablero.
+**1. Orden jerárquico por rol (default)**
+Usaré el mismo orden que ya define `ASSIGNABLE_ROLE_GROUPS` en `roleCatalog.ts`, ampliado con `super_admin` arriba y los roles legacy (`admin`, `operador`, `viewer`) al final:
 
----
+```text
+super_admin → admin_org → gerente_operaciones → gerente_visor →
+coordinador_logistico → gerente_comercial → ejecutivo_pricing → vendedor →
+contador → tesorero → auxiliar_contable → ejecutivo_cobranza →
+customer_service → cliente → legacy
+```
 
-## 1) Glosario — expandir de 16 → ~35 términos
+Se aplicará como `sortingFn` personalizado en la columna **Rol** y será el orden inicial de la tabla (`defaultSorting`). Dentro del mismo rol, se ordena alfabéticamente por email.
 
-Mantener los actuales (siguen vigentes) y agregar:
+**2. Columna "Usuario" enriquecida** (reemplaza "Email" pelado)
+- Avatar circular con iniciales del email + color derivado del rol.
+- Email en negrita; debajo, chip pequeño "Tú" si es el usuario en sesión.
+- Si el email es "No disponible", se conserva el estilo italic actual.
 
-**Logística operativa nueva**
-- Carta garantía · Días libres almacenaje · Demoras escalonadas (tabulador)
-- Free time · Detention vs Demurrage · UN/LOCODE
-- Handoff (cotización confirmada → embarque)
+**3. Badge de rol con tooltip**
+- Hover sobre el badge muestra la descripción del rol (`ROLE_DESCRIPTIONS[role]`) para que el admin sepa qué implica antes de cambiarlo.
 
-**Comercial / CRM**
-- Lead · Oportunidad · Actividad · Pipeline ponderado
-- Next Best Action (NBA) · Forecast · Embudo · Leaderboard
-- KAM (Key Account Manager)
+**4. Select "Cambiar rol" agrupado**
+- Reemplazo `SelectItem` plano por `SelectGroup` + `SelectLabel` usando los grupos `ASSIGNABLE_ROLE_GROUPS` (Administración, Operaciones, Comercial, Finanzas, Soporte).
+- El usuario actual no puede degradarse a sí mismo (ya bloqueado en otra capa); aquí solo deshabilito visualmente las acciones sobre la propia fila para evitar confusión.
 
-**Pricing y costeo**
-- Tarifa vigente · Override de tarifa · Top 3 ranking · Partner / Agente
-- P&L preliminar · Margen bruto · Tarifa-first (política)
+**5. Barra superior con resumen + búsqueda**
+- Encima de la tabla: contador "X usuarios · Y roles distintos" + input de búsqueda por email (filtra en cliente, debounced 200 ms).
+- Filtro adicional por rol (Select "Todos los roles" + opciones agrupadas).
 
-**Finanzas y compras**
-- CXP / CXC · Folio interno proveedor (FP-XXXXXX) · "Por capturar" · "Por pagar"
-- Conciliación bancaria · CFDI 4.0 · Complemento de pago (REP)
-- Estado de resultados · Aging (ya está, dejar) · Diferencia cambiaria
+**6. Fecha de registro**
+- Mantengo `formatDate` pero agrego tooltip con fecha+hora completa al hover.
 
-**Plataforma**
-- Tenant / Organización · Impersonación · Bitácora · Bandeja · RLS
+**7. UI/accesibilidad**
+- Marca de la fila del usuario actual con un borde-izquierdo `border-l-2 border-primary`.
+- Acción Eliminar con tooltip "Eliminar usuario" (además del `aria-label` que ya existe).
+- Sin cambios de lógica de permisos ni de mutaciones (solo presentación/orden/filtros cliente).
 
----
+### Archivos a tocar
+- `src/features/admin/routes/admin-org/usuariosColumns.tsx` — nueva columna Usuario, sorting jerárquico, tooltips, select agrupado.
+- `src/features/admin/routes/admin-org/Usuarios.tsx` — barra de resumen + filtros, default sorting, filtrado cliente, resaltado de fila propia.
+- `src/features/admin/domain/roles/roleCatalog.ts` — exportar `ROLE_HIERARCHY_ORDER: AppRole[]` (constante derivada de `ASSIGNABLE_ROLE_GROUPS` + legacy) para reusarse desde el `sortingFn`.
+- `src/constants/appVersion.ts` — bump a `13.118.2`.
+- `CHANGELOG.md` — entrada `[13.118.2]`.
 
-## 2) Módulos / FAQ — pasar de 4 → 10 módulos
-
-Cada módulo: 4–6 preguntas escritas **en pies del usuario final** ("¿cómo hago X?", "¿por qué no puedo Y?", "¿qué pasa si Z?"), con respuestas concretas que mencionen la ruta del menú y los botones reales.
-
-| # | Módulo | Audiencia principal | Foco de las FAQ |
-|---|---|---|---|
-| 1 | **Inicio / Dashboard** | Todos | Qué muestra cada card, qué significa cada badge, cómo cambiar de scope (mío / todos) |
-| 2 | **CRM** | Vendedor, Gerente Comercial | Diferencia *Mi día* vs *Resumen*, cómo crear lead, convertir a oportunidad, NBA, atajos (Quick Add, Ctrl+K del CRM), forecast |
-| 3 | **Cotizaciones** | Vendedor, Pricing | Wizard tarifa-first, cuándo cargar costos vs venta, P&L preliminar, override de tarifa (quién lo aprueba), handoff a embarque |
-| 4 | **Costeo / Tarifas** | Pricing | Matriz CN→MX, ranking Top 3, capturar tarifa con días libres + frecuencia, vincular partner↔proveedor, carta garantía, tabulador demoras |
-| 5 | **Embarques** | Coordinador, Operador | (Mantener las 5 FAQ actuales + agregar) tracking automático desde timeline, garantías/demoras auto-calculadas, alerta de docs faltantes, candado de avance de estado, cerrar embarque |
-| 6 | **Compras (CXP)** | Auxiliar contable, Tesorero | Bandeja "Por capturar", subir XML/PDF de proveedor, folio interno FP-XXXXXX, conciliar contra costos del embarque, "Por pagar", quién autoriza pagos |
-| 7 | **Facturación (CXC)** | Contador, Cobranza | (Refrescar las 5 actuales) proformas, consolidación, layout contable, hueco de facturación, cancelar CFDI, complemento de pago REP, cartera y promesas de pago |
-| 8 | **Tesorería** | Tesorero | Conciliación bancaria, sugerencias automáticas (tolerancia ±$1 / ±5 días), liquidar comisiones, separación de divisas |
-| 9 | **Profit / Reportes** | Gerencia, Contador | P&L por contenedor, estado de resultados con diferencia cambiaria, exportar a contabilidad, leaderboard vendedores |
-| 10 | **Clientes y Portal** | Atención a clientes, Coordinador | (Mantener las 4 actuales + agregar) parseo CSF con IA, contactos internacionales, qué ve el cliente en el portal, notificaciones |
-| 11 | **Operación diaria** | Todos | (Refrescar las 4 actuales + agregar) Ctrl+K global, badges del sidebar, bandejas (qué son), bitácora, cambiar de organización (impersonación super-admin), modo demo |
-| 12 | **Roles y permisos** | Admin de organización | Lista de 12 roles agrupados (Admin / Ops / Comercial / Finanzas / Soporte), cómo asignar, qué puede ver/hacer cada uno, handoff vendedor→coordinador, quién aprueba overrides |
-
-> Total esperado: ~55 FAQs (vs 18 actuales). Estilo: español MX claro, respuestas de 1–3 frases, **siempre** mencionando la ruta exacta del menú o la pestaña.
-
----
-
-## 3) Cambios estructurales menores en `Ayuda.tsx`
-
-El componente actual funciona bien pero con 12 módulos la lista vertical de tarjetas se vuelve larga. Cambios mínimos:
-
-- **Mantener** el search, los dos tabs (FAQ / Glosario), el accordion por módulo.
-- **Agregar** un índice/chips al inicio del tab FAQ con los nombres de los 12 módulos como anclas (`<a href="#cotizaciones">Cotizaciones</a>` con `scroll-margin-top` para que el sticky nav no tape). Cada Card de módulo recibe `id={modulo.id}`. Esto evita scrollear ciegamente.
-- **Agregar atributos `audiencia: AppRole[]`** opcional a cada módulo (por ejemplo CXP → contador, auxiliar_contable, tesorero) — **no se filtra automáticamente** por rol en esta iteración (mantener simple), pero se renderiza como badge pequeño en el header del módulo: `"Para: Contador · Tesorero"`. Ayuda al usuario a saber si esa sección le aplica.
-- **Conservar** el fallback "¿No encuentras lo que buscas?" al final, actualizar el texto: en vez de pedir contactar al admin, mencionar el CHANGELOG y el módulo de Auditoría para reportar incidencias.
-
-`Ayuda.tsx` quedará ~170 líneas (sigue bajo el límite de 200).
-
----
-
-## 4) Archivos a editar
-
-- `src/features/dashboard/routes/ayudaContent.ts` — reescritura completa del contenido (glosario + módulos). Pasa de ~89 líneas a ~350 (es contenido estático, no lógica — el límite de 200 líneas del Power of 10 aplica a componentes/módulos de lógica, no a archivos de constantes; igual lo mantenemos legible).
-  - Extender el tipo `AyudaModulo` con `audiencia?: string[]` (lectura humana, no enum estricto, para evitar acoplamiento con `AppRole`).
-- `src/features/dashboard/routes/Ayuda.tsx`:
-  - Renderizar chips de índice al inicio del tab FAQ.
-  - Pasar `id={modulo.id}` y `scroll-mt-20` al `<Card>` de cada módulo.
-  - Renderizar la audiencia como `<Badge variant="outline" className="text-[10px]">` al lado del título.
-  - Actualizar copy del fallback final.
-
-**Sin cambios** en rutas, sidebar, BD, hooks, ni en otros tests.
-
----
-
-## 5) Versionado y registro
-
-- Bump `APP_VERSION` → `13.118.1` en `src/constants/appVersion.ts` (patch — sólo contenido y polish).
-- Entrada en `CHANGELOG.md`: "Centro de ayuda: glosario expandido (16→~35), 12 módulos de FAQ alineados a los roles modernos del ERP, índice clickeable y audiencia visible por módulo."
-
-## 6) Pruebas
-
-No se agregan tests nuevos (contenido y presentación). Si existen snapshots de `Ayuda.tsx` o tests que cuentan `MODULOS.length === 4`, se ajustan al actualizar. (Revisión rápida en build: `rg "MODULOS|GLOSARIO" src --files-with-matches` muestra que sólo `Ayuda.tsx` los consume — sin tests dependientes.)
+### Notas técnicas
+- No se modifican hooks ni servicios (`useUsuarios`, `fetchUsuariosOrganizacion`), `UserRow` se conserva igual.
+- No se cambian permisos, RLS, ni la edge function `user-management`.
+- Filtros y orden son 100% cliente — la lista de miembros por org es pequeña, no requiere server-side pagination.
+- Sin cambios en tests existentes; los del hook siguen pasando.
