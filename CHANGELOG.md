@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.114.4] - 2026-06-22
+- **fix(permisos)**: auditoría cruzada de los 13 roles activos + 3 legacy comparando catálogo, `usePermissions`, sidebar y guards de ruta. Único desajuste encontrado: el rol **Tesorero** veía la entrada **Cobranza** (`/cartera`) en su menú lateral, pero el guard de la ruta no lo incluía y el clic lo regresaba a `/`. Se sumó `tesorero` a `allowedRoles` de `/cartera` (lectura) porque concilia depósitos bancarios con cobros. Resto de roles ya quedaron alineados en 13.114.3. Analogía: el tesorero veía el botón de Cobranza pero estaba pintado sobre una puerta cerrada — ahora la puerta abre en modo sólo lectura.
+
 ## [13.114.3] - 2026-06-22
 - **fix(permisos)**: los roles **Gerente de Operaciones** y **Gerente Comercial** veían entradas en el menú lateral (Tesorería, CXP, Cartera, Profit Dashboard, Presupuesto) que al hacer clic los regresaban a `/` porque las rutas tenían un guard más estrecho que el sidebar. Se alinearon los `allowedRoles` de las rutas de **lectura financiera** con `FINANCE_VIEWERS` de `usePermissions`: ahora ambos gerentes pueden abrir esas pantallas en modo lectura (las mutaciones siguen restringidas a finanzas). Analogía: el menú del restaurante anunciaba platillos, pero las puertas de la cocina estaban cerradas para los gerentes — ahora les dejan **mirar** la cocina, pero no cocinar.
 
