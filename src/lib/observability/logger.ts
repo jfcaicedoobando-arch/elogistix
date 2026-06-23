@@ -31,6 +31,26 @@ function reportToSentry(scope: string, err: Error): void {
     });
 }
 
+/**
+ * 13.114.17: añade breadcrumb a Sentry para `info`/`warn` en prod, así los
+ * errores capturados llegan con el historial de pasos que el desarrollador
+ * registró con el logger. Carga dinámica + try/catch silencioso.
+ */
+function addSentryBreadcrumb(level: "info" | "warning", scope: string, args: unknown[]): void {
+  if (!isProd) return;
+  void import("@sentry/react")
+    .then((Sentry) => {
+      const message = args
+        .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
+        .join(" ")
+        .slice(0, 500);
+      Sentry.addBreadcrumb({ category: scope, level, message });
+    })
+    .catch(() => {
+      // best-effort
+    });
+}
+
 export const logger = {
   debug(scope: string, ...args: unknown[]): void {
     if (isProd) return;
@@ -38,11 +58,15 @@ export const logger = {
     console.debug(...fmt(scope, args));
   },
   info(scope: string, ...args: unknown[]): void {
-    if (isProd) return;
+    if (isProd) {
+      addSentryBreadcrumb("info", scope, args);
+      return;
+    }
      
     console.info(...fmt(scope, args));
   },
   warn(scope: string, ...args: unknown[]): void {
+    addSentryBreadcrumb("warning", scope, args);
      
     console.warn(...fmt(scope, args));
   },
@@ -64,3 +88,4 @@ export const logger = {
     }
   },
 };
+

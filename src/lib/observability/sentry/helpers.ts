@@ -114,6 +114,11 @@ export function sampleByRoute(ctx: {
     return 1.0;
   }
 
+  // 13.114.17: ampliar cobertura crítica a módulos nuevos (compras, costeo, CRM).
+  if (/^\/(compras|costeo)/i.test(path)) return 1.0;
+  if (/^\/crm\/(leads|oportunidades)\//i.test(path)) return 1.0;
+  if (/^\/crm/i.test(path)) return 0.5;
+
   // F5 (13.65.0): ampliar muestreo en flujos de reportes y auditoría.
   if (/^\/reportes/i.test(path)) return 0.5;
   if (/^\/(profit|tesoreria|comisiones|cxc|cxp)/i.test(path)) return 0.5;
@@ -123,3 +128,4 @@ export function sampleByRoute(ctx: {
 
   return 0.1;
 }
+
