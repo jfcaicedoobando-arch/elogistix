@@ -13,7 +13,7 @@
  * Falla con mensaje claro si la columna falta o el valor no coincide.
  */
 import { expect } from "vitest";
-import type { TableCall } from "@/services/__tests__/_supabaseChainMock";
+import type { TableCall } from "@/test/utils/_supabaseChainMock";
 
 interface MockShape {
   tableCalls: TableCall[];

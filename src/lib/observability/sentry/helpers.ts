@@ -93,6 +93,28 @@ export function scrubEventPii<T extends Sentry.ErrorEvent>(event: T): T {
 }
 
 
+const SAMPLE_RULES: ReadonlyArray<{ pattern: RegExp; rate: number }> = [
+  // 0% — estáticas / marketing / dev
+  { pattern: /^\/(landing|privacidad|terminos|guia|tracking)?\/?$/i, rate: 0 },
+  { pattern: /^\/(legal|recursos)(\/|$)/i, rate: 0 },
+  { pattern: /^\/dev(\/|$)/i, rate: 0 },
+  // 100% — flujos críticos de negocio
+  { pattern: /\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturas\/nueva|conciliacion)/i, rate: 1.0 },
+  { pattern: /^\/(compras|costeo)/i, rate: 1.0 },
+  { pattern: /^\/crm\/(leads|oportunidades)\//i, rate: 1.0 },
+  { pattern: /^\/portal\/(embarques|cotizaciones|facturas)\/[^/]+/i, rate: 1.0 },
+  // 50% — financieros / reportes / portal cliente / CRM general
+  { pattern: /^\/crm/i, rate: 0.5 },
+  { pattern: /^\/reportes/i, rate: 0.5 },
+  { pattern: /^\/(profit|tesoreria|comisiones|cxc|cxp|cartera|proformas)/i, rate: 0.5 },
+  { pattern: /^\/portal/i, rate: 0.5 },
+  // 30% — auditoría / admin
+  { pattern: /^\/(auditoria|admin)/i, rate: 0.3 },
+  // 5% — dashboards y listados de alto volumen
+  { pattern: /^\/(dashboard|embarques|clientes|proveedores)\/?$/i, rate: 0.05 },
+  { pattern: /^\/inicio\/?$/i, rate: 0.05 },
+];
+
 /**
  * Sampling dinámico por ruta. Devuelve la probabilidad [0..1] de trazar la
  * transaction actual. Prioriza flujos críticos (edición/creación de embarques,
@@ -108,40 +130,10 @@ export function sampleByRoute(ctx: {
     (typeof window !== "undefined" ? window.location.pathname : "") ??
     "";
 
-  if (/^\/(landing|privacidad|terminos|guia|tracking)?\/?$/i.test(path)) return 0;
-  // 13.114.18: páginas estáticas legales / recursos no aportan señal accionable.
-  if (/^\/(legal|recursos)(\/|$)/i.test(path)) return 0;
-  // 13.114.19: `/dev/*` son previews internos (PDFs, sandboxes) que sólo
-  // consumen cuota sin valor de producción.
-  if (/^\/dev(\/|$)/i.test(path)) return 0;
-
-  if (/\/(embarques\/(nuevo|[^/]+\/editar)|cotizaciones\/nueva|facturas\/nueva|conciliacion)/i.test(path)) {
-    return 1.0;
+  for (const rule of SAMPLE_RULES) {
+    if (rule.pattern.test(path)) return rule.rate;
   }
-
-  // 13.114.17: ampliar cobertura crítica a módulos nuevos (compras, costeo, CRM).
-  if (/^\/(compras|costeo)/i.test(path)) return 1.0;
-  if (/^\/crm\/(leads|oportunidades)\//i.test(path)) return 1.0;
-  if (/^\/crm/i.test(path)) return 0.5;
-
-  // 13.114.19: detalle de embarque/cotización/factura del portal de cliente
-  // final → 100%. Es la pantalla con mayor impacto en NPS y la más expuesta
-  // a errores de RLS/permisos.
-  if (/^\/portal\/(embarques|cotizaciones|facturas)\/[^/]+/i.test(path)) return 1.0;
-
-  // F5 (13.65.0): ampliar muestreo en flujos de reportes y auditoría.
-  if (/^\/reportes/i.test(path)) return 0.5;
-  // 13.114.18: añadir /cartera y /proformas (documentos financieros) al grupo 50%.
-  if (/^\/(profit|tesoreria|comisiones|cxc|cxp|cartera|proformas)/i.test(path)) return 0.5;
-  // 13.114.18: portal del cliente final tiene alto impacto en NPS.
-  if (/^\/portal/i.test(path)) return 0.5;
-  if (/^\/(auditoria|admin)/i.test(path)) return 0.3;
-
-  if (/^\/(dashboard|embarques|clientes|proveedores)\/?$/i.test(path)) return 0.05;
-  // 13.114.19: `/inicio` es el dashboard real post-login; cae al 5% (no al
-  // 10% default) porque es el primer hit de cada sesión y antes inflaba cuota.
-  if (/^\/inicio\/?$/i.test(path)) return 0.05;
-
   return 0.1;
 }
+
 
