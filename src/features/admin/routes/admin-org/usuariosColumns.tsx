@@ -18,7 +18,7 @@ import { sortByDate } from "@/components/shared/dataTable/sortingFns";
 import type { Row, SortingFn } from "@tanstack/react-table";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
-import { formatDate, formatDateTime } from "@/lib/formatters";
+import { formatDate, formatDateTimeShort } from "@/lib/formatters";
 import {
   ROLE_BADGE_CLASSES,
   ROLE_LABELS,
