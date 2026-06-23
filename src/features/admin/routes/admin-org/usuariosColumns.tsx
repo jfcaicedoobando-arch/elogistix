@@ -160,7 +160,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
                   onPendingRole(u, newRole);
                 }}
               >
-                <SelectTrigger className="w-[220px]">
+                <SelectTrigger className="w-full min-w-[160px] sm:min-w-[180px] lg:min-w-[220px] max-w-[260px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
