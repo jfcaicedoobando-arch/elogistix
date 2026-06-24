@@ -12,7 +12,7 @@ import { buildAdminOrganizacionesColumns } from "@/features/admin/components/Adm
 export default function AdminOrganizaciones() {
   const navigate = useNavigate();
   const { state, setters, data, createOrg } = useAdminOrganizacionesController();
-  const columns = useMemo(() => buildAdminOrganizacionesColumns(navigate), [navigate]);
+  const columns = useMemo(() => buildAdminOrganizacionesColumns(), []);
 
   return (
     <div className="space-y-4 sm:space-y-6">
