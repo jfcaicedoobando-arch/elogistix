@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Building2, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,7 @@ function OrgInfoCardBase() {
   const copiarId = () => {
     navigator.clipboard.writeText(organization.id).then(
       () => toast.success("ID de organización copiado"),
-      () => toast.error("No se pudo copiar el ID"),
+      () => notifyError(undefined, { title: "No se pudo copiar el ID", method: "OrgInfoCard.copiarId" }),
     );
   };
 
