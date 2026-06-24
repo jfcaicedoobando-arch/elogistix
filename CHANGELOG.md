@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.20] - 2026-06-24
+- **feat(costeo/agentes/portal)**: El modal "Invitar agente al Portal" ahora tiene dos pestañas: **Enviar por email** (flujo original) y **Asignar contraseña** (nuevo). En modo contraseña, el admin captura email + password (con botón "Generar segura" de 12 chars y toggle mostrar/ocultar) y la edge function `user-management` crea la cuenta de Supabase ya confirmada (o reasigna la contraseña si el usuario ya existe). Tras éxito, el modal cambia a una vista con email y contraseña en sólo lectura más botones "Copiar" individuales y "Copiar ambos" — la contraseña no se vuelve a ver. Motivo: a los agentes de carga en China rara vez les llega el correo de Supabase (Great Firewall / filtros), así que ahora el admin puede entregarles las credenciales directamente por WeChat o WhatsApp. La acción queda registrada en `bitacora_actividad` (módulo "Costeo Agentes", acción "cuenta creada con contraseña" o "contraseña reasignada por admin"); la contraseña nunca se loggea.
+
 ## [13.135.19] - 2026-06-24
 - **fix(rpc/embarques)**: Sentry reportó `function public.generar_expediente(tipo_operacion) does not exist` al convertir una cotización aceptada en borrador de embarque (`/cotizaciones/:id`, release 13.135.14). La RPC `crear_embarque_borrador_desde_cotizacion` pasaba `v_cot.tipo` (enum `tipo_operacion`) a `generar_expediente`, que sólo tiene firma `(text)`. Postgres no auto-castea enum → text, así que abortaba. Fix: `generar_expediente(v_cot.tipo::text)`. Sin cambios de comportamiento; el resto del cuerpo permanece idéntico.
 
