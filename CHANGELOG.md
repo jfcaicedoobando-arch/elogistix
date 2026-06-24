@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.3] - 2026-06-24
+- **fix(admin/miembros)**: Al dar de alta un miembro desde el detalle de una organización, ya no se crea una organización fantasma "Mi organización" y la membresía queda correctamente vinculada a la organización destino. Se agregó el flag `skip_auto_org` al trigger `handle_new_user_signup` y el handler `create` de `user-management` lo envía en `user_metadata`. También se reasignó el usuario huérfano `admin@chino.com` a Chino Cochino y se eliminó la org fantasma creada en el intento fallido. Analogía: le avisamos a la recepcionista que este nuevo entra a piso 5, así deja de construirle una oficina en el piso 1.
+
 ## [13.135.2] - 2026-06-24
 - **fix(admin/breadcrumbs)**: `AdminLayout` ahora usa el `Breadcrumbs` compartido (con `BreadcrumbProvider`), por lo que `/admin/organizaciones/:id` muestra el nombre de la organización en lugar del UUID crudo. Eliminado el componente local `Breadcrumbs` que sólo conocía 4 etiquetas estáticas y devolvía el UUID tal cual. Analogía: cambiamos un letrero hecho a mano por uno digital conectado al directorio del edificio.
 
