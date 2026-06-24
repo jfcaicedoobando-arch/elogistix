@@ -83,7 +83,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   }, [open, initial, agenteIdFijo]);
 
   const total = useMemo(() => calcularTotal(form), [form]);
-  const baseValido = esFormValido(form);
+  const baseValido = esFormValido(form, { skipRutaId: multiple });
   const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
   const pendiente = crear.isPending || crearMultiples.isPending || actualizar.isPending;
   const errores = intentoEnvio ? calcularErrores(form, rutaIds.length, multiple) : undefined;
