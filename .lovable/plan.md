@@ -1,62 +1,63 @@
-# Fix: error 500 en `demo-access` (Sentry JAVASCRIPT-REACT-1G)
+## Problema
 
-## Qué pasó (en simple)
-El botón **"Probar demo"** llama a la edge function `demo-access`, que entre otras cosas se asegura de que el usuario demo pertenezca a la organización demo. Esa función llamó a la RPC `ensure_demo_membership`, y la base reventó con:
+La RPC `crear_embarque_borrador_desde_cotizacion` está duplicada en la base de datos:
 
-> duplicate key value violates unique constraint **`organization_members_user_id_unique`**
+1. **Overload de 1 argumento** (versión original): `(p_cotizacion_id uuid)`
+2. **Overload de 4 argumentos con DEFAULTs** (agregada en la migración del 19-jun): `(p_cotizacion_id uuid, p_decision text DEFAULT 'sin_cambios', p_tarifa_id_aplicada uuid DEFAULT NULL, p_delta_jsonb jsonb DEFAULT NULL)`
 
-**Analogía:** la tabla `organization_members` tiene una regla "un usuario sólo puede pertenecer a UNA organización" (constraint `UNIQUE(user_id)`). La RPC intentó insertar al usuario demo, y como `ON CONFLICT` estaba mirando otra cerradura (`UNIQUE(organization_id, user_id)`), no detectó el choque y la inserción explotó.
+Como los 3 argumentos extra tienen `DEFAULT`, cuando alguien llama a la función pasando sólo `p_cotizacion_id`, Postgres encuentra **dos candidatos válidos** (la de 1 arg y la de 4 args con defaults) y aborta con:
 
-Probablemente el usuario `933a08f5-…` quedó vinculado a otra organización en algún flujo previo, así que al entrar a demo ya no se puede re-insertar.
+> `function public.crear_embarque_borrador_desde_cotizacion(uuid) is not unique`
 
-## La causa raíz
-RPC actual:
+Esto rompe:
+- El flujo "Generar embarque" desde el detalle de cotización (lo que vio el usuario en Sentry).
+- La llamada interna de la propia función de 4 args (línea 147 de la migración), que invoca `crear_embarque_borrador_desde_cotizacion(p_cotizacion_id)` recursivamente con un solo argumento.
+
+**Analogía:** es como tener dos botones idénticos en la app llamados "Guardar" — cuando le pides al sistema "presiona Guardar" no sabe a cuál te refieres.
+
+## Solución
+
+Quitar los `DEFAULT` de los 3 argumentos opcionales del overload de 4 args. Así:
+- La llamada con 1 uuid resuelve **únicamente** al overload viejo.
+- La llamada con 4 args resuelve **únicamente** al overload nuevo (que es como ya lo invoca `crearEmbarqueBorradorConDecision` en `src/features/cotizacion/services/revalidacion/index.ts` — siempre pasa los 4).
+- La llamada interna recursiva sigue funcionando porque pasa un solo argumento.
+
+Sin cambios de comportamiento, sin tocar RLS, sin renombrar la función, sin tocar el cliente.
+
+## Cambios
+
+1. **Nueva migración** `supabase/migrations/<timestamp>_fix_overload_crear_embarque.sql`:
+   ```sql
+   DROP FUNCTION IF EXISTS public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb);
+
+   CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(
+     p_cotizacion_id      uuid,
+     p_decision           text,
+     p_tarifa_id_aplicada uuid,
+     p_delta_jsonb        jsonb
+   ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+   -- mismo cuerpo que la migración 20260619230147 (sin DEFAULTs)
+   $$;
+
+   GRANT EXECUTE ON FUNCTION
+     public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb)
+     TO authenticated, service_role;
+   ```
+
+2. **`src/constants/appVersion.ts`** → `13.135.14`.
+
+3. **`CHANGELOG.md`** → entrada `13.135.14` describiendo el fix del overload ambiguo.
+
+4. **Sentry** → marcar el issue como resuelto una vez aplicada la migración.
+
+## Verificación
+
+Después de migrar, correr:
 ```sql
-INSERT INTO public.organization_members (user_id, organization_id, role)
-VALUES (_user_id, 'de100000-…', 'admin')
-ON CONFLICT (organization_id, user_id) DO UPDATE SET role = 'admin';
+SELECT pg_get_function_identity_arguments(oid)
+FROM pg_proc
+WHERE proname='crear_embarque_borrador_desde_cotizacion';
 ```
-La tabla tiene DOS constraints únicas:
-- `UNIQUE(organization_id, user_id)` ← el que mira el ON CONFLICT
-- `UNIQUE(user_id)` ← el que realmente falla
+Esperado: dos filas, una `p_cotizacion_id uuid` y otra `p_cotizacion_id uuid, p_decision text, p_tarifa_id_aplicada uuid, p_delta_jsonb jsonb` — **ninguna con `DEFAULT`** en el segundo resultado.
 
-## Plan
-
-### 1. Migración nueva: corregir `ensure_demo_membership`
-Cambiar el `ON CONFLICT` para que apunte a `(user_id)` y reasigne al usuario demo a la organización demo (forzando overwrite). Así, sin importar a qué org haya quedado vinculado, vuelve a la demo.
-
-```sql
-CREATE OR REPLACE FUNCTION public.ensure_demo_membership(_user_id uuid)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
-BEGIN
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (_user_id, 'admin'::app_role)
-  ON CONFLICT (user_id, role) DO NOTHING;
-
-  INSERT INTO public.organization_members (user_id, organization_id, role)
-  VALUES (_user_id, 'de100000-0000-0000-0000-000000000001'::uuid, 'admin'::app_role)
-  ON CONFLICT (user_id) DO UPDATE
-    SET organization_id = EXCLUDED.organization_id,
-        role            = EXCLUDED.role;
-END;
-$function$;
-```
-(También se ajusta el `ON CONFLICT` de `user_roles` para usar su llave real `(user_id, role)`.)
-
-### 2. Versionado y changelog
-- Bump `APP_VERSION` → `13.135.13`
-- Entrada en `CHANGELOG.md` describiendo el fix
-- Marcar el issue `JAVASCRIPT-REACT-1G` como resuelto en Sentry una vez aplicado
-
-## Archivos a tocar
-- `supabase/migrations/<timestamp>_fix_ensure_demo_membership.sql` (nuevo)
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
-
-## Lo que NO cambia
-- No se tocan tablas, RLS ni la edge function `demo-access`.
-- No se quita el constraint `UNIQUE(user_id)` (es intencional: 1 usuario = 1 org).
+Luego, desde la app: abrir una cotización y dar "Generar embarque" — debe crear el borrador sin el error.
