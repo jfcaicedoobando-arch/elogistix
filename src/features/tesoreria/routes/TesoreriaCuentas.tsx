@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { formatCurrency } from "@/lib/formatters";
 import {
   useTesoreriaCuentasController,
@@ -19,7 +20,8 @@ import {
 
 export default function TesoreriaCuentas() {
   const {
-    cuentas, isLoading, open, setOpen, form, setField, submit, submitting, confirmarEliminar,
+    cuentas, isLoading, open, setOpen, form, setField, submit, submitting,
+    deleteTarget, solicitarEliminar, cancelarEliminar, confirmarEliminar, eliminando,
   } = useTesoreriaCuentasController();
 
   return (
@@ -50,7 +52,7 @@ export default function TesoreriaCuentas() {
                   </div>
                   <Button
                     variant="ghost" size="icon"
-                    onClick={() => confirmarEliminar(c.id, c.alias)}
+                    onClick={() => solicitarEliminar(c.id, c.alias)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
