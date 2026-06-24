@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.8] - 2026-06-24
+- **fix(ci/migrations)**: La migración `20260623215118…` (vínculo agente demo→AGENTEPRUEBA) abortaba CI con `Usuario de prueba no existe` porque corría antes que el seed del usuario (`20260624054843…`). Reemplazado `RAISE EXCEPTION` por `RAISE NOTICE + RETURN` y agregado guard `to_regclass('auth.users') IS NULL` para que el bloque sea no-op tanto en CI (sin auth.users) como cuando el seed aún no se aplicó. En producción el comportamiento es idéntico.
+
 ## [13.135.7] - 2026-06-24
 - **chore(ci)**: Tanda A de hardening CI tras auditoría — quick wins de reproducibilidad y consistencia.
   - **Pin de runners**: los 8 workflows pasan de `ubuntu-latest` → `ubuntu-24.04` (12 ocurrencias). Evita que un bump silencioso de GitHub Runners rompa CI sin aviso.
