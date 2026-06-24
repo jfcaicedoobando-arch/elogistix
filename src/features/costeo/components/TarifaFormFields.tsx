@@ -8,6 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import { MultiRutaSelect } from "./MultiRutaSelect";
 
 interface CatalogosRow { id: string; name?: string; nombre?: string; activo?: boolean; activa?: boolean }
 
