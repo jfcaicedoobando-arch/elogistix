@@ -77,12 +77,11 @@ export default function AdminOrgDetalle() {
       />
 
       {id && (
-        <AgregarMiembroOrgDialog
+        <CrearMiembroOrgDialog
           open={addMemberOpen}
           onOpenChange={setAddMemberOpen}
           organizationId={id}
-          existingUserIds={members.map((m) => m.user_id)}
-          onAdded={invalidateMembers}
+          onCreated={invalidateMembers}
         />
       )}
     </div>
