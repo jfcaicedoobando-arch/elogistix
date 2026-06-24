@@ -280,9 +280,49 @@ BEGIN
     'cotizacion_costos acepta INSERT con organization_id ajeno'
   );
 
+  -- (13.135.6) WITH CHECK ampliado: bbva_movimientos, pagos_factura,
+  -- pagos_proveedor y factura_notas_credito. Antes solo se cubrían 3 tablas;
+  -- estas 4 manejan dinero real y una policy sin WITH CHECK permitiría
+  -- mutación cruzada de tenants sin detección.
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.bbva_movimientos(organization_id, cuenta_bancaria_id, fecha, concepto, referencia, cargo, abono, hash_dedupe, estado_conciliacion, motivo_ignorar, importado_en)
+       VALUES (%L, %L, CURRENT_DATE, %L, %L, 0, 1000, %L, %L, %L, now())',
+      org_a, cuenta_a, 'HACK', 'REF-HACK', 'hash-hack-001', 'Pendiente', ''
+    ),
+    'bbva_movimientos acepta INSERT con organization_id ajeno'
+  );
+
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.pagos_factura(factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
+       VALUES (%L, %L, CURRENT_DATE, 1, %L, 1, 1, %L, %L, %L, 0)',
+      fac_a, org_a, 'MXN', 'Transferencia', 'REF-HACK', ''
+    ),
+    'pagos_factura acepta INSERT con organization_id ajeno'
+  );
+
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.pagos_proveedor(organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, metodo_pago, referencia, notas)
+       VALUES (%L, %L, CURRENT_DATE, 1, %L, 0, %L, %L, %L)',
+      org_a, pf_a, 'MXN', 'Transferencia', 'REF-HACK', ''
+    ),
+    'pagos_proveedor acepta INSERT con organization_id ajeno'
+  );
+
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, motivo, descripcion, monto, moneda, tipo_cambio, estado, fecha_emision)
+       VALUES (%L, %L, %L, %L, %L, 1, %L, 1, %L, CURRENT_DATE)',
+      org_a, fac_a, 'NC-HACK', 'Descuento', 'HACK', 'MXN', 'Aplicada'
+    ),
+    'factura_notas_credito acepta INSERT con organization_id ajeno'
+  );
+
   PERFORM pg_temp.as_postgres();
 
-  RAISE NOTICE 'RLS FIN CRITICO: 9 SELECTs + 3 WITH CHECK aserciones pasaron';
+  RAISE NOTICE 'RLS FIN CRITICO: 9 SELECTs + 7 WITH CHECK aserciones pasaron';
 END;
 $$;
 

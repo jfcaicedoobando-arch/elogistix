@@ -146,6 +146,22 @@ BEGIN
   END;
 
   -- --------------------------------------------------------------------------
+  -- Test 8b (13.135.6): bitacora_actividad — SELECT cross-tenant.
+  -- Antes sólo se validaba el WITH CHECK del INSERT; una policy de SELECT mal
+  -- escrita habría dejado fugar la bitácora de otra org sin detección.
+  -- --------------------------------------------------------------------------
+  PERFORM pg_temp.as_postgres();
+  INSERT INTO public.bitacora_actividad(usuario_id, usuario_email, accion, modulo, organization_id)
+    VALUES (user_b, 'b@test.mx', 'login', 'auth', org_b);
+
+  PERFORM pg_temp.as_user(user_a);
+  SELECT COUNT(*) INTO visible_count FROM public.bitacora_actividad
+    WHERE organization_id = org_b;
+  PERFORM pg_temp.assert(visible_count = 0,
+    format('Admin A vio %s entradas de bitácora de Org B, esperaba 0', visible_count));
+
+
+  -- --------------------------------------------------------------------------
   -- Test 9 (12.61.11): notificaciones_internas — bug-simulado con organization_id
   -- de otra org NO debe ser visible aunque usuario_id coincida.
   -- --------------------------------------------------------------------------
