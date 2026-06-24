@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.36] - 2026-06-24
+- **fix(costeo)**: Los tres inputs numéricos del modal de tarifa (Flete base, Días libres demoras, Tránsito) ahora seleccionan su valor al recibir foco (`onFocus → select()`), para que la primera tecla reemplace el default (ej. `7`) en lugar de concatenarse (`710`).
+
 ## [13.135.35] - 2026-06-24
 - **fix(costeo)**: Los inputs de "Flete base USD" y "Días libres demoras" en el modal de tarifa ya no muestran el `0` inicial pegado al monto que se escribe (queda `5` en vez de `05`). Cuando el valor es `0` se renderiza vacío con `placeholder="0.00"` / `"0"`.
 
