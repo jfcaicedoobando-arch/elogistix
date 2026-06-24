@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.133.3] - 2026-06-23
+- **fix(tests/CI)**: Reparados los 2 tests rojos reportados en el log de CI (`tests` y `coverage` jobs).
+  - **`roleCatalog.extra.test.ts`**: el array `ALL_ROLES` del test no incluía `agente_carga` (rol agregado al catálogo), por lo que `ROLE_LABELS` tenía 18 claves y el test esperaba 17. Añadido `agente_carga` a `ALL_ROLES` para que coincida con el catálogo real.
+  - **`useAprobacionTarifa.ts`**: las 3 mutaciones (aprobar/rechazar/reactivar tarifa) usaban `toast.error()` directo en `onError`, lo cual viola la regla arquitectónica `error-toasts-use-notifyError`. Migradas a `notifyError(toast, { title, error, method })` con códigos `FEATURES_COSTEO_HOOKS_USEAPROBACIONTARIFA_1..3`.
+- Bump APP_VERSION → 13.133.3. Analogía: el catálogo de empleados se actualizó con un nuevo puesto ("agente de carga") pero la lista de control de asistencia seguía con la versión vieja — sincronizamos ambas. Y las 3 alarmas de error del módulo de tarifas todavía sonaban con la corneta vieja (`toast.error`); las cambiamos a la corneta nueva (`notifyError`) que también queda registrada en bitácora.
+
 ## [13.133.2] - 2026-06-23
 - **fix(arquitectura/tests)**: Reparados los 4 tests rojos del baseline arquitectónico.
   - **`TarifaFormFields.tsx`** (206 líneas) excedía el límite Power-of-10 de 200. Se extrajeron `NumerosFields` y `VigenciaFields` a `TarifaNumerosVigenciaFields.tsx` y se re-exportan desde el archivo original para mantener compatibilidad con `TarifaForm.tsx`.
