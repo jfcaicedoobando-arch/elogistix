@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.30] - 2026-06-24
+- **fix(cotizaciones)**: Resuelve `column "user_id" of relation "notificaciones_internas" does not exist` (Sentry JAVASCRIPT-REACT-1P) al convertir una cotización aceptada en borrador de embarque. La función `crear_embarque_borrador_desde_cotizacion(uuid)` insertaba en columnas inexistentes `user_id`/`link`; se corrige a las reales `usuario_id`/`enlace`. La sobrecarga de 4 args (revalidación de tarifa) que delega en esta también queda arreglada de paso.
+
 ## [13.135.29] - 2026-06-24
 - **fix(portal-agente)**: El header del Portal del Agente ya muestra correctamente el nombre del agente (en vez del fallback "Agente") y el chip con el nombre de la organización. La causa raíz era que `agente_users` puede leer su propia fila vía RLS, pero el join a `costeo_agentes` y `organizations` regresaba `null` porque esas tablas exigen membresía en `organization_members`. Se reemplaza el fetch por una RPC consolidada `get_current_agente_context()` (`SECURITY DEFINER`) que devuelve `agente_id`, `organization_id`, `proveedor_id`, `agente_nombre` y `organizacion_nombre` saltándose RLS. `EXECUTE` revocado a `PUBLIC`/`anon`, otorgado a `authenticated`.
 
