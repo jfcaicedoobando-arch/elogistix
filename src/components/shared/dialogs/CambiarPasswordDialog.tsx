@@ -7,7 +7,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
+
 
 interface Props {
   open: boolean;
