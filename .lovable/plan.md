@@ -1,60 +1,47 @@
+## Problema
 
-# Auditoría y limpieza del Super Admin
+Hoy, en `/admin/organizaciones/:id`, el botón **"Agregar miembro"** muestra un combo con TODOS los usuarios del sistema (vía `useAvailableUsers` → edge function `user-management` action `list`). Esto contradice la regla de negocio: **un usuario pertenece a una sola organización**. Si se "agrega" a un usuario que ya es miembro de otra org, queda con membresías cruzadas y la sesión rompe el aislamiento multi-tenant.
 
-## Problemas detectados
+Además, la única restricción en BD es `UNIQUE (organization_id, user_id)` — no impide que el mismo `user_id` aparezca en dos organizaciones distintas. Buena noticia: ya no hay duplicados en producción, así que podemos endurecer la restricción sin migrar datos.
 
-1. **"Usuarios Globales" es un concepto que no corresponde al modelo.** Los usuarios viven dentro de una organización (`organization_members`). La pantalla actual sólo aplana la lista y duplica lo que ya vive en el detalle de cada organización (pestaña Miembros).
-2. **KPIs engañosos en el Dashboard.** Las tarjetas de "Embarques" y "Cotizaciones" navegan a `/admin/organizaciones` sin filtro, dando una falsa sensación de que vas a ver esos datos.
-3. **Sidebar plano sin jerarquía.** Mezcla operación diaria (Organizaciones), salud (Auditoría, Diagnóstico) y sistema (Configuración Global) al mismo nivel.
+**Analogía:** es como si en un edificio de oficinas el portero pudiera "mover" a un empleado de Coca-Cola a Pepsi con un clic, en lugar de obligar a Pepsi a contratar a alguien nuevo. Vamos a quitar el botón de "mover" y dejar sólo el de "contratar".
 
-## Cambios propuestos
+## Cambios
 
-### 1. Eliminar el módulo `/admin/usuarios`
+### 1. UI: reemplazar diálogo de agregar miembro
+- Renombrar `AgregarMiembroOrgDialog` → `CrearMiembroOrgDialog`.
+- Campos: **Email**, **Contraseña** (con generador), **Rol en la organización** (mismo `ASSIGNABLE_ROLES_ADMIN_ORG`).
+- Quitar el `Select` de usuarios existentes y la dependencia de `useAvailableUsers` / `existingUserIds`.
+- Botón del card pasa de **"Agregar miembro"** a **"Crear miembro"** (`UserPlus` + texto).
+- Texto del card y placeholders ajustados al nuevo flujo.
 
-- Quitar la ruta `AdminUsuarios` de `src/routes/adminRoutes.tsx`.
-- Quitar el item "Usuarios" del `AdminSidebar`.
-- Quitar la tarjeta KPI "Usuarios" del `AdminDashboard` (o reemplazarla por una métrica útil — ver punto 2).
-- Borrar archivos huérfanos: `AdminUsuarios.tsx`, `AdminUsuariosColumns.tsx`, `AdminUsuariosFilters.tsx`, `useAdminUsuariosController.ts` y su export en el barrel `features/admin/hooks`.
-- **Conservar** `NuevoUsuarioDialog` y el servicio `fetchAvailableUsers` porque los sigue usando `AgregarMiembroOrgDialog` dentro del detalle de organización.
-- La gestión de usuarios queda centralizada en `/admin/organizaciones/:id` → tarjeta `OrgMembersCard` (que ya permite agregar, cambiar rol y quitar miembros).
+### 2. Hook + servicio
+- Nuevo `useCreateOrgMember` que invoca la edge function `user-management` con `action: "create"` y un nuevo campo `organization_id` (para que un super admin pueda crear dentro de cualquier org, no sólo la suya).
+- Eliminar `useAddOrgMember` y `addOrgMember` (servicio) — ya no se usan desde la UI.
+- Eliminar `useAvailableUsers` del flujo de organización (puede quedarse si otros consumidores lo usan; revisar `rg useAvailableUsers`).
 
-### 2. Simplificar el Dashboard Super Admin
+### 3. Edge function `user-management` (acción `create`)
+- Aceptar `organization_id` opcional en el payload.
+- Si quien llama es **super_admin global** y se envía `organization_id`, insertar la membresía en esa org en vez de en `admin.orgId`.
+- Si NO es super_admin global, ignorar `organization_id` y seguir usando `admin.orgId` (sin cambio).
+- Validar que la org exista antes de insertar.
 
-- Dejar sólo dos KPIs accionables:
-  - **Organizaciones totales** → navega a `/admin/organizaciones`.
-  - **Miembros totales en la plataforma** (suma de `organization_members`) → no navega; es informativo.
-- Eliminar tarjetas de "Embarques" y "Cotizaciones" (no aportaban porque no llevaban a ninguna vista filtrada).
-- Mantener la gráfica de actividad por organización y la lista de "Últimas organizaciones" (esas sí son accionables).
-
-### 3. Reorganizar el sidebar en 2 grupos
-
-```text
-Plataforma
-  • Dashboard            /admin
-  • Organizaciones       /admin/organizaciones
-  • Auditoría plataforma /admin/auditoria
-  • Diagnóstico          /admin/diagnostico
-
-Sistema
-  • Configuración Global /admin/configuracion
+### 4. BD: endurecer "1 usuario = 1 org"
+Migración que agrega:
+```sql
+ALTER TABLE public.organization_members
+  ADD CONSTRAINT organization_members_user_id_unique UNIQUE (user_id);
 ```
+No requiere backfill — ya verifiqué que no hay duplicados.
 
-Implementación: usar `SidebarGroupLabel` por grupo dentro del `AdminSidebar` actual, sin tocar el `SidebarFooter` (menú de usuario).
-
-### 4. Changelog y versión
-
-- Bump `APP_VERSION` (patch o minor según corresponda).
-- Entrada en `CHANGELOG.md` describiendo: eliminación de Usuarios Globales, simplificación de KPIs y reagrupación del sidebar.
-
-## Detalles técnicos
-
-- **Ruta eliminada**: `<Route path="/admin/usuarios" .../>` en `adminRoutes.tsx`. No hay enlaces internos hacia ella fuera del sidebar y el dashboard, así que no quedan referencias rotas (a verificar con `rg "/admin/usuarios"`).
-- **Hook nuevo opcional**: `useAdminTotalMembers` — un `count` sobre `organization_members` para alimentar el KPI nuevo. Puede ir como campo extra dentro de `useAdminDashboardStats` para no agregar otra query.
-- **Tests**: revisar `src/__tests__/architecture/*` y `routes.smoke.test.tsx` por referencias a `AdminUsuarios`.
-- **Memory**: actualizar `mem://index.md` si hay alguna entrada que mencione "Usuarios Globales" (no detecté ninguna, pero confirmamos al implementar).
+### 5. Limpieza
+- Borrar `AgregarMiembroOrgDialog.tsx` (renombrado).
+- Actualizar `OrgMembersCard` para no recibir `existingUserIds`.
+- Actualizar `useAdminOrgDetalle` para no calcular `existingUserIds`.
+- Actualizar tests que mencionan `useAddOrgMember` / `addOrgMember`.
+- `CHANGELOG.md` + `APP_VERSION` (bump patch).
 
 ## Fuera de alcance
 
-- No tocar lógica de roles ni RLS.
-- No rediseñar visualmente las tarjetas ni cambiar el design system.
-- No crear vistas globales de embarques/cotizaciones cruzando organizaciones (queda como backlog futuro si lo necesitas).
+- Flujo de "transferir" un usuario entre organizaciones (si surge la necesidad, se diseña aparte: implica baja en la org origen + alta en la destino + invalidar sesiones).
+- Cambios al módulo de Configuración o al sidebar del super admin.
