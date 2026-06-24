@@ -9,6 +9,7 @@ import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 export interface AgenteContext {
   agenteId: string;
   organizationId: string;
+  organizacionNombre: string;
   proveedorId: string | null;
   agenteNombre: string;
   email: string;
@@ -29,10 +30,16 @@ export async function fetchAgenteContext(): Promise<AgenteContext> {
   if (error) throw error;
   if (!data) throw new Error("Tu usuario aún no está vinculado a un agente. Contacta a operaciones.");
 
+  // El agente no tiene SELECT directo sobre `organizations` (RLS), así que
+  // resolvemos el nombre vía RPC SECURITY DEFINER que sólo expone `nombre`.
+  const { data: orgNombre, error: orgErr } = await supabase.rpc("get_current_agente_org_nombre");
+  if (orgErr) throw orgErr;
+
   const ag = (data.costeo_agentes ?? null) as { nombre?: string; proveedor_id?: string | null } | null;
   return {
     agenteId: data.agente_id,
     organizationId: data.organization_id,
+    organizacionNombre: (orgNombre as string | null) ?? "Organización",
     proveedorId: ag?.proveedor_id ?? null,
     agenteNombre: ag?.nombre ?? "Agente",
     email: user.email ?? "",
