@@ -1,42 +1,49 @@
 ## Causa raíz
 
-Analogía: tienes una función que sólo entiende "texto plano", pero algunos clientes le hablan en un "dialecto" (el enum `tipo_operacion`). Cuando le hablan en dialecto, no la encuentra y revienta con `function public.generar_expediente(tipo_operacion) does not exist`.
+Analogía: el agente tiene su llave de la puerta de "agente_users" (RLS lo deja leer su propia fila), pero la cerradura del `costeo_agentes` y de `organizations` está cerrada para él (sus políticas exigen ser miembro de `organization_members`, que un agente externo NO es). Resultado: el `select` con joins regresa silenciosamente `costeo_agentes: null` y por eso el header cae al fallback "Portal Agente · **Agente**". Y aunque la RPC `get_current_agente_org_nombre()` sí existe y tiene EXECUTE, la lógica del header oculta el chip cuando viene vacío.
 
-Concretamente:
-- En BD sólo existe `public.generar_expediente(tip_op text)`.
-- Hay dos rutas que la invocan:
-  1. **Cliente** `src/features/cotizacion/services/conversiones/embarques.ts:63` hace `supabase.rpc("generar_expediente", { tipo_op: cotizacion.tipo })`. Supabase-js infiere el tipo del argumento como el enum `tipo_operacion` (porque la columna `cotizaciones.tipo` es de ese enum en los tipos generados) y PostgREST no encuentra la firma.
-  2. **SQL** `crear_embarque_borrador_desde_cotizacion(uuid)` ya fue parcheada en 13.135.19 con `v_cot.tipo::text` (fix puntual).
-
-El bundle del error (13.135.14) es previo al parche del cliente, pero la próxima vez que cualquier caller pase el enum sin castear, vuelve a tronar. Necesitamos una solución **a prueba de balas** que no dependa de que cada call site se acuerde de castear.
+Lo que confirma el preview (`Chino el agente` logueado): se ve `Portal Agente · Agente` en vez de `Portal Agente · Chino El Agente`, y no aparece el chip de "Chino Cochino".
 
 ## Solución
 
-Agregar una **sobrecarga** de `generar_expediente` que acepte el enum `tipo_operacion` directamente y delegue a la versión `text`. Así cualquier caller (cliente con supabase-js o SQL futuro) funciona sin cast.
+Una sola RPC `SECURITY DEFINER` que devuelva todo el contexto del agente saltándose RLS, y cambiar `fetchAgenteContext` para usarla.
 
 ### Cambios
 
-1. **Migración SQL** — nueva función:
+1. **Migración SQL** — crear RPC consolidada:
    ```sql
-   CREATE OR REPLACE FUNCTION public.generar_expediente(tipo_op public.tipo_operacion)
-   RETURNS text LANGUAGE sql SECURITY DEFINER SET search_path=public
-   AS $$ SELECT public.generar_expediente(tipo_op::text) $$;
-   GRANT EXECUTE ON FUNCTION public.generar_expediente(public.tipo_operacion) TO authenticated, service_role;
+   CREATE OR REPLACE FUNCTION public.get_current_agente_context()
+   RETURNS TABLE (
+     agente_id uuid, organization_id uuid, proveedor_id uuid,
+     agente_nombre text, organizacion_nombre text
+   )
+   LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public
+   AS $$
+     SELECT au.agente_id, au.organization_id, ca.proveedor_id,
+            ca.nombre, o.nombre
+       FROM public.agente_users au
+       LEFT JOIN public.costeo_agentes ca ON ca.id = au.agente_id
+       LEFT JOIN public.organizations  o  ON o.id  = au.organization_id
+      WHERE au.user_id = auth.uid()
+      LIMIT 1;
+   $$;
+   REVOKE EXECUTE ON FUNCTION public.get_current_agente_context() FROM PUBLIC, anon;
+   GRANT  EXECUTE ON FUNCTION public.get_current_agente_context() TO authenticated;
    ```
-   (la versión `text` original queda intacta, no rompe nada).
+   (mantenemos `get_current_agente_org_nombre()` para no romper nada).
 
-2. **Defensa adicional en cliente** — `src/features/cotizacion/services/conversiones/embarques.ts` línea 63: convertir explícitamente a `String(cotizacion.tipo)` para que aunque alguien borre la sobrecarga, siga funcionando.
+2. **Cliente** `src/features/portal-agente/services/index.ts` — reemplazar el `.from("agente_users").select(...costeo_agentes(...))` + RPC de org por una sola `supabase.rpc("get_current_agente_context")`. Si devuelve 0 filas → `notAuthenticated`. Mapeo directo al `AgenteContext`. Sin cambios en la interface ni en los consumidores.
 
 3. **Versión + changelog**
-   - `src/constants/appVersion.ts` → `13.135.28`
-   - `CHANGELOG.md` → entrada `[13.135.28]` describiendo el fix.
+   - `src/constants/appVersion.ts` → `13.135.29`
+   - `CHANGELOG.md` → entrada `[13.135.29]` describiendo el fix.
 
 ## Validación
 
-- Confirmar en `pg_proc` que ahora existen **dos** firmas de `generar_expediente`.
-- Reproducir el flujo: cotización Aceptada → "Crear embarque" → la revalidación de tarifa ya no debe arrojar el error.
+- Abrir `/agente` en preview como Chino. El header debe decir `Portal Agente · Chino El Agente` y el chip `🏢 Chino Cochino`.
+- Verificar con Playwright + screenshot.
 
 ## Fuera de alcance
 
-- No tocamos la lógica de revalidación ni los demás RPCs.
-- No tocamos permisos, RLS, ni la firma de 4 args de `crear_embarque_borrador_desde_cotizacion`.
+- No abrimos RLS de `costeo_agentes` ni `organizations` (mantener principio de menor privilegio).
+- No tocamos UI, sólo la fuente de datos.
