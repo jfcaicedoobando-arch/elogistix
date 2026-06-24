@@ -65,7 +65,7 @@ export function CambiarPasswordDialog({
     } catch (err) {
       notifyError(toast, {
         title: "No se pudo actualizar la contraseña",
-        description: getErrorMessage(err),
+        description: traducirErrorPassword(getErrorMessage(err)),
         error: err,
         method,
       });
@@ -73,6 +73,7 @@ export function CambiarPasswordDialog({
       setIsPending(false);
     }
   };
+
 
   return (
     <FormDialogShell
