@@ -8,6 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import { MultiRutaSelect } from "./MultiRutaSelect";
 
 interface CatalogosRow { id: string; name?: string; nombre?: string; activo?: boolean; activa?: boolean }
 
@@ -93,29 +94,45 @@ interface RutaTipoProps {
   rutas: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
   tipos: CatalogosRow[];
   errores?: Record<string, boolean>;
+  /** Modo multi-ruta: 1 captura → N tarifas. Solo en alta/duplicado. */
+  multiple?: boolean;
+  rutaIds?: string[];
+  onRutaIdsChange?: (ids: string[]) => void;
 }
 
-export function RutaTipoFields({ form, setForm, rutas, tipos, errores }: RutaTipoProps) {
+export function RutaTipoFields({
+  form, setForm, rutas, tipos, errores, multiple, rutaIds, onRutaIdsChange,
+}: RutaTipoProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
-        <Label htmlFor="tarifa-ruta">Ruta *</Label>
-        <Select value={form.ruta_id} onValueChange={(v) => setForm({ ...form, ruta_id: v })}>
-          <SelectTrigger
+        <Label htmlFor="tarifa-ruta">{multiple ? "Rutas *" : "Ruta *"}</Label>
+        {multiple ? (
+          <MultiRutaSelect
             id="tarifa-ruta"
-            aria-invalid={errores?.ruta_id || undefined}
-            className={invalidCls(errores?.ruta_id)}
-          >
-            <SelectValue placeholder="Selecciona ruta" />
-          </SelectTrigger>
-          <SelectContent>
-            {rutas.filter((r) => r.activa).map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.puerto_origen_nombre} → {r.puerto_destino_nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            rutas={rutas}
+            value={rutaIds ?? []}
+            onChange={(ids) => onRutaIdsChange?.(ids)}
+            invalid={errores?.ruta_id}
+          />
+        ) : (
+          <Select value={form.ruta_id} onValueChange={(v) => setForm({ ...form, ruta_id: v })}>
+            <SelectTrigger
+              id="tarifa-ruta"
+              aria-invalid={errores?.ruta_id || undefined}
+              className={invalidCls(errores?.ruta_id)}
+            >
+              <SelectValue placeholder="Selecciona ruta" />
+            </SelectTrigger>
+            <SelectContent>
+              {rutas.filter((r) => r.activa).map((r) => (
+                <SelectItem key={r.id} value={r.id}>
+                  {r.puerto_origen_nombre} → {r.puerto_destino_nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <div>
         <Label htmlFor="tarifa-tipo">Tipo de contenedor *</Label>
