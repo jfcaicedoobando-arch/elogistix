@@ -93,6 +93,27 @@ export async function removeOrgMember(memberId: string): Promise<void> {
   if (error) throw error;
 }
 
-// Nota: el alta de miembros se hace creando un usuario nuevo vía edge function
-// `user-management` (action `create`). No exponemos un servicio para asociar
-// usuarios existentes — un usuario sólo puede pertenecer a una organización.
+/**
+ * Crea un usuario nuevo dentro de una organización vía edge function
+ * `user-management` (action `create`). No exponemos un servicio para asociar
+ * usuarios existentes — un usuario sólo puede pertenecer a una organización.
+ */
+export interface CreateOrgMemberInput {
+  organizationId: string;
+  email: string;
+  password: string;
+  role: AppRole;
+}
+
+export async function createOrgMember(input: CreateOrgMemberInput): Promise<void> {
+  const { error } = await supabase.functions.invoke("user-management", {
+    body: {
+      action: "create",
+      email: input.email,
+      password: input.password,
+      role: input.role,
+      organization_id: input.organizationId,
+    },
+  });
+  if (error) throw error;
+}
