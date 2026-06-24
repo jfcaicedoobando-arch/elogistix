@@ -1,22 +1,62 @@
-## Renombrar puerto CNSHK
+# Fix: error 500 en `demo-access` (Sentry JAVASCRIPT-REACT-1G)
 
-Actualizar el registro en el catálogo de puertos (`puertos`) para que el código `CNSHK` muestre el nombre completo "Shenzhen Shekou" en lugar de solo "Shenzhen".
+## Qué pasó (en simple)
+El botón **"Probar demo"** llama a la edge function `demo-access`, que entre otras cosas se asegura de que el usuario demo pertenezca a la organización demo. Esa función llamó a la RPC `ensure_demo_membership`, y la base reventó con:
 
-### Cambio
+> duplicate key value violates unique constraint **`organization_members_user_id_unique`**
 
-- `UPDATE public.puertos SET name = 'Shenzhen Shekou' WHERE code = 'CNSHK';`
+**Analogía:** la tabla `organization_members` tiene una regla "un usuario sólo puede pertenecer a UNA organización" (constraint `UNIQUE(user_id)`). La RPC intentó insertar al usuario demo, y como `ON CONFLICT` estaba mirando otra cerradura (`UNIQUE(organization_id, user_id)`), no detectó el choque y la inserción explotó.
 
-### Impacto
+Probablemente el usuario `933a08f5-…` quedó vinculado a otra organización en algún flujo previo, así que al entrar a demo ya no se puede re-insertar.
 
-- Aparecerá como **"Shenzhen Shekou, China (CNSHK)"** en `PortSelect` y en todas las vistas que leen del catálogo (cotizaciones, embarques, costeo de rutas, etc.).
-- Los embarques/cotizaciones existentes que guardaron el string ya formateado (`"Shenzhen, China (CNSHK)"`) **no** se actualizan automáticamente. ¿Quieres que también haga un backfill para reemplazar el texto viejo en `embarques.puerto_origen/destino`, `cotizaciones`, etc.?
+## La causa raíz
+RPC actual:
+```sql
+INSERT INTO public.organization_members (user_id, organization_id, role)
+VALUES (_user_id, 'de100000-…', 'admin')
+ON CONFLICT (organization_id, user_id) DO UPDATE SET role = 'admin';
+```
+La tabla tiene DOS constraints únicas:
+- `UNIQUE(organization_id, user_id)` ← el que mira el ON CONFLICT
+- `UNIQUE(user_id)` ← el que realmente falla
 
-### Changelog
+## Plan
 
-- Bump `APP_VERSION` y nueva entrada en `CHANGELOG.md` describiendo el rename.
+### 1. Migración nueva: corregir `ensure_demo_membership`
+Cambiar el `ON CONFLICT` para que apunte a `(user_id)` y reasigne al usuario demo a la organización demo (forzando overwrite). Así, sin importar a qué org haya quedado vinculado, vuelve a la demo.
 
-### ¿Hay más puertos por renombrar?
+```sql
+CREATE OR REPLACE FUNCTION public.ensure_demo_membership(_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (_user_id, 'admin'::app_role)
+  ON CONFLICT (user_id, role) DO NOTHING;
 
-Mencionas "unos puertos" en plural. Si tienes la lista completa, mándamela y los hago todos en una sola migración.
+  INSERT INTO public.organization_members (user_id, organization_id, role)
+  VALUES (_user_id, 'de100000-0000-0000-0000-000000000001'::uuid, 'admin'::app_role)
+  ON CONFLICT (user_id) DO UPDATE
+    SET organization_id = EXCLUDED.organization_id,
+        role            = EXCLUDED.role;
+END;
+$function$;
+```
+(También se ajusta el `ON CONFLICT` de `user_roles` para usar su llave real `(user_id, role)`.)
 
-Renombrar CNYTN Shenzhen Yantian
+### 2. Versionado y changelog
+- Bump `APP_VERSION` → `13.135.13`
+- Entrada en `CHANGELOG.md` describiendo el fix
+- Marcar el issue `JAVASCRIPT-REACT-1G` como resuelto en Sentry una vez aplicado
+
+## Archivos a tocar
+- `supabase/migrations/<timestamp>_fix_ensure_demo_membership.sql` (nuevo)
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
+
+## Lo que NO cambia
+- No se tocan tablas, RLS ni la edge function `demo-access`.
+- No se quita el constraint `UNIQUE(user_id)` (es intencional: 1 usuario = 1 org).
