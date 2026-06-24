@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.31] - 2026-06-24
+- **feat(costeo)**: El modal "Nueva tarifa" (Costeo y Portal Agente) ahora permite seleccionar **varias rutas en un solo guardado**. Reemplaza el `Select` de ruta por un combobox con búsqueda, checkboxes y chips removibles ("Seleccionar todas las visibles" / "Limpiar"). Por cada ruta seleccionada se inserta una tarifa independiente compartiendo agente, naviera, tipo de contenedor, flete, recargos, vigencia y notas. Nueva mutación `crearMultiples` con toast agregado ("Se crearon N tarifas") y, si hay fallas parciales, deja el modal abierto con sólo las rutas pendientes. Modo "editar" mantiene selección única. Botón dinámico: `Guardar tarifa` → `Guardar N tarifas`.
+
 ## [13.135.30] - 2026-06-24
 - **fix(cotizaciones)**: Resuelve `column "user_id" of relation "notificaciones_internas" does not exist` (Sentry JAVASCRIPT-REACT-1P) al convertir una cotización aceptada en borrador de embarque. La función `crear_embarque_borrador_desde_cotizacion(uuid)` insertaba en columnas inexistentes `user_id`/`link`; se corrige a las reales `usuario_id`/`enlace`. La sobrecarga de 4 args (revalidación de tarifa) que delega en esta también queda arreglada de paso.
 
