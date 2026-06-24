@@ -67,6 +67,25 @@ export function validateCreatePayload(body: { email?: string; password?: string 
   return null;
 }
 
+/**
+ * Resuelve la organización destino para el alta:
+ * - super_admin global puede pasar `organization_id` para crear en cualquier org.
+ * - admin_org siempre crea en su propia org (ignora payload).
+ */
+async function resolveTargetOrgId(
+  adminClient: SupabaseClient,
+  admin: AdminAccess,
+  orgIdPayload: string | undefined,
+): Promise<{ targetOrgId: string | null } | { error: string }> {
+  if (!admin.isGlobalAdmin || !orgIdPayload) {
+    return { targetOrgId: admin.orgId };
+  }
+  const { data: orgRow, error: orgErr } = await adminClient
+    .from("organizations").select("id").eq("id", orgIdPayload).maybeSingle();
+  if (orgErr || !orgRow) return { error: "Organización destino no encontrada" };
+  return { targetOrgId: orgRow.id as string };
+}
+
 export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { cors, log, callerId, adminClient, body } = ctx;
   if (!admin.isGlobalAdmin && !admin.orgId) {
