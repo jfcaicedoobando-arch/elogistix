@@ -92,6 +92,9 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
       puerto_destino?: { name?: string } | null;
     } | null;
   };
+  // SAFE-CAST: `data` viene del cliente Supabase con tipos generados (joins
+  // anidados resueltos al shape `Raw` declarado arriba). El cast aplana
+  // únicamente la unión `null | Raw[]` a `Raw[]` para iterar.
   return ((data ?? []) as unknown as Raw[]).map((r) => ({
     id: r.id,
     ruta_id: r.ruta_id,

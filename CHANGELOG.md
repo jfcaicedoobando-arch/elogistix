@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.133.2] - 2026-06-23
+- **fix(arquitectura/tests)**: Reparados los 4 tests rojos del baseline arquitectónico.
+  - **`TarifaFormFields.tsx`** (206 líneas) excedía el límite Power-of-10 de 200. Se extrajeron `NumerosFields` y `VigenciaFields` a `TarifaNumerosVigenciaFields.tsx` y se re-exportan desde el archivo original para mantener compatibilidad con `TarifaForm.tsx`.
+  - **`portal-agente/services/index.ts:95`** tenía un `as unknown as Raw[]` sin el marcador `// SAFE-CAST:` exigido por el lint arquitectónico. Se documentó el cast (aplana la unión `null | Raw[]` con tipos generados de Supabase) con el comentario requerido.
+- Bump APP_VERSION → 13.133.2. Analogía: el guardia de la entrada (test de arquitectura) detectó dos infracciones: un archivo que pasaba de las 200 páginas permitidas (lo partimos en dos) y un cast sin la calcomanía SAFE-CAST que dice por qué es seguro (le pegamos la calcomanía con la explicación).
+
 ## [13.133.1] - 2026-06-23
 - **fix(lint)**: `ProtectedRoute` superaba el umbral de complejidad ciclomática de ESLint (17 > 16). Extraída la cascada de redirecciones (cliente → /portal, agente_carga → /agente, super_admin → /admin, onboarding pendiente → /onboarding) a un helper puro `resolveProtectedRouteRedirect` en `src/features/auth/utils/`. El componente sólo se queda con loading, autenticación, redirect resuelto y validación de `allowedRoles`. Bump APP_VERSION → 13.133.1. Analogía: el portero del edificio tenía un cuaderno con 17 reglas para decidir a dónde mandar a cada visitante; movimos las reglas de routeo a una guía aparte y ahora el portero sólo pregunta "¿está autorizado?" y consulta la guía.
 
