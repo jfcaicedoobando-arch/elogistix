@@ -15,33 +15,34 @@ export interface AgenteContext {
   email: string;
 }
 
-/** Contexto completo del agente autenticado (vínculo agente_users + datos del costeo_agente). */
+/** Contexto completo del agente autenticado vía RPC SECURITY DEFINER
+ *  (salta RLS de `costeo_agentes` y `organizations`, a las que el agente
+ *  no tiene SELECT directo). */
 export async function fetchAgenteContext(): Promise<AgenteContext> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error(AUTH_ERROR_MESSAGES.notAuthenticated);
 
-  const { data, error } = await supabase
-    .from("agente_users")
-    .select("agente_id, organization_id, costeo_agentes(nombre, proveedor_id)")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-
+  const { data, error } = await supabase.rpc("get_current_agente_context");
   if (error) throw error;
-  if (!data) throw new Error("Tu usuario aún no está vinculado a un agente. Contacta a operaciones.");
 
-  // El agente no tiene SELECT directo sobre `organizations` (RLS), así que
-  // resolvemos el nombre vía RPC SECURITY DEFINER que sólo expone `nombre`.
-  const { data: orgNombre, error: orgErr } = await supabase.rpc("get_current_agente_org_nombre");
-  if (orgErr) throw orgErr;
+  // SAFE-CAST: la RPC devuelve SETOF con una sola fila o vacío.
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error("Tu usuario aún no está vinculado a un agente. Contacta a operaciones.");
 
-  const ag = (data.costeo_agentes ?? null) as { nombre?: string; proveedor_id?: string | null } | null;
+  const r = row as {
+    agente_id: string;
+    organization_id: string;
+    proveedor_id: string | null;
+    agente_nombre: string | null;
+    organizacion_nombre: string | null;
+  };
+
   return {
-    agenteId: data.agente_id,
-    organizationId: data.organization_id,
-    organizacionNombre: (orgNombre as string | null) ?? "Organización",
-    proveedorId: ag?.proveedor_id ?? null,
-    agenteNombre: ag?.nombre ?? "Agente",
+    agenteId: r.agente_id,
+    organizationId: r.organization_id,
+    organizacionNombre: r.organizacion_nombre ?? "Organización",
+    proveedorId: r.proveedor_id ?? null,
+    agenteNombre: r.agente_nombre ?? "Agente",
     email: user.email ?? "",
   };
 }
