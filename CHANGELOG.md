@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.16] - 2026-06-24
+- **feat(ui/cuenta)**: Los usuarios internos (admin de organización, operadores, etc.) ahora pueden cambiar su propia contraseña sin cerrar sesión. Agregada opción "Cambiar contraseña" en el menú de usuario del sidebar (popover del avatar), que abre un diálogo compartido `CambiarPasswordDialog` (`@/components/shared/dialogs`). Valida ≥8 caracteres y confirmación; llama a `supabase.auth.updateUser`. El diálogo del portal de clientes ahora re-exporta este mismo componente compartido — mismo comportamiento, código único.
+
 ## [13.135.14] - 2026-06-24
 - **fix(rpc/embarques)**: La RPC `crear_embarque_borrador_desde_cotizacion` tenía dos sobrecargas: una de 1 argumento y otra de 4 con `DEFAULT` en los 3 extra. Al llamarla con un solo `uuid` (botón "Generar embarque" desde una cotización, y también la llamada recursiva interna), Postgres encontraba dos candidatos válidos y abortaba con `function public.crear_embarque_borrador_desde_cotizacion(uuid) is not unique` (Sentry, ruta `/cotizaciones/:id`). Se quitaron los `DEFAULT` de la sobrecarga de 4 args: ahora 1 uuid resuelve a la sobrecarga vieja y 4 args a la nueva, sin ambigüedad. Sin cambios de comportamiento ni de cliente (`crearEmbarqueBorradorConDecision` ya pasaba siempre los 4).
 
