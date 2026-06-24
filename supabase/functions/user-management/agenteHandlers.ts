@@ -152,26 +152,22 @@ async function executeInvitePath(
 async function registrarBitacoraPassword(
   adminClient: SupabaseClient,
   callerId: string,
-  organization_id: string,
-  agente_id: string,
-  email: string,
-  userId: string,
-  isNew: boolean,
+  ctx: { organization_id: string; agente_id: string; email: string; userId: string; isNew: boolean },
 ): Promise<void> {
   const { data: userRow } = await adminClient
     .schema("auth").from("users").select("email").eq("id", callerId).maybeSingle();
-  const accion = isNew
+  const accion = ctx.isNew
     ? "Agente: cuenta creada con contraseña"
     : "Agente: contraseña reasignada por admin";
   await adminClient.from("bitacora_actividad").insert({
-    organization_id,
+    organization_id: ctx.organization_id,
     usuario_id: callerId,
     usuario_email: (userRow as { email?: string } | null)?.email ?? "",
     modulo: "Costeo Agentes",
     accion,
-    entidad_id: agente_id,
-    entidad_nombre: email,
-    detalles: { user_id: userId, mode: "password" },
+    entidad_id: ctx.agente_id,
+    entidad_nombre: ctx.email,
+    detalles: { user_id: ctx.userId, mode: "password" },
   });
 }
 
