@@ -2,19 +2,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { Trash2, UserPlus, Users } from "lucide-react";
 import type { MemberRow } from "@/features/admin/hooks";
 import type { AppRole } from "@/types/appRole";
-
-const roleBadge: Record<string, string> = {
-  super_admin: "bg-primary text-primary-foreground",
-  admin: "bg-destructive text-destructive-foreground",
-  operador: "bg-info text-info-foreground",
-  viewer: "bg-muted text-muted-foreground",
-};
+import {
+  ASSIGNABLE_ROLE_GROUPS,
+  LEGACY_ROLES,
+  ROLE_BADGE_CLASSES,
+  ROLE_LABELS,
+} from "@/features/admin/domain/roles/roleCatalog";
 
 interface OrgMembersCardProps {
   members: MemberRow[];
@@ -27,18 +34,39 @@ interface OrgMembersCardProps {
 export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onRemove }: OrgMembersCardProps) {
   const columns: ColumnDef<MemberRow, unknown>[] = defineColumns<MemberRow>([
     { id: "email", header: "Usuario", meta: { width: "min-w-[200px]", className: "font-medium" }, cell: ({ row }) => row.original.email ?? row.original.user_id },
-    { id: "role", header: "Rol", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge className={roleBadge[row.original.role] ?? ""}>{row.original.role}</Badge> },
     {
-      id: "change_role", header: "Cambiar rol", meta: { width: "w-[160px]" },
+      id: "role",
+      header: "Rol",
+      meta: { width: "w-[180px]" },
+      cell: ({ row }) => {
+        const r = row.original.role as AppRole;
+        return <Badge className={ROLE_BADGE_CLASSES[r] ?? ""}>{ROLE_LABELS[r] ?? r}</Badge>;
+      },
+    },
+    {
+      id: "change_role", header: "Cambiar rol", meta: { width: "w-[220px]" },
       cell: ({ row }) => {
         const m = row.original;
+        const currentRole = m.role as AppRole;
+        const isLegacy = (LEGACY_ROLES as readonly string[]).includes(currentRole);
         return (
-          <Select value={m.role} onValueChange={(val) => onChangeRole(m.id, val as AppRole)}>
-            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+          <Select value={currentRole} onValueChange={(val) => onChangeRole(m.id, val as AppRole)}>
+            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="operador">Operador</SelectItem>
-              <SelectItem value="viewer">Viewer</SelectItem>
+              {ASSIGNABLE_ROLE_GROUPS.map((group) => (
+                <SelectGroup key={group.label}>
+                  <SelectLabel>{group.label}</SelectLabel>
+                  {group.roles.map((r) => (
+                    <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+              {isLegacy && (
+                <SelectGroup>
+                  <SelectLabel>Legacy</SelectLabel>
+                  <SelectItem value={currentRole} disabled>{ROLE_LABELS[currentRole]}</SelectItem>
+                </SelectGroup>
+              )}
             </SelectContent>
           </Select>
         );
