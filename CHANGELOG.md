@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.1] - 2026-06-24
+- **ux(admin/organizaciones)**: La tabla de organizaciones ahora permite drill-down haciendo click en cualquier parte de la fila. Eliminada la columna de acciones (menú "⋯" con "Ver detalle" / "Desactivar" deshabilitado) — era redundante y agregaba ruido. Analogía: en vez de tener un timbre al lado de cada puerta, ahora la puerta entera abre con un toque.
+
 ## [13.135.0] - 2026-06-24
 - **feat(admin/organizaciones)**: El alta de miembros ahora **crea un usuario nuevo** directamente en la organización destino, en vez de permitir asociar un usuario existente. Refuerza la regla de negocio "un usuario pertenece a una sola organización".
   - UI: nuevo `CrearMiembroOrgDialog` (email + contraseña con generador + rol). Eliminado `AgregarMiembroOrgDialog` y su combo de usuarios existentes. Botón del card: "Agregar miembro" → "Crear miembro".
