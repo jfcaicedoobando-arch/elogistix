@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Save, Building2, FileText, Anchor, Wrench, Scale } from "lucide-react";
 import { useConfiguracionState } from "@/features/configuracion/hooks";
 import TabEmpresa from "@/features/configuracion/components/TabEmpresa";
+import { OrgInfoCard } from "@/features/configuracion/components/OrgInfoCard";
 import TabFacturacion from "@/features/configuracion/components/TabFacturacion";
 import TabPuertos from "@/features/configuracion/components/TabPuertos";
 import TabOperaciones from "@/features/configuracion/components/TabOperaciones";
@@ -63,7 +64,8 @@ export default function Configuracion() {
           <TabsTrigger value="herramientas" className="gap-1.5"><Wrench className="h-3.5 w-3.5" /> Herramientas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="empresa">
+        <TabsContent value="empresa" className="space-y-4">
+          <OrgInfoCard />
           <TabEmpresa
             nombre={s.nombre} setNombre={set("nombre")}
             subtitulo={s.subtitulo} setSubtitulo={set("subtitulo")}
