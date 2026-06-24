@@ -1,19 +1,17 @@
 ## Causa
 
-El input de "Flete base" usa `value={form.flete_base}` con `form.flete_base = 0` por default. Cuando el usuario escribe "5" sobre el "0", queda "05" porque React lo trata como string concatenado al value actual.
+- `dias_libres_demoras` arranca en **7** (default), no en 0 — por eso mi fix anterior (`=== 0 ? ""`) no aplica: el usuario sigue viendo "7" y al teclear queda "710".
+- `transit_time_dias` arranca en `null`, así que ya muestra vacío, pero si el usuario captura un valor y luego quiere cambiarlo, vuelve a tener el mismo problema de concatenación.
 
-## Solución
+## Solución (uniforme y simple)
 
-En `src/features/costeo/components/TarifaNumerosVigenciaFields.tsx`:
+Agregar `onFocus={(e) => e.currentTarget.select()}` a los tres inputs numéricos del formulario (`tarifa-flete`, `tarifa-dias-libres`, `tarifa-transito`). Al enfocar el campo, el valor actual queda seleccionado y la primera tecla lo reemplaza completo.
 
-- Mostrar cadena vacía cuando el valor es 0 (el caso inicial / placeholder):
-  `value={form.flete_base === 0 ? "" : form.flete_base}`
-- Agregar `placeholder="0.00"` para no perder pista visual.
-- Aplicar el mismo patrón a `dias_libres_demoras` (también arranca en 0) por consistencia. `transit_time_dias` ya usa `?? ""`, no se toca.
-
-La validación `flete_base > 0` ya existe en `calcularErrores`, no requiere cambios.
+- Mantiene el placeholder y el default funcional (no se borra al renderizar).
+- No cambia la lógica de guardado.
+- Patrón estándar para inputs `type="number"` con default no-cero.
 
 ## Versión
 
-- `src/constants/appVersion.ts` → `13.135.35`
-- `CHANGELOG.md` → `[13.135.35]`: "fix: el input de flete base (y días libres) ya no muestra el `0` inicial pegado al monto que se escribe."
+- `src/constants/appVersion.ts` → `13.135.36`
+- `CHANGELOG.md` → `[13.135.36]`: "fix: los inputs numéricos de tarifa (flete, días libres, tránsito) seleccionan su valor al enfocarse para que el siguiente texto lo reemplace."

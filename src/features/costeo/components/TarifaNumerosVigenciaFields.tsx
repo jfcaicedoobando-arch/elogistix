@@ -29,6 +29,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
           type="number" min={0} step="0.01" value={form.flete_base === 0 ? "" : form.flete_base} placeholder="0.00"
           aria-invalid={errores?.flete_base || undefined}
           className={`${invalidCls(errores?.flete_base) ?? ""} ${noSpinnerCls}`}
+          onFocus={(e) => e.currentTarget.select()}
           onChange={(e) => setForm({ ...form, flete_base: Number(e.target.value) || 0 })}
         />
       </div>
@@ -38,6 +39,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
           id="tarifa-dias-libres"
           type="number" min={0} value={form.dias_libres_demoras === 0 ? "" : form.dias_libres_demoras} placeholder="0"
           className={noSpinnerCls}
+          onFocus={(e) => e.currentTarget.select()}
           onChange={(e) => setForm({ ...form, dias_libres_demoras: Number(e.target.value) || 0 })}
         />
       </div>
@@ -45,8 +47,9 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Label htmlFor="tarifa-transito">Tránsito (días)</Label>
         <Input
           id="tarifa-transito"
-          type="number" min={0} value={form.transit_time_dias ?? ""}
+          type="number" min={0} value={form.transit_time_dias ?? ""} placeholder="0"
           className={noSpinnerCls}
+          onFocus={(e) => e.currentTarget.select()}
           onChange={(e) => setForm({ ...form, transit_time_dias: e.target.value ? Number(e.target.value) : null })}
         />
       </div>
