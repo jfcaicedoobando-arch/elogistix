@@ -109,6 +109,16 @@ export default function TesoreriaCuentas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteAlert
+        open={!!deleteTarget}
+        onOpenChange={(v) => { if (!v) cancelarEliminar(); }}
+        title={deleteTarget ? `¿Eliminar cuenta "${deleteTarget.alias}"?` : "¿Eliminar cuenta?"}
+        description="La cuenta dejará de aparecer en conciliación. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar cuenta"
+        pending={eliminando}
+        onConfirm={confirmarEliminar}
+      />
     </div>
   );
 }
