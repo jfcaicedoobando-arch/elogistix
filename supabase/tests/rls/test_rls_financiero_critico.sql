@@ -149,44 +149,44 @@ BEGIN
   RESET ROLE;
 
   -- =========================================================================
-  -- TEST 5: pagos_factura aislamiento (requiere factura previa)
+  -- TEST 5: pagos_factura aislamiento
+  -- (13.135.6) Guards `IF EXISTS facturas` eliminados: la tabla `facturas`
+  -- es core y siempre existe en CI. El guard enmascaraba la cobertura.
   -- =========================================================================
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='facturas') THEN
-    INSERT INTO public.facturas(
-      id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
-      fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
-    ) VALUES (
-      fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida'
-    );
+  INSERT INTO public.facturas(
+    id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
+    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
+  ) VALUES (
+    fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
+    CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida'
+  );
 
-    INSERT INTO public.pagos_factura(
-      id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
-      monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn
-    ) VALUES (
-      pago_fac_a, fac_a, org_a, CURRENT_DATE, 500, 'MXN', 1,
-      500, 'Transferencia', 'REF-PF-A', '', 0
-    );
+  INSERT INTO public.pagos_factura(
+    id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
+    monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn
+  ) VALUES (
+    pago_fac_a, fac_a, org_a, CURRENT_DATE, 500, 'MXN', 1,
+    500, 'Transferencia', 'REF-PF-A', '', 0
+  );
 
-    PERFORM pg_temp.as_user(user_b);
-    SELECT count(*) INTO visible FROM public.pagos_factura WHERE id = pago_fac_a;
-    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver pagos_factura de org_a');
-    RESET ROLE;
+  PERFORM pg_temp.as_user(user_b);
+  SELECT count(*) INTO visible FROM public.pagos_factura WHERE id = pago_fac_a;
+  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver pagos_factura de org_a');
+  PERFORM pg_temp.as_postgres();
 
-    -- TEST 6: factura_notas_credito aislamiento
-    INSERT INTO public.factura_notas_credito(
-      id, organization_id, factura_id, folio, motivo, descripcion, monto, moneda,
-      tipo_cambio, estado, fecha_emision
-    ) VALUES (
-      nc_a, org_a, fac_a, 'NC-A-001', 'Descuento', 'Ajuste', 100, 'MXN',
-      1, 'Aplicada', CURRENT_DATE
-    );
+  -- TEST 6: factura_notas_credito aislamiento
+  INSERT INTO public.factura_notas_credito(
+    id, organization_id, factura_id, folio, motivo, descripcion, monto, moneda,
+    tipo_cambio, estado, fecha_emision
+  ) VALUES (
+    nc_a, org_a, fac_a, 'NC-A-001', 'Descuento', 'Ajuste', 100, 'MXN',
+    1, 'Aplicada', CURRENT_DATE
+  );
 
-    PERFORM pg_temp.as_user(user_b);
-    SELECT count(*) INTO visible FROM public.factura_notas_credito WHERE id = nc_a;
-    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver nota de crédito de org_a');
-    RESET ROLE;
-  END IF;
+  PERFORM pg_temp.as_user(user_b);
+  SELECT count(*) INTO visible FROM public.factura_notas_credito WHERE id = nc_a;
+  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver nota de crédito de org_a');
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 7: pagos_proveedor aislamiento
@@ -207,44 +207,42 @@ BEGIN
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.pagos_proveedor WHERE id = pago_prov_a;
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver pagos_proveedor de org_a');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 8: comisiones_devengadas aislamiento
+  -- (13.135.6) Guard `IF EXISTS` eliminado: la tabla la crea la migración
+  -- 20260602193937. Si en CI no existe, queremos un fallo ruidoso.
   -- =========================================================================
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='comisiones_devengadas')
-     AND EXISTS (SELECT 1 FROM public.facturas WHERE id = fac_a)
-     AND EXISTS (SELECT 1 FROM public.pagos_factura WHERE id = pago_fac_a) THEN
-    INSERT INTO public.comisiones_devengadas(
-      id, organization_id, pago_factura_id, embarque_id, factura_id,
-      monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado, comision_mxn, estado
-    ) VALUES (
-      com_a, org_a, pago_fac_a, emb_a, fac_a,
-      500, 200, 0.10, 20, 'Devengada'
-    );
+  INSERT INTO public.comisiones_devengadas(
+    id, organization_id, pago_factura_id, embarque_id, factura_id,
+    monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado, comision_mxn, estado
+  ) VALUES (
+    com_a, org_a, pago_fac_a, emb_a, fac_a,
+    500, 200, 0.10, 20, 'Devengada'
+  );
 
-    PERFORM pg_temp.as_user(user_b);
-    SELECT count(*) INTO visible FROM public.comisiones_devengadas WHERE id = com_a;
-    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver comisiones_devengadas de org_a');
-    RESET ROLE;
-  END IF;
+  PERFORM pg_temp.as_user(user_b);
+  SELECT count(*) INTO visible FROM public.comisiones_devengadas WHERE id = com_a;
+  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver comisiones_devengadas de org_a');
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 9: liquidaciones_comision aislamiento
+  -- (13.135.6) Guards `IF EXISTS vendedoras / liquidaciones_comision` eliminados:
+  -- `liquidaciones_comision` la crea la misma migración 20260602193937 y su
+  -- columna `vendedora_id` es solo `uuid NOT NULL` sin FK, así que la tabla
+  -- `vendedoras` (que nunca existió) no es necesaria.
   -- =========================================================================
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='vendedoras')
-     AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='liquidaciones_comision') THEN
-    INSERT INTO public.vendedoras(id, organization_id, nombre)
-      VALUES (vend_a, org_a, 'Vendedora A');
-    INSERT INTO public.liquidaciones_comision(
-      id, organization_id, vendedora_id, periodo, total_mxn
-    ) VALUES (liq_a, org_a, vend_a, '2026-01', 1000);
+  INSERT INTO public.liquidaciones_comision(
+    id, organization_id, vendedora_id, periodo, total_mxn
+  ) VALUES (liq_a, org_a, vend_a, '2026-01', 1000);
 
-    PERFORM pg_temp.as_user(user_b);
-    SELECT count(*) INTO visible FROM public.liquidaciones_comision WHERE id = liq_a;
-    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver liquidaciones_comision de org_a');
-    RESET ROLE;
-  END IF;
+  PERFORM pg_temp.as_user(user_b);
+  SELECT count(*) INTO visible FROM public.liquidaciones_comision WHERE id = liq_a;
+  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver liquidaciones_comision de org_a');
+  PERFORM pg_temp.as_postgres();
+
 
   -- =========================================================================
   -- TEST 10: WITH CHECK — bloquear INSERT cruzado de org desde user_b a org_a.
