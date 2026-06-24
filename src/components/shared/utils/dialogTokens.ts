@@ -31,3 +31,17 @@ export const dialogSize = {
  * sin romper layout.
  */
 export const scrollableDialog = "max-h-[85vh] overflow-y-auto";
+
+/**
+ * Clase canónica para `<SheetContent side="right">` cuando se usa como
+ * filtros móviles (Cotizaciones, Embarques, CxP, Portal, etc.). Estandariza
+ * ancho (sm:max-w-sm), flex column y sin padding por defecto. Aplicar SIEMPRE
+ * en filtros móviles para evitar variaciones de ancho entre módulos.
+ */
+export const mobileFilterSheet = "w-full sm:max-w-sm flex flex-col gap-0 p-0";
+
+/**
+ * Clase canónica para `<SheetContent side="right">` cuando se usa como panel
+ * lateral tipo formulario (conversión de leads, notas de actividad, etc.).
+ */
+export const formSheet = "sm:max-w-md";
