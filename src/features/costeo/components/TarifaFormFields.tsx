@@ -140,66 +140,7 @@ export function RutaTipoFields({ form, setForm, rutas, tipos, errores }: RutaTip
   );
 }
 
-interface NumerosProps { form: TarifaInput; setForm: (f: TarifaInput) => void; errores?: Record<string, boolean> }
-
-export function NumerosFields({ form, setForm, errores }: NumerosProps) {
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      <div>
-        <Label htmlFor="tarifa-flete">Flete base USD *</Label>
-        <Input
-          id="tarifa-flete"
-          type="number" min={0} step="0.01" value={form.flete_base}
-          aria-invalid={errores?.flete_base || undefined}
-          className={`${invalidCls(errores?.flete_base) ?? ""} ${noSpinnerCls}`}
-          onChange={(e) => setForm({ ...form, flete_base: Number(e.target.value) || 0 })}
-        />
-      </div>
-      <div>
-        <Label htmlFor="tarifa-dias-libres">Días libres demoras</Label>
-        <Input
-          id="tarifa-dias-libres"
-          type="number" min={0} value={form.dias_libres_demoras}
-          className={noSpinnerCls}
-          onChange={(e) => setForm({ ...form, dias_libres_demoras: Number(e.target.value) || 0 })}
-        />
-      </div>
-      <div>
-        <Label htmlFor="tarifa-transito">Tránsito (días)</Label>
-        <Input
-          id="tarifa-transito"
-          type="number" min={0} value={form.transit_time_dias ?? ""}
-          className={noSpinnerCls}
-          onChange={(e) => setForm({ ...form, transit_time_dias: e.target.value ? Number(e.target.value) : null })}
-        />
-      </div>
-    </div>
-  );
-}
-
-export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      <div>
-        <Label htmlFor="tarifa-vig-desde">Vigente desde *</Label>
-        <Input
-          id="tarifa-vig-desde"
-          type="date" value={form.vigente_desde}
-          aria-invalid={errores?.vigente_desde || undefined}
-          className={invalidCls(errores?.vigente_desde)}
-          onChange={(e) => setForm({ ...form, vigente_desde: e.target.value })}
-        />
-      </div>
-      <div>
-        <Label htmlFor="tarifa-vig-hasta">Vigente hasta *</Label>
-        <Input
-          id="tarifa-vig-hasta"
-          type="date" value={form.vigente_hasta}
-          aria-invalid={errores?.vigente_hasta || undefined}
-          className={invalidCls(errores?.vigente_hasta)}
-          onChange={(e) => setForm({ ...form, vigente_hasta: e.target.value })}
-        />
-      </div>
-    </div>
-  );
-}
+// `NumerosFields` y `VigenciaFields` viven en archivo aparte para mantener
+// este módulo ≤200 líneas (Power-of-10). Re-exportamos para compatibilidad
+// con importadores existentes (`TarifaForm.tsx`).
+export { NumerosFields, VigenciaFields } from "./TarifaNumerosVigenciaFields";
