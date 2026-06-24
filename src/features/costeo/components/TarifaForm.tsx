@@ -4,7 +4,6 @@
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { Tag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,6 +21,7 @@ import {
   buildInitialForm, calcularTotal, esFormValido, usdFormatter,
   calcularErrores, camposFaltantes, computeGuardarLabel,
 } from "./TarifaForm.helpers";
+import { useTarifaSubmit } from "./useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
 interface Props {
@@ -45,7 +45,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const { data: rutasData = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
   const { data: tipos = [] } = useTiposContenedor();
-  const { crear, crearMultiples, actualizar } = useCosteoTarifaMutations();
+  const mutations = useCosteoTarifaMutations();
+  const { crear, crearMultiples, actualizar } = mutations;
   const agentes = agentesData;
   const rutas = rutasOverride ?? rutasData;
 
@@ -77,51 +78,22 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const faltantes = camposFaltantes(erroresLive);
   const tooltipFaltantes = faltantes.length > 0 ? `Faltan: ${faltantes.join(", ")}` : undefined;
 
+  const ejecutarSubmit = useTarifaSubmit({
+    mutations,
+    form,
+    rutaIds,
+    esEdicion,
+    tarifaId,
+    onSuccess: () => onOpenChange(false),
+    onPartialSuccess: (idsCreados) =>
+      setRutaIds((prev) => prev.filter((id) => !idsCreados.has(id))),
+  });
+
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
     setIntentoEnvio(true);
     if (!valido) return;
-    if (esEdicion && tarifaId) {
-      actualizar.mutate(
-        { id: tarifaId, input: form },
-        {
-          onSuccess: () => {
-            toast.success("Tarifa actualizada");
-            onOpenChange(false);
-          },
-          onError: (err: Error) => toast.error("No se pudo actualizar la tarifa", { description: err.message }),
-        },
-      );
-      return;
-    }
-    if (rutaIds.length <= 1) {
-      const input: TarifaInput = { ...form, ruta_id: rutaIds[0] ?? form.ruta_id };
-      crear.mutate(input, {
-        onSuccess: () => {
-          toast.success("Tarifa creada");
-          onOpenChange(false);
-        },
-        onError: (err: Error) => toast.error("No se pudo crear la tarifa", { description: err.message }),
-      });
-      return;
-    }
-    const inputs: TarifaInput[] = rutaIds.map((ruta_id) => ({ ...form, ruta_id }));
-    crearMultiples.mutate(inputs, {
-      onSuccess: ({ exitos, fallos }) => {
-        if (fallos.length === 0) {
-          toast.success(`Se crearon ${exitos.length} tarifa${exitos.length === 1 ? "" : "s"}`);
-          onOpenChange(false);
-          return;
-        }
-        toast.warning(`Se crearon ${exitos.length} de ${exitos.length + fallos.length} tarifas`, {
-          description: `Quedan ${fallos.length} con error; revisa las rutas restantes.`,
-        });
-        // Quita las rutas ya creadas para no duplicar y deja modal abierto.
-        const exitosIds = new Set(exitos.map((i) => i.ruta_id));
-        setRutaIds((prev) => prev.filter((id) => !exitosIds.has(id)));
-      },
-      onError: (err: Error) => toast.error("No se pudieron crear las tarifas", { description: err.message }),
-    });
+    ejecutarSubmit();
   };
 
 
