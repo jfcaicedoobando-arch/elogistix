@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import type { AppRole } from "@/types/appRole";
 import { anyRoleSatisfies } from "@/lib/auth/roleHierarchy";
+import { resolveProtectedRouteRedirect } from "@/features/auth/utils/resolveProtectedRouteRedirect";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,35 +26,13 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
-  // Cliente accessing regular app routes → redirect to /portal
-  if (role === "cliente" && !location.pathname.startsWith("/portal")) {
-    return <Navigate to="/portal" replace />;
-  }
-
-  // Agente de carga accediendo a rutas internas → redirigir a /agente
-  // Defensa en profundidad: aunque el usuario tenga una membresía admin/viewer
-  // en alguna organización (por ejemplo el trigger handle_new_user_signup), su
-  // rol global `agente_carga` siempre lo confina al portal del agente.
-  if (role === "agente_carga" && !location.pathname.startsWith("/agente")) {
-    return <Navigate to="/agente" replace />;
-  }
-
-  // Super admin accessing regular app routes → redirect to /admin
-  const isSuperAdmin = role === "super_admin";
-  if (isSuperAdmin && !location.pathname.startsWith("/admin")) {
-    return <Navigate to="/admin" replace />;
-  }
-
-  // Onboarding inicial: si la organización del usuario no ha completado los
-  // datos básicos (RFC, dirección, moneda), forzar al admin a completarlos.
-  if (
-    organization &&
-    organization.onboarding_completado === false &&
-    role !== "cliente" &&
-    !isSuperAdmin &&
-    !location.pathname.startsWith("/onboarding")
-  ) {
-    return <Navigate to="/onboarding" replace />;
+  const redirectTo = resolveProtectedRouteRedirect({
+    role,
+    organization,
+    pathname: location.pathname,
+  });
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   if (allowedRoles && effectiveRole && !anyRoleSatisfies(allowedRoles, effectiveRole as AppRole)) {
