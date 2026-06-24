@@ -37,6 +37,16 @@ interface Props {
   rutasOverride?: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
 }
 
+const ETIQUETAS: Record<string, string> = {
+  agente_id: "Agente",
+  naviera_id: "Naviera",
+  ruta_id: "Ruta",
+  tipo_contenedor_id: "Tipo de contenedor",
+  flete_base: "Flete base",
+  vigente_desde: "Vigencia desde",
+  vigente_hasta: "Vigencia hasta",
+};
+
 function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: boolean): Record<string, boolean> {
   return {
     agente_id: !form.agente_id,
@@ -49,12 +59,17 @@ function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: bool
   };
 }
 
+function camposFaltantes(errores: Record<string, boolean>): string[] {
+  return Object.entries(errores).filter(([, v]) => v).map(([k]) => ETIQUETAS[k] ?? k);
+}
+
 function computeGuardarLabel({ pendiente, esEdicion, rutasCount }: { pendiente: boolean; esEdicion: boolean; rutasCount: number }): string {
   if (pendiente) return "Guardando…";
   if (esEdicion) return "Guardar cambios";
   if (rutasCount > 1) return `Guardar ${rutasCount} tarifas`;
   return "Guardar tarifa";
 }
+
 
 export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
   const { data: agentesData = [] } = useCosteoAgentes();
@@ -86,7 +101,12 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const baseValido = esFormValido(form, { skipRutaId: multiple });
   const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
   const pendiente = crear.isPending || crearMultiples.isPending || actualizar.isPending;
-  const errores = intentoEnvio ? calcularErrores(form, rutaIds.length, multiple) : undefined;
+  // Errores siempre calculados para validación reactiva.
+  const erroresLive = calcularErrores(form, rutaIds.length, multiple);
+  // Sólo se pintan los campos en rojo después del primer intento (evita "mar de rojo" al abrir).
+  const errores = intentoEnvio ? erroresLive : undefined;
+  const faltantes = camposFaltantes(erroresLive);
+  const tooltipFaltantes = faltantes.length > 0 ? `Faltan: ${faltantes.join(", ")}` : undefined;
 
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,10 +155,22 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
         </div>
       }
       footer={
-        <>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button type="submit" form="tarifa-form" disabled={pendiente}>{guardarLabel}</Button>
-        </>
+        <div className="flex w-full items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {tooltipFaltantes ?? "Listo para guardar."}
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button
+              type="submit"
+              form="tarifa-form"
+              disabled={pendiente || !valido}
+              title={tooltipFaltantes}
+            >
+              {guardarLabel}
+            </Button>
+          </div>
+        </div>
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">

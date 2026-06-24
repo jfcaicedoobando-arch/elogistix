@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.41] - 2026-06-24
+- **feat(costeo)**: Validación reactiva en el modal de tarifa marítima. El botón Guardar ahora se deshabilita en tiempo real mientras hay campos inválidos, con `title`/tooltip listando lo que falta, y se agrega una línea de ayuda en el footer (`aria-live="polite"`) que muestra "Faltan: …" o "Listo para guardar." Sin clicks perdidos sin feedback.
+
 ## [13.135.40] - 2026-06-24
 - **fix(costeo)**: En el modal "Nueva tarifa marítima" el botón Guardar no hacía nada (sin toast). `esFormValido` exigía `form.ruta_id` no vacío, pero en modo creación múltiple las rutas viven en el estado `rutaIds` y `form.ruta_id` queda vacío, por lo que la validación bloqueaba el submit silenciosamente. Se agrega flag `skipRutaId` para saltar esa verificación en modo multi.
 
