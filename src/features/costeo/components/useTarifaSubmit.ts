@@ -4,6 +4,7 @@
  */
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { useCosteoTarifaMutations } from "@/features/costeo/hooks/useCosteoTarifas";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 
@@ -31,7 +32,7 @@ export function useTarifaSubmit({
       {
         onSuccess: () => { toast.success("Tarifa actualizada"); onSuccess(); },
         onError: (err: Error) =>
-          toast.error("No se pudo actualizar la tarifa", { description: err.message }),
+          notifyError(undefined, { title: "No se pudo actualizar la tarifa", description: err.message, error: err, method: "FEATURES_COSTEO_COMPONENTS_USETARIFASUBMIT_1" }),
       },
     );
   }, [actualizar, tarifaId, form, onSuccess]);
@@ -41,7 +42,7 @@ export function useTarifaSubmit({
     crear.mutate(input, {
       onSuccess: () => { toast.success("Tarifa creada"); onSuccess(); },
       onError: (err: Error) =>
-        toast.error("No se pudo crear la tarifa", { description: err.message }),
+        notifyError(undefined, { title: "No se pudo crear la tarifa", description: err.message, error: err, method: "FEATURES_COSTEO_COMPONENTS_USETARIFASUBMIT_2" }),
     });
   }, [crear, form, rutaIds, onSuccess]);
 
@@ -60,7 +61,7 @@ export function useTarifaSubmit({
         onPartialSuccess(new Set(exitos.map((i) => i.ruta_id)));
       },
       onError: (err: Error) =>
-        toast.error("No se pudieron crear las tarifas", { description: err.message }),
+        notifyError(undefined, { title: "No se pudieron crear las tarifas", description: err.message, error: err, method: "FEATURES_COSTEO_COMPONENTS_USETARIFASUBMIT_3" }),
     });
   }, [crearMultiples, form, rutaIds, onSuccess, onPartialSuccess]);
 
