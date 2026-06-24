@@ -126,6 +126,55 @@ async function ensureAgenteRole(adminClient: SupabaseClient, userId: string): Pr
   }
 }
 
+type InviteInput = {
+  email: string;
+  agente_id: string;
+  organization_id: string;
+  mode: "email" | "password";
+  password?: string;
+};
+
+type InviteResult = { userId: string; isNew: boolean } | { error: string };
+
+async function executeInvitePath(
+  adminClient: SupabaseClient,
+  originHeader: string,
+  input: InviteInput,
+): Promise<InviteResult> {
+  if (input.mode === "password") {
+    return await createOrResetUserWithPassword(adminClient, input.email, input.password!);
+  }
+  const baseRedirect = resolveRedirectTo(originHeader);
+  const redirectTo = baseRedirect.replace(/\/portal\/login$/, "/login");
+  return await inviteOrLinkUser(adminClient, input.email, redirectTo);
+}
+
+async function registrarBitacoraPassword(
+  adminClient: SupabaseClient,
+  callerId: string,
+  organization_id: string,
+  agente_id: string,
+  email: string,
+  userId: string,
+  isNew: boolean,
+): Promise<void> {
+  const { data: userRow } = await adminClient
+    .schema("auth").from("users").select("email").eq("id", callerId).maybeSingle();
+  const accion = isNew
+    ? "Agente: cuenta creada con contraseña"
+    : "Agente: contraseña reasignada por admin";
+  await adminClient.from("bitacora_actividad").insert({
+    organization_id,
+    usuario_id: callerId,
+    usuario_email: (userRow as { email?: string } | null)?.email ?? "",
+    modulo: "Costeo Agentes",
+    accion,
+    entidad_id: agente_id,
+    entidad_nombre: email,
+    detalles: { user_id: userId, mode: "password" },
+  });
+}
+
 export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { req, cors, log, callerId, adminClient, body } = ctx;
   if (!admin.isGlobalAdmin && !admin.orgId) {
@@ -138,6 +187,7 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse(inputOrErr, 400, cors);
   }
   const { email, agente_id, organization_id, mode, password } = inputOrErr;
+  const isPasswordMode = mode === "password";
 
   if (!admin.isGlobalAdmin && admin.orgId !== organization_id) {
     log.finish(403, "cross_org_invite_blocked", {
@@ -152,26 +202,14 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse("Agente inválido para esa organización", 400, cors);
   }
 
-  let inviteResult: { userId: string; isNew: boolean } | { error: string };
-  if (mode === "password") {
-    inviteResult = await createOrResetUserWithPassword(adminClient, email, password!);
-  } else {
-    // Reutiliza la URL de redirect del portal cliente y reemplaza el path al login del agente.
-    const baseRedirect = resolveRedirectTo(req.headers.get("origin") ?? "");
-    const redirectTo = baseRedirect.replace(/\/portal\/login$/, "/login");
-    inviteResult = await inviteOrLinkUser(adminClient, email, redirectTo);
-  }
+  const originHeader = req.headers.get("origin") ?? "";
+  const inviteResult = await executeInvitePath(adminClient, originHeader, { email, agente_id, organization_id, mode, password });
 
   if ("error" in inviteResult) {
-    const reason = mode === "password" ? "create_with_password_failed" : "invite_email_failed";
+    const reason = isPasswordMode ? "create_with_password_failed" : "invite_email_failed";
+    const errPrefix = isPasswordMode ? "Error al crear cuenta del agente" : "Error al invitar agente";
     log.finish(500, reason, { organization_id, payload: { error: inviteResult.error } });
-    return errorResponse(
-      mode === "password"
-        ? `Error al crear cuenta del agente: ${inviteResult.error}`
-        : `Error al invitar agente: ${inviteResult.error}`,
-      500,
-      cors,
-    );
+    return errorResponse(`${errPrefix}: ${inviteResult.error}`, 500, cors);
   }
   const { userId, isNew } = inviteResult;
 
@@ -188,25 +226,12 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse(`Error al vincular agente: ${linkError.message}`, 500, cors);
   }
 
-  // Bitácora — solo para modo password, para auditar quién asignó credenciales directas.
-  if (mode === "password") {
-    const { data: userRow } = await adminClient
-      .schema("auth").from("users").select("email").eq("id", callerId).maybeSingle();
-    await adminClient.from("bitacora_actividad").insert({
-      organization_id,
-      usuario_id: callerId,
-      usuario_email: (userRow as { email?: string } | null)?.email ?? "",
-      modulo: "Costeo Agentes",
-      accion: isNew
-        ? "Agente: cuenta creada con contraseña"
-        : "Agente: contraseña reasignada por admin",
-      entidad_id: agente_id,
-      entidad_nombre: email,
-      detalles: { user_id: userId, mode: "password" },
-    });
+  if (isPasswordMode) {
+    await registrarBitacoraPassword(adminClient, callerId, organization_id, agente_id, email, userId, isNew);
   }
 
-  log.finish(200, mode === "password" ? "agente_user_created_with_password" : "agente_user_invited", {
+  const finishReason = isPasswordMode ? "agente_user_created_with_password" : "agente_user_invited";
+  log.finish(200, finishReason, {
     organization_id,
     payload: { user_id: userId, is_new: isNew, agente_id, mode },
   });
