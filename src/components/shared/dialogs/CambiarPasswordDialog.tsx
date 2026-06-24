@@ -16,33 +16,24 @@ interface Props {
   method?: string;
 }
 
-/**
- * Traduce errores de Supabase Auth (en inglés) a es-MX.
- * Prefiere `error.code` (estable entre versiones) y cae a substring del
- * mensaje cuando no hay code. Devuelve el mensaje original si no hay match.
- */
-function traducirErrorPassword(err: unknown): string {
-  const e = (err ?? {}) as { code?: unknown; message?: unknown };
-  const code = typeof e.code === "string" ? e.code : "";
-  const msg = typeof e.message === "string" ? e.message : "";
+/** Traducciones por `error.code` (estable entre versiones de Supabase Auth). */
+const CODE_TRANSLATIONS: Record<string, string> = {
+  weak_password:
+    "Esta contraseña es muy fácil de adivinar o aparece en filtraciones públicas. Elige una más segura (mezcla mayúsculas, minúsculas, números y símbolos, o una frase larga).",
+  same_password: "La nueva contraseña debe ser distinta a la actual.",
+  over_request_rate_limit: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+  over_email_send_rate_limit: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+  session_not_found:
+    "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.",
+  session_expired:
+    "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.",
+};
 
-  // 1) Match por código (preferido)
-  switch (code) {
-    case "weak_password":
-      return "Esta contraseña es muy fácil de adivinar o aparece en filtraciones públicas. Elige una más segura (mezcla mayúsculas, minúsculas, números y símbolos, o una frase larga).";
-    case "same_password":
-      return "La nueva contraseña debe ser distinta a la actual.";
-    case "over_request_rate_limit":
-    case "over_email_send_rate_limit":
-      return "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
-    case "session_not_found":
-    case "session_expired":
-      return "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.";
-  }
-
-  // 2) Fallback por substring del mensaje
+/** Fallback por substring del mensaje cuando no hay `code`. */
+function traducirPorMensaje(msg: string): string | null {
   const m = msg.toLowerCase();
-  if (m.includes("known to be weak") || m.includes("is too weak") || m.includes("weak password") || m.includes("pwned") || m.includes("compromised")) {
+  const weakHits = ["known to be weak", "is too weak", "weak password", "pwned", "compromised"];
+  if (weakHits.some((h) => m.includes(h))) {
     return "Esta contraseña es muy fácil de adivinar o aparece en filtraciones públicas. Elige una más segura.";
   }
   if (m.includes("should be different from the old") || m.includes("same as the existing")) {
@@ -57,7 +48,19 @@ function traducirErrorPassword(err: unknown): string {
   if (m.includes("session") && (m.includes("expired") || m.includes("missing"))) {
     return "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.";
   }
-  return msg || "Error desconocido.";
+  return null;
+}
+
+/**
+ * Traduce errores de Supabase Auth (en inglés) a es-MX.
+ * Prefiere `error.code` (estable entre versiones) y cae a substring del
+ * mensaje cuando no hay code. Devuelve el mensaje original si no hay match.
+ */
+function traducirErrorPassword(err: unknown): string {
+  const e = (err ?? {}) as { code?: unknown; message?: unknown };
+  const code = typeof e.code === "string" ? e.code : "";
+  const msg = typeof e.message === "string" ? e.message : "";
+  return CODE_TRANSLATIONS[code] ?? traducirPorMensaje(msg) ?? msg ?? "Error desconocido.";
 }
 
 
