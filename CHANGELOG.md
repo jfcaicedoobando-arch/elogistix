@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.29] - 2026-06-24
+- **fix(portal-agente)**: El header del Portal del Agente ya muestra correctamente el nombre del agente (en vez del fallback "Agente") y el chip con el nombre de la organización. La causa raíz era que `agente_users` puede leer su propia fila vía RLS, pero el join a `costeo_agentes` y `organizations` regresaba `null` porque esas tablas exigen membresía en `organization_members`. Se reemplaza el fetch por una RPC consolidada `get_current_agente_context()` (`SECURITY DEFINER`) que devuelve `agente_id`, `organization_id`, `proveedor_id`, `agente_nombre` y `organizacion_nombre` saltándose RLS. `EXECUTE` revocado a `PUBLIC`/`anon`, otorgado a `authenticated`.
+
 ## [13.135.28] - 2026-06-24
 - **fix(cotizaciones)**: Resuelve `function public.generar_expediente(tipo_operacion) does not exist` al revalidar tarifa / crear embarque desde una cotización aceptada. Se agrega sobrecarga SQL `generar_expediente(tipo_operacion)` que delega en la versión `text`, y se castea explícitamente en `convertirCotizacionAEmbarques` para evitar que supabase-js infiera el enum.
 
