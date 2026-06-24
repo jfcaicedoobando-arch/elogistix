@@ -17,22 +17,39 @@ interface Props {
 }
 
 /**
- * Traduce mensajes comunes de Supabase Auth (en inglés) a es-MX.
- * Si no hay coincidencia, devuelve el mensaje original.
+ * Traduce errores de Supabase Auth (en inglés) a es-MX.
+ * Prefiere `error.code` (estable entre versiones) y cae a substring del
+ * mensaje cuando no hay code. Devuelve el mensaje original si no hay match.
  */
-function traducirErrorPassword(msg: string): string {
+function traducirErrorPassword(err: unknown): string {
+  const e = (err ?? {}) as { code?: unknown; message?: unknown };
+  const code = typeof e.code === "string" ? e.code : "";
+  const msg = typeof e.message === "string" ? e.message : "";
+
+  // 1) Match por código (preferido)
+  switch (code) {
+    case "weak_password":
+      return "Esta contraseña es muy fácil de adivinar o aparece en filtraciones públicas. Elige una más segura (mezcla mayúsculas, minúsculas, números y símbolos, o una frase larga).";
+    case "same_password":
+      return "La nueva contraseña debe ser distinta a la actual.";
+    case "over_request_rate_limit":
+    case "over_email_send_rate_limit":
+      return "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
+    case "session_not_found":
+    case "session_expired":
+      return "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.";
+  }
+
+  // 2) Fallback por substring del mensaje
   const m = msg.toLowerCase();
-  if (m.includes("should be different from the old")) {
-    return "La nueva contraseña debe ser distinta a la anterior.";
+  if (m.includes("known to be weak") || m.includes("is too weak") || m.includes("weak password") || m.includes("pwned") || m.includes("compromised")) {
+    return "Esta contraseña es muy fácil de adivinar o aparece en filtraciones públicas. Elige una más segura.";
+  }
+  if (m.includes("should be different from the old") || m.includes("same as the existing")) {
+    return "La nueva contraseña debe ser distinta a la actual.";
   }
   if (m.includes("at least") && m.includes("character")) {
     return "La contraseña es muy corta. Usa al menos 8 caracteres.";
-  }
-  if (m.includes("weak password") || m.includes("pwned") || m.includes("compromised")) {
-    return "Esta contraseña es muy débil o ha sido filtrada. Elige una más segura.";
-  }
-  if (m.includes("same as the existing")) {
-    return "La nueva contraseña debe ser distinta a la actual.";
   }
   if (m.includes("rate limit") || m.includes("too many requests")) {
     return "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
@@ -40,8 +57,9 @@ function traducirErrorPassword(msg: string): string {
   if (m.includes("session") && (m.includes("expired") || m.includes("missing"))) {
     return "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.";
   }
-  return msg;
+  return msg || "Error desconocido.";
 }
+
 
 
 /**
@@ -93,7 +111,7 @@ export function CambiarPasswordDialog({
     } catch (err) {
       notifyError(toast, {
         title: "No se pudo actualizar la contraseña",
-        description: traducirErrorPassword(getErrorMessage(err)),
+        description: traducirErrorPassword(err),
         error: err,
         method,
       });
