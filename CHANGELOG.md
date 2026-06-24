@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.34] - 2026-06-24
+- **chore(costeo)**: El selector múltiple de rutas en el modal "Nueva tarifa" ordena las opciones alfabéticamente (locale `es`, `sensitivity: base`) por `Origen → Destino`.
+
 ## [13.135.33] - 2026-06-24
 - **fix(costeo)**: El scroll con rueda del mouse / trackpad ya funciona en el selector múltiple de rutas del modal "Nueva tarifa". El `Popover` vive dentro del `Dialog` de Radix, que usa `RemoveScroll` y bloquea los eventos `wheel` que burbujean al `body`. Se agrega `onWheel={e.stopPropagation()}` en `PopoverContent` y `CommandList` de `MultiRutaSelect` para que el scroll natural del contenedor ocurra antes del bloqueo.
 
