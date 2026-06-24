@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.12] - 2026-06-24
+- **chore(catálogo/puertos)**: Renombrados puertos confusos en el catálogo: `CNSHK` → "Shenzhen Shekou" y `CNYTN` → "Shenzhen Yantian" (antes ambos mostraban solo "Shenzhen"). Aplica a nuevos registros; los embarques/cotizaciones existentes conservan el texto previo.
+
 ## [13.135.11] - 2026-06-24
 - **fix(ci/rls)**: La suite `test_rls_financiero` abortaba en CI con `invalid input syntax for type json — input string ended unexpectedly` al insertar en `proformas` justo después de un `pg_temp.as_postgres()`. Causa raíz: `set_config('request.jwt.claims', NULL, true)` deja la variable de sesión como string vacío `''`, no como NULL; los stubs `auth.uid()/jwt()/role()` del `_ci_bootstrap.sql` hacían `current_setting(...)::jsonb` directo y reventaban al castear `''`. Envueltos los tres stubs con `nullif(current_setting(...), '')` para tratar el vacío como ausente. Sin impacto en producción (allí los stubs no se usan; GoTrue provee `auth.uid()` real).
 
