@@ -223,7 +223,7 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
   }
 
   if (isPasswordMode) {
-    await registrarBitacoraPassword(adminClient, callerId, organization_id, agente_id, email, userId, isNew);
+    await registrarBitacoraPassword(adminClient, callerId, { organization_id, agente_id, email, userId, isNew });
   }
 
   const finishReason = isPasswordMode ? "agente_user_created_with_password" : "agente_user_invited";
