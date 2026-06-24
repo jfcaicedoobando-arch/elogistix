@@ -1,20 +1,19 @@
 ## Causa
 
-El `Popover` con la lista de rutas vive dentro del `Dialog` del modal (Radix Dialog usa `RemoveScroll`, que bloquea eventos `wheel` que llegan al `body`). El `CommandList` sí tiene `overflow-y-auto` con `max-h-[300px]`, pero los eventos de rueda burbujean al bloqueador antes de scrollear la lista interna.
+El input de "Flete base" usa `value={form.flete_base}` con `form.flete_base = 0` por default. Cuando el usuario escribe "5" sobre el "0", queda "05" porque React lo trata como string concatenado al value actual.
 
-## Solución (puntual, no toca el primitivo global)
+## Solución
 
-En `src/features/costeo/components/MultiRutaSelect.tsx` agregar `onWheel={(e) => e.stopPropagation()}` al `CommandList` (envolverlo con un wrapper o pasarle el handler directo). Esto deja que el navegador haga el scroll natural del contenedor antes de que `RemoveScroll` intercepte el evento.
+En `src/features/costeo/components/TarifaNumerosVigenciaFields.tsx`:
 
-Opcionalmente, también dar `onWheelCapture` al `PopoverContent` para reforzar.
+- Mostrar cadena vacía cuando el valor es 0 (el caso inicial / placeholder):
+  `value={form.flete_base === 0 ? "" : form.flete_base}`
+- Agregar `placeholder="0.00"` para no perder pista visual.
+- Aplicar el mismo patrón a `dias_libres_demoras` (también arranca en 0) por consistencia. `transit_time_dias` ya usa `?? ""`, no se toca.
 
-Sin cambios en `ui/command.tsx` ni `ui/popover.tsx` para no afectar otros usos (Ctrl+K global ya funciona porque su Dialog es el propio contenedor scrolleable).
-
-## Validación
-
-Abrir `/agente/tarifas` → "Nueva tarifa" → abrir combobox de rutas → con muchas rutas debe poder scrollearse con la rueda del mouse y con trackpad. Validar también con teclado (↑/↓) que sigue funcionando.
+La validación `flete_base > 0` ya existe en `calcularErrores`, no requiere cambios.
 
 ## Versión
 
-- `src/constants/appVersion.ts` → `13.135.33`
-- `CHANGELOG.md` → `[13.135.33]`: "fix: scroll wheel funciona en el selector múltiple de rutas dentro del modal Nueva tarifa."
+- `src/constants/appVersion.ts` → `13.135.35`
+- `CHANGELOG.md` → `[13.135.35]`: "fix: el input de flete base (y días libres) ya no muestra el `0` inicial pegado al monto que se escribe."

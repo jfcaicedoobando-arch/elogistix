@@ -26,7 +26,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Label htmlFor="tarifa-flete">Flete base USD *</Label>
         <Input
           id="tarifa-flete"
-          type="number" min={0} step="0.01" value={form.flete_base}
+          type="number" min={0} step="0.01" value={form.flete_base === 0 ? "" : form.flete_base} placeholder="0.00"
           aria-invalid={errores?.flete_base || undefined}
           className={`${invalidCls(errores?.flete_base) ?? ""} ${noSpinnerCls}`}
           onChange={(e) => setForm({ ...form, flete_base: Number(e.target.value) || 0 })}
@@ -36,7 +36,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Label htmlFor="tarifa-dias-libres">Días libres demoras</Label>
         <Input
           id="tarifa-dias-libres"
-          type="number" min={0} value={form.dias_libres_demoras}
+          type="number" min={0} value={form.dias_libres_demoras === 0 ? "" : form.dias_libres_demoras} placeholder="0"
           className={noSpinnerCls}
           onChange={(e) => setForm({ ...form, dias_libres_demoras: Number(e.target.value) || 0 })}
         />

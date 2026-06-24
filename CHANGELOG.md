@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.35] - 2026-06-24
+- **fix(costeo)**: Los inputs de "Flete base USD" y "Días libres demoras" en el modal de tarifa ya no muestran el `0` inicial pegado al monto que se escribe (queda `5` en vez de `05`). Cuando el valor es `0` se renderiza vacío con `placeholder="0.00"` / `"0"`.
+
 ## [13.135.34] - 2026-06-24
 - **chore(costeo)**: El selector múltiple de rutas en el modal "Nueva tarifa" ordena las opciones alfabéticamente (locale `es`, `sensitivity: base`) por `Origen → Destino`.
 
