@@ -20,6 +20,7 @@ import {
 } from "./TarifaFormFields";
 import {
   buildInitialForm, calcularTotal, esFormValido, usdFormatter,
+  calcularErrores, camposFaltantes, computeGuardarLabel,
 } from "./TarifaForm.helpers";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
@@ -36,39 +37,6 @@ interface Props {
   tituloOverride?: string;
   /** Rutas a usar en lugar de useCosteoRutas() (útil cuando no hay OrganizationContext). */
   rutasOverride?: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
-}
-
-const ETIQUETAS: Record<string, string> = {
-  agente_id: "Agente",
-  naviera_id: "Naviera",
-  ruta_id: "Ruta",
-  tipo_contenedor_id: "Tipo de contenedor",
-  flete_base: "Flete base",
-  vigente_desde: "Vigencia desde",
-  vigente_hasta: "Vigencia hasta",
-};
-
-function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: boolean): Record<string, boolean> {
-  return {
-    agente_id: !form.agente_id,
-    naviera_id: !form.naviera_id,
-    ruta_id: multiple ? rutaIdsCount === 0 : !form.ruta_id,
-    tipo_contenedor_id: !form.tipo_contenedor_id,
-    flete_base: !(Number(form.flete_base) > 0),
-    vigente_desde: !form.vigente_desde,
-    vigente_hasta: !form.vigente_hasta,
-  };
-}
-
-function camposFaltantes(errores: Record<string, boolean>): string[] {
-  return Object.entries(errores).filter(([, v]) => v).map(([k]) => ETIQUETAS[k] ?? k);
-}
-
-function computeGuardarLabel({ pendiente, esEdicion, rutasCount }: { pendiente: boolean; esEdicion: boolean; rutasCount: number }): string {
-  if (pendiente) return "Guardando…";
-  if (esEdicion) return "Guardar cambios";
-  if (rutasCount > 1) return `Guardar ${rutasCount} tarifas`;
-  return "Guardar tarifa";
 }
 
 
