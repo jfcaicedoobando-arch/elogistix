@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Users, Ship, UserCheck, FileText } from "lucide-react";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
-import AgregarMiembroOrgDialog from "@/features/admin/components/AgregarMiembroOrgDialog";
+import CrearMiembroOrgDialog from "@/features/admin/components/CrearMiembroOrgDialog";
 import { OrgHeader } from "@/features/admin/components/orgDetalle/OrgHeader";
 import { OrgInfoCard } from "@/features/admin/components/orgDetalle/OrgInfoCard";
 import { OrgMembersCard } from "@/features/admin/components/orgDetalle/OrgMembersCard";
