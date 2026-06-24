@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.5] - 2026-06-24
+- **fix(migrations)**: El seed del usuario demo de agente (`agente.demo@librecarga.com`) ya no rompe el replay de CI cuando `auth.users` no tiene la columna `instance_id` (versiones nuevas de Supabase auth) o cuando el esquema `auth` no existe (Postgres fresco). La migración ahora arma el `INSERT` de forma dinámica incluyendo sólo las columnas presentes (`instance_id`, `confirmation_token`, etc.) y aborta limpio si `auth.users` no existe. Analogía: la migración ahora prueba la cerradura antes de meter la llave; si no encaja, sigue de largo en vez de romper la puerta.
+
 ## [13.135.4] - 2026-06-24
 - **fix(admin/miembros)**: El dropdown "Cambiar rol" en el detalle de la organización ahora muestra los 12 roles modernos agrupados (Administración / Operaciones / Comercial / Finanzas / Soporte) en lugar de las 3 opciones legacy (`admin`/`operador`/`viewer`) hardcodeadas. El badge de la columna "Rol" también usa las etiquetas en español y los colores del catálogo único `roleCatalog`. Si un miembro tiene un rol legacy se muestra como opción deshabilitada en la sección "Legacy" para no perder el contexto visual. Analogía: actualizamos el menú impreso del restaurante — los platillos nuevos ya están en la carta y los viejos quedaron tachados pero visibles.
 
