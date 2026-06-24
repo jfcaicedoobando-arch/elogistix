@@ -49,6 +49,13 @@ function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: bool
   };
 }
 
+function computeGuardarLabel({ pendiente, esEdicion, rutasCount }: { pendiente: boolean; esEdicion: boolean; rutasCount: number }): string {
+  if (pendiente) return "Guardando…";
+  if (esEdicion) return "Guardar cambios";
+  if (rutasCount > 1) return `Guardar ${rutasCount} tarifas`;
+  return "Guardar tarifa";
+}
+
 export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
   const { data: agentesData = [] } = useCosteoAgentes();
   const { data: rutasData = [] } = useCosteoRutas();
@@ -111,13 +118,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
     });
   };
 
-  const guardarLabel = pendiente
-    ? "Guardando…"
-    : esEdicion
-      ? "Guardar cambios"
-      : rutaIds.length > 1
-        ? `Guardar ${rutaIds.length} tarifas`
-        : "Guardar tarifa";
+  const guardarLabel = computeGuardarLabel({ pendiente, esEdicion, rutasCount: rutaIds.length });
 
   return (
     <FormDialogShell
