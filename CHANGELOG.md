@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.23] - 2026-06-24
+- **feat(usuarios)**: La página `/usuarios` ahora tiene tres pestañas: **Internos**, **Portal Cliente** y **Portal Agente**. Antes sólo se listaban los miembros de `organization_members` (empleados internos), por lo que los agentes invitados desde "Invitar agente al Portal" no aparecían (esas cuentas viven en `agente_users`). Las nuevas pestañas leen `client_users` / `agente_users` con join al cliente/agente vinculado y resuelven el email vía la edge `user-management` action `list`. Cada fila permite eliminar el acceso (doble confirmación → elimina el auth user; las filas de `client_users`/`agente_users` se borran en cascada). El botón "+ Nuevo Usuario" se oculta fuera de la pestaña Internos y se muestra una nota explicando que las cuentas de portal se crean desde la ficha del cliente o del agente. Nuevos archivos: `services/usuario/portales.ts`, `hooks/usuario/usePortalUsuarios.ts`, `routes/admin-org/UsuariosInternosTab.tsx`, `routes/admin-org/PortalUsuariosTab.tsx`, `routes/admin-org/portalUsuariosColumns.tsx`.
+
 ## [13.135.22] - 2026-06-24
 - **chore(lint)**: Pasa `bun run lint --max-warnings 0` sin warnings. (1) `traducirErrorPassword` en `CambiarPasswordDialog.tsx` se partió en mapa `CODE_TRANSLATIONS` + helper `traducirPorMensaje` (complejidad 25 → ≤10). (2) `InvitarAgentePortalDialog.tsx` extrae la vista de credenciales a nuevo archivo `InvitarAgenteCredencialesView.tsx` (función 227 líneas → ~170, archivo 254 → ~210). (3) `handleInviteAgente` en `agenteHandlers.ts` extrae `executeInvitePath` y `registrarBitacoraPassword` (complejidad 18 → ≤16; params del helper en objeto para respetar `max-params=5`). Sin cambios funcionales.
 
