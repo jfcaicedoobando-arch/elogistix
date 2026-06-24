@@ -111,7 +111,7 @@ export function MultiRutaSelect({ rutas, value, onChange, invalid, id }: Props) 
                 Limpiar
               </button>
             </div>
-            <CommandList>
+            <CommandList onWheel={(e) => e.stopPropagation()}>
               <CommandEmpty>No hay rutas que coincidan.</CommandEmpty>
               <CommandGroup>
                 {visiblesFiltradas.map((r) => {
