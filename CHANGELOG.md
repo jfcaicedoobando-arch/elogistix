@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.0] - 2026-06-24
+- **feat(admin/organizaciones)**: El alta de miembros ahora **crea un usuario nuevo** directamente en la organización destino, en vez de permitir asociar un usuario existente. Refuerza la regla de negocio "un usuario pertenece a una sola organización".
+  - UI: nuevo `CrearMiembroOrgDialog` (email + contraseña con generador + rol). Eliminado `AgregarMiembroOrgDialog` y su combo de usuarios existentes. Botón del card: "Agregar miembro" → "Crear miembro".
+  - Hook: `useAddOrgMember`/`addOrgMember` reemplazados por `useCreateOrgMember`, que invoca la edge function `user-management` (action `create`) con el nuevo campo `organization_id`.
+  - Edge function `user-management` (acción `create`): acepta `organization_id` opcional. Sólo el super_admin global puede dirigir el alta a una org distinta de la suya; si la org no existe, responde 400. Si la inserción de membresía falla, hace rollback del usuario auth para no dejar huérfanos.
+  - BD: nueva restricción `UNIQUE (user_id)` en `public.organization_members` para impedir membresías cruzadas a nivel de base de datos.
+  - Tests actualizados (`members.test.ts`) y `APP_VERSION` → 13.135.0.
+  - Analogía: antes el portero podía mover empleados entre Coca-Cola y Pepsi con un clic; ahora cada empresa tiene que contratar a alguien nuevo, como debe ser.
+
 ## [13.134.1] - 2026-06-24
 - **fix(auditoría/sentry)**: `fetchReporteAuditoria` ahora trata el error Postgres `42501` ("No autorizado") como reporte vacío en vez de propagar. El badge del sidebar (`useAuditoriaCount`) lo invocaba para usuarios con rol sólo por membresía, y el error subía a Sentry (issue JAVASCRIPT-REACT-1F, 4 eventos / 2 usuarios). Bump APP_VERSION → 13.134.1. Analogía: el portero anotaba en la bitácora cada vez que alguien tocaba la puerta equivocada; ahora simplemente le indica "no es aquí" y sigue su día.
 

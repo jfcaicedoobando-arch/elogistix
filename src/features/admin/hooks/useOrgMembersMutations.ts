@@ -1,32 +1,48 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query";
-import { addOrgMember, fetchAvailableUsers } from "@/features/admin/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-
 /**
- * Lista todos los usuarios disponibles vía edge function `user-management` (action `list`).
+ * Mutaciones para crear miembros nuevos dentro de una organización.
+ *
+ * Regla de negocio: un usuario sólo puede pertenecer a una organización.
+ * Por eso NO exponemos un flujo para "agregar" usuarios existentes —
+ * el alta crea un usuario nuevo vía edge function `user-management`
+ * (action `create`) y lo inserta como miembro de la org destino.
  */
-export function useAvailableUsers(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.admin.allUsersOptions,
-    queryFn: fetchAvailableUsers,
-    enabled,
-  });
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/query";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import type { AppRole } from "@/types/appRole";
+
+export interface CreateOrgMemberInput {
+  organizationId: string;
+  email: string;
+  password: string;
+  role: AppRole;
 }
 
-/**
- * Agrega un miembro a una organización con un rol determinado.
- */
-export function useAddOrgMember() {
+async function createOrgMember(input: CreateOrgMemberInput): Promise<void> {
+  const { error } = await supabase.functions.invoke("user-management", {
+    body: {
+      action: "create",
+      email: input.email,
+      password: input.password,
+      role: input.role,
+      organization_id: input.organizationId,
+    },
+  });
+  if (error) throw error;
+}
+
+export function useCreateOrgMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: addOrgMember,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.admin.allUsers });
-      notifySuccess(undefined, { title: "Miembro agregado a la organización" });
+    mutationFn: createOrgMember,
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(variables.organizationId) });
+      qc.invalidateQueries({ queryKey: queryKeys.admin.orgCountMembers(variables.organizationId) });
+      notifySuccess(undefined, { title: "Miembro creado en la organización" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al agregar miembro: ${error.message}`, error, method: "ADD_ORG_MEMBER" });
+      notifyError(undefined, { title: `Error al crear miembro: ${error.message}`, error, method: "CREATE_ORG_MEMBER" });
     },
   });
 }

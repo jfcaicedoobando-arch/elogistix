@@ -18,7 +18,6 @@ import {
   fetchOrgMembers,
   updateOrgMemberRole,
   removeOrgMember,
-  addOrgMember,
 } from "@/features/admin/services/members";
 
 beforeEach(() => {
@@ -110,10 +109,4 @@ describe("services/admin/members", () => {
     expect(mock.tableCalls[0].ops).toContain("delete");
   });
 
-  it("addOrgMember inserta payload completo", async () => {
-    mock.setTableResult("organization_members", { data: null, error: null });
-    await addOrgMember({ organizationId: "o1", userId: "u1", role: "operador" });
-    const p = mock.getMutationPayload("organization_members") as Record<string, unknown>;
-    expect(p).toEqual({ organization_id: "o1", user_id: "u1", role: "operador" });
-  });
 });
