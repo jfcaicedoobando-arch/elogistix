@@ -4,3 +4,4 @@
 export { useCreateUser } from './useUsuarioMutations';
 export { useDeleteUser as useDeleteUserAuth } from './useUsuarioMutations';
 export * from './useUsuarios';
+export * from './usePortalUsuarios';

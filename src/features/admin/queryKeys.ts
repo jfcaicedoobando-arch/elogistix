@@ -2,6 +2,14 @@ export const usuarios = {
   all: ['usuarios'] as const,
 } as const;
 
+export const usuariosPortalCliente = {
+  all: ['usuarios-portal-cliente'] as const,
+} as const;
+
+export const usuariosPortalAgente = {
+  all: ['usuarios-portal-agente'] as const,
+} as const;
+
 export const planes = {
   all: ['planes'] as const,
 } as const;
