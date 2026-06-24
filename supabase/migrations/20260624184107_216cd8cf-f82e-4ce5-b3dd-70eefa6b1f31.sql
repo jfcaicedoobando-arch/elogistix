@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_current_agente_org_nombre() FROM PUBLIC, anon;

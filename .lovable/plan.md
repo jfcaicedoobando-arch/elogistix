@@ -1,33 +1,44 @@
-## Problema
+## Objetivo
 
-En `/usuarios` → pestaña **Portal Agente**, el agente "Chino" aparece pero su email se muestra como vacío / `UNRESOLVED_EMAIL`.
+Que el agente, al entrar al Portal del Agente, vea claramente **dos identidades** en el header: su **nombre de agente** (ya existe) y el **nombre de la organización** (cliente/forwarder) a la que pertenece — que hoy no aparece en ningún lado.
 
-**Causa raíz:** `fetchEmailMap()` en `portales.ts` llama a la edge `user-management` action `"list"`, que solamente devuelve usuarios de `organization_members` (los logs lo confirman: `count: 1, scope: org`). Los agentes del portal NO están en `organization_members` — viven en `agente_users` + `auth.users`, así que el `emailMap` no contiene su `user_id` y caemos al placeholder.
+## Dónde se muestra hoy
 
-**Analogía:** estábamos pidiendo el directorio telefónico de empleados internos para buscar el teléfono de un visitante. El visitante no está ahí, por eso no encontramos su número.
+`AgenteLayout` (header sticky superior) ya pinta:
 
-## Solución
+```
+[Logo Libre Carga]  Portal Agente · {agenteNombre}
+```
 
-Nueva acción en la edge `user-management`: **`list-portal-emails`**.
+Falta el nombre de la organización. La idea es que el agente sepa "estoy viendo cosas de la organización X" sin tener que adivinar.
 
-- **Input:** `{ action: "list-portal-emails", user_ids: string[] }`.
-- **Lógica:**
-  1. Valida que el caller sea admin de organización.
-  2. Filtra los `user_ids` recibidos a sólo los que estén vinculados a `client_users` o `agente_users` de la misma `organization_id` del caller (evita fuga de emails cross-org).
-  3. Por cada `user_id` autorizado, lee `auth.users.email` con `adminClient.auth.admin.getUserById`.
-  4. Devuelve `[{ id, email }]`.
+## Cambios propuestos
 
-En el frontend (`portales.ts`):
+1. **Backend (lectura)** — Extender `fetchAgenteContext()` en `src/features/portal-agente/services/index.ts`:
+   - Agregar el join `organizations:organization_id(nombre)` al SELECT sobre `agente_users`.
+   - Devolver un nuevo campo `organizacionNombre: string` en la interfaz `AgenteContext`.
+   - Si las políticas RLS actuales de `organizations` no permiten al rol `agente` leer la fila, crear una función `SECURITY DEFINER` `get_agente_org_nombre()` que devuelva sólo el `nombre` (sin filtrar datos sensibles) y llamarla con `supabase.rpc(...)`. Decidimos al ejecutar, según el error que dé el join.
 
-- Reemplazar `fetchEmailMap()` por `fetchPortalEmailMap(userIds: string[])` que invoque la nueva acción.
-- `fetchUsuariosPortalCliente` y `fetchUsuariosPortalAgente` recolectan los `user_id` después del SELECT y luego piden el mapa con esa acción.
+2. **UI (header)** — En `src/features/portal-agente/components/AgenteLayout.tsx`:
+   - Mantener el subtítulo del `BrandLockup` como `Portal Agente · {agenteNombre}`.
+   - Agregar al lado del email (extremo derecho del header) un chip pequeño con el ícono `Building2` y el texto `{organizacionNombre}`, oculto en pantallas chicas (`hidden sm:inline-flex`).
+   - En el header móvil (la nav inferior `md:hidden`), agregar una línea superior delgada con el mismo nombre de organización para que también se vea en celular.
 
-## Archivos
+3. **Tooltip** — Añadir `title={organizacionNombre}` al chip para que al pasar el mouse se vea completo cuando se trunque.
 
-- `supabase/functions/user-management/index.ts` — registrar `"list-portal-emails"` en `ACTIONS` y el `switch`.
-- `supabase/functions/user-management/agenteHandlers.ts` (o nuevo `portalEmailsHandler.ts`) — exportar `handleListPortalEmails`.
-- `src/features/admin/services/usuario/portales.ts` — usar la nueva acción.
-- `src/constants/appVersion.ts` → `13.135.24`.
-- `CHANGELOG.md` — entrada `## [13.135.24] - 2026-06-24` describiendo el fix.
+## Lo que NO cambia
 
-Sin cambios de UI ni de schema.
+- Sin tocar permisos, RLS de embarques/tarifas, ni rutas.
+- Sin cambios en `costeo_agentes` ni en `agente_users`.
+- Sin tocar el flujo de invitación ni la edge function `user-management`.
+
+## Validación
+
+- Iniciar sesión como agente de prueba (ej. Chino el agente) y verificar:
+  - Header muestra "Portal Agente · Chino el agente" + chip con nombre de la organización a la derecha.
+  - En móvil, el nombre de la org aparece en la barra superior.
+- Que no rompa los tests existentes del portal (`useAgenteContext` mantiene compatibilidad agregando un campo, no quitando).
+
+## Changelog
+
+Bump `APP_VERSION` y entrada en `CHANGELOG.md` describiendo: "Portal del Agente — header ahora muestra el nombre de la organización junto al nombre del agente y el email."

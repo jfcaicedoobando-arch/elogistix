@@ -3,7 +3,7 @@
  * Header minimal con BrandLockup + nav + logout. Sin sidebar.
  */
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Ship, FileText, ShieldCheck, LayoutDashboard, User, LogOut } from "lucide-react";
+import { Ship, FileText, ShieldCheck, LayoutDashboard, User, LogOut, Building2 } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -67,6 +67,15 @@ export default function AgenteLayout() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {ctx?.organizacionNombre && (
+              <span
+                className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 text-xs font-medium text-foreground max-w-[200px]"
+                title={ctx.organizacionNombre}
+              >
+                <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="truncate">{ctx.organizacionNombre}</span>
+              </span>
+            )}
             <ThemeToggle />
             <span className="hidden sm:inline text-xs text-muted-foreground max-w-[180px] truncate">
               {user?.email}
@@ -76,6 +85,13 @@ export default function AgenteLayout() {
             </Button>
           </div>
         </div>
+
+        {ctx?.organizacionNombre && (
+          <div className="md:hidden border-t bg-muted/30 px-3 py-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Building2 className="h-3 w-3 shrink-0" />
+            <span className="truncate font-medium text-foreground">{ctx.organizacionNombre}</span>
+          </div>
+        )}
 
         <nav className="md:hidden border-t bg-card/80 px-2 py-1 flex items-center gap-1 overflow-x-auto">
           {NAV.map((item) => {
