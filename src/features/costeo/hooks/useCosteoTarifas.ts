@@ -107,5 +107,5 @@ export function useCosteoTarifaMutations() {
       notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_4" }),
   });
 
-  return { crear, actualizar, reemplazar, eliminar };
+  return { crear, crearMultiples, actualizar, reemplazar, eliminar };
 }
