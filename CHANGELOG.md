@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.2] - 2026-06-24
+- **fix(admin/breadcrumbs)**: `AdminLayout` ahora usa el `Breadcrumbs` compartido (con `BreadcrumbProvider`), por lo que `/admin/organizaciones/:id` muestra el nombre de la organización en lugar del UUID crudo. Eliminado el componente local `Breadcrumbs` que sólo conocía 4 etiquetas estáticas y devolvía el UUID tal cual. Analogía: cambiamos un letrero hecho a mano por uno digital conectado al directorio del edificio.
+
 ## [13.135.1] - 2026-06-24
 - **ux(admin/organizaciones)**: La tabla de organizaciones ahora permite drill-down haciendo click en cualquier parte de la fila. Eliminada la columna de acciones (menú "⋯" con "Ver detalle" / "Desactivar" deshabilitado) — era redundante y agregaba ruido. Analogía: en vez de tener un timbre al lado de cada puerta, ahora la puerta entera abre con un toque.
 

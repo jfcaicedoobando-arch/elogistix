@@ -1,3 +1,3 @@
 // ============= Full file contents =============
 
-export const APP_VERSION = "13.135.1";
+export const APP_VERSION = "13.135.2";
