@@ -17,6 +17,34 @@ interface Props {
 }
 
 /**
+ * Traduce mensajes comunes de Supabase Auth (en inglés) a es-MX.
+ * Si no hay coincidencia, devuelve el mensaje original.
+ */
+function traducirErrorPassword(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("should be different from the old")) {
+    return "La nueva contraseña debe ser distinta a la anterior.";
+  }
+  if (m.includes("at least") && m.includes("character")) {
+    return "La contraseña es muy corta. Usa al menos 8 caracteres.";
+  }
+  if (m.includes("weak password") || m.includes("pwned") || m.includes("compromised")) {
+    return "Esta contraseña es muy débil o ha sido filtrada. Elige una más segura.";
+  }
+  if (m.includes("same as the existing")) {
+    return "La nueva contraseña debe ser distinta a la actual.";
+  }
+  if (m.includes("rate limit") || m.includes("too many requests")) {
+    return "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
+  }
+  if (m.includes("session") && (m.includes("expired") || m.includes("missing"))) {
+    return "Tu sesión expiró. Cierra sesión y vuelve a entrar para cambiar la contraseña.";
+  }
+  return msg;
+}
+
+
+/**
  * Diálogo compartido para que cualquier usuario autenticado (interno o de
  * portal) cambie su propia contraseña. Llama a `supabase.auth.updateUser`
  * directamente, así que no requiere RPC ni rol específico.
