@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.43] - 2026-06-24
+- **feat(costeo)**: Toasts de éxito/error vía `sonner` en `TarifaForm` para los tres flujos (crear, crear múltiples, actualizar). Los `useToast` legacy del hook no se renderizaban porque sólo está montado el `<Toaster />` de sonner en `App.tsx`, así que el usuario no veía feedback. Se agrega también un toast de advertencia cuando un alta múltiple tiene éxitos parciales.
+
 ## [13.135.42] - 2026-06-24
 - **feat(costeo)**: El botón Guardar de la tarifa marítima muestra spinner (`Loader2` animado) y `aria-busy` mientras corre la mutación; el botón Cancelar también se deshabilita en ese lapso para evitar cierres a media transacción. Previene dobles clics y confirma visualmente que la operación está en curso.
 
