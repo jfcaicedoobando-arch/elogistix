@@ -3,34 +3,12 @@
  *
  * Regla de negocio: un usuario sólo puede pertenecer a una organización.
  * Por eso NO exponemos un flujo para "agregar" usuarios existentes —
- * el alta crea un usuario nuevo vía edge function `user-management`
- * (action `create`) y lo inserta como miembro de la org destino.
+ * el alta crea un usuario nuevo vía servicio `createOrgMember`.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/query";
+import { createOrgMember } from "@/features/admin/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import type { AppRole } from "@/types/appRole";
-
-export interface CreateOrgMemberInput {
-  organizationId: string;
-  email: string;
-  password: string;
-  role: AppRole;
-}
-
-async function createOrgMember(input: CreateOrgMemberInput): Promise<void> {
-  const { error } = await supabase.functions.invoke("user-management", {
-    body: {
-      action: "create",
-      email: input.email,
-      password: input.password,
-      role: input.role,
-      organization_id: input.organizationId,
-    },
-  });
-  if (error) throw error;
-}
 
 export function useCreateOrgMember() {
   const qc = useQueryClient();
