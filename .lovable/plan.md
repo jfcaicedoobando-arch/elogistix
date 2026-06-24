@@ -1,68 +1,66 @@
-## Objetivo
+## Causa raíz
 
-Permitir que en el modal de **Nueva tarifa** (módulo Costeo y Portal Agente) el usuario seleccione **varias rutas a la vez** y se generen N tarifas que comparten todos los demás datos (agente, naviera, tipo de contenedor, flete, recargos, vigencia, notas).
+En `/agente/tarifas` el modal usa `fetchCosteoRutas(organizationId)` que hace `SELECT * FROM costeo_rutas`. La tabla tiene RLS:
 
-Aplica **solo en modo "crear"** (incluye "duplicar"). En modo "editar" la selección de ruta sigue siendo única — no tiene sentido cambiar 1 tarifa a N.
+```
+costeo_rutas_select_org → EXISTS (organization_members WHERE user_id = auth.uid())
+```
 
-## UX propuesta
+El usuario del Portal Agente vive en `agente_users`, **no** en `organization_members`, así que el `SELECT` regresa 0 filas. Es el mismo problema que ya resolvimos para el contexto del agente (org y nombre) en la v13.135.29 con la RPC `get_current_agente_context()`.
 
-En el bloque `RutaTipoFields`, reemplazar el `Select` único de ruta por un **selector múltiple tipo combobox con checkboxes** (búsqueda por origen/destino, con chips de las rutas elegidas debajo):
+Nota: este bug existía antes del cambio multi-ruta; con el Select sencillo también salía vacío. El combobox sólo lo hace más visible.
 
-- Placeholder: "Selecciona una o varias rutas CN → MX".
-- Cada item: `Puerto Origen → Puerto Destino` (mismo texto que hoy).
-- Acciones rápidas: "Seleccionar todas las visibles" / "Limpiar selección".
-- Bajo el selector se muestran chips removibles con cada ruta elegida y un contador: `3 rutas seleccionadas`.
-- Si solo hay 1 ruta seleccionada el flujo se ve idéntico al actual.
+## Solución
 
-El resto del formulario (agente, naviera, tipo contenedor, números, vigencia, recargos, notas) **no cambia**: se captura una sola vez y aplica a todas las rutas.
+Crear una RPC `SECURITY DEFINER` que devuelva las rutas activas de la organización del agente autenticado, saltándose RLS de forma segura (la función internamente valida que el caller sea un `agente_user` y resuelve su `organization_id` vía `current_agente_org()`).
 
-El botón de guardar cambia su label dinámicamente:
-- 1 ruta → "Guardar tarifa"
-- N rutas → "Guardar N tarifas"
+### Backend (migration)
 
-El "Total comparable" en el header se mantiene (es el mismo para todas).
+```sql
+CREATE OR REPLACE FUNCTION public.get_agente_rutas()
+RETURNS TABLE (
+  id uuid,
+  organization_id uuid,
+  puerto_origen_id uuid,
+  puerto_destino_id uuid,
+  activa boolean,
+  puerto_origen_nombre text,
+  puerto_destino_nombre text
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT r.id, r.organization_id, r.puerto_origen_id, r.puerto_destino_id, r.activa,
+         po.name AS puerto_origen_nombre,
+         pd.name AS puerto_destino_nombre
+    FROM public.costeo_rutas r
+    JOIN public.agente_users au ON au.user_id = auth.uid()
+    JOIN public.costeo_agentes a ON a.id = au.agente_id
+                                 AND a.organization_id = r.organization_id
+    LEFT JOIN public.puertos po ON po.id = r.puerto_origen_id
+    LEFT JOIN public.puertos pd ON pd.id = r.puerto_destino_id
+   WHERE r.activa = true;
+$$;
 
-## Comportamiento al guardar (modo crear)
+REVOKE EXECUTE ON FUNCTION public.get_agente_rutas() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_agente_rutas() TO authenticated;
+```
 
-1. Validar igual que hoy + exigir `rutas.length >= 1`.
-2. Por cada `ruta_id` seleccionada, ejecutar `crear.mutateAsync({ ...form, ruta_id })` **en serie** (para no saturar y para poder reportar fallas individuales).
-3. Toast final agregado:
-   - Todas OK → "Se crearon N tarifas".
-   - Parcial → "Se crearon X de N tarifas. Fallaron: <origen→destino>, …" (no se cierra el modal; las rutas que sí se crearon se quitan de la selección para no duplicar).
-   - Todas fallan → se mantiene el modal abierto, no se cierra.
-4. Si todas pasan, cerrar modal e invalidar queries (lo hace el hook actual).
+Sólo devuelve rutas de la organización a la que pertenece el agente — no hay fuga cross-org. Si el caller no es agente, regresa vacío.
 
-En modo **editar**: el selector queda como Select único (no se permite multi) — sin cambios funcionales.
+### Client
 
-En modo **duplicar**: se hereda como crear (puede multi-seleccionar; la ruta original viene preseleccionada).
+- `src/features/portal-agente/services/index.ts` (o un archivo de servicios de rutas del portal): nueva función `fetchAgenteRutas()` que llama `supabase.rpc("get_agente_rutas")` y devuelve el array.
+- `src/features/portal-agente/components/AgenteTarifaForm.tsx`: cambiar el `useQuery` para usar `fetchAgenteRutas()` en lugar de `fetchCosteoRutas(ctx.organizationId)`. Mismo shape (id, activa, puerto_origen_nombre, puerto_destino_nombre), así que `TarifaForm` no cambia.
 
-## Detalles técnicos
+### Versionado
 
-Archivos a tocar:
-
-- `src/features/costeo/components/TarifaFormFields.tsx`
-  - Cambiar `RutaTipoFields` para aceptar `multiple?: boolean`, `rutaIds: string[]`, `onRutaIdsChange`. Cuando `multiple`, renderizar un combobox múltiple (Popover + Command de shadcn + Checkbox) con chips. Cuando no, mantener el Select actual.
-
-- `src/features/costeo/components/TarifaForm.tsx`
-  - Agregar estado local `rutaIds: string[]` además de `form.ruta_id`. En modo crear/duplicar usar multi; en editar usar single (sincronizado con `form.ruta_id`).
-  - Ajustar `calcularErrores` para validar `rutaIds.length > 0` en crear.
-  - Nueva función `guardarMultiples` que itera `rutaIds`, llama `crear.mutateAsync` por cada uno, agrega resultados y muestra toast resumen. Reusar la mutación existente sin tocar el servicio.
-  - Footer: label del botón dinámico según `rutaIds.length`.
-
-- `src/features/portal-agente/components/AgenteTarifaForm.tsx`
-  - Sin cambios de API: hereda el comportamiento porque solo envuelve `TarifaForm`.
-
-- No se modifica `services/tarifas.ts` ni la BD: cada tarifa sigue siendo un INSERT individual con su `ruta_id`. El trigger del portal agente que fuerza `estado_aprobacion='borrador'` sigue aplicando por fila.
-
-- Memoria: actualizar `mem://features/costeo-tarifas-maritimas` con la nota "Modal Nueva tarifa soporta multi-ruta (1 form → N inserts)".
-
-## Versionado y changelog
-
-- `src/constants/appVersion.ts` → `13.135.31`
-- `CHANGELOG.md` → entrada `[13.135.31] - 2026-06-24`: "Modal Nueva tarifa permite seleccionar varias rutas y generar N tarifas en un solo guardado."
+- `src/constants/appVersion.ts` → `13.135.32`
+- `CHANGELOG.md` → entrada `[13.135.32]`: "Portal Agente: el modal de Nueva tarifa ya lista las rutas de la organización vinculada. Nueva RPC `get_agente_rutas()` (`SECURITY DEFINER`) porque `agente_users` no tiene SELECT directo sobre `costeo_rutas` por RLS."
 
 ## Fuera de alcance
 
-- Edición masiva de tarifas existentes.
-- Importación CSV / bulk import.
-- Cambios en el modelo de datos (no se crea concepto de "plantilla de tarifa").
+- Tocar las políticas RLS de `costeo_rutas` (mantener la regla de membresía organizacional).
+- Cambios en el Portal interno (`/costeo`) — ahí sí funciona porque el usuario es miembro.
