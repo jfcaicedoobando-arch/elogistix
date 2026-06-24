@@ -121,6 +121,9 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
 
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email, password, email_confirm: true,
+    // Evita que el trigger handle_new_user_signup cree una organización fantasma:
+    // el alta desde el panel asigna explícitamente la organización destino.
+    user_metadata: { skip_auto_org: true },
   });
   if (createError) {
     log.finish(400, "auth_create_failed", {
