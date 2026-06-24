@@ -26,7 +26,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Label htmlFor="tarifa-flete">Flete base USD *</Label>
         <Input
           id="tarifa-flete"
-          type="number" min={0} step="0.01" value={form.flete_base}
+          type="number" min={0} step="0.01" value={form.flete_base === 0 ? "" : form.flete_base} placeholder="0.00"
           aria-invalid={errores?.flete_base || undefined}
           className={`${invalidCls(errores?.flete_base) ?? ""} ${noSpinnerCls}`}
           onChange={(e) => setForm({ ...form, flete_base: Number(e.target.value) || 0 })}
