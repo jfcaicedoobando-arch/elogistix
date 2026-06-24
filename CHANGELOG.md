@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.133.1] - 2026-06-23
+- **fix(lint)**: `ProtectedRoute` superaba el umbral de complejidad ciclomática de ESLint (17 > 16). Extraída la cascada de redirecciones (cliente → /portal, agente_carga → /agente, super_admin → /admin, onboarding pendiente → /onboarding) a un helper puro `resolveProtectedRouteRedirect` en `src/features/auth/utils/`. El componente sólo se queda con loading, autenticación, redirect resuelto y validación de `allowedRoles`. Bump APP_VERSION → 13.133.1. Analogía: el portero del edificio tenía un cuaderno con 17 reglas para decidir a dónde mandar a cada visitante; movimos las reglas de routeo a una guía aparte y ahora el portero sólo pregunta "¿está autorizado?" y consulta la guía.
+
 ## [13.133.0] - 2026-06-23
 - **refactor(ui/modales · sweep final de estilos hardcoded)**: Eliminados todos los anchos/clases hardcoded restantes en modales y sheets compartidos.
   - **Nuevos tokens en `dialogTokens.ts`**: `mobileFilterSheet` (`w-full sm:max-w-sm flex flex-col gap-0 p-0`) y `formSheet` (`sm:max-w-md`) — clases canónicas para `<SheetContent side="right">` en filtros móviles y paneles tipo formulario.
