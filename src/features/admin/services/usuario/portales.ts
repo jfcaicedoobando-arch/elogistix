@@ -55,8 +55,8 @@ async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, st
   return emailMap;
 }
 
-// Tipo conservado por compatibilidad con consumidores que aún lo importen.
-export type _ListUsersRow = ListUsersRow;
+
+
 
 export async function fetchUsuariosPortalCliente(): Promise<PortalClienteUserRow[]> {
   const { data, error } = await supabase
