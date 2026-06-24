@@ -107,15 +107,27 @@ export function RutaTipoFields({
   return (
     <div className="grid grid-cols-2 gap-3">
       <div>
-        <Label htmlFor="tarifa-ruta">{multiple ? "Rutas *" : "Ruta *"}</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="tarifa-ruta">{multiple ? "Rutas *" : "Ruta *"}</Label>
+          {multiple && (rutaIds?.length ?? 0) > 1 && (
+            <Badge variant="secondary" className="text-[10px]">
+              Se crearán {rutaIds?.length} tarifas
+            </Badge>
+          )}
+        </div>
         {multiple ? (
-          <MultiRutaSelect
-            id="tarifa-ruta"
-            rutas={rutas}
-            value={rutaIds ?? []}
-            onChange={(ids) => onRutaIdsChange?.(ids)}
-            invalid={errores?.ruta_id}
-          />
+          <>
+            <MultiRutaSelect
+              id="tarifa-ruta"
+              rutas={rutas}
+              value={rutaIds ?? []}
+              onChange={(ids) => onRutaIdsChange?.(ids)}
+              invalid={errores?.ruta_id}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tip: selecciona varias rutas para crear una tarifa en cada una con los mismos datos.
+            </p>
+          </>
         ) : (
           <Select value={form.ruta_id} onValueChange={(v) => setForm({ ...form, ruta_id: v })}>
             <SelectTrigger
