@@ -1,48 +1,49 @@
-## Contexto
 
-Hoy el nombre de la organización (`organizations.nombre`) sólo se ve en el `OrgSwitcher` del sidebar, y ese componente está **oculto si el usuario no es super admin con múltiples orgs** (ver `src/components/layout/OrgSwitcher.tsx:15`). Para `admin@chino.com` (admin normal de tenant) eso significa que no se ve por ningún lado.
+## Problema
 
-La página `/configuracion` tiene una pestaña "Datos de la Empresa" pero edita la tabla `configuracion` (datos para PDFs), **no** el nombre de la organización tenant (`organizations.nombre`). Son cosas distintas.
+Los usuarios internos (admin de organización, operadores, etc.) no tienen forma de cambiar su propia contraseña desde la app. Sólo los usuarios del portal de clientes la tienen en `/portal/perfil`. La única alternativa actual es desloguearse y usar "¿Olvidaste tu contraseña?".
 
-## Solución (dos lugares)
+**Analogía:** es como una oficina donde sólo los visitantes pueden cambiar la llave de su casillero, pero los empleados no.
 
-### 1) Sidebar: badge siempre visible debajo del logo
+## Solución
 
-En `src/components/layout/AppSidebar.tsx`, debajo del `BrandLockup` (header del sidebar), agregar un indicador `Building2 + organization.nombre` siempre visible para cualquier usuario autenticado con organización activa.
+Agregar la opción "Cambiar contraseña" en el menú de usuario del sidebar (el popover que aparece al hacer click sobre el avatar/email abajo a la izquierda), reutilizando el diálogo que ya existe en el portal.
 
-Comportamiento:
-- **Super admin con >1 orgs** → seguir mostrando el `OrgSwitcher` actual (dropdown clickeable). El nuevo badge no se muestra para no duplicar.
-- **Cualquier otro usuario con org** → mostrar badge read-only (no dropdown) con `Building2` + nombre truncado.
-- **Sidebar colapsado** → sólo el ícono `Building2` con `title="<nombre org>"` como tooltip nativo.
+## Cambios
 
-Estilos: reusar tokens del sidebar (`text-sidebar-foreground/70`, `bg-sidebar-accent/30`, `border-sidebar-border`), nada de colores hardcodeados.
+### 1) Diálogo reutilizable
+- **`src/components/shared/dialogs/CambiarPasswordDialog.tsx`** (nuevo, ≤120 líneas)
+  - Migrar la lógica del diálogo del portal a un componente compartido.
+  - Inputs: contraseña nueva + confirmación, con validación mínima (≥8 caracteres, coinciden).
+  - Llama a `supabase.auth.updateUser({ password })` directamente (ya existe `updateUserPassword` en `src/features/auth/services/index.ts`).
+  - Usa `FormDialogShell` (regla del proyecto para modales tipo formulario).
+  - Toast de éxito/error vía `notifySuccess` / `notifyError`.
 
-**Analogía:** es como poner el nombre de tu empresa debajo del logo de la app — siempre sabes en qué cuenta estás trabajando.
+### 2) Menú de usuario del sidebar
+- **`src/components/layout/SidebarUserMenu.tsx`**
+  - Agregar un nuevo `DropdownMenuItem` "Cambiar contraseña" con icono `KeyRound`, entre "Modo claro/oscuro" y "Cerrar sesión".
+  - Estado local `cambiarPass` que abre `<CambiarPasswordDialog />`.
 
-### 2) `/configuracion`: nueva tarjeta "Organización"
+### 3) Portal de clientes — refactor de reuso
+- **`src/features/portal/routes/PortalPerfil.tsx`** y **`src/features/portal/components/perfil/CambiarPasswordDialog.tsx`**
+  - Reemplazar el diálogo del portal por el componente compartido. La función `cambiarPasswordPortal` ya hace lo mismo internamente, así que el comportamiento no cambia para el cliente.
 
-En la pestaña "Empresa" de `src/features/configuracion/` (o como tarjeta nueva arriba de "Datos de la Empresa"), agregar una `Card` read-only con:
-- Nombre de la organización (`organizations.nombre`)
-- ID de la organización (útil para soporte, copiable)
-- Plan/estado si está disponible en el contexto
+### 4) Versionado y changelog
+- **`src/constants/appVersion.ts`** → `13.135.16`
+- **`CHANGELOG.md`** → entrada `13.135.16` describiendo la nueva opción en el menú de usuario.
 
-Sin inputs editables — sólo informativa. Aclara la diferencia: "Datos de la Empresa" = lo que aparece en PDFs; "Organización" = tu cuenta tenant en Libre Carga.
+## Lo que NO hago
 
-## Archivos a tocar
+- No toco políticas de contraseña (longitud mínima, HIBP, etc.) — eso es del lado de Supabase Auth.
+- No agrego cambio de email — sólo contraseña, que es lo que preguntaste.
+- No cambio el flujo de "¿Olvidaste tu contraseña?" del login.
 
-- `src/components/layout/AppSidebar.tsx` — agregar el badge debajo del header.
-- `src/components/layout/OrgSwitcher.tsx` *(opcional)* — exportar también una variante "read-only badge" o crearla aparte como `OrgBadge.tsx` para no inflar `OrgSwitcher`. Preferencia: **archivo nuevo `src/components/layout/OrgBadge.tsx`** (componentes ≤200 líneas, Power of 10).
-- `src/features/configuracion/components/TabEmpresa.tsx` — agregar Card "Organización" arriba.
-- `src/constants/appVersion.ts` → bump a `13.135.15`.
-- `CHANGELOG.md` → entrada `13.135.15`.
+## Verificación
 
-## No se toca
+- Build pasa.
+- Probar manualmente: login como `admin@chino.com` → click avatar abajo a la izquierda → "Cambiar contraseña" → diálogo se abre y guarda.
+- Portal de clientes sigue funcionando igual.
 
-- Lógica de permisos / `useOrganization`.
-- Tabla `organizations` ni RLS.
-- `OrgSwitcher` para super admins (sigue igual).
-- Edge functions ni backend.
+## Respuesta corta para darle al usuario `admin@chino.com` mientras tanto
 
-## Mientras tanto (respuesta al usuario)
-
-Puedes responderle a `admin@chino.com`: *"Hoy el nombre de tu organización no se muestra en la UI porque eres admin de una sola organización. Vamos a agregarlo en el sidebar (siempre visible) y en la página de Configuración."*
+> Hoy puedes cambiar tu contraseña cerrando sesión y usando "¿Olvidaste tu contraseña?" en la pantalla de login. Vamos a agregar la opción dentro del menú de usuario del sidebar para que no tengas que salir.
