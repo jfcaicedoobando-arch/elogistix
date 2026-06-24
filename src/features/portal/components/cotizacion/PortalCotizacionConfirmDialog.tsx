@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 type ConfirmAction = "Aceptada" | "Rechazada" | null;
 
