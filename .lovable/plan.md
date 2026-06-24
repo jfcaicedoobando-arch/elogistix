@@ -1,49 +1,52 @@
-## Causa raíz
+## Resumen de Sentry
 
-Analogía: el agente tiene su llave de la puerta de "agente_users" (RLS lo deja leer su propia fila), pero la cerradura del `costeo_agentes` y de `organizations` está cerrada para él (sus políticas exigen ser miembro de `organization_members`, que un agente externo NO es). Resultado: el `select` con joins regresa silenciosamente `costeo_agentes: null` y por eso el header cae al fallback "Portal Agente · **Agente**". Y aunque la RPC `get_current_agente_org_nombre()` sí existe y tiene EXECUTE, la lógica del header oculta el chip cuando viene vacío.
+4 issues abiertos en últimos 7 días:
 
-Lo que confirma el preview (`Chino el agente` logueado): se ve `Portal Agente · Agente` en vez de `Portal Agente · Chino El Agente`, y no aparece el chip de "Chino Cochino".
+1. **JAVASCRIPT-REACT-1P** (2 eventos, real) — `column "user_id" of relation "notificaciones_internas" does not exist` al crear borrador de embarque desde una cotización aceptada.
+2. **JAVASCRIPT-REACT-1N / 1M** — errores minificados (`<unknown>`, `zF`) sin stack útil; 1 evento cada uno hace 49 min. Sin acción ahora.
+3. **JAVASCRIPT-REACT-1K** — "Invalid login credentials". Es el mensaje normal cuando alguien teclea mal la contraseña; no es bug.
+
+Sólo el #1 es bug real. Procedo a arreglarlo.
+
+## Causa raíz #1
+
+Analogía: la función SQL `crear_embarque_borrador_desde_cotizacion` mete una carta al buzón de notificaciones, pero usa nombres viejos de las casillas del sobre. La tabla `notificaciones_internas` tiene las columnas `usuario_id` y `enlace`, pero la función intenta insertar en `user_id` y `link`. Postgres tira el INSERT y revienta todo el flujo de "Convertir cotización en embarque".
+
+```sql
+-- Tabla real:
+usuario_id uuid, enlace text  ...
+-- Función actual (incorrecta):
+INSERT INTO notificaciones_internas (organization_id, user_id, ..., link) ...
+```
 
 ## Solución
 
-Una sola RPC `SECURITY DEFINER` que devuelva todo el contexto del agente saltándose RLS, y cambiar `fetchAgenteContext` para usarla.
-
-### Cambios
-
-1. **Migración SQL** — crear RPC consolidada:
+1. **Migración SQL** — reemplazar `CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid)` cambiando sólo el INSERT final a:
    ```sql
-   CREATE OR REPLACE FUNCTION public.get_current_agente_context()
-   RETURNS TABLE (
-     agente_id uuid, organization_id uuid, proveedor_id uuid,
-     agente_nombre text, organizacion_nombre text
+   INSERT INTO public.notificaciones_internas (
+     organization_id, usuario_id, tipo, titulo, mensaje, enlace
    )
-   LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public
-   AS $$
-     SELECT au.agente_id, au.organization_id, ca.proveedor_id,
-            ca.nombre, o.nombre
-       FROM public.agente_users au
-       LEFT JOIN public.costeo_agentes ca ON ca.id = au.agente_id
-       LEFT JOIN public.organizations  o  ON o.id  = au.organization_id
-      WHERE au.user_id = auth.uid()
-      LIMIT 1;
-   $$;
-   REVOKE EXECUTE ON FUNCTION public.get_current_agente_context() FROM PUBLIC, anon;
-   GRANT  EXECUTE ON FUNCTION public.get_current_agente_context() TO authenticated;
+   SELECT v_cot.organization_id, om.user_id, 'cotizacion_borrador_embarque',
+          'Borrador de embarque creado',
+          'Se generó el borrador ' || v_expediente || ' desde la cotización ' || v_cot.folio,
+          '/embarques/' || v_embarque_id::text
+   FROM public.organization_members om
+   WHERE om.organization_id = v_cot.organization_id
+     AND om.role IN ('admin'::app_role, 'operador'::app_role)
+     AND om.user_id <> auth.uid();
    ```
-   (mantenemos `get_current_agente_org_nombre()` para no romper nada).
+   El resto del cuerpo queda igual. La sobrecarga de 4 args (`p_decision, ...`) ya delega en esta, no necesita cambios.
 
-2. **Cliente** `src/features/portal-agente/services/index.ts` — reemplazar el `.from("agente_users").select(...costeo_agentes(...))` + RPC de org por una sola `supabase.rpc("get_current_agente_context")`. Si devuelve 0 filas → `notAuthenticated`. Mapeo directo al `AgenteContext`. Sin cambios en la interface ni en los consumidores.
-
-3. **Versión + changelog**
-   - `src/constants/appVersion.ts` → `13.135.29`
-   - `CHANGELOG.md` → entrada `[13.135.29]` describiendo el fix.
+2. **Versión + changelog**
+   - `src/constants/appVersion.ts` → `13.135.30`
+   - `CHANGELOG.md` → entrada `[13.135.30]` describiendo el fix.
 
 ## Validación
 
-- Abrir `/agente` en preview como Chino. El header debe decir `Portal Agente · Chino El Agente` y el chip `🏢 Chino Cochino`.
-- Verificar con Playwright + screenshot.
+- Volver a abrir la cotización aceptada en preview y reintentar "Crear embarque desde cotización" → ya no debe lanzar `column user_id ... does not exist`.
+- Marcar el issue de Sentry como resuelto sólo después de confirmar (lo dejo al usuario o automatizado en un commit posterior).
 
 ## Fuera de alcance
 
-- No abrimos RLS de `costeo_agentes` ni `organizations` (mantener principio de menor privilegio).
-- No tocamos UI, sólo la fuente de datos.
+- No tocamos los issues `<unknown>`/`zF` (sin stack útil; esperar más eventos con sourcemaps).
+- No tocamos "Invalid login credentials" (no es bug).
