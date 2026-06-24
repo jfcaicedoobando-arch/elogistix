@@ -4,6 +4,7 @@
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Tag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -115,28 +116,46 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
     if (esEdicion && tarifaId) {
       actualizar.mutate(
         { id: tarifaId, input: form },
-        { onSuccess: () => onOpenChange(false) },
+        {
+          onSuccess: () => {
+            toast.success("Tarifa actualizada");
+            onOpenChange(false);
+          },
+          onError: (err: Error) => toast.error("No se pudo actualizar la tarifa", { description: err.message }),
+        },
       );
       return;
     }
     if (rutaIds.length <= 1) {
       const input: TarifaInput = { ...form, ruta_id: rutaIds[0] ?? form.ruta_id };
-      crear.mutate(input, { onSuccess: () => onOpenChange(false) });
+      crear.mutate(input, {
+        onSuccess: () => {
+          toast.success("Tarifa creada");
+          onOpenChange(false);
+        },
+        onError: (err: Error) => toast.error("No se pudo crear la tarifa", { description: err.message }),
+      });
       return;
     }
     const inputs: TarifaInput[] = rutaIds.map((ruta_id) => ({ ...form, ruta_id }));
     crearMultiples.mutate(inputs, {
       onSuccess: ({ exitos, fallos }) => {
         if (fallos.length === 0) {
+          toast.success(`Se crearon ${exitos.length} tarifa${exitos.length === 1 ? "" : "s"}`);
           onOpenChange(false);
           return;
         }
+        toast.warning(`Se crearon ${exitos.length} de ${exitos.length + fallos.length} tarifas`, {
+          description: `Quedan ${fallos.length} con error; revisa las rutas restantes.`,
+        });
         // Quita las rutas ya creadas para no duplicar y deja modal abierto.
         const exitosIds = new Set(exitos.map((i) => i.ruta_id));
         setRutaIds((prev) => prev.filter((id) => !exitosIds.has(id)));
       },
+      onError: (err: Error) => toast.error("No se pudieron crear las tarifas", { description: err.message }),
     });
   };
+
 
   const guardarLabel = computeGuardarLabel({ pendiente, esEdicion, rutasCount: rutaIds.length });
 
