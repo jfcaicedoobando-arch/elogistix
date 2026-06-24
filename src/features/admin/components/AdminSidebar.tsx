@@ -34,14 +34,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 
-const adminItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
-  { title: "Usuarios", url: "/admin/usuarios", icon: Users },
-  { title: "Auditoría plataforma", url: "/admin/auditoria", icon: ShieldCheck },
-  { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
-
-  { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
+const adminGroups: { label: string; items: { title: string; url: string; icon: typeof LayoutDashboard }[] }[] = [
+  {
+    label: "Plataforma",
+    items: [
+      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+      { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
+      { title: "Auditoría plataforma", url: "/admin/auditoria", icon: ShieldCheck },
+      { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
+    ],
+  },
 ];
 
 export function AdminSidebar() {
