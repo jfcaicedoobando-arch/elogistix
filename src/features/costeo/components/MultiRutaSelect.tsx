@@ -33,7 +33,13 @@ const labelRuta = (r: RutaOption) =>
 export function MultiRutaSelect({ rutas, value, onChange, invalid, id }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const activas = useMemo(() => rutas.filter((r) => r.activa), [rutas]);
+  const activas = useMemo(
+    () => rutas
+      .filter((r) => r.activa)
+      .slice()
+      .sort((a, b) => labelRuta(a).localeCompare(labelRuta(b), "es", { sensitivity: "base" })),
+    [rutas],
+  );
   const seleccion = useMemo(
     () => activas.filter((r) => value.includes(r.id)),
     [activas, value],
