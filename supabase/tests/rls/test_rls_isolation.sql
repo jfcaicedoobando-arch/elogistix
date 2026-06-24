@@ -119,7 +119,7 @@ BEGIN
   -- --------------------------------------------------------------------------
   -- Test 7: app_logs — admin de Org A solo ve logs de su org
   -- --------------------------------------------------------------------------
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
   PERFORM set_config('request.jwt.claims', NULL, true);
   INSERT INTO public.app_logs(level, fn, msg, organization_id) VALUES
     ('info', 'test-fn', 'log-A', org_a),
@@ -165,7 +165,7 @@ BEGIN
   -- Test 9 (12.61.11): notificaciones_internas — bug-simulado con organization_id
   -- de otra org NO debe ser visible aunque usuario_id coincida.
   -- --------------------------------------------------------------------------
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
   PERFORM set_config('request.jwt.claims', NULL, true);
   INSERT INTO public.notificaciones_internas(usuario_id, organization_id, tipo, titulo, mensaje)
     VALUES
@@ -181,7 +181,7 @@ BEGIN
   -- --------------------------------------------------------------------------
   -- Test 10 (12.61.11): crm_notificaciones — mismo refuerzo
   -- --------------------------------------------------------------------------
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
   PERFORM set_config('request.jwt.claims', NULL, true);
   INSERT INTO public.crm_notificaciones(user_id, organization_id, tipo, titulo, mensaje)
     VALUES
@@ -195,7 +195,7 @@ BEGIN
     format('User A vio %s crm_notificaciones, esperaba 1 (la cruzada debe bloquearse)', visible_count));
 
   -- Limpieza
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
   PERFORM set_config('request.jwt.claims', NULL, true);
 
   RAISE NOTICE '✓ Todos los tests de RLS pasaron correctamente';

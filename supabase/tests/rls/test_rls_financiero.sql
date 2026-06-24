@@ -74,7 +74,7 @@ BEGIN
   PERFORM pg_temp.assert(visible = 1, format('user_a debe ver 1 factura, vio %s', visible));
   SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_b;
   PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver factura de org_b');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 2: proformas aislamiento
@@ -90,7 +90,7 @@ BEGIN
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.proformas WHERE id = prof_a;
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver proforma de org_a');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 3: cotizaciones aislamiento
@@ -103,7 +103,7 @@ BEGIN
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.cotizaciones WHERE id = cot_a;
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver cotización de org_a');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- Nota (13.135.6): los bloques antiguos para `cuentas_por_cobrar` y
   -- `gastos_embarque` envolvían el test en `IF EXISTS (information_schema...)`.

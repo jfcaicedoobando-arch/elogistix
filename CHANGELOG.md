@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.7] - 2026-06-24
+- **chore(ci)**: Tanda A de hardening CI tras auditoría — quick wins de reproducibilidad y consistencia.
+  - **Pin de runners**: los 8 workflows pasan de `ubuntu-latest` → `ubuntu-24.04` (12 ocurrencias). Evita que un bump silencioso de GitHub Runners rompa CI sin aviso.
+  - **Pin de Deno**: `ci.yml` y `post-deploy-smoke.yml` ahora fijan `deno-version: v1.46.x` en vez de `v1.x` flotante.
+  - **RLS helpers consistentes**: reemplazadas las 10 ocurrencias de `RESET ROLE;` pelado por `PERFORM pg_temp.as_postgres();` en `test_rls_financiero.sql`, `test_rls_financiero_critico.sql` y `test_rls_isolation.sql`. El helper limpia `request.jwt.claims` antes de resetear el rol, evitando falsos verdes cuando `auth.uid()` sigue resolviendo al usuario simulado anterior.
+  - Postgres ya estaba pinneado por digest SHA256 en `rls-tests.yml` ✓ y todos los workflows ya tenían `concurrency` con `cancel-in-progress` ✓ — sin cambios.
+
 ## [13.135.6] - 2026-06-24
 - **chore(ci/rls)**: Hardening de la suite RLS y los workflows de GitHub Actions tras auditoría completa.
   - **CRITICAL**: `actionlint.yml` ahora pinea `actionlint` a la versión `1.7.7`. Antes descargaba y ejecutaba el script de la rama `main` sin verificación → vector de supply-chain ataque al runner con `GITHUB_TOKEN`.
