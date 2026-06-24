@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.42] - 2026-06-24
+- **feat(costeo)**: El botón Guardar de la tarifa marítima muestra spinner (`Loader2` animado) y `aria-busy` mientras corre la mutación; el botón Cancelar también se deshabilita en ese lapso para evitar cierres a media transacción. Previene dobles clics y confirma visualmente que la operación está en curso.
+
 ## [13.135.41] - 2026-06-24
 - **feat(costeo)**: Validación reactiva en el modal de tarifa marítima. El botón Guardar ahora se deshabilita en tiempo real mientras hay campos inválidos, con `title`/tooltip listando lo que falta, y se agrega una línea de ayuda en el footer (`aria-live="polite"`) que muestra "Faltan: …" o "Listo para guardar." Sin clicks perdidos sin feedback.
 
