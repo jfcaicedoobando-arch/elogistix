@@ -133,6 +133,19 @@ export default function Papelera() {
           />
         </CardContent>
       </Card>
+
+      <DoubleConfirmDeleteDialog
+        open={!!purgeTarget}
+        onOpenChange={(v) => { if (!v) setPurgeTarget(null); }}
+        entityName={purgeTarget ? `«${purgeTarget.label}»` : "este registro"}
+        description="El registro se eliminará definitivamente de la base de datos. Esta acción no se puede deshacer."
+        finalDescription="Una vez purgado no podrás recuperarlo desde la papelera. ¿Continuar?"
+        isPending={purge.isPending}
+        onConfirm={async () => {
+          if (purgeTarget) await purge.mutateAsync(purgeTarget.id);
+          setPurgeTarget(null);
+        }}
+      />
     </div>
   );
 }
