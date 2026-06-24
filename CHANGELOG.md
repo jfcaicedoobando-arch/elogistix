@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.21] - 2026-06-24
+- **ui(sidebar)**: El nombre de la organización en el sidebar ya no se ve como un botón/módulo navegable. Se rediseñó `OrgBadge` como una etiqueta de contexto (caption "ORGANIZACIÓN" tenue + nombre en semibold, sin borde ni fondo de acento ni altura tipo item de menú). El `OrgSwitcher` (super admin con varias orgs) también se aligeró: trigger fantasma con caption arriba y nombre + chevron debajo, en lugar del botón con borde que competía con los items. Estado colapsado conserva el icono `Building2` con tooltip. Motivo: en `/usuarios` el chip "Chino Cochino" se confundía con un destino navegable.
+
 ## [13.135.20] - 2026-06-24
 - **feat(costeo/agentes/portal)**: El modal "Invitar agente al Portal" ahora tiene dos pestañas: **Enviar por email** (flujo original) y **Asignar contraseña** (nuevo). En modo contraseña, el admin captura email + password (con botón "Generar segura" de 12 chars y toggle mostrar/ocultar) y la edge function `user-management` crea la cuenta de Supabase ya confirmada (o reasigna la contraseña si el usuario ya existe). Tras éxito, el modal cambia a una vista con email y contraseña en sólo lectura más botones "Copiar" individuales y "Copiar ambos" — la contraseña no se vuelve a ver. Motivo: a los agentes de carga en China rara vez les llega el correo de Supabase (Great Firewall / filtros), así que ahora el admin puede entregarles las credenciales directamente por WeChat o WhatsApp. La acción queda registrada en `bitacora_actividad` (módulo "Costeo Agentes", acción "cuenta creada con contraseña" o "contraseña reasignada por admin"); la contraseña nunca se loggea.
 

@@ -1,79 +1,45 @@
-## Problema
+# Rediseño del indicador de organización en el sidebar
 
-A los agentes de carga en China muchas veces no les llega el email de invitación (firewalls, filtros, dominios bloqueados). Hoy el modal solo pide email y dispara un correo de Supabase — si nunca llega, el agente no entra. El admin de operaciones no tiene forma de saltarse el correo y darle credenciales directas (por ej. por WeChat/WhatsApp).
+## Problema observado
+En la captura del sidebar, el `OrgBadge` ("Chino Cochino") aparece como una caja con borde, fondo `bg-sidebar-accent/30`, icono y misma altura (`h-8`) que los items del menú. Resultado: **parece un botón/módulo navegable** y compite visualmente con "Principal", "Operaciones", etc.
 
-## Solución
+## Objetivo
+Que se lea claramente como **"estás trabajando en esta organización"** (contexto), no como un destino navegable.
 
-Hacer que el modal "Invitar agente al Portal" permita **dos modos**:
+## Cambio propuesto (solo UI, archivo `src/components/layout/OrgBadge.tsx`)
 
-1. **Por email** (actual): solo email → llega correo con magic link / reset password.
-2. **Manual con contraseña**: email + contraseña → el sistema crea la cuenta ya confirmada y lista para usar. El admin copia las credenciales y se las pasa al agente por el canal que sea.
+Reemplazar el "chip con borde" por una **etiqueta de contexto** estilo encabezado:
 
-Toggle / tab dentro del mismo `FormDialogShell` (sin nuevo modal). En modo manual se muestran las credenciales en pantalla tras crear con un botón "Copiar".
+- Sin borde, sin fondo de acento, sin look de botón.
+- Texto pequeño con `uppercase`, tracking amplio, color tenue (`text-sidebar-foreground/50`) arriba — etiqueta "Organización".
+- Debajo, el nombre de la organización en `text-sm font-semibold text-sidebar-foreground` con `truncate`.
+- Icono `Building2` opcional, pequeño y tenue, al lado del nombre.
+- Padding horizontal mínimo, sin altura fija que lo iguale a los items.
+- Sin `cursor-pointer`, sin `hover:` de fondo (es read-only).
 
-## Cambios
-
-### Frontend (`InvitarAgentePortalDialog.tsx`)
-- Agregar `Tabs` (o `RadioGroup`) con 2 opciones: **Enviar por email** | **Asignar contraseña**.
-- En modo manual: input de contraseña (mínimo 8 caracteres) + checkbox "Mostrar contraseña" + botón "Generar segura" que llena un random de 12 chars.
-- Validar contraseña antes de enviar.
-- Mandar `mode: "email" | "password"` y opcionalmente `password` al edge function.
-- Tras éxito en modo `password`: mostrar bloque con email y contraseña + botones "Copiar email" / "Copiar contraseña" / "Copiar ambos". El modal no se cierra automáticamente; el admin lo cierra manualmente cuando ya copió.
-- Toast diferente: "Cuenta creada con contraseña — copia las credenciales antes de cerrar".
-
-### Backend (`agenteHandlers.ts` + `index.ts`)
-- `validateInviteAgente` acepta opcional `mode` (default `"email"`) y `password` (requerido si `mode === "password"`, mínimo 8 chars).
-- Nueva ruta `inviteOrCreateUserWithPassword`:
-  - Si el usuario **no existe**: `adminClient.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { role: "agente_carga" } })`.
-  - Si **ya existe**: `adminClient.auth.admin.updateUserById(userId, { password, email_confirm: true })` (resetea la contraseña al valor provisto). Loggear `password_reset_by_admin` en bitácora.
-- En ambos casos, mismo flujo posterior: `ensureAgenteRole` + upsert en `agente_users`.
-- Respuesta incluye `mode_used` y `is_new` (la contraseña NO se devuelve; el frontend ya la tiene en memoria).
-- Logging: `log.finish(200, "agente_user_created_with_password", { ... })` para distinguir del flow email.
-
-### Bitácora
-- Insertar en `bitacora_actividad`: acción `Agente: cuenta creada con contraseña` (módulo `Costeo Agentes`) cuando `mode === "password"`, para auditoría (quién creó la cuenta y a qué agente).
-
-### Versionado
-- `src/constants/appVersion.ts` → `13.135.20`.
-- Entrada en `CHANGELOG.md`.
-
-### Tests (opcional, solo si existen para este flujo)
-- Actualizar `supabase/functions/user-management/smoke_test.ts` y `validate_test.ts` con caso `mode=password`.
-
-## UX (mockup texto)
+Estado colapsado: mantener solo el icono `Building2` centrado con tooltip (igual que hoy), pero sin fondo de acento.
 
 ```text
-┌─ Invitar agente al Portal ─────────────────────┐
-│ Envía una invitación a [Agente] ...            │
-│                                                 │
-│ Método:                                         │
-│  ( ) Enviar invitación por email                │
-│  (•) Asignar contraseña manualmente             │
-│                                                 │
-│ Email del agente:                               │
-│  [contacto@agente.com           ]               │
-│                                                 │
-│ Contraseña:                                     │
-│  [••••••••••••] [👁] [Generar segura]           │
-│  Mínimo 8 caracteres.                           │
-│                                                 │
-│ ℹ️ Útil cuando el correo no llega (China, etc). │
-│   Después comparte las credenciales por el      │
-│   canal que prefieras (WeChat, WhatsApp).       │
-│                                                 │
-│        [ Cancelar ]  [ Crear cuenta ]           │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────┐
+│ ORGANIZACIÓN            │  ← caption tenue, uppercase, 10px
+│ 🏢 Chino Cochino        │  ← nombre, semibold, sm
+├─────────────────────────┤
+│ DASHBOARDS              │
+│   Principal             │
+└─────────────────────────┘
 ```
 
-Tras éxito en modo password:
+Lo mismo aplica al `OrgSwitcher` cuando el super admin lo ve: cambiar el `Button variant="outline"` por un trigger más sutil (texto + chevron pequeño) para que no compita con los items de menú. Mantiene su funcionalidad de cambio de organización.
 
-```text
-✓ Cuenta creada
-Email:       contacto@agente.com    [Copiar]
-Contraseña:  Hk7-mP9$Xq2L           [Copiar]
-            [ Copiar ambos ]  [ Cerrar ]
-```
+## Versionado
+- `src/constants/appVersion.ts` → `13.135.21`
+- `CHANGELOG.md` → entrada `13.135.21`: "Sidebar: el nombre de la organización ahora se muestra como etiqueta de contexto en lugar de botón, para no confundirse con un módulo navegable."
 
-## Riesgo
+## Archivos a tocar
+- `src/components/layout/OrgBadge.tsx` (rediseño visual)
+- `src/components/layout/OrgSwitcher.tsx` (alinear el trigger no-colapsado al mismo lenguaje sutil)
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
 
-Bajo. El edge function ya tiene service-role; agregar `createUser` con `email_confirm: true` es API estándar de Supabase. La contraseña viaja por HTTPS y nunca se loggea (ni en bitácora ni en `app_logs`). Si el admin pierde la contraseña, puede reabrir el modal y "Asignar contraseña" otra vez — la reescribe.
+## Analogía
+Hoy el nombre de la organización está vestido igual que los botones del menú — como un empleado con el mismo uniforme que los meseros, la gente le pide la cuenta. Lo vamos a vestir como un **letrero de "Sucursal: Centro"** colgado en la pared: claro, informativo, pero nadie intenta tocarlo esperando que abra algo.

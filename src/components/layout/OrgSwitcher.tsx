@@ -39,18 +39,18 @@ function OrgSwitcherBase({ collapsed }: { collapsed?: boolean }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-between text-xs h-8 border-sidebar-border bg-sidebar-accent/30"
-        >
-          <span className="flex items-center gap-1.5 truncate">
-            <Building2 className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{organization?.nombre ?? "Sin org"}</span>
-          </span>
-          <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
-        </Button>
+      <DropdownMenuTrigger
+        className="w-full text-left px-1 py-0.5 rounded-sm hover:bg-sidebar-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        aria-label="Cambiar de organización"
+      >
+        <div className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground/50">
+          Organización
+        </div>
+        <div className="flex items-center gap-1.5 text-sm font-semibold text-sidebar-foreground/90">
+          <Building2 className="h-3.5 w-3.5 shrink-0 text-sidebar-foreground/50" aria-hidden="true" />
+          <span className="truncate flex-1">{organization?.nombre ?? "Sin org"}</span>
+          <ChevronDown className="h-3 w-3 shrink-0 opacity-50" aria-hidden="true" />
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         {organizations.map((org) => (
