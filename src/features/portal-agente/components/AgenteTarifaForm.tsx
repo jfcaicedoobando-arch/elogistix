@@ -7,7 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
-import { fetchCosteoRutas } from "@/features/costeo/services/rutas";
+import { fetchAgenteRutas } from "@/features/portal-agente/services";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 
 interface Props {
