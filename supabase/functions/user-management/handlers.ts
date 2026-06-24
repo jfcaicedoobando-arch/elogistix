@@ -78,7 +78,9 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
     log.finish(400, "validation_failed", { user_id: callerId });
     return errorResponse(validationError, 400, cors);
   }
-  const { email, password, role } = body as { email: string; password: string; role?: string };
+  const { email, password, role, organization_id: orgIdPayload } = body as {
+    email: string; password: string; role?: string; organization_id?: string;
+  };
   if (!role || !(VALID_ROLES as readonly string[]).includes(role)) {
     log.finish(400, "invalid_role", { user_id: callerId, payload: { role } });
     return errorResponse(`Rol no soportado: ${role ?? "(vacío)"}`, 400, cors);
@@ -91,13 +93,27 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
   }
   const selectedRole = role;
 
+  // Resolver organización destino:
+  // - super_admin global puede pasar `organization_id` para crear en cualquier org.
+  // - admin_org siempre crea en su propia org (ignora payload).
+  let targetOrgId: string | null = admin.orgId;
+  if (admin.isGlobalAdmin && typeof orgIdPayload === "string" && orgIdPayload) {
+    const { data: orgRow, error: orgErr } = await adminClient
+      .from("organizations").select("id").eq("id", orgIdPayload).maybeSingle();
+    if (orgErr || !orgRow) {
+      log.finish(400, "invalid_organization_id", { user_id: callerId, payload: { organization_id: orgIdPayload } });
+      return errorResponse("Organización destino no encontrada", 400, cors);
+    }
+    targetOrgId = orgRow.id as string;
+  }
+
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email, password, email_confirm: true,
   });
   if (createError) {
     log.finish(400, "auth_create_failed", {
       user_id: callerId,
-      organization_id: admin.orgId ?? null,
+      organization_id: targetOrgId,
       payload: { error: createError.message },
     });
     return errorResponse(createError.message, 400, cors);
@@ -105,12 +121,22 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
 
   // Siempre persistir el rol seleccionado en user_roles (trigger crea uno default = viewer).
   await adminClient.from("user_roles").update({ role: selectedRole }).eq("user_id", newUser.user.id);
-  if (admin.orgId) {
-    await adminClient.from("organization_members").insert({
+  if (targetOrgId) {
+    const { error: memberError } = await adminClient.from("organization_members").insert({
       user_id: newUser.user.id,
-      organization_id: admin.orgId,
+      organization_id: targetOrgId,
       role: selectedRole,
     });
+    if (memberError) {
+      // Rollback del usuario auth para no dejar huérfanos.
+      await adminClient.auth.admin.deleteUser(newUser.user.id);
+      log.finish(400, "member_insert_failed", {
+        user_id: callerId,
+        organization_id: targetOrgId,
+        payload: { error: memberError.message },
+      });
+      return errorResponse(memberError.message, 400, cors);
+    }
   }
 
   log.finish(200, "user_created", {
