@@ -1,43 +1,45 @@
-## Problema
+## Contexto
 
-En el modal de Nueva tarifa (`/agente/tarifas`), al dar click en **Guardar tarifa** no pasa nada y no aparece toast.
+La capacidad de cargar varias tarifas a la vez (1 captura → N rutas) **ya está implementada** en la app tradicional, dentro del modal de "Nueva tarifa" (`TarifaForm`), exactamente igual que en el portal de agentes. Cuando no hay `tarifaId` (alta o duplicado), el componente entra en modo `multiple = true` y el selector de ruta se reemplaza por `MultiRutaSelect`, ejecutando la mutación `crearMultiples`.
 
-## Causa raíz
+El problema reportado es de **descubribilidad**: los usuarios no se dan cuenta de que pueden seleccionar varias rutas. Esta intervención es 100% UI/presentación — no toca lógica de mutaciones, RLS ni servicios.
 
-`TarifaForm.tsx` calcula la validez así:
+## Cambios propuestos (sólo presentación)
 
-```ts
-const baseValido = esFormValido(form);              // exige form.ruta_id ≠ ""
-const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
-```
+### 1. `src/features/costeo/routes/CosteoTarifas.tsx`
+- Cambiar el label del botón principal de **"Nueva tarifa"** a **"Nueva(s) tarifa(s)"**.
+- Agregar un `title`/tooltip: "Puedes seleccionar varias rutas para crear varias tarifas con la misma captura."
 
-En modo creación (`multiple = true`) la(s) ruta(s) se capturan en el estado aparte `rutaIds` (multi-select), y `form.ruta_id` **siempre queda vacío**. Como `esFormValido` exige `form.ruta_id` no vacío, `baseValido` es `false`, `valido` es `false`, y `guardar()` hace `return` silencioso antes de llamar la mutación — por eso no hay toast ni error.
+### 2. `src/features/costeo/components/TarifaForm.tsx`
+- Cuando `multiple === true`, pasar una `description` al `FormDialogShell` que diga:
+  > "Captura la tarifa una sola vez y elige una o varias rutas para generarlas en lote."
+- Mantener la descripción actual cuando es edición.
 
-Adicionalmente, al marcar `intentoEnvio = true` sí se pintan errores en los campos, pero el usuario reporta que tampoco ve indicación clara de qué falta porque el campo "ruta" sí está lleno desde su punto de vista.
+### 3. `src/features/costeo/components/TarifaFormFields.tsx` (`RutaTipoFields`)
+- En modo `multiple`, debajo del `MultiRutaSelect` mostrar un texto ayuda muted:
+  > "Tip: selecciona varias rutas para crear una tarifa en cada una con los mismos datos."
+- Si `rutaIds.length > 1`, mostrar un `Badge` informativo: "Se crearán N tarifas" junto al label.
 
-## Fix propuesto
+### 4. `src/features/costeo/components/MultiRutaSelect.tsx`
+- Cambiar el placeholder del trigger cuando está vacío a "Selecciona una o varias rutas…" (hoy probablemente dice algo más genérico).
 
-Un único cambio acotado en `src/features/costeo/components/TarifaForm.tsx`:
+### 5. Versionado y changelog
+- Bump `src/constants/appVersion.ts` → `13.135.47`.
+- Entrada en `CHANGELOG.md`:
+  > **UX:** El modal de Nueva tarifa en /costeo/tarifas ahora deja claro que admite carga multi-ruta (mismo flujo que ya usa el portal de agentes).
 
-1. Hacer que `esFormValido` reciba un flag `skipRutaId` (o exponer un helper alterno) para que en modo `multiple` no exija `form.ruta_id`.
-2. Reemplazar el cálculo de `valido` por:
-   ```ts
-   const baseValido = esFormValido(form, { skipRutaId: multiple });
-   const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
-   ```
-3. Aplicar el mismo flag en `calcularErrores` para que la celda `ruta_id` no se marque roja basándose en `form.ruta_id` cuando es multi (ya usa `rutaIdsCount === 0` para multi, así está bien — no se toca).
+## Lo que NO se toca
 
-Sin cambios de UI, sin cambios de business logic, sin tocar mutaciones ni servicios.
+- `useTarifaSubmit`, `useCosteoTarifaMutations`, servicios y RLS quedan iguales.
+- El portal de agentes (`AgenteTarifaForm`) no se modifica.
+- No se introduce importación CSV (sería otro alcance).
 
-## Riesgo
+## Validación
 
-Muy bajo: sólo cambia la condición de habilitar el botón Guardar en modo creación. El modo edición (`multiple = false`) sigue exigiendo `form.ruta_id` como antes.
+- `bun run lint -- --max-warnings 0`
+- `bun run build`
+- Verificación visual rápida con Playwright en `/costeo/tarifas` abriendo el modal y confirmando el nuevo copy y badge cuando se seleccionan ≥2 rutas.
 
-## Versionado
+## Analogía
 
-- `APP_VERSION` → `13.135.40`
-- Entrada nueva en `CHANGELOG.md`
-
-## Verificación
-
-Reproducir el flujo: abrir Nueva tarifa, llenar agente/naviera/ruta(s)/contenedor/flete base, click Guardar → debe disparar `crear`/`crearMultiples` y mostrar toast de éxito/error.
+Hoy el modal es como un buffet con varios platillos abiertos, pero el letrero de la entrada sólo decía "comida"; vamos a cambiar el letrero a "buffet, puedes servirte varios" para que la gente sepa que la opción siempre estuvo ahí.

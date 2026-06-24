@@ -105,7 +105,9 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       onOpenChange={onOpenChange}
       icon={Tag}
       title={getTituloModal(tituloOverride, esEdicion)}
-      description="Captura o edita la tarifa marítima con sus costos y condiciones."
+      description={multiple
+        ? "Captura la tarifa una sola vez y elige una o varias rutas para generarlas en lote."
+        : "Captura o edita la tarifa marítima con sus costos y condiciones."}
       size="2xl"
       headerAside={
         <div className="text-right">

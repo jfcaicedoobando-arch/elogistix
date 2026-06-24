@@ -85,7 +85,14 @@ export default function CosteoTarifas() {
       <PageHeader
         title="Tarifas marítimas (USD)"
         description="Matriz CN → MX por agente, naviera, ruta y tipo de contenedor. Aprueba o rechaza las tarifas que envían los agentes."
-        actions={<Button onClick={nuevo}><Plus className="size-4 mr-2" />Nueva tarifa</Button>}
+        actions={
+          <Button
+            onClick={nuevo}
+            title="Captura una vez y elige una o varias rutas para generarlas en lote."
+          >
+            <Plus className="size-4 mr-2" />Nueva(s) tarifa(s)
+          </Button>
+        }
       />
 
       {rutaIdFromUrl && tarifas[0] && (
