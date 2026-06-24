@@ -14,6 +14,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { DataTable } from "@/components/shared/DataTable";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import { huecoFacturacionColumns } from "./huecoFacturacionColumns";
 import type { FilaHueco } from "@/features/facturacion/services";
@@ -43,7 +45,7 @@ export function HuecoFacturacionDetalleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
+      <DialogContent className={cn(dialogSize["4xl"], scrollableDialog, "flex flex-col")}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />

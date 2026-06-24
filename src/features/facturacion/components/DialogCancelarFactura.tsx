@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
@@ -32,7 +33,7 @@ export function DialogCancelarFactura({ facturaId, numero, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <Ban className="h-5 w-5" /> Cancelar CFDI {numero ?? ""}

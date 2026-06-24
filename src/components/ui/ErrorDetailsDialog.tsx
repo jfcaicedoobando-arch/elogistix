@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, X } from "lucide-react";
 import { useErrorReport, closeErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { formatReportMarkdown, formatReportJson } from "@/components/shared/utils/errorReport";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { toast as sonnerToast } from "sonner";
 
 /**
@@ -32,7 +33,7 @@ export function ErrorDetailsDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) closeErrorReport(); }}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className={dialogSize["3xl"]}>
         <DialogHeader>
           <DialogTitle>Detalles del error</DialogTitle>
           <DialogDescription>Muestra el detalle técnico del error ocurrido para facilitar su diagnóstico.</DialogDescription>

@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, AlertTriangle } from "lucide-react";
 import { nombreDesdeEmail } from "@/lib/formatters";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
 import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/features/operaciones/hooks";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
 import { EmbarqueEstadoListItem } from "./embarquesEstadoDialog/EmbarqueEstadoListItem";
@@ -47,7 +49,7 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent className={cn(dialogSize["3xl"], scrollableDialog, "flex flex-col")}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon className="h-5 w-5" style={{ color: ESTADO_COLOR[estado] }} />

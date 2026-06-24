@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { useCancelarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/repFacturapi";
 
@@ -44,7 +45,7 @@ export function DialogCancelarRep({ pagoId, facturaId, open, onOpenChange }: Pro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>Cancelar REP</DialogTitle>
           <DialogDescription>

@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Lock, Unlock } from "lucide-react";
 import {
   useCerrarEmbarque,
@@ -113,7 +114,7 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
 
       {/* Diálogo cerrar */}
       <Dialog open={dlg.openCerrar} onOpenChange={dlg.setOpenCerrar}>
-        <DialogContent>
+        <DialogContent className={dialogSize.md}>
           <DialogHeader>
             <DialogTitle>Confirmar cierre del embarque</DialogTitle>
             <DialogDescription>
@@ -146,7 +147,7 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
 
       {/* Diálogo reabrir */}
       <Dialog open={dlg.openReabrir} onOpenChange={dlg.setOpenReabrir}>
-        <DialogContent>
+        <DialogContent className={dialogSize.md}>
           <DialogHeader>
             <DialogTitle>Reabrir embarque cerrado</DialogTitle>
             <DialogDescription>
