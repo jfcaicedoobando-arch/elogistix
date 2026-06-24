@@ -153,6 +153,21 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
         embarqueId={embarqueId}
         seguro={editing}
       />
+
+      <ConfirmDeleteAlert
+        open={!!deleting}
+        onOpenChange={(v) => { if (!v) setDeleting(null); }}
+        title={deleting ? `¿Eliminar póliza ${deleting.numero_poliza}?` : "¿Eliminar póliza?"}
+        description="Se eliminará la póliza y la prima dejará de contar como costo en el P&L del embarque."
+        confirmLabel="Eliminar"
+        pending={del.isPending}
+        onConfirm={() => {
+          if (deleting) {
+            del.mutate(deleting.id);
+            setDeleting(null);
+          }
+        }}
+      />
     </div>
   );
 }
