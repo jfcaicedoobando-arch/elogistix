@@ -21,7 +21,7 @@ function OrgInfoCardBase() {
   const copiarId = () => {
     navigator.clipboard.writeText(organization.id).then(
       () => toast.success("ID de organización copiado"),
-      () => toast.error("No se pudo copiar el ID"),
+      () => notifyError(undefined, { title: "No se pudo copiar el ID", method: "OrgInfoCard.copiarId" }),
     );
   };
 
