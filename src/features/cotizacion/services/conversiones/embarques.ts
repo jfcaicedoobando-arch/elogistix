@@ -60,8 +60,10 @@ export async function convertirCotizacionAEmbarques(
   const piezasTotal = Number(cotizacion.piezas ?? 0);
 
   // 1) Expediente único para el embarque consolidado.
+  // FIX 13.135.28: castear a string para evitar que supabase-js infiera el
+  // enum `tipo_operacion` y PostgREST falle buscando la firma.
   const { data: expediente, error: errorExp } = await supabase.rpc("generar_expediente", {
-    tipo_op: cotizacion.tipo,
+    tipo_op: String(cotizacion.tipo),
   });
   if (errorExp) throw errorExp;
 

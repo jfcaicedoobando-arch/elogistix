@@ -1,44 +1,42 @@
-## Objetivo
+## Causa raíz
 
-Que el agente, al entrar al Portal del Agente, vea claramente **dos identidades** en el header: su **nombre de agente** (ya existe) y el **nombre de la organización** (cliente/forwarder) a la que pertenece — que hoy no aparece en ningún lado.
+Analogía: tienes una función que sólo entiende "texto plano", pero algunos clientes le hablan en un "dialecto" (el enum `tipo_operacion`). Cuando le hablan en dialecto, no la encuentra y revienta con `function public.generar_expediente(tipo_operacion) does not exist`.
 
-## Dónde se muestra hoy
+Concretamente:
+- En BD sólo existe `public.generar_expediente(tip_op text)`.
+- Hay dos rutas que la invocan:
+  1. **Cliente** `src/features/cotizacion/services/conversiones/embarques.ts:63` hace `supabase.rpc("generar_expediente", { tipo_op: cotizacion.tipo })`. Supabase-js infiere el tipo del argumento como el enum `tipo_operacion` (porque la columna `cotizaciones.tipo` es de ese enum en los tipos generados) y PostgREST no encuentra la firma.
+  2. **SQL** `crear_embarque_borrador_desde_cotizacion(uuid)` ya fue parcheada en 13.135.19 con `v_cot.tipo::text` (fix puntual).
 
-`AgenteLayout` (header sticky superior) ya pinta:
+El bundle del error (13.135.14) es previo al parche del cliente, pero la próxima vez que cualquier caller pase el enum sin castear, vuelve a tronar. Necesitamos una solución **a prueba de balas** que no dependa de que cada call site se acuerde de castear.
 
-```
-[Logo Libre Carga]  Portal Agente · {agenteNombre}
-```
+## Solución
 
-Falta el nombre de la organización. La idea es que el agente sepa "estoy viendo cosas de la organización X" sin tener que adivinar.
+Agregar una **sobrecarga** de `generar_expediente` que acepte el enum `tipo_operacion` directamente y delegue a la versión `text`. Así cualquier caller (cliente con supabase-js o SQL futuro) funciona sin cast.
 
-## Cambios propuestos
+### Cambios
 
-1. **Backend (lectura)** — Extender `fetchAgenteContext()` en `src/features/portal-agente/services/index.ts`:
-   - Agregar el join `organizations:organization_id(nombre)` al SELECT sobre `agente_users`.
-   - Devolver un nuevo campo `organizacionNombre: string` en la interfaz `AgenteContext`.
-   - Si las políticas RLS actuales de `organizations` no permiten al rol `agente` leer la fila, crear una función `SECURITY DEFINER` `get_agente_org_nombre()` que devuelva sólo el `nombre` (sin filtrar datos sensibles) y llamarla con `supabase.rpc(...)`. Decidimos al ejecutar, según el error que dé el join.
+1. **Migración SQL** — nueva función:
+   ```sql
+   CREATE OR REPLACE FUNCTION public.generar_expediente(tipo_op public.tipo_operacion)
+   RETURNS text LANGUAGE sql SECURITY DEFINER SET search_path=public
+   AS $$ SELECT public.generar_expediente(tipo_op::text) $$;
+   GRANT EXECUTE ON FUNCTION public.generar_expediente(public.tipo_operacion) TO authenticated, service_role;
+   ```
+   (la versión `text` original queda intacta, no rompe nada).
 
-2. **UI (header)** — En `src/features/portal-agente/components/AgenteLayout.tsx`:
-   - Mantener el subtítulo del `BrandLockup` como `Portal Agente · {agenteNombre}`.
-   - Agregar al lado del email (extremo derecho del header) un chip pequeño con el ícono `Building2` y el texto `{organizacionNombre}`, oculto en pantallas chicas (`hidden sm:inline-flex`).
-   - En el header móvil (la nav inferior `md:hidden`), agregar una línea superior delgada con el mismo nombre de organización para que también se vea en celular.
+2. **Defensa adicional en cliente** — `src/features/cotizacion/services/conversiones/embarques.ts` línea 63: convertir explícitamente a `String(cotizacion.tipo)` para que aunque alguien borre la sobrecarga, siga funcionando.
 
-3. **Tooltip** — Añadir `title={organizacionNombre}` al chip para que al pasar el mouse se vea completo cuando se trunque.
-
-## Lo que NO cambia
-
-- Sin tocar permisos, RLS de embarques/tarifas, ni rutas.
-- Sin cambios en `costeo_agentes` ni en `agente_users`.
-- Sin tocar el flujo de invitación ni la edge function `user-management`.
+3. **Versión + changelog**
+   - `src/constants/appVersion.ts` → `13.135.28`
+   - `CHANGELOG.md` → entrada `[13.135.28]` describiendo el fix.
 
 ## Validación
 
-- Iniciar sesión como agente de prueba (ej. Chino el agente) y verificar:
-  - Header muestra "Portal Agente · Chino el agente" + chip con nombre de la organización a la derecha.
-  - En móvil, el nombre de la org aparece en la barra superior.
-- Que no rompa los tests existentes del portal (`useAgenteContext` mantiene compatibilidad agregando un campo, no quitando).
+- Confirmar en `pg_proc` que ahora existen **dos** firmas de `generar_expediente`.
+- Reproducir el flujo: cotización Aceptada → "Crear embarque" → la revalidación de tarifa ya no debe arrojar el error.
 
-## Changelog
+## Fuera de alcance
 
-Bump `APP_VERSION` y entrada en `CHANGELOG.md` describiendo: "Portal del Agente — header ahora muestra el nombre de la organización junto al nombre del agente y el email."
+- No tocamos la lógica de revalidación ni los demás RPCs.
+- No tocamos permisos, RLS, ni la firma de 4 args de `crear_embarque_borrador_desde_cotizacion`.
