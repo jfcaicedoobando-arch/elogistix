@@ -93,19 +93,12 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
   }
   const selectedRole = role;
 
-  // Resolver organización destino:
-  // - super_admin global puede pasar `organization_id` para crear en cualquier org.
-  // - admin_org siempre crea en su propia org (ignora payload).
-  let targetOrgId: string | null = admin.orgId;
-  if (admin.isGlobalAdmin && typeof orgIdPayload === "string" && orgIdPayload) {
-    const { data: orgRow, error: orgErr } = await adminClient
-      .from("organizations").select("id").eq("id", orgIdPayload).maybeSingle();
-    if (orgErr || !orgRow) {
-      log.finish(400, "invalid_organization_id", { user_id: callerId, payload: { organization_id: orgIdPayload } });
-      return errorResponse("Organización destino no encontrada", 400, cors);
-    }
-    targetOrgId = orgRow.id as string;
+  const orgResolution = await resolveTargetOrgId(adminClient, admin, orgIdPayload);
+  if ("error" in orgResolution) {
+    log.finish(400, "invalid_organization_id", { user_id: callerId, payload: { organization_id: orgIdPayload } });
+    return errorResponse(orgResolution.error, 400, cors);
   }
+  const targetOrgId = orgResolution.targetOrgId;
 
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email, password, email_confirm: true,
