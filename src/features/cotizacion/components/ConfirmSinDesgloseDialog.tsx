@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -24,7 +25,7 @@ export function ConfirmSinDesgloseDialog({ open, onOpenChange, onConfirm, isPend
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.md}>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" aria-hidden />

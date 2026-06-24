@@ -46,7 +46,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 shrink-0 z-10 transition-all ${
                       isCompleted
-                        ? "bg-accent border-accent text-white"
+                        ? "bg-accent border-accent text-accent-foreground"
                         : isCurrent
                         ? "bg-accent/10 border-accent text-accent ring-4 ring-accent/20"
                         : "bg-card border-border text-muted-foreground"
@@ -80,7 +80,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
                       isCompleted
-                        ? "bg-accent border-accent text-white"
+                        ? "bg-accent border-accent text-accent-foreground"
                         : isCurrent
                         ? "bg-accent/10 border-accent text-accent ring-4 ring-accent/20"
                         : "bg-card border-border text-muted-foreground"

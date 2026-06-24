@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,7 +94,7 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
       ))}
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) handleCancel(); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
             <AlertDialogDescription>

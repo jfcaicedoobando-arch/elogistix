@@ -20,6 +20,7 @@ import {
   type ContenedorBorrador,
 } from "@/features/embarques/types/contenedor";
 import { FilaContenedor } from "./FilaContenedor";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 const SOFT_CAP = 50;
 
@@ -100,7 +101,7 @@ export function ListaContenedoresEditable({
       </Button>
 
       <AlertDialog open={confirmSoftCap} onOpenChange={setConfirmSoftCap}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Agregar otro contenedor?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -1,16 +1,14 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Landmark, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { formatCurrency } from "@/lib/formatters";
 import {
@@ -67,48 +65,54 @@ export default function TesoreriaCuentas() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nueva cuenta bancaria</DialogTitle><DialogDescription>Captura los datos de la nueva cuenta bancaria para conciliación.</DialogDescription></DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Banco</Label>
-              <Input value={form.banco} onChange={(e) => setField("banco", e.target.value)} />
-            </div>
-            <div>
-              <Label>Alias *</Label>
-              <Input value={form.alias} onChange={(e) => setField("alias", e.target.value)} placeholder="BBVA Cheques MXN" />
-            </div>
-            <div>
-              <Label>Número de cuenta</Label>
-              <Input value={form.numero} onChange={(e) => setField("numero", e.target.value)} />
-            </div>
-            <div>
-              <Label>CLABE</Label>
-              <Input value={form.clabe} onChange={(e) => setField("clabe", e.target.value)} />
-            </div>
-            <div>
-              <Label>Moneda</Label>
-              <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MXN">MXN</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Saldo inicial</Label>
-              <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
-            </div>
-          </div>
-          <DialogFooter>
+      <FormDialogShell
+        open={open}
+        onOpenChange={setOpen}
+        icon={Landmark}
+        title="Nueva cuenta bancaria"
+        description="Captura los datos de la nueva cuenta bancaria para conciliación."
+        size="lg"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button onClick={submit} disabled={submitting}>Guardar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Banco</Label>
+            <Input value={form.banco} onChange={(e) => setField("banco", e.target.value)} />
+          </div>
+          <div>
+            <Label>Alias *</Label>
+            <Input value={form.alias} onChange={(e) => setField("alias", e.target.value)} placeholder="BBVA Cheques MXN" />
+          </div>
+          <div>
+            <Label>Número de cuenta</Label>
+            <Input value={form.numero} onChange={(e) => setField("numero", e.target.value)} />
+          </div>
+          <div>
+            <Label>CLABE</Label>
+            <Input value={form.clabe} onChange={(e) => setField("clabe", e.target.value)} />
+          </div>
+          <div>
+            <Label>Moneda</Label>
+            <Select value={form.moneda} onValueChange={(v) => setField("moneda", v as Moneda)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MXN">MXN</SelectItem>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Saldo inicial</Label>
+            <Input type="number" step="0.01" value={form.saldoInicial} onChange={(e) => setField("saldoInicial", Number(e.target.value))} />
+          </div>
+        </div>
+      </FormDialogShell>
 
       <ConfirmDeleteAlert
         open={!!deleteTarget}

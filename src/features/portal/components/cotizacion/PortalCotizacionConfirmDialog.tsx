@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { scrollableDialog } from "@/components/shared/utils/dialogTokens";
+import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 type ConfirmAction = "Aceptada" | "Rechazada" | null;
 
@@ -40,7 +40,7 @@ export default function PortalCotizacionConfirmDialog({
   const isAceptar = confirmAction === "Aceptada";
   return (
     <AlertDialog open={!!confirmAction} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={cn(scrollableDialog)}>
+      <AlertDialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {isAceptar ? "¿Aceptar esta cotización?" : "¿Rechazar esta cotización?"}

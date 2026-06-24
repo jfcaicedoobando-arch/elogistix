@@ -26,6 +26,7 @@ import {
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import type { TipoContenedor } from "@/features/catalogos/hooks";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   index: number;
@@ -80,7 +81,7 @@ export function FilaContenedor({
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar contenedor #{index + 1}?</AlertDialogTitle>
             <AlertDialogDescription>

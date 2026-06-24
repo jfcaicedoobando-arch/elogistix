@@ -5,6 +5,7 @@ import {
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 export interface PendingRoleChange {
   user: UserRow;
@@ -21,7 +22,7 @@ interface Props {
 export function RoleChangeAlertDialog({ pendingRole, isPending, onConfirm, onCancel }: Props) {
   return (
     <AlertDialog open={!!pendingRole} onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Cambiar rol del usuario?</AlertDialogTitle>
           <AlertDialogDescription>

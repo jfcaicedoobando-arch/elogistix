@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -67,7 +68,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
   if (open && bloqueado && !paso2 && deps) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Ban className="h-5 w-5" />
@@ -90,7 +91,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
     <>
       {/* Paso 1 */}
       <AlertDialog open={open && !paso2} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar embarque {embarque.expediente}?</AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -125,7 +126,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
 
       {/* Paso 2 */}
       <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) { setPaso2(false); onOpenChange(false); } }}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>⚠️ Confirmación final</AlertDialogTitle>
             <AlertDialogDescription>

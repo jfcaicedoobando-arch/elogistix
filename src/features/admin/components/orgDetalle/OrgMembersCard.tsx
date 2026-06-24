@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,7 +55,7 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className={dialogSize.sm}>
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Eliminar miembro?</AlertDialogTitle>
                 <AlertDialogDescription>

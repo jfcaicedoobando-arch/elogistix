@@ -17,6 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);
@@ -69,7 +70,7 @@ export function BackfillLegacyCard() {
         )}
 
         <AlertDialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setConfirmText(""); }}>
-          <AlertDialogContent>
+          <AlertDialogContent className={dialogSize.md}>
             <AlertDialogHeader>
               <AlertDialogTitle>Ejecutar backfill legacy</AlertDialogTitle>
               <AlertDialogDescription>

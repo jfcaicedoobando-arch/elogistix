@@ -1,4 +1,5 @@
 import { ChevronRight } from "lucide-react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -64,7 +65,7 @@ export function AvanzarEstadoButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>{btn}</AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
           <AlertDialogDescription>

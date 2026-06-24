@@ -160,7 +160,7 @@ export function DialogHistorialPagos({ open, onOpenChange, factura, canEdit }: P
       />
 
       <AlertDialog open={!!pagoAEliminar} onOpenChange={(o) => !o && setPagoAEliminar(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar pago</AlertDialogTitle>
             <AlertDialogDescription>

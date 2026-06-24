@@ -20,6 +20,7 @@ import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);
@@ -124,7 +125,7 @@ export function TabCategorias() {
       <DialogCategoria open={open} onOpenChange={setOpen} categoria={editar} />
 
       <AlertDialog open={!!borrarId} onOpenChange={(v) => !v && setBorrarId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar categoría</AlertDialogTitle>
             <AlertDialogDescription>

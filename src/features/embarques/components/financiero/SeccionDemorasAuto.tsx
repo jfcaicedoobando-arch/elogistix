@@ -15,6 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   embarqueId: string;
@@ -54,7 +55,7 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
                   <Trash2 className="size-4 mr-2" /> Eliminar auto
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className={dialogSize.sm}>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Eliminar demoras automáticas</AlertDialogTitle>
                   <AlertDialogDescription>

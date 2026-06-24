@@ -26,6 +26,7 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   facturaId: string;
@@ -166,7 +167,7 @@ export function FacturaPagosSection({
       </Card>
 
       <AlertDialog open={!!pagoAEliminar} onOpenChange={(o) => !o && setPagoAEliminar(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar pago</AlertDialogTitle>
             <AlertDialogDescription>

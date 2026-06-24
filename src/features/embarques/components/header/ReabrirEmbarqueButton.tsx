@@ -1,4 +1,5 @@
 import { Unlock } from "lucide-react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -19,7 +20,7 @@ export function ReabrirEmbarqueButton({ expediente, reabriendoEstado, onReabrir 
           <Unlock className="h-4 w-4 mr-1" /> Reabrir
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>Reabrir embarque cerrado</AlertDialogTitle>
           <AlertDialogDescription>

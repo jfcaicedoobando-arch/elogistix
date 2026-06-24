@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDate } from "@/lib/formatters";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   fechaIso: string | null;
@@ -24,7 +25,7 @@ interface Props {
 export function TrackingConfirmFechaLlegadaDialog({ fechaIso, onConfirm, onCancel }: Props) {
   return (
     <AlertDialog open={!!fechaIso} onOpenChange={(open) => !open && onCancel()}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Actualizar fecha de llegada real?</AlertDialogTitle>
           <AlertDialogDescription>
