@@ -137,7 +137,7 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     log.finish(400, "missing_fields", { user_id: callerId });
     return errorResponse(inputOrErr, 400, cors);
   }
-  const { email, agente_id, organization_id } = inputOrErr;
+  const { email, agente_id, organization_id, mode, password } = inputOrErr;
 
   if (!admin.isGlobalAdmin && admin.orgId !== organization_id) {
     log.finish(403, "cross_org_invite_blocked", {
@@ -152,14 +152,26 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse("Agente inválido para esa organización", 400, cors);
   }
 
-  // Reutiliza la URL de redirect del portal cliente y reemplaza el path al login del agente.
-  const baseRedirect = resolveRedirectTo(req.headers.get("origin") ?? "");
-  const redirectTo = baseRedirect.replace(/\/portal\/login$/, "/login");
+  let inviteResult: { userId: string; isNew: boolean } | { error: string };
+  if (mode === "password") {
+    inviteResult = await createOrResetUserWithPassword(adminClient, email, password!);
+  } else {
+    // Reutiliza la URL de redirect del portal cliente y reemplaza el path al login del agente.
+    const baseRedirect = resolveRedirectTo(req.headers.get("origin") ?? "");
+    const redirectTo = baseRedirect.replace(/\/portal\/login$/, "/login");
+    inviteResult = await inviteOrLinkUser(adminClient, email, redirectTo);
+  }
 
-  const inviteResult = await inviteOrLinkUser(adminClient, email, redirectTo);
   if ("error" in inviteResult) {
-    log.finish(500, "invite_email_failed", { organization_id, payload: { error: inviteResult.error } });
-    return errorResponse(`Error al invitar agente: ${inviteResult.error}`, 500, cors);
+    const reason = mode === "password" ? "create_with_password_failed" : "invite_email_failed";
+    log.finish(500, reason, { organization_id, payload: { error: inviteResult.error } });
+    return errorResponse(
+      mode === "password"
+        ? `Error al crear cuenta del agente: ${inviteResult.error}`
+        : `Error al invitar agente: ${inviteResult.error}`,
+      500,
+      cors,
+    );
   }
   const { userId, isNew } = inviteResult;
 
@@ -176,11 +188,29 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse(`Error al vincular agente: ${linkError.message}`, 500, cors);
   }
 
-  log.finish(200, "agente_user_invited", {
+  // Bitácora — solo para modo password, para auditar quién asignó credenciales directas.
+  if (mode === "password") {
+    const { data: userRow } = await adminClient
+      .schema("auth").from("users").select("email").eq("id", callerId).maybeSingle();
+    await adminClient.from("bitacora_actividad").insert({
+      organization_id,
+      usuario_id: callerId,
+      usuario_email: (userRow as { email?: string } | null)?.email ?? "",
+      modulo: "Costeo Agentes",
+      accion: isNew
+        ? "Agente: cuenta creada con contraseña"
+        : "Agente: contraseña reasignada por admin",
+      entidad_id: agente_id,
+      entidad_nombre: email,
+      detalles: { user_id: userId, mode: "password" },
+    });
+  }
+
+  log.finish(200, mode === "password" ? "agente_user_created_with_password" : "agente_user_invited", {
     organization_id,
-    payload: { user_id: userId, is_new: isNew, agente_id },
+    payload: { user_id: userId, is_new: isNew, agente_id, mode },
   });
-  return jsonResponse({ success: true, user_id: userId, is_new: isNew }, 200, cors);
+  return jsonResponse({ success: true, user_id: userId, is_new: isNew, mode_used: mode }, 200, cors);
 }
 
 export async function handleListAgentes(ctx: HandlerCtx): Promise<Response> {
