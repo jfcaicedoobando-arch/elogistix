@@ -40,7 +40,7 @@ export default function PortalCotizacionConfirmDialog({
   const isAceptar = confirmAction === "Aceptada";
   return (
     <AlertDialog open={!!confirmAction} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={cn(scrollableDialog)}>
+      <AlertDialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {isAceptar ? "¿Aceptar esta cotización?" : "¿Rechazar esta cotización?"}
