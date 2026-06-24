@@ -69,9 +69,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   }, [open, initial, agenteIdFijo]);
 
   const total = useMemo(() => calcularTotal(form), [form]);
-  const baseValido = esFormValido(form, { skipRutaId: multiple });
-  const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
-  const pendiente = crear.isPending || crearMultiples.isPending || actualizar.isPending;
+  const valido = computeValido(esFormValido(form, { skipRutaId: multiple }), multiple, rutaIds.length);
+  const pendiente = [crear, crearMultiples, actualizar].some((m) => m.isPending);
   // Errores siempre calculados para validación reactiva.
   const erroresLive = calcularErrores(form, rutaIds.length, multiple);
   // Sólo se pintan los campos en rojo después del primer intento (evita "mar de rojo" al abrir).
