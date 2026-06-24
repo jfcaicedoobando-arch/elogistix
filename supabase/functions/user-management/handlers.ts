@@ -141,7 +141,7 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
 
   log.finish(200, "user_created", {
     user_id: callerId,
-    organization_id: admin.orgId ?? null,
+    organization_id: targetOrgId,
     payload: { new_user_id: newUser.user.id, role: selectedRole },
   });
   return jsonResponse({ user: { id: newUser.user.id, email: newUser.user.email } }, 200, cors);
