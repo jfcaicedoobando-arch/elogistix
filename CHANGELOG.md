@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.28] - 2026-06-24
+- **fix(cotizaciones)**: Resuelve `function public.generar_expediente(tipo_operacion) does not exist` al revalidar tarifa / crear embarque desde una cotización aceptada. Se agrega sobrecarga SQL `generar_expediente(tipo_operacion)` que delega en la versión `text`, y se castea explícitamente en `convertirCotizacionAEmbarques` para evitar que supabase-js infiera el enum.
+
 ## [13.135.27] - 2026-06-24
 - **feat(portal-agente)**: El header del Portal del Agente ahora muestra el nombre de la organización a la que pertenece el agente, además del nombre del agente. En desktop aparece como chip con ícono `Building2` junto al email; en móvil, como barra delgada entre el header y la navegación. Como `agente_users` no tiene SELECT sobre `organizations` (RLS), se agregó la RPC `SECURITY DEFINER` `get_current_agente_org_nombre()` que devuelve sólo el nombre usando `current_agente_org()`. `fetchAgenteContext` expone el nuevo campo `organizacionNombre`.
 
