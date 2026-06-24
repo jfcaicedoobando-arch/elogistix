@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.17] - 2026-06-24
+- **fix(ui/cuenta)**: El toast de error al cambiar contraseña venía en inglés (mensaje crudo de Supabase Auth: "New password should be different from the old password", "Password should be at least X characters", etc.). Agregada función `traducirErrorPassword` en el diálogo compartido que mapea los mensajes más comunes a es-MX (contraseña igual a la anterior, muy corta, débil/filtrada, rate limit, sesión expirada). Si no hay coincidencia se conserva el mensaje original para no ocultar errores inesperados.
+
 ## [13.135.16] - 2026-06-24
 - **feat(ui/cuenta)**: Los usuarios internos (admin de organización, operadores, etc.) ahora pueden cambiar su propia contraseña sin cerrar sesión. Agregada opción "Cambiar contraseña" en el menú de usuario del sidebar (popover del avatar), que abre un diálogo compartido `CambiarPasswordDialog` (`@/components/shared/dialogs`). Valida ≥8 caracteres y confirmación; llama a `supabase.auth.updateUser`. El diálogo del portal de clientes ahora re-exporta este mismo componente compartido — mismo comportamiento, código único.
 
