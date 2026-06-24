@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.19] - 2026-06-24
+- **fix(rpc/embarques)**: Sentry reportó `function public.generar_expediente(tipo_operacion) does not exist` al convertir una cotización aceptada en borrador de embarque (`/cotizaciones/:id`, release 13.135.14). La RPC `crear_embarque_borrador_desde_cotizacion` pasaba `v_cot.tipo` (enum `tipo_operacion`) a `generar_expediente`, que sólo tiene firma `(text)`. Postgres no auto-castea enum → text, así que abortaba. Fix: `generar_expediente(v_cot.tipo::text)`. Sin cambios de comportamiento; el resto del cuerpo permanece idéntico.
+
 ## [13.135.17] - 2026-06-24
 - **fix(ui/cuenta)**: El toast de error al cambiar contraseña venía en inglés (mensaje crudo de Supabase Auth: "New password should be different from the old password", "Password should be at least X characters", etc.). Agregada función `traducirErrorPassword` en el diálogo compartido que mapea los mensajes más comunes a es-MX (contraseña igual a la anterior, muy corta, débil/filtrada, rate limit, sesión expirada). Si no hay coincidencia se conserva el mensaje original para no ocultar errores inesperados.
 
