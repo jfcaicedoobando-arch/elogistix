@@ -17,7 +17,10 @@ import {
   configuracionGlobal, configuracionOrg,
 } from "@/features/catalogos/queryKeys";
 import { bitacora, dashboard, operadores, operaciones, reportes, sidebar } from "@/features/dashboard/queryKeys";
-import { usuarios, planes, admin, appLogs, papelera, idempotenciaLog } from "@/features/admin/queryKeys";
+import {
+  usuarios, usuariosPortalCliente, usuariosPortalAgente,
+  planes, admin, appLogs, papelera, idempotenciaLog,
+} from "@/features/admin/queryKeys";
 import { crm } from "@/features/crm/queryKeys";
 import { portal } from "@/features/portal/queryKeys";
 import { auditoria } from "@/features/auditoria/queryKeys";
@@ -54,6 +57,8 @@ export const queryKeys = {
   portal,
   sidebar,
   usuarios,
+  usuariosPortalCliente,
+  usuariosPortalAgente,
   admin,
   crm,
   auditoria,
