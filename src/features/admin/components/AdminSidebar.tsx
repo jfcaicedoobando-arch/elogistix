@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Building2,
-  Users,
   LogOut,
   Settings,
   ChevronUp,
@@ -23,6 +22,7 @@ import {
   SidebarHeader,
   SidebarFooter,
   useSidebar,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
