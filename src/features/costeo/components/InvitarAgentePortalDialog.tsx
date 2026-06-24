@@ -153,56 +153,19 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
           </p>
         </TabsContent>
 
-        <TabsContent value="password" className="space-y-3 pt-4">
-          <div className="space-y-2">
-            <Label>Email del agente</Label>
-            <Input
-              type="email"
-              placeholder="contacto@agente.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Contraseña (mínimo 8 caracteres)</Label>
-            <div className="flex gap-2">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="font-mono"
-                placeholder="••••••••"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setPassword(generarPasswordSegura());
-                  setShowPassword(true);
-                }}
-                aria-label="Generar contraseña segura"
-                title="Generar contraseña segura"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Útil cuando el correo no llega (agentes en China, filtros corporativos). La cuenta queda
-            activa al toque y tú compartes las credenciales por WeChat, WhatsApp o el canal que prefieras.
-            {" "}Si el agente ya tiene cuenta, esta acción <strong>reasigna</strong> su contraseña.
-          </p>
-        </TabsContent>
+        <InvitarAgentePasswordTab
+          email={email}
+          password={password}
+          showPassword={showPassword}
+          onEmailChange={setEmail}
+          onPasswordChange={setPassword}
+          onToggleShow={() => setShowPassword((v) => !v)}
+          onGenerate={() => {
+            setPassword(generarPasswordSegura());
+            setShowPassword(true);
+          }}
+        />
+
       </Tabs>
     </FormDialogShell>
   );
