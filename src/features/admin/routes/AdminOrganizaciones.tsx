@@ -46,6 +46,7 @@ export default function AdminOrganizaciones() {
           emptyMessage="No se encontraron organizaciones con los filtros aplicados."
           rowKey={(o) => o.id}
           density="comfortable"
+          onRowClick={(o) => navigate(`/admin/organizaciones/${o.id}`)}
         />
       </div>
 
