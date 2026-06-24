@@ -75,6 +75,46 @@ async function inviteOrLinkUser(
   return { userId: data.user.id, isNew: true };
 }
 
+/**
+ * Modo "password": el admin asigna la contraseña directamente (útil cuando el
+ * email no llega — agentes en China). Si el usuario existe, le reescribe la
+ * contraseña; si no, crea la cuenta ya confirmada para que pueda entrar al toque.
+ * La contraseña jamás se loggea ni se devuelve en la respuesta.
+ */
+async function createOrResetUserWithPassword(
+  adminClient: SupabaseClient,
+  email: string,
+  password: string,
+): Promise<{ userId: string; isNew: boolean } | { error: string }> {
+  const { data: existing } = await adminClient
+    .schema("auth")
+    .from("users")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+
+  if (existing) {
+    const userId = (existing as { id: string }).id;
+    const { error } = await adminClient.auth.admin.updateUserById(userId, {
+      password,
+      email_confirm: true,
+    });
+    if (error) return { error: error.message };
+    return { userId, isNew: false };
+  }
+
+  const { data, error } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { role: "agente_carga" },
+  });
+  if (error || !data.user) {
+    return { error: error?.message ?? "Error al crear usuario" };
+  }
+  return { userId: data.user.id, isNew: true };
+}
+
 async function ensureAgenteRole(adminClient: SupabaseClient, userId: string): Promise<void> {
   const { data: existing } = await adminClient
     .from("user_roles").select("id").eq("user_id", userId).maybeSingle();
