@@ -169,6 +169,20 @@ BEGIN
   SELECT count(*) INTO visible FROM public.pagos_factura WHERE id = pago_a;
   PERFORM pg_temp.assert(visible = 1, 'operador_a NO debe afectar pagos de org_b (pago_a debe seguir intacto)');
 
+  -- TEST 11b (13.135.6): operador NO puede auto-asignarse super_admin.
+  -- Escalada clásica: insertar (user_id=self, role='super_admin') en user_roles
+  -- bypassearía toda la matriz de policies (super_admin es el "wildcard tenant").
+  -- La policy "Admins manage non-super-admin roles" debe rechazar este INSERT.
+  PERFORM pg_temp.as_user(operador_a);
+  PERFORM pg_temp.assert_insert_blocked(
+    format(
+      'INSERT INTO public.user_roles(user_id, role) VALUES (%L, %L)',
+      operador_a, 'super_admin'
+    ),
+    'operador_a NO debe poder auto-asignarse super_admin via user_roles'
+  );
+
+
   -- ════════════════════════════════════════════════════════════════════════
   -- ROL CLIENTE (portal) — aislamiento estricto + sin acceso a internos
   -- ════════════════════════════════════════════════════════════════════════
