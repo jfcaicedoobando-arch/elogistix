@@ -9,6 +9,9 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 ## [13.135.17] - 2026-06-24
 - **fix(ui/cuenta)**: El toast de error al cambiar contraseña venía en inglés (mensaje crudo de Supabase Auth: "New password should be different from the old password", "Password should be at least X characters", etc.). Agregada función `traducirErrorPassword` en el diálogo compartido que mapea los mensajes más comunes a es-MX (contraseña igual a la anterior, muy corta, débil/filtrada, rate limit, sesión expirada). Si no hay coincidencia se conserva el mensaje original para no ocultar errores inesperados.
 
+## [13.135.18] - 2026-06-24
+- **fix(ui/cuenta)**: El error `weak_password` de Supabase Auth (HIBP, contraseña en listas de filtraciones) seguía mostrándose en inglés ("Password is known to be weak…") porque el traductor sólo cazaba la frase "weak password" y el mensaje real era "is known to be weak". Refactor del traductor en `CambiarPasswordDialog`: ahora prefiere `error.code` (estable: `weak_password`, `same_password`, `over_request_rate_limit`, `session_expired`, etc.) y cae a substring del mensaje como respaldo, añadiendo patrones "known to be weak" y "is too weak". También se pasa el error completo en vez de sólo el mensaje.
+
 ## [13.135.16] - 2026-06-24
 - **feat(ui/cuenta)**: Los usuarios internos (admin de organización, operadores, etc.) ahora pueden cambiar su propia contraseña sin cerrar sesión. Agregada opción "Cambiar contraseña" en el menú de usuario del sidebar (popover del avatar), que abre un diálogo compartido `CambiarPasswordDialog` (`@/components/shared/dialogs`). Valida ≥8 caracteres y confirmación; llama a `supabase.auth.updateUser`. El diálogo del portal de clientes ahora re-exporta este mismo componente compartido — mismo comportamiento, código único.
 
