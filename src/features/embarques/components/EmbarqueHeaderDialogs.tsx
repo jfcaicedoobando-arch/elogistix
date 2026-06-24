@@ -40,7 +40,7 @@ export function EmbarqueHeaderDialogs({
   return (
     <>
       <AlertDialog open={warnCierreOpen} onOpenChange={onWarnCierreOpenChange}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Hay conceptos sin facturar</AlertDialogTitle>
             <AlertDialogDescription>
@@ -55,7 +55,7 @@ export function EmbarqueHeaderDialogs({
       </AlertDialog>
 
       <AlertDialog open={warnDocsOpen} onOpenChange={onWarnDocsOpenChange}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" /> Faltan documentos
@@ -78,7 +78,7 @@ export function EmbarqueHeaderDialogs({
       </AlertDialog>
 
       <AlertDialog open={blockDocsOpen} onOpenChange={onBlockDocsOpenChange}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <FileWarning className="h-5 w-5 text-destructive" /> No se puede avanzar

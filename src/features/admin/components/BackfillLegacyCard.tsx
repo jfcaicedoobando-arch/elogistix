@@ -69,7 +69,7 @@ export function BackfillLegacyCard() {
         )}
 
         <AlertDialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setConfirmText(""); }}>
-          <AlertDialogContent>
+          <AlertDialogContent className={dialogSize.md}>
             <AlertDialogHeader>
               <AlertDialogTitle>Ejecutar backfill legacy</AlertDialogTitle>
               <AlertDialogDescription>

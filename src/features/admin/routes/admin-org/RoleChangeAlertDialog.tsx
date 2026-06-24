@@ -21,7 +21,7 @@ interface Props {
 export function RoleChangeAlertDialog({ pendingRole, isPending, onConfirm, onCancel }: Props) {
   return (
     <AlertDialog open={!!pendingRole} onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Cambiar rol del usuario?</AlertDialogTitle>
           <AlertDialogDescription>

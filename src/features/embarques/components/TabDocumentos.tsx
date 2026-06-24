@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,7 +96,7 @@ export function TabDocumentos({
       />
 
       <AlertDialog open={!!docToDelete} onOpenChange={(open) => { if (!open) setDocToDelete(null); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
             <AlertDialogDescription>

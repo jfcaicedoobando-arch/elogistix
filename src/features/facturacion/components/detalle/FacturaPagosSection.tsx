@@ -166,7 +166,7 @@ export function FacturaPagosSection({
       </Card>
 
       <AlertDialog open={!!pagoAEliminar} onOpenChange={(o) => !o && setPagoAEliminar(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar pago</AlertDialogTitle>
             <AlertDialogDescription>

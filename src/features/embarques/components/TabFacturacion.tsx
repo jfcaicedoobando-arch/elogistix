@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -147,7 +148,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
       />
 
       <AlertDialog open={!!proformaAEliminar} onOpenChange={(o) => !o && setProformaAEliminar(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar proforma</AlertDialogTitle>
             <AlertDialogDescription>

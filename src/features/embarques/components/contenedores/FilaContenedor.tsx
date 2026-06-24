@@ -80,7 +80,7 @@ export function FilaContenedor({
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar contenedor #{index + 1}?</AlertDialogTitle>
             <AlertDialogDescription>

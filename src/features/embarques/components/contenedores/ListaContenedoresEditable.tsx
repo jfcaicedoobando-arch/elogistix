@@ -100,7 +100,7 @@ export function ListaContenedoresEditable({
       </Button>
 
       <AlertDialog open={confirmSoftCap} onOpenChange={setConfirmSoftCap}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Agregar otro contenedor?</AlertDialogTitle>
             <AlertDialogDescription>

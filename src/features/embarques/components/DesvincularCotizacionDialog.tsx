@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -31,7 +32,7 @@ export function DesvincularCotizacionDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>Desvincular cotización</AlertDialogTitle>
           <AlertDialogDescription>

@@ -54,7 +54,7 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
                   <Trash2 className="size-4 mr-2" /> Eliminar auto
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className={dialogSize.sm}>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Eliminar demoras automáticas</AlertDialogTitle>
                   <AlertDialogDescription>

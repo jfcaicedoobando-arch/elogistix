@@ -124,7 +124,7 @@ export function TabCategorias() {
       <DialogCategoria open={open} onOpenChange={setOpen} categoria={editar} />
 
       <AlertDialog open={!!borrarId} onOpenChange={(v) => !v && setBorrarId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar categoría</AlertDialogTitle>
             <AlertDialogDescription>
