@@ -6378,6 +6378,18 @@ export type Database = {
         Returns: string
       }
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
+      get_agente_rutas: {
+        Args: never
+        Returns: {
+          activa: boolean
+          id: string
+          organization_id: string
+          puerto_destino_id: string
+          puerto_destino_nombre: string
+          puerto_origen_id: string
+          puerto_origen_nombre: string
+        }[]
+      }
       get_current_agente_context: {
         Args: never
         Returns: {

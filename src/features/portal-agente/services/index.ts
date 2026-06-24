@@ -47,6 +47,36 @@ export async function fetchAgenteContext(): Promise<AgenteContext> {
   };
 }
 
+export interface AgenteRutaRow {
+  id: string;
+  organization_id: string;
+  activa: boolean;
+  puerto_origen_nombre?: string;
+  puerto_destino_nombre?: string;
+}
+
+/** Lista las rutas activas de la organización del agente vía RPC SECURITY DEFINER
+ *  (el agente no tiene SELECT directo sobre `costeo_rutas` por RLS). */
+export async function fetchAgenteRutas(): Promise<AgenteRutaRow[]> {
+  const { data, error } = await supabase.rpc("get_agente_rutas");
+  if (error) throw error;
+  // SAFE-CAST: la RPC devuelve SETOF con el shape declarado por la función.
+  const rows = (data ?? []) as Array<{
+    id: string;
+    organization_id: string;
+    activa: boolean;
+    puerto_origen_nombre: string | null;
+    puerto_destino_nombre: string | null;
+  }>;
+  return rows.map((r) => ({
+    id: r.id,
+    organization_id: r.organization_id,
+    activa: r.activa,
+    puerto_origen_nombre: r.puerto_origen_nombre ?? undefined,
+    puerto_destino_nombre: r.puerto_destino_nombre ?? undefined,
+  }));
+}
+
 export interface AgenteTarifaRow {
   id: string;
   ruta_id: string;

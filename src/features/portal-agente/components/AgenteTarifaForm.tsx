@@ -7,7 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
-import { fetchCosteoRutas } from "@/features/costeo/services/rutas";
+import { fetchAgenteRutas } from "@/features/portal-agente/services";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 
 interface Props {
@@ -29,7 +29,7 @@ export function AgenteTarifaForm({ open, onOpenChange, initial, tarifaId, modo }
 
   const { data: rutas = [] } = useQuery({
     queryKey: ["portal-agente", "rutas", ctx?.organizationId],
-    queryFn: () => fetchCosteoRutas(ctx!.organizationId),
+    queryFn: () => fetchAgenteRutas(),
     enabled: !!ctx?.organizationId && open,
     staleTime: 5 * 60 * 1000,
   });
