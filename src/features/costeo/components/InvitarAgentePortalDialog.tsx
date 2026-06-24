@@ -14,11 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Send, Eye, EyeOff, Copy, RefreshCw, Check } from "lucide-react";
+import { Loader2, Send, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { InvitarAgenteCredencialesView } from "./InvitarAgenteCredencialesView";
 import type { AgenteRow } from "./CosteoAgentesTable";
 
 interface Props {
@@ -38,8 +39,9 @@ function generarPasswordSegura(): string {
   crypto.getRandomValues(arr);
   let out = "";
   for (let i = 0; i < 12; i++) out += todo[arr[i] % todo.length];
-  // Garantiza al menos un dígito y un símbolo.
-  return out.replace(/^(.)(.)/, (_m, a) => `${a}${digitos[arr[0] % digitos.length]}${simbolos[arr[1] % simbolos.length]}`).slice(0, 12);
+  return out
+    .replace(/^(.)(.)/, (_m, a) => `${a}${digitos[arr[0] % digitos.length]}${simbolos[arr[1] % simbolos.length]}`)
+    .slice(0, 12);
 }
 
 export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
@@ -50,7 +52,6 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const [credencialesCreadas, setCredencialesCreadas] = useState<{ email: string; password: string } | null>(null);
-  const [copiado, setCopiado] = useState<string | null>(null);
 
   const reset = () => {
     setEmail("");
@@ -58,22 +59,11 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
     setShowPassword(false);
     setMode("email");
     setCredencialesCreadas(null);
-    setCopiado(null);
   };
 
   const handleClose = (open: boolean) => {
     if (!open) reset();
     onOpenChange(open);
-  };
-
-  const handleCopiar = async (texto: string, llave: string) => {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(llave);
-      setTimeout(() => setCopiado((c) => (c === llave ? null : c)), 1500);
-    } catch {
-      notifyError(undefined, { title: "No se pudo copiar al portapapeles" });
-    }
   };
 
   const handleInvite = async () => {
@@ -104,7 +94,6 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
     }
 
     if (mode === "password") {
-      // Conservamos las credenciales en memoria para que el admin las copie y comparta.
       setCredencialesCreadas({ email, password });
       notifySuccess(undefined, {
         title: "Cuenta creada con contraseña",
@@ -121,62 +110,13 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
     onOpenChange(false);
   };
 
-  // Vista de "credenciales listas" — reemplaza el formulario tras éxito en modo password.
   if (credencialesCreadas) {
-    const ambos = `Email: ${credencialesCreadas.email}\nContraseña: ${credencialesCreadas.password}`;
     return (
-      <FormDialogShell
-        open={!!agente}
-        onOpenChange={handleClose}
-        icon={Check}
-        title="Cuenta creada"
-        description="Copia las credenciales y compártelas con el agente por el canal que prefieras (WeChat, WhatsApp, etc.). No volverás a ver la contraseña."
-        size="md"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => handleCopiar(ambos, "ambos")}>
-              <Copy className="h-4 w-4 mr-1" />
-              {copiado === "ambos" ? "Copiado" : "Copiar ambos"}
-            </Button>
-            <Button onClick={() => handleClose(false)}>Cerrar</Button>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Email</Label>
-            <div className="flex gap-2">
-              <Input readOnly value={credencialesCreadas.email} className="font-mono text-sm" />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleCopiar(credencialesCreadas.email, "email")}
-                aria-label="Copiar email"
-              >
-                {copiado === "email" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Contraseña</Label>
-            <div className="flex gap-2">
-              <Input readOnly value={credencialesCreadas.password} className="font-mono text-sm" />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleCopiar(credencialesCreadas.password, "password")}
-                aria-label="Copiar contraseña"
-              >
-                {copiado === "password" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            El agente debe entrar a <code>/login</code> con estas credenciales. Si las pierde, puedes
-            reabrir este modal y asignar otra contraseña.
-          </p>
-        </div>
-      </FormDialogShell>
+      <InvitarAgenteCredencialesView
+        email={credencialesCreadas.email}
+        password={credencialesCreadas.password}
+        onClose={() => handleClose(false)}
+      />
     );
   }
 
