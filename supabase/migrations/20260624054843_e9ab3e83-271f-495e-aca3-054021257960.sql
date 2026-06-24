@@ -89,7 +89,9 @@ BEGIN
     INSERT INTO public.user_roles (user_id, role) VALUES (v_user_id, 'agente_carga');
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM public.agente_users WHERE user_id = v_user_id AND agente_id = v_agente_id) THEN
+  -- Sólo vincular si el agente existe (en CI los seeds previos no están).
+  IF EXISTS (SELECT 1 FROM public.costeo_agentes WHERE id = v_agente_id)
+     AND NOT EXISTS (SELECT 1 FROM public.agente_users WHERE user_id = v_user_id AND agente_id = v_agente_id) THEN
     INSERT INTO public.agente_users (user_id, agente_id, organization_id)
     VALUES (v_user_id, v_agente_id, v_org_id);
   END IF;

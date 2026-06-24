@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.10] - 2026-06-24
+- **fix(ci/migrations)**: La misma migración seed `20260624054843…` fallaba ahora con `agente_users_agente_id_fkey` porque el UUID hardcodeado del agente demo no existe en `costeo_agentes` en CI (los seeds del agente corren en otra migración previa que también es no-op en CI). Agregada guard `EXISTS (SELECT 1 FROM costeo_agentes WHERE id = v_agente_id)` antes del `INSERT INTO agente_users`. En producción el agente sí existe y el vínculo se crea normal.
+
 ## [13.135.9] - 2026-06-24
 - **fix(ci/migrations)**: La migración seed `20260624054843…` (usuario agente demo) fallaba en CI con `column "aud" of relation "users" does not exist` porque el stub mínimo de `auth.users` no incluye las columnas que GoTrue añade en producción. Reescrito el `INSERT` para construirse dinámicamente filtrando contra `information_schema.columns` — sólo se insertan columnas existentes. También se hace opcional el `INSERT INTO auth.identities` (vía `to_regclass`) y el `UPDATE` del password. En producción el comportamiento es idéntico.
 
