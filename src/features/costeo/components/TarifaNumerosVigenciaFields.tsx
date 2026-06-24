@@ -36,7 +36,7 @@ export function NumerosFields({ form, setForm, errores }: NumerosProps) {
         <Label htmlFor="tarifa-dias-libres">Días libres demoras</Label>
         <Input
           id="tarifa-dias-libres"
-          type="number" min={0} value={form.dias_libres_demoras}
+          type="number" min={0} value={form.dias_libres_demoras === 0 ? "" : form.dias_libres_demoras} placeholder="0"
           className={noSpinnerCls}
           onChange={(e) => setForm({ ...form, dias_libres_demoras: Number(e.target.value) || 0 })}
         />
