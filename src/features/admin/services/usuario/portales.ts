@@ -27,11 +27,6 @@ export interface PortalAgenteUserRow {
   created_at: string;
 }
 
-interface ListUsersRow {
-  id: string;
-  email: string;
-  created_at: string;
-}
 
 /**
  * v13.135.24 — Resuelve emails de portales vía la acción dedicada
