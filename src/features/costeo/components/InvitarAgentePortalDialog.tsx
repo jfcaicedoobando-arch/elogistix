@@ -19,7 +19,8 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { InvitarAgenteCredencialesView } from "./InvitarAgenteCredencialesView";
-import { InvitarAgentePasswordTab, generarPasswordSegura } from "./InvitarAgentePasswordTab";
+import { InvitarAgentePasswordTab } from "./InvitarAgentePasswordTab";
+import { generarPasswordSegura } from "../utils/generarPasswordSegura";
 import { inviteAgentePortal } from "../services/inviteAgentePortal";
 import type { AgenteRow } from "./CosteoAgentesTable";
 
