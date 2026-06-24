@@ -26,8 +26,6 @@ interface EntidadesProps {
 const invalidCls = (invalid?: boolean) =>
   invalid ? "border-destructive focus-visible:ring-destructive" : undefined;
 
-const noSpinnerCls =
-  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 export function EntidadesFields({ form, setForm, agentes, navieras, errores, agenteIdFijo, agenteNombreFijo }: EntidadesProps) {
   const agenteBloqueado = Boolean(agenteIdFijo);
