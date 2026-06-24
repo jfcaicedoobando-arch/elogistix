@@ -22,6 +22,7 @@ import {
 import { toast as sonnerToast } from "sonner";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
 import { crmToast } from "@/features/crm/lib/crmToast";
+import { formSheet } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -65,7 +66,7 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md">
+      <SheetContent side="right" className={formSheet}>
         <SheetHeader>
           <SheetTitle>{yaConvertido ? "Lead convertido" : "Convertir lead"}</SheetTitle>
           <SheetDescription>

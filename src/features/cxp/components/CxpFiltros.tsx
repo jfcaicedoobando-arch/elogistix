@@ -17,6 +17,7 @@ import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import type { EstatusCxP } from "@/features/cxp/services";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields, ESTATUS } from "./CxpFiltrosSheetFields";
+import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   search: string;
@@ -147,7 +148,7 @@ export function CxpFiltros(props: Props) {
           <FilterButton count={secondaryActive} />
         </div>
 
-        <SheetContent side="right" className="w-full max-w-sm flex flex-col gap-0 p-0">
+        <SheetContent side="right" className={mobileFilterSheet}>
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Filtros de CxP</SheetTitle>
           </SheetHeader>

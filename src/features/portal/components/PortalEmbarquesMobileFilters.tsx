@@ -7,6 +7,7 @@ import { Filter, X, Search, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -66,7 +67,7 @@ export function PortalEmbarquesMobileFilters({
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-full max-w-sm flex flex-col gap-0 p-0">
+        <SheetContent side="right" className={mobileFilterSheet}>
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Filtros de embarques</SheetTitle>
           </SheetHeader>

@@ -13,6 +13,7 @@ import {
 import { useActualizarActividadNotas } from "@/features/crm/hooks";
 import type { CrmActividadRow } from "@/features/crm/hooks";
 import { crmToast } from "@/features/crm/lib/crmToast";
+import { formSheet } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   actividad: CrmActividadRow | null;
@@ -41,7 +42,7 @@ export default function ActividadNotasSheet({ actividad, open, onOpenChange }: P
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md">
+      <SheetContent side="right" className={formSheet}>
         <SheetHeader>
           <SheetTitle>Notas de actividad</SheetTitle>
           <SheetDescription className="line-clamp-1">

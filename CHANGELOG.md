@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.133.0] - 2026-06-23
+- **refactor(ui/modales · sweep final de estilos hardcoded)**: Eliminados todos los anchos/clases hardcoded restantes en modales y sheets compartidos.
+  - **Nuevos tokens en `dialogTokens.ts`**: `mobileFilterSheet` (`w-full sm:max-w-sm flex flex-col gap-0 p-0`) y `formSheet` (`sm:max-w-md`) — clases canónicas para `<SheetContent side="right">` en filtros móviles y paneles tipo formulario.
+  - **6 sheets de filtros móviles** ahora usan `className={mobileFilterSheet}` en vez de duplicar la cadena `"w-full max-w-sm flex flex-col gap-0 p-0"`: `MobileFiltersSheet`, `EmbarquesFiltros`, `PortalFacturasMobileFilters`, `PortalEmbarquesMobileFilters`, `CotizacionesMobileFilters`, `CxpFiltros`.
+  - **2 sheets tipo formulario** (`ConvertirLeadSheet`, `ActividadNotasSheet`) ahora usan `className={formSheet}` en vez de `"sm:max-w-md"` hardcoded.
+  - **3 shells compartidos** (`DoubleConfirmDeleteDialog`, `ConfirmDeleteAlert`, `DocumentChecklist`) ahora declaran explícitamente `className={dialogSize.sm}` en `<AlertDialogContent>` — antes tomaban el ancho default de Radix.
+- Bump APP_VERSION → 13.133.0. Analogía: en lugar de que cada filtro móvil tuviera su propio papelito con las medidas pegado al cajón, ahora todos consultan el mismo metro de la pared. Cualquier cambio futuro al ancho del panel se hace en un solo lugar.
+
 ## [13.132.0] - 2026-06-23
 - **refactor(ui/modales · Fase 2 de auditoría)**: Continuación del barrido de design language compartido en modales. Cambios:
   - **`TesoreriaCuentas`** migra su `<Dialog>` ad-hoc (sin token de tamaño, header/footer manuales) a `FormDialogShell` con `icon={Landmark}`, `size="lg"`, footer sticky y descripción semántica. Es el único modal con `<DialogContent>` completamente bare que quedaba en la app.
