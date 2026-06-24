@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.26] - 2026-06-24
+- **chore(arch)**: `OrgInfoCard.tsx` reemplaza `toast.error(...)` directo por `notifyError({ method: "OrgInfoCard.copiarId" })` para cumplir el baseline `error-toasts-use-notifyError`.
+
 ## [13.135.25] - 2026-06-24
 - **chore(arch)**: Baselines de arquitectura vuelven a verde. (1) `CambiarPasswordDialog.tsx` ya no importa `supabase/client` directo; nuevo servicio `src/lib/auth/changePassword.ts` con `updateOwnPassword()`. (2) `InvitarAgentePortalDialog.tsx` baja de 224 → 172 líneas extrayendo el tab de contraseña a `InvitarAgentePasswordTab.tsx` y el invoke de la edge a `services/inviteAgentePortal.ts`. Sin cambios funcionales.
 
