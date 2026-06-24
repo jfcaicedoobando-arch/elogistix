@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.4] - 2026-06-24
+- **fix(admin/miembros)**: El dropdown "Cambiar rol" en el detalle de la organización ahora muestra los 12 roles modernos agrupados (Administración / Operaciones / Comercial / Finanzas / Soporte) en lugar de las 3 opciones legacy (`admin`/`operador`/`viewer`) hardcodeadas. El badge de la columna "Rol" también usa las etiquetas en español y los colores del catálogo único `roleCatalog`. Si un miembro tiene un rol legacy se muestra como opción deshabilitada en la sección "Legacy" para no perder el contexto visual. Analogía: actualizamos el menú impreso del restaurante — los platillos nuevos ya están en la carta y los viejos quedaron tachados pero visibles.
+
 ## [13.135.3] - 2026-06-24
 - **fix(admin/miembros)**: Al dar de alta un miembro desde el detalle de una organización, ya no se crea una organización fantasma "Mi organización" y la membresía queda correctamente vinculada a la organización destino. Se agregó el flag `skip_auto_org` al trigger `handle_new_user_signup` y el handler `create` de `user-management` lo envía en `user_metadata`. También se reasignó el usuario huérfano `admin@chino.com` a Chino Cochino y se eliminó la org fantasma creada en el intento fallido. Analogía: le avisamos a la recepcionista que este nuevo entra a piso 5, así deja de construirle una oficina en el piso 1.
 
