@@ -90,7 +90,7 @@ BEGIN
   PERFORM pg_temp.assert(visible = 1, format('user_a debe ver 1 cuenta, vio %s', visible));
   SELECT count(*) INTO visible FROM public.cuentas_bancarias WHERE id = cuenta_b;
   PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver cuenta_bancaria de org_b');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 2: bbva_movimientos aislamiento
@@ -106,7 +106,7 @@ BEGIN
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.bbva_movimientos WHERE id = mov_a;
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver bbva_movimientos de org_a');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 3: proveedor_facturas aislamiento
@@ -128,7 +128,7 @@ BEGIN
   PERFORM pg_temp.assert(visible = 1, format('user_a debe ver 1 factura proveedor, vio %s', visible));
   SELECT count(*) INTO visible FROM public.proveedor_facturas WHERE id = pf_b;
   PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver factura proveedor de org_b');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 4: cotizacion_costos aislamiento (markups internos)
@@ -146,7 +146,7 @@ BEGIN
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.cotizacion_costos WHERE id = cc_a;
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver cotizacion_costos de org_a');
-  RESET ROLE;
+  PERFORM pg_temp.as_postgres();
 
   -- =========================================================================
   -- TEST 5: pagos_factura aislamiento

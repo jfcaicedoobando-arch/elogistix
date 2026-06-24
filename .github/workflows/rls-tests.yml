@@ -42,7 +42,7 @@ env:
 jobs:
   rls:
     name: Prepare RLS database snapshot
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     services:
@@ -167,7 +167,7 @@ jobs:
 
   rls-suites:
     name: RLS suite — ${{ matrix.suite }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: rls
     timeout-minutes: 10
     strategy:
@@ -272,7 +272,7 @@ jobs:
 
   rls-tests-result:
     name: RLS tests result
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: rls-suites
     if: always()
     steps:
