@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Building2, Users, Ship, FileText, ArrowRight } from "lucide-react";
+import { Building2, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
@@ -30,29 +30,17 @@ export default function AdminDashboard() {
       icon: Building2,
       to: "/admin/organizaciones",
       tone: "text-primary",
+      navigable: true,
     },
     {
-      title: "Usuarios",
+      title: "Miembros en la plataforma",
       value: stats?.totalUsers ?? 0,
       icon: Users,
-      to: "/admin/usuarios",
+      to: null,
       tone: "text-info",
+      navigable: false,
     },
-    {
-      title: "Embarques",
-      value: stats?.totalEmbarques ?? 0,
-      icon: Ship,
-      to: "/admin/organizaciones",
-      tone: "text-accent-foreground",
-    },
-    {
-      title: "Cotizaciones",
-      value: stats?.totalCotizaciones ?? 0,
-      icon: FileText,
-      to: "/admin/organizaciones",
-      tone: "text-muted-foreground",
-    },
-  ];
+  ] as const;
 
   return (
     <div className="space-y-6">
@@ -63,15 +51,10 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* KPI Cards (clickables) */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <button
-            key={card.title}
-            onClick={() => navigate(card.to)}
-            className="text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
-            aria-label={`Ver ${card.title}`}
-          >
+      {/* KPI Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {cards.map((card) => {
+          const inner = (
             <Card className="transition-all group-hover:shadow-md group-hover:-translate-y-0.5 group-hover:border-primary/40">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
@@ -81,14 +64,29 @@ export default function AdminDashboard() {
                 <div className="text-2xl font-bold tabular-nums">
                   {isLoading ? "—" : card.value}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Ver detalle <ArrowRight className="h-3 w-3" />
-                </div>
+                {card.navigable && (
+                  <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Ver detalle <ArrowRight className="h-3 w-3" />
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </button>
-        ))}
+          );
+          return card.navigable && card.to ? (
+            <button
+              key={card.title}
+              onClick={() => navigate(card.to!)}
+              className="text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+              aria-label={`Ver ${card.title}`}
+            >
+              {inner}
+            </button>
+          ) : (
+            <div key={card.title} className="group">{inner}</div>
+          );
+        })}
       </div>
+
 
       {/* Activity chart */}
       <div className="grid gap-4 lg:grid-cols-3">

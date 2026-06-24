@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.134.0] - 2026-06-23
+- **refactor(admin)**: Auditoría y limpieza del módulo Super Admin.
+  - **Eliminado `/admin/usuarios`** (Usuarios Globales). El concepto no correspondía al modelo: los usuarios viven dentro de cada organización (`organization_members`). La gestión queda centralizada en `/admin/organizaciones/:id` → tarjeta Miembros (alta, cambio de rol y baja).
+  - Archivos eliminados: `AdminUsuarios.tsx`, `AdminUsuariosColumns.tsx`, `AdminUsuariosFilters.tsx`, `useAdminUsuariosController.ts` y su test. Ruta removida de `adminRoutes.tsx` y del barrel `features/admin/hooks/index.ts`. Test `routes.smoke` actualizado.
+  - **Dashboard simplificado**: las tarjetas KPI engañosas de "Embarques" y "Cotizaciones" (que navegaban a `/admin/organizaciones` sin filtro) se quitaron. Quedan dos: **Organizaciones** (accionable) y **Miembros en la plataforma** (informativa).
+  - **Sidebar reagrupado en 2 bloques** con `SidebarGroupLabel`: **Plataforma** (Dashboard, Organizaciones, Auditoría plataforma, Diagnóstico) y **Sistema** (Configuración Global).
+- Bump APP_VERSION → 13.134.0. Analogía: tenías dos cajones repitiendo los mismos papeles (Usuarios Globales y Miembros por organización). Tiramos el duplicado, dejamos sólo el cajón correcto y ordenamos los demás cajones por tema en el escritorio del admin.
+
 ## [13.133.3] - 2026-06-23
 - **fix(tests/CI)**: Reparados los 2 tests rojos reportados en el log de CI (`tests` y `coverage` jobs).
   - **`roleCatalog.extra.test.ts`**: el array `ALL_ROLES` del test no incluía `agente_carga` (rol agregado al catálogo), por lo que `ROLE_LABELS` tenía 18 claves y el test esperaba 17. Añadido `agente_carga` a `ALL_ROLES` para que coincida con el catálogo real.

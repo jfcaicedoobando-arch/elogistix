@@ -89,12 +89,11 @@ describe("routes/adminRoutes", () => {
     expect(wrapper).toMatch(/ProtectedRoute|AdminLayout/);
   });
 
-  it("expone rutas admin críticas (orgs, usuarios, configuración, diagnóstico)", () => {
+  it("expone rutas admin críticas (orgs, configuración, diagnóstico)", () => {
     const paths = collectPaths(adminRoutes);
     expect(paths).toContain("/admin");
     expect(paths).toContain("/admin/organizaciones");
     expect(paths).toContain("/admin/organizaciones/:id");
-    expect(paths).toContain("/admin/usuarios");
     expect(paths).toContain("/admin/configuracion");
     expect(paths).toContain("/admin/diagnostico");
   });

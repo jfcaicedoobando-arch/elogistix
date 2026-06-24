@@ -6,7 +6,7 @@ export * from './useAdminOrgInfo';
 export * from './useAdminOrgKpis';
 export * from './useAdminOrgMembers';
 export * from './useAdminOrganizacionesController';
-export * from './useAdminUsuariosController';
+
 export * from './useAlertasSistema';
 export * from './useAppLogs';
 export * from './useAppLogsHealth';

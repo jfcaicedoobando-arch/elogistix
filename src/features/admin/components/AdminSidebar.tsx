@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Building2,
-  Users,
   LogOut,
   Settings,
   ChevronUp,
@@ -23,6 +22,7 @@ import {
   SidebarHeader,
   SidebarFooter,
   useSidebar,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -34,14 +34,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 
-const adminItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
-  { title: "Usuarios", url: "/admin/usuarios", icon: Users },
-  { title: "Auditoría plataforma", url: "/admin/auditoria", icon: ShieldCheck },
-  { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
-
-  { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
+const adminGroups: { label: string; items: { title: string; url: string; icon: typeof LayoutDashboard }[] }[] = [
+  {
+    label: "Plataforma",
+    items: [
+      { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+      { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
+      { title: "Auditoría plataforma", url: "/admin/auditoria", icon: ShieldCheck },
+      { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
+    ],
+  },
 ];
 
 export function AdminSidebar() {
@@ -68,40 +76,43 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        <SidebarGroup>
-          {!collapsed && (
-            <span className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
-              Administración
-            </span>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminItems.map((item) => {
-                const active = isActive(item.url);
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.title}
-                    >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/admin"}
-                        className="hover:bg-sidebar-accent/50 focus-visible:ring-2 focus-visible:ring-ring"
-                        activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary"
+        {adminGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            {!collapsed && (
+              <SidebarGroupLabel className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+                {group.label}
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
                       >
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                        <NavLink
+                          to={item.url}
+                          end={item.url === "/admin"}
+                          className="hover:bg-sidebar-accent/50 focus-visible:ring-2 focus-visible:ring-ring"
+                          activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
+
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <DropdownMenu>
