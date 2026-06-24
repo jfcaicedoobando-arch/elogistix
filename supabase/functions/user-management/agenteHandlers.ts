@@ -11,14 +11,23 @@ import { resolveRedirectTo } from "./clientHandlers.ts";
 declare const Deno: { env: { get(key: string): string | undefined } };
 
 function validateInviteAgente(body: Record<string, unknown>):
-  { email: string; agente_id: string; organization_id: string } | string {
+  | { email: string; agente_id: string; organization_id: string; mode: "email" | "password"; password?: string }
+  | string {
   const email = typeof body.email === "string" ? body.email : "";
   const agente_id = typeof body.agente_id === "string" ? body.agente_id : "";
   const organization_id = typeof body.organization_id === "string" ? body.organization_id : "";
+  const rawMode = typeof body.mode === "string" ? body.mode : "email";
+  const mode: "email" | "password" = rawMode === "password" ? "password" : "email";
+  const password = typeof body.password === "string" ? body.password : undefined;
   if (!email || !agente_id || !organization_id) {
     return "Faltan campos requeridos: email, agente_id, organization_id";
   }
-  return { email, agente_id, organization_id };
+  if (mode === "password") {
+    if (!password || password.length < 8) {
+      return "La contraseña debe tener al menos 8 caracteres";
+    }
+  }
+  return { email, agente_id, organization_id, mode, password };
 }
 
 async function ensureAgenteEnOrg(
