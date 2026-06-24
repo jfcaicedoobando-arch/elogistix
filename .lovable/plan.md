@@ -1,63 +1,43 @@
-## Diagnóstico
+## Problema
 
-El job de CI **"RLS tests result / Apply migrations"** falla con:
+En el modal de Nueva tarifa (`/agente/tarifas`), al dar click en **Guardar tarifa** no pasa nada y no aparece toast.
 
-```
-ERROR: function public.generar_expediente(text) does not exist
-```
+## Causa raíz
 
-Causa: la migración `20260624192903…sql` (la que agrega el overload `generar_expediente(tipo_operacion)`) hace `SELECT public.generar_expediente(tipo_op::text)` dentro de su cuerpo. En prod el overload `generar_expediente(text)` existe (lo confirmé con `pg_proc`), pero **no fue creado por ninguna migración** — vive sólo en el snapshot productivo. CI arranca desde cero y aplica migraciones secuencialmente, así que cuando llega al overload nuevo no encuentra el `text` y aborta.
+`TarifaForm.tsx` calcula la validez así:
 
-Confirmación en prod (no se toca):
-```
-generar_expediente(tipo_op text)              -- LANGUAGE plpgsql, SECURITY DEFINER
-generar_expediente(tipo_op tipo_operacion)    -- LANGUAGE sql,    SECURITY DEFINER (lo agregamos nosotros)
+```ts
+const baseValido = esFormValido(form);              // exige form.ruta_id ≠ ""
+const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
 ```
 
-## Solución
+En modo creación (`multiple = true`) la(s) ruta(s) se capturan en el estado aparte `rutaIds` (multi-select), y `form.ruta_id` **siempre queda vacío**. Como `esFormValido` exige `form.ruta_id` no vacío, `baseValido` es `false`, `valido` es `false`, y `guardar()` hace `return` silencioso antes de llamar la mutación — por eso no hay toast ni error.
 
-Nueva migración `…_register_generar_expediente_text.sql` que registra el overload `text` con el mismo cuerpo exacto que ya está en prod (idempotente con `CREATE OR REPLACE`, así no rompe nada al re-aplicarse). Va **antes** de cualquier llamada — pero como va a quedar con timestamp más reciente, basta con que también `CREATE OR REPLACE`-emos el overload `tipo_operacion` para que el orden interno no importe (la búsqueda de funciones es resolución por nombre al ejecutar, no al crear).
+Adicionalmente, al marcar `intentoEnvio = true` sí se pintan errores en los campos, pero el usuario reporta que tampoco ve indicación clara de qué falta porque el campo "ruta" sí está lleno desde su punto de vista.
 
-Detalle clave: `CREATE OR REPLACE FUNCTION` para el overload `tipo_operacion` con `SELECT public.generar_expediente(tipo_op::text)` ya no fallará si en el mismo archivo creamos primero el `text`. Como precaución, este nuevo archivo declara ambos en orden: primero el `text`, luego re-declara el `tipo_operacion`.
+## Fix propuesto
 
-```sql
--- 1) Registra el cuerpo real que ya existe en prod (idempotente)
-CREATE OR REPLACE FUNCTION public.generar_expediente(tipo_op text)
-RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
-AS $$
-DECLARE prefijo text; consecutivo int;
-BEGIN
-  consecutivo := nextval('embarque_consecutivo_seq');
-  CASE tipo_op
-    WHEN 'Importación' THEN prefijo := 'IMP';
-    WHEN 'Exportación' THEN prefijo := 'EXP';
-    WHEN 'Nacional'    THEN prefijo := 'NAC';
-    ELSE prefijo := 'GEN';
-  END CASE;
-  RETURN 'EL' || prefijo || lpad(consecutivo::text, 5, '0');
-END;
-$$;
+Un único cambio acotado en `src/features/costeo/components/TarifaForm.tsx`:
 
-REVOKE EXECUTE ON FUNCTION public.generar_expediente(text) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.generar_expediente(text) TO authenticated, service_role;
+1. Hacer que `esFormValido` reciba un flag `skipRutaId` (o exponer un helper alterno) para que en modo `multiple` no exija `form.ruta_id`.
+2. Reemplazar el cálculo de `valido` por:
+   ```ts
+   const baseValido = esFormValido(form, { skipRutaId: multiple });
+   const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
+   ```
+3. Aplicar el mismo flag en `calcularErrores` para que la celda `ruta_id` no se marque roja basándose en `form.ruta_id` cuando es multi (ya usa `rutaIdsCount === 0` para multi, así está bien — no se toca).
 
--- 2) Re-asegura el overload por enum (idempotente)
-CREATE OR REPLACE FUNCTION public.generar_expediente(tipo_op public.tipo_operacion)
-RETURNS text LANGUAGE sql SECURITY DEFINER SET search_path = public
-AS $$ SELECT public.generar_expediente(tipo_op::text); $$;
+Sin cambios de UI, sin cambios de business logic, sin tocar mutaciones ni servicios.
 
-REVOKE EXECUTE ON FUNCTION public.generar_expediente(public.tipo_operacion) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.generar_expediente(public.tipo_operacion) TO authenticated, service_role;
-```
+## Riesgo
 
-En prod no cambia comportamiento (es el mismo cuerpo ya existente). En CI desbloquea el pipeline.
+Muy bajo: sólo cambia la condición de habilitar el botón Guardar en modo creación. El modo edición (`multiple = false`) sigue exigiendo `form.ruta_id` como antes.
 
-## Versión
+## Versionado
 
-- `src/constants/appVersion.ts` → `13.135.37`
-- `CHANGELOG.md` → `[13.135.37]`: "fix(ci): registra `generar_expediente(text)` como migración (existía en prod sin migración correspondiente) para desbloquear el job de RLS tests."
+- `APP_VERSION` → `13.135.40`
+- Entrada nueva en `CHANGELOG.md`
 
-## Fuera de alcance
+## Verificación
 
-- Reescribir el código que llama `generar_expediente(...)`.
-- Revisar otras funciones potencialmente "no migradas" (sería un barrido aparte; aviso si quieres que lo haga después).
+Reproducir el flujo: abrir Nueva tarifa, llenar agente/naviera/ruta(s)/contenedor/flete base, click Guardar → debe disparar `crear`/`crearMultiples` y mostrar toast de éxito/error.

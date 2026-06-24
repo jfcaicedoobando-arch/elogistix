@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.40] - 2026-06-24
+- **fix(costeo)**: En el modal "Nueva tarifa marítima" el botón Guardar no hacía nada (sin toast). `esFormValido` exigía `form.ruta_id` no vacío, pero en modo creación múltiple las rutas viven en el estado `rutaIds` y `form.ruta_id` queda vacío, por lo que la validación bloqueaba el submit silenciosamente. Se agrega flag `skipRutaId` para saltar esa verificación en modo multi.
+
 ## [13.135.39] - 2026-06-24
 - **fix(lint)**: `TarifaForm` superaba la complejidad ciclomática máxima (17 > 16) por el ternario anidado del label del botón Guardar. Se extrae a un helper `computeGuardarLabel` con `if`s planos, bajando la complejidad sin cambios funcionales.
 

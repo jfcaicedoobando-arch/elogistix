@@ -38,8 +38,9 @@ export function calcularTotal(form: TarifaInput): number {
   return (Number(form.flete_base) || 0) + rec;
 }
 
-export function esFormValido(form: TarifaInput): boolean {
-  if (!form.agente_id || !form.naviera_id || !form.ruta_id || !form.tipo_contenedor_id) return false;
+export function esFormValido(form: TarifaInput, opts?: { skipRutaId?: boolean }): boolean {
+  if (!form.agente_id || !form.naviera_id || !form.tipo_contenedor_id) return false;
+  if (!opts?.skipRutaId && !form.ruta_id) return false;
   if (form.flete_base <= 0) return false;
   return form.vigente_desde <= form.vigente_hasta;
 }
