@@ -11,16 +11,16 @@
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { InvitarAgenteCredencialesView } from "./InvitarAgenteCredencialesView";
 import { InvitarAgentePasswordTab, generarPasswordSegura } from "./InvitarAgentePasswordTab";
+import { inviteAgentePortal } from "../services/inviteAgentePortal";
 import type { AgenteRow } from "./CosteoAgentesTable";
 
 interface Props {
@@ -40,60 +40,35 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
   const [credencialesCreadas, setCredencialesCreadas] = useState<{ email: string; password: string } | null>(null);
 
   const reset = () => {
-    setEmail("");
-    setPassword("");
-    setShowPassword(false);
-    setMode("email");
-    setCredencialesCreadas(null);
+    setEmail(""); setPassword(""); setShowPassword(false); setMode("email"); setCredencialesCreadas(null);
   };
-
-  const handleClose = (open: boolean) => {
-    if (!open) reset();
-    onOpenChange(open);
-  };
+  const handleClose = (open: boolean) => { if (!open) reset(); onOpenChange(open); };
 
   const handleInvite = async () => {
     if (!agente || !organizationId) return;
-    if (!email.includes("@")) {
-      notifyError(undefined, { title: "Email inválido" });
-      return;
-    }
+    if (!email.includes("@")) return notifyError(undefined, { title: "Email inválido" });
     if (mode === "password" && password.length < 8) {
-      notifyError(undefined, { title: "La contraseña debe tener al menos 8 caracteres" });
-      return;
+      return notifyError(undefined, { title: "La contraseña debe tener al menos 8 caracteres" });
     }
     setPending(true);
-    const { data, error } = await supabase.functions.invoke("user-management", {
-      body: {
-        action: "invite-agente",
-        email,
-        agente_id: agente.id,
-        organization_id: organizationId,
-        mode,
-        ...(mode === "password" ? { password } : {}),
-      },
-    });
-    setPending(false);
-    if (error) {
-      notifyError(undefined, { title: `Error al invitar: ${error.message}`, error, method: "INVITE_AGENTE" });
-      return;
-    }
-
-    if (mode === "password") {
-      setCredencialesCreadas({ email, password });
-      notifySuccess(undefined, {
-        title: "Cuenta creada con contraseña",
-        description: "Copia las credenciales antes de cerrar.",
+    try {
+      const data = await inviteAgentePortal({
+        email, agente_id: agente.id, organization_id: organizationId, mode, password,
       });
-      return;
+      if (mode === "password") {
+        setCredencialesCreadas({ email, password });
+        notifySuccess(undefined, { title: "Cuenta creada con contraseña", description: "Copia las credenciales antes de cerrar." });
+        return;
+      }
+      notifySuccess(undefined, { title: data.is_new ? "Invitación enviada al agente" : "Usuario existente vinculado" });
+      reset();
+      onOpenChange(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      notifyError(undefined, { title: `Error al invitar: ${msg}`, error: err, method: "INVITE_AGENTE" });
+    } finally {
+      setPending(false);
     }
-
-    const isNew = (data as { is_new?: boolean } | null)?.is_new;
-    notifySuccess(undefined, {
-      title: isNew ? "Invitación enviada al agente" : "Usuario existente vinculado",
-    });
-    reset();
-    onOpenChange(false);
   };
 
   if (credencialesCreadas) {
