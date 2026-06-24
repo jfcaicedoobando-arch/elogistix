@@ -29,7 +29,7 @@ export function AgenteTarifaForm({ open, onOpenChange, initial, tarifaId, modo }
 
   const { data: rutas = [] } = useQuery({
     queryKey: ["portal-agente", "rutas", ctx?.organizationId],
-    queryFn: () => fetchCosteoRutas(ctx!.organizationId),
+    queryFn: () => fetchAgenteRutas(),
     enabled: !!ctx?.organizationId && open,
     staleTime: 5 * 60 * 1000,
   });
