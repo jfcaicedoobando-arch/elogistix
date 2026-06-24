@@ -6077,9 +6077,9 @@ export type Database = {
         | {
             Args: {
               p_cotizacion_id: string
-              p_decision?: string
-              p_delta_jsonb?: Json
-              p_tarifa_id_aplicada?: string
+              p_decision: string
+              p_delta_jsonb: Json
+              p_tarifa_id_aplicada: string
             }
             Returns: string
           }
