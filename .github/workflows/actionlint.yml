@@ -35,9 +35,16 @@ jobs:
 
       - name: Download actionlint
         id: get
+        env:
+          # Pinned actionlint version. NUNCA dejar flotante: el script de
+          # `main` se ejecuta en el runner con acceso a GITHUB_TOKEN, así que
+          # un compromiso del repo upstream sería supply-chain crítico.
+          # Para bumpear: revisar https://github.com/rhysd/actionlint/releases
+          # y subir la versión deliberadamente.
+          ACTIONLINT_VERSION: "1.7.7"
         run: |
           set -euo pipefail
-          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) "$ACTIONLINT_VERSION"
           echo "bin=$(pwd)/actionlint" >> "$GITHUB_OUTPUT"
 
       - name: Run actionlint

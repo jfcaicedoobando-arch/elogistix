@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.6] - 2026-06-24
+- **chore(ci/rls)**: Hardening de la suite RLS y los workflows de GitHub Actions tras auditoría completa.
+  - **CRITICAL**: `actionlint.yml` ahora pinea `actionlint` a la versión `1.7.7`. Antes descargaba y ejecutaba el script de la rama `main` sin verificación → vector de supply-chain ataque al runner con `GITHUB_TOKEN`.
+  - **HIGH (cobertura RLS)**: Eliminados los guards `IF EXISTS (information_schema.tables …)` que enmascaraban **falsos verdes permanentes** en `test_rls_financiero.sql` (`cuentas_por_cobrar`, `gastos_embarque` — tablas que nunca llegaron a producción, bloques retirados) y en `test_rls_financiero_critico.sql` (`pagos_factura`, `factura_notas_credito`, `comisiones_devengadas`, `liquidaciones_comision` — tablas core que sí existen vía migraciones, ahora siempre se ejecutan).
+  - **HIGH (WITH CHECK ampliado)**: 4 aserciones nuevas de bloqueo cross-tenant en `test_rls_financiero_critico.sql` para `bbva_movimientos`, `pagos_factura`, `pagos_proveedor` y `factura_notas_credito` (antes sólo se cubrían 3 tablas de 7).
+  - **HIGH (bitácora)**: `test_rls_isolation.sql` ahora verifica que un admin de Org A NO puede SELECT sobre `bitacora_actividad` de Org B (antes sólo se probaba el INSERT bloqueado).
+  - **HIGH (escalada de privilegios)**: `test_rls_roles_no_admin.sql` añade el test "operador NO puede auto-asignarse `super_admin` en `user_roles`".
+  - Analogía: el guardia de seguridad pretendía revisar 9 puertas pero 4 estaban tapiadas con un letrero de "si existe la puerta, revísala" — descubrimos que el letrero estaba mintiendo y abrimos las puertas que sí existen.
+
 ## [13.135.5] - 2026-06-24
 - **fix(migrations)**: El seed del usuario demo de agente (`agente.demo@librecarga.com`) ya no rompe el replay de CI cuando `auth.users` no tiene la columna `instance_id` (versiones nuevas de Supabase auth) o cuando el esquema `auth` no existe (Postgres fresco). La migración ahora arma el `INSERT` de forma dinámica incluyendo sólo las columnas presentes (`instance_id`, `confirmation_token`, etc.) y aborta limpio si `auth.users` no existe. Analogía: la migración ahora prueba la cerradura antes de meter la llave; si no encaja, sigue de largo en vez de romper la puerta.
 
