@@ -14,12 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Send, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { InvitarAgenteCredencialesView } from "./InvitarAgenteCredencialesView";
+import { InvitarAgentePasswordTab, generarPasswordSegura } from "./InvitarAgentePasswordTab";
 import type { AgenteRow } from "./CosteoAgentesTable";
 
 interface Props {
@@ -28,21 +29,6 @@ interface Props {
 }
 
 type Mode = "email" | "password";
-
-/** Genera una contraseña legible de 12 chars (letras + dígitos + símbolo seguro). */
-function generarPasswordSegura(): string {
-  const letras = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
-  const digitos = "23456789";
-  const simbolos = "!@#$%*-_";
-  const todo = letras + digitos + simbolos;
-  const arr = new Uint32Array(12);
-  crypto.getRandomValues(arr);
-  let out = "";
-  for (let i = 0; i < 12; i++) out += todo[arr[i] % todo.length];
-  return out
-    .replace(/^(.)(.)/, (_m, a) => `${a}${digitos[arr[0] % digitos.length]}${simbolos[arr[1] % simbolos.length]}`)
-    .slice(0, 12);
-}
 
 export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
   const { organizationId } = useOrganization();
