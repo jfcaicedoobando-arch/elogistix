@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.13] - 2026-06-24
+- **fix(demo-access)**: La edge function `demo-access` devolvía HTTP 500 con `duplicate key value violates unique constraint "organization_members_user_id_unique"` (Sentry JAVASCRIPT-REACT-1G). La RPC `ensure_demo_membership` hacía `ON CONFLICT (organization_id, user_id)` pero la tabla tiene también `UNIQUE(user_id)` (un usuario sólo puede pertenecer a UNA organización), así que si el usuario demo había quedado vinculado a otra org el INSERT explotaba sin ser atrapado. Corregido el `ON CONFLICT` a `(user_id)` con `DO UPDATE SET organization_id = EXCLUDED.organization_id, role = EXCLUDED.role` para forzar el regreso a la org demo. Mismo ajuste en el `INSERT` a `user_roles`.
+
 ## [13.135.12] - 2026-06-24
 - **chore(catálogo/puertos)**: Renombrados puertos confusos en el catálogo: `CNSHK` → "Shenzhen Shekou" y `CNYTN` → "Shenzhen Yantian" (antes ambos mostraban solo "Shenzhen"). Aplica a nuevos registros; los embarques/cotizaciones existentes conservan el texto previo.
 
