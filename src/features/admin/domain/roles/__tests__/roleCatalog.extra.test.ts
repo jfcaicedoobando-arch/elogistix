@@ -13,7 +13,7 @@ const ALL_ROLES: AppRole[] = [
   "super_admin", "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial",
   "coordinador_logistico", "ejecutivo_pricing", "contador", "tesorero",
   "auxiliar_contable", "ejecutivo_cobranza",
-  "vendedor", "customer_service", "cliente", "admin", "operador", "viewer",
+  "vendedor", "customer_service", "cliente", "agente_carga", "admin", "operador", "viewer",
 ];
 
 describe("roleCatalog | ROLE_LABELS", () => {
