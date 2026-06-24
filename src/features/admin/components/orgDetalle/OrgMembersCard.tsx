@@ -85,7 +85,7 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
           <Users className="h-5 w-5" /> Miembros ({members.length})
         </CardTitle>
         <Button size="sm" className="gap-1" onClick={onAddClick}>
-          <UserPlus className="h-4 w-4" /> Agregar miembro
+          <UserPlus className="h-4 w-4" /> Crear miembro
         </Button>
       </CardHeader>
       <CardContent>
