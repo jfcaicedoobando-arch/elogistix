@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.46] - 2026-06-24
+- **fix(tests)**: Dos reglas de arquitectura fallaban tras agregar toasts en `useTarifaSubmit.ts`: `error-toasts-use-notifyError` (no usar `toast.error` directo) y `no-double-toast-on-mutate` (los toasts viven en el hook de mutación, no en componentes). Se eliminan los toasts del hook de submit; `useCosteoTarifaMutations` ya los emite vía `notifyError` (que internamente despacha por sonner, así que el usuario sí los ve). El handler `onPartialSuccess` se conserva para limpiar las rutas creadas.
+
 ## [13.135.45] - 2026-06-24
 - **fix(lint)**: `TarifaForm` rebasó complejidad ciclomática (20 > 16) tras los toasts y validación reactiva. Se extrae el submit a `useTarifaSubmit.ts` y los ternarios/short-circuits inline (`valido`, `pendiente`, título del modal) a helpers `computeValido` / `getTituloModal` en `TarifaForm.helpers.ts`. Complejidad ahora dentro del umbral.
 
