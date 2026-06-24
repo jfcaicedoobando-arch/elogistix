@@ -1,63 +1,48 @@
-## Problema
+## Contexto
 
-La RPC `crear_embarque_borrador_desde_cotizacion` está duplicada en la base de datos:
+Hoy el nombre de la organización (`organizations.nombre`) sólo se ve en el `OrgSwitcher` del sidebar, y ese componente está **oculto si el usuario no es super admin con múltiples orgs** (ver `src/components/layout/OrgSwitcher.tsx:15`). Para `admin@chino.com` (admin normal de tenant) eso significa que no se ve por ningún lado.
 
-1. **Overload de 1 argumento** (versión original): `(p_cotizacion_id uuid)`
-2. **Overload de 4 argumentos con DEFAULTs** (agregada en la migración del 19-jun): `(p_cotizacion_id uuid, p_decision text DEFAULT 'sin_cambios', p_tarifa_id_aplicada uuid DEFAULT NULL, p_delta_jsonb jsonb DEFAULT NULL)`
+La página `/configuracion` tiene una pestaña "Datos de la Empresa" pero edita la tabla `configuracion` (datos para PDFs), **no** el nombre de la organización tenant (`organizations.nombre`). Son cosas distintas.
 
-Como los 3 argumentos extra tienen `DEFAULT`, cuando alguien llama a la función pasando sólo `p_cotizacion_id`, Postgres encuentra **dos candidatos válidos** (la de 1 arg y la de 4 args con defaults) y aborta con:
+## Solución (dos lugares)
 
-> `function public.crear_embarque_borrador_desde_cotizacion(uuid) is not unique`
+### 1) Sidebar: badge siempre visible debajo del logo
 
-Esto rompe:
-- El flujo "Generar embarque" desde el detalle de cotización (lo que vio el usuario en Sentry).
-- La llamada interna de la propia función de 4 args (línea 147 de la migración), que invoca `crear_embarque_borrador_desde_cotizacion(p_cotizacion_id)` recursivamente con un solo argumento.
+En `src/components/layout/AppSidebar.tsx`, debajo del `BrandLockup` (header del sidebar), agregar un indicador `Building2 + organization.nombre` siempre visible para cualquier usuario autenticado con organización activa.
 
-**Analogía:** es como tener dos botones idénticos en la app llamados "Guardar" — cuando le pides al sistema "presiona Guardar" no sabe a cuál te refieres.
+Comportamiento:
+- **Super admin con >1 orgs** → seguir mostrando el `OrgSwitcher` actual (dropdown clickeable). El nuevo badge no se muestra para no duplicar.
+- **Cualquier otro usuario con org** → mostrar badge read-only (no dropdown) con `Building2` + nombre truncado.
+- **Sidebar colapsado** → sólo el ícono `Building2` con `title="<nombre org>"` como tooltip nativo.
 
-## Solución
+Estilos: reusar tokens del sidebar (`text-sidebar-foreground/70`, `bg-sidebar-accent/30`, `border-sidebar-border`), nada de colores hardcodeados.
 
-Quitar los `DEFAULT` de los 3 argumentos opcionales del overload de 4 args. Así:
-- La llamada con 1 uuid resuelve **únicamente** al overload viejo.
-- La llamada con 4 args resuelve **únicamente** al overload nuevo (que es como ya lo invoca `crearEmbarqueBorradorConDecision` en `src/features/cotizacion/services/revalidacion/index.ts` — siempre pasa los 4).
-- La llamada interna recursiva sigue funcionando porque pasa un solo argumento.
+**Analogía:** es como poner el nombre de tu empresa debajo del logo de la app — siempre sabes en qué cuenta estás trabajando.
 
-Sin cambios de comportamiento, sin tocar RLS, sin renombrar la función, sin tocar el cliente.
+### 2) `/configuracion`: nueva tarjeta "Organización"
 
-## Cambios
+En la pestaña "Empresa" de `src/features/configuracion/` (o como tarjeta nueva arriba de "Datos de la Empresa"), agregar una `Card` read-only con:
+- Nombre de la organización (`organizations.nombre`)
+- ID de la organización (útil para soporte, copiable)
+- Plan/estado si está disponible en el contexto
 
-1. **Nueva migración** `supabase/migrations/<timestamp>_fix_overload_crear_embarque.sql`:
-   ```sql
-   DROP FUNCTION IF EXISTS public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb);
+Sin inputs editables — sólo informativa. Aclara la diferencia: "Datos de la Empresa" = lo que aparece en PDFs; "Organización" = tu cuenta tenant en Libre Carga.
 
-   CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(
-     p_cotizacion_id      uuid,
-     p_decision           text,
-     p_tarifa_id_aplicada uuid,
-     p_delta_jsonb        jsonb
-   ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
-   -- mismo cuerpo que la migración 20260619230147 (sin DEFAULTs)
-   $$;
+## Archivos a tocar
 
-   GRANT EXECUTE ON FUNCTION
-     public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb)
-     TO authenticated, service_role;
-   ```
+- `src/components/layout/AppSidebar.tsx` — agregar el badge debajo del header.
+- `src/components/layout/OrgSwitcher.tsx` *(opcional)* — exportar también una variante "read-only badge" o crearla aparte como `OrgBadge.tsx` para no inflar `OrgSwitcher`. Preferencia: **archivo nuevo `src/components/layout/OrgBadge.tsx`** (componentes ≤200 líneas, Power of 10).
+- `src/features/configuracion/components/TabEmpresa.tsx` — agregar Card "Organización" arriba.
+- `src/constants/appVersion.ts` → bump a `13.135.15`.
+- `CHANGELOG.md` → entrada `13.135.15`.
 
-2. **`src/constants/appVersion.ts`** → `13.135.14`.
+## No se toca
 
-3. **`CHANGELOG.md`** → entrada `13.135.14` describiendo el fix del overload ambiguo.
+- Lógica de permisos / `useOrganization`.
+- Tabla `organizations` ni RLS.
+- `OrgSwitcher` para super admins (sigue igual).
+- Edge functions ni backend.
 
-4. **Sentry** → marcar el issue como resuelto una vez aplicada la migración.
+## Mientras tanto (respuesta al usuario)
 
-## Verificación
-
-Después de migrar, correr:
-```sql
-SELECT pg_get_function_identity_arguments(oid)
-FROM pg_proc
-WHERE proname='crear_embarque_borrador_desde_cotizacion';
-```
-Esperado: dos filas, una `p_cotizacion_id uuid` y otra `p_cotizacion_id uuid, p_decision text, p_tarifa_id_aplicada uuid, p_delta_jsonb jsonb` — **ninguna con `DEFAULT`** en el segundo resultado.
-
-Luego, desde la app: abrir una cotización y dar "Generar embarque" — debe crear el borrador sin el error.
+Puedes responderle a `admin@chino.com`: *"Hoy el nombre de tu organización no se muestra en la UI porque eres admin de una sola organización. Vamos a agregarlo en el sidebar (siempre visible) y en la página de Configuración."*

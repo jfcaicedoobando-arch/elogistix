@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { APP_VERSION } from "@/constants/appVersion";
 import { OrgSwitcher } from "@/components/layout/OrgSwitcher";
+import { OrgBadge } from "@/components/layout/OrgBadge";
 import { SidebarGroupBlock } from "@/components/layout/SidebarGroupBlock";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { useAppSidebarSections } from "@/hooks/layout";
@@ -60,8 +61,9 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        <div className="px-2 mb-2">
+        <div className="px-2 mb-2 space-y-2">
           <OrgSwitcher collapsed={collapsed} />
+          <OrgBadge collapsed={collapsed} />
         </div>
         {sections.map((section) => (
           <SidebarGroupBlock
