@@ -38,6 +38,7 @@ const dtf = new Intl.DateTimeFormat("es-MX", {
 export default function Papelera() {
   const { isAdmin } = usePermissions();
   const { tabla, setTabla, rows, isLoading, restore, purge } = usePapelera(isAdmin);
+  const [purgeTarget, setPurgeTarget] = useState<TrashRow | null>(null);
 
   if (!isAdmin) return <Navigate to="/" replace />;
 
@@ -83,11 +84,7 @@ export default function Papelera() {
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => {
-                if (window.confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) {
-                  purge.mutate(r.id);
-                }
-              }}
+              onClick={() => setPurgeTarget(r)}
               disabled={restore.isPending || purge.isPending}
             >
               <X className="h-3.5 w-3.5 mr-1" /> Purgar
