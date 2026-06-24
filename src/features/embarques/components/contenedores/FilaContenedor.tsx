@@ -26,6 +26,7 @@ import {
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import type { TipoContenedor } from "@/features/catalogos/hooks";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   index: number;

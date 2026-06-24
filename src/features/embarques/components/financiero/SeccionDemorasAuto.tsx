@@ -15,6 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   embarqueId: string;

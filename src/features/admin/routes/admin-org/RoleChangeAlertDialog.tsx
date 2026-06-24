@@ -5,6 +5,7 @@ import {
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 export interface PendingRoleChange {
   user: UserRow;

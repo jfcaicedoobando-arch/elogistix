@@ -20,6 +20,7 @@ import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);

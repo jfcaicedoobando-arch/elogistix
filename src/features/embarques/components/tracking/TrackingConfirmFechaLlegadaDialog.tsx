@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDate } from "@/lib/formatters";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   fechaIso: string | null;

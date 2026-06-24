@@ -20,6 +20,7 @@ import {
   type ContenedorBorrador,
 } from "@/features/embarques/types/contenedor";
 import { FilaContenedor } from "./FilaContenedor";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 const SOFT_CAP = 50;
 

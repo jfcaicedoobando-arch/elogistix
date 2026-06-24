@@ -17,6 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);

@@ -26,6 +26,7 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   facturaId: string;
