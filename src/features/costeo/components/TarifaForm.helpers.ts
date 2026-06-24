@@ -45,6 +45,16 @@ export function esFormValido(form: TarifaInput, opts?: { skipRutaId?: boolean })
   return form.vigente_desde <= form.vigente_hasta;
 }
 
+export function computeValido(baseValido: boolean, multiple: boolean, rutaIdsCount: number): boolean {
+  if (!multiple) return baseValido;
+  return baseValido && rutaIdsCount > 0;
+}
+
+export function getTituloModal(tituloOverride: string | undefined, esEdicion: boolean): string {
+  if (tituloOverride) return tituloOverride;
+  return esEdicion ? "Editar tarifa marítima (USD)" : "Nueva tarifa marítima (USD)";
+}
+
 const ETIQUETAS: Record<string, string> = {
   agente_id: "Agente",
   naviera_id: "Naviera",
