@@ -67,6 +67,25 @@ export function validateCreatePayload(body: { email?: string; password?: string 
   return null;
 }
 
+/**
+ * Resuelve la organización destino para el alta:
+ * - super_admin global puede pasar `organization_id` para crear en cualquier org.
+ * - admin_org siempre crea en su propia org (ignora payload).
+ */
+async function resolveTargetOrgId(
+  adminClient: SupabaseClient,
+  admin: AdminAccess,
+  orgIdPayload: string | undefined,
+): Promise<{ targetOrgId: string | null } | { error: string }> {
+  if (!admin.isGlobalAdmin || !orgIdPayload) {
+    return { targetOrgId: admin.orgId };
+  }
+  const { data: orgRow, error: orgErr } = await adminClient
+    .from("organizations").select("id").eq("id", orgIdPayload).maybeSingle();
+  if (orgErr || !orgRow) return { error: "Organización destino no encontrada" };
+  return { targetOrgId: orgRow.id as string };
+}
+
 export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { cors, log, callerId, adminClient, body } = ctx;
   if (!admin.isGlobalAdmin && !admin.orgId) {
@@ -93,19 +112,12 @@ export async function handleCreate(ctx: HandlerCtx, admin: AdminAccess): Promise
   }
   const selectedRole = role;
 
-  // Resolver organización destino:
-  // - super_admin global puede pasar `organization_id` para crear en cualquier org.
-  // - admin_org siempre crea en su propia org (ignora payload).
-  let targetOrgId: string | null = admin.orgId;
-  if (admin.isGlobalAdmin && typeof orgIdPayload === "string" && orgIdPayload) {
-    const { data: orgRow, error: orgErr } = await adminClient
-      .from("organizations").select("id").eq("id", orgIdPayload).maybeSingle();
-    if (orgErr || !orgRow) {
-      log.finish(400, "invalid_organization_id", { user_id: callerId, payload: { organization_id: orgIdPayload } });
-      return errorResponse("Organización destino no encontrada", 400, cors);
-    }
-    targetOrgId = orgRow.id as string;
+  const orgResolution = await resolveTargetOrgId(adminClient, admin, orgIdPayload);
+  if ("error" in orgResolution) {
+    log.finish(400, "invalid_organization_id", { user_id: callerId, payload: { organization_id: orgIdPayload } });
+    return errorResponse(orgResolution.error, 400, cors);
   }
+  const targetOrgId = orgResolution.targetOrgId;
 
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email, password, email_confirm: true,
