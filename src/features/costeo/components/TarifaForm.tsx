@@ -20,6 +20,7 @@ import {
 import {
   buildInitialForm, calcularTotal, esFormValido, usdFormatter,
   calcularErrores, camposFaltantes, computeGuardarLabel,
+  computeValido, getTituloModal,
 } from "./TarifaForm.helpers";
 import { useTarifaSubmit } from "./useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
