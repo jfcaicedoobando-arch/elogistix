@@ -37,6 +37,16 @@ interface Props {
   rutasOverride?: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
 }
 
+const ETIQUETAS: Record<string, string> = {
+  agente_id: "Agente",
+  naviera_id: "Naviera",
+  ruta_id: "Ruta",
+  tipo_contenedor_id: "Tipo de contenedor",
+  flete_base: "Flete base",
+  vigente_desde: "Vigencia desde",
+  vigente_hasta: "Vigencia hasta",
+};
+
 function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: boolean): Record<string, boolean> {
   return {
     agente_id: !form.agente_id,
@@ -49,12 +59,17 @@ function calcularErrores(form: TarifaInput, rutaIdsCount: number, multiple: bool
   };
 }
 
+function camposFaltantes(errores: Record<string, boolean>): string[] {
+  return Object.entries(errores).filter(([, v]) => v).map(([k]) => ETIQUETAS[k] ?? k);
+}
+
 function computeGuardarLabel({ pendiente, esEdicion, rutasCount }: { pendiente: boolean; esEdicion: boolean; rutasCount: number }): string {
   if (pendiente) return "Guardando…";
   if (esEdicion) return "Guardar cambios";
   if (rutasCount > 1) return `Guardar ${rutasCount} tarifas`;
   return "Guardar tarifa";
 }
+
 
 export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
   const { data: agentesData = [] } = useCosteoAgentes();
