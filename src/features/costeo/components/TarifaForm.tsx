@@ -101,7 +101,12 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const baseValido = esFormValido(form, { skipRutaId: multiple });
   const valido = multiple ? baseValido && rutaIds.length > 0 : baseValido;
   const pendiente = crear.isPending || crearMultiples.isPending || actualizar.isPending;
-  const errores = intentoEnvio ? calcularErrores(form, rutaIds.length, multiple) : undefined;
+  // Errores siempre calculados para validación reactiva.
+  const erroresLive = calcularErrores(form, rutaIds.length, multiple);
+  // Sólo se pintan los campos en rojo después del primer intento (evita "mar de rojo" al abrir).
+  const errores = intentoEnvio ? erroresLive : undefined;
+  const faltantes = camposFaltantes(erroresLive);
+  const tooltipFaltantes = faltantes.length > 0 ? `Faltan: ${faltantes.join(", ")}` : undefined;
 
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,10 +155,22 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
         </div>
       }
       footer={
-        <>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button type="submit" form="tarifa-form" disabled={pendiente}>{guardarLabel}</Button>
-        </>
+        <div className="flex w-full items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {tooltipFaltantes ?? "Listo para guardar."}
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button
+              type="submit"
+              form="tarifa-form"
+              disabled={pendiente || !valido}
+              title={tooltipFaltantes}
+            >
+              {guardarLabel}
+            </Button>
+          </div>
+        </div>
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
