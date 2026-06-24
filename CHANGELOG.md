@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.11] - 2026-06-24
+- **fix(ci/rls)**: La suite `test_rls_financiero` abortaba en CI con `invalid input syntax for type json — input string ended unexpectedly` al insertar en `proformas` justo después de un `pg_temp.as_postgres()`. Causa raíz: `set_config('request.jwt.claims', NULL, true)` deja la variable de sesión como string vacío `''`, no como NULL; los stubs `auth.uid()/jwt()/role()` del `_ci_bootstrap.sql` hacían `current_setting(...)::jsonb` directo y reventaban al castear `''`. Envueltos los tres stubs con `nullif(current_setting(...), '')` para tratar el vacío como ausente. Sin impacto en producción (allí los stubs no se usan; GoTrue provee `auth.uid()` real).
+
 ## [13.135.10] - 2026-06-24
 - **fix(ci/migrations)**: La misma migración seed `20260624054843…` fallaba ahora con `agente_users_agente_id_fkey` porque el UUID hardcodeado del agente demo no existe en `costeo_agentes` en CI (los seeds del agente corren en otra migración previa que también es no-op en CI). Agregada guard `EXISTS (SELECT 1 FROM costeo_agentes WHERE id = v_agente_id)` antes del `INSERT INTO agente_users`. En producción el agente sí existe y el vínculo se crea normal.
 

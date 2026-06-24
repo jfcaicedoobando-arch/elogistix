@@ -20,20 +20,26 @@ CREATE TABLE IF NOT EXISTS auth.users (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Stub de auth.uid(): lee request.jwt.claims.sub (mismo contrato que GoTrue).
+-- Stubs auth.uid()/jwt()/role() — leen `request.jwt.claims`.
+-- Importante: `set_config('request.jwt.claims', NULL, true)` (usado por
+-- `pg_temp.as_postgres()` para limpiar la sesión) NO deja la variable como
+-- NULL sino como string vacío `''`. Hacer `''::jsonb` aborta con
+-- "invalid input syntax for type json — input string ended unexpectedly",
+-- lo que rompe cualquier INSERT que dispare un default basado en auth.uid()
+-- después de un reset. `nullif(..., '')` blinda esto.
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
 LANGUAGE sql STABLE AS $$
-  SELECT nullif(current_setting('request.jwt.claims', true)::jsonb->>'sub','')::uuid
+  SELECT nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub', '')::uuid
 $$;
 
 CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb
 LANGUAGE sql STABLE AS $$
-  SELECT coalesce(current_setting('request.jwt.claims', true)::jsonb, '{}'::jsonb)
+  SELECT coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb)
 $$;
 
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text
 LANGUAGE sql STABLE AS $$
-  SELECT coalesce(current_setting('request.jwt.claims', true)::jsonb->>'role','anon')
+  SELECT coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'role', 'anon')
 $$;
 
 -- Roles que las migraciones esperan (PostgREST/Supabase).
