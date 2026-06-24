@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.25] - 2026-06-24
+- **chore(arch)**: Baselines de arquitectura vuelven a verde. (1) `CambiarPasswordDialog.tsx` ya no importa `supabase/client` directo; nuevo servicio `src/lib/auth/changePassword.ts` con `updateOwnPassword()`. (2) `InvitarAgentePortalDialog.tsx` baja de 224 → 172 líneas extrayendo el tab de contraseña a `InvitarAgentePasswordTab.tsx` y el invoke de la edge a `services/inviteAgentePortal.ts`. Sin cambios funcionales.
+
 ## [13.135.24] - 2026-06-24
 - **fix(usuarios/portales)**: Los usuarios del Portal Agente y Portal Cliente en `/usuarios` ahora muestran su email correctamente. Antes el email aparecía vacío porque resolvíamos los emails con la acción `list` de `user-management`, que sólo devuelve miembros de `organization_members` — los usuarios de portales viven en `client_users` / `agente_users`, así que nunca aparecían en ese listado. Nueva acción dedicada `list-portal-emails` (nuevo handler `portalEmailsHandler.ts`) que acepta un array de `user_ids`, valida que pertenezcan a `client_users`/`agente_users` de la organización del caller (evita fuga cross-org) y devuelve `[{ id, email }]`. `services/usuario/portales.ts` ahora recolecta los `user_id` después del SELECT y los pide en una sola llamada.
 

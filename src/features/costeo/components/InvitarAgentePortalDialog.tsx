@@ -11,15 +11,16 @@
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Send, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { InvitarAgenteCredencialesView } from "./InvitarAgenteCredencialesView";
+import { InvitarAgentePasswordTab, generarPasswordSegura } from "./InvitarAgentePasswordTab";
+import { inviteAgentePortal } from "../services/inviteAgentePortal";
 import type { AgenteRow } from "./CosteoAgentesTable";
 
 interface Props {
@@ -28,21 +29,6 @@ interface Props {
 }
 
 type Mode = "email" | "password";
-
-/** Genera una contraseña legible de 12 chars (letras + dígitos + símbolo seguro). */
-function generarPasswordSegura(): string {
-  const letras = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
-  const digitos = "23456789";
-  const simbolos = "!@#$%*-_";
-  const todo = letras + digitos + simbolos;
-  const arr = new Uint32Array(12);
-  crypto.getRandomValues(arr);
-  let out = "";
-  for (let i = 0; i < 12; i++) out += todo[arr[i] % todo.length];
-  return out
-    .replace(/^(.)(.)/, (_m, a) => `${a}${digitos[arr[0] % digitos.length]}${simbolos[arr[1] % simbolos.length]}`)
-    .slice(0, 12);
-}
 
 export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
   const { organizationId } = useOrganization();
@@ -54,60 +40,35 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
   const [credencialesCreadas, setCredencialesCreadas] = useState<{ email: string; password: string } | null>(null);
 
   const reset = () => {
-    setEmail("");
-    setPassword("");
-    setShowPassword(false);
-    setMode("email");
-    setCredencialesCreadas(null);
+    setEmail(""); setPassword(""); setShowPassword(false); setMode("email"); setCredencialesCreadas(null);
   };
-
-  const handleClose = (open: boolean) => {
-    if (!open) reset();
-    onOpenChange(open);
-  };
+  const handleClose = (open: boolean) => { if (!open) reset(); onOpenChange(open); };
 
   const handleInvite = async () => {
     if (!agente || !organizationId) return;
-    if (!email.includes("@")) {
-      notifyError(undefined, { title: "Email inválido" });
-      return;
-    }
+    if (!email.includes("@")) return notifyError(undefined, { title: "Email inválido" });
     if (mode === "password" && password.length < 8) {
-      notifyError(undefined, { title: "La contraseña debe tener al menos 8 caracteres" });
-      return;
+      return notifyError(undefined, { title: "La contraseña debe tener al menos 8 caracteres" });
     }
     setPending(true);
-    const { data, error } = await supabase.functions.invoke("user-management", {
-      body: {
-        action: "invite-agente",
-        email,
-        agente_id: agente.id,
-        organization_id: organizationId,
-        mode,
-        ...(mode === "password" ? { password } : {}),
-      },
-    });
-    setPending(false);
-    if (error) {
-      notifyError(undefined, { title: `Error al invitar: ${error.message}`, error, method: "INVITE_AGENTE" });
-      return;
-    }
-
-    if (mode === "password") {
-      setCredencialesCreadas({ email, password });
-      notifySuccess(undefined, {
-        title: "Cuenta creada con contraseña",
-        description: "Copia las credenciales antes de cerrar.",
+    try {
+      const data = await inviteAgentePortal({
+        email, agente_id: agente.id, organization_id: organizationId, mode, password,
       });
-      return;
+      if (mode === "password") {
+        setCredencialesCreadas({ email, password });
+        notifySuccess(undefined, { title: "Cuenta creada con contraseña", description: "Copia las credenciales antes de cerrar." });
+        return;
+      }
+      notifySuccess(undefined, { title: data.is_new ? "Invitación enviada al agente" : "Usuario existente vinculado" });
+      reset();
+      onOpenChange(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      notifyError(undefined, { title: `Error al invitar: ${msg}`, error: err, method: "INVITE_AGENTE" });
+    } finally {
+      setPending(false);
     }
-
-    const isNew = (data as { is_new?: boolean } | null)?.is_new;
-    notifySuccess(undefined, {
-      title: isNew ? "Invitación enviada al agente" : "Usuario existente vinculado",
-    });
-    reset();
-    onOpenChange(false);
   };
 
   if (credencialesCreadas) {
@@ -167,56 +128,19 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
           </p>
         </TabsContent>
 
-        <TabsContent value="password" className="space-y-3 pt-4">
-          <div className="space-y-2">
-            <Label>Email del agente</Label>
-            <Input
-              type="email"
-              placeholder="contacto@agente.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Contraseña (mínimo 8 caracteres)</Label>
-            <div className="flex gap-2">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="font-mono"
-                placeholder="••••••••"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setPassword(generarPasswordSegura());
-                  setShowPassword(true);
-                }}
-                aria-label="Generar contraseña segura"
-                title="Generar contraseña segura"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Útil cuando el correo no llega (agentes en China, filtros corporativos). La cuenta queda
-            activa al toque y tú compartes las credenciales por WeChat, WhatsApp o el canal que prefieras.
-            {" "}Si el agente ya tiene cuenta, esta acción <strong>reasigna</strong> su contraseña.
-          </p>
-        </TabsContent>
+        <InvitarAgentePasswordTab
+          email={email}
+          password={password}
+          showPassword={showPassword}
+          onEmailChange={setEmail}
+          onPasswordChange={setPassword}
+          onToggleShow={() => setShowPassword((v) => !v)}
+          onGenerate={() => {
+            setPassword(generarPasswordSegura());
+            setShowPassword(true);
+          }}
+        />
+
       </Tabs>
     </FormDialogShell>
   );

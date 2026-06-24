@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, KeyRound } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { supabase } from "@/integrations/supabase/client";
+import { updateOwnPassword } from "@/lib/auth/changePassword";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
@@ -107,8 +107,7 @@ export function CambiarPasswordDialog({
     }
     setIsPending(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: nueva });
-      if (error) throw error;
+      await updateOwnPassword(nueva);
       toast({ title: "Contraseña actualizada" });
       onOpenChange(false);
     } catch (err) {
