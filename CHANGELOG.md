@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.38] - 2026-06-24
+- **fix(ci)**: La migración que registraba `generar_expediente(text)` se nombró con timestamp posterior a la migración que la consumía (`20260624192903`), por lo que CI seguía fallando con `function public.generar_expediente(text) does not exist`. Se renombra al timestamp `20260624192900` para que corra antes y satisfaga la dependencia. Sin cambios funcionales.
+
 ## [13.135.37] - 2026-06-24
 - **fix(ci)**: El job "RLS tests result / Apply migrations" fallaba con `function public.generar_expediente(text) does not exist` al aplicar migraciones desde cero. La función `generar_expediente(text)` existía sólo en el snapshot productivo (nunca fue versionada). Se agrega migración que la registra con el cuerpo idéntico al de prod y reasegura el overload `generar_expediente(tipo_operacion)` que la delega. Idempotente, sin cambios de comportamiento en producción.
 
