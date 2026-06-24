@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.45] - 2026-06-24
+- **fix(lint)**: `TarifaForm` rebasó complejidad ciclomática (20 > 16) tras los toasts y validación reactiva. Se extrae el submit a `useTarifaSubmit.ts` y los ternarios/short-circuits inline (`valido`, `pendiente`, título del modal) a helpers `computeValido` / `getTituloModal` en `TarifaForm.helpers.ts`. Complejidad ahora dentro del umbral.
+
 ## [13.135.44] - 2026-06-24
 - **fix(tests)**: `audit-report` falló porque `TarifaForm.tsx` rebasó las 200 líneas (230) tras las mejoras de validación/toast. Se mueven los helpers `calcularErrores`, `camposFaltantes`, `computeGuardarLabel` y el mapa `ETIQUETAS` a `TarifaForm.helpers.ts`, dejando el componente en 197 líneas. Adicional: `keys-shape.test.ts` desconocía los dominios `usuariosPortalCliente` y `usuariosPortalAgente`; se agregan a `EXPECTED_DOMAINS`.
 
