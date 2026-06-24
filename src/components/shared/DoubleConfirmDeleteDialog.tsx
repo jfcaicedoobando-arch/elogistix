@@ -23,6 +23,7 @@ export default function DoubleConfirmDeleteDialog(props: DoubleConfirmDeleteDial
 }
 
 import { useState, useEffect } from "react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 function DoubleConfirmInner({
   open,
@@ -56,7 +57,7 @@ function DoubleConfirmInner({
     <>
       {/* Paso 1 */}
       <AlertDialog open={open && !paso2} onOpenChange={(v) => { if (!v) close(); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar {entityName}?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -72,7 +73,7 @@ function DoubleConfirmInner({
 
       {/* Paso 2 */}
       <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) close(); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>⚠️ Confirmar eliminación</AlertDialogTitle>
             <AlertDialogDescription>

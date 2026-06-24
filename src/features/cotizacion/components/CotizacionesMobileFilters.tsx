@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/sheet";
 import SearchInput from "@/components/shared/SearchInput";
 import type { ReactNode } from "react";
+import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -48,7 +49,7 @@ export function CotizacionesMobileFilters({
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-full max-w-sm flex flex-col gap-0 p-0">
+        <SheetContent side="right" className={mobileFilterSheet}>
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Filtros de cotizaciones</SheetTitle>
           </SheetHeader>

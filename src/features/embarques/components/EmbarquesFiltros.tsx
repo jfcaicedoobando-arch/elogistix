@@ -22,6 +22,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import { EmbarquesFiltrosCampos } from "./EmbarquesFiltrosCampos";
 import { EmbarquesFiltrosChips } from "./EmbarquesFiltrosChips";
 import { countActiveEmbarqueFilters } from "./embarquesFiltrosUtils";
+import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 
 interface ClienteOption {
   id: string;
@@ -112,7 +113,7 @@ export default function EmbarquesFiltros(props: Props) {
           <FilterButton count={secondaryActive} />
         </div>
 
-        <SheetContent side="right" className="w-full max-w-sm flex flex-col gap-0 p-0">
+        <SheetContent side="right" className={mobileFilterSheet}>
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Filtros de embarques</SheetTitle>
           </SheetHeader>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   open: boolean;
@@ -36,7 +37,7 @@ export function ConfirmDeleteAlert({
 }: Props) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}

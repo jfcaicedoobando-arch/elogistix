@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
 } from "@/components/ui/sheet";
@@ -50,7 +51,7 @@ export function MobileFiltersSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full max-w-sm flex flex-col gap-0 p-0">
+      <SheetContent side="right" className={mobileFilterSheet}>
         <SheetHeader className="p-4 border-b">
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
