@@ -27,32 +27,36 @@ export interface PortalAgenteUserRow {
   created_at: string;
 }
 
-interface ListUsersRow {
-  id: string;
-  email: string;
-  created_at: string;
-}
 
-async function fetchEmailMap(): Promise<Record<string, string>> {
+/**
+ * v13.135.24 — Resuelve emails de portales vía la acción dedicada
+ * `list-portal-emails`. Antes usábamos `list`, que sólo devuelve miembros
+ * de la organización, dejando vacíos los emails de portal cliente/agente.
+ */
+async function fetchPortalEmailMap(userIds: string[]): Promise<Record<string, string>> {
   const emailMap: Record<string, string> = {};
+  if (userIds.length === 0) return emailMap;
   try {
     const { data, error } = await supabase.functions.invoke("user-management", {
-      body: { action: "list" },
+      body: { action: "list-portal-emails", user_ids: userIds },
     });
     if (error) {
-      console.warn("[portales] user-management invoke error:", error);
+      console.warn("[portales] list-portal-emails invoke error:", error);
       return emailMap;
     }
     if (Array.isArray(data)) {
-      (data as ListUsersRow[]).forEach((u) => {
+      (data as Array<{ id: string; email: string }>).forEach((u) => {
         emailMap[u.id] = u.email;
       });
     }
   } catch (err) {
-    console.warn("[portales] user-management threw:", err);
+    console.warn("[portales] list-portal-emails threw:", err);
   }
   return emailMap;
 }
+
+
+
 
 export async function fetchUsuariosPortalCliente(): Promise<PortalClienteUserRow[]> {
   const { data, error } = await supabase
@@ -60,7 +64,6 @@ export async function fetchUsuariosPortalCliente(): Promise<PortalClienteUserRow
     .select("id, user_id, cliente_id, created_at, clientes:cliente_id(nombre)")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  const emailMap = await fetchEmailMap();
   type Row = {
     id: string;
     user_id: string;
@@ -68,7 +71,9 @@ export async function fetchUsuariosPortalCliente(): Promise<PortalClienteUserRow
     created_at: string | null;
     clientes: { nombre: string | null } | null;
   };
-  return ((data ?? []) as Row[]).map((r) => ({
+  const rows = (data ?? []) as Row[];
+  const emailMap = await fetchPortalEmailMap(rows.map((r) => r.user_id));
+  return rows.map((r) => ({
     id: r.id,
     user_id: r.user_id,
     cliente_id: r.cliente_id,
@@ -84,7 +89,6 @@ export async function fetchUsuariosPortalAgente(): Promise<PortalAgenteUserRow[]
     .select("id, user_id, agente_id, created_at, costeo_agentes:agente_id(nombre)")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  const emailMap = await fetchEmailMap();
   type Row = {
     id: string;
     user_id: string;
@@ -92,7 +96,9 @@ export async function fetchUsuariosPortalAgente(): Promise<PortalAgenteUserRow[]
     created_at: string;
     costeo_agentes: { nombre: string | null } | null;
   };
-  return ((data ?? []) as Row[]).map((r) => ({
+  const rows = (data ?? []) as Row[];
+  const emailMap = await fetchPortalEmailMap(rows.map((r) => r.user_id));
+  return rows.map((r) => ({
     id: r.id,
     user_id: r.user_id,
     agente_id: r.agente_id,

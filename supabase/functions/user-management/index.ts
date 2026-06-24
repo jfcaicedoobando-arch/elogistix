@@ -31,6 +31,7 @@ import {
   handleListClients,
 } from "./handlers.ts";
 import { handleInviteAgente, handleListAgentes } from "./agenteHandlers.ts";
+import { handleListPortalEmails } from "./portalEmailsHandler.ts";
 
 initSentryEdge("user-management");
 
@@ -41,7 +42,8 @@ export type Action =
   | "invite-client"
   | "list-clients"
   | "invite-agente"
-  | "list-agentes";
+  | "list-agentes"
+  | "list-portal-emails";
 
 const ACTIONS = new Set<Action>([
   "list",
@@ -51,6 +53,7 @@ const ACTIONS = new Set<Action>([
   "list-clients",
   "invite-agente",
   "list-agentes",
+  "list-portal-emails",
 ]);
 
 export function parseAction(raw: unknown): Action | null {
@@ -72,7 +75,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | create | delete | invite-client | list-clients | invite-agente | list-agentes",
+        "action inválida. Use: list | create | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
         400,
         cors,
       );
@@ -95,6 +98,8 @@ Deno.serve(async (req) => {
         return await handleInviteAgente(ctx, await checkAdminAccess(adminClient, callerId));
       case "list-agentes":
         return await handleListAgentes(ctx);
+      case "list-portal-emails":
+        return await handleListPortalEmails(ctx, await checkAdminAccess(adminClient, callerId));
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
