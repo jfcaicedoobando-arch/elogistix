@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.22] - 2026-06-24
+- **chore(lint)**: Pasa `bun run lint --max-warnings 0` sin warnings. (1) `traducirErrorPassword` en `CambiarPasswordDialog.tsx` se partió en mapa `CODE_TRANSLATIONS` + helper `traducirPorMensaje` (complejidad 25 → ≤10). (2) `InvitarAgentePortalDialog.tsx` extrae la vista de credenciales a nuevo archivo `InvitarAgenteCredencialesView.tsx` (función 227 líneas → ~170, archivo 254 → ~210). (3) `handleInviteAgente` en `agenteHandlers.ts` extrae `executeInvitePath` y `registrarBitacoraPassword` (complejidad 18 → ≤16; params del helper en objeto para respetar `max-params=5`). Sin cambios funcionales.
+
 ## [13.135.21] - 2026-06-24
 - **ui(sidebar)**: El nombre de la organización en el sidebar ya no se ve como un botón/módulo navegable. Se rediseñó `OrgBadge` como una etiqueta de contexto (caption "ORGANIZACIÓN" tenue + nombre en semibold, sin borde ni fondo de acento ni altura tipo item de menú). El `OrgSwitcher` (super admin con varias orgs) también se aligeró: trigger fantasma con caption arriba y nombre + chevron debajo, en lugar del botón con borde que competía con los items. Estado colapsado conserva el icono `Building2` con tooltip. Motivo: en `/usuarios` el chip "Chino Cochino" se confundía con un destino navegable.
 
