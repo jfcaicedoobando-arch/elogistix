@@ -1,17 +1,13 @@
 /**
  * Badge + botones de aprobación/rechazo de una factura de proveedor.
  * Solo visible/operable para roles autorizados (admin, contador, tesorero).
- * El rechazo abre un dialog modal pidiendo motivo.
+ * El rechazo abre un ReasonDialog pidiendo motivo.
  */
 import { useState } from "react";
-import { Check, X, Clock } from "lucide-react";
+import { Check, X, Clock, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ReasonDialog } from "@/components/shared/ReasonDialog";
 import { useAprobarFactura } from "@/features/cxp/hooks/useAprobarFactura";
 import type { EstadoAprobacion } from "@/features/cxp/services/aprobacionFactura";
 
@@ -36,7 +32,6 @@ export function EstadoAprobacionBadge({ estado }: { estado: EstadoAprobacion }) 
 
 export function BotonesAprobacionFactura({ facturaId, estado, motivoRechazo, puedeAprobar }: Props) {
   const [openRechazo, setOpenRechazo] = useState(false);
-  const [motivo, setMotivo] = useState("");
   const aprobar = useAprobarFactura();
 
   return (
@@ -65,39 +60,22 @@ export function BotonesAprobacionFactura({ facturaId, estado, motivoRechazo, pue
         </div>
       )}
 
-      <Dialog open={openRechazo} onOpenChange={setOpenRechazo}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rechazar factura</DialogTitle>
-            <DialogDescription>
-              Indica el motivo del rechazo. Será registrado en la bitácora.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label>Motivo</Label>
-            <Textarea
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-              rows={4}
-              placeholder="Ej. Folio incorrecto, falta XML, monto no coincide con presupuesto..."
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenRechazo(false)}>Cancelar</Button>
-            <Button
-              variant="destructive"
-              disabled={motivo.trim().length < 3 || aprobar.isPending}
-              onClick={async () => {
-                await aprobar.mutateAsync({ id: facturaId, aprobar: false, motivo: motivo.trim() });
-                setOpenRechazo(false);
-                setMotivo("");
-              }}
-            >
-              Rechazar factura
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReasonDialog
+        open={openRechazo}
+        onOpenChange={setOpenRechazo}
+        icon={XCircle}
+        title="Rechazar factura"
+        description="Indica el motivo del rechazo. Será registrado en la bitácora."
+        label="Motivo"
+        placeholder="Ej. Folio incorrecto, falta XML, monto no coincide con presupuesto..."
+        confirmLabel="Rechazar factura"
+        minLength={3}
+        pending={aprobar.isPending}
+        onConfirm={async (motivo) => {
+          await aprobar.mutateAsync({ id: facturaId, aprobar: false, motivo });
+          setOpenRechazo(false);
+        }}
+      />
     </div>
   );
 }
