@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.134.1] - 2026-06-24
+- **fix(auditoría/sentry)**: `fetchReporteAuditoria` ahora trata el error Postgres `42501` ("No autorizado") como reporte vacío en vez de propagar. El badge del sidebar (`useAuditoriaCount`) lo invocaba para usuarios con rol sólo por membresía, y el error subía a Sentry (issue JAVASCRIPT-REACT-1F, 4 eventos / 2 usuarios). Bump APP_VERSION → 13.134.1. Analogía: el portero anotaba en la bitácora cada vez que alguien tocaba la puerta equivocada; ahora simplemente le indica "no es aquí" y sigue su día.
+
 ## [13.134.0] - 2026-06-23
 - **refactor(admin)**: Auditoría y limpieza del módulo Super Admin.
   - **Eliminado `/admin/usuarios`** (Usuarios Globales). El concepto no correspondía al modelo: los usuarios viven dentro de cada organización (`organization_members`). La gestión queda centralizada en `/admin/organizaciones/:id` → tarjeta Miembros (alta, cambio de rol y baja).
