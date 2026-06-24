@@ -36,7 +36,10 @@ DECLARE
   fac_b uuid := gen_random_uuid();
   prof_a uuid := gen_random_uuid();
   cot_a uuid := gen_random_uuid();
-  gasto_a uuid := gen_random_uuid();
+  -- (gastos_embarque y cuentas_por_cobrar fueron retirados: no existen
+  --  en migraciones ni en código; los bloques IF EXISTS antiguos enmascaraban
+  --  esta cobertura cero. Si se reintroducen como tablas reales, añadir
+  --  tests aquí sin guards.)
   visible int;
 BEGIN
   -- Seed mínimo (bypass RLS como rol postgres)
@@ -102,33 +105,13 @@ BEGIN
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver cotización de org_a');
   RESET ROLE;
 
-  -- =========================================================================
-  -- TEST 4: cuentas_por_cobrar derivadas de facturas
-  -- =========================================================================
-  -- Algunas implementaciones derivan CxC vía view o tabla; chequeamos si existe.
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_name = 'cuentas_por_cobrar') THEN
-    PERFORM pg_temp.as_user(user_a);
-    EXECUTE 'SELECT count(*) FROM public.cuentas_por_cobrar WHERE organization_id = $1' INTO visible USING org_b;
-    PERFORM pg_temp.assert(visible = 0, 'user_a NO debe ver CxC de org_b');
-    RESET ROLE;
-  END IF;
+  -- Nota (13.135.6): los bloques antiguos para `cuentas_por_cobrar` y
+  -- `gastos_embarque` envolvían el test en `IF EXISTS (information_schema...)`.
+  -- Esas tablas nunca llegaron a producción (no aparecen en ninguna migración
+  -- ni código de la app), así que el `IF EXISTS` siempre era falso y los
+  -- tests se saltaban silenciosamente — falso verde permanente. Eliminados.
 
-  -- =========================================================================
-  -- TEST 5: gastos_embarque aislamiento (si la tabla existe)
-  -- =========================================================================
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_name = 'gastos_embarque') THEN
-    EXECUTE format(
-      'INSERT INTO public.gastos_embarque(id, organization_id, embarque_id, concepto, monto, moneda)
-       VALUES (%L, %L, %L, %L, %L, %L)',
-      gasto_a, org_a, emb_a, 'Maniobras', 500, 'MXN'
-    );
-    PERFORM pg_temp.as_user(user_b);
-    EXECUTE 'SELECT count(*) FROM public.gastos_embarque WHERE id = $1' INTO visible USING gasto_a;
-    PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver gasto de org_a');
-    RESET ROLE;
-  END IF;
+
 
   RAISE NOTICE 'RLS FINANCIERO: todas las aserciones pasaron';
 END;
