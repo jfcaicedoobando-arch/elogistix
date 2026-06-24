@@ -28,6 +28,7 @@ export function useTesoreriaCuentasController() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; alias: string } | null>(null);
 
   const setField = <K extends keyof typeof INITIAL_FORM>(key: K, value: (typeof INITIAL_FORM)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -58,8 +59,13 @@ export function useTesoreriaCuentasController() {
     }
   };
 
-  const confirmarEliminar = (id: string, alias: string) => {
-    if (window.confirm(`¿Eliminar cuenta "${alias}"?`)) eliminar.mutate(id);
+  const solicitarEliminar = (id: string, alias: string) => setDeleteTarget({ id, alias });
+  const cancelarEliminar = () => setDeleteTarget(null);
+  const confirmarEliminar = () => {
+    if (deleteTarget) {
+      eliminar.mutate(deleteTarget.id);
+      setDeleteTarget(null);
+    }
   };
 
   return {
@@ -71,6 +77,10 @@ export function useTesoreriaCuentasController() {
     setField,
     submit,
     submitting: crear.isPending,
+    deleteTarget,
+    solicitarEliminar,
+    cancelarEliminar,
     confirmarEliminar,
+    eliminando: eliminar.isPending,
   };
 }

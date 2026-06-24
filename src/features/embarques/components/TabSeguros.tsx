@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
+import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { Shield, Plus, ExternalLink, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useDeleteSeguro, useSegurosEmbarque } from "@/features/embarques/hooks/useSegurosEmbarque";
@@ -36,6 +37,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
   const del = useDeleteSeguro(embarqueId);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SeguroEmbarque | null>(null);
+  const [deleting, setDeleting] = useState<SeguroEmbarque | null>(null);
 
   const totales = useMemo(() => {
     return seguros.reduce<Record<string, number>>((acc, s) => {
@@ -82,9 +84,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
             <Pencil className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" disabled={!canEdit || del.isPending}
-            onClick={() => {
-              if (window.confirm(`¿Eliminar póliza ${row.original.numero_poliza}?`)) del.mutate(row.original.id);
-            }} aria-label="Eliminar">
+            onClick={() => setDeleting(row.original)} aria-label="Eliminar">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -152,6 +152,21 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
         onOpenChange={setOpen}
         embarqueId={embarqueId}
         seguro={editing}
+      />
+
+      <ConfirmDeleteAlert
+        open={!!deleting}
+        onOpenChange={(v) => { if (!v) setDeleting(null); }}
+        title={deleting ? `¿Eliminar póliza ${deleting.numero_poliza}?` : "¿Eliminar póliza?"}
+        description="Se eliminará la póliza y la prima dejará de contar como costo en el P&L del embarque."
+        confirmLabel="Eliminar"
+        pending={del.isPending}
+        onConfirm={() => {
+          if (deleting) {
+            del.mutate(deleting.id);
+            setDeleting(null);
+          }
+        }}
       />
     </div>
   );

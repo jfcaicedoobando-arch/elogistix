@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { useMarcarRevisadoController } from "@/features/auditoria/hooks";
 import { HallazgoSummary } from "@/features/auditoria/components/marcarRevisado/HallazgoSummary";
 import { AccionTab, AccionButton } from "@/features/auditoria/components/marcarRevisado/AccionTab";
@@ -40,7 +41,7 @@ export function MarcarRevisadoDialog({ hallazgo, revisionExistente, open, onOpen
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className={dialogSize.xl}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-primary" />

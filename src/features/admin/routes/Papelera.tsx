@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Trash2, RotateCcw, X } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 import { Navigate } from "react-router-dom";
 import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hooks";
@@ -36,6 +38,7 @@ const dtf = new Intl.DateTimeFormat("es-MX", {
 export default function Papelera() {
   const { isAdmin } = usePermissions();
   const { tabla, setTabla, rows, isLoading, restore, purge } = usePapelera(isAdmin);
+  const [purgeTarget, setPurgeTarget] = useState<TrashRow | null>(null);
 
   if (!isAdmin) return <Navigate to="/" replace />;
 
@@ -81,11 +84,7 @@ export default function Papelera() {
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => {
-                if (window.confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) {
-                  purge.mutate(r.id);
-                }
-              }}
+              onClick={() => setPurgeTarget(r)}
               disabled={restore.isPending || purge.isPending}
             >
               <X className="h-3.5 w-3.5 mr-1" /> Purgar
@@ -134,6 +133,19 @@ export default function Papelera() {
           />
         </CardContent>
       </Card>
+
+      <DoubleConfirmDeleteDialog
+        open={!!purgeTarget}
+        onOpenChange={(v) => { if (!v) setPurgeTarget(null); }}
+        entityName={purgeTarget ? `«${purgeTarget.label}»` : "este registro"}
+        description="El registro se eliminará definitivamente de la base de datos. Esta acción no se puede deshacer."
+        finalDescription="Una vez purgado no podrás recuperarlo desde la papelera. ¿Continuar?"
+        isPending={purge.isPending}
+        onConfirm={async () => {
+          if (purgeTarget) await purge.mutateAsync(purgeTarget.id);
+          setPurgeTarget(null);
+        }}
+      />
     </div>
   );
 }
