@@ -1,52 +1,68 @@
-## Resumen de Sentry
+## Objetivo
 
-4 issues abiertos en últimos 7 días:
+Permitir que en el modal de **Nueva tarifa** (módulo Costeo y Portal Agente) el usuario seleccione **varias rutas a la vez** y se generen N tarifas que comparten todos los demás datos (agente, naviera, tipo de contenedor, flete, recargos, vigencia, notas).
 
-1. **JAVASCRIPT-REACT-1P** (2 eventos, real) — `column "user_id" of relation "notificaciones_internas" does not exist` al crear borrador de embarque desde una cotización aceptada.
-2. **JAVASCRIPT-REACT-1N / 1M** — errores minificados (`<unknown>`, `zF`) sin stack útil; 1 evento cada uno hace 49 min. Sin acción ahora.
-3. **JAVASCRIPT-REACT-1K** — "Invalid login credentials". Es el mensaje normal cuando alguien teclea mal la contraseña; no es bug.
+Aplica **solo en modo "crear"** (incluye "duplicar"). En modo "editar" la selección de ruta sigue siendo única — no tiene sentido cambiar 1 tarifa a N.
 
-Sólo el #1 es bug real. Procedo a arreglarlo.
+## UX propuesta
 
-## Causa raíz #1
+En el bloque `RutaTipoFields`, reemplazar el `Select` único de ruta por un **selector múltiple tipo combobox con checkboxes** (búsqueda por origen/destino, con chips de las rutas elegidas debajo):
 
-Analogía: la función SQL `crear_embarque_borrador_desde_cotizacion` mete una carta al buzón de notificaciones, pero usa nombres viejos de las casillas del sobre. La tabla `notificaciones_internas` tiene las columnas `usuario_id` y `enlace`, pero la función intenta insertar en `user_id` y `link`. Postgres tira el INSERT y revienta todo el flujo de "Convertir cotización en embarque".
+- Placeholder: "Selecciona una o varias rutas CN → MX".
+- Cada item: `Puerto Origen → Puerto Destino` (mismo texto que hoy).
+- Acciones rápidas: "Seleccionar todas las visibles" / "Limpiar selección".
+- Bajo el selector se muestran chips removibles con cada ruta elegida y un contador: `3 rutas seleccionadas`.
+- Si solo hay 1 ruta seleccionada el flujo se ve idéntico al actual.
 
-```sql
--- Tabla real:
-usuario_id uuid, enlace text  ...
--- Función actual (incorrecta):
-INSERT INTO notificaciones_internas (organization_id, user_id, ..., link) ...
-```
+El resto del formulario (agente, naviera, tipo contenedor, números, vigencia, recargos, notas) **no cambia**: se captura una sola vez y aplica a todas las rutas.
 
-## Solución
+El botón de guardar cambia su label dinámicamente:
+- 1 ruta → "Guardar tarifa"
+- N rutas → "Guardar N tarifas"
 
-1. **Migración SQL** — reemplazar `CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid)` cambiando sólo el INSERT final a:
-   ```sql
-   INSERT INTO public.notificaciones_internas (
-     organization_id, usuario_id, tipo, titulo, mensaje, enlace
-   )
-   SELECT v_cot.organization_id, om.user_id, 'cotizacion_borrador_embarque',
-          'Borrador de embarque creado',
-          'Se generó el borrador ' || v_expediente || ' desde la cotización ' || v_cot.folio,
-          '/embarques/' || v_embarque_id::text
-   FROM public.organization_members om
-   WHERE om.organization_id = v_cot.organization_id
-     AND om.role IN ('admin'::app_role, 'operador'::app_role)
-     AND om.user_id <> auth.uid();
-   ```
-   El resto del cuerpo queda igual. La sobrecarga de 4 args (`p_decision, ...`) ya delega en esta, no necesita cambios.
+El "Total comparable" en el header se mantiene (es el mismo para todas).
 
-2. **Versión + changelog**
-   - `src/constants/appVersion.ts` → `13.135.30`
-   - `CHANGELOG.md` → entrada `[13.135.30]` describiendo el fix.
+## Comportamiento al guardar (modo crear)
 
-## Validación
+1. Validar igual que hoy + exigir `rutas.length >= 1`.
+2. Por cada `ruta_id` seleccionada, ejecutar `crear.mutateAsync({ ...form, ruta_id })` **en serie** (para no saturar y para poder reportar fallas individuales).
+3. Toast final agregado:
+   - Todas OK → "Se crearon N tarifas".
+   - Parcial → "Se crearon X de N tarifas. Fallaron: <origen→destino>, …" (no se cierra el modal; las rutas que sí se crearon se quitan de la selección para no duplicar).
+   - Todas fallan → se mantiene el modal abierto, no se cierra.
+4. Si todas pasan, cerrar modal e invalidar queries (lo hace el hook actual).
 
-- Volver a abrir la cotización aceptada en preview y reintentar "Crear embarque desde cotización" → ya no debe lanzar `column user_id ... does not exist`.
-- Marcar el issue de Sentry como resuelto sólo después de confirmar (lo dejo al usuario o automatizado en un commit posterior).
+En modo **editar**: el selector queda como Select único (no se permite multi) — sin cambios funcionales.
+
+En modo **duplicar**: se hereda como crear (puede multi-seleccionar; la ruta original viene preseleccionada).
+
+## Detalles técnicos
+
+Archivos a tocar:
+
+- `src/features/costeo/components/TarifaFormFields.tsx`
+  - Cambiar `RutaTipoFields` para aceptar `multiple?: boolean`, `rutaIds: string[]`, `onRutaIdsChange`. Cuando `multiple`, renderizar un combobox múltiple (Popover + Command de shadcn + Checkbox) con chips. Cuando no, mantener el Select actual.
+
+- `src/features/costeo/components/TarifaForm.tsx`
+  - Agregar estado local `rutaIds: string[]` además de `form.ruta_id`. En modo crear/duplicar usar multi; en editar usar single (sincronizado con `form.ruta_id`).
+  - Ajustar `calcularErrores` para validar `rutaIds.length > 0` en crear.
+  - Nueva función `guardarMultiples` que itera `rutaIds`, llama `crear.mutateAsync` por cada uno, agrega resultados y muestra toast resumen. Reusar la mutación existente sin tocar el servicio.
+  - Footer: label del botón dinámico según `rutaIds.length`.
+
+- `src/features/portal-agente/components/AgenteTarifaForm.tsx`
+  - Sin cambios de API: hereda el comportamiento porque solo envuelve `TarifaForm`.
+
+- No se modifica `services/tarifas.ts` ni la BD: cada tarifa sigue siendo un INSERT individual con su `ruta_id`. El trigger del portal agente que fuerza `estado_aprobacion='borrador'` sigue aplicando por fila.
+
+- Memoria: actualizar `mem://features/costeo-tarifas-maritimas` con la nota "Modal Nueva tarifa soporta multi-ruta (1 form → N inserts)".
+
+## Versionado y changelog
+
+- `src/constants/appVersion.ts` → `13.135.31`
+- `CHANGELOG.md` → entrada `[13.135.31] - 2026-06-24`: "Modal Nueva tarifa permite seleccionar varias rutas y generar N tarifas en un solo guardado."
 
 ## Fuera de alcance
 
-- No tocamos los issues `<unknown>`/`zF` (sin stack útil; esperar más eventos con sourcemaps).
-- No tocamos "Invalid login credentials" (no es bug).
+- Edición masiva de tarifas existentes.
+- Importación CSV / bulk import.
+- Cambios en el modelo de datos (no se crea concepto de "plantilla de tarifa").
