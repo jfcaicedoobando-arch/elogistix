@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.44] - 2026-06-24
+- **fix(tests)**: `audit-report` falló porque `TarifaForm.tsx` rebasó las 200 líneas (230) tras las mejoras de validación/toast. Se mueven los helpers `calcularErrores`, `camposFaltantes`, `computeGuardarLabel` y el mapa `ETIQUETAS` a `TarifaForm.helpers.ts`, dejando el componente en 197 líneas. Adicional: `keys-shape.test.ts` desconocía los dominios `usuariosPortalCliente` y `usuariosPortalAgente`; se agregan a `EXPECTED_DOMAINS`.
+
 ## [13.135.43] - 2026-06-24
 - **feat(costeo)**: Toasts de éxito/error vía `sonner` en `TarifaForm` para los tres flujos (crear, crear múltiples, actualizar). Los `useToast` legacy del hook no se renderizaban porque sólo está montado el `<Toaster />` de sonner en `App.tsx`, así que el usuario no veía feedback. Se agrega también un toast de advertencia cuando un alta múltiple tiene éxitos parciales.
 
