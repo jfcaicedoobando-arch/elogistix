@@ -2,7 +2,7 @@
  * Tabla de tarifas marítimas (cuerpo de CosteoTarifas).
  * v13.135.49: badge unificado + dropdown de acciones.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
