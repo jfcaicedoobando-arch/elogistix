@@ -24,13 +24,7 @@ export function useAdminDashboardStats() {
   });
 }
 
-// ─── Global Users ────────────────────────────────────────
-export function useAdminGlobalUsers() {
-  return useQuery({
-    queryKey: queryKeys.admin.allUsers,
-    queryFn: fetchAdminGlobalUsers,
-  });
-}
+// ─── Global Users (hook removido — sin consumidores) ─────
 
 // ─── Organizations List ──────────────────────────────────
 export function useAdminOrganizations() {
