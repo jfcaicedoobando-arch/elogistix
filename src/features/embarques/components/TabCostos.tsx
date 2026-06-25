@@ -4,10 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Receipt } from "lucide-react";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useCostosConFactura } from "@/features/embarques/hooks/useCostosConFactura";
+import {
+  getEstadoLiquidacionDerivado,
+  getEstadoLiquidacionBadgeClass,
+} from "@/features/embarques/utils/estadoLiquidacionDerivado";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import { ConceptosCostoCard } from "./costos/ConceptosCostoCard";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
@@ -33,6 +37,12 @@ const kpiColors = [
 export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
+  const { data: costosConFactura } = useCostosConFactura(embarqueId);
+  const costosConFacturaSet = useMemo(
+    () => costosConFactura ?? new Set<string>(),
+    [costosConFactura],
+  );
+
 
   const showContenedorCol = contenedores.length >= 2;
   const contenedorLabelById = useMemo(() => {
@@ -69,10 +79,22 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
     if (showContenedorCol) {
       base.push({ id: "contenedor", header: "Contenedor", cell: ({ row }) => renderContenedor(row.original.contenedor_id) });
     }
-    base.push({ id: "liq", header: "Liquidación", cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado_liquidacion)}>{row.original.estado_liquidacion}</Badge> });
+    base.push({
+      id: "liq",
+      header: "Liquidación",
+      cell: ({ row }) => {
+        const estado = getEstadoLiquidacionDerivado(row.original, costosConFacturaSet);
+        return (
+          <Badge variant="outline" className={getEstadoLiquidacionBadgeClass(estado)}>
+            {estado}
+          </Badge>
+        );
+      },
+    });
     return defineColumns<ConceptoCostoRow>(base);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showContenedorCol, contenedorLabelById]);
+  }, [showContenedorCol, contenedorLabelById, costosConFacturaSet]);
+
 
   const kpis = [
     { label: 'Total Venta', value: formatCurrency(totalVenta), color: '' },
