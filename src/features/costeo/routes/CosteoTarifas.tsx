@@ -50,6 +50,12 @@ export default function CosteoTarifas() {
   const [initial, setInitial] = useState<Partial<TarifaInput> | undefined>();
   const [editId, setEditId] = useState<string | undefined>();
   const [aEliminar, setAEliminar] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
+
+  const changeView = (v: ViewMode) => {
+    setViewMode(v);
+    safeLocalStorage.setItem(STORAGE_KEYS.tarifasViewMode, v);
+  };
 
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
@@ -193,6 +199,25 @@ export default function CosteoTarifas() {
         onClearAll={clearAll}
       />
 
+      {!isLoading && tarifasFiltradas.length > 0 && (
+        <div className="flex justify-end">
+          <ToggleGroup
+            type="single"
+            size="sm"
+            value={viewMode}
+            onValueChange={(v) => v && changeView(v as ViewMode)}
+            aria-label="Modo de vista"
+          >
+            <ToggleGroupItem value="agrupada" aria-label="Vista agrupada por ruta">
+              <Rows3 className="size-4 mr-1" />Agrupada
+            </ToggleGroupItem>
+            <ToggleGroupItem value="tabla" aria-label="Vista tabla plana">
+              <LayoutList className="size-4 mr-1" />Tabla
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      )}
+
       {!isLoading && tarifasFiltradas.length === 0 ? (
         <Card>
           <TarifasEmptyState
@@ -201,6 +226,13 @@ export default function CosteoTarifas() {
             onNueva={nuevo}
           />
         </Card>
+      ) : viewMode === "agrupada" ? (
+        <TarifasGroupedView
+          tarifas={tarifasFiltradas}
+          onEditar={editar}
+          onDuplicar={duplicar}
+          onEliminar={(id) => setAEliminar(id)}
+        />
       ) : (
         <CosteoTarifasTable
           tarifas={tarifasFiltradas}
