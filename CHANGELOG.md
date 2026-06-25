@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.65] - 2026-06-25
+- **feat(embarques) — Columna Liquidación con 3 estados**: En el tab Costos del detalle de embarque, la columna "Liquidación" ahora distingue **Pendiente de cargar** (sin factura de proveedor vinculada), **Pendiente de pago** (factura cargada pero sin pagar) y **Pagado**. El tercer estado se deriva en el cliente desde `proveedor_facturas_conceptos` (nuevo hook `useCostosConFactura` + helper `getEstadoLiquidacionDerivado`); el modelo de BD no cambia. Se aprovecha también para que el filtro del checklist "costo-sin-factura" filtre por el nuevo estado.
+
 ## [13.135.64] - 2026-06-25
 - **chore(lint) — Limpieza de código muerto detectado por knip**: Se eliminaron 2 archivos sin uso (`EstadoAprobacionBadge`, `TarifaEstadoBadge` en `features/costeo/components`) y 10 exports sin consumidores (`useAdminGlobalUsers`, `useDeleteUser` admin auth, `NextButton`, `fmtPendientesLiq`, `useNotasCredito` / `useCrearNotaCredito` / `useCambiarEstadoNotaCredito`, `buildGastoColumns` + tipo `GastoPendiente`, `useCambiarPasswordPortal`, `CategoriaSelect`). También se eliminaron los imports/aliases asociados que quedaron sin uso. `bun run lint:unused:strict` ahora pasa limpio.
 
