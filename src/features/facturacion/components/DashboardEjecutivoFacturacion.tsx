@@ -123,7 +123,11 @@ export function DashboardEjecutivoFacturacion() {
               value={porTimbrar.toString()}
               tone={porTimbrar > 0 ? "warn" : "default"}
             />
-            <Kpi label="Facturado mes" value={formatCurrencyCompact(facturadoMes, "MXN")} />
+            <Kpi
+              label="Facturado mes"
+              value={formatCurrencyCompact(facturadoMes, "MXN")}
+              hint="Facturas emitidas en el mes en curso, convertidas a MXN con el tipo de cambio de cada factura. Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar."
+            />
             <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
             <Kpi label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
             <Kpi
