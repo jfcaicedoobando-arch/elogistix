@@ -48,6 +48,9 @@ export function useAvanzarEstadoEmbarque() {
     },
     // Toasts (éxito y error) los maneja el caller (useEmbarqueEstadoActions)
     // para evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
+    onError: () => {
+      // No-op intencional: el caller (useEmbarqueEstadoActions) clasifica y notifica el error.
+    },
   });
 }
 
@@ -90,5 +93,8 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
     // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
+    onError: () => {
+      // No-op intencional: el caller maneja el toast de error.
+    },
   });
 }
