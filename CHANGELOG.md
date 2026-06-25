@@ -6,8 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.69] - 2026-06-25
+- **chore(coverage) — Revert + tests reales**: Se revierte el bajón de umbral del 13.135.68 (`lines`/`statements` 37→38) por política ratchet. En su lugar se añaden tests unitarios para el código que diluyó el denominador: `updateOwnPassword`, `CambiarPasswordDialog` (incluye `traducirErrorPassword`), `OrgInfoCard` (configuración), `inviteAgentePortal`, `generarPasswordSegura`, `InvitarAgentePasswordTab` e `InvitarAgenteCredencialesView`. Nueva regla en memoria: ante fallos de coverage, escribir tests — nunca bajar el umbral.
+
 ## [13.135.68] - 2026-06-25
-- **chore(coverage) — Ajuste de umbral**: Bajamos `lines`/`statements` 38→37 en `vitest.config.ts`. Tras agregar los diálogos presentacionales recientes (`CambiarPasswordDialog`, `OrgBadge`, `InvitarAgentePortalDialog`, controllers de página) el coverage real cayó a 37.74% y reventaba el job de Coverage merge. `functions` y `branches` se mantienen.
+- **chore(coverage) — Ajuste de umbral**: Bajamos `lines`/`statements` 38→37 en `vitest.config.ts`. Tras agregar los diálogos presentacionales recientes (`CambiarPasswordDialog`, `OrgBadge`, `InvitarAgentePortalDialog`, controllers de página) el coverage real cayó a 37.74% y reventaba el job de Coverage merge. `functions` y `branches` se mantienen. **REVERTIDO en 13.135.69**.
 
 ## [13.135.67] - 2026-06-25
 - **chore(arquitectura) — Fix tests de CI**: Se movió la consulta de `useCostosConFactura` al servicio `costosConFactura.ts` (el hook ahora sólo orquesta `useQuery`) para respetar la jerarquía Pages→Hooks→Services y se marcó el cast con `SAFE-CAST`. Además se añadió `onError` no-op en `useAvanzarEstadoEmbarque` y `useReabrirEmbarque` (los toasts los maneja el caller) para cumplir el guardrail `mutations-have-onerror`.
