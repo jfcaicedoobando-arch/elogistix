@@ -58,8 +58,8 @@ export function DialogGenerarLiquidacion({
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>Periodo (YYYY-MM)</Label>
-          <Input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} />
+          <Label>Periodo</Label>
+          <MonthPickerMx value={periodo} onChange={setPeriodo} />
         </div>
       </div>
     </FormDialogShell>

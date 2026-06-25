@@ -83,11 +83,10 @@ export default function Comisiones() {
                   ))}
                 </SelectContent>
               </Select>
-              <input
-                type="month"
+              <MonthPickerMx
                 value={periodo}
-                onChange={(e) => setPeriodo(e.target.value)}
-                className="border rounded px-2 py-1.5 text-sm bg-background"
+                onChange={setPeriodo}
+                className="w-[180px] h-9"
               />
             </CardContent>
           </Card>

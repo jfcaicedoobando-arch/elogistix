@@ -140,7 +140,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
         <div className="space-y-1">
           <Label>Fecha programada</Label>
-          <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          <DateTimePickerMx value={fecha} onChange={setFecha} />
         </div>
       </div>
       <div className="space-y-1">

@@ -47,7 +47,7 @@ export function TabVsReal() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <Label className="text-xs">Periodo</Label>
-          <Input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="h-9" />
+          <MonthPickerMx value={periodo} onChange={setPeriodo} className="h-9" />
         </div>
         <Button variant="outline" onClick={handlePdf} disabled={!data}>
           <FileText className="h-4 w-4 mr-2" /> PDF

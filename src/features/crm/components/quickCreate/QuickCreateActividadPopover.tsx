@@ -75,7 +75,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Fecha</Label>
-        <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        <DateTimePickerMx value={fecha} onChange={setFecha} />
       </div>
       <div className="flex items-center justify-between pt-1">
         <Button variant="ghost" size="sm" onClick={onMore} className="text-xs">Más campos →</Button>
