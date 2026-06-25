@@ -86,7 +86,7 @@ export default function Facturacion() {
     search, setSearch,
     filterEstado, setFilter,
     page, setPage, pageSize, setPageSize,
-    paginatedFacturas, totalPages,
+    paginatedFacturas, facturasFiltradas, totalPages,
     proformasPendientes,
     loadingFacturas,
     canEdit,
