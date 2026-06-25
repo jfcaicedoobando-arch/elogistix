@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.61] - 2026-06-25
+- **fix(embarques) — Avanzar a Cerrado bloqueado por trigger**: Al avanzar el estado a "Cerrado" desde el botón principal, el backend fallaba con `Embarque cerrado: edición bloqueada (tabla eventos_embarque)` porque cambiaba el estado primero y luego intentaba insertar nota/evento (el trigger `trg_bloquear_cierre` ya los rechazaba). Además ese flujo nunca generaba el snapshot financiero ni el log de cierre. Ahora `avanzar_estado_embarque` delega a la RPC oficial `cerrar_embarque` cuando el destino es `Cerrado` (snapshot, log, comisiones definitivas) y luego inserta la nota + evento de tracking con `app.bypass_cierre=on` para no chocar con el bloqueo.
+
 ## [13.135.60] - 2026-06-25
 - **fix(embarques) — Toast duplicado al avanzar estado**: Al fallar el cambio de estado del embarque (p. ej. "Embarque cerrado: edición bloqueada") aparecían dos notificaciones de error porque tanto el `onError` del mutation como el `try/catch` del caller emitían toast. Se removieron los toasts de `onError` en `useAvanzarEstadoEmbarque` y `useReabrirEmbarque`; el manejo queda centralizado en `useEmbarqueEstadoActions`, que ya clasifica mensajes especiales (docs faltantes).
 
