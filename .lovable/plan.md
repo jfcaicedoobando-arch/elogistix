@@ -1,46 +1,45 @@
-# Fase C — Vista Agrupada pulida
+## Fase D — Acciones contextuales y refinamientos finales
 
-Objetivo: que la vista agrupada se lea como una tabla real (columnas alineadas entre grupos) y que la vigencia se entienda de un vistazo.
+Cierre del rediseño de `/costeo/tarifas`. Foco: acelerar decisiones del usuario (aprobar/comparar/duplicar) y pulir detalles de jerarquía visual que quedaron sueltos tras A/B/C.
 
-## Cambios visuales
+### 1. Acciones rápidas en hover (fila)
+En `TarifaFila.tsx`, mostrar acciones inline al hacer hover sobre una fila (además del kebab que ya existe):
+- **Aprobar** (solo si `estado_aprobacion = 'borrador' | 'pendiente'`)
+- **Duplicar** (clonar la tarifa con vigencia nueva — atajo para renovaciones)
+- **Ver detalle**
 
-1. **Header de columnas sticky por grupo**
-  - Agregar una fila de encabezados ligera arriba de cada grupo expandido: `Agente · Naviera | Vigencia | Estado | Total USD | Acciones`.
-  - Mismo `grid-template` que las filas (`grid-cols-[1fr_140px_160px_150px_auto]`) para que columnas y filas queden perfectamente alineadas.
-  - Tipografía: `text-[11px] uppercase tracking-wide text-muted-foreground`, sin bordes pesados.
-2. **Mini-barra de vigencia**
-  - Reemplazar el texto plano "01/dic → 31/ene · vence en 12 d" por:
-    - Línea 1: `01/dic → 31/ene` en `tabular-nums`.
-    - Línea 2: barra de progreso de 60px (`h-1 rounded-full bg-muted`) con relleno proporcional al avance del periodo. Color: `bg-success` >7d, `bg-warning` ≤7d, `bg-destructive` vencida.
-    - Tooltip con el texto exacto ("vence en 12 d").
-  - Una sola lectura visual de "qué tan fresca está la tarifa".
-3. **Header de grupo más informativo sin ruido**
-  - Mantener el chip "Mejor USD X" + Trophy.
-  - Añadir a la derecha del título un micro-meta: `3 vigentes · 1 por vencer` (sólo si hay >0 por vencer; warning sutil).
-  - Conservar Chevron y contador `n tarifas`.
-4. **Densidad y separadores**
-  - Reducir `py` de filas a `py-2.5` y separadores `divide-y divide-border/60` en lugar de borders completos.
-  - Hover unificado `hover:bg-muted/40`.
+Visibles con `opacity-0 group-hover:opacity-100` para no saturar; el kebab queda como fallback con todas las acciones.
 
-## Archivos a tocar
+### 2. Comparador rápido en grupo
+En el header de cada grupo (`TarifasGroupedView.tsx`), cuando hay 2+ tarifas vigentes, mostrar un mini-resumen:
+`Mejor USD 1,200 · Promedio USD 1,310 · Δ máx USD 240`
+Ayuda al usuario a saber de un vistazo si vale la pena expandir el grupo.
 
-- `src/features/costeo/components/TarifasGroupedView.tsx`: añadir header de columnas, componente interno `VigenciaBar`, ajustar header de grupo y densidad. Mantener ≤200 líneas — si crece, extraer `VigenciaBar.tsx` y `GrupoHeader.tsx`.
-- `src/constants/appVersion.ts`: bump a `13.135.52` (o siguiente disponible).
-- `CHANGELOG.md`: entrada Fase C.
+### 3. Empty state y zero-results diferenciados
+- **Sin tarifas en absoluto**: ilustración + CTA "Nueva tarifa".
+- **Con filtros aplicados pero 0 resultados**: mensaje específico + botón "Limpiar filtros".
+Hoy ambos casos muestran el mismo placeholder.
 
-## Lo que NO se toca
+### 4. Indicador de "tarifa recién creada"
+Badge sutil `Nueva` (verde, 7 días) en filas creadas recientemente para que el usuario que acaba de cargar varias rutas las identifique fácilmente al regresar.
 
-- Vista Tabla (sigue intacta).
-- Lógica de "Mejor" / cálculo de delta (ya hecho en Fase A).
-- KPIs / filtros (Fase B).
-- Queries, RPCs, servicios.
+### 5. Refinamientos visuales pendientes de A–C
+- Alinear el chip **Mejor** del header con la columna "Estado" del grid (hoy queda flotando a la izquierda).
+- Reducir padding vertical del header de grupo en ~4px (se ve más alto que las filas).
+- En vista Tabla, aplicar el mismo tratamiento de delta `+USD X vs mejor` que ya tiene la vista Agrupada.
 
-## Verificación
+### Archivos a tocar
+- `src/features/costeo/components/TarifaFila.tsx` — acciones hover + badge "Nueva"
+- `src/features/costeo/components/TarifasGroupedView.tsx` — mini-resumen comparador, alineación chip, padding header
+- `src/features/costeo/components/TarifasEmptyState.tsx` (nuevo) — empty states diferenciados
+- `src/features/costeo/routes/CosteoTarifas.tsx` — wire-up empty states y delta en vista Tabla
+- `src/features/costeo/hooks/useDuplicarTarifa.ts` (nuevo) — mutation para duplicar
+- `CHANGELOG.md` + `src/constants/appVersion.ts` → `13.135.54`
 
-Tras implementar, capturar `/costeo/tarifas` con Playwright (viewport 1280×1800) y revisar:
+### Fuera de alcance (queda para otra iteración)
+- Bulk actions (seleccionar varias tarifas y aprobar en lote).
+- Export a CSV/Excel.
+- Historial de cambios por tarifa.
 
-- Columnas alineadas entre el header y todas las filas de cada grupo.
-- Barra de vigencia con color correcto en una tarifa vigente y una próxima a vencer.
-- Densidad cómoda sin sentir apretado.
-
-¿Apruebo y procedo con Fase C tal cual? Si
+### Verificación
+Playwright sobre `/costeo/tarifas` con sesión autorizada: screenshot del hover de fila, del header de grupo con mini-resumen, y del empty state con filtros activos.
