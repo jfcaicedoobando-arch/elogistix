@@ -1,40 +1,48 @@
-# Columna "Liquidación" con 3 estados
+## Plan: Revertir umbral y añadir tests para el código nuevo
 
-## Qué cambia (visible para el usuario)
+### Regla a guardar en memoria
+Crear `mem://principles/coverage-threshold`:
+- **Nunca** bajar los umbrales de coverage en `vitest.config.ts` como "fix" cuando CI falla por cobertura.
+- La solución correcta es **escribir tests** para el código nuevo que causó la caída.
+- Umbral mínimo actual: **lines/statements 38%, functions 52%, branches 72%**.
+- Añadir referencia en `mem://index.md` (Core).
 
-En `/embarques/:id?tab=costos`, en la tabla **Costos directos del embarque**, la columna **Liquidación** dejará de mostrar sólo "Pendiente / Pagado" y mostrará 3 estados con colores distintos:
+### Revertir el cambio incorrecto
+- `vitest.config.ts`: subir `lines` y `statements` de **37 → 38** (estado previo).
+- Quitar el comentario justificativo que añadí.
 
-| Estado mostrado | Cuándo aplica | Color sugerido |
-|---|---|---|
-| **Pendiente de cargar** | El costo aún no tiene factura de proveedor vinculada | Gris / outline |
-| **Pendiente de pago** | Ya existe una factura de proveedor vinculada pero el costo sigue marcado como no pagado | Amarillo / warning |
-| **Pagado** | `estado_liquidacion = 'Pagado'` | Verde / success |
+### Añadir tests para cubrir el código reciente que causó la caída
+Los componentes que metieron líneas sin tests:
 
-No se cambia el modelo de datos (`conceptos_costo.estado_liquidacion` sigue siendo `Pendiente` / `Pagado`); el tercer estado se **deriva** en lectura a partir del vínculo con `proveedor_facturas_conceptos`.
+1. **`src/lib/auth/changePassword.ts`** (lógica pura, fácil de cubrir)
+   - Test de `traducirErrorPassword` para cada código de error mapeado (same_password, weak_password, etc.) → cubre muchas branches.
+   - Test de `changePassword` con mock de `supabase.auth.updateUser` (éxito y error).
 
-## Cómo se decide cada estado
+2. **`src/components/shared/dialogs/CambiarPasswordDialog.tsx`**
+   - Render del diálogo abierto.
+   - Validación: contraseñas no coinciden → muestra error.
+   - Submit exitoso → llama `changePassword` y cierra.
+   - Submit con error → muestra toast traducido.
 
-1. Si `estado_liquidacion = 'Pagado'` → **Pagado**.
-2. Si existe al menos un renglón en `proveedor_facturas_conceptos` cuyo `concepto_costo_id` apunte al costo → **Pendiente de pago**.
-3. En otro caso → **Pendiente de cargar**.
+3. **`src/components/layout/OrgBadge.tsx`**
+   - Render con organización presente.
+   - Render sin organización (no rompe).
 
-## Detalles técnicos
+4. **`src/features/configuracion/components/OrgInfoCard.tsx`**
+   - Render con datos de organización.
+   - Estado de carga.
 
-- **Servicio nuevo / extender query existente**: en `src/features/embarques/services/queries/conceptos.ts` (o un hook adicional consumido por `useEmbarqueDetalleData`) traer el `Set<string>` de `concepto_costo_id` que ya tienen factura de proveedor vinculada para el embarque actual. Una sola consulta:
-  ```ts
-  supabase
-    .from('proveedor_facturas_conceptos')
-    .select('concepto_costo_id, conceptos_costo!inner(embarque_id)')
-    .eq('conceptos_costo.embarque_id', embarqueId)
-  ```
-- **Helper de UI**: nuevo `getEstadoLiquidacionDerivado(concepto, conFacturaSet)` en `src/features/embarques/utils/` que devuelve `'Pagado' | 'Pendiente de pago' | 'Pendiente de cargar'`.
-- **Render**: en `src/features/embarques/components/TabCostos.tsx` la columna `liq` usa el helper y un `Badge` con clase según estado (no usar `getEstadoColor` genérico; mapear local para los 3 valores nuevos).
-- **Filtro del checklist** (`ConceptosCostoCard.tsx`): el filtro actual `cxp / costo-no-liquidado` excluye los `Pagado`; mantener ese comportamiento. Adicionalmente, el filtro `costo-sin-factura` ya existe como clave en `FOCUS_LABEL` pero no filtra — aprovechar para que filtre por estado derivado **Pendiente de cargar**.
-- **Tipo prop**: `TabCostos` y `ConceptosCostoCard` reciben el `Set<string>` de costos con factura (`costosConFactura`) y lo pasan al builder de columnas y al filtro.
-- **Bump versión** + `CHANGELOG.md`.
+5. **`src/features/usuarios/.../InvitarAgentePortalDialog.tsx`** (si la complejidad lo permite, sino dividir)
+   - Render de tabs (invitar por email vs asignar contraseña).
+   - Validación de contraseña en el tab de asignar.
+   - Submit en cada tab llama al edge function con el payload correcto.
 
-## Fuera de alcance
+### Verificación
+- `bun run test` pasa.
+- `bun run test -- --coverage` reporta lines/statements ≥ 38%.
+- Bump a `v13.135.69` + entrada en `CHANGELOG.md` describiendo: revert del umbral + tests añadidos.
 
-- No se cambia el esquema de BD ni los valores almacenados.
-- No se modifica la lógica de marcado de pago ni la conciliación con facturas.
-- No se tocan otros listados (CXP, dashboards) — sólo la tabla de costos del detalle de embarque.
+### Notas técnicas
+- Usar `@testing-library/react` con `userEvent` para los diálogos.
+- Mockear `@/integrations/supabase/client` siguiendo el patrón thenable ya establecido (ver `mem://technical/testing-mock-patterns`).
+- Respetar `afterEach` global de cleanup (`mem://technical/testing-cleanup-protocol`).
