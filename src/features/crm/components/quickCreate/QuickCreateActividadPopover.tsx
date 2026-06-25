@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
 import { toast } from "sonner";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
 
@@ -75,7 +76,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Fecha</Label>
-        <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        <DateTimePickerMx value={fecha} onChange={setFecha} />
       </div>
       <div className="flex items-center justify-between pt-1">
         <Button variant="ghost" size="sm" onClick={onMore} className="text-xs">Más campos →</Button>

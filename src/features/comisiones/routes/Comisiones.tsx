@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
+import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { formatCurrency } from "@/lib/formatters";
 import { useComisionesDevengadas, useUsuariosVendedores } from "@/features/comisiones/hooks";
 import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
@@ -83,11 +84,10 @@ export default function Comisiones() {
                   ))}
                 </SelectContent>
               </Select>
-              <input
-                type="month"
+              <MonthPickerMx
                 value={periodo}
-                onChange={(e) => setPeriodo(e.target.value)}
-                className="border rounded px-2 py-1.5 text-sm bg-background"
+                onChange={setPeriodo}
+                className="w-[180px] h-9"
               />
             </CardContent>
           </Card>

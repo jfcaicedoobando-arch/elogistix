@@ -6,8 +6,8 @@ import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
@@ -47,7 +47,7 @@ export function TabVsReal() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <Label className="text-xs">Periodo</Label>
-          <Input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="h-9" />
+          <MonthPickerMx value={periodo} onChange={setPeriodo} className="h-9" />
         </div>
         <Button variant="outline" onClick={handlePdf} disabled={!data}>
           <FileText className="h-4 w-4 mr-2" /> PDF

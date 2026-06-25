@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
@@ -58,8 +58,8 @@ export function DialogGenerarLiquidacion({
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>Periodo (YYYY-MM)</Label>
-          <Input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} />
+          <Label>Periodo</Label>
+          <MonthPickerMx value={periodo} onChange={setPeriodo} />
         </div>
       </div>
     </FormDialogShell>

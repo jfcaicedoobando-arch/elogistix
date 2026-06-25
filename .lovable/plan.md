@@ -1,58 +1,43 @@
-## Auditoría: `<Input type="date">` nativo en la app
+## Resultado de la auditoría
 
-Hice un barrido completo. Encontré **30 ocurrencias** del input de fecha nativo en **22 archivos**. Todos sufren el mismo problema: en navegadores con locale en inglés muestran `MM/DD/YYYY` en vez del formato mexicano `DD/MM/YYYY`.
+Busqué en todo `src/` los inputs de fecha nativos. La migración previa a `DatePickerMx` está **completa**: cero ocurrencias de `<input type="date">` (solo queda la mención del comentario en `date-picker-mx.tsx`).
 
-### Agrupación por módulo
+Sin embargo, encontré **5 inputs nativos de fecha/periodo que aún muestran formato en inglés** según el idioma del navegador:
 
-**Costeo (tarifas, demoras, búsqueda) — 6 campos**
-- `costeo/components/TarifaNumerosVigenciaFields.tsx` (vigente_desde, vigente_hasta)
-- `costeo/components/BuscarTarifaDialog.tsx` (fecha)
-- `costeo/components/NavieraCondicionForm.tsx` (1)
-- `costeo/routes/CosteoDemorasVenta.tsx` (vigente_desde, vigente_hasta)
-- `costeo/routes/CosteoBuscar.tsx` (fecha)
+### `type="datetime-local"` (muestra MM/DD/YYYY hh:mm AM/PM)
+1. `src/features/crm/components/NuevaActividadDialog.tsx:143` — campo "Fecha"
+2. `src/features/crm/components/quickCreate/QuickCreateActividadPopover.tsx:78` — campo "Fecha"
 
-**CxP (facturas y filtros) — 6 campos**
-- `cxp/components/FacturaProveedorFormFields.tsx` (emision, vencimiento)
-- `cxp/components/DialogNotaCreditoProveedor.tsx` (fecha)
-- `cxp/components/CxpFiltrosSheetFields.tsx` (fechaDesde, fechaHasta)
+### `type="month"` (muestra "Month YYYY" en inglés)
+3. `src/features/comisiones/routes/Comisiones.tsx:87` — selector de periodo
+4. `src/features/comisiones/components/DialogGenerarLiquidacion.tsx:62` — selector de periodo
+5. `src/features/presupuesto/components/TabVsReal.tsx:50` — selector de periodo
 
-**Facturación — 3 campos**
-- `facturacion/components/DialogMarcarFacturada.tsx` (1)
-- `facturacion/components/PagoFormFields.tsx` (fecha)
-- `facturacion/components/FacturaManualDatosFiscales.tsx` (fechaEmision)
+## Plan de remediación
 
-**Embarques — 7 campos**
-- `embarques/components/stepDatosRuta/StepDatosRutaFechas.tsx` (2)
-- `embarques/components/TabDemoras.tsx` (2)
-- `embarques/components/DialogSeguroForm.tsx` (vigencia_desde, vigencia_hasta)
-- `embarques/components/tracking/TrackingNuevoEventoForm.tsx` (fecha)
+### Paso 1 — Crear `DateTimePickerMx`
+Nuevo componente en `src/components/ui/date-time-picker-mx.tsx` que combine `DatePickerMx` (DD/MM/YYYY) con un input de hora (`HH:mm`), devolviendo un string ISO compatible con el actual `datetime-local`. Reutilizar la estética de `DatePickerMx`.
 
-**Cotización — 2 campos**
-- `cotizacion/components/informativa/WizardInformativa.tsx` (vigenciaDesde, vigenciaHasta)
+Aplicar en:
+- `NuevaActividadDialog.tsx`
+- `QuickCreateActividadPopover.tsx`
 
-**CRM — 4 campos**
-- `crm/components/nuevaOportunidad/OportunidadFormFields.tsx` (fecha_estimada_cierre)
-- `crm/components/OportunidadesFiltersBar.tsx` (cierreDesde, cierreHasta)
-- `crm/components/ConvertirLeadDialog.tsx` (fecha)
+### Paso 2 — Crear `MonthPickerMx`
+Nuevo componente en `src/components/ui/month-picker-mx.tsx`: popover con `Calendar` en modo selección de mes (o dos selects mes/año en español: "Enero 2026"). Devuelve `YYYY-MM` para mantener compatibilidad con la lógica existente de periodos.
 
-**Admin / Auditoría — 3 campos**
-- `admin/components/DiagnosticoFilters.tsx` (2)
-- `auditoria/components/marcarRevisado/SnoozeTab.tsx` (1)
+Aplicar en:
+- `Comisiones.tsx`
+- `DialogGenerarLiquidacion.tsx`
+- `TabVsReal.tsx`
 
-### Plan de remediación
+### Paso 3 — Versionado
+- Bump `APP_VERSION` a `13.135.58`.
+- Agregar entrada en `CHANGELOG.md` describiendo la auditoría y los nuevos pickers.
 
-Reemplazar `<Input type="date" value={x} onChange={e => set(e.target.value)} />` por `<DatePickerMx value={x} onChange={set} />` en los 22 archivos. Conservar `className`/`id`/`title` cuando existan.
+## Notas técnicas
 
-**Casos especiales que validaré antes de tocar**:
-- `TrackingNuevoEventoForm.tsx` usa `register("fecha")` de react-hook-form → necesita `Controller` para conectar `DatePickerMx`.
-- `FacturaProveedorFormFields.tsx` tiene un campo `vencimiento` con `readOnly` → si es solo lectura quizá conviene mostrarlo formateado en vez de un picker; lo dejaré como `DatePickerMx` deshabilitado para mantener consistencia visual.
+- Ambos nuevos componentes deben respetar la guía de estilo (semantic tokens, sin colores hardcoded) y exponer la misma API que un `Input` controlado (`value` + `onChange(string)`) para minimizar cambios en los call sites.
+- Locale `es-MX` con `date-fns/locale/es`.
+- No tocar la lógica de negocio (cálculos de comisiones/presupuesto) — solo presentación.
 
-### Versionado
-- Bump `APP_VERSION` a `13.135.57`.
-- Entrada en `CHANGELOG.md` listando los módulos afectados.
-
-### Analogía
-Es como cambiar todos los relojes de pared de la oficina al mismo formato 24h: el tiempo no cambia, pero ya nadie se confunde leyendo "03:00" pensando si es mañana o tarde.
-
-### Confirmación
-¿Aplico el reemplazo en los **22 archivos** de una vez, o prefieres que lo haga por módulo (Costeo → CxP → Facturación → Embarques → Cotización → CRM → Admin)?
+¿Apruebas que proceda con los 3 pasos, o prefieres solo los `datetime-local` (paso 1) y dejar los `type="month"` como están?

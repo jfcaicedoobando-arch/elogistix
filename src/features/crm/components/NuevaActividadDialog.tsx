@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -140,7 +141,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
         <div className="space-y-1">
           <Label>Fecha programada</Label>
-          <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          <DateTimePickerMx value={fecha} onChange={setFecha} />
         </div>
       </div>
       <div className="space-y-1">
