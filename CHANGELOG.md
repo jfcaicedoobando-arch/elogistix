@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.52] - 2026-06-25
+- **UX(costeo/tarifas) Fase B**: KPIs compactos (~56px de alto, una sola fila tipo chip con borde sutil) que destacan visualmente cuando están actuando como filtro activo; barra de filtros sin `Card` wrapper, búsqueda más prominente con placeholder mejorado ("Buscar por puerto, agente o naviera…"), selects `h-9` con labels inline (`Aprob:`, `Vigencia:`, `Agente:`, `Cont:`), y botón "Limpiar filtros" alineado a la derecha sólo cuando hay filtros activos. Nueva fila de contexto sobre la tabla con contador `N tarifas` a la izquierda y toggle Agrupada/Tabla a la derecha. La tabla queda visible mucho más arriba en el viewport.
+
 ## [13.135.51] - 2026-06-25
 - **UX(costeo/tarifas) Fase A**: Mejoras visuales en vista agrupada — el **precio total** ahora es la columna ancla (text-base semibold, columnas alineadas con anchos fijos y `tabular-nums`); se muestra **delta vs. mejor** (`+USD …`) en cada fila no-ganadora; las filas **Vencida/Reemplazada** se atenúan con `opacity-60` para que la vista vaya a las vigentes; el header del grupo deja un solo chip dominante (Mejor con ícono Trophy) y mueve `# tarifas · # agentes` a metadata secundaria; hover sutil de fila (`bg-muted/30`); botón principal renombrado a **"Nueva tarifa"** (la multi-ruta sigue disponible dentro del modal). Cero cambios en datos/RPC.
 
