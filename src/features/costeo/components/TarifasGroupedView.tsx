@@ -198,6 +198,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                     key={t.id}
                     t={t}
                     esMejor={g.mejor?.id === t.id}
+                    mejorTotal={g.mejor?.total_comparable ?? null}
                     onEditar={() => onEditar(t.id)}
                     onDuplicar={() => onDuplicar(t.id)}
                     onEliminar={() => onEliminar(t.id)}
