@@ -43,6 +43,20 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
   const { aprobar, rechazar, reactivar } = useAprobacionTarifa();
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
 
+  // Mejor total por (ruta + contenedor) entre elegibles (vigente y no rechazada/reemplazada).
+  const mejorPorGrupo = useMemo(() => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const map = new Map<string, number>();
+    for (const t of tarifas) {
+      const ap = t.estado_aprobacion ?? "vigente";
+      if (ap !== "vigente" || t.vigente_hasta < hoy || t.estado === "reemplazada") continue;
+      const k = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
+      const prev = map.get(k);
+      if (prev == null || t.total_comparable < prev) map.set(k, t.total_comparable);
+    }
+    return map;
+  }, [tarifas]);
+
   return (
     <Card>
       <Table>
