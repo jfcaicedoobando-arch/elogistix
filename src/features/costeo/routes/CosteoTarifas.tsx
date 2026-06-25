@@ -35,7 +35,7 @@ import {
 } from "./CosteoTarifas.helpers";
 import { PageHeader } from "@/components/shared/PageHeader";
 
-const DEFAULT_APROB: AprobacionFiltro = "borrador";
+const DEFAULT_APROB: AprobacionFiltro = "todas";
 const DEFAULT_ESTADO: EstadoFiltro = "todas";
 
 export default function CosteoTarifas() {
