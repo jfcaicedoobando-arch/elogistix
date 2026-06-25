@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";

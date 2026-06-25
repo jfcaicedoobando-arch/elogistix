@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.58] - 2026-06-25
+- **fix(ux) — Localización de pickers**: Auditoría complementaria de `type="datetime-local"` y `type="month"` nativos. Nuevos componentes `DateTimePickerMx` (DD/MM/YYYY HH:mm) y `MonthPickerMx` (Mes YYYY en español). Migrados: CRM (`NuevaActividadDialog`, `QuickCreateActividadPopover`), Comisiones (`Comisiones`, `DialogGenerarLiquidacion`) y Presupuesto (`TabVsReal`). Ya no quedan inputs de fecha/periodo nativos en la app.
+
 ## [13.135.57] - 2026-06-25
 - **fix(ux) — Localización global de fechas**: Auditoría completa del proyecto y migración de **todos** los `<input type="date">` nativos a `DatePickerMx` (30 ocurrencias en 22 archivos). Ahora todos los inputs de fecha de la app muestran DD/MM/YYYY sin importar el locale del navegador. Módulos afectados: Costeo (tarifas, demoras-venta, buscar, naviera-condiciones), CxP (facturas, NC, filtros), Facturación (pagos, marcar facturada, factura manual), Embarques (wizard ETD/ETA, seguros, tracking, demoras por contenedor), Cotización informativa, CRM (oportunidades, filtros, convertir lead), Admin diagnóstico y Auditoría snooze. Los casos con react-hook-form (`StepDatosRutaFechas`, `TrackingNuevoEventoForm`) se migraron usando `Controller`.
 
