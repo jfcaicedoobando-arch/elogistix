@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.56] - 2026-06-25
+- **fix(ux)**: Los modales de "Registrar pago" (liquidación de comisiones y pago a proveedor) ahora usan `DatePickerMx` en lugar del `<input type="date">` nativo. Antes, en navegadores con locale en inglés, las fechas se mostraban en formato gringo (MM/DD/YYYY); ahora siempre se muestran en formato mexicano (DD/MM/YYYY). El valor ISO almacenado no cambia.
+
 ## [13.135.55] - 2026-06-25
 - **feat(proformas)**: La RPC `generar_numero_proforma` ahora respeta un piso opcional configurable por organización y año, leído de `configuracion` (`categoria='folios'`, `clave='proforma_floor_<YEAR>'`). Se establece el piso `947` para 2026 en la organización principal, de modo que la próxima proforma generada será **PRO-2026-0948**. Cero impacto en proformas existentes.
 
