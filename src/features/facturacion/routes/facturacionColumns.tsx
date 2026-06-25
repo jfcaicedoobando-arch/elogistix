@@ -8,10 +8,8 @@ import { sortByString, sortByNumber, sortByDate } from "@/components/shared/data
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { useFacturas } from "@/features/facturacion/hooks";
-import type { useFacturacionPageController } from "@/features/facturacion/hooks";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
-export type GastoPendiente = ReturnType<typeof useFacturacionPageController>["gastosPendientes"][number];
 
 export interface FacturaColumnsOptions {
   canEdit: boolean;
