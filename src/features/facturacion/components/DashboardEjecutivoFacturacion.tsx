@@ -133,8 +133,9 @@ export function DashboardEjecutivoFacturacion() {
               tone={(dash.data?.facturas_sin_tc ?? 0) > 0 ? "warn" : "default"}
               hint={
                 (dash.data?.facturas_sin_tc ?? 0) > 0
-                  ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${dash.data?.facturas_sin_tc} factura(s) USD sin TC capturado ni fallback disponible están excluidas — captura el TC en cada factura para que el total cuadre.`
-                  : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar."
+                  ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${dash.data?.facturas_sin_tc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
+                  : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar."
+
               }
             />
 

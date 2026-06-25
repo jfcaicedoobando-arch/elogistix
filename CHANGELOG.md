@@ -6,7 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.73] - 2026-06-25
+- **fix(facturación) — TC inválido (≤1) en facturas USD/EUR no infla el KPI**: El fix previo (`13.135.72`) sólo cubría `tipo_cambio` NULL/0, pero en producción había 12 facturas USD de junio con `tipo_cambio = 1` literalmente guardado. Ahora `sumarFacturasPorMoneda` y `fetchDashboardEjecutivoFacturacion` consideran `tc ≤ 1` como inválido para monedas extranjeras y aplican el TC del día (`useExchangeRates`) como fallback, o excluyen la factura y la cuentan en `facturas_sin_tc`. Tooltip del KPI actualizado para reflejar el nuevo comportamiento. Tests ampliados (7 casos). Nota: las 12 facturas existentes no se corrigieron en BD porque están emitidas e inmutables (sólo se corrigen vía nota de crédito); el fix presentacional cubre el problema sin tocar datos contables.
+
+
+
 ## [13.135.72] - 2026-06-25
+
 - **fix(facturación) — KPI "Facturado mes" inflaba facturas USD sin TC**: El cálculo del equivalente MXN en `fetchDashboardEjecutivoFacturacion` usaba `(tc || 1)` como fallback silencioso, por lo que cuando una factura USD no tenía `tipo_cambio` capturado, el monto en USD se sumaba como si fueran MXN 1:1 (102,193.20 USD aparecía como "$102.2K MXN"). Ahora: 1) si `tipo_cambio` está vacío se usa el TC del día desde `useExchangeRates` como fallback; 2) si tampoco hay fallback la factura se excluye y se cuenta en `facturas_sin_tc`; 3) el KPI muestra un ⚠️ con tooltip cuando hay facturas excluidas. Además el footer de la tabla "Emitidas" ahora muestra **MXN equivalente** (cuadra contra el header) y un contador "Sin TC" cuando aplica.
 
 ## [13.135.71] - 2026-06-25

@@ -1,51 +1,58 @@
-## Diagnóstico verificado contra la base de datos
+## Lo que encontré al validar los datos
 
-En junio 2026 (rango actual del filtro):
+Las 12 facturas USD de junio **no tienen `tipo_cambio` NULL** como pensé — tienen `tipo_cambio = 1` literalmente guardado en la base:
 
-- 12 facturas en USD, total **$102,193.20 USD**, todas en estado *Emitida*.
-- 0 facturas en MXN.
-- Las 12 facturas tienen `tipo_cambio = NULL`.
-
-El servicio `fetchDashboardEjecutivoFacturacion` calcula el equivalente MXN así:
-
-```ts
-const tc = moneda === "MXN" ? 1 : Number(tipoCambio ?? 0);
-return Number(monto) * (tc || 1);   // ← si tc=0, fallback a 1
+```
+moneda=USD  total=1212.20  tipo_cambio=1
+moneda=USD  total=4490.00  tipo_cambio=1
+moneda=USD  total=21600.00 tipo_cambio=1
+... (12 filas, todas con tc=1)
 ```
 
-Con `tipo_cambio` NULL, `tc` cae a 0 y el `|| 1` lo convierte en 1. Resultado: **102,193.20 USD se suma como si fueran 102,193.20 MXN**. Por eso el número del header y el USD del footer son casi idénticos: literalmente es el mismo número, mal etiquetado.
+Por eso mi fix anterior no aplicó: mi código sólo usa el fallback cuando `tipo_cambio` es NULL o 0. Como en la base dice "1" explícitamente, lo respeta y multiplica `102,193.20 × 1 = $102.2K MXN`.
+
+## Analogía
+
+Es como si alguien hubiera escrito a mano en cada factura USD "tipo de cambio: 1" en lugar de "tipo de cambio: 17.25". La calculadora hace bien su trabajo, pero el dato de entrada está mal.
 
 ## Causa raíz
 
-El `|| 1` "esconde" facturas USD sin tipo de cambio capturado, dándole al usuario un KPN MXN incorrecto en silencio.
+Hay dos problemas que se combinan:
 
-## Cambios propuestos (solo presentación / cálculo del KPI, sin tocar datos ni RLS)
+1. **El código es demasiado confiado**: acepta `tc = 1` para facturas USD como si fuera válido, cuando financieramente nunca lo es (1 USD ≠ 1 MXN).
+2. **Los datos están mal**: alguien (o algún flujo de captura previo) guardó las 12 facturas USD con TC=1, probablemente porque el formulario tenía ese default.
+
+## Plan de fix (sólo presentación; los datos los decide el usuario)
 
 ### 1. `src/features/facturacion/services/dashboardEjecutivo.ts`
-- Quitar el fallback silencioso `|| 1` para monedas distintas de MXN.
-- Si una factura USD no tiene `tipo_cambio`, usar el **tipo de cambio del día más cercano** desde la tabla/servicio de tipos de cambio ya existente en el proyecto (`exchange-rates`). Si no hay tipo de cambio disponible, **excluir esa factura de la suma MXN** y contarla como "pendiente de TC".
-- Retornar también un nuevo campo `facturas_sin_tc: number` para poder advertir al usuario.
 
-### 2. `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`
-- Si `facturas_sin_tc > 0`, mostrar un pequeño badge ⚠️ junto al KPI "Facturado mes" con tooltip: *"N facturas USD sin tipo de cambio capturado no se incluyen en el equivalente MXN. Captura el TC en cada factura para que el total cuadre."*
-- Mantener el tooltip explicativo ya existente.
+- Cambiar la heurística: para monedas distintas de MXN, considerar `tc <= 1` como **inválido** (no tiene sentido financiero), y aplicar el fallback de tipo de cambio del día.
+- Si tampoco hay fallback, excluir la factura y contarla en `facturas_sin_tc`.
 
-### 3. `src/features/facturacion/components/FacturasEmitidasFooter.tsx`
-- Agregar una fila con el **MXN equivalente total** (`Subtotal MXN + Subtotal USD × TC` por factura), usando exactamente la misma fórmula corregida que el header — así ambos números cuadran cuando el filtro está en "mes en curso".
-- Marcar visualmente cuántas facturas USD del filtro no tienen TC.
+### 2. `src/features/facturacion/utils/sumarFacturas.ts`
+
+- Misma heurística (`tc <= 1` → fallback) para que el footer "MXN equivalente" cuadre con el header.
+
+### 3. `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`
+
+- Actualizar el copy del tooltip del ⚠️ para mencionar también el caso "TC capturado inválido (≤1) en factura USD/EUR".
 
 ### 4. Tests
-- Ampliar `sumarFacturas.test.ts` y agregar un test al servicio del dashboard para cubrir el caso `tipo_cambio = NULL` (no debe inflar el MXN).
+
+- Agregar caso `tc=1` para USD → debe usar fallback (no multiplicar por 1).
 - Mantener cobertura ≥38%.
 
-## Lo que NO voy a cambiar
+## Lo que NO voy a tocar
 
-- No voy a actualizar `tipo_cambio` en las facturas existentes (eso es decisión del usuario / dato operativo).
-- No tocaré RLS, migraciones, ni el flujo de captura/emisión de facturas.
-- No cambiaré el filtro de fechas ni la lógica de paginación.
+- **No modificaré las 12 facturas existentes en la base**. Eso es un cambio de datos productivos que requiere tu autorización explícita y debería hacerse vía un formulario de corrección (que ya debe existir) o una migración puntual aparte.
+- No tocaré RLS ni el flujo de captura/timbrado de facturas.
+
+## Pregunta para ti (opcional, segundo paso)
+
+¿Quieres que después también te arme una **migración correctiva** para actualizar el `tipo_cambio` de esas 12 facturas USD a un TC realista (p.ej. el TC del día que se emitieron, vía Banxico/Frankfurter)? Sería un cambio aparte (versión `13.135.73`) y requeriría tu OK explícito porque modifica datos contables. SI, OK.
 
 ## Versionado
 
-Bump a `13.135.72` + entrada en `CHANGELOG.md` describiendo el fix.
+Bump a `13.135.72` ya existe → este fix sube a `**13.135.73**` + entrada en `CHANGELOG.md`.
 
-¿Procedo?
+¿Procedo con el fix defensivo (`tc ≤ 1 → fallback`)? Si

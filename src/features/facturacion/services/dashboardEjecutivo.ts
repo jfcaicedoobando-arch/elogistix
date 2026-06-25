@@ -52,14 +52,16 @@ function ultimosNMeses(n: number, hoy: Date): { desde: Date; rangos: Array<{ ini
 type FacturaRow = { fecha_emision: string; total: number; moneda: string; tipo_cambio: number | null };
 type PagoRow = { fecha_pago: string; monto_aplicado_factura: number; tipo_cambio: number | null; moneda: string };
 
-/** Devuelve el MXN equivalente o `null` si no se pudo convertir (USD sin TC ni fallback). */
+/** Devuelve el MXN equivalente o `null` si no se pudo convertir (USD/EUR con TC inválido y sin fallback). */
 function mxnEquivalente(monto: number, moneda: string, tipoCambio: number | null, fallback: number): number | null {
   if (moneda === "MXN") return Number(monto);
   const tc = Number(tipoCambio) || 0;
-  if (tc > 0) return Number(monto) * tc;
+  // tc <= 1 se considera inválido para monedas extranjeras: 1 USD/EUR nunca es 1 MXN.
+  if (tc > 1) return Number(monto) * tc;
   if (fallback > 0) return Number(monto) * fallback;
   return null;
 }
+
 
 function acumularFacturas(
   facturas: FacturaRow[],

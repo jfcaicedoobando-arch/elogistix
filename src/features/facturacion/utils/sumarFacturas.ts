@@ -49,13 +49,15 @@ export function sumarFacturasPorMoneda(
     if (f.moneda === "USD") {
       totalUsd += monto;
       const tc = Number(f.tipo_cambio) || 0;
-      if (tc > 0) mxnEquivalente += monto * tc;
+      // tc <= 1 se considera inválido para USD: 1 USD nunca es 1 MXN.
+      if (tc > 1) mxnEquivalente += monto * tc;
       else if (fallback > 0) mxnEquivalente += monto * fallback;
       else facturasSinTc += 1;
     } else if (f.moneda === "MXN") {
       totalMxn += monto;
       mxnEquivalente += monto;
     }
+
     conteo += 1;
   }
   return { conteo, totalMxn, totalUsd, conteoCanceladas, mxnEquivalente, facturasSinTc };
