@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -76,7 +77,7 @@ export default function CosteoBuscar() {
           </div>
           <div>
             <Label htmlFor="buscar-fecha">Fecha</Label>
-            <Input id="buscar-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
           </div>
         </div>
       </Card>

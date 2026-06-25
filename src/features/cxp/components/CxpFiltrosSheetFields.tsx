@@ -4,6 +4,7 @@
  */
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -94,16 +95,18 @@ export function CxpFiltrosSheetFields(props: Props) {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Emisión desde</Label>
-          <Input
-            type="date" value={props.fechaDesde}
-            onChange={(e) => props.onFechaDesdeChange(e.target.value)}
+          <DatePickerMx
+            value={props.fechaDesde}
+            onChange={props.onFechaDesdeChange}
+            className="w-full"
           />
         </div>
         <div className="space-y-1">
           <Label>Emisión hasta</Label>
-          <Input
-            type="date" value={props.fechaHasta}
-            onChange={(e) => props.onFechaHastaChange(e.target.value)}
+          <DatePickerMx
+            value={props.fechaHasta}
+            onChange={props.onFechaHastaChange}
+            className="w-full"
           />
         </div>
       </div>

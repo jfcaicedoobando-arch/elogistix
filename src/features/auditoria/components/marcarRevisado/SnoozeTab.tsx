@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TabsContent } from "@/components/ui/tabs";
@@ -22,13 +23,10 @@ export function SnoozeTab({ ctrl }: Props) {
           <Label htmlFor="snooze-hasta" className="text-xs">
             Silenciar hasta <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="snooze-hasta"
-            type="date"
-            min={ctrl.minSnoozeDate}
+          <DatePickerMx
             value={ctrl.snoozeHasta}
-            onChange={(e) => ctrl.setSnoozeHasta(e.target.value)}
-            className="text-sm"
+            onChange={ctrl.setSnoozeHasta}
+            className="w-full text-sm"
           />
         </div>
       </div>

@@ -5,6 +5,7 @@
  */
 import { CalendarDays, Coins, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -60,7 +61,7 @@ export function FacturaProveedorFormFields({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label>Emisión</Label>
-            <Input type="date" value={values.emision} onChange={(e) => onChange("emision", e.target.value)} />
+            <DatePickerMx value={values.emision} onChange={(v) => onChange("emision", v)} className="w-full" />
           </div>
           <div className="space-y-1">
             <Label>Días crédito</Label>
@@ -72,7 +73,11 @@ export function FacturaProveedorFormFields({
           </div>
           <div className="space-y-1">
             <Label>Vencimiento</Label>
-            <Input type="date" value={values.vencimiento} readOnly className="bg-muted" />
+            <Input
+              value={values.vencimiento ? values.vencimiento.split("-").reverse().join("/") : ""}
+              readOnly
+              className="bg-muted"
+            />
           </div>
         </div>
       </FormSection>

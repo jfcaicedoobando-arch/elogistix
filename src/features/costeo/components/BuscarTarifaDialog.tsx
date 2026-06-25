@@ -8,6 +8,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -158,7 +159,7 @@ export function BuscarTarifaDialog({
         </div>
         <div>
           <Label htmlFor="td-fecha">Fecha</Label>
-          <Input id="td-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
         </div>
       </div>
 

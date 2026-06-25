@@ -3,6 +3,7 @@
  * Sin lógica de datos: sólo recibe valores y callbacks.
  */
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -81,20 +82,18 @@ export function DiagnosticoFilters({
       </div>
       <div>
         <Label htmlFor="diag-from" className="text-xs">Desde</Label>
-        <Input
-          id="diag-from"
-          type="date"
+        <DatePickerMx
           value={from ?? ""}
-          onChange={(e) => onFromChange(e.target.value || null)}
+          onChange={(v) => onFromChange(v || null)}
+          className="w-full"
         />
       </div>
       <div>
         <Label htmlFor="diag-to" className="text-xs">Hasta</Label>
-        <Input
-          id="diag-to"
-          type="date"
+        <DatePickerMx
           value={to ?? ""}
-          onChange={(e) => onToChange(e.target.value || null)}
+          onChange={(v) => onToChange(v || null)}
+          className="w-full"
         />
       </div>
       <div className="md:col-span-6 flex justify-end">

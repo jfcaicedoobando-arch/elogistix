@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -106,11 +107,11 @@ export function DialogSeguroForm({ open, onOpenChange, embarqueId, seguro }: Pro
 
         <div>
           <Label>Vigencia desde *</Label>
-          <Input type="date" value={form.vigencia_desde} onChange={(e) => setField("vigencia_desde", e.target.value)} />
+          <DatePickerMx value={form.vigencia_desde} onChange={(v) => setField("vigencia_desde", v)} className="w-full" />
         </div>
         <div>
           <Label>Vigencia hasta *</Label>
-          <Input type="date" value={form.vigencia_hasta} onChange={(e) => setField("vigencia_hasta", e.target.value)} />
+          <DatePickerMx value={form.vigencia_hasta} onChange={(v) => setField("vigencia_hasta", v)} className="w-full" />
         </div>
 
         <div>

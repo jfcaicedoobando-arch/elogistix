@@ -3,6 +3,7 @@
  * Extraído para mantener el dialog principal < 200 LOC.
  */
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
@@ -36,7 +37,7 @@ export function FacturaManualDatosFiscales({ value, onChange }: Props) {
       </div>
       <div>
         <Label>Fecha emisión</Label>
-        <Input type="date" value={value.fechaEmision} onChange={(e) => onChange({ fechaEmision: e.target.value })} />
+        <DatePickerMx value={value.fechaEmision} onChange={(v) => onChange({ fechaEmision: v })} className="w-full" />
       </div>
       <div>
         <Label>Días crédito</Label>

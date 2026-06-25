@@ -5,6 +5,7 @@
  */
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 
 const invalidCls = (invalid?: boolean) =>
@@ -62,22 +63,18 @@ export function VigenciaFields({ form, setForm, errores }: NumerosProps) {
     <div className="grid grid-cols-2 gap-3">
       <div>
         <Label htmlFor="tarifa-vig-desde">Vigente desde *</Label>
-        <Input
-          id="tarifa-vig-desde"
-          type="date" value={form.vigente_desde}
-          aria-invalid={errores?.vigente_desde || undefined}
-          className={invalidCls(errores?.vigente_desde)}
-          onChange={(e) => setForm({ ...form, vigente_desde: e.target.value })}
+        <DatePickerMx
+          value={form.vigente_desde}
+          onChange={(v) => setForm({ ...form, vigente_desde: v })}
+          className={`w-full ${invalidCls(errores?.vigente_desde) ?? ""}`}
         />
       </div>
       <div>
         <Label htmlFor="tarifa-vig-hasta">Vigente hasta *</Label>
-        <Input
-          id="tarifa-vig-hasta"
-          type="date" value={form.vigente_hasta}
-          aria-invalid={errores?.vigente_hasta || undefined}
-          className={invalidCls(errores?.vigente_hasta)}
-          onChange={(e) => setForm({ ...form, vigente_hasta: e.target.value })}
+        <DatePickerMx
+          value={form.vigente_hasta}
+          onChange={(v) => setForm({ ...form, vigente_hasta: v })}
+          className={`w-full ${invalidCls(errores?.vigente_hasta) ?? ""}`}
         />
       </div>
     </div>

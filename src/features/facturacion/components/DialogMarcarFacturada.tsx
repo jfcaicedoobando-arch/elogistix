@@ -3,6 +3,7 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Loader2, Paperclip, X, FileText, FileCode2 } from "lucide-react";
 import { useMarcarProformaFacturada, type ProformaRow } from "@/features/embarques/hooks";
@@ -79,11 +80,10 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="fecha">Fecha de facturación</Label>
-            <Input
-              id="fecha"
-              type="date"
+            <DatePickerMx
               value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
+              onChange={setFecha}
+              className="w-full"
             />
           </div>
 

@@ -6,6 +6,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CrmEtapaRow } from "@/features/crm/hooks";
@@ -53,11 +54,11 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Cierre desde</Label>
-        <Input type="date" value={value.cierreDesde} onChange={(e) => set("cierreDesde", e.target.value)} />
+        <DatePickerMx value={value.cierreDesde} onChange={(v) => set("cierreDesde", v)} className="w-full" />
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Cierre hasta</Label>
-        <Input type="date" value={value.cierreHasta} onChange={(e) => set("cierreHasta", e.target.value)} />
+        <DatePickerMx value={value.cierreHasta} onChange={(v) => set("cierreHasta", v)} className="w-full" />
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Monto mínimo</Label>

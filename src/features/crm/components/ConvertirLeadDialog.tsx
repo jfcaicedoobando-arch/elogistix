@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -144,7 +145,7 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
 
           <div className="space-y-1">
             <Label>Fecha estimada de cierre</Label>
-            <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+            <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
           </div>
         </>
       )}
