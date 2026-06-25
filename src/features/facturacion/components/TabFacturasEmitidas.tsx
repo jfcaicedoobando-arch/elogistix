@@ -18,6 +18,7 @@ import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelecti
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import type { Database } from "@/types/db";
 import type { ColumnDef } from "@/components/shared/DataTable";
+import { FacturasEmitidasFooter } from "@/features/facturacion/components/FacturasEmitidasFooter";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
