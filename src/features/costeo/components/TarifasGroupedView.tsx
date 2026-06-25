@@ -35,6 +35,9 @@ interface Grupo {
   mejor: TarifaRow | null;
   agentes: number;
   porVencer: number;
+  promedio: number | null;
+  deltaMax: number | null;
+  elegiblesCount: number;
 }
 
 function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
@@ -48,6 +51,7 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
         rutaLabel: `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
         contenedor: t.tipo_contenedor_nombre,
         rows: [], mejor: null, agentes: 0, porVencer: 0,
+        promedio: null, deltaMax: null, elegiblesCount: 0,
       };
       map.set(key, g);
     }
@@ -62,6 +66,13 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
     g.mejor = elegibles[0] ?? null;
     g.agentes = new Set(g.rows.map((r) => r.agente_nombre)).size;
     g.porVencer = elegibles.filter((r) => vigenciaHint(r.vigente_hasta).tone === "warn").length;
+    g.elegiblesCount = elegibles.length;
+    if (elegibles.length >= 2) {
+      const suma = elegibles.reduce((acc, r) => acc + r.total_comparable, 0);
+      g.promedio = suma / elegibles.length;
+      const peor = elegibles[elegibles.length - 1].total_comparable;
+      g.deltaMax = peor - elegibles[0].total_comparable;
+    }
   }
   return Array.from(map.values()).sort((a, b) => a.rutaLabel.localeCompare(b.rutaLabel));
 }
