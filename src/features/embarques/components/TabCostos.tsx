@@ -147,6 +147,7 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
       <ConceptosCostoCard
         conceptosCosto={conceptosCosto}
         columns={costoColumns}
+        costosConFactura={costosConFacturaSet}
         irACargarCostos={irACargarCostos}
       />
     </div>
