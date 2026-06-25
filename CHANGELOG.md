@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.50] - 2026-06-25
+- **fix(costeo/tarifas)**: "Limpiar filtros" volvía a aplicar "Pendientes" porque ese era el default del filtro de aprobación. Se cambia el default a "Todas" para que limpiar realmente muestre todo; el KPI "Pendientes" sigue funcionando como atajo.
+
 ## [13.135.49] - 2026-06-25
 - **UX(costeo/tarifas) Fase 2**: Vista agrupada por ruta + tipo de contenedor (default), con card colapsable por grupo, chips de # tarifas / # agentes / mejor precio y resaltado "Mejor" en la tarifa elegible más barata. Toggle Agrupada/Tabla persistido en localStorage. Badge único de estado que fusiona vigencia técnica + aprobación (Vigente/Pendiente con punto pulsante/Vencida/Rechazada/Reemplazada). Acciones por fila consolidadas en menú kebab (Editar, Duplicar, Aprobar, Rechazar, Reactivar, Eliminar). Cero cambios en datos/RPC/RLS.
 
