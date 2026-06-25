@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import {
   fetchAdminDashboardStats,
-  fetchAdminGlobalUsers,
   fetchAdminOrganizations,
   fetchAdminOrgActivity,
   fetchAdminRecentOrgs,
@@ -25,13 +24,7 @@ export function useAdminDashboardStats() {
   });
 }
 
-// ─── Global Users ────────────────────────────────────────
-export function useAdminGlobalUsers() {
-  return useQuery({
-    queryKey: queryKeys.admin.allUsers,
-    queryFn: fetchAdminGlobalUsers,
-  });
-}
+// ─── Global Users (hook removido — sin consumidores) ─────
 
 // ─── Organizations List ──────────────────────────────────
 export function useAdminOrganizations() {

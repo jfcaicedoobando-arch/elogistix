@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -176,11 +176,3 @@ export function ClienteFiscalSelects({ form, onChange, prefilledRegimen }: Selec
   );
 }
 
-/** Botón footer "Siguiente" usado para que el dialog quede más limpio. */
-export function NextButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
-  return (
-    <Button onClick={onClick} disabled={disabled}>
-      Siguiente
-    </Button>
-  );
-}

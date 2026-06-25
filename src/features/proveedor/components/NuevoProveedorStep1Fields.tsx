@@ -11,7 +11,6 @@ import { Loader2, Upload } from "lucide-react";
 import { useRef } from "react";
 import {
   MONEDAS_PROVEEDOR as MONEDAS,
-  CATEGORIAS_PROVEEDOR,
   SUBTIPOS_GASTO_OPERATIVO,
   tiposProveedorPorOrigen,
 } from "@/constants/proveedorConstants";
@@ -20,28 +19,6 @@ import type { useNuevoProveedorController } from "@/features/proveedor/hooks";
 
 export type Controller = ReturnType<typeof useNuevoProveedorController>;
 
-export function CategoriaSelect({ c }: { c: Controller }) {
-  return (
-    <div className="space-y-2">
-      <Label>Categoría *</Label>
-      <Select value={c.form.categoria || ""} onValueChange={c.handleCategoriaChange}>
-        <SelectTrigger><SelectValue placeholder="Selecciona categoría" /></SelectTrigger>
-        <SelectContent>
-          {CATEGORIAS_PROVEEDOR.map((cat) => (
-            <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {c.form.categoria && (
-        <p className="text-xs text-muted-foreground">
-          {c.isLogistico
-            ? "Proveedor logístico: naviera, transportista, agente, etc."
-            : "Gasto de administración: renta, internet, papelería, SaaS, honorarios, etc."}
-        </p>
-      )}
-    </div>
-  );
-}
 
 export function OrigenSelect({ c }: { c: Controller }) {
   return (

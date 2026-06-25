@@ -73,11 +73,6 @@ export const fmtSinFactura = (d: unknown): string | null => {
   return null;
 };
 
-export const fmtPendientesLiq = (d: unknown): string | null => {
-  const n = Number(pick(d, "pendientes") ?? 0);
-  if (n > 0) return `${n} concepto(s) por liquidar al proveedor`;
-  return null;
-};
 
 export const fmtContenedores = (d: unknown): string | null => {
   const sin = Number(pick(d, "contenedores_incompletos") ?? pick(d, "sin_datos") ?? 0);

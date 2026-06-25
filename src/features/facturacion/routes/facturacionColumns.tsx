@@ -8,10 +8,8 @@ import { sortByString, sortByNumber, sortByDate } from "@/components/shared/data
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { useFacturas } from "@/features/facturacion/hooks";
-import type { useFacturacionPageController } from "@/features/facturacion/hooks";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
-export type GastoPendiente = ReturnType<typeof useFacturacionPageController>["gastosPendientes"][number];
 
 export interface FacturaColumnsOptions {
   canEdit: boolean;
@@ -132,58 +130,3 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
   ]);
 }
 
-interface GastoColumnsOptions {
-  canEdit: boolean;
-  marcarPagadoPending: boolean;
-  handleMarcarPagado: (id: string) => void;
-}
-
-export function buildGastoColumns(opts: GastoColumnsOptions): ColumnDef<GastoPendiente, unknown>[] {
-  const { canEdit, marcarPagadoPending, handleMarcarPagado } = opts;
-  return defineColumns<GastoPendiente>([
-    {
-      id: "proveedor", header: "Proveedor",
-      accessorFn: (g) => g.proveedor_nombre, enableSorting: true,
-      sortingFn: sortByString<GastoPendiente>((g) => g.proveedor_nombre),
-      meta: { width: "min-w-[180px]", className: "max-w-[220px] truncate" },
-      cell: ({ row }) => <span title={toTitleCase(row.original.proveedor_nombre)}>{toTitleCase(row.original.proveedor_nombre)}</span>,
-    },
-    {
-      id: "expediente", header: "Expediente",
-      meta: { width: "w-[110px]", className: "font-medium whitespace-nowrap" },
-      cell: ({ row }) => (row.original.embarques as { expediente: string } | null)?.expediente || "-",
-    },
-    {
-      id: "concepto", header: "Concepto",
-      meta: { width: "min-w-[140px]" },
-      cell: ({ row }) => row.original.concepto,
-    },
-    {
-      id: "monto", header: "Monto",
-      accessorFn: (g) => g.monto, enableSorting: true,
-      sortingFn: sortByNumber<GastoPendiente>((g) => g.monto),
-      meta: { width: "w-[140px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums" },
-      cell: ({ row }) => formatCurrency(row.original.monto, row.original.moneda),
-    },
-    {
-      id: "vencimiento", header: "Vencimiento",
-      accessorFn: (g) => g.fecha_vencimiento, enableSorting: true,
-      sortingFn: sortByDate<GastoPendiente>((g) => g.fecha_vencimiento),
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
-      cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "-",
-    },
-    {
-      id: "estado", header: "Estado",
-      meta: { width: "w-[100px]" },
-      cell: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge>,
-    },
-    {
-      id: "acciones", header: "Acciones",
-      cell: ({ row }) => canEdit ? (
-        <Button variant="outline" size="sm" disabled={marcarPagadoPending} onClick={() => handleMarcarPagado(row.original.id)}>
-          Marcar Pagado
-        </Button>
-      ) : null,
-    },
-  ]);
-}
