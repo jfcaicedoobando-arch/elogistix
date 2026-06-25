@@ -48,6 +48,9 @@ export function useAvanzarEstadoEmbarque() {
     },
     // Toasts (éxito y error) los maneja el caller (useEmbarqueEstadoActions)
     // para evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
+    onError: () => {
+      // No-op intencional: el caller (useEmbarqueEstadoActions) clasifica y notifica el error.
+    },
   });
 }
 
