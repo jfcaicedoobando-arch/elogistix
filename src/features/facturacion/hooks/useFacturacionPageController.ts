@@ -124,6 +124,7 @@ export function useFacturacionPageController(opts?: {
     pageSize, setPageSize,
     // datos
     facturas,
+    facturasFiltradas: filtered,
     paginatedFacturas,
     totalPages,
     gastosPendientes: gastosFiltrados,

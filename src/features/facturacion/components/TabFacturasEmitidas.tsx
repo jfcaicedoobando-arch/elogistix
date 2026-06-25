@@ -18,6 +18,7 @@ import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelecti
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import type { Database } from "@/types/db";
 import type { ColumnDef } from "@/components/shared/DataTable";
+import { FacturasEmitidasFooter } from "@/features/facturacion/components/FacturasEmitidasFooter";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
@@ -32,6 +33,7 @@ interface Props {
   exportarLayoutContable: () => void;
   columns: ColumnDef<Factura, unknown>[];
   data: Factura[];
+  facturasFiltradas: Factura[];
   isLoading: boolean;
   page: number;
   totalPages: number;
@@ -108,6 +110,8 @@ export function TabFacturasEmitidas(p: Props) {
           />
         </CardContent>
       </Card>
+
+      <FacturasEmitidasFooter facturas={p.facturasFiltradas} />
     </>
   );
 }

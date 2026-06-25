@@ -16,15 +16,26 @@ import { useProformasPendientes } from "@/features/embarques/hooks/useProformas"
 
 type Tone = "default" | "success" | "warn" | "danger";
 
-function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: Tone }) {
+function Kpi({ label, value, tone = "default", hint }: { label: string; value: string; tone?: Tone; hint?: string }) {
   const cls =
     tone === "danger" ? "text-destructive" :
     tone === "warn" ? "text-warning" :
     tone === "success" ? "text-success" :
     "text-foreground";
+  const labelNode = hint ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center gap-1 cursor-help">
+          {label}
+          <span aria-hidden className="opacity-60">ⓘ</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[260px] text-xs">{hint}</TooltipContent>
+    </Tooltip>
+  ) : label;
   return (
     <div className="flex-1 min-w-[120px] px-3 py-2">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">{labelNode}</p>
       <p className={`text-lg font-semibold tabular-nums ${cls}`}>{value}</p>
     </div>
   );
@@ -112,7 +123,11 @@ export function DashboardEjecutivoFacturacion() {
               value={porTimbrar.toString()}
               tone={porTimbrar > 0 ? "warn" : "default"}
             />
-            <Kpi label="Facturado mes" value={formatCurrencyCompact(facturadoMes, "MXN")} />
+            <Kpi
+              label="Facturado mes"
+              value={formatCurrencyCompact(facturadoMes, "MXN")}
+              hint="Facturas emitidas en el mes en curso, convertidas a MXN con el tipo de cambio de cada factura. Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar."
+            />
             <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
             <Kpi label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
             <Kpi

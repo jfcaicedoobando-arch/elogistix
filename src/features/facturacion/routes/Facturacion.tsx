@@ -86,7 +86,7 @@ export default function Facturacion() {
     search, setSearch,
     filterEstado, setFilter,
     page, setPage, pageSize, setPageSize,
-    paginatedFacturas, totalPages,
+    paginatedFacturas, facturasFiltradas, totalPages,
     proformasPendientes,
     loadingFacturas,
     canEdit,
@@ -161,6 +161,7 @@ export default function Facturacion() {
               exportarLayoutContable={exportarLayoutContable}
               columns={facturaColumns}
               data={paginatedFacturas}
+              facturasFiltradas={facturasFiltradas}
               isLoading={loadingFacturas}
               page={page} totalPages={totalPages} setPage={setPage}
               pageSize={pageSize} setPageSize={setPageSize}

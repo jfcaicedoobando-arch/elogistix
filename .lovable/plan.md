@@ -1,33 +1,48 @@
-## Plan: Ampliar regla de fechas de descarga/devolución a cualquier embarque con contenedores
+## Diagnóstico (analogía rápida)
 
-### Contexto
-La regla `contenedores_fechas_completas` ya existe en el RPC `validar_cierre_embarque` y bloquea el cierre, pero está envuelta en `IF v_emb.modo='Marítimo' AND tipo_carga ILIKE 'FCL%'`. El embarque actual (`Carga General`) cae fuera del guard, así que la regla no aparece en su checklist.
+El KPI del header **"Facturado mes"** y la tabla de **Emitidas** hoy hablan idiomas distintos, por eso no cuadran:
 
-### Cambios
+| | KPI header ("Facturado mes") | Tabla "Emitidas" |
+|---|---|---|
+| Periodo | Mes en curso (fijo) | Lo que diga el filtro de fechas (por defecto: **todo**) |
+| Estados | Excluye **Cancelada** | Incluye **todos** (Borrador, Por timbrar, Cancelada, etc.) |
+| Moneda | Todo convertido a **MXN** usando `tipo_cambio` de la factura | Cada factura en su moneda original (MXN y USD mezclados) |
+| Visible | Un solo número | No hay totalizador al pie de la tabla |
 
-**1. Migración SQL — `validar_cierre_embarque`**
-- Sacar la validación de fechas (bloque "1b") fuera del `IF` de FCL.
-- Nueva condición: aplicar si el embarque tiene **al menos 1 contenedor no eliminado**. Si no hay contenedores la regla se omite (no se agrega al checklist).
-- La validación de **datos completos** (peso/volumen, bloque "1") se queda como está, sólo para FCL marítimo — el usuario no pidió moverla.
+Es como comparar "kilos del mes" contra "frutas sueltas del año" — siempre van a diferir.
 
-```text
-IF EXISTS (SELECT 1 FROM embarque_contenedores
-           WHERE embarque_id = p_embarque_id AND deleted_at IS NULL) THEN
-  SELECT COUNT(*), COALESCE(array_agg(id), ARRAY[]::uuid[])
-    INTO v_cont_sin_fechas, v_cont_fechas_ids
-  FROM embarque_contenedores
-  WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
-    AND (fecha_descarga IS NULL OR fecha_devolucion IS NULL);
-  v_ok := (v_cont_sin_fechas = 0); v_puede := v_puede AND v_ok;
-  v_checks := v_checks || jsonb_build_array(jsonb_build_object(
-    'regla','contenedores_fechas_completas','ok',v_ok,
-    'detalle', jsonb_build_object('contenedores_sin_fechas', v_cont_sin_fechas, 'ids', v_cont_fechas_ids)));
-END IF;
-```
+## Qué voy a cambiar (solo UI / presentación)
 
-**2. Sin cambios de frontend**
-- `cierreCheckMeta.ts` ya tiene la entrada `contenedores_fechas_completas` con label, responsable (Operador) y CTA hacia el tab Resumen → contenedores. Sólo aparecerá en más embarques.
+1. **Footer totalizador en la tabla de Emitidas** (`TabFacturasEmitidas.tsx`)
+   - Subtotal **MXN** (suma facturas en MXN)
+   - Subtotal **USD** (suma facturas en USD)
+   - **Equivalente MXN total** (USD convertido con `tipo_cambio` de cada factura + MXN)
+   - Conteo de facturas y nota: *"Excluyendo canceladas"* (se restan en el cálculo del equivalente).
+   - Usa los datos ya filtrados (`paginatedFacturas` cuando hay paginación local, o `filtered` completo — usaremos `filtered` para que el total sea de TODAS las páginas, no sólo la visible).
 
-**3. Versionado + changelog**
-- Bump a `v13.135.70`.
-- Entrada en `CHANGELOG.md`: feat(embarques) — ampliar regla de fechas de descarga/devolución a cualquier embarque con contenedores (antes sólo FCL marítimo).
+2. **Tooltip explicativo en el KPI "Facturado mes"** (`DashboardEjecutivoFacturacion.tsx`)
+   - Aclarar: *"Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura. Excluye canceladas."*
+
+3. **Botón "Filtrar por mes en curso"** en el `DateRangeFilter` del módulo (atajo de 1 click), para que el usuario pueda alinear visualmente la tabla con el KPI cuando quiera verificar.
+
+4. Exponer `filtered` (no sólo `paginatedFacturas`) desde el controller para alimentar el footer.
+
+## Qué NO voy a cambiar
+
+- Lógica de negocio del KPI (`fetchDashboardEjecutivoFacturacion`) — su cálculo es correcto.
+- Lógica de filtros del controller — sólo agrego el dato `filtered` ya existente al return.
+- Migraciones, RPCs, RLS.
+
+## Versionado
+
+Bump a `13.135.71` + entrada en `CHANGELOG.md`.
+
+## Detalle técnico
+
+- `useFacturacionPageController` → agregar `filtered` al return.
+- `Facturacion.tsx` → pasar `filtered` (renombrado a `facturasFiltradas`) a `TabFacturasEmitidas`.
+- `TabFacturasEmitidas` → nuevo subcomponente `FacturasEmitidasFooter` con los 3 totales + `formatCurrency`.
+- Helper local `sumarFacturasPorMoneda(facturas)` con tests unitarios para mantener el coverage ≥38%.
+- `DateRangeFilter` → botón "Mes en curso" (si no existe ya).
+
+¿Procedo?
