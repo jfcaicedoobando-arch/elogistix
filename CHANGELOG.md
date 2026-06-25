@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.62] - 2026-06-25
+- **fix(embarques) — Check constraint en cierre forzado**: La tabla `cierre_embarque_log` sólo aceptaba `cerrar` / `reabrir`, pero la RPC `cerrar_embarque` ya escribía `cerrar_forzado` cuando un admin cerraba con checklist incompleto. Se amplió el `CHECK` para incluir `cerrar_forzado`.
+
 ## [13.135.61] - 2026-06-25
 - **fix(embarques) — Avanzar a Cerrado bloqueado por trigger**: Al avanzar el estado a "Cerrado" desde el botón principal, el backend fallaba con `Embarque cerrado: edición bloqueada (tabla eventos_embarque)` porque cambiaba el estado primero y luego intentaba insertar nota/evento (el trigger `trg_bloquear_cierre` ya los rechazaba). Además ese flujo nunca generaba el snapshot financiero ni el log de cierre. Ahora `avanzar_estado_embarque` delega a la RPC oficial `cerrar_embarque` cuando el destino es `Cerrado` (snapshot, log, comisiones definitivas) y luego inserta la nota + evento de tracking con `app.bypass_cierre=on` para no chocar con el bloqueo.
 
