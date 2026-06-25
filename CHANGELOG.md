@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.51] - 2026-06-25
+- **UX(costeo/tarifas) Fase A**: Mejoras visuales en vista agrupada — el **precio total** ahora es la columna ancla (text-base semibold, columnas alineadas con anchos fijos y `tabular-nums`); se muestra **delta vs. mejor** (`+USD …`) en cada fila no-ganadora; las filas **Vencida/Reemplazada** se atenúan con `opacity-60` para que la vista vaya a las vigentes; el header del grupo deja un solo chip dominante (Mejor con ícono Trophy) y mueve `# tarifas · # agentes` a metadata secundaria; hover sutil de fila (`bg-muted/30`); botón principal renombrado a **"Nueva tarifa"** (la multi-ruta sigue disponible dentro del modal). Cero cambios en datos/RPC.
+
 ## [13.135.50] - 2026-06-25
 - **fix(costeo/tarifas)**: "Limpiar filtros" volvía a aplicar "Pendientes" porque ese era el default del filtro de aprobación. Se cambia el default a "Todas" para que limpiar realmente muestre todo; el KPI "Pendientes" sigue funcionando como atajo.
 
