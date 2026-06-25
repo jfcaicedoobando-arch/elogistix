@@ -1,13 +1,15 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
- * v13.135.48: KPIs, búsqueda, chips de filtros activos y estado vacío útil.
+ * v13.135.49: vista agrupada por ruta + toggle agrupada/tabla.
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LayoutList, Plus, Rows3 } from "lucide-react";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import {
   useCosteoTarifas, useCosteoTarifaMutations,
 } from "@/features/costeo/hooks/useCosteoTarifas";
@@ -20,6 +22,13 @@ import { CosteoTarifasTable } from "@/features/costeo/components/CosteoTarifasTa
 import { TarifasKpis } from "@/features/costeo/components/TarifasKpis";
 import { TarifasFilterChips } from "@/features/costeo/components/TarifasFilterChips";
 import { TarifasEmptyState } from "@/features/costeo/components/TarifasEmptyState";
+import { TarifasGroupedView } from "@/features/costeo/components/TarifasGroupedView";
+
+type ViewMode = "agrupada" | "tabla";
+
+function readViewMode(): ViewMode {
+  return safeLocalStorage.getItem(STORAGE_KEYS.tarifasViewMode) === "tabla" ? "tabla" : "agrupada";
+}
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import {
   buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
