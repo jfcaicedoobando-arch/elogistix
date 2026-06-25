@@ -1,16 +1,14 @@
 /**
  * Tabla de tarifas marítimas (cuerpo de CosteoTarifas).
- * v13.130.0: agrega columna y acciones de aprobación.
+ * v13.135.49: badge unificado + dropdown de acciones.
  */
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Check, Copy, Pencil, RotateCcw, Trash2, X } from "lucide-react";
-import { TarifaEstadoBadge } from "./TarifaEstadoBadge";
-import { EstadoAprobacionBadge } from "./EstadoAprobacionBadge";
+import { TarifaEstadoUnificado } from "./TarifaEstadoUnificado";
+import { TarifaRowActions } from "./TarifaRowActions";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
 import { usd, formatVigencia, vigenciaHint } from "../routes/CosteoTarifas.helpers";
@@ -51,96 +49,58 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
         <TableHeader>
           <TableRow>
             <TableHead>Ruta</TableHead>
-            <TableHead>Agente</TableHead>
-            <TableHead>Naviera</TableHead>
+            <TableHead>Agente / Naviera</TableHead>
             <TableHead>Contenedor</TableHead>
             <TableHead className="text-right">Flete</TableHead>
             <TableHead className="text-right">Recargos</TableHead>
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-right">Total USD</TableHead>
             <TableHead>Vigencia</TableHead>
-            <TableHead>Vigencia téc.</TableHead>
-            <TableHead>Aprobación</TableHead>
-            <TableHead className="w-44 text-right">Acciones</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="w-12 text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading && (
-            <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
-          )}
-          {!isLoading && tarifas.length === 0 && (
-            <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">Sin tarifas para los filtros aplicados.</TableCell></TableRow>
+            <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
           )}
           {tarifas.map((t) => {
             const ap = t.estado_aprobacion ?? "vigente";
+            const hint = vigenciaHint(t.vigente_hasta);
+            const hintCls = hint.tone === "danger" ? "text-destructive" : hint.tone === "warn" ? "text-warning" : "text-muted-foreground";
             return (
               <TableRow key={t.id}>
                 <TableCell className="text-sm">{t.puerto_origen_nombre} → {t.puerto_destino_nombre}</TableCell>
-                <TableCell className="font-medium">{t.agente_nombre}</TableCell>
-                <TableCell>{t.naviera_nombre}</TableCell>
+                <TableCell>
+                  <div className="font-medium">{t.agente_nombre}</div>
+                  <div className="text-xs text-muted-foreground">{t.naviera_nombre}</div>
+                </TableCell>
                 <TableCell>{t.tipo_contenedor_nombre}</TableCell>
                 <TableCell className="text-right tabular-nums">{usd(Number(t.flete_base))}</TableCell>
                 <TableCell className="text-right tabular-nums">{usd(t.recargos_total)}</TableCell>
                 <TableCell className="text-right tabular-nums font-semibold">{usd(t.total_comparable)}</TableCell>
                 <TableCell className="text-xs">
                   <div className="text-foreground">{formatVigencia(t.vigente_desde, t.vigente_hasta)}</div>
-                  {(() => {
-                    const h = vigenciaHint(t.vigente_hasta);
-                    const cls = h.tone === "danger" ? "text-destructive" : h.tone === "warn" ? "text-warning" : "text-muted-foreground";
-                    return <div className={cls}>{h.text}</div>;
-                  })()}
+                  <div className={hintCls}>{hint.text}</div>
                 </TableCell>
                 <TableCell>
-                  <TarifaEstadoBadge estado={t.estado} vigenteHasta={t.vigente_hasta} />
+                  <TarifaEstadoUnificado
+                    estado={t.estado}
+                    estadoAprobacion={ap}
+                    vigenteHasta={t.vigente_hasta}
+                    motivo={t.motivo_rechazo}
+                  />
                 </TableCell>
-                <TableCell>
-                  <EstadoAprobacionBadge estado={ap} motivo={t.motivo_rechazo} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1 justify-end">
-                    {ap === "borrador" && (
-                      <>
-                        <Button
-                          size="icon" variant="ghost"
-                          className="text-success hover:text-success"
-                          onClick={() => aprobar.mutate(t.id)}
-                          disabled={aprobar.isPending}
-                          aria-label="Aprobar tarifa"
-                          title="Aprobar"
-                        >
-                          <Check className="size-4" />
-                        </Button>
-                        <Button
-                          size="icon" variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setRechazandoId(t.id)}
-                          aria-label="Rechazar tarifa"
-                          title="Rechazar"
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </>
-                    )}
-                    {ap === "rechazada" && (
-                      <Button
-                        size="icon" variant="ghost"
-                        onClick={() => reactivar.mutate(t.id)}
-                        disabled={reactivar.isPending}
-                        aria-label="Reactivar como borrador"
-                        title="Reactivar como borrador"
-                      >
-                        <RotateCcw className="size-4" />
-                      </Button>
-                    )}
-                    <Button size="icon" variant="ghost" onClick={() => onEditar(t.id)} aria-label="Editar tarifa">
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => onDuplicar(t.id)} aria-label="Duplicar tarifa">
-                      <Copy className="size-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => onEliminar(t.id)} aria-label="Eliminar tarifa">
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </div>
+                <TableCell className="text-right">
+                  <TarifaRowActions
+                    estadoAprobacion={ap}
+                    onEditar={() => onEditar(t.id)}
+                    onDuplicar={() => onDuplicar(t.id)}
+                    onEliminar={() => onEliminar(t.id)}
+                    onAprobar={() => aprobar.mutate(t.id)}
+                    onRechazar={() => setRechazandoId(t.id)}
+                    onReactivar={() => reactivar.mutate(t.id)}
+                    disabled={aprobar.isPending || reactivar.isPending}
+                  />
                 </TableCell>
               </TableRow>
             );

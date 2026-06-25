@@ -1,13 +1,15 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
- * v13.135.48: KPIs, búsqueda, chips de filtros activos y estado vacío útil.
+ * v13.135.49: vista agrupada por ruta + toggle agrupada/tabla.
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LayoutList, Plus, Rows3 } from "lucide-react";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import {
   useCosteoTarifas, useCosteoTarifaMutations,
 } from "@/features/costeo/hooks/useCosteoTarifas";
@@ -20,6 +22,13 @@ import { CosteoTarifasTable } from "@/features/costeo/components/CosteoTarifasTa
 import { TarifasKpis } from "@/features/costeo/components/TarifasKpis";
 import { TarifasFilterChips } from "@/features/costeo/components/TarifasFilterChips";
 import { TarifasEmptyState } from "@/features/costeo/components/TarifasEmptyState";
+import { TarifasGroupedView } from "@/features/costeo/components/TarifasGroupedView";
+
+type ViewMode = "agrupada" | "tabla";
+
+function readViewMode(): ViewMode {
+  return safeLocalStorage.getItem(STORAGE_KEYS.tarifasViewMode) === "tabla" ? "tabla" : "agrupada";
+}
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import {
   buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
@@ -41,6 +50,12 @@ export default function CosteoTarifas() {
   const [initial, setInitial] = useState<Partial<TarifaInput> | undefined>();
   const [editId, setEditId] = useState<string | undefined>();
   const [aEliminar, setAEliminar] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
+
+  const changeView = (v: ViewMode) => {
+    setViewMode(v);
+    safeLocalStorage.setItem(STORAGE_KEYS.tarifasViewMode, v);
+  };
 
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();
@@ -184,6 +199,24 @@ export default function CosteoTarifas() {
         onClearAll={clearAll}
       />
 
+      {!isLoading && tarifasFiltradas.length > 0 && (
+        <div className="flex justify-end">
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => v && changeView(v as ViewMode)}
+            aria-label="Modo de vista"
+          >
+            <ToggleGroupItem value="agrupada" aria-label="Vista agrupada por ruta" className="h-8 px-3 text-xs">
+              <Rows3 className="size-4 mr-1" />Agrupada
+            </ToggleGroupItem>
+            <ToggleGroupItem value="tabla" aria-label="Vista tabla plana" className="h-8 px-3 text-xs">
+              <LayoutList className="size-4 mr-1" />Tabla
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      )}
+
       {!isLoading && tarifasFiltradas.length === 0 ? (
         <Card>
           <TarifasEmptyState
@@ -192,6 +225,13 @@ export default function CosteoTarifas() {
             onNueva={nuevo}
           />
         </Card>
+      ) : viewMode === "agrupada" ? (
+        <TarifasGroupedView
+          tarifas={tarifasFiltradas}
+          onEditar={editar}
+          onDuplicar={duplicar}
+          onEliminar={(id) => setAEliminar(id)}
+        />
       ) : (
         <CosteoTarifasTable
           tarifas={tarifasFiltradas}

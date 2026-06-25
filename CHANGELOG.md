@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.49] - 2026-06-25
+- **UX(costeo/tarifas) Fase 2**: Vista agrupada por ruta + tipo de contenedor (default), con card colapsable por grupo, chips de # tarifas / # agentes / mejor precio y resaltado "Mejor" en la tarifa elegible más barata. Toggle Agrupada/Tabla persistido en localStorage. Badge único de estado que fusiona vigencia técnica + aprobación (Vigente/Pendiente con punto pulsante/Vencida/Rechazada/Reemplazada). Acciones por fila consolidadas en menú kebab (Editar, Duplicar, Aprobar, Rechazar, Reactivar, Eliminar). Cero cambios en datos/RPC/RLS.
+
 ## [13.135.48] - 2026-06-25
 - **UX(costeo/tarifas)**: Rediseño de la página de tarifas marítimas vigentes. Se agregan 4 tarjetas KPI (Vigentes hoy, Por vencer ≤7 días, Pendientes de aprobación, Rutas cubiertas) clickeables para filtrar; barra de filtros con input de búsqueda por puerto/agente/naviera y botón Limpiar; chips removibles de filtros activos; vigencia formateada `dd/mes → dd/mes` con hint "vence en N días" (rojo si vencida, ámbar si ≤7 días); estado vacío útil con CTAs Limpiar filtros / Nueva(s) tarifa(s). Cero cambios en RPCs, mutaciones ni RLS.
 
