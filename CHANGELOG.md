@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.63] - 2026-06-25
+- **fix(embarques) — Doble toast al avanzar estado**: Tanto la mutation `useAvanzarEstadoEmbarque`/`useReabrirEmbarque` como el caller `useEmbarqueEstadoActions` emitían `notifySuccess`, mostrando dos toasts seguidos. Se quitó el toast de éxito del mutation y queda únicamente el del caller (que ya manejaba también los errores).
+
 ## [13.135.62] - 2026-06-25
 - **fix(embarques) — Check constraint en cierre forzado**: La tabla `cierre_embarque_log` sólo aceptaba `cerrar` / `reabrir`, pero la RPC `cerrar_embarque` ya escribía `cerrar_forzado` cuando un admin cerraba con checklist incompleto. Se amplió el `CHECK` para incluir `cerrar_forzado`.
 
