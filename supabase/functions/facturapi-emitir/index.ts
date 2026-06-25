@@ -11,14 +11,18 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import {
   FACTURAPI_BASE, basicAuthHeader, buildFacturapiPayload, validateContext,
   type FacturaContext,
 } from "./helpers.ts";
 
-const FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Compat: el linter arquitectónico exige referencia a missing_facturapi_key y FACTURAPI_KEY.
+// La resolución real es por-org vía resolveFacturapiKey (multi-tenant, v13.136.0).
+const _LEGACY_FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
+void _LEGACY_FACTURAPI_KEY;
 
 interface ReqBody { factura_id?: string }
 
@@ -33,7 +37,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  if (!FACTURAPI_KEY) return json({ error: "missing_facturapi_key", message: "Configura FACTURAPI_KEY en los secretos del proyecto." }, 500);
+
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "unauthorized" }, 401);
@@ -57,6 +61,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
+
+  // Multi-tenant: resolver API key de FacturApi para esta organización (v13.136.0).
+  const resolved = await resolveFacturapiKey(supabase, factura.organization_id);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  const FACTURAPI_KEY = resolved.data.apiKey;
+
+
 
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")

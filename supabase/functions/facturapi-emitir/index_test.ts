@@ -41,15 +41,17 @@ Deno.test("facturapi-emitir: persistSession=false en el cliente Supabase", () =>
   assertStringIncludes(indexSource, "persistSession: false");
 });
 
-Deno.test("facturapi-emitir: orden estricto auth → load → llamada externa", () => {
+Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → llamada externa", () => {
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
-  // pagada por requests no autorizadas.
+  // pagada por requests no autorizadas. El resolveFacturapiKey debe ir entre
+  // load y fapi para que multi-tenant (v13.136.0) elija la org correcta.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
   const loadIdx = indexSource.indexOf('.from("facturas")');
+  const resolveIdx = indexSource.indexOf("resolveFacturapiKey(");
   const fapiIdx = indexSource.indexOf("/invoices`");
-  if (authIdx <= 0 || loadIdx <= authIdx || fapiIdx <= loadIdx) {
+  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || fapiIdx <= resolveIdx) {
     throw new Error(
-      `Orden inválido: getUser=${authIdx} load=${loadIdx} fapi=${fapiIdx}`,
+      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} fapi=${fapiIdx}`,
     );
   }
 });
@@ -58,6 +60,9 @@ Deno.test("facturapi-emitir: wrapped en Sentry", () => {
   assertStringIncludes(indexSource, 'wrapEdgeHandler("facturapi-emitir"');
 });
 
-Deno.test("facturapi-emitir: falla limpio si falta FACTURAPI_KEY (no 500 críptico)", () => {
-  assertStringIncludes(indexSource, '"missing_facturapi_key"');
+Deno.test("facturapi-emitir: resuelve API key por organización vía helper compartido (v13.136.0)", () => {
+  // El error explícito missing_facturapi_key / org_facturapi_not_configured vive en _shared/facturapiAuth.ts.
+  // Aquí sólo verificamos que el index delegue en ese helper en vez de leer FACTURAPI_KEY global directo.
+  assertStringIncludes(indexSource, 'from "../_shared/facturapiAuth.ts"');
+  assertStringIncludes(indexSource, "resolveFacturapiKey(supabase, factura.organization_id)");
 });

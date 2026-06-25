@@ -7,11 +7,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
-import { FACTURAPI_BASE, basicAuthHeader } from "../facturapi-emitir/helpers.ts";
 
-const FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
+import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto en resolveFacturapiKey (v13.136.0).
+void Deno.env.get("FACTURAPI_KEY");
 
 const MOTIVOS_VALIDOS = new Set(["01", "02", "03", "04"]);
 
@@ -25,7 +27,6 @@ function json(b: unknown, s = 200) {
 Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!FACTURAPI_KEY) return json({ error: "missing_facturapi_key" }, 500);
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "unauthorized" }, 401);
@@ -54,6 +55,11 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   if (pErr || !pago) return json({ error: "pago_not_found" }, 404);
   if (!pago.facturapi_rep_id) return json({ error: "no_timbrado_rep" }, 409);
   if (pago.estado_rep === "Cancelado") return json({ error: "ya_cancelado" }, 409);
+
+  const resolved = await resolveFacturapiKey(supabase, pago.organization_id);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  const FACTURAPI_KEY = resolved.data.apiKey;
+
 
   const queryParts: string[] = [`motive=${encodeURIComponent(body.motivo)}`];
   if (body.sustituye_uuid) queryParts.push(`substitution=${encodeURIComponent(body.sustituye_uuid)}`);

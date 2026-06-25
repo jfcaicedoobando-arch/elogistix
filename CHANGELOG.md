@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.1] - 2026-06-25
+- **feat(facturapi) — Fase 2: edge functions multi-tenant**: Nuevo helper compartido `supabase/functions/_shared/facturapiAuth.ts` con `resolveFacturapiKey(supabase, orgId)` que lee `facturapi_credenciales` y resuelve la API key del secret correcto (`FACTURAPI_KEY_<ORG>_SANDBOX|LIVE`). Las 4 edge functions (`facturapi-emitir`, `facturapi-cancelar`, `facturapi-emitir-rep`, `facturapi-cancelar-rep`) ahora delegan en el helper en vez de leer `FACTURAPI_KEY` global; orgs sin configurar reciben `412 org_facturapi_not_configured` con mensaje claro. Mientras se migran las orgs, el helper cae al secret global `FACTURAPI_KEY` si existe (modo legacy). Tests unitarios del helper (6 casos) y guardrail arquitectónico `facturapi-multi-tenant.test.ts` (8 casos) para evitar regresiones.
+
 ## [13.136.0] - 2026-06-25
 - **feat(facturapi) — Fase 1: esquema multi-tenant**: Nueva tabla `public.facturapi_credenciales` (1 fila por organización) con `facturapi_org_id`, `ambiente` (sandbox/live), nombres de secrets para las API keys (las llaves reales NUNCA se guardan en BD, sólo el nombre del secret de Supabase), estado del CSD (`certificado_cargado`, `certificado_vence_at`), `webhook_secret` para verificar firmas HMAC y `last_test_timbre_at`. RLS: sólo `admin_org` de la propia organización y `super_admin` pueden leer/escribir; las edge functions acceden vía `service_role`. Trigger `updated_at` estándar. Base para fases 2-6 del plan de integración FacturApi.
 
