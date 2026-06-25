@@ -93,5 +93,8 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
     // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
+    onError: () => {
+      // No-op intencional: el caller maneja el toast de error.
+    },
   });
 }
