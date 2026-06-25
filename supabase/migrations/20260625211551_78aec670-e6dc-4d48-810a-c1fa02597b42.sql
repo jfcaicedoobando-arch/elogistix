@@ -1,0 +1,2 @@
+ALTER TABLE public.cierre_embarque_log DROP CONSTRAINT cierre_embarque_log_accion_check;
+ALTER TABLE public.cierre_embarque_log ADD CONSTRAINT cierre_embarque_log_accion_check CHECK (accion = ANY (ARRAY['cerrar'::text, 'cerrar_forzado'::text, 'reabrir'::text]));
