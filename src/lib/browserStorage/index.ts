@@ -21,6 +21,7 @@ export const STORAGE_KEYS = {
   appVersion: "lc-app-version",
   eerrFuente: "lc-eerr-fuente",
   dashboardEjecutivoPeriodo: "lc-dashboard-ejec-periodo",
+  tarifasViewMode: "lc-tarifas-view-mode",
 } as const;
 
 export const loginLoggedKey = (userId: string): string =>
