@@ -3,7 +3,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrackingConfirmFechaLlegadaDialog } from "./TrackingConfirmFechaLlegadaDialog";
@@ -64,7 +63,6 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
 
   const {
     control,
-    register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
