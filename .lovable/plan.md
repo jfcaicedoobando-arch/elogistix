@@ -1,48 +1,33 @@
-## Plan: Revertir umbral y añadir tests para el código nuevo
+## Plan: Ampliar regla de fechas de descarga/devolución a cualquier embarque con contenedores
 
-### Regla a guardar en memoria
-Crear `mem://principles/coverage-threshold`:
-- **Nunca** bajar los umbrales de coverage en `vitest.config.ts` como "fix" cuando CI falla por cobertura.
-- La solución correcta es **escribir tests** para el código nuevo que causó la caída.
-- Umbral mínimo actual: **lines/statements 38%, functions 52%, branches 72%**.
-- Añadir referencia en `mem://index.md` (Core).
+### Contexto
+La regla `contenedores_fechas_completas` ya existe en el RPC `validar_cierre_embarque` y bloquea el cierre, pero está envuelta en `IF v_emb.modo='Marítimo' AND tipo_carga ILIKE 'FCL%'`. El embarque actual (`Carga General`) cae fuera del guard, así que la regla no aparece en su checklist.
 
-### Revertir el cambio incorrecto
-- `vitest.config.ts`: subir `lines` y `statements` de **37 → 38** (estado previo).
-- Quitar el comentario justificativo que añadí.
+### Cambios
 
-### Añadir tests para cubrir el código reciente que causó la caída
-Los componentes que metieron líneas sin tests:
+**1. Migración SQL — `validar_cierre_embarque`**
+- Sacar la validación de fechas (bloque "1b") fuera del `IF` de FCL.
+- Nueva condición: aplicar si el embarque tiene **al menos 1 contenedor no eliminado**. Si no hay contenedores la regla se omite (no se agrega al checklist).
+- La validación de **datos completos** (peso/volumen, bloque "1") se queda como está, sólo para FCL marítimo — el usuario no pidió moverla.
 
-1. **`src/lib/auth/changePassword.ts`** (lógica pura, fácil de cubrir)
-   - Test de `traducirErrorPassword` para cada código de error mapeado (same_password, weak_password, etc.) → cubre muchas branches.
-   - Test de `changePassword` con mock de `supabase.auth.updateUser` (éxito y error).
+```text
+IF EXISTS (SELECT 1 FROM embarque_contenedores
+           WHERE embarque_id = p_embarque_id AND deleted_at IS NULL) THEN
+  SELECT COUNT(*), COALESCE(array_agg(id), ARRAY[]::uuid[])
+    INTO v_cont_sin_fechas, v_cont_fechas_ids
+  FROM embarque_contenedores
+  WHERE embarque_id = p_embarque_id AND deleted_at IS NULL
+    AND (fecha_descarga IS NULL OR fecha_devolucion IS NULL);
+  v_ok := (v_cont_sin_fechas = 0); v_puede := v_puede AND v_ok;
+  v_checks := v_checks || jsonb_build_array(jsonb_build_object(
+    'regla','contenedores_fechas_completas','ok',v_ok,
+    'detalle', jsonb_build_object('contenedores_sin_fechas', v_cont_sin_fechas, 'ids', v_cont_fechas_ids)));
+END IF;
+```
 
-2. **`src/components/shared/dialogs/CambiarPasswordDialog.tsx`**
-   - Render del diálogo abierto.
-   - Validación: contraseñas no coinciden → muestra error.
-   - Submit exitoso → llama `changePassword` y cierra.
-   - Submit con error → muestra toast traducido.
+**2. Sin cambios de frontend**
+- `cierreCheckMeta.ts` ya tiene la entrada `contenedores_fechas_completas` con label, responsable (Operador) y CTA hacia el tab Resumen → contenedores. Sólo aparecerá en más embarques.
 
-3. **`src/components/layout/OrgBadge.tsx`**
-   - Render con organización presente.
-   - Render sin organización (no rompe).
-
-4. **`src/features/configuracion/components/OrgInfoCard.tsx`**
-   - Render con datos de organización.
-   - Estado de carga.
-
-5. **`src/features/usuarios/.../InvitarAgentePortalDialog.tsx`** (si la complejidad lo permite, sino dividir)
-   - Render de tabs (invitar por email vs asignar contraseña).
-   - Validación de contraseña en el tab de asignar.
-   - Submit en cada tab llama al edge function con el payload correcto.
-
-### Verificación
-- `bun run test` pasa.
-- `bun run test -- --coverage` reporta lines/statements ≥ 38%.
-- Bump a `v13.135.69` + entrada en `CHANGELOG.md` describiendo: revert del umbral + tests añadidos.
-
-### Notas técnicas
-- Usar `@testing-library/react` con `userEvent` para los diálogos.
-- Mockear `@/integrations/supabase/client` siguiendo el patrón thenable ya establecido (ver `mem://technical/testing-mock-patterns`).
-- Respetar `afterEach` global de cleanup (`mem://technical/testing-cleanup-protocol`).
+**3. Versionado + changelog**
+- Bump a `v13.135.70`.
+- Entrada en `CHANGELOG.md`: feat(embarques) — ampliar regla de fechas de descarga/devolución a cualquier embarque con contenedores (antes sólo FCL marítimo).
