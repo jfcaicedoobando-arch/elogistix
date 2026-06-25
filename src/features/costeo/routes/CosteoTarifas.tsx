@@ -203,15 +203,14 @@ export default function CosteoTarifas() {
         <div className="flex justify-end">
           <ToggleGroup
             type="single"
-            size="sm"
             value={viewMode}
             onValueChange={(v) => v && changeView(v as ViewMode)}
             aria-label="Modo de vista"
           >
-            <ToggleGroupItem value="agrupada" aria-label="Vista agrupada por ruta">
+            <ToggleGroupItem value="agrupada" aria-label="Vista agrupada por ruta" className="h-8 px-3 text-xs">
               <Rows3 className="size-4 mr-1" />Agrupada
             </ToggleGroupItem>
-            <ToggleGroupItem value="tabla" aria-label="Vista tabla plana">
+            <ToggleGroupItem value="tabla" aria-label="Vista tabla plana" className="h-8 px-3 text-xs">
               <LayoutList className="size-4 mr-1" />Tabla
             </ToggleGroupItem>
           </ToggleGroup>
