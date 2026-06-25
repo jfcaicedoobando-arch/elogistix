@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import {
   fetchAdminDashboardStats,
-  fetchAdminGlobalUsers,
   fetchAdminOrganizations,
   fetchAdminOrgActivity,
   fetchAdminRecentOrgs,
