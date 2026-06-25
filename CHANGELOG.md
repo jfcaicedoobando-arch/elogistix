@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.55] - 2026-06-25
+- **feat(proformas)**: La RPC `generar_numero_proforma` ahora respeta un piso opcional configurable por organización y año, leído de `configuracion` (`categoria='folios'`, `clave='proforma_floor_<YEAR>'`). Se establece el piso `947` para 2026 en la organización principal, de modo que la próxima proforma generada será **PRO-2026-0948**. Cero impacto en proformas existentes.
+
 ## [13.135.54] - 2026-06-25
 - **UX(costeo/tarifas) Fase D**: Cierre del rediseño con acciones contextuales y refinamientos. Acciones rápidas en hover de fila (Aprobar visible si el estado es `borrador`, y Duplicar siempre) que aparecen con `opacity-0 group-hover:opacity-100` sin saturar la fila; el kebab queda como fallback con todas las acciones. Badge **Nueva** (chip primary con ícono Sparkles) en filas creadas en los últimos 7 días, para identificar de un vistazo cargas recientes. En el header de cada grupo con 2+ tarifas elegibles se agrega un mini-comparador (`Promedio USD … · Δ máx USD …`) y el chip "Mejor" se ancla con `min-w-[150px]` para alinearse con la columna Total del grid. Padding del header reducido (`py-2.5`) para igualar altura con las filas. En vista Tabla se aplica el mismo tratamiento de **delta vs mejor** que ya tenía la vista Agrupada (calculado por ruta + contenedor entre elegibles). Cero cambios en datos/RPC/RLS.
 
