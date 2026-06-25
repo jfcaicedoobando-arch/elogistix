@@ -18,10 +18,12 @@ const FOCUS_KEYS = ["cxp", "costo-no-liquidado", "costo-sin-factura"];
 interface Props {
   conceptosCosto: ConceptoCostoRow[];
   columns: ColumnDef<ConceptoCostoRow, unknown>[];
+  /** IDs de conceptos_costo que ya tienen factura de proveedor vinculada. */
+  costosConFactura?: ReadonlySet<string>;
   irACargarCostos?: { label: string; onClick: () => void };
 }
 
-export function ConceptosCostoCard({ conceptosCosto, columns, irACargarCostos }: Props) {
+export function ConceptosCostoCard({ conceptosCosto, columns, costosConFactura, irACargarCostos }: Props) {
   const { focus, registerRef, clearFocus } = useFocusSection();
   const costoFocus = focus && FOCUS_KEYS.includes(focus) ? focus : null;
 
@@ -29,8 +31,13 @@ export function ConceptosCostoCard({ conceptosCosto, columns, irACargarCostos }:
     if (costoFocus === "cxp" || costoFocus === "costo-no-liquidado") {
       return conceptosCosto.filter(c => (c.estado_liquidacion ?? '').toLowerCase() !== 'pagado');
     }
+    if (costoFocus === "costo-sin-factura" && costosConFactura) {
+      return conceptosCosto.filter(c =>
+        (c.estado_liquidacion ?? '').toLowerCase() !== 'pagado' && !costosConFactura.has(c.id),
+      );
+    }
     return conceptosCosto;
-  }, [conceptosCosto, costoFocus]);
+  }, [conceptosCosto, costoFocus, costosConFactura]);
 
   const emptyTitle = costoFocus ? "Sin coincidencias con el filtro" : "Sin costos directos del embarque";
   const emptyDescription = costoFocus
