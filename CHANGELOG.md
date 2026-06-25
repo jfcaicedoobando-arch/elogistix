@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.60] - 2026-06-25
+- **fix(embarques) — Toast duplicado al avanzar estado**: Al fallar el cambio de estado del embarque (p. ej. "Embarque cerrado: edición bloqueada") aparecían dos notificaciones de error porque tanto el `onError` del mutation como el `try/catch` del caller emitían toast. Se removieron los toasts de `onError` en `useAvanzarEstadoEmbarque` y `useReabrirEmbarque`; el manejo queda centralizado en `useEmbarqueEstadoActions`, que ya clasifica mensajes especiales (docs faltantes).
+
 ## [13.135.59] - 2026-06-25
 - **feat(embarques) — Cierre forzado por admin**: Los roles `super_admin`, `admin_org` y `admin` ya pueden cerrar un embarque aunque el checklist de cierre esté incompleto. Cambios: el RPC `cerrar_embarque` omite la validación dura del checklist para estos roles y registra la acción como `cerrar_forzado` en `cierre_embarque_log` y bitácora con la marca `forzado_admin: true`. En el frontend, `useEmbarqueEstadoActions` desbloquea el botón "Avanzar a Cerrado" para admins. Para el resto de roles autorizados (gerente de operaciones, coordinador logístico) la validación sigue siendo bloqueante.
 
