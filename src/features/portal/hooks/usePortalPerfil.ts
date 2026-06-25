@@ -3,7 +3,6 @@ import { queryKeys } from "@/lib/query";
 import {
   fetchPortalPerfil,
   actualizarContactoPortal,
-  cambiarPasswordPortal,
 } from "@/features/portal/services";
 import type { PortalPerfilData } from "@/features/portal/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
@@ -27,18 +26,6 @@ export function useActualizarContactoPortal() {
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al actualizar contacto: ${error.message}`, error, method: "PORTAL_UPDATE_CONTACT" });
-    },
-  });
-}
-
-export function useCambiarPasswordPortal() {
-  return useMutation({
-    mutationFn: cambiarPasswordPortal,
-    onSuccess: () => {
-      notifySuccess(undefined, { title: "Contraseña actualizada" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al cambiar contraseña: ${error.message}`, error, method: "PORTAL_CHANGE_PASSWORD" });
     },
   });
 }
