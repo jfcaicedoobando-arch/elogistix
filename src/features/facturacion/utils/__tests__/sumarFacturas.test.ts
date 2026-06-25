@@ -14,7 +14,6 @@ describe("sumarFacturasPorMoneda", () => {
     expect(r.totalUsd).toBe(75);
     expect(r.conteo).toBe(4);
     expect(r.conteoCanceladas).toBe(1);
-    // 300 MXN + (50*20) + (25*20) = 300 + 1000 + 500
     expect(r.mxnEquivalente).toBe(1800);
     expect(r.facturasSinTc).toBe(0);
   });
@@ -48,9 +47,29 @@ describe("sumarFacturasPorMoneda", () => {
       ],
       { fallbackUsdMxn: 20 },
     );
-    // 100*20 (fallback) + 100*18 = 2000 + 1800
     expect(r.mxnEquivalente).toBe(3800);
     expect(r.facturasSinTc).toBe(0);
+  });
+
+  it("USD con tipo_cambio=1 se considera inválido y usa fallback", () => {
+    const r = sumarFacturasPorMoneda(
+      [
+        { total: 100, moneda: "USD", estado: "Emitida", tipo_cambio: 1 },
+        { total: 50, moneda: "USD", estado: "Emitida", tipo_cambio: 0.5 },
+      ],
+      { fallbackUsdMxn: 17.5 },
+    );
+    // (100 + 50) * 17.5 = 2625
+    expect(r.mxnEquivalente).toBe(2625);
+    expect(r.facturasSinTc).toBe(0);
+  });
+
+  it("USD con tipo_cambio=1 sin fallback cuenta como facturasSinTc", () => {
+    const r = sumarFacturasPorMoneda([
+      { total: 100, moneda: "USD", estado: "Emitida", tipo_cambio: 1 },
+    ]);
+    expect(r.mxnEquivalente).toBe(0);
+    expect(r.facturasSinTc).toBe(1);
   });
 
   it("trata valores no numéricos como 0 y monedas raras no rompen MXN equivalente", () => {
