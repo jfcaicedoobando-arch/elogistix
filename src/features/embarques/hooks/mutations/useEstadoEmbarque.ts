@@ -14,7 +14,7 @@ import {
   descripcionEventoCambioEstado,
 } from '@/features/embarques/domain/embarque';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
+import { notifyError } from '@/components/shared/utils/appFeedback';
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
   await insertEventoEmbarque({
@@ -45,10 +45,9 @@ export function useAvanzarEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
-      notifySuccess(undefined, { title: `Estado actualizado a ${vars.nuevoEstado}` });
     },
-    // El toast de error lo maneja el caller (useEmbarqueEstadoActions) para
-    // evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
+    // Toasts (éxito y error) los maneja el caller (useEmbarqueEstadoActions)
+    // para evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
   });
 }
 
@@ -89,8 +88,7 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
-      notifySuccess(undefined, { title: "Embarque reabierto" });
     },
-    // Toast de error manejado por el caller para evitar doble notificación.
+    // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
   });
 }
