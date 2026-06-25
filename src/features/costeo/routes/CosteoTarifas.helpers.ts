@@ -6,6 +6,27 @@ export const usd = (n: number) => usdFormatter.format(n);
 export type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
 export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";
 
+const mesesCortos = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+
+export function formatVigencia(desde: string, hasta: string): string {
+  const fmt = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    if (!y || !m || !d) return iso;
+    return `${String(d).padStart(2, "0")}/${mesesCortos[m - 1]}`;
+  };
+  return `${fmt(desde)} → ${fmt(hasta)}`;
+}
+
+export function vigenciaHint(hasta: string): { text: string; tone: "muted" | "warn" | "danger" } {
+  const target = new Date(hasta).getTime();
+  const today = new Date().setHours(0, 0, 0, 0);
+  const diff = Math.floor((target - today) / 86_400_000);
+  if (diff < 0) return { text: `vencida hace ${Math.abs(diff)} d`, tone: "danger" };
+  if (diff === 0) return { text: "vence hoy", tone: "danger" };
+  if (diff <= 7) return { text: `vence en ${diff} d`, tone: "warn" };
+  return { text: `vence en ${diff} d`, tone: "muted" };
+}
+
 type TarifaRow = {
   agente_id: string;
   naviera_id: string;
