@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.71] - 2026-06-25
+- **fix(facturación) — Totalizador en tabla Emitidas**: La tabla de facturas emitidas ahora muestra un footer con `Subtotal MXN`, `Subtotal USD`, conteo y canceladas excluidas. Suma sobre TODAS las páginas del filtro actual, no sólo la visible. Además el KPI "Facturado mes" del header ahora tiene tooltip explicando que convierte USD→MXN con el tipo de cambio de cada factura y excluye canceladas. Esto explica la diferencia visual entre la suma rápida que hace el usuario sobre la tabla y el número del header.
+
 ## [13.135.70] - 2026-06-25
 - **feat(embarques) — Fechas de contenedor obligatorias en cierre**: La regla `contenedores_fechas_completas` del checklist de cierre ahora aplica a **cualquier embarque con al menos un contenedor cargado**, no sólo a FCL marítimo. Si el embarque tiene contenedores y a alguno le falta `fecha_descarga` o `fecha_devolucion`, el cierre se bloquea (los admins pueden seguir forzando). Si no hay contenedores la regla se omite del checklist. Cambio aislado al RPC `validar_cierre_embarque`; el frontend ya tenía label/CTA registrados.
 
