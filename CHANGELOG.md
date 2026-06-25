@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.59] - 2026-06-25
+- **feat(embarques) — Cierre forzado por admin**: Los roles `super_admin`, `admin_org` y `admin` ya pueden cerrar un embarque aunque el checklist de cierre esté incompleto. Cambios: el RPC `cerrar_embarque` omite la validación dura del checklist para estos roles y registra la acción como `cerrar_forzado` en `cierre_embarque_log` y bitácora con la marca `forzado_admin: true`. En el frontend, `useEmbarqueEstadoActions` desbloquea el botón "Avanzar a Cerrado" para admins. Para el resto de roles autorizados (gerente de operaciones, coordinador logístico) la validación sigue siendo bloqueante.
+
 ## [13.135.58] - 2026-06-25
 - **fix(ux) — Localización de pickers**: Auditoría complementaria de `type="datetime-local"` y `type="month"` nativos. Nuevos componentes `DateTimePickerMx` (DD/MM/YYYY HH:mm) y `MonthPickerMx` (Mes YYYY en español). Migrados: CRM (`NuevaActividadDialog`, `QuickCreateActividadPopover`), Comisiones (`Comisiones`, `DialogGenerarLiquidacion`) y Presupuesto (`TabVsReal`). Ya no quedan inputs de fecha/periodo nativos en la app.
 
