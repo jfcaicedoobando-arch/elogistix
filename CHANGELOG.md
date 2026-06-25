@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.70] - 2026-06-25
+- **feat(embarques) — Fechas de contenedor obligatorias en cierre**: La regla `contenedores_fechas_completas` del checklist de cierre ahora aplica a **cualquier embarque con al menos un contenedor cargado**, no sólo a FCL marítimo. Si el embarque tiene contenedores y a alguno le falta `fecha_descarga` o `fecha_devolucion`, el cierre se bloquea (los admins pueden seguir forzando). Si no hay contenedores la regla se omite del checklist. Cambio aislado al RPC `validar_cierre_embarque`; el frontend ya tenía label/CTA registrados.
+
 ## [13.135.69] - 2026-06-25
 - **chore(coverage) — Revert + tests reales**: Se revierte el bajón de umbral del 13.135.68 (`lines`/`statements` 37→38) por política ratchet. En su lugar se añaden tests unitarios para el código que diluyó el denominador: `updateOwnPassword`, `CambiarPasswordDialog` (incluye `traducirErrorPassword`), `OrgInfoCard` (configuración), `inviteAgentePortal`, `generarPasswordSegura`, `InvitarAgentePasswordTab` e `InvitarAgenteCredencialesView`. Nueva regla en memoria: ante fallos de coverage, escribir tests — nunca bajar el umbral.
 
