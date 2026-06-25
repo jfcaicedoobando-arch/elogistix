@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
