@@ -33,6 +33,7 @@ interface Props {
   exportarLayoutContable: () => void;
   columns: ColumnDef<Factura, unknown>[];
   data: Factura[];
+  facturasFiltradas: Factura[];
   isLoading: boolean;
   page: number;
   totalPages: number;
