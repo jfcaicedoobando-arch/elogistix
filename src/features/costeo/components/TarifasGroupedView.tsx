@@ -101,7 +101,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
             <button
               type="button"
               onClick={() => toggle(g.key)}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
             >
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
@@ -113,8 +113,14 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                   )}
                 </div>
               </div>
+              {g.elegiblesCount >= 2 && g.promedio != null && g.deltaMax != null && (
+                <div className="hidden md:block text-right text-[11px] text-muted-foreground tabular-nums leading-tight mr-1">
+                  <div>Promedio {usd(g.promedio)}</div>
+                  <div>Δ máx {usd(g.deltaMax)}</div>
+                </div>
+              )}
               {g.mejor && (
-                <Badge className="bg-success/15 text-success border-success/30 tabular-nums" variant="outline">
+                <Badge className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end" variant="outline">
                   <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
                 </Badge>
               )}
