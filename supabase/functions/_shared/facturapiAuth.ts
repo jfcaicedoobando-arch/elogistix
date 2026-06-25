@@ -18,6 +18,15 @@
 
 export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
+/** Header `Authorization: Basic ...` para Facturapi (usuario = api key, password vacío). */
+export function basicAuthHeader(apiKey: string): string {
+  const g = globalThis as { Buffer?: { from: (s: string) => { toString: (enc: string) => string } } };
+  const b64 = typeof btoa === "function"
+    ? btoa(`${apiKey}:`)
+    : g.Buffer!.from(`${apiKey}:`).toString("base64");
+  return `Basic ${b64}`;
+}
+
 export type FacturapiAmbiente = "sandbox" | "live";
 
 export interface FacturapiResolved {
