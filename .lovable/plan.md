@@ -1,48 +1,51 @@
-## Diagnóstico (analogía rápida)
+## Diagnóstico verificado contra la base de datos
 
-El KPI del header **"Facturado mes"** y la tabla de **Emitidas** hoy hablan idiomas distintos, por eso no cuadran:
+En junio 2026 (rango actual del filtro):
 
-| | KPI header ("Facturado mes") | Tabla "Emitidas" |
-|---|---|---|
-| Periodo | Mes en curso (fijo) | Lo que diga el filtro de fechas (por defecto: **todo**) |
-| Estados | Excluye **Cancelada** | Incluye **todos** (Borrador, Por timbrar, Cancelada, etc.) |
-| Moneda | Todo convertido a **MXN** usando `tipo_cambio` de la factura | Cada factura en su moneda original (MXN y USD mezclados) |
-| Visible | Un solo número | No hay totalizador al pie de la tabla |
+- 12 facturas en USD, total **$102,193.20 USD**, todas en estado *Emitida*.
+- 0 facturas en MXN.
+- Las 12 facturas tienen `tipo_cambio = NULL`.
 
-Es como comparar "kilos del mes" contra "frutas sueltas del año" — siempre van a diferir.
+El servicio `fetchDashboardEjecutivoFacturacion` calcula el equivalente MXN así:
 
-## Qué voy a cambiar (solo UI / presentación)
+```ts
+const tc = moneda === "MXN" ? 1 : Number(tipoCambio ?? 0);
+return Number(monto) * (tc || 1);   // ← si tc=0, fallback a 1
+```
 
-1. **Footer totalizador en la tabla de Emitidas** (`TabFacturasEmitidas.tsx`)
-   - Subtotal **MXN** (suma facturas en MXN)
-   - Subtotal **USD** (suma facturas en USD)
-   - **Equivalente MXN total** (USD convertido con `tipo_cambio` de cada factura + MXN)
-   - Conteo de facturas y nota: *"Excluyendo canceladas"* (se restan en el cálculo del equivalente).
-   - Usa los datos ya filtrados (`paginatedFacturas` cuando hay paginación local, o `filtered` completo — usaremos `filtered` para que el total sea de TODAS las páginas, no sólo la visible).
+Con `tipo_cambio` NULL, `tc` cae a 0 y el `|| 1` lo convierte en 1. Resultado: **102,193.20 USD se suma como si fueran 102,193.20 MXN**. Por eso el número del header y el USD del footer son casi idénticos: literalmente es el mismo número, mal etiquetado.
 
-2. **Tooltip explicativo en el KPI "Facturado mes"** (`DashboardEjecutivoFacturacion.tsx`)
-   - Aclarar: *"Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura. Excluye canceladas."*
+## Causa raíz
 
-3. **Botón "Filtrar por mes en curso"** en el `DateRangeFilter` del módulo (atajo de 1 click), para que el usuario pueda alinear visualmente la tabla con el KPI cuando quiera verificar.
+El `|| 1` "esconde" facturas USD sin tipo de cambio capturado, dándole al usuario un KPN MXN incorrecto en silencio.
 
-4. Exponer `filtered` (no sólo `paginatedFacturas`) desde el controller para alimentar el footer.
+## Cambios propuestos (solo presentación / cálculo del KPI, sin tocar datos ni RLS)
 
-## Qué NO voy a cambiar
+### 1. `src/features/facturacion/services/dashboardEjecutivo.ts`
+- Quitar el fallback silencioso `|| 1` para monedas distintas de MXN.
+- Si una factura USD no tiene `tipo_cambio`, usar el **tipo de cambio del día más cercano** desde la tabla/servicio de tipos de cambio ya existente en el proyecto (`exchange-rates`). Si no hay tipo de cambio disponible, **excluir esa factura de la suma MXN** y contarla como "pendiente de TC".
+- Retornar también un nuevo campo `facturas_sin_tc: number` para poder advertir al usuario.
 
-- Lógica de negocio del KPI (`fetchDashboardEjecutivoFacturacion`) — su cálculo es correcto.
-- Lógica de filtros del controller — sólo agrego el dato `filtered` ya existente al return.
-- Migraciones, RPCs, RLS.
+### 2. `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`
+- Si `facturas_sin_tc > 0`, mostrar un pequeño badge ⚠️ junto al KPI "Facturado mes" con tooltip: *"N facturas USD sin tipo de cambio capturado no se incluyen en el equivalente MXN. Captura el TC en cada factura para que el total cuadre."*
+- Mantener el tooltip explicativo ya existente.
+
+### 3. `src/features/facturacion/components/FacturasEmitidasFooter.tsx`
+- Agregar una fila con el **MXN equivalente total** (`Subtotal MXN + Subtotal USD × TC` por factura), usando exactamente la misma fórmula corregida que el header — así ambos números cuadran cuando el filtro está en "mes en curso".
+- Marcar visualmente cuántas facturas USD del filtro no tienen TC.
+
+### 4. Tests
+- Ampliar `sumarFacturas.test.ts` y agregar un test al servicio del dashboard para cubrir el caso `tipo_cambio = NULL` (no debe inflar el MXN).
+- Mantener cobertura ≥38%.
+
+## Lo que NO voy a cambiar
+
+- No voy a actualizar `tipo_cambio` en las facturas existentes (eso es decisión del usuario / dato operativo).
+- No tocaré RLS, migraciones, ni el flujo de captura/emisión de facturas.
+- No cambiaré el filtro de fechas ni la lógica de paginación.
 
 ## Versionado
 
-Bump a `13.135.71` + entrada en `CHANGELOG.md`.
-
-## Detalle técnico
-
-- `useFacturacionPageController` → agregar `filtered` al return.
-- `Facturacion.tsx` → pasar `filtered` (renombrado a `facturasFiltradas`) a `TabFacturasEmitidas`.
-- `TabFacturasEmitidas` → nuevo subcomponente `FacturasEmitidasFooter` con los 3 totales + `formatCurrency`.
-- Helper local `sumarFacturasPorMoneda(facturas)` con tests unitarios para mantener el coverage ≥38%.
-- `DateRangeFilter` → botón "Mes en curso" (si no existe ya).
+Bump a `13.135.72` + entrada en `CHANGELOG.md` describiendo el fix.
 
 ¿Procedo?

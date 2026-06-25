@@ -3,8 +3,11 @@
  * cobrado del mes y tendencia de 6 meses (facturado vs cobrado en MXN
  * equivalente usando `tipo_cambio` de la factura).
  *
- * "Por facturar", "Por cobrar" y "Vencido" se inyectan desde hooks
- * existentes (hueco de facturación y cobranza) para evitar duplicar lógica.
+ * v13.135.72: si una factura USD no tiene `tipo_cambio` capturado, se usa
+ * el fallback `fallbackUsdMxn` (típicamente el TC del día desde
+ * `fetchExchangeRates`). Si tampoco hay fallback, la factura se excluye del
+ * MXN equivalente y se cuenta en `facturas_sin_tc` para que la UI pueda
+ * advertir. Antes, el `|| 1` silencioso sumaba USD como si fueran MXN 1:1.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,6 +21,8 @@ export interface DashboardEjecutivoKpis {
   facturado_mes_mxn: number;
   cobrado_mes_mxn: number;
   tendencia: MesKpi[]; // últimos 6 meses (incluye el actual)
+  /** Facturas USD del mes en curso sin tipo_cambio capturado ni fallback aplicable. */
+  facturas_sin_tc: number;
 }
 
 function ymd(d: Date): string {
@@ -47,33 +52,60 @@ function ultimosNMeses(n: number, hoy: Date): { desde: Date; rangos: Array<{ ini
 type FacturaRow = { fecha_emision: string; total: number; moneda: string; tipo_cambio: number | null };
 type PagoRow = { fecha_pago: string; monto_aplicado_factura: number; tipo_cambio: number | null; moneda: string };
 
-function mxnEquivalente(monto: number, moneda: string, tipoCambio: number | null): number {
-  const tc = moneda === "MXN" ? 1 : Number(tipoCambio ?? 0);
-  return Number(monto) * (tc || 1);
+/** Devuelve el MXN equivalente o `null` si no se pudo convertir (USD sin TC ni fallback). */
+function mxnEquivalente(monto: number, moneda: string, tipoCambio: number | null, fallback: number): number | null {
+  if (moneda === "MXN") return Number(monto);
+  const tc = Number(tipoCambio) || 0;
+  if (tc > 0) return Number(monto) * tc;
+  if (fallback > 0) return Number(monto) * fallback;
+  return null;
 }
 
-function acumularFacturas(facturas: FacturaRow[], tendencia: MesKpi[], idxMes: Map<string, number>): void {
+function acumularFacturas(
+  facturas: FacturaRow[],
+  tendencia: MesKpi[],
+  idxMes: Map<string, number>,
+  fallback: number,
+  mesActual: string,
+): number {
+  let sinTcMesActual = 0;
   for (const f of facturas) {
-    const i = idxMes.get(f.fecha_emision.slice(0, 7));
+    const ymStr = f.fecha_emision.slice(0, 7);
+    const i = idxMes.get(ymStr);
     if (i === undefined) continue;
-    tendencia[i].facturado_mxn += mxnEquivalente(f.total, f.moneda, f.tipo_cambio);
+    const eq = mxnEquivalente(f.total, f.moneda, f.tipo_cambio, fallback);
+    if (eq === null) {
+      if (ymStr === mesActual) sinTcMesActual += 1;
+      continue;
+    }
+    tendencia[i].facturado_mxn += eq;
   }
+  return sinTcMesActual;
 }
 
-function acumularPagos(pagos: PagoRow[], tendencia: MesKpi[], idxMes: Map<string, number>): void {
+function acumularPagos(
+  pagos: PagoRow[],
+  tendencia: MesKpi[],
+  idxMes: Map<string, number>,
+  fallback: number,
+): void {
   for (const p of pagos) {
     const i = idxMes.get(p.fecha_pago.slice(0, 7));
     if (i === undefined) continue;
-    tendencia[i].cobrado_mxn += mxnEquivalente(p.monto_aplicado_factura, p.moneda, p.tipo_cambio);
+    const eq = mxnEquivalente(p.monto_aplicado_factura, p.moneda, p.tipo_cambio, fallback);
+    if (eq === null) continue;
+    tendencia[i].cobrado_mxn += eq;
   }
 }
 
 export async function fetchDashboardEjecutivoFacturacion(
   organizationId: string | null,
+  fallbackUsdMxn: number | null = null,
   hoy: Date = new Date(),
 ): Promise<DashboardEjecutivoKpis> {
   const { desde, rangos } = ultimosNMeses(6, hoy);
   const desdeIso = ymd(desde);
+  const fallback = Number(fallbackUsdMxn ?? 0) || 0;
 
   let qFacturas = supabase
     .from("facturas")
@@ -98,15 +130,16 @@ export async function fetchDashboardEjecutivoFacturacion(
 
   const tendencia: MesKpi[] = rangos.map((r) => ({ mes: r.mes, facturado_mxn: 0, cobrado_mxn: 0 }));
   const idxMes = new Map(rangos.map((r, i) => [r.mes, i]));
+  const mesActual = rangos[rangos.length - 1]?.mes ?? "";
 
-  acumularFacturas((facturas ?? []) as FacturaRow[], tendencia, idxMes);
-  acumularPagos((pagos ?? []) as PagoRow[], tendencia, idxMes);
+  const sinTc = acumularFacturas((facturas ?? []) as FacturaRow[], tendencia, idxMes, fallback, mesActual);
+  acumularPagos((pagos ?? []) as PagoRow[], tendencia, idxMes, fallback);
 
   const actual = tendencia[tendencia.length - 1] ?? { facturado_mxn: 0, cobrado_mxn: 0 };
   return {
     facturado_mes_mxn: actual.facturado_mxn,
     cobrado_mes_mxn: actual.cobrado_mxn,
     tendencia,
+    facturas_sin_tc: sinTc,
   };
 }
-

@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.72] - 2026-06-25
+- **fix(facturación) — KPI "Facturado mes" inflaba facturas USD sin TC**: El cálculo del equivalente MXN en `fetchDashboardEjecutivoFacturacion` usaba `(tc || 1)` como fallback silencioso, por lo que cuando una factura USD no tenía `tipo_cambio` capturado, el monto en USD se sumaba como si fueran MXN 1:1 (102,193.20 USD aparecía como "$102.2K MXN"). Ahora: 1) si `tipo_cambio` está vacío se usa el TC del día desde `useExchangeRates` como fallback; 2) si tampoco hay fallback la factura se excluye y se cuenta en `facturas_sin_tc`; 3) el KPI muestra un ⚠️ con tooltip cuando hay facturas excluidas. Además el footer de la tabla "Emitidas" ahora muestra **MXN equivalente** (cuadra contra el header) y un contador "Sin TC" cuando aplica.
+
 ## [13.135.71] - 2026-06-25
+
 - **fix(facturación) — Totalizador en tabla Emitidas**: La tabla de facturas emitidas ahora muestra un footer con `Subtotal MXN`, `Subtotal USD`, conteo y canceladas excluidas. Suma sobre TODAS las páginas del filtro actual, no sólo la visible. Además el KPI "Facturado mes" del header ahora tiene tooltip explicando que convierte USD→MXN con el tipo de cambio de cada factura y excluye canceladas. Esto explica la diferencia visual entre la suma rápida que hace el usuario sobre la tabla y el número del header.
 
 ## [13.135.70] - 2026-06-25
