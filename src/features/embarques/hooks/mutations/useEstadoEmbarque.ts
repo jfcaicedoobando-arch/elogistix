@@ -88,8 +88,7 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
-      notifySuccess(undefined, { title: "Embarque reabierto" });
     },
-    // Toast de error manejado por el caller para evitar doble notificación.
+    // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
   });
 }
