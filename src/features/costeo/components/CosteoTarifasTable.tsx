@@ -13,7 +13,7 @@ import { TarifaEstadoBadge } from "./TarifaEstadoBadge";
 import { EstadoAprobacionBadge } from "./EstadoAprobacionBadge";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
-import { usd } from "../routes/CosteoTarifas.helpers";
+import { usd, formatVigencia, vigenciaHint } from "../routes/CosteoTarifas.helpers";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
 
 interface TarifaRow {
@@ -81,7 +81,14 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
                 <TableCell className="text-right tabular-nums">{usd(Number(t.flete_base))}</TableCell>
                 <TableCell className="text-right tabular-nums">{usd(t.recargos_total)}</TableCell>
                 <TableCell className="text-right tabular-nums font-semibold">{usd(t.total_comparable)}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{t.vigente_desde} → {t.vigente_hasta}</TableCell>
+                <TableCell className="text-xs">
+                  <div className="text-foreground">{formatVigencia(t.vigente_desde, t.vigente_hasta)}</div>
+                  {(() => {
+                    const h = vigenciaHint(t.vigente_hasta);
+                    const cls = h.tone === "danger" ? "text-destructive" : h.tone === "warn" ? "text-warning" : "text-muted-foreground";
+                    return <div className={cls}>{h.text}</div>;
+                  })()}
+                </TableCell>
                 <TableCell>
                   <TarifaEstadoBadge estado={t.estado} vigenteHasta={t.vigente_hasta} />
                 </TableCell>

@@ -1,12 +1,15 @@
 /**
  * Filtros de la matriz de tarifas marítimas.
- * v13.130.0: agrega filtro por aprobación (pendientes/aprobadas/rechazadas).
+ * v13.135.48: agrega búsqueda y botón limpiar.
  */
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Search, X } from "lucide-react";
 import type { EstadoFiltro, AprobacionFiltro } from "../routes/CosteoTarifas.helpers";
 
 interface OpcionId { id: string; nombre?: string; name?: string }
@@ -20,19 +23,48 @@ interface Props {
   onAgenteChange: (v: string) => void;
   tipoId: string;
   onTipoChange: (v: string) => void;
+  busqueda: string;
+  onBusquedaChange: (v: string) => void;
   agentes: OpcionId[];
   tipos: OpcionId[];
   pendientesCount: number;
+  onClearAll: () => void;
+  hasActiveFilters: boolean;
 }
 
 export function CosteoTarifasFiltros({
   estado, onEstadoChange,
   aprobacion, onAprobacionChange,
-  agenteId, onAgenteChange, tipoId, onTipoChange, agentes, tipos, pendientesCount,
+  agenteId, onAgenteChange, tipoId, onTipoChange,
+  busqueda, onBusquedaChange,
+  agentes, tipos, pendientesCount, onClearAll, hasActiveFilters,
 }: Props) {
   return (
     <Card className="p-4 flex flex-wrap gap-3 items-end">
-      <div className="min-w-[180px]">
+      <div className="flex-1 min-w-[220px]">
+        <Label htmlFor="filtro-buscar" className="text-xs">Búsqueda</Label>
+        <div className="relative">
+          <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            id="filtro-buscar"
+            value={busqueda}
+            onChange={(e) => onBusquedaChange(e.target.value)}
+            placeholder="Puerto, agente o naviera…"
+            className="pl-8 pr-8"
+          />
+          {busqueda && (
+            <button
+              type="button"
+              onClick={() => onBusquedaChange("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="min-w-[170px]">
         <Label htmlFor="filtro-aprob" className="text-xs">Aprobación</Label>
         <Select value={aprobacion} onValueChange={(v) => onAprobacionChange(v as AprobacionFiltro)}>
           <SelectTrigger id="filtro-aprob" aria-label="Filtrar por aprobación"><SelectValue /></SelectTrigger>
@@ -56,7 +88,7 @@ export function CosteoTarifasFiltros({
           </SelectContent>
         </Select>
       </div>
-      <div className="min-w-[180px]">
+      <div className="min-w-[170px]">
         <Label htmlFor="filtro-agente" className="text-xs">Agente</Label>
         <Select value={agenteId} onValueChange={onAgenteChange}>
           <SelectTrigger id="filtro-agente" aria-label="Filtrar por agente"><SelectValue placeholder="Agente" /></SelectTrigger>
@@ -80,6 +112,11 @@ export function CosteoTarifasFiltros({
           </SelectContent>
         </Select>
       </div>
+      {hasActiveFilters && (
+        <Button variant="ghost" onClick={onClearAll} className="text-xs">
+          <X className="size-4 mr-1" />Limpiar
+        </Button>
+      )}
     </Card>
   );
 }

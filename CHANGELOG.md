@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.48] - 2026-06-25
+- **UX(costeo/tarifas)**: Rediseño de la página de tarifas marítimas vigentes. Se agregan 4 tarjetas KPI (Vigentes hoy, Por vencer ≤7 días, Pendientes de aprobación, Rutas cubiertas) clickeables para filtrar; barra de filtros con input de búsqueda por puerto/agente/naviera y botón Limpiar; chips removibles de filtros activos; vigencia formateada `dd/mes → dd/mes` con hint "vence en N días" (rojo si vencida, ámbar si ≤7 días); estado vacío útil con CTAs Limpiar filtros / Nueva(s) tarifa(s). Cero cambios en RPCs, mutaciones ni RLS.
+
 ## [13.135.47] - 2026-06-24
 - **UX(costeo)**: El modal de Nueva tarifa en `/costeo/tarifas` ya soportaba multi-ruta (mismo flujo del portal de agentes) pero no era descubrible. Se renombra el botón a "Nueva(s) tarifa(s)", se ajusta la descripción del modal al modo alta, se agrega un tip bajo el selector de rutas y un badge dinámico "Se crearán N tarifas" cuando hay 2+ rutas seleccionadas. Cero cambios en lógica de mutaciones.
 
