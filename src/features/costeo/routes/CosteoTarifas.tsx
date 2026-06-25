@@ -1,6 +1,6 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
- * v13.130.0: añade flujo de aprobación (Pendientes por defecto).
+ * v13.135.48: KPIs, búsqueda, chips de filtros activos y estado vacío útil.
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -17,19 +17,26 @@ import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { CosteoTarifasFiltros } from "@/features/costeo/components/CosteoTarifasFiltros";
 import { CosteoTarifasTable } from "@/features/costeo/components/CosteoTarifasTable";
+import { TarifasKpis } from "@/features/costeo/components/TarifasKpis";
+import { TarifasFilterChips } from "@/features/costeo/components/TarifasFilterChips";
+import { TarifasEmptyState } from "@/features/costeo/components/TarifasEmptyState";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import {
   buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
 } from "./CosteoTarifas.helpers";
 import { PageHeader } from "@/components/shared/PageHeader";
 
+const DEFAULT_APROB: AprobacionFiltro = "borrador";
+const DEFAULT_ESTADO: EstadoFiltro = "todas";
+
 export default function CosteoTarifas() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rutaIdFromUrl = searchParams.get("ruta") ?? undefined;
-  const [estado, setEstado] = useState<EstadoFiltro>("todas");
-  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("borrador");
+  const [estado, setEstado] = useState<EstadoFiltro>(DEFAULT_ESTADO);
+  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>(DEFAULT_APROB);
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
+  const [busqueda, setBusqueda] = useState("");
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<Partial<TarifaInput> | undefined>();
   const [editId, setEditId] = useState<string | undefined>();
@@ -50,14 +57,34 @@ export default function CosteoTarifas() {
   const { eliminar } = useCosteoTarifaMutations();
 
   const tarifasFiltradas = useMemo(() => {
-    if (aprobacion === "todas") return tarifas;
-    return tarifas.filter((t) => (t.estado_aprobacion ?? "vigente") === aprobacion);
-  }, [tarifas, aprobacion]);
+    const q = busqueda.trim().toLowerCase();
+    return tarifas.filter((t) => {
+      if (aprobacion !== "todas" && (t.estado_aprobacion ?? "vigente") !== aprobacion) return false;
+      if (!q) return true;
+      const hay = `${t.puerto_origen_nombre} ${t.puerto_destino_nombre} ${t.agente_nombre} ${t.naviera_nombre}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [tarifas, aprobacion, busqueda]);
 
   const pendientesCount = useMemo(
     () => tarifas.filter((t) => (t.estado_aprobacion ?? "vigente") === "borrador").length,
     [tarifas],
   );
+
+  const hasActiveFilters =
+    aprobacion !== DEFAULT_APROB ||
+    estado !== DEFAULT_ESTADO ||
+    agenteId !== "todos" ||
+    tipoId !== "todos" ||
+    busqueda.trim() !== "";
+
+  const clearAll = () => {
+    setAprobacion(DEFAULT_APROB);
+    setEstado(DEFAULT_ESTADO);
+    setAgenteId("todos");
+    setTipoId("todos");
+    setBusqueda("");
+  };
 
   const duplicar = (id: string) => {
     const t = tarifas.find((x) => x.id === id);
@@ -83,8 +110,8 @@ export default function CosteoTarifas() {
   return (
     <div className="p-6 space-y-4">
       <PageHeader
-        title="Tarifas marítimas (USD)"
-        description="Matriz CN → MX por agente, naviera, ruta y tipo de contenedor. Aprueba o rechaza las tarifas que envían los agentes."
+        title="Tarifas marítimas"
+        description="Matriz CN → MX por agente, naviera, ruta y contenedor. Moneda base: USD."
         actions={
           <Button
             onClick={nuevo}
@@ -93,6 +120,12 @@ export default function CosteoTarifas() {
             <Plus className="size-4 mr-2" />Nueva(s) tarifa(s)
           </Button>
         }
+      />
+
+      <TarifasKpis
+        tarifas={tarifas}
+        onFilterPendientes={() => setAprobacion("borrador")}
+        onFilterPorVencer={() => { setAprobacion("vigente"); setEstado("vigente"); }}
       />
 
       {rutaIdFromUrl && tarifas[0] && (
@@ -126,18 +159,48 @@ export default function CosteoTarifas() {
         onAgenteChange={setAgenteId}
         tipoId={tipoId}
         onTipoChange={setTipoId}
+        busqueda={busqueda}
+        onBusquedaChange={setBusqueda}
         agentes={agentes}
         tipos={tipos}
         pendientesCount={pendientesCount}
+        onClearAll={clearAll}
+        hasActiveFilters={hasActiveFilters}
       />
 
-      <CosteoTarifasTable
-        tarifas={tarifasFiltradas}
-        isLoading={isLoading}
-        onEditar={editar}
-        onDuplicar={duplicar}
-        onEliminar={(id) => setAEliminar(id)}
+      <TarifasFilterChips
+        estado={estado}
+        aprobacion={aprobacion}
+        agenteId={agenteId}
+        tipoId={tipoId}
+        busqueda={busqueda}
+        agentes={agentes}
+        tipos={tipos}
+        onClearEstado={() => setEstado(DEFAULT_ESTADO)}
+        onClearAprobacion={() => setAprobacion("todas")}
+        onClearAgente={() => setAgenteId("todos")}
+        onClearTipo={() => setTipoId("todos")}
+        onClearBusqueda={() => setBusqueda("")}
+        onClearAll={clearAll}
       />
+
+      {!isLoading && tarifasFiltradas.length === 0 ? (
+        <Card>
+          <TarifasEmptyState
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearAll}
+            onNueva={nuevo}
+          />
+        </Card>
+      ) : (
+        <CosteoTarifasTable
+          tarifas={tarifasFiltradas}
+          isLoading={isLoading}
+          onEditar={editar}
+          onDuplicar={duplicar}
+          onEliminar={(id) => setAEliminar(id)}
+        />
+      )}
 
       <TarifaForm open={open} onOpenChange={setOpen} initial={initial} tarifaId={editId} />
 
