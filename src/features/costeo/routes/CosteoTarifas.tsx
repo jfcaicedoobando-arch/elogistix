@@ -141,10 +141,15 @@ export default function CosteoTarifas() {
         tarifas={tarifas}
         onFilterPendientes={() => setAprobacion("borrador")}
         onFilterPorVencer={() => { setAprobacion("vigente"); setEstado("vigente"); }}
+        activeKpi={
+          aprobacion === "borrador" ? "pendientes"
+            : (aprobacion === "vigente" && estado === "vigente") ? "porVencer"
+            : null
+        }
       />
 
       {rutaIdFromUrl && tarifas[0] && (
-        <Card className="p-3 flex items-center justify-between bg-muted/40">
+        <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2">
           <p className="text-sm">
             Filtrando por ruta:{" "}
             <span className="font-medium">
@@ -162,7 +167,7 @@ export default function CosteoTarifas() {
           >
             Limpiar filtro
           </Button>
-        </Card>
+        </div>
       )}
 
       <CosteoTarifasFiltros
@@ -200,7 +205,10 @@ export default function CosteoTarifas() {
       />
 
       {!isLoading && tarifasFiltradas.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {tarifasFiltradas.length} {tarifasFiltradas.length === 1 ? "tarifa" : "tarifas"}
+          </span>
           <ToggleGroup
             type="single"
             value={viewMode}
