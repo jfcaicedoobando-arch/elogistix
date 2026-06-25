@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.2] - 2026-06-25
+- **feat(facturapi) — Fase 3: UI de configuración por organización**: Nueva tarjeta `FacturapiCredencialesCard` en Configuración → Facturación. Permite al `admin_org` seleccionar ambiente activo (Sandbox/Producción), capturar el `facturapi_org_id` opcional, definir los nombres de los secrets (`FACTURAPI_KEY_<ORG>_SANDBOX|LIVE` por defecto) y marcar el estado de datos fiscales / CSD con su vencimiento. La API key real **NO** se captura en la UI — se guarda como secret de Lovable Cloud; la tarjeta sólo persiste el nombre del secret en `facturapi_credenciales`. Incluye instrucciones paso a paso, badge de estado (Configurado / Sin configurar / Sandbox / Producción) y botones para copiar el nombre del secret sugerido. Servicio `services/facturapiCredenciales.ts` + hooks `useFacturapiCredenciales` / `useUpsertFacturapiCredenciales`.
+
 ## [13.136.1] - 2026-06-25
 - **feat(facturapi) — Fase 2: edge functions multi-tenant**: Nuevo helper compartido `supabase/functions/_shared/facturapiAuth.ts` con `resolveFacturapiKey(supabase, orgId)` que lee `facturapi_credenciales` y resuelve la API key del secret correcto (`FACTURAPI_KEY_<ORG>_SANDBOX|LIVE`). Las 4 edge functions (`facturapi-emitir`, `facturapi-cancelar`, `facturapi-emitir-rep`, `facturapi-cancelar-rep`) ahora delegan en el helper en vez de leer `FACTURAPI_KEY` global; orgs sin configurar reciben `412 org_facturapi_not_configured` con mensaje claro. Mientras se migran las orgs, el helper cae al secret global `FACTURAPI_KEY` si existe (modo legacy). Tests unitarios del helper (6 casos) y guardrail arquitectónico `facturapi-multi-tenant.test.ts` (8 casos) para evitar regresiones.
 
