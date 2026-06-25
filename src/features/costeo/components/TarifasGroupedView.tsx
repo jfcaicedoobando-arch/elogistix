@@ -1,36 +1,23 @@
 /**
  * Vista agrupada por ruta + tipo de contenedor.
- * Marca la mejor tarifa (menor total comparable, aprobada y vigente) por grupo.
- * v13.135.49
+ * v13.135.53: header de columnas alineado, mini-barra de vigencia,
+ * micro-meta "por vencer" en header del grupo.
  */
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Trophy } from "lucide-react";
-import { TarifaEstadoUnificado } from "./TarifaEstadoUnificado";
-import { TarifaRowActions } from "./TarifaRowActions";
+import { TarifaFila, TarifaColumnHeader, type FilaTarifa } from "./TarifaFila";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
-import { usd, formatVigencia, vigenciaHint } from "../routes/CosteoTarifas.helpers";
-import type { CosteoTarifaEstado } from "@/features/costeo/types";
+import { usd, vigenciaHint } from "../routes/CosteoTarifas.helpers";
 
-interface TarifaRow {
-  id: string;
+interface TarifaRow extends FilaTarifa {
   puerto_origen_nombre: string;
   puerto_destino_nombre: string;
-  agente_nombre: string;
-  naviera_nombre: string;
   tipo_contenedor_nombre: string;
   agente_id?: string;
-  flete_base: number | string;
-  recargos_total: number;
-  total_comparable: number;
-  vigente_desde: string;
-  vigente_hasta: string;
-  estado: CosteoTarifaEstado;
-  estado_aprobacion?: string;
-  motivo_rechazo?: string | null;
 }
 
 interface Props {
@@ -47,6 +34,7 @@ interface Grupo {
   rows: TarifaRow[];
   mejor: TarifaRow | null;
   agentes: number;
+  porVencer: number;
 }
 
 function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
@@ -59,9 +47,7 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
         key,
         rutaLabel: `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
         contenedor: t.tipo_contenedor_nombre,
-        rows: [],
-        mejor: null,
-        agentes: 0,
+        rows: [], mejor: null, agentes: 0, porVencer: 0,
       };
       map.set(key, g);
     }
@@ -75,81 +61,9 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
     );
     g.mejor = elegibles[0] ?? null;
     g.agentes = new Set(g.rows.map((r) => r.agente_nombre)).size;
+    g.porVencer = elegibles.filter((r) => vigenciaHint(r.vigente_hasta).tone === "warn").length;
   }
   return Array.from(map.values()).sort((a, b) => a.rutaLabel.localeCompare(b.rutaLabel));
-}
-
-interface FilaProps {
-  t: TarifaRow;
-  esMejor: boolean;
-  mejorTotal: number | null;
-  onEditar: () => void;
-  onDuplicar: () => void;
-  onEliminar: () => void;
-  onAprobar: () => void;
-  onRechazar: () => void;
-  onReactivar: () => void;
-  pending: boolean;
-}
-
-function Fila({ t, esMejor, mejorTotal, onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar, pending }: FilaProps) {
-  const ap = t.estado_aprobacion ?? "vigente";
-  const hint = vigenciaHint(t.vigente_hasta);
-  const hoy = new Date().toISOString().slice(0, 10);
-  const atenuar = !esMejor && (t.vigente_hasta < hoy || t.estado === "vencida" || t.estado === "reemplazada");
-  const hintCls = hint.tone === "danger"
-    ? "text-destructive"
-    : hint.tone === "warn"
-      ? "text-warning"
-      : esMejor ? "text-success" : "text-muted-foreground";
-  const delta = mejorTotal != null && !esMejor && t.total_comparable > mejorTotal
-    ? t.total_comparable - mejorTotal : 0;
-  return (
-    <div
-      className={`grid grid-cols-[1fr_140px_160px_150px_auto] gap-4 items-center px-4 py-2.5 text-sm transition-colors hover:bg-muted/30 ${esMejor ? "bg-success/5" : ""} ${atenuar ? "opacity-60" : ""}`}
-    >
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          {esMejor && (
-            <Badge className="bg-success/15 text-success border-success/30 gap-1" variant="outline">
-              <Trophy className="size-3" />Mejor
-            </Badge>
-          )}
-          <span className="font-medium truncate">{t.agente_nombre}</span>
-        </div>
-        <div className="text-xs text-muted-foreground truncate">{t.naviera_nombre}</div>
-      </div>
-      <div className="text-right tabular-nums text-xs text-muted-foreground">
-        <div>Flete {usd(Number(t.flete_base))}</div>
-        <div>Recargos {usd(t.recargos_total)}</div>
-      </div>
-      <div className="text-right tabular-nums">
-        <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>
-          {usd(t.total_comparable)}
-        </div>
-        {delta > 0 && (
-          <div className="text-[11px] text-muted-foreground">+{usd(delta)} vs mejor</div>
-        )}
-      </div>
-      <div className="text-xs">
-        <div>{formatVigencia(t.vigente_desde, t.vigente_hasta)}</div>
-        <div className={hintCls}>{hint.text}</div>
-      </div>
-      <div className="flex items-center gap-2 justify-end">
-        <TarifaEstadoUnificado estado={t.estado} estadoAprobacion={ap} vigenteHasta={t.vigente_hasta} motivo={t.motivo_rechazo} />
-        <TarifaRowActions
-          estadoAprobacion={ap}
-          onEditar={onEditar}
-          onDuplicar={onDuplicar}
-          onEliminar={onEliminar}
-          onAprobar={onAprobar}
-          onRechazar={onRechazar}
-          onReactivar={onReactivar}
-          disabled={pending}
-        />
-      </div>
-    </div>
-  );
 }
 
 export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }: Props) {
@@ -183,6 +97,9 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                 <div className="font-semibold">{g.rutaLabel}</div>
                 <div className="text-xs text-muted-foreground">
                   {g.contenedor} · {g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"} · {g.agentes} agente{g.agentes === 1 ? "" : "s"}
+                  {g.porVencer > 0 && (
+                    <span className="text-warning"> · {g.porVencer} por vencer</span>
+                  )}
                 </div>
               </div>
               {g.mejor && (
@@ -192,22 +109,25 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               )}
             </button>
             {!isCollapsed && (
-              <div className="divide-y">
-                {g.rows.map((t) => (
-                  <Fila
-                    key={t.id}
-                    t={t}
-                    esMejor={g.mejor?.id === t.id}
-                    mejorTotal={g.mejor?.total_comparable ?? null}
-                    onEditar={() => onEditar(t.id)}
-                    onDuplicar={() => onDuplicar(t.id)}
-                    onEliminar={() => onEliminar(t.id)}
-                    onAprobar={() => aprobar.mutate(t.id)}
-                    onRechazar={() => setRechazandoId(t.id)}
-                    onReactivar={() => reactivar.mutate(t.id)}
-                    pending={pending}
-                  />
-                ))}
+              <div>
+                <TarifaColumnHeader />
+                <div className="divide-y divide-border/60">
+                  {g.rows.map((t) => (
+                    <TarifaFila
+                      key={t.id}
+                      t={t}
+                      esMejor={g.mejor?.id === t.id}
+                      mejorTotal={g.mejor?.total_comparable ?? null}
+                      onEditar={() => onEditar(t.id)}
+                      onDuplicar={() => onDuplicar(t.id)}
+                      onEliminar={() => onEliminar(t.id)}
+                      onAprobar={() => aprobar.mutate(t.id)}
+                      onRechazar={() => setRechazandoId(t.id)}
+                      onReactivar={() => reactivar.mutate(t.id)}
+                      pending={pending}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </Card>

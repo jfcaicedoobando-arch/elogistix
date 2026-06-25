@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.53] - 2026-06-25
+- **UX(costeo/tarifas) Fase C**: Vista agrupada con calidad de tabla real — header de columnas ligero (`Agente · Naviera | Vigencia | Estado | Total USD | Acciones`) alineado al mismo `grid-template` de las filas para que todo encaje vertical; mini-barra de vigencia que sustituye el texto "vence en N d" por una barra de progreso del periodo coloreada por urgencia (success / warning / destructive) con tooltip; micro-meta "N por vencer" en warning dentro del header del grupo cuando aplica; densidad afinada (`py-2.5`, divisores `border/60`, hover `bg-muted/40`). Refactor: se extraen `VigenciaBar.tsx` y `TarifaFila.tsx` para mantener `TarifasGroupedView.tsx` bajo el umbral de Power of 10. Cero cambios en datos/RPC.
+
 ## [13.135.52] - 2026-06-25
 - **UX(costeo/tarifas) Fase B**: KPIs compactos (~56px de alto, una sola fila tipo chip con borde sutil) que destacan visualmente cuando están actuando como filtro activo; barra de filtros sin `Card` wrapper, búsqueda más prominente con placeholder mejorado ("Buscar por puerto, agente o naviera…"), selects `h-9` con labels inline (`Aprob:`, `Vigencia:`, `Agente:`, `Cont:`), y botón "Limpiar filtros" alineado a la derecha sólo cuando hay filtros activos. Nueva fila de contexto sobre la tabla con contador `N tarifas` a la izquierda y toggle Agrupada/Tabla a la derecha. La tabla queda visible mucho más arriba en el viewport.
 
