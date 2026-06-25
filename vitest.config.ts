@@ -122,12 +122,13 @@ export default defineConfig({
       // lines/statements se mantienen en 35 por política ratchet.
       // 13.87.2 — Lines/statements 35→38 tras excluir marketing del
       // denominador (real 40.62%, margen 2.62).
-      // 13.135.68 — Bajamos lines/statements 38→37 tras agregar diálogos
-      // presentacionales (CambiarPasswordDialog, OrgBadge, InvitarAgentePortal,
-      // controllers de página) que diluyeron el denominador (real 37.74%).
+      // 13.135.69 — Política ratchet: se REVIERTE el intento de bajar a 37
+      // (v13.135.68). En su lugar se añaden tests para CambiarPasswordDialog,
+      // OrgInfoCard, InvitarAgentePortalDialog y servicios asociados para
+      // restaurar el coverage real ≥ 38%. Ver mem://principles/coverage-threshold.
       thresholds: {
-        lines: 37,
-        statements: 37,
+        lines: 38,
+        statements: 38,
         functions: 52,
         branches: 72,
       },
