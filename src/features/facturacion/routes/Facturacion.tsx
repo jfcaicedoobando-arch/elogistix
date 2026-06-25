@@ -161,6 +161,7 @@ export default function Facturacion() {
               exportarLayoutContable={exportarLayoutContable}
               columns={facturaColumns}
               data={paginatedFacturas}
+              facturasFiltradas={facturasFiltradas}
               isLoading={loadingFacturas}
               page={page} totalPages={totalPages} setPage={setPage}
               pageSize={pageSize} setPageSize={setPageSize}
