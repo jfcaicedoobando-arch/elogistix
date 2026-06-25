@@ -1,9 +1,7 @@
 /**
- * Filtros de la matriz de tarifas marítimas.
- * v13.135.48: agrega búsqueda y botón limpiar.
+ * Barra de filtros de la matriz de tarifas marítimas.
+ * v13.135.52: sin Card wrapper, búsqueda prominente, selects sm.
  */
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,83 +38,86 @@ export function CosteoTarifasFiltros({
   agentes, tipos, pendientesCount, onClearAll, hasActiveFilters,
 }: Props) {
   return (
-    <Card className="p-4 flex flex-wrap gap-3 items-end">
-      <div className="flex-1 min-w-[220px]">
-        <Label htmlFor="filtro-buscar" className="text-xs">Búsqueda</Label>
-        <div className="relative">
-          <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            id="filtro-buscar"
-            value={busqueda}
-            onChange={(e) => onBusquedaChange(e.target.value)}
-            placeholder="Puerto, agente o naviera…"
-            className="pl-8 pr-8"
-          />
-          {busqueda && (
-            <button
-              type="button"
-              onClick={() => onBusquedaChange("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Limpiar búsqueda"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="relative flex-1 min-w-[260px] max-w-md">
+        <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Input
+          id="filtro-buscar"
+          value={busqueda}
+          onChange={(e) => onBusquedaChange(e.target.value)}
+          placeholder="Buscar por puerto, agente o naviera…"
+          className="pl-9 pr-8 h-9"
+          aria-label="Buscar tarifas"
+        />
+        {busqueda && (
+          <button
+            type="button"
+            onClick={() => onBusquedaChange("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Limpiar búsqueda"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
-      <div className="min-w-[170px]">
-        <Label htmlFor="filtro-aprob" className="text-xs">Aprobación</Label>
-        <Select value={aprobacion} onValueChange={(v) => onAprobacionChange(v as AprobacionFiltro)}>
-          <SelectTrigger id="filtro-aprob" aria-label="Filtrar por aprobación"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="borrador">Pendientes{pendientesCount > 0 ? ` (${pendientesCount})` : ""}</SelectItem>
-            <SelectItem value="vigente">Aprobadas</SelectItem>
-            <SelectItem value="rechazada">Rechazadas</SelectItem>
-            <SelectItem value="todas">Todas</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="min-w-[140px]">
-        <Label htmlFor="filtro-estado" className="text-xs">Vigencia téc.</Label>
-        <Select value={estado} onValueChange={(v) => onEstadoChange(v as EstadoFiltro)}>
-          <SelectTrigger id="filtro-estado" aria-label="Filtrar por estado"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="vigente">Vigentes</SelectItem>
-            <SelectItem value="vencida">Vencidas</SelectItem>
-            <SelectItem value="reemplazada">Reemplazadas</SelectItem>
-            <SelectItem value="todas">Todas</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="min-w-[170px]">
-        <Label htmlFor="filtro-agente" className="text-xs">Agente</Label>
-        <Select value={agenteId} onValueChange={onAgenteChange}>
-          <SelectTrigger id="filtro-agente" aria-label="Filtrar por agente"><SelectValue placeholder="Agente" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los agentes</SelectItem>
-            {agentes.map((a) => (
-              <SelectItem key={a.id} value={a.id}>{a.nombre ?? a.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="min-w-[160px]">
-        <Label htmlFor="filtro-tipo" className="text-xs">Contenedor</Label>
-        <Select value={tipoId} onValueChange={onTipoChange}>
-          <SelectTrigger id="filtro-tipo" aria-label="Filtrar por tipo de contenedor"><SelectValue placeholder="Contenedor" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los tipos</SelectItem>
-            {tipos.map((t) => (
-              <SelectItem key={t.id} value={t.id}>{t.name ?? t.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+
+      <Select value={aprobacion} onValueChange={(v) => onAprobacionChange(v as AprobacionFiltro)}>
+        <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por aprobación">
+          <span className="text-xs text-muted-foreground">Aprob:</span>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todas">Todas</SelectItem>
+          <SelectItem value="borrador">Pendientes{pendientesCount > 0 ? ` (${pendientesCount})` : ""}</SelectItem>
+          <SelectItem value="vigente">Aprobadas</SelectItem>
+          <SelectItem value="rechazada">Rechazadas</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={estado} onValueChange={(v) => onEstadoChange(v as EstadoFiltro)}>
+        <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por vigencia">
+          <span className="text-xs text-muted-foreground">Vigencia:</span>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todas">Todas</SelectItem>
+          <SelectItem value="vigente">Vigentes</SelectItem>
+          <SelectItem value="vencida">Vencidas</SelectItem>
+          <SelectItem value="reemplazada">Reemplazadas</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={agenteId} onValueChange={onAgenteChange}>
+        <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por agente">
+          <span className="text-xs text-muted-foreground">Agente:</span>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          {agentes.map((a) => (
+            <SelectItem key={a.id} value={a.id}>{a.nombre ?? a.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={tipoId} onValueChange={onTipoChange}>
+        <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por contenedor">
+          <span className="text-xs text-muted-foreground">Cont:</span>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          {tipos.map((t) => (
+            <SelectItem key={t.id} value={t.id}>{t.name ?? t.nombre}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       {hasActiveFilters && (
-        <Button variant="ghost" onClick={onClearAll} className="text-xs">
-          <X className="size-4 mr-1" />Limpiar
+        <Button variant="ghost" size="sm" onClick={onClearAll} className="ml-auto h-9 text-xs">
+          <X className="size-4 mr-1" />Limpiar filtros
         </Button>
       )}
-    </Card>
+    </div>
   );
 }

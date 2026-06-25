@@ -1,10 +1,10 @@
 /**
- * Tarjetas KPI para la matriz de tarifas marítimas.
- * v13.135.48: cuenta vigentes, por vencer, pendientes y rutas cubiertas.
+ * Tira de KPIs compacta para la matriz de tarifas marítimas.
+ * v13.135.52: rediseño compacto (~56px) con indicador de filtro activo.
  */
-import { Card } from "@/components/ui/card";
 import { CheckCircle2, Clock, AlertTriangle, Route } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TarifaLike {
   vigente_hasta: string;
@@ -17,6 +17,7 @@ interface Props {
   tarifas: TarifaLike[];
   onFilterPendientes?: () => void;
   onFilterPorVencer?: () => void;
+  activeKpi?: "vigentes" | "porVencer" | "pendientes" | null;
 }
 
 const DAY_MS = 86_400_000;
@@ -27,45 +28,54 @@ function daysUntil(date: string): number {
   return Math.floor((target - today) / DAY_MS);
 }
 
-interface KpiCardProps {
+type Tone = "success" | "warning" | "info" | "neutral";
+
+const toneIcon: Record<Tone, string> = {
+  success: "text-success",
+  warning: "text-warning",
+  info: "text-primary",
+  neutral: "text-muted-foreground",
+};
+
+const toneActive: Record<Tone, string> = {
+  success: "border-success/60 bg-success/5",
+  warning: "border-warning/60 bg-warning/5",
+  info: "border-primary/60 bg-primary/5",
+  neutral: "border-muted",
+};
+
+interface KpiProps {
   label: string;
   value: number | string;
   icon: LucideIcon;
-  tone: "success" | "warning" | "info" | "neutral";
+  tone: Tone;
   onClick?: () => void;
-  hint?: string;
+  active?: boolean;
 }
 
-const toneClasses: Record<KpiCardProps["tone"], string> = {
-  success: "text-success bg-success/10",
-  warning: "text-warning bg-warning/10",
-  info: "text-primary bg-primary/10",
-  neutral: "text-muted-foreground bg-muted",
-};
-
-function KpiCard({ label, value, icon: Icon, tone, onClick, hint }: KpiCardProps) {
+function Kpi({ label, value, icon: Icon, tone, onClick, active }: KpiProps) {
   const interactive = !!onClick;
   return (
-    <Card
-      className={`p-4 flex items-center gap-3 ${interactive ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
+    <button
+      type="button"
       onClick={onClick}
-      role={interactive ? "button" : undefined}
-      tabIndex={interactive ? 0 : undefined}
-      onKeyDown={interactive ? (e) => { if (e.key === "Enter") onClick?.(); } : undefined}
+      disabled={!interactive}
+      className={cn(
+        "flex items-center gap-2.5 rounded-md border px-3 py-2 text-left transition-colors",
+        interactive ? "hover:bg-muted/50 cursor-pointer" : "cursor-default",
+        active ? toneActive[tone] : "border-border bg-card",
+      )}
     >
-      <div className={`size-10 rounded-md flex items-center justify-center ${toneClasses[tone]}`}>
-        <Icon className="size-5" />
+      <Icon className={cn("size-4 shrink-0", toneIcon[tone])} />
+      <div className="flex items-baseline gap-1.5 min-w-0">
+        <span className="text-lg font-semibold tabular-nums leading-none">{value}</span>
+        <span className="text-xs text-muted-foreground truncate">{label}</span>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className="text-2xl font-semibold tabular-nums leading-tight">{value}</div>
-        {hint && <div className="text-xs text-muted-foreground mt-0.5 truncate">{hint}</div>}
-      </div>
-    </Card>
+    </button>
   );
 }
 
-export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer }: Props) {
+export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, activeKpi }: Props) {
   const today = new Date().setHours(0, 0, 0, 0);
   let vigentes = 0;
   let porVencer = 0;
@@ -84,25 +94,25 @@ export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer }: 
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <KpiCard label="Vigentes hoy" value={vigentes} icon={CheckCircle2} tone="success" />
-      <KpiCard
-        label="Por vencer ≤ 7 días"
+    <div className="flex flex-wrap gap-2">
+      <Kpi label="vigentes hoy" value={vigentes} icon={CheckCircle2} tone="success" active={activeKpi === "vigentes"} />
+      <Kpi
+        label="por vencer ≤ 7 días"
         value={porVencer}
         icon={Clock}
         tone="warning"
         onClick={porVencer > 0 ? onFilterPorVencer : undefined}
-        hint={porVencer > 0 ? "Click para filtrar" : undefined}
+        active={activeKpi === "porVencer"}
       />
-      <KpiCard
-        label="Pendientes aprobación"
+      <Kpi
+        label="pendientes aprobación"
         value={pendientes}
         icon={AlertTriangle}
         tone="info"
         onClick={pendientes > 0 ? onFilterPendientes : undefined}
-        hint={pendientes > 0 ? "Click para revisar" : undefined}
+        active={activeKpi === "pendientes"}
       />
-      <KpiCard label="Rutas cubiertas" value={rutas.size} icon={Route} tone="neutral" />
+      <Kpi label="rutas cubiertas" value={rutas.size} icon={Route} tone="neutral" />
     </div>
   );
 }
