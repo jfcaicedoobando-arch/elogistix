@@ -47,9 +47,8 @@ export function useAvanzarEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
       notifySuccess(undefined, { title: `Estado actualizado a ${vars.nuevoEstado}` });
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al avanzar estado: ${error.message}`, error, method: "ADVANCE_EMBARQUE_STATE" });
-    },
+    // El toast de error lo maneja el caller (useEmbarqueEstadoActions) para
+    // evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
   });
 }
 
