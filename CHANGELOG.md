@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.66] - 2026-06-25
+- **chore(lint) — Refactor de `CosteoTarifas`**: Se extrajo todo el estado y handlers de la página a un hook `useCosteoTarifasPageState`, dejando el componente como vista declarativa. Esto baja el componente por debajo de los límites de eslint (`max-lines-per-function` 200 y `complexity` 16) y `bun run lint -- --max-warnings 0` ahora pasa limpio.
+
 ## [13.135.65] - 2026-06-25
 - **feat(embarques) — Columna Liquidación con 3 estados**: En el tab Costos del detalle de embarque, la columna "Liquidación" ahora distingue **Pendiente de cargar** (sin factura de proveedor vinculada), **Pendiente de pago** (factura cargada pero sin pagar) y **Pagado**. El tercer estado se deriva en el cliente desde `proveedor_facturas_conceptos` (nuevo hook `useCostosConFactura` + helper `getEstadoLiquidacionDerivado`); el modelo de BD no cambia. Se aprovecha también para que el filtro del checklist "costo-sin-factura" filtre por el nuevo estado.
 
