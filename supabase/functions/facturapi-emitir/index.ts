@@ -62,6 +62,12 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
+  // Multi-tenant: resolver API key de FacturApi para esta organización (v13.136.0).
+  const resolved = await resolveFacturapiKey(supabase, factura.organization_id);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  const { apiKey: FACTURAPI_KEY, baseUrl: FAPI_BASE } = resolved.data;
+
+
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
     .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
