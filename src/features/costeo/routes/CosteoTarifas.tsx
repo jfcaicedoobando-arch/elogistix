@@ -130,9 +130,9 @@ export default function CosteoTarifas() {
         actions={
           <Button
             onClick={nuevo}
-            title="Captura una vez y elige una o varias rutas para generarlas en lote."
+            title="Puedes capturar una tarifa o seleccionar varias rutas para crearlas en lote."
           >
-            <Plus className="size-4 mr-2" />Nueva(s) tarifa(s)
+            <Plus className="size-4 mr-2" />Nueva tarifa
           </Button>
         }
       />

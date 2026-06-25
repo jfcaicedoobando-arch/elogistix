@@ -82,6 +82,7 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
 interface FilaProps {
   t: TarifaRow;
   esMejor: boolean;
+  mejorTotal: number | null;
   onEditar: () => void;
   onDuplicar: () => void;
   onEliminar: () => void;
@@ -91,12 +92,22 @@ interface FilaProps {
   pending: boolean;
 }
 
-function Fila({ t, esMejor, onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar, pending }: FilaProps) {
+function Fila({ t, esMejor, mejorTotal, onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar, pending }: FilaProps) {
   const ap = t.estado_aprobacion ?? "vigente";
   const hint = vigenciaHint(t.vigente_hasta);
-  const hintCls = hint.tone === "danger" ? "text-destructive" : hint.tone === "warn" ? "text-warning" : "text-muted-foreground";
+  const hoy = new Date().toISOString().slice(0, 10);
+  const atenuar = !esMejor && (t.vigente_hasta < hoy || t.estado === "vencida" || t.estado === "reemplazada");
+  const hintCls = hint.tone === "danger"
+    ? "text-destructive"
+    : hint.tone === "warn"
+      ? "text-warning"
+      : esMejor ? "text-success" : "text-muted-foreground";
+  const delta = mejorTotal != null && !esMejor && t.total_comparable > mejorTotal
+    ? t.total_comparable - mejorTotal : 0;
   return (
-    <div className={`grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 items-center px-4 py-2 text-sm ${esMejor ? "bg-success/5" : ""}`}>
+    <div
+      className={`grid grid-cols-[1fr_140px_160px_150px_auto] gap-4 items-center px-4 py-2.5 text-sm transition-colors hover:bg-muted/30 ${esMejor ? "bg-success/5" : ""} ${atenuar ? "opacity-60" : ""}`}
+    >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           {esMejor && (
@@ -112,8 +123,13 @@ function Fila({ t, esMejor, onEditar, onDuplicar, onEliminar, onAprobar, onRecha
         <div>Flete {usd(Number(t.flete_base))}</div>
         <div>Recargos {usd(t.recargos_total)}</div>
       </div>
-      <div className={`text-right tabular-nums ${esMejor ? "font-bold text-success" : "font-semibold"}`}>
-        {usd(t.total_comparable)}
+      <div className="text-right tabular-nums">
+        <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>
+          {usd(t.total_comparable)}
+        </div>
+        {delta > 0 && (
+          <div className="text-[11px] text-muted-foreground">+{usd(delta)} vs mejor</div>
+        )}
       </div>
       <div className="text-xs">
         <div>{formatVigencia(t.vigente_desde, t.vigente_hasta)}</div>
@@ -165,13 +181,13 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold">{g.rutaLabel}</div>
-                <div className="text-xs text-muted-foreground">{g.contenedor}</div>
+                <div className="text-xs text-muted-foreground">
+                  {g.contenedor} · {g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"} · {g.agentes} agente{g.agentes === 1 ? "" : "s"}
+                </div>
               </div>
-              <Badge variant="secondary">{g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"}</Badge>
-              <Badge variant="secondary">{g.agentes} agente{g.agentes === 1 ? "" : "s"}</Badge>
               {g.mejor && (
                 <Badge className="bg-success/15 text-success border-success/30 tabular-nums" variant="outline">
-                  Mejor: {usd(g.mejor.total_comparable)}
+                  <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
                 </Badge>
               )}
             </button>
@@ -182,6 +198,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                     key={t.id}
                     t={t}
                     esMejor={g.mejor?.id === t.id}
+                    mejorTotal={g.mejor?.total_comparable ?? null}
                     onEditar={() => onEditar(t.id)}
                     onDuplicar={() => onDuplicar(t.id)}
                     onEliminar={() => onEliminar(t.id)}
