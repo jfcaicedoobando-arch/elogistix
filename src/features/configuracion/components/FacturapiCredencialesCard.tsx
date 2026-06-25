@@ -72,9 +72,9 @@ export default function FacturapiCredencialesCard() {
         certificado_cargado: csdCargado,
         certificado_vence_at: csdVence || null,
       });
-      notifySuccess({ title: "Configuración de FacturApi guardada" });
+      notifySuccess(undefined, { title: "Configuración de FacturApi guardada" });
     } catch (err) {
-      notifyError(err, { title: "No se pudo guardar la configuración", method: "FacturapiCredencialesCard.onGuardar" });
+      notifyError(undefined, { title: "No se pudo guardar la configuración", method: "FacturapiCredencialesCard.onGuardar", error: err });
     }
   };
 
