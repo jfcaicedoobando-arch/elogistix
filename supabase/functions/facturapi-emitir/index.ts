@@ -65,7 +65,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // Multi-tenant: resolver API key de FacturApi para esta organización (v13.136.0).
   const resolved = await resolveFacturapiKey(supabase, factura.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const { apiKey: FACTURAPI_KEY, baseUrl: FAPI_BASE } = resolved.data;
+  const FACTURAPI_KEY = resolved.data.apiKey;
+
 
 
   const { data: cliente, error: cErr } = await supabase
