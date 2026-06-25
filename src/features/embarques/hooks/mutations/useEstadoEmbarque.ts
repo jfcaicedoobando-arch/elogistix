@@ -91,8 +91,6 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
       notifySuccess(undefined, { title: "Embarque reabierto" });
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al reabrir embarque: ${error.message}`, error, method: "REOPEN_EMBARQUE" });
-    },
+    // Toast de error manejado por el caller para evitar doble notificación.
   });
 }
