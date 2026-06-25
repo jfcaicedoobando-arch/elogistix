@@ -47,7 +47,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const cierreVisible = siguienteEstado === "Cerrado";
   const { data: validacionCierre } = useValidacionCierre(cierreVisible ? id : undefined);
   const rolPuedeCerrar = isAdmin || canEditFinance;
-  const validacionOk = validacionCierre?.puede_cerrar === true;
+  // v13.135.59 — Admins (super_admin / admin_org / admin) pueden forzar el
+  // cierre aunque el checklist esté incompleto. Para los demás roles el
+  // checklist sigue siendo bloqueante.
+  const validacionOk = validacionCierre?.puede_cerrar === true || isAdmin;
   const bloqueoCierreMotivo = resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk);
 
   // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
