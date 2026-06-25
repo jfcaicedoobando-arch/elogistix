@@ -1,48 +1,40 @@
-## Problema
+# Columna "Liquidación" con 3 estados
 
-Cuando un admin avanza el embarque a **"Cerrado"** desde el botón "Avanzar estado", el backend ejecuta `avanzar_estado_embarque`, que:
+## Qué cambia (visible para el usuario)
 
-1. Cambia `estado = 'Cerrado'` en `embarques`.
-2. Intenta insertar una nota en `notas_embarque` y un evento en `eventos_embarque`.
+En `/embarques/:id?tab=costos`, en la tabla **Costos directos del embarque**, la columna **Liquidación** dejará de mostrar sólo "Pendiente / Pagado" y mostrará 3 estados con colores distintos:
 
-El trigger `trg_bloquear_cierre` ve que el embarque ya quedó en `Cerrado` y rechaza el INSERT con `check_violation`: *"Embarque cerrado: edición bloqueada (tabla eventos_embarque)"*. Resultado: el estado se queda a medias (cambió a Cerrado, pero sin nota/evento ni snapshot de cierre) y al usuario le sale el toast de error.
+| Estado mostrado | Cuándo aplica | Color sugerido |
+|---|---|---|
+| **Pendiente de cargar** | El costo aún no tiene factura de proveedor vinculada | Gris / outline |
+| **Pendiente de pago** | Ya existe una factura de proveedor vinculada pero el costo sigue marcado como no pagado | Amarillo / warning |
+| **Pagado** | `estado_liquidacion = 'Pagado'` | Verde / success |
 
-Además — bug colateral importante — este flujo **nunca llama a `cerrar_embarque`**, así que cuando se "avanza a Cerrado" no se genera el snapshot financiero, no se escribe en `cierre_embarque_log` ni se marcan las `comisiones_devengadas` como definitivas. Sólo el botón "Cerrar embarque" del tab de Cierre invoca la RPC correcta.
+No se cambia el modelo de datos (`conceptos_costo.estado_liquidacion` sigue siendo `Pendiente` / `Pagado`); el tercer estado se **deriva** en lectura a partir del vínculo con `proveedor_facturas_conceptos`.
 
-## Solución
+## Cómo se decide cada estado
 
-Hacer que `avanzar_estado_embarque` delegue el cierre a `cerrar_embarque` cuando el estado destino es `Cerrado`, y que las inserciones de tracking se hagan con el bypass activo.
+1. Si `estado_liquidacion = 'Pagado'` → **Pagado**.
+2. Si existe al menos un renglón en `proveedor_facturas_conceptos` cuyo `concepto_costo_id` apunte al costo → **Pendiente de pago**.
+3. En otro caso → **Pendiente de cargar**.
 
-### Cambios
+## Detalles técnicos
 
-**1. Migración SQL — actualizar `public.avanzar_estado_embarque`**
+- **Servicio nuevo / extender query existente**: en `src/features/embarques/services/queries/conceptos.ts` (o un hook adicional consumido por `useEmbarqueDetalleData`) traer el `Set<string>` de `concepto_costo_id` que ya tienen factura de proveedor vinculada para el embarque actual. Una sola consulta:
+  ```ts
+  supabase
+    .from('proveedor_facturas_conceptos')
+    .select('concepto_costo_id, conceptos_costo!inner(embarque_id)')
+    .eq('conceptos_costo.embarque_id', embarqueId)
+  ```
+- **Helper de UI**: nuevo `getEstadoLiquidacionDerivado(concepto, conFacturaSet)` en `src/features/embarques/utils/` que devuelve `'Pagado' | 'Pendiente de pago' | 'Pendiente de cargar'`.
+- **Render**: en `src/features/embarques/components/TabCostos.tsx` la columna `liq` usa el helper y un `Badge` con clase según estado (no usar `getEstadoColor` genérico; mapear local para los 3 valores nuevos).
+- **Filtro del checklist** (`ConceptosCostoCard.tsx`): el filtro actual `cxp / costo-no-liquidado` excluye los `Pagado`; mantener ese comportamiento. Adicionalmente, el filtro `costo-sin-factura` ya existe como clave en `FOCUS_LABEL` pero no filtra — aprovechar para que filtre por estado derivado **Pendiente de cargar**.
+- **Tipo prop**: `TabCostos` y `ConceptosCostoCard` reciben el `Set<string>` de costos con factura (`costosConFactura`) y lo pasan al builder de columnas y al filtro.
+- **Bump versión** + `CHANGELOG.md`.
 
-Al inicio del cuerpo, si `p_nuevo_estado = 'Cerrado'`:
+## Fuera de alcance
 
-- Reclamar idempotencia y resolver `v_org_id` como hoy.
-- Llamar `PERFORM public.cerrar_embarque(p_embarque_id)`. Esto:
-  - Reusa la validación de rol y checklist (con bypass para admin que ya existe).
-  - Genera el snapshot financiero, el log en `cierre_embarque_log` y marca comisiones definitivas.
-  - Deja el estado en `Cerrado` con `cerrado_at` / `cerrado_por`.
-- Activar `set_config('app.bypass_cierre','on', true)` y insertar la nota + evento de tracking (para que el timeline siga mostrando "Cambio de estado a Cerrado"), luego desactivar el bypass.
-- Guardar la respuesta de idempotencia y `RETURN`.
-
-Para el resto de estados, conservar el flujo actual sin cambios.
-
-**2. Bump de versión** a `13.135.61` + entrada en `CHANGELOG.md`.
-
-### Lo que NO se toca
-
-- Trigger `tg_bloquear_si_embarque_cerrado`: sigue protegiendo edits post-cierre.
-- RPC `cerrar_embarque`: ya tiene la lógica de admin forzado y snapshot.
-- Frontend (`useEmbarqueEstadoActions`, `useAvanzarEstadoEmbarque`): no requiere cambios; la mutación ya invalida las queries correctas.
-
-### Validación
-
-- Como admin (estado Entregado → Cerrado): el avance debe registrar log de cierre, marcar comisiones definitivas, y dejar la nota + evento visibles en el timeline, sin toast de error.
-- Como rol no autorizado: debe fallar con el mensaje de `cerrar_embarque` ("No autorizado para cerrar embarques…"), no con el de check_violation.
-- Avances a otros estados (Confirmado, En Tránsito, etc.): comportamiento idéntico al actual.
-
-## Analogía
-
-Hoy es como cerrar la puerta con llave y *después* intentar meter un papelito por debajo — la puerta ya no deja pasar nada. El fix es: primero metes el papelito y luego cierras; y de paso, usar el procedimiento oficial de cierre que además llena la bitácora y sella las comisiones.
+- No se cambia el esquema de BD ni los valores almacenados.
+- No se modifica la lógica de marcado de pago ni la conciliación con facturas.
+- No se tocan otros listados (CXP, dashboards) — sólo la tabla de costos del detalle de embarque.
