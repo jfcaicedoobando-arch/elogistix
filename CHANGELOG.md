@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.0] - 2026-06-25
+- **feat(facturapi) — Fase 1: esquema multi-tenant**: Nueva tabla `public.facturapi_credenciales` (1 fila por organización) con `facturapi_org_id`, `ambiente` (sandbox/live), nombres de secrets para las API keys (las llaves reales NUNCA se guardan en BD, sólo el nombre del secret de Supabase), estado del CSD (`certificado_cargado`, `certificado_vence_at`), `webhook_secret` para verificar firmas HMAC y `last_test_timbre_at`. RLS: sólo `admin_org` de la propia organización y `super_admin` pueden leer/escribir; las edge functions acceden vía `service_role`. Trigger `updated_at` estándar. Base para fases 2-6 del plan de integración FacturApi.
+
 ## [13.135.73] - 2026-06-25
 - **fix(facturación) — TC inválido (≤1) en facturas USD/EUR no infla el KPI**: El fix previo (`13.135.72`) sólo cubría `tipo_cambio` NULL/0, pero en producción había 12 facturas USD de junio con `tipo_cambio = 1` literalmente guardado. Ahora `sumarFacturasPorMoneda` y `fetchDashboardEjecutivoFacturacion` consideran `tc ≤ 1` como inválido para monedas extranjeras y aplican el TC del día (`useExchangeRates`) como fallback, o excluyen la factura y la cuentan en `facturas_sin_tc`. Tooltip del KPI actualizado para reflejar el nuevo comportamiento. Tests ampliados (7 casos). Nota: las 12 facturas existentes no se corrigieron en BD porque están emitidas e inmutables (sólo se corrigen vía nota de crédito); el fix presentacional cubre el problema sin tocar datos contables.
 
