@@ -181,13 +181,13 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold">{g.rutaLabel}</div>
-                <div className="text-xs text-muted-foreground">{g.contenedor}</div>
+                <div className="text-xs text-muted-foreground">
+                  {g.contenedor} · {g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"} · {g.agentes} agente{g.agentes === 1 ? "" : "s"}
+                </div>
               </div>
-              <Badge variant="secondary">{g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"}</Badge>
-              <Badge variant="secondary">{g.agentes} agente{g.agentes === 1 ? "" : "s"}</Badge>
               {g.mejor && (
                 <Badge className="bg-success/15 text-success border-success/30 tabular-nums" variant="outline">
-                  Mejor: {usd(g.mejor.total_comparable)}
+                  <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
                 </Badge>
               )}
             </button>
