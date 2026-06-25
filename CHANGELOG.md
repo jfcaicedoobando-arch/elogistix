@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.54] - 2026-06-25
+- **UX(costeo/tarifas) Fase D**: Cierre del rediseño con acciones contextuales y refinamientos. Acciones rápidas en hover de fila (Aprobar visible si el estado es `borrador`, y Duplicar siempre) que aparecen con `opacity-0 group-hover:opacity-100` sin saturar la fila; el kebab queda como fallback con todas las acciones. Badge **Nueva** (chip primary con ícono Sparkles) en filas creadas en los últimos 7 días, para identificar de un vistazo cargas recientes. En el header de cada grupo con 2+ tarifas elegibles se agrega un mini-comparador (`Promedio USD … · Δ máx USD …`) y el chip "Mejor" se ancla con `min-w-[150px]` para alinearse con la columna Total del grid. Padding del header reducido (`py-2.5`) para igualar altura con las filas. En vista Tabla se aplica el mismo tratamiento de **delta vs mejor** que ya tenía la vista Agrupada (calculado por ruta + contenedor entre elegibles). Cero cambios en datos/RPC/RLS.
+
 ## [13.135.53] - 2026-06-25
 - **UX(costeo/tarifas) Fase C**: Vista agrupada con calidad de tabla real — header de columnas ligero (`Agente · Naviera | Vigencia | Estado | Total USD | Acciones`) alineado al mismo `grid-template` de las filas para que todo encaje vertical; mini-barra de vigencia que sustituye el texto "vence en N d" por una barra de progreso del periodo coloreada por urgencia (success / warning / destructive) con tooltip; micro-meta "N por vencer" en warning dentro del header del grupo cuando aplica; densidad afinada (`py-2.5`, divisores `border/60`, hover `bg-muted/40`). Refactor: se extraen `VigenciaBar.tsx` y `TarifaFila.tsx` para mantener `TarifasGroupedView.tsx` bajo el umbral de Power of 10. Cero cambios en datos/RPC.
 

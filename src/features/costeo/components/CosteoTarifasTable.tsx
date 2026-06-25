@@ -2,7 +2,7 @@
  * Tabla de tarifas marítimas (cuerpo de CosteoTarifas).
  * v13.135.49: badge unificado + dropdown de acciones.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -43,6 +43,20 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
   const { aprobar, rechazar, reactivar } = useAprobacionTarifa();
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
 
+  // Mejor total por (ruta + contenedor) entre elegibles (vigente y no rechazada/reemplazada).
+  const mejorPorGrupo = useMemo(() => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const map = new Map<string, number>();
+    for (const t of tarifas) {
+      const ap = t.estado_aprobacion ?? "vigente";
+      if (ap !== "vigente" || t.vigente_hasta < hoy || t.estado === "reemplazada") continue;
+      const k = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
+      const prev = map.get(k);
+      if (prev == null || t.total_comparable < prev) map.set(k, t.total_comparable);
+    }
+    return map;
+  }, [tarifas]);
+
   return (
     <Card>
       <Table>
@@ -67,6 +81,10 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
             const ap = t.estado_aprobacion ?? "vigente";
             const hint = vigenciaHint(t.vigente_hasta);
             const hintCls = hint.tone === "danger" ? "text-destructive" : hint.tone === "warn" ? "text-warning" : "text-muted-foreground";
+            const grupoKey = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
+            const mejor = mejorPorGrupo.get(grupoKey);
+            const esMejor = mejor != null && t.total_comparable === mejor && ap === "vigente";
+            const delta = mejor != null && !esMejor && t.total_comparable > mejor ? t.total_comparable - mejor : 0;
             return (
               <TableRow key={t.id}>
                 <TableCell className="text-sm">{t.puerto_origen_nombre} → {t.puerto_destino_nombre}</TableCell>
@@ -77,7 +95,12 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
                 <TableCell>{t.tipo_contenedor_nombre}</TableCell>
                 <TableCell className="text-right tabular-nums">{usd(Number(t.flete_base))}</TableCell>
                 <TableCell className="text-right tabular-nums">{usd(t.recargos_total)}</TableCell>
-                <TableCell className="text-right tabular-nums font-semibold">{usd(t.total_comparable)}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  <div className={`font-semibold ${esMejor ? "text-success" : ""}`}>{usd(t.total_comparable)}</div>
+                  {delta > 0 && (
+                    <div className="text-[11px] text-muted-foreground">+{usd(delta)} vs mejor</div>
+                  )}
+                </TableCell>
                 <TableCell className="text-xs">
                   <div className="text-foreground">{formatVigencia(t.vigente_desde, t.vigente_hasta)}</div>
                   <div className={hintCls}>{hint.text}</div>

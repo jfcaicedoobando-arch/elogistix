@@ -35,6 +35,9 @@ interface Grupo {
   mejor: TarifaRow | null;
   agentes: number;
   porVencer: number;
+  promedio: number | null;
+  deltaMax: number | null;
+  elegiblesCount: number;
 }
 
 function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
@@ -48,6 +51,7 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
         rutaLabel: `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
         contenedor: t.tipo_contenedor_nombre,
         rows: [], mejor: null, agentes: 0, porVencer: 0,
+        promedio: null, deltaMax: null, elegiblesCount: 0,
       };
       map.set(key, g);
     }
@@ -62,6 +66,13 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
     g.mejor = elegibles[0] ?? null;
     g.agentes = new Set(g.rows.map((r) => r.agente_nombre)).size;
     g.porVencer = elegibles.filter((r) => vigenciaHint(r.vigente_hasta).tone === "warn").length;
+    g.elegiblesCount = elegibles.length;
+    if (elegibles.length >= 2) {
+      const suma = elegibles.reduce((acc, r) => acc + r.total_comparable, 0);
+      g.promedio = suma / elegibles.length;
+      const peor = elegibles[elegibles.length - 1].total_comparable;
+      g.deltaMax = peor - elegibles[0].total_comparable;
+    }
   }
   return Array.from(map.values()).sort((a, b) => a.rutaLabel.localeCompare(b.rutaLabel));
 }
@@ -90,7 +101,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
             <button
               type="button"
               onClick={() => toggle(g.key)}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
             >
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
@@ -102,8 +113,14 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                   )}
                 </div>
               </div>
+              {g.elegiblesCount >= 2 && g.promedio != null && g.deltaMax != null && (
+                <div className="hidden md:block text-right text-[11px] text-muted-foreground tabular-nums leading-tight mr-1">
+                  <div>Promedio {usd(g.promedio)}</div>
+                  <div>Δ máx {usd(g.deltaMax)}</div>
+                </div>
+              )}
               {g.mejor && (
-                <Badge className="bg-success/15 text-success border-success/30 tabular-nums" variant="outline">
+                <Badge className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end" variant="outline">
                   <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
                 </Badge>
               )}
