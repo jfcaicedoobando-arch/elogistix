@@ -11,7 +11,6 @@ import { Loader2, Upload } from "lucide-react";
 import { useRef } from "react";
 import {
   MONEDAS_PROVEEDOR as MONEDAS,
-  CATEGORIAS_PROVEEDOR,
   SUBTIPOS_GASTO_OPERATIVO,
   tiposProveedorPorOrigen,
 } from "@/constants/proveedorConstants";
