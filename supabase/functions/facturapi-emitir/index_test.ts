@@ -41,15 +41,17 @@ Deno.test("facturapi-emitir: persistSession=false en el cliente Supabase", () =>
   assertStringIncludes(indexSource, "persistSession: false");
 });
 
-Deno.test("facturapi-emitir: orden estricto auth → load → llamada externa", () => {
+Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → llamada externa", () => {
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
-  // pagada por requests no autorizadas.
+  // pagada por requests no autorizadas. El resolveFacturapiKey debe ir entre
+  // load y fapi para que multi-tenant (v13.136.0) elija la org correcta.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
   const loadIdx = indexSource.indexOf('.from("facturas")');
+  const resolveIdx = indexSource.indexOf("resolveFacturapiKey(");
   const fapiIdx = indexSource.indexOf("/invoices`");
-  if (authIdx <= 0 || loadIdx <= authIdx || fapiIdx <= loadIdx) {
+  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || fapiIdx <= resolveIdx) {
     throw new Error(
-      `Orden inválido: getUser=${authIdx} load=${loadIdx} fapi=${fapiIdx}`,
+      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} fapi=${fapiIdx}`,
     );
   }
 });
