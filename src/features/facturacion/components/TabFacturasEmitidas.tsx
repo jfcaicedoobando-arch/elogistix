@@ -110,6 +110,8 @@ export function TabFacturasEmitidas(p: Props) {
           />
         </CardContent>
       </Card>
+
+      <FacturasEmitidasFooter facturas={p.facturasFiltradas} />
     </>
   );
 }
