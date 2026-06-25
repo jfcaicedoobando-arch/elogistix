@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.135.64] - 2026-06-25
+- **chore(lint) — Limpieza de código muerto detectado por knip**: Se eliminaron 2 archivos sin uso (`EstadoAprobacionBadge`, `TarifaEstadoBadge` en `features/costeo/components`) y 10 exports sin consumidores (`useAdminGlobalUsers`, `useDeleteUser` admin auth, `NextButton`, `fmtPendientesLiq`, `useNotasCredito` / `useCrearNotaCredito` / `useCambiarEstadoNotaCredito`, `buildGastoColumns` + tipo `GastoPendiente`, `useCambiarPasswordPortal`, `CategoriaSelect`). También se eliminaron los imports/aliases asociados que quedaron sin uso. `bun run lint:unused:strict` ahora pasa limpio.
+
 ## [13.135.63] - 2026-06-25
 - **fix(embarques) — Doble toast al avanzar estado**: Tanto la mutation `useAvanzarEstadoEmbarque`/`useReabrirEmbarque` como el caller `useEmbarqueEstadoActions` emitían `notifySuccess`, mostrando dos toasts seguidos. Se quitó el toast de éxito del mutation y queda únicamente el del caller (que ya manejaba también los errores).
 
