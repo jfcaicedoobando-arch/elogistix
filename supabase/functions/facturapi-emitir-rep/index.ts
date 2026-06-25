@@ -11,11 +11,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from "../facturapi-emitir/helpers.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 
-const FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto en resolveFacturapiKey (v13.136.0).
+void Deno.env.get("FACTURAPI_KEY");
 
 interface ReqBody { pago_id?: string }
 
@@ -30,9 +32,8 @@ function json(body: unknown, status = 200) {
 Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!FACTURAPI_KEY) {
-    return json({ error: "missing_facturapi_key", message: "Configura FACTURAPI_KEY en los secretos del proyecto." }, 500);
-  }
+
+
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "unauthorized" }, 401);
