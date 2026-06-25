@@ -60,6 +60,9 @@ Deno.test("facturapi-emitir: wrapped en Sentry", () => {
   assertStringIncludes(indexSource, 'wrapEdgeHandler("facturapi-emitir"');
 });
 
-Deno.test("facturapi-emitir: falla limpio si falta FACTURAPI_KEY (no 500 críptico)", () => {
-  assertStringIncludes(indexSource, '"missing_facturapi_key"');
+Deno.test("facturapi-emitir: resuelve API key por organización vía helper compartido (v13.136.0)", () => {
+  // El error explícito missing_facturapi_key / org_facturapi_not_configured vive en _shared/facturapiAuth.ts.
+  // Aquí sólo verificamos que el index delegue en ese helper en vez de leer FACTURAPI_KEY global directo.
+  assertStringIncludes(indexSource, 'from "../_shared/facturapiAuth.ts"');
+  assertStringIncludes(indexSource, "resolveFacturapiKey(supabase, factura.organization_id)");
 });
