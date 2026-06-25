@@ -3683,6 +3683,59 @@ export type Database = {
           },
         ]
       }
+      facturapi_credenciales: {
+        Row: {
+          ambiente: string
+          api_key_live_secret_name: string | null
+          api_key_sandbox_secret_name: string | null
+          certificado_cargado: boolean
+          certificado_vence_at: string | null
+          created_at: string
+          datos_fiscales_completos: boolean
+          facturapi_org_id: string | null
+          last_test_timbre_at: string | null
+          organization_id: string
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          ambiente?: string
+          api_key_live_secret_name?: string | null
+          api_key_sandbox_secret_name?: string | null
+          certificado_cargado?: boolean
+          certificado_vence_at?: string | null
+          created_at?: string
+          datos_fiscales_completos?: boolean
+          facturapi_org_id?: string | null
+          last_test_timbre_at?: string | null
+          organization_id: string
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          ambiente?: string
+          api_key_live_secret_name?: string | null
+          api_key_sandbox_secret_name?: string | null
+          certificado_cargado?: boolean
+          certificado_vence_at?: string | null
+          created_at?: string
+          datos_fiscales_completos?: boolean
+          facturapi_org_id?: string | null
+          last_test_timbre_at?: string | null
+          organization_id?: string
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facturapi_credenciales_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facturas: {
         Row: {
           cancelacion_motivo: string | null
