@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { FileMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -93,7 +94,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="nc-fecha">Fecha *</Label>
-          <Input id="nc-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
         </div>
       </div>
       <div className="space-y-1.5">

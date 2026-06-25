@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrackingConfirmFechaLlegadaDialog } from "./TrackingConfirmFechaLlegadaDialog";
 import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/features/embarques/hooks";
@@ -63,7 +63,6 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
 
   const {
     control,
-    register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
@@ -157,7 +156,13 @@ export function TrackingNuevoEventoForm({ embarqueId, estadoActual, fechaLlegada
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Fecha *</label>
-              <Input type="date" {...register("fecha")} required />
+              <Controller
+                control={control}
+                name="fecha"
+                render={({ field }) => (
+                  <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+                )}
+              />
               {errors.fecha && <p className="text-xs text-destructive">{errors.fecha.message}</p>}
               <p className="text-xs text-muted-foreground">
                 Usa la fecha del último evento publicado por la naviera.

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -78,11 +78,11 @@ export default function WizardInformativa() {
           </div>
           <div>
             <Label>Vigencia desde *</Label>
-            <Input type="date" value={vigenciaDesde} onChange={(e) => setVigenciaDesde(e.target.value)} />
+            <DatePickerMx value={vigenciaDesde} onChange={setVigenciaDesde} className="w-full" />
           </div>
           <div>
             <Label>Vigencia hasta *</Label>
-            <Input type="date" value={vigenciaHasta} onChange={(e) => setVigenciaHasta(e.target.value)} />
+            <DatePickerMx value={vigenciaHasta} onChange={setVigenciaHasta} className="w-full" />
           </div>
         </CardContent>
       </Card>

@@ -3,6 +3,7 @@
  * Extraído de `NuevaOportunidadDialog.tsx`.
  */
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -111,7 +112,7 @@ export default function OportunidadFormFields({
       </div>
       <div className="space-y-1">
         <Label>Fecha estimada cierre</Label>
-        <Input type="date" value={form.fecha_estimada_cierre} onChange={(e) => set("fecha_estimada_cierre", e.target.value)} />
+        <DatePickerMx value={form.fecha_estimada_cierre} onChange={(v) => set("fecha_estimada_cierre", v)} className="w-full" />
       </div>
       <div className="space-y-1">
         <Label>Modo</Label>

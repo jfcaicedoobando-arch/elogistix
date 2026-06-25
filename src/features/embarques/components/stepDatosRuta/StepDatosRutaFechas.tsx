@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, Controller } from "react-hook-form";
 import { CheckCircle2, RotateCw } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { sugerirETA, type StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
@@ -110,7 +110,7 @@ function EtaLabelAdornment({
 // ── StepDatosRutaFechas ────────────────────────────────────────────────────────
 
 export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
-  const { register, watch } = useFormContext<EmbarqueFormValues>();
+  const { control, watch } = useFormContext<EmbarqueFormValues>();
   const etd = watch("etd");
   const eta = watch("eta");
   const { hasSugerencia, sugerencia, autoApplied, recalcular } = useEtaSugerencia(etd, eta, diasTransitoSugerencia);
@@ -119,12 +119,16 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
     <>
       <div className="space-y-2">
         <Label htmlFor="emb-etd">ETD (Fecha Salida) *</Label>
-        <Input
-          id="emb-etd"
-          type="date"
-          aria-invalid={errors.etd ? true : undefined}
-          className={errors.etd ? "border-destructive" : ""}
-          {...register("etd")}
+        <Controller
+          control={control}
+          name="etd"
+          render={({ field }) => (
+            <DatePickerMx
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              className={`w-full ${errors.etd ? "border-destructive" : ""}`}
+            />
+          )}
         />
         {errors.etd && <p className={errClass}>{errors.etd}</p>}
       </div>
@@ -142,13 +146,16 @@ export function StepDatosRutaFechas({ errors, diasTransitoSugerencia }: Props) {
             recalcular={recalcular}
           />
         </Label>
-        <Input
-          id="emb-eta"
-          type="date"
-          min={etd || undefined}
-          aria-invalid={errors.eta ? true : undefined}
-          className={errors.eta ? "border-destructive" : ""}
-          {...register("eta")}
+        <Controller
+          control={control}
+          name="eta"
+          render={({ field }) => (
+            <DatePickerMx
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              className={`w-full ${errors.eta ? "border-destructive" : ""}`}
+            />
+          )}
         />
         {errors.eta && <p className={errClass}>{errors.eta}</p>}
       </div>

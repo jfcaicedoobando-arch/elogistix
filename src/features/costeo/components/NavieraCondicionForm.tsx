@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,13 +110,12 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="carta-vigente">Vigente hasta *</Label>
-              <Input
-                id="carta-vigente"
-                type="date"
+              <DatePickerMx
                 value={form.carta_garantia_vigente_hasta ?? ""}
-                onChange={(e) =>
-                  setForm({ ...form, carta_garantia_vigente_hasta: e.target.value || null })
+                onChange={(v) =>
+                  setForm({ ...form, carta_garantia_vigente_hasta: v || null })
                 }
+                className="w-full"
               />
             </div>
             <div>

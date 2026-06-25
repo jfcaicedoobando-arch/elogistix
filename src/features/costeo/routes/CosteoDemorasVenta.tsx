@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -154,13 +155,15 @@ export default function CosteoDemorasVenta() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="dem-vig-desde">Vigente desde</Label>
-              <Input id="dem-vig-desde" type="date" value={form.vigente_desde}
-                onChange={(e) => setForm({ ...form, vigente_desde: e.target.value })} />
+              <DatePickerMx value={form.vigente_desde}
+                onChange={(v) => setForm({ ...form, vigente_desde: v })}
+                className="w-full" />
             </div>
             <div>
               <Label htmlFor="dem-vig-hasta">Vigente hasta</Label>
-              <Input id="dem-vig-hasta" type="date" value={form.vigente_hasta ?? ''}
-                onChange={(e) => setForm({ ...form, vigente_hasta: e.target.value || null })} />
+              <DatePickerMx value={form.vigente_hasta ?? ''}
+                onChange={(v) => setForm({ ...form, vigente_hasta: v || null })}
+                className="w-full" />
             </div>
           </div>
         </form>

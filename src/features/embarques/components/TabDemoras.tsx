@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
@@ -104,12 +105,10 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
         id: "f_desc",
         header: "Fecha de descarga",
         cell: ({ row }) => (
-          <Input
-            type="date"
-            disabled={!canEdit}
-            className="h-8 w-[140px]"
+          <DatePickerMx
             value={(valorActual(row.original, "fecha_descarga") as string | null) ?? ""}
-            onChange={(e) => setDraft(row.original.id, { fecha_descarga: e.target.value || null })}
+            onChange={(v) => setDraft(row.original.id, { fecha_descarga: v || null })}
+            className="h-8 w-[160px]"
           />
         ),
       },
@@ -117,12 +116,10 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
         id: "f_dev",
         header: "Fecha de devolución",
         cell: ({ row }) => (
-          <Input
-            type="date"
-            disabled={!canEdit}
-            className="h-8 w-[140px]"
+          <DatePickerMx
             value={(valorActual(row.original, "fecha_devolucion") as string | null) ?? ""}
-            onChange={(e) => setDraft(row.original.id, { fecha_devolucion: e.target.value || null })}
+            onChange={(v) => setDraft(row.original.id, { fecha_devolucion: v || null })}
+            className="h-8 w-[160px]"
           />
         ),
       },

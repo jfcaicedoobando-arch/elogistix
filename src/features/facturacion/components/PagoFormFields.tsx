@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -26,7 +27,7 @@ export function PagoFormFields({ values, onChange }: Props) {
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1">
         <Label>Fecha de pago</Label>
-        <Input type="date" value={values.fecha} onChange={(e) => onChange("fecha", e.target.value)} />
+        <DatePickerMx value={values.fecha} onChange={(v) => onChange("fecha", v)} className="w-full" />
       </div>
       <div className="space-y-1">
         <Label>Forma de pago</Label>
