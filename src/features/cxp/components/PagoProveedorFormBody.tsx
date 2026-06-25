@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -49,7 +50,7 @@ export function PagoProveedorFormBody(p: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Fecha de pago</Label>
-            <Input type="date" value={p.fecha} onChange={(e) => p.setFecha(e.target.value)} />
+            <DatePickerMx value={p.fecha} onChange={p.setFecha} className="w-full" />
           </div>
           <div className="space-y-1">
             <Label>Método</Label>
