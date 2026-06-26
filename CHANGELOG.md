@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.6] - 2026-06-26
+- **chore(tests) — audit:tests verde**: renombrado el título duplicado `"propaga el error de Supabase"` en `inviteAgentePortal.test.ts` a `"propaga el error de Supabase al invitar agente al portal"` para evitar colisión con los tests de `embarques/mutations`.
+
 ## [13.136.5] - 2026-06-26
 - **chore(lint) — Zero warnings**: `bun run lint -- --max-warnings 0` vuelve a verde. (1) `_shared/facturapiAuth.ts`: el parámetro `supabase: any` de `resolveFacturapiKey` ahora usa una interfaz estructural `SupabaseLike` (sólo declara `from().select().eq().maybeSingle()` con `FacturapiCredencialRow`), eliminando el `@typescript-eslint/no-explicit-any` y el `deno-lint-ignore-file` que tapaba el warning. (2) `DashboardEjecutivoFacturacion.tsx`: complejidad ciclomática bajada de 20 → ≤16 extrayendo los ternarios inline del KPI "Facturado mes" (`sinTc`, `facturadoLabel`, `facturadoTone`, `facturadoHint`, `porTimbrarTone`) a constantes locales. Cero cambios funcionales o visuales.
 

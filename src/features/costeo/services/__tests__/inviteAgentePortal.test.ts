@@ -30,7 +30,7 @@ describe("inviteAgentePortal", () => {
     expect(opts.body.password).toBe("secreta12");
   });
 
-  it("propaga el error de Supabase", async () => {
+  it("propaga el error de Supabase al invitar agente al portal", async () => {
     invokeMock.mockResolvedValue({ data: null, error: new Error("boom") });
     await expect(
       inviteAgentePortal({ email: "x@y.com", agente_id: "a", organization_id: "o", mode: "email" }),
