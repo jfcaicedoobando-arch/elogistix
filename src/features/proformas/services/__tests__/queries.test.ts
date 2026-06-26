@@ -1,0 +1,107 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
+vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+vi.mock("@/lib/supabase/cast", () => ({ fromDb: <T>(v: unknown) => v as T }));
+
+import {
+  fetchProformasEmbarque,
+  fetchProformaPorId,
+  fetchProformasAprobadas,
+  fetchProformasPendientes,
+  fetchClienteParaPdf,
+  fetchEmbarqueParaPdf,
+  fetchConceptosProforma,
+  fetchConceptosConsolidados,
+} from "../queries";
+
+describe("proformas queries", () => {
+  beforeEach(() => { mock.tableCalls.length = 0; });
+
+  it("fetchProformasEmbarque devuelve filas y filtra por embarque_id", async () => {
+    mock.setTableResult("proformas", { data: [{ id: "1" }], error: null });
+    const res = await fetchProformasEmbarque("emb-1");
+    expect(res).toEqual([{ id: "1" }]);
+    const call = mock.tableCalls[0];
+    expect(call.opArgs[call.ops.indexOf("eq")]).toEqual(["embarque_id", "emb-1"]);
+  });
+
+  it("fetchProformasEmbarque devuelve [] cuando data es null", async () => {
+    mock.setTableResult("proformas", { data: null, error: null });
+    await expect(fetchProformasEmbarque("e")).resolves.toEqual([]);
+  });
+
+  it("fetchProformasEmbarque propaga error", async () => {
+    mock.setTableResult("proformas", { data: null, error: new Error("err") });
+    await expect(fetchProformasEmbarque("e")).rejects.toThrow("err");
+  });
+
+  it("fetchProformaPorId devuelve null cuando no hay data", async () => {
+    mock.setTableResult("proformas", { data: null, error: null });
+    await expect(fetchProformaPorId("p")).resolves.toBeNull();
+  });
+
+  it("fetchProformaPorId mapea data presente", async () => {
+    mock.setTableResult("proformas", { data: { id: "p1" }, error: null });
+    await expect(fetchProformaPorId("p1")).resolves.toEqual({ id: "p1" });
+  });
+
+  it("fetchProformasAprobadas filtra estado_revision=aprobada", async () => {
+    mock.setTableResult("proformas", { data: [], error: null });
+    await fetchProformasAprobadas("org");
+    const call = mock.tableCalls[0];
+    const eqArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "eq");
+    expect(eqArgs).toContainEqual(["eq", ["organization_id", "org"]]);
+    expect(eqArgs).toContainEqual(["eq", ["estado_revision", "aprobada"]]);
+  });
+
+  it("fetchProformasPendientes deriva contenedores_lista únicos", async () => {
+    mock.setTableResult("proformas", {
+      data: [
+        {
+          id: "p1",
+          conceptos_venta: [
+            { contenedor_id: "c1", embarque_contenedores: { numero_contenedor: "MSCU1", tipo_contenedor: "40HC" } },
+            { contenedor_id: "c1", embarque_contenedores: { numero_contenedor: "MSCU1", tipo_contenedor: "40HC" } },
+            { contenedor_id: "c2", embarque_contenedores: { numero_contenedor: "MSCU2", tipo_contenedor: "20GP" } },
+            { contenedor_id: null, embarque_contenedores: null },
+          ],
+        },
+      ],
+      error: null,
+    });
+    const res = await fetchProformasPendientes("org");
+    const lista = (res[0] as { contenedores_lista: Array<{ numero: string | null }> }).contenedores_lista;
+    expect(lista).toHaveLength(3);
+    expect(lista.map((l) => l.numero)).toEqual(["MSCU1", "MSCU2", null]);
+  });
+
+  it("fetchProformasPendientes maneja conceptos_venta ausentes", async () => {
+    mock.setTableResult("proformas", { data: [{ id: "p1" }], error: null });
+    const res = await fetchProformasPendientes("org");
+    expect((res[0] as { contenedores_lista: unknown[] }).contenedores_lista).toEqual([]);
+  });
+
+  it("fetchClienteParaPdf delega a maybeSingle", async () => {
+    mock.setTableResult("clientes", { data: { nombre: "X" }, error: null });
+    await expect(fetchClienteParaPdf("c")).resolves.toEqual({ nombre: "X" });
+  });
+
+  it("fetchEmbarqueParaPdf delega a single y propaga error", async () => {
+    mock.setTableResult("embarques", { data: null, error: new Error("404") });
+    await expect(fetchEmbarqueParaPdf("e")).rejects.toThrow("404");
+  });
+
+  it("fetchConceptosProforma devuelve filas", async () => {
+    mock.setTableResult("conceptos_venta", { data: [{ id: "cv1" }], error: null });
+    await expect(fetchConceptosProforma("p")).resolves.toEqual([{ id: "cv1" }]);
+  });
+
+  it("fetchConceptosConsolidados propaga error", async () => {
+    mock.setTableResult("proforma_conceptos_consolidados", { data: null, error: new Error("e") });
+    await expect(fetchConceptosConsolidados("p")).rejects.toThrow("e");
+  });
+});
