@@ -82,7 +82,7 @@ export async function resolveFacturapiKey(
   const { data: cred } = await supabase
     .from("facturapi_credenciales")
     .select(
-      "ambiente, api_key_sandbox_secret_name, api_key_live_secret_name, facturapi_org_id",
+      "ambiente, api_key_sandbox_secret_name, api_key_live_secret_name, api_key_sandbox_vault_id, api_key_live_vault_id, facturapi_org_id",
     )
     .eq("organization_id", organizationId)
     .maybeSingle();
@@ -114,6 +114,33 @@ export async function resolveFacturapiKey(
   }
 
   const ambiente: FacturapiAmbiente = cred.ambiente === "live" ? "live" : "sandbox";
+
+  // Ruta nueva (self-service): la key vive cifrada en vault. Resolverla vía RPC
+  // sólo invocable con service_role (`get_facturapi_api_key_internal`).
+  const vaultId: string | null = ambiente === "live"
+    ? cred.api_key_live_vault_id
+    : cred.api_key_sandbox_vault_id;
+
+  if (vaultId && supabase.rpc) {
+    const { data: keyFromVault, error: rpcErr } = await supabase.rpc(
+      "get_facturapi_api_key_internal",
+      { p_org_id: organizationId, p_ambiente: ambiente },
+    );
+    if (!rpcErr && typeof keyFromVault === "string" && keyFromVault.length > 0) {
+      return {
+        ok: true,
+        data: {
+          apiKey: keyFromVault,
+          ambiente,
+          baseUrl: FACTURAPI_BASE,
+          facturapiOrgId: cred.facturapi_org_id ?? null,
+          legacy: false,
+        },
+      };
+    }
+  }
+
+  // Fallback legacy: nombre de secret en Deno.env.
   const secretName: string | null = ambiente === "live"
     ? cred.api_key_live_secret_name
     : cred.api_key_sandbox_secret_name;
@@ -152,3 +179,4 @@ export async function resolveFacturapiKey(
     },
   };
 }
+
