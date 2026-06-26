@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const addBreadcrumb = vi.fn();
+const { addBreadcrumb } = vi.hoisted(() => ({ addBreadcrumb: vi.fn() }));
 vi.mock("@sentry/react", () => ({ addBreadcrumb }));
 
 import { addFiscalBreadcrumb } from "../fiscalBreadcrumbs";
