@@ -18,7 +18,7 @@ const f = (over: Partial<FacturaCxP>): FacturaCxP =>
   ({ saldo: 0, moneda: "MXN", dias_vencido: 0, fecha_vencimiento: null, estatus: "Vigente", ...over } as FacturaCxP);
 
 describe("calcularKPIsCxP", () => {
-  it("ignora filas con saldo <= 0", () => {
+  it("ignora filas de CxP con saldo <= 0", () => {
     const k = calcularKPIsCxP([f({ saldo: 0, moneda: "MXN" })]);
     expect(k.por_pagar_mxn).toBe(0);
     expect(k.por_pagar_usd).toBe(0);

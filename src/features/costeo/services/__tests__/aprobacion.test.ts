@@ -47,6 +47,6 @@ describe("costeo/services/aprobacion", () => {
 
   it("propaga errores del RPC", async () => {
     mock.setRpcResult("agente_aprobar_tarifa", { data: null, error: { message: "denied" } });
-    await expect(aprobarTarifa("t6")).rejects.toBeTruthy();
+    await expect(aprobarTarifa("t6")).rejects.toThrow();
   });
 });

@@ -5,13 +5,13 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **1857**
+Total de `as` casts detectados: **1895**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 536     | 28.9% |
-| LOW       | 1 | 52      | 2.8% |
-| MEDIUM    | 2 | 1269   | 68.3% |
+| SAFE      | 0 | 539     | 28.4% |
+| LOW       | 1 | 52      | 2.7% |
+| MEDIUM    | 2 | 1304   | 68.8% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -35,15 +35,15 @@ Total de `as` casts detectados: **1857**
 | 4 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
 | 5 | `src/test/setup.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
 | 6 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
-| 7 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 8 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 9 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
-| 10 | `src/features/crm/services/__tests__/cotizacionDesdeOportunidad.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 11 | `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 12 | `src/features/profit/hooks/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 13 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 14 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 8 | 14 | 1 | 0 | 7 | 0 | 0 |
-| 15 | `src/features/facturacion/services/__tests__/facturasIndex.test.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
+| 7 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 8 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 9 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 10 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
+| 11 | `src/features/crm/services/__tests__/cotizacionDesdeOportunidad.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 12 | `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 13 | `src/features/profit/hooks/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 14 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 15 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 8 | 14 | 1 | 0 | 7 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
