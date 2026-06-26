@@ -56,6 +56,10 @@ const WRAPPED_COVERAGE = [
 // de esta lista y añadir a manual o wrapped.
 const SENTRY_EXEMPT = new Set<string>([
   "supabase/functions/sentry-tunnel/index.ts",
+  // facturapi-test-conexion: prueba de conectividad sin lógica de negocio;
+  // los errores se devuelven al cliente (200 con `ok:false, status, detail`)
+  // y se reportan desde el front (`reportCaughtError`).
+  "supabase/functions/facturapi-test-conexion/index.ts",
 ]);
 
 describe("Edge functions con manejo manual de Sentry", () => {

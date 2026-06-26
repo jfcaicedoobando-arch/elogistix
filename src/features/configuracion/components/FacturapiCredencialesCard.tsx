@@ -22,7 +22,24 @@ import { type FacturapiAmbiente } from "@/features/configuracion/services/factur
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
 import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
 import FacturapiOnboardingWizard from "./FacturapiOnboardingWizard";
-
+function HeaderBadges({ configurado, ambiente }: { configurado: boolean; ambiente: FacturapiAmbiente }) {
+  return (
+    <>
+      {configurado ? (
+        <Badge variant="secondary" className="ml-2 gap-1">
+          <CheckCircle2 className="h-3 w-3" /> Configurado
+        </Badge>
+      ) : (
+        <Badge variant="outline" className="ml-2 gap-1">
+          <AlertTriangle className="h-3 w-3" /> Sin configurar
+        </Badge>
+      )}
+      <Badge variant={ambiente === "live" ? "default" : "outline"} className="ml-1">
+        {ambiente === "live" ? "Producción" : "Sandbox"}
+      </Badge>
+    </>
+  );
+}
 
 export default function FacturapiCredencialesCard() {
   const { organization } = useOrganization();
@@ -79,18 +96,7 @@ export default function FacturapiCredencialesCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Receipt className="h-5 w-5" /> FacturApi (Timbrado SAT)
-          {configurado ? (
-            <Badge variant="secondary" className="ml-2 gap-1">
-              <CheckCircle2 className="h-3 w-3" /> Configurado
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="ml-2 gap-1">
-              <AlertTriangle className="h-3 w-3" /> Sin configurar
-            </Badge>
-          )}
-          <Badge variant={ambiente === "live" ? "default" : "outline"} className="ml-1">
-            {ambiente === "live" ? "Producción" : "Sandbox"}
-          </Badge>
+          <HeaderBadges configurado={configurado} ambiente={ambiente} />
         </CardTitle>
         <CardDescription>
           Conecta tu cuenta de FacturApi para timbrar CFDI 4.0 desde Libre Carga.

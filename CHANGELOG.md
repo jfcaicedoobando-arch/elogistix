@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.20] - 2026-06-26
+- **chore(ci) — verde en lint y tests**:
+  - Refactor por complejidad (`max-warnings 0`): extraído `HeaderBadges` en `FacturapiCredencialesCard`; partido `resolveFacturapiKey` en `legacyFallback` + `tryVaultKey` + `resolveSecretName`; partido el handler de `facturapi-test-conexion` en `parseBody` / `authorizeRequest` / `buildSupabaseLike` / `callFacturapi`.
+  - Añadida `facturapi-test-conexion` a `SENTRY_EXEMPT` (prueba de conectividad sin lógica de negocio; los errores ya se reportan desde el front vía `reportCaughtError`).
+
 ## [13.137.19] - 2026-06-26
 - **feat(facturapi) — wizard de onboarding en 3 pasos**:
   - Nuevo `FacturapiOnboardingWizard` montado sobre `FormDialogShell` + stepper: (1) Ambiente, (2) API keys sandbox/live, (3) Probar conexión y confirmar.
