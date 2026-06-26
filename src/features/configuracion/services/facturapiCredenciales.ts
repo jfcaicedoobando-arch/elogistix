@@ -64,11 +64,6 @@ export async function upsertFacturapiCredenciales(
   if (error) throw error;
 }
 
-/** Convención estable para nombrar el secret según ambiente (legacy). */
-export function defaultSecretName(orgId: string, ambiente: FacturapiAmbiente): string {
-  const short = orgId.replace(/-/g, "").slice(0, 8).toUpperCase();
-  return `FACTURAPI_KEY_${short}_${ambiente.toUpperCase()}`;
-}
 
 /**
  * Guarda la API key real (sandbox o live) en el Vault del servidor mediante el
