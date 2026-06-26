@@ -14,13 +14,9 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFactura } from "@/features/facturacion/hooks";
-import { usePermissions, useToast } from "@/hooks/shared";
+import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
+import { usePermissions } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import { openFacturaInNewTab } from "@/services/storage";
-import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
-import { notifyError } from "@/components/shared/utils/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { getErrorMessage } from "@/lib/errors/index";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
@@ -33,6 +29,7 @@ import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/de
 import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { Replace } from "lucide-react";
+
 
 
 
