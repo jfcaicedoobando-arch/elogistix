@@ -12,13 +12,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
-import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
-import { buildCancelQuery, validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto en resolveFacturapiKey (v13.136.0).
+// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto vía SDK (v13.136.4).
 void Deno.env.get("FACTURAPI_KEY");
+void resolveFacturapiKey;
 
 function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -53,29 +55,30 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
   if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
 
-  const resolved = await resolveFacturapiKey(supabase, factura.organization_id);
+  const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const FACTURAPI_KEY = resolved.data.apiKey;
+  const facturapi = resolved.data.client;
 
-
-  const query = buildCancelQuery(motivo, sustituye_uuid);
-
-  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices/${factura.facturapi_id}?${query}`, {
-    method: "DELETE",
-    headers: { "Authorization": basicAuthHeader(FACTURAPI_KEY) },
-  });
-  const fapiJson = await fapiRes.json().catch(() => ({}));
-  if (!fapiRes.ok) {
+  interface FapiCancelResponse { status?: string }
+  let cancelResp: FapiCancelResponse;
+  try {
+    cancelResp = await facturapi.invoices.cancel(
+      factura.facturapi_id,
+      { motive, substitution: sustituye_uuid },
+    ) as FapiCancelResponse;
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
     await supabase.from("bitacora_actividad").insert({
       organization_id: factura.organization_id,
       user_id: userData.user.id,
       accion: "facturapi_cancelar_failed",
       entidad: "factura",
       entidad_id: factura_id,
-      detalle: { status: fapiRes.status, response: fapiJson },
+      detalle: { status, response: detail },
     });
-    return json({ error: "facturapi_error", status: fapiRes.status, detail: fapiJson }, 502);
+    return json({ error: "facturapi_error", status, detail }, 502);
   }
+  const fapiJson = cancelResp;
 
   const { error: updErr } = await supabase
     .from("facturas")

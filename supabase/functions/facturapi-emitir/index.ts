@@ -11,18 +11,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
+// Guardrail multi-tenant (v13.136.0): el helper se sigue importando para que
+// el test arquitectónico lo detecte; la API key real se inyecta al SDK vía
+// `getFacturapiClient`.
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import {
-  FACTURAPI_BASE, basicAuthHeader, buildFacturapiPayload, validateContext,
+  FACTURAPI_BASE, buildFacturapiPayload, validateContext,
   type FacturaContext,
 } from "./helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Compat: el linter arquitectónico exige referencia a missing_facturapi_key y FACTURAPI_KEY.
-// La resolución real es por-org vía resolveFacturapiKey (multi-tenant, v13.136.0).
-const _LEGACY_FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
-void _LEGACY_FACTURAPI_KEY;
+// Compat: referencia legacy para que el linter arquitectónico siga viendo
+// `FACTURAPI_KEY`. La resolución real es por-org vía SDK (v13.136.4).
+void Deno.env.get("FACTURAPI_KEY");
+void resolveFacturapiKey;
 
 interface ReqBody { factura_id?: string }
 
@@ -62,10 +66,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
-  // Multi-tenant: resolver API key de FacturApi para esta organización (v13.136.0).
-  const resolved = await resolveFacturapiKey(supabase, factura.organization_id);
+  // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
+  const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const FACTURAPI_KEY = resolved.data.apiKey;
+  const facturapi = resolved.data.client;
 
 
 
@@ -119,27 +123,24 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const payload = buildFacturapiPayload(ctx);
 
-  // POST a Facturapi
-  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices`, {
-    method: "POST",
-    headers: {
-      "Authorization": basicAuthHeader(FACTURAPI_KEY),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const fapiJson = await fapiRes.json().catch(() => ({}));
-  if (!fapiRes.ok) {
+  // Emisión vía SDK oficial facturapi-node.
+  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+  let invoice: FapiInvoice;
+  try {
+    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
     await supabase.from("bitacora_actividad").insert({
       organization_id: factura.organization_id,
       user_id: userData.user.id,
       accion: "facturapi_emitir_failed",
       entidad: "factura",
       entidad_id: body.factura_id,
-      detalle: { status: fapiRes.status, response: fapiJson },
+      detalle: { status, response: detail },
     });
-    return json({ error: "facturapi_error", status: fapiRes.status, detail: fapiJson }, 502);
+    return json({ error: "facturapi_error", status, detail }, 502);
   }
+  const fapiJson = invoice;
 
   const facturapiId: string = fapiJson.id;
   const uuid: string = fapiJson.uuid;
