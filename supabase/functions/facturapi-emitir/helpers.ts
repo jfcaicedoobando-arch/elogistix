@@ -43,6 +43,8 @@ export interface FacturapiPayload {
   payment_method: string;
   currency: string;
   exchange?: number;
+  related?: string[];
+  relation?: string;
   customer: {
     legal_name: string;
     tax_id: string;
@@ -63,6 +65,7 @@ export interface FacturapiPayload {
     };
   }>;
 }
+
 
 const RFC_RX = /^([A-ZÑ&]{3,4})\d{6}(?:[A-Z\d]{2}[A\d0-9])$/i;
 
