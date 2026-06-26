@@ -3,10 +3,14 @@
  * Se mantiene fuera del hook controller para respetar la separación
  * lógica/presentación: el hook expone datos + handlers, este builder los
  * compone con celdas visuales.
+ *
+ * Fase 3 (Proforma → Factura): añadida columna de selección (`_select`) que
+ * permite escoger varias proformas para fusionarlas en una sola factura.
  */
 import { Download, FileCheck2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import type { ProformaConFactura, ProformaRow } from "@/features/embarques/hooks";
@@ -16,14 +20,45 @@ interface BuildArgs {
   descargar: (p: ProformaConFactura) => void;
   downloadingId: string | null;
   onMarcarFacturada: (p: ProformaRow) => void;
+  selection?: {
+    selectedIds: Set<string>;
+    toggle: (id: string) => void;
+    isSelectable: (p: ProformaConFactura) => boolean;
+  };
 }
 
 export function buildProformasColumns({
   descargar,
   downloadingId,
   onMarcarFacturada,
+  selection,
 }: BuildArgs): ColumnDef<ProformaConFactura, unknown>[] {
-  return defineColumns<ProformaConFactura>([
+  const cols: ColumnDef<ProformaConFactura, unknown>[] = [];
+
+  if (selection) {
+    cols.push({
+      id: "_select",
+      header: "",
+      enableSorting: false,
+      meta: { width: "w-[40px]", className: "text-center" },
+      cell: ({ row }) => {
+        const p = row.original;
+        const selectable = selection.isSelectable(p);
+        return (
+          <div onClick={(e) => e.stopPropagation()} className="flex justify-center">
+            <Checkbox
+              checked={selection.selectedIds.has(p.id)}
+              disabled={!selectable}
+              onCheckedChange={() => selection.toggle(p.id)}
+              aria-label={`Seleccionar proforma ${p.numero}`}
+            />
+          </div>
+        );
+      },
+    });
+  }
+
+  cols.push(
     {
       id: "numero",
       header: "# Proforma",
@@ -110,5 +145,7 @@ export function buildProformasColumns({
         );
       },
     },
-  ]);
+  );
+
+  return defineColumns<ProformaConFactura>(cols);
 }

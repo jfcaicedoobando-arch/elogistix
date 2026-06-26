@@ -32,23 +32,36 @@ export async function listarPagosFactura(facturaId: string): Promise<PagoFactura
   return data ?? [];
 }
 
-export async function registrarPagoFactura(input: RegistrarPagoInput): Promise<void> {
+/**
+ * Inserta un pago y devuelve el `id` recién creado (útil para encadenar el
+ * timbrado del REP en facturas PPD). Devuelve `null` si Supabase no regresa
+ * la fila (no debería suceder en producción, pero los tests con mocks viejos
+ * pueden devolver `data: null`).
+ */
+export async function registrarPagoFactura(
+  input: RegistrarPagoInput,
+): Promise<string | null> {
   const { data: userData } = await supabase.auth.getUser();
   const created_by = userData.user?.id ?? null;
-  const { error } = await supabase.from("pagos_factura").insert({
-    factura_id: input.factura_id,
-    fecha_pago: input.fecha_pago,
-    monto: input.monto,
-    moneda: input.moneda,
-    tipo_cambio: input.tipo_cambio,
-    monto_aplicado_factura: input.monto_aplicado_factura,
-    forma_pago: input.forma_pago,
-    referencia: input.referencia ?? "",
-    notas: input.notas ?? "",
-    diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
-    created_by,
-  });
+  const { data, error } = await supabase
+    .from("pagos_factura")
+    .insert({
+      factura_id: input.factura_id,
+      fecha_pago: input.fecha_pago,
+      monto: input.monto,
+      moneda: input.moneda,
+      tipo_cambio: input.tipo_cambio,
+      monto_aplicado_factura: input.monto_aplicado_factura,
+      forma_pago: input.forma_pago,
+      referencia: input.referencia ?? "",
+      notas: input.notas ?? "",
+      diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? 0,
+      created_by,
+    })
+    .select("id")
+    .single();
   if (error) throw error;
+  return (data as { id?: string } | null)?.id ?? null;
 }
 
 export async function eliminarPagoFactura(id: string): Promise<void> {
