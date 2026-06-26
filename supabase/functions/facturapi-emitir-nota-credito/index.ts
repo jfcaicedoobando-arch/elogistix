@@ -48,23 +48,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
 
-  const nc = await loadNc(supabase, body.nota_credito_id);
-  if (!nc) return json({ error: "nota_credito_not_found" }, 404);
-  if (nc.facturapi_id) return json({ error: "ya_timbrada", message: "Esta nota de crédito ya fue timbrada." }, 409);
+  const pre = await preloadNcContext(supabase, body.nota_credito_id);
+  if (!pre.ok) return json(pre.body, pre.status);
+  const { nc, factura, cliente, email } = pre;
 
-  const factura = await loadFactura(supabase, nc.factura_id);
-  if (!factura) return json({ error: "factura_not_found" }, 404);
-  if (!factura.uuid_fiscal) {
-    return json({
-      error: "factura_sin_uuid",
-      message: "La factura original no tiene UUID fiscal. Timbra la factura primero.",
-    }, 409);
-  }
-
-  const cliente = await loadCliente(supabase, factura.cliente_id);
-  if (!cliente) return json({ error: "cliente_not_found" }, 404);
-
-  const email = await loadEmailPrincipal(supabase, factura.cliente_id);
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
