@@ -11,6 +11,16 @@ import { getCurrentUser } from "@/features/auth/services";
 export type NotaCredito = Tables<"factura_notas_credito">;
 export type EstadoNotaCredito = NotaCredito["estado"];
 
+export interface ConceptoNotaCredito {
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+  clave_sat?: string | null;
+  clave_unidad?: string | null;
+  unidad?: string | null;
+  tasa_iva?: number | null;
+}
+
 export interface CrearNotaCreditoInput {
   factura_id: string;
   folio: string;
@@ -20,7 +30,12 @@ export interface CrearNotaCreditoInput {
   moneda: NotaCredito["moneda"];
   tipo_cambio: number;
   fecha_emision: string;
+  serie?: string | null;
+  uso_cfdi?: string | null;
+  forma_pago?: string | null;
+  conceptos?: ConceptoNotaCredito[];
 }
+
 
 export async function listarNotasCreditoPorFactura(facturaId: string): Promise<NotaCredito[]> {
   const { data, error } = await supabase
