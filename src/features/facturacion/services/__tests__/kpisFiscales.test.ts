@@ -9,7 +9,12 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { fetchFacturacionKpisFiscales } from "../kpisFiscales";
 
 describe("fetchFacturacionKpisFiscales", () => {
-  beforeEach(() => { mock.tableCalls.length = 0; });
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+    mock.setTableResult("proformas", { data: null, error: null });
+    mock.setTableResult("facturas", { data: null, error: null });
+    mock.setTableResult("pagos_factura", { data: null, error: null });
+  });
 
   it("agrega los counts de las 3 fuentes", async () => {
     mock.setTableResult("proformas", { data: null, error: null, count: 4 } as never);
