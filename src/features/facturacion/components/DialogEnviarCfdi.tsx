@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/shared";
 import { enviarCfdiFactura, enviarCfdiRep } from "@/features/facturacion/services/enviarCfdiEmail";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorMessage } from "@/lib/errors/index";
 
 interface Props {
   open: boolean;
