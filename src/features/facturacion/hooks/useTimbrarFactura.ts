@@ -7,6 +7,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useTimbrarFactura() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "emitir-factura"],
     mutationFn: (facturaId: string) => emitirFacturapi(facturaId),
     onSuccess: (res) => {
       toast.success(`Factura timbrada · UUID ${res.uuid.slice(0, 8)}…`);
@@ -19,6 +20,7 @@ export function useTimbrarFactura() {
 export function useCancelarFactura() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "cancelar-factura"],
     mutationFn: (vars: {
       facturaId: string;
       motivo: MotivoCancelacionSat;

@@ -19,6 +19,7 @@ export interface CrearFacturaManualVars {
 export function useCrearFacturaManual() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "factura-manual"],
     mutationFn: async (vars: CrearFacturaManualVars) => {
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {

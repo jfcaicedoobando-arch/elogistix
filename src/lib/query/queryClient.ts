@@ -13,11 +13,15 @@ function reportQueryError(
   kind: "query" | "mutation",
   rootKey: string | undefined,
   meta?: Record<string, unknown>,
+  opKey?: string | undefined,
 ): void {
   // 13.114.18: queryKey[0] y mutationKey[0] se promueven a `tags` para poder
   // filtrar/agrupar en Sentry (los `extra` no son indexables).
+  // 13.137.15: mutationKey[1] se promueve como `mutation_op` para distinguir
+  // sub-flujos (ej. ["fiscal","emitir-rep"] vs ["fiscal","cancelar-rep"]).
   const tags: Record<string, string> = { feature: "react_query", kind };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
+  if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
   void import("@sentry/react")
     .then(({ captureException }) =>
       captureException(err, { tags, extra: meta }),
@@ -32,6 +36,13 @@ const rootOf = (k: unknown): string | undefined => {
   return typeof v === "string" ? v : undefined;
 };
 
+const opOf = (k: unknown): string | undefined => {
+  const arr = k as unknown[] | undefined;
+  if (!Array.isArray(arr) || arr.length < 2) return undefined;
+  const v = arr[1];
+  return typeof v === "string" ? v : undefined;
+};
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (err, query) =>
@@ -39,9 +50,13 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (err, _vars, _ctx, mutation) =>
-      reportQueryError(err, "mutation", rootOf(mutation.options.mutationKey), {
-        mutationKey: mutation.options.mutationKey,
-      }),
+      reportQueryError(
+        err,
+        "mutation",
+        rootOf(mutation.options.mutationKey),
+        { mutationKey: mutation.options.mutationKey },
+        opOf(mutation.options.mutationKey),
+      ),
   }),
   defaultOptions: {
     queries: {

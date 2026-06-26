@@ -65,6 +65,7 @@ export function ConvertirAFacturaDialog({
   }, [open, series, serieId]);
 
   const mutation = useMutation({
+    mutationKey: ["fiscal", "proforma-a-factura"],
     mutationFn: () =>
       convertirProformaAFactura({
         proformaIds,

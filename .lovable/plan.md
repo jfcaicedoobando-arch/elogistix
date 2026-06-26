@@ -1,42 +1,82 @@
-## Problemas detectados
+## Estado actual (qué ya está cubierto)
 
-**1. `supabase/functions/facturapi-webhook/helpers.ts` — sintaxis rota**
-La función `mapEventToFacturaPatch` no cierra correctamente sus llaves: en la línea 68 hay un `}` que cierra el `switch`, pero falta otro `}` para cerrar la función. Luego aparece `export interface MappedReceiptUpdate` dentro de la función (Deno: *"'import', and 'export' cannot be used outside of module code"*). En la línea 120 hay un `}` extra que cierra una llave inexistente.
+**Frontend** (`src/lib/observability/sentry/`):
+- Init dinámico, PII scrub, env detection, sampling por ruta, replay-on-error.
+- `QueryCache.onError` + `MutationCache.onError` reportan automáticamente **todo** error de React Query con tags `feature:react_query`, `kind`, `query_root`/`mutation_root`.
+- `reportCaughtError(err, {feature, op})` para try/catch manuales.
+- `ErrorBoundary`, telemetría de sesión/perfil, widget de feedback, contexto de usuario.
+- Tunnel `sentry-tunnel` para esquivar ad-blockers.
 
-Esto rompe **Edge Functions (Deno tests)** porque ningún test del módulo carga.
+**Edge functions** (18 envueltas con `wrapEdgeHandler`, 8 con captura manual). Tests de arquitectura `sentry-edge-coverage` y `sentry-edge-wrapping` ya obligan a que **toda** función nueva con `index.ts` esté listada o exenta.
 
-**2. `src/features/facturacion/hooks/useFacturacionKpisFiscales.ts` viola la capa Hooks → Services**
-Importa `@/integrations/supabase/client` directamente. El test de arquitectura `architecture.test.ts` bloquea esto, lo que rompe:
-- **Tests (shard 6/8)**
-- **Lint, typecheck, unused code & build** (mismo test corre en el job `quality`)
-- **Coverage merge & report** y **CI Success** (en cascada)
+## Gaps detectados en código nuevo
 
-## Plan de arreglo
+1. **Tags genéricos en mutations fiscales**. Las nuevas mutations (`emitirRep`, `cancelarRep`, `timbrarNotaCreditoFacturapi`, `convertirProformasAFactura`, `descargarCfdiFacturapi`, `enviarCfdiEmail`, `crearFacturaManual`, `duplicarFacturaParaSustitucion`) llegan a Sentry sólo con `mutation_root` plano. Sin un `mutationKey` consistente, los issues quedan agrupados como "react_query" sin distinguir flujo.
+2. **Fire-and-forget en UI fiscal**. Botones de "Descargar PDF/XML", "Enviar por email", "Copiar webhook URL" hacen `try/catch + toast.error` sin pasar por React Query → si fallan, Sentry no los ve. (Verificado en `descargarCfdiFacturapi.ts` y `FacturapiWebhookUrlSection.tsx`.)
+3. **Sin breadcrumbs de dominio** en el flujo Proforma → Factura → Timbrado → Pago → REP. Cuando algo falla, falta el rastro de pasos previos del usuario.
+4. **Sin test que prohíba** que un nuevo servicio fiscal trague el error con un `catch { toast.error(...) }` sin reportar.
+5. **Verificación end-to-end pendiente**: confirmar que `sentry-tunnel` sigue recibiendo POSTs y que el DSN del front llega.
 
-### a) Arreglar `facturapi-webhook/helpers.ts`
-- Añadir el `}` faltante después de la línea 68 para cerrar `mapEventToFacturaPatch`.
-- Eliminar el `}` extra en la línea 120.
+## Plan
 
-### b) Extraer servicio para KPIs fiscales
-- Crear `src/features/facturacion/services/kpisFiscales.ts` con:
-  - Tipo `FacturacionKpisFiscales`.
-  - Función `fetchFacturacionKpisFiscales(orgId)` que hace los 3 conteos en paralelo (proformas convertibles, facturas sin timbrar, REPs pendientes).
-- Reescribir `useFacturacionKpisFiscales.ts` para:
-  - Quitar el import de `@/integrations/supabase/client`.
-  - Llamar al nuevo servicio en `queryFn`.
+### Fase 1 — Verificación de lo existente
+- Correr `bun run test -- sentry` (cubre `core.test`, `helpers.test`, `dropPredicate`, `piiScrub.fase5`, `user.test`, `reportCaughtError.test`, `queryClient.sentry.test`, `useAuthSession.sentry.test`).
+- Correr los 3 tests de arquitectura: `sentry-edge-coverage`, `sentry-edge-wrapping`, `sentry-imports-guardrail`.
+- Correr `deno test supabase/functions/_shared/sentry_test.ts`.
+- Abrir `/admin/sentry-diagnostico` en preview y disparar un evento de prueba; confirmar que llega a Sentry vía el tunnel.
 
-### c) Versionado
-- Bump `APP_VERSION` a `13.137.14`.
-- Entrada en `CHANGELOG.md`:
+### Fase 2 — Granularidad de tags
+- En cada `useMutation` del flujo fiscal nuevo, asignar `mutationKey` jerárquica:
+  ```text
+  ["fiscal","emitir-factura"]
+  ["fiscal","emitir-rep"]
+  ["fiscal","cancelar-factura"]
+  ["fiscal","cancelar-rep"]
+  ["fiscal","nota-credito","emitir"]
+  ["fiscal","nota-credito","cancelar"]
+  ["fiscal","proforma-a-factura"]
+  ["fiscal","sustituir-factura"]
+  ["fiscal","descargar-cfdi"]
+  ["fiscal","enviar-cfdi-email"]
+  ["fiscal","factura-manual"]
   ```
-  ## [13.137.14] - 2026-06-26
-  - **fix(ci)**: corrige sintaxis en `facturapi-webhook/helpers.ts` y extrae servicio `kpisFiscales` para cumplir capa Hooks→Services.
-  ```
+  Esto hace que `mutation_root="fiscal"` agrupe y un tag secundario distinga el paso.
 
-### d) Verificación
-- `bun x vitest run src/lib/__tests__/architecture.test.ts` → debe pasar.
-- `deno test --no-check supabase/functions/facturapi-webhook/helpers_test.ts` → debe parsear y pasar.
+### Fase 3 — Cerrar fugas fire-and-forget
+- Auditar handlers que hacen `try/catch + notifyError` sin re-throw ni mutation:
+  - `descargarCfdiFacturapi` callers (botón descarga).
+  - `enviarCfdiEmail` callers.
+  - `FacturapiWebhookUrlSection` (copiar URL).
+  - `ConvertirAFacturaDialog`, `DialogSustituirFactura` (botones secundarios).
+- Añadir `reportCaughtError(err, { feature: "facturacion", op: "<nombre>" })` en cada `catch`.
 
-## Notas técnicas (analogía)
-Los hooks son como meseros: toman pedidos del componente y los entregan, pero no entran a la cocina (Supabase). El servicio es la cocina. Antes, el hook se metía a cocinar — ahora vuelve a su rol.
-El segundo bug es como una receta a la que le faltó cerrar un paréntesis: el chef (Deno) no la pudo leer y abortó todo el menú.
+### Fase 4 — Breadcrumbs de dominio
+Crear `src/lib/observability/fiscalBreadcrumbs.ts` con helper:
+```text
+addFiscalBreadcrumb(op, data) → Sentry.addBreadcrumb({category:"fiscal", ...})
+```
+Insertar en los puntos de entrada del flujo (abrir modal, confirmar, recibir respuesta de Facturapi). Lazy import para no inflar bundle.
+
+### Fase 5 — Guardrail arquitectónico
+Añadir `src/__tests__/architecture/sentry-fiscal-services.test.ts`:
+- Para cada archivo en `src/features/facturacion/services/*.ts` (excepto índices y tipos): si contiene `catch (`, debe **o** re-lanzar el error **o** llamar `reportCaughtError` / `Sentry.captureException`.
+- Excluye tests y archivos que el linter ya marca con `// SAFE-CAST:` apropiado.
+
+### Fase 6 — Documentación
+- Actualizar `CHANGELOG.md` con entrada del bump.
+- Bump `APP_VERSION` a `13.137.15`.
+- Anotar en `mem://technical/architecture-and-standards` que las mutations fiscales usan `mutationKey` jerárquica empezando con `"fiscal"`.
+
+## Detalles técnicos
+
+- Los breadcrumbs son síncronos pero el SDK ya está cargado cuando un usuario llega al flujo fiscal (post-login). No requieren dynamic import adicional.
+- `reportCaughtError` ya hace dynamic import del SDK, así que añadirlo en handlers no afecta bundle inicial.
+- El nuevo test de arquitectura usa lectura de archivos en disco (mismo patrón que los 3 existentes) — sin dependencia runtime.
+- No se tocan los wrappers `_shared/sentry.ts` ni `core.ts`. Los cambios son aditivos.
+
+## Fuera de alcance
+
+- No subir `tracesSampleRate` ni `replaysSessionSampleRate` (costo).
+- No agregar Sentry a `sentry-tunnel` (sería recursión).
+- No instrumentar funciones marketing/landing (sample 0% por diseño).
+- No tocar el flujo de demoras automáticas / garantías (no es código fiscal y ya está cubierto vía React Query).

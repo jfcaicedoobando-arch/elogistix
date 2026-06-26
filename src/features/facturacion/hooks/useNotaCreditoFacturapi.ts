@@ -11,6 +11,7 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 export function useTimbrarNotaCredito(facturaId: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "emitir-nota-credito"],
     mutationFn: (notaCreditoId: string) => timbrarNotaCreditoFacturapi(notaCreditoId),
     onSuccess: (res) => {
       toast.success(`Nota de crédito timbrada · UUID ${res.uuid.slice(0, 8)}…`);
@@ -29,6 +30,7 @@ export function useTimbrarNotaCredito(facturaId: string) {
 export function useCancelarNotaCredito(facturaId: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "cancelar-nota-credito"],
     mutationFn: (vars: { notaCreditoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarNotaCreditoFacturapi(vars.notaCreditoId, vars.motivo, vars.sustituyeUuid),
     onSuccess: () => {
