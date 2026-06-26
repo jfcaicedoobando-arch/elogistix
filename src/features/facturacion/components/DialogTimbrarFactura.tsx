@@ -148,6 +148,15 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
         </div>
       </div>
 
+      <label className="flex items-center gap-2 text-sm cursor-pointer">
+        <Checkbox
+          checked={enviarEmail}
+          onCheckedChange={(c) => setEnviarEmail(c === true)}
+        />
+        <span>Enviar el CFDI por email al cliente tras timbrar</span>
+      </label>
+
+
       {!puedeTimbrar && (
         <Alert variant="destructive">
           <AlertDescription>
