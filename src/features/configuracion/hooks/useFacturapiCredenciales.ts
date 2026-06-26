@@ -2,6 +2,7 @@
  * Hooks para leer/escribir las credenciales de FacturApi de la org actual.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchFacturapiCredenciales,
   upsertFacturapiCredenciales,
