@@ -30,6 +30,8 @@ const CRITICAL = [
   "supabase/functions/exchange-rates/index.ts",
   // 13.114.5 — CFDI upload (visibilidad server-side de "Failed to fetch")
   "supabase/functions/parse-cfdi-xml/index.ts",
+  // 13.136.3 — Webhook de FacturApi (sync de estado factura)
+  "supabase/functions/facturapi-webhook/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
