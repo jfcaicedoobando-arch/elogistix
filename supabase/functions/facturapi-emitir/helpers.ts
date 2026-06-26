@@ -30,7 +30,10 @@ export interface FacturaContext {
     email?: string | null;
   };
   conceptos: ConceptoInterno[];
+  /** UUID de la factura sustituida cuando este CFDI la reemplaza (relación SAT 04). */
+  sustituye_uuid?: string | null;
 }
+
 
 export interface FacturapiPayload {
   type: "I";
