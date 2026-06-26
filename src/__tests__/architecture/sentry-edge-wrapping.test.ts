@@ -35,6 +35,9 @@ const CRITICAL = [
   // 13.137.4-5 — Descarga y envío de CFDI vía FacturApi
   "supabase/functions/facturapi-descargar/index.ts",
   "supabase/functions/facturapi-enviar-email/index.ts",
+  // 13.137.7 — Notas de crédito (CFDI tipo E)
+  "supabase/functions/facturapi-emitir-nota-credito/index.ts",
+  "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {

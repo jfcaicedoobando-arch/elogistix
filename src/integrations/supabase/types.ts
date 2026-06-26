@@ -3528,6 +3528,9 @@ export type Database = {
         Row: {
           aprobada_at: string | null
           aprobada_por: string | null
+          cancelacion_motivo: string | null
+          cancelado_en: string | null
+          conceptos: Json
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -3535,19 +3538,32 @@ export type Database = {
           descripcion: string
           estado: Database["public"]["Enums"]["estado_nota_credito"]
           factura_id: string
+          facturapi_id: string | null
           fecha_emision: string
           folio: string
+          folio_fiscal: number | null
+          forma_pago: string | null
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
           motivo: Database["public"]["Enums"]["motivo_nota_credito"]
           organization_id: string
+          pdf_url: string | null
+          serie: string | null
+          timbrado_en: string | null
+          timbrado_por: string | null
           tipo_cambio: number
           updated_at: string
+          uso_cfdi: string | null
+          uuid_fiscal: string | null
+          xml_url: string | null
         }
         Insert: {
           aprobada_at?: string | null
           aprobada_por?: string | null
+          cancelacion_motivo?: string | null
+          cancelado_en?: string | null
+          conceptos?: Json
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -3555,19 +3571,32 @@ export type Database = {
           descripcion?: string
           estado?: Database["public"]["Enums"]["estado_nota_credito"]
           factura_id: string
+          facturapi_id?: string | null
           fecha_emision?: string
           folio: string
+          folio_fiscal?: number | null
+          forma_pago?: string | null
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto: number
           motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
           organization_id?: string
+          pdf_url?: string | null
+          serie?: string | null
+          timbrado_en?: string | null
+          timbrado_por?: string | null
           tipo_cambio?: number
           updated_at?: string
+          uso_cfdi?: string | null
+          uuid_fiscal?: string | null
+          xml_url?: string | null
         }
         Update: {
           aprobada_at?: string | null
           aprobada_por?: string | null
+          cancelacion_motivo?: string | null
+          cancelado_en?: string | null
+          conceptos?: Json
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -3575,15 +3604,25 @@ export type Database = {
           descripcion?: string
           estado?: Database["public"]["Enums"]["estado_nota_credito"]
           factura_id?: string
+          facturapi_id?: string | null
           fecha_emision?: string
           folio?: string
+          folio_fiscal?: number | null
+          forma_pago?: string | null
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
           motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
           organization_id?: string
+          pdf_url?: string | null
+          serie?: string | null
+          timbrado_en?: string | null
+          timbrado_por?: string | null
           tipo_cambio?: number
           updated_at?: string
+          uso_cfdi?: string | null
+          uuid_fiscal?: string | null
+          xml_url?: string | null
         }
         Relationships: [
           {
@@ -7065,7 +7104,12 @@ export type Database = {
         | "Parcialmente pagada"
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
-      estado_nota_credito: "Borrador" | "Aprobada" | "Aplicada" | "Cancelada"
+      estado_nota_credito:
+        | "Borrador"
+        | "Aprobada"
+        | "Timbrada"
+        | "Aplicada"
+        | "Cancelada"
       estado_nota_credito_proveedor:
         | "Borrador"
         | "Aprobada"
@@ -7356,7 +7400,13 @@ export const Constants = {
       ],
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
-      estado_nota_credito: ["Borrador", "Aprobada", "Aplicada", "Cancelada"],
+      estado_nota_credito: [
+        "Borrador",
+        "Aprobada",
+        "Timbrada",
+        "Aplicada",
+        "Cancelada",
+      ],
       estado_nota_credito_proveedor: [
         "Borrador",
         "Aprobada",

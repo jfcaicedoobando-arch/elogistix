@@ -1,60 +1,67 @@
+## Bloque alta prioridad — pasos 3 y 4
 
-# Item #2 — Envío del CFDI por email al cliente
+Ya cerramos #1 (PDF/XML vía proxy) y #2 (email). Siguen los dos puntos fiscales más sensibles del bloque:
 
-Aprovechamos FacturApi (`POST /invoices/{id}/email` y `POST /receipts/{id}/email`) que ya envía el PDF + XML adjuntos al cliente. No usamos la cola de emails interna (Mailgun/pgmq) porque FacturApi ya entrega el CFDI con su plantilla SAT-compliant y archivos correctos.
+### Paso 3 — Notas de crédito (CFDI tipo E)
 
-## Alcance
+**Objetivo**: emitir una nota de crédito ligada a una factura existente (devolución, descuento o bonificación), timbrarla en FacturApi y reflejarla en saldos.
 
-1. **Envío al timbrar (opcional)**: checkbox "Enviar CFDI al cliente por email" en `DialogTimbrarFactura`. Activo por default si el cliente tiene email.
-2. **Reenvío manual de factura**: botón "Reenviar CFDI" en `FacturaDetalle` (sólo si está timbrada). Permite editar el destinatario antes de enviar.
-3. **Reenvío manual de REP**: botón equivalente en `PagoFacturaRow` cuando el REP está timbrado.
-4. **Auditoría**: cada envío se registra en `bitacora_actividad` con destinatario, tipo (factura/REP) y resultado.
+**Backend**
+- Tabla nueva `public.facturas_notas_credito` (ya existe `factura_notas_credito` — revisaremos columnas y la reutilizamos o ampliamos):
+  - `id`, `organization_id`, `factura_id` (FK), `numero`, `serie`, `folio`, `motivo` ('01' devolución, '02' descuento, '03' bonificación), `monto`, `moneda`, `tipo_cambio`, `facturapi_id`, `uuid_fiscal`, `pdf_url`, `xml_url`, `estado` (`borrador`/`timbrada`/`cancelada`), `creado_por`, timestamps.
+  - GRANT a `authenticated`/`service_role`, RLS por `organization_id` con `has_role`.
+- Nueva edge function `facturapi-emitir-nota-credito` (`verify_jwt=true`, `wrapEdgeHandler`, CORS strict):
+  - Input: `{ nota_credito_id }`.
+  - Carga la NC + factura original; arma payload SDK con `type: "E"`, `related: [uuid_factura]`, `relationship: "01"` (Nota de crédito), conceptos con la misma clave SAT.
+  - Llama `facturapi.invoices.create()` vía `getFacturapiClient`.
+  - Actualiza la NC con uuid/folio/urls, registra `bitacora_actividad` (`nc_timbrada`).
+- Nueva edge function `facturapi-cancelar-nota-credito` (mismo patrón que `facturapi-cancelar`).
+- RPC `recalcular_saldo_factura(factura_id)` que descuenta NCs timbradas no canceladas para que el saldo pendiente refleje la nota.
 
-## Diseño técnico
+**Frontend**
+- Servicio `src/features/facturacion/services/notasCreditoFacturapi.ts` con `crearNotaCredito`, `timbrarNotaCredito`, `cancelarNotaCredito`.
+- Componente `DialogCrearNotaCredito.tsx` usando `FormDialogShell`:
+  - Selección de motivo SAT, monto (validado ≤ saldo de la factura), moneda heredada, conceptos editables (precargados desde la factura).
+  - Botón "Guardar y timbrar" (crea + invoca edge function).
+- Sección "Notas de crédito" dentro de `FacturaDetalle.tsx` (lista con estado, monto, acciones: ver PDF/XML, reenviar email, cancelar).
+- Reutiliza `FacturaDownloadButton` (ya soporta proxy) y `DialogEnviarCfdi` para envío.
 
-### Backend
-- **Nueva edge function `facturapi-enviar-email`** (`verify_jwt=true`, CORS strict, `wrapEdgeHandler`):
-  - Input: `{ factura_id?, pago_id?, email? }` (uno de los dos IDs).
-  - Resuelve org → API key vía `resolveFacturapiKey` (patrón ya existente).
-  - Si `email` viene vacío, lo toma del cliente (`clientes.email_facturacion` o `clientes.email`).
-  - Llama `POST https://www.facturapi.io/v2/invoices/{facturapi_id}/email` o `/receipts/{id}/email` con `{ "email": [destinatario] }`.
-  - Inserta en `bitacora_actividad` (`accion='cfdi_enviado'`, payload con tipo y destinatario).
-  - Devuelve `{ ok, enviado_a }` o error normalizado.
+### Paso 4 — Cancelación con sustitución (motivo 01)
 
-### Frontend
-- **Servicio** `src/features/facturacion/services/enviarCfdiEmail.ts` con `enviarCfdiFactura(facturaId, email?)` y `enviarCfdiRep(pagoId, email?)`.
-- **`DialogTimbrarFactura`**:
-  - Agregar `Checkbox` "Enviar CFDI al cliente" + input email (auto-poblado del cliente, editable).
-  - Tras `timbrar.mutate` exitoso, si el check está activo, invocar `enviarCfdiFactura`.
-  - Mostrar toast independiente del envío (no bloquea el timbrado).
-- **Nuevo componente `DialogEnviarCfdi.tsx`** (reutilizado para factura y REP):
-  - Campos: destinatario(s) email (multi-email separado por coma, validación), nota opcional ignorada (FacturApi no la acepta vía email endpoint).
-  - Botón "Enviar".
-- **`FacturaDetalle.tsx`**: nuevo botón "Reenviar CFDI" junto a los botones de descarga (sólo si `uuid_fiscal`).
-- **`PagoFacturaRow.tsx`**: botón "Reenviar REP" cuando `rep_uuid` existe.
+Hoy `DialogCancelarFactura` ya permite elegir motivo 01 y capturar el UUID que sustituye, pero el flujo es manual (el usuario debe timbrar antes la factura nueva y pegar su UUID).
 
-### Catálogo de errores
-- Si FacturApi responde `400 invalid_email`: traducir a "Email inválido".
-- Si responde `404`: "CFDI no encontrado en FacturApi" (probablemente cancelado).
-- Otros: mensaje genérico + log a Sentry.
+**Mejoras**
+- Backend: extender `facturapi-cancelar` para aceptar `sustituye_factura_id` (en vez de UUID crudo) y resolver internamente el `uuid_fiscal` de esa factura — evita errores de copia/pega.
+- Nuevo flujo "Sustituir factura" en `FacturaDetalle.tsx`:
+  - Botón "Cancelar y sustituir" abre wizard 2 pasos (`FormDialogStepper`):
+    1. **Crear sustituta**: duplica la factura actual (RPC `duplicar_factura_para_sustitucion(factura_id)`), permite editar y timbrar.
+    2. **Cancelar original**: una vez timbrada la sustituta, invoca cancelación motivo 01 con `sustituye_factura_id` de la nueva.
+- RPC `duplicar_factura_para_sustitucion`:
+  - Inserta nueva factura en estado borrador con los mismos conceptos, cliente y proforma origen.
+  - Marca metadato `sustituye_a_factura_id` para trazabilidad.
+- Auditoría: ambos eventos (`factura_sustituida`, `factura_cancelada_01`) a `bitacora_actividad` con referencias cruzadas.
+- UI: badge "Sustituida por FAC-XXXX" en la factura cancelada y "Sustituye a FAC-YYYY" en la nueva.
 
-## Archivos a crear
-- `supabase/functions/facturapi-enviar-email/index.ts`
-- `src/features/facturacion/services/enviarCfdiEmail.ts`
-- `src/features/facturacion/components/DialogEnviarCfdi.tsx`
+### Guardrails CI a actualizar (los dos pasos)
 
-## Archivos a editar
-- `src/features/facturacion/components/DialogTimbrarFactura.tsx` (checkbox + envío post-timbrado)
-- `src/features/facturacion/routes/FacturaDetalle.tsx` (botón reenviar)
-- `src/features/facturacion/components/PagoFacturaRow.tsx` (botón reenviar REP)
-- `supabase/config.toml` (registrar nueva función)
-- `src/constants/appVersion.ts` + `CHANGELOG.md` (bump a `13.137.5`)
+- `sentry-edge-coverage.test.ts` y `sentry-edge-wrapping.test.ts`: agregar `facturapi-emitir-nota-credito`, `facturapi-cancelar-nota-credito`.
+- `facturapi-multi-tenant.test.ts`: añadir las 2 nuevas funciones al array `FILES`.
+- `supabase/config.toml`: no se requiere bloque (defaults OK).
+- Tests Deno por función nueva (happy path + sin auth + payload inválido).
+- Tests unit del servicio frontend con mock de `supabase.functions.invoke`.
 
-## Tests
-- Unit del servicio `enviarCfdiEmail` con mock de `supabase.functions.invoke`.
-- Deno test del endpoint cubriendo: sin auth, sin IDs, email inválido, happy path factura, happy path REP.
+### Entrega por turnos
 
-## Out of scope (para iteraciones siguientes)
-- Plantillas custom de email (FacturApi maneja el template).
-- Envío masivo desde la tabla de facturas (se puede agregar luego en `FacturasMasivasToolbar`).
-- Tracking de aperturas/clicks (no expuesto por FacturApi).
+Para mantener PRs pequeños y trazables propongo este orden:
+
+1. **Turno A — Notas de crédito (backend)**: migración tabla/RLS/RPC + edge functions + tests Deno. Bump `13.137.7`.
+2. **Turno B — Notas de crédito (frontend)**: servicio, dialog, sección en `FacturaDetalle`. Bump `13.137.8`.
+3. **Turno C — Sustitución (backend + RPC duplicar)**: extender `facturapi-cancelar`, RPC `duplicar_factura_para_sustitucion`. Bump `13.137.9`.
+4. **Turno D — Sustitución (frontend wizard + badges)**. Bump `13.137.10`.
+
+### Fuera de alcance (queda para bloque siguiente)
+- Reintento manual de REP, cancelación de REP con UI (items 5–6 — quick wins ya planeados).
+- Aplicación automática de NC a saldos en cobranza/conciliación bancaria.
+- Webhook sync (item del bloque medio).
+
+¿Arrancamos con el **Turno A (Notas de crédito backend)** o prefieres ajustar el orden (p. ej. hacer sustitución primero)?
