@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.8] - 2026-06-26
+- **chore(tests) — guardrails arquitectónicos verdes**: (1) `useUpsertFacturapiCredenciales` ahora declara `onError` con `notifyError(...)` (toast en español) para cumplir el guardrail `mutations-have-onerror`. (2) `supabase/functions/facturapi-webhook/index.ts` agregada a `CRITICAL` en `sentry-edge-wrapping.test.ts` y a `WRAPPED_COVERAGE` en `sentry-edge-coverage.test.ts` — la función ya usaba `wrapEdgeHandler`, sólo faltaba registrarla en los baselines de exhaustividad.
+
 ## [13.136.7] - 2026-06-26
 - **chore(arch) — Power of 10 ≤200 líneas**: `FacturapiCredencialesCard.tsx` (231 líneas) dividido extrayendo el JSX del formulario a `FacturapiCredencialesForm.tsx`. El card queda en 144 líneas (estado + handlers + header) y el form en ~140 (presentacional puro con props). Cero cambios funcionales/visuales; resuelve los tests `architecture-baseline` y `audit-report`.
 
