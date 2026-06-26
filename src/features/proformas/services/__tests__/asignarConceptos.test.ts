@@ -23,7 +23,7 @@ describe("asignarConceptosAProforma", () => {
     expect(rpc).toHaveBeenCalledWith("asignar_conceptos_a_proforma", { p_proforma_id: "p1", p_concepto_ids: [] });
   });
 
-  it("propaga el error del RPC", async () => {
+  it("propaga el error del RPC asignar_conceptos", async () => {
     rpc.mockResolvedValueOnce({ data: null, error: { message: "no perms" } });
     await expect(asignarConceptosAProforma("p1", ["c1"])).rejects.toMatchObject({ message: "no perms" });
   });

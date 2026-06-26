@@ -41,7 +41,7 @@ describe("fetchClienteFinancials", () => {
     expect(r).toEqual({ facturadoUSD: 0, pendienteUSD: 0, profitUSD: 0 });
   });
 
-  it("propaga error de facturas", async () => {
+  it("propaga error al consultar facturas del cliente", async () => {
     mock.setTableResult("facturas", { data: null, error: new Error("rls") });
     await expect(fetchClienteFinancials("x")).rejects.toThrow("rls");
   });
