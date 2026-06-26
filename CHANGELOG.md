@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.16] - 2026-06-26
+- **test(coverage) — +100 tests de lógica fiscal para mantener cobertura ≥ 38%**:
+  - Servicios FacturApi: `facturapi.ts` (9), `repFacturapi.ts` (6), `notasCreditoFacturapi.ts` (5), `enviarCfdiEmail.ts` (5), `descargarCfdiFacturapi.ts` (12 incl. `esUrlFacturapi`), `facturaManual.ts` (7 incl. cálculo IVA/total, rollback de conceptos, fecha vencimiento).
+  - Servicios de listado/CRUD: `facturasCrud.ts` (11), `dashboardEjecutivo.ts` (8 incl. conversión USD→MXN con fallback, conteo `facturas_sin_tc`), `masivas.ts` (6), `datosFiscalesCliente.ts` (5), `kpisFiscales.ts` (3).
+  - Conversión y proformas: `convertirAFactura.ts` (5), `asignarConceptos.ts` (3), `queries.ts` (12 incl. derivación de `contenedores_lista`).
+  - Observabilidad: `fiscalBreadcrumbs.ts` (3) — categoría/level, default data, error swallowing.
+  - Política `mem://principles/coverage-threshold` respetada: umbral en `vitest.config.ts` se mantiene en 38/52/72.
+
 ## [13.137.15] - 2026-06-26
 - **feat(observability) — Ampliación de cobertura Sentry en flujo fiscal**:
   - **MutationKeys jerárquicas** `["fiscal", "<op>"]` en `useTimbrarFactura`, `useCancelarFactura`, `useTimbrarRep`, `useCancelarRep`, `useTimbrarNotaCredito`, `useCancelarNotaCredito`, `useCrearFacturaManual` y `ConvertirAFacturaDialog`. Errores ahora llegan a Sentry con `mutation_root="fiscal"` + nuevo tag indexable `mutation_op` (ej. `emitir-rep`, `cancelar-nota-credito`).
