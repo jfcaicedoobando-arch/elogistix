@@ -118,7 +118,6 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
       return null;
   }
 }
-}
 
 /** HMAC-SHA256 hex del body con el secret. Usa Web Crypto (disponible en Deno). */
 export async function computeSignature(rawBody: string, secret: string): Promise<string> {
