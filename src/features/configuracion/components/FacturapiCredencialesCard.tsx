@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Receipt, AlertTriangle, CheckCircle2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
@@ -21,6 +21,7 @@ import {
 import { type FacturapiAmbiente } from "@/features/configuracion/services/facturapiCredenciales";
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
 import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
+import FacturapiOnboardingWizard from "./FacturapiOnboardingWizard";
 
 
 export default function FacturapiCredencialesCard() {
