@@ -13,7 +13,7 @@ import { listarNotasCreditoPorFactura, type EstadoNotaCredito, type ConceptoNota
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
-import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
+import { DialogCancelarNotaCredito } from "@/features/facturacion/components/DialogCancelarNotaCredito";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { useTimbrarNotaCredito, useCancelarNotaCredito } from "@/features/facturacion/hooks/useNotaCreditoFacturapi";
 import type { Tables } from "@/integrations/supabase/types";
