@@ -153,18 +153,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
 
   const payload = buildRepPayload(ctx);
 
-  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices`, {
-    method: "POST",
-    headers: {
-      "Authorization": basicAuthHeader(FACTURAPI_KEY),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const fapiJson = await fapiRes.json().catch(() => ({}));
-  if (!fapiRes.ok) {
-    const errMsg = typeof fapiJson === "object" && fapiJson !== null
-      ? JSON.stringify(fapiJson).slice(0, 500)
+  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+  let invoice: FapiInvoice;
+  try {
+    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
+    const errMsg = typeof detail === "object" && detail !== null
+      ? JSON.stringify(detail).slice(0, 500)
       : "Facturapi error";
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: errMsg })
@@ -175,10 +171,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       accion: "facturapi_rep_emitir_failed",
       entidad: "pago_factura",
       entidad_id: pago.id,
-      detalle: { status: fapiRes.status, response: fapiJson },
+      detalle: { status, response: detail },
     });
-    return json({ error: "facturapi_error", status: fapiRes.status, detail: fapiJson }, 502);
+    return json({ error: "facturapi_error", status, detail }, 502);
   }
+  const fapiJson = invoice;
 
   const facturapiId: string = fapiJson.id;
   const uuid: string = fapiJson.uuid;
