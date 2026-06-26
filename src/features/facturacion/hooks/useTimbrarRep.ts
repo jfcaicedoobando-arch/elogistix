@@ -10,6 +10,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useTimbrarRep(facturaId?: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "emitir-rep"],
     mutationFn: (pagoId: string) => emitirRep(pagoId),
     onSuccess: (res) => {
       toast.success(`REP timbrado · UUID ${res.uuid.slice(0, 8)}…`);
@@ -31,6 +32,7 @@ export function useTimbrarRep(facturaId?: string) {
 export function useCancelarRep(facturaId?: string) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["fiscal", "cancelar-rep"],
     mutationFn: (vars: { pagoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarRep(vars.pagoId, vars.motivo, vars.sustituyeUuid),
     onSuccess: () => {
