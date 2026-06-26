@@ -93,7 +93,7 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="tracking">Tracking</TabsTrigger>
         <TabsTrigger value="documentos">Documentos</TabsTrigger>
         <TabsTrigger value="costos">Costos</TabsTrigger>
-        <TabsTrigger value="garantias">Garantías y Demoras</TabsTrigger>
+        <TabsTrigger value="garantias">Demoras y Garantías</TabsTrigger>
         <TabsTrigger value="seguros">Seguros</TabsTrigger>
         <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
@@ -152,15 +152,15 @@ export function EmbarqueDetalleTabs({
 
       {/* Garantías y Demoras fusionadas (v13.66.15): mismo dominio (free time / depósito por contenedor). */}
       <TabsContent value="garantias" className="space-y-6">
-        <section aria-labelledby="seccion-garantias" className="space-y-3">
-          <h2 id="seccion-garantias" className="text-base font-semibold">Garantías</h2>
-          <TabGarantias embarqueId={embarqueId} canEdit={canEdit} fechaLlegadaReal={embarque.fecha_llegada_real ?? null} />
-        </section>
-        <Separator />
         <section aria-labelledby="seccion-demoras" className="space-y-3">
           <h2 id="seccion-demoras" className="text-base font-semibold">Demoras</h2>
           <SeccionDemorasAuto embarqueId={embarqueId} canEdit={canEdit} />
           <TabDemoras embarqueId={embarqueId} canEdit={canEdit} />
+        </section>
+        <Separator />
+        <section aria-labelledby="seccion-garantias" className="space-y-3">
+          <h2 id="seccion-garantias" className="text-base font-semibold">Garantías</h2>
+          <TabGarantias embarqueId={embarqueId} canEdit={canEdit} fechaLlegadaReal={embarque.fecha_llegada_real ?? null} />
         </section>
       </TabsContent>
 
