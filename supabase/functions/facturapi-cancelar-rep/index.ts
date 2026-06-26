@@ -58,31 +58,30 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
   if (!pago.facturapi_rep_id) return json({ error: "no_timbrado_rep" }, 409);
   if (pago.estado_rep === "Cancelado") return json({ error: "ya_cancelado" }, 409);
 
-  const resolved = await resolveFacturapiKey(supabase, pago.organization_id);
+  const resolved = await getFacturapiClient(supabase, pago.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const FACTURAPI_KEY = resolved.data.apiKey;
+  const facturapi = resolved.data.client;
 
-
-  const queryParts: string[] = [`motive=${encodeURIComponent(body.motivo)}`];
-  if (body.sustituye_uuid) queryParts.push(`substitution=${encodeURIComponent(body.sustituye_uuid)}`);
-  const query = queryParts.join("&");
-
-  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices/${pago.facturapi_rep_id}?${query}`, {
-    method: "DELETE",
-    headers: { "Authorization": basicAuthHeader(FACTURAPI_KEY) },
-  });
-  const fapiJson = await fapiRes.json().catch(() => ({}));
-  if (!fapiRes.ok) {
+  interface FapiCancelResponse { status?: string }
+  let cancelResp: FapiCancelResponse;
+  try {
+    cancelResp = await facturapi.invoices.cancel(
+      pago.facturapi_rep_id,
+      { motive: body.motivo, substitution: body.sustituye_uuid },
+    ) as FapiCancelResponse;
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
     await supabase.from("bitacora_actividad").insert({
       organization_id: pago.organization_id,
       user_id: userData.user.id,
       accion: "facturapi_rep_cancelar_failed",
       entidad: "pago_factura",
       entidad_id: pago.id,
-      detalle: { status: fapiRes.status, response: fapiJson },
+      detalle: { status, response: detail },
     });
-    return json({ error: "facturapi_error", status: fapiRes.status, detail: fapiJson }, 502);
+    return json({ error: "facturapi_error", status, detail }, 502);
   }
+  const fapiJson = cancelResp;
 
   const { error: updErr } = await supabase
     .from("pagos_factura")
