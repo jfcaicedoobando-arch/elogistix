@@ -11,7 +11,10 @@ export type FacturapiEventType =
   | "invoice.status_updated"
   | "invoice.canceled"
   | "invoice.delivered_to_customer"
-  | "invoice.created";
+  | "invoice.created"
+  | "receipt.status_updated"
+  | "receipt.canceled"
+  | "receipt.created";
 
 export interface FacturapiWebhookEvent {
   type: string;
