@@ -36,8 +36,8 @@ export async function convertirProformaAFactura(
     p_forma_pago: params.formaPago,
     p_uso_cfdi: params.usoCfdi,
     p_dias_credito: params.diasCredito ?? 0,
-    p_notas: params.notas ?? null,
-    p_request_id: params.requestId ?? null,
+    p_notas: params.notas ?? undefined,
+    p_request_id: params.requestId ?? undefined,
   });
   if (error) throw error;
   // SAFE-CAST: el RPC devuelve la fila completa de `facturas`; sólo extraemos
