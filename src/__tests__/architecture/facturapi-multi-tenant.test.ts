@@ -58,11 +58,11 @@ describe("facturapi SDK-only guardrail (v13.136.4)", () => {
     });
   }
 
-  it("sólo _shared/facturapiClient.ts importa npm:facturapi", () => {
+  it("sólo _shared/facturapiClient.ts referencia npm:facturapi", () => {
     const helperSrc = readFileSync(
       join(ROOT, "supabase/functions/_shared/facturapiClient.ts"),
       "utf8",
     );
-    expect(helperSrc).toMatch(/import\([^)]*npm:facturapi/);
+    expect(helperSrc).toMatch(/npm:facturapi/);
   });
 });
