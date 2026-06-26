@@ -68,14 +68,15 @@ export async function loadCliente(supabase: SupabaseLike, id: string): Promise<C
 }
 
 export async function loadEmailPrincipal(supabase: SupabaseLike, clienteId: string): Promise<string | null> {
-  const chain = supabase.from("contactos_cliente").select("email").eq("cliente_id", clienteId);
-  // segunda llamada `.eq(...).maybeSingle()`
-  // deno-lint-ignore no-explicit-any
-  const second = (chain as any).eq?.("es_principal", true);
-  if (!second) return null;
-  const { data } = await second.maybeSingle();
-  return (data as { email: string | null } | null)?.email ?? null;
+  const { data } = await supabase
+    .from("contactos_cliente")
+    .select("email")
+    .eq("cliente_id", clienteId)
+    .eq("es_principal", true)
+    .maybeSingle();
+  return ((data as { email: string | null } | null)?.email) ?? null;
 }
+
 
 export function buildNcContextFromRows(
   nc: NcRow,
