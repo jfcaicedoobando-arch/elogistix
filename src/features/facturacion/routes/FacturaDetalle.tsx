@@ -103,33 +103,22 @@ export default function FacturaDetalle() {
     );
   }
 
-  const vencida = factura.estado === "Vencida";
-
   return (
     <div className="space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
       <Button variant="ghost" size="sm" onClick={() => navigate("/facturacion")} className="-ml-2">
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
       </Button>
 
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold font-mono tabular-nums">{factura.numero}</h1>
-            <Badge className={`${getEstadoColor(factura.estado)} text-xs`}>{factura.estado}</Badge>
-            {sinTimbrar && <Badge variant="outline" className="text-xs">Sin timbrar</Badge>}
-            {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {factura.cliente_nombre} • Exp: <span className="font-mono">{factura.expediente}</span>
-          </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-xs text-muted-foreground">Total</p>
-          <p className="text-2xl font-bold tabular-nums text-accent">
-            {formatCurrency(Number(factura.total), factura.moneda)}
-          </p>
-        </div>
-      </div>
+      <FacturaDetalleHeader
+        numero={factura.numero}
+        estado={factura.estado}
+        sinTimbrar={sinTimbrar}
+        clienteNombre={factura.cliente_nombre}
+        expediente={factura.expediente}
+        total={Number(factura.total)}
+        moneda={factura.moneda}
+      />
+
 
       <FacturaDetalleActions
         canEdit={canEdit}
