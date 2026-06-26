@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.19] - 2026-06-26
+- **feat(facturapi) — wizard de onboarding en 3 pasos**:
+  - Nuevo `FacturapiOnboardingWizard` montado sobre `FormDialogShell` + stepper: (1) Ambiente, (2) API keys sandbox/live, (3) Probar conexión y confirmar.
+  - El botón **Siguiente** sólo se habilita cuando el paso cumple su requisito; **Finalizar** exige una prueba exitosa contra `organizations/me`.
+  - Mensajes de error de FacturApi traducidos al español MX (401 key inválida, 404 org no encontrada, 5xx temporal, red caída).
+  - `FacturapiCredencialesCard` ahora muestra el botón **Conectar FacturApi** / **Reconfigurar** como entrada principal; el formulario plano queda como "Modo avanzado" plegable.
+
 ## [13.137.18] - 2026-06-26
 - **feat(facturapi) — onboarding self-service de API keys (sandbox/live)**:
   - Migración: `facturapi_credenciales` gana `api_key_sandbox_vault_id/last4` y `api_key_live_vault_id/last4`. Las keys se guardan cifradas vía `vault.create_secret` y solo se exponen los últimos 4 dígitos a la UI.

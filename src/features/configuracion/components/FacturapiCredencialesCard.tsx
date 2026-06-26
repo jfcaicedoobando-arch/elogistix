@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Receipt, AlertTriangle, CheckCircle2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
@@ -21,6 +21,7 @@ import {
 import { type FacturapiAmbiente } from "@/features/configuracion/services/facturapiCredenciales";
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
 import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
+import FacturapiOnboardingWizard from "./FacturapiOnboardingWizard";
 
 
 export default function FacturapiCredencialesCard() {
@@ -34,6 +35,7 @@ export default function FacturapiCredencialesCard() {
   const [datosFiscales, setDatosFiscales] = useState(false);
   const [csdCargado, setCsdCargado] = useState(false);
   const [csdVence, setCsdVence] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
@@ -100,29 +102,58 @@ export default function FacturapiCredencialesCard() {
       <CardContent className="space-y-4">
         {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
 
-        <FacturapiCredencialesForm
-          orgId={orgId}
-          ambiente={ambiente}
-          setAmbiente={setAmbiente}
-          facturapiOrgId={facturapiOrgId}
-          setFacturapiOrgId={setFacturapiOrgId}
-          sandboxLast4={sandboxLast4}
-          liveLast4={liveLast4}
-          datosFiscales={datosFiscales}
-          setDatosFiscales={setDatosFiscales}
-          csdCargado={csdCargado}
-          setCsdCargado={setCsdCargado}
-          csdVence={csdVence}
-          setCsdVence={setCsdVence}
-        />
+        <div className="flex items-center justify-between gap-3 rounded border border-dashed p-3 bg-muted/30">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium">
+              {configurado ? "Reconfigurar conexión" : "Asistente paso a paso"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {configurado
+                ? "Vuelve a ejecutar el wizard si cambiaste de ambiente o rotaste tus keys."
+                : "Te guiamos en 3 pasos para vincular tu cuenta de FacturApi."}
+            </p>
+          </div>
+          <Button type="button" onClick={() => setWizardOpen(true)}>
+            <Wand2 className="h-4 w-4 mr-1" />
+            {configurado ? "Reconfigurar" : "Conectar FacturApi"}
+          </Button>
+        </div>
+
+        <details className="rounded border">
+          <summary className="cursor-pointer select-none px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/30">
+            Modo avanzado — editar campos manualmente
+          </summary>
+          <div className="p-3 space-y-4">
+            <FacturapiCredencialesForm
+              orgId={orgId}
+              ambiente={ambiente}
+              setAmbiente={setAmbiente}
+              facturapiOrgId={facturapiOrgId}
+              setFacturapiOrgId={setFacturapiOrgId}
+              sandboxLast4={sandboxLast4}
+              liveLast4={liveLast4}
+              datosFiscales={datosFiscales}
+              setDatosFiscales={setDatosFiscales}
+              csdCargado={csdCargado}
+              setCsdCargado={setCsdCargado}
+              csdVence={csdVence}
+              setCsdVence={setCsdVence}
+            />
+            <div className="flex justify-end">
+              <Button onClick={onGuardar} disabled={upsert.isPending} variant="outline" size="sm">
+                {upsert.isPending ? "Guardando…" : "Guardar configuración"}
+              </Button>
+            </div>
+          </div>
+        </details>
 
         <FacturapiWebhookUrlSection orgId={orgId} copiar={copiar} />
 
-        <div className="flex justify-end gap-2">
-          <Button onClick={onGuardar} disabled={upsert.isPending}>
-            {upsert.isPending ? "Guardando…" : "Guardar configuración"}
-          </Button>
-        </div>
+        <FacturapiOnboardingWizard
+          orgId={orgId}
+          open={wizardOpen}
+          onOpenChange={setWizardOpen}
+        />
       </CardContent>
     </Card>
   );
