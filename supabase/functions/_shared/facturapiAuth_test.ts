@@ -46,6 +46,8 @@ Deno.test("resolveFacturapiKey: usa secret sandbox cuando ambiente=sandbox", asy
     ambiente: "sandbox",
     api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
     api_key_live_secret_name: "FACTURAPI_KEY_ORG1_LIVE",
+    api_key_sandbox_vault_id: null,
+    api_key_live_vault_id: null,
     facturapi_org_id: "fapi_org_1",
   });
   const res = await resolveFacturapiKey(sb, "org-1");
@@ -63,6 +65,8 @@ Deno.test("resolveFacturapiKey: usa secret live cuando ambiente=live", async () 
     ambiente: "live",
     api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
     api_key_live_secret_name: "FACTURAPI_KEY_ORG1_LIVE",
+    api_key_sandbox_vault_id: null,
+    api_key_live_vault_id: null,
     facturapi_org_id: "fapi_org_1",
   });
   const res = await resolveFacturapiKey(sb, "org-1");
@@ -98,6 +102,8 @@ Deno.test("resolveFacturapiKey: 500 si el secret name existe en la tabla pero el
     ambiente: "sandbox",
     api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
     api_key_live_secret_name: null,
+    api_key_sandbox_vault_id: null,
+    api_key_live_vault_id: null,
     facturapi_org_id: null,
   });
   const res = await resolveFacturapiKey(sb, "org-1");
@@ -112,6 +118,8 @@ Deno.test("resolveFacturapiKey: 412 cuando el ambiente activo no tiene secret_na
     ambiente: "live",
     api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
     api_key_live_secret_name: null,
+    api_key_sandbox_vault_id: null,
+    api_key_live_vault_id: null,
     facturapi_org_id: null,
   });
   const res = await resolveFacturapiKey(sb, "org-1");
