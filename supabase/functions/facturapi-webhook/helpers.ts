@@ -65,6 +65,7 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
       };
     default:
       return null;
+  }
 }
 
 /**
