@@ -43,12 +43,12 @@ Deno.test("facturapi-emitir: persistSession=false en el cliente Supabase", () =>
 
 Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → llamada externa", () => {
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
-  // pagada por requests no autorizadas. El resolveFacturapiKey debe ir entre
-  // load y fapi para que multi-tenant (v13.136.0) elija la org correcta.
+  // pagada por requests no autorizadas. El getFacturapiClient debe ir entre
+  // load y la llamada SDK para que multi-tenant (v13.136.4) elija la org correcta.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
   const loadIdx = indexSource.indexOf('.from("facturas")');
-  const resolveIdx = indexSource.indexOf("resolveFacturapiKey(");
-  const fapiIdx = indexSource.indexOf("/invoices`");
+  const resolveIdx = indexSource.indexOf("getFacturapiClient(");
+  const fapiIdx = indexSource.indexOf("facturapi.invoices.create");
   if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || fapiIdx <= resolveIdx) {
     throw new Error(
       `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} fapi=${fapiIdx}`,
@@ -60,9 +60,10 @@ Deno.test("facturapi-emitir: wrapped en Sentry", () => {
   assertStringIncludes(indexSource, 'wrapEdgeHandler("facturapi-emitir"');
 });
 
-Deno.test("facturapi-emitir: resuelve API key por organización vía helper compartido (v13.136.0)", () => {
+Deno.test("facturapi-emitir: resuelve API key por organización vía helper compartido (v13.136.4)", () => {
   // El error explícito missing_facturapi_key / org_facturapi_not_configured vive en _shared/facturapiAuth.ts.
-  // Aquí sólo verificamos que el index delegue en ese helper en vez de leer FACTURAPI_KEY global directo.
-  assertStringIncludes(indexSource, 'from "../_shared/facturapiAuth.ts"');
-  assertStringIncludes(indexSource, "resolveFacturapiKey(supabase, factura.organization_id)");
+  // Tras la migración al SDK oficial, el index delega en getFacturapiClient
+  // (que internamente llama resolveFacturapiKey) en vez de leer FACTURAPI_KEY global directo.
+  assertStringIncludes(indexSource, 'from "../_shared/facturapiClient.ts"');
+  assertStringIncludes(indexSource, "getFacturapiClient(supabase, factura.organization_id)");
 });
