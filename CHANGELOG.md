@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.21] - 2026-06-26
+- **test(coverage) — más cobertura de lógica de negocio**:
+  - `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts`: `diasVencido`, precedencia de `clasificar`, `mapJoinedRow` (pagos/NC vivos, saldo ≥ 0, días vencidos = 0 si saldada) y `aplicarFiltrosCliente`.
+  - `src/features/cxp/services/__tests__/cxpKpis.test.ts`: separación MXN/USD, vencidas, por-vencer-7d.
+  - `src/features/costeo/services/__tests__/aprobacion.test.ts`: RPC `agente_aprobar_tarifa` (vigente/rechazada/borrador) + validación motivo ≥ 5.
+  - `src/lib/mappers/__tests__/estadoResultadosRows.test.ts`: coerción defensiva de boundary Supabase (null, "", NaN → defaults).
+
 ## [13.137.20] - 2026-06-26
 - **chore(ci) — verde en lint y tests**:
   - Refactor por complejidad (`max-warnings 0`): extraído `HeaderBadges` en `FacturapiCredencialesCard`; partido `resolveFacturapiKey` en `legacyFallback` + `tryVaultKey` + `resolveSecretName`; partido el handler de `facturapi-test-conexion` en `parseBody` / `authorizeRequest` / `buildSupabaseLike` / `callFacturapi`.
