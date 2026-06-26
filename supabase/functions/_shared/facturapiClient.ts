@@ -22,8 +22,11 @@ let FacturapiCtor: any | null = null;
 
 async function loadFacturapiCtor(): Promise<any> {
   if (FacturapiCtor) return FacturapiCtor;
-  const mod = await import("npm:facturapi@5");
-  // El SDK exporta la clase como default; algunos bundlers la dejan en `.default.default`.
+  // Indirección por variable para que el typecheck de Deno no intente
+  // resolver `npm:facturapi@5` en tiempo de compilación (sólo se carga en
+  // tiempo de ejecución dentro de la edge function).
+  const sdkSpec = "npm:facturapi@5";
+  const mod = await import(sdkSpec);
   FacturapiCtor = (mod as any).default?.default ?? (mod as any).default ?? mod;
   return FacturapiCtor;
 }
