@@ -1,47 +1,42 @@
-## Wizard "Conectar FacturApi" (3 pasos)
+## Diagnóstico
 
-Reemplazo de la captura todo-en-uno por un asistente guiado, montado sobre `FormDialogShell` + `FormDialogStepper` (los componentes estándar de modales tipo formulario del proyecto). Se integra al `FacturapiCredencialesCard` existente: si la org aún no tiene `last4` cargado, la tarjeta muestra un botón **"Conectar FacturApi"** que abre el wizard; si ya está conectada, se muestra como hoy con un botón **"Reconfigurar"** que también lo abre.
+**1. Lint/audit (`audit:tests` → exit 1)** — 2 violaciones de higiene:
+- `src/features/costeo/services/__tests__/aprobacion.test.ts:50` usa `rejects.toBeTruthy()` (weak-rejects-assertion).
+- `src/features/cxp/services/__tests__/cxpKpis.test.ts:21` y `src/features/facturacion/services/__tests__/cobranzaAggregates.test.ts:41` comparten el título `"ignora filas con saldo <= 0"` (duplicate-title).
 
-### Pasos
+**2. Tests shard 3/8 (exit 1, 24s)** — el shard reporta `blob` y termina con código 1, pero el reporter blob no imprime fallas a stdout. Es muy probable que sean tests recién añadidos en el último batch (~40 nuevos en CxP / costeo / facturación) con assertions débiles o expectativas erróneas. Hay que reproducirlo localmente con reporter `verbose` para identificar los `expect` fallidos y corregirlos.
 
-1. **Ambiente** — el usuario elige Sandbox o Producción (default Sandbox). Explicación breve de qué significa cada uno y recomendación de empezar siempre por Sandbox. Único campo: switch + texto de ayuda.
-2. **API keys** — inputs tipo password para Sandbox (`sk_test_…`) y Live (`sk_live_…`). Cada uno con badge de estado (Vacía / Cargada · `••••1234`) y botón **Guardar** que persiste vía RPC `set_facturapi_api_key` (cifrado en vault). Botón **Quitar** para borrar (`clear_facturapi_api_key`). Al menos la key del ambiente activo debe estar cargada para avanzar.
-3. **Probar y confirmar** — botón **Probar conexión** que invoca la edge function `facturapi-test-conexion` con el ambiente activo. Muestra estado en vivo: idle → "Probando…" (spinner) → éxito (badge verde + nombre legal devuelto por FacturApi + `facturapi_org_id` autocompletado) o error (alerta roja con `status` y `detail` traducidos). Sólo permite **Finalizar** cuando la prueba haya sido exitosa al menos una vez.
+**3. Tests shard 1/8 y 4/8 (timeout 20 min)** — La config de vitest fuerza `pool: 'forks'` con `singleFork: true` y `fileParallelism: false`, así que cada shard corre todos sus archivos **en serie en un único worker**. Shard 1 tiene 517 tests y shard 4 tiene 366 tests; el coverage v8 amplifica el costo. Los canaries de PDF (200 renders) y suites con jsdom pesado terminan saturando el límite. Hay que paralelizar el shard sin reintroducir las fugas que motivaron el `singleFork`.
 
-### Progreso y mensajes
+## Cambios propuestos
 
-- Header con stepper visible (1 Ambiente · 2 API keys · 3 Probar). Cada paso ya completo se marca con check; el paso actual resaltado.
-- Footer sticky con **Atrás** / **Siguiente** (deshabilitado si el paso no cumple su requisito) y **Finalizar** en el último paso.
-- Mensajes claros en español MX para cada error de FacturApi (key inválida → "FacturApi rechazó la API key (401). Verifica que la copiaste completa y que corresponde al ambiente seleccionado."; org no encontrada → "No se encontró la organización en FacturApi."; red → "No se pudo contactar a FacturApi. Reintenta en unos segundos.").
-- Toast de éxito al finalizar: "FacturApi conectado en ambiente Sandbox/Producción".
+### Paso A — Arreglar higiene de tests (desbloquea Lint y CI)
+1. **`aprobacion.test.ts:50`**: reemplazar
+   ```ts
+   await expect(aprobarTarifa("t6")).rejects.toBeTruthy();
+   ```
+   por una assertion específica al error real lanzado (`rejects.toThrow(/no encontrada|inválida/i)` según el mensaje real del servicio).
+2. **`cobranzaAggregates.test.ts:41`**: renombrar el título a algo contextual, p.ej. `"cobranza: ignora filas con saldo <= 0"`. Dejar el de CxP como está (es el dominio "natural" del título original).
 
-### Archivos
+### Paso B — Reproducir y arreglar shard 3
+1. Correr local: `bunx vitest run --shard=3/8 --reporter=verbose 2>&1 | tee /tmp/shard3.log` y filtrar `FAIL`/`AssertionError`.
+2. Por cada test fallido (esperamos 1-5 dentro de los recién agregados de CxP/facturación/costeo/financialMappers), ajustar fixture o assertion. Sin reescribir lógica de negocio.
 
-- **Nuevo** `src/features/configuracion/components/FacturapiOnboardingWizard.tsx` — orquesta los 3 pasos, mantiene estado local (`paso`, `pruebaResultado`), invoca hooks ya existentes (`useSetFacturapiApiKey`, `useClearFacturapiApiKey`, `useProbarFacturapiConexion`, `useUpsertFacturapiCredenciales`) y al finalizar persiste el ambiente elegido vía upsert.
-- **Nuevo** `src/features/configuracion/components/wizard/PasoAmbiente.tsx`, `PasoApiKeys.tsx`, `PasoProbar.tsx` — componentes presentacionales de cada paso (cumple regla ≤200 líneas por archivo).
-- **Editado** `FacturapiCredencialesCard.tsx` — añade botón "Conectar FacturApi" / "Reconfigurar" que abre el wizard. La vista detallada (form actual) queda como modo avanzado plegable para usuarios que ya conocen la integración.
-- **Editado** `CHANGELOG.md` + bump `APP_VERSION` a `13.137.19`.
+### Paso C — Quitar el cuello de botella de shards (timeouts)
+Editar `vitest.config.ts`:
+- Eliminar `poolOptions.forks.singleFork: true`.
+- Mantener `pool: 'forks'` pero permitir `fileParallelism: true` con `poolOptions.forks.maxForks: 2, minForks: 1` (2 workers por shard, conservador para 4 GB de runner + coverage v8 a 8 GB heap).
+- Mantener `isolate: true` y el `afterEach` global que ya limpia RTL/PDF (ver `mem://technical/testing-cleanup-protocol`) para evitar regresión de fugas.
+- Si tras correr local algún archivo concreto sigue siendo problemático (canary PDF), marcarlo con `// @vitest-environment node` + `test.sequential` o moverlo a su propio archivo con `describe.sequential`, sin tocar el resto.
 
-### Detalles técnicos
+Verificación post-cambio: correr en local los 3 shards más pesados (`1/8`, `4/8`, `8/8`) con `time bunx vitest run --shard=N/8 --coverage` y confirmar que terminan en <12 min cada uno y que ninguna suite revive leaks (chequear `mem://features/testing-regression-canary`).
 
-- El wizard reusa toda la lógica de servicios ya implementada en `setFacturapiApiKey`, `clearFacturapiApiKey`, `probarFacturapiConexion` y la edge `facturapi-test-conexion` — no se toca backend ni migraciones.
-- Validación por paso:
-  - Paso 1: siempre válido (default sandbox).
-  - Paso 2: válido si `last4` del ambiente activo está presente tras guardar (lo lee de `useFacturapiCredenciales`).
-  - Paso 3: válido si `pruebaResultado?.ok === true` para el ambiente activo.
-- Si el usuario cambia el ambiente en el paso 1 después de probar, se invalida `pruebaResultado` para forzar reprobar.
-- El wizard usa `FormDialogShell` con icon-tile `<Receipt/>`, secciones por paso vía `FormDialogSection` y footer sticky con los botones — alineado a la regla del proyecto sobre modales tipo formulario.
-- Sin cambios a tests existentes; agregar smoke test del componente raíz (`FacturapiOnboardingWizard.test.tsx`) que monte cada paso y verifique que **Siguiente** está deshabilitado hasta cumplir su requisito (usa mocks de los hooks).
+### Paso D — Versionado y changelog
+Bump `APP_VERSION` a `13.137.22` y agregar entrada en `CHANGELOG.md`:
+> Reparada higiene de tests (aprobación, cobranza), arreglados tests fallidos en shard 3 y eliminado cuello de botella `singleFork` que disparaba timeouts de 20 min en shards 1 y 4.
 
-```text
-┌──────────────────────────────────────────┐
-│  Conectar FacturApi                  [x] │
-│  ──①──── ──②──── ──③──                   │
-│  Ambiente  API keys  Probar              │
-├──────────────────────────────────────────┤
-│  (contenido del paso actual)             │
-│                                          │
-├──────────────────────────────────────────┤
-│  [Atrás]              [Siguiente / OK]   │
-└──────────────────────────────────────────┘
-```
+## Notas
+
+- No bajamos el threshold de coverage (regla `mem://principles/coverage-threshold`).
+- No tocamos lógica de negocio: solo tests, configuración de vitest y versión.
+- Si paralelizar reintroduce flakes en CI, el plan B (siguiente turno) es subir el split a 12 shards en `.github/workflows/ci.yml` en lugar de habilitar paralelismo intra-shard.

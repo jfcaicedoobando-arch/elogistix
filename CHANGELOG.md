@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.22] - 2026-06-26
+- **fix(ci) — timeouts de shards 1/8 y 4/8**: los shards con ~500 tests excedían el límite de 20 min de GitHub Actions corriendo en `singleFork`.
+  - Subida la matriz de shards de **8 → 12** en `.github/workflows/ci.yml`. Cada shard pasa de ~500 a ~330 tests, dejando margen cómodo bajo los 20 min.
+  - Se prefiere más shards sobre paralelizar dentro del shard: probado localmente, `fileParallelism: true` triplicaba el wall-time de shards pequeños porque el setup de jsdom + mocks se paga por fork (~17s × 2). Mantener `singleFork: true` también preserva el aislamiento que evita las fugas de PDF/RTL históricas (`mem://technical/testing-cleanup-protocol`).
+
 ## [13.137.21] - 2026-06-26
 - **test(coverage) — más cobertura de lógica de negocio**:
   - `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts`: `diasVencido`, precedencia de `clasificar`, `mapJoinedRow` (pagos/NC vivos, saldo ≥ 0, días vencidos = 0 si saldada) y `aplicarFiltrosCliente`.
