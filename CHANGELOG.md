@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.5] - 2026-06-26
+- **chore(lint) — Zero warnings**: `bun run lint -- --max-warnings 0` vuelve a verde. (1) `_shared/facturapiAuth.ts`: el parámetro `supabase: any` de `resolveFacturapiKey` ahora usa una interfaz estructural `SupabaseLike` (sólo declara `from().select().eq().maybeSingle()` con `FacturapiCredencialRow`), eliminando el `@typescript-eslint/no-explicit-any` y el `deno-lint-ignore-file` que tapaba el warning. (2) `DashboardEjecutivoFacturacion.tsx`: complejidad ciclomática bajada de 20 → ≤16 extrayendo los ternarios inline del KPI "Facturado mes" (`sinTc`, `facturadoLabel`, `facturadoTone`, `facturadoHint`, `porTimbrarTone`) a constantes locales. Cero cambios funcionales o visuales.
+
 ## [13.136.4] - 2026-06-26
 - **refactor(facturapi) — Migración al SDK oficial**: Las 4 edge functions de emisión y cancelación (`facturapi-emitir`, `facturapi-cancelar`, `facturapi-emitir-rep`, `facturapi-cancelar-rep`) ahora llaman a FacturApi a través del SDK oficial `facturapi-node@5` (vía `npm:facturapi@5` de Deno) en lugar de `fetch` manual con `Basic` auth. Nuevo helper compartido `_shared/facturapiClient.ts` con `getFacturapiClient(supabase, organizationId)` (cachea el cliente por API key) y `describeFacturapiError(err)` (normaliza `response.status` / `response.data` del SDK). El multi-tenancy sigue resolviéndose vía `resolveFacturapiKey`; el SDK sólo recibe la key ya resuelta. Guardrail arquitectónico extendido: además de exigir el helper multi-tenant, ahora bloquea cualquier `fetch("https://www.facturapi.io/...")`, uso de `basicAuthHeader` en las functions y cualquier import directo de `npm:facturapi` fuera del helper compartido. Tests Deno nuevos para `describeFacturapiError`.
 
