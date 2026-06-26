@@ -2,10 +2,11 @@
  * Fila individual del historial de pagos.
  * Extraído de DialogHistorialPagos para mantener archivos < 200 LOC (Power of 10).
  */
-import { Receipt, FileText, FileCode, Ban, Trash2 } from "lucide-react";
+import { Receipt, Ban, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 
 export type EstadoRep = "NoAplica" | "Pendiente" | "Timbrado" | "Cancelado" | "Error";
 
