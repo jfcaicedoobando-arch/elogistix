@@ -21,41 +21,75 @@ function json(data: unknown, status = 200) {
   });
 }
 
+async function parseBody(req: Request): Promise<Body | null> {
+  try {
+    const body = (await req.json()) as Body;
+    if (!body?.organization_id) return null;
+    if (body.ambiente !== "sandbox" && body.ambiente !== "live") return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
+interface CredRow {
+  api_key_sandbox_vault_id: string | null;
+  api_key_live_vault_id: string | null;
+  api_key_sandbox_secret_name: string | null;
+  api_key_live_secret_name: string | null;
+  facturapi_org_id: string | null;
+}
+
+function buildSupabaseLike(sbAdmin: ReturnType<typeof createClient>, cred: CredRow, ambiente: "sandbox" | "live") {
+  const fakeRow = { ambiente, ...cred };
+  return {
+    from: () => ({
+      select: () => ({
+        eq: () => ({ maybeSingle: () => Promise.resolve({ data: fakeRow, error: null }) }),
+      }),
+    }),
+    rpc: (fn: string, args: Record<string, unknown>) =>
+      sbAdmin.rpc(fn, args) as unknown as Promise<{ data: string | null; error: unknown }>,
+  };
+}
+
+async function authorizeRequest(req: Request, url: string, anon: string, organizationId: string) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return { ok: false as const, status: 401, error: "unauthorized" };
+  const sbUser = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
+  const { data: claims, error } = await sbUser.auth.getClaims(authHeader.replace("Bearer ", ""));
+  if (error || !claims?.claims?.sub) return { ok: false as const, status: 401, error: "unauthorized" };
+  const { data: member } = await sbUser
+    .from("organization_members")
+    .select("role")
+    .eq("user_id", claims.claims.sub)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (!member) return { ok: false as const, status: 403, error: "forbidden" };
+  return { ok: true as const };
+}
+
+async function callFacturapi(resolved: { data: { client: unknown; facturapiOrgId: string | null } }) {
+  const client = resolved.data.client as {
+    organizations: { retrieve: (id: string) => Promise<{ id: string; legal_name?: string; name?: string }> };
+  };
+  const orgId = resolved.data.facturapiOrgId ?? "me";
+  return await client.organizations.retrieve(orgId);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
 
   const url = Deno.env.get("SUPABASE_URL")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  const sbUser = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
-  const { data: claims, error: authErr } = await sbUser.auth.getClaims(authHeader.replace("Bearer ", ""));
-  if (authErr || !claims?.claims?.sub) return json({ error: "unauthorized" }, 401);
+  const body = await parseBody(req);
+  if (!body) return json({ error: "invalid_body" }, 400);
 
-  let body: Body;
-  try {
-    body = await req.json();
-  } catch {
-    return json({ error: "invalid_body" }, 400);
-  }
-  if (!body?.organization_id || (body.ambiente !== "sandbox" && body.ambiente !== "live")) {
-    return json({ error: "invalid_body" }, 400);
-  }
+  const auth = await authorizeRequest(req, url, anon, body.organization_id);
+  if (!auth.ok) return json({ error: auth.error }, auth.status);
 
-  // Verifica que el usuario pertenezca a la org (o sea super_admin)
-  const { data: member } = await sbUser
-    .from("organization_members")
-    .select("role")
-    .eq("user_id", claims.claims.sub)
-    .eq("organization_id", body.organization_id)
-    .maybeSingle();
-  if (!member) return json({ error: "forbidden" }, 403);
-
-  // Para forzar el ambiente solicitado, leemos directo con service role y armamos
-  // un SupabaseLike que devuelve ese ambiente.
   const sbAdmin = createClient(url, service);
   const { data: cred } = await sbAdmin
     .from("facturapi_credenciales")
@@ -65,40 +99,18 @@ Deno.serve(async (req) => {
 
   if (!cred) return json({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
 
-  const fakeRow = {
-    ambiente: body.ambiente,
-    api_key_sandbox_secret_name: cred.api_key_sandbox_secret_name,
-    api_key_live_secret_name: cred.api_key_live_secret_name,
-    api_key_sandbox_vault_id: cred.api_key_sandbox_vault_id,
-    api_key_live_vault_id: cred.api_key_live_vault_id,
-    facturapi_org_id: cred.facturapi_org_id,
-  };
-  const sbForHelper = {
-    from: () => ({
-      select: () => ({
-        eq: () => ({ maybeSingle: () => Promise.resolve({ data: fakeRow, error: null }) }),
-      }),
-    }),
-    rpc: (fn: string, args: Record<string, unknown>) => sbAdmin.rpc(fn, args) as unknown as Promise<{ data: string | null; error: unknown }>,
-  };
-
+  const sbForHelper = buildSupabaseLike(sbAdmin, cred as CredRow, body.ambiente);
   const resolved = await getFacturapiClient(sbForHelper, body.organization_id);
   if (!resolved.ok) return json(resolved.data, resolved.data.status);
 
   try {
-    const client = resolved.data.client as { organizations: { retrieve: (id: string) => Promise<{ id: string; legal_name?: string; name?: string }> } };
-    // En cuentas single-org de FacturApi, "me" funciona; si no, requiere el id.
-    const orgId = resolved.data.facturapiOrgId ?? "me";
-    const me = await client.organizations.retrieve(orgId);
-
-    // Persistir facturapi_org_id si vino y no estaba guardado
+    const me = await callFacturapi(resolved);
     if (me?.id && !resolved.data.facturapiOrgId) {
       await sbAdmin
         .from("facturapi_credenciales")
         .update({ facturapi_org_id: me.id })
         .eq("organization_id", body.organization_id);
     }
-
     return json({
       ok: true,
       ambiente: body.ambiente,
@@ -110,3 +122,4 @@ Deno.serve(async (req) => {
     return json({ ok: false, status, detail }, 200);
   }
 });
+
