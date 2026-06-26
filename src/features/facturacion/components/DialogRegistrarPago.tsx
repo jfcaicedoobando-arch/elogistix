@@ -103,22 +103,18 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   });
 
   const headerAside = (
-    <div className="text-xs text-muted-foreground space-y-0.5">
-      <div>Total: <strong className="text-foreground">{formatCurrency(factura.total, factura.moneda)}</strong></div>
-      <div>Pagado: <strong className="text-foreground">{formatCurrency(totalPagado, factura.moneda)}</strong></div>
-      <div>Saldo: <strong className={saldo > 0 ? "text-warning" : "text-success"}>{formatCurrency(saldo, factura.moneda)}</strong></div>
-    </div>
+    <ResumenSaldo total={factura.total} pagado={totalPagado} saldo={saldo} moneda={factura.moneda} />
   );
 
   const ocupado = isPending || timbrandoRep;
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ocupado}>Cancelar</Button>
-      <Button onClick={handleGuardar} disabled={invalido || ocupado}>
-        {ocupado && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-        {timbrandoRep ? "Timbrando REP…" : "Registrar pago"}
-      </Button>
-    </>
+    <FooterAcciones
+      ocupado={ocupado}
+      timbrandoRep={timbrandoRep}
+      invalido={invalido}
+      onCancel={() => onOpenChange(false)}
+      onGuardar={handleGuardar}
+    />
   );
 
   return (
@@ -133,26 +129,17 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       footer={footer}
     >
       <PagoFormFields values={values} onChange={handleChange} />
+      <NotasPago
+        esPpdTimbrada={esPpdTimbrada}
+        monedaPago={values.moneda}
+        monedaFactura={factura.moneda}
+        montoNum={montoNum}
+        montoAplicado={montoAplicado}
+        tipoCambio={tipoCambio}
+        excede={excede}
+        saldo={saldo}
+      />
 
-      {esPpdTimbrada && (
-        <Alert>
-          <AlertDescription className="text-xs">
-            Esta factura es <strong>PPD</strong>. Al guardar, se intentará timbrar
-            automáticamente el <strong>REP (Complemento de Pagos)</strong> ante el SAT.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {values.moneda !== factura.moneda && montoNum > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Equivalente: {formatCurrency(montoAplicado, factura.moneda)} (TC: {tipoCambio.toFixed(4)})
-        </p>
-      )}
-      {excede && (
-        <p className="text-xs text-destructive">
-          El monto excede el saldo pendiente ({formatCurrency(saldo, factura.moneda)}).
-        </p>
-      )}
     </FormDialogShell>
   );
 }
