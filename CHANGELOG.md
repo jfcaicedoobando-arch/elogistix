@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.7] - 2026-06-26
+- **chore(arch) — Power of 10 ≤200 líneas**: `FacturapiCredencialesCard.tsx` (231 líneas) dividido extrayendo el JSX del formulario a `FacturapiCredencialesForm.tsx`. El card queda en 144 líneas (estado + handlers + header) y el form en ~140 (presentacional puro con props). Cero cambios funcionales/visuales; resuelve los tests `architecture-baseline` y `audit-report`.
+
 ## [13.136.6] - 2026-06-26
 - **chore(tests) — audit:tests verde**: renombrado el título duplicado `"propaga el error de Supabase"` en `inviteAgentePortal.test.ts` a `"propaga el error de Supabase al invitar agente al portal"` para evitar colisión con los tests de `embarques/mutations`.
 
