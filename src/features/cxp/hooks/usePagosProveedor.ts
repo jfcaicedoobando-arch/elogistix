@@ -8,6 +8,7 @@ import {
   type RegistrarPagoProveedorInput,
 } from "@/features/cxp/services";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
 
 export function usePagosProveedor(facturaId: string | null | undefined) {
   return useQuery({
@@ -30,7 +31,7 @@ export function useRegistrarPagoProveedor() {
       notifySuccess(undefined, { title: "Pago a proveedor registrado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al registrar pago: ${error.message}`, error, method: "REGISTER_PAYMENT_PROVEEDOR" });
+      notifyError(undefined, { title: traducirErrorPagoProveedor(error), error, method: "REGISTER_PAYMENT_PROVEEDOR" });
     },
   });
 }
@@ -46,7 +47,7 @@ export function useEliminarPagoProveedor(facturaId: string) {
       notifySuccess(undefined, { title: "Pago a proveedor eliminado" });
     },
     onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar pago: ${error.message}`, error, method: "DELETE_PAYMENT_PROVEEDOR" });
+      notifyError(undefined, { title: traducirErrorPagoProveedor(error), error, method: "DELETE_PAYMENT_PROVEEDOR" });
     },
   });
 }
