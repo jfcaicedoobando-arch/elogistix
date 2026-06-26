@@ -12,7 +12,7 @@ import {
   getEstadoLiquidacionDerivado,
   getEstadoLiquidacionBadgeClass,
 } from "@/features/embarques/utils/estadoLiquidacionDerivado";
-import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
+
 import { ConceptosCostoCard } from "./costos/ConceptosCostoCard";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
 
@@ -119,8 +119,6 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
           </Card>
         ))}
       </div>
-
-      {embarqueId && <SeccionDemorasAuto embarqueId={embarqueId} canEdit={!!canEdit} />}
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
