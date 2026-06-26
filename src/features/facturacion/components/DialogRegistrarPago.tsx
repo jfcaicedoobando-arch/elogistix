@@ -8,15 +8,13 @@
  * vive en `useRegistrarPagoSubmit` para mantener este componente delgado.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, ArrowDownToLine } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowDownToLine } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { usePagosFactura } from "@/features/facturacion/hooks";
 import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
+import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 
 interface Factura {
   id: string;
