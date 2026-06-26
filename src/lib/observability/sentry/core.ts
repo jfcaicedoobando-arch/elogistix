@@ -112,26 +112,7 @@ export function initSentry(): void {
       /Lock broken by another request with the 'steal' option/i,
     ],
     beforeSend(event, hint) {
-      const originalMsg =
-        (hint?.originalException as Error | undefined)?.message ??
-        (typeof hint?.originalException === "string" ? hint.originalException : undefined);
-      if (isDynamicImportErrorMessage(originalMsg)) return null;
-      if (isDynamicImportErrorMessage(event.message)) return null;
-      const values = event.exception?.values;
-      if (values && values.some((v) => isDynamicImportErrorMessage(v.value))) return null;
-
-      const exc = hint?.originalException as Error | undefined;
-      if (exc && isReactRefreshHmrError(exc)) return null;
-      if (values && values.some((v) => isReactRefreshStackTrace(v.stacktrace))) return null;
-
-      // Errores de validación (zod) son input del usuario, no bugs. El UI ya
-      // muestra el toast con el mensaje legible; no contaminan Sentry.
-      const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
-      const causeName = (cause as { name?: string } | undefined)?.name;
-      if (causeName === "ZodError" || (exc as { name?: string } | undefined)?.name === "ZodError") {
-        return null;
-      }
-
+      if (shouldDropSentryEvent(event, hint)) return null;
       return scrubEventPii(event);
     },
     // 13.114.19: las transactions también pueden traer PII en `request.url`
