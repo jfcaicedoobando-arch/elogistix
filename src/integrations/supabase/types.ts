@@ -3732,8 +3732,12 @@ export type Database = {
       facturapi_credenciales: {
         Row: {
           ambiente: string
+          api_key_live_last4: string | null
           api_key_live_secret_name: string | null
+          api_key_live_vault_id: string | null
+          api_key_sandbox_last4: string | null
           api_key_sandbox_secret_name: string | null
+          api_key_sandbox_vault_id: string | null
           certificado_cargado: boolean
           certificado_vence_at: string | null
           created_at: string
@@ -3746,8 +3750,12 @@ export type Database = {
         }
         Insert: {
           ambiente?: string
+          api_key_live_last4?: string | null
           api_key_live_secret_name?: string | null
+          api_key_live_vault_id?: string | null
+          api_key_sandbox_last4?: string | null
           api_key_sandbox_secret_name?: string | null
+          api_key_sandbox_vault_id?: string | null
           certificado_cargado?: boolean
           certificado_vence_at?: string | null
           created_at?: string
@@ -3760,8 +3768,12 @@ export type Database = {
         }
         Update: {
           ambiente?: string
+          api_key_live_last4?: string | null
           api_key_live_secret_name?: string | null
+          api_key_live_vault_id?: string | null
+          api_key_sandbox_last4?: string | null
           api_key_sandbox_secret_name?: string | null
+          api_key_sandbox_vault_id?: string | null
           certificado_cargado?: boolean
           certificado_vence_at?: string | null
           created_at?: string
@@ -5881,6 +5893,10 @@ export type Database = {
       }
     }
     Functions: {
+      _assert_facturapi_admin: {
+        Args: { p_org_id: string }
+        Returns: undefined
+      }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
       _docs_requeridos_por_estado: {
@@ -6126,6 +6142,10 @@ export type Database = {
       check_ratelimit: {
         Args: { p_key: string; p_max?: number; p_window_seconds?: number }
         Returns: Json
+      }
+      clear_facturapi_api_key: {
+        Args: { p_ambiente: string; p_org_id: string }
+        Returns: undefined
       }
       clientes_listado: {
         Args: {
@@ -6650,6 +6670,10 @@ export type Database = {
       }
       get_current_agente_org_nombre: { Args: never; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
+      get_facturapi_api_key_internal: {
+        Args: { p_ambiente: string; p_org_id: string }
+        Returns: string
+      }
       get_top_tarifas: {
         Args: {
           p_fecha?: string
@@ -6984,6 +7008,10 @@ export type Database = {
       seed_demo_organization: { Args: never; Returns: undefined }
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
+        Returns: undefined
+      }
+      set_facturapi_api_key: {
+        Args: { p_ambiente: string; p_api_key: string; p_org_id: string }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
