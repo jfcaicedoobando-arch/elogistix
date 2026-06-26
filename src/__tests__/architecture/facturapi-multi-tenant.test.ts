@@ -20,6 +20,8 @@ const FILES = [
   "supabase/functions/facturapi-cancelar/index.ts",
   "supabase/functions/facturapi-emitir-rep/index.ts",
   "supabase/functions/facturapi-cancelar-rep/index.ts",
+  "supabase/functions/facturapi-emitir-nota-credito/index.ts",
+  "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
 ];
 
 describe("facturapi multi-tenant guardrail", () => {
