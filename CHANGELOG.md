@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.6] - 2026-06-26
+- **chore(ci) — guardrails para envío de CFDI**: registra `facturapi-descargar` y `facturapi-enviar-email` en `sentry-edge-wrapping` y `sentry-edge-coverage`; añade `src/lib/observability/sentry/dropPredicate.ts` a la allowlist del guardrail de imports `@sentry/*`; extrae `FacturaDetalleActions.tsx` para bajar la complejidad ciclomática de `FacturaDetalle` (19 → ≤16); migra el toast de error del envío de email en `DialogTimbrarFactura` a `notifyError` y lo añade a la whitelist de `no-double-toast-on-mutate` (encadenado opcional tras el timbrado).
+
 ## [13.137.5] - 2026-06-26
 - **feat(facturacion) — Envío de CFDI por email (FacturApi, item #2 alta prioridad)**:
   - Nueva edge function `facturapi-enviar-email` que actúa de proxy autenticado: resuelve la API key por organización, busca el email del cliente (primero `contactos_cliente.email` con `es_principal=true`, fallback a `clientes.email`) y dispara `POST /v2/invoices/{id}/email` de FacturApi (sirve tanto para facturas como para REP). Cada envío queda registrado en `bitacora_actividad` (`cfdi_enviado` / `cfdi_envio_failed`).
