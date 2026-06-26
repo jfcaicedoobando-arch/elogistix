@@ -32,6 +32,9 @@ const CRITICAL = [
   "supabase/functions/parse-cfdi-xml/index.ts",
   // 13.136.3 — Webhook de FacturApi (sync de estado factura)
   "supabase/functions/facturapi-webhook/index.ts",
+  // 13.137.4-5 — Descarga y envío de CFDI vía FacturApi
+  "supabase/functions/facturapi-descargar/index.ts",
+  "supabase/functions/facturapi-enviar-email/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {

@@ -9,8 +9,8 @@
  * para invitar al usuario a continuar el flujo.
  */
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Stamp, Mail } from "lucide-react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +31,7 @@ import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/F
 import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
+import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -125,43 +126,17 @@ export default function FacturaDetalle() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {canEdit && sinTimbrar && (
-          <Button size="sm" onClick={() => setTimbrarOpen(true)}>
-            <Stamp className="h-4 w-4 mr-1.5" /> Timbrar factura
-          </Button>
-        )}
-        {(factura.factura_pdf_url || !sinTimbrar) && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDownload(factura.factura_pdf_url, "pdf")}
-          >
-            <FileText className="h-4 w-4 mr-1.5 text-destructive" /> Descargar PDF
-          </Button>
-        )}
-        {(factura.factura_xml_url || !sinTimbrar) && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDownload(factura.factura_xml_url, "xml")}
-          >
-            <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Descargar XML
-          </Button>
-        )}
-        {!sinTimbrar && (
-          <Button variant="outline" size="sm" onClick={() => setEnviarOpen(true)}>
-            <Mail className="h-4 w-4 mr-1.5" /> Enviar por email
-          </Button>
-        )}
-        {factura.embarque_id && (
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/embarques/${factura.embarque_id}`}>
-              <Ship className="h-4 w-4 mr-1.5" /> Ver embarque
-            </Link>
-          </Button>
-        )}
-      </div>
+      <FacturaDetalleActions
+        canEdit={canEdit}
+        sinTimbrar={sinTimbrar}
+        pdfUrl={factura.factura_pdf_url}
+        xmlUrl={factura.factura_xml_url}
+        embarqueId={factura.embarque_id ?? null}
+        onTimbrar={() => setTimbrarOpen(true)}
+        onEnviarEmail={() => setEnviarOpen(true)}
+        onDownload={handleDownload}
+      />
+
 
       <FacturaResumenCard factura={factura} />
       <FacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />

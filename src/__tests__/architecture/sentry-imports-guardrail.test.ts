@@ -21,6 +21,7 @@ const ALLOWLIST = new Set<string>([
   "src/lib/observability/sentry/core.ts",
   "src/lib/observability/sentry/helpers.ts",
   "src/lib/observability/sentry/user.ts",
+  "src/lib/observability/sentry/dropPredicate.ts",
   // ErrorBoundary debe capturar síncronamente dentro de componentDidCatch.
   "src/components/shared/ErrorBoundary.tsx",
   // Widget de feedback: usa Sentry.getFeedback() — la API requiere import síncrono.
