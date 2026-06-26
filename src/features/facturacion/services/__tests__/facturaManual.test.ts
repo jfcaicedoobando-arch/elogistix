@@ -58,7 +58,6 @@ describe("crearFacturaManual", () => {
       }
       return {};
     });
-    insertChain.mockReset();
     deleteEq.mockClear();
   });
 
