@@ -33,6 +33,9 @@ import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTi
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
+import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
+import { Replace } from "lucide-react";
+
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
