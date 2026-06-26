@@ -90,21 +90,19 @@ export function PagoFacturaRow({
               <Receipt className="h-4 w-4 text-destructive" />
             </Button>
           )}
-          {estadoRep === "Timbrado" && pago.rep_pdf_url && (
-            <a href={pago.rep_pdf_url} target="_blank" rel="noopener noreferrer"
-              title="Descargar PDF del REP"
-              className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
-              onClick={(e) => e.stopPropagation()}>
-              <FileText className="h-4 w-4" />
-            </a>
-          )}
-          {estadoRep === "Timbrado" && pago.rep_xml_url && (
-            <a href={pago.rep_xml_url} target="_blank" rel="noopener noreferrer"
-              title="Descargar XML del REP"
-              className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
-              onClick={(e) => e.stopPropagation()}>
-              <FileCode className="h-4 w-4" />
-            </a>
+          {estadoRep === "Timbrado" && (
+            <>
+              <FacturaDownloadButton
+                stored={pago.rep_pdf_url}
+                kind="pdf"
+                pagoId={pago.id}
+              />
+              <FacturaDownloadButton
+                stored={pago.rep_xml_url}
+                kind="xml"
+                pagoId={pago.id}
+              />
+            </>
           )}
           {canEdit && estadoRep === "Timbrado" && (
             <Button variant="ghost" size="icon" className="h-7 w-7" title="Cancelar REP"
