@@ -1,50 +1,97 @@
-## Turno B — Notas de Crédito (Frontend)
+## Paso 4 — Cancelación con sustitución (motivo SAT 01) — Turnos C y D
 
-Conectar el backend del Turno A (ya desplegado) con la UI para que el usuario pueda crear, timbrar, descargar, reenviar y cancelar Notas de Crédito desde el detalle de factura.
+### Contexto
+Hoy el `DialogCancelarFactura` ya acepta motivo `01` con un campo libre "UUID que sustituye", pero el usuario tiene que **crear manualmente** la factura sustituta, timbrarla, copiar el UUID y volver a abrir el diálogo. El SAT exige que la NUEVA factura se emita con relación `04` (sustitución de CFDI previos) apuntando al UUID viejo, y que la cancelación apunte al UUID nuevo. Vamos a automatizar todo eso.
 
-### 1. Servicio `notasCreditoFacturapi.ts`
-Nuevo archivo `src/features/facturacion/services/notasCreditoFacturapi.ts` que envuelve las edge functions vía `supabase.functions.invoke`:
-- `timbrarNotaCredito(notaCreditoId)` → invoca `facturapi-emitir-nota-credito`.
-- `cancelarNotaCreditoFacturapi(notaCreditoId, motivo, sustituyeUuid?)` → invoca `facturapi-cancelar-nota-credito`.
-- Manejo de errores homogéneo (mensaje legible + `Sentry` vía `notifyError`).
+### Analogía
+Como cuando devuelves un producto roto en una tienda: en lugar de pedirte que tú mismo factures un nuevo ticket idéntico y luego lo pegues en la cancelación del viejo, la caja registradora hace todo en un solo flujo — clona el ticket, lo timbra, y cancela el viejo apuntando al nuevo automáticamente.
 
-### 2. Hook `useNotaCreditoFacturapi.ts`
-`src/features/facturacion/hooks/useNotaCreditoFacturapi.ts` con dos mutaciones (`useTimbrarNotaCredito`, `useCancelarNotaCredito`) siguiendo el patrón de `useTimbrarFactura.ts`: invalida `queryKeys.facturas.notasCreditoRecientes` y `notasCreditoPorFactura`.
+### Turno C — Backend de sustitución
 
-### 3. Dialog `DialogCrearNotaCredito.tsx`
-`src/features/facturacion/components/DialogCrearNotaCredito.tsx` usando `FormDialogShell` (siguiendo el patrón de `DialogNotaCreditoProveedor.tsx` y memoria `mem://style/form-dialog-shell`):
-- Props: `facturaId`, `monedaFactura`, `saldoFactura`, `uuidFacturaOriginal`, `conceptosFactura` (precarga editable).
-- Campos: folio (auto-sugerido), fecha, motivo SAT (01 Devolución / 02 Descuento / 03 Bonificación), uso CFDI (default G02), forma de pago, conceptos editables (cantidad, descripción, precio).
-- Validación: monto ≤ saldo factura, requiere UUID fiscal en factura original, al menos 1 concepto.
-- Dos botones: **Guardar borrador** (solo `crearNotaCredito`) y **Guardar y timbrar** (crear + invocar edge function en cadena).
-- Localización mexicana (DatePickerMx, montos MXN/USD).
+1. **Migración `factura_sustituciones`**
+   - Agregar columnas a `public.facturas`:
+     - `sustituye_a uuid REFERENCES public.facturas(id)` — apunta al CFDI viejo cancelado por esta factura nueva.
+     - `sustituida_por uuid REFERENCES public.facturas(id)` — apunta a la factura nueva que la reemplaza (se llena al confirmar cancel 01).
+     - Índices parciales por ambos campos.
+   - Agregar enum `'Sustituida'` al `estado_factura` para distinguir cancelaciones por sustitución vs. otros motivos (sólo se setea cuando motivo = '01').
 
-### 4. Sección en `FacturaDetalle.tsx`
-Nuevo componente `src/features/facturacion/components/detalle/FacturaNotasCreditoSeccion.tsx`:
-- Lista de NCs asociadas a la factura (usa `listarNotasCreditoPorFactura`).
-- Columnas: folio, fecha, monto, motivo, estado (badge: Borrador/Timbrada/Aplicada/Cancelada), acciones.
-- Acciones por fila (según estado):
-  - **Borrador** → Timbrar, Editar, Eliminar.
-  - **Timbrada** → Descargar PDF/XML (reusa `FacturaDownloadButton` apuntando a NC), Reenviar email (reusa `DialogEnviarCfdi`), Cancelar, Marcar como Aplicada.
-  - **Aplicada/Cancelada** → solo lectura + descargas.
-- Botón "Nueva nota de crédito" abre `DialogCrearNotaCredito`.
+2. **Nuevo RPC `public.duplicar_factura_para_sustitucion(p_factura_id uuid) returns uuid`**
+   - SECURITY DEFINER, valida org_id + permisos (admin/facturacion).
+   - Bloquea si la factura origen no está timbrada (no se puede sustituir un CFDI inexistente).
+   - Bloquea si ya tiene `sustituida_por` (no duplicar dos veces).
+   - Clona en estado `Borrador` (sin `facturapi_id`, `uuid_fiscal`, `folio_fiscal`, fechas de timbrado, URLs): cliente, expediente, conceptos en `snapshot_emision`, moneda, tipo_cambio, totales, uso CFDI, forma/método de pago, días crédito, embarque_id, dejando `numero` con un sufijo `-R` (o nuevo folio interno vía `generar_numero_proforma` análogo si aplica).
+   - Setea `sustituye_a = p_factura_id` en la nueva.
+   - Inserta evento en `bitacora_actividad` (`factura_duplicada_para_sustitucion`).
+   - Retorna el `id` de la nueva factura.
 
-### 5. Reutilización de descargas y email
-- Extender `FacturaDownloadButton.tsx` con prop opcional `tipo: "factura" | "nota_credito"` para pasar el `facturapi_id` correcto al proxy `facturapi-descargar`.
-- Verificar que `facturapi-descargar` ya soporta NCs (mismo endpoint Facturapi `/invoices/:id/...`); si no, ajustar.
-- Extender `DialogEnviarCfdi` análogamente para aceptar `tipo`.
+3. **Extender edge function `facturapi-emitir`** (timbrado)
+   - Si la factura tiene `sustituye_a` no nulo, incluir en el payload a FacturApi `related=[uuid_factura_sustituida]` con `relationship='04'` (sustitución de CFDIs previos).
+   - Tests Deno: payload incluye relación 04 cuando aplica.
 
-### 6. Integración en página
-Montar `FacturaNotasCreditoSeccion` dentro de `FacturaDetalle.tsx`, debajo de la sección de pagos, visible solo cuando la factura esté Timbrada o Pagada.
+4. **Extender edge function `facturapi-cancelar`**
+   - Si motivo = '01' y body incluye `sustituida_por_factura_id`, resolver el UUID desde esa factura (debe estar timbrada) en vez de pedir `sustituye_uuid` crudo.
+   - Después de cancelar, en la misma transacción:
+     - `facturas.estado = 'Sustituida'`, `sustituida_por = <id nuevo>` en la vieja.
+     - Bitácora `factura_sustituida` con ambos IDs y UUIDs.
 
-### 7. Tests
-- `src/features/facturacion/services/__tests__/notasCreditoFacturapi.test.ts` (mock `functions.invoke`, happy path + error).
-- `src/features/facturacion/components/__tests__/DialogCrearNotaCredito.test.tsx` (render, validación de monto, llamada a mutación).
+5. **Guardrails CI**: agregar `duplicar_factura_para_sustitucion` a tests de RLS/role; actualizar guardrails de edge functions sólo si cambian firmas.
 
-### 8. Guardrails y versionado
-- Verificar lint y arquitectura (FormDialogShell, notifyError, no double toast).
-- Bump `APP_VERSION` → `13.137.8`.
-- Entrada en `CHANGELOG.md`: "Dialog de creación/timbrado de Notas de Crédito y sección en detalle de factura".
+### Turno D — Frontend de sustitución (wizard de 3 pasos)
 
-### Fuera de alcance (Turnos C y D)
-Sustitución de facturas (motivo 01), RPC `duplicar_factura_para_sustitucion`, wizard de cancelación con sustitución.
+1. **Nuevo `DialogSustituirFactura.tsx`** (FormDialogShell + FormDialogStepper, mem://style/form-dialog-shell)
+   - **Paso 1 · Confirmar**: muestra resumen de la factura a cancelar (folio, cliente, total, UUID), explica el flujo en español sencillo.
+   - **Paso 2 · Clonar y editar**: al avanzar llama `duplicar_factura_para_sustitucion`, navega a `FacturaDetalle` de la nueva (`?accion=timbrar`) en una nueva pestaña o inline; deja la factura como `Borrador` con badge "Sustituye a FAC-XXXX". Permite al usuario editar conceptos/precios antes de timbrar.
+   - **Paso 3 · Confirmar cancelación**: una vez timbrada la nueva (detecta `uuid_fiscal`), llama `cancelarFacturapi({ facturaId: viejo, motivo: '01', sustituida_por_factura_id: nuevo })`. Cierra el wizard.
+
+2. **Service y hook**
+   - `duplicarFacturaParaSustitucion(facturaId): Promise<string>` en `src/features/facturacion/services/facturas.ts`.
+   - `useDuplicarFacturaParaSustitucion()` con invalidación de queries.
+   - Extender `cancelarFacturapi` para aceptar `sustituidaPorFacturaId` en lugar de `sustituyeUuid`.
+
+3. **UI en `FacturaDetalle.tsx`**
+   - Reemplazar el botón "Cancelar" actual por menú con 2 acciones cuando la factura está `Emitida`/`Pagada parcial`:
+     - **Cancelar (motivos 02/03/04)** → diálogo existente.
+     - **Cancelar con sustitución (01)** → nuevo wizard.
+   - Si la factura ya tiene `sustituye_a`, mostrar badge "Sustituye a FAC-XXXX" con link.
+   - Si la factura está `Sustituida`, mostrar badge "Sustituida por FAC-XXXX" con link.
+
+4. **Sección en `FacturaResumenCard`**
+   - Cuando hay cadena de sustitución, listar UUIDs viejo→nuevo con fechas.
+
+5. **Changelog + APP_VERSION**: `13.137.9` (turno C, backend) y `13.137.10` (turno D, frontend).
+
+### Detalles técnicos
+
+```text
+flujo timbrado con sustitución:
+  Factura vieja (timbrada, UUID-A)
+        │ Usuario abre wizard "Cancelar con sustitución"
+        ▼
+  duplicar_factura_para_sustitucion(viejo.id)
+        │ → factura nueva (Borrador, sustituye_a = viejo.id)
+        ▼
+  Usuario edita y timbra
+        │ facturapi-emitir detecta sustituye_a y agrega
+        │ related=[UUID-A], relationship='04'
+        ▼
+  Factura nueva timbrada (UUID-B)
+        │ Usuario confirma "Cancelar la vieja"
+        ▼
+  facturapi-cancelar(viejo, motivo='01',
+                     sustituida_por_factura_id = nuevo.id)
+        │ resuelve UUID-B desde nuevo, llama Facturapi,
+        │ marca vieja como Sustituida + sustituida_por=nuevo
+        ▼
+  Cadena cerrada y trazable
+```
+
+- La migración no romperá filas existentes: las nuevas columnas son nullable.
+- Re-usamos `notifyError`, `appFeedback`, `getErrorMessage` y `ERROR_CODES` ya estandarizados.
+- Cuidado con la regla mem: registrar en CHANGELOG.md y bumpear APP_VERSION en cada turno.
+- Power of 10: cada componente nuevo ≤200 líneas; el wizard se divide en `DialogSustituirFactura.tsx` + `WizardSustituirPasos.tsx` si crece.
+
+### Orden de entrega
+- **Turno C primero** (migración + RPC + edge functions + bitácora) → versión `13.137.9`.
+- **Turno D después** (wizard, services, hooks, integración en FacturaDetalle) → `13.137.10`.
+
+¿Arrancamos por **Turno C (backend)** o prefieres ajustar algo del wizard antes (p. ej. quieres que la nueva factura se cree y timbre de un solo clic sin permitir editarla)?
