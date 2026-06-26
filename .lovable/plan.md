@@ -1,59 +1,47 @@
+## Wizard "Conectar FacturApi" (3 pasos)
 
-## Objetivo
+Reemplazo de la captura todo-en-uno por un asistente guiado, montado sobre `FormDialogShell` + `FormDialogStepper` (los componentes estándar de modales tipo formulario del proyecto). Se integra al `FacturapiCredencialesCard` existente: si la org aún no tiene `last4` cargado, la tarjeta muestra un botón **"Conectar FacturApi"** que abre el wizard; si ya está conectada, se muestra como hoy con un botón **"Reconfigurar"** que también lo abre.
 
-Hoy el admin de la org no puede terminar de conectarse con FacturApi por sí mismo: la UI sólo guarda el **nombre** del secret y la API key real tiene que crearla alguien con acceso a Lovable Cloud (Backend → Secrets). Vamos a permitir que el propio `admin_org` pegue sus dos API keys (sandbox y live) desde la app, las guardamos cifradas en la base, y las edge functions las leerán al timbrar.
+### Pasos
 
-Analogía: hoy el cliente nos da el “nombre del cajón” pero alguien de Lovable tiene que meter la llave; con este cambio el cliente mete su propia llave en su propio cajón con candado.
+1. **Ambiente** — el usuario elige Sandbox o Producción (default Sandbox). Explicación breve de qué significa cada uno y recomendación de empezar siempre por Sandbox. Único campo: switch + texto de ayuda.
+2. **API keys** — inputs tipo password para Sandbox (`sk_test_…`) y Live (`sk_live_…`). Cada uno con badge de estado (Vacía / Cargada · `••••1234`) y botón **Guardar** que persiste vía RPC `set_facturapi_api_key` (cifrado en vault). Botón **Quitar** para borrar (`clear_facturapi_api_key`). Al menos la key del ambiente activo debe estar cargada para avanzar.
+3. **Probar y confirmar** — botón **Probar conexión** que invoca la edge function `facturapi-test-conexion` con el ambiente activo. Muestra estado en vivo: idle → "Probando…" (spinner) → éxito (badge verde + nombre legal devuelto por FacturApi + `facturapi_org_id` autocompletado) o error (alerta roja con `status` y `detail` traducidos). Sólo permite **Finalizar** cuando la prueba haya sido exitosa al menos una vez.
 
-## UX
+### Progreso y mensajes
 
-En **Configuración → Facturación → FacturApi**, reemplazamos los inputs de “nombre del secret” por:
+- Header con stepper visible (1 Ambiente · 2 API keys · 3 Probar). Cada paso ya completo se marca con check; el paso actual resaltado.
+- Footer sticky con **Atrás** / **Siguiente** (deshabilitado si el paso no cumple su requisito) y **Finalizar** en el último paso.
+- Mensajes claros en español MX para cada error de FacturApi (key inválida → "FacturApi rechazó la API key (401). Verifica que la copiaste completa y que corresponde al ambiente seleccionado."; org no encontrada → "No se encontró la organización en FacturApi."; red → "No se pudo contactar a FacturApi. Reintenta en unos segundos.").
+- Toast de éxito al finalizar: "FacturApi conectado en ambiente Sandbox/Producción".
 
-- Dos campos password: **API Key Sandbox** y **API Key Producción**.
-- Para cada uno: estado (Cargada / Vacía), botón **Probar conexión** (hace un `GET /organizations/me` a FacturApi), botón **Reemplazar** y botón **Quitar**.
-- Las keys ya guardadas se muestran enmascaradas (`sk_test_••••••••1234`). Nunca se devuelven en claro al cliente.
-- Selector de ambiente activo (sandbox/live) sigue igual.
-- Mensaje claro: “La API key se guarda cifrada. Sólo el servidor puede leerla al timbrar.”
+### Archivos
 
-Mantenemos el modo legacy (secret en `Deno.env`) como fallback para no romper orgs ya configuradas.
+- **Nuevo** `src/features/configuracion/components/FacturapiOnboardingWizard.tsx` — orquesta los 3 pasos, mantiene estado local (`paso`, `pruebaResultado`), invoca hooks ya existentes (`useSetFacturapiApiKey`, `useClearFacturapiApiKey`, `useProbarFacturapiConexion`, `useUpsertFacturapiCredenciales`) y al finalizar persiste el ambiente elegido vía upsert.
+- **Nuevo** `src/features/configuracion/components/wizard/PasoAmbiente.tsx`, `PasoApiKeys.tsx`, `PasoProbar.tsx` — componentes presentacionales de cada paso (cumple regla ≤200 líneas por archivo).
+- **Editado** `FacturapiCredencialesCard.tsx` — añade botón "Conectar FacturApi" / "Reconfigurar" que abre el wizard. La vista detallada (form actual) queda como modo avanzado plegable para usuarios que ya conocen la integración.
+- **Editado** `CHANGELOG.md` + bump `APP_VERSION` a `13.137.19`.
 
-## Cambios técnicos
+### Detalles técnicos
 
-### 1. Base de datos (migración)
-- Tabla `facturapi_credenciales`: agregar columnas
-  - `api_key_sandbox_vault_id uuid null`
-  - `api_key_live_vault_id uuid null`
-  - `api_key_sandbox_last4 text null`
-  - `api_key_live_last4 text null`
-- Mantener `api_key_sandbox_secret_name` / `_live_secret_name` por compatibilidad (deprecated, lectura sólo).
-- 3 RPCs `SECURITY DEFINER` (search_path fijo, autorización con `has_role(... 'admin_org' | 'super_admin')` + match de `organization_id`):
-  - `set_facturapi_api_key(p_org_id uuid, p_ambiente text, p_api_key text)` — valida formato (`sk_test_` o `sk_live_`), guarda en `vault.create_secret`, persiste `vault_id` y `last4`, **borra el vault anterior** si existía.
-  - `clear_facturapi_api_key(p_org_id uuid, p_ambiente text)` — borra vault y limpia columnas.
-  - `get_facturapi_api_key_internal(p_org_id uuid, p_ambiente text)` — sólo invocable con service_role (revoke a authenticated); devuelve la key desencriptada para uso de edge functions.
-- GRANTs explícitos sobre las RPCs (authenticated para set/clear, service_role para get_internal).
+- El wizard reusa toda la lógica de servicios ya implementada en `setFacturapiApiKey`, `clearFacturapiApiKey`, `probarFacturapiConexion` y la edge `facturapi-test-conexion` — no se toca backend ni migraciones.
+- Validación por paso:
+  - Paso 1: siempre válido (default sandbox).
+  - Paso 2: válido si `last4` del ambiente activo está presente tras guardar (lo lee de `useFacturapiCredenciales`).
+  - Paso 3: válido si `pruebaResultado?.ok === true` para el ambiente activo.
+- Si el usuario cambia el ambiente en el paso 1 después de probar, se invalida `pruebaResultado` para forzar reprobar.
+- El wizard usa `FormDialogShell` con icon-tile `<Receipt/>`, secciones por paso vía `FormDialogSection` y footer sticky con los botones — alineado a la regla del proyecto sobre modales tipo formulario.
+- Sin cambios a tests existentes; agregar smoke test del componente raíz (`FacturapiOnboardingWizard.test.tsx`) que monte cada paso y verifique que **Siguiente** está deshabilitado hasta cumplir su requisito (usa mocks de los hooks).
 
-### 2. Servicios y hooks (frontend)
-- `src/features/configuracion/services/facturapiCredenciales.ts`: añadir `setFacturapiApiKey`, `clearFacturapiApiKey`, `probarFacturapiKey` (invoca edge function de prueba).
-- Hook `useSetFacturapiApiKey` con invalidation de `facturapi_credenciales`.
-- `FacturapiCredencialesForm` rediseñado para los nuevos campos (sandbox/live como password + acciones).
-
-### 3. Edge functions
-- `supabase/functions/_shared/facturapiAuth.ts`: en `resolveFacturapiKey`, después de leer la fila intentar **primero** `supabase.rpc('get_facturapi_api_key_internal', …)`. Si devuelve key → usarla. Si no, fallback al flujo actual (`Deno.env.get(secret_name)`), luego fallback legacy global.
-- Nueva edge function `facturapi-test-conexion`: recibe `{ org_id, ambiente }`, resuelve key con el helper, llama `GET https://www.facturapi.io/v2/organizations/me` vía SDK, responde `{ ok, facturapi_org_id, nombre }`. Sirve para el botón “Probar conexión” y para guardar/refrescar `facturapi_org_id` automáticamente.
-- Actualizar `supabase/functions/_shared/facturapiAuth_test.ts` y el guardrail `facturapi-multi-tenant.test.ts` para incluir la nueva ruta (RPC primero, env como fallback).
-
-### 4. Docs y versión
-- `docs/facturapi-go-live.md`: reescribir pasos 2 y 3 — el admin de la org ahora pega la key directamente en Configuración → Facturación; los secrets globales sólo se mencionan como fallback legacy.
-- `CHANGELOG.md` + bump `APP_VERSION` (siguiente patch).
-
-## Seguridad
-
-- API keys nunca se devuelven al cliente: el `select *` de `facturapi_credenciales` no expone `vault_id` ni la key (solo `last4`); las RPCs de lectura en claro están **revocadas** a `authenticated`/`anon`.
-- RLS: `set_/clear_facturapi_api_key` valida que `auth.uid()` pertenezca a la org (`organization_members`) y tenga rol `admin_org` o `super_admin`.
-- Bitácora: registrar evento `facturapi_api_key_actualizada` (sin contenido de la key) en `bitacora_actividad`.
-- Sin logs de la key en edge functions (no `console.log(apiKey)`).
-
-## Fuera de alcance (proponer en otro turno si se desea)
-- Subida del CSD desde la app (hoy se sube directo en FacturApi).
-- Rotación automática programada de keys.
-- Onboarding wizard guiado paso a paso (este cambio sólo mejora el formulario existente).
+```text
+┌──────────────────────────────────────────┐
+│  Conectar FacturApi                  [x] │
+│  ──①──── ──②──── ──③──                   │
+│  Ambiente  API keys  Probar              │
+├──────────────────────────────────────────┤
+│  (contenido del paso actual)             │
+│                                          │
+├──────────────────────────────────────────┤
+│  [Atrás]              [Siguiente / OK]   │
+└──────────────────────────────────────────┘
+```
