@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const insertChain = vi.fn();
-const deleteEq = vi.fn().mockResolvedValue({ error: null });
-const from = vi.fn();
+const { from, deleteEq } = vi.hoisted(() => ({
+  from: vi.fn(),
+  deleteEq: vi.fn().mockResolvedValue({ error: null }),
+}));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from } }));
 
 import { crearFacturaManual } from "../facturaManual";
