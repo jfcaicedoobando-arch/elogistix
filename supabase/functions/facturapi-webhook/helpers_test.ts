@@ -46,3 +46,27 @@ Deno.test("mapEventToFacturaPatch: tipo desconocido -> null", () => {
 Deno.test("mapEventToFacturaPatch: sin object -> null", () => {
   assertEquals(mapEventToFacturaPatch({ type: "invoice.canceled" }), null);
 });
+
+Deno.test("mapEventToReceiptPatch: receipt.status_updated valid", () => {
+  const r = mapEventToReceiptPatch({
+    type: "receipt.status_updated",
+    data: { object: { id: "rep_1", status: "valid", uuid: "U-REP-1" } },
+  });
+  assert(r);
+  assertEquals(r!.facturapi_rep_id, "rep_1");
+  assertEquals(r!.patch.estado_rep, "Timbrado");
+  assertEquals(r!.patch.uuid_rep, "U-REP-1");
+});
+
+Deno.test("mapEventToReceiptPatch: receipt.canceled", () => {
+  const r = mapEventToReceiptPatch({
+    type: "receipt.canceled",
+    data: { object: { id: "rep_2" } },
+  });
+  assert(r);
+  assertEquals(r!.patch.estado_rep, "Cancelado");
+});
+
+Deno.test("mapEventToReceiptPatch: invoice.* -> null", () => {
+  assertEquals(mapEventToReceiptPatch({ type: "invoice.status_updated", data: { object: { id: "fa_1" } } }), null);
+});
