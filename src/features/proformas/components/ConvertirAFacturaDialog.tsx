@@ -23,7 +23,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { toast } from "@/hooks/shared/useToast";
-import { notifyError } from "@/lib/observability/notifyError";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   USOS_CFDI_SAT,
   FORMAS_PAGO_SAT,
