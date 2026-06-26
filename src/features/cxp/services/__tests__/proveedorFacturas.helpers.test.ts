@@ -1,0 +1,172 @@
+/**
+ * Tests de lógica pura para helpers de CxP.
+ * Cubre: diasVencido (signo correcto vs hoy), clasificar (orden de
+ * precedencia Pagada/Sin saldo/Vencida/Por vencer/Vigente), mapJoinedRow
+ * (suma de pagos vivos, NC sólo Aplicadas, saldo nunca negativo, no
+ * mostrar días vencidos cuando ya está pagada) y filtros cliente.
+ */
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import {
+  diasVencido,
+  clasificar,
+  mapJoinedRow,
+  aplicarFiltrosCliente,
+  type Joined,
+} from "../proveedorFacturas.helpers";
+import type { FacturaCxP } from "../proveedorFacturas";
+
+const HOY = new Date("2026-06-26T12:00:00Z");
+
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(HOY);
+});
+afterAll(() => vi.useRealTimers());
+
+const baseJoined = (over: Partial<Joined> = {}): Joined => ({
+  id: "f1",
+  proveedor_id: "p1",
+  proveedor_nombre: "ACME",
+  embarque_id: null,
+  folio_proveedor: "A-1",
+  folio_interno: "FP-000001",
+  fecha_emision: "2026-06-01",
+  fecha_vencimiento: "2026-06-20",
+  moneda: "MXN",
+  subtotal: 100,
+  iva: 16,
+  retenciones: 0,
+  total: 116,
+  estado: "Pendiente" as Joined["estado"],
+  tipo_cambio_usd: 17,
+  rfc_proveedor: "ACM010101AAA",
+  uuid_fiscal: null,
+  dias_credito: 30,
+  notas: null,
+  estado_aprobacion: "aprobada",
+  motivo_rechazo: null,
+  categoria_presupuesto_id: null,
+  archivo_xml_url: null,
+  archivo_pdf_url: null,
+  pagos_proveedor: null,
+  proveedor_notas_credito: null,
+  proveedores: { origen_proveedor: "Nacional" },
+  presupuesto_categorias: null,
+  ...over,
+});
+
+describe("diasVencido", () => {
+  it("devuelve 0 cuando fecha_vencimiento es null", () => {
+    expect(diasVencido(null)).toBe(0);
+  });
+  it("positivo cuando ya pasó (2026-06-20 vs hoy 2026-06-26)", () => {
+    expect(diasVencido("2026-06-20")).toBe(6);
+  });
+  it("negativo cuando aún no vence", () => {
+    expect(diasVencido("2026-07-01")).toBe(-5);
+  });
+});
+
+describe("clasificar", () => {
+  it("estado Pagada gana sobre cualquier saldo/días", () => {
+    expect(clasificar(500, 10, "Pagada" as never)).toBe("Pagada");
+  });
+  it("saldo ≤ 0.01 ⇒ Sin saldo", () => {
+    expect(clasificar(0.005, 0, "Pendiente" as never)).toBe("Sin saldo");
+  });
+  it("días > 0 con saldo ⇒ Vencida", () => {
+    expect(clasificar(100, 1, "Pendiente" as never)).toBe("Vencida");
+  });
+  it("días entre -3 y 0 ⇒ Por vencer", () => {
+    expect(clasificar(100, -2, "Pendiente" as never)).toBe("Por vencer");
+    expect(clasificar(100, 0, "Pendiente" as never)).toBe("Por vencer");
+  });
+  it("días < -3 ⇒ Vigente", () => {
+    expect(clasificar(100, -10, "Pendiente" as never)).toBe("Vigente");
+  });
+});
+
+describe("mapJoinedRow", () => {
+  it("suma pagos vivos e ignora pagos eliminados", () => {
+    const row = baseJoined({
+      pagos_proveedor: [
+        { monto: 50, deleted_at: null },
+        { monto: 999, deleted_at: "2026-06-10" }, // ignorado
+      ],
+    });
+    const out = mapJoinedRow(row);
+    expect(out.pagado).toBe(50);
+    expect(out.saldo).toBe(66); // 116 - 50
+  });
+
+  it("sólo cuenta notas de crédito Aplicadas y no eliminadas", () => {
+    const row = baseJoined({
+      proveedor_notas_credito: [
+        { monto: 10, estado: "Aplicada", deleted_at: null },
+        { monto: 5, estado: "Cancelada", deleted_at: null },
+        { monto: 7, estado: "Aplicada", deleted_at: "2026-01-01" },
+      ],
+    });
+    const out = mapJoinedRow(row);
+    expect(out.notas_credito).toBe(10);
+    expect(out.saldo).toBe(106);
+  });
+
+  it("saldo nunca es negativo aunque pagos+NC excedan total", () => {
+    const row = baseJoined({
+      total: 100,
+      pagos_proveedor: [{ monto: 200, deleted_at: null }],
+    });
+    const out = mapJoinedRow(row);
+    expect(out.saldo).toBe(0);
+  });
+
+  it("no muestra días vencidos cuando la factura está saldada", () => {
+    const row = baseJoined({
+      fecha_vencimiento: "2026-01-01",
+      total: 100,
+      pagos_proveedor: [{ monto: 100, deleted_at: null }],
+    });
+    const out = mapJoinedRow(row);
+    expect(out.dias_vencido).toBe(0);
+    expect(out.estatus).toBe("Sin saldo");
+  });
+
+  it("propaga origen del proveedor y categoría", () => {
+    const row = baseJoined({
+      proveedores: { origen_proveedor: "Extranjero" },
+      presupuesto_categorias: { nombre: "Logística" },
+    });
+    const out = mapJoinedRow(row);
+    expect(out.proveedor_origen).toBe("Extranjero");
+    expect(out.categoria_nombre).toBe("Logística");
+  });
+});
+
+describe("aplicarFiltrosCliente", () => {
+  const f = (over: Partial<FacturaCxP>): FacturaCxP => ({
+    ...({} as FacturaCxP),
+    ...over,
+  });
+  const rows: FacturaCxP[] = [
+    f({ id: "1", estatus: "Vencida", proveedor_origen: "Nacional", estado_aprobacion: "aprobada" }),
+    f({ id: "2", estatus: "Vigente", proveedor_origen: "Extranjero", estado_aprobacion: "pendiente" }),
+    f({ id: "3", estatus: "Vencida", proveedor_origen: "Extranjero", estado_aprobacion: "aprobada" }),
+  ];
+
+  it("filtro 'todos' no filtra", () => {
+    expect(aplicarFiltrosCliente(rows, { estatus: "todos" }).length).toBe(3);
+  });
+  it("filtra por estatus", () => {
+    const r = aplicarFiltrosCliente(rows, { estatus: "Vencida" });
+    expect(r.map((x) => x.id)).toEqual(["1", "3"]);
+  });
+  it("combina estatus + origen + aprobación", () => {
+    const r = aplicarFiltrosCliente(rows, {
+      estatus: "Vencida",
+      origen: "Extranjero",
+      aprobacion: "aprobada",
+    });
+    expect(r.map((x) => x.id)).toEqual(["3"]);
+  });
+});
