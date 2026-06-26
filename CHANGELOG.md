@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.2] - 2026-06-26
+- **feat(facturacion) — Fases 3-6 Proforma → Factura → Timbrado → Pago → REP**:
+  - **Fusión N:1**: nueva columna de selección en `TabProformas` + barra flotante "Convertir / Fusionar en factura" que valida mismo cliente y abre `ConvertirAFacturaDialog` con todos los IDs seleccionados.
+  - **UX threading**: tras la conversión, `ConvertirAFacturaDialog` navega a `/facturacion/:id?accion=timbrar`; `FacturaDetalle` detecta el parámetro y abre auto el `DialogTimbrarFactura` (limpia la query param después). Añadido botón "Timbrar factura" + badge "Sin timbrar" cuando `uuid_fiscal` es null.
+  - **REP automático**: `DialogRegistrarPago` ahora encadena `emitirRep(pagoId)` cuando la factura es **PPD** y está timbrada. Si falla, el pago queda registrado y el usuario puede reintentar desde `PagoFacturaRow`. Se muestra aviso PPD en el modal y un toast diferenciado para éxito/error del REP.
+  - `registrarPagoFactura` ahora retorna el `id` insertado (`select("id").single()`) para soportar el encadenado del REP sin romper firma (tests existentes no asertan el retorno).
+  - Documentación: nuevo `docs/flujo-facturacion.md` con diagrama, fases, permisos y archivos clave.
+
 ## [13.137.1] - 2026-06-26
 - **chore(lint) — `beforeSend` de Sentry bajo el umbral de complejidad**: en `src/lib/observability/sentry/core.ts` se extrajo el predicado `shouldDropSentryEvent(event, hint)` que encapsula los filtros de chunk-load, React-Refresh y ZodError. `beforeSend` queda en 2 ramas (drop o `scrubEventPii`) y deja de violar `complexity ≤ 16` (`bun run lint` pasa con `--max-warnings 0`). Sin cambios de comportamiento.
 
