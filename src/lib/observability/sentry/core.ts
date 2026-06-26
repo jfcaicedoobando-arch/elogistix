@@ -49,6 +49,36 @@ const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
   /librecarga\.com/,
 ];
 
+/**
+ * Predicado para `beforeSend`: decide si un evento debe descartarse antes de
+ * llegar a Sentry. Extraído para mantener el `beforeSend` con complejidad baja.
+ */
+function shouldDropSentryEvent(
+  event: Sentry.ErrorEvent,
+  hint: Sentry.EventHint | undefined,
+): boolean {
+  const exc = hint?.originalException as Error | undefined;
+  const originalMsg =
+    exc?.message ??
+    (typeof hint?.originalException === "string" ? hint.originalException : undefined);
+  if (isDynamicImportErrorMessage(originalMsg)) return true;
+  if (isDynamicImportErrorMessage(event.message)) return true;
+
+  const values = event.exception?.values;
+  if (values?.some((v) => isDynamicImportErrorMessage(v.value))) return true;
+
+  if (exc && isReactRefreshHmrError(exc)) return true;
+  if (values?.some((v) => isReactRefreshStackTrace(v.stacktrace))) return true;
+
+  // Errores de validación (zod) son input del usuario, no bugs.
+  const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
+  const causeName = (cause as { name?: string } | undefined)?.name;
+  const excName = (exc as { name?: string } | undefined)?.name;
+  if (causeName === "ZodError" || excName === "ZodError") return true;
+
+  return false;
+}
+
 /** Resuelve el environment de Sentry. Prioriza `VITE_SENTRY_ENV` (permite
  *  distinguir `preview` de `production` en builds idénticos). Fallback a MODE. */
 function resolveEnvironment(): string {
