@@ -3,14 +3,16 @@
  * Extraídos para mantener la página ≤200 líneas (Power-of-10 #4) y reducir
  * la complejidad ciclomática del componente página.
  */
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, Ship, Loader2, ExternalLink } from "lucide-react";
+import { Download, Ship, Loader2, ExternalLink, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate, formatDiasCredito, nombreDesdeEmail } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
+import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
