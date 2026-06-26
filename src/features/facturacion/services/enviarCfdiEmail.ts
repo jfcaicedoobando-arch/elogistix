@@ -12,6 +12,7 @@ export interface EnviarCfdiResult {
 interface EnviarCfdiArgs {
   facturaId?: string;
   pagoId?: string;
+  notaCreditoId?: string;
   email?: string;
 }
 
@@ -25,6 +26,7 @@ async function invocar(args: EnviarCfdiArgs): Promise<EnviarCfdiResult> {
     body: {
       factura_id: args.facturaId,
       pago_id: args.pagoId,
+      nota_credito_id: args.notaCreditoId,
       email: args.email,
     },
   });
@@ -42,3 +44,8 @@ export function enviarCfdiFactura(facturaId: string, email?: string): Promise<En
 export function enviarCfdiRep(pagoId: string, email?: string): Promise<EnviarCfdiResult> {
   return invocar({ pagoId, email });
 }
+
+export function enviarCfdiNotaCredito(notaCreditoId: string, email?: string): Promise<EnviarCfdiResult> {
+  return invocar({ notaCreditoId, email });
+}
+

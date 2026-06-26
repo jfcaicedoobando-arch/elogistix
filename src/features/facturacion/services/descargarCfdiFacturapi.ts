@@ -14,6 +14,7 @@ export interface DescargarCfdiOpts {
   tipo: CfdiTipo;
   facturaId?: string;
   pagoId?: string;
+  notaCreditoId?: string;
 }
 
 /** Detecta si la URL guardada apunta a FacturApi (necesita proxy). */
@@ -28,8 +29,8 @@ export interface CfdiBlob {
 }
 
 export async function fetchCfdiFacturapi(opts: DescargarCfdiOpts): Promise<CfdiBlob> {
-  if (!opts.facturaId && !opts.pagoId) {
-    throw new Error("facturaId o pagoId requerido");
+  if (!opts.facturaId && !opts.pagoId && !opts.notaCreditoId) {
+    throw new Error("facturaId, pagoId o notaCreditoId requerido");
   }
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
@@ -48,8 +49,10 @@ export async function fetchCfdiFacturapi(opts: DescargarCfdiOpts): Promise<CfdiB
       tipo: opts.tipo,
       factura_id: opts.facturaId,
       pago_id: opts.pagoId,
+      nota_credito_id: opts.notaCreditoId,
     }),
   });
+
 
   if (!res.ok) {
     let msg = `Error ${res.status}`;

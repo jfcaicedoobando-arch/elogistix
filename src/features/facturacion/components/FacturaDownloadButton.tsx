@@ -14,9 +14,11 @@ interface Props {
   facturaId?: string;
   /** Igual que facturaId pero para REP de un pago. */
   pagoId?: string;
+  /** Igual que facturaId pero para una nota de crédito timbrada. */
+  notaCreditoId?: string;
 }
 
-export function FacturaDownloadButton({ stored, kind, size = "icon", className, facturaId, pagoId }: Props) {
+export function FacturaDownloadButton({ stored, kind, size = "icon", className, facturaId, pagoId, notaCreditoId }: Props) {
   const Icon = kind === "pdf" ? FileText : FileCode2;
   const colorClass = kind === "pdf" ? "text-destructive" : "text-info";
   const label = kind === "pdf" ? "Descargar PDF" : "Descargar XML";
@@ -25,10 +27,9 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
     e.stopPropagation();
     e.preventDefault();
     try {
-      // Si la URL guardada es de FacturApi (o no hay URL pero sí ID), proxyear.
-      const usarProxy = (!stored || esUrlFacturapi(stored)) && (facturaId || pagoId);
+      const usarProxy = (!stored || esUrlFacturapi(stored)) && (facturaId || pagoId || notaCreditoId);
       if (usarProxy) {
-        await descargarCfdiFacturapi({ tipo: kind, facturaId, pagoId });
+        await descargarCfdiFacturapi({ tipo: kind, facturaId, pagoId, notaCreditoId });
       } else if (stored) {
         await openFacturaInNewTab(stored);
       } else {
@@ -39,6 +40,7 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
         description: (err as Error).message, error: err, method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1" });
     }
   };
+
 
   if (size === "icon") {
     return (

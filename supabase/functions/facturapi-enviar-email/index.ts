@@ -25,6 +25,7 @@ function json(body: unknown, status = 200): Response {
 interface ReqBody {
   factura_id?: string;
   pago_id?: string;
+  nota_credito_id?: string;
   email?: string;
 }
 
@@ -32,7 +33,7 @@ interface Target {
   facturapiId: string;
   organizationId: string;
   clienteId: string;
-  tipo: "factura" | "rep";
+  tipo: "factura" | "rep" | "nota_credito";
   entidadId: string;
 }
 
@@ -42,6 +43,31 @@ async function resolveTarget(
   supabase: SbClient,
   body: ReqBody,
 ): Promise<{ ok: true; data: Target } | { ok: false; status: number; body: unknown }> {
+  if (body.nota_credito_id) {
+    const { data: nc, error } = await supabase
+      .from("factura_notas_credito")
+      .select("facturapi_id, organization_id, factura_id")
+      .eq("id", body.nota_credito_id)
+      .maybeSingle();
+    if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
+    const ncId = nc.facturapi_id as string | null;
+    if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
+    const { data: fact } = await supabase
+      .from("facturas")
+      .select("cliente_id")
+      .eq("id", nc.factura_id as string)
+      .maybeSingle();
+    return {
+      ok: true,
+      data: {
+        facturapiId: ncId,
+        organizationId: nc.organization_id as string,
+        clienteId: (fact?.cliente_id as string) ?? "",
+        tipo: "nota_credito",
+        entidadId: body.nota_credito_id,
+      },
+    };
+  }
   if (body.pago_id) {
     const { data: pago, error } = await supabase
       .from("pagos_factura")
@@ -87,8 +113,9 @@ async function resolveTarget(
       },
     };
   }
-  return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id o pago_id requerido" } };
+  return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id, pago_id o nota_credito_id requerido" } };
 }
+
 
 async function resolveEmail(
   supabase: SbClient,

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
-import { enviarCfdiFactura, enviarCfdiRep } from "@/features/facturacion/services/enviarCfdiEmail";
+import { enviarCfdiFactura, enviarCfdiRep, enviarCfdiNotaCredito } from "@/features/facturacion/services/enviarCfdiEmail";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors/index";
@@ -19,12 +19,13 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   facturaId?: string;
   pagoId?: string;
+  notaCreditoId?: string;
   emailDefault?: string | null;
   titulo?: string;
 }
 
 export function DialogEnviarCfdi({
-  open, onOpenChange, facturaId, pagoId, emailDefault, titulo,
+  open, onOpenChange, facturaId, pagoId, notaCreditoId, emailDefault, titulo,
 }: Props) {
   const { toast } = useToast();
   const [email, setEmail] = useState(emailDefault ?? "");
@@ -36,14 +37,17 @@ export function DialogEnviarCfdi({
     if (!valido) return;
     setEnviando(true);
     try {
-      const res = facturaId
-        ? await enviarCfdiFactura(facturaId, email.trim())
-        : await enviarCfdiRep(pagoId!, email.trim());
+      const res = notaCreditoId
+        ? await enviarCfdiNotaCredito(notaCreditoId, email.trim())
+        : facturaId
+          ? await enviarCfdiFactura(facturaId, email.trim())
+          : await enviarCfdiRep(pagoId!, email.trim());
       toast({
         title: "CFDI enviado",
         description: `Se envió a ${res.enviado_a}.`,
       });
       onOpenChange(false);
+
     } catch (err) {
       notifyError(toast, {
         title: "No se pudo enviar el CFDI",

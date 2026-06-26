@@ -32,6 +32,7 @@ import { DialogRegistrarPago } from "@/features/facturacion/components/DialogReg
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
+import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -147,6 +148,16 @@ export default function FacturaDetalle() {
         moneda={factura.moneda}
         canEdit={canEdit}
         onRegistrarPago={() => setPagoOpen(true)}
+      />
+      <FacturaNotasCreditoSeccion
+        facturaId={factura.id}
+        facturaNumero={factura.numero}
+        monedaFactura={factura.moneda}
+        tipoCambioFactura={Number(factura.tipo_cambio ?? 1)}
+        saldoFactura={Number(factura.total)}
+        uuidFacturaOriginal={factura.uuid_fiscal ?? null}
+        snapshotEmision={factura.snapshot_emision}
+        canEdit={canEdit}
       />
       {isAdmin && <FacturaBitacoraCard facturaId={factura.id} />}
 
