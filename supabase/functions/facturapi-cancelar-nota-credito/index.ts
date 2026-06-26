@@ -1,0 +1,108 @@
+/**
+ * facturapi-cancelar-nota-credito — Cancela un CFDI tipo E (NC) en FacturApi.
+ * Motivos SAT 01/02/03/04 igual que en facturas.
+ *
+ * Entrada: { nota_credito_id, motivo: '01'|'02'|'03'|'04', sustituye_uuid? }
+ */
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { corsHeaders } from "../_shared/cors.ts";
+import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+void Deno.env.get("FACTURAPI_KEY");
+void resolveFacturapiKey;
+
+const MOTIVOS_VALIDOS = new Set(["01", "02", "03", "04"]);
+
+interface ReqBody {
+  nota_credito_id?: string;
+  motivo?: string;
+  sustituye_uuid?: string;
+}
+
+function json(b: unknown, s = 200) {
+  return new Response(JSON.stringify(b), {
+    status: s,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return json({ error: "unauthorized" }, 401);
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
+  });
+  const { data: userData, error: uErr } = await supabase.auth.getUser();
+  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
+
+  const body = (await req.json().catch(() => ({}))) as ReqBody;
+  if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
+  if (!body.motivo || !MOTIVOS_VALIDOS.has(body.motivo)) {
+    return json({ error: "motivo_invalido", message: "Motivo SAT requerido (01-04)." }, 400);
+  }
+  if (body.motivo === "01" && !body.sustituye_uuid) {
+    return json({ error: "sustituye_uuid_required", message: "El motivo 01 requiere UUID de sustitución." }, 400);
+  }
+
+  const { data: nc, error: ncErr } = await supabase
+    .from("factura_notas_credito")
+    .select("id, organization_id, facturapi_id, estado")
+    .eq("id", body.nota_credito_id)
+    .maybeSingle();
+  if (ncErr || !nc) return json({ error: "nota_credito_not_found" }, 404);
+  if (!nc.facturapi_id) return json({ error: "no_timbrada" }, 409);
+
+  const resolved = await getFacturapiClient(supabase, nc.organization_id);
+  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  const facturapi = resolved.data.client;
+
+  interface FapiCancelResponse { status?: string }
+  let cancelResp: FapiCancelResponse;
+  try {
+    cancelResp = await facturapi.invoices.cancel(
+      nc.facturapi_id,
+      { motive: body.motivo, substitution: body.sustituye_uuid },
+    ) as FapiCancelResponse;
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
+    await supabase.from("bitacora_actividad").insert({
+      organization_id: nc.organization_id,
+      user_id: userData.user.id,
+      accion: "facturapi_nc_cancelar_failed",
+      entidad: "factura_nota_credito",
+      entidad_id: body.nota_credito_id,
+      detalle: { status, response: detail },
+    });
+    return json({ error: "facturapi_error", status, detail }, 502);
+  }
+
+  const { error: updErr } = await supabase
+    .from("factura_notas_credito")
+    .update({
+      estado: "Cancelada",
+      cancelacion_motivo: body.motivo,
+      cancelado_en: new Date().toISOString(),
+    })
+    .eq("id", body.nota_credito_id);
+  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+
+  await supabase.from("bitacora_actividad").insert({
+    organization_id: nc.organization_id,
+    user_id: userData.user.id,
+    accion: "facturapi_nc_cancelada",
+    entidad: "factura_nota_credito",
+    entidad_id: body.nota_credito_id,
+    detalle: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
+  });
+
+  return json({ ok: true, status: cancelResp.status ?? "canceled" });
+}));
