@@ -1,68 +1,53 @@
-# Plan: Fases 3-6 — Flujo Proforma → Factura → Timbrado → Pago → REP
+# Pendientes del flujo fiscal (post 13.137.2)
 
-**Contexto:** Fases 1-2 ya entregadas (vista `v_proforma_factura_link`, RPC `convertir_proformas_a_factura`, modal `ConvertirAFacturaDialog`, botón "Convertir a factura" en proforma individual). El timbrado manual de facturas y REP **ya existe** en el código (`useTimbrarFactura`, `useTimbrarRep`, edge functions `facturapi-emitir` y `facturapi-emitir-rep`). Las fases siguientes son **integración + automatización + visibilidad**, no construir desde cero.
+Las 6 fases del plan original están cerradas (ver `docs/flujo-facturacion.md`). Lo que **no** se hizo y queda como trabajo posterior, agrupado por prioridad.
 
-## Fase 3 — Conversión múltiple (fusión N:1) desde el listado
+## Alta prioridad (afecta operación diaria)
 
-Hoy la conversión sólo vive en el detalle de proforma. Para fusionar varias proformas en una factura hay que poder seleccionarlas en el listado.
+1. **Descarga de PDF y XML del CFDI**
+   - Hoy guardamos `uuid_fiscal` y `facturapi_id` pero no exponemos el PDF/XML al usuario.
+   - Falta: endpoint `facturapi-descargar` (PDF/XML) + botones en `FacturaDetalle` y en el listado.
 
-- En `TabProformas` agregar checkbox por fila (sólo habilitado si `estado_revision = 'aprobada'` y `estado_proforma != 'facturada'`).
-- Barra de acción flotante "Convertir N proformas a factura" que aparece al haber selección.
-- Validar en cliente antes de abrir el modal: mismo `cliente_id` y misma moneda en todas las seleccionadas (mensaje claro si no).
-- Reusar `ConvertirAFacturaDialog` pasando el array de IDs; el RPC ya soporta fusión.
+2. **Envío del CFDI por email al cliente**
+   - FacturApi tiene `customer.email` y `send_by_email`. No lo estamos usando.
+   - Falta: opción en `DialogTimbrarFactura` ("Enviar al cliente") + botón "Reenviar CFDI" en `FacturaDetalle`. También reenvío del REP.
 
-## Fase 4 — Timbrado manual desde la factura recién generada
+3. **Notas de crédito (CFDI tipo E) timbradas por FacturApi**
+   - La tabla `factura_notas_credito` existe, pero el alta es manual; no se timbra.
+   - Falta: RPC + diálogo + edge function `facturapi-emitir-nc` y enlace al CFDI padre.
 
-El componente `DialogTimbrarFactura` ya existe. Falta el hilo de UX desde la conversión.
+4. **Cancelación con sustitución (motivo SAT 01)**
+   - `DialogCancelarFactura` soporta motivos 02/03/04. El 01 exige folio fiscal de reemplazo, que aún no se captura ni se valida.
 
-- Al regresar `convertirProformaAFactura` con éxito, navegar a `/facturacion/{id}` y abrir automáticamente el `DialogTimbrarFactura` (query param `?accion=timbrar`).
-- En el detalle de factura mostrar badge "Borrador — pendiente de timbrar" y botón primario "Timbrar ante SAT" (sólo roles `contador`, `admin_org`, `admin`, `super_admin`).
-- Tras timbrar exitoso, actualizar la proforma origen: marcar `estado_proforma = 'facturada'` (ya lo hace el RPC al crear la factura; verificar idempotencia).
+## Media prioridad (robustez)
 
-## Fase 5 — REP automático al registrar pago en facturas PPD
+5. **Reintento manual de REP fallido**
+   - `useTimbrarRep` ya existe; falta UI: en `PagoFacturaRow` si el pago es PPD y `rep_uuid` está vacío, mostrar botón "Timbrar REP".
 
-Hoy `useRegistrarPagoFactura` registra el pago en BD pero **no dispara `emitirRep`** automáticamente.
+6. **Cancelar REP**
+   - Hay edge function `facturapi-cancelar-rep` deployada pero sin diálogo ni botón en `DialogHistorialPagos`.
 
-- Modificar `useRegistrarPagoFactura`:
-  - Si la factura es PPD y está timbrada, encadenar la llamada a `emitirRep(pagoId)` después del registro.
-  - Manejar fallo del REP sin perder el pago: el pago queda registrado, se muestra toast "Pago registrado, REP pendiente — reintentar" con botón.
-- En `DialogRegistrarPago` añadir aviso visual cuando la factura es PPD: "Se generará y timbrará automáticamente el REP al guardar".
-- Añadir columna/badge en la tabla de pagos: "REP timbrado / REP pendiente / REP con error" con acción de reintentar.
+7. **Webhook FacturApi → sincronización**
+   - El handler ya actualiza estado de facturas. Falta:
+     - Cubrir eventos de REP (`receipt.*`/`payment.*`).
+     - Guía en UI para registrar la URL del webhook (`?org=<UUID>`) — hoy hay que sacarlo a mano.
 
-## Fase 6 — Dashboards de seguimiento + documentación
+8. **KPIs del módulo de facturación**
+   - Mencionados en Fase 6 pero nunca dibujados: "Proformas convertibles", "Facturas sin timbrar", "REPs pendientes".
 
-**Dashboard en `/facturacion`:**
-- KPI "Proformas pendientes de facturar" (aprobadas sin `factura_id`).
-- KPI "Facturas borrador pendientes de timbrar" (timbrado_en IS NULL, estado borrador).
-- KPI "Pagos PPD sin REP" (pagos de facturas PPD timbradas sin REP correspondiente).
-- Cada KPI navega al listado filtrado.
+## Baja prioridad (limpieza)
 
-**Documentación:**
-- `docs/flujo-facturacion.md`: diagrama del pipeline Proforma → Factura → Timbrado → Pago → REP con roles y estados.
-- Actualizar `CHANGELOG.md` y bump de versión por fase.
+9. **Deprecar flujo manual `DialogMarcarFacturada`**
+   - Sigue activo para datos históricos. Definir fecha de corte y ocultarlo para proformas nuevas.
 
-## Detalles técnicos
+10. **Migración de facturas históricas a CFDI**
+    - Decidir si las facturas previas a 13.137.0 se pueden re-timbrar o quedan como "no fiscales".
 
-```text
-Proforma (aprobada) ─┐
-                     ├─► convertir_proformas_a_factura ─► Factura (borrador)
-Proforma (aprobada) ─┘                                         │
-                                                               ▼
-                                                    DialogTimbrarFactura
-                                                               │
-                                                               ▼
-                                                      Factura (timbrada)
-                                                          │   │
-                                              PUE ────────┘   └──── PPD
-                                               │                      │
-                                          Pago ✓ fin           Pago + auto-REP
-```
+11. **Pruebas E2E del flujo completo**
+    - Hoy hay tests unitarios de `pagos`/`convertirAFactura`. Falta un happy-path E2E (proforma→factura→timbrado sandbox→pago PPD→REP).
 
-**Migraciones SQL nuevas (Fase 5):**
-- Trigger opcional en `pagos_factura` que invoca edge function vía `pg_net` para auto-REP (alternativa al encadenamiento client-side). Decisión preferida: **client-side** para mantener visibilidad del error al usuario.
+## Sugerencia de orden de ataque
 
-**Permisos:** todas las acciones nuevas restringidas a `contador`, `admin_org`, `admin`, `super_admin` (consistente con Fase 2).
+Si quieres avanzar por valor para el usuario: **1 → 2 → 5 → 6 → 3 → 4 → 7 → 8 → resto**.
 
-**Sin notificaciones por email** al cliente tras timbrado (confirmado por usuario).
-
-**Orden sugerido de ejecución:** Fase 3 → Fase 4 → Fase 5 → Fase 6. Cada fase es desplegable independientemente con su propio bump de versión.
+Dime cuáles activamos y armo el plan de implementación detallado del bloque que elijas.
