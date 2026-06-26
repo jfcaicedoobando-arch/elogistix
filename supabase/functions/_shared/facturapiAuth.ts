@@ -14,7 +14,7 @@
  *   if (!resolved.ok) return json(resolved.data, resolved.data.status);
  *   const { apiKey, baseUrl } = resolved.data;
  */
-// deno-lint-ignore-file no-explicit-any
+
 
 export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
@@ -25,6 +25,23 @@ export function basicAuthHeader(apiKey: string): string {
     ? btoa(`${apiKey}:`)
     : g.Buffer!.from(`${apiKey}:`).toString("base64");
   return `Basic ${b64}`;
+}
+
+/** Forma mínima estructural del cliente de Supabase que necesitamos aquí. */
+interface FacturapiCredencialRow {
+  ambiente: string | null;
+  api_key_sandbox_secret_name: string | null;
+  api_key_live_secret_name: string | null;
+  facturapi_org_id: string | null;
+}
+export interface SupabaseLike {
+  from: (table: string) => {
+    select: (cols: string) => {
+      eq: (col: string, val: string) => {
+        maybeSingle: () => Promise<{ data: FacturapiCredencialRow | null; error: unknown }>;
+      };
+    };
+  };
 }
 
 export type FacturapiAmbiente = "sandbox" | "live";
@@ -53,7 +70,7 @@ export type FacturapiResolveResult =
  * desde el secret apropiado según el ambiente (sandbox/live).
  */
 export async function resolveFacturapiKey(
-  supabase: any,
+  supabase: SupabaseLike,
   organizationId: string,
 ): Promise<FacturapiResolveResult> {
   const { data: cred } = await supabase

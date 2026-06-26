@@ -12,22 +12,30 @@
  * Sólo este módulo puede importar `npm:facturapi`. Las edge functions deben
  * usar `getFacturapiClient(supabase, organizationId)`.
  */
-// deno-lint-ignore-file no-explicit-any
-import { resolveFacturapiKey, type FacturapiResolveResult } from "./facturapiAuth.ts";
+import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
 
-export type FacturapiClient = any;
+// El SDK `facturapi-node` no exporta tipos accesibles desde el typecheck de
+// Deno (lo cargamos dinámicamente). Lo modelamos como un objeto opaco.
+export type FacturapiClient = object;
+type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
 
 const clientCache = new Map<string, FacturapiClient>();
-let FacturapiCtor: any | null = null;
+let FacturapiCtor: FacturapiCtorType | null = null;
 
-async function loadFacturapiCtor(): Promise<any> {
+async function loadFacturapiCtor(): Promise<FacturapiCtorType> {
   if (FacturapiCtor) return FacturapiCtor;
   // Indirección por variable para que el typecheck de Deno no intente
   // resolver `npm:facturapi@5` en tiempo de compilación (sólo se carga en
   // tiempo de ejecución dentro de la edge function).
   const sdkSpec = "npm:facturapi@5";
-  const mod = await import(sdkSpec);
-  FacturapiCtor = (mod as any).default?.default ?? (mod as any).default ?? mod;
+  const mod = (await import(sdkSpec)) as {
+    default?: FacturapiCtorType | { default?: FacturapiCtorType };
+  };
+  const def = mod.default;
+  const ctor = (def && typeof def === "object" && "default" in def
+    ? def.default
+    : def) as FacturapiCtorType | undefined;
+  FacturapiCtor = ctor ?? (mod as unknown as FacturapiCtorType);
   return FacturapiCtor;
 }
 
@@ -47,7 +55,7 @@ export type FacturapiClientResult =
  * Resuelve la API key y devuelve un cliente del SDK listo para usarse.
  */
 export async function getFacturapiClient(
-  supabase: any,
+  supabase: SupabaseLike,
   organizationId: string,
 ): Promise<FacturapiClientResult> {
   const resolved = await resolveFacturapiKey(supabase, organizationId);
@@ -68,16 +76,22 @@ export async function getFacturapiClient(
   };
 }
 
+interface FacturapiErrorShape {
+  response?: { status?: number; data?: unknown };
+  status?: number;
+  data?: unknown;
+  message?: string;
+}
+
 /**
  * Normaliza un error lanzado por el SDK de FacturApi a `{ status, detail }`
  * para responder al cliente con un shape consistente.
  */
 export function describeFacturapiError(err: unknown): { status: number; detail: unknown } {
-  const anyErr = err as any;
-  // El SDK adjunta `response.data` y `response.status` para errores HTTP.
-  const status: number = anyErr?.response?.status ?? anyErr?.status ?? 502;
-  const detail: unknown = anyErr?.response?.data ?? anyErr?.data ?? {
-    message: anyErr?.message ?? String(err),
+  const e = (err ?? {}) as FacturapiErrorShape;
+  const status: number = e.response?.status ?? e.status ?? 502;
+  const detail: unknown = e.response?.data ?? e.data ?? {
+    message: e.message ?? String(err),
   };
   return { status, detail };
 }
