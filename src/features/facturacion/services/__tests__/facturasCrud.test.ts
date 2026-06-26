@@ -83,7 +83,7 @@ describe("facturasCrud service", () => {
     expect(upd.referencia_pago).toBeNull();
   });
 
-  it("marcarCostoPagado propaga error", async () => {
+  it("marcarCostoPagado propaga error del update", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: new Error("perm") });
     await expect(marcarCostoPagado({ id: "c1" })).rejects.toThrow("perm");
   });
@@ -94,7 +94,7 @@ describe("facturasCrud service", () => {
     expect(r).toEqual([{ id: "1" }]);
   });
 
-  it("fetchGastosPendientes propaga error", async () => {
+  it("fetchGastosPendientes propaga error de Supabase", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: new Error("x") });
     await expect(fetchGastosPendientes()).rejects.toThrow("x");
   });
