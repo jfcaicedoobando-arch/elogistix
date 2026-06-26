@@ -23,6 +23,7 @@ import {
   type FacturapiAmbiente,
 } from "@/features/configuracion/services/facturapiCredenciales";
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
+import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
 
 
 export default function FacturapiCredencialesCard() {
@@ -125,6 +126,10 @@ export default function FacturapiCredencialesCard() {
           setCsdVence={setCsdVence}
           copiar={copiar}
         />
+
+        <FacturapiWebhookUrlSection orgId={orgId} copiar={copiar} />
+
+
 
 
         <div className="flex justify-end gap-2">

@@ -15,6 +15,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import type { ProformaConFactura, ProformaRow } from "@/features/embarques/hooks";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { puedeMarcarManualmente } from "@/features/facturacion/constants/deprecation";
 
 interface BuildArgs {
   descargar: (p: ProformaConFactura) => void;
@@ -125,6 +126,7 @@ export function buildProformasColumns({
       cell: ({ row }) => {
         const p = row.original;
         const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
+        const permitirMarcarManual = puedeMarcarManualmente(p.created_at);
         return (
           <div className="flex items-center gap-1">
             <Button
@@ -133,10 +135,11 @@ export function buildProformasColumns({
             >
               <Download className="h-3.5 w-3.5 mr-1" /> PDF
             </Button>
-            {!facturada && (
+            {!facturada && permitirMarcarManual && (
               <Button
                 variant="default" size="sm"
                 onClick={(e) => { e.stopPropagation(); onMarcarFacturada(p); }}
+                title="Flujo manual histórico (deprecado para proformas nuevas)"
               >
                 <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Facturada
               </Button>

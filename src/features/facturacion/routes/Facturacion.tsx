@@ -31,6 +31,7 @@ import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFactur
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
 import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFacturacionCard";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
+import { FacturacionKpisFiscales } from "@/features/facturacion/components/FacturacionKpisFiscales";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/features/facturacion/components/GuiaPrefacturacion";
@@ -135,6 +136,7 @@ export default function Facturacion() {
 
         {/* Dashboard de KPIs (siempre visible) */}
         <DashboardEjecutivoFacturacion />
+        <FacturacionKpisFiscales />
 
         {/* Alerta global: Hueco de facturación (única fuente de "por facturar") */}
         <HuecoFacturacionCard />
