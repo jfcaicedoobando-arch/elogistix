@@ -36,22 +36,17 @@ export default defineConfig({
     // RAM del sandbox). Esto reduce el wall-clock de la suite ~2x sin riesgo
     // de OOM. Subir a 3-4 forks requirió heap ≤4 GB y disparó OOM en archivos
     // PDF pesados; 2 forks @ 8 GB es el punto óptimo verificado.
-    // 13.137.22 — Eliminado singleFork=true: shards 1/8 y 4/8 excedían el
-    // límite de 20 min de CI corriendo todos sus archivos en serie en un
-    // único worker. Con isolate=true + afterEach global (testing-cleanup-protocol)
-    // + canary de PDF, 2 forks por shard es seguro (heap pico ~55 MB × 2 = ~110 MB
-    // contra 8 GB por fork; runner de GH tiene 16 GB RAM). El coverage v8 corre
-    // por fork sin contaminación. Mantenemos isolate y heap a 8 GB por fork.
     pool: "forks",
     poolOptions: {
       forks: {
-        maxForks: 2,
+        singleFork: true,
+        maxForks: 1,
         minForks: 1,
         isolate: true,
         execArgv: ["--max-old-space-size=8192", "--expose-gc"],
       },
     },
-    fileParallelism: true,
+    fileParallelism: false,
     isolate: true,
     sequence: { shuffle: false },
     coverage: {
