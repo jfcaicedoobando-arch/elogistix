@@ -137,10 +137,8 @@ export default function FacturaDetalle() {
         </Button>
       )}
 
-
-
-
       <FacturaResumenCard factura={factura} />
+
       <FacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />
       <FacturaPagosSection
         facturaId={factura.id}
