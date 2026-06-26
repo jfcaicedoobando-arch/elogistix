@@ -10,15 +10,12 @@
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFactura } from "@/features/facturacion/hooks";
 import { usePermissions, useToast } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import { formatCurrency } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -34,7 +31,9 @@ import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviar
 import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
+import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { Replace } from "lucide-react";
+
 
 
 export default function FacturaDetalle() {
