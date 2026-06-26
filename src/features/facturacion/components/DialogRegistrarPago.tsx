@@ -101,20 +101,14 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     setTimbrandoRep(true);
     try {
       await emitirRep(pagoId);
-      notifySuccess(toast, {
-        title: "REP timbrado",
-        description: "Se generó el Recibo Electrónico de Pago.",
-      });
+      notifySuccess(toast, { title: "REP timbrado", description: "Se generó el Recibo Electrónico de Pago." });
     } catch (err) {
       notifyError(toast, {
         title: "Pago registrado, pero el REP falló",
         description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
+        method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
-    } finally {
-      setTimbrandoRep(false);
-    }
+    } finally { setTimbrandoRep(false); }
   };
 
   const handleGuardar = async () => {
