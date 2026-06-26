@@ -10,7 +10,7 @@
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Replace } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFactura } from "@/features/facturacion/hooks";
@@ -21,14 +21,11 @@ import { FacturaResumenCard } from "@/features/facturacion/components/detalle/Fa
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
-import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
-import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
-import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
-import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
-import { Replace } from "lucide-react";
+import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
+
 
 
 
