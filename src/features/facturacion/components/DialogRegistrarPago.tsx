@@ -1,10 +1,17 @@
 /**
  * Registrar pago a factura del cliente.
  * Migrado a `FormDialogShell` (v13.120.0).
+ *
+ * Fase 5 (Proforma → Factura): cuando la factura está timbrada y es **PPD**,
+ * tras registrar el pago se dispara automáticamente el timbrado del REP
+ * (Recibo Electrónico de Pago) vía `emitirRep`. Si falla, el pago queda
+ * registrado en estado `Pendiente` y el usuario puede reintentar desde el
+ * historial.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
@@ -14,6 +21,7 @@ import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
+import { emitirRep } from "@/features/facturacion/services/repFacturapi";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 
 interface Factura {
@@ -21,6 +29,10 @@ interface Factura {
   numero: string;
   total: number;
   moneda: string;
+  /** `PPD` requiere REP automático tras cada abono; `PUE` no. */
+  metodoPago?: string | null;
+  /** UUID fiscal del CFDI emitido. Sin él no se puede timbrar REP. */
+  uuidFiscal?: string | null;
 }
 
 interface Props {
@@ -49,6 +61,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
   const registrar = useRegistrarPagoFactura();
   const registrarActividad = useRegistrarActividad();
+  const [timbrandoRep, setTimbrandoRep] = useState(false);
 
   const totalPagado = useMemo(
     () => pagosPrevios.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0),
@@ -79,13 +92,34 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const excede = montoAplicado > saldo + 0.01;
   const invalido = montoNum <= 0 || excede;
   const tipoCambio = montoNum > 0 ? montoAplicado / montoNum : 1;
+  const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
 
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>
     setValues((s) => ({ ...s, [k]: v }));
 
+  const intentarTimbrarRep = async (pagoId: string) => {
+    setTimbrandoRep(true);
+    try {
+      await emitirRep(pagoId);
+      notifySuccess(toast, {
+        title: "REP timbrado",
+        description: "Se generó el Recibo Electrónico de Pago.",
+      });
+    } catch (err) {
+      notifyError(toast, {
+        title: "Pago registrado, pero el REP falló",
+        description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+    } finally {
+      setTimbrandoRep(false);
+    }
+  };
+
   const handleGuardar = async () => {
     try {
-      await registrar.mutateAsync({
+      const pagoId = await registrar.mutateAsync({
         factura_id: factura.id,
         fecha_pago: values.fecha,
         monto: montoNum,
@@ -101,6 +135,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
         entidad_nombre: `Pago ${formatCurrency(montoNum, values.moneda)} factura ${factura.numero}`,
       });
       notifySuccess(toast, { title: "Pago registrado" });
+      if (esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId);
       onOpenChange(false);
     } catch (err) {
       notifyError(toast, {
@@ -118,12 +153,13 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     </div>
   );
 
+  const ocupado = registrar.isPending || timbrandoRep;
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>Cancelar</Button>
-      <Button onClick={handleGuardar} disabled={invalido || registrar.isPending}>
-        {registrar.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-        Registrar pago
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ocupado}>Cancelar</Button>
+      <Button onClick={handleGuardar} disabled={invalido || ocupado}>
+        {ocupado && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+        {timbrandoRep ? "Timbrando REP…" : "Registrar pago"}
       </Button>
     </>
   );
@@ -140,6 +176,15 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       footer={footer}
     >
       <PagoFormFields values={values} onChange={handleChange} />
+
+      {esPpdTimbrada && (
+        <Alert>
+          <AlertDescription className="text-xs">
+            Esta factura es <strong>PPD</strong>. Al guardar, se intentará timbrar
+            automáticamente el <strong>REP (Complemento de Pagos)</strong> ante el SAT.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {values.moneda !== factura.moneda && montoNum > 0 && (
         <p className="text-xs text-muted-foreground">

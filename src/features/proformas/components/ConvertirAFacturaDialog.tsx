@@ -105,7 +105,7 @@ export function ConvertirAFacturaDialog({
       qc.invalidateQueries({ queryKey: ["proforma-detalle"] });
       qc.invalidateQueries({ queryKey: ["facturas"] });
       onOpenChange(false);
-      navigate(`/facturacion/${res.facturaId}`);
+      navigate(`/facturacion/${res.facturaId}?accion=timbrar`);
     },
     onError: (err) => notifyError(undefined, { error: err, title: "Convertir proforma a factura" }),
   });

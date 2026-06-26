@@ -1,21 +1,28 @@
 /**
  * Controller del componente <TabProformas/>: orquesta el estado UI (delegado a
- * `useTabProformasState`), datos y handlers (descargar PDF, marcar facturada).
+ * `useTabProformasState`), datos y handlers (descargar PDF, marcar facturada,
+ * selección múltiple para convertir N proformas → 1 factura).
  *
  * Las columnas JSX viven en `components/facturacion/proformasColumns.tsx` para
  * respetar la separación lógica/presentación (no JSX en hooks).
  */
-import { useState } from "react";
-import { useProformas, type ProformaRow } from "@/features/embarques/hooks/useProformas";
+import { useCallback, useMemo, useState } from "react";
+import { useProformas, type ProformaConFactura, type ProformaRow } from "@/features/embarques/hooks/useProformas";
 import { useDescargarProformaPdf } from "@/features/embarques/hooks/useDescargarProformaPdf";
 import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
 
 export type { FiltroEstadoProforma };
 
+function isConvertible(p: ProformaConFactura): boolean {
+  return (p.estado_proforma ?? "pendiente") !== "facturada";
+}
+
 export function useTabProformasController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;
 }) {
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [convertOpen, setConvertOpen] = useState(false);
 
   const { data: proformas = [], isLoading } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
@@ -23,6 +30,37 @@ export function useTabProformasController(opts?: {
   const state = useTabProformasState(proformas, opts?.isInRange);
   const { filtered, paginated, counts, totalPages, search, filtroEstado, page, pageSize } = state;
 
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelected = useCallback(() => setSelectedIds(new Set()), []);
+
+  const selectedProformas = useMemo(
+    () => proformas.filter((p) => selectedIds.has(p.id) && isConvertible(p)),
+    [proformas, selectedIds],
+  );
+
+  // Validación de fusión: mismo cliente (las proformas guardan totales en USD
+  // y MXN; la moneda final de la factura la define la serie/conversión y se
+  // valida en la RPC `convertir_proformas_a_factura`).
+  const fusionInfo = useMemo(() => {
+    if (selectedProformas.length === 0) {
+      return { sameCliente: true, clienteNombre: "", organizationId: "", diasCredito: 0 };
+    }
+    const first = selectedProformas[0];
+    return {
+      sameCliente: selectedProformas.every((p) => p.cliente_id === first.cliente_id),
+      clienteNombre: first.cliente_nombre,
+      organizationId: first.organization_id,
+      diasCredito: first.dias_credito ?? 0,
+    };
+  }, [selectedProformas]);
 
   const csvColumns = [
     { key: "numero", label: "# Proforma" },
@@ -62,9 +100,13 @@ export function useTabProformasController(opts?: {
     isLoading, proformas, filtered, paginated, counts, totalPages,
     // handlers para columnas (compuestas en el componente)
     descargar, downloadingId,
+    // selección múltiple (Fase 3 — fusión)
+    selectedIds, toggleSelected, clearSelected, isConvertible,
+    selectedProformas, fusionInfo,
+    convertOpen, setConvertOpen,
     // export CSV
     csvColumns, csvRows,
-    // dialog facturación
+    // dialog facturación (flujo legado)
     proformaAFacturar, setProformaAFacturar,
   };
 }
