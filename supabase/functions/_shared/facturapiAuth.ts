@@ -71,6 +71,50 @@ export type FacturapiResolveResult =
   | { ok: true; data: FacturapiResolved }
   | { ok: false; data: FacturapiResolveError };
 
+function legacyFallback(): FacturapiResolveResult {
+  const legacy = Deno.env.get("FACTURAPI_KEY") ?? "";
+  if (legacy) {
+    return {
+      ok: true,
+      data: {
+        apiKey: legacy,
+        ambiente: "sandbox",
+        baseUrl: FACTURAPI_BASE,
+        facturapiOrgId: null,
+        legacy: true,
+      },
+    };
+  }
+  return {
+    ok: false,
+    data: {
+      error: "org_facturapi_not_configured",
+      message:
+        "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.",
+      status: 412,
+    },
+  };
+}
+
+async function tryVaultKey(
+  supabase: SupabaseLike,
+  organizationId: string,
+  ambiente: FacturapiAmbiente,
+  vaultId: string | null,
+): Promise<string | null> {
+  if (!vaultId || !supabase.rpc) return null;
+  const { data, error } = await supabase.rpc("get_facturapi_api_key_internal", {
+    p_org_id: organizationId,
+    p_ambiente: ambiente,
+  });
+  if (error) return null;
+  return typeof data === "string" && data.length > 0 ? data : null;
+}
+
+function resolveSecretName(cred: FacturapiCredencialRow, ambiente: FacturapiAmbiente): string | null {
+  return ambiente === "live" ? cred.api_key_live_secret_name : cred.api_key_sandbox_secret_name;
+}
+
 /**
  * Carga credenciales de FacturApi para una organización y resuelve la API key
  * desde el secret apropiado según el ambiente (sandbox/live).
@@ -87,64 +131,26 @@ export async function resolveFacturapiKey(
     .eq("organization_id", organizationId)
     .maybeSingle();
 
-  if (!cred) {
-    // Compatibilidad: usar la key global mientras se migra la org.
-    const legacy = Deno.env.get("FACTURAPI_KEY") ?? "";
-    if (legacy) {
-      return {
-        ok: true,
-        data: {
-          apiKey: legacy,
-          ambiente: "sandbox",
-          baseUrl: FACTURAPI_BASE,
-          facturapiOrgId: null,
-          legacy: true,
-        },
-      };
-    }
+  if (!cred) return legacyFallback();
+
+  const ambiente: FacturapiAmbiente = cred.ambiente === "live" ? "live" : "sandbox";
+  const vaultId = ambiente === "live" ? cred.api_key_live_vault_id : cred.api_key_sandbox_vault_id;
+
+  const vaultKey = await tryVaultKey(supabase, organizationId, ambiente, vaultId);
+  if (vaultKey) {
     return {
-      ok: false,
+      ok: true,
       data: {
-        error: "org_facturapi_not_configured",
-        message:
-          "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.",
-        status: 412,
+        apiKey: vaultKey,
+        ambiente,
+        baseUrl: FACTURAPI_BASE,
+        facturapiOrgId: cred.facturapi_org_id ?? null,
+        legacy: false,
       },
     };
   }
 
-  const ambiente: FacturapiAmbiente = cred.ambiente === "live" ? "live" : "sandbox";
-
-  // Ruta nueva (self-service): la key vive cifrada en vault. Resolverla vía RPC
-  // sólo invocable con service_role (`get_facturapi_api_key_internal`).
-  const vaultId: string | null = ambiente === "live"
-    ? cred.api_key_live_vault_id
-    : cred.api_key_sandbox_vault_id;
-
-  if (vaultId && supabase.rpc) {
-    const { data: keyFromVault, error: rpcErr } = await supabase.rpc(
-      "get_facturapi_api_key_internal",
-      { p_org_id: organizationId, p_ambiente: ambiente },
-    );
-    if (!rpcErr && typeof keyFromVault === "string" && keyFromVault.length > 0) {
-      return {
-        ok: true,
-        data: {
-          apiKey: keyFromVault,
-          ambiente,
-          baseUrl: FACTURAPI_BASE,
-          facturapiOrgId: cred.facturapi_org_id ?? null,
-          legacy: false,
-        },
-      };
-    }
-  }
-
-  // Fallback legacy: nombre de secret en Deno.env.
-  const secretName: string | null = ambiente === "live"
-    ? cred.api_key_live_secret_name
-    : cred.api_key_sandbox_secret_name;
-
+  const secretName = resolveSecretName(cred, ambiente);
   if (!secretName) {
     return {
       ok: false,
@@ -179,4 +185,5 @@ export async function resolveFacturapiKey(
     },
   };
 }
+
 
