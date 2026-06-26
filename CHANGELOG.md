@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.1] - 2026-06-26
+- **chore(lint) — `beforeSend` de Sentry bajo el umbral de complejidad**: en `src/lib/observability/sentry/core.ts` se extrajo el predicado `shouldDropSentryEvent(event, hint)` que encapsula los filtros de chunk-load, React-Refresh y ZodError. `beforeSend` queda en 2 ramas (drop o `scrubEventPii`) y deja de violar `complexity ≤ 16` (`bun run lint` pasa con `--max-warnings 0`). Sin cambios de comportamiento.
+
 ## [13.137.0] - 2026-06-26
 - **feat(facturacion) — Fase 1/2 Proforma → Factura**: nueva migración `fase_1_trazabilidad.sql` con vista `v_proforma_factura_link` y RPC `convertir_proformas_a_factura(uuid[], serie, método, forma, uso, días, notas, request_id)` que soporta fusión N:1 de proformas aprobadas del mismo cliente en una factura **borrador** (lista para timbrar, sin tocar SAT). Permisos: `contador`, `admin_org`, `admin`, `super_admin`. Frontend: nuevo servicio `convertirAFactura.ts`, modal `ConvertirAFacturaDialog.tsx` (selector de serie/método/forma/uso CFDI/días de crédito/notas, aviso PPD → REP automático) y botón **Convertir a factura** en `AccionesProforma` visible sólo cuando la proforma está `aprobada` y aún no facturada. Al éxito invalida queries de proformas/facturas y navega al detalle de la nueva factura.
 
