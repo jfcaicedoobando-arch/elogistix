@@ -32,12 +32,14 @@ Deno.test("facturapi-cancelar: registra fallo en bitacora_actividad si Facturapi
 
 Deno.test("facturapi-cancelar: actualiza estado=Cancelada Y registra motivo (no parcial)", () => {
   // Si sólo se cambia estado sin motivo, perdemos trazabilidad SAT.
-  const updIdx = indexSource.indexOf('estado: "Cancelada"');
+  // Acepta el ternario `esSustitucion ? "Sustituida" : "Cancelada"` introducido en 13.137.9.
+  const estadoIdx = indexSource.search(/estado:\s*(?:esSustitucion\s*\?\s*"Sustituida"\s*:\s*)?"Cancelada"/);
   const motIdx = indexSource.indexOf("cancelacion_motivo: motivo");
   const fechaIdx = indexSource.indexOf("cancelado_en:");
-  assertEquals(updIdx > 0 && motIdx > 0 && fechaIdx > 0, true,
+  assertEquals(estadoIdx > 0 && motIdx > 0 && fechaIdx > 0, true,
     "Update debe incluir estado + motivo + fecha juntos");
 });
+
 
 Deno.test("facturapi-cancelar: rechaza factura sin facturapi_id (409 no_timbrada)", () => {
   assertStringIncludes(indexSource, '"no_timbrada"');
