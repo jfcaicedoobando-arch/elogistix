@@ -19,12 +19,18 @@ export function useTimbrarFactura() {
 export function useCancelarFactura() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { facturaId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
-      cancelarFacturapi(vars.facturaId, vars.motivo, vars.sustituyeUuid),
-    onSuccess: () => {
-      toast.success("CFDI cancelado");
+    mutationFn: (vars: {
+      facturaId: string;
+      motivo: MotivoCancelacionSat;
+      sustituyeUuid?: string;
+      sustituidaPorFacturaId?: string;
+    }) =>
+      cancelarFacturapi(vars.facturaId, vars.motivo, vars.sustituyeUuid, vars.sustituidaPorFacturaId),
+    onSuccess: (res) => {
+      toast.success(res.sustituida ? "CFDI sustituido" : "CFDI cancelado");
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
     onError: (err: Error) => notifyError(toast, { title: `No se pudo cancelar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_2" }),
   });
 }
+
