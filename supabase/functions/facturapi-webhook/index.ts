@@ -54,6 +54,35 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   let event: FacturapiWebhookEvent;
   try { event = JSON.parse(rawBody); } catch { return json({ error: "invalid_json" }, 400); }
 
+  // Eventos de REP (`receipt.*`) → tabla `pagos_factura`.
+  const receipt = mapEventToReceiptPatch(event);
+  if (receipt) {
+    const { data: pago } = await supabase
+      .from("pagos_factura")
+      .select("id, organization_id")
+      .eq("facturapi_rep_id", receipt.facturapi_rep_id)
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    if (!pago) return json({ ok: true, ignored: "pago_not_found" });
+
+    const { error: updErr } = await supabase
+      .from("pagos_factura")
+      .update(receipt.patch)
+      .eq("id", pago.id);
+    if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+
+    await supabase.from("bitacora_actividad").insert({
+      organization_id: orgId,
+      user_id: null,
+      accion: receipt.bitacora_accion,
+      entidad: "pago_factura",
+      entidad_id: pago.id,
+      detalle: { event_type: event.type, patch: receipt.patch },
+    });
+    return json({ ok: true, target: "pagos_factura" });
+  }
+
+  // Eventos de factura (`invoice.*`) → tabla `facturas`.
   const mapped = mapEventToFacturaPatch(event);
   if (!mapped) return json({ ok: true, ignored: true });
 
