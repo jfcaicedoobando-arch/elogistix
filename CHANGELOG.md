@@ -6,7 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.9] - 2026-06-26
+- **feat(facturacion) — Sustitución de CFDI (motivo SAT 01) end-to-end (Paso 4)**:
+  - `facturapi-emitir`: si la factura tiene `sustituye_a`, resuelve el UUID fiscal del CFDI previo y agrega `related: [uuid]` + `relation: '04'` al payload Facturapi para que el SAT acepte la relación de sustitución.
+  - `facturapi-cancelar`: nuevo input opcional `sustituida_por_factura_id`; si viene, resuelve su UUID, fuerza motivo `01`, marca la original como `Sustituida`, escribe `sustituida_por` y registra `facturapi_sustituida` en bitácora. Bug fix: usa `motive: motivo` correctamente al invocar el SDK.
+  - `helpers.ts` (`buildFacturapiPayload`): soporta `sustituye_uuid` con campos `related`/`relation` opcionales.
+  - Service `facturapi.ts`: `cancelarFacturapi` ahora retorna `{ sustituida }` y acepta `sustituidaPorFacturaId`; nuevo wrapper `duplicarFacturaParaSustitucion` sobre la RPC.
+  - Hook `useCancelarFactura`: propaga el parámetro y muestra toast "CFDI sustituido" cuando aplica.
+  - Nuevo `DialogSustituirFactura.tsx`: wizard de 3 pasos (intro → borrador clonado → confirmar cancelación) integrado en `FacturaDetalle` mediante botón "Sustituir CFDI (motivo 01)" visible sólo para facturas timbradas en estado `Emitida`.
+
 ## [13.137.8] - 2026-06-26
+
 - **feat(facturacion) — Notas de crédito CFDI tipo E (Turno B: frontend)**:
   - Nuevo service `notasCreditoFacturapi.ts` (wrapper de `facturapi-emitir-nota-credito` y `facturapi-cancelar-nota-credito`) y hook `useNotaCreditoFacturapi.ts` con invalidación de `facturasKeys.notasCredito` y `notas_credito_recientes`.
   - Nuevo `DialogCrearNotaCredito.tsx` (FormDialogShell): captura folio, motivo SAT, uso CFDI, forma de pago, descripción y editor de conceptos con clave SAT/unidad; precarga conceptos desde `snapshot_emision` de la factura y permite "Guardar borrador" o "Guardar y timbrar".
