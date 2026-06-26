@@ -49,6 +49,29 @@ const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
   /librecarga\.com/,
 ];
 
+/** Detecta errores de chunk/HMR que se auto-recuperan con reload. */
+function isRecoverableLoadError(
+  event: Sentry.ErrorEvent,
+  exc: Error | undefined,
+  originalMsg: string | undefined,
+): boolean {
+  if (isDynamicImportErrorMessage(originalMsg)) return true;
+  if (isDynamicImportErrorMessage(event.message)) return true;
+  const values = event.exception?.values;
+  if (values?.some((v) => isDynamicImportErrorMessage(v.value))) return true;
+  if (exc && isReactRefreshHmrError(exc)) return true;
+  if (values?.some((v) => isReactRefreshStackTrace(v.stacktrace))) return true;
+  return false;
+}
+
+/** Errores de validación (zod) son input del usuario, no bugs. */
+function isZodValidationError(exc: Error | undefined): boolean {
+  const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
+  const causeName = (cause as { name?: string } | undefined)?.name;
+  const excName = (exc as { name?: string } | undefined)?.name;
+  return causeName === "ZodError" || excName === "ZodError";
+}
+
 /**
  * Predicado para `beforeSend`: decide si un evento debe descartarse antes de
  * llegar a Sentry. Extraído para mantener el `beforeSend` con complejidad baja.
@@ -61,21 +84,8 @@ function shouldDropSentryEvent(
   const originalMsg =
     exc?.message ??
     (typeof hint?.originalException === "string" ? hint.originalException : undefined);
-  if (isDynamicImportErrorMessage(originalMsg)) return true;
-  if (isDynamicImportErrorMessage(event.message)) return true;
-
-  const values = event.exception?.values;
-  if (values?.some((v) => isDynamicImportErrorMessage(v.value))) return true;
-
-  if (exc && isReactRefreshHmrError(exc)) return true;
-  if (values?.some((v) => isReactRefreshStackTrace(v.stacktrace))) return true;
-
-  // Errores de validación (zod) son input del usuario, no bugs.
-  const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
-  const causeName = (cause as { name?: string } | undefined)?.name;
-  const excName = (exc as { name?: string } | undefined)?.name;
-  if (causeName === "ZodError" || excName === "ZodError") return true;
-
+  if (isRecoverableLoadError(event, exc, originalMsg)) return true;
+  if (isZodValidationError(exc)) return true;
   return false;
 }
 
