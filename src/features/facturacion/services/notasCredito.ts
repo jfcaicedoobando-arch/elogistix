@@ -98,8 +98,11 @@ export async function listarNotasCreditoRecientes(
 
 export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<NotaCredito> {
   const user = await getCurrentUser();
+  const { conceptos, ...rest } = input;
   const payload: TablesInsert<"factura_notas_credito"> = {
-    ...input,
+    ...rest,
+    // SAFE-CAST: ConceptoNotaCredito[] es serializable a Json (objetos planos).
+    conceptos: (conceptos ?? []) as unknown as TablesInsert<"factura_notas_credito">["conceptos"],
     created_by: user.id,
     estado: "Borrador",
   };
@@ -111,6 +114,7 @@ export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<No
   if (error) throw error;
   return data;
 }
+
 
 function asegurarTransicion(actual: EstadoNotaCredito, siguiente: EstadoNotaCredito): void {
   const validas: Record<EstadoNotaCredito, EstadoNotaCredito[]> = {
