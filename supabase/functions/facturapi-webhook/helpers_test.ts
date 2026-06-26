@@ -1,5 +1,5 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { computeSignature, mapEventToFacturaPatch, safeEqual } from "./helpers.ts";
+import { computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "./helpers.ts";
 
 Deno.test("safeEqual: igualdad y desigualdad", () => {
   assert(safeEqual("abc", "abc"));
