@@ -19,6 +19,7 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/facturapi";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 interface Props {
   facturaId: string | null;
@@ -48,6 +49,7 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
       setStep("borrador");
       toast.success("Borrador sustituto creado");
     } catch (err) {
+      reportCaughtError(err, { feature: "facturacion", op: "duplicar_para_sustitucion" }, { facturaId });
       notifyError(toast, {
         title: "No se pudo duplicar",
         error: err as Error,

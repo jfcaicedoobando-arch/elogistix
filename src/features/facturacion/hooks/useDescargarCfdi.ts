@@ -10,6 +10,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useToast } from "@/hooks/shared";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 export function useDescargarCfdi(facturaId: string | undefined) {
   const { toast } = useToast();
@@ -23,6 +24,7 @@ export function useDescargarCfdi(facturaId: string | undefined) {
           await openFacturaInNewTab(stored);
         }
       } catch (err) {
+        reportCaughtError(err, { feature: "facturacion", op: "descargar_cfdi", tipo }, { facturaId });
         notifyError(toast, {
           title: `No se pudo abrir el ${tipo.toUpperCase()}`,
           description: getErrorMessage(err),
