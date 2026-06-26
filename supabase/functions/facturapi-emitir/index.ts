@@ -124,9 +124,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const payload = buildFacturapiPayload(ctx);
 
   // Emisión vía SDK oficial facturapi-node.
-  let invoice: any;
+  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+  let invoice: FapiInvoice;
   try {
-    invoice = await facturapi.invoices.create(payload);
+    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
     await supabase.from("bitacora_actividad").insert({
