@@ -99,8 +99,9 @@ export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<No
 
 function asegurarTransicion(actual: EstadoNotaCredito, siguiente: EstadoNotaCredito): void {
   const validas: Record<EstadoNotaCredito, EstadoNotaCredito[]> = {
-    Borrador: ["Aprobada", "Cancelada"],
-    Aprobada: ["Aplicada", "Cancelada"],
+    Borrador: ["Aprobada", "Timbrada", "Cancelada"],
+    Aprobada: ["Timbrada", "Aplicada", "Cancelada"],
+    Timbrada: ["Aplicada", "Cancelada"],
     Aplicada: [],
     Cancelada: [],
   };
