@@ -9,10 +9,29 @@ interface Row {
   ambiente: string;
   api_key_sandbox_secret_name: string | null;
   api_key_live_secret_name: string | null;
+  api_key_sandbox_vault_id: string | null;
+  api_key_live_vault_id: string | null;
   facturapi_org_id: string | null;
 }
 
-function makeSupabase(row: Row | null) {
+function makeSupabase(row: Row | null, rpcImpl?: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: unknown }>) {
+  return {
+    from() {
+      return {
+        select() {
+          return {
+            eq() {
+              return {
+                maybeSingle: () => Promise.resolve({ data: row, error: null }),
+              };
+            },
+          };
+        },
+      };
+    },
+    rpc: rpcImpl ?? (() => Promise.resolve({ data: null, error: null })),
+  };
+}
   return {
     from() {
       return {
