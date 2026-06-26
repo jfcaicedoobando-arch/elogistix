@@ -31,5 +31,12 @@ export function useUpsertFacturapiCredenciales(orgId: string | null | undefined)
     onSuccess: () => {
       if (orgId) qc.invalidateQueries({ queryKey: KEY(orgId) });
     },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo guardar la configuración de FacturApi",
+        method: "useUpsertFacturapiCredenciales",
+        error,
+      });
+    },
   });
 }
