@@ -10,7 +10,7 @@
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Stamp } from "lucide-react";
+import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Stamp, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,13 +23,14 @@ import { openFacturaInNewTab } from "@/services/storage";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorMessage } from "@/lib/errors/index";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
+import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +43,7 @@ export default function FacturaDetalle() {
 
   const [pagoOpen, setPagoOpen] = useState(false);
   const [timbrarOpen, setTimbrarOpen] = useState(false);
+  const [enviarOpen, setEnviarOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
 
@@ -147,6 +149,11 @@ export default function FacturaDetalle() {
             <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Descargar XML
           </Button>
         )}
+        {!sinTimbrar && (
+          <Button variant="outline" size="sm" onClick={() => setEnviarOpen(true)}>
+            <Mail className="h-4 w-4 mr-1.5" /> Enviar por email
+          </Button>
+        )}
         {factura.embarque_id && (
           <Button variant="outline" size="sm" asChild>
             <Link to={`/embarques/${factura.embarque_id}`}>
@@ -185,6 +192,13 @@ export default function FacturaDetalle() {
         facturaId={timbrarOpen ? factura.id : null}
         open={timbrarOpen}
         onOpenChange={setTimbrarOpen}
+      />
+
+      <DialogEnviarCfdi
+        open={enviarOpen}
+        onOpenChange={setEnviarOpen}
+        facturaId={factura.id}
+        titulo={`Enviar CFDI ${factura.numero}`}
       />
     </div>
   );
