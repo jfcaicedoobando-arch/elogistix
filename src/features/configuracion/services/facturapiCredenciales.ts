@@ -16,6 +16,10 @@ export interface FacturapiCredencialesRow {
   ambiente: FacturapiAmbiente;
   api_key_sandbox_secret_name: string | null;
   api_key_live_secret_name: string | null;
+  api_key_sandbox_vault_id: string | null;
+  api_key_live_vault_id: string | null;
+  api_key_sandbox_last4: string | null;
+  api_key_live_last4: string | null;
   certificado_cargado: boolean;
   certificado_vence_at: string | null;
   webhook_secret: string | null;
