@@ -108,3 +108,24 @@ export function buildNcContextFromRows(
     conceptos,
   };
 }
+
+export type PreloadResult =
+  | { ok: true; nc: NcRow; factura: FacturaRow; cliente: ClienteRow; email: string | null }
+  | { ok: false; status: number; body: unknown };
+
+export async function preloadNcContext(
+  supabase: SupabaseLike,
+  notaCreditoId: string,
+): Promise<PreloadResult> {
+  const nc = await loadNc(supabase, notaCreditoId);
+  if (!nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
+  if (nc.facturapi_id) return { ok: false, status: 409, body: { error: "ya_timbrada", message: "Esta nota de crédito ya fue timbrada." } };
+  const factura = await loadFactura(supabase, nc.factura_id);
+  if (!factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
+  if (!factura.uuid_fiscal) return { ok: false, status: 409, body: { error: "factura_sin_uuid", message: "La factura original no tiene UUID fiscal. Timbra la factura primero." } };
+  const cliente = await loadCliente(supabase, factura.cliente_id);
+  if (!cliente) return { ok: false, status: 404, body: { error: "cliente_not_found" } };
+  const email = await loadEmailPrincipal(supabase, factura.cliente_id);
+  return { ok: true, nc, factura, cliente, email };
+}
+
