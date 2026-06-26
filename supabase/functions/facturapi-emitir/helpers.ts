@@ -129,8 +129,14 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  if (ctx.sustituye_uuid) {
+    // SAT relación 04 = "Sustitución de los CFDI previos"
+    payload.related = [ctx.sustituye_uuid];
+    payload.relation = "04";
+  }
   return payload;
 }
+
 
 export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
