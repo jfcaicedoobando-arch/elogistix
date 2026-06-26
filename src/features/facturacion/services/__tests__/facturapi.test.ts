@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const invoke = vi.fn();
-const rpc = vi.fn();
+const { invoke, rpc } = vi.hoisted(() => ({ invoke: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { functions: { invoke }, rpc },
 }));
