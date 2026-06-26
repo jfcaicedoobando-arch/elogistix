@@ -55,12 +55,17 @@ export default function FacturaDetalle() {
     }
   }, [searchParams, sinTimbrar, canEdit, setSearchParams]);
 
-  const handleDownload = async (stored: string, kind: "PDF" | "XML") => {
+  const handleDownload = async (stored: string | null, tipo: "pdf" | "xml") => {
     try {
-      await openFacturaInNewTab(stored);
+      const usarProxy = !stored || esUrlFacturapi(stored);
+      if (usarProxy && factura?.id) {
+        await descargarCfdiFacturapi({ tipo, facturaId: factura.id });
+      } else if (stored) {
+        await openFacturaInNewTab(stored);
+      }
     } catch (err) {
       notifyError(toast, {
-        title: `No se pudo abrir el ${kind}`,
+        title: `No se pudo abrir el ${tipo.toUpperCase()}`,
         description: getErrorMessage(err),
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
