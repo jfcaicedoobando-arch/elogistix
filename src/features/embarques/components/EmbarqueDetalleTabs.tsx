@@ -93,7 +93,7 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="tracking">Tracking</TabsTrigger>
         <TabsTrigger value="documentos">Documentos</TabsTrigger>
         <TabsTrigger value="costos">Costos</TabsTrigger>
-        <TabsTrigger value="garantias">Garantías y Demoras</TabsTrigger>
+        <TabsTrigger value="garantias">Demoras y Garantías</TabsTrigger>
         <TabsTrigger value="seguros">Seguros</TabsTrigger>
         <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
