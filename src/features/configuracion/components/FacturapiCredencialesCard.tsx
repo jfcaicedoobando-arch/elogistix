@@ -18,10 +18,7 @@ import {
   useFacturapiCredenciales,
   useUpsertFacturapiCredenciales,
 } from "@/features/configuracion/hooks/useFacturapiCredenciales";
-import {
-  defaultSecretName,
-  type FacturapiAmbiente,
-} from "@/features/configuracion/services/facturapiCredenciales";
+import { type FacturapiAmbiente } from "@/features/configuracion/services/facturapiCredenciales";
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
 import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
 
@@ -34,8 +31,6 @@ export default function FacturapiCredencialesCard() {
 
   const [ambiente, setAmbiente] = useState<FacturapiAmbiente>("sandbox");
   const [facturapiOrgId, setFacturapiOrgId] = useState("");
-  const [secretSandbox, setSecretSandbox] = useState("");
-  const [secretLive, setSecretLive] = useState("");
   const [datosFiscales, setDatosFiscales] = useState(false);
   const [csdCargado, setCsdCargado] = useState(false);
   const [csdVence, setCsdVence] = useState("");
@@ -44,8 +39,6 @@ export default function FacturapiCredencialesCard() {
     if (!orgId) return;
     setAmbiente((data?.ambiente as FacturapiAmbiente) ?? "sandbox");
     setFacturapiOrgId(data?.facturapi_org_id ?? "");
-    setSecretSandbox(data?.api_key_sandbox_secret_name ?? defaultSecretName(orgId, "sandbox"));
-    setSecretLive(data?.api_key_live_secret_name ?? defaultSecretName(orgId, "live"));
     setDatosFiscales(data?.datos_fiscales_completos ?? false);
     setCsdCargado(data?.certificado_cargado ?? false);
     setCsdVence(data?.certificado_vence_at ?? "");
