@@ -2,6 +2,7 @@
  * Hooks para leer/escribir las credenciales de FacturApi de la org actual.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchFacturapiCredenciales,
   upsertFacturapiCredenciales,
@@ -29,6 +30,13 @@ export function useUpsertFacturapiCredenciales(orgId: string | null | undefined)
     },
     onSuccess: () => {
       if (orgId) qc.invalidateQueries({ queryKey: KEY(orgId) });
+    },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo guardar la configuración de FacturApi",
+        method: "useUpsertFacturapiCredenciales",
+        error,
+      });
     },
   });
 }

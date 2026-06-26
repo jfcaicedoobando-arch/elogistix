@@ -44,6 +44,7 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/preview-transactional-email/index.ts",
   "supabase/functions/exchange-rates/index.ts",
   "supabase/functions/parse-cfdi-xml/index.ts",
+  "supabase/functions/facturapi-webhook/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia
