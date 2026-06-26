@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.7] - 2026-06-26
+- **feat(facturacion) — Notas de crédito CFDI tipo E (Turno A: backend, item #3 alta prioridad)**:
+  - Migración: amplía `factura_notas_credito` con columnas fiscales (`serie`, `folio_fiscal`, `facturapi_id`, `uuid_fiscal`, `pdf_url`, `xml_url`, `uso_cfdi`, `forma_pago`, `conceptos jsonb`, `timbrado_en/por`, `cancelado_en`, `cancelacion_motivo`) y agrega `Timbrada` al enum `estado_nota_credito`.
+  - Nueva edge function `facturapi-emitir-nota-credito`: arma payload tipo **E** con `related=[uuid_factura]`, `relationship='01'` (nota de crédito), conceptos heredados del JSON; valida RFC/CP/régimen/uso/forma; timbra vía SDK FacturApi y persiste UUID + URLs + bitácora (`facturapi_nc_emitida`).
+  - Nueva edge function `facturapi-cancelar-nota-credito`: cancela el CFDI con motivos SAT 01–04 (requiere `sustituye_uuid` para 01); registra `facturapi_nc_cancelada` en bitácora.
+  - Tests Deno de helpers (validación + payload) y guardrails CI actualizados: `sentry-edge-coverage`, `sentry-edge-wrapping`, `facturapi-multi-tenant` incluyen ambas funciones nuevas.
+  - Fix colateral: `notasCredito.ts` y `NotasCreditoRecientes.tsx` mapean el nuevo estado `Timbrada` (color info y transiciones Borrador→Timbrada→Aplicada).
+
 ## [13.137.6] - 2026-06-26
 - **chore(ci) — guardrails para envío de CFDI**: registra `facturapi-descargar` y `facturapi-enviar-email` en `sentry-edge-wrapping` y `sentry-edge-coverage`; añade `src/lib/observability/sentry/dropPredicate.ts` a la allowlist del guardrail de imports `@sentry/*`; extrae `FacturaDetalleActions.tsx` para bajar la complejidad ciclomática de `FacturaDetalle` (19 → ≤16); migra el toast de error del envío de email en `DialogTimbrarFactura` a `notifyError` y lo añade a la whitelist de `no-double-toast-on-mutate` (encadenado opcional tras el timbrado).
 
