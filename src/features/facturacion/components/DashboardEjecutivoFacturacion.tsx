@@ -113,6 +113,15 @@ export function DashboardEjecutivoFacturacion() {
   const cobradoArr = tendencia.map((t) => t.cobrado_mxn);
   const meses = tendencia.map((t) => mesLabel(t.mes));
 
+  const facturasSinTc = dash.data?.facturas_sin_tc ?? 0;
+  const sinTc = facturasSinTc > 0;
+  const facturadoLabel = sinTc ? "Facturado mes ⚠️" : "Facturado mes";
+  const facturadoTone: "warn" | "default" = sinTc ? "warn" : "default";
+  const facturadoHint = sinTc
+    ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
+    : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.";
+  const porTimbrarTone: "warn" | "default" = porTimbrar > 0 ? "warn" : "default";
+
   return (
     <TooltipProvider delayDuration={150}>
       <Card>
@@ -121,22 +130,13 @@ export function DashboardEjecutivoFacturacion() {
             <Kpi
               label="Por timbrar"
               value={porTimbrar.toString()}
-              tone={porTimbrar > 0 ? "warn" : "default"}
+              tone={porTimbrarTone}
             />
             <Kpi
-              label={
-                (dash.data?.facturas_sin_tc ?? 0) > 0
-                  ? `Facturado mes ⚠️`
-                  : "Facturado mes"
-              }
+              label={facturadoLabel}
               value={formatCurrencyCompact(facturadoMes, "MXN")}
-              tone={(dash.data?.facturas_sin_tc ?? 0) > 0 ? "warn" : "default"}
-              hint={
-                (dash.data?.facturas_sin_tc ?? 0) > 0
-                  ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${dash.data?.facturas_sin_tc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
-                  : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar."
-
-              }
+              tone={facturadoTone}
+              hint={facturadoHint}
             />
 
             <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
@@ -146,6 +146,7 @@ export function DashboardEjecutivoFacturacion() {
               value={formatCurrencyCompact(vencido, "MXN")}
               tone="danger"
             />
+
 
             {tendencia.length > 0 && (
               <div className="px-3 py-2 lg:border-l border-border">
