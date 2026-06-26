@@ -1,7 +1,7 @@
 /**
  * facturapi-cancelar — Cancela un CFDI emitido en Facturapi.
  *
- * Entrada: { factura_id: string, motivo: '01'|'02'|'03'|'04', sustituye_uuid?: string }
+ * Entrada: { factura_id: string, motivo: '01'|'02'|'03'|'04', sustituye_uuid?: string, sustituida_por_factura_id?: string }
  * Motivos SAT:
  *   01 = Comprobante emitido con errores con relación
  *   02 = Comprobante emitido con errores sin relación
