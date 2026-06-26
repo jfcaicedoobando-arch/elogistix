@@ -43,7 +43,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & { sustituida_por_factura_id?: string };
   // Si viene `sustituida_por_factura_id`, resolver su UUID y forzar motivo 01.
   let sustituyeUuidResuelto: string | undefined = rawBody.sustituye_uuid;
-  let sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
+  const sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
   if (sustituidaPorFacturaId) {
     const { data: nueva } = await supabase
       .from("facturas").select("id, uuid_fiscal").eq("id", sustituidaPorFacturaId).maybeSingle();
