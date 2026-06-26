@@ -7,6 +7,7 @@ import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -17,7 +18,10 @@ import {
   actualizarDatosTimbradoFactura,
   type ClienteFiscalRow,
 } from "@/features/facturacion/services";
+import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEmail";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/shared";
+import { getErrorMessage } from "@/lib/errors/index";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 
