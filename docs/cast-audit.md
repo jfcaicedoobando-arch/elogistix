@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-06-23
+# Cast Audit — generado 2026-06-26
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **1799**
+Total de `as` casts detectados: **1857**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 524     | 29.1% |
-| LOW       | 1 | 48      | 2.7% |
-| MEDIUM    | 2 | 1225   | 68.1% |
-| HIGH      | 3 | 2     | 0.1% |
+| SAFE      | 0 | 536     | 28.9% |
+| LOW       | 1 | 52      | 2.8% |
+| MEDIUM    | 2 | 1269   | 68.3% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -31,34 +31,23 @@ Total de `as` casts detectados: **1799**
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
 | 1 | `src/features/embarques/services/cierre.ts` | 15 | 28 | 0 | 2 | 13 | 0 | 0 |
 | 2 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
-| 3 | `src/lib/observability/sentry/core.ts` | 11 | 24 | 0 | 0 | 9 | 2 | 0 |
-| 4 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
-| 5 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
-| 6 | `src/test/setup.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
-| 7 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
-| 8 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 9 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 10 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
-| 11 | `src/features/crm/services/__tests__/cotizacionDesdeOportunidad.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 12 | `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 13 | `src/features/profit/hooks/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 14 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 15 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 8 | 14 | 1 | 0 | 7 | 0 | 0 |
+| 3 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 4 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
+| 5 | `src/test/setup.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
+| 6 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
+| 7 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 8 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 9 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
+| 10 | `src/features/crm/services/__tests__/cotizacionDesdeOportunidad.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 11 | `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 12 | `src/features/profit/hooks/__tests__/useProfit.test.tsx` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 13 | `src/generators/cotizacion/__tests__/datosGenerales.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 14 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 8 | 14 | 1 | 0 | 7 | 0 | 0 |
+| 15 | `src/features/facturacion/services/__tests__/facturasIndex.test.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/lib/observability/sentry/core.ts:133`
-
-```ts
-return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
-```
-
-### 2. [HIGH] `src/lib/observability/sentry/core.ts:133`
-
-```ts
-return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
