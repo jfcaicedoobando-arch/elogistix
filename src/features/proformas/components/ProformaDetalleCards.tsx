@@ -53,6 +53,10 @@ interface AccionesProps {
 
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: AccionesProps) {
   const cargando = downloadingId === proforma.id;
+  const [convertirOpen, setConvertirOpen] = useState(false);
+  const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
+  const aprobada = (proforma.estado_revision ?? "") === "aprobada";
+  const puedeConvertir = aprobada && !facturada && !proforma.factura_id;
   return (
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" disabled={cargando} onClick={onDescargar}>
@@ -68,9 +72,24 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Accio
           </Link>
         </Button>
       )}
+      {puedeConvertir && (
+        <>
+          <Button size="sm" onClick={() => setConvertirOpen(true)}>
+            <FileText className="h-4 w-4 mr-1.5" /> Convertir a factura
+          </Button>
+          <ConvertirAFacturaDialog
+            open={convertirOpen}
+            onOpenChange={setConvertirOpen}
+            proformaIds={[proforma.id]}
+            organizationId={proforma.organization_id}
+            diasCreditoDefault={proforma.dias_credito ?? 0}
+          />
+        </>
+      )}
     </div>
   );
 }
+
 
 export function DatosGeneralesCard({ proforma }: { proforma: ProformaDetalleFull }) {
   return (
