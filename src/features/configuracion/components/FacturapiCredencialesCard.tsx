@@ -18,10 +18,7 @@ import {
   useFacturapiCredenciales,
   useUpsertFacturapiCredenciales,
 } from "@/features/configuracion/hooks/useFacturapiCredenciales";
-import {
-  defaultSecretName,
-  type FacturapiAmbiente,
-} from "@/features/configuracion/services/facturapiCredenciales";
+import { type FacturapiAmbiente } from "@/features/configuracion/services/facturapiCredenciales";
 import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
 import { FacturapiWebhookUrlSection } from "./FacturapiWebhookUrlSection";
 
@@ -34,8 +31,6 @@ export default function FacturapiCredencialesCard() {
 
   const [ambiente, setAmbiente] = useState<FacturapiAmbiente>("sandbox");
   const [facturapiOrgId, setFacturapiOrgId] = useState("");
-  const [secretSandbox, setSecretSandbox] = useState("");
-  const [secretLive, setSecretLive] = useState("");
   const [datosFiscales, setDatosFiscales] = useState(false);
   const [csdCargado, setCsdCargado] = useState(false);
   const [csdVence, setCsdVence] = useState("");
@@ -44,8 +39,6 @@ export default function FacturapiCredencialesCard() {
     if (!orgId) return;
     setAmbiente((data?.ambiente as FacturapiAmbiente) ?? "sandbox");
     setFacturapiOrgId(data?.facturapi_org_id ?? "");
-    setSecretSandbox(data?.api_key_sandbox_secret_name ?? defaultSecretName(orgId, "sandbox"));
-    setSecretLive(data?.api_key_live_secret_name ?? defaultSecretName(orgId, "live"));
     setDatosFiscales(data?.datos_fiscales_completos ?? false);
     setCsdCargado(data?.certificado_cargado ?? false);
     setCsdVence(data?.certificado_vence_at ?? "");
@@ -65,8 +58,6 @@ export default function FacturapiCredencialesCard() {
       await upsert.mutateAsync({
         ambiente,
         facturapi_org_id: facturapiOrgId.trim() || null,
-        api_key_sandbox_secret_name: secretSandbox.trim() || null,
-        api_key_live_secret_name: secretLive.trim() || null,
         datos_fiscales_completos: datosFiscales,
         certificado_cargado: csdCargado,
         certificado_vence_at: csdVence || null,
@@ -77,8 +68,9 @@ export default function FacturapiCredencialesCard() {
     }
   };
 
-  const configurado = !!data && (ambiente === "sandbox" ? !!secretSandbox : !!secretLive);
-  const secretActivo = ambiente === "sandbox" ? secretSandbox : secretLive;
+  const sandboxLast4 = data?.api_key_sandbox_last4 ?? null;
+  const liveLast4 = data?.api_key_live_last4 ?? null;
+  const configurado = !!data && (ambiente === "sandbox" ? !!sandboxLast4 : !!liveLast4);
 
   return (
     <Card>
@@ -100,8 +92,8 @@ export default function FacturapiCredencialesCard() {
         </CardTitle>
         <CardDescription>
           Conecta tu cuenta de FacturApi para timbrar CFDI 4.0 desde Libre Carga.
-          La API key se guarda como secret en el servidor; aquí sólo configuras
-          el ambiente activo y el nombre del secret.
+          Pega abajo tus API keys de Sandbox y Producción; se guardan cifradas
+          en el servidor y nunca regresan al navegador.
         </CardDescription>
       </CardHeader>
 
@@ -114,36 +106,25 @@ export default function FacturapiCredencialesCard() {
           setAmbiente={setAmbiente}
           facturapiOrgId={facturapiOrgId}
           setFacturapiOrgId={setFacturapiOrgId}
-          secretSandbox={secretSandbox}
-          setSecretSandbox={setSecretSandbox}
-          secretLive={secretLive}
-          setSecretLive={setSecretLive}
+          sandboxLast4={sandboxLast4}
+          liveLast4={liveLast4}
           datosFiscales={datosFiscales}
           setDatosFiscales={setDatosFiscales}
           csdCargado={csdCargado}
           setCsdCargado={setCsdCargado}
           csdVence={csdVence}
           setCsdVence={setCsdVence}
-          copiar={copiar}
         />
 
         <FacturapiWebhookUrlSection orgId={orgId} copiar={copiar} />
-
-
-
 
         <div className="flex justify-end gap-2">
           <Button onClick={onGuardar} disabled={upsert.isPending}>
             {upsert.isPending ? "Guardando…" : "Guardar configuración"}
           </Button>
         </div>
-
-        {configurado && secretActivo && (
-          <p className="text-[11px] text-muted-foreground">
-            Al timbrar, la función usará el secret <code className="font-mono">{secretActivo}</code>.
-          </p>
-        )}
       </CardContent>
     </Card>
   );
 }
+

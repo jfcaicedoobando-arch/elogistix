@@ -1,63 +1,59 @@
+
 ## Objetivo
 
-Subir cobertura real ≥ 38% sumando tests de **lógica de negocio pura** sobre los módulos fiscales nuevos (FacturApi, REP, NC, conversión proforma→factura) y servicios recientes sin tests. No tocamos código de producción.
+Hoy el admin de la org no puede terminar de conectarse con FacturApi por sí mismo: la UI sólo guarda el **nombre** del secret y la API key real tiene que crearla alguien con acceso a Lovable Cloud (Backend → Secrets). Vamos a permitir que el propio `admin_org` pegue sus dos API keys (sandbox y live) desde la app, las guardamos cifradas en la base, y las edge functions las leerán al timbrar.
 
-## Estado actual
+Analogía: hoy el cliente nos da el “nombre del cajón” pero alguien de Lovable tiene que meter la llave; con este cambio el cliente mete su propia llave en su propio cajón con candado.
 
-- Umbral `vitest.config.ts`: `lines/statements: 38, functions: 52, branches: 72`.
-- El reporte MD (`reports/coverage-report.md`) está stale (v12.64.1, 29%). Política `mem://principles/coverage-threshold`: nunca bajar umbral; siempre escribir tests.
-- Servicios fiscales NUEVOS sin test: `facturapi.ts`, `repFacturapi.ts`, `notasCreditoFacturapi.ts`, `facturaManual.ts`, `kpisFiscales.ts`, `descargarCfdiFacturapi.ts`, `enviarCfdiEmail.ts`, `datosFiscalesCliente.ts`, `facturasCrud.ts`, `dashboardEjecutivo.ts`, `masivas.ts`.
-- Proformas sin test: `convertirAFactura.ts`, `asignarConceptos.ts`, `queries.ts`.
-- Helper de observabilidad sin test: `src/lib/observability/fiscalBreadcrumbs.ts`.
+## UX
 
-## Plan de tests (lógica pura + servicios con mock Supabase)
+En **Configuración → Facturación → FacturApi**, reemplazamos los inputs de “nombre del secret” por:
 
-Patrón: usar `src/test/utils/_supabaseChainMock.ts` para servicios y `vitest` puro para utilidades. Cero render de páginas pesadas (mejor ratio cobertura/esfuerzo).
+- Dos campos password: **API Key Sandbox** y **API Key Producción**.
+- Para cada uno: estado (Cargada / Vacía), botón **Probar conexión** (hace un `GET /organizations/me` a FacturApi), botón **Reemplazar** y botón **Quitar**.
+- Las keys ya guardadas se muestran enmascaradas (`sk_test_••••••••1234`). Nunca se devuelven en claro al cliente.
+- Selector de ambiente activo (sandbox/live) sigue igual.
+- Mensaje claro: “La API key se guarda cifrada. Sólo el servidor puede leerla al timbrar.”
 
-### Bloque A — Servicios FacturApi (alto impacto)
-1. `facturapi.ts.test.ts` — happy path emitir + branches de error (credenciales faltantes, factura ya timbrada, error 4xx FacturApi, organización sin RFC).
-2. `repFacturapi.ts.test.ts` — emitir REP con un pago, varios pagos parciales, monto 0 inválido, cancelación.
-3. `notasCreditoFacturapi.ts.test.ts` — emitir NC tipo "01 sustitución" y "02 devolución", validación de monto > factura origen.
-4. `facturaManual.ts.test.ts` — creación con/sin proforma vinculada, cálculo de totales y validación de campos fiscales.
-5. `facturasCrud.ts.test.ts` — list con filtros (fecha, estado, cliente), actualización de status, soft-delete.
+Mantenemos el modo legacy (secret en `Deno.env`) como fallback para no romper orgs ya configuradas.
 
-### Bloque B — Conversión y proformas
-6. `convertirAFactura.test.ts` — 1 proforma → factura, N proformas consolidadas, mezcla de monedas (rechazo), error si proforma ya facturada.
-7. `asignarConceptos.test.ts` — asignación, reasignación, des-asignación, validación org.
-8. `queries.test.ts` — filtros de búsqueda y paginación.
+## Cambios técnicos
 
-### Bloque C — KPIs y helpers fiscales
-9. `kpisFiscales.test.ts` — conteo de facturas pendientes de timbrar, REP pendientes, NC abiertas, cero, sólo cancelados.
-10. `descargarCfdiFacturapi.test.ts` — URL PDF/XML, manejo 404, propagación de errores.
-11. `enviarCfdiEmail.test.ts` — validación destinatarios, payload correcto, error edge function.
-12. `datosFiscalesCliente.test.ts` — resolución de uso CFDI, régimen, fallback a defaults.
+### 1. Base de datos (migración)
+- Tabla `facturapi_credenciales`: agregar columnas
+  - `api_key_sandbox_vault_id uuid null`
+  - `api_key_live_vault_id uuid null`
+  - `api_key_sandbox_last4 text null`
+  - `api_key_live_last4 text null`
+- Mantener `api_key_sandbox_secret_name` / `_live_secret_name` por compatibilidad (deprecated, lectura sólo).
+- 3 RPCs `SECURITY DEFINER` (search_path fijo, autorización con `has_role(... 'admin_org' | 'super_admin')` + match de `organization_id`):
+  - `set_facturapi_api_key(p_org_id uuid, p_ambiente text, p_api_key text)` — valida formato (`sk_test_` o `sk_live_`), guarda en `vault.create_secret`, persiste `vault_id` y `last4`, **borra el vault anterior** si existía.
+  - `clear_facturapi_api_key(p_org_id uuid, p_ambiente text)` — borra vault y limpia columnas.
+  - `get_facturapi_api_key_internal(p_org_id uuid, p_ambiente text)` — sólo invocable con service_role (revoke a authenticated); devuelve la key desencriptada para uso de edge functions.
+- GRANTs explícitos sobre las RPCs (authenticated para set/clear, service_role para get_internal).
 
-### Bloque D — Observabilidad y dashboards
-13. `fiscalBreadcrumbs.test.ts` — `addFiscalBreadcrumb` agrega categoría/level correctos y trunca data.
-14. `dashboardEjecutivo.test.ts` — agregaciones por moneda, mes, top clientes.
-15. `masivas.test.ts` — generación de payloads batch, filtrado de inválidas.
+### 2. Servicios y hooks (frontend)
+- `src/features/configuracion/services/facturapiCredenciales.ts`: añadir `setFacturapiApiKey`, `clearFacturapiApiKey`, `probarFacturapiKey` (invoca edge function de prueba).
+- Hook `useSetFacturapiApiKey` con invalidation de `facturapi_credenciales`.
+- `FacturapiCredencialesForm` rediseñado para los nuevos campos (sandbox/live como password + acciones).
 
-### Bloque E — Hooks delgados (sólo si A–D no cierran el umbral)
-16. `useTimbrarFactura`, `useTimbrarRep`, `useNotaCreditoFacturapi`, `useCrearFacturaManual` — assertions con `assertMutation` (mutationKey, invalidateQueries, onError).
+### 3. Edge functions
+- `supabase/functions/_shared/facturapiAuth.ts`: en `resolveFacturapiKey`, después de leer la fila intentar **primero** `supabase.rpc('get_facturapi_api_key_internal', …)`. Si devuelve key → usarla. Si no, fallback al flujo actual (`Deno.env.get(secret_name)`), luego fallback legacy global.
+- Nueva edge function `facturapi-test-conexion`: recibe `{ org_id, ambiente }`, resuelve key con el helper, llama `GET https://www.facturapi.io/v2/organizations/me` vía SDK, responde `{ ok, facturapi_org_id, nombre }`. Sirve para el botón “Probar conexión” y para guardar/refrescar `facturapi_org_id` automáticamente.
+- Actualizar `supabase/functions/_shared/facturapiAuth_test.ts` y el guardrail `facturapi-multi-tenant.test.ts` para incluir la nueva ruta (RPC primero, env como fallback).
 
-## Métricas y verificación
+### 4. Docs y versión
+- `docs/facturapi-go-live.md`: reescribir pasos 2 y 3 — el admin de la org ahora pega la key directamente en Configuración → Facturación; los secrets globales sólo se mencionan como fallback legacy.
+- `CHANGELOG.md` + bump `APP_VERSION` (siguiente patch).
 
-1. Antes: correr `bun run test:coverage` y registrar baseline real.
-2. Implementar Bloques A–D (≈15 archivos, ~80–120 tests).
-3. Volver a correr coverage. Si lines < 38%, agregar Bloque E.
-4. Regenerar `reports/coverage-report.md` con `scripts/coverage-report.ts`.
-5. Bump `APP_VERSION` + entrada en `CHANGELOG.md` (`## [13.137.16] - 2026-06-26` — "Tests de lógica fiscal para mantener cobertura ≥ 38%").
+## Seguridad
 
-## Detalles técnicos
+- API keys nunca se devuelven al cliente: el `select *` de `facturapi_credenciales` no expone `vault_id` ni la key (solo `last4`); las RPCs de lectura en claro están **revocadas** a `authenticated`/`anon`.
+- RLS: `set_/clear_facturapi_api_key` valida que `auth.uid()` pertenezca a la org (`organization_members`) y tenga rol `admin_org` o `super_admin`.
+- Bitácora: registrar evento `facturapi_api_key_actualizada` (sin contenido de la key) en `bitacora_actividad`.
+- Sin logs de la key en edge functions (no `console.log(apiKey)`).
 
-- Reusar `src/services/__tests__/_supabaseChainMock.ts` (patrón ya usado en `vsReal.bordes.test.ts`).
-- Mockear `@/integrations/supabase/client` por archivo, nunca import real.
-- Para FacturApi: stub `fetch` o el SDK envuelto en `src/lib/facturapi/*` (verificar punto de inyección antes de escribir cada test).
-- Tests deben cumplir `Power of 10`, sin `any`, assertions fuertes (evitar `weak-rejects-assertion` que ya marcó CI).
-- Cobertura objetivo: cada archivo nuevo de test debe sumar ≥0.3pp lines en su archivo target.
-
-## Fuera de alcance
-
-- No tocar páginas (`src/pages/**`) ni componentes UI grandes — su cobertura se persigue con E2E, no unitario.
-- No modificar threshold ni excludes de `vitest.config.ts`.
-- No editar el código de producción salvo extracciones triviales si un servicio resulta intestable (documentar caso por caso antes).
+## Fuera de alcance (proponer en otro turno si se desea)
+- Subida del CSD desde la app (hoy se sube directo en FacturApi).
+- Rotación automática programada de keys.
+- Onboarding wizard guiado paso a paso (este cambio sólo mejora el formulario existente).

@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.18] - 2026-06-26
+- **feat(facturapi) — onboarding self-service de API keys (sandbox/live)**:
+  - Migración: `facturapi_credenciales` gana `api_key_sandbox_vault_id/last4` y `api_key_live_vault_id/last4`. Las keys se guardan cifradas vía `vault.create_secret` y solo se exponen los últimos 4 dígitos a la UI.
+  - RPCs nuevas: `set_facturapi_api_key`, `clear_facturapi_api_key` (authenticated, restringidas a admin de la org) y `get_facturapi_api_key_internal` (sólo `service_role`).
+  - Edge function nueva `facturapi-test-conexion`: valida la key contra `organizations/me` y autocompleta `facturapi_org_id`.
+  - `_shared/facturapiAuth.ts` ahora resuelve primero por vault y cae a env vars legacy si falla. Tests Deno extendidos con dos escenarios de vault.
+  - UI `FacturapiCredencialesForm` rediseñada: inputs tipo password con prefijo (`sk_test_` / `sk_live_`), badges de estado, botones **Guardar / Quitar / Probar**. Adiós a pedirle al cliente que use Lovable Secrets.
+
 ## [13.137.17] - 2026-06-26
 - **fix(tests) — títulos `it()` duplicados que rompían `audit-report`**:
   - Renombrados en `financials.test.ts`, `facturasCrud.test.ts` y `asignarConceptos.test.ts` para evitar colisiones con los nuevos suites fiscales (regla `duplicate-title`).
