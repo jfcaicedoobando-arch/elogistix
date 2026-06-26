@@ -64,8 +64,63 @@ export async function upsertFacturapiCredenciales(
   if (error) throw error;
 }
 
-/** Convención estable para nombrar el secret según ambiente. */
+/** Convención estable para nombrar el secret según ambiente (legacy). */
 export function defaultSecretName(orgId: string, ambiente: FacturapiAmbiente): string {
   const short = orgId.replace(/-/g, "").slice(0, 8).toUpperCase();
   return `FACTURAPI_KEY_${short}_${ambiente.toUpperCase()}`;
 }
+
+/**
+ * Guarda la API key real (sandbox o live) en el Vault del servidor mediante el
+ * RPC `set_facturapi_api_key`. La key nunca regresa al cliente; sólo se guarda
+ * `last4` para mostrar como referencia visual.
+ */
+export async function setFacturapiApiKey(
+  orgId: string,
+  ambiente: FacturapiAmbiente,
+  apiKey: string,
+): Promise<void> {
+  // SAFE-CAST: RPC tipada en supabase/types.ts no se ha regenerado todavía.
+  const { error } = await supabase.rpc("set_facturapi_api_key" as never, {
+    p_org_id: orgId,
+    p_ambiente: ambiente,
+    p_api_key: apiKey,
+  } as never);
+  if (error) throw error;
+}
+
+export async function clearFacturapiApiKey(
+  orgId: string,
+  ambiente: FacturapiAmbiente,
+): Promise<void> {
+  // SAFE-CAST: RPC nueva, types.ts pendiente de regenerar.
+  const { error } = await supabase.rpc("clear_facturapi_api_key" as never, {
+    p_org_id: orgId,
+    p_ambiente: ambiente,
+  } as never);
+  if (error) throw error;
+}
+
+export interface ProbarConexionResult {
+  ok: boolean;
+  ambiente?: FacturapiAmbiente;
+  facturapi_org_id?: string | null;
+  nombre?: string | null;
+  status?: number;
+  detail?: unknown;
+  error?: string;
+  message?: string;
+}
+
+export async function probarFacturapiConexion(
+  orgId: string,
+  ambiente: FacturapiAmbiente,
+): Promise<ProbarConexionResult> {
+  const { data, error } = await supabase.functions.invoke<ProbarConexionResult>(
+    "facturapi-test-conexion",
+    { body: { organization_id: orgId, ambiente } },
+  );
+  if (error) throw new Error(error.message);
+  return data ?? { ok: false, error: "empty_response" };
+}
+
