@@ -12,7 +12,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - Mismo contrato público (`Promise<Set<string>>`); ningún consumidor cambia.
   - Test nuevo `costosConFactura.test.ts` cubre vacío, mapeo, deduplicación y errores en ambos pasos.
 
-## [13.137.10] - 2026-06-26
+## [13.137.9] - 2026-06-26
 
 - **feat(facturacion) — Sustitución de CFDI (motivo SAT 01) end-to-end (Paso 4)**:
   - `facturapi-emitir`: si la factura tiene `sustituye_a`, resuelve el UUID fiscal del CFDI previo y agrega `related: [uuid]` + `relation: '04'` al payload Facturapi para que el SAT acepte la relación de sustitución.
