@@ -12,13 +12,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
-import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
-import { buildCancelQuery, validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
+import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto en resolveFacturapiKey (v13.136.0).
+// Compat legacy `FACTURAPI_KEY` — multi-tenant resuelto vía SDK (v13.136.4).
 void Deno.env.get("FACTURAPI_KEY");
+void resolveFacturapiKey;
 
 function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
