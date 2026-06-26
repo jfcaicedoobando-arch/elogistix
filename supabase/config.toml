@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.sentry-tunnel]
 verify_jwt = false
+
+[functions.facturapi-webhook]
+verify_jwt = false
