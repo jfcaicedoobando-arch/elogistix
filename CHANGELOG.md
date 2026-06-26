@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.10] - 2026-06-26
+- **ux(embarques) — card de Demoras automáticas movido a tab "Garantías y Demoras"**: `SeccionDemorasAuto` (botón Recalcular / Eliminar automáticas) se quitó de `TabCostos.tsx` y ahora se renderiza dentro de la sección "Demoras" del tab unificado, arriba de la tabla por contenedor. Agrupa captura (fechas descarga/devolución + tabulador) → cálculo → resultado en un solo lugar. Sin cambios de lógica ni RPC.
+
 ## [13.136.9] - 2026-06-26
 - **fix(tests) — facturapi-emitir/index_test.ts post-migración SDK**: tras migrar a `facturapi-node` (v13.136.4), dos smoke tests Deno seguían buscando patrones legacy (`/invoices\`` template literal y `resolveFacturapiKey(supabase, factura.organization_id)` directo en index). Actualizados para buscar `facturapi.invoices.create` y `getFacturapiClient(supabase, factura.organization_id)`. El test de orden estricto auth → load → resolve → fapi sigue intacto, sólo cambian los markers que detecta.
 

@@ -17,6 +17,7 @@ import { TabPnlContenedor } from "@/features/embarques/components/TabPnlContened
 import { TabSeguros } from "@/features/embarques/components/TabSeguros";
 import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
+import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
@@ -158,6 +159,7 @@ export function EmbarqueDetalleTabs({
         <Separator />
         <section aria-labelledby="seccion-demoras" className="space-y-3">
           <h2 id="seccion-demoras" className="text-base font-semibold">Demoras</h2>
+          <SeccionDemorasAuto embarqueId={embarqueId} canEdit={canEdit} />
           <TabDemoras embarqueId={embarqueId} canEdit={canEdit} />
         </section>
       </TabsContent>
