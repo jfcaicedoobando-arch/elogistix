@@ -129,20 +129,20 @@ export default function FacturaDetalle() {
             <Stamp className="h-4 w-4 mr-1.5" /> Timbrar factura
           </Button>
         )}
-        {factura.factura_pdf_url && (
+        {(factura.factura_pdf_url || !sinTimbrar) && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDownload(factura.factura_pdf_url!, "PDF")}
+            onClick={() => handleDownload(factura.factura_pdf_url, "pdf")}
           >
             <FileText className="h-4 w-4 mr-1.5 text-destructive" /> Descargar PDF
           </Button>
         )}
-        {factura.factura_xml_url && (
+        {(factura.factura_xml_url || !sinTimbrar) && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDownload(factura.factura_xml_url!, "XML")}
+            onClick={() => handleDownload(factura.factura_xml_url, "xml")}
           >
             <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Descargar XML
           </Button>
