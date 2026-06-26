@@ -199,6 +199,15 @@ export default function FacturaDetalle() {
         facturaId={factura.id}
         titulo={`Enviar CFDI ${factura.numero}`}
       />
+
+      <DialogSustituirFactura
+        facturaId={sustituirOpen ? factura.id : null}
+        numero={factura.numero}
+        uuidOriginal={factura.uuid_fiscal ?? null}
+        open={sustituirOpen}
+        onOpenChange={setSustituirOpen}
+      />
+
     </div>
   );
 }
