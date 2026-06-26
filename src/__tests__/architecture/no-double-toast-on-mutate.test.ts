@@ -30,6 +30,11 @@ const WHITELIST = new Set<string>([
   // sólo invalida cache; el toast con fecha formateada y mensaje según
   // Aceptada/Rechazada vive en el controller, que es la única notificación.
   "src/features/cotizacion/hooks/usePortalCotizacionDetalleController.ts",
+  // `DialogTimbrarFactura` encadena `enviarCfdiFactura` dentro del onSuccess
+  // de `useTimbrarFactura` cuando el usuario marca "enviar email". El toast
+  // de envío vive aquí porque la acción es opcional (checkbox) y no forma
+  // parte del hook de timbrado.
+  "src/features/facturacion/components/DialogTimbrarFactura.tsx",
 ]);
 
 const TOAST_TOKENS = /\b(toast\s*[.(]|notifySuccess|notifyError|notifyWarning|notifyInfo)\b/;
