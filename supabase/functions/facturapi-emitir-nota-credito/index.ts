@@ -11,9 +11,8 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { buildNcPayload, validateNcContext } from "./helpers.ts";
-import {
-  loadNc, loadFactura, loadCliente, loadEmailPrincipal, buildNcContextFromRows,
-} from "./data.ts";
+import { preloadNcContext, buildNcContextFromRows } from "./data.ts";
+
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
