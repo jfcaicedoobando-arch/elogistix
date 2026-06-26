@@ -19,7 +19,6 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { APP_VERSION } from "@/constants/appVersion";
-import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
 import { sampleByRoute, scrubEventPii } from "./helpers";
 import { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
