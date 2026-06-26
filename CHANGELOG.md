@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.8] - 2026-06-26
+- **feat(facturacion) — Notas de crédito CFDI tipo E (Turno B: frontend)**:
+  - Nuevo service `notasCreditoFacturapi.ts` (wrapper de `facturapi-emitir-nota-credito` y `facturapi-cancelar-nota-credito`) y hook `useNotaCreditoFacturapi.ts` con invalidación de `facturasKeys.notasCredito` y `notas_credito_recientes`.
+  - Nuevo `DialogCrearNotaCredito.tsx` (FormDialogShell): captura folio, motivo SAT, uso CFDI, forma de pago, descripción y editor de conceptos con clave SAT/unidad; precarga conceptos desde `snapshot_emision` de la factura y permite "Guardar borrador" o "Guardar y timbrar".
+  - Nuevo `DialogCancelarNotaCredito.tsx`: selector de motivos SAT 01–04 con campo de UUID sustituto cuando el motivo es 01.
+  - Nueva sección `FacturaNotasCreditoSeccion.tsx` montada en `FacturaDetalle`: lista NCs por factura con badges por estado (`Borrador`/`Aprobada`/`Timbrada`/`Aplicada`/`Cancelada`), acciones por fila (timbrar, descargar PDF/XML vía proxy, reenviar por email, cancelar).
+  - Extiende `FacturaDownloadButton`, `DialogEnviarCfdi`, `descargarCfdiFacturapi` y `enviarCfdiEmail` para aceptar `notaCreditoId` y reutilizar las edge functions de descarga/email del Paso 1 y 2.
+  - `crearNotaCredito` ahora persiste `conceptos`, `uso_cfdi` y `forma_pago` con cast seguro a `Json` (`// SAFE-CAST`).
+
 ## [13.137.7] - 2026-06-26
 - **feat(facturacion) — Notas de crédito CFDI tipo E (Turno A: backend, item #3 alta prioridad)**:
   - Migración: amplía `factura_notas_credito` con columnas fiscales (`serie`, `folio_fiscal`, `facturapi_id`, `uuid_fiscal`, `pdf_url`, `xml_url`, `uso_cfdi`, `forma_pago`, `conceptos jsonb`, `timbrado_en/por`, `cancelado_en`, `cancelacion_motivo`) y agrega `Timbrada` al enum `estado_nota_credito`.
