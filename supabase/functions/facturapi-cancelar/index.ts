@@ -40,8 +40,20 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   const { data: userData, error: uErr } = await supabase.auth.getUser();
   if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
-  const body = (await req.json().catch(() => ({}))) as CancelacionInput;
-  const validated = validateCancelacionInput(body);
+  const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & { sustituida_por_factura_id?: string };
+  // Si viene `sustituida_por_factura_id`, resolver su UUID y forzar motivo 01.
+  let sustituyeUuidResuelto: string | undefined = rawBody.sustituye_uuid;
+  let sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
+  if (sustituidaPorFacturaId) {
+    const { data: nueva } = await supabase
+      .from("facturas").select("id, uuid_fiscal").eq("id", sustituidaPorFacturaId).maybeSingle();
+    if (!nueva?.uuid_fiscal) {
+      return json({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
+    }
+    sustituyeUuidResuelto = nueva.uuid_fiscal as string;
+  }
+
+  const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
   if (!validated.ok) {
     return json({ error: validated.error, ...(validated.message ? { message: validated.message } : {}) }, 400);
   }
@@ -64,7 +76,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   try {
     cancelResp = await facturapi.invoices.cancel(
       factura.facturapi_id,
-      { motive, substitution: sustituye_uuid },
+      { motive: motivo, substitution: sustituye_uuid },
     ) as FapiCancelResponse;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
@@ -80,24 +92,35 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   }
   const fapiJson = cancelResp;
 
+  // Si fue sustitución (motivo 01 + sustituta resuelta), marcar estado 'Sustituida'
+  // y enlazar `sustituida_por`; si no, el ciclo normal -> 'Cancelada'.
+  const esSustitucion = motivo === "01" && !!sustituidaPorFacturaId;
+  const updatePayload: Record<string, unknown> = {
+    estado: esSustitucion ? "Sustituida" : "Cancelada",
+    cancelacion_motivo: motivo,
+    cancelado_en: new Date().toISOString(),
+  };
+  if (esSustitucion) updatePayload.sustituida_por = sustituidaPorFacturaId;
+
   const { error: updErr } = await supabase
     .from("facturas")
-    .update({
-      estado: "Cancelada",
-      cancelacion_motivo: motivo,
-      cancelado_en: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", factura_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await supabase.from("bitacora_actividad").insert({
     organization_id: factura.organization_id,
     user_id: userData.user.id,
-    accion: "facturapi_cancelada",
+    accion: esSustitucion ? "facturapi_sustituida" : "facturapi_cancelada",
     entidad: "factura",
     entidad_id: factura_id,
-    detalle: { motivo, sustituye_uuid: sustituye_uuid ?? null },
+    detalle: {
+      motivo,
+      sustituye_uuid: sustituye_uuid ?? null,
+      sustituida_por_factura_id: sustituidaPorFacturaId,
+    },
   });
 
-  return json({ ok: true, status: fapiJson.status ?? "canceled" });
+  return json({ ok: true, status: fapiJson.status ?? "canceled", sustituida: esSustitucion });
 }));
+
