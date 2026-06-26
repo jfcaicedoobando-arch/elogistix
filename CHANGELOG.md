@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.3] - 2026-06-26
+- **feat(facturapi) — Fases 4-6: webhook + go-live**: Nueva edge function `facturapi-webhook` (multi-tenant via `?org=<UUID>`) que valida firma HMAC-SHA256 (`facturapi-signature`) contra `facturapi_credenciales.webhook_secret` y sincroniza `facturas.estado`, `uuid_fiscal`, `cancelado_en` y `enviada_cliente_at` desde eventos `invoice.status_updated`, `invoice.canceled` y `invoice.delivered_to_customer`. Helpers puros con 7 tests (`computeSignature`, `mapEventToFacturaPatch`, `safeEqual`). `verify_jwt = false` en `config.toml` porque FacturApi no envía JWT. Documentación operativa nueva en `docs/facturapi-go-live.md` con los 6 pasos para activar una org (crear cuenta, guardar secrets, configurar UI, registrar webhook, smoke test, cutover a Producción) y tabla de errores comunes.
+
 ## [13.136.2] - 2026-06-25
 - **feat(facturapi) — Fase 3: UI de configuración por organización**: Nueva tarjeta `FacturapiCredencialesCard` en Configuración → Facturación. Permite al `admin_org` seleccionar ambiente activo (Sandbox/Producción), capturar el `facturapi_org_id` opcional, definir los nombres de los secrets (`FACTURAPI_KEY_<ORG>_SANDBOX|LIVE` por defecto) y marcar el estado de datos fiscales / CSD con su vencimiento. La API key real **NO** se captura en la UI — se guarda como secret de Lovable Cloud; la tarjeta sólo persiste el nombre del secret en `facturapi_credenciales`. Incluye instrucciones paso a paso, badge de estado (Configurado / Sin configurar / Sandbox / Producción) y botones para copiar el nombre del secret sugerido. Servicio `services/facturapiCredenciales.ts` + hooks `useFacturapiCredenciales` / `useUpsertFacturapiCredenciales`.
 
