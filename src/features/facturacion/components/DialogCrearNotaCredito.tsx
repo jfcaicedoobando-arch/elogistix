@@ -6,16 +6,10 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { FileMinus, Plus, Trash2 } from "lucide-react";
+import { FileMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { useToast } from "@/hooks/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,6 +21,8 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { NotaCreditoCamposFiscales } from "./detalle/NotaCreditoCamposFiscales";
+import { NotaCreditoConceptosEditor } from "./detalle/NotaCreditoConceptosEditor";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
@@ -45,20 +41,8 @@ interface Props {
   conceptosSugeridos?: ConceptoNotaCredito[];
 }
 
-const MOTIVOS: { value: Motivo; label: string }[] = [
-  { value: "Devolucion", label: "Devolución" },
-  { value: "Descuento", label: "Descuento" },
-  { value: "Bonificacion", label: "Bonificación" },
-  { value: "Error", label: "Error de facturación" },
-  { value: "Otro", label: "Otro" },
-];
-
 const CLAVE_SAT_DEFAULT = "84111506";
 const CLAVE_UNIDAD_DEFAULT = "E48";
-
-function calcImporte(c: ConceptoNotaCredito): number {
-  return Number(c.cantidad) * Number(c.precio_unitario);
-}
 
 function makeConcepto(): ConceptoNotaCredito {
   return {
@@ -99,7 +83,7 @@ export function DialogCrearNotaCredito({
   }, [open, conceptosSugeridos]);
 
   const monto = useMemo(
-    () => conceptos.reduce((acc, c) => acc + calcImporte(c), 0),
+    () => conceptos.reduce((acc, c) => acc + Number(c.cantidad) * Number(c.precio_unitario), 0),
     [conceptos],
   );
 
@@ -131,21 +115,13 @@ export function DialogCrearNotaCredito({
     },
   });
 
-  const updateConcepto = (i: number, patch: Partial<ConceptoNotaCredito>) =>
-    setConceptos((prev) => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
-
-  const removeConcepto = (i: number) =>
-    setConceptos((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev));
-
   const handleSubmit = async (timbrarAhora: boolean) => {
     if (!puedeGuardar) return;
     setGuardando(true);
     try {
       const nueva = await crearMut.mutateAsync();
       toast({ title: "Nota de crédito creada", description: `Folio ${nueva.folio}` });
-      if (timbrarAhora && !sinUuid) {
-        await timbrar.mutateAsync(nueva.id);
-      }
+      if (timbrarAhora && !sinUuid) await timbrar.mutateAsync(nueva.id);
       onOpenChange(false);
     } catch (err) {
       notifyError(toast, {
@@ -161,9 +137,7 @@ export function DialogCrearNotaCredito({
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={guardando}>
-        Cancelar
-      </Button>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={guardando}>Cancelar</Button>
       <Button variant="secondary" onClick={() => handleSubmit(false)} disabled={!puedeGuardar || guardando}>
         Guardar borrador
       </Button>
@@ -197,113 +171,28 @@ export function DialogCrearNotaCredito({
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="nc-folio">Folio interno *</Label>
-          <Input id="nc-folio" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="NC-001" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="nc-fecha">Fecha *</Label>
-          <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Motivo SAT *</Label>
-          <Select value={motivo} onValueChange={(v) => setMotivo(v as Motivo)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {MOTIVOS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Uso CFDI *</Label>
-          <Select value={usoCfdi} onValueChange={setUsoCfdi}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5 col-span-2">
-          <Label>Forma de pago *</Label>
-          <Select value={formaPago} onValueChange={setFormaPago}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <NotaCreditoCamposFiscales
+        folio={folio} setFolio={setFolio}
+        fecha={fecha} setFecha={setFecha}
+        motivo={motivo} setMotivo={setMotivo}
+        usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}
+        formaPago={formaPago} setFormaPago={setFormaPago}
+        descripcion={descripcion} setDescripcion={setDescripcion}
+      />
 
-      <div className="space-y-1.5">
-        <Label htmlFor="nc-desc">Descripción / Justificación *</Label>
-        <Textarea
-          id="nc-desc" value={descripcion} onChange={(e) => setDescripcion(e.target.value)}
-          rows={2} placeholder="Motivo del crédito al cliente"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Conceptos *</Label>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setConceptos((p) => [...p, makeConcepto()])}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {conceptos.map((c, i) => (
-            <div key={i} className="grid grid-cols-12 gap-2 items-end border rounded-md p-2">
-              <div className="col-span-12 sm:col-span-5 space-y-1">
-                <Label className="text-xs">Descripción</Label>
-                <Input
-                  value={c.descripcion}
-                  onChange={(e) => updateConcepto(i, { descripcion: e.target.value })}
-                  placeholder="Descripción del concepto"
-                />
-              </div>
-              <div className="col-span-3 sm:col-span-2 space-y-1">
-                <Label className="text-xs">Cant.</Label>
-                <Input
-                  type="number" min="0.01" step="0.01" value={c.cantidad}
-                  onChange={(e) => updateConcepto(i, { cantidad: Number(e.target.value) })}
-                />
-              </div>
-              <div className="col-span-5 sm:col-span-2 space-y-1">
-                <Label className="text-xs">P. Unitario</Label>
-                <Input
-                  type="number" min="0" step="0.01" value={c.precio_unitario}
-                  onChange={(e) => updateConcepto(i, { precio_unitario: Number(e.target.value) })}
-                />
-              </div>
-              <div className="col-span-3 sm:col-span-2 space-y-1">
-                <Label className="text-xs">Clave SAT</Label>
-                <Input
-                  value={c.clave_sat ?? ""}
-                  onChange={(e) => updateConcepto(i, { clave_sat: e.target.value })}
-                />
-              </div>
-              <div className="col-span-1 flex justify-end">
-                <Button
-                  type="button" variant="ghost" size="icon"
-                  onClick={() => removeConcepto(i)} disabled={conceptos.length === 1}
-                  aria-label="Eliminar concepto"
-                >
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-end text-sm pt-1">
-          <span className="text-muted-foreground mr-2">Total:</span>
-          <strong className={`tabular-nums ${excedeSaldo ? "text-destructive" : ""}`}>
-            {monto.toFixed(2)} {monedaFactura}
-          </strong>
-        </div>
-        {excedeSaldo && (
-          <p className="text-xs text-destructive">El monto excede el saldo de la factura.</p>
-        )}
-      </div>
+      <NotaCreditoConceptosEditor
+        conceptos={conceptos}
+        monto={monto}
+        monedaFactura={monedaFactura}
+        excedeSaldo={excedeSaldo}
+        onAdd={() => setConceptos((p) => [...p, makeConcepto()])}
+        onUpdate={(i, patch) =>
+          setConceptos((prev) => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)))
+        }
+        onRemove={(i) =>
+          setConceptos((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
+        }
+      />
     </FormDialogShell>
   );
 }

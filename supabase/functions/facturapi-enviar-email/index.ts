@@ -39,82 +39,63 @@ interface Target {
 
 type SbClient = ReturnType<typeof createClient>;
 
-async function resolveTarget(
-  supabase: SbClient,
-  body: ReqBody,
-): Promise<{ ok: true; data: Target } | { ok: false; status: number; body: unknown }> {
-  if (body.nota_credito_id) {
-    const { data: nc, error } = await supabase
-      .from("factura_notas_credito")
-      .select("facturapi_id, organization_id, factura_id")
-      .eq("id", body.nota_credito_id)
-      .maybeSingle();
-    if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
-    const ncId = nc.facturapi_id as string | null;
-    if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
-    const { data: fact } = await supabase
-      .from("facturas")
-      .select("cliente_id")
-      .eq("id", nc.factura_id as string)
-      .maybeSingle();
-    return {
-      ok: true,
-      data: {
-        facturapiId: ncId,
-        organizationId: nc.organization_id as string,
-        clienteId: (fact?.cliente_id as string) ?? "",
-        tipo: "nota_credito",
-        entidadId: body.nota_credito_id,
-      },
-    };
-  }
-  if (body.pago_id) {
-    const { data: pago, error } = await supabase
-      .from("pagos_factura")
-      .select("facturapi_rep_id, organization_id, factura_id")
-      .eq("id", body.pago_id)
-      .maybeSingle();
-    if (error || !pago) return { ok: false, status: 404, body: { error: "pago_not_found" } };
-    const repId = pago.facturapi_rep_id as string | null;
-    if (!repId) return { ok: false, status: 422, body: { error: "rep_no_timbrado" } };
-    const { data: fact } = await supabase
-      .from("facturas")
-      .select("cliente_id")
-      .eq("id", pago.factura_id as string)
-      .maybeSingle();
-    return {
-      ok: true,
-      data: {
-        facturapiId: repId,
-        organizationId: pago.organization_id as string,
-        clienteId: (fact?.cliente_id as string) ?? "",
-        tipo: "rep",
-        entidadId: body.pago_id,
-      },
-    };
-  }
-  if (body.factura_id) {
-    const { data: factura, error } = await supabase
-      .from("facturas")
-      .select("facturapi_id, organization_id, cliente_id")
-      .eq("id", body.factura_id)
-      .maybeSingle();
-    if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
-    const fId = factura.facturapi_id as string | null;
-    if (!fId) return { ok: false, status: 422, body: { error: "factura_no_timbrada" } };
-    return {
-      ok: true,
-      data: {
-        facturapiId: fId,
-        organizationId: factura.organization_id as string,
-        clienteId: factura.cliente_id as string,
-        tipo: "factura",
-        entidadId: body.factura_id,
-      },
-    };
-  }
+type ResolvedT =
+  | { ok: true; data: Target }
+  | { ok: false; status: number; body: unknown };
+
+async function resolveFromNc(supabase: SbClient, id: string): Promise<ResolvedT> {
+  const { data: nc, error } = await supabase
+    .from("factura_notas_credito")
+    .select("facturapi_id, organization_id, factura_id")
+    .eq("id", id).maybeSingle();
+  if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
+  const ncId = nc.facturapi_id as string | null;
+  if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
+  const { data: fact } = await supabase
+    .from("facturas").select("cliente_id").eq("id", nc.factura_id as string).maybeSingle();
+  return { ok: true, data: {
+    facturapiId: ncId, organizationId: nc.organization_id as string,
+    clienteId: (fact?.cliente_id as string) ?? "", tipo: "nota_credito", entidadId: id,
+  } };
+}
+
+async function resolveFromPago(supabase: SbClient, id: string): Promise<ResolvedT> {
+  const { data: pago, error } = await supabase
+    .from("pagos_factura")
+    .select("facturapi_rep_id, organization_id, factura_id")
+    .eq("id", id).maybeSingle();
+  if (error || !pago) return { ok: false, status: 404, body: { error: "pago_not_found" } };
+  const repId = pago.facturapi_rep_id as string | null;
+  if (!repId) return { ok: false, status: 422, body: { error: "rep_no_timbrado" } };
+  const { data: fact } = await supabase
+    .from("facturas").select("cliente_id").eq("id", pago.factura_id as string).maybeSingle();
+  return { ok: true, data: {
+    facturapiId: repId, organizationId: pago.organization_id as string,
+    clienteId: (fact?.cliente_id as string) ?? "", tipo: "rep", entidadId: id,
+  } };
+}
+
+async function resolveFromFactura(supabase: SbClient, id: string): Promise<ResolvedT> {
+  const { data: factura, error } = await supabase
+    .from("facturas")
+    .select("facturapi_id, organization_id, cliente_id")
+    .eq("id", id).maybeSingle();
+  if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
+  const fId = factura.facturapi_id as string | null;
+  if (!fId) return { ok: false, status: 422, body: { error: "factura_no_timbrada" } };
+  return { ok: true, data: {
+    facturapiId: fId, organizationId: factura.organization_id as string,
+    clienteId: factura.cliente_id as string, tipo: "factura", entidadId: id,
+  } };
+}
+
+async function resolveTarget(supabase: SbClient, body: ReqBody): Promise<ResolvedT> {
+  if (body.nota_credito_id) return resolveFromNc(supabase, body.nota_credito_id);
+  if (body.pago_id) return resolveFromPago(supabase, body.pago_id);
+  if (body.factura_id) return resolveFromFactura(supabase, body.factura_id);
   return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id, pago_id o nota_credito_id requerido" } };
 }
+
 
 
 async function resolveEmail(
