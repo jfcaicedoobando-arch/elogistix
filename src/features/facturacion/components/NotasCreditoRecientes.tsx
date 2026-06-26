@@ -18,11 +18,12 @@ import { useNotasCreditoRecientes, type EstadoNotaCredito } from "@/features/fac
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
   Borrador: "bg-muted text-muted-foreground",
   Aprobada: "bg-warning/10 text-warning border-warning/20",
+  Timbrada: "bg-info/10 text-info border-info/20",
   Aplicada: "bg-success/10 text-success border-success/20",
   Cancelada: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-const ESTADOS: Array<EstadoNotaCredito | "todos"> = ["todos", "Borrador", "Aprobada", "Aplicada", "Cancelada"];
+const ESTADOS: Array<EstadoNotaCredito | "todos"> = ["todos", "Borrador", "Aprobada", "Timbrada", "Aplicada", "Cancelada"];
 
 export function NotasCreditoRecientes() {
   const [open, setOpen] = useState(false);
