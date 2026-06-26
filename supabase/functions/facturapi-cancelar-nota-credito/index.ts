@@ -30,9 +30,20 @@ function json(b: unknown, s = 200) {
   });
 }
 
+function validateRequest(req: Request, body: ReqBody): Response | null {
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
+  if (!body.motivo || !MOTIVOS_VALIDOS.has(body.motivo)) {
+    return json({ error: "motivo_invalido", message: "Motivo SAT requerido (01-04)." }, 400);
+  }
+  if (body.motivo === "01" && !body.sustituye_uuid) {
+    return json({ error: "sustituye_uuid_required", message: "El motivo 01 requiere UUID de sustitución." }, 400);
+  }
+  return null;
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "unauthorized" }, 401);
@@ -45,13 +56,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
   if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
-  if (!body.motivo || !MOTIVOS_VALIDOS.has(body.motivo)) {
-    return json({ error: "motivo_invalido", message: "Motivo SAT requerido (01-04)." }, 400);
-  }
-  if (body.motivo === "01" && !body.sustituye_uuid) {
-    return json({ error: "sustituye_uuid_required", message: "El motivo 01 requiere UUID de sustitución." }, 400);
-  }
+  const invalid = validateRequest(req, body);
+  if (invalid) return invalid;
+
 
   const { data: nc, error: ncErr } = await supabase
     .from("factura_notas_credito")
