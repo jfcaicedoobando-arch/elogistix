@@ -12,6 +12,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import {
   computeSignature,
   mapEventToFacturaPatch,
+  mapEventToReceiptPatch,
   safeEqual,
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
