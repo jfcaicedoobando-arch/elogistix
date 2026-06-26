@@ -19,14 +19,9 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { APP_VERSION } from "@/constants/appVersion";
-import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
-import {
-  isReactRefreshHmrError,
-  isReactRefreshStackTrace,
-  sampleByRoute,
-  scrubEventPii,
-} from "./helpers";
+import { sampleByRoute, scrubEventPii } from "./helpers";
+import { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
 import { FEEDBACK_INTEGRATION_OPTIONS } from "./feedbackConfig";
 
 export {
@@ -35,6 +30,7 @@ export {
   sampleByRoute,
   scrubEventPii,
 } from "./helpers";
+export { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
 
 // DSN del proyecto elogistix/javascript-react (clave pública, segura en bundle).
 const DEFAULT_DSN =
@@ -49,48 +45,6 @@ const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
   /librecarga\.com/,
 ];
 
-/**
- * Predicado para `beforeSend`: decide si un evento debe descartarse antes de
- * llegar a Sentry. Extraído para mantener el `beforeSend` con complejidad baja.
- */
-function shouldDropSentryEvent(
-  event: Sentry.ErrorEvent,
-  hint: Sentry.EventHint | undefined,
-): boolean {
-  const exc = hint?.originalException as Error | undefined;
-  const originalMsg =
-    exc?.message ??
-    (typeof hint?.originalException === "string" ? hint.originalException : undefined);
-  if (isDynamicImportErrorMessage(originalMsg)) return true;
-  if (isDynamicImportErrorMessage(event.message)) return true;
-
-  const values = event.exception?.values;
-  if (values?.some((v) => isDynamicImportErrorMessage(v.value))) return true;
-
-  if (exc && isReactRefreshHmrError(exc)) return true;
-  if (values?.some((v) => isReactRefreshStackTrace(v.stacktrace))) return true;
-
-  // Errores de validación (zod) son input del usuario, no bugs.
-  const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
-  const causeName = (cause as { name?: string } | undefined)?.name;
-  const excName = (exc as { name?: string } | undefined)?.name;
-  if (causeName === "ZodError" || excName === "ZodError") return true;
-
-  return false;
-}
-
-/** Resuelve el environment de Sentry. Prioriza `VITE_SENTRY_ENV` (permite
- *  distinguir `preview` de `production` en builds idénticos). Fallback a MODE. */
-function resolveEnvironment(): string {
-  const explicit = import.meta.env.VITE_SENTRY_ENV as string | undefined;
-  if (explicit && explicit.length > 0) return explicit;
-  if (typeof window !== "undefined") {
-    const host = window.location?.hostname ?? "";
-    if (host.endsWith("lovable.app")) return "preview";
-    if (host === "librecarga.com" || host === "www.librecarga.com") return "production";
-  }
-  return import.meta.env.MODE;
-}
 
 let initialized = false;
 
@@ -102,7 +56,7 @@ export function initSentry(): void {
   initialized = true;
   // 13.114.17: warn si se está usando el DSN hardcodeado en producción real
   // (no preview). Permite detectar configuración faltante sin romper.
-  if (!import.meta.env.VITE_SENTRY_DSN && resolveEnvironment() === "production") {
+  if (!import.meta.env.VITE_SENTRY_DSN && resolveSentryEnvironment() === "production") {
      
     console.warn("[sentry] VITE_SENTRY_DSN no configurado, usando DEFAULT_DSN hardcodeado");
   }
@@ -118,7 +72,7 @@ export function initSentry(): void {
     dsn: DSN,
     release: `libre-carga@${APP_VERSION}`,
     dist: buildHash,
-    environment: resolveEnvironment(),
+    environment: resolveSentryEnvironment(),
     tracesSampler: sampleByRoute,
     tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
     profilesSampleRate: 0.1,

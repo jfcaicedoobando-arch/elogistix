@@ -4,25 +4,17 @@
  *
  * Fase 5 (Proforma → Factura): cuando la factura está timbrada y es **PPD**,
  * tras registrar el pago se dispara automáticamente el timbrado del REP
- * (Recibo Electrónico de Pago) vía `emitirRep`. Si falla, el pago queda
- * registrado en estado `Pendiente` y el usuario puede reintentar desde el
- * historial.
+ * (Recibo Electrónico de Pago) vía `emitirRep`. La lógica de submit + auto-REP
+ * vive en `useRegistrarPagoSubmit` para mantener este componente delgado.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, ArrowDownToLine } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowDownToLine } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
-import { useRegistrarPagoFactura, usePagosFactura } from "@/features/facturacion/hooks";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { getErrorMessage } from "@/lib/errors";
-import { emitirRep } from "@/features/facturacion/services/repFacturapi";
+import { usePagosFactura } from "@/features/facturacion/hooks";
+import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
+import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 
 interface Factura {
   id: string;
@@ -56,12 +48,9 @@ function convertirAMonedaFactura(
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
-  const { toast } = useToast();
   const { data: rates } = useExchangeRates();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
-  const registrar = useRegistrarPagoFactura();
-  const registrarActividad = useRegistrarActividad();
-  const [timbrandoRep, setTimbrandoRep] = useState(false);
+  const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false));
 
   const totalPagado = useMemo(
     () => pagosPrevios.reduce((s, p) => s + Number(p.monto_aplicado_factura), 0),
@@ -97,71 +86,33 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const handleChange = <K extends keyof PagoFormValues>(k: K, v: PagoFormValues[K]) =>
     setValues((s) => ({ ...s, [k]: v }));
 
-  const intentarTimbrarRep = async (pagoId: string) => {
-    setTimbrandoRep(true);
-    try {
-      await emitirRep(pagoId);
-      notifySuccess(toast, {
-        title: "REP timbrado",
-        description: "Se generó el Recibo Electrónico de Pago.",
-      });
-    } catch (err) {
-      notifyError(toast, {
-        title: "Pago registrado, pero el REP falló",
-        description: `${getErrorMessage(err)}. Puedes reintentar desde el historial de pagos.`,
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-    } finally {
-      setTimbrandoRep(false);
-    }
-  };
-
-  const handleGuardar = async () => {
-    try {
-      const pagoId = await registrar.mutateAsync({
-        factura_id: factura.id,
-        fecha_pago: values.fecha,
-        monto: montoNum,
-        moneda: values.moneda as "MXN" | "USD" | "EUR",
-        tipo_cambio: tipoCambio,
-        monto_aplicado_factura: montoAplicado,
-        forma_pago: values.formaPago,
-        referencia: values.referencia,
-        notas: values.notas,
-      });
-      registrarActividad.mutate({
-        accion: "crear", modulo: "facturas", entidad_id: factura.id,
-        entidad_nombre: `Pago ${formatCurrency(montoNum, values.moneda)} factura ${factura.numero}`,
-      });
-      notifySuccess(toast, { title: "Pago registrado" });
-      if (esPpdTimbrada && pagoId) await intentarTimbrarRep(pagoId);
-      onOpenChange(false);
-    } catch (err) {
-      notifyError(toast, {
-        title: "Error al registrar pago", description: getErrorMessage(err),
-        method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-    }
-  };
+  const handleGuardar = () => submit({
+    facturaId: factura.id,
+    facturaNumero: factura.numero,
+    fecha: values.fecha,
+    monto: montoNum,
+    moneda: values.moneda as "MXN" | "USD" | "EUR",
+    tipoCambio,
+    montoAplicado,
+    formaPago: values.formaPago,
+    referencia: values.referencia,
+    notas: values.notas,
+    esPpdTimbrada,
+  });
 
   const headerAside = (
-    <div className="text-xs text-muted-foreground space-y-0.5">
-      <div>Total: <strong className="text-foreground">{formatCurrency(factura.total, factura.moneda)}</strong></div>
-      <div>Pagado: <strong className="text-foreground">{formatCurrency(totalPagado, factura.moneda)}</strong></div>
-      <div>Saldo: <strong className={saldo > 0 ? "text-warning" : "text-success"}>{formatCurrency(saldo, factura.moneda)}</strong></div>
-    </div>
+    <ResumenSaldo total={factura.total} pagado={totalPagado} saldo={saldo} moneda={factura.moneda} />
   );
 
-  const ocupado = registrar.isPending || timbrandoRep;
+  const ocupado = isPending || timbrandoRep;
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ocupado}>Cancelar</Button>
-      <Button onClick={handleGuardar} disabled={invalido || ocupado}>
-        {ocupado && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-        {timbrandoRep ? "Timbrando REP…" : "Registrar pago"}
-      </Button>
-    </>
+    <FooterAcciones
+      ocupado={ocupado}
+      timbrandoRep={timbrandoRep}
+      invalido={invalido}
+      onCancel={() => onOpenChange(false)}
+      onGuardar={handleGuardar}
+    />
   );
 
   return (
@@ -176,26 +127,17 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       footer={footer}
     >
       <PagoFormFields values={values} onChange={handleChange} />
+      <NotasPago
+        esPpdTimbrada={esPpdTimbrada}
+        monedaPago={values.moneda}
+        monedaFactura={factura.moneda}
+        montoNum={montoNum}
+        montoAplicado={montoAplicado}
+        tipoCambio={tipoCambio}
+        excede={excede}
+        saldo={saldo}
+      />
 
-      {esPpdTimbrada && (
-        <Alert>
-          <AlertDescription className="text-xs">
-            Esta factura es <strong>PPD</strong>. Al guardar, se intentará timbrar
-            automáticamente el <strong>REP (Complemento de Pagos)</strong> ante el SAT.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {values.moneda !== factura.moneda && montoNum > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Equivalente: {formatCurrency(montoAplicado, factura.moneda)} (TC: {tipoCambio.toFixed(4)})
-        </p>
-      )}
-      {excede && (
-        <p className="text-xs text-destructive">
-          El monto excede el saldo pendiente ({formatCurrency(saldo, factura.moneda)}).
-        </p>
-      )}
     </FormDialogShell>
   );
 }

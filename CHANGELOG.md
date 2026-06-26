@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.3] - 2026-06-26
+- **chore(ci) — splits para Power-of-10 y fix de test de pagos**: extraído `dropPredicate.ts` (shouldDropSentryEvent + resolveSentryEnvironment) de `sentry/core.ts` (224 → 167 líneas); extraído `ConvertirAFacturaDialogFields.tsx` (DatosFiscalesFactura) de `ConvertirAFacturaDialog.tsx` (229 → 151 líneas); `DialogRegistrarPago` se divide en `useRegistrarPagoSubmit` + `DialogRegistrarPagoParts` para bajar complejidad ciclomática (17 → ≤16) y queda en 143 líneas. Test `registrarPagoFactura` actualizado para esperar el `id` retornado en lugar de `undefined`. `bun run lint --max-warnings 0` y baselines de arquitectura pasan.
+
 ## [13.137.2] - 2026-06-26
 - **feat(facturacion) — Fases 3-6 Proforma → Factura → Timbrado → Pago → REP**:
   - **Fusión N:1**: nueva columna de selección en `TabProformas` + barra flotante "Convertir / Fusionar en factura" que valida mismo cliente y abre `ConvertirAFacturaDialog` con todos los IDs seleccionados.
