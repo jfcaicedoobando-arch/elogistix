@@ -50,7 +50,7 @@ describe("fetchCostosConFactura", () => {
 
   it("propaga error del paso conceptos_costo", async () => {
     mock.setTableResult("conceptos_costo", { data: null, error: { message: "boom" } });
-    await expect(fetchCostosConFactura("emb-1")).rejects.toBeTruthy();
+    await expect(fetchCostosConFactura("emb-1")).rejects.toThrow(/boom/);
   });
 
   it("propaga error del paso proveedor_facturas_conceptos", async () => {
@@ -59,6 +59,6 @@ describe("fetchCostosConFactura", () => {
       data: null,
       error: { message: "boom" },
     });
-    await expect(fetchCostosConFactura("emb-1")).rejects.toBeTruthy();
+    await expect(fetchCostosConFactura("emb-1")).rejects.toThrow(/boom/);
   });
 });
