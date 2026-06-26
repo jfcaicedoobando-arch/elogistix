@@ -127,3 +127,48 @@ Deno.test("resolveFacturapiKey: 412 cuando el ambiente activo no tiene secret_na
   assertEquals(res.data.error, "org_facturapi_not_configured");
   assertEquals(res.data.status, 412);
 });
+
+Deno.test("resolveFacturapiKey: usa RPC vault cuando vault_id está presente", async () => {
+  cleanupEnv();
+  const sb = makeSupabase(
+    {
+      ambiente: "sandbox",
+      api_key_sandbox_secret_name: null,
+      api_key_live_secret_name: null,
+      api_key_sandbox_vault_id: "11111111-1111-1111-1111-111111111111",
+      api_key_live_vault_id: null,
+      facturapi_org_id: "fapi_org_1",
+    },
+    (fn, args) => {
+      if (fn === "get_facturapi_api_key_internal" && args.p_ambiente === "sandbox") {
+        return Promise.resolve({ data: "sk_test_from_vault", error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    },
+  );
+  const res = await resolveFacturapiKey(sb, "org-1");
+  if (!res.ok) throw new Error("esperaba ok");
+  assertEquals(res.data.apiKey, "sk_test_from_vault");
+  assertEquals(res.data.ambiente, "sandbox");
+  assertEquals(res.data.legacy, false);
+});
+
+Deno.test("resolveFacturapiKey: si el RPC vault falla, cae al fallback env", async () => {
+  cleanupEnv();
+  Deno.env.set("FACTURAPI_KEY_ORG1_SANDBOX", "sk_test_env_fallback");
+  const sb = makeSupabase(
+    {
+      ambiente: "sandbox",
+      api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
+      api_key_live_secret_name: null,
+      api_key_sandbox_vault_id: "11111111-1111-1111-1111-111111111111",
+      api_key_live_vault_id: null,
+      facturapi_org_id: null,
+    },
+    () => Promise.resolve({ data: null, error: { message: "rpc failed" } }),
+  );
+  const res = await resolveFacturapiKey(sb, "org-1");
+  if (!res.ok) throw new Error("esperaba ok (fallback env)");
+  assertEquals(res.data.apiKey, "sk_test_env_fallback");
+  cleanupEnv();
+});
