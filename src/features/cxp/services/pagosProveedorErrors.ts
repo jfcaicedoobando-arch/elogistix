@@ -2,7 +2,7 @@
  * Traductor de errores específicos al registrar pagos a proveedor.
  *
  * Mapea PostgrestError (Supabase) y otros errores conocidos a mensajes en
- * español-MX listos para `toast.error(...)`. Evita que mensajes en inglés
+ * español-MX listos para `notifyError`. Evita que mensajes en inglés
  * (RLS, FK, trigger violations) lleguen al usuario final.
  */
 
