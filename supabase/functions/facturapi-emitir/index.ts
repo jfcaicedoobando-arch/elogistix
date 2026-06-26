@@ -123,27 +123,23 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const payload = buildFacturapiPayload(ctx);
 
-  // POST a Facturapi
-  const fapiRes = await fetch(`${FACTURAPI_BASE}/invoices`, {
-    method: "POST",
-    headers: {
-      "Authorization": basicAuthHeader(FACTURAPI_KEY),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const fapiJson = await fapiRes.json().catch(() => ({}));
-  if (!fapiRes.ok) {
+  // Emisión vía SDK oficial facturapi-node.
+  let invoice: any;
+  try {
+    invoice = await facturapi.invoices.create(payload);
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
     await supabase.from("bitacora_actividad").insert({
       organization_id: factura.organization_id,
       user_id: userData.user.id,
       accion: "facturapi_emitir_failed",
       entidad: "factura",
       entidad_id: body.factura_id,
-      detalle: { status: fapiRes.status, response: fapiJson },
+      detalle: { status, response: detail },
     });
-    return json({ error: "facturapi_error", status: fapiRes.status, detail: fapiJson }, 502);
+    return json({ error: "facturapi_error", status, detail }, 502);
   }
+  const fapiJson = invoice;
 
   const facturapiId: string = fapiJson.id;
   const uuid: string = fapiJson.uuid;
