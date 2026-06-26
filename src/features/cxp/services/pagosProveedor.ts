@@ -40,7 +40,33 @@ export async function registrarPagoProveedor(
   input: RegistrarPagoProveedorInput,
   userId: string | null,
 ): Promise<PagoProveedor> {
+  // Resolvemos la organización del padre para que el INSERT no dependa del
+  // default `current_user_org_id()` (que puede divergir bajo impersonación o
+  // cambio reciente de organización activa). Si la org del usuario actual no
+  // coincide con la de la factura, abortamos con un error tipado para que el
+  // toast en español lo capture (evita el PostgrestError RLS opaco visto en
+  // Sentry JAVASCRIPT-REACT-W).
+  const { data: fact, error: errFact } = await supabase
+    .from("proveedor_facturas")
+    .select("organization_id")
+    .eq("id", input.proveedor_factura_id)
+    .maybeSingle();
+  if (errFact) throw errFact;
+  if (!fact?.organization_id) {
+    throw Object.assign(new Error("Factura de proveedor no encontrada."), {
+      code: "NOT_FOUND",
+    });
+  }
+
+  const { data: orgActualRow, error: errOrg } = await supabase.rpc("current_user_org_id");
+  if (errOrg) throw errOrg;
+  const orgActual = (orgActualRow as string | null) ?? null;
+  if (orgActual && orgActual !== fact.organization_id) {
+    throw Object.assign(new Error("ORG_MISMATCH"), { code: "ORG_MISMATCH" });
+  }
+
   const payload: TablesInsert<"pagos_proveedor"> = {
+    organization_id: fact.organization_id,
     proveedor_factura_id: input.proveedor_factura_id,
     fecha_pago: input.fecha_pago,
     monto: input.monto,
@@ -64,6 +90,7 @@ export async function registrarPagoProveedor(
   await recalcularEstadoFactura(input.proveedor_factura_id);
   return data as PagoProveedor;
 }
+
 
 export async function eliminarPagoProveedor(id: string, facturaId: string, userId: string | null) {
   const { error } = await supabase

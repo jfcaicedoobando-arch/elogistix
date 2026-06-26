@@ -12,6 +12,7 @@ import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "./usePagoProveedorForm";
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
 
 interface Props {
   open: boolean;
@@ -45,8 +46,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
       toast.success("Pago registrado");
       onOpenChange(false);
     } catch (e) {
-      const err = e as { message?: string };
-      notifyError(toast, { title: err.message ?? "Error al registrar pago", error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
+      notifyError(toast, { title: traducirErrorPagoProveedor(e), error: e, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_3" });
     }
   };
 
