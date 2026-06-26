@@ -124,6 +124,14 @@ export function initSentry(): void {
       if (exc && isReactRefreshHmrError(exc)) return null;
       if (values && values.some((v) => isReactRefreshStackTrace(v.stacktrace))) return null;
 
+      // Errores de validación (zod) son input del usuario, no bugs. El UI ya
+      // muestra el toast con el mensaje legible; no contaminan Sentry.
+      const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
+      const causeName = (cause as { name?: string } | undefined)?.name;
+      if (causeName === "ZodError" || (exc as { name?: string } | undefined)?.name === "ZodError") {
+        return null;
+      }
+
       return scrubEventPii(event);
     },
     // 13.114.19: las transactions también pueden traer PII en `request.url`

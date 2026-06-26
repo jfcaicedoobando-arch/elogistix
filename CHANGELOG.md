@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.12] - 2026-06-26
+- **fix(rls) — `_assert_internal_reader` acepta todos los roles internos**: la función SECURITY DEFINER sólo dejaba pasar a `admin`, `operador` y `super_admin`, por lo que cualquier `contador`, `admin_org`, `gerente_operaciones`, `coordinador_logistico`, `ejecutivo_pricing`, `tesorero`, `customer_service`, `gerente_visor`, `vendedor`, `gerente_comercial`, `auxiliar_contable` o `ejecutivo_cobranza` recibía `42501 "No autorizado"` al abrir el detalle de un embarque (Sentry JAVASCRIPT-REACT-1M, 17 eventos, 3 usuarios). Ahora valida con `EXISTS` contra `user_roles` excluyendo sólo a roles externos (`cliente`, `agente_carga`); soporta automáticamente futuros roles internos.
+- **fix(observability) — `ZodError` ya no se reporta a Sentry**: errores lanzados por `parseOrThrow` (validación de mutaciones) son input del usuario, no bugs. El UI sigue mostrando el toast con el mensaje legible. `beforeSend` ahora retorna `null` cuando la exception (o su `cause`) es un `ZodError` (Sentry JAVASCRIPT-REACT-1Q).
+
 ## [13.136.11] - 2026-06-26
 - **ux(embarques) — reordenado tab "Demoras y Garantías"**: en `EmbarqueDetalleTabs.tsx` ahora la sección **Demoras** (auto + tabla) aparece primero y **Garantías** debajo. Trigger del tab renombrado a "Demoras y Garantías" para reflejar el nuevo orden. Sin cambios de lógica.
 
