@@ -32,8 +32,8 @@ export interface FacturapiCredencialesRow {
 export interface FacturapiCredencialesInput {
   facturapi_org_id: string | null;
   ambiente: FacturapiAmbiente;
-  api_key_sandbox_secret_name: string | null;
-  api_key_live_secret_name: string | null;
+  api_key_sandbox_secret_name?: string | null;
+  api_key_live_secret_name?: string | null;
   datos_fiscales_completos: boolean;
   certificado_cargado: boolean;
   certificado_vence_at: string | null;
