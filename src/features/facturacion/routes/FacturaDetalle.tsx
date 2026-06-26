@@ -37,7 +37,6 @@ export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { toast } = useToast();
   const { canEdit, isAdmin } = usePermissions();
   const { data: factura, isLoading } = useFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
@@ -48,7 +47,7 @@ export default function FacturaDetalle() {
   const [sustituirOpen, setSustituirOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
-
+  const handleDownload = useDescargarCfdi(factura?.id);
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
   // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
@@ -61,23 +60,6 @@ export default function FacturaDetalle() {
     }
   }, [searchParams, sinTimbrar, canEdit, setSearchParams]);
 
-  const handleDownload = async (stored: string | null, tipo: "pdf" | "xml") => {
-    try {
-      const usarProxy = !stored || esUrlFacturapi(stored);
-      if (usarProxy && factura?.id) {
-        await descargarCfdiFacturapi({ tipo, facturaId: factura.id });
-      } else if (stored) {
-        await openFacturaInNewTab(stored);
-      }
-    } catch (err) {
-      notifyError(toast, {
-        title: `No se pudo abrir el ${tipo.toUpperCase()}`,
-        description: getErrorMessage(err),
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-    }
-  };
 
   if (isLoading) {
     return (
