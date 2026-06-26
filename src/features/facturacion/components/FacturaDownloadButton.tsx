@@ -2,29 +2,44 @@ import { Button } from "@/components/ui/button";
 import { FileText, FileCode2 } from "lucide-react";
 import { openFacturaInNewTab } from "@/services/storage";
 import { toast } from "@/hooks/shared";
+import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
-  stored: string;
+  stored: string | null;
   kind: "pdf" | "xml";
   size?: "sm" | "icon";
   className?: string;
+  /** Si se proporciona, se usa el proxy FacturApi cuando `stored` apunta a su dominio o está vacío. */
+  facturaId?: string;
+  /** Igual que facturaId pero para REP de un pago. */
+  pagoId?: string;
 }
 
-export function FacturaDownloadButton({ stored, kind, size = "icon", className }: Props) {
+export function FacturaDownloadButton({ stored, kind, size = "icon", className, facturaId, pagoId }: Props) {
   const Icon = kind === "pdf" ? FileText : FileCode2;
   const colorClass = kind === "pdf" ? "text-destructive" : "text-info";
   const label = kind === "pdf" ? "Descargar PDF" : "Descargar XML";
+
   const onClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     try {
-      await openFacturaInNewTab(stored);
+      // Si la URL guardada es de FacturApi (o no hay URL pero sí ID), proxyear.
+      const usarProxy = (!stored || esUrlFacturapi(stored)) && (facturaId || pagoId);
+      if (usarProxy) {
+        await descargarCfdiFacturapi({ tipo: kind, facturaId, pagoId });
+      } else if (stored) {
+        await openFacturaInNewTab(stored);
+      } else {
+        throw new Error("Archivo no disponible");
+      }
     } catch (err) {
       notifyError(toast, { title: "No se pudo abrir el archivo",
         description: (err as Error).message, error: err, method: "FEATURES_FACTURACION_COMPONENTS_FACTURADOWNLOADBUTTON_1" });
     }
   };
+
   if (size === "icon") {
     return (
       <Button
