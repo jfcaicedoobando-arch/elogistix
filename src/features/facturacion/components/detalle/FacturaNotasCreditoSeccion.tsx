@@ -193,11 +193,11 @@ export function FacturaNotasCreditoSeccion(props: Props) {
         titulo="Reenviar nota de crédito"
       />
 
-      <DialogCancelarFactura
+      <DialogCancelarNotaCredito
         open={!!cancelarNcId}
         onOpenChange={(o) => !o && setCancelarNcId(null)}
-        modo="nota_credito"
-        onConfirmNotaCredito={(motivo, sustituyeUuid) => {
+        loading={cancelar.isPending}
+        onConfirm={(motivo, sustituyeUuid) => {
           if (!cancelarNcId) return;
           cancelar.mutate(
             { notaCreditoId: cancelarNcId, motivo, sustituyeUuid },
@@ -205,6 +205,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
           );
         }}
       />
+
     </Card>
   );
 }
