@@ -32,22 +32,6 @@ function makeSupabase(row: Row | null, rpcImpl?: (fn: string, args: Record<strin
     rpc: rpcImpl ?? (() => Promise.resolve({ data: null, error: null })),
   };
 }
-  return {
-    from() {
-      return {
-        select() {
-          return {
-            eq() {
-              return {
-                maybeSingle: () => Promise.resolve({ data: row, error: null }),
-              };
-            },
-          };
-        },
-      };
-    },
-  };
-}
 
 function cleanupEnv() {
   Deno.env.delete("FACTURAPI_KEY");
