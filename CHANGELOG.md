@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.14] - 2026-06-26
+- **fix(ci)**: corrige llaves en `supabase/functions/facturapi-webhook/helpers.ts` (cierre faltante de `mapEventToFacturaPatch` + `}` extra) que rompían el parseo Deno, y extrae `fetchFacturacionKpisFiscales` a `src/features/facturacion/services/kpisFiscales.ts` para que `useFacturacionKpisFiscales` deje de importar el cliente Supabase directo y cumpla la regla Hooks→Services.
+
 ## [13.137.13] - 2026-06-26
 - **feat(facturacion) — Cierre del plan FacturApi (pendientes 7, 8, 9, 11)**:
   - **Webhook REP** (`receipt.*`): `facturapi-webhook/helpers.ts` añade `mapEventToReceiptPatch` para `receipt.status_updated`, `receipt.canceled`, `receipt.created`. `index.ts` ahora enruta el evento a `pagos_factura` o `facturas` según el tipo, escribe `bitacora_actividad` y conserva firma HMAC SHA-256.

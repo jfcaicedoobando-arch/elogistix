@@ -65,6 +65,7 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
       };
     default:
       return null;
+  }
 }
 
 /**
@@ -116,7 +117,6 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
     default:
       return null;
   }
-}
 }
 
 /** HMAC-SHA256 hex del body con el secret. Usa Web Crypto (disponible en Deno). */
