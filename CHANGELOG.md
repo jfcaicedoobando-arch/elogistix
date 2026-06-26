@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.15] - 2026-06-26
+- **feat(observability) — Ampliación de cobertura Sentry en flujo fiscal**:
+  - **MutationKeys jerárquicas** `["fiscal", "<op>"]` en `useTimbrarFactura`, `useCancelarFactura`, `useTimbrarRep`, `useCancelarRep`, `useTimbrarNotaCredito`, `useCancelarNotaCredito`, `useCrearFacturaManual` y `ConvertirAFacturaDialog`. Errores ahora llegan a Sentry con `mutation_root="fiscal"` + nuevo tag indexable `mutation_op` (ej. `emitir-rep`, `cancelar-nota-credito`).
+  - **`queryClient.ts`** promueve `mutationKey[1]` como tag `mutation_op` para permitir filtrar sub-flujos sin perder el agrupado por dominio.
+  - **Fugas fire-and-forget cerradas**: `DialogSustituirFactura.handleDuplicar` y `useDescargarCfdi` ahora invocan `reportCaughtError(err, { feature: "facturacion", op })` antes del toast. Antes esos errores morían en consola.
+  - **Helper `addFiscalBreadcrumb`** en `src/lib/observability/fiscalBreadcrumbs.ts` para enriquecer el rastro de pasos previos cuando un timbrado/REP/NC falla (dynamic import del SDK, no infla bundle inicial).
+  - **Guardrail nuevo**: `src/__tests__/architecture/sentry-fiscal-services.test.ts` exige que todo servicio en `src/features/facturacion/services/` con bloques `catch` re-lance o reporte. Bloquea regresiones silenciosas tipo `catch { toast.error(...) }`.
+
 ## [13.137.14] - 2026-06-26
 - **fix(ci)**: corrige llaves en `supabase/functions/facturapi-webhook/helpers.ts` (cierre faltante de `mapEventToFacturaPatch` + `}` extra) que rompían el parseo Deno, y extrae `fetchFacturacionKpisFiscales` a `src/features/facturacion/services/kpisFiscales.ts` para que `useFacturacionKpisFiscales` deje de importar el cliente Supabase directo y cumpla la regla Hooks→Services.
 
