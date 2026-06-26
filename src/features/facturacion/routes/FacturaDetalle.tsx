@@ -143,6 +143,14 @@ export default function FacturaDetalle() {
         onDownload={handleDownload}
       />
 
+      {canEdit && !sinTimbrar && factura.estado === "Emitida" && (
+        <Button variant="outline" size="sm" onClick={() => setSustituirOpen(true)} className="gap-1">
+          <Replace className="h-4 w-4" /> Sustituir CFDI (motivo 01)
+        </Button>
+      )}
+
+
+
 
       <FacturaResumenCard factura={factura} />
       <FacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />
