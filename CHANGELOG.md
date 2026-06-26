@@ -6,7 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.12] - 2026-06-26
+- **fix(cxp) — Registrar pago a proveedor: RLS opaco y mensaje en inglés** (Sentry `JAVASCRIPT-REACT-W`, 5 eventos, regresión):
+  - `registrarPagoProveedor` ahora resuelve `organization_id` desde la factura padre y valida coherencia contra `current_user_org_id()` antes del INSERT. Si difieren, lanza `ORG_MISMATCH` tipado en lugar de dejar que reviente la RLS.
+  - Nuevo `pagosProveedorErrors.ts` traduce PostgrestError (`42501`, `23503`, `23505`, `23514`, `ORG_MISMATCH`, embarque cerrado) a mensajes en español-MX.
+  - `useRegistrarPagoProveedor` / `useEliminarPagoProveedor` y `DialogRegistrarPagoProveedor` muestran ahora el toast traducido.
+  - **Bug colateral**: `proveedorFacturas.update.ts` consultaba `pagos_proveedor.factura_id` (columna inexistente); corregido a `proveedor_factura_id`. Esto rompía silenciosamente la validación de saldo al editar facturas.
+  - Tests: 5 nuevos en `pagosProveedor.test.ts` + 6 en `pagosProveedorErrors.test.ts`.
+
 ## [13.137.11] - 2026-06-26
+
 - **fix(embarques) — Tab Costos del detalle reventaba con PGRST200** (Sentry `JAVASCRIPT-REACT-1M`, 40 eventos, regresión):
   - `fetchCostosConFactura` ya no usa embed `conceptos_costo!inner(...)` porque la FK física entre `proveedor_facturas_conceptos.concepto_costo_id` y `conceptos_costo.id` no está registrada en el schema cache de PostgREST. Se reescribe al patrón de dos pasos (mismo enfoque que `reconciliacionCostos.ts`).
   - Mismo contrato público (`Promise<Set<string>>`); ningún consumidor cambia.

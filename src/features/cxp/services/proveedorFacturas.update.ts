@@ -120,7 +120,7 @@ export async function actualizarFacturaProveedor(
   const { data: pagos, error: errPagos } = await supabase
     .from("pagos_proveedor")
     .select("monto")
-    .eq("factura_id", id);
+    .eq("proveedor_factura_id", id);
   if (errPagos) throw errPagos;
   const totalPagado = (pagos ?? []).reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
   // Tolerancia de 1 centavo por redondeos.
