@@ -2,11 +2,13 @@
  * Fila individual del historial de pagos.
  * Extraído de DialogHistorialPagos para mantener archivos < 200 LOC (Power of 10).
  */
-import { Receipt, Ban, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Receipt, Ban, Trash2, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
+import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 
 export type EstadoRep = "NoAplica" | "Pendiente" | "Timbrado" | "Cancelado" | "Error";
 
@@ -56,6 +58,7 @@ export function PagoFacturaRow({
   const dif = Number(pago.diferencia_cambiaria_mxn) || 0;
   const tieneDif = Math.abs(dif) > 0.005;
   const estadoRep = (pago.estado_rep ?? "NoAplica") as EstadoRep;
+  const [enviarOpen, setEnviarOpen] = useState(false);
 
   return (
     <tr className="border-b last:border-0 hover:bg-muted/30">
@@ -102,6 +105,10 @@ export function PagoFacturaRow({
                 kind="xml"
                 pagoId={pago.id}
               />
+              <Button variant="ghost" size="icon" className="h-7 w-7" title="Enviar REP por email"
+                onClick={(e) => { e.stopPropagation(); setEnviarOpen(true); }}>
+                <Mail className="h-4 w-4" />
+              </Button>
             </>
           )}
           {canEdit && estadoRep === "Timbrado" && (
@@ -120,6 +127,12 @@ export function PagoFacturaRow({
           </Button>
         </td>
       )}
+      <DialogEnviarCfdi
+        open={enviarOpen}
+        onOpenChange={setEnviarOpen}
+        pagoId={pago.id}
+        titulo="Enviar REP por email"
+      />
     </tr>
   );
 }

@@ -7,6 +7,7 @@ import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -17,7 +18,10 @@ import {
   actualizarDatosTimbradoFactura,
   type ClienteFiscalRow,
 } from "@/features/facturacion/services";
+import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEmail";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/shared";
+import { getErrorMessage } from "@/lib/errors/index";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 
@@ -39,10 +43,12 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     queryFn: () => fetchClienteFiscal(factura!.cliente_id),
   });
 
+  const { toast } = useToast();
   const [serie, setSerie] = useState("A");
   const [usoCfdi, setUsoCfdi] = useState(factura?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
   const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? "03");
   const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? "PUE");
+  const [enviarEmail, setEnviarEmail] = useState(true);
 
   if (!facturaId || !factura) return null;
 
@@ -62,7 +68,23 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       forma_pago: formaPago,
       metodo_pago: metodoPago,
     });
-    timbrar.mutate(facturaId, { onSuccess: () => onOpenChange(false) });
+    timbrar.mutate(facturaId, {
+      onSuccess: async () => {
+        if (enviarEmail) {
+          try {
+            const r = await enviarCfdiFactura(facturaId);
+            toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
+          } catch (err) {
+            toast({
+              title: "Factura timbrada, pero no se envió el email",
+              description: getErrorMessage(err),
+              variant: "destructive",
+            });
+          }
+        }
+        onOpenChange(false);
+      },
+    });
   };
 
   const footer = (
@@ -125,6 +147,15 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           </Select>
         </div>
       </div>
+
+      <label className="flex items-center gap-2 text-sm cursor-pointer">
+        <Checkbox
+          checked={enviarEmail}
+          onCheckedChange={(c) => setEnviarEmail(c === true)}
+        />
+        <span>Enviar el CFDI por email al cliente tras timbrar</span>
+      </label>
+
 
       {!puedeTimbrar && (
         <Alert variant="destructive">

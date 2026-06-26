@@ -1,53 +1,60 @@
-# Pendientes del flujo fiscal (post 13.137.2)
 
-Las 6 fases del plan original están cerradas (ver `docs/flujo-facturacion.md`). Lo que **no** se hizo y queda como trabajo posterior, agrupado por prioridad.
+# Item #2 — Envío del CFDI por email al cliente
 
-## Alta prioridad (afecta operación diaria)
+Aprovechamos FacturApi (`POST /invoices/{id}/email` y `POST /receipts/{id}/email`) que ya envía el PDF + XML adjuntos al cliente. No usamos la cola de emails interna (Mailgun/pgmq) porque FacturApi ya entrega el CFDI con su plantilla SAT-compliant y archivos correctos.
 
-1. **Descarga de PDF y XML del CFDI**
-   - Hoy guardamos `uuid_fiscal` y `facturapi_id` pero no exponemos el PDF/XML al usuario.
-   - Falta: endpoint `facturapi-descargar` (PDF/XML) + botones en `FacturaDetalle` y en el listado.
+## Alcance
 
-2. **Envío del CFDI por email al cliente**
-   - FacturApi tiene `customer.email` y `send_by_email`. No lo estamos usando.
-   - Falta: opción en `DialogTimbrarFactura` ("Enviar al cliente") + botón "Reenviar CFDI" en `FacturaDetalle`. También reenvío del REP.
+1. **Envío al timbrar (opcional)**: checkbox "Enviar CFDI al cliente por email" en `DialogTimbrarFactura`. Activo por default si el cliente tiene email.
+2. **Reenvío manual de factura**: botón "Reenviar CFDI" en `FacturaDetalle` (sólo si está timbrada). Permite editar el destinatario antes de enviar.
+3. **Reenvío manual de REP**: botón equivalente en `PagoFacturaRow` cuando el REP está timbrado.
+4. **Auditoría**: cada envío se registra en `bitacora_actividad` con destinatario, tipo (factura/REP) y resultado.
 
-3. **Notas de crédito (CFDI tipo E) timbradas por FacturApi**
-   - La tabla `factura_notas_credito` existe, pero el alta es manual; no se timbra.
-   - Falta: RPC + diálogo + edge function `facturapi-emitir-nc` y enlace al CFDI padre.
+## Diseño técnico
 
-4. **Cancelación con sustitución (motivo SAT 01)**
-   - `DialogCancelarFactura` soporta motivos 02/03/04. El 01 exige folio fiscal de reemplazo, que aún no se captura ni se valida.
+### Backend
+- **Nueva edge function `facturapi-enviar-email`** (`verify_jwt=true`, CORS strict, `wrapEdgeHandler`):
+  - Input: `{ factura_id?, pago_id?, email? }` (uno de los dos IDs).
+  - Resuelve org → API key vía `resolveFacturapiKey` (patrón ya existente).
+  - Si `email` viene vacío, lo toma del cliente (`clientes.email_facturacion` o `clientes.email`).
+  - Llama `POST https://www.facturapi.io/v2/invoices/{facturapi_id}/email` o `/receipts/{id}/email` con `{ "email": [destinatario] }`.
+  - Inserta en `bitacora_actividad` (`accion='cfdi_enviado'`, payload con tipo y destinatario).
+  - Devuelve `{ ok, enviado_a }` o error normalizado.
 
-## Media prioridad (robustez)
+### Frontend
+- **Servicio** `src/features/facturacion/services/enviarCfdiEmail.ts` con `enviarCfdiFactura(facturaId, email?)` y `enviarCfdiRep(pagoId, email?)`.
+- **`DialogTimbrarFactura`**:
+  - Agregar `Checkbox` "Enviar CFDI al cliente" + input email (auto-poblado del cliente, editable).
+  - Tras `timbrar.mutate` exitoso, si el check está activo, invocar `enviarCfdiFactura`.
+  - Mostrar toast independiente del envío (no bloquea el timbrado).
+- **Nuevo componente `DialogEnviarCfdi.tsx`** (reutilizado para factura y REP):
+  - Campos: destinatario(s) email (multi-email separado por coma, validación), nota opcional ignorada (FacturApi no la acepta vía email endpoint).
+  - Botón "Enviar".
+- **`FacturaDetalle.tsx`**: nuevo botón "Reenviar CFDI" junto a los botones de descarga (sólo si `uuid_fiscal`).
+- **`PagoFacturaRow.tsx`**: botón "Reenviar REP" cuando `rep_uuid` existe.
 
-5. **Reintento manual de REP fallido**
-   - `useTimbrarRep` ya existe; falta UI: en `PagoFacturaRow` si el pago es PPD y `rep_uuid` está vacío, mostrar botón "Timbrar REP".
+### Catálogo de errores
+- Si FacturApi responde `400 invalid_email`: traducir a "Email inválido".
+- Si responde `404`: "CFDI no encontrado en FacturApi" (probablemente cancelado).
+- Otros: mensaje genérico + log a Sentry.
 
-6. **Cancelar REP**
-   - Hay edge function `facturapi-cancelar-rep` deployada pero sin diálogo ni botón en `DialogHistorialPagos`.
+## Archivos a crear
+- `supabase/functions/facturapi-enviar-email/index.ts`
+- `src/features/facturacion/services/enviarCfdiEmail.ts`
+- `src/features/facturacion/components/DialogEnviarCfdi.tsx`
 
-7. **Webhook FacturApi → sincronización**
-   - El handler ya actualiza estado de facturas. Falta:
-     - Cubrir eventos de REP (`receipt.*`/`payment.*`).
-     - Guía en UI para registrar la URL del webhook (`?org=<UUID>`) — hoy hay que sacarlo a mano.
+## Archivos a editar
+- `src/features/facturacion/components/DialogTimbrarFactura.tsx` (checkbox + envío post-timbrado)
+- `src/features/facturacion/routes/FacturaDetalle.tsx` (botón reenviar)
+- `src/features/facturacion/components/PagoFacturaRow.tsx` (botón reenviar REP)
+- `supabase/config.toml` (registrar nueva función)
+- `src/constants/appVersion.ts` + `CHANGELOG.md` (bump a `13.137.5`)
 
-8. **KPIs del módulo de facturación**
-   - Mencionados en Fase 6 pero nunca dibujados: "Proformas convertibles", "Facturas sin timbrar", "REPs pendientes".
+## Tests
+- Unit del servicio `enviarCfdiEmail` con mock de `supabase.functions.invoke`.
+- Deno test del endpoint cubriendo: sin auth, sin IDs, email inválido, happy path factura, happy path REP.
 
-## Baja prioridad (limpieza)
-
-9. **Deprecar flujo manual `DialogMarcarFacturada`**
-   - Sigue activo para datos históricos. Definir fecha de corte y ocultarlo para proformas nuevas.
-
-10. **Migración de facturas históricas a CFDI**
-    - Decidir si las facturas previas a 13.137.0 se pueden re-timbrar o quedan como "no fiscales".
-
-11. **Pruebas E2E del flujo completo**
-    - Hoy hay tests unitarios de `pagos`/`convertirAFactura`. Falta un happy-path E2E (proforma→factura→timbrado sandbox→pago PPD→REP).
-
-## Sugerencia de orden de ataque
-
-Si quieres avanzar por valor para el usuario: **1 → 2 → 5 → 6 → 3 → 4 → 7 → 8 → resto**.
-
-Dime cuáles activamos y armo el plan de implementación detallado del bloque que elijas.
+## Out of scope (para iteraciones siguientes)
+- Plantillas custom de email (FacturApi maneja el template).
+- Envío masivo desde la tabla de facturas (se puede agregar luego en `FacturasMasivasToolbar`).
+- Tracking de aperturas/clicks (no expuesto por FacturApi).

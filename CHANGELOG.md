@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.5] - 2026-06-26
+- **feat(facturacion) — Envío de CFDI por email (FacturApi, item #2 alta prioridad)**:
+  - Nueva edge function `facturapi-enviar-email` que actúa de proxy autenticado: resuelve la API key por organización, busca el email del cliente (primero `contactos_cliente.email` con `es_principal=true`, fallback a `clientes.email`) y dispara `POST /v2/invoices/{id}/email` de FacturApi (sirve tanto para facturas como para REP). Cada envío queda registrado en `bitacora_actividad` (`cfdi_enviado` / `cfdi_envio_failed`).
+  - Nuevo servicio `enviarCfdiEmail.ts` con helpers `enviarCfdiFactura(facturaId, email?)` y `enviarCfdiRep(pagoId, email?)`.
+  - Nuevo `DialogEnviarCfdi.tsx` reutilizable que permite editar el destinatario antes de enviar y muestra toast con el resultado.
+  - `DialogTimbrarFactura` ahora incluye un checkbox **"Enviar el CFDI por email al cliente tras timbrar"** (activado por defecto); si el timbrado tiene éxito encadena el envío y avisa si el correo falla sin bloquear el timbrado.
+  - Botón **"Enviar por email"** en `FacturaDetalle` (cabecera de acciones) y acción de **reenvío** en `PagoFacturaRow` (icono ✉️ junto a los downloads del REP timbrado).
+
 ## [13.137.3] - 2026-06-26
 - **chore(ci) — splits para Power-of-10 y fix de test de pagos**: extraído `dropPredicate.ts` (shouldDropSentryEvent + resolveSentryEnvironment) de `sentry/core.ts` (224 → 167 líneas); extraído `ConvertirAFacturaDialogFields.tsx` (DatosFiscalesFactura) de `ConvertirAFacturaDialog.tsx` (229 → 151 líneas); `DialogRegistrarPago` se divide en `useRegistrarPagoSubmit` + `DialogRegistrarPagoParts` para bajar complejidad ciclomática (17 → ≤16) y queda en 143 líneas. Test `registrarPagoFactura` actualizado para esperar el `id` retornado en lugar de `undefined`. `bun run lint --max-warnings 0` y baselines de arquitectura pasan.
 
