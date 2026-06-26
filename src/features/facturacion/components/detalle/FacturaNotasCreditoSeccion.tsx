@@ -4,29 +4,19 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FileMinus, Mail, Plus, XCircle, Stamp } from "lucide-react";
+import { FileMinus, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/formatters";
-import { listarNotasCreditoPorFactura, type EstadoNotaCredito, type ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
+import { listarNotasCreditoPorFactura, type ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { DialogCancelarNotaCredito } from "@/features/facturacion/components/DialogCancelarNotaCredito";
-import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { useTimbrarNotaCredito, useCancelarNotaCredito } from "@/features/facturacion/hooks/useNotaCreditoFacturapi";
+import { FacturaNotasCreditoTable } from "./FacturaNotasCreditoTable";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Moneda = Tables<"facturas">["moneda"];
-
-const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
-  Borrador: "bg-muted text-muted-foreground",
-  Aprobada: "bg-warning/10 text-warning border-warning/20",
-  Timbrada: "bg-info/10 text-info border-info/20",
-  Aplicada: "bg-success/10 text-success border-success/20",
-  Cancelada: "bg-destructive/10 text-destructive border-destructive/20",
-};
 
 interface ConceptoSnapshot {
   descripcion?: string;
@@ -102,75 +92,15 @@ export function FacturaNotasCreditoSeccion(props: Props) {
         ) : notas.length === 0 ? (
           <p className="text-sm text-muted-foreground">Esta factura no tiene notas de crédito.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted-foreground border-b">
-                <tr>
-                  <th className="text-left py-2 px-2">Folio</th>
-                  <th className="text-left py-2 px-2">Fecha</th>
-                  <th className="text-left py-2 px-2">Motivo</th>
-                  <th className="text-left py-2 px-2">Estado</th>
-                  <th className="text-right py-2 px-2">Monto</th>
-                  <th className="text-right py-2 px-2 w-44">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {notas.map((n) => {
-                  const timbrada = n.estado === "Timbrada" || n.estado === "Aplicada";
-                  const cancelable = n.estado === "Timbrada";
-                  const puedeTimbrar = n.estado === "Borrador" && !!uuidFacturaOriginal;
-                  return (
-                    <tr key={n.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-2 px-2 font-mono text-xs">{n.folio}</td>
-                      <td className="py-2 px-2 text-xs">{formatDate(n.fecha_emision)}</td>
-                      <td className="py-2 px-2 text-xs">{n.motivo}</td>
-                      <td className="py-2 px-2">
-                        <Badge variant="outline" className={ESTADO_COLOR[n.estado]}>{n.estado}</Badge>
-                      </td>
-                      <td className="py-2 px-2 text-right tabular-nums">
-                        {formatCurrency(Number(n.monto), n.moneda)}
-                      </td>
-                      <td className="py-2 px-2">
-                        <div className="flex justify-end items-center gap-1">
-                          {timbrada && (
-                            <>
-                              <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
-                              <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
-                              <Button
-                                variant="outline" size="icon" className="h-7 w-7"
-                                title="Reenviar por email" aria-label="Reenviar por email"
-                                onClick={() => setEmailNcId(n.id)}
-                              >
-                                <Mail className="h-3.5 w-3.5" />
-                              </Button>
-                            </>
-                          )}
-                          {canEdit && puedeTimbrar && (
-                            <Button
-                              variant="outline" size="sm" className="h-7"
-                              onClick={() => timbrar.mutate(n.id)}
-                              disabled={timbrar.isPending}
-                            >
-                              <Stamp className="h-3.5 w-3.5 mr-1" /> Timbrar
-                            </Button>
-                          )}
-                          {canEdit && cancelable && (
-                            <Button
-                              variant="ghost" size="icon" className="h-7 w-7"
-                              title="Cancelar NC" aria-label="Cancelar NC"
-                              onClick={() => setCancelarNcId(n.id)}
-                            >
-                              <XCircle className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <FacturaNotasCreditoTable
+            notas={notas}
+            canEdit={canEdit}
+            uuidFacturaOriginal={uuidFacturaOriginal}
+            timbrando={timbrar.isPending}
+            onTimbrar={(id) => timbrar.mutate(id)}
+            onEmail={setEmailNcId}
+            onCancelar={setCancelarNcId}
+          />
         )}
       </CardContent>
 
@@ -205,7 +135,6 @@ export function FacturaNotasCreditoSeccion(props: Props) {
           );
         }}
       />
-
     </Card>
   );
 }
