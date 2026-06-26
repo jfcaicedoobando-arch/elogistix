@@ -107,7 +107,7 @@ export function ConvertirAFacturaDialog({
       onOpenChange(false);
       navigate(`/facturacion/${res.facturaId}`);
     },
-    onError: (err) => notifyError(err, "Convertir proforma a factura"),
+    onError: (err) => notifyError(undefined, { error: err, title: "Convertir proforma a factura" }),
   });
 
   const sinSeries = !!series && series.length === 0;
