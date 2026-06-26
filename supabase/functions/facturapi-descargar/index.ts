@@ -42,72 +42,65 @@ interface ResolvedTarget {
   filename: string;
 }
 
+type Resolved =
+  | { ok: true; data: ResolvedTarget }
+  | { ok: false; status: number; body: unknown };
+
+async function resolveFromNc(
+  supabase: ReturnType<typeof createClient>, id: string,
+): Promise<Resolved> {
+  const { data: nc, error } = await supabase
+    .from("factura_notas_credito")
+    .select("facturapi_id, folio, serie, organization_id")
+    .eq("id", id).maybeSingle();
+  if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
+  const ncId = nc.facturapi_id as string | null;
+  if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
+  const serie = nc.serie ?? "";
+  const folio = nc.folio ?? "NC";
+  return { ok: true, data: { facturapiId: ncId, organizationId: nc.organization_id as string, filename: `NC-${serie}${folio}` } };
+}
+
+async function resolveFromPago(
+  supabase: ReturnType<typeof createClient>, id: string,
+): Promise<Resolved> {
+  const { data: pago, error } = await supabase
+    .from("pagos_factura")
+    .select("facturapi_rep_id, folio_rep, serie_rep, organization_id, factura_id")
+    .eq("id", id).maybeSingle();
+  if (error || !pago) return { ok: false, status: 404, body: { error: "pago_not_found" } };
+  const repId = pago.facturapi_rep_id as string | null;
+  if (!repId) return { ok: false, status: 422, body: { error: "rep_no_timbrado" } };
+  const folio = pago.folio_rep ?? "REP";
+  const serie = pago.serie_rep ?? "";
+  return { ok: true, data: { facturapiId: repId, organizationId: pago.organization_id as string, filename: `REP-${serie}${folio}` } };
+}
+
+async function resolveFromFactura(
+  supabase: ReturnType<typeof createClient>, id: string,
+): Promise<Resolved> {
+  const { data: factura, error } = await supabase
+    .from("facturas")
+    .select("facturapi_id, folio_fiscal, serie, organization_id")
+    .eq("id", id).maybeSingle();
+  if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
+  const fId = factura.facturapi_id as string | null;
+  if (!fId) return { ok: false, status: 422, body: { error: "factura_no_timbrada" } };
+  const folio = factura.folio_fiscal ?? "S/F";
+  const serie = factura.serie ?? "";
+  return { ok: true, data: { facturapiId: fId, organizationId: factura.organization_id as string, filename: `${serie}${folio}` } };
+}
+
 async function resolveTarget(
   supabase: ReturnType<typeof createClient>,
   body: ReqBody,
-): Promise<{ ok: true; data: ResolvedTarget } | { ok: false; status: number; body: unknown }> {
-  if (body.nota_credito_id) {
-    const { data: nc, error } = await supabase
-      .from("factura_notas_credito")
-      .select("facturapi_id, folio, serie, organization_id")
-      .eq("id", body.nota_credito_id)
-      .maybeSingle();
-    if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
-    const ncId = nc.facturapi_id as string | null;
-    if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
-    const serie = nc.serie ?? "";
-    const folio = nc.folio ?? "NC";
-    return {
-      ok: true,
-      data: {
-        facturapiId: ncId,
-        organizationId: nc.organization_id as string,
-        filename: `NC-${serie}${folio}`,
-      },
-    };
-  }
-  if (body.pago_id) {
-    const { data: pago, error } = await supabase
-      .from("pagos_factura")
-      .select("facturapi_rep_id, folio_rep, serie_rep, organization_id, factura_id")
-      .eq("id", body.pago_id)
-      .maybeSingle();
-    if (error || !pago) return { ok: false, status: 404, body: { error: "pago_not_found" } };
-    const repId = pago.facturapi_rep_id as string | null;
-    if (!repId) return { ok: false, status: 422, body: { error: "rep_no_timbrado" } };
-    const folio = pago.folio_rep ?? "REP";
-    const serie = pago.serie_rep ?? "";
-    return {
-      ok: true,
-      data: {
-        facturapiId: repId,
-        organizationId: pago.organization_id as string,
-        filename: `REP-${serie}${folio}`,
-      },
-    };
-  }
-  if (body.factura_id) {
-    const { data: factura, error } = await supabase
-      .from("facturas")
-      .select("facturapi_id, folio_fiscal, serie, organization_id")
-      .eq("id", body.factura_id)
-      .maybeSingle();
-    if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
-    const fId = factura.facturapi_id as string | null;
-    if (!fId) return { ok: false, status: 422, body: { error: "factura_no_timbrada" } };
-    const folio = factura.folio_fiscal ?? "S/F";
-    const serie = factura.serie ?? "";
-    return {
-      ok: true,
-      data: {
-        facturapiId: fId,
-        organizationId: factura.organization_id as string,
-        filename: `${serie}${folio}`,
-      },
-    };
-  }
+): Promise<Resolved> {
+  if (body.nota_credito_id) return resolveFromNc(supabase, body.nota_credito_id);
+  if (body.pago_id) return resolveFromPago(supabase, body.pago_id);
+  if (body.factura_id) return resolveFromFactura(supabase, body.factura_id);
   return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id, pago_id o nota_credito_id requerido" } };
 }
+
 
 
 Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
