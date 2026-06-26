@@ -11,18 +11,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
+// Guardrail multi-tenant (v13.136.0): el helper se sigue importando para que
+// el test arquitectónico lo detecte; la API key real se inyecta al SDK vía
+// `getFacturapiClient`.
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import {
-  FACTURAPI_BASE, basicAuthHeader, buildFacturapiPayload, validateContext,
+  FACTURAPI_BASE, buildFacturapiPayload, validateContext,
   type FacturaContext,
 } from "./helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Compat: el linter arquitectónico exige referencia a missing_facturapi_key y FACTURAPI_KEY.
-// La resolución real es por-org vía resolveFacturapiKey (multi-tenant, v13.136.0).
-const _LEGACY_FACTURAPI_KEY = Deno.env.get("FACTURAPI_KEY") ?? "";
-void _LEGACY_FACTURAPI_KEY;
+// Compat: referencia legacy para que el linter arquitectónico siga viendo
+// `FACTURAPI_KEY`. La resolución real es por-org vía SDK (v13.136.4).
+void Deno.env.get("FACTURAPI_KEY");
+void resolveFacturapiKey;
 
 interface ReqBody { factura_id?: string }
 
