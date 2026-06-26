@@ -43,10 +43,12 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     queryFn: () => fetchClienteFiscal(factura!.cliente_id),
   });
 
+  const { toast } = useToast();
   const [serie, setSerie] = useState("A");
   const [usoCfdi, setUsoCfdi] = useState(factura?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
   const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? "03");
   const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? "PUE");
+  const [enviarEmail, setEnviarEmail] = useState(true);
 
   if (!facturaId || !factura) return null;
 
@@ -66,7 +68,23 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       forma_pago: formaPago,
       metodo_pago: metodoPago,
     });
-    timbrar.mutate(facturaId, { onSuccess: () => onOpenChange(false) });
+    timbrar.mutate(facturaId, {
+      onSuccess: async () => {
+        if (enviarEmail) {
+          try {
+            const r = await enviarCfdiFactura(facturaId);
+            toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
+          } catch (err) {
+            toast({
+              title: "Factura timbrada, pero no se envió el email",
+              description: getErrorMessage(err),
+              variant: "destructive",
+            });
+          }
+        }
+        onOpenChange(false);
+      },
+    });
   };
 
   const footer = (
