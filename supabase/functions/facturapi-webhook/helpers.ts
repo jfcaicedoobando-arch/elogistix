@@ -1,0 +1,90 @@
+/**
+ * Helpers puros para `facturapi-webhook`. Sin I/O, 100% testeables.
+ *
+ * FacturApi envía eventos con la forma:
+ *   { type: "invoice.status_updated", data: { object: { id, status, uuid, ... } } }
+ *
+ * Firma: header `facturapi-signature` = HMAC-SHA256(raw_body, webhook_secret) hex.
+ */
+
+export type FacturapiEventType =
+  | "invoice.status_updated"
+  | "invoice.canceled"
+  | "invoice.delivered_to_customer"
+  | "invoice.created";
+
+export interface FacturapiWebhookEvent {
+  type: string;
+  data?: { object?: Record<string, unknown> };
+}
+
+export interface MappedUpdate {
+  facturapi_id: string;
+  patch: Record<string, unknown>;
+  bitacora_accion: string;
+}
+
+/**
+ * Convierte un evento de FacturApi en un patch parcial para `public.facturas`.
+ * Devuelve `null` si el evento no requiere acción.
+ */
+export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate | null {
+  const obj = ev.data?.object as Record<string, unknown> | undefined;
+  if (!obj || typeof obj.id !== "string") return null;
+  const facturapi_id = obj.id;
+  const status = typeof obj.status === "string" ? obj.status : null;
+  const uuid = typeof obj.uuid === "string" ? obj.uuid : null;
+
+  switch (ev.type) {
+    case "invoice.status_updated": {
+      const patch: Record<string, unknown> = {};
+      if (uuid) patch.uuid_fiscal = uuid;
+      if (status === "canceled") {
+        patch.estado = "Cancelada";
+        patch.cancelado_en = new Date().toISOString();
+      } else if (status === "valid") {
+        patch.estado = "Timbrada";
+      }
+      if (Object.keys(patch).length === 0) return null;
+      return { facturapi_id, patch, bitacora_accion: "facturapi_webhook_status" };
+    }
+    case "invoice.canceled":
+      return {
+        facturapi_id,
+        patch: { estado: "Cancelada", cancelado_en: new Date().toISOString() },
+        bitacora_accion: "facturapi_webhook_canceled",
+      };
+    case "invoice.delivered_to_customer":
+      return {
+        facturapi_id,
+        patch: { enviada_cliente_at: new Date().toISOString() },
+        bitacora_accion: "facturapi_webhook_delivered",
+      };
+    default:
+      return null;
+  }
+}
+
+/** HMAC-SHA256 hex del body con el secret. Usa Web Crypto (disponible en Deno). */
+export async function computeSignature(rawBody: string, secret: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(rawBody));
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Comparación constante en tiempo para evitar timing attacks. */
+export function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
