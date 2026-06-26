@@ -3819,6 +3819,8 @@ export type Database = {
           serie_id: string | null
           snapshot_emision: Json | null
           subtotal: number
+          sustituida_por: string | null
+          sustituye_a: string | null
           timbrado_en: string | null
           timbrado_por: string | null
           tipo_cambio: number
@@ -3863,6 +3865,8 @@ export type Database = {
           serie_id?: string | null
           snapshot_emision?: Json | null
           subtotal?: number
+          sustituida_por?: string | null
+          sustituye_a?: string | null
           timbrado_en?: string | null
           timbrado_por?: string | null
           tipo_cambio?: number
@@ -3907,6 +3911,8 @@ export type Database = {
           serie_id?: string | null
           snapshot_emision?: Json | null
           subtotal?: number
+          sustituida_por?: string | null
+          sustituye_a?: string | null
           timbrado_en?: string | null
           timbrado_por?: string | null
           tipo_cambio?: number
@@ -3963,6 +3969,20 @@ export type Database = {
             columns: ["serie_id"]
             isOneToOne: false
             referencedRelation: "factura_series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_sustituida_por_fkey"
+            columns: ["sustituida_por"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_sustituye_a_fkey"
+            columns: ["sustituye_a"]
+            isOneToOne: false
+            referencedRelation: "facturas"
             referencedColumns: ["id"]
           },
         ]
@@ -6249,6 +6269,8 @@ export type Database = {
           serie_id: string | null
           snapshot_emision: Json | null
           subtotal: number
+          sustituida_por: string | null
+          sustituye_a: string | null
           timbrado_en: string | null
           timbrado_por: string | null
           tipo_cambio: number
@@ -6447,6 +6469,10 @@ export type Database = {
           p_request_id?: string
         }
         Returns: Json
+      }
+      duplicar_factura_para_sustitucion: {
+        Args: { p_factura_id: string }
+        Returns: string
       }
       eliminar_embarque_completo: {
         Args: { p_embarque_id: string }
@@ -7102,6 +7128,7 @@ export type Database = {
         | "Vencida"
         | "Cancelada"
         | "Parcialmente pagada"
+        | "Sustituida"
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
       estado_nota_credito:
@@ -7397,6 +7424,7 @@ export const Constants = {
         "Vencida",
         "Cancelada",
         "Parcialmente pagada",
+        "Sustituida",
       ],
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],

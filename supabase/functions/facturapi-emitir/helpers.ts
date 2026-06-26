@@ -30,7 +30,10 @@ export interface FacturaContext {
     email?: string | null;
   };
   conceptos: ConceptoInterno[];
+  /** UUID de la factura sustituida cuando este CFDI la reemplaza (relación SAT 04). */
+  sustituye_uuid?: string | null;
 }
+
 
 export interface FacturapiPayload {
   type: "I";
@@ -40,6 +43,8 @@ export interface FacturapiPayload {
   payment_method: string;
   currency: string;
   exchange?: number;
+  related?: string[];
+  relation?: string;
   customer: {
     legal_name: string;
     tax_id: string;
@@ -60,6 +65,7 @@ export interface FacturapiPayload {
     };
   }>;
 }
+
 
 const RFC_RX = /^([A-ZÑ&]{3,4})\d{6}(?:[A-Z\d]{2}[A\d0-9])$/i;
 
@@ -123,8 +129,14 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  if (ctx.sustituye_uuid) {
+    // SAT relación 04 = "Sustitución de los CFDI previos"
+    payload.related = [ctx.sustituye_uuid];
+    payload.relation = "04";
+  }
   return payload;
 }
+
 
 export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 

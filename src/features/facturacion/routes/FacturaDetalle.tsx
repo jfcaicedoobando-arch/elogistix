@@ -33,6 +33,9 @@ import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTi
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
+import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
+import { Replace } from "lucide-react";
+
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -46,8 +49,10 @@ export default function FacturaDetalle() {
   const [pagoOpen, setPagoOpen] = useState(false);
   const [timbrarOpen, setTimbrarOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
+  const [sustituirOpen, setSustituirOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
+
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
   // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
@@ -138,6 +143,14 @@ export default function FacturaDetalle() {
         onDownload={handleDownload}
       />
 
+      {canEdit && !sinTimbrar && factura.estado === "Emitida" && (
+        <Button variant="outline" size="sm" onClick={() => setSustituirOpen(true)} className="gap-1">
+          <Replace className="h-4 w-4" /> Sustituir CFDI (motivo 01)
+        </Button>
+      )}
+
+
+
 
       <FacturaResumenCard factura={factura} />
       <FacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />
@@ -186,6 +199,15 @@ export default function FacturaDetalle() {
         facturaId={factura.id}
         titulo={`Enviar CFDI ${factura.numero}`}
       />
+
+      <DialogSustituirFactura
+        facturaId={sustituirOpen ? factura.id : null}
+        numero={factura.numero}
+        uuidOriginal={factura.uuid_fiscal ?? null}
+        open={sustituirOpen}
+        onOpenChange={setSustituirOpen}
+      />
+
     </div>
   );
 }
