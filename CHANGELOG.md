@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.17] - 2026-06-26
+- **fix(tests) — títulos `it()` duplicados que rompían `audit-report`**:
+  - Renombrados en `financials.test.ts`, `facturasCrud.test.ts` y `asignarConceptos.test.ts` para evitar colisiones con los nuevos suites fiscales (regla `duplicate-title`).
+
 ## [13.137.16] - 2026-06-26
 - **test(coverage) — +100 tests de lógica fiscal para mantener cobertura ≥ 38%**:
   - Servicios FacturApi: `facturapi.ts` (9), `repFacturapi.ts` (6), `notasCreditoFacturapi.ts` (5), `enviarCfdiEmail.ts` (5), `descargarCfdiFacturapi.ts` (12 incl. `esUrlFacturapi`), `facturaManual.ts` (7 incl. cálculo IVA/total, rollback de conceptos, fecha vencimiento).
