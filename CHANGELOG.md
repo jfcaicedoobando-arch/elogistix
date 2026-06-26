@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.11] - 2026-06-26
+- **fix(embarques) — Tab Costos del detalle reventaba con PGRST200** (Sentry `JAVASCRIPT-REACT-1M`, 40 eventos, regresión):
+  - `fetchCostosConFactura` ya no usa embed `conceptos_costo!inner(...)` porque la FK física entre `proveedor_facturas_conceptos.concepto_costo_id` y `conceptos_costo.id` no está registrada en el schema cache de PostgREST. Se reescribe al patrón de dos pasos (mismo enfoque que `reconciliacionCostos.ts`).
+  - Mismo contrato público (`Promise<Set<string>>`); ningún consumidor cambia.
+  - Test nuevo `costosConFactura.test.ts` cubre vacío, mapeo, deduplicación y errores en ambos pasos.
+
 ## [13.137.9] - 2026-06-26
+
 - **feat(facturacion) — Sustitución de CFDI (motivo SAT 01) end-to-end (Paso 4)**:
   - `facturapi-emitir`: si la factura tiene `sustituye_a`, resuelve el UUID fiscal del CFDI previo y agrega `related: [uuid]` + `relation: '04'` al payload Facturapi para que el SAT acepte la relación de sustitución.
   - `facturapi-cancelar`: nuevo input opcional `sustituida_por_factura_id`; si viene, resuelve su UUID, fuerza motivo `01`, marca la original como `Sustituida`, escribe `sustituida_por` y registra `facturapi_sustituida` en bitácora. Bug fix: usa `motive: motivo` correctamente al invocar el SDK.
