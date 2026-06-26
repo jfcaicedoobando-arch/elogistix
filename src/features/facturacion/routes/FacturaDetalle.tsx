@@ -20,6 +20,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
+import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
@@ -55,12 +56,17 @@ export default function FacturaDetalle() {
     }
   }, [searchParams, sinTimbrar, canEdit, setSearchParams]);
 
-  const handleDownload = async (stored: string, kind: "PDF" | "XML") => {
+  const handleDownload = async (stored: string | null, tipo: "pdf" | "xml") => {
     try {
-      await openFacturaInNewTab(stored);
+      const usarProxy = !stored || esUrlFacturapi(stored);
+      if (usarProxy && factura?.id) {
+        await descargarCfdiFacturapi({ tipo, facturaId: factura.id });
+      } else if (stored) {
+        await openFacturaInNewTab(stored);
+      }
     } catch (err) {
       notifyError(toast, {
-        title: `No se pudo abrir el ${kind}`,
+        title: `No se pudo abrir el ${tipo.toUpperCase()}`,
         description: getErrorMessage(err),
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
@@ -123,20 +129,20 @@ export default function FacturaDetalle() {
             <Stamp className="h-4 w-4 mr-1.5" /> Timbrar factura
           </Button>
         )}
-        {factura.factura_pdf_url && (
+        {(factura.factura_pdf_url || !sinTimbrar) && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDownload(factura.factura_pdf_url!, "PDF")}
+            onClick={() => handleDownload(factura.factura_pdf_url, "pdf")}
           >
             <FileText className="h-4 w-4 mr-1.5 text-destructive" /> Descargar PDF
           </Button>
         )}
-        {factura.factura_xml_url && (
+        {(factura.factura_xml_url || !sinTimbrar) && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDownload(factura.factura_xml_url!, "XML")}
+            onClick={() => handleDownload(factura.factura_xml_url, "xml")}
           >
             <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Descargar XML
           </Button>

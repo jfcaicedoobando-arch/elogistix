@@ -122,7 +122,8 @@ export function DatosGeneralesCard({ proforma }: { proforma: ProformaDetalleFull
 }
 
 export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
-  const tieneArchivos = !!(factura.factura_pdf_url || factura.factura_xml_url);
+  const timbrada = !!factura.uuid_fiscal;
+  const tieneArchivos = !!(factura.factura_pdf_url || factura.factura_xml_url || timbrada);
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
@@ -154,12 +155,8 @@ export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
         </div>
         {tieneArchivos && (
           <div className="col-span-2 md:col-span-3 flex flex-wrap gap-2 pt-1 border-t">
-            {factura.factura_pdf_url && (
-              <FacturaDownloadButton stored={factura.factura_pdf_url} kind="pdf" size="sm" />
-            )}
-            {factura.factura_xml_url && (
-              <FacturaDownloadButton stored={factura.factura_xml_url} kind="xml" size="sm" />
-            )}
+            <FacturaDownloadButton stored={factura.factura_pdf_url ?? null} kind="pdf" size="sm" facturaId={factura.id} />
+            <FacturaDownloadButton stored={factura.factura_xml_url ?? null} kind="xml" size="sm" facturaId={factura.id} />
           </div>
         )}
       </CardContent>

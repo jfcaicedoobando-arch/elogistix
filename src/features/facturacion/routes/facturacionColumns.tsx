@@ -86,11 +86,14 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       meta: { width: "w-[110px]" },
       cell: ({ row }) => {
         const f = row.original;
-        if (!f.factura_pdf_url && !f.factura_xml_url) return <span className="text-muted-foreground text-xs">—</span>;
+        const timbrada = !!(f as { uuid_fiscal?: string | null }).uuid_fiscal;
+        if (!f.factura_pdf_url && !f.factura_xml_url && !timbrada) {
+          return <span className="text-muted-foreground text-xs">—</span>;
+        }
         return (
           <div className="flex items-center gap-1">
-            {f.factura_pdf_url && <FacturaDownloadButton stored={f.factura_pdf_url} kind="pdf" />}
-            {f.factura_xml_url && <FacturaDownloadButton stored={f.factura_xml_url} kind="xml" />}
+            <FacturaDownloadButton stored={f.factura_pdf_url ?? null} kind="pdf" facturaId={f.id} />
+            <FacturaDownloadButton stored={f.factura_xml_url ?? null} kind="xml" facturaId={f.id} />
           </div>
         );
       },

@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface FacturaParaZip {
+  id: string;
   numero: string;
   factura_pdf_url: string | null;
   factura_xml_url: string | null;
@@ -15,7 +16,7 @@ export async function fetchFacturasParaZip(ids: string[]): Promise<FacturaParaZi
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("facturas")
-    .select("numero, factura_pdf_url, factura_xml_url")
+    .select("id, numero, factura_pdf_url, factura_xml_url")
     .in("id", ids);
   if (error) throw error;
   return (data ?? []) as FacturaParaZip[];

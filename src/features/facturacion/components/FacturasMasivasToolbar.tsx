@@ -11,6 +11,19 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { fetchCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
+
+async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf" | "xml"): Promise<ArrayBuffer | null> {
+  if (!stored && !facturaId) return null;
+  if (stored && !esUrlFacturapi(stored)) {
+    const res = await fetch(stored);
+    if (!res.ok) return null;
+    return await res.arrayBuffer();
+  }
+  // Stored vacío o apunta a FacturApi → usar proxy autenticado.
+  const { blob } = await fetchCfdiFacturapi({ tipo, facturaId });
+  return await blob.arrayBuffer();
+}
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
@@ -38,21 +51,17 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
       const folder = zip.folder("facturas")!;
       let count = 0;
       for (const f of data ?? []) {
-        if (f.factura_pdf_url) {
-          try {
-            const res = await fetch(f.factura_pdf_url);
-            if (res.ok) {
-              folder.file(`${f.numero}.pdf`, await res.arrayBuffer());
-              count++;
-            }
-          } catch { /* skip */ }
-        }
-        if (f.factura_xml_url) {
-          try {
-            const res = await fetch(f.factura_xml_url);
-            if (res.ok) folder.file(`${f.numero}.xml`, await res.arrayBuffer());
-          } catch { /* skip */ }
-        }
+        try {
+          const pdf = await obtenerBytes(f.factura_pdf_url, f.id, "pdf");
+          if (pdf) {
+            folder.file(`${f.numero}.pdf`, pdf);
+            count++;
+          }
+        } catch { /* skip */ }
+        try {
+          const xml = await obtenerBytes(f.factura_xml_url, f.id, "xml");
+          if (xml) folder.file(`${f.numero}.xml`, xml);
+        } catch { /* skip */ }
       }
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
       saveAs(blob, `facturas-${new Date().toISOString().slice(0, 10)}.zip`);
