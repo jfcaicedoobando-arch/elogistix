@@ -35,6 +35,7 @@ export default function FacturapiCredencialesCard() {
   const [datosFiscales, setDatosFiscales] = useState(false);
   const [csdCargado, setCsdCargado] = useState(false);
   const [csdVence, setCsdVence] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     if (!orgId) return;
