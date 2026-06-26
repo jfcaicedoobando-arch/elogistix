@@ -32,6 +32,8 @@ interface FacturapiCredencialRow {
   ambiente: string | null;
   api_key_sandbox_secret_name: string | null;
   api_key_live_secret_name: string | null;
+  api_key_sandbox_vault_id: string | null;
+  api_key_live_vault_id: string | null;
   facturapi_org_id: string | null;
 }
 export interface SupabaseLike {
@@ -42,6 +44,10 @@ export interface SupabaseLike {
       };
     };
   };
+  rpc?: (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ data: string | null; error: unknown }>;
 }
 
 export type FacturapiAmbiente = "sandbox" | "live";
