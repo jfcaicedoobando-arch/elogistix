@@ -1,60 +1,64 @@
-## Estado actual de Sentry
+# Estado actual de los 11 pendientes fiscales
 
-Sólo queda **1 issue abierto** en `elogistix/javascript-react`:
+Revisé el código contra la lista. Esto es lo que **ya está hecho** y lo que **realmente queda pendiente**.
 
-- **JAVASCRIPT-REACT-W** — `UnhandledRejection: Object captured as promise rejection with keys: code, details, hint, message`
-  - **Mensaje real (PostgrestError)**: `new row violates row-level security policy "Hide soft deleted pagos_proveedor" for table "pagos_proveedor"` (`code: 42501`)
-  - 5 eventos · 3 usuarios · regresión · último visto hoy · release `13.136.11`
-  - URL: `https://librecarga.com/cxp`, rol efectivo: `contador`, org `00000000-0000-0000-0000-000000000001`
+## Ya implementado (no hay que tocar)
 
-## Hallazgos de la investigación
 
-1. **El usuario sí tiene el rol `contador`** en `user_roles` y la policy `Tenant CRUD pagos_proveedor` ya lo permite (revisado con `pg_policy`).
-2. **La policy restrictiva `Hide soft deleted pagos_proveedor` tiene `WITH CHECK (true)`** — no puede bloquear un INSERT por sí sola; Postgres la nombra cuando *cualquiera* de las dos checks falla.
-3. **La causa más probable**: el INSERT en `registrarPagoProveedor` no envía `organization_id`, así que toma el default `current_user_org_id()`. Si el usuario está actuando bajo impersonación o cambió de org sin refrescar JWT, `current_user_org_id()` devuelve un valor distinto al de la factura padre y *aun así* el INSERT cuela hasta el chequeo RLS final.
-4. **Bug colateral encontrado**: `proveedorFacturas.update.ts:123` consulta `pagos_proveedor` filtrando por `factura_id`, pero la columna real es `proveedor_factura_id`. Esa query lanza error silencioso al editar facturas (no es la causa del Sentry, pero hay que arreglarlo).
-5. **Manejo de errores faltante**: `registrarPagoProveedor` y `eliminarPagoProveedor` hacen `throw error` directo. El dialog que los llama no envuelve la promesa en try/catch con toast → escapa a `window.onunhandledrejection` y llega a Sentry como `UnhandledRejection`. Por eso el mensaje aparece sin stacktrace.
+| #   | Item                                    | Dónde quedó                                                                                            |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 1   | Descarga PDF/XML del CFDI               | `facturapi-descargar` desplegada + botones en `FacturaDetalle` (13.137.8)                              |
+| 2   | Envío del CFDI por email                | `facturapi-enviar-email` + checkbox en `DialogTimbrarFactura` + botón "Reenviar" (13.137.8)            |
+| 3   | Notas de crédito timbradas              | `facturapi-emitir-nota-credito` + `DialogCrearNotaCredito` + sección en `FacturaDetalle` (13.137.8/10) |
+| 4   | Cancelación con sustitución (motivo 01) | `DialogSustituirFactura` + `duplicar_factura_para_sustitucion` (13.137.9)                              |
+| 5   | Reintento manual de REP                 | Botón "Timbrar REP" ya está en `PagoFacturaRow.tsx:84`                                                 |
+| 6   | Cancelar REP                            | `DialogCancelarRep` integrado en `DialogHistorialPagos`                                                |
 
-## Plan de implementación
 
-### 1) Frontend — Traducción y captura de error RLS
-- Crear `src/features/cxp/services/pagosProveedorErrors.ts` con `traducirErrorPagoProveedor(err)` que mapee:
-  - `42501` (RLS) → `"No tienes permiso para registrar pagos a proveedor en esta organización. Verifica tu rol o la organización activa."`
-  - `23xxx` (FK/unique) → mensajes genéricos en español.
-  - `check_violation` con mensaje "La factura debe estar aprobada…" → respetar el texto del trigger.
-  - Cualquier otro → `"No se pudo registrar el pago. Inténtalo de nuevo."`
-- Envolver el `mutate`/`onSubmit` en `DialogRegistrarPagoProveedor.tsx` con try/catch que muestre `toast.error(traducirErrorPagoProveedor(e))` y **nunca** re-lance al unhandled rejection.
+## Realmente pendiente
 
-### 2) Backend — Forzar coherencia org en el INSERT
-- En `registrarPagoProveedor` (servicio), añadir `organization_id` explícito tomado del padre `proveedor_facturas.organization_id` (consultarlo antes del INSERT). Así eliminamos la dependencia del default `current_user_org_id()` que pudo divergir bajo impersonación.
-- Si la consulta del padre devuelve org distinta al `current_user_org_id()` actual → lanzar error en español controlado *antes* de pegarle al INSERT.
+### Media prioridad
 
-### 3) Bug colateral en update de facturas
-- `proveedorFacturas.update.ts:121-123`: cambiar `.eq("factura_id", id)` → `.eq("proveedor_factura_id", id)`.
-- Añadir test `proveedorFacturas.update.test.ts` que falle si vuelve a usar `factura_id`.
+**7. Webhook FacturApi — partes faltantes**
 
-### 4) Tests
-- `pagosProveedor.test.ts`: cubrir el nuevo path "org del padre != current_user_org_id → error controlado".
-- `pagosProveedorErrors.test.ts`: 4 casos (RLS, FK, check_violation, genérico).
+- El handler hoy procesa `invoice.status_updated`, `invoice.canceled`, `invoice.delivered_to_recipient`. **Faltan eventos de REP** (`receipt.created`, `receipt.canceled`, `payment.*`) para sincronizar `pagos_factura.rep_*` cuando se timbra desde fuera o asincrónicamente.
+- **Falta UI** que muestre al admin la URL exacta del webhook con `?org=<UUID>` ya pre-armada (hoy hay que construirla a mano). Pertenece a `FacturapiCredencialesCard`.
 
-### 5) Sentry + versionado
-- Marcar `JAVASCRIPT-REACT-W` como `resolved` con comentario que referencie la versión.
-- Bump `APP_VERSION` a `13.137.12` y agregar bullet en `CHANGELOG.md`.
+**8. KPIs del módulo de facturación**
 
-## Detalle técnico
+- Cero hits para "Proformas convertibles / Facturas sin timbrar / REPs pendientes" en `src/features/facturacion/`. Hay que crear `FacturacionKpis.tsx` con tres tarjetas que cuenten:
+  - Proformas en estado `Aprobada` sin `factura_id`
+  - Facturas con `estado='Borrador'` y sin `facturapi_id`
+  - `pagos_factura` PPD con `rep_uuid IS NULL`
+
+### Baja prioridad (limpieza)
+
+**9. Deprecar `DialogMarcarFacturada**`
+
+- Sigue activo en `TabProformas.tsx`. Decisión + flag para ocultarlo en proformas creadas después de la fecha de corte.
+
+**10. Migración de facturas históricas**
+
+- Decisión de producto: ¿se re-timbra el histórico previo a 13.137.0 o quedan marcadas "no fiscales"? No hay código aún.
+
+**11. E2E del flujo completo**
+
+- Hay tests unitarios pero no un happy-path Playwright: proforma → factura → timbrado sandbox → pago PPD → REP.
+
+## Orden sugerido para retomar
+
+Por valor inmediato al usuario:
 
 ```text
-src/features/cxp/
-├── services/
-│   ├── pagosProveedor.ts                 (modificar: organization_id explícito + guard de coherencia)
-│   ├── pagosProveedorErrors.ts           (nuevo)
-│   ├── proveedorFacturas.update.ts       (fix factura_id → proveedor_factura_id)
-│   └── __tests__/
-│       ├── pagosProveedor.test.ts        (ampliar)
-│       ├── pagosProveedorErrors.test.ts  (nuevo)
-│       └── proveedorFacturas.update.test.ts (nuevo)
-└── components/
-    └── DialogRegistrarPagoProveedor.tsx  (try/catch + toast en español)
+7  Webhook REP + UI con URL ──► cierra el ciclo asíncrono
+8  KPIs de facturación      ──► visibilidad de pendientes
+9  Deprecar marcado manual  ──► limpieza tras 7 y 8
+10 Migración histórica       ──► decisión de producto
+11 E2E sandbox               ──► red de seguridad antes de prod
 ```
 
-No se tocan migraciones SQL (las policies ya están correctas); el fix es defensivo en aplicación.
+**Dime cuál activamos** y armo el plan detallado de ese bloque (no toco código todavía).
+
+Vamos a hacer 7,8,9, y 11.  El punto 10 no se va a hacer
+
+&nbsp;

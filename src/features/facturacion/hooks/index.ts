@@ -15,3 +15,4 @@ export * from './useCrearFacturaManual';
 
 export * from './useNotasCredito';
 export * from './useCobranza';
+export * from './useFacturacionKpisFiscales';

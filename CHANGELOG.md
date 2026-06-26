@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.13] - 2026-06-26
+- **feat(facturacion) — Cierre del plan FacturApi (pendientes 7, 8, 9, 11)**:
+  - **Webhook REP** (`receipt.*`): `facturapi-webhook/helpers.ts` añade `mapEventToReceiptPatch` para `receipt.status_updated`, `receipt.canceled`, `receipt.created`. `index.ts` ahora enruta el evento a `pagos_factura` o `facturas` según el tipo, escribe `bitacora_actividad` y conserva firma HMAC SHA-256.
+  - **URL del webhook en UI**: nuevo `FacturapiWebhookUrlSection` dentro de `FacturapiCredencialesCard`. Muestra la URL pre-formateada (`<SUPABASE_URL>/functions/v1/facturapi-webhook?org=<UUID>`) con botón de copiar; elimina el paso manual que provocaba errores de configuración.
+  - **KPIs fiscales** (`FacturacionKpisFiscales` + `useFacturacionKpisFiscales`): tarjetas para *Proformas convertibles*, *Facturas sin timbrar* y *REPs pendientes*, integradas debajo del `DashboardEjecutivoFacturacion`. Sólo cuentan filas (no descarga payload).
+  - **Deprecación `DialogMarcarFacturada`**: nueva constante `MARCAR_FACTURADA_CUTOFF = 2026-01-01`. El botón "Facturada" en `proformasColumns` se oculta para proformas creadas a partir de esa fecha; las históricas siguen pudiéndose marcar manualmente.
+  - **E2E**: `e2e/specs/08-flujo-fiscal.spec.ts` cubre el happy path proforma→factura→timbrado→pago PPD→REP. Skipped por defecto; se activa con `E2E_FISCAL=1` + `E2E_PROFORMA_NUMERO`.
+  - Tests Deno: 3 casos nuevos en `helpers_test.ts` para los eventos `receipt.*`.
+
 ## [13.137.12] - 2026-06-26
 - **fix(cxp) — Registrar pago a proveedor: RLS opaco y mensaje en inglés** (Sentry `JAVASCRIPT-REACT-W`, 5 eventos, regresión):
   - `registrarPagoProveedor` ahora resuelve `organization_id` desde la factura padre y valida coherencia contra `current_user_org_id()` antes del INSERT. Si difieren, lanza `ORG_MISMATCH` tipado en lugar de dejar que reviente la RLS.

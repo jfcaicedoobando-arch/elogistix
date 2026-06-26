@@ -11,7 +11,10 @@ export type FacturapiEventType =
   | "invoice.status_updated"
   | "invoice.canceled"
   | "invoice.delivered_to_customer"
-  | "invoice.created";
+  | "invoice.created"
+  | "receipt.status_updated"
+  | "receipt.canceled"
+  | "receipt.created";
 
 export interface FacturapiWebhookEvent {
   type: string;
@@ -62,7 +65,58 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
       };
     default:
       return null;
+}
+
+/**
+ * Mapper de eventos `receipt.*` (REP / Complemento de Pagos) hacia
+ * `public.pagos_factura`. Devuelve el `facturapi_rep_id` para hacer match.
+ *
+ * FacturApi nombra al objeto REP `receipt`; los eventos siguen la misma
+ * forma que invoice (`type`, `data.object`).
+ */
+export interface MappedReceiptUpdate {
+  facturapi_rep_id: string;
+  patch: Record<string, unknown>;
+  bitacora_accion: string;
+}
+
+export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceiptUpdate | null {
+  const obj = ev.data?.object as Record<string, unknown> | undefined;
+  if (!obj || typeof obj.id !== "string") return null;
+  const facturapi_rep_id = obj.id;
+  const status = typeof obj.status === "string" ? obj.status : null;
+  const uuid = typeof obj.uuid === "string" ? obj.uuid : null;
+
+  switch (ev.type) {
+    case "receipt.status_updated": {
+      const patch: Record<string, unknown> = {};
+      if (uuid) patch.uuid_rep = uuid;
+      if (status === "canceled") {
+        patch.estado_rep = "Cancelado";
+        patch.rep_cancelado_en = new Date().toISOString();
+      } else if (status === "valid") {
+        patch.estado_rep = "Timbrado";
+        patch.timbrado_rep_en = new Date().toISOString();
+      }
+      if (Object.keys(patch).length === 0) return null;
+      return { facturapi_rep_id, patch, bitacora_accion: "facturapi_webhook_rep_status" };
+    }
+    case "receipt.canceled":
+      return {
+        facturapi_rep_id,
+        patch: { estado_rep: "Cancelado", rep_cancelado_en: new Date().toISOString() },
+        bitacora_accion: "facturapi_webhook_rep_canceled",
+      };
+    case "receipt.created":
+      return {
+        facturapi_rep_id,
+        patch: uuid ? { uuid_rep: uuid, estado_rep: "Timbrado", timbrado_rep_en: new Date().toISOString() } : { estado_rep: "Timbrado" },
+        bitacora_accion: "facturapi_webhook_rep_created",
+      };
+    default:
+      return null;
   }
+}
 }
 
 /** HMAC-SHA256 hex del body con el secret. Usa Web Crypto (disponible en Deno). */
