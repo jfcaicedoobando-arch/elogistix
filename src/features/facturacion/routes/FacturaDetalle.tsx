@@ -136,39 +136,14 @@ export default function FacturaDetalle() {
       />
       {isAdmin && <FacturaBitacoraCard facturaId={factura.id} />}
 
-      <DialogRegistrarPago
-        open={pagoOpen}
-        onOpenChange={setPagoOpen}
-        factura={{
-          id: factura.id,
-          numero: factura.numero,
-          total: Number(factura.total),
-          moneda: factura.moneda,
-          metodoPago: factura.metodo_pago ?? null,
-          uuidFiscal: factura.uuid_fiscal ?? null,
-        }}
+      <FacturaDetalleModales
+        factura={factura}
+        pagoOpen={pagoOpen} setPagoOpen={setPagoOpen}
+        timbrarOpen={timbrarOpen} setTimbrarOpen={setTimbrarOpen}
+        enviarOpen={enviarOpen} setEnviarOpen={setEnviarOpen}
+        sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
       />
 
-      <DialogTimbrarFactura
-        facturaId={timbrarOpen ? factura.id : null}
-        open={timbrarOpen}
-        onOpenChange={setTimbrarOpen}
-      />
-
-      <DialogEnviarCfdi
-        open={enviarOpen}
-        onOpenChange={setEnviarOpen}
-        facturaId={factura.id}
-        titulo={`Enviar CFDI ${factura.numero}`}
-      />
-
-      <DialogSustituirFactura
-        facturaId={sustituirOpen ? factura.id : null}
-        numero={factura.numero}
-        uuidOriginal={factura.uuid_fiscal ?? null}
-        open={sustituirOpen}
-        onOpenChange={setSustituirOpen}
-      />
 
     </div>
   );
