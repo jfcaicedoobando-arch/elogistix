@@ -6,6 +6,10 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchFacturapiCredenciales,
   upsertFacturapiCredenciales,
+  setFacturapiApiKey,
+  clearFacturapiApiKey,
+  probarFacturapiConexion,
+  type FacturapiAmbiente,
   type FacturapiCredencialesInput,
   type FacturapiCredencialesRow,
 } from "@/features/configuracion/services/facturapiCredenciales";
