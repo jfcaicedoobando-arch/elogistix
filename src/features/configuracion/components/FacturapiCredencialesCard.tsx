@@ -8,13 +8,9 @@
  */
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Receipt, Copy, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Receipt, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
@@ -26,6 +22,8 @@ import {
   defaultSecretName,
   type FacturapiAmbiente,
 } from "@/features/configuracion/services/facturapiCredenciales";
+import FacturapiCredencialesForm from "./FacturapiCredencialesForm";
+
 
 export default function FacturapiCredencialesCard() {
   const { organization } = useOrganization();
