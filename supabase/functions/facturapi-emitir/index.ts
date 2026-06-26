@@ -60,11 +60,21 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // Cargar factura + cliente + conceptos
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id")
+    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a")
     .eq("id", body.factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
+
+  // Si esta factura sustituye a otra, resolver su UUID para relación SAT 04.
+  let sustituyeUuid: string | null = null;
+  if (factura.sustituye_a) {
+    const { data: prev } = await supabase
+      .from("facturas").select("uuid_fiscal").eq("id", factura.sustituye_a).maybeSingle();
+    if (!prev?.uuid_fiscal) return json({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
+    sustituyeUuid = prev.uuid_fiscal as string;
+  }
+
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
