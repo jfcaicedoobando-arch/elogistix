@@ -126,7 +126,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       unidad: c.unidad,
       tasa_iva: c.tasa_iva != null ? Number(c.tasa_iva) : 0.16,
     })),
+    sustituye_uuid: sustituyeUuid,
   };
+
 
   const issues = validateContext(ctx);
   if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
