@@ -49,6 +49,36 @@ const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
   /librecarga\.com/,
 ];
 
+/**
+ * Predicado para `beforeSend`: decide si un evento debe descartarse antes de
+ * llegar a Sentry. Extraído para mantener el `beforeSend` con complejidad baja.
+ */
+function shouldDropSentryEvent(
+  event: Sentry.ErrorEvent,
+  hint: Sentry.EventHint | undefined,
+): boolean {
+  const exc = hint?.originalException as Error | undefined;
+  const originalMsg =
+    exc?.message ??
+    (typeof hint?.originalException === "string" ? hint.originalException : undefined);
+  if (isDynamicImportErrorMessage(originalMsg)) return true;
+  if (isDynamicImportErrorMessage(event.message)) return true;
+
+  const values = event.exception?.values;
+  if (values?.some((v) => isDynamicImportErrorMessage(v.value))) return true;
+
+  if (exc && isReactRefreshHmrError(exc)) return true;
+  if (values?.some((v) => isReactRefreshStackTrace(v.stacktrace))) return true;
+
+  // Errores de validación (zod) son input del usuario, no bugs.
+  const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
+  const causeName = (cause as { name?: string } | undefined)?.name;
+  const excName = (exc as { name?: string } | undefined)?.name;
+  if (causeName === "ZodError" || excName === "ZodError") return true;
+
+  return false;
+}
+
 /** Resuelve el environment de Sentry. Prioriza `VITE_SENTRY_ENV` (permite
  *  distinguir `preview` de `production` en builds idénticos). Fallback a MODE. */
 function resolveEnvironment(): string {
@@ -112,26 +142,7 @@ export function initSentry(): void {
       /Lock broken by another request with the 'steal' option/i,
     ],
     beforeSend(event, hint) {
-      const originalMsg =
-        (hint?.originalException as Error | undefined)?.message ??
-        (typeof hint?.originalException === "string" ? hint.originalException : undefined);
-      if (isDynamicImportErrorMessage(originalMsg)) return null;
-      if (isDynamicImportErrorMessage(event.message)) return null;
-      const values = event.exception?.values;
-      if (values && values.some((v) => isDynamicImportErrorMessage(v.value))) return null;
-
-      const exc = hint?.originalException as Error | undefined;
-      if (exc && isReactRefreshHmrError(exc)) return null;
-      if (values && values.some((v) => isReactRefreshStackTrace(v.stacktrace))) return null;
-
-      // Errores de validación (zod) son input del usuario, no bugs. El UI ya
-      // muestra el toast con el mensaje legible; no contaminan Sentry.
-      const cause = (exc as (Error & { cause?: unknown }) | undefined)?.cause;
-      const causeName = (cause as { name?: string } | undefined)?.name;
-      if (causeName === "ZodError" || (exc as { name?: string } | undefined)?.name === "ZodError") {
-        return null;
-      }
-
+      if (shouldDropSentryEvent(event, hint)) return null;
       return scrubEventPii(event);
     },
     // 13.114.19: las transactions también pueden traer PII en `request.url`
