@@ -22,7 +22,12 @@ export function esUrlFacturapi(url: string | null | undefined): boolean {
   return url.includes("facturapi.io");
 }
 
-export async function descargarCfdiFacturapi(opts: DescargarCfdiOpts): Promise<void> {
+export interface CfdiBlob {
+  blob: Blob;
+  filename: string;
+}
+
+export async function fetchCfdiFacturapi(opts: DescargarCfdiOpts): Promise<CfdiBlob> {
   if (!opts.facturaId && !opts.pagoId) {
     throw new Error("facturaId o pagoId requerido");
   }
@@ -59,7 +64,11 @@ export async function descargarCfdiFacturapi(opts: DescargarCfdiOpts): Promise<v
   const disposition = res.headers.get("Content-Disposition") ?? "";
   const match = /filename="?([^"]+)"?/i.exec(disposition);
   const filename = match?.[1] ?? `cfdi.${opts.tipo}`;
+  return { blob, filename };
+}
 
+export async function descargarCfdiFacturapi(opts: DescargarCfdiOpts): Promise<void> {
+  const { blob, filename } = await fetchCfdiFacturapi(opts);
   const objectUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = objectUrl;
