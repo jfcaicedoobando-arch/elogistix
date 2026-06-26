@@ -1176,6 +1176,13 @@ export type Database = {
             referencedRelation: "proformas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conceptos_venta_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
+          },
         ]
       }
       configuracion: {
@@ -3906,6 +3913,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "facturas_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
+          },
+          {
             foreignKeyName: "facturas_serie_id_fkey"
             columns: ["serie_id"]
             isOneToOne: false
@@ -4638,6 +4652,13 @@ export type Database = {
             referencedRelation: "proformas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proforma_conceptos_consolidados_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
+          },
         ]
       }
       proformas: {
@@ -4769,6 +4790,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proformas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_consolidada_en_fkey"
+            columns: ["consolidada_en"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
           },
           {
             foreignKeyName: "proformas_embarque_id_fkey"
@@ -5725,6 +5753,46 @@ export type Database = {
           },
         ]
       }
+      v_proforma_factura_link: {
+        Row: {
+          cliente_id: string | null
+          es_consolidada: boolean | null
+          estado_proforma: string | null
+          estado_revision: string | null
+          factura_estado: Database["public"]["Enums"]["estado_factura"] | null
+          factura_id: string | null
+          factura_numero: string | null
+          organization_id: string | null
+          proforma_id: string | null
+          proforma_numero: string | null
+          proformas_origen: string[] | null
+          timbrado_en: string | null
+          uuid_fiscal: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proformas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_proveedor_facturas_saldo: {
         Row: {
           notas_credito_aplicadas: number | null
@@ -6094,6 +6162,68 @@ export type Database = {
           _tc_usd: number
         }
         Returns: number
+      }
+      convertir_proformas_a_factura: {
+        Args: {
+          p_dias_credito?: number
+          p_forma_pago: string
+          p_metodo_pago: string
+          p_notas?: string
+          p_proforma_ids: string[]
+          p_request_id?: string
+          p_serie_id: string
+          p_uso_cfdi: string
+        }
+        Returns: {
+          cancelacion_motivo: string | null
+          cancelado_en: string | null
+          cliente_id: string
+          cliente_nombre: string
+          cotizacion_id: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number | null
+          embarque_id: string | null
+          enviada_cliente_at: string | null
+          estado: Database["public"]["Enums"]["estado_factura"]
+          expediente: string
+          factura_pdf_url: string | null
+          factura_xml_url: string | null
+          facturapi_id: string | null
+          fecha_emision: string
+          fecha_vencimiento: string
+          folio_fiscal: number | null
+          forma_pago: string | null
+          id: string
+          iva: number
+          metodo_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          notas: string | null
+          numero: string
+          organization_id: string
+          origen: Database["public"]["Enums"]["origen_factura"]
+          proforma_id: string | null
+          referencia_bl: string | null
+          rfc_cliente: string | null
+          serie: string | null
+          serie_id: string | null
+          snapshot_emision: Json | null
+          subtotal: number
+          timbrado_en: string | null
+          timbrado_por: string | null
+          tipo_cambio: number
+          total: number
+          updated_at: string
+          uso_cfdi: string | null
+          uuid_fiscal: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "facturas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       cotizaciones_listado: {
         Args: {
