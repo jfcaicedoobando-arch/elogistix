@@ -22,6 +22,8 @@ import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEma
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors/index";
+import { notifyError } from "@/components/shared/utils/appFeedback";
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 
@@ -75,10 +77,11 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
             const r = await enviarCfdiFactura(facturaId);
             toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
           } catch (err) {
-            toast({
+            notifyError(toast, {
               title: "Factura timbrada, pero no se envió el email",
               description: getErrorMessage(err),
-              variant: "destructive",
+              method: "ON_ERROR",
+              errorCode: ERROR_CODES.VALIDATION_FAILED,
             });
           }
         }
