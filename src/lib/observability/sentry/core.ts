@@ -21,12 +21,7 @@ import {
 import { APP_VERSION } from "@/constants/appVersion";
 import { isDynamicImportErrorMessage } from "@/lib/errors/dynamicImportError";
 import { scrubPii, scrubUrl, isSensitiveApiUrl } from "@/lib/observability/piiScrub";
-import {
-  isReactRefreshHmrError,
-  isReactRefreshStackTrace,
-  sampleByRoute,
-  scrubEventPii,
-} from "./helpers";
+import { sampleByRoute, scrubEventPii } from "./helpers";
 import { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
 import { FEEDBACK_INTEGRATION_OPTIONS } from "./feedbackConfig";
 
@@ -62,7 +57,7 @@ export function initSentry(): void {
   initialized = true;
   // 13.114.17: warn si se está usando el DSN hardcodeado en producción real
   // (no preview). Permite detectar configuración faltante sin romper.
-  if (!import.meta.env.VITE_SENTRY_DSN && resolveEnvironment() === "production") {
+  if (!import.meta.env.VITE_SENTRY_DSN && resolveSentryEnvironment() === "production") {
      
     console.warn("[sentry] VITE_SENTRY_DSN no configurado, usando DEFAULT_DSN hardcodeado");
   }
@@ -78,7 +73,7 @@ export function initSentry(): void {
     dsn: DSN,
     release: `libre-carga@${APP_VERSION}`,
     dist: buildHash,
-    environment: resolveEnvironment(),
+    environment: resolveSentryEnvironment(),
     tracesSampler: sampleByRoute,
     tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
     profilesSampleRate: 0.1,
