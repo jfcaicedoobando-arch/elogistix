@@ -33,6 +33,7 @@ interface ReqBody {
   tipo?: "pdf" | "xml";
   factura_id?: string;
   pago_id?: string;
+  nota_credito_id?: string;
 }
 
 interface ResolvedTarget {
@@ -45,6 +46,26 @@ async function resolveTarget(
   supabase: ReturnType<typeof createClient>,
   body: ReqBody,
 ): Promise<{ ok: true; data: ResolvedTarget } | { ok: false; status: number; body: unknown }> {
+  if (body.nota_credito_id) {
+    const { data: nc, error } = await supabase
+      .from("factura_notas_credito")
+      .select("facturapi_id, folio, serie, organization_id")
+      .eq("id", body.nota_credito_id)
+      .maybeSingle();
+    if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
+    const ncId = nc.facturapi_id as string | null;
+    if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
+    const serie = nc.serie ?? "";
+    const folio = nc.folio ?? "NC";
+    return {
+      ok: true,
+      data: {
+        facturapiId: ncId,
+        organizationId: nc.organization_id as string,
+        filename: `NC-${serie}${folio}`,
+      },
+    };
+  }
   if (body.pago_id) {
     const { data: pago, error } = await supabase
       .from("pagos_factura")
@@ -85,8 +106,9 @@ async function resolveTarget(
       },
     };
   }
-  return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id o pago_id requerido" } };
+  return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id, pago_id o nota_credito_id requerido" } };
 }
+
 
 Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
