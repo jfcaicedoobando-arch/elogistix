@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.136.11] - 2026-06-26
+- **ux(embarques) — reordenado tab "Demoras y Garantías"**: en `EmbarqueDetalleTabs.tsx` ahora la sección **Demoras** (auto + tabla) aparece primero y **Garantías** debajo. Trigger del tab renombrado a "Demoras y Garantías" para reflejar el nuevo orden. Sin cambios de lógica.
+
 ## [13.136.10] - 2026-06-26
 - **ux(embarques) — card de Demoras automáticas movido a tab "Garantías y Demoras"**: `SeccionDemorasAuto` (botón Recalcular / Eliminar automáticas) se quitó de `TabCostos.tsx` y ahora se renderiza dentro de la sección "Demoras" del tab unificado, arriba de la tabla por contenedor. Agrupa captura (fechas descarga/devolución + tabulador) → cálculo → resultado en un solo lugar. Sin cambios de lógica ni RPC.
 
