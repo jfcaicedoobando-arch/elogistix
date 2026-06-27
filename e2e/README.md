@@ -20,11 +20,27 @@ E2E_EMAIL=admin-staging@librecarga.test       # cuenta interna con acceso comple
 E2E_PASSWORD=********
 E2E_PORTAL_EMAIL=cliente-staging@empresa.test # cuenta de portal cliente
 E2E_PORTAL_PASSWORD=********
+
+# Specs avanzados (opcionales — el spec se salta si falta su flag)
+E2E_HAS_SEED=1                                # 07 wizard teclado
+E2E_FISCAL=1                                  # 08 happy path fiscal sandbox
+E2E_PROFORMA_NUMERO=PRO-2026-XXXX             # 08
+E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID=<uuid>   # 09 cierre embarque
+E2E_ADMIN_ORG=1                               # 09 probar bypass admin_org
+E2E_HAS_AUDIT_DATA=1                          # 10 auditoría bulk
+E2E_COTIZACION_ACEPTADA_ID=<uuid>             # 11 cotización → embarque
+E2E_PROVEEDOR_ID=<uuid>                       # 12 CXP
+E2E_EMBARQUE_PARA_CXP_ID=<uuid>               # 12 CXP
+
+# Cross-org (06) — opcionales, IDs de OTRA organización
+E2E_CROSS_ORG_EMBARQUE_ID=<uuid>
+E2E_CROSS_ORG_FACTURA_ID=<uuid>
+E2E_CROSS_ORG_COTIZACION_ID=<uuid>
 ```
 
 > ⚠️ **Nunca** uses credenciales productivas. Provisiona un tenant de staging
-> con datos seed determinísticos. Los specs asumen que existe al menos un
-> cliente, un embarque y una factura previos.
+> con datos seed determinísticos. Los specs 09–12 **mutan** datos reales y
+> hacen cleanup best-effort; revisar el tenant tras correr.
 
 ## Correr
 
