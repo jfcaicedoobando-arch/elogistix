@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.50] - 2026-06-27
+- **test(cxp) — lote 3: hooks `useCargaCfdi` y `useEditarFacturaProveedorForm` (+16 tests)**: nuevos archivos `useCargaCfdi.test.tsx` (9 tests: rechazo .xml/2MB/null, happy path, reset, mapeo de fase de `CfdiUploadError` a `response`/`request` offline, timeout cliente con fake timers) y `useEditarFacturaProveedorForm.test.tsx` (7 tests: precarga desde `fetchFacturaParaEdicion`, `handleProveedor` no-op, recálculo de vencimiento + `hayCambios`, validación de folio vacío, submit happy con payload normalizado, manejo de rechazo silencioso, y `factura=null`). Ambos hooks pasan de 0% a cobertura completa de ramas observables.
+
 ## [13.137.49] - 2026-06-27
+
 - **fix(ci) — run 76396991060 falló por hygiene + unhandled error en shards 5/8**: tres causas distintas en el mismo run. (1) Test hygiene: 4 títulos duplicados en los tests nuevos de lote 1/2 (`historialFactura`, `sugerirEmbarques`, `proveedorSalud`, `cxpAprobacionCount`) — los prefijé con `[archivo]` para hacerlos únicos vs `crm/oportunidades.test.ts` y `embarques/contenedores/crud.test.ts`. (2) Shard 5 fallaba con `URL.revokeObjectURL is not a function` porque `descargarBlob` deja un `setTimeout(revoke, 4000)` que dispara después de que el test terminó, en jsdom sin polyfill — agregué stubs no-op de `URL.createObjectURL`/`revokeObjectURL` en `src/test/setup.ts`. (3) Shard 8 reventaba en `audit-report.test.ts` por los mismos duplicados de hygiene (mismo issue que (1), distinto canal). Quality y tests deben volver a verde; el gap de cobertura (21.32% vs 38%) sigue abierto y se ataca con más lotes.
 
 ## [13.137.48] - 2026-06-27
