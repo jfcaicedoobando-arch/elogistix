@@ -28,18 +28,39 @@ test.describe("Flujo 12 — CXP captura + pago", () => {
   let facturaId: string | null = null;
   let folio: string | null = null;
 
-  test.afterAll(async ({ browser }) => {
+  test.afterAll(async ({ browser }, testInfo) => {
     if (!facturaId) return;
+    // Intento 1: usar storageState directo. Si el token expiró o el setup
+    // falló, caemos a loginAs() vía formulario en el mismo context.
     const ctx = await browser.newContext({ storageState: "e2e/.auth/internal.json" });
     const page = await ctx.newPage();
-    await page.goto("/");
-    await bestEffortCleanup("borrar pagos del proveedor", async () => {
-      await supabaseRest(page).delete("pagos_proveedor", { proveedor_factura_id: facturaId! });
-    });
-    await bestEffortCleanup("borrar factura proveedor E2E", async () => {
-      await supabaseRest(page).delete("proveedor_facturas", { id: facturaId! });
-    });
-    await ctx.close();
+    try {
+      await page.goto("/");
+      // Probar el handle; si falla, login UI para mintear sesión fresca.
+      await page.waitForLoadState("domcontentloaded");
+      const hasSession = await page.evaluate(() =>
+        Object.keys(window.localStorage).some((k) => /^sb-[^-]+-auth-token$/.test(k)),
+      );
+      if (!hasSession) {
+        await loginAs(page, internalCreds());
+      }
+      await bestEffortCleanup(testInfo, "borrar pagos del proveedor", async () => {
+        await supabaseRest(page).delete("pagos_proveedor", { proveedor_factura_id: facturaId! });
+      });
+      await bestEffortCleanup(testInfo, "borrar factura proveedor E2E", async () => {
+        await supabaseRest(page).delete("proveedor_facturas", { id: facturaId! });
+      });
+      // Red de seguridad: borra cualquier otra factura tagueada E2E_TEST
+      // del mismo proveedor (capa por si quedaron facturas de runs previos).
+      await bestEffortCleanup(testInfo, "barrido defensivo E2E_TEST", async () => {
+        await supabaseRest(page).delete("proveedor_facturas", {
+          referencia: "like.*E2E_TEST*",
+          proveedor_id: PROVEEDOR_ID,
+        });
+      });
+    } finally {
+      await ctx.close();
+    }
   });
 
   test("captura factura proveedor y asigna folio FP-XXXXXX", async ({ page }) => {
