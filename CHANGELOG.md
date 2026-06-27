@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.14] - 2026-06-27
+- **ui(cohesion) — Batch 1 auditoría visual 1920×1080**. (1) Facturación: la `GuiaPrefacturacion` (acordeón pedagógico) baja debajo de los KPIs y `HuecoFacturacionCard` para restaurar la jerarquía header→KPIs→guía→tabla común a toda la app. (2) CRM: el `CrmLayout` ahora arranca con un título "CRM" + subtítulo antes de la barra de tabs (`h-12 → h-11`), evitando que la tab strip se lea como extensión del topbar global. Hallazgos del auditor que NO se aplicaron por ser falsos positivos contra el código actual: badge sidebar absoluto (es inline `ml-auto`), botón "Sin Cambios" en Configuración (no existe), "+ Nuevo Tarifario" duplicado en Cotizaciones (no existe), badge `enterprise` como `<span>` (es `<SelectItem>`), search del topbar invisible (ya usa `bg-muted/50 border`).
+
 ## [13.139.13] - 2026-06-27
 - **chore(lint) — Limpieza de warnings en suite E2E**. Remueve directivas `eslint-disable` huérfanas en `cleanup.ts` y `globalTeardown.ts`, parte `globalTeardown` en helpers `probeOrphans` + `reportOutcome` (complejidad ciclomática 17 → <10) y reemplaza `({}, testInfo)` por `(_fixtures, testInfo)` en `08-flujo-fiscal.spec.ts` para satisfacer `no-empty-pattern`.
 

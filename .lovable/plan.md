@@ -1,42 +1,79 @@
-## Auditoría de cleanup E2E
+# Auditoría visual UI/UX @ 1920×1080 — plan de remediación
 
-Revisé los 12 specs, `fixtures/cleanup.ts`, `fixtures/api.ts` y los contratos reales de las RPC/tablas que tocamos. La mayoría está bien (specs 01-07 son read-only y no necesitan cleanup), pero **6 hallazgos** reales en los specs mutadores (08-12) y en los helpers.
+Capturé 12 rutas a 1920×1080 (`inicio`, `embarques`, `cotizaciones`, `clientes`, `proveedores`, `facturacion`, `cxp`, `costeo/tarifas`, `auditoria`, `usuarios`, `configuracion`, `crm`) y un auditor senior las inspeccionó pixel a pixel. **20 hallazgos**: 4 críticos, 5 altos, 6 medios, 5 bajos. Los módulos más “parchados” son **CRM** y **Configuración**; los más cohesionados son **Embarques** e **Inicio**.
 
-### Hallazgos
+Propongo agrupar las correcciones en **4 batches** ordenados por impacto en cohesión. Cada batch es un commit independiente con bump de versión y entrada en `CHANGELOG.md`.
 
-| # | Spec / helper | Severidad | Problema |
-|---|---|---|---|
-| 1 | **09-cierre-embarque** | Alta | Llama `supabaseRest(page).rpc("reabrir_embarque", { p_embarque_id })` pero la firma real es `reabrir_embarque(p_embarque_id uuid, p_motivo text)` (NOT NULL). El RPC tira 4xx, `bestEffortCleanup` lo traga y el embarque queda **cerrado** para siempre. |
-| 2 | **09-cierre-embarque** | Alta | El cleanup vive dentro del `test("admin_org puede cerrar…")`. Si el spec falla **después** del clic de cerrar pero antes del bloque cleanup (p. ej. al esperar el badge "cerrado"), el embarque queda cerrado sin reapertura. Debe moverse a un `afterEach` con flag `wasClosed`. |
-| 3 | **10-auditoria-bulk** | Media | Inserta filas en `auditoria_revisiones` (3 por corrida) y **no las borra**. Tras varios runs se acumula ruido y baja el score de auditoría real. Falta `afterEach` que borre `auditoria_revisiones` por `comentario ILIKE 'E2E_TEST%'` y/o por `created_at > startTs`. El snooze también puede insertar — borrar `auditoria_snooze` con la misma heurística. |
-| 4 | **11-cotizacion-a-embarque** | Media | `DELETE FROM embarques WHERE id=…` directo puede fallar por FK (contenedores, tracking_eventos, embarque_conceptos generados por el RPC), o por trigger `bloquear_*`. El error se traga y queda un embarque huérfano. Debe usar una RPC dedicada (`eliminar_embarque_borrador` si existe) o borrar primero las tablas hijas en orden, dentro de `bestEffortCleanup` separados. También: marcar el embarque con `notas_internas = 'E2E_TEST'` justo después de crearlo para que aparezca en reportes de basura. |
-| 5 | **12-cxp-factura-pago** | Alta | `test.afterAll` abre un context nuevo con `storageState: "e2e/.auth/internal.json"`. Si ese storageState no se generó (globalSetup falló) o el access_token expiró, `supabaseRest` tira "no se pudo obtener handle" y **no limpia nada**. Debe: (a) si falla la lectura del handle, hacer fallback a `loginAs(page, internalCreds())`; (b) loguear con `testInfo.attach` en lugar de `console.warn` invisible. |
-| 6 | **12-cxp-factura-pago** | Media | Sólo borra `pagos_proveedor` + `proveedor_facturas`. No borra `proveedor_facturas_conceptos` (CASCADE lo cubre por FK) pero **sí queda** el folio `FP-XXXXXX` consumido del consecutivo (no es recuperable, sólo documentar). Además, si el primer test inserta y el segundo falla a la mitad, no hay registro de `bitacora_actividad` para localizar la basura — falta tag `referencia LIKE 'E2E_TEST%'` ya está ✓, pero confirmar que se borre por ese tag como red de seguridad. |
-| 7 | **08-flujo-fiscal** | Media (sandbox) | **Cero cleanup**. Cada corrida crea factura timbrada + pago + REP en FacturApi sandbox y los deja vivos. Está `skip` por defecto, pero cuando se corre manualmente acumula CFDI. Cancelar CFDI no es trivial (motivo SAT 02 "sin sustitución" funciona en sandbox); al menos invocar `cancelar_factura` con motivo 02 en `afterAll` best-effort + borrar `pagos_factura` locales. |
-| 8 | **fixtures/cleanup.ts** | Baja | `console.warn` no se ve en el reporter por defecto. Cambiar la firma a `bestEffortCleanup(testInfo, label, fn)` y usar `testInfo.attach("cleanup-warning", { body: msg, contentType: "text/plain" })` para que aparezca en el HTML report. |
-| 9 | **fixtures/api.ts** | Baja | `readHandle` falla silencioso si no hay sesión; útil añadir un `Page` argument check + mensaje claro. También: cachear el handle por test para no leer localStorage en cada call. |
-| 10 | **Global** | Baja | No hay `globalTeardown` que detecte huérfanos. Añadir uno mínimo que loguee (no borre) filas con `referencia/comentario/notas_internas LIKE 'E2E_TEST%'` para visibilidad. |
+---
 
-### Fixes propuestos (orden de implementación)
+## Batch 1 — Cohesión estructural (CRITICAL)
 
-1. **Spec 09** — pasar `p_motivo: "cleanup E2E"` a la RPC y mover cleanup a `test.afterEach` con flag `wasClosed`.
-2. **Spec 11** — añadir intento de cleanup en cascada: `tracking_eventos` → `embarque_contenedores` → `embarque_conceptos` → `embarques`, cada uno en su propio `bestEffortCleanup`. Marcar el embarque con `notas_internas = 'E2E_TEST'` tras el `waitForURL`.
-3. **Spec 12** — endurecer `afterAll`: try `loginAs` fallback si el storageState no produce token; añadir cleanup defensivo por tag (`referencia ILIKE 'E2E_TEST%'`) además del id.
-4. **Spec 10** — capturar `startTs = new Date().toISOString()` en `beforeEach`; `afterEach` borra `auditoria_revisiones` y `auditoria_snooze` del usuario E2E con `created_at >= startTs` o `comentario ILIKE 'E2E_TEST%'`.
-5. **Spec 08** — opcional, sólo cuando esté `E2E_FISCAL=1`: `afterAll` intenta cancelar CFDI motivo 02 (best-effort) y borra `pagos_factura` locales tagueados.
-6. **Helpers** — `bestEffortCleanup` acepta `testInfo` y usa `attach` para visibilidad; `supabaseRest` mensaje de error claro cuando no hay token.
-7. **globalTeardown** (nuevo, ~30 líneas) — query read-only que cuenta huérfanos `E2E_TEST` y los reporta en stdout para que un humano limpie manualmente si hace falta.
+Cambios de mayor impacto visual: 4 archivos, ~1 día.
 
-### Notas técnicas
+1. **C-01 · Badge del sidebar invade contenido.** El contador rojo "17" en "Embarques" se sale del sidebar (`-right-1` con sidebar de 254 px). → `right-2` en el badge + `overflow-x: hidden` en el contenedor del nav (`src/components/ui/sidebar.tsx` y/o `SidebarNavItem`).
+2. **C-02 · CxP/Proveedores: columna "Proveedor" trunca el nombre y rompe la altura de fila.** Badge "Nacional/Extranjero" salta a segunda línea. → en la celda: `flex items-center gap-2 min-w-0`, nombre con `truncate max-w-[220px]`, columna `min-w-[280px]`. Aplicar mismo patrón en tabla de `cxp` y `proveedores`.
+3. **C-03 · Facturación: el acordeón "¿Cómo funciona este módulo?" desplaza la barra de KPIs.** Rompe la jerarquía título → KPIs → filtros → tabla que usa el resto de la app. → mover el acordeón **debajo** de `<KpiStrip>` o convertirlo en un botón de ayuda `<HelpCircle>` que abre un `<Popover>`. Mantener orden: header → KPIs → filtros → tabla.
+4. **C-04 · CRM: las pestañas viven en el topbar global, no en el contenido.** Ningún otro módulo hace eso. → mover `<TabsList>` (Mi día, Resumen, Leads, …) al área de contenido bajo el `<PageHeader>`, mismo patrón que Proveedores/CxP.
 
-- `bestEffortCleanup` se mantiene "no rompe el test"; sólo mejora visibilidad.
-- Ningún cambio en `src/`. Todo vive en `e2e/`, `playwright.config.ts` y `CHANGELOG.md`.
-- Bump de versión sugerido: `13.139.10` (patch dentro del ciclo de mejoras E2E).
+**Riesgo:** el cambio de CRM toca routing interno del feature; verificar que los `<Outlet>`/`useNavigate` sigan apuntando a las rutas hijas.
 
-### Out of scope
+---
 
-- Reescribir specs read-only (01-07) — no aplica.
-- Crear seeds automáticos para los specs gateados (`E2E_*`) — eso es otro plan.
-- Cancelar CFDIs reales en producción — sólo sandbox.
+## Batch 2 — Sistema de tablas y headers (HIGH)
 
-¿Implemento los 7 fixes o sólo los de severidad Alta (1, 2, 5)?
+Toca tabla compartida `DataTable` y `PageHeader`. ~1 día.
+
+5. **H-01 · Tabla de Embarques: columna CLIENTE acapara 35% del ancho.** ETD/ETA quedan apretados, ESTADO pegado al borde. → declarar widths explícitos en `columnsEmbarques.tsx`: `EXPEDIENTE w-[130px]`, `BL_MASTER w-[140px]`, `CONTENEDORES w-[120px]`, `CLIENTE w-[220px] max-w-[220px]`, `MODO w-[90px]`, `ORIGEN/DESTINO w-[120px]`, `ETD/ETA w-[100px]`, `ESTADO w-[110px]`. Agregar `table-fixed` en la `<table>` del `DataTable` compartido.
+6. **H-02 · Cotizaciones: dos CTAs con peso visual de primario.** "+ Nueva Cotización" (filled) y "+ Nuevo Tarifario" (outline pero con `+`) compiten. → "Nuevo Tarifario" → `variant="outline"`, icono `FileSpreadsheet`, sin `+`.
+7. **H-03 · Inicio: pipeline de embarques con padding asimétrico y segunda fila de KPIs sin card.** → padding uniforme `p-6` en ambas filas; envolver la segunda fila ("Arribos / MXN 267.4K …") en el mismo `<Card>` con `shadow-card`.
+8. **H-04 · Configuración: botón "Sin Cambios" con estilo de primario.** Implica acción cuando es estado pasivo. → cuando `!isDirty`: `variant="outline" disabled`, gris muted. Sólo `variant="default"` cuando hay cambios.
+9. **H-05 · Auditoría: cards "Salud operativa" y "Atención de hallazgos" con alturas distintas y pesos tipográficos disparejos.** → contenedor interno `h-full flex flex-col justify-between`; metric numeral estandarizado a `text-5xl font-bold` (token único del sistema).
+
+**Riesgo bajo:** todos son ajustes presentacionales, no tocan negocio.
+
+---
+
+## Batch 3 — Sistema de componentes (MEDIUM)
+
+El batch que más empuja la cohesión a largo plazo. ~1 día.
+
+10. **M-01 · Tabs: dos variantes coexisten.** Underline (`proveedores`, `cxp`) vs segmentado-pastilla (`usuarios`, `auditoria`). → adoptar **una sola variante "underline"** en `<Tabs>` de shadcn para tabs de módulo. Auditar los 5 módulos tabulados y unificar.
+11. **M-02 · CxP: barra de filtros mezcla pills, selects y "Filtros" en alturas distintas.** Dos "Todas" ambiguas. → todos los controles `h-9`; `<ToggleGroup>` para filtros mutuamente excluyentes; `<Select>` con label visible; renombrar "Todas" → "Todas las monedas" / "Todas las aprobaciones".
+12. **M-03 · Clientes: search a ancho completo (1664 px) sin filtros.** Inconsistente con embarques/cotizaciones/proveedores. → cap `max-w-[600px]` y traer los CTAs "Importar CSV" + "Nuevo cliente" desde el topbar al toolbar.
+13. **M-04 · Costeo/Tarifas: badges "Mejor"/"Nueva" outline mientras el resto usa filled.** → adoptar vocabulario único: `outline` para etiquetas tipo (Nacional/Tarifario), `filled` para estado (Aceptada/En Tránsito/Vencida) y para features (Mejor=green filled, Nueva=blue filled).
+14. **M-05 · Usuarios: ~62% del alto vacío con 8 usuarios.** → footer con resumen ("8 de 8 · 5 roles"), o card "Invitar usuario" cuando `total < 10`. `min-h-[calc(100vh-64px)]` + flex column.
+15. **M-06 · Facturación: KPIs con verde/rojo sin leyenda.** Cobrado=Vencido (mismos MXN 737.8K) en colores distintos confunde. → agregar `border-l-4 border-{green,red}-500` al `<Card>` del KPI (cue estructural) + tooltip explicativo.
+
+**Riesgo:** unificar tabs implica tocar componente compartido `Tabs`; ejecutar Playwright sobre los 5 módulos tabulados para verificar que el indicador activo se renderice bien.
+
+---
+
+## Batch 4 — Pulido fino (LOW)
+
+Quick wins, ~½ día.
+
+16. **L-01 · Subtítulos de página inconsistentes** → token único `text-sm text-muted-foreground mt-0.5 leading-snug` en `<PageHeader>` (corolario: migrar los **30 archivos** que aún usan `<h1>` crudo en lugar de `<PageHeader>` — listado ya identificado).
+17. **L-02 · Inicio: chip "41 embarques activos" flota entre topbar y contenido** → moverlo inline al `<PageHeader>` con `flex items-center gap-3`.
+18. **L-03 · CRM: KPI "Pipeline ponderado" se desnivela por wrap del label** → label `text-xs text-nowrap`, mini-cards `h-[72px]` fijo.
+19. **L-04 · Configuración: badge "enterprise" estilo `<span>` default** → `<Badge variant="outline" className="capitalize text-indigo-600 border-indigo-300 bg-indigo-50">Enterprise</Badge>`.
+20. **L-05 · Topbar search casi invisible sobre fondo blanco** → `bg-muted/40 border border-input` para garantizar contraste ≥3:1.
+
+---
+
+## Tareas transversales (al cerrar los 4 batches)
+
+- **Migrar 30 rutas con `<h1>` crudo a `<PageHeader>`** (`rg -l "<h1 " src/features -g '*.tsx'`) — necesario para que L-01 sea estructural y no decorativo.
+- **Añadir un test de regresión visual ligero** (Playwright + screenshot diff) en al menos las 3 rutas más críticas (`/inicio`, `/embarques`, `/cxp`) a 1920×1080 para que próximos PRs no rompan cohesión.
+- **Bump de versión por batch** (`13.139.14` → `13.139.17`) y entrada en `CHANGELOG.md` por cada uno.
+
+---
+
+## Detalles técnicos (sección extendida)
+
+**Tokens ya disponibles en `index.css`** (verificado): paleta KPI categórica (`--kpi-info/success/accent/warning/secondary/danger` con variantes `-soft`), sombras de tarjeta (`--shadow-card/raised/overlay`), radios (`--radius-sm/lg`), estados de embarque (`--state-llegada/en-proceso/cerrado`), sidebar con variantes claro/oscuro. **No hace falta crear tokens nuevos** — los hallazgos se resuelven usando los existentes consistentemente.
+
+**Inventario de componentes compartidos**: 36 piezas en `src/components/shared/` (incluyen `PageHeader`, `KpiStrip`, `DataTable`, `FormDialogShell`, `FloatingActionButton`). El UI kit existe y es robusto; el problema es **adopción inconsistente** (60 usos de `PageHeader` vs 30 archivos con `<h1>` crudo, dos variantes de Tabs coexistiendo, dos formas distintas de pintar el mismo badge).
+
+**Estrategia de ejecución**: implementar en orden Batch 1 → 4. Después de cada batch, recapturar las 12 screenshots a 1920×1080 y comparar antes/después para validar que no haya regresión visual en otras rutas. El reporte completo del auditor (con regiones específicas y fixes Tailwind por hallazgo) queda disponible para usar como referencia durante la implementación.
+
+**Resultado esperado**: app que se ve construida por un solo sistema de diseño, sin "patched-on" modules. Cohesión visual completa en 3–4 días de trabajo.
