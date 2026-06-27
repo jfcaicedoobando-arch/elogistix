@@ -1,60 +1,44 @@
-# Plan: corregir bugs en tests de shards 2 y 6
+# Plan: auditoría exhaustiva del shard 2/12
 
-Auditoría con subagentes encontró **1 bug alto, 5 medios, 3 bajos** sobre 92 archivos. Ninguno es la causa raíz garantizada del cuelgue >20 min observado en CI (que sigue siendo sospecha sobre shards de PDF/leak en otros números), pero todos son fuentes plausibles de flakiness y falsos positivos.
+## Contexto
+
+Los fixes de `13.137.24` cubrieron 8 archivos sospechosos en shards 2 y 6, pero el CI sigue colgándose >20 min. La auditoría previa fue **heurística** (grep de patrones conocidos: `waitFor` sin timeout, `act` sin `await`, etc.). Esta vez vamos **línea por línea** sobre los 46 archivos del shard 2, sin filtrar por patrón.
 
 ## Analogía
 
-Los tests son como recetas. Algunas dicen "deja reposar la masa" pero no ponen alarma (sin `await`), o usan el mismo tazón para varias recetas sin lavarlo (QueryClient compartido), o tienen un temporizador real de 4 min con un límite de cocción de 15 min sin colchón. No siempre se queman, pero un día con horno lento sí.
+La auditoría anterior fue como buscar las llaves debajo del farol porque ahí hay luz. Ahora vamos a barrer toda la habitación con lámpara en mano: cada test del shard 2 se lee completo, no sólo los que coinciden con sospechas previas.
 
-## Cambios
+## Cómo se reparte el trabajo
 
-### Alta — `src/features/cxp/services/__tests__/parseCfdi.test.ts`
-- L68–81: el test de retry hace `sleep(1s)+sleep(3s)` reales con `testTimeout = 15_000`. Cero margen.
-- **Fix**: usar `vi.useFakeTimers()` + `vi.runAllTimersAsync()` siguiendo el patrón de `fetchWithRetry.test.ts`. Quitar el `15_000` literal del `it()`.
+1. **Resolver la lista exacta del shard 2/12** ejecutando localmente `vitest list --shard=2/12` para obtener los 46 paths actuales (la lista puede haber cambiado tras los fixes de `13.137.24`).
 
-### Media — `src/features/profit/hooks/__tests__/useProfit.test.tsx`
-- L67: `act(() => result.current.setFuente('facturas'))` sin `await`. Con React 18 + React Query el `waitFor` siguiente puede esperar hasta 15s.
-- **Fix**: `await act(async () => { result.current.setFuente('facturas'); })`.
+2. **Dividir en 4 lotes de ~12 archivos** y lanzar **4 subagentes en paralelo** (`acp_subagent--spawn_agent`, modelo `capable`). Cada uno recibe:
+   - Lista exacta de archivos a leer.
+   - Instrucción de leer **el archivo completo** y reportar por archivo:
+     - Timers reales (`sleep`, `setTimeout` sin fake timers) con duración estimada.
+     - `waitFor` / `findBy*` sin timeout custom y con condición costosa.
+     - Mocks de Supabase / fetch sin todos los métodos encadenables.
+     - Promesas creadas en el test que nunca se resuelven (sin `.resolves`/`.rejects`).
+     - `renderHook` / `render` sin `unmount` al final, especialmente con suscripciones realtime o `onAuthStateChange`.
+     - QueryClient o wrappers compartidos a nivel módulo.
+     - Loops `for`/`while` que generan trabajo pesado sin yield (PDF, parsers, fixtures grandes).
+     - `vi.useFakeTimers` sin `vi.useRealTimers` en cleanup.
+     - `act` sin `await`.
+     - Cualquier `import` que dispare side effects pesados al cargar (PDF font loaders, Sentry init).
+   - Para cada hallazgo: ruta, líneas, severidad (alta/media/baja), justificación de por qué podría colgar o ralentizar el shard.
 
-### Media — `src/features/embarques/hooks/__tests__/useEmbarqueForm.test.tsx`
-- L16: `const wrapper = createWrapper()` a nivel módulo → QueryClient compartido y cancelado entre tests por el `afterEach` global.
-- **Fix**: mover `createWrapper()` a un `beforeEach` o instanciarlo dentro de cada `renderHook`.
+3. **Consolidar hallazgos** en un solo plan de fixes con orden por severidad. Si aparece evidencia clara del culpable del timeout (ej. un test que carga `react-pdf` sin stub, o suscripción realtime sin unmount), priorizar ese fix primero y validar localmente con `vitest run --shard=2/12` cronometrado.
 
-### Media — `src/features/embarques/hooks/__tests__/useEditarEmbarqueWizard.test.tsx`
-- L44–49: lee `methods.getValues("clienteId")` síncrono pero la inicialización ocurre en `useEffect`. Falso positivo/negativo según timing.
-- **Fix**: envolver en `await waitFor(() => expect(result.current.methods.getValues("clienteId")).toBe("cli-1"))`.
+4. **Aplicar fixes** sólo después de tener el reporte consolidado, no en streaming, para evitar tocar archivos que otros subagentes están leyendo.
 
-### Media — `src/lib/contexts/auth/__tests__/useAuthProfile.sentry.test.ts`
-- L23–26: `flushImport()` con `setTimeout(20ms)` real → frágil en CI.
-- L49–58: aserción negativa (`not.toHaveBeenCalled()`) inmediatamente después → falso positivo silencioso.
-- `renderHook` sin guardar `unmount` → promesa resolviendo tras fin de test, contamina el siguiente en singleFork.
-- **Fix**: usar fake timers + `vi.runAllTimersAsync()`, capturar `unmount` y llamarlo al final de cada test, y reforzar la aserción negativa con un `waitFor` que confirme que la rama de éxito sí ocurrió antes.
+## Entregables
 
-### Media — `src/features/embarques/services/tracking/__tests__/index.test.ts`
-- L4–11: mock manual de Supabase con sólo 4 métodos encadenados → cualquier método extra revienta como `TypeError: undefined is not a function`.
-- **Fix**: reemplazar por `createSupabaseMock` del proyecto (patrón estándar definido en mem://technical/testing-mock-patterns).
-
-### Media — `src/features/catalogos/hooks/__tests__/useTiposContenedor.test.tsx`
-- L34: `mutateAsync` fuera de `act()` → warnings y contaminación de QueryClient en singleFork.
-- **Fix**: envolver en `await act(async () => { await result.current.agregarTipo.mutateAsync(...); })`.
-
-### Baja — `src/features/comisiones/hooks/__tests__/useComisiones.test.tsx`
-- Sin `beforeEach(() => mock.mockReset())`. Frágil.
-- **Fix**: agregar reset explícito.
-
-### Baja — `portal.test.ts` y `duplicadoRfc.test.ts`
-- Usan `vi.*` sin importarlo (funciona por `globals: true`).
-- **Fix**: agregar `vi` al import desde vitest para consistencia.
+- Reporte consolidado en `.lovable/plan-shard2-audit.md` con tabla de 46 archivos × estado (clean / sospechoso / culpable probable).
+- PR de fixes con bump `13.137.25` y entrada en `CHANGELOG.md`.
+- Si el shard 2 vuelve a colgar tras los fixes, abrir follow-up con instrumentación (`VITEST_POOL_LOGS=1`, `--reporter=verbose`) para capturar qué test es el último en empezar antes del timeout.
 
 ## Fuera de alcance
 
-- Causa raíz del timeout >20 min en CI no se confirmó aquí. Los guardrails de `13.137.23` (limpieza de blobs + `if: success()`) hacen que el próximo CI apunte al shard culpable. Si vuelve a colgar después de estos fixes, abrir un follow-up enfocado en shards de PDF/`canaries`/`pdfLeak*` que viven en otros shards.
-
-## Versionado y registro
-
-- Bump `APP_VERSION` a `13.137.24` y entrada en `CHANGELOG.md` describiendo cada fix por archivo.
-
-## Validación
-
-- `bun run test:shard -- src/features/cxp/services/__tests__/parseCfdi.test.ts src/features/profit/hooks/__tests__/useProfit.test.tsx src/features/embarques/hooks/__tests__/useEmbarqueForm.test.tsx src/features/embarques/hooks/__tests__/useEditarEmbarqueWizard.test.tsx src/lib/contexts/auth/__tests__/useAuthProfile.sentry.test.ts src/features/embarques/services/tracking/__tests__/index.test.ts src/features/catalogos/hooks/__tests__/useTiposContenedor.test.tsx src/features/comisiones/hooks/__tests__/useComisiones.test.tsx`
-- Verificar 0 warnings de `act()` y 0 timeouts.
+- Shards distintos al 2/12.
+- Cambios al workflow CI (ya endurecido en `13.137.23`).
+- Refactor de tests sin bug detectado, sólo por estilo.
