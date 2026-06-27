@@ -167,9 +167,10 @@ jobs:
         with:
           path: |
             node_modules/.vitest
-          key: ${{ runner.os }}-vitest-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
+          key: ${{ runner.os }}-vitest-v4-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
           restore-keys: |
-            ${{ runner.os }}-vitest-${{ matrix.shard }}-
+            ${{ runner.os }}-vitest-v4-${{ matrix.shard }}-
+
 
       - name: Prepare blob output directory (reset)
         run: rm -rf .vitest-reports && mkdir -p .vitest-reports
@@ -215,6 +216,9 @@ jobs:
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
 
+      - name: Prepare blob input directory (reset)
+        run: rm -rf .vitest-reports && mkdir -p .vitest-reports
+
       - name: Download shard blobs
         id: download-blobs
         continue-on-error: true
@@ -223,6 +227,14 @@ jobs:
           pattern: vitest-blob-*
           path: .vitest-reports/
           merge-multiple: true
+
+      - name: Purge stale blobs (Vitest version mismatch guard)
+        # 13.138.2 — sólo aceptamos blobs con nombre exacto `blob-<N>.json` (1..20).
+        # Cualquier blob con sufijos legacy (`blob-3-12.json`, `blob-9-20b.json`, etc.)
+        # viene de matrices anteriores y rompe `mergeReports` por mezclar v3.2.4 con v4.1.9.
+        run: |
+          find .vitest-reports/ -maxdepth 1 -type f ! -regex '.*/blob-[0-9]+\.json' -print -delete || true
+          ls -la .vitest-reports/ || echo "empty"
 
       - name: Check blob reports
         id: check-blobs
@@ -233,6 +245,7 @@ jobs:
           else
             echo "skip_merge=false" >> "$GITHUB_OUTPUT"
           fi
+
 
       - name: Merge reports + coverage thresholds
         if: steps.check-blobs.outputs.skip_merge != 'true'
