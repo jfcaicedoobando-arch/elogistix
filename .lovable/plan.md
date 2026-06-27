@@ -1,47 +1,35 @@
-## Objetivo
+## Problema
 
-Permitir, en la tabla de hallazgos de Auditoría, seleccionar varias filas pendientes de la página actual y marcarlas como revisadas en una sola operación, capturando una nota/acción común que se aplica a todas.
+En la búsqueda global (Ctrl+K), al teclear `149` aparece **dos veces** el expediente `ELIMP00149` (cliente INDIMEX TRADING). No es un bug de UI: en la BD hay dos filas en `embarques` con el mismo expediente porque es un embarque multi-contenedor (dos BL Master distintos: `034G523190` y `034G521324`).
 
-## UX
+El listado de embarques ya deduplica por expediente (`dedupePorExpediente`), pero el RPC `busqueda_global` no — devuelve una fila por contenedor.
 
-1. **Checkbox por fila** (sólo en hallazgos pendientes — los ya revisados no son seleccionables).
-2. **Checkbox maestro** en el header: selecciona/deselecciona todos los pendientes visibles en la página actual. Estado indeterminado si hay selección parcial.
-3. **Barra de acciones flotante** sobre la tabla cuando `selección > 0`:
-   - Texto: "N hallazgos seleccionados"
-   - Botón primario: "Marcar como revisados"
-   - Botón secundario: "Limpiar selección"
-4. **Diálogo `MarcarRevisadosBulkDialog`** al confirmar:
-   - Resumen: "Vas a marcar N hallazgos como revisados".
-   - Lista compacta (scroll, máx ~10 visibles) con expediente + regla + detalle truncado.
-   - Textarea **obligatoria** "Acción tomada" (placeholder: "Ej. Validado por contabilidad el 27/06/2026").
-   - Botones: Cancelar / Confirmar.
-5. Al confirmar: progress + toast de resultado (`X revisados, Y con error` si hay fallos parciales).
-6. La selección se limpia al cambiar de página, cambiar filtros o cerrar el diálogo con éxito.
+## Solución propuesta
 
-## Cambios de código (frontend-only, sin SQL nuevo)
+Deduplicar por `expediente` dentro del bloque de embarques del RPC `public.busqueda_global`, devolviendo **una sola entrada por expediente** y agregando al sublabel el número de contenedores cuando hay más de uno (consistente con el listado).
 
-| Archivo | Cambio |
-|---|---|
-| `src/features/auditoria/hooks/useHallazgosTablaState.ts` | Agregar `selectedIds: Set<string>`, `toggleSelected`, `toggleAllVisible`, `clearSelection`, `selectablesEnPagina` (pendientes visibles). Reset al cambiar página/filtros. |
-| `src/features/auditoria/components/HallazgosTabla.tsx` | Columna checkbox al inicio (sólo si fila es pendiente). Header con checkbox maestro tri-estado. Props nuevas: `selectedIds`, `onToggle`, `onToggleAll`, `selectablesIds`. |
-| `src/features/auditoria/components/HallazgosBulkBar.tsx` *(nuevo)* | Barra de acciones cuando hay selección. |
-| `src/features/auditoria/components/MarcarRevisadosBulkDialog.tsx` *(nuevo)* | Modal de confirmación con textarea + lista. Usa `FormDialogShell`. |
-| `src/features/auditoria/hooks/useMarcarRevisadosBulk.ts` *(nuevo)* | Hook que itera sobre selección, llama `upsertAuditoriaRevision` para cada uno, agrega resultados éxito/fallo, invalida queries de revisiones, lanza toasts. Concurrencia limitada (`Promise.allSettled` por chunks de 5). |
-| `src/features/auditoria/components/HallazgosTablaPaginada.tsx` | Ensamblar `HallazgosBulkBar` + `MarcarRevisadosBulkDialog`; pasar handlers. |
+### Cambios técnicos
 
-Sin cambios de SQL/RPC: reutilizamos `upsertAuditoriaRevision` (ya idempotente vía `onConflict`). El `accion_tomada` es la nota común tecleada por el usuario.
+1. **Migración SQL** — reemplazar el `SELECT` de embarques en `busqueda_global` por uno con `DISTINCT ON (e.expediente)`:
+   ```sql
+   SELECT DISTINCT ON (e.expediente)
+          e.id, e.expediente AS label,
+          e.cliente_nombre
+            || CASE WHEN COUNT(*) OVER (PARTITION BY e.expediente) > 1
+                    THEN ' · ' || COUNT(*) OVER (PARTITION BY e.expediente) || ' contenedores'
+                    ELSE '' END AS sublabel,
+          'embarque'::text AS tipo,
+          '/embarques/' || e.id AS url
+   FROM embarques e
+   WHERE e.expediente ILIKE '%' || termino || '%'
+     AND (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+   ORDER BY e.expediente, e.created_at ASC
+   LIMIT limite
+   ```
+   El `id` que se navega será el del primer contenedor (más antiguo); al abrirlo, la vista de embarque ya muestra todos los relacionados por BL/expediente.
 
-## Tests
+2. **Sin cambios en frontend** — `GlobalSearch.tsx` y `useGlobalSearch` consumen el mismo shape.
 
-- `useHallazgosTablaState.test.ts`: toggles, "select all visible page", limpieza al cambiar página/filtros, no-selecciona ya revisados.
-- `useMarcarRevisadosBulk.test.tsx`: éxito total, fallo parcial (resumen "X/Y"), invalidación de query, validación nota vacía.
-- `MarcarRevisadosBulkDialog.test.tsx`: render, deshabilita confirmar con nota vacía.
-
-## Versionado
-
-Bump `APP_VERSION` patch (`13.139.x`) + entrada nueva en `CHANGELOG.md`.
-
-## Fuera de alcance
-
-- Bulk para snooze, asignar responsable o deshacer revisión (sólo "marcar revisado").
-- Selección cross-page (queda como mejora futura).
+3. **Mantenimiento**
+   - Bump `APP_VERSION` a `13.139.2`.
+   - Entrada en `CHANGELOG.md`: "Búsqueda global: deduplicar embarques multi-contenedor por expediente".
