@@ -68,7 +68,7 @@ describe("fetchEmbarquesPaginados", () => {
       pageSize: 20
     } as any);
     
-    const args = mock.rpcCalls[0].args;
+    const args = mock.rpcCalls[0].args as Record<string, unknown>;
     expect(args.p_modo).toBeUndefined();
     expect(args.p_cliente_id).toBeUndefined();
     expect(args.p_operador).toBeUndefined();
@@ -84,8 +84,9 @@ describe("fetchEmbarquesPaginados", () => {
       page: 0,
       pageSize: 10
     } as any);
-    expect(mock.rpcCalls[0].args.p_proforma).toBe("sin");
-    expect(mock.rpcCalls[0].args.p_sort_by).toBe("expediente_num");
+    const args2 = mock.rpcCalls[0].args as Record<string, unknown>;
+    expect(args2.p_proforma).toBe("sin");
+    expect(args2.p_sort_by).toBe("expediente_num");
   });
 
   it("lanza error si falla el rpc", async () => {

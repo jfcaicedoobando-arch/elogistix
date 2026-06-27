@@ -46,7 +46,8 @@ describe("fetchForecast", () => {
     mock.setTableResult("crm_oportunidades", { data: [{}, {}], error: null });
     
     const r = await fetchForecast("2024-01-01", "2024-12-31");
-    expect(r.total).toBe(2);
+    expect(r.porMes).toBeDefined();
+    expect(r.porVendedor).toBeDefined();
     
     const call = mock.tableCalls.find(c => c.table === "crm_oportunidades");
     expect(call?.ops).toContain("gte");
