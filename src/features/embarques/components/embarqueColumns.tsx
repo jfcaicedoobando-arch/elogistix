@@ -131,7 +131,7 @@ export function buildEmbarqueColumns({
       accessorFn: (e) => e.cliente_nombre,
       enableSorting: true,
       sortingFn: sortByString<EmbarqueRow>((e) => e.cliente_nombre),
-      meta: { width: "min-w-[140px]", className: "max-w-[160px] truncate" },
+      meta: { width: "min-w-[200px]", className: "max-w-[240px] truncate" },
       cell: ({ row }) => {
         const nombre = toTitleCase(row.original.cliente_nombre);
         return <span title={nombre} className="block truncate">{nombre}</span>;
@@ -150,14 +150,20 @@ export function buildEmbarqueColumns({
     {
       id: "origen",
       header: "Origen",
-      meta: { width: "w-[120px]", className: "text-xs" },
-      cell: ({ row }) => shortName(getOrigen(row.original)),
+      meta: { width: "w-[150px]", className: "text-xs truncate" },
+      cell: ({ row }) => {
+        const v = shortName(getOrigen(row.original));
+        return <span title={v} className="block truncate">{v}</span>;
+      },
     },
     {
       id: "destino",
       header: "Destino",
-      meta: { width: "w-[120px]", className: "text-xs" },
-      cell: ({ row }) => shortName(getDestino(row.original)),
+      meta: { width: "w-[150px]", className: "text-xs truncate" },
+      cell: ({ row }) => {
+        const v = shortName(getDestino(row.original));
+        return <span title={v} className="block truncate">{v}</span>;
+      },
     },
     {
       id: "etd",

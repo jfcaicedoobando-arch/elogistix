@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { useFacturacionPorEmitir } from "@/features/bandejas/hooks/useBandejas";
 import { resumirFacturacionPorEmitir, DIAS_ATRASO_FACTURACION } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function FacturacionPorEmitir() {
   const { data = [], isLoading } = useFacturacionPorEmitir();
@@ -13,12 +14,10 @@ export default function FacturacionPorEmitir() {
 
   return (
     <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Facturación — Por emitir</h1>
-        <p className="text-muted-foreground">
-          Proformas aprobadas pendientes de timbrar al cliente.
-        </p>
-      </div>
+      <PageHeader
+        title="Facturación — Por emitir"
+        description="Proformas aprobadas pendientes de timbrar al cliente."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

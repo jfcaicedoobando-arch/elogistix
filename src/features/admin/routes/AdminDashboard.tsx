@@ -4,6 +4,7 @@ import { Building2, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { PageHeader } from "@/components/shared/PageHeader";
 import {
   useAdminDashboardStats,
   useAdminOrgActivity,
@@ -44,12 +45,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard Super Admin</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Resumen global de toda la plataforma.
-        </p>
-      </div>
+      <PageHeader
+        title="Dashboard Super Admin"
+        description="Resumen global de toda la plataforma."
+      />
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2">

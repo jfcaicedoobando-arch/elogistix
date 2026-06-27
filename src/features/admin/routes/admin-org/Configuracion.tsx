@@ -10,6 +10,7 @@ import TabFacturacion from "@/features/configuracion/components/TabFacturacion";
 import TabPuertos from "@/features/configuracion/components/TabPuertos";
 import TabOperaciones from "@/features/configuracion/components/TabOperaciones";
 import TabExportar from "@/features/admin/components/TabExportar";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
   if (isSaving) return "Guardando...";
@@ -26,10 +27,7 @@ export default function Configuracion() {
   if (isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configuración</h1>
-          <p className="text-sm text-muted-foreground">Parámetros generales del sistema</p>
-        </div>
+        <PageHeader title="Configuración" description="Parámetros generales del sistema" />
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
         </div>
@@ -42,18 +40,16 @@ export default function Configuracion() {
   return (
     <div className="space-y-4 sm:space-y-6">
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
-          <p className="text-sm text-muted-foreground">Parámetros generales del sistema</p>
-        </div>
-        {mostrarGuardar && (
+      <PageHeader
+        title="Configuración"
+        description="Parámetros generales del sistema"
+        actions={mostrarGuardar ? (
           <Button onClick={handleSave} disabled={isSaving || !isDirty} title={!isDirty ? "No hay cambios pendientes" : undefined}>
             <Save className="h-4 w-4 mr-2" />
             {getSaveButtonLabel(isSaving, isDirty)}
           </Button>
-        )}
-      </div>
+        ) : null}
+      />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <TabsList className="flex-wrap h-auto gap-1">
