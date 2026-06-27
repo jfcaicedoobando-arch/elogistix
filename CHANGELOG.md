@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.13] - 2026-06-27
+- **chore(lint) — Limpieza de warnings en suite E2E**. Remueve directivas `eslint-disable` huérfanas en `cleanup.ts` y `globalTeardown.ts`, parte `globalTeardown` en helpers `probeOrphans` + `reportOutcome` (complejidad ciclomática 17 → <10) y reemplaza `({}, testInfo)` por `(_fixtures, testInfo)` en `08-flujo-fiscal.spec.ts` para satisfacer `no-empty-pattern`.
+
 ## [13.139.12] - 2026-06-27
 - **refactor(embarques) — Extraer diálogos de cierre/reapertura**. `TabCierre.tsx` bajó de 206 a ~145 líneas (cumple el baseline arquitectural de 200). Los dos `Dialog` viven ahora en `cierre/CierreDialogs.tsx` (`CerrarEmbarqueDialog` + `ReabrirEmbarqueDialog`) como componentes presentacionales puros.
 
