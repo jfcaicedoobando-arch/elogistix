@@ -14,6 +14,9 @@ import {
   FileCheck,
   Stamp,
   Ban,
+  Banknote,
+  HandCoins,
+  AlertOctagon,
   type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
