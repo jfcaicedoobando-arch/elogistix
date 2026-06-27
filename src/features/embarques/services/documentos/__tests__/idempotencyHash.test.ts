@@ -55,8 +55,11 @@ describe("hexToUuid", () => {
     expect(hexToUuid(hex)).toBe("01234567-89ab-cdef-0123-456789abcdef");
   });
 
-  it("determinístico: mismo hex → mismo UUID", () => {
+  it("determinístico: mismo hex → mismo UUID con formato esperado", () => {
     const hex = "ffffffffffffffffffffffffffffffff";
-    expect(hexToUuid(hex)).toBe(hexToUuid(hex));
+    const a = hexToUuid(hex);
+    const b = hexToUuid(hex);
+    expect(a).toBe(b);
+    expect(a).toBe("ffffffff-ffff-ffff-ffff-ffffffffffff");
   });
 });

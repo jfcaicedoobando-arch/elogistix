@@ -5,12 +5,12 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+const { fetchEtapasMock } = vi.hoisted(() => ({ fetchEtapasMock: vi.fn() }));
 vi.mock("@/features/crm/services/etapas", () => ({
-  fetchEtapasPipelineActivas: vi.fn(),
+  fetchEtapasPipelineActivas: fetchEtapasMock,
 }));
 
 import { sincronizarEtapaPorEstadoCotizacion } from "../sincronizarEtapa";
-import { fetchEtapasPipelineActivas } from "@/features/crm/services/etapas";
 
 const etapasMock = [
   { id: "e-abierta", tipo: "abierta", nombre: "Negociación", probabilidad_default: 60, activa: true, orden: 1 },
@@ -20,7 +20,8 @@ const etapasMock = [
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
-  vi.mocked(fetchEtapasPipelineActivas).mockResolvedValue(etapasMock as never);
+  fetchEtapasMock.mockReset();
+  fetchEtapasMock.mockResolvedValue(etapasMock as never);
 });
 
 describe("sincronizarEtapaPorEstadoCotizacion", () => {

@@ -1,7 +1,7 @@
 /**
  * Tests de mutation hooks de embarques: orquestación service + invalidación.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -34,8 +34,28 @@ import { useUpdateEmbarque } from "../useUpdateEmbarque";
 import { useEliminarEmbarque } from "../useDeleteEmbarque";
 import { queryKeys } from "@/lib/query";
 
+// v13.137.41: registramos cada QueryClient creado para limpiarlo en
+// afterEach (cancelQueries → clear) y evitar leaks de subscripciones bajo
+// singleFork. Antes cada test creaba un QC nuevo y nunca lo destruía.
+const activeClients = new Set<QueryClient>();
+
+afterEach(async () => {
+  for (const qc of activeClients) {
+    await qc.cancelQueries();
+    qc.clear();
+    qc.unmount();
+  }
+  activeClients.clear();
+});
+
 function makeWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const qc = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0, staleTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+  activeClients.add(qc);
   const spy = vi.spyOn(qc, "invalidateQueries");
   const wrapper = ({ children }: { children: ReactNode }) =>
     React.createElement(QueryClientProvider, { client: qc, children });
