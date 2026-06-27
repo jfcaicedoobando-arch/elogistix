@@ -38,6 +38,13 @@ async function saveStorageState(baseUrl: string, email: string, password: string
     // storageState antes de que Supabase escriba el sb-* token en localStorage.
     await page.getByText(/libre carga/i).first().waitFor({ state: "visible", timeout: 15_000 });
     await ctx.storageState({ path: file });
+  } catch (err) {
+    // Si el login falla, escribimos un storageState vacío para que los
+    // specs caigan al `loginAs(...)` clásico en vez de heredar un estado
+    // "logueado" falso que terminaría rompiendo todos los specs.
+    // eslint-disable-next-line no-console
+    console.warn(`[globalSetup] login falló para ${email}: ${(err as Error).message}`);
+    writeFileSync(file, EMPTY_STATE);
   } finally {
     await browser.close();
   }
