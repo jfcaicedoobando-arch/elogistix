@@ -52,6 +52,8 @@ describe("fetchConceptosCostoAbiertosDeProveedor", () => {
 describe("vincularFacturaAConceptos", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
+    mock.resetResults();
     mock.setTableResult("proveedor_facturas_conceptos", { data: null, error: null });
     mock.setTableResult("conceptos_costo", { data: null, error: null });
   });
