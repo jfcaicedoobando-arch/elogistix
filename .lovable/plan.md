@@ -1,56 +1,68 @@
-## Diagnóstico
+## Objetivo
 
-Run nuevo (`76374375182`), mismo síntoma que el anterior: el job *Coverage merge & report* falla con:
+Subir la **cobertura de branches** (el cuello de botella) antes que la de statements/lines/functions. Branches mide caminos condicionales (if/else, ternarios, `??`, `||`, switch, early returns), que es donde se esconden los bugs reales.
 
-```
-Coverage for lines     21.65% < 38%
-Coverage for functions 38.34% < 52%
-Coverage for branches  64.29% < 72%
-```
+## Fase 1 — Diagnóstico (sin escribir tests todavía)
 
-Todos los 20 shards pasaron sus tests (un shard ejemplo: 2,248 / 63,117 statements = 3.56%). El fix de `v13.137.46` (quitar `--reporter=default`) **no movió la aguja** — la cobertura real se desplomó por otra razón, no por el reporter. Mi diagnóstico anterior fue incorrecto, lo siento.
+1. Generar un reporte de cobertura limpio y completo:
+   - `bun run test:coverage` (sin shard, para tener el `coverage-summary.json` consolidado).
+2. Construir un ranking de "candidatos de mayor ROI" usando `coverage/coverage-summary.json`, ordenando por:
+   - `branches.pct < 50%` **AND** `branches.total >= 10` (archivos con muchas ramas sin cubrir).
+   - Priorizar `src/features/{facturacion, cxp, embarques, costeo, proformas}` porque son los módulos pesados recién agregados que están arrastrando el umbral hacia abajo.
+3. Producir una tabla corta en `docs/coverage/branch-gaps.md` con: archivo, branches cubiertos/total, % actual, % objetivo, owner del test propuesto.
 
-**Analogía**: pensé que el termómetro estaba mal calibrado, pero resultó que el paciente sí tiene fiebre.
+## Fase 2 — Categorías de código a atacar (en este orden)
 
-## Hipótesis de la caída real
+Por experiencia en este repo, las ramas no cubiertas se concentran en 4 patrones. Atacarlos en orden maximiza el % por test escrito:
 
-Las rondas recientes de "endurecimiento de tests" (shards 9-12, v13.137.41–43) hicieron varias cosas que pudieron reducir cobertura:
+1. **Services / RPC wrappers** (`src/features/*/services/*.ts`)
+   - Casi siempre tienen: happy path + `if (error) throw` + validación de `organization_id` + mapeo de filas vacías. 3–4 tests cubren ~90% de branches.
+   - Candidatos sospechosos: `facturapi*`, `repFacturapi`, `proveedorNotasCredito`, `notasCredito`, `costosConFactura`, `convertirProformas`.
 
-1. **Resets globales de `mock.tableCalls` en `beforeEach`** evitan que tests posteriores ejecuten ramas que dependían del estado acumulado.
-2. **`vi.useFakeTimers({ toFake: ["Date"] })`** restringido en `cxpKpis.test.ts` (y posiblemente otros) puede dejar sin ejecutar ramas que dependían de timers fake completos.
-3. **Mocks más estrictos** que ya no devuelven datos por defecto → menos ejecución de helpers/branches downstream.
-4. Posible exclusión accidental de archivos del denominador no es el problema (denom es estable: 126K stmts).
+2. **Hooks de mutación/forms** (`src/features/*/hooks/use*.tsx`)
+   - Ramas típicas: estado loading, error de red, validación de campos, callbacks opcionales (`onSuccess?.()`), feature flags.
+   - Candidatos: `useEditarFacturaProveedorForm` (ampliar), `useEmitirFactura`, `useCancelarFactura`, `useTimbrarFactura`, `useEmitirRep`.
 
-## Plan
+3. **Utils financieros/parseadores** (`src/features/*/utils/*.ts`, `src/lib/financial/*`)
+   - Funciones puras = ROI altísimo en branches por test. Cubrir edge cases: monto 0, divisas mezcladas, redondeos, fechas inválidas.
+   - Candidatos: `sumarFacturas`, utilidades de `cfdi`, `traducirErrorPassword`, `pagosProveedorErrors`.
 
-### 1. Reproducir la cobertura merge localmente
-Correr en el sandbox el flujo completo igual a CI (20 shards + merge) y obtener el `reports/coverage-report.md` para confirmar el 21.65% y ver **qué archivos cayeron** respecto al baseline (último build verde).
+4. **Reducers / state machines** (validaciones de cierre, transiciones de embarque, checklist)
+   - Cada transición prohibida es una rama. Tabla parametrizada (`it.each`) cubre muchas branches con poco código.
+   - Candidatos: `validar_cierre_embarque` wrapper, `useEmbarqueEstadoActions`, lógica de `Liquidación`.
 
-```
-bun run test:coverage:shard -- --shard=1/20 ... # x20
-bun run test:coverage:merge
-```
+## Fase 3 — Estrategia de escritura de tests
 
-### 2. Identificar la regresión
-Comparar `coverage/coverage-summary.json` actual contra el último baseline conocido (~40%). Listar los 20 archivos con mayor pérdida de cobertura. Eso apunta al commit/fix que la causó.
+- **`it.each` para tablas de decisión.** Una sola suite parametrizada cubre 6–12 branches.
+- **Mock mínimo.** Reutilizar `_supabaseChainMock.ts`; no inventar mocks nuevos.
+- **Cubrir el lado "feo" primero**: errores, nulls, permisos denegados, monedas no soportadas. Los happy paths ya suelen estar cubiertos.
+- **Assertions fuertes** (`audit:tests` lo exige): `toEqual` sobre objetos, no `toBeDefined`.
+- **No tests cosméticos** (snapshots de JSX sin lógica): no mueven branches y suben el denominador sin beneficio.
 
-### 3. Restaurar cobertura sin bajar umbral
-Según `mem://principles/coverage-threshold`: **prohibido bajar el threshold**. Opciones, en orden de preferencia:
+## Fase 4 — Meta de cobertura escalonada
 
-- **3a.** Revertir el reset global de `mock.tableCalls` *sólo* en tests donde el reset eliminó ejecución de ramas (mantenerlo donde realmente prevenía falsos positivos).
-- **3b.** Agregar tests adicionales para los archivos top-regresores hasta volver a ≥38% lines / ≥52% functions / ≥72% branches.
-- **3c.** Si un fix concreto del endurecimiento fue contraproducente, ajustarlo (no revertir todo).
+En vez de saltar a 70% de una, ratchet en 3 PRs:
 
-### 4. Verificar y bumpear
-- Re-correr merge localmente, confirmar ≥38% en las 4 métricas (con margen ≥2pp).
-- Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+| PR  | Branches objetivo | Statements objetivo |
+| --- | ----------------- | ------------------- |
+| 1   | 45%               | 42%                 |
+| 2   | 55%               | 50%                 |
+| 3   | 65%               | 60%                 |
 
-## Lo que NO haré
-- No bajaré el umbral (`mem://principles/coverage-threshold`).
-- No agregaré `--reporter=default` de regreso.
-- No tocaré shards/`--retry=2`.
+Cada PR actualiza el threshold en `vitest.config.ts` **sólo después** de verificar que pasa con margen (≥2pp). Esto evita el patrón de bajar el threshold cuando CI falla (regla `mem://principles/coverage-threshold`).
 
-## Riesgo
-Re-correr 20 shards localmente toma ~10-15 min de sandbox. Si prefieres, puedo saltar el paso 1 y ir directo al paso 2 leyendo el último `coverage-report.md` del repo (si existe baseline). Avísame.
+## Fase 5 — Entregables
 
-¿Apruebas y procedo en modo build?
+1. `docs/coverage/branch-gaps.md` — ranking inicial y reasignaciones por PR.
+2. Lotes de tests agrupados por módulo (1 PR ≈ 1 módulo) para revisar fácil.
+3. Bump de threshold en cada PR + entrada en `CHANGELOG.md` con versión bumped.
+
+## Notas técnicas
+
+- El reporte actual está fragmentado en `.vitest-reports/blob-*.json`; necesitamos una corrida `test:coverage` consolidada (sin `--shard`) para que `coverage-summary.json` sea fuente de verdad.
+- Excluir explícitamente del denominador (en `vitest.config.ts`) cualquier archivo puramente declarativo nuevo (columnas, copy, tipos) que aparezca al revisar el ranking. Esto ya está parcialmente hecho para `marketing/` y `*Columns.tsx`.
+- No tocar `src/integrations/supabase/**` ni archivos auto-generados.
+
+## Pregunta de confirmación antes de implementar
+
+¿Avanzo con la **Fase 1 (diagnóstico)** primero y te traigo el ranking real de archivos con baja branch coverage antes de escribir tests? Eso evita gastar tiempo en módulos que ya están razonablemente cubiertos.
