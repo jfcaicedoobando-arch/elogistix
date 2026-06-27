@@ -3,16 +3,19 @@
  * acumulación de vencidos vs por-vencer-7d y exclusión de filas
  * sin saldo.
  */
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { calcularKPIsCxP } from "../cxpKpis";
 import type { FacturaCxP } from "../proveedorFacturas";
 
 const HOY = new Date("2026-06-26T12:00:00Z");
-beforeAll(() => {
+// v13.137.35: el global `afterEach` de `src/test/setup.ts` invoca
+// `vi.useRealTimers()`, lo que anula `beforeAll(useFakeTimers)`.
+// Reinstalamos el reloj fijo en cada test para que los KPIs basados en
+// `new Date()` (ver `cxpKpis.ts`) sean deterministas.
+beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(HOY);
 });
-afterAll(() => vi.useRealTimers());
 
 const f = (over: Partial<FacturaCxP>): FacturaCxP =>
   ({ saldo: 0, moneda: "MXN", dias_vencido: 0, fecha_vencimiento: null, estatus: "Vigente", ...over } as FacturaCxP);
