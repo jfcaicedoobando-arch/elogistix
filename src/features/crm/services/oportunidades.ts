@@ -76,7 +76,7 @@ export async function moverEtapaOportunidad(input: {
   etapa_id: string;
   probabilidad?: number;
 }): Promise<void> {
-  const patch: Record<string, unknown> = { etapa_id: input.etapa_id };
+  const patch: { etapa_id: string; probabilidad?: number } = { etapa_id: input.etapa_id };
   if (typeof input.probabilidad === "number") patch.probabilidad = input.probabilidad;
   const { error } = await supabase
     .from("crm_oportunidades")

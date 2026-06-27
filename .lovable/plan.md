@@ -1,68 +1,50 @@
-## Objetivo
 
-Subir la **cobertura de branches** (el cuello de botella) antes que la de statements/lines/functions. Branches mide caminos condicionales (if/else, ternarios, `??`, `||`, switch, early returns), que es donde se esconden los bugs reales.
+## Diagnóstico
 
-## Fase 1 — Diagnóstico (sin escribir tests todavía)
+- `dependency_scan`: **0 vulnerabilidades** high/critical.
+- `npm-check-updates` reporta ~60 paquetes con versiones nuevas, pero la mayoría son **majors con breaking changes** que romperían la app si los actualizamos sin un proyecto dedicado.
 
-1. Generar un reporte de cobertura limpio y completo:
-   - `bun run test:coverage` (sin shard, para tener el `coverage-summary.json` consolidado).
-2. Construir un ranking de "candidatos de mayor ROI" usando `coverage/coverage-summary.json`, ordenando por:
-   - `branches.pct < 50%` **AND** `branches.total >= 10` (archivos con muchas ramas sin cubrir).
-   - Priorizar `src/features/{facturacion, cxp, embarques, costeo, proformas}` porque son los módulos pesados recién agregados que están arrastrando el umbral hacia abajo.
-3. Producir una tabla corta en `docs/coverage/branch-gaps.md` con: archivo, branches cubiertos/total, % actual, % objetivo, owner del test propuesto.
+## Estrategia: 2 olas
 
-## Fase 2 — Categorías de código a atacar (en este orden)
+Analogía: como cambiar el aceite del coche (rutina, sin riesgo) vs. cambiar el motor entero (es otro proyecto). Esta vez sólo hacemos lo primero.
 
-Por experiencia en este repo, las ramas no cubiertas se concentran en 4 patrones. Atacarlos en orden maximiza el % por test escrito:
+### Ola 1 — Aplicar ahora (minor + patch, bajo riesgo)
 
-1. **Services / RPC wrappers** (`src/features/*/services/*.ts`)
-   - Casi siempre tienen: happy path + `if (error) throw` + validación de `organization_id` + mapeo de filas vacías. 3–4 tests cubren ~90% de branches.
-   - Candidatos sospechosos: `facturapi*`, `repFacturapi`, `proveedorNotasCredito`, `notasCredito`, `costosConFactura`, `convertirProformas`.
+Sólo bumps dentro del mismo major. Cubiertos por nuestros tests y CI.
 
-2. **Hooks de mutación/forms** (`src/features/*/hooks/use*.tsx`)
-   - Ramas típicas: estado loading, error de red, validación de campos, callbacks opcionales (`onSuccess?.()`), feature flags.
-   - Candidatos: `useEditarFacturaProveedorForm` (ampliar), `useEmitirFactura`, `useCancelarFactura`, `useTimbrarFactura`, `useEmitirRep`.
+- Radix UI completo (`@radix-ui/react-*`): patches/minors
+- `@sentry/react` 10.53 → 10.62
+- `@supabase/supabase-js` 2.98 → 2.108
+- `@tanstack/react-query*` 5.83 → 5.101 (+ persisters + virtual)
+- `@playwright/test` 1.60 → 1.61
+- `@hookform/resolvers` 3 → 5 *(revisar: aunque es major, el cambio es sólo de empaquetado ESM; si rompe tipos lo dejo en ola 2)*
+- `react-hook-form` 7.61 → 7.80
+- `libphonenumber-js`, `papaparse`, `postcss`, `autoprefixer`, `terser`, `tsx`, `lovable-tagger`, `knip`, `typescript-eslint`, `@testing-library/jest-dom`
 
-3. **Utils financieros/parseadores** (`src/features/*/utils/*.ts`, `src/lib/financial/*`)
-   - Funciones puras = ROI altísimo en branches por test. Cubrir edge cases: monto 0, divisas mezcladas, redondeos, fechas inválidas.
-   - Candidatos: `sumarFacturas`, utilidades de `cfdi`, `traducirErrorPassword`, `pagosProveedorErrors`.
+Pasos:
+1. `bunx npm-check-updates -u --target minor` + agregar `@hookform/resolvers` y los radix manualmente.
+2. `bun install`
+3. Verificar: `bun run lint`, `bunx tsgo --noEmit`, `bun run test` (subset rápido), build.
+4. Si algo falla → revertir ese paquete puntual y documentar.
+5. Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
 
-4. **Reducers / state machines** (validaciones de cierre, transiciones de embarque, checklist)
-   - Cada transición prohibida es una rama. Tabla parametrizada (`it.each`) cubre muchas branches con poco código.
-   - Candidatos: `validar_cierre_embarque` wrapper, `useEmbarqueEstadoActions`, lógica de `Liquidación`.
+### Ola 2 — Diferidos (majors, requieren proyecto separado)
 
-## Fase 3 — Estrategia de escritura de tests
+Cada uno requiere migración manual significativa, NO se tocan hoy:
 
-- **`it.each` para tablas de decisión.** Una sola suite parametrizada cubre 6–12 branches.
-- **Mock mínimo.** Reutilizar `_supabaseChainMock.ts`; no inventar mocks nuevos.
-- **Cubrir el lado "feo" primero**: errores, nulls, permisos denegados, monedas no soportadas. Los happy paths ya suelen estar cubiertos.
-- **Assertions fuertes** (`audit:tests` lo exige): `toEqual` sobre objetos, no `toBeDefined`.
-- **No tests cosméticos** (snapshots de JSX sin lógica): no mueven branches y suben el denominador sin beneficio.
+- **React 18 → 19** (+ `@types/react`, `react-dom`): cambios en JSX runtime, hooks, `useFormState` etc. Toca toda la app.
+- **Vite 5 → 8** + **@vitejs/plugin-react-swc 3 → 4**: cambios de config y plugins.
+- **Tailwind 3 → 4**: nueva sintaxis CSS-first, hay que reescribir `tailwind.config.ts` y tokens.
+- **Zod 3 → 4**: API rota en schemas (`z.string().email()` etc.), afecta todos los formularios.
+- **react-router-dom 6 → 7**: nuevo data router.
+- **recharts 2 → 3**: cambios de props en gráficos del dashboard.
+- **sonner 1 → 2**, **lucide-react 0.462 → 1.21**, **date-fns 3 → 4**, **react-day-picker 8 → 10**: breaking en componentes muy usados.
+- **ESLint 9 → 10**, **eslint-plugin-react-hooks 5 → 7**, **vitest 3 → 4**, **@vitest/coverage-v8 3 → 4**, **typescript 5 → 6**, **jsdom 20 → 29**, **tailwind-merge 2 → 3**, **globals 15 → 17**, **@types/node 22 → 26**, **@eslint/js 9 → 10**.
 
-## Fase 4 — Meta de cobertura escalonada
+Para cada uno se haría un PR aparte siguiendo su guía oficial de migración.
 
-En vez de saltar a 70% de una, ratchet en 3 PRs:
+## Entregable de esta tarea
 
-| PR  | Branches objetivo | Statements objetivo |
-| --- | ----------------- | ------------------- |
-| 1   | 45%               | 42%                 |
-| 2   | 55%               | 50%                 |
-| 3   | 65%               | 60%                 |
+Sólo la **Ola 1**: instalar, validar lint/tipos/tests/build, y actualizar `CHANGELOG.md` + `APP_VERSION`. Si algún paquete de la lista rompe la build, lo excluyo y lo reporto.
 
-Cada PR actualiza el threshold en `vitest.config.ts` **sólo después** de verificar que pasa con margen (≥2pp). Esto evita el patrón de bajar el threshold cuando CI falla (regla `mem://principles/coverage-threshold`).
-
-## Fase 5 — Entregables
-
-1. `docs/coverage/branch-gaps.md` — ranking inicial y reasignaciones por PR.
-2. Lotes de tests agrupados por módulo (1 PR ≈ 1 módulo) para revisar fácil.
-3. Bump de threshold en cada PR + entrada en `CHANGELOG.md` con versión bumped.
-
-## Notas técnicas
-
-- El reporte actual está fragmentado en `.vitest-reports/blob-*.json`; necesitamos una corrida `test:coverage` consolidada (sin `--shard`) para que `coverage-summary.json` sea fuente de verdad.
-- Excluir explícitamente del denominador (en `vitest.config.ts`) cualquier archivo puramente declarativo nuevo (columnas, copy, tipos) que aparezca al revisar el ranking. Esto ya está parcialmente hecho para `marketing/` y `*Columns.tsx`.
-- No tocar `src/integrations/supabase/**` ni archivos auto-generados.
-
-## Pregunta de confirmación antes de implementar
-
-¿Avanzo con la **Fase 1 (diagnóstico)** primero y te traigo el ranking real de archivos con baja branch coverage antes de escribir tests? Eso evita gastar tiempo en módulos que ya están razonablemente cubiertos.
+¿Apruebas que ejecute la Ola 1?

@@ -45,7 +45,7 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
   }
 
   if (!etapa) return;
-  const patch: Record<string, unknown> = {
+  const patch: { etapa_id: string; probabilidad: number; fecha_cierre_real?: string } = {
     etapa_id: etapa.id,
     probabilidad: etapa.probabilidad_default ?? 0,
   };
