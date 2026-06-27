@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.32] - 2026-06-27
+- **fix(lint)**: eliminadas 2 directivas `eslint-disable-next-line no-console` no utilizadas en `src/test/setup.ts` (la regla `no-console` no aplica a archivos de test, por lo que las directivas generaban warnings con `--max-warnings 0`).
+
 ## [13.137.31] - 2026-06-27
 - **fix(tests) — barrido transversal de mutaciones globales sin restauración**: cerrado el pendiente #4 de la auditoría de los 12 shards. Inventario completo con `rg` sobre `global.X = …`, `globalThis.X = …`, `Object.defineProperty(window|navigator|document|globalThis, …)`, `Object.assign(navigator|URL|window|document, …)` y `URL.createObjectURL/revokeObjectURL = …` en toda la suite.
   - **CRÍTICOS (4 archivos sin restauración alguna)**:
