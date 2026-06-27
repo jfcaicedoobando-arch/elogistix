@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
@@ -13,6 +13,11 @@ vi.mock('@/features/cliente/hooks/useRentabilidadClientes', () => ({
 import { useReportesPageController } from '../useReportesPageController';
 
 describe('useReportes Hooks', () => {
+  beforeEach(() => {
+    mockUseRentabilidad.mockReset();
+  });
+
+
   const mockRentabilidad = {
     clientes: [
       { cliente_id: '1', cliente_nombre: 'A', profit_usd: 100, margen: 10, venta_usd: 1000, costo_usd: 900, total_embarques: 1 },

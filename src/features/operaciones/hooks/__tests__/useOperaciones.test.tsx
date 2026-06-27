@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
@@ -14,6 +14,11 @@ import { useOperacionesData } from '../useOperacionesData';
 import { useOperacionesPageController } from '../useOperacionesPageController';
 
 describe('useOperaciones Hooks', () => {
+  beforeEach(() => {
+    mockFetchStats.mockReset();
+  });
+
+
   const mockData = {
     global: { totalActivas: 10, totalContenedores: 5, totalCriticos: 1, totalEnPuerto: 2 },
     operadores: [{ nombre: 'Op1', cargasEsteMes: 5, historico: [{ mes: 'Jan', creados: 2, llegados: 1 }] }],

@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
@@ -21,6 +21,14 @@ import { usePresupuestoVsReal } from '../usePresupuestoVsReal';
 import { usePresupuestoCategorias } from '../usePresupuestoCategorias';
 
 describe('usePresupuesto Hooks', () => {
+  beforeEach(() => {
+    mockFetchMensual.mockReset();
+    mockUpsert.mockReset();
+    mockFetchVsReal.mockReset();
+    mockFetchCats.mockReset();
+  });
+
+
   it('usePresupuestoMensualAnio fetches data', async () => {
     mockFetchMensual.mockResolvedValueOnce([{ categoria: 'cat1', meses: [] }]);
     const { result } = renderHook(() => usePresupuestoMensualAnio(2023), { wrapper: createWrapper() });
