@@ -1,35 +1,38 @@
-## Problema
+## Diagnóstico — embarque ELIMP00154
 
-En la búsqueda global (Ctrl+K), al teclear `149` aparece **dos veces** el expediente `ELIMP00149` (cliente INDIMEX TRADING). No es un bug de UI: en la BD hay dos filas en `embarques` con el mismo expediente porque es un embarque multi-contenedor (dos BL Master distintos: `034G523190` y `034G521324`).
+**Lo que encontré en BD:**
 
-El listado de embarques ya deduplica por expediente (`dedupePorExpediente`), pero el RPC `busqueda_global` no — devuelve una fila por contenedor.
+- Proforma `PRO-2026-0093` creada el **5 may 2026**, total USD 3,481, estado `pendiente`.
+- 4 conceptos_venta (Seguro, Flete Marítimo, Release, Cargos en Origen) creados el **15 may 2026** (10 días después de la proforma), todos con `proforma_id = NULL` y `estado_facturacion = 'pendiente'`.
+- La suma de los 4 conceptos = 3,481 USD, idéntica al subtotal de la proforma.
+- La tabla `proforma_conceptos_consolidados` (snapshot que usan los PDF nuevos) **no tiene filas** para esta proforma.
+- No existe ningún concepto_venta (ni borrado) que apunte a la proforma.
 
-## Solución propuesta
+**Analogía:** la proforma es como un recibo emitido en mayo 5 con su propia copia de los cargos. Después, el 15 de mayo alguien volvió a capturar los conceptos en el embarque desde cero (probablemente por una edición/resync) y esas nuevas filas nacieron "sueltas", sin saber que ya existía un recibo emitido con esos mismos importes. Por eso la pestaña los muestra como pendientes.
 
-Deduplicar por `expediente` dentro del bloque de embarques del RPC `public.busqueda_global`, devolviendo **una sola entrada por expediente** y agregando al sublabel el número de contenedores cuando hay más de uno (consistente con el listado).
+**Por qué pasó:** sí, este embarque vivió flujos antiguos. El `proforma_id` y el `estado_facturacion` en `conceptos_venta` se setean hoy cuando generas la proforma a través del wizard actual; los conceptos del 15 de mayo se insertaron por una ruta que no actualiza esos campos (patrón histórico de "delete & re-insert" al editar embarque, ver `mem://features/editar-embarques`). Como nadie volvió a abrir el wizard de proforma desde entonces, nunca se re-vincularon.
 
-### Cambios técnicos
+## Plan propuesto
 
-1. **Migración SQL** — reemplazar el `SELECT` de embarques en `busqueda_global` por uno con `DISTINCT ON (e.expediente)`:
-   ```sql
-   SELECT DISTINCT ON (e.expediente)
-          e.id, e.expediente AS label,
-          e.cliente_nombre
-            || CASE WHEN COUNT(*) OVER (PARTITION BY e.expediente) > 1
-                    THEN ' · ' || COUNT(*) OVER (PARTITION BY e.expediente) || ' contenedores'
-                    ELSE '' END AS sublabel,
-          'embarque'::text AS tipo,
-          '/embarques/' || e.id AS url
-   FROM embarques e
-   WHERE e.expediente ILIKE '%' || termino || '%'
-     AND (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
-   ORDER BY e.expediente, e.created_at ASC
-   LIMIT limite
-   ```
-   El `id` que se navega será el del primer contenedor (más antiguo); al abrirlo, la vista de embarque ya muestra todos los relacionados por BL/expediente.
+### 1. Fix puntual para ELIMP00154 (migración de datos)
 
-2. **Sin cambios en frontend** — `GlobalSearch.tsx` y `useGlobalSearch` consumen el mismo shape.
+Vincular los 4 conceptos a la proforma existente y marcarlos `en_proforma`:
 
-3. **Mantenimiento**
-   - Bump `APP_VERSION` a `13.139.2`.
-   - Entrada en `CHANGELOG.md`: "Búsqueda global: deduplicar embarques multi-contenedor por expediente".
+- `UPDATE conceptos_venta SET proforma_id = '894e...', estado_facturacion = 'en_proforma' WHERE id IN (4 ids)`
+- No tocar la proforma (totales ya correctos).
+
+### 2. Auditoría global (read-only, una sola consulta)
+
+Buscar otros embarques con la misma huella: proforma `pendiente` cuyos totales cuadran con conceptos_venta sin `proforma_id` del mismo embarque. Te entrego una lista para decidir si aplicamos el mismo fix en lote.
+
+### 3. (Opcional) Candado preventivo
+
+En el servicio que re-inserta conceptos al editar embarque (`src/features/embarques/...`), preservar el `proforma_id` y `estado_facturacion` si el concepto previo ya estaba vinculado, para que esto no se repita en futuros embarques editados. Lo dejo fuera por defecto a menos que lo apruebes — es cambio de código y requiere tests.
+
+### 4. Changelog + bump
+
+`13.139.x` con nota: "Fix vínculo conceptos↔proforma en ELIMP00154 (y N embarques análogos si aplica fase 2)".
+
+**Confirma:** ¿avanzamos sólo con (1) + (2) para ver el alcance, o agregamos (3) desde ya? 1 y 2
+
+&nbsp;
