@@ -6,7 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.25] - 2026-06-27
+- **fix(tests) — auditoría línea-por-línea del shard 2/12**: revisión exhaustiva de los 46 archivos del shard usando 4 subagentes en paralelo. Hallazgos aplicados:
+  - `usePortalCotizacionDetalleController.integration.test.tsx`: las 8 llamadas `act(() => …)` envolviendo `handleResponder()` (que dispara `mutate()` async) y setters de estado fueron migradas a `await act(async () => …)`. Bajo React 18 + singleFork, el patrón síncrono dejaba microtasks de la mutación drenando fuera del boundary y producía aserciones flakeantes contra `confirmAction`/`comentario` post-reset.
+  - `useEmbarqueForm.test.tsx`: `vincularCotizacion`/`desvincularCotizacion` llaman a `methods.trigger()` (RHF async). Cambiado a `await act(async () => …)` para que la validación drene antes de los `getValues(...)`.
+  - `proveedorFacturas.helpers.test.ts`: `beforeAll`/`afterAll` con fake timers + `setSystemTime(HOY)` eran destruidos por el `vi.useRealTimers()` del `afterEach` global tras el primer `it`. Migrado a `beforeEach`/`afterEach` para re-instalar HOY antes de cada test.
+  - `OrgInfoCard.test.tsx`: `Object.assign(navigator, { clipboard })` directo no se restauraba con `vi.unstubAllGlobals()`. Cambiado a `vi.stubGlobal("navigator", …)` para evitar fugas cross-archivo en singleFork.
+  - `tracking/index.test.ts`: `global.fetch = vi.fn()` directo dejaba el mock residual para archivos posteriores. Cambiado a `vi.stubGlobal("fetch", …)`.
+- **chore(test-setup) — instrumentación shard-trace**: `src/test/setup.ts` ahora imprime `[shard-trace] FILE_START <ruta>` y `FILE_END <ruta>` en `beforeAll`/`afterAll` cuando `CI=true`. Si un shard vuelve a colgar >20min, el último `FILE_START` sin su `FILE_END` correspondiente identifica al archivo culpable de inmediato.
+
 ## [13.137.24] - 2026-06-27
+
 - **fix(tests) — bugs detectados en auditoría de shards 2 y 6**:
   - `parseCfdi.test.ts`: el test de retry hacía 4s de `sleep` reales con `testTimeout=15s` (cero margen). Migrado a `vi.useFakeTimers()` + `vi.runAllTimersAsync()`.
   - `useProfit.test.tsx`: `act(() => setFuente('facturas'))` sin `await`; el `waitFor` siguiente podía esperar 15s bajo React 18. Ahora `await act(async () => …)`.

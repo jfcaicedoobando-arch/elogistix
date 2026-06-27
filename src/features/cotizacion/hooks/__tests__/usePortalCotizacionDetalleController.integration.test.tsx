@@ -46,13 +46,13 @@ describe("B.3.5 flujo Portal Aprobación Cotización", () => {
       { wrapper: createWrapper() },
     );
 
-    act(() => {
+    await act(async () => {
       result.current.setConfirmAction("Aceptada");
       result.current.setComentario("Adelante");
     });
     expect(result.current.confirmAction).toBe("Aceptada");
 
-    act(() => {
+    await act(async () => {
       result.current.handleResponder();
     });
 
@@ -77,11 +77,11 @@ describe("B.3.5 flujo Portal Aprobación Cotización", () => {
       { wrapper: createWrapper() },
     );
 
-    act(() => {
+    await act(async () => {
       result.current.setConfirmAction("Rechazada");
       result.current.setComentario("Precio alto");
     });
-    act(() => {
+    await act(async () => {
       result.current.handleResponder();
     });
 
@@ -100,11 +100,11 @@ describe("B.3.5 flujo Portal Aprobación Cotización", () => {
       { wrapper: createWrapper() },
     );
 
-    act(() => {
+    await act(async () => {
       result.current.setConfirmAction("Aceptada");
       result.current.setComentario("ok");
     });
-    act(() => {
+    await act(async () => {
       result.current.handleResponder();
     });
 
@@ -124,28 +124,28 @@ describe("B.3.5 flujo Portal Aprobación Cotización", () => {
     );
 
     // Sin confirmAction.
-    act(() => result.current.handleResponder());
+    await act(async () => { result.current.handleResponder(); });
     expect(portalResponderMock).not.toHaveBeenCalled();
 
     // Con confirmAction pero sin cotizacionId.
     rerender({ id: undefined });
-    act(() => {
+    await act(async () => {
       result.current.setConfirmAction("Aceptada");
     });
-    act(() => result.current.handleResponder());
+    await act(async () => { result.current.handleResponder(); });
     expect(portalResponderMock).not.toHaveBeenCalled();
   });
 
-  it("onDialogOpenChange(false) resetea estado", () => {
+  it("onDialogOpenChange(false) resetea estado", async () => {
     const { result } = renderHook(
       () => usePortalCotizacionDetalleController("cot-1"),
       { wrapper: createWrapper() },
     );
-    act(() => {
+    await act(async () => {
       result.current.setConfirmAction("Rechazada");
       result.current.setComentario("texto");
     });
-    act(() => result.current.onDialogOpenChange(false));
+    await act(async () => { result.current.onDialogOpenChange(false); });
     expect(result.current.confirmAction).toBeNull();
     expect(result.current.comentario).toBe("");
   });

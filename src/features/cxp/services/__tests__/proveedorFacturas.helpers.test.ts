@@ -5,7 +5,7 @@
  * (suma de pagos vivos, NC sólo Aplicadas, saldo nunca negativo, no
  * mostrar días vencidos cuando ya está pagada) y filtros cliente.
  */
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   diasVencido,
   clasificar,
@@ -17,11 +17,16 @@ import type { FacturaCxP } from "../proveedorFacturas";
 
 const HOY = new Date("2026-06-26T12:00:00Z");
 
-beforeAll(() => {
+// v13.137.25: `beforeAll`/`afterAll` no funciona aquí porque el `afterEach`
+// global de setup.ts hace `vi.useRealTimers()` entre tests. Tras el primer
+// `it`, todos los `diasVencido(...)` calculaban contra la fecha real del
+// runner. Movemos a beforeEach/afterEach para re-instalar HOY antes de cada
+// caso.
+beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(HOY);
 });
-afterAll(() => vi.useRealTimers());
+afterEach(() => vi.useRealTimers());
 
 const baseJoined = (over: Partial<Joined> = {}): Joined => ({
   id: "f1",

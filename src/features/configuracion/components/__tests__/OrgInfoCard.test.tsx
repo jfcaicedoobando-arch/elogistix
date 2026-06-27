@@ -33,7 +33,11 @@ describe("OrgInfoCard (configuracion)", () => {
     writeTextMock.mockReset();
     sonnerSuccessMock.mockReset();
     sonnerErrorMock.mockReset();
-    Object.assign(navigator, {
+    // v13.137.25: `vi.stubGlobal` se restaura via `vi.unstubAllGlobals()` del
+    // afterEach global. Antes mutábamos `navigator.clipboard` directo, que
+    // quedaba persistente entre archivos en singleFork.
+    vi.stubGlobal("navigator", {
+      ...navigator,
       clipboard: { writeText: (t: string) => { writeTextMock(t); return Promise.resolve(); } },
     });
   });
