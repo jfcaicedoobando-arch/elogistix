@@ -2,11 +2,14 @@ import { describe, it, expect } from "vitest";
 import {
   agregarPendientes,
   calcularScore,
+  calcularRegresion,
   agruparPorEtapaYCliente,
   calcularVencimientos,
   calcularRanking,
+  RIESGO_UMBRAL_MXN,
 } from "../ejecutivoAgregados";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
+
 
 const h = (over: Partial<HallazgoAuditoria>): HallazgoAuditoria =>
   ({
