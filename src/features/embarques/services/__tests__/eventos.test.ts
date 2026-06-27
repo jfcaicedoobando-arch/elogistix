@@ -1,7 +1,7 @@
 /**
  * Tests for src/services/embarque/eventos.ts
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -12,6 +12,13 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { fetchEventosEmbarque, insertEventoEmbarque } from "@/features/embarques/services/eventos";
 
 const EMBARQUE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+// v13.137.35: reset de `tableCalls` por test (consistente con forecast/leaderboard
+// /plantillas/proyeccion). Sin esto, `tableCalls.find(...)` y `tableCalls.at(-1)`
+// pueden leer llamadas de tests previos si se reordena la suite.
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+});
 
 describe("fetchEventosEmbarque", () => {
   it("queries eventos_embarque filtered by embarque_id", async () => {

@@ -31,9 +31,14 @@ vi.mock("@/hooks/shared", () => ({
   useDebounce: (v: any) => v,
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => {
+// v13.137.35: el wrapper se crea por test (no a nivel de módulo). Antes
+// `createWrapper()` se llamaba una sola vez al cargar el archivo y el QueryClient
+// resultante se reutilizaba entre tests; tras el primer `cleanupGlobalQueryClient`
+// la referencia global quedaba `undefined` y las suscripciones del segundo test
+// nunca se cancelaban → leak.
+const makeWrapper = () => {
   const QueryWrapper = createWrapper();
-  return (
+  return ({ children }: { children: React.ReactNode }) => (
     <MemoryRouter>
       <QueryWrapper>{children}</QueryWrapper>
     </MemoryRouter>
@@ -42,7 +47,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 
 describe("useEditarEmbarqueWizard", () => {
   it("carga datos del embarque e inicializa formulario", async () => {
-    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper });
+    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper: makeWrapper() });
 
     expect(result.current.embarque?.expediente).toBe("EXP-001");
     // v13.137.24: el `useEffect` de inicialización corre tras el primer render;
@@ -53,7 +58,7 @@ describe("useEditarEmbarqueWizard", () => {
   });
 
   it("permite cambiar de paso", () => {
-    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper });
+    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper: makeWrapper() });
     
     act(() => {
       result.current.setCurrentStep(2);
