@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.3] - 2026-06-27
+- **fix(embarques/cierre) — Mostrar historial de cierres legacy con usuario y fecha**. El tab `Cierre` mostraba "Sin movimientos" cuando el embarque se había marcado como Cerrado vía cambio directo de estado (sin pasar por la RPC `cerrar_embarque`, p. ej. embarques antiguos o migrados). `fetchCierreLog` (`src/features/embarques/services/cierre.ts`) ahora hace fallback a `bitacora_actividad` filtrando `accion = 'cambiar_estado'` con `estado_nuevo = 'Cerrado'` (cierre) o `estado_anterior = 'Cerrado'` (reapertura), incluyendo `usuario_email`. Los registros legacy se etiquetan como `origen: 'bitacora'` y se ordenan junto con `cierre_embarque_log` evitando duplicados por timestamp (precisión de minutos). `CierreHistorialCard` ahora muestra "Por &lt;email&gt;" debajo del badge y un chip `Registro legacy` cuando el dato viene de la bitácora. Sin migraciones SQL.
+
 ## [13.139.2] - 2026-06-27
 - **fix(busqueda-global) — Deduplicar embarques multi-contenedor por expediente**. El RPC `public.busqueda_global` ahora aplica `DISTINCT ON (e.expediente)` en el bloque de embarques, devolviendo una sola entrada por expediente aunque existan múltiples contenedores (BL distintos) bajo el mismo folio. Cuando hay >1 contenedor el sublabel agrega "· N contenedores" para que el usuario sepa que es agrupado. Antes, al buscar "149" aparecía `ELIMP00149` dos veces (un row por cada BL Master). Sin cambios en frontend.
 

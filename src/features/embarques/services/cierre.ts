@@ -31,10 +31,13 @@ export interface CierreLogEntry {
   embarque_id: string;
   accion: "cerrar" | "reabrir";
   usuario_id: string | null;
+  usuario_email?: string | null;
   motivo: string | null;
   snapshot: Record<string, unknown> | null;
   created_at: string;
+  origen?: "log" | "bitacora";
 }
+
 
 export async function validarCierre(embarqueId: string): Promise<CierreValidacion> {
   // SAFE-CAST: RPC tipada como Json en types.ts generados.
@@ -67,8 +70,62 @@ export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry
     .eq("embarque_id", embarqueId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return ((data as unknown) as CierreLogEntry[]) ?? [];
+  const principal = (((data as unknown) as CierreLogEntry[]) ?? []).map((e) => ({
+    ...e,
+    origen: "log" as const,
+  }));
+
+  // Fallback: cierres/reaperturas históricos registrados solo en bitácora
+  // (antes de que existiera cierre_embarque_log o ejecutados con UPDATE directo de estado).
+  const { data: bitacora } = await supabase
+    .from("bitacora_actividad")
+    .select("id, usuario_id, usuario_email, accion, detalles, created_at")
+    .eq("entidad_id", embarqueId)
+    .eq("accion", "cambiar_estado")
+    .order("created_at", { ascending: false });
+
+  const fallback: CierreLogEntry[] = [];
+  for (const row of (bitacora ?? []) as Array<{
+    id: string;
+    usuario_id: string | null;
+    usuario_email: string | null;
+    detalles: Record<string, unknown> | null;
+    created_at: string;
+  }>) {
+    const det = (row.detalles ?? {}) as { estado_nuevo?: string; estado_anterior?: string };
+    const nuevo = (det.estado_nuevo ?? "").toLowerCase();
+    const anterior = (det.estado_anterior ?? "").toLowerCase();
+    let accion: "cerrar" | "reabrir" | null = null;
+    if (nuevo === "cerrado") accion = "cerrar";
+    else if (anterior === "cerrado") accion = "reabrir";
+    if (!accion) continue;
+    fallback.push({
+      id: `bit-${row.id}`,
+      embarque_id: embarqueId,
+      accion,
+      usuario_id: row.usuario_id,
+      usuario_email: row.usuario_email,
+      motivo: null,
+      snapshot: null,
+      created_at: row.created_at,
+      origen: "bitacora",
+    });
+  }
+
+
+  // Evitar duplicar si ya hay un registro en cierre_embarque_log con el mismo timestamp aproximado.
+  const principalKeys = new Set(
+    principal.map((p) => `${p.accion}-${p.created_at.slice(0, 16)}`),
+  );
+  const fallbackUnico = fallback.filter(
+    (f) => !principalKeys.has(`${f.accion}-${f.created_at.slice(0, 16)}`),
+  );
+
+  return [...principal, ...fallbackUnico].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  );
 }
+
 
 // ============================================================
 // v13.89.0 — Cierre administrativo: resumen por embarque y conteo global
