@@ -71,7 +71,10 @@ export function EmbarqueDetalleHeader({
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
           <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-          <ModoIcon modo={embarque.modo} size={18} circle />
+          <Badge variant="outline" className="gap-1 font-normal">
+            <ModoIcon modo={embarque.modo} size={12} />
+            {embarque.modo}
+          </Badge>
           <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
           <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
         </div>

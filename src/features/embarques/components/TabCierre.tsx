@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Lock, Unlock } from "lucide-react";
 import {
