@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render } from "@testing-library/react";
 import { ReporteEjecutivoDocument } from "../ReporteEjecutivoDocument";
 import type { SnapshotEjecutivo } from "@/features/dashboardEjecutivo/services";
 
@@ -27,7 +27,9 @@ const mockSnapshot = {
   alertas: [],
 } satisfies SnapshotEjecutivo;
 
-afterEach(() => { cleanup(); });
+// `cleanup()` ya lo ejecuta `src/test/setup.ts` globalmente — sin override local
+// (auditoría 13.137.30 - BAJA: limpieza redundante eliminada).
+
 
 describe("ReporteEjecutivoDocument", () => {
   it("muestra título, período, KPIs y mensajes de listas vacías", () => {

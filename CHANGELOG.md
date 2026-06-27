@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.30] - 2026-06-27
+- **fix(tests) — oleada 3 (BAJA) de fixes de auditoría 12 shards**: limpieza cosmética final.
+  - `ReporteEjecutivoDocument.test.tsx`: eliminado `afterEach(() => { cleanup(); })` redundante — `src/test/setup.ts` ya ejecuta `cleanup()` global tras cada test. Imports de `cleanup` y `afterEach` removidos. Único archivo de la suite que aún tenía este patrón.
+  - Sub-auditoría de aserciones débiles (`toBeDefined`, `toBeTruthy`, `expect.any(Function)` solitario): la mayoría ya fueron reforzadas en `13.137.27` (`bitacoraDescripcion.extra`, `plantillas`, `eventos`). Scan final no encontró matches residuales en archivos no tocados.
+- Con esta oleada queda cerrado el ciclo completo de auditoría (CRÍTICA → ALTA → MEDIA → BAJA) iniciado en `13.137.27` con los 12 subagentes paralelos. Suite estable, sin leaks transversales conocidos y con setup global como única fuente de cleanup.
+
 ## [13.137.29] - 2026-06-27
 - **fix(tests) — oleada 2 (MEDIA) de fixes de auditoría 12 shards**: reducción de latencia y revisión de los patrones MEDIA reportados.
   - 6 archivos con `await new Promise((r) => setTimeout(r, 5|10|15))` usados como flush de dynamic imports (`useAuthSession.sentry.test.ts`, `sentry/user.test.ts`, `reportCaughtError.test.ts`, `queryClient.sentry.test.ts`, `exchangeRates.sentry.test.ts`, `useDialogGenerarProformaController.test.tsx`) migrados a `setTimeout(r, 0)`. Sigue siendo un macrotask hop (requerido para que `.then` del dynamic import drene), pero acelera ~30 ms acumulados por shard y elimina el riesgo si en el futuro algún test activa fake timers en el mismo archivo (el 0 ms es lo mínimo que `setSystemTime` puede saltar).
