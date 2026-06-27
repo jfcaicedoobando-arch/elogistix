@@ -1,0 +1,118 @@
+/**
+ * @vitest-environment jsdom
+ *
+ * Branches cubiertos:
+ *  - useTimbrarFactura: onSuccess invalida cache + slice de uuid; onError mapea mensaje.
+ *  - useCancelarFactura: toast "sustituido" vs "cancelado"; onError.
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+
+const emitirFacturapi = vi.fn();
+const cancelarFacturapi = vi.fn();
+const toastSuccess = vi.fn();
+const notifyError = vi.fn();
+
+vi.mock("sonner", () => ({
+  toast: { success: (...a: unknown[]) => toastSuccess(...a) },
+}));
+vi.mock("@/features/facturacion/services/facturapi", () => ({
+  emitirFacturapi: (...a: unknown[]) => emitirFacturapi(...a),
+  cancelarFacturapi: (...a: unknown[]) => cancelarFacturapi(...a),
+}));
+vi.mock("@/components/shared/utils/appFeedback", () => ({
+  notifyError: (...a: unknown[]) => notifyError(...a),
+}));
+
+import { useTimbrarFactura, useCancelarFactura } from "../useTimbrarFactura";
+import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
+
+function wrapper(qc: QueryClient) {
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  );
+}
+
+beforeEach(() => {
+  emitirFacturapi.mockReset();
+  cancelarFacturapi.mockReset();
+  toastSuccess.mockReset();
+  notifyError.mockReset();
+});
+
+describe("useTimbrarFactura", () => {
+  it("onSuccess: muestra UUID truncado e invalida facturas.all", async () => {
+    emitirFacturapi.mockResolvedValue({ uuid: "ABCDEF12-XYZ" });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useTimbrarFactura(), { wrapper: wrapper(qc) });
+
+    result.current.mutate("fac-1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(emitirFacturapi).toHaveBeenCalledWith("fac-1");
+    expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("ABCDEF12"));
+    expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.all });
+    qc.clear();
+  });
+
+  it("onError: pasa el mensaje del error a notifyError", async () => {
+    emitirFacturapi.mockRejectedValue(new Error("boom"));
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useTimbrarFactura(), { wrapper: wrapper(qc) });
+
+    result.current.mutate("fac-2");
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(notifyError).toHaveBeenCalledTimes(1);
+    expect(notifyError.mock.calls[0]![1].title).toContain("boom");
+    qc.clear();
+  });
+});
+
+describe("useCancelarFactura", () => {
+  it("rama sustituida=true → toast 'CFDI sustituido'", async () => {
+    cancelarFacturapi.mockResolvedValue({ sustituida: true });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCancelarFactura(), { wrapper: wrapper(qc) });
+
+    result.current.mutate({
+      facturaId: "f-1",
+      motivo: "01",
+      sustituyeUuid: "uuid-old",
+      sustituidaPorFacturaId: "f-2",
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(cancelarFacturapi).toHaveBeenCalledWith("f-1", "01", "uuid-old", "f-2");
+    expect(toastSuccess).toHaveBeenCalledWith("CFDI sustituido");
+    qc.clear();
+  });
+
+  it("rama sustituida=false → toast 'CFDI cancelado'", async () => {
+    cancelarFacturapi.mockResolvedValue({ sustituida: false });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCancelarFactura(), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ facturaId: "f-3", motivo: "02" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toastSuccess).toHaveBeenCalledWith("CFDI cancelado");
+    qc.clear();
+  });
+
+  it("onError: propaga mensaje a notifyError", async () => {
+    cancelarFacturapi.mockRejectedValue(new Error("no se pudo"));
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCancelarFactura(), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ facturaId: "f-4", motivo: "02" });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(notifyError).toHaveBeenCalledTimes(1);
+    expect(notifyError.mock.calls[0]![1].title).toContain("no se pudo");
+    qc.clear();
+  });
+});
