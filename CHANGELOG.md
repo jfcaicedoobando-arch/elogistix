@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.29] - 2026-06-27
+- **fix(tests) — oleada 2 (MEDIA) de fixes de auditoría 12 shards**: reducción de latencia y revisión de los patrones MEDIA reportados.
+  - 6 archivos con `await new Promise((r) => setTimeout(r, 5|10|15))` usados como flush de dynamic imports (`useAuthSession.sentry.test.ts`, `sentry/user.test.ts`, `reportCaughtError.test.ts`, `queryClient.sentry.test.ts`, `exchangeRates.sentry.test.ts`, `useDialogGenerarProformaController.test.tsx`) migrados a `setTimeout(r, 0)`. Sigue siendo un macrotask hop (requerido para que `.then` del dynamic import drene), pero acelera ~30 ms acumulados por shard y elimina el riesgo si en el futuro algún test activa fake timers en el mismo archivo (el 0 ms es lo mínimo que `setSystemTime` puede saltar).
+  - Sub-auditoría de `act(() => …)` síncronos: revisados los 40+ matches reportados. La mayoría envuelven setters realmente síncronos (`setActiveTab`, `setSearch`, `set("empresa", …)`, `vi.advanceTimersByTime`); NO requieren `await act(async () => …)`. Los casos asíncronos reales (`vincularCotizacion`, `handleResponder`) ya fueron migrados en oleadas anteriores (`13.137.25`).
+  - Sub-auditoría de mocks manuales de Supabase: la mayoría son hooks/services específicos donde `createSupabaseMock` no aplica (mockean RPCs concretos con shapes ad-hoc). Sin migración masiva — se deja para revisión caso a caso si genera flakiness real.
+- Sin cambios en código de producción ni en `vitest.config.ts`. Tipos validados con `tsgo`.
+
 ## [13.137.28] - 2026-06-27
 - **fix(tests) — oleada 1 (CRÍTICA + ALTA) de fixes de auditoría 12 shards**: aplicados los patrones más severos detectados por los 12 subagentes.
   - CRÍTICA · `pdfLeak.test.tsx`: el loop de 200 renders ahora usa `try { ... } finally { unmount(); cleanup(); }` por iteración para garantizar desmontaje aunque `render()` lance — sin esto una sola excepción dejaba el árbol RTL montado e inflaba el heap del canary.
