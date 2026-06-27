@@ -58,7 +58,7 @@ describe("useTimbrarNotaCredito", () => {
     qc.clear();
   });
 
-  it("onError: notifyError con mensaje", async () => {
+  it("timbrar NC onError: notifyError con mensaje", async () => {
     timbrarNotaCreditoFacturapi.mockRejectedValue(new Error("nc fail"));
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const { result } = renderHook(() => useTimbrarNotaCredito("fac-1"), { wrapper: wrapper(qc) });
