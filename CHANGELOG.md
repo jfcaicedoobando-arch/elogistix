@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.5] - 2026-06-27
+- **chore(embarques/detalle) — Reordenar tabs**. Nuevo orden tras `Seguros`: `Facturación → Conciliación → P&L → Cierre → Notas y Actividad`. Sólo cambia el orden de `TabsTrigger` y `TabsContent` en `EmbarqueDetalleTabs.tsx`; los `value` se conservan, así que los deep-links existentes (`?tab=facturacion`, etc.) siguen funcionando.
+
 ## [13.139.4] - 2026-06-27
 - **fix(facturacion/proformas) — Re-vincular conceptos huérfanos a su proforma en 6 embarques legacy**. Diagnóstico: el embarque `ELIMP00154` mostraba la proforma `PRO-2026-0093` generada, pero los 4 conceptos de venta aparecían como "pendientes de pasar a proforma". Los conceptos se habían re-creado vía el patrón legacy de delete+re-insert al editar el embarque (ver `mem://features/editar-embarques`), perdiendo `proforma_id` y `estado_facturacion`. Auditoría global encontró el mismo patrón en 6 embarques (ELIMP00154, ELEXP00250, ELGEN00206, ELIMP00207, ELIMP00219, ELIMP00162). Migración de datos vincula los conceptos a su proforma cuando los totales cuadran exactamente por moneda (tolerancia 0.5) y los marca `en_proforma`. Además, se alineó el trigger `bloquear_conceptos_en_embarque_cerrado` para que respete `app.bypass_cierre` (consistente con `tg_bloquear_si_embarque_cerrado`), permitiendo correcciones administrativas en embarques cerrados como ELIMP00162. Sin cambios de frontend.
 

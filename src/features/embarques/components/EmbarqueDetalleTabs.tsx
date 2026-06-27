@@ -95,9 +95,9 @@ export function EmbarqueDetalleTabs({
         <TabsTrigger value="costos">Costos</TabsTrigger>
         <TabsTrigger value="garantias">Demoras y Garantías</TabsTrigger>
         <TabsTrigger value="seguros">Seguros</TabsTrigger>
-        <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="facturacion">Facturación</TabsTrigger>
         <TabsTrigger value="conciliacion">Conciliación</TabsTrigger>
+        <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
         <TabsTrigger value="cierre">Cierre</TabsTrigger>
         <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
       </TabsList>
@@ -168,6 +168,14 @@ export function EmbarqueDetalleTabs({
         <TabSeguros embarqueId={embarqueId} canEdit={canEdit} />
       </TabsContent>
 
+      <TabsContent value="facturacion">
+        <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
+      </TabsContent>
+
+      <TabsContent value="conciliacion" className="space-y-6">
+        <TabConciliacion embarqueId={embarqueId} />
+      </TabsContent>
+
       {/* P&L unificada (v13.66.15): toggle Global / Por contenedor. */}
       <TabsContent value="pnl" className="space-y-4">
         <div className="flex items-center justify-end">
@@ -183,14 +191,6 @@ export function EmbarqueDetalleTabs({
         {pnlView === "global"
           ? <TabPnl embarqueId={embarqueId} />
           : <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente} />}
-      </TabsContent>
-
-      <TabsContent value="facturacion">
-        <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
-      </TabsContent>
-
-      <TabsContent value="conciliacion" className="space-y-6">
-        <TabConciliacion embarqueId={embarqueId} />
       </TabsContent>
 
       <TabsContent value="cierre" className="space-y-6">
