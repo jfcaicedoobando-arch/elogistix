@@ -18,6 +18,9 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   proforma_borrador_abandonada: "facturacion",
   proforma_inconsistente: "facturacion",
   embarque_huerfano: "tracking",
+  factura_sin_timbrar: "facturacion",
+  rep_pendiente: "facturacion",
+  factura_cancelada_sin_sustitucion: "facturacion",
 };
 
 interface Props {

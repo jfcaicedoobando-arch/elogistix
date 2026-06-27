@@ -18,6 +18,9 @@ export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   proforma_borrador_abandonada: "Borrador abandonado",
   proforma_inconsistente: "Proforma inconsistente",
   embarque_huerfano: "Embarque huérfano",
+  factura_sin_timbrar: "Factura sin timbrar",
+  rep_pendiente: "REP pendiente",
+  factura_cancelada_sin_sustitucion: "Cancelada sin sustitución",
 };
 
 export function reglaShortLabel(regla: ReglaAuditoria): string {
