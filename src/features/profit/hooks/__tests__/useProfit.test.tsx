@@ -64,7 +64,11 @@ describe('useEstadoResultados', () => {
     const { result } = renderHook(() => useEstadoResultados(), { wrapper });
     await waitFor(() => expect(mockFetchER).toHaveBeenCalled());
 
-    act(() => result.current.setFuente('facturas'));
+    // v13.137.24: `await act` para que React 18 flushee el re-render y la
+    // re-suscripción de React Query antes del `waitFor` siguiente.
+    await act(async () => {
+      result.current.setFuente('facturas');
+    });
 
     await waitFor(() => expect(mockFetchERDevengado).toHaveBeenCalled());
     expect(result.current.fuente).toBe('facturas');

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import { useEditarEmbarqueWizard } from "../useEditarEmbarqueWizard";
 import { MemoryRouter } from "react-router-dom";
@@ -41,12 +41,15 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe("useEditarEmbarqueWizard", () => {
-  it("carga datos del embarque e inicializa formulario", () => {
+  it("carga datos del embarque e inicializa formulario", async () => {
     const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper });
-    
+
     expect(result.current.embarque?.expediente).toBe("EXP-001");
-    // Esperamos un ciclo para que el useEffect de inicialización corra
-    expect(result.current.methods.getValues("clienteId")).toBe("cli-1");
+    // v13.137.24: el `useEffect` de inicialización corre tras el primer render;
+    // sin `waitFor` el assert era un falso positivo/negativo dependiendo del scheduler.
+    await waitFor(() =>
+      expect(result.current.methods.getValues("clienteId")).toBe("cli-1"),
+    );
   });
 
   it("permite cambiar de paso", () => {

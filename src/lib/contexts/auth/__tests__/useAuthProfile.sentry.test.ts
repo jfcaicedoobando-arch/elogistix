@@ -20,19 +20,13 @@ beforeEach(() => {
 });
 afterEach(() => vi.clearAllMocks());
 
-async function flushImport() {
-  for (let i = 0; i < 6; i++) await Promise.resolve();
-  await new Promise((r) => setTimeout(r, 20));
-}
-
 describe("useAuthProfile — captureException", () => {
   it("reporta a Sentry cuando fetchUserContext rechaza, con tag phase y uid", async () => {
     const boom = new Error("profile-fetch-down");
     mockFetchUserContext.mockRejectedValue(boom);
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    renderHook(() => useAuthProfile("u-XYZ"));
-    await flushImport();
+    const { unmount } = renderHook(() => useAuthProfile("u-XYZ"));
 
     await waitFor(() =>
       expect(sentryMock.captureException).toHaveBeenCalledWith(
@@ -43,18 +37,27 @@ describe("useAuthProfile — captureException", () => {
         }),
       ),
     );
+    unmount();
     errSpy.mockRestore();
   });
 
   it("NO reporta cuando fetchUserContext resuelve", async () => {
+    // v13.137.24: antes el negativo se aseveraba tras un `setTimeout(20)` real
+    // (frágil + falso positivo silencioso). Ahora primero esperamos a que el
+    // efecto efectivamente llame al servicio (rama de éxito) y sólo entonces
+    // verificamos que Sentry NO se invocó.
     mockFetchUserContext.mockResolvedValue({
       role: "user",
       orgRole: "user",
       organizationId: "o-1",
       organization: null,
     });
-    renderHook(() => useAuthProfile("u-OK"));
-    await flushImport();
+    const { unmount } = renderHook(() => useAuthProfile("u-OK"));
+    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled());
+    // microtask flush para que cualquier `.catch` ya hubiese disparado
+    await Promise.resolve();
+    await Promise.resolve();
     expect(sentryMock.captureException).not.toHaveBeenCalled();
+    unmount();
   });
 });

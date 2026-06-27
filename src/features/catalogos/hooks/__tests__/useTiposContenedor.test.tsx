@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useTiposContenedor, useAdminTiposContenedor } from "../useTiposContenedor";
 import { createWrapper } from "@/test/utils/queryWrapper";
@@ -30,8 +30,12 @@ describe("useTiposContenedor", () => {
 
   it("handles container type mutations", async () => {
     const { result } = renderHook(() => useAdminTiposContenedor(), { wrapper: createWrapper() });
-    
-    await result.current.agregarTipo.mutateAsync({ name: "20 ST", code: "20ST" });
+
+    // v13.137.24: envuelto en `act` para evitar warnings y contaminación
+    // del QueryClient compartido bajo `singleFork`.
+    await act(async () => {
+      await result.current.agregarTipo.mutateAsync({ name: "20 ST", code: "20ST" });
+    });
     expect(catalogosService.insertTipoContenedor).toHaveBeenCalled();
   });
 });

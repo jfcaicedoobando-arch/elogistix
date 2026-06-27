@@ -6,6 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.24] - 2026-06-27
+- **fix(tests) — bugs detectados en auditoría de shards 2 y 6**:
+  - `parseCfdi.test.ts`: el test de retry hacía 4s de `sleep` reales con `testTimeout=15s` (cero margen). Migrado a `vi.useFakeTimers()` + `vi.runAllTimersAsync()`.
+  - `useProfit.test.tsx`: `act(() => setFuente('facturas'))` sin `await`; el `waitFor` siguiente podía esperar 15s bajo React 18. Ahora `await act(async () => …)`.
+  - `useEmbarqueForm.test.tsx`: `createWrapper()` a nivel módulo compartía un QueryClient que el `afterEach` global cancelaba entre tests. Ahora se crea por test.
+  - `useEditarEmbarqueWizard.test.tsx`: leía `methods.getValues("clienteId")` síncrono pero la inicialización ocurre en `useEffect`. Envuelto en `await waitFor(...)`.
+  - `useAuthProfile.sentry.test.ts`: reemplazado `flushImport` (con `setTimeout(20)` real) por `waitFor`; la aserción negativa ahora confirma primero que la rama de éxito ocurrió; `renderHook` captura y llama `unmount()` para evitar promesas resolviendo tras el fin del test (contaminación bajo `singleFork`).
+  - `tracking/index.test.ts`: mock manual de Supabase con sólo 4 métodos reemplazado por `createSupabaseMock` (patrón estándar — `mem://technical/testing-mock-patterns`).
+  - `useTiposContenedor.test.tsx`: `mutateAsync` envuelto en `await act(async () => …)` para evitar warnings y fugas de estado en `singleFork`.
+  - `useComisiones.test.tsx`: agregado `beforeEach` con `mockReset()` para los 4 mocks.
+  - `portal.test.ts` y `duplicadoRfc.test.ts`: agregado `vi` al import desde vitest (antes funcionaba sólo por `globals: true`).
+
 ## [13.137.23] - 2026-06-27
 - **fix(ci) — coverage falso por blobs stale**: cuando un shard se colgaba 20 min y GitHub lo cancelaba, el cache de `actions/cache` restauraba un `blob-N.json` viejo y el step `if: always()` lo subía igual. El merge usaba datos obsoletos y la cobertura bajaba a 34.45% < 38%, fallando el job.
   - Quitado `.vitest-reports` del path cacheado en `.github/workflows/ci.yml` (sólo cacheamos `node_modules/.vitest`).
