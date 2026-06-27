@@ -117,11 +117,19 @@ describe("descargarCfdiFacturapi", () => {
     URL.createObjectURL = createObjectURL;
     URL.revokeObjectURL = revokeObjectURL;
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    // Auditoría 13.137.34: usamos fake timers para flushear el `setTimeout(revokeObjectURL, 1000)`
+    // del SUT antes de restaurar los originales — si no, el timer se dispara después del
+    // afterEach y revoca contra `undefined` (jsdom no define URL.revokeObjectURL), provocando
+    // "URL.revokeObjectURL is not a function" como unhandled error en el shard.
+    vi.useFakeTimers();
     try {
       await descargarCfdiFacturapi({ tipo: "pdf", facturaId: "f1" });
       expect(createObjectURL).toHaveBeenCalled();
       expect(clickSpy).toHaveBeenCalled();
+      vi.runAllTimers();
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:url");
     } finally {
+      vi.useRealTimers();
       URL.createObjectURL = origCreate;
       URL.revokeObjectURL = origRevoke;
       clickSpy.mockRestore();
