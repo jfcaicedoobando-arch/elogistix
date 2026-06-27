@@ -41,6 +41,9 @@ export function emptyPorRegla(): Record<ReglaAuditoria, number> {
     embarque_huerfano: 0,
     factura_sin_timbrar: 0, rep_pendiente: 0,
     factura_cancelada_sin_sustitucion: 0,
+    cxc_vencida: 0,
+    cxp_por_capturar_estancada: 0,
+    cxp_vencida: 0,
   };
 }
 
