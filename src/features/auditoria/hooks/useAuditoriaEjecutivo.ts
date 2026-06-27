@@ -12,6 +12,7 @@ import {
   revisionKey,
   useAuditoriaRevisiones,
 } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useAuditoriaSnapshots } from "@/features/auditoria/hooks/useAuditoriaSnapshots";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
@@ -20,12 +21,15 @@ import type {
 import {
   agregarPendientes,
   calcularScore,
+  calcularRegresion,
   agruparPorEtapaYCliente,
   calcularVencimientos,
   calcularRanking,
   type OperadorRanking,
+  type RegresionScore,
   type ScoreEstado,
 } from "@/features/auditoria/domain/ejecutivoAgregados";
+
 
 export interface AuditoriaEjecutivoData {
   isLoading: boolean;
