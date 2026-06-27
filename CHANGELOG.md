@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.11] - 2026-06-27
+- **feat(e2e) — Reporte consolidado de huérfanos + gate de CI por umbral**.
+  - `e2e/globalTeardown.ts`: ahora escribe `test-results/e2e-orphans-report.json` y `.md` con `runId`, fecha, umbral, total y conteo por probe (incluye `auditoria_comentarios` y `pagos_factura`).
+  - Nuevo env var `E2E_ORPHAN_THRESHOLD` (default `0`): si el total de huérfanos `E2E_TEST` supera el umbral, el teardown setea `process.exitCode = 1` y CI falla.
+  - El reporte se genera incluso cuando no hay sesión (con `error: skipped`) para que el artifact siempre exista en el run.
+
 ## [13.139.10] - 2026-06-27
 - **fix(e2e) — Endurecimiento de cleanup en specs Playwright (auditoría)**. Cierra los 10 hallazgos del audit de cleanup:
   - `09-cierre-embarque`: cleanup movido a `afterEach` con flag `wasClosed`; ahora pasa `p_motivo` (NOT NULL) al RPC `reabrir_embarque` para que la reapertura no falle silencioso.
