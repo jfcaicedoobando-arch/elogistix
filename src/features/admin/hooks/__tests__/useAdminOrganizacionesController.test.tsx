@@ -27,10 +27,10 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
 }));
 
 describe("useAdminOrganizacionesController", () => {
-  it("filters organizations by search term", () => {
+  it("filters organizations by search term", async () => {
     const { result } = renderHook(() => useAdminOrganizacionesController(), { wrapper: createWrapper() });
     
-    act(() => {
+    await act(async () => {
       result.current.setters.setSearch("Alpha");
     });
     
@@ -38,10 +38,10 @@ describe("useAdminOrganizacionesController", () => {
     expect(result.current.data.filtered[0].nombre).toBe("Org Alpha");
   });
 
-  it("filters organizations by plan", () => {
+  it("filters organizations by plan", async () => {
     const { result } = renderHook(() => useAdminOrganizacionesController(), { wrapper: createWrapper() });
     
-    act(() => {
+    await act(async () => {
       result.current.setters.setPlanFilter("Basic");
     });
     
@@ -49,15 +49,15 @@ describe("useAdminOrganizacionesController", () => {
     expect(result.current.data.filtered[0].plan).toBe("Basic");
   });
 
-  it("handles organization creation", () => {
+  it("handles organization creation", async () => {
     const { result } = renderHook(() => useAdminOrganizacionesController(), { wrapper: createWrapper() });
     
-    act(() => {
+    await act(async () => {
       result.current.setters.setNombre("New Org");
       result.current.setters.setRfc("NEW_RFC");
     });
     
-    act(() => {
+    await act(async () => {
       result.current.createOrg.mutate();
     });
     

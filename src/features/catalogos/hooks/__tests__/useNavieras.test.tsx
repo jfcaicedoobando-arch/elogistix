@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { useNavieras, useAdminNavieras } from "../useNavieras";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import * as catalogosService from "@/features/catalogos/services";
@@ -19,6 +19,10 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("useNavieras", () => {
   it("fetches active navieras", async () => {

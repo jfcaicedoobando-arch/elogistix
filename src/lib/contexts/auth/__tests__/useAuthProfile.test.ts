@@ -45,7 +45,7 @@ describe("useAuthProfile", () => {
     });
     const { result } = renderHook(() => useAuthProfile("u2"));
     await waitFor(() => expect(result.current.profile.role).toBe("user"), { timeout: 1000 });
-    act(() => {
+    await act(async () => {
       result.current.reset();
     });
     await waitFor(() => expect(result.current.profile.role).toBeNull());

@@ -27,11 +27,11 @@ describe("useTabsParam", () => {
     expect(result.current.activeTab).toBe("documentos");
   });
 
-  it("setActiveTab actualiza el tab activo", () => {
+  it("setActiveTab actualiza el tab activo", async () => {
     const { result } = renderHook(() => useTabsParam(TABS, "general"), {
       wrapper: makeWrapper(),
     });
-    act(() => { result.current.setActiveTab("actividades"); });
+    await act(async () => { result.current.setActiveTab("actividades"); });
     expect(result.current.activeTab).toBe("actividades");
   });
 
