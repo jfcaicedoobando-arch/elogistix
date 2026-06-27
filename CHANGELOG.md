@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.26] - 2026-06-27
+- **fix(tests) — auditoría línea-por-línea del shard 6/12**: revisión exhaustiva de los 45 archivos del shard con 4 subagentes en paralelo. Hallazgos aplicados:
+  - `usePortalDocumentDownload.test.tsx` (ALTA): `Object.defineProperty(URL, "createObjectURL", ...)` directo no era restaurado por `vi.unstubAllGlobals()` del setup global; bajo singleFork los métodos quedaban como `vi.fn()` permanentes para todo el shard, contaminando cualquier otro test que tocara `URL`. Migrado a `vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL })` + `vi.unstubAllGlobals()` explícito en el `afterEach` local.
+  - `useLoginAudit.test.ts` (MEDIA): dos `vi.advanceTimersByTime(200)` fuera de `act()`; el callback del `setTimeout` dispara `insertLoginAudit()` que puede provocar actualizaciones de estado React no envueltas. Migrado a `act(() => { vi.advanceTimersByTime(200); })`.
+  - `documentos.test.ts` y `contenedores/crud.test.ts` (MEDIA): `mock.rpcCalls` / `mock.tableCalls` (arrays a nivel módulo del `createSupabaseMock`) acumulaban registros entre tests bajo singleFork. Tests posteriores con `.find(c => c.fn === "...")` podían matchear llamadas stale. Agregado `beforeEach` que vacía ambos arrays.
+
 ## [13.137.25] - 2026-06-27
 - **fix(tests) — auditoría línea-por-línea del shard 2/12**: revisión exhaustiva de los 46 archivos del shard usando 4 subagentes en paralelo. Hallazgos aplicados:
   - `usePortalCotizacionDetalleController.integration.test.tsx`: las 8 llamadas `act(() => …)` envolviendo `handleResponder()` (que dispara `mutate()` async) y setters de estado fueron migradas a `await act(async () => …)`. Bajo React 18 + singleFork, el patrón síncrono dejaba microtasks de la mutación drenando fuera del boundary y producía aserciones flakeantes contra `confirmAction`/`comentario` post-reset.

@@ -34,19 +34,16 @@ beforeEach(() => {
       blob: () => Promise.resolve(new Blob(["pdf"], { type: "application/pdf" })),
     }),
   );
-  // jsdom no implementa `URL.createObjectURL`/`revokeObjectURL`, así que no se
-  // puede usar `vi.spyOn` (requiere que la propiedad exista). Se parchan con
-  // `stubGlobal` sobre `URL` re-asignando los métodos faltantes; el
-  // `unstubAllGlobals` del setup global los limpia entre archivos.
-  Object.defineProperty(URL, "createObjectURL", {
-    configurable: true,
-    writable: true,
-    value: vi.fn(() => "blob:fake"),
-  });
-  Object.defineProperty(URL, "revokeObjectURL", {
-    configurable: true,
-    writable: true,
-    value: vi.fn(),
+  // jsdom no implementa `URL.createObjectURL`/`revokeObjectURL`. Usamos
+  // `vi.stubGlobal("URL", ...)` para que `vi.unstubAllGlobals()` del setup
+  // global RESTAURE el objeto URL completo entre archivos del shard. La
+  // versión previa usaba `Object.defineProperty` directo, que dejaba esos
+  // métodos como `vi.fn()` permanentes y filtraba el mock al resto del shard
+  // (singleFork).
+  vi.stubGlobal("URL", {
+    ...URL,
+    createObjectURL: vi.fn(() => "blob:fake"),
+    revokeObjectURL: vi.fn(),
   });
 
   // Stub sólo el anchor; `restoreAllMocks` (afterEach local) evita acumular
@@ -64,6 +61,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("usePortalDocumentDownload", () => {

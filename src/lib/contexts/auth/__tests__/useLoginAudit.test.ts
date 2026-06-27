@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 
 const { mockInsert, mockSession } = vi.hoisted(() => ({
   mockInsert: vi.fn(),
@@ -35,14 +35,14 @@ describe("useLoginAudit", () => {
   it("registra login al recibir evento SIGNED_IN", () => {
     mockSession.getItem.mockReturnValue(null);
     renderHook(() => useLoginAudit(FAKE_USER, "SIGNED_IN"));
-    vi.advanceTimersByTime(200);
+    act(() => { vi.advanceTimersByTime(200); });
     expect(mockInsert).toHaveBeenCalledWith("u1", "test@test.com");
   });
 
   it("no registra login si ya existe entrada en sessionStorage", () => {
     mockSession.getItem.mockReturnValue("1");
     renderHook(() => useLoginAudit(FAKE_USER, "SIGNED_IN"));
-    vi.advanceTimersByTime(200);
+    act(() => { vi.advanceTimersByTime(200); });
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
