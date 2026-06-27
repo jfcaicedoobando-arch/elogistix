@@ -88,8 +88,7 @@ describe("invokeParseCfdiOnce", () => {
   });
 
   it("mapea FunctionsRelayError como preflight retryable", async () => {
-    const relayErr = new FunctionsRelayError(new Response(null, { status: 0 }));
-    relayErr.message = "blocked";
+    const relayErr = Object.assign(Object.create(FunctionsRelayError.prototype), { message: "blocked" });
     invokeMock.mockResolvedValueOnce({ data: null, error: relayErr });
     const r = await invokeParseCfdiOnce(file, categorias);
     expect(r.ok).toBe(false);
@@ -102,8 +101,7 @@ describe("invokeParseCfdiOnce", () => {
   });
 
   it("mapea FunctionsFetchError como request retryable", async () => {
-    const fetchErr = new FunctionsFetchError(new Response(null, { status: 0 }));
-    fetchErr.message = "net";
+    const fetchErr = Object.assign(Object.create(FunctionsFetchError.prototype), { message: "net" });
     invokeMock.mockResolvedValueOnce({ data: null, error: fetchErr });
     const r = await invokeParseCfdiOnce(file, categorias);
     expect(r.ok).toBe(false);
