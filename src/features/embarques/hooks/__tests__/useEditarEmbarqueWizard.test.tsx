@@ -31,9 +31,14 @@ vi.mock("@/hooks/shared", () => ({
   useDebounce: (v: any) => v,
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => {
+// v13.137.35: el wrapper se crea por test (no a nivel de módulo). Antes
+// `createWrapper()` se llamaba una sola vez al cargar el archivo y el QueryClient
+// resultante se reutilizaba entre tests; tras el primer `cleanupGlobalQueryClient`
+// la referencia global quedaba `undefined` y las suscripciones del segundo test
+// nunca se cancelaban → leak.
+const makeWrapper = () => {
   const QueryWrapper = createWrapper();
-  return (
+  return ({ children }: { children: React.ReactNode }) => (
     <MemoryRouter>
       <QueryWrapper>{children}</QueryWrapper>
     </MemoryRouter>
