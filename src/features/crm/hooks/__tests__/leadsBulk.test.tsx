@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
@@ -25,6 +25,13 @@ vi.mock("@/lib/query", () => ({
 import { useActualizarLeadsBulk, useEliminarLeadsBulk, useCrearLeadsBulk } from "../leads/bulk";
 
 describe("leads bulk hooks", () => {
+  beforeEach(() => {
+    bulkUpdateLeads.mockReset();
+    bulkSoftDeleteLeads.mockReset();
+    bulkCreateLeads.mockReset();
+  });
+
+
   it("useActualizarLeadsBulk llama a bulkUpdateLeads con ids y patch", async () => {
     bulkUpdateLeads.mockResolvedValueOnce([{ id: "l1" }]);
     const { result } = renderHook(() => useActualizarLeadsBulk(), { wrapper: createWrapper() });

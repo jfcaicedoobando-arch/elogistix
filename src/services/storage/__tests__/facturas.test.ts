@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { extractFacturaPath, getFacturaSignedUrl } from '../facturas';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -15,6 +15,12 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('storage/facturas', () => {
+  beforeEach(() => {
+    mockSupabase.storage.from.mockClear();
+    mockSupabase.storage.createSignedUrl.mockClear();
+  });
+
+
   it('extractFacturaPath limpia URLs publicas', () => {
     const full = 'https://host/storage/v1/object/public/facturas/mi/factura.pdf';
     expect(extractFacturaPath(full)).toBe('mi/factura.pdf');

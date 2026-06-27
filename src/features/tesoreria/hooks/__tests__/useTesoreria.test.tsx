@@ -1,12 +1,12 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
 const { mockFetchFlujo, mockFetchSaldos, mockCobranza, mockCxp } = vi.hoisted(() => ({
   mockFetchFlujo: vi.fn(),
-  mockFetchSaldos: vi.fn().mockResolvedValue([]),
-  mockCobranza: vi.fn(() => ({ data: [], isLoading: false, error: null })),
-  mockCxp: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  mockFetchSaldos: vi.fn(),
+  mockCobranza: vi.fn(),
+  mockCxp: vi.fn(),
 }));
 
 vi.mock('@/features/tesoreria/services', () => ({
@@ -19,6 +19,14 @@ vi.mock('@/features/cxp/hooks', () => ({ useFacturasCxP: mockCxp }));
 import { useFlujoProyectado } from '../useFlujoProyectado';
 
 describe('useFlujoProyectado (composer)', () => {
+  beforeEach(() => {
+    mockFetchFlujo.mockReset();
+    mockFetchSaldos.mockReset().mockResolvedValue([]);
+    mockCobranza.mockReset().mockReturnValue({ data: [], isLoading: false, error: null });
+    mockCxp.mockReset().mockReturnValue({ data: [], isLoading: false, error: null });
+  });
+
+
   it('fetches projection data when sources are ready', async () => {
     mockFetchFlujo.mockResolvedValueOnce({ semanas: [{ semana_iso: '2026-W01' }] });
     const { result } = renderHook(() => useFlujoProyectado(), { wrapper: createWrapper() });

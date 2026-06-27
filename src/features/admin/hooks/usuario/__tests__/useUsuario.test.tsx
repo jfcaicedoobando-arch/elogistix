@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
@@ -17,6 +17,13 @@ vi.mock('@/features/admin/services/usuario', () => ({
 import { useUsuarios, useUpdateUserRole, useDeleteUser } from '../useUsuarios';
 
 describe('useUsuario Hooks', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockUpdate.mockReset();
+    mockDelete.mockReset();
+  });
+
+
   it('useUsuarios fetches list', async () => {
     mockFetch.mockResolvedValueOnce([{ id: 'u1', email: 'test@test.com' }]);
     const { result } = renderHook(() => useUsuarios(), { wrapper: createWrapper() });

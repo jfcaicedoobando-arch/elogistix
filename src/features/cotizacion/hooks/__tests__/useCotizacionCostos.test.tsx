@@ -1,6 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
 
 const fetchCotizacionCostos = vi.hoisted(() => vi.fn());
 const upsertCotizacionCostos = vi.hoisted(() => vi.fn());
