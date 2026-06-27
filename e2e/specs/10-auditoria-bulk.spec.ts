@@ -8,11 +8,36 @@
  */
 import { expect, test } from "@playwright/test";
 import { internalCreds, loginAs } from "../fixtures/auth";
+import { bestEffortCleanup } from "../fixtures/cleanup";
+import { supabaseRest } from "../fixtures/api";
 
 const ENABLED = process.env.E2E_HAS_AUDIT_DATA === "1";
 
 test.describe("Flujo 10 — Auditoría operativa (bulk + snooze)", () => {
   test.skip(!ENABLED, "E2E_HAS_AUDIT_DATA=1 requerido");
+
+  let startTs = "";
+  test.beforeEach(() => {
+    startTs = new Date().toISOString();
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    if (!startTs) return;
+    // Best-effort: borrar revisiones y snoozes creados por el spec.
+    // Filtro doble (timestamp + tag de comentario) por si la columna
+    // `created_at` no existe en alguna instalación legacy.
+    await bestEffortCleanup(testInfo, "borrar auditoria_revisiones E2E", async () => {
+      await supabaseRest(page).delete("auditoria_revisiones", {
+        comentario: "like.*E2E_TEST*",
+      });
+    });
+    await bestEffortCleanup(testInfo, "borrar auditoria_revisiones por timestamp", async () => {
+      await supabaseRest(page).delete("auditoria_revisiones", {
+        created_at: `gte.${startTs}`,
+      });
+    });
+  });
+
 
   test("seleccionar múltiples hallazgos y marcarlos como revisados", async ({ page }) => {
     await loginAs(page, internalCreds());
