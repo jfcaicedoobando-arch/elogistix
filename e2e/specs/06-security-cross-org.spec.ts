@@ -67,9 +67,19 @@ test.describe("Flujo 06 — Seguridad cross-org", () => {
       };
       page.on("response", onResp);
 
+      // Esperar a que se dispare al menos la query REST del recurso (o el
+      // load del documento si la guardia bloquea antes de pedir datos), en
+      // vez de un timeout fijo. Esto reduce flakes y acorta el spec.
+      const restPromise = page
+        .waitForResponse(
+          (r) => r.url().includes(`/rest/v1/${t.restTable}`) && r.url().includes(`id=eq.${id}`),
+          { timeout: 8_000 },
+        )
+        .catch(() => null);
       await page.goto(t.path(id), { waitUntil: "domcontentloaded" });
-      // Dar tiempo a que disparen las queries de detalle.
-      await page.waitForTimeout(2_000);
+      await restPromise;
+      // Pequeño margen para que la UI reaccione (404 / redirect) tras la respuesta.
+      await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
 
       page.off("response", onResp);
 

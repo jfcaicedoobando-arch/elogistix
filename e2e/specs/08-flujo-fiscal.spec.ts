@@ -53,7 +53,16 @@ test.describe("Flujo 08 — Fiscal happy path", () => {
     await expect(facturaRow).toBeVisible({ timeout: 10_000 });
     await facturaRow.getByRole("button", { name: /registrar pago/i }).click();
     await page.getByLabel(/monto/i).fill("100");
-    await page.getByLabel(/forma de pago/i).selectOption({ label: /transferencia/i });
+    // `forma de pago` puede ser <select> nativo o un Radix Select. Probamos
+    // la API nativa y, si no es un combobox nativo, abrimos el listbox de Radix.
+    const formaPago = page.getByLabel(/forma de pago/i);
+    const tagName = await formaPago.evaluate((el) => el.tagName.toLowerCase()).catch(() => "");
+    if (tagName === "select") {
+      await formaPago.selectOption({ label: /transferencia/i });
+    } else {
+      await formaPago.click();
+      await page.getByRole("option", { name: /transferencia/i }).first().click();
+    }
     await page.getByRole("button", { name: /guardar/i }).click();
 
     // El REP se timbra automáticamente vía edge function.
