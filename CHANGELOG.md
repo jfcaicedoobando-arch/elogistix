@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.56] - 2026-06-27
+- **test(coverage) — PR-2 ramas en hooks fiscales (lote 2)**: 24 tests nuevos para hooks sin cobertura en `features/facturacion/hooks`. `useTimbrarFactura.test.tsx` (5): onSuccess invalida cache + UUID truncado / onError mapea mensaje / `useCancelarFactura` ramas `sustituida=true|false` + error. `useTimbrarRep.test.tsx` (6): rama `facturaId` definido vs undefined en invalidate (timbrar y cancelar) + errores. `useCrearFacturaManual.test.tsx` (4): `timbrarAlGuardar=true|false` con toasts distintos + error al crear + error al timbrar después de crear. `useNotaCreditoFacturapi.test.tsx` (4): timbrar/cancelar nota de crédito con invalidación de `notasCredito(facturaId)` + recientes. `useDescargarCfdi.test.tsx` (5): rama `stored=null+facturaId` (proxy), `esUrlFacturapi=true` (proxy), URL almacenada (open in new tab), `usarProxy=true sin facturaId` (silenciosa), y error → `reportCaughtError + notifyError` con tipo en mayúsculas.
+
 ## [13.137.55] - 2026-06-27
 - **fix(tests) — shard 9/20 fail silencioso**: re-ejecuté shards 8/20 y 9/20 aislados. Shard 8 pasa limpio (exit 0); shard 9 fallaba 1 test `fetchForecast > aplica filtros de fecha si se proveen` enmascarado por `--retry=2` y reporter `blob` (sin imprimir el error en stdout, sólo exit 1). La aserción `r.porMes` veía `undefined` porque el mock de `computeForecast` retornaba `{ total, ponderado, por_vendedor }` en snake_case en lugar del shape real `ForecastResumen` (`porMes`/`porVendedor`). Alineado el mock al tipo real → shard 9 ahora exit 0 con blob completo.
 
