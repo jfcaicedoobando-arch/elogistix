@@ -26,7 +26,7 @@ test.describe("Flujo 08 — Fiscal happy path", () => {
   let facturaIdCreada: string | null = null;
   let lastPage: import("@playwright/test").Page | null = null;
 
-  test.afterAll(async ({}, testInfo) => {
+  test.afterAll(async (_fixtures, testInfo) => {
     // Best-effort: cancelar CFDI sandbox motivo 02 (sin sustitución) y
     // borrar pagos locales asociados. Si no hay sesión disponible, nos rendimos.
     if (!facturaIdCreada || !lastPage) return;
