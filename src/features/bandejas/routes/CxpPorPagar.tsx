@@ -7,6 +7,7 @@ import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function CxpPorPagar() {
   const navigate = useNavigate();
@@ -15,12 +16,10 @@ export default function CxpPorPagar() {
 
   return (
     <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">CxP — Por pagar</h1>
-        <p className="text-muted-foreground">
-          Facturas de proveedor vigentes con saldo. Programa y registra los pagos.
-        </p>
-      </div>
+      <PageHeader
+        title="CxP — Por pagar"
+        description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
+      />
 
       <ComprasTabStrip />
 
