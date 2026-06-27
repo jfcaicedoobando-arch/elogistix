@@ -88,6 +88,44 @@ export function useHallazgosTablaState(
   const start = (currentPage - 1) * pageSize;
   const visibles = filtrados.slice(start, start + pageSize);
 
+  // Selección múltiple: sólo hallazgos pendientes (no revisados) visibles.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const selectablesEnPagina = useMemo(() => {
+    const ids: string[] = [];
+    for (const h of visibles) {
+      const rev = revisiones?.get(revisionKey(h));
+      if (rev?.estado_revision !== "revisado") ids.push(revisionKey(h));
+    }
+    return ids;
+  }, [visibles, revisiones]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds((prev) => (prev.size === 0 ? prev : new Set()));
+  }, []);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleAllVisible = useCallback(() => {
+    setSelectedIds((prev) => {
+      const allSelected = selectablesEnPagina.length > 0 && selectablesEnPagina.every((id) => prev.has(id));
+      if (allSelected) {
+        const next = new Set(prev);
+        for (const id of selectablesEnPagina) next.delete(id);
+        return next;
+      }
+      const next = new Set(prev);
+      for (const id of selectablesEnPagina) next.add(id);
+      return next;
+    });
+  }, [selectablesEnPagina]);
+
   const limpiar = () => {
     setSearch("");
     setFiltroRegla("todas");
@@ -98,6 +136,7 @@ export function useHallazgosTablaState(
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
+    clearSelection();
   };
 
   const hayFiltros = [
@@ -111,10 +150,16 @@ export function useHallazgosTablaState(
     !!etaHasta,
   ].some(Boolean);
 
-  // setter wrappers que resetean la paginación al cambiar filtro
+  // setter wrappers que resetean la paginación y la selección al cambiar filtro
   const wrap = <T,>(setter: (v: T) => void) => (v: T) => {
     setter(v);
     setPage(1);
+    clearSelection();
+  };
+
+  const setPageWithClear = (p: number) => {
+    setPage(p);
+    clearSelection();
   };
 
   return {
@@ -136,6 +181,12 @@ export function useHallazgosTablaState(
     visibles,
     hayFiltros,
     totalHallazgos: hallazgos.length,
+    // selección
+    selectedIds,
+    selectablesEnPagina,
+    toggleSelected,
+    toggleAllVisible,
+    clearSelection,
     setSearch: wrap(setSearch),
     setFiltroRegla: wrap(setFiltroRegla),
     setFiltroSev: wrap(setFiltroSev),
@@ -145,7 +196,7 @@ export function useHallazgosTablaState(
     setEtaDesde: wrap(setEtaDesde),
     setEtaHasta: wrap(setEtaHasta),
     setPageSize: wrap(setPageSize),
-    setPage,
+    setPage: setPageWithClear,
     limpiar,
   };
 }
