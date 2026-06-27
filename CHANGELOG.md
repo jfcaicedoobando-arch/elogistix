@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.9] - 2026-06-27
+- **feat(e2e) — Ampliación de cobertura Playwright: 4 specs nuevos (09–12)**.
+  - `09-cierre-embarque`: valida bloqueo por checklist incompleto + tooltip de motivo; bypass `admin_org` opcional (`E2E_ADMIN_ORG=1`).
+  - `10-auditoria-bulk`: selección múltiple de hallazgos → marcar revisados; snooze rechaza >30 días (trigger DB).
+  - `11-cotizacion-a-embarque`: ejecuta `crear_embarque_borrador_desde_cotizacion` y valida expediente real; cleanup borra el borrador.
+  - `12-cxp-factura-pago`: captura factura proveedor (asigna folio `FP-XXXXXX`) y registra pago; en `serial` mode con cleanup en `afterAll`.
+  - Helpers nuevos: `e2e/fixtures/cleanup.ts` (`bestEffortCleanup`) y `e2e/fixtures/api.ts` (`supabaseRest` con token del storageState para DELETE/PATCH/RPC en cleanups).
+  - Todos los specs nuevos están gateados por env var y mutan datos reales con cleanup best-effort.
+  - `e2e/README.md` actualizado con la matriz completa de specs + env vars.
+
 ## [13.139.8] - 2026-06-27
 - **fix(e2e) — Endurecimiento de specs Playwright (hallazgos 1-9 de auditoría)**. Reduce flakiness y refuerza assertions:
   - `01-login`: el assert de error de credenciales ahora filtra por `[role="alert"]` / `[data-sonner-toast]` para no matchear copy ambiental.

@@ -1,61 +1,85 @@
+## Objetivo
+Ampliar la cobertura de Playwright con 4 nuevos specs (09–12) gateados por flag, con mutaciones reales sobre staging y cleanup best-effort.
 
-# Auditoría E2E — Playwright (`/e2e`)
+## Convenciones comunes
 
-Revisé `playwright.config.ts`, `globalSetup.ts`, `fixtures/auth.ts` y los 8 specs. Resumen analógico: la suite es como una alarma de casa con sensores conectados pero sin batería — el cableado existe, pero varios sensores apuntan a paredes que ya no están ahí (rutas obsoletas) y otros suenan aunque no pase nada (asserts tautológicos).
+- Cada spec se salta con `test.skip(...)` si falta su flag/env requerido.
+- Mutaciones envueltas en `try/finally`; el cleanup intenta dejar el dato en estado previo (o lo marca como "creado por E2E" para barrido manual).
+- Selectores estables: `getByRole` + nombres anclados; nunca `text=` ambiguo.
+- Esperas con `waitForResponse` sobre `/rest/v1/<tabla>` o sobre `/functions/v1/<edge>` en vez de `waitForTimeout`.
+- Todos los specs corren en project `chromium-internal` salvo aclaración.
 
-## Hallazgos
+## Specs nuevos
 
-### Bloqueantes (rompen o dan falsos verdes)
+### 09 — Cierre de embarque
+**Archivo:** `e2e/specs/09-cierre-embarque.spec.ts`
+**Flag:** `E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID` (UUID de un embarque con checklist incompleto, en estado `en_transito`/`arribado`).
+**Cobertura:**
+1. Login interno, ir a `/embarques/<id>?tab=cierre`.
+2. Validar que `CierrePendientesCard` lista ≥1 pendiente.
+3. Botón "Cerrar embarque" deshabilitado → hover muestra tooltip "Faltan N pendientes".
+4. Si `E2E_ADMIN_ORG=1`, intentar cerrar con bypass: click "Cerrar embarque" → confirmar → esperar `waitForResponse(/cerrar_embarque/)` y validar badge "Cerrado".
+5. **Cleanup:** RPC `reabrir_embarque` (si existe) o `UPDATE embarques SET estado='arribado' WHERE id=...` vía fetch a una edge function helper. Si no hay helper, log warning y dejar nota.
 
-1. **`globalSetup` escribe `internal.json`/`portal.json` pero ningún `project` los consume.** No hay `use: { storageState: "e2e/.auth/internal.json" }` en `playwright.config.ts`. El ahorro de "3-5s por spec" prometido en el comentario nunca ocurre — cada spec hace login fresco vía `loginAs`.
-2. **Spec 01 "credenciales inválidas" se rompe si `globalSetup` corrió.** Como la sesión queda persistida en el contexto del navegador (cuando lo cableemos según #1), `goto("/")` redirige al dashboard y el formulario nunca se renderiza. Falta `test.use({ storageState: { cookies: [], origins: [] } })` en ese test.
-3. **Spec 06 (cross-org) usa ruta inexistente.** `/facturacion/facturas/${id}` no existe (la real es `/facturacion/:id`). El test pasa porque la SPA muestra 404 genérico, no porque RLS bloquee. Además, un UUID dummy no valida cross-org — sólo valida "registro inexistente".
-4. **Spec 06 assert tautológico.** `expect(page).not.toHaveURL(new RegExp(\`${id}.*\\?\`))` exige `id` seguido de `?` (query string); tras `goto` nunca hay `?`, así que siempre pasa.
-5. **Spec 04 busca tabs obsoletos.** Pide `proformas|pendientes|conciliaci`, pero el rediseño v13.92.0 (que el propio spec 03 documenta) dejó sólo `Por timbrar | Emitidas | Notas de crédito`. El tab "Proformas pendientes" hoy vive en otra ruta.
-6. **Spec 08 usa Locator desactualizado tras `timbrar`.** `borrador` se define con `hasText: /Borrador/i`; después de timbrar el badge cambia a "Timbrada" y `borrador.getByRole("button", { name: /registrar pago/i })` resuelve a 0 elementos.
+### 10 — Auditoría operativa (bulk + snooze)
+**Archivo:** `e2e/specs/10-auditoria-bulk.spec.ts`
+**Flag:** `E2E_HAS_AUDIT_DATA=1` (asume `auditoria_embarques_org` devuelve ≥3 hallazgos).
+**Cobertura:**
+1. Login interno, ir a `/auditoria`.
+2. Esperar respuesta de RPC `auditoria_embarques_org`; validar tabla con ≥3 filas.
+3. Seleccionar 3 hallazgos vía checkbox de fila.
+4. Validar `HallazgosBulkBar` visible con "3 seleccionados".
+5. Click "Marcar revisados" → confirmar diálogo → esperar `waitForResponse(/auditoria_revisiones/)`.
+6. Validar toast de éxito y que los 3 hallazgos desaparecen/cambian de estado.
+7. Snooze: en un hallazgo, abrir menú, intentar snooze 35 días → validar error "máximo 30 días".
+8. Snooze válido (15 días) → validar badge "Snoozed hasta DD/MM/YYYY".
+9. **Cleanup:** des-marcar revisados vía `DELETE` en `auditoria_revisiones` no es trivial desde el cliente; usar `try/finally` con un comentario "creado por E2E" en `motivo` y dejar barrido manual.
 
-### Altos (afectan robustez)
+### 11 — Cotización → embarque
+**Archivo:** `e2e/specs/11-cotizacion-a-embarque.spec.ts`
+**Flag:** `E2E_COTIZACION_ACEPTADA_ID` (UUID de cotización en estado `aceptada` sin embarque vinculado).
+**Cobertura:**
+1. Login interno, ir a `/cotizaciones/<id>`.
+2. Validar badge `ACEPTADA`.
+3. Click "Convertir a embarque" → confirmar.
+4. Esperar `waitForResponse(/crear_embarque_borrador_desde_cotizacion/)`.
+5. Validar redirección a `/embarques/<nuevo-id>?...`.
+6. Validar heading con expediente `EL(IMP|EXP|GEN)\d+` y badge `cotizacion_id` vinculada.
+7. **Cleanup:** capturar `nuevo-id`; en `afterEach` intentar `DELETE` vía RPC `eliminar_embarque_borrador` si existe, o dejar marcado con `notas="E2E_CLEANUP"`.
 
-7. **`playwright.config.ts` no tiene `webServer`.** Si el dev no levantó manualmente Vite en 8080, los specs fallan con `ERR_CONNECTION_REFUSED`. Debe agregarse `webServer: { command: "bun run dev", url: BASE_URL, reuseExistingServer: !process.env.CI }`.
-8. **Specs no cargan `.env.e2e`.** El README lo menciona pero ni `globalSetup` ni `playwright.config` hacen `dotenv.config({ path: ".env.e2e" })`. El usuario debe exportar variables manualmente.
-9. **Spec 02 race condition.** `Promise.race([firstRow, emptyState])` resuelve al primero visible; si el estado vacío parpadea antes de hidratar datos, el subsiguiente `firstRow.isVisible()` resulta `false` y el `test.skip` se dispara aunque sí haya datos.
-10. **`loginAs` regex no anclada.** `/\/$|\/login/i` matchea `/loginhistory`, `/loginabc`, etc. Debe ser `/^\/?$|^\/login(\/|$)/i`.
-11. **`globalSetup.saveStorageState`** no espera a que el shell autenticado esté listo (sólo a que la URL cambie). Si Supabase tarda en hidratar la sesión antes del primer `localStorage.setItem`, el `storageState` puede quedar incompleto.
+### 12 — CXP: captura factura proveedor + pago
+**Archivo:** `e2e/specs/12-cxp-factura-pago.spec.ts`
+**Flag:** `E2E_PROVEEDOR_ID` + `E2E_EMBARQUE_PARA_CXP_ID`.
+**Cobertura:**
+1. Login interno, ir a `/compras/por-capturar`.
+2. Capturar nueva factura proveedor: abrir modal, llenar monto/moneda/proveedor/embarque, guardar.
+3. Esperar `waitForResponse(/proveedor_facturas/)`; validar folio `FP-\d{6}` asignado.
+4. Ir a `/compras/facturas-proveedor`, localizar factura por folio.
+5. Registrar pago: abrir modal, monto = total, forma de pago, guardar.
+6. Esperar `waitForResponse(/pagos_proveedor/)`; validar badge "Pagado".
+7. **Cleanup:** `try/finally` con `DELETE` vía RPC `eliminar_proveedor_factura_e2e` (a crear si no existe) o marcar `referencia='E2E_TEST'` para barrido.
 
-### Medios (mejoras)
+## Helpers a agregar
 
-12. **Falta `test.describe.configure({ mode: "serial" })`** en specs que mutan (08 fiscal). Aunque `workers: 1` lo cubre globalmente, marcar la intención previene regresiones si se sube a paralelo.
-13. **Spec 06 no intercepta network.** La defensa real es RLS; el spec sólo valida UI. Debe añadir `page.on("response")` y assertear que ningún POST a `/rest/v1/embarques?id=eq.<id>` devuelva una fila.
-14. **`pwRequest` importado y silenciado con `void`.** Eliminar el import sin uso en lugar del workaround.
+- `e2e/fixtures/cleanup.ts` — wrapper `bestEffortCleanup(fn)` que loguea pero no rompe el spec si falla.
+- `e2e/fixtures/api.ts` — fetch directo a `${BASE_URL}/rest/v1/...` o edge functions con el token del storageState para cleanups server-side.
+- Extender `playwright.config.ts`: no requiere proyectos nuevos; todos viven en `chromium-internal`.
 
-## Plan de remediación (3 lotes)
+## Documentación
 
-### Lote 1 — Bloqueantes (1 PR)
-- Cablear `storageState` en `playwright.config.ts` con dos projects: `chromium-internal` (consume `internal.json`) y `chromium-portal` (consume `portal.json`). Spec 05 corre sólo en el segundo project.
-- Spec 01 segundo test: `test.use({ storageState: { cookies: [], origins: [] } })`.
-- Spec 06: corregir ruta a `/facturacion/${id}`. Reescribir assert principal a "UI muestra guard copy O la URL ya no contiene el ID". Documentar que `E2E_CROSS_ORG_*_ID` es **requerido** para validación real (con dummy UUID sólo se valida 404, no cross-org).
-- Spec 04: buscar tab `por timbrar` y luego navegar a la ruta de proformas pendientes real (validar dónde vive hoy: `/cotizaciones` o `/proformas`). Si ya no existe el concepto, eliminar el spec o moverlo a `/facturacion` tab `por timbrar`.
-- Spec 08: re-localizar la fila por número de factura (no por estado "Borrador") después de timbrar.
+- Actualizar `e2e/README.md` con las nuevas env vars y cómo sembrar datos:
+  - `E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID`
+  - `E2E_ADMIN_ORG=1` (opcional)
+  - `E2E_HAS_AUDIT_DATA=1`
+  - `E2E_COTIZACION_ACEPTADA_ID`
+  - `E2E_PROVEEDOR_ID`, `E2E_EMBARQUE_PARA_CXP_ID`
 
-### Lote 2 — Altos (1 PR)
-- Añadir bloque `webServer` en `playwright.config.ts` (no-op cuando `E2E_BASE_URL` es remoto).
-- `globalSetup` y `playwright.config` cargan `dotenv` desde `.env.e2e` si existe.
-- Spec 02: cambiar `Promise.race` por esperar al `data-loading="false"` del DataTable + lectura síncrona del count.
-- `loginAs`: regex anclada `^/?$|^/login(/|$)`.
-- `globalSetup`: tras detectar URL post-login, esperar a `getByText(/libre carga/i)` antes de `storageState`.
+## Versionado
 
-### Lote 3 — Medios (1 PR)
-- Spec 08: `test.describe.configure({ mode: "serial" })` explícito.
-- Spec 06: agregar `page.on("response")` interceptando `/rest/v1/embarques`, `/rest/v1/facturas`, `/rest/v1/cotizaciones` filtrados por el ID dummy y asegurar que devuelvan `[]`.
-- Limpiar import `pwRequest` no usado.
-- Añadir `e2e/.auth/` a `.gitignore` si no está.
+- Bump `APP_VERSION` a `13.139.9` y entrada en `CHANGELOG.md` describiendo los 4 specs nuevos + helpers.
 
-## Notas técnicas
+## Detalles técnicos
 
-- Nada que cambiar en `src/`; toda la cirugía vive en `playwright.config.ts`, `e2e/globalSetup.ts`, `e2e/fixtures/auth.ts` y los 8 specs.
-- No bumpeamos `APP_VERSION` por cambios sólo en E2E; sí actualizamos `CHANGELOG.md` como entrada `chore(e2e)`.
-- No corro los specs como parte de la remediación: requieren credenciales staging que no están en el sandbox.
-
-## Pregunta antes de implementar
-
-¿Avanzo con los 3 lotes secuenciales en un solo turno (PR único), o prefieres ir lote por lote para revisar entre cada uno?
+- No tocar `src/`: cambios sólo en `e2e/`, `playwright.config.ts` (si hace falta), `CHANGELOG.md` y `appVersion.ts`.
+- Edge functions de cleanup (si terminan siendo necesarias): a evaluar en la implementación; idealmente reutilizamos RPCs ya existentes con permisos del usuario E2E.
+- `serial` mode para 12 (captura → pago dependen en orden); los demás independientes.
