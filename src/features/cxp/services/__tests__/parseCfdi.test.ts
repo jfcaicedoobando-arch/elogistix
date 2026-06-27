@@ -66,19 +66,25 @@ describe("parseCfdiXml", () => {
   });
 
   it("reintenta y envuelve FunctionsFetchError como fase 'request'", async () => {
-    const fetchError = new FunctionsFetchError(new TypeError("Failed to fetch"));
-    supabaseMock.functions.invoke.mockResolvedValue({ data: null, error: fetchError });
-
-    let caught: unknown;
+    // v13.137.24: usamos fake timers para evitar los 4s reales de `sleep(BACKOFF)`
+    // entre intentos. Con testTimeout=15s y singleFork bajo carga, los 4s reales
+    // dejaban cero margen y producían flakes en CI.
+    vi.useFakeTimers();
     try {
-      await parseCfdiXml(xmlFile(), []);
-    } catch (e) {
-      caught = e;
+      const fetchError = new FunctionsFetchError(new TypeError("Failed to fetch"));
+      supabaseMock.functions.invoke.mockResolvedValue({ data: null, error: fetchError });
+
+      const promise = parseCfdiXml(xmlFile(), []).catch((e) => e);
+      await vi.runAllTimersAsync();
+      const caught = await promise;
+
+      expect(caught).toBeInstanceOf(CfdiUploadError);
+      expect((caught as CfdiUploadError).context.phase).toBe("request");
+      expect((caught as CfdiUploadError).context.attemptCount).toBe(3);
+    } finally {
+      vi.useRealTimers();
     }
-    expect(caught).toBeInstanceOf(CfdiUploadError);
-    expect((caught as CfdiUploadError).context.phase).toBe("request");
-    expect((caught as CfdiUploadError).context.attemptCount).toBe(3);
-  }, 15_000);
+  });
 
   it("falla si no hay sesión activa", async () => {
     supabaseMock.auth.getSession.mockResolvedValueOnce({ data: { session: null } });

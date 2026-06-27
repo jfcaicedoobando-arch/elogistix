@@ -13,17 +13,20 @@ vi.mock("@/services/storage/index", () => ({
   uploadFile: vi.fn().mockResolvedValue({}),
 }));
 
-const wrapper = createWrapper();
+// v13.137.24: `createWrapper()` se instancia POR test. Antes se compartía a
+// nivel módulo y el `afterEach` global (que limpia el QueryClient registrado)
+// dejaba los tests 2 y 3 apuntando a un cliente ya cancelado.
+const makeWrapper = () => createWrapper();
 
 describe("useEmbarqueForm", () => {
   it("inicializa con valores por defecto y sincroniza tipos de cambio", () => {
-    const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
     expect(result.current.methods.getValues("tipoCambioUSD")).toBe("20");
     expect(result.current.methods.getValues("tipoCambioEUR")).toBe("22");
   });
 
   it("gestiona archivos de documentos", () => {
-    const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
     const file = new File([""], "test.pdf", { type: "application/pdf" });
     // "Factura Comercial" es el nombre exacto del documento para el modo Marítimo
     // según getDocsForMode("Marítimo") en embarqueConstants.
@@ -41,7 +44,7 @@ describe("useEmbarqueForm", () => {
   });
 
   it("vincular y desvincular cotización actualiza campos", () => {
-    const { result } = renderHook(() => useEmbarqueForm(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
     const mockCot = {
       id: "cot-1",
       folio: "COT-001",

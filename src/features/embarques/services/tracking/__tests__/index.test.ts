@@ -1,29 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// v13.137.24: usamos el helper estándar del proyecto en vez de un mock manual
+// con sólo 4 métodos encadenados (que reventaba como `TypeError: undefined is
+// not a function` si la implementación llamaba `.eq` / `.match` / etc.).
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import('@/services/__tests__/_supabaseChainMock');
+  return createSupabaseMock();
+});
+vi.mock('@/integrations/supabase/client', () => ({ supabase: mock.supabase }));
+
 import { createTrackingLink, fetchTrackingPublico } from '../index';
-
-const { mockSupabase } = vi.hoisted(() => ({
-  mockSupabase: {
-    from: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
-  },
-}));
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase,
-}));
 
 describe('tracking/index', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
   });
 
   it('createTrackingLink inserta un nuevo link', async () => {
     const mockData = { id: '1', embarque_id: 'emb1' };
-    mockSupabase.single.mockResolvedValue({ data: mockData, error: null });
+    mock.setTableResult('tracking_links', { data: mockData, error: null });
     const result = await createTrackingLink({ embarqueId: 'emb1' });
-    expect(mockSupabase.from).toHaveBeenCalledWith('tracking_links');
+    expect(mock.tableCalls.some((c) => c.table === 'tracking_links')).toBe(true);
     expect(result).toEqual(mockData);
   });
 
@@ -37,7 +35,6 @@ describe('tracking/index', () => {
     expect(result).toEqual({ embarque: {} });
   });
 
-
   it('fetchTrackingPublico lanza error si el fetch retorna !ok', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -47,7 +44,7 @@ describe('tracking/index', () => {
   });
 
   it('createTrackingLink propaga error de insert', async () => {
-    mockSupabase.single.mockResolvedValue({ data: null, error: new Error('insert fail') });
+    mock.setTableResult('tracking_links', { data: null, error: new Error('insert fail') });
     await expect(createTrackingLink({ embarqueId: 'emb1' })).rejects.toThrow('insert fail');
   });
 });

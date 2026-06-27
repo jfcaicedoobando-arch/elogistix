@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
@@ -20,6 +20,14 @@ import { useLiquidaciones, useGenerarLiquidacion, useRegistrarPagoLiquidacion } 
 import { useVendedorasConfig } from '../useVendedoras';
 
 describe('useComisiones Hooks', () => {
+  // v13.137.24: reset explícito para evitar fugas de `mockResolvedValueOnce`
+  // entre tests si un test consume más de una llamada o falla antes de drenarlo.
+  beforeEach(() => {
+    mockFetchLiquidaciones.mockReset();
+    mockGenerar.mockReset();
+    mockRegistrar.mockReset();
+    mockFetchVendedoras.mockReset();
+  });
   it('useLiquidaciones fetches data', async () => {
     mockFetchLiquidaciones.mockResolvedValueOnce([{ id: 'l1' }]);
     const { result } = renderHook(() => useLiquidaciones(), { wrapper: createWrapper() });
