@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.38] - 2026-06-27
+- **fix(ci/coverage shard) — exit 1 en shards individuales**: `vitest.config.ts` aplicaba thresholds globales (lines 38, branches 72, etc.) también cuando se corría con `--shard=N/12`, donde sólo un subconjunto de tests ejecuta y la cobertura medida es ~6%. Los overrides `--coverage.thresholds.*=0` por CLI no vencen a la config anidada en Vitest 3. Ahora los thresholds se aplican únicamente cuando NO se pasa `--shard` (sigue activo en `test:coverage:merge`). Esto desbloquea el job "Tests (shard 3/12)" sin debilitar el gate real de cobertura.
+
 ## [13.137.37] - 2026-06-27
 - **fix(tests/shard 3) — estabilización tras fallo CI**: auditado el shard 3 con subagentes y aplicado hardening contra flakes: wrappers `nuqs` con memoria por test, `act()` asíncronos, resets completos de mocks Supabase, mocks hoisted seguros, timers fijos en lógica de fechas y cleanup de spies. Verificado localmente con `bun run test:coverage:shard -- --shard=3/12` exitoso.
 
