@@ -24,12 +24,12 @@ describe("fetchHistorialFactura", () => {
     expect(r[1].monto).toBe(100);
   });
 
-  it("retorna [] cuando data es null", async () => {
+  it("[historialFactura] retorna [] cuando data es null", async () => {
     mock.setRpcResult("historial_proveedor_factura", { data: null, error: null });
     expect(await fetchHistorialFactura("f1")).toEqual([]);
   });
 
-  it("propaga error", async () => {
+  it("[historialFactura] propaga error", async () => {
     mock.setRpcResult("historial_proveedor_factura", { data: null, error: { message: "boom" } });
     await expect(fetchHistorialFactura("f1")).rejects.toMatchObject({ message: "boom" });
   });

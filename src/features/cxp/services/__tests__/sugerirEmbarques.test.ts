@@ -32,7 +32,7 @@ describe("sugerirEmbarques service", () => {
       const r = await sugerirEmbarquesParaProveedor("p1", "org-1", 5);
       expect(r).toEqual(rows);
     });
-    it("propaga error de Supabase", async () => {
+    it("[fetchEmbarques] propaga error de Supabase", async () => {
       mock.setRpcResult("sugerir_embarques_para_proveedor", { data: null, error: { message: "boom" } });
       await expect(sugerirEmbarquesParaProveedor("p1", "org-1")).rejects.toMatchObject({ message: "boom" });
     });
@@ -61,7 +61,7 @@ describe("sugerirEmbarques service", () => {
       expect(call?.ops).toContain("eq");
       expect(call?.ops).toContain("limit");
     });
-    it("propaga error", async () => {
+    it("[fetchSugerencias] propaga error", async () => {
       mock.setTableResult("embarques", { data: null, error: { message: "fail" } });
       await expect(buscarEmbarquesPorTexto("x", "org-1")).rejects.toMatchObject({ message: "fail" });
     });

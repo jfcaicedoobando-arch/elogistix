@@ -25,7 +25,7 @@ describe("cxpAprobacionCount service", () => {
     await expect(fetchPendientesAprobacionCount()).resolves.toBe(0);
   });
 
-  it("propaga el error", async () => {
+  it("[cxpAprobacionCount] propaga el error", async () => {
     mock.setRpcResult("cxp_pendientes_aprobacion_count", { data: null, error: { message: "rls" } });
     await expect(fetchPendientesAprobacionCount()).rejects.toMatchObject({ message: "rls" });
   });

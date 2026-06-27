@@ -66,6 +66,17 @@ if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function scrollIntoView(): void {};
 }
 
+
+// jsdom no implementa `URL.createObjectURL`/`revokeObjectURL`. Los stubs
+// evitan unhandled errors cuando timers tardíos (p.ej. `descargarBlob` con
+// `setTimeout(revoke, 4000)`) se ejecutan después de que el test terminó.
+if (typeof URL.createObjectURL !== "function") {
+  URL.createObjectURL = () => "blob:mock";
+}
+if (typeof URL.revokeObjectURL !== "function") {
+  URL.revokeObjectURL = () => { /* noop */ };
+}
+
 /**
  * Helper: invoca global.gc() si Node corre con --expose-gc. No-op en caso
  * contrario. Permite recuperar heap entre archivos de test cuando se ejecuta

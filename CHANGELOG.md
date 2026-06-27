@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.49] - 2026-06-27
+- **fix(ci) — run 76396991060 falló por hygiene + unhandled error en shards 5/8**: tres causas distintas en el mismo run. (1) Test hygiene: 4 títulos duplicados en los tests nuevos de lote 1/2 (`historialFactura`, `sugerirEmbarques`, `proveedorSalud`, `cxpAprobacionCount`) — los prefijé con `[archivo]` para hacerlos únicos vs `crm/oportunidades.test.ts` y `embarques/contenedores/crud.test.ts`. (2) Shard 5 fallaba con `URL.revokeObjectURL is not a function` porque `descargarBlob` deja un `setTimeout(revoke, 4000)` que dispara después de que el test terminó, en jsdom sin polyfill — agregué stubs no-op de `URL.createObjectURL`/`revokeObjectURL` en `src/test/setup.ts`. (3) Shard 8 reventaba en `audit-report.test.ts` por los mismos duplicados de hygiene (mismo issue que (1), distinto canal). Quality y tests deben volver a verde; el gap de cobertura (21.32% vs 38%) sigue abierto y se ataca con más lotes.
+
 ## [13.137.48] - 2026-06-27
 - **test(cxp) — lote 2: services huérfanos del módulo Compras**: 24 tests nuevos en 3 archivos cubriendo los services que más pesaban sin cobertura. `proveedorFacturas.update` (12 tests: happy path, re-aprobación forzada por cambios sensibles, `SaldoNegativoError`, tolerancia de centavo, trim de folio, propagación de errores en read/pagos). `parseCfdi.invoke` (9 tests: mapeo completo de `FunctionsHttpError`/`FunctionsRelayError`/`FunctionsFetchError` a `InvokeAttempt`, body no-JSON, EmptyResponse, throws atrapados). `cxpAprobacionCount` (3 tests: RPC normal, null → 0, propagación de error). Sigue siendo trabajo iterativo: faltan `useEditarFacturaProveedorForm`, `useCargaCfdi`, `useRegistrarPagoSubmit`, componentes de facturación y wizards.
 
