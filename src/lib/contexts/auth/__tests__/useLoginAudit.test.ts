@@ -42,7 +42,7 @@ describe("useLoginAudit", () => {
   it("no registra login si ya existe entrada en sessionStorage", () => {
     mockSession.getItem.mockReturnValue("1");
     renderHook(() => useLoginAudit(FAKE_USER, "SIGNED_IN"));
-    vi.advanceTimersByTime(200);
+    act(() => { vi.advanceTimersByTime(200); });
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
