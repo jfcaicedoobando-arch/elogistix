@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.27] - 2026-06-27
+- **fix(tests) — hallazgos BAJA de auditoría shards 2/12 y 6/12**: cerrados todos los pendientes cosméticos detectados por los subagentes para dejar la suite 100% limpia.
+  - Imports de `vi` agregados en `aprobacion.test.ts`, `demorasVenta.test.ts`, `rutas.test.ts` y `conversiones/embarques.test.ts` (funcionaban por `globals: true`, pero la regla del proyecto es importar explícito — ver `mem://technical/testing-mock-patterns`).
+  - Eliminados `any` evitables en mocks: `planes/index.test.ts` (tipado con `ReturnType<typeof createSupabaseMock>`), `useTasaIVA.test.tsx` (`string`/`unknown`), `useEmbarqueForm.test.tsx` (`Parameters<typeof vincularCotizacion>[0]`), `comentarios.test.ts` (`ReturnType<typeof createSupabaseChainMock>`), `useProfit.test.tsx` (interface `ERFixture`).
+  - Asserts débiles reforzados: `bitacoraDescripcion.extra.test.ts` (verifica monto y moneda en contexto), `plantillas.test.ts` (`expect.any(String)` + parseo de fecha válida en `deleted_at`), `eventos.test.ts` (`toMatchObject({ table })` en vez de `toBeDefined`).
+  - 71 tests afectados ejecutados localmente: todos verdes en 4s.
+
 ## [13.137.26] - 2026-06-27
 - **fix(tests) — auditoría línea-por-línea del shard 6/12**: revisión exhaustiva de los 45 archivos del shard con 4 subagentes en paralelo. Hallazgos aplicados:
   - `usePortalDocumentDownload.test.tsx` (ALTA): `Object.defineProperty(URL, "createObjectURL", ...)` directo no era restaurado por `vi.unstubAllGlobals()` del setup global; bajo singleFork los métodos quedaban como `vi.fn()` permanentes para todo el shard, contaminando cualquier otro test que tocara `URL`. Migrado a `vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL })` + `vi.unstubAllGlobals()` explícito en el `afterEach` local.
