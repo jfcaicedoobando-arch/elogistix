@@ -87,7 +87,7 @@ describe("useCancelarNotaCredito", () => {
     qc.clear();
   });
 
-  it("onError: notifyError", async () => {
+  it("cancelar NC onError: notifyError", async () => {
     cancelarNotaCreditoFacturapi.mockRejectedValue(new Error("cancel fail"));
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const { result } = renderHook(() => useCancelarNotaCredito("fac-2"), { wrapper: wrapper(qc) });
