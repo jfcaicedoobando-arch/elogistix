@@ -10,6 +10,7 @@ import TabFacturacion from "@/features/configuracion/components/TabFacturacion";
 import TabPuertos from "@/features/configuracion/components/TabPuertos";
 import TabOperaciones from "@/features/configuracion/components/TabOperaciones";
 import TabExportar from "@/features/admin/components/TabExportar";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
   if (isSaving) return "Guardando...";
@@ -26,10 +27,7 @@ export default function Configuracion() {
   if (isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Configuración</h1>
-          <p className="text-sm text-muted-foreground">Parámetros generales del sistema</p>
-        </div>
+        <PageHeader title="Configuración" description="Parámetros generales del sistema" />
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
         </div>
