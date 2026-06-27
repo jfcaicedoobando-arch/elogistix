@@ -29,7 +29,7 @@ describe("fetchHistorialFactura", () => {
     expect(await fetchHistorialFactura("f1")).toEqual([]);
   });
 
-  it("propaga error", async () => {
+  it("[historialFactura] propaga error", async () => {
     mock.setRpcResult("historial_proveedor_factura", { data: null, error: { message: "boom" } });
     await expect(fetchHistorialFactura("f1")).rejects.toMatchObject({ message: "boom" });
   });

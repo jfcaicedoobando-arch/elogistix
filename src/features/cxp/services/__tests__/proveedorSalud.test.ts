@@ -75,7 +75,7 @@ describe("fetchProveedorSalud", () => {
     expect(r.mensual).toEqual([]);
   });
 
-  it("propaga error de Supabase", async () => {
+  it("[proveedorSalud] propaga error de Supabase", async () => {
     mock.setRpcResult("proveedor_salud", { data: null, error: { message: "boom" } });
     await expect(fetchProveedorSalud("p1")).rejects.toMatchObject({ message: "boom" });
   });
