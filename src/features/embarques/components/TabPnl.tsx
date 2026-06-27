@@ -90,7 +90,13 @@ export function TabPnl({ embarqueId }: Props) {
           label="Margen real"
           value={pctPnl(margenReal)}
           delta={`Presup. ${pctPnl(margenPresup)}`}
-          tone={margenReal < 15 ? "warning" : "success"}
+          tone={
+            utilidadReal < 0 || margenReal < 0
+              ? "destructive"
+              : margenReal < 15
+                ? "warning"
+                : "success"
+          }
         />
       </div>
 
