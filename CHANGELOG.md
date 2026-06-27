@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.23] - 2026-06-27
+- **fix(ci) — coverage falso por blobs stale**: cuando un shard se colgaba 20 min y GitHub lo cancelaba, el cache de `actions/cache` restauraba un `blob-N.json` viejo y el step `if: always()` lo subía igual. El merge usaba datos obsoletos y la cobertura bajaba a 34.45% < 38%, fallando el job.
+  - Quitado `.vitest-reports` del path cacheado en `.github/workflows/ci.yml` (sólo cacheamos `node_modules/.vitest`).
+  - El paso de preparación ahora hace `rm -rf .vitest-reports && mkdir -p`, garantizando arranque limpio.
+  - Upload de blob cambia a `if: success()`: si el shard falla o se cancela, NO sube blob. El merge fallará con "blob missing" en el shard real, exponiendo el problema.
+
 ## [13.137.22] - 2026-06-26
 - **fix(ci) — timeouts de shards 1/8 y 4/8**: los shards con ~500 tests excedían el límite de 20 min de GitHub Actions corriendo en `singleFork`.
   - Subida la matriz de shards de **8 → 12** en `.github/workflows/ci.yml`. Cada shard pasa de ~500 a ~330 tests, dejando margen cómodo bajo los 20 min.

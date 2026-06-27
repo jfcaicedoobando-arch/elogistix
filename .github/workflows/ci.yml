@@ -159,18 +159,20 @@ jobs:
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
 
-      - name: Cache Vitest reports
+      # 13.137.23 — NO cacheamos `.vitest-reports/`. Antes el cache preservaba
+      # blobs viejos entre runs y, si el shard se cancelaba por timeout, el step
+      # de upload subía un blob obsoleto que ensuciaba el merge de coverage.
+      - name: Cache Vitest transform
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             node_modules/.vitest
-            .vitest-reports
           key: ${{ runner.os }}-vitest-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
           restore-keys: |
             ${{ runner.os }}-vitest-${{ matrix.shard }}-
 
-      - name: Prepare blob output directory
-        run: mkdir -p .vitest-reports
+      - name: Prepare blob output directory (reset)
+        run: rm -rf .vitest-reports && mkdir -p .vitest-reports
 
       - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
         run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
@@ -179,8 +181,11 @@ jobs:
         if: always()
         run: ls -la .vitest-reports/ || echo "empty"
 
+      # 13.137.23 — `if: success()` (no `always()`): si el shard se cuelga o
+      # falla, NO subimos un blob potencialmente parcial/obsoleto. El merge
+      # fallará con "blob missing" exponiendo el shard real ofensor.
       - name: Upload shard blob report
-        if: always()
+        if: success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: vitest-blob-${{ matrix.shard }}

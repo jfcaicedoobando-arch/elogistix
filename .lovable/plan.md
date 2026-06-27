@@ -1,42 +1,69 @@
 ## Diagnóstico
 
-**1. Lint/audit (`audit:tests` → exit 1)** — 2 violaciones de higiene:
-- `src/features/costeo/services/__tests__/aprobacion.test.ts:50` usa `rejects.toBeTruthy()` (weak-rejects-assertion).
-- `src/features/cxp/services/__tests__/cxpKpis.test.ts:21` y `src/features/facturacion/services/__tests__/cobranzaAggregates.test.ts:41` comparten el título `"ignora filas con saldo <= 0"` (duplicate-title).
+El job **CI Success (aggregator)** falló porque:
 
-**2. Tests shard 3/8 (exit 1, 24s)** — el shard reporta `blob` y termina con código 1, pero el reporter blob no imprime fallas a stdout. Es muy probable que sean tests recién añadidos en el último batch (~40 nuevos en CxP / costeo / facturación) con assertions débiles o expectativas erróneas. Hay que reproducirlo localmente con reporter `verbose` para identificar los `expect` fallidos y corregirlos.
+1. **Shards 2/12 y 6/12 colgaron 20 min y los canceló GitHub Actions** (timeout del job). Los otros 10 shards completaron sus tests en **<30 segundos** cada uno — un shard que tarda 20 min mientras sus hermanos terminan en 25s indica un test individual con **promesa sin resolver, `setInterval` sin cleanup, o `waitFor` mal escrito** que entró en bucle infinito en jsdom. Esto es nuevo (no pasaba con 8 shards).
+2. **Coverage merge falló (34.45% < 38%, branches 71.74% < 72%)**. Causa: como shards 2 y 6 no terminaron, sus blobs en `.vitest-reports/` quedaron **stale del cache de la corrida anterior** (`actions/cache@... key: Linux-vitest-2-...`) y el step de upload-artifact subió ese blob viejo. El merge cuenta archivos de antes sin la cobertura real, así que la métrica se desplomó.
 
-**3. Tests shard 1/8 y 4/8 (timeout 20 min)** — La config de vitest fuerza `pool: 'forks'` con `singleFork: true` y `fileParallelism: false`, así que cada shard corre todos sus archivos **en serie en un único worker**. Shard 1 tiene 517 tests y shard 4 tiene 366 tests; el coverage v8 amplifica el costo. Los canaries de PDF (200 renders) y suites con jsdom pesado terminan saturando el límite. Hay que paralelizar el shard sin reintroducir las fugas que motivaron el `singleFork`.
+No hubo fallos de lint, typecheck, build, edge functions ni de shards individuales que sí corrieron.
 
 ## Cambios propuestos
 
-### Paso A — Arreglar higiene de tests (desbloquea Lint y CI)
-1. **`aprobacion.test.ts:50`**: reemplazar
-   ```ts
-   await expect(aprobarTarifa("t6")).rejects.toBeTruthy();
-   ```
-   por una assertion específica al error real lanzado (`rejects.toThrow(/no encontrada|inválida/i)` según el mensaje real del servicio).
-2. **`cobranzaAggregates.test.ts:41`**: renombrar el título a algo contextual, p.ej. `"cobranza: ignora filas con saldo <= 0"`. Dejar el de CxP como está (es el dominio "natural" del título original).
+### Paso A — Identificar el test que cuelga (shards 2 y 6)
 
-### Paso B — Reproducir y arreglar shard 3
-1. Correr local: `bunx vitest run --shard=3/8 --reporter=verbose 2>&1 | tee /tmp/shard3.log` y filtrar `FAIL`/`AssertionError`.
-2. Por cada test fallido (esperamos 1-5 dentro de los recién agregados de CxP/facturación/costeo/financialMappers), ajustar fixture o assertion. Sin reescribir lógica de negocio.
+Reproducir localmente con reporter verbose y timeout corto:
 
-### Paso C — Quitar el cuello de botella de shards (timeouts)
-Editar `vitest.config.ts`:
-- Eliminar `poolOptions.forks.singleFork: true`.
-- Mantener `pool: 'forks'` pero permitir `fileParallelism: true` con `poolOptions.forks.maxForks: 2, minForks: 1` (2 workers por shard, conservador para 4 GB de runner + coverage v8 a 8 GB heap).
-- Mantener `isolate: true` y el `afterEach` global que ya limpia RTL/PDF (ver `mem://technical/testing-cleanup-protocol`) para evitar regresión de fugas.
-- Si tras correr local algún archivo concreto sigue siendo problemático (canary PDF), marcarlo con `// @vitest-environment node` + `test.sequential` o moverlo a su propio archivo con `describe.sequential`, sin tocar el resto.
+```bash
+bunx vitest run --shard=2/12 --reporter=verbose --testTimeout=15000 --hookTimeout=15000 2>&1 | tee /tmp/sh2.log
+bunx vitest run --shard=6/12 --reporter=verbose --testTimeout=15000 --hookTimeout=15000 2>&1 | tee /tmp/sh6.log
+```
 
-Verificación post-cambio: correr en local los 3 shards más pesados (`1/8`, `4/8`, `8/8`) con `time bunx vitest run --shard=N/8 --coverage` y confirmar que terminan en <12 min cada uno y que ninguna suite revive leaks (chequear `mem://features/testing-regression-canary`).
+Sospechosos primarios (agregados recientemente y conocidos por ser pesados/asincrónicos):
+- Tests E2E-style del flujo fiscal (`flujoFiscal*`, `convertirAFactura*`, `emitirRep*`, `cancelacion*`).
+- Tests del wizard de FacturApi (`FacturapiOnboardingWizard*`).
+- Tests de hooks con `useQuery` + `waitFor` (probable `act()`/timeout) en `useFacturacionKpisFiscales`.
+
+Buscar en cada test fallido:
+- `await waitFor(...)` sin `expect` dentro o con condición que nunca se cumple.
+- `setInterval`/`setTimeout` sin `vi.useFakeTimers()` y `vi.clearAllTimers()` en `afterEach`.
+- Mocks de Supabase que devuelven una promesa que nunca resuelve (cadena thenable rota).
+- `Promise.all` que espera una invocación que nunca se hace.
+
+Corregir cada test ofensor (sin tocar lógica de negocio) hasta que ambos shards corran <2 min.
+
+### Paso B — Blindar el cache para no enmascarar timeouts
+
+Editar `.github/workflows/ci.yml` en la matriz `Tests (shard N/12)`:
+
+1. **No cachear `.vitest-reports/`** en `actions/cache`. Sólo cachear `node_modules/.vitest` (el cache de transformación de vitest). Hoy el path es `node_modules/.vitest\n.vitest-reports`, y eso permite que un blob obsoleto sobreviva entre runs.
+2. **Limpiar `.vitest-reports/` antes del run**: cambiar `mkdir -p .vitest-reports` por `rm -rf .vitest-reports && mkdir -p .vitest-reports`.
+3. **Condicionar el upload del blob a éxito del step de tests**: agregar `if: success()` al step `Upload vitest blob` (hoy probablemente usa `if: always()`). Sin esto, una cancelación sube basura.
+
+Resultado: si un shard se cuelga otra vez, el merge fallará con "blob missing" en lugar de mentir con cobertura falsa, y veremos el problema en el shard real.
+
+### Paso C — Bajar el techo de tiempo individual de tests
+
+Añadir en `vitest.config.ts`:
+
+```ts
+test: {
+  // ya existente...
+  testTimeout: 20_000,     // 20s por test (default 5s, pero algunos necesitan más)
+  hookTimeout: 20_000,
+  teardownTimeout: 10_000,
+}
+```
+
+Cualquier test futuro que se cuelgue va a fallar como `Test timed out in 20000ms` en lugar de consumir los 20 min del job. Es defensa en profundidad.
 
 ### Paso D — Versionado y changelog
-Bump `APP_VERSION` a `13.137.22` y agregar entrada en `CHANGELOG.md`:
-> Reparada higiene de tests (aprobación, cobranza), arreglados tests fallidos en shard 3 y eliminado cuello de botella `singleFork` que disparaba timeouts de 20 min en shards 1 y 4.
+
+- Bump `APP_VERSION` → `13.137.23`.
+- Entrada en `CHANGELOG.md`:
+  > Identificados y corregidos tests colgantes en shards 2 y 6 que provocaban timeouts de 20 min y blobs de cobertura obsoletos. Cache de CI ya no preserva `.vitest-reports/` entre runs.
 
 ## Notas
 
-- No bajamos el threshold de coverage (regla `mem://principles/coverage-threshold`).
-- No tocamos lógica de negocio: solo tests, configuración de vitest y versión.
-- Si paralelizar reintroduce flakes en CI, el plan B (siguiente turno) es subir el split a 12 shards en `.github/workflows/ci.yml` en lugar de habilitar paralelismo intra-shard.
+- **No** bajamos el threshold de coverage (regla `mem://principles/coverage-threshold`).
+- **No** tocamos lógica de negocio: sólo tests rotos, workflow YAML y config de vitest.
+- Si el Paso A no encuentra el test culpable en local en 30 min, plan B: ejecutar shards 2 y 6 con `--reporter=verbose --bail=1` en CI temporalmente, identificar el último test que arranca antes del cuelgue y atacarlo.
