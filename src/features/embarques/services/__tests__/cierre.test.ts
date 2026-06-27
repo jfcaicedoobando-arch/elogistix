@@ -92,7 +92,15 @@ describe("cierre service", () => {
       });
       const eqFn = vi.fn().mockReturnValue({ order: orderFn });
       const selectFn = vi.fn().mockReturnValue({ eq: eqFn });
-      mockedFrom.mockReturnValue({ select: selectFn });
+      // Bitácora fallback chain: select -> eq -> eq -> order
+      const bitacoraOrder = vi.fn().mockResolvedValue({ data: [], error: null });
+      const bitacoraEq2 = vi.fn().mockReturnValue({ order: bitacoraOrder });
+      const bitacoraEq1 = vi.fn().mockReturnValue({ eq: bitacoraEq2 });
+      const bitacoraSelect = vi.fn().mockReturnValue({ eq: bitacoraEq1 });
+      mockedFrom.mockImplementation((tabla: string) => {
+        if (tabla === "bitacora_actividad") return { select: bitacoraSelect };
+        return { select: selectFn };
+      });
 
       const log = await fetchCierreLog("emb-4");
       expect(mockedFrom).toHaveBeenCalledWith("cierre_embarque_log");
@@ -104,7 +112,13 @@ describe("cierre service", () => {
 
     it("retorna array vacío cuando no hay datos", async () => {
       const orderFn = vi.fn().mockResolvedValue({ data: null, error: null });
-      mockedFrom.mockReturnValue({ select: () => ({ eq: () => ({ order: orderFn }) }) });
+      const bitacoraOrder = vi.fn().mockResolvedValue({ data: null, error: null });
+      mockedFrom.mockImplementation((tabla: string) => {
+        if (tabla === "bitacora_actividad") {
+          return { select: () => ({ eq: () => ({ eq: () => ({ order: bitacoraOrder }) }) }) };
+        }
+        return { select: () => ({ eq: () => ({ order: orderFn }) }) };
+      });
       const log = await fetchCierreLog("emb-5");
       expect(log).toEqual([]);
     });
