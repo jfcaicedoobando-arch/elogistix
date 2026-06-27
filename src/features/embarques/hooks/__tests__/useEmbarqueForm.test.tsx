@@ -43,7 +43,7 @@ describe("useEmbarqueForm", () => {
     expect(facturaEntry?.adjuntado).toBe(true);
   });
 
-  it("vincular y desvincular cotización actualiza campos", () => {
+  it("vincular y desvincular cotización actualiza campos", async () => {
     const { result } = renderHook(() => useEmbarqueForm(), { wrapper: makeWrapper() });
     const mockCot = {
       id: "cot-1",
@@ -55,17 +55,21 @@ describe("useEmbarqueForm", () => {
       bl_master: "BL123",
     };
 
-    act(() => {
+    // v13.137.25: `vincularCotizacion`/`desvincularCotizacion` llaman a
+    // `methods.trigger()` (async, devuelve Promise<boolean>). Sin `await act`
+    // las microtasks de RHF resuelven fuera del boundary y React 18 puede
+    // dejar updates colgados bajo singleFork.
+    await act(async () => {
       result.current.vincularCotizacion(mockCot as any);
     });
-    
+
     expect(result.current.methods.getValues("clienteId")).toBe("cli-1");
     expect(result.current.methods.getValues("modo")).toBe("Marítimo");
 
-    act(() => {
+    await act(async () => {
       result.current.desvincularCotizacion();
     });
-    
+
     expect(result.current.methods.getValues("clienteId")).toBe("");
   });
 });

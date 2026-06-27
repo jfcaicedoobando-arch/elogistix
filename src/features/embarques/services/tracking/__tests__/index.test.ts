@@ -26,20 +26,25 @@ describe('tracking/index', () => {
   });
 
   it('fetchTrackingPublico llama a fetch con el token', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    // v13.137.25: `vi.stubGlobal` se restaura via `vi.unstubAllGlobals()`
+    // del afterEach global. Antes `global.fetch = ...` directo quedaba
+    // residual entre archivos bajo singleFork.
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ embarque: {} }),
     });
+    vi.stubGlobal('fetch', fetchMock);
     const result = await fetchTrackingPublico('token123');
-    expect(global.fetch).toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalled();
     expect(result).toEqual({ embarque: {} });
   });
 
   it('fetchTrackingPublico lanza error si el fetch retorna !ok', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       json: () => Promise.resolve({ error: 'Token inválido' }),
     });
+    vi.stubGlobal('fetch', fetchMock);
     await expect(fetchTrackingPublico('bad-token')).rejects.toThrow('Token inválido');
   });
 
