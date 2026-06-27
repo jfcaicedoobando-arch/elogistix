@@ -14,17 +14,24 @@ vi.mock("@/features/auth/services", () => ({ fetchUserContext: mockFetchUserCont
 
 import { useAuthProfile } from "../useAuthProfile";
 
+// v13.137.35: spy a `console.error` administrado en beforeEach/afterEach. Antes
+// se creaba dentro del test sin try/finally → si `waitFor` fallaba, el spy nunca
+// se restauraba y `console.error` quedaba silenciado para todo el resto del shard.
+let errSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   sentryMock.captureException.mockClear();
   mockFetchUserContext.mockReset();
+  errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  errSpy?.mockRestore();
+  vi.clearAllMocks();
+});
 
 describe("useAuthProfile — captureException", () => {
   it("reporta a Sentry cuando fetchUserContext rechaza, con tag phase y uid", async () => {
     const boom = new Error("profile-fetch-down");
     mockFetchUserContext.mockRejectedValue(boom);
-    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const { unmount } = renderHook(() => useAuthProfile("u-XYZ"));
 
@@ -38,7 +45,6 @@ describe("useAuthProfile — captureException", () => {
       ),
     );
     unmount();
-    errSpy.mockRestore();
   });
 
   it("NO reporta cuando fetchUserContext resuelve", async () => {
