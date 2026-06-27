@@ -132,8 +132,9 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
             type="number"
             min={0}
             disabled={!canEdit}
-            placeholder="naviera"
-            className="h-8 w-[110px] tabular-nums text-right"
+            placeholder="usa naviera"
+            title="Vacío = usa los días libres configurados en la naviera. Capturá un número para sobreescribir."
+            className="h-8 w-[120px] tabular-nums text-right placeholder:italic placeholder:text-muted-foreground/60"
             value={(valorActual(row.original, "dias_libres_override") as number | null) ?? ""}
             onChange={(e) => {
               const raw = e.target.value;

@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -9,15 +8,9 @@ import type { Row, SortingFn } from "@tanstack/react-table";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
-import {
-  ROLE_BADGE_CLASSES,
-  ROLE_DESCRIPTIONS,
-  obtenerEtiquetaRol,
-  obtenerRangoRol,
-} from "@/features/admin/domain/roles/roleCatalog";
+import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
 import { ChangeRoleCell, UsuarioCell } from "./usuariosCells";
 
-const roleBadge = ROLE_BADGE_CLASSES;
 
 interface Options {
   currentUserId: string | undefined;
@@ -59,22 +52,14 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
           accessorFn: (u) => u.role,
           enableSorting: true,
           sortingFn: sortByRoleHierarchy,
-          meta: { width: "w-[1%] whitespace-nowrap" },
-          cell: ({ row }) => {
-            const role = row.original.role;
-            return (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge className={`${roleBadge[role]} cursor-help whitespace-nowrap`}>
-                    {obtenerEtiquetaRol(role)}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-xs leading-snug">{ROLE_DESCRIPTIONS[role]}</p>
-                </TooltipContent>
-              </Tooltip>
-            );
-          },
+          meta: { width: "w-[260px]" },
+          cell: ({ row }) => (
+            <ChangeRoleCell
+              user={row.original}
+              isSelf={row.original.user_id === currentUserId}
+              onPendingRole={onPendingRole}
+            />
+          ),
         },
         {
           id: "created_at",
@@ -95,18 +80,6 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
                 <p className="text-xs">{formatDateTimeShort(row.original.created_at)}</p>
               </TooltipContent>
             </Tooltip>
-          ),
-        },
-        {
-          id: "change_role",
-          header: "Cambiar rol",
-          meta: { width: "w-[1%]" },
-          cell: ({ row }) => (
-            <ChangeRoleCell
-              user={row.original}
-              isSelf={row.original.user_id === currentUserId}
-              onPendingRole={onPendingRole}
-            />
           ),
         },
         {

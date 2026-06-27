@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.6] - 2026-06-27
+- **fix(ui) — Auditoría visual a 1920×1080**. Cinco arreglos de presentación:
+  1. `TabDemoras` — el placeholder `"naviera"` en la columna *Días libres (override)* se confundía con un valor cargado; ahora dice `usa naviera` en cursiva muted con tooltip nativo.
+  2. `TabPnl` — la card *Margen real* pintaba `0.0%` en verde aunque la utilidad fuera negativa; ahora usa `destructive` cuando utilidad o margen son < 0 (coherente con *Utilidad real*).
+  3. `EmbarqueDetalleHeader` — el icono ⚓ flotaba suelto entre chips; ahora va dentro de un `Badge variant="outline"` con la etiqueta del modo, alineado con los demás chips.
+  4. `TabCierre` — el botón `Cerrar embarque` deshabilitado no comunicaba el motivo; ahora envuelto en `Tooltip` que dice "Faltan N pendientes del checklist" o el estado requerido.
+  5. `usuariosColumns` — se eliminó la columna duplicada `Cambiar rol` (el `Select` ya mostraba lo mismo que el `Badge`); ahora la columna `Rol` es directamente un `Select` (260px) reduciendo el ancho horizontal de la tabla.
+
 ## [13.139.5] - 2026-06-27
 - **chore(embarques/detalle) — Reordenar tabs**. Nuevo orden tras `Seguros`: `Facturación → Conciliación → P&L → Cierre → Notas y Actividad`. Sólo cambia el orden de `TabsTrigger` y `TabsContent` en `EmbarqueDetalleTabs.tsx`; los `value` se conservan, así que los deep-links existentes (`?tab=facturacion`, etc.) siguen funcionando.
 
