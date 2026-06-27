@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.48] - 2026-06-27
+- **test(cxp) — lote 2: services huérfanos del módulo Compras**: 24 tests nuevos en 3 archivos cubriendo los services que más pesaban sin cobertura. `proveedorFacturas.update` (12 tests: happy path, re-aprobación forzada por cambios sensibles, `SaldoNegativoError`, tolerancia de centavo, trim de folio, propagación de errores en read/pagos). `parseCfdi.invoke` (9 tests: mapeo completo de `FunctionsHttpError`/`FunctionsRelayError`/`FunctionsFetchError` a `InvokeAttempt`, body no-JSON, EmptyResponse, throws atrapados). `cxpAprobacionCount` (3 tests: RPC normal, null → 0, propagación de error). Sigue siendo trabajo iterativo: faltan `useEditarFacturaProveedorForm`, `useCargaCfdi`, `useRegistrarPagoSubmit`, componentes de facturación y wizards.
+
 ## [13.137.47] - 2026-06-27
 - **test(cxp) — primer lote de tests para recuperar cobertura ≥38%**: el run `76374375182` confirmó que la baja a 21.65% no es un artefacto del reporter sino código nuevo (módulos `facturacion`, `cxp`, `proformas`, `fiscal`) sin tests. Per `mem://principles/coverage-threshold` NO bajamos el umbral; arrancamos a escribir tests del código nuevo. Este lote agrega 57 tests en 5 archivos sobre helpers/services puros de CXP: `useNuevaFacturaProveedorForm.helpers` (25), `sugerirEmbarques` (11), `proveedorNotasCredito` (9), `proveedorSalud` (6), `historialFactura` (3), `aprobacionFactura` (3). Es trabajo iterativo: cubrir el gap completo requerirá varios turnos más enfocados en hooks/services restantes y componentes presentacionales grandes.
 
