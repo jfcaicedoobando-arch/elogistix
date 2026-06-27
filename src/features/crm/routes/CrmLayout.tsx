@@ -46,7 +46,7 @@ export default function CrmLayout() {
       </div>
       <div className="border-b bg-background">
         <div className="px-3 sm:px-6 flex items-center gap-2 h-11">
-          <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 h-12 -mb-px">
+          <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 h-11 -mb-px">
             {TABS.map((t) => {
               const showBadge = t.to === "/crm/actividades" && vencidas > 0;
               return (
@@ -56,7 +56,7 @@ export default function CrmLayout() {
                   end={t.end}
                   className={({ isActive }) =>
                     cn(
-                      "inline-flex items-center gap-2 px-3 h-12 text-sm font-medium border-b-2 whitespace-nowrap transition-colors shrink-0",
+                      "inline-flex items-center gap-2 px-3 h-11 text-sm font-medium border-b-2 whitespace-nowrap transition-colors shrink-0",
                       isActive
                         ? "border-primary text-primary"
                         : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
