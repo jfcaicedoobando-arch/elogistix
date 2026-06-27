@@ -5,6 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useAuditoriaRevisiones } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useHallazgosSelection } from "@/features/auditoria/hooks/useHallazgosSelection";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import type {
   HallazgoAuditoria,
@@ -88,6 +89,15 @@ export function useHallazgosTablaState(
   const start = (currentPage - 1) * pageSize;
   const visibles = filtrados.slice(start, start + pageSize);
 
+  const {
+    selectedIds,
+    selectablesEnPagina,
+    toggleSelected,
+    toggleAllVisible,
+    clearSelection,
+  } = useHallazgosSelection(visibles, revisiones);
+
+
   const limpiar = () => {
     setSearch("");
     setFiltroRegla("todas");
@@ -98,6 +108,7 @@ export function useHallazgosTablaState(
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
+    clearSelection();
   };
 
   const hayFiltros = [
@@ -111,10 +122,16 @@ export function useHallazgosTablaState(
     !!etaHasta,
   ].some(Boolean);
 
-  // setter wrappers que resetean la paginación al cambiar filtro
+  // setter wrappers que resetean la paginación y la selección al cambiar filtro
   const wrap = <T,>(setter: (v: T) => void) => (v: T) => {
     setter(v);
     setPage(1);
+    clearSelection();
+  };
+
+  const setPageWithClear = (p: number) => {
+    setPage(p);
+    clearSelection();
   };
 
   return {
@@ -136,6 +153,12 @@ export function useHallazgosTablaState(
     visibles,
     hayFiltros,
     totalHallazgos: hallazgos.length,
+    // selección
+    selectedIds,
+    selectablesEnPagina,
+    toggleSelected,
+    toggleAllVisible,
+    clearSelection,
     setSearch: wrap(setSearch),
     setFiltroRegla: wrap(setFiltroRegla),
     setFiltroSev: wrap(setFiltroSev),
@@ -145,7 +168,7 @@ export function useHallazgosTablaState(
     setEtaDesde: wrap(setEtaDesde),
     setEtaHasta: wrap(setEtaHasta),
     setPageSize: wrap(setPageSize),
-    setPage,
+    setPage: setPageWithClear,
     limpiar,
   };
 }

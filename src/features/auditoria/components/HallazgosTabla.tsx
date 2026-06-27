@@ -17,6 +17,7 @@ import {
   severidadConfig,
 } from "./hallazgosTablaConfig";
 import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
+import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 
 interface Props {
   visibles: HallazgoAuditoria[];
@@ -25,6 +26,11 @@ interface Props {
   currentUserId?: string | null;
   onMarcarRevisado: (h: HallazgoAuditoria) => void;
   onAsignarResponsable: (h: HallazgoAuditoria) => void;
+  // Selección múltiple
+  selectedIds: Set<string>;
+  selectablesEnPagina: string[];
+  onToggleSelected: (id: string) => void;
+  onToggleAllVisible: () => void;
 }
 
 function isVencida(fechaLimite: string | null): boolean {
@@ -33,18 +39,22 @@ function isVencida(fechaLimite: string | null): boolean {
   return fechaLimite < today;
 }
 
-export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onMarcarRevisado, onAsignarResponsable }: Props) {
+export function HallazgosTabla(props: Props) {
+  const {
+    visibles, start, revisiones, currentUserId,
+    onMarcarRevisado, onAsignarResponsable,
+    selectedIds, selectablesEnPagina, onToggleSelected, onToggleAllVisible,
+  } = props;
   const abrirEmbarque = (h: HallazgoAuditoria) => {
     window.open(
       `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`,
-      "_blank",
-      "noopener,noreferrer",
+      "_blank", "noopener,noreferrer",
     );
   };
-
   const getRevision = (h: HallazgoAuditoria) => revisiones?.get(revisionKey(h)) ?? null;
 
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
+    buildSelectColumn({ revisiones, selectedIds, selectablesEnPagina, onToggleSelected, onToggleAllVisible }),
     { id: "sev", header: "Severidad", meta: { width: "w-[100px]" },
       cell: ({ row }) => {
         const sev = severidadConfig[row.original.severidad];
