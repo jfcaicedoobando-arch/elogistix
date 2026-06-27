@@ -21,7 +21,24 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       // Power of 10 §5 — dependencias completas en hooks evitan stale closures.
       "react-hooks/exhaustive-deps": "error",
+      // 13.137.58 — Upgrade eslint-plugin-react-hooks 5 → 7 (PR-A toolchain).
+      // v7 incluye reglas estilo React Compiler activas en `recommended`. Las
+      // bajamos a `warn` para landear el bump sin un refactor masivo; se
+      // remediarán archivo por archivo en una iteración dedicada
+      // (tracked: mem://principles/power-of-10 follow-up).
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/incompatible-library": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      // ESLint 10 — `no-useless-assignment` nuevo en recomendado. Genera ruido
+      // de bajo valor en patrones legítimos (asignaciones de fallback antes
+      // de un branch). Lo dejamos como warning para visibilidad sin bloquear.
+      "no-useless-assignment": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+
       "@typescript-eslint/no-unused-vars": "off",
       // Power of 10 §5/§10 — Tipado estricto: prohibido `any` sin override documentado.
       // Para casos legítimos puntuales usar `// eslint-disable-next-line @typescript-eslint/no-explicit-any`.
