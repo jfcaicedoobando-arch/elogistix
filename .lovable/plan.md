@@ -1,44 +1,56 @@
 ## Diagnóstico
 
-El shard 5/20 sale con `exit 1` pero los logs **no muestran qué test falló**. ¿Por qué? El script `test:coverage:shard` corre vitest con `--reporter=blob` (necesario para fusionar cobertura), y ese reporter sólo escribe un archivo JSON — no imprime fallas en stdout. Por eso vemos el `Coverage summary` y luego `exited with code 1`, sin pista alguna del test culpable.
+Run nuevo (`76374375182`), mismo síntoma que el anterior: el job *Coverage merge & report* falla con:
 
-Encima ya tenemos `--retry=2`, así que la falla sobrevivió 3 intentos: no es flake, es un test reproduciblemente roto en CI (probablemente sensible al entorno, no a la máquina local — por eso pasa cuando lo corremos en el sandbox).
+```
+Coverage for lines     21.65% < 38%
+Coverage for functions 38.34% < 52%
+Coverage for branches  64.29% < 72%
+```
 
-**Analogía**: es como si el shard 5 te dijera "reprobé el examen" pero sin mostrarte qué pregunta falló, porque está usando un formato de respuesta que sólo entiende la máquina calificadora.
+Todos los 20 shards pasaron sus tests (un shard ejemplo: 2,248 / 63,117 statements = 3.56%). El fix de `v13.137.46` (quitar `--reporter=default`) **no movió la aguja** — la cobertura real se desplomó por otra razón, no por el reporter. Mi diagnóstico anterior fue incorrecto, lo siento.
+
+**Analogía**: pensé que el termómetro estaba mal calibrado, pero resultó que el paciente sí tiene fiebre.
+
+## Hipótesis de la caída real
+
+Las rondas recientes de "endurecimiento de tests" (shards 9-12, v13.137.41–43) hicieron varias cosas que pudieron reducir cobertura:
+
+1. **Resets globales de `mock.tableCalls` en `beforeEach`** evitan que tests posteriores ejecuten ramas que dependían del estado acumulado.
+2. **`vi.useFakeTimers({ toFake: ["Date"] })`** restringido en `cxpKpis.test.ts` (y posiblemente otros) puede dejar sin ejecutar ramas que dependían de timers fake completos.
+3. **Mocks más estrictos** que ya no devuelven datos por defecto → menos ejecución de helpers/branches downstream.
+4. Posible exclusión accidental de archivos del denominador no es el problema (denom es estable: 126K stmts).
 
 ## Plan
 
-### 1. Hacer visibles las fallas del shard (cambio en `package.json`)
-Agregar el reporter `default` junto al `blob` para que stdout muestre el test que falla, sin perder la fusión de cobertura:
+### 1. Reproducir la cobertura merge localmente
+Correr en el sandbox el flujo completo igual a CI (20 shards + merge) y obtener el `reports/coverage-report.md` para confirmar el 21.65% y ver **qué archivos cayeron** respecto al baseline (último build verde).
 
 ```
-vitest run --coverage --reporter=blob --reporter=default --retry=2 ...
+bun run test:coverage:shard -- --shard=1/20 ... # x20
+bun run test:coverage:merge
 ```
 
-El `blob` sigue escribiendo el JSON para el merge; el `default` imprime el resumen de tests fallidos en el log de CI. Sin esto, no podemos diagnosticar shards que truenen en el futuro.
+### 2. Identificar la regresión
+Comparar `coverage/coverage-summary.json` actual contra el último baseline conocido (~40%). Listar los 20 archivos con mayor pérdida de cobertura. Eso apunta al commit/fix que la causó.
 
-### 2. Reproducir shard 5 localmente para encontrar el test que falla
-Correr en el sandbox exactamente el mismo comando que CI:
+### 3. Restaurar cobertura sin bajar umbral
+Según `mem://principles/coverage-threshold`: **prohibido bajar el threshold**. Opciones, en orden de preferencia:
 
-```
-vitest run --reporter=default --shard=5/20
-```
+- **3a.** Revertir el reset global de `mock.tableCalls` *sólo* en tests donde el reset eliminó ejecución de ramas (mantenerlo donde realmente prevenía falsos positivos).
+- **3b.** Agregar tests adicionales para los archivos top-regresores hasta volver a ≥38% lines / ≥52% functions / ≥72% branches.
+- **3c.** Si un fix concreto del endurecimiento fue contraproducente, ajustarlo (no revertir todo).
 
-Identificar el (los) archivo(s) fallidos. Hay 28 archivos en ese shard — probable que el culpable sea uno sensible a:
-- Variables de entorno faltantes en CI (CI tiene ramps distintos a local)
-- Orden de ejecución / state leak entre tests dentro del fork
-- Timing (timers reales vs fake) bajo carga del runner de GitHub
-
-### 3. Reparar el test detectado
-Aplicar el fix puntual (reset de mocks, `vi.useFakeTimers({ toFake: ["Date"] })`, mock de env, etc.) según el patrón que ya está documentado en `mem://technical/testing-mock-patterns` y `mem://technical/testing-cleanup-protocol`.
-
-### 4. Verificar y bumpear versión
-- Correr `vitest run --shard=5/20` localmente para confirmar verde
-- Actualizar `CHANGELOG.md` + `APP_VERSION` (bump patch)
+### 4. Verificar y bumpear
+- Re-correr merge localmente, confirmar ≥38% en las 4 métricas (con margen ≥2pp).
+- Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
 
 ## Lo que NO haré
-- No volveré a bajar el umbral de cobertura (regla `mem://principles/coverage-threshold`).
-- No quitaré `--retry=2` — sólo agregaré visibilidad.
-- No tocaré tests ajenos al shard 5.
+- No bajaré el umbral (`mem://principles/coverage-threshold`).
+- No agregaré `--reporter=default` de regreso.
+- No tocaré shards/`--retry=2`.
 
-¿Lo apruebas y procedo?
+## Riesgo
+Re-correr 20 shards localmente toma ~10-15 min de sandbox. Si prefieres, puedo saltar el paso 1 y ir directo al paso 2 leyendo el último `coverage-report.md` del repo (si existe baseline). Avísame.
+
+¿Apruebas y procedo en modo build?
