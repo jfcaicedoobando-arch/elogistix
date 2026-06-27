@@ -1,69 +1,60 @@
-## Diagnóstico
+# Plan: corregir bugs en tests de shards 2 y 6
 
-El job **CI Success (aggregator)** falló porque:
+Auditoría con subagentes encontró **1 bug alto, 5 medios, 3 bajos** sobre 92 archivos. Ninguno es la causa raíz garantizada del cuelgue >20 min observado en CI (que sigue siendo sospecha sobre shards de PDF/leak en otros números), pero todos son fuentes plausibles de flakiness y falsos positivos.
 
-1. **Shards 2/12 y 6/12 colgaron 20 min y los canceló GitHub Actions** (timeout del job). Los otros 10 shards completaron sus tests en **<30 segundos** cada uno — un shard que tarda 20 min mientras sus hermanos terminan en 25s indica un test individual con **promesa sin resolver, `setInterval` sin cleanup, o `waitFor` mal escrito** que entró en bucle infinito en jsdom. Esto es nuevo (no pasaba con 8 shards).
-2. **Coverage merge falló (34.45% < 38%, branches 71.74% < 72%)**. Causa: como shards 2 y 6 no terminaron, sus blobs en `.vitest-reports/` quedaron **stale del cache de la corrida anterior** (`actions/cache@... key: Linux-vitest-2-...`) y el step de upload-artifact subió ese blob viejo. El merge cuenta archivos de antes sin la cobertura real, así que la métrica se desplomó.
+## Analogía
 
-No hubo fallos de lint, typecheck, build, edge functions ni de shards individuales que sí corrieron.
+Los tests son como recetas. Algunas dicen "deja reposar la masa" pero no ponen alarma (sin `await`), o usan el mismo tazón para varias recetas sin lavarlo (QueryClient compartido), o tienen un temporizador real de 4 min con un límite de cocción de 15 min sin colchón. No siempre se queman, pero un día con horno lento sí.
 
-## Cambios propuestos
+## Cambios
 
-### Paso A — Identificar el test que cuelga (shards 2 y 6)
+### Alta — `src/features/cxp/services/__tests__/parseCfdi.test.ts`
+- L68–81: el test de retry hace `sleep(1s)+sleep(3s)` reales con `testTimeout = 15_000`. Cero margen.
+- **Fix**: usar `vi.useFakeTimers()` + `vi.runAllTimersAsync()` siguiendo el patrón de `fetchWithRetry.test.ts`. Quitar el `15_000` literal del `it()`.
 
-Reproducir localmente con reporter verbose y timeout corto:
+### Media — `src/features/profit/hooks/__tests__/useProfit.test.tsx`
+- L67: `act(() => result.current.setFuente('facturas'))` sin `await`. Con React 18 + React Query el `waitFor` siguiente puede esperar hasta 15s.
+- **Fix**: `await act(async () => { result.current.setFuente('facturas'); })`.
 
-```bash
-bunx vitest run --shard=2/12 --reporter=verbose --testTimeout=15000 --hookTimeout=15000 2>&1 | tee /tmp/sh2.log
-bunx vitest run --shard=6/12 --reporter=verbose --testTimeout=15000 --hookTimeout=15000 2>&1 | tee /tmp/sh6.log
-```
+### Media — `src/features/embarques/hooks/__tests__/useEmbarqueForm.test.tsx`
+- L16: `const wrapper = createWrapper()` a nivel módulo → QueryClient compartido y cancelado entre tests por el `afterEach` global.
+- **Fix**: mover `createWrapper()` a un `beforeEach` o instanciarlo dentro de cada `renderHook`.
 
-Sospechosos primarios (agregados recientemente y conocidos por ser pesados/asincrónicos):
-- Tests E2E-style del flujo fiscal (`flujoFiscal*`, `convertirAFactura*`, `emitirRep*`, `cancelacion*`).
-- Tests del wizard de FacturApi (`FacturapiOnboardingWizard*`).
-- Tests de hooks con `useQuery` + `waitFor` (probable `act()`/timeout) en `useFacturacionKpisFiscales`.
+### Media — `src/features/embarques/hooks/__tests__/useEditarEmbarqueWizard.test.tsx`
+- L44–49: lee `methods.getValues("clienteId")` síncrono pero la inicialización ocurre en `useEffect`. Falso positivo/negativo según timing.
+- **Fix**: envolver en `await waitFor(() => expect(result.current.methods.getValues("clienteId")).toBe("cli-1"))`.
 
-Buscar en cada test fallido:
-- `await waitFor(...)` sin `expect` dentro o con condición que nunca se cumple.
-- `setInterval`/`setTimeout` sin `vi.useFakeTimers()` y `vi.clearAllTimers()` en `afterEach`.
-- Mocks de Supabase que devuelven una promesa que nunca resuelve (cadena thenable rota).
-- `Promise.all` que espera una invocación que nunca se hace.
+### Media — `src/lib/contexts/auth/__tests__/useAuthProfile.sentry.test.ts`
+- L23–26: `flushImport()` con `setTimeout(20ms)` real → frágil en CI.
+- L49–58: aserción negativa (`not.toHaveBeenCalled()`) inmediatamente después → falso positivo silencioso.
+- `renderHook` sin guardar `unmount` → promesa resolviendo tras fin de test, contamina el siguiente en singleFork.
+- **Fix**: usar fake timers + `vi.runAllTimersAsync()`, capturar `unmount` y llamarlo al final de cada test, y reforzar la aserción negativa con un `waitFor` que confirme que la rama de éxito sí ocurrió antes.
 
-Corregir cada test ofensor (sin tocar lógica de negocio) hasta que ambos shards corran <2 min.
+### Media — `src/features/embarques/services/tracking/__tests__/index.test.ts`
+- L4–11: mock manual de Supabase con sólo 4 métodos encadenados → cualquier método extra revienta como `TypeError: undefined is not a function`.
+- **Fix**: reemplazar por `createSupabaseMock` del proyecto (patrón estándar definido en mem://technical/testing-mock-patterns).
 
-### Paso B — Blindar el cache para no enmascarar timeouts
+### Media — `src/features/catalogos/hooks/__tests__/useTiposContenedor.test.tsx`
+- L34: `mutateAsync` fuera de `act()` → warnings y contaminación de QueryClient en singleFork.
+- **Fix**: envolver en `await act(async () => { await result.current.agregarTipo.mutateAsync(...); })`.
 
-Editar `.github/workflows/ci.yml` en la matriz `Tests (shard N/12)`:
+### Baja — `src/features/comisiones/hooks/__tests__/useComisiones.test.tsx`
+- Sin `beforeEach(() => mock.mockReset())`. Frágil.
+- **Fix**: agregar reset explícito.
 
-1. **No cachear `.vitest-reports/`** en `actions/cache`. Sólo cachear `node_modules/.vitest` (el cache de transformación de vitest). Hoy el path es `node_modules/.vitest\n.vitest-reports`, y eso permite que un blob obsoleto sobreviva entre runs.
-2. **Limpiar `.vitest-reports/` antes del run**: cambiar `mkdir -p .vitest-reports` por `rm -rf .vitest-reports && mkdir -p .vitest-reports`.
-3. **Condicionar el upload del blob a éxito del step de tests**: agregar `if: success()` al step `Upload vitest blob` (hoy probablemente usa `if: always()`). Sin esto, una cancelación sube basura.
+### Baja — `portal.test.ts` y `duplicadoRfc.test.ts`
+- Usan `vi.*` sin importarlo (funciona por `globals: true`).
+- **Fix**: agregar `vi` al import desde vitest para consistencia.
 
-Resultado: si un shard se cuelga otra vez, el merge fallará con "blob missing" en lugar de mentir con cobertura falsa, y veremos el problema en el shard real.
+## Fuera de alcance
 
-### Paso C — Bajar el techo de tiempo individual de tests
+- Causa raíz del timeout >20 min en CI no se confirmó aquí. Los guardrails de `13.137.23` (limpieza de blobs + `if: success()`) hacen que el próximo CI apunte al shard culpable. Si vuelve a colgar después de estos fixes, abrir un follow-up enfocado en shards de PDF/`canaries`/`pdfLeak*` que viven en otros shards.
 
-Añadir en `vitest.config.ts`:
+## Versionado y registro
 
-```ts
-test: {
-  // ya existente...
-  testTimeout: 20_000,     // 20s por test (default 5s, pero algunos necesitan más)
-  hookTimeout: 20_000,
-  teardownTimeout: 10_000,
-}
-```
+- Bump `APP_VERSION` a `13.137.24` y entrada en `CHANGELOG.md` describiendo cada fix por archivo.
 
-Cualquier test futuro que se cuelgue va a fallar como `Test timed out in 20000ms` en lugar de consumir los 20 min del job. Es defensa en profundidad.
+## Validación
 
-### Paso D — Versionado y changelog
-
-- Bump `APP_VERSION` → `13.137.23`.
-- Entrada en `CHANGELOG.md`:
-  > Identificados y corregidos tests colgantes en shards 2 y 6 que provocaban timeouts de 20 min y blobs de cobertura obsoletos. Cache de CI ya no preserva `.vitest-reports/` entre runs.
-
-## Notas
-
-- **No** bajamos el threshold de coverage (regla `mem://principles/coverage-threshold`).
-- **No** tocamos lógica de negocio: sólo tests rotos, workflow YAML y config de vitest.
-- Si el Paso A no encuentra el test culpable en local en 30 min, plan B: ejecutar shards 2 y 6 con `--reporter=verbose --bail=1` en CI temporalmente, identificar el último test que arranca antes del cuelgue y atacarlo.
+- `bun run test:shard -- src/features/cxp/services/__tests__/parseCfdi.test.ts src/features/profit/hooks/__tests__/useProfit.test.tsx src/features/embarques/hooks/__tests__/useEmbarqueForm.test.tsx src/features/embarques/hooks/__tests__/useEditarEmbarqueWizard.test.tsx src/lib/contexts/auth/__tests__/useAuthProfile.sentry.test.ts src/features/embarques/services/tracking/__tests__/index.test.ts src/features/catalogos/hooks/__tests__/useTiposContenedor.test.tsx src/features/comisiones/hooks/__tests__/useComisiones.test.tsx`
+- Verificar 0 warnings de `act()` y 0 timeouts.
