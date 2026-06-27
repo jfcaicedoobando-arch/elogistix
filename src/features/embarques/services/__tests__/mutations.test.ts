@@ -209,7 +209,7 @@ describe("insertarNotaEmbarque", () => {
   it("inserta una nota válida", async () => {
     mock.setTableResult("notas_embarque", { data: null, error: null });
     await insertarNotaEmbarque(UUID, "Mensaje de prueba", "u@d.com");
-    const call = mock.tableCalls.at(-1);
+    const call = mock.tableCalls[mock.tableCalls.length - 1];
     expect(call?.table).toBe("notas_embarque");
     expect(call?.ops).toContain("insert");
   });

@@ -30,7 +30,7 @@ describe("listarPorEmbarque", () => {
     mock.setTableResult("embarque_contenedores", { data: rows, error: null });
     const result = await listarPorEmbarque(EMB);
     expect(result).toEqual(rows);
-    const call = mock.tableCalls.at(-1);
+    const call = mock.tableCalls[mock.tableCalls.length - 1];
     expect(call?.table).toBe("embarque_contenedores");
     expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq", "order"]));
   });
@@ -56,7 +56,7 @@ describe("crearMuchos", () => {
       { numero_contenedor: "A2", tipo_contenedor: "40HC", peso_kg: 1, volumen_m3: 1, piezas: 1 },
     ] as never);
     expect(result).toHaveLength(2);
-    const call = mock.tableCalls.at(-1);
+    const call = mock.tableCalls[mock.tableCalls.length - 1];
     expect(call?.ops).toEqual(expect.arrayContaining(["insert", "select"]));
   });
 });

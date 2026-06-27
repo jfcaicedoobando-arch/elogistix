@@ -35,7 +35,7 @@ describe("consolidarProformas", () => {
       requestId: "req-1",
     });
     expect(result).toEqual(row);
-    const call = mock.rpcCalls.at(-1)!;
+    const call = mock.rpcCalls[mock.rpcCalls.length - 1]!;
     expect(call.fn).toBe("consolidar_proformas");
     expect(call.args).toMatchObject({
       p_organization_id: "org-1",
@@ -52,7 +52,7 @@ describe("consolidarProformas", () => {
       ...base, blMaster: null, operador: null, diasCredito: null,
       proformaIds: ["a", "b"],
     });
-    expect(mock.rpcCalls.at(-1)?.args).toMatchObject({
+    expect(mock.rpcCalls[mock.rpcCalls.length - 1]?.args).toMatchObject({
       p_bl_master: "", p_operador: "", p_dias_credito: 0,
     });
   });

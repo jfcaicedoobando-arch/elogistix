@@ -14,7 +14,7 @@ import { fetchEventosEmbarque, insertEventoEmbarque } from "@/features/embarques
 const EMBARQUE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 // v13.137.35: reset de `tableCalls` por test (consistente con forecast/leaderboard
-// /plantillas/proyeccion). Sin esto, `tableCalls.find(...)` y `tableCalls.at(-1)`
+// /plantillas/proyeccion). Sin esto, `tableCalls.find(...)` y `tableCalls[tableCalls.length - 1]`
 // pueden leer llamadas de tests previos si se reordena la suite.
 beforeEach(() => {
   mock.tableCalls.length = 0;
@@ -68,7 +68,7 @@ describe("insertEventoEmbarque", () => {
         usuario: "op@demo.com",
       }),
     ).resolves.toBeUndefined();
-    const insertCall = mock.tableCalls.at(-1);
+    const insertCall = mock.tableCalls[mock.tableCalls.length - 1];
     expect(insertCall?.table).toBe("eventos_embarque");
     expect(insertCall?.ops).toContain("insert");
   });

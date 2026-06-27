@@ -13,7 +13,7 @@ describe("actualizarContenedorEmbarque", () => {
     await expect(
       actualizarContenedorEmbarque("emb-1", "MSCU1234567"),
     ).resolves.toBeUndefined();
-    const call = mock.tableCalls.at(-1);
+    const call = mock.tableCalls[mock.tableCalls.length - 1];
     expect(call?.table).toBe("embarques");
     expect(call?.ops).toEqual(expect.arrayContaining(["update", "eq"]));
   });
