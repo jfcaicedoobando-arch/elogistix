@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.34] - 2026-06-27
+- **fix(tests/shard 4) — `URL.revokeObjectURL is not a function` como Unhandled Error**: en `descargarCfdiFacturapi.test.ts` el SUT programa `setTimeout(() => URL.revokeObjectURL(url), 1000)`. El test restauraba `URL.revokeObjectURL` en el `finally` antes de que el timer disparara → el timeout se ejecutaba después del test contra `undefined` (jsdom no define el método) y crasheaba el shard. Fix: envolver el test con `vi.useFakeTimers()` + `vi.runAllTimers()` antes de restaurar, y asertar explícitamente que `revokeObjectURL` fue llamado con el blob URL. Shard 4 ahora pasa 280/280 limpio.
+
 ## [13.137.33] - 2026-06-27
 - **fix(tests) — cierre de pendientes #1, #4, #5 de la auditoría de los 12 shards**: barrido sistemático con 4 subagentes en paralelo (mutaciones globales, vi.hoisted mutables, act síncronos, mocks de Supabase). Resultado: pendiente #1 cerrado sin acción (0 hallazgos accionables — los 93 `act(() => …)` síncronos auditados son legítimamente síncronos, todos los handlers async ya usan `await act(async …)`). Pendiente #2 documentado como diferido (sólo cosmético, sin riesgo).
   - **Fase A — pendiente #5 CRÍTICA (5 archivos, arrays/objetos mutables sin reset)**:
