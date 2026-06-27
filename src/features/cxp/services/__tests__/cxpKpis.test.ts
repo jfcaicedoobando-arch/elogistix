@@ -12,8 +12,12 @@ const HOY = new Date("2026-06-26T12:00:00Z");
 // `vi.useRealTimers()`, lo que anula `beforeAll(useFakeTimers)`.
 // Reinstalamos el reloj fijo en cada test para que los KPIs basados en
 // `new Date()` (ver `cxpKpis.ts`) sean deterministas.
+// v13.137.43: limitamos `toFake` a `["Date"]`. El default de vitest 3
+// también intercepta `queueMicrotask`/`setImmediate`, lo que cuelga la
+// inicialización del fork (shard 9 quedaba en timeout de 20min en CI).
+// Sólo necesitamos congelar la fecha del sistema para los KPIs.
 beforeEach(() => {
-  vi.useFakeTimers();
+  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(HOY);
 });
 
