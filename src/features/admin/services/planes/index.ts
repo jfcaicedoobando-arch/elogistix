@@ -30,7 +30,8 @@ export async function updatePlan(plan: Partial<Plan> & { id: string }): Promise<
   const { id, ...rest } = plan;
   const { error } = await supabase
     .from("planes")
-    .update(rest as Record<string, unknown>)
+    // SAFE-CAST: Partial<Plan> proviene de un formulario validado; supabase-js 2.108 endurece RejectExcessProperties.
+    .update(rest as never)
     .eq("id", id);
   if (error) throw error;
 }
