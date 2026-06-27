@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.36] - 2026-06-27
+- **fix(tests/shard 6) — auditoría línea-por-línea de 46 archivos sin correr el shard**: 3 subagentes en paralelo (A/B/C). 10 bugs concretos corregidos:
+  - `useCierreDialog.test.ts`: 10 `act()` síncronos sin `await` → ahora todos `await act(async …)`.
+  - `useDialogGenerarProformaController.test.tsx`: `createWrapper()` a nivel módulo (QueryClient compartido entre 5 tests) → factory dentro de `beforeEach`.
+  - `useCotizacionHydration.test.tsx`: `createWrapper()` invocado dentro del componente wrapper (nuevo QueryClient por render, sobrescribía el global) → `makeWrapper(initialState)` por test.
+  - `useEmbarqueDocumentosActions.test.tsx`: `vi.stubGlobal("fetch", …)` sin `afterEach(vi.unstubAllGlobals)` → restauración explícita para no contaminar tests posteriores.
+  - `useEmbarqueFinancials.test.tsx`: `mockCompute` (vi.hoisted) sin reset → `beforeEach(() => mockCompute.mockReset())`, conteos `toHaveBeenCalledTimes(1|2)` ahora deterministas.
+  - `useEmbarqueSubmitOrchestrator.test.tsx` y `useEmbarquesPageController.test.tsx`: mismo bug de `createWrapper()` en el componente body → reemplazados por `makeWrapper()` por `renderHook`.
+  - `useEmbarquesFilters.test.tsx`: `withNuqsTestingAdapter({ hasMemory: true })` a nivel módulo (URL state filtrándose entre tests) → recreado en `beforeEach`.
+  - `useEditarEmbarqueWizard.test.tsx`: `act()` sin `await` en el test de cambio de paso.
+  - `embarqueFases.test.ts`: `Date.now()` vivo sin pin de reloj → `vi.useFakeTimers()`/`vi.setSystemTime()` con `try/finally`.
+  - `DialogSeguroForm.validation.test.ts`: construcción `new Date("…T23:59:59")` interpretada como local time mientras el fixture `hoy` es UTC → sufijo `Z` para parsear como UTC.
+  - **Analogía**: shard 6 era como un taller donde cada mesa dejaba grasa en la siguiente: cada test contaminaba al próximo con globals/timers/QueryClients sin limpiar. Ahora cada test trae su propia mesa limpia y la deja limpia.
+
 ## [13.137.34] - 2026-06-27
 - **fix(tests/shard 4) — `URL.revokeObjectURL is not a function` como Unhandled Error**: en `descargarCfdiFacturapi.test.ts` el SUT programa `setTimeout(() => URL.revokeObjectURL(url), 1000)`. El test restauraba `URL.revokeObjectURL` en el `finally` antes de que el timer disparara → el timeout se ejecutaba después del test contra `undefined` (jsdom no define el método) y crasheaba el shard. Fix: envolver el test con `vi.useFakeTimers()` + `vi.runAllTimers()` antes de restaurar, y asertar explícitamente que `revokeObjectURL` fue llamado con el blob URL. Shard 4 ahora pasa 280/280 limpio.
 
