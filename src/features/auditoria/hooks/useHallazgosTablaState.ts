@@ -3,8 +3,9 @@
  * Aísla filtros, paginación y derivaciones del componente UI. Los predicados
  * puros viven en `hallazgosTablaFilters.ts`.
  */
-import { useCallback, useMemo, useState } from "react";
-import { useAuditoriaRevisiones, revisionKey } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useMemo, useState } from "react";
+import { useAuditoriaRevisiones } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useHallazgosSelection } from "@/features/auditoria/hooks/useHallazgosSelection";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import type {
   HallazgoAuditoria,
