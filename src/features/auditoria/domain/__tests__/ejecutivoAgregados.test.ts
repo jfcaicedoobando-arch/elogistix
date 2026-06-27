@@ -102,4 +102,35 @@ describe("ejecutivoAgregados", () => {
     // Alias retrocompatible
     expect(out.rankingOperadores).toBe(out.rankingResponsables);
   });
+
+  it("calcularScore 60/40: riesgoMxn arrastra el score hacia abajo", () => {
+    // Sin riesgo: comportamiento legado (sólo higiene) → score 80
+    expect(calcularScore(10, 5, 0).score).toBe(80);
+    // Con riesgo = umbral → economico=0 → score = 0.4*80 + 0.6*0 = 32
+    const r = calcularScore(10, 5, RIESGO_UMBRAL_MXN);
+    expect(r.score).toBe(32);
+    expect(r.scoreEstado).toBe("malo");
+    // Saturación: riesgo > umbral no baja del piso
+    expect(calcularScore(0, 1, RIESGO_UMBRAL_MXN * 10).score).toBe(40);
+  });
+
+  it("calcularRegresion empata snapshot más cercano a 7 días", () => {
+    const hoy = new Date();
+    const hace7 = new Date(hoy.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+    const hace14 = new Date(hoy.getTime() - 14 * 86_400_000).toISOString().slice(0, 10);
+    const reg = calcularRegresion(70, [
+      { fecha: hace14, score: 90 },
+      { fecha: hace7, score: 85 },
+    ], 7);
+    expect(reg).not.toBeNull();
+    expect(reg!.scoreAnterior).toBe(85);
+    expect(reg!.diferencia).toBe(-15);
+  });
+
+  it("calcularRegresion retorna null si no hay snapshot dentro de ±3 días", () => {
+    const hace20 = new Date(Date.now() - 20 * 86_400_000).toISOString().slice(0, 10);
+    expect(calcularRegresion(70, [{ fecha: hace20, score: 90 }], 7)).toBeNull();
+    expect(calcularRegresion(70, [], 7)).toBeNull();
+  });
 });
+
