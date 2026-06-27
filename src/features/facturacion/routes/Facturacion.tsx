@@ -132,14 +132,15 @@ export default function Facturacion() {
             </Button>
           )}
         </div>
-        <GuiaPrefacturacion />
-
-        {/* Dashboard de KPIs (siempre visible) */}
+        {/* Dashboard de KPIs (siempre visible) — primer golpe de vista */}
         <DashboardEjecutivoFacturacion />
         <FacturacionKpisFiscales />
 
         {/* Alerta global: Hueco de facturación (única fuente de "por facturar") */}
         <HuecoFacturacionCard />
+
+        {/* Guía pedagógica colapsable: después de los KPIs para no romper la jerarquía */}
+        <GuiaPrefacturacion />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b">
