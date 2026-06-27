@@ -12,6 +12,8 @@
  */
 import { expect, test } from "@playwright/test";
 import { internalCreds, loginAs } from "../fixtures/auth";
+import { bestEffortCleanup } from "../fixtures/cleanup";
+import { supabaseRest } from "../fixtures/api";
 
 const ENABLED = process.env.E2E_FISCAL === "1";
 const PROFORMA = process.env.E2E_PROFORMA_NUMERO ?? "";
@@ -20,6 +22,25 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("Flujo 08 — Fiscal happy path", () => {
   test.skip(!ENABLED, "E2E_FISCAL=1 + E2E_PROFORMA_NUMERO requeridos");
+
+  let facturaIdCreada: string | null = null;
+  let lastPage: import("@playwright/test").Page | null = null;
+
+  test.afterAll(async (testInfo) => {
+    // Best-effort: cancelar CFDI sandbox motivo 02 (sin sustitución) y
+    // borrar pagos locales asociados. Si no hay sesión disponible, nos rendimos.
+    if (!facturaIdCreada || !lastPage) return;
+    await bestEffortCleanup(testInfo, "cancelar CFDI sandbox (motivo 02)", async () => {
+      await supabaseRest(lastPage!).rpc("cancelar_factura", {
+        p_factura_id: facturaIdCreada,
+        p_motivo: "02",
+      });
+    });
+    await bestEffortCleanup(testInfo, "borrar pagos_factura E2E", async () => {
+      await supabaseRest(lastPage!).delete("pagos_factura", { factura_id: facturaIdCreada! });
+    });
+  });
+
 
   test("proforma aprobada → convertir → timbrar → registrar pago PPD → REP", async ({ page }) => {
     await loginAs(page, internalCreds());
