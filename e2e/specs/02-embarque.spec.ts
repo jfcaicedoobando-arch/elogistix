@@ -10,21 +10,22 @@ test.describe("Flujo 02 — Embarques", () => {
       timeout: 15_000,
     });
 
-    // Esperar a que cargue la primera fila (o estado vacío explícito).
-    const firstRow = page.locator("table tbody tr").first();
-    const emptyState = page.getByText(/sin resultados|no hay embarques/i);
-    await Promise.race([
-      firstRow.waitFor({ state: "visible", timeout: 20_000 }),
-      emptyState.waitFor({ state: "visible", timeout: 20_000 }),
-    ]);
+    // Esperar a que la tabla termine de cargar (estado loading=false) antes
+    // de decidir si hay filas. Evita race con `Promise.race` que veía el
+    // empty-state mientras la query aún no resolvía.
+    const table = page.locator("table").first();
+    await table.waitFor({ state: "visible", timeout: 20_000 });
+    await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => {
+      // networkidle puede no llegar si hay subscripciones realtime — tolerar.
+    });
 
-    // Si no hay datos sembrados, saltar el paso de detalle en lugar de un
-    // `if (visible)` que pasa siempre. Requiere `E2E_HAS_SEED=1` para
-    // ejercitar el flujo completo en CI con seed.
-    const hasRow = await firstRow.isVisible().catch(() => false);
-    test.skip(!hasRow, "Sin datos sembrados — establecer E2E_HAS_SEED=1 + seed para probar el detalle");
+    const rowCount = await page.locator("table tbody tr").count();
+    test.skip(
+      rowCount === 0,
+      "Sin datos sembrados — establecer E2E_HAS_SEED=1 + seed para probar el detalle",
+    );
 
-    await firstRow.click();
+    await page.locator("table tbody tr").first().click();
     await expect(page).toHaveURL(/\/embarques\/.+/);
     await expect(page.getByText(/expediente|operador|cliente/i).first()).toBeVisible({
       timeout: 15_000,

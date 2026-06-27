@@ -16,6 +16,8 @@ import { internalCreds, loginAs } from "../fixtures/auth";
 const ENABLED = process.env.E2E_FISCAL === "1";
 const PROFORMA = process.env.E2E_PROFORMA_NUMERO ?? "";
 
+test.describe.configure({ mode: "serial" });
+
 test.describe("Flujo 08 — Fiscal happy path", () => {
   test.skip(!ENABLED, "E2E_FISCAL=1 + E2E_PROFORMA_NUMERO requeridos");
 
@@ -27,30 +29,37 @@ test.describe("Flujo 08 — Fiscal happy path", () => {
     await expect(page.getByRole("tab", { name: /por timbrar/i })).toBeVisible();
     await page.getByRole("tab", { name: /por timbrar/i }).click();
 
-    const row = page.getByRole("row", { name: new RegExp(PROFORMA, "i") });
-    await expect(row).toBeVisible({ timeout: 15_000 });
+    const proformaRow = page.getByRole("row", { name: new RegExp(PROFORMA, "i") });
+    await expect(proformaRow).toBeVisible({ timeout: 15_000 });
 
     // 2. Convertir a factura.
-    await row.getByRole("checkbox").check();
+    await proformaRow.getByRole("checkbox").check();
     await page.getByRole("button", { name: /convertir a factura/i }).click();
     await page.getByRole("button", { name: /^confirmar$/i }).click();
     await expect(page.getByText(/factura.*creada/i)).toBeVisible({ timeout: 20_000 });
 
-    // 3. Saltar a Emitidas, timbrar la primera Borrador.
+    // 3. Saltar a Emitidas y timbrar la primera Borrador. Capturamos el
+    //    número de factura del row para re-localizarlo después del timbrado
+    //    (el badge cambia de "Borrador" a "Timbrada" y rompe locators por estado).
     await page.getByRole("tab", { name: /emitidas/i }).click();
-    const borrador = page.getByRole("row").filter({ hasText: /Borrador/i }).first();
-    await borrador.getByRole("button", { name: /timbrar/i }).click();
+    const borradorRow = page.getByRole("row").filter({ hasText: /Borrador/i }).first();
+    const facturaNumero = (await borradorRow.locator("td").first().innerText()).trim();
+    await borradorRow.getByRole("button", { name: /timbrar/i }).click();
     await page.getByRole("button", { name: /^timbrar$/i }).click();
     await expect(page.getByText(/timbrada/i)).toBeVisible({ timeout: 30_000 });
 
-    // 4. Registrar pago PPD → debe generarse el REP automáticamente.
-    await borrador.getByRole("button", { name: /registrar pago/i }).click();
+    // 4. Registrar pago PPD usando un locator fresco por número de factura.
+    const facturaRow = page.getByRole("row", { name: new RegExp(facturaNumero, "i") });
+    await expect(facturaRow).toBeVisible({ timeout: 10_000 });
+    await facturaRow.getByRole("button", { name: /registrar pago/i }).click();
     await page.getByLabel(/monto/i).fill("100");
     await page.getByLabel(/forma de pago/i).selectOption({ label: /transferencia/i });
     await page.getByRole("button", { name: /guardar/i }).click();
 
+    // El REP se timbra automáticamente vía edge function.
     await expect(page.getByText(/REP.*timbrado|Complemento.*timbrado/i)).toBeVisible({
       timeout: 45_000,
     });
   });
 });
+
