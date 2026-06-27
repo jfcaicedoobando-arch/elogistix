@@ -15,6 +15,8 @@ import {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+  mock.resetResults();
 });
 
 describe("services/crm/plantillas", () => {

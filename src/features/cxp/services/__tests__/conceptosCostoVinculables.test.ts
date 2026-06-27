@@ -18,6 +18,8 @@ import {
 describe("fetchConceptosCostoAbiertosDeProveedor", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
+    mock.resetResults();
   });
 
   it("regresa vacío si no hay proveedorId", async () => {

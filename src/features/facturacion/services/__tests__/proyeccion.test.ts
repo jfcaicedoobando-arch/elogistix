@@ -11,6 +11,8 @@ describe("fetchProyeccionMes", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
     mock.rpcCalls.length = 0;
+    mock.resetResults();
+    mock.rpcCalls.length = 0;
   });
 
 

@@ -29,6 +29,8 @@ import {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+  mock.resetResults();
   mock.invoke.mockReset();
   mock.getSession.mockReset();
   mock.getSession.mockResolvedValue({ data: { session: { access_token: "tok" } } });

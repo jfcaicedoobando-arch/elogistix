@@ -15,6 +15,8 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 describe("vendedoras service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
+    mock.resetResults();
   });
 
   it("fetchVendedorasConfig mezcla con emails de usuarios", async () => {
