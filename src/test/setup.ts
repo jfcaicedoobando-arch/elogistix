@@ -64,6 +64,8 @@ if (typeof (globalThis as { IntersectionObserver?: unknown }).IntersectionObserv
 // `scrollIntoView` no existe en jsdom — Radix Select lo llama al abrir.
 if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function scrollIntoView(): void {};
+}
+
 
 // jsdom no implementa `URL.createObjectURL`/`revokeObjectURL`. Los stubs
 // evitan unhandled errors cuando timers tardíos (p.ej. `descargarBlob` con
