@@ -1,61 +1,37 @@
 
-## Resultado de la auditoría de compatibilidad
+## Diagnóstico
 
-Lovable fija el stack en **React 18 + Vite 5 + Tailwind v3 + TypeScript 5**. Eso bloquea varios de los upgrades mayores que aparecen en `bun outdated` y obliga a reescribir el plan de migración previo (PR-A → PR-H).
+Los `TS2550/TS2554` que muestra el panel son del caché local del harness, **no** existen en CI. Lo que rompe el pipeline son:
 
-### Instalado hoy — todo compatible ✅
-React 18.3.1, react-dom 18.3.1, Vite 5.4.21, Tailwind 3.4.19, TypeScript 5.9.3, @vitejs/plugin-react-swc 3.11.0, Sentry 10.62, Supabase JS 2.108, TanStack Query 5.101, Radix UI (todos), Zod 3.25, date-fns 3.6, recharts 2.15, sonner 1.7, lucide 0.462, react-router-dom 6.30, react-day-picker 8.10, tailwind-merge 2.6, @hookform/resolvers 3.10, Vitest 4.1, ESLint 10, jsdom 29, knip 6.
+1. `coverage=failure` — merge de Vitest abortado por blobs de v3.2.4 sobrantes.
+2. `tests=failure` — `Tests (shard 8/20)` exit 1 sin pista del test culpable (reporter `blob`).
 
-### Upgrades mayores — clasificación
+## Plan
 
-**🚫 INCOMPATIBLES con Lovable (no aplicar):**
+### Parte A — Arreglar el merge de coverage (alta prioridad)
+Limpiar `.vitest-reports/` **antes** de que el job de merge baje los artefactos, y volver opcionalmente la clave de caché de Vitest única por commit para que blobs viejos no vivan en caché entre runs.
 
-| Paquete | Latest | Motivo |
-|---|---|---|
-| `react` / `react-dom` | 19.2.7 | Lovable = React 18 |
-| `@types/react` / `@types/react-dom` | 19.x | Atado a React 19 |
-| `vite` | 8.1.0 | Lovable = Vite 5 |
-| `@vitejs/plugin-react-swc` | 4.3.1 | Requiere Vite 6+ |
-| `tailwindcss` | 4.3.1 | Lovable = Tailwind v3 (cambia config a CSS-first, rompe `tailwind.config.ts` y plugins) |
-| `typescript` | 6.0.3 | Lovable = TS 5 |
-| `react-router-dom` | 7.18.0 | Requiere React 19 + cambia API a "framework mode" |
+Cambios en `.github/workflows/ci.yml` (job `coverage-merge`):
+- Insertar paso `rm -rf .vitest-reports && mkdir -p .vitest-reports` justo antes del `actions/download-artifact`.
+- Bumpear la `key` del caché `node_modules/.vitest` (sufijo `-v4` o incluir `${{ github.sha }}`) para invalidar de un golpe los blobs persistidos.
 
-Esto invalida los PRs **B, E, F, G, H** del plan mayor anterior. Hay que retirarlos del backlog.
+Validación: el log siguiente debe mostrar solo `blob-1.json … blob-20.json` (todos v4.1.9).
 
-**⚠️ MAYORES INDEPENDIENTES (compatibles con React 18, requieren refactor moderado):**
+### Parte B — Identificar el test que rompe shard 8/20
+El script `test:coverage:shard` corre con `--reporter=blob` puro, por eso CI no imprime el test fallido. Plan:
+- En `package.json` cambiar a doble reporter: `--reporter=blob --reporter=default` para que stdout muestre el `FAIL` del archivo concreto sin perder el blob para merge.
+- Una vez que CI reporte el archivo culpable, abrir un seguimiento focalizado (no incluido en este PR).
 
-| Paquete | Latest | Riesgo / refactor |
-|---|---|---|
-| `zod` | 4.4.3 | API de errores y `z.record` cambian; tocaría ~80+ schemas |
-| `sonner` | 2.0.7 | Renombres en API de `toast()` y theming |
-| `lucide-react` | 1.21.0 | Reorganización de exports / nombres de íconos |
-| `date-fns` | 4.4.0 | Soporte de zonas horarias nuevo; ya usamos `formatInTimeZone`, hay que validar |
-| `recharts` | 3.9.0 | Reescritura de `<Tooltip>` y tipos; alto riesgo en dashboards |
-| `react-day-picker` | 10.0.1 | API nueva; afecta `DatePickerMx`, `DateTimePickerMx`, `MonthPickerMx` |
-| `tailwind-merge` | 3.6.0 | Pide Tailwind 4 → **descartar** mientras sigamos en TW 3 |
-| `@hookform/resolvers` | 5.4.0 | Atado a Zod 4 → ligar con el upgrade de Zod |
-
-### Plan revisado de migración mayor
-
-1. **Cerrar oficialmente** los PR-B / PR-E / PR-F / PR-G / PR-H y dejar nota en `mem://` para no volver a proponerlos mientras la plataforma siga en este stack.
-2. Mantener solo estos PRs viables (orden propuesto, menor a mayor riesgo):
-   - **PR-D1**: `sonner` 1 → 2  *(toasts; cambios acotados)*
-   - **PR-D2**: `lucide-react` 0.462 → 1.x  *(reemplazar nombres deprecados)*
-   - **PR-D3**: `date-fns` 3 → 4  *(validar `formatInTimeZone` y locales `es`)*
-   - **PR-D4**: `react-day-picker` 8 → 10 + ajustar `DatePickerMx` y derivados
-   - **PR-C**: `zod` 3 → 4 **+** `@hookform/resolvers` 3 → 5 (en el mismo PR; son interdependientes)
-   - **PR-D5**: `recharts` 2 → 3  *(último por ser el más invasivo en UI)*
-3. Dejar fuera del backlog: `tailwind-merge` 3 (requiere Tailwind 4).
-4. Documentar en `mem://constraint/lovable-stack-pins` los pines duros: React 18, Vite 5, Tailwind 3, TS 5, router 6, swc-plugin 3.
+### Parte C — Higiene del cache stale del harness
+Los `TS2550` que ve el usuario vienen del typechecker local del IDE. El root `tsconfig.json` ya tiene `lib`/`target` ES2022 (PR `13.138.1`). Para evitar que la deuda visible siga ruido, agregar un `restart_dev_server` mental: no hay cambio de código aquí — solo documentar el origen en `CHANGELOG`.
 
 ### Detalle técnico
 
-- `bun outdated` corrido contra el lockfile actual; los "Update" coinciden con "Current" porque los rangos en `package.json` son `^x.y.z` por debajo de cada major.
-- Las restricciones React 18 / Vite 5 / Tailwind 3 / TS 5 vienen del propio runtime de Lovable (no podemos elevarlas aunque pasen los tests locales: el preview dejaría de buildear en la plataforma).
-- No se proponen cambios de código en este plan — sólo reordenar el backlog de upgrades y registrar las restricciones.
+- `.github/workflows/ci.yml` job `coverage-merge`: añadir `rm -rf .vitest-reports` antes de `download-artifact: name: vitest-blobs-*`, y bumpear `key: Linux-vitest-v4-${{ ... }}`.
+- `package.json` script `test:coverage:shard`: `vitest run --coverage --reporter=blob --reporter=default --retry=2 --coverage.thresholds.…=0`.
+- Bump versión `13.138.2`. Entrada en `CHANGELOG.md`.
 
-### Entregable de esta tarea
-Al aprobar, en modo build sólo haremos:
-- Crear `mem://constraint/lovable-stack-pins` con los pines.
-- Actualizar `.lovable/plan.md` (si existe) o `CHANGELOG.md` con el plan revisado.
-- No tocar `package.json` ni el lockfile.
+### Fuera de alcance
+- No tocar tests aún; primero queremos que el reporter exponga el test fallido del shard 8.
+- No tocar `tsconfig` (ya está en ES2022 desde 13.138.1).
+- No subir majors bloqueados (memoria `lovable-stack-pins`).
