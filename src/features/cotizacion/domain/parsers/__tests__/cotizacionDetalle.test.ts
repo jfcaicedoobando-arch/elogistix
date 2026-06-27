@@ -42,9 +42,12 @@ describe("cotizacionDetalleHelpers", () => {
 
     it("retorna [] y loggea ante JSON string inválido", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      expect(parseConceptos("{not json")).toEqual([]);
-      expect(warn).toHaveBeenCalled();
-      warn.mockRestore();
+      try {
+        expect(parseConceptos("{not json")).toEqual([]);
+        expect(warn).toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
 
     it("descarta filas con schema inválido (moneda desconocida o campos faltantes)", () => {

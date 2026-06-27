@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useTiposContenedor, useAdminTiposContenedor } from "../useTiposContenedor";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import * as catalogosService from "@/features/catalogos/services";
@@ -21,6 +21,10 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
 }));
 
 describe("useTiposContenedor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("fetches container types", async () => {
     const { result } = renderHook(() => useTiposContenedor(), { wrapper: createWrapper() });
     
