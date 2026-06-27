@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.53] - 2026-06-27
+- **test(coverage) — PR-2 ramas en hooks (lote 1)**: nuevo `useEmbarqueEstadoActions.branches.test.tsx` con 15 tests que cubren las ramas no tocadas por el suite base: early returns (sin embarque / siguiente=null / sin id), candado de documentos (`block_docs`, `warn_docs`, `confirmarAvanceConDocsPendientes`, manejo de error `documentos_faltantes` del backend), gate de cierre (motivo `rol`, motivo `checklist`, bypass de admin) y `confirmarCierreSinProforma`, sync automático de estado (dispara/no dispara según `calcularEstadoEmbarque`), error en `handleReabrir`, y cálculo de `conceptosSinProforma`. Mocks añadidos para `useCierreEmbarque`, `usePermissions` y `appFeedback` para aislar el hook por completo. `cotizacionForm.ts` ya estaba en 100% desde PR-1, por lo que el lote se enfoca en el hook con mayor superficie de ramas pendientes.
+
 ## [13.137.52] - 2026-06-27
 - **test(coverage) — PR-1 ramas en services/utils**: tres lotes paralelos elevan branch coverage en 16 archivos críticos. Batch A: `cotizacionForm.ts` 42→100%, `estadoResultadosDevengado.ts` 52→75.5%, `versionado/index.ts` 39→77.4%, `conversiones/embarques.ts` 51→81.3%. Batch B: `proveedorFacturas.ts` 17→96.2%, `leads/convertir.ts` 56→91.2%, `navieraCondiciones.ts` 50→81.5%, `forecast.ts` 32→81%, `proveedoresCrud.ts` 55→75%. Batch C: `portal/queries.ts` 57→76.9%, `comisiones/vendedoras.ts` 48→86.4%, `cierreCheckFormatters.ts` 40→92.7%, `pdf/layoutContable.ts` 36→100%, `comisiones/devengadas.ts` 58→96%, `embarques/paginados.ts` 43→95.8%, `errorReport.ts` 20→83.3%. Corregidos TS errors en `forecast.test.ts` (uso de `total` inexistente → asserts en `porMes`/`porVendedor`) y `paginados.test.ts` (cast `args as Record<string, unknown>`).
 
