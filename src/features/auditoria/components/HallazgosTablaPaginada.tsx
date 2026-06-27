@@ -3,12 +3,14 @@
  * Composición: Filtros + Tabla + Paginación + Diálogo de revisión.
  * El estado vive en `useHallazgosTablaState`.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { revisionKey } from "@/features/auditoria/hooks";
 import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/features/auditoria/hooks";
 import { MarcarRevisadoDialog } from "@/features/auditoria/components/MarcarRevisadoDialog";
 import { AsignarResponsableDialog } from "@/features/auditoria/components/AsignarResponsableDialog";
+import { MarcarRevisadosBulkDialog } from "@/features/auditoria/components/MarcarRevisadosBulkDialog";
+import { HallazgosBulkBar } from "@/features/auditoria/components/HallazgosBulkBar";
 import { HallazgosFiltros } from "./HallazgosFiltros";
 import { HallazgosTabla } from "./HallazgosTabla";
 import { HallazgosPagination } from "./HallazgosPagination";
