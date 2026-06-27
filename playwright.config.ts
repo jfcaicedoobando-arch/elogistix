@@ -36,6 +36,7 @@ export default defineConfig({
   // globalSetup hace login una vez y persiste storageState en e2e/.auth/*.json.
   // Los projects de abajo lo consumen vía `use.storageState`.
   globalSetup: "./e2e/globalSetup.ts",
+  globalTeardown: "./e2e/globalTeardown.ts",
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   // Levanta el dev server sólo cuando apuntamos a localhost. En remoto (staging)
   // no toca nada. `reuseExistingServer` evita un segundo proceso si ya corre.
