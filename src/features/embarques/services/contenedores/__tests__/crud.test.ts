@@ -1,7 +1,7 @@
 /**
  * Tests CRUD de embarque_contenedores.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -16,6 +16,13 @@ import {
 } from "@/features/embarques/services/contenedores/crud";
 
 const EMB = "11111111-1111-4111-8111-111111111111";
+
+beforeEach(() => {
+  // Bajo singleFork los registros del mock se acumulan entre tests y producen
+  // falsos positivos en find(...). Vaciamos antes de cada test.
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+});
 
 describe("listarPorEmbarque", () => {
   it("devuelve la lista de la tabla embarque_contenedores", async () => {

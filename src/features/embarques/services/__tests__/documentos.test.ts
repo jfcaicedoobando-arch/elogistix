@@ -2,7 +2,7 @@
  * Tests for src/services/embarque/documentos.ts
  * Focused on resolverExpediente helper.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -17,6 +17,13 @@ vi.mock("@/services/storage/index", () => ({
 }));
 
 import { resolverExpediente } from "@/features/embarques/services/documentos";
+
+beforeEach(() => {
+  // Evita acoplamiento de orden entre tests bajo singleFork: limpia los
+  // registros de llamadas acumulados en el mock de Supabase.
+  mock.rpcCalls.length = 0;
+  mock.tableCalls.length = 0;
+});
 
 describe("resolverExpediente", () => {
   it("calls resolver_expediente_por_bl RPC when blMaster is provided", async () => {
