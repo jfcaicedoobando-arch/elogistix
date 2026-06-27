@@ -35,7 +35,7 @@ describe("useLoginAudit", () => {
   it("registra login al recibir evento SIGNED_IN", () => {
     mockSession.getItem.mockReturnValue(null);
     renderHook(() => useLoginAudit(FAKE_USER, "SIGNED_IN"));
-    vi.advanceTimersByTime(200);
+    act(() => { vi.advanceTimersByTime(200); });
     expect(mockInsert).toHaveBeenCalledWith("u1", "test@test.com");
   });
 
