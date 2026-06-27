@@ -15,7 +15,11 @@ export type ReglaAuditoria =
   | "proforma_vencida"
   | "proforma_borrador_abandonada"
   | "proforma_inconsistente"
-  | "embarque_huerfano";
+  | "embarque_huerfano"
+  // Fase 2 — Reglas fiscales (FacturAPI)
+  | "factura_sin_timbrar"
+  | "rep_pendiente"
+  | "factura_cancelada_sin_sustitucion";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 
