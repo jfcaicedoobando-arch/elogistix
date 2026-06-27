@@ -122,73 +122,25 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
 
       <CierreHistorialCard log={log} />
 
-      {/* Diálogo cerrar */}
-      <Dialog open={dlg.openCerrar} onOpenChange={dlg.setOpenCerrar}>
-        <DialogContent className={dialogSize.md}>
-          <DialogHeader>
-            <DialogTitle>Confirmar cierre del embarque</DialogTitle>
-            <DialogDescription>
-              Esta acción es <strong>irreversible</strong> sin intervención de un super admin.
-              Escribe <strong>CERRAR</strong> para confirmar.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-cerrar">Confirmación</Label>
-            <Input
-              id="confirm-cerrar"
-              value={dlg.confirmText}
-              onChange={(e) => dlg.setConfirmText(e.target.value)}
-              placeholder="CERRAR"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => dlg.setOpenCerrar(false)}>Cancelar</Button>
-            <Button
-              disabled={!dlg.puedeConfirmarCerrar || cerrarMut.isPending}
-              onClick={() =>
-                cerrarMut.mutate(undefined, { onSuccess: dlg.resetCerrar })
-              }
-            >
-              Cerrar embarque
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CerrarEmbarqueDialog
+        open={dlg.openCerrar}
+        onOpenChange={dlg.setOpenCerrar}
+        confirmText={dlg.confirmText}
+        onConfirmTextChange={dlg.setConfirmText}
+        puedeConfirmar={dlg.puedeConfirmarCerrar}
+        isPending={cerrarMut.isPending}
+        onConfirm={() => cerrarMut.mutate(undefined, { onSuccess: dlg.resetCerrar })}
+      />
 
-      {/* Diálogo reabrir */}
-      <Dialog open={dlg.openReabrir} onOpenChange={dlg.setOpenReabrir}>
-        <DialogContent className={dialogSize.md}>
-          <DialogHeader>
-            <DialogTitle>Reabrir embarque cerrado</DialogTitle>
-            <DialogDescription>
-              Describe el motivo (mínimo {CIERRE_MOTIVO_MIN} caracteres). Quedará registrado en bitácora.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="motivo-reapertura">Motivo</Label>
-            <Textarea
-              id="motivo-reapertura"
-              value={dlg.motivoReapertura}
-              onChange={(e) => dlg.setMotivoReapertura(e.target.value)}
-              rows={4}
-            />
-            <p className="text-xs text-muted-foreground">
-              {dlg.motivoReapertura.trim().length}/{CIERRE_MOTIVO_MIN} caracteres
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => dlg.setOpenReabrir(false)}>Cancelar</Button>
-            <Button
-              disabled={!dlg.puedeConfirmarReabrir || reabrirMut.isPending}
-              onClick={() =>
-                reabrirMut.mutate(dlg.motivoReapertura, { onSuccess: dlg.resetReabrir })
-              }
-            >
-              Reabrir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReabrirEmbarqueDialog
+        open={dlg.openReabrir}
+        onOpenChange={dlg.setOpenReabrir}
+        motivo={dlg.motivoReapertura}
+        onMotivoChange={dlg.setMotivoReapertura}
+        puedeConfirmar={dlg.puedeConfirmarReabrir}
+        isPending={reabrirMut.isPending}
+        onConfirm={() => reabrirMut.mutate(dlg.motivoReapertura, { onSuccess: dlg.resetReabrir })}
+      />
     </div>
   );
 }

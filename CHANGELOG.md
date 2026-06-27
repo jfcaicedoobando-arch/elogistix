@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.12] - 2026-06-27
+- **refactor(embarques) — Extraer diálogos de cierre/reapertura**. `TabCierre.tsx` bajó de 206 a ~145 líneas (cumple el baseline arquitectural de 200). Los dos `Dialog` viven ahora en `cierre/CierreDialogs.tsx` (`CerrarEmbarqueDialog` + `ReabrirEmbarqueDialog`) como componentes presentacionales puros.
+
 ## [13.139.11] - 2026-06-27
 - **feat(e2e) — Reporte consolidado de huérfanos + gate de CI por umbral**.
   - `e2e/globalTeardown.ts`: ahora escribe `test-results/e2e-orphans-report.json` y `.md` con `runId`, fecha, umbral, total y conteo por probe (incluye `auditoria_comentarios` y `pagos_factura`).
