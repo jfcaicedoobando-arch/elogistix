@@ -104,7 +104,10 @@ describe("useEmbarqueEstadoActions — early returns", () => {
   });
 
   it("handleReabrir no hace nada si no hay id", async () => {
-    const { result } = renderH({}, undefined);
+    const { result } = renderHook(
+      () => useEmbarqueEstadoActions({ ...base } as EmbarqueArg, undefined),
+      { wrapper: createWrapper() },
+    );
     await act(async () => { await result.current.handleReabrir(); });
     expect(h.reabrir).not.toHaveBeenCalled();
   });
