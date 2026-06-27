@@ -32,7 +32,7 @@ beforeEach(() => {
   mock.rpcCalls.length = 0;
 });
 
-describe("fetchEmbarquesPaginados", () => {
+describe("fetchEmbarquesPaginados (listado integration)", () => {
   it("calls embarques_listado RPC with pagination params", async () => {
     mock.setRpcResult("embarques_listado", { data: [], error: null });
     const result = await fetchEmbarquesPaginados(BASE_FILTERS);

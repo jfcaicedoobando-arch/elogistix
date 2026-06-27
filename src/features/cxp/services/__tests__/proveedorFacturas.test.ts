@@ -54,7 +54,7 @@ describe("proveedorFacturas service", () => {
       await expect(fetchFacturasCxP()).rejects.toThrow("Error fetch");
     });
 
-    it("maneja data null devolviendo array vacío", async () => {
+    it("maneja data null en fetchFacturasCxP devolviendo array vacío", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: null });
       const res = await fetchFacturasCxP();
       expect(res).toEqual([]);
@@ -74,7 +74,7 @@ describe("proveedorFacturas service", () => {
       expect(res).toBeNull();
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla fetchFacturaProveedor", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error fetch" } });
       await expect(fetchFacturaProveedor("f1")).rejects.toThrow("Error fetch");
     });
@@ -87,7 +87,7 @@ describe("proveedorFacturas service", () => {
       expect(res.id).toBe("f1");
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla crearFacturaProveedor", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error create" } });
       await expect(crearFacturaProveedor({} as any)).rejects.toThrow("Error create");
     });
@@ -113,7 +113,7 @@ describe("proveedorFacturas service", () => {
       expect(call?.ops.filter(o => o === "neq")).toHaveLength(2); // neq estado y neq id
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla existeFacturaDuplicada", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error check" } });
       await expect(existeFacturaDuplicada("p1", "f1", "2024-01-01")).rejects.toThrow("Error check");
     });
@@ -128,7 +128,7 @@ describe("proveedorFacturas service", () => {
       expect(payload.deleted_at).toBeDefined();
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla softDeleteFacturaProveedor", async () => {
       mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error delete" } });
       await expect(softDeleteFacturaProveedor("f1", "u1")).rejects.toThrow("Error delete");
     });
