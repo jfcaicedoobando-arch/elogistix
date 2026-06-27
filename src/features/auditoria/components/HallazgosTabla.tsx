@@ -100,7 +100,6 @@ export function HallazgosTabla({
     },
     { id: "sev", header: "Severidad", meta: { width: "w-[100px]" },
       cell: ({ row }) => {
-      cell: ({ row }) => {
         const sev = severidadConfig[row.original.severidad];
         return <Badge variant="outline" className={cn("text-[10px]", sev.className)}>{sev.label}</Badge>;
       } },
