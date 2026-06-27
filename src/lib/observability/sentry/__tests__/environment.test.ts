@@ -33,7 +33,9 @@ async function freshInit() {
     | undefined;
 }
 
-const originalLocation = window.location;
+// Auditoría 13.137.32: capturamos originalLocation dentro de beforeEach para
+// evitar snapshot contaminado si otro archivo del shard mutó window.location antes.
+let originalLocation: Location;
 
 function setHostname(host: string) {
   // jsdom: redefinir window.location de forma controlada.
@@ -44,6 +46,7 @@ function setHostname(host: string) {
 }
 
 beforeEach(() => {
+  originalLocation = window.location;
   sentryMock.init.mockClear();
   // Forzar MODE != development para que initSentry no se salga temprano.
   vi.stubEnv("MODE", "production");
