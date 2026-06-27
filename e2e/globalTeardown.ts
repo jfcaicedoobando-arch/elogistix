@@ -139,43 +139,13 @@ export default async function globalTeardown() {
       .catch(() => null);
 
     if (!handle || !handle.url || !handle.anonKey || !handle.accessToken) {
-      // eslint-disable-next-line no-console
       console.warn("[globalTeardown] sin sesión válida, salto el barrido de huérfanos.");
       writeReport(emptyResults, threshold, 0, runId);
       return;
     }
 
     for (const probe of PROBES) {
-      const qs = `${encodeURIComponent(probe.column)}=${encodeURIComponent(probe.filter)}&select=id`;
-      try {
-        const res = await fetch(`${handle.url}/rest/v1/${probe.table}?${qs}`, {
-          headers: {
-            apikey: handle.anonKey,
-            Authorization: `Bearer ${handle.accessToken}`,
-            Prefer: "count=exact",
-            Range: "0-0",
-          },
-        });
-        if (!res.ok) {
-          results.push({
-            table: probe.table,
-            column: probe.column,
-            count: 0,
-            error: `HTTP ${res.status}`,
-          });
-          continue;
-        }
-        const range = res.headers.get("content-range") ?? "0/0";
-        const count = Number(range.split("/")[1] ?? 0);
-        results.push({ table: probe.table, column: probe.column, count });
-      } catch (err) {
-        results.push({
-          table: probe.table,
-          column: probe.column,
-          count: 0,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
+      results.push(await probeOrphans(handle, probe));
     }
   } finally {
     await browser.close();
@@ -183,24 +153,51 @@ export default async function globalTeardown() {
 
   const total = results.reduce((acc, r) => acc + r.count, 0);
   writeReport(results, threshold, total, runId);
+  reportOutcome(results, total, threshold);
+}
 
+async function probeOrphans(
+  handle: { url: string; anonKey: string; accessToken: string },
+  probe: OrphanProbe,
+): Promise<ProbeResult> {
+  const qs = `${encodeURIComponent(probe.column)}=${encodeURIComponent(probe.filter)}&select=id`;
+  try {
+    const res = await fetch(`${handle.url}/rest/v1/${probe.table}?${qs}`, {
+      headers: {
+        apikey: handle.anonKey,
+        Authorization: `Bearer ${handle.accessToken}`,
+        Prefer: "count=exact",
+        Range: "0-0",
+      },
+    });
+    if (!res.ok) {
+      return { table: probe.table, column: probe.column, count: 0, error: `HTTP ${res.status}` };
+    }
+    const range = res.headers.get("content-range") ?? "0/0";
+    const count = Number(range.split("/")[1] ?? 0);
+    return { table: probe.table, column: probe.column, count };
+  } catch (err) {
+    return {
+      table: probe.table,
+      column: probe.column,
+      count: 0,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+function reportOutcome(results: ProbeResult[], total: number, threshold: number): void {
   const dirty = results.filter((t) => t.count > 0);
   if (dirty.length === 0) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `[globalTeardown] ✓ sin huérfanos E2E_TEST. Reporte: ${REPORT_MD}`,
-    );
+    console.log(`[globalTeardown] ✓ sin huérfanos E2E_TEST. Reporte: ${REPORT_MD}`);
   } else {
-    // eslint-disable-next-line no-console
     console.warn(
       `[globalTeardown] ⚠ huérfanos E2E_TEST detectados (total=${total}, umbral=${threshold}):\n` +
         dirty.map((t) => `  - ${t.table}.${t.column}: ${t.count}`).join("\n") +
         `\nReporte: ${REPORT_MD}`,
     );
   }
-
   if (total > threshold) {
-    // eslint-disable-next-line no-console
     console.error(
       `[globalTeardown] ❌ Total de huérfanos (${total}) supera el umbral configurado (${threshold}). Falla CI.`,
     );

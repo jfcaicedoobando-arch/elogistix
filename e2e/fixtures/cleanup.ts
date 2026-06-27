@@ -37,7 +37,7 @@ export async function bestEffortCleanup(
         })
         .catch(() => undefined);
     }
-    // eslint-disable-next-line no-console
+    
     console.warn(msg);
   }
 }
