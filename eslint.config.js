@@ -79,12 +79,15 @@ export default tseslint.config(
   },
   {
     // Exemptions: generated types, UI primitives (shadcn), data catalogs, and tests
+    // Exemptions: generated types, UI primitives (shadcn), data catalogs, tests
+    // y registries de rutas (sólo exportan lazy() components + objetos config).
     files: [
       "src/components/ui/**",
       "src/integrations/supabase/**",
       "src/data/changelogData.ts",
       "src/data/ports.ts",
       "src/content/changelog/**",
+      "src/routes/**",
       "**/*.test.ts",
       "**/*.test.tsx",
     ],
