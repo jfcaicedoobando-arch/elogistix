@@ -88,16 +88,36 @@ export function TabCierre({ embarqueId, estatus, modo }: Props) {
 
       <CierreChecklistCard isLoading={isLoading} checks={checks} embarqueId={embarqueId} informativo={esCerrado} />
 
-      <div className="flex flex-wrap gap-2">
-        {!esCerrado && canCerrarEmbarque && (
-          <Button
-            onClick={() => dlg.setOpenCerrar(true)}
-            disabled={!puedeCerrar || !todoOk || cerrarMut.isPending}
-          >
-            <Lock className="mr-2 h-4 w-4" />
-            Cerrar embarque
-          </Button>
-        )}
+      <div className="flex flex-wrap items-center gap-2">
+        {!esCerrado && canCerrarEmbarque && (() => {
+          const disabled = !puedeCerrar || !todoOk || cerrarMut.isPending;
+          const pendientes = checks.filter((c) => !c.ok).length;
+          const motivo = !listoParaCierre
+            ? (modo?.toLowerCase() === "marítimo"
+                ? "El embarque debe estar en EIR para cerrar."
+                : "El embarque debe estar en Entregado para cerrar.")
+            : pendientes > 0
+              ? `Faltan ${pendientes} pendiente${pendientes === 1 ? "" : "s"} del checklist.`
+              : null;
+          const btn = (
+            <Button
+              onClick={() => dlg.setOpenCerrar(true)}
+              disabled={disabled}
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Cerrar embarque
+            </Button>
+          );
+          if (!disabled || !motivo) return btn;
+          return (
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild><span tabIndex={0}>{btn}</span></TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-xs">{motivo}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        })()}
         {!esCerrado && !canCerrarEmbarque && (
           <p className="text-xs text-muted-foreground">
             El cierre del embarque es responsabilidad del <strong>coordinador logístico</strong>.
