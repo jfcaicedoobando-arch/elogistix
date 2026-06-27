@@ -34,7 +34,7 @@ describe("fetchEtapaTipos", () => {
     expect(m.size).toBe(0);
   });
 
-  it("propaga error supabase", async () => {
+  it("propaga error supabase en fetchEtapaTipos", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "err" } });
     await expect(fetchEtapaTipos()).rejects.toThrow("err");
   });

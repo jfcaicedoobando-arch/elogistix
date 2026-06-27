@@ -101,7 +101,7 @@ describe("proveedor/services/proveedoresCrud", () => {
       expect(call?.ops).not.toContain("eq");
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla fetchProveedoresLite", async () => {
       mock.setTableResult("proveedores", { data: null, error: { message: "err" } });
       await expect(fetchProveedoresLite()).rejects.toThrow("err");
     });
@@ -119,14 +119,14 @@ describe("proveedor/services/proveedoresCrud", () => {
       expect(res?.id).toBe("p1");
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla findProveedorByRfc", async () => {
       mock.setTableResult("proveedores", { data: null, error: { message: "err" } });
       await expect(findProveedorByRfc("x")).rejects.toThrow("err");
     });
   });
 
   describe("fetchProveedor", () => {
-    it("lanza error si falla", async () => {
+    it("lanza error si falla fetchProveedor", async () => {
       mock.setTableResult("proveedores", { data: null, error: { message: "err" } });
       await expect(fetchProveedor("id1")).rejects.toThrow("err");
     });
@@ -151,14 +151,14 @@ describe("proveedor/services/proveedoresCrud", () => {
   });
 
   describe("updateProveedor", () => {
-    it("lanza error si falla", async () => {
+    it("lanza error si falla updateProveedor", async () => {
       mock.setTableResult("proveedores", { data: null, error: { message: "err" } });
       await expect(updateProveedor("id1", {})).rejects.toThrow("err");
     });
   });
 
   describe("deleteProveedor", () => {
-    it("lanza error si falla", async () => {
+    it("lanza error si falla deleteProveedor", async () => {
       mock.setTableResult("proveedores", { data: null, error: { message: "err" } });
       await expect(deleteProveedor("id1")).rejects.toThrow("err");
     });

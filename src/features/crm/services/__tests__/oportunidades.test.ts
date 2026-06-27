@@ -23,7 +23,7 @@ describe("crearOportunidad", () => {
     expect(mock.tableCalls[0]?.ops).toContain("insert");
   });
 
-  it("propaga error supabase", async () => {
+  it("propaga error supabase en crearOportunidad", async () => {
     mock.setTableResult("crm_oportunidades", { data: null, error: { message: "err" } });
     await expect(crearOportunidad(validInput, null)).rejects.toThrow();
   });

@@ -42,12 +42,12 @@ describe("costeo/services/navieraCondiciones", () => {
       expect(res[0].proveedor_nombre).toBeNull();
     });
 
-    it("lanza error si falla", async () => {
+    it("lanza error si falla fetchCondicionesNaviera", async () => {
       mock.setTableResult("costeo_navieras_condiciones", { data: null, error: { message: "err" } });
       await expect(fetchCondicionesNaviera(ORG)).rejects.toThrow("err");
     });
 
-    it("maneja data null devolviendo array vacío", async () => {
+    it("maneja data null en fetchCondicionesNaviera devolviendo array vacío", async () => {
       mock.setTableResult("costeo_navieras_condiciones", { data: null, error: null });
       const res = await fetchCondicionesNaviera(ORG);
       expect(res).toEqual([]);
@@ -103,7 +103,7 @@ describe("costeo/services/navieraCondiciones", () => {
   });
 
   describe("deleteCondicionNaviera", () => {
-    it("lanza error si falla", async () => {
+    it("lanza error si falla deleteCondicionNaviera", async () => {
       mock.setTableResult("costeo_navieras_condiciones", { data: null, error: { message: "del err" } });
       await expect(deleteCondicionNaviera("c1")).rejects.toThrow("del err");
     });
