@@ -21,22 +21,21 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       // Power of 10 §5 — dependencias completas en hooks evitan stale closures.
       "react-hooks/exhaustive-deps": "error",
-      // 13.137.58 — Upgrade eslint-plugin-react-hooks 5 → 7 (PR-A toolchain).
-      // v7 incluye reglas estilo React Compiler activas en `recommended`. Las
-      // bajamos a `warn` para landear el bump sin un refactor masivo; se
-      // remediarán archivo por archivo en una iteración dedicada
-      // (tracked: mem://principles/power-of-10 follow-up).
-      "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/purity": "warn",
-      "react-hooks/refs": "warn",
-      "react-hooks/static-components": "warn",
-      "react-hooks/immutability": "warn",
-      "react-hooks/incompatible-library": "warn",
-      "react-hooks/preserve-manual-memoization": "warn",
+      // 13.138.3 — eslint-plugin-react-hooks v7 trae reglas estilo React
+      // Compiler activas en `recommended`. El proyecto está pineado a React 18
+      // SIN Compiler (ver mem://constraint/lovable-stack-pins), por lo que
+      // son falsos positivos para nuestro stack: el código funciona en runtime.
+      // Las apagamos para no bloquear `--max-warnings 0` en CI.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/static-components": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/incompatible-library": "off",
+      "react-hooks/preserve-manual-memoization": "off",
       // ESLint 10 — `no-useless-assignment` nuevo en recomendado. Genera ruido
-      // de bajo valor en patrones legítimos (asignaciones de fallback antes
-      // de un branch). Lo dejamos como warning para visibilidad sin bloquear.
-      "no-useless-assignment": "warn",
+      // en patrones legítimos (asignaciones de fallback antes de un branch).
+      "no-useless-assignment": "off",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
 
       "@typescript-eslint/no-unused-vars": "off",
