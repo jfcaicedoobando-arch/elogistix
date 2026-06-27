@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createSupabaseChainMock } from '@/test/utils/_supabaseChainMock';
 
-const { mockSupabase } = vi.hoisted(() => ({ mockSupabase: { current: null as any } }));
+const { mockSupabase } = vi.hoisted(() => ({ mockSupabase: { current: null as unknown as ReturnType<typeof createSupabaseChainMock>["supabase"] } }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   get supabase() {

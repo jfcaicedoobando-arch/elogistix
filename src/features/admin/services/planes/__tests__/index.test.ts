@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mock } = vi.hoisted(() => ({ mock: { current: null as any } }));
+const { mock } = vi.hoisted(() => ({ mock: { current: null as unknown as { supabase: unknown } } }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   get supabase() { return mock.current.supabase; },

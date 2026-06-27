@@ -60,7 +60,7 @@ describe("useEmbarqueForm", () => {
     // las microtasks de RHF resuelven fuera del boundary y React 18 puede
     // dejar updates colgados bajo singleFork.
     await act(async () => {
-      result.current.vincularCotizacion(mockCot as any);
+      result.current.vincularCotizacion(mockCot as Parameters<typeof result.current.vincularCotizacion>[0]);
     });
 
     expect(result.current.methods.getValues("clienteId")).toBe("cli-1");

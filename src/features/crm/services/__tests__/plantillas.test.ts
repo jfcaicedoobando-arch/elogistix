@@ -90,7 +90,8 @@ describe("services/crm/plantillas", () => {
     mock.setTableResult("crm_plantillas_mensaje", { data: null, error: null });
     await eliminarPlantilla("p1");
     const p = mock.getMutationPayload("crm_plantillas_mensaje", "update") as Record<string, unknown>;
-    expect(p.deleted_at).toBeTruthy();
+    expect(p.deleted_at).toEqual(expect.any(String));
+    expect(new Date(p.deleted_at as string).toString()).not.toBe("Invalid Date");
   });
 
   it("eliminarPlantilla propaga error", async () => {

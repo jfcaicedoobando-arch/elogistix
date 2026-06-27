@@ -2,7 +2,7 @@
  * Tests de aprobación/rechazo/reactivación de tarifas marítimas.
  * Verifica los parámetros del RPC y la validación de motivo de rechazo.
  */
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");

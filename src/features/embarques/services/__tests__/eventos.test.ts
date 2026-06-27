@@ -19,7 +19,7 @@ describe("fetchEventosEmbarque", () => {
     const result = await fetchEventosEmbarque(EMBARQUE_ID);
     expect(result).toEqual([]);
     const call = mock.tableCalls.find((c) => c.table === "eventos_embarque");
-    expect(call).toBeDefined();
+    expect(call).toMatchObject({ table: "eventos_embarque" });
     expect(call?.ops).toEqual(expect.arrayContaining(["select", "eq", "order"]));
   });
 
