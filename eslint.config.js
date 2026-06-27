@@ -95,6 +95,7 @@ export default tseslint.config(
       "max-lines": "off",
       "max-lines-per-function": "off",
       "complexity": "off",
+      "max-depth": "off",
       // Shadcn primitives y catálogos exportan variantes/constantes
       // junto al componente — patrón estándar, no impacta a HMR de pantallas.
       "react-refresh/only-export-components": "off",
