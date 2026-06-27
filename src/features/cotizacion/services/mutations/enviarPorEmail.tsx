@@ -117,8 +117,8 @@ async function invokeEnviarCotizacion<T = unknown>(body: Record<string, unknown>
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    if (msg === OFFLINE_MSG) throw new Error(OFFLINE_MSG, { cause: e });
-    throw new Error(`No se pudo contactar al servicio de correo: ${msg}. ${NETWORK_HINT}`, { cause: e });
+    if (msg === OFFLINE_MSG) throw Object.assign(new Error(OFFLINE_MSG), { cause: e });
+    throw Object.assign(new Error(`No se pudo contactar al servicio de correo: ${msg}. ${NETWORK_HINT}`), { cause: e });
   }
 
 

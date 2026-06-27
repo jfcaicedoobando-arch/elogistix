@@ -22,7 +22,7 @@ describe("listIdempotencyLog", () => {
     mock.setRpcResult("list_idempotency_log", { data: rows, error: null });
     const result = await listIdempotencyLog(50, 10);
     expect(result).toEqual(rows);
-    expect(mock.rpcCalls.at(-1)).toEqual({
+    expect(mock.rpcCalls[mock.rpcCalls.length - 1]).toEqual({
       fn: "list_idempotency_log",
       args: { _limit: 50, _offset: 10 },
     });
@@ -31,7 +31,7 @@ describe("listIdempotencyLog", () => {
   it("usa defaults limit=200 offset=0", async () => {
     mock.setRpcResult("list_idempotency_log", { data: [], error: null });
     await listIdempotencyLog();
-    expect(mock.rpcCalls.at(-1)?.args).toEqual({ _limit: 200, _offset: 0 });
+    expect(mock.rpcCalls[mock.rpcCalls.length - 1]?.args).toEqual({ _limit: 200, _offset: 0 });
   });
 
   it("propaga errores de la RPC", async () => {

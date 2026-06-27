@@ -81,7 +81,7 @@ describe("syncSentryUser", () => {
     // Garantía importante: el último setUser refleja el usuario actual.
     // (El SDK puede recibir 1-2 llamadas porque ambos .then se encolan; el
     // contrato del wrapper es "latest-wins sobre el valor", no "1 sola llamada").
-    const lastCall = sentryMocks.setUser.mock.calls.at(-1);
+    const lastCall = sentryMocks.setUser.mock.calls[sentryMocks.setUser.mock.calls.length - 1];
     expect(lastCall?.[0]).toEqual({ id: "u-2", email: "b@x.com" });
   });
 });
