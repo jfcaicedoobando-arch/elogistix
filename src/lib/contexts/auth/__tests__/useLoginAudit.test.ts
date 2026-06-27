@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 
 const { mockInsert, mockSession } = vi.hoisted(() => ({
   mockInsert: vi.fn(),
