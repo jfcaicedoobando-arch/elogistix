@@ -161,7 +161,7 @@ describe("Idempotencia A.3 — reintento tras error de red", () => {
     expect(ok.id).toBe(UUID_A);
 
     // Tras éxito, la UI resetea el id; el próximo submit usaría uno nuevo.
-    act(() => result.current.reset());
+    await act(async () => { result.current.reset(); });
     expect(result.current.get()).not.toBe(reqId);
 
     // Hubo 2 attempts pero sólo 1 creación efectiva.

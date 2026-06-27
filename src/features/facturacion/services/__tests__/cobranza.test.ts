@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   agruparSaldosPorMoneda,
   calcularKPIs,
@@ -23,6 +23,10 @@ const f = (over: Partial<FacturaCobranza> = {}): FacturaCobranza => ({
   estado_factura: "Emitida",
   tipo_cambio: 1,
   ...over,
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("agruparSaldosPorMoneda (cobranza — separación de monedas)", () => {
@@ -58,7 +62,6 @@ describe("agruparSaldosPorMoneda (cobranza — separación de monedas)", () => {
     expect(r.descartadas).toBe(1);
     expect(r.porMoneda.EUR).toBe(999);
     expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
   });
 
   it("precisión: 0.1 + 0.1 + 0.1 === 0.3 (vía currency.js)", () => {
@@ -110,6 +113,6 @@ describe("calcularKPIs (cobranza — consistencia con agruparSaldosPorMoneda)", 
     expect(k.vencido_mxn).toBe(0);
     expect(k.vencido_usd).toBe(0);
     expect(k.facturas_vencidas).toBe(0);
-    warn.mockRestore();
+    expect(warn).toHaveBeenCalled();
   });
 });

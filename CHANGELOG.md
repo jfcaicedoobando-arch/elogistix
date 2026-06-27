@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.37] - 2026-06-27
+- **fix(tests/shard 3) — estabilización tras fallo CI**: auditado el shard 3 con subagentes y aplicado hardening contra flakes: wrappers `nuqs` con memoria por test, `act()` asíncronos, resets completos de mocks Supabase, mocks hoisted seguros, timers fijos en lógica de fechas y cleanup de spies. Verificado localmente con `bun run test:coverage:shard -- --shard=3/12` exitoso.
+
 ## [13.137.36] - 2026-06-27
 - **fix(tests/shard 6) — auditoría línea-por-línea de 46 archivos sin correr el shard**: 3 subagentes en paralelo (A/B/C). 10 bugs concretos corregidos:
   - `useCierreDialog.test.ts`: 10 `act()` síncronos sin `await` → ahora todos `await act(async …)`.

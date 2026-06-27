@@ -40,6 +40,9 @@ beforeEach(() => {
   mockById.mockReset();
   mockVenta.mockReset();
   mockCosto.mockReset();
+  mockPaginados.mockReset();
+  mockExpedientes.mockReset();
+  mockProveedores.mockReset();
 });
 
 describe("useEmbarque", () => {

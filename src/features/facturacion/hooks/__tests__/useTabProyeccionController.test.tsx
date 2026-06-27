@@ -25,8 +25,10 @@ vi.mock("@/hooks/shared", () => ({
 import { useTabProyeccionController } from "../useTabProyeccionController";
 
 function wrapperFor(url = "/facturacion") {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  (globalThis as unknown as { __TEST_QUERY_CLIENT__?: QueryClient }).__TEST_QUERY_CLIENT__ = qc;
+
   return ({ children }: { children: React.ReactNode }) => {
-    const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
     return (
       <QueryClientProvider client={qc}>
         <MemoryRouter initialEntries={[url]}>{children}</MemoryRouter>

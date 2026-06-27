@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER } from "../rutaEstado";
 import type { CosteoRuta } from "@/features/costeo/types";
 
@@ -20,6 +20,15 @@ function makeRuta(overrides: Partial<CosteoRuta>): CosteoRuta {
 }
 
 describe("computeRutaEstado", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-15T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("inactiva cuando el flag activa es false", () => {
     const meta = computeRutaEstado(makeRuta({ activa: false, tarifas_vigentes_count: 5 }));
     expect(meta.key).toBe("inactiva");

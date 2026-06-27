@@ -13,24 +13,12 @@ vi.mock("@/lib/downloadBlob", () => ({
 
 import { descargarPdf } from "../descargarPdf";
 
-// Auditoría 13.137.32: migrado de beforeAll/afterAll a beforeEach/afterEach para
-// garantizar restauración de URL.createObjectURL/revokeObjectURL entre cada test
-// del archivo. Asegura que cualquier excepción intermedia no deje contaminado
-// el global URL para tests subsiguientes del shard.
-let origCreateObjectURL: typeof URL.createObjectURL;
-let origRevokeObjectURL: typeof URL.revokeObjectURL;
-
 beforeEach(() => {
-  origCreateObjectURL = URL.createObjectURL;
-  origRevokeObjectURL = URL.revokeObjectURL;
-  URL.createObjectURL = vi.fn(() => "mock-url");
-  URL.revokeObjectURL = vi.fn();
   descargarBlobMock.mockClear();
 });
 
 afterEach(() => {
-  URL.createObjectURL = origCreateObjectURL;
-  URL.revokeObjectURL = origRevokeObjectURL;
+  vi.restoreAllMocks();
 });
 
 describe("pdf/render/descargarPdf", () => {
@@ -47,7 +35,6 @@ describe("pdf/render/descargarPdf", () => {
     const [blobArg, nameArg] = descargarBlobMock.mock.calls[0];
     expect(blobArg).toBeInstanceOf(Blob);
     expect(nameArg).toBe("mi-documento.pdf");
-    pdfSpy.mockRestore();
   });
 
   it("conserva la extensión .pdf si ya está incluida", async () => {
@@ -56,7 +43,7 @@ describe("pdf/render/descargarPdf", () => {
   });
 
   it("propaga el error si toBlob falla", async () => {
-    const pdfSpy = vi.spyOn(ReactPDF, "pdf").mockReturnValueOnce({
+    vi.spyOn(ReactPDF, "pdf").mockReturnValueOnce({
       toBlob: () => Promise.reject(new Error("render fail")),
       toBuffer: () => Promise.resolve(new Uint8Array()),
       toString: () => Promise.resolve(""),
@@ -65,6 +52,5 @@ describe("pdf/render/descargarPdf", () => {
       descargarPdf(React.createElement("div") as never, "x"),
     ).rejects.toThrow("render fail");
     expect(descargarBlobMock).not.toHaveBeenCalled();
-    pdfSpy.mockRestore();
   });
 });

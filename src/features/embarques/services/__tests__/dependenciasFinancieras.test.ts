@@ -14,6 +14,7 @@ function setEmpty(table: string) {
 import { fetchEmbarqueDependenciasFinancieras } from "@/features/embarques/services/dependenciasFinancieras";
 
 beforeEach(() => {
+  mock.resetResults();
   mock.tableCalls.length = 0;
 });
 

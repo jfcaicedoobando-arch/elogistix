@@ -16,6 +16,7 @@ import {
 } from "@/features/admin/services/organizations";
 
 beforeEach(() => {
+  mock.resetResults();
   mock.tableCalls.length = 0;
 });
 
