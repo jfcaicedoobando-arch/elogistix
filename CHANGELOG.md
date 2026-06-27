@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.28] - 2026-06-27
+- **fix(tests) — oleada 1 (CRÍTICA + ALTA) de fixes de auditoría 12 shards**: aplicados los patrones más severos detectados por los 12 subagentes.
+  - CRÍTICA · `pdfLeak.test.tsx`: el loop de 200 renders ahora usa `try { ... } finally { unmount(); cleanup(); }` por iteración para garantizar desmontaje aunque `render()` lance — sin esto una sola excepción dejaba el árbol RTL montado e inflaba el heap del canary.
+  - CRÍTICA · `cliente/services/csf/__tests__/index.test.ts`: migrado `global.fetch = vi.fn()` a `vi.stubGlobal("fetch", ...)` + `afterEach(vi.unstubAllGlobals)` para evitar leak transversal del mock entre archivos del shard bajo singleFork.
+  - CRÍTICA · `embarques/services/__tests__/mutations.test.ts`: agregado `beforeEach` que limpia `mock.rpcCalls.length = 0` y `mock.tableCalls.length = 0` del `createSupabaseMock` hoisted; sin esto los `.find(c => c.fn === "...")` podían matchear llamadas stale de tests previos.
+  - ALTA · 4 archivos con asignación directa a `global.fetch` / `globalThis.fetch` (`tracking/__tests__/tracking.test.ts`, `cliente/services/__tests__/csfService.test.ts`, `facturacion/services/__tests__/descargarCfdiFacturapi.test.ts`, `cotizacion/services/mutations/__tests__/enviarPorEmail.test.ts`) migrados a `vi.stubGlobal("fetch", ...)` + `vi.unstubAllGlobals()` en `afterEach`. Restauración de `originalFetch` ya no es necesaria — el setup global revierte automático.
+- Sin cambios en `vitest.config.ts` ni en `src/test/setup.ts`. Validación de tipos (`tsgo`) limpia.
+
 ## [13.137.27] - 2026-06-27
 - **fix(tests) — hallazgos BAJA de auditoría shards 2/12 y 6/12**: cerrados todos los pendientes cosméticos detectados por los subagentes para dejar la suite 100% limpia.
   - Imports de `vi` agregados en `aprobacion.test.ts`, `demorasVenta.test.ts`, `rutas.test.ts` y `conversiones/embarques.test.ts` (funcionaban por `globals: true`, pero la regla del proyecto es importar explícito — ver `mem://technical/testing-mock-patterns`).
