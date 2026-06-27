@@ -15,6 +15,11 @@ vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", async () => {
   );
   return { ...actual, useAuditoriaRevisiones: vi.fn() };
 });
+vi.mock("@/features/auditoria/hooks/useAuditoriaSnapshots", () => ({
+  useAuditoriaSnapshots: vi.fn(() => ({ data: [], isLoading: false })),
+  useAutoCapturarSnapshot: vi.fn(),
+  useCapturarSnapshotAuditoria: vi.fn(),
+}));
 
 import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import { useAuditoriaRevisiones } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
