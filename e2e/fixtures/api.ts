@@ -53,13 +53,24 @@ async function readHandle(page: Page): Promise<SupabaseHandle> {
   return handle;
 }
 
+// Operadores PostgREST conocidos — si el valor empieza con uno de estos
+// seguidos de `.`, se pasa tal cual; cualquier otro valor se serializa como `eq.<v>`.
+const PGRST_OPS = /^(eq|neq|gt|gte|lt|lte|like|ilike|in|is|cs|cd|sl|sr|nxr|nxl|adj|ov|fts|plfts|phfts|wfts)\./;
+
+function buildQs(match: Record<string, string>): string {
+  return Object.entries(match)
+    .map(([k, v]) => {
+      const value = PGRST_OPS.test(v) ? v : `eq.${v}`;
+      return `${encodeURIComponent(k)}=${encodeURIComponent(value)}`;
+    })
+    .join("&");
+}
+
 export function supabaseRest(page: Page) {
   return {
     async patch(table: string, match: Record<string, string>, payload: Record<string, unknown>) {
       const h = await readHandle(page);
-      const qs = Object.entries(match)
-        .map(([k, v]) => `${encodeURIComponent(k)}=eq.${encodeURIComponent(v)}`)
-        .join("&");
+      const qs = buildQs(match);
       const res = await fetch(`${h.url}/rest/v1/${table}?${qs}`, {
         method: "PATCH",
         headers: {
@@ -74,9 +85,7 @@ export function supabaseRest(page: Page) {
     },
     async delete(table: string, match: Record<string, string>) {
       const h = await readHandle(page);
-      const qs = Object.entries(match)
-        .map(([k, v]) => `${encodeURIComponent(k)}=eq.${encodeURIComponent(v)}`)
-        .join("&");
+      const qs = buildQs(match);
       const res = await fetch(`${h.url}/rest/v1/${table}?${qs}`, {
         method: "DELETE",
         headers: {
