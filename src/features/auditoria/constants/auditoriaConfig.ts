@@ -109,13 +109,37 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
       "Embarques activos sin operador asignado o sin movimientos recientes en bitácora.",
     icon: Clock,
   },
+  factura_sin_timbrar: {
+    shortLabel: "Factura sin timbrar",
+    label: "Facturas sin timbrar",
+    description:
+      "Facturas creadas hace más de 48 horas que siguen sin timbrarse ante el SAT vía FacturAPI.",
+    icon: Stamp,
+  },
+  rep_pendiente: {
+    shortLabel: "REP pendiente",
+    label: "Recibo Electrónico de Pago pendiente",
+    description:
+      "Pago aplicado a una factura PPD cuyo REP lleva más de 72 horas sin emitirse.",
+    icon: FileCheck,
+  },
+  factura_cancelada_sin_sustitucion: {
+    shortLabel: "Cancelada sin sustitución",
+    label: "Factura cancelada motivo 01 sin sustituta",
+    description:
+      "Factura cancelada con motivo SAT 01 (sustitución) sin folio sustituto emitido tras 24 horas.",
+    icon: Ban,
+  },
 };
 
 /** Orden canónico de presentación (mayor severidad operativa primero). */
 export const REGLAS_ORDEN: ReglaAuditoria[] = [
+  "factura_cancelada_sin_sustitucion",
   "docs_pendientes_avanzado",
   "ventas_sin_facturar",
   "margen_negativo",
+  "factura_sin_timbrar",
+  "rep_pendiente",
   "margen_bajo",
   "proforma_inconsistente",
   "proforma_vencida",
