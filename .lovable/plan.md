@@ -1,59 +1,44 @@
-## Objetivo
+## Diagnóstico
 
-Aplicar los hallazgos del reporte de auditoría de los 12 shards en 3 oleadas secuenciales, con paralelismo dentro de cada oleada vía subagentes, y bumpear la versión + actualizar `CHANGELOG.md` al final de cada oleada.
+El shard 5/20 sale con `exit 1` pero los logs **no muestran qué test falló**. ¿Por qué? El script `test:coverage:shard` corre vitest con `--reporter=blob` (necesario para fusionar cobertura), y ese reporter sólo escribe un archivo JSON — no imprime fallas en stdout. Por eso vemos el `Coverage summary` y luego `exited with code 1`, sin pista alguna del test culpable.
 
-## Estrategia general
+Encima ya tenemos `--retry=2`, así que la falla sobrevivió 3 intentos: no es flake, es un test reproduciblemente roto en CI (probablemente sensible al entorno, no a la máquina local — por eso pasa cuando lo corremos en el sandbox).
 
-- **1 subagente por shard** dentro de cada oleada, en paralelo, pero esta vez **con permiso de edición** (no read-only): cada uno aplica sólo los fixes de la severidad de la oleada actual en sus archivos.
-- **Sin correr tests** durante la aplicación (igual que la auditoría). La validación final se hace una sola vez al cierre de cada oleada con `tsgo` (typecheck) — los runs de vitest los dispara el CI.
-- **Bump de versión PATCH** al final de cada oleada (3 bumps totales) + entrada en `CHANGELOG.md` describiendo qué patrones se corrigieron y en cuántos archivos.
+**Analogía**: es como si el shard 5 te dijera "reprobé el examen" pero sin mostrarte qué pregunta falló, porque está usando un formato de respuesta que sólo entiende la máquina calificadora.
 
-## Oleada 1 — CRÍTICA + ALTA
+## Plan
 
-Patrones a corregir (del reporte consolidado):
+### 1. Hacer visibles las fallas del shard (cambio en `package.json`)
+Agregar el reporter `default` junto al `blob` para que stdout muestre el test que falla, sin perder la fusión de cobertura:
 
-1. **`pdfLeak.test.tsx`**: envolver el loop de 200 renders en `try/finally` con `cleanup()` por iteración.
-2. **`csf/__tests__/index.test.ts`**: reemplazar `global.fetch = vi.fn()` por `vi.stubGlobal("fetch", …)` + `afterEach(vi.unstubAllGlobals)`.
-3. **`embarques/services/__tests__/mutations.test.ts` y `listado.test.ts`**: agregar `mock.rpcCalls.length = 0` y `mock.tableCalls.length = 0` en `beforeEach`.
-4. **Leaks de globals (ALTA, transversal)**: en todos los tests del shard, reemplazar asignaciones directas a `global.fetch`, `global.navigator`, `global.URL`, `window.matchMedia`, etc. por `vi.stubGlobal(…)` + cleanup.
-5. **`QueryClient` compartido (ALTA)**: mover instanciación de `QueryClient` fuera del cuerpo del wrapper a una factory por test, usando el helper `createWrapper` de `src/test/utils/queryWrapper.tsx`.
-6. **Mock hygiene (ALTA)**: en mocks `vi.hoisted` a nivel de módulo, agregar `vi.clearAllMocks()` (o `mockReset` específico) en `beforeEach` cuando falte.
+```
+vitest run --coverage --reporter=blob --reporter=default --retry=2 ...
+```
 
-Cierre de oleada:
-- Bump `APP_VERSION` (PATCH) en `src/constants/appVersion.ts`.
-- Nueva entrada en `CHANGELOG.md` raíz: `## [X.Y.Z] - YYYY-MM-DD` + bullets resumiendo patrones corregidos y nº de archivos por shard.
+El `blob` sigue escribiendo el JSON para el merge; el `default` imprime el resumen de tests fallidos en el log de CI. Sin esto, no podemos diagnosticar shards que truenen en el futuro.
 
-## Oleada 2 — MEDIA
+### 2. Reproducir shard 5 localmente para encontrar el test que falla
+Correr en el sandbox exactamente el mismo comando que CI:
 
-Patrones:
+```
+vitest run --reporter=default --shard=5/20
+```
 
-1. **Timers reales frágiles**: reemplazar `await new Promise(r => setTimeout(r, 5))` / 10ms por `await Promise.resolve()` (microtask flush) o `vi.runAllTimersAsync()` cuando ya hay fake timers activos.
-2. **Mocks manuales de Supabase**: migrar a `createSupabaseMock()` de `@/services/__tests__/_supabaseChainMock` donde el patrón es estándar (cadena `from().select()…`).
-3. **`act()` sin `await`**: convertir `act(() => userTrigger())` en `await act(async () => { … })` cuando el callback dispara updates async.
+Identificar el (los) archivo(s) fallidos. Hay 28 archivos en ese shard — probable que el culpable sea uno sensible a:
+- Variables de entorno faltantes en CI (CI tiene ramps distintos a local)
+- Orden de ejecución / state leak entre tests dentro del fork
+- Timing (timers reales vs fake) bajo carga del runner de GitHub
 
-Cierre de oleada: bump PATCH + CHANGELOG.
+### 3. Reparar el test detectado
+Aplicar el fix puntual (reset de mocks, `vi.useFakeTimers({ toFake: ["Date"] })`, mock de env, etc.) según el patrón que ya está documentado en `mem://technical/testing-mock-patterns` y `mem://technical/testing-cleanup-protocol`.
 
-## Oleada 3 — BAJA
+### 4. Verificar y bumpear versión
+- Correr `vitest run --shard=5/20` localmente para confirmar verde
+- Actualizar `CHANGELOG.md` + `APP_VERSION` (bump patch)
 
-Patrones:
+## Lo que NO haré
+- No volveré a bajar el umbral de cobertura (regla `mem://principles/coverage-threshold`).
+- No quitaré `--retry=2` — sólo agregaré visibilidad.
+- No tocaré tests ajenos al shard 5.
 
-1. **Asserts débiles**: `toBeDefined()` solo → `toMatchObject({...})` o `toEqual({...})` con campos clave.
-2. **Cleanup duplicado**: remover `cleanup()` manual en `afterEach` donde el setup global ya lo hace (`src/test/setup.ts`).
-3. **Títulos duplicados de tests** dentro del mismo `describe`: renombrar para distinguir el caso.
-4. **Imports no usados** en archivos de test detectados por la auditoría.
-
-Cierre de oleada: bump PATCH + CHANGELOG + opcionalmente nueva memoria `mem://technical/testing-globals-stubbing` documentando la regla `vi.stubGlobal` (si la oleada 1 deja patrón consolidado).
-
-## Detalles técnicos
-
-- **Modelo de subagentes**: `capable` (los fixes requieren entender contexto del test y no romper aserciones).
-- **Reparto**: misma partición de 12 shards que la auditoría — cada subagente recibe inline la lista de archivos y los fixes específicos a aplicar de su reporte.
-- **Restricción**: cada subagente sólo toca archivos de su shard y sólo aplica patrones de la severidad de la oleada actual. No bumpea versión (eso lo hago yo al cierre).
-- **Validación**: tras cada oleada, corro `bunx tsgo --noEmit` para confirmar que no se rompió tipado. Los tests los corre el CI al hacer push.
-- **Rollback**: si una oleada introduce regresiones, revertimos sólo esa oleada (commits separados por bump).
-
-## Lo que NO incluye
-
-- Cambios en `vitest.config.ts` ni en `src/test/setup.ts` (a menos que un fix lo requiera explícitamente — en ese caso te pregunto antes).
-- Refactor estructural de tests (sólo fixes puntuales del reporte).
-- Correr la suite completa local (lo hace CI).
+¿Lo apruebas y procedo?

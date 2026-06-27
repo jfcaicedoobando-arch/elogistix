@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.45] - 2026-06-27
+- **fix(ci) — visibilidad de fallas en shards de tests**: el script `test:coverage:shard` usaba solo `--reporter=blob`, que escribe JSON pero no imprime tests fallidos. Cuando un shard reventaba en CI veíamos solo `exit 1` sin pista alguna del culpable (caso shard 5/20 hoy). Agregado `--reporter=default` en paralelo: blob sigue alimentando el merge de cobertura y default imprime el resumen de fallas en stdout. Próximo fallo en CI será diagnosticable directo del log.
+
 ## [13.137.44] - 2026-06-27
 - **fix(ci) — shard 5/20 fallaba con exit 1 sin fallos visibles**: el reporter `blob` suprime la salida de tests, así que cuando un test se ponía flaky en CI sólo veíamos el resumen de coverage y `exit 1`. Localmente los 28 archivos pasan (204 tests). Agregamos `--retry=2` al script `test:coverage:shard` para que vitest reintente automáticamente los tests intermitentes antes de marcar el shard como rojo. No cambia el comportamiento de la suite estable.
 
