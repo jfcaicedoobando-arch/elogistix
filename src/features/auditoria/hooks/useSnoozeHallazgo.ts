@@ -30,6 +30,23 @@ export function useSnoozeHallazgo() {
       if (!user) throw new Error("Sesión no válida");
       if (!organizationId) throw new Error("Organización no resuelta");
       const { hallazgo, snoozedUntil, motivo } = params;
+
+      // Validación cliente (espejo del trigger BD `validar_snooze_auditoria`):
+      // fechas pasadas se rechazan y snooze > 30 días exige motivo >= 20 chars.
+      const hoyIso = new Date().toISOString().slice(0, 10);
+      if (snoozedUntil < hoyIso) {
+        throw new Error("No se puede silenciar un hallazgo en el pasado");
+      }
+      const dias = Math.round(
+        (Date.parse(`${snoozedUntil}T00:00:00Z`) - Date.parse(`${hoyIso}T00:00:00Z`)) / 86_400_000,
+      );
+      const motivoLen = (motivo ?? "").trim().length;
+      if (dias > 30 && motivoLen < 20) {
+        throw new Error(
+          "Silenciar más de 30 días requiere un motivo justificado de al menos 20 caracteres",
+        );
+      }
+
       const detalleHash = hallazgoHash(hallazgo);
       const data = await snoozeRevision({
         organization_id: organizationId,
@@ -40,6 +57,7 @@ export function useSnoozeHallazgo() {
         snoozed_until: snoozedUntil,
         snooze_motivo: motivo,
       });
+
 
       try {
         await insertBitacora({
