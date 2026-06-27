@@ -21,6 +21,9 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   factura_sin_timbrar: "facturacion",
   rep_pendiente: "facturacion",
   factura_cancelada_sin_sustitucion: "facturacion",
+  cxc_vencida: "facturacion",
+  cxp_por_capturar_estancada: "facturacion",
+  cxp_vencida: "facturacion",
 };
 
 interface Props {
