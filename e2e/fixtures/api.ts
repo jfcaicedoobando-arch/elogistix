@@ -45,7 +45,10 @@ async function readHandle(page: Page): Promise<SupabaseHandle> {
     };
   });
   if (!handle || !handle.url || !handle.anonKey || !handle.accessToken) {
-    throw new Error("no se pudo obtener handle Supabase desde el page");
+    throw new Error(
+      "supabaseRest: no hay sesión en el page (sb-*-auth-token ausente o sin access_token). " +
+        "¿Olvidaste llamar a loginAs(page) antes del cleanup?",
+    );
   }
   return handle;
 }
