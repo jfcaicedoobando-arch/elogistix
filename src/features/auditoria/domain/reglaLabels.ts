@@ -22,7 +22,7 @@ export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   rep_pendiente: "REP pendiente",
   factura_cancelada_sin_sustitucion: "Cancelada sin sustitución",
   cxc_vencida: "CXC vencida",
-  cxp_por_capturar_estancada: "CXP por capturar estancada",
+  cxp_por_capturar_estancada: "CXP por capturar",
   cxp_vencida: "CXP vencida",
 };
 
