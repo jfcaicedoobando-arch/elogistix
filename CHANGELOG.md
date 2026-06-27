@@ -6,6 +6,27 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.30] - 2026-06-27
+- **fix(tests) — oleada 3 (BAJA) de fixes de auditoría 12 shards**: limpieza cosmética final.
+  - `ReporteEjecutivoDocument.test.tsx`: eliminado `afterEach(() => { cleanup(); })` redundante — `src/test/setup.ts` ya ejecuta `cleanup()` global tras cada test. Imports de `cleanup` y `afterEach` removidos. Único archivo de la suite que aún tenía este patrón.
+  - Sub-auditoría de aserciones débiles (`toBeDefined`, `toBeTruthy`, `expect.any(Function)` solitario): la mayoría ya fueron reforzadas en `13.137.27` (`bitacoraDescripcion.extra`, `plantillas`, `eventos`). Scan final no encontró matches residuales en archivos no tocados.
+- Con esta oleada queda cerrado el ciclo completo de auditoría (CRÍTICA → ALTA → MEDIA → BAJA) iniciado en `13.137.27` con los 12 subagentes paralelos. Suite estable, sin leaks transversales conocidos y con setup global como única fuente de cleanup.
+
+## [13.137.29] - 2026-06-27
+- **fix(tests) — oleada 2 (MEDIA) de fixes de auditoría 12 shards**: reducción de latencia y revisión de los patrones MEDIA reportados.
+  - 6 archivos con `await new Promise((r) => setTimeout(r, 5|10|15))` usados como flush de dynamic imports (`useAuthSession.sentry.test.ts`, `sentry/user.test.ts`, `reportCaughtError.test.ts`, `queryClient.sentry.test.ts`, `exchangeRates.sentry.test.ts`, `useDialogGenerarProformaController.test.tsx`) migrados a `setTimeout(r, 0)`. Sigue siendo un macrotask hop (requerido para que `.then` del dynamic import drene), pero acelera ~30 ms acumulados por shard y elimina el riesgo si en el futuro algún test activa fake timers en el mismo archivo (el 0 ms es lo mínimo que `setSystemTime` puede saltar).
+  - Sub-auditoría de `act(() => …)` síncronos: revisados los 40+ matches reportados. La mayoría envuelven setters realmente síncronos (`setActiveTab`, `setSearch`, `set("empresa", …)`, `vi.advanceTimersByTime`); NO requieren `await act(async () => …)`. Los casos asíncronos reales (`vincularCotizacion`, `handleResponder`) ya fueron migrados en oleadas anteriores (`13.137.25`).
+  - Sub-auditoría de mocks manuales de Supabase: la mayoría son hooks/services específicos donde `createSupabaseMock` no aplica (mockean RPCs concretos con shapes ad-hoc). Sin migración masiva — se deja para revisión caso a caso si genera flakiness real.
+- Sin cambios en código de producción ni en `vitest.config.ts`. Tipos validados con `tsgo`.
+
+## [13.137.28] - 2026-06-27
+- **fix(tests) — oleada 1 (CRÍTICA + ALTA) de fixes de auditoría 12 shards**: aplicados los patrones más severos detectados por los 12 subagentes.
+  - CRÍTICA · `pdfLeak.test.tsx`: el loop de 200 renders ahora usa `try { ... } finally { unmount(); cleanup(); }` por iteración para garantizar desmontaje aunque `render()` lance — sin esto una sola excepción dejaba el árbol RTL montado e inflaba el heap del canary.
+  - CRÍTICA · `cliente/services/csf/__tests__/index.test.ts`: migrado `global.fetch = vi.fn()` a `vi.stubGlobal("fetch", ...)` + `afterEach(vi.unstubAllGlobals)` para evitar leak transversal del mock entre archivos del shard bajo singleFork.
+  - CRÍTICA · `embarques/services/__tests__/mutations.test.ts`: agregado `beforeEach` que limpia `mock.rpcCalls.length = 0` y `mock.tableCalls.length = 0` del `createSupabaseMock` hoisted; sin esto los `.find(c => c.fn === "...")` podían matchear llamadas stale de tests previos.
+  - ALTA · 4 archivos con asignación directa a `global.fetch` / `globalThis.fetch` (`tracking/__tests__/tracking.test.ts`, `cliente/services/__tests__/csfService.test.ts`, `facturacion/services/__tests__/descargarCfdiFacturapi.test.ts`, `cotizacion/services/mutations/__tests__/enviarPorEmail.test.ts`) migrados a `vi.stubGlobal("fetch", ...)` + `vi.unstubAllGlobals()` en `afterEach`. Restauración de `originalFetch` ya no es necesaria — el setup global revierte automático.
+- Sin cambios en `vitest.config.ts` ni en `src/test/setup.ts`. Validación de tipos (`tsgo`) limpia.
+
 ## [13.137.27] - 2026-06-27
 - **fix(tests) — hallazgos BAJA de auditoría shards 2/12 y 6/12**: cerrados todos los pendientes cosméticos detectados por los subagentes para dejar la suite 100% limpia.
   - Imports de `vi` agregados en `aprobacion.test.ts`, `demorasVenta.test.ts`, `rutas.test.ts` y `conversiones/embarques.test.ts` (funcionaban por `globals: true`, pero la regla del proyecto es importar explícito — ver `mem://technical/testing-mock-patterns`).

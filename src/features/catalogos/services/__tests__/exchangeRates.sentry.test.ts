@@ -30,7 +30,7 @@ afterEach(() => vi.clearAllMocks());
 
 async function flush() {
   for (let i = 0; i < 6; i++) await Promise.resolve();
-  await new Promise((r) => setTimeout(r, 5));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 describe("fetchExchangeRates — captureException", () => {

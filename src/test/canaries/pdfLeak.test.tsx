@@ -14,7 +14,7 @@
  * Requiere `--expose-gc` (configurado en `vitest.config.ts` execArgv).
  */
 import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { render, cleanup } from "@testing-library/react";
 import { ProformaDocument } from "@/pdf/documents/ProformaDocument";
 
 const proforma = {
@@ -52,10 +52,18 @@ describe("PDF leak canary (200 renders)", () => {
     const heapBefore = process.memoryUsage().heapUsed;
 
     for (let i = 0; i < 200; i++) {
+      // try/finally + cleanup() asegura desmontaje aunque render() lance
+      // (auditoría 13.137.28 - CRÍTICA: sin esto, una excepción dejaba el
+      // árbol RTL montado e inflaba el heap del loop).
       const { unmount } = render(
         <ProformaDocument proforma={proforma as any} embarque={embarque as any} conceptos={[concepto as any]} />,
       );
-      unmount();
+      try {
+        // render exitoso; no hay aserciones por iteración.
+      } finally {
+        unmount();
+        cleanup();
+      }
     }
 
     gc();

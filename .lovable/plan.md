@@ -1,52 +1,59 @@
 ## Objetivo
 
-Auditar **línea por línea** los archivos de test de los 12 shards del CI (`--shard=N/12`), **sin correr los tests**, para detectar bugs latentes, leaks, races, mocks colgados, asserts débiles, hygiene issues, etc. Cada shard lo audita 1 subagente independiente en paralelo.
+Aplicar los hallazgos del reporte de auditoría de los 12 shards en 3 oleadas secuenciales, con paralelismo dentro de cada oleada vía subagentes, y bumpear la versión + actualizar `CHANGELOG.md` al final de cada oleada.
 
-## Por qué 1 agente por shard
+## Estrategia general
 
-- Cada shard tiene ~45 archivos de test → cabe holgadamente en el contexto de un subagente `capable`.
-- Paralelismo total (12 a la vez) → tiempo de auditoría ≈ tiempo de 1 shard.
-- Aísla hallazgos por shard, lo que facilita correlacionar con timeouts/coverage drops del CI.
-- Cada subagente es read-only → cero riesgo de modificar código durante la auditoría.
+- **1 subagente por shard** dentro de cada oleada, en paralelo, pero esta vez **con permiso de edición** (no read-only): cada uno aplica sólo los fixes de la severidad de la oleada actual en sus archivos.
+- **Sin correr tests** durante la aplicación (igual que la auditoría). La validación final se hace una sola vez al cierre de cada oleada con `tsgo` (typecheck) — los runs de vitest los dispara el CI.
+- **Bump de versión PATCH** al final de cada oleada (3 bumps totales) + entrada en `CHANGELOG.md` describiendo qué patrones se corrigieron y en cuántos archivos.
 
-## Paso 1 — Resolver la lista de archivos por shard
+## Oleada 1 — CRÍTICA + ALTA
 
-Vitest aplica `--shard=N/12` sobre la lista **ordenada** de test files que matchean el glob de `vitest.config.ts`. Antes de lanzar subagentes:
+Patrones a corregir (del reporte consolidado):
 
-1. Leer `vitest.config.ts` para confirmar `include`/`exclude` y el modo de pool (`singleFork`).
-2. Generar la lista completa de archivos `*.test.ts(x)` ordenada igual que Vitest.
-3. Particionar en 12 grupos contiguos del mismo tamaño (lo que hace `--shard`).
-4. Guardar la partición como referencia (no se escribe en el repo; se pasa inline a cada subagente).
+1. **`pdfLeak.test.tsx`**: envolver el loop de 200 renders en `try/finally` con `cleanup()` por iteración.
+2. **`csf/__tests__/index.test.ts`**: reemplazar `global.fetch = vi.fn()` por `vi.stubGlobal("fetch", …)` + `afterEach(vi.unstubAllGlobals)`.
+3. **`embarques/services/__tests__/mutations.test.ts` y `listado.test.ts`**: agregar `mock.rpcCalls.length = 0` y `mock.tableCalls.length = 0` en `beforeEach`.
+4. **Leaks de globals (ALTA, transversal)**: en todos los tests del shard, reemplazar asignaciones directas a `global.fetch`, `global.navigator`, `global.URL`, `window.matchMedia`, etc. por `vi.stubGlobal(…)` + cleanup.
+5. **`QueryClient` compartido (ALTA)**: mover instanciación de `QueryClient` fuera del cuerpo del wrapper a una factory por test, usando el helper `createWrapper` de `src/test/utils/queryWrapper.tsx`.
+6. **Mock hygiene (ALTA)**: en mocks `vi.hoisted` a nivel de módulo, agregar `vi.clearAllMocks()` (o `mockReset` específico) en `beforeEach` cuando falte.
 
-## Paso 2 — Lanzar los 12 subagentes en paralelo
+Cierre de oleada:
+- Bump `APP_VERSION` (PATCH) en `src/constants/appVersion.ts`.
+- Nueva entrada en `CHANGELOG.md` raíz: `## [X.Y.Z] - YYYY-MM-DD` + bullets resumiendo patrones corregidos y nº de archivos por shard.
 
-Una sola respuesta con 12 llamadas `spawn_agent` en paralelo, modelo `capable`. Cada uno recibe:
+## Oleada 2 — MEDIA
 
-- **System prompt**: rol de auditor de tests Vitest + React Testing Library + mocks de Supabase, con foco en estabilidad bajo `singleFork`. Reglas del proyecto: cleanup obligatorio en `useEffect`-style mocks, `vi.stubGlobal` en vez de asignación directa, `await act(async () => …)` para updates async, `mockReset`/`clearAllMocks` en `beforeEach`, fake timers acotados con `beforeEach`/`afterEach`, asserts fuertes (no `toBeDefined` solo), sin `sleep` real, sin compartir `QueryClient` entre tests, etc.
-- **Task**: lista exacta de archivos del shard N, instrucción de leerlos **uno por uno línea a línea** y producir un reporte estructurado con: archivo, líneas, severidad (CRÍTICA/ALTA/MEDIA/BAJA), patrón detectado, riesgo, fix propuesto, y si ya se aplicó en versiones recientes (referenciar memorias relevantes: `mem://technical/testing-cleanup-protocol`, `mem://technical/testing-mock-patterns`, `mem://features/testing-regression-canary`, `mem://technical/testing-strategy`).
-- **Restricción explícita**: **NO ejecutar** `vitest`, `bun test`, ni ningún runner. Solo lectura.
+Patrones:
 
-## Paso 3 — Consolidación
+1. **Timers reales frágiles**: reemplazar `await new Promise(r => setTimeout(r, 5))` / 10ms por `await Promise.resolve()` (microtask flush) o `vi.runAllTimersAsync()` cuando ya hay fake timers activos.
+2. **Mocks manuales de Supabase**: migrar a `createSupabaseMock()` de `@/services/__tests__/_supabaseChainMock` donde el patrón es estándar (cadena `from().select()…`).
+3. **`act()` sin `await`**: convertir `act(() => userTrigger())` en `await act(async () => { … })` cuando el callback dispara updates async.
 
-Cuando lleguen las 12 notificaciones de completado:
+Cierre de oleada: bump PATCH + CHANGELOG.
 
-1. Leer los 12 resultados con `get_agent_result`.
-2. Consolidar en un único reporte agrupado por severidad y por shard, deduplicando patrones que aparezcan en múltiples shards (probablemente sean reglas a documentar en memoria).
-3. Presentarte el reporte con: top hallazgos críticos, patrones recurrentes, propuesta de fixes priorizada, y candidatos a nueva memoria de testing.
+## Oleada 3 — BAJA
 
-## Paso 4 — (Opcional, requiere tu aprobación)
+Patrones:
 
-Después de revisar el reporte, podemos abrir un segundo plan para aplicar los fixes en lotes (por severidad o por shard) y bumpear versión.
+1. **Asserts débiles**: `toBeDefined()` solo → `toMatchObject({...})` o `toEqual({...})` con campos clave.
+2. **Cleanup duplicado**: remover `cleanup()` manual en `afterEach` donde el setup global ya lo hace (`src/test/setup.ts`).
+3. **Títulos duplicados de tests** dentro del mismo `describe`: renombrar para distinguir el caso.
+4. **Imports no usados** en archivos de test detectados por la auditoría.
+
+Cierre de oleada: bump PATCH + CHANGELOG + opcionalmente nueva memoria `mem://technical/testing-globals-stubbing` documentando la regla `vi.stubGlobal` (si la oleada 1 deja patrón consolidado).
 
 ## Detalles técnicos
 
-- **Modelo de subagente**: `capable` para los 12 (lectura cuidadosa + razonamiento sobre concurrencia y leaks).
-- **Costo aproximado**: 12 subagentes × ~45 archivos × lectura completa. Es significativo pero acotado y se ejecuta en paralelo.
-- **No se modifica nada del repo en esta fase** — auditoría pura.
-- **No se corre CI ni vitest local** — explícito en la instrucción de cada subagente.
+- **Modelo de subagentes**: `capable` (los fixes requieren entender contexto del test y no romper aserciones).
+- **Reparto**: misma partición de 12 shards que la auditoría — cada subagente recibe inline la lista de archivos y los fixes específicos a aplicar de su reporte.
+- **Restricción**: cada subagente sólo toca archivos de su shard y sólo aplica patrones de la severidad de la oleada actual. No bumpea versión (eso lo hago yo al cierre).
+- **Validación**: tras cada oleada, corro `bunx tsgo --noEmit` para confirmar que no se rompió tipado. Los tests los corre el CI al hacer push.
+- **Rollback**: si una oleada introduce regresiones, revertimos sólo esa oleada (commits separados por bump).
 
-## Lo que NO incluye este plan
+## Lo que NO incluye
 
-- Aplicar fixes (lo proponemos como Paso 4 separado tras tu revisión).
-- Bumpear versión / actualizar `CHANGELOG.md` (no hay cambios de código en esta fase).
-- Cambiar configuración de CI o `vitest.config.ts`.
+- Cambios en `vitest.config.ts` ni en `src/test/setup.ts` (a menos que un fix lo requiera explícitamente — en ese caso te pregunto antes).
+- Refactor estructural de tests (sólo fixes puntuales del reporte).
+- Correr la suite completa local (lo hace CI).

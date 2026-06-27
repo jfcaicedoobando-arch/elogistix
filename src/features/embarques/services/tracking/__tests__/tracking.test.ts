@@ -7,14 +7,14 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 describe("trackingService.fetchTrackingPublico", () => {
-  const originalFetch = global.fetch;
-
   beforeEach(() => {
     vi.stubEnv("VITE_SUPABASE_URL", "https://testproject.supabase.co");
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    // vi.stubGlobal + unstubAllGlobals evita el leak transversal de fetch
+    // entre archivos del shard bajo singleFork (auditoría 13.137.28 - ALTA).
+    vi.unstubAllGlobals();
     vi.unstubAllEnvs();
   });
 
@@ -24,44 +24,52 @@ describe("trackingService.fetchTrackingPublico", () => {
       eventos: [],
       organizacion: { nombre: "Test", logo_url: null },
     };
-    global.fetch = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(payload),
-    }) as unknown as typeof fetch;
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     const result = await fetchTrackingPublico("abc123");
     expect(result).toEqual(payload);
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledWith(
       "https://testproject.supabase.co/functions/v1/tracking-public?token=abc123",
     );
   });
 
   it("encodea correctamente tokens con caracteres especiales", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ embarque: {}, eventos: [], organizacion: null }),
-    }) as unknown as typeof fetch;
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     await fetchTrackingPublico("a/b+c=d");
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledWith(
       "https://testproject.supabase.co/functions/v1/tracking-public?token=a%2Fb%2Bc%3Dd",
     );
   });
 
   it("lanza error con el mensaje del body cuando la respuesta no es OK", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.resolve({ error: "Token expirado" }),
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ error: "Token expirado" }),
+      }),
+    );
 
     await expect(fetchTrackingPublico("xxx")).rejects.toThrow("Token expirado");
   });
 
   it("lanza error genérico cuando el body no es JSON", async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      json: () => Promise.reject(new Error("not json")),
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.reject(new Error("not json")),
+      }),
+    );
 
     await expect(fetchTrackingPublico("xxx")).rejects.toThrow("Error al cargar tracking");
   });

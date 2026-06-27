@@ -32,7 +32,7 @@ afterEach(() => vi.clearAllMocks());
 
 async function flushImport() {
   for (let i = 0; i < 6; i++) await Promise.resolve();
-  await new Promise((r) => setTimeout(r, 10));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 describe("useAuthSession — captureException", () => {

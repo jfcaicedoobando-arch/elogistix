@@ -12,7 +12,7 @@ import { reportCaughtError } from "../reportCaughtError";
 
 async function flush() {
   for (let i = 0; i < 6; i++) await Promise.resolve();
-  await new Promise((r) => setTimeout(r, 5));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 beforeEach(() => mocks.captureException.mockClear());

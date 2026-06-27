@@ -7,14 +7,14 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import { esUrlFacturapi, fetchCfdiFacturapi, descargarCfdiFacturapi } from "../descargarCfdiFacturapi";
 
-const originalFetch = globalThis.fetch;
-
 beforeEach(() => {
   getSession.mockReset();
   vi.stubEnv("VITE_SUPABASE_PROJECT_ID", "proj");
 });
 afterEach(() => {
-  globalThis.fetch = originalFetch;
+  // vi.stubGlobal + unstubAllGlobals evita el leak de fetch entre archivos
+  // del shard bajo singleFork (auditoría 13.137.28 - ALTA).
+  vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
 
@@ -43,11 +43,14 @@ describe("fetchCfdiFacturapi", () => {
   it("descarga blob y extrae filename del Content-Disposition", async () => {
     getSession.mockResolvedValueOnce({ data: { session: { access_token: "t" } } });
     const blob = new Blob(["x"]);
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      blob: () => Promise.resolve(blob),
-      headers: { get: () => 'attachment; filename="factura.pdf"' },
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        blob: () => Promise.resolve(blob),
+        headers: { get: () => 'attachment; filename="factura.pdf"' },
+      }),
+    );
     const res = await fetchCfdiFacturapi({ tipo: "pdf", facturaId: "f1" });
     expect(res.blob).toBe(blob);
     expect(res.filename).toBe("factura.pdf");
@@ -55,32 +58,41 @@ describe("fetchCfdiFacturapi", () => {
 
   it("usa filename por default si no viene en headers", async () => {
     getSession.mockResolvedValueOnce({ data: { session: { access_token: "t" } } });
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      blob: () => Promise.resolve(new Blob([])),
-      headers: { get: () => "" },
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        blob: () => Promise.resolve(new Blob([])),
+        headers: { get: () => "" },
+      }),
+    );
     const res = await fetchCfdiFacturapi({ tipo: "xml", pagoId: "p" });
     expect(res.filename).toBe("cfdi.xml");
   });
 
   it("lanza error con mensaje del body cuando !ok", async () => {
     getSession.mockResolvedValueOnce({ data: { session: { access_token: "t" } } });
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: () => Promise.resolve({ message: "boom" }),
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({ message: "boom" }),
+      }),
+    );
     await expect(fetchCfdiFacturapi({ tipo: "pdf", facturaId: "f" })).rejects.toThrow("boom");
   });
 
   it("cae a 'Error N' cuando el body no es JSON", async () => {
     getSession.mockResolvedValueOnce({ data: { session: { access_token: "t" } } });
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 503,
-      json: () => Promise.reject(new Error("not json")),
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: () => Promise.reject(new Error("not json")),
+      }),
+    );
     await expect(fetchCfdiFacturapi({ tipo: "pdf", facturaId: "f" })).rejects.toThrow("Error 503");
   });
 });
@@ -88,11 +100,14 @@ describe("fetchCfdiFacturapi", () => {
 describe("descargarCfdiFacturapi", () => {
   it("crea link y dispara click", async () => {
     getSession.mockResolvedValueOnce({ data: { session: { access_token: "t" } } });
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      blob: () => Promise.resolve(new Blob(["x"])),
-      headers: { get: () => 'filename="f.pdf"' },
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        blob: () => Promise.resolve(new Blob(["x"])),
+        headers: { get: () => 'filename="f.pdf"' },
+      }),
+    );
     const createObjectURL = vi.fn().mockReturnValue("blob:url");
     const revokeObjectURL = vi.fn();
     Object.assign(URL, { createObjectURL, revokeObjectURL });

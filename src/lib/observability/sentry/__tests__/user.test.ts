@@ -36,7 +36,7 @@ afterEach(() => {
 
 async function flushImport() {
   // Esperar a que microtasks + macrotask drenen (dynamic import + .then chain).
-  await new Promise<void>((r) => setTimeout(r, 10));
+  await new Promise<void>((r) => setTimeout(r, 0));
   for (let i = 0; i < 4; i++) await Promise.resolve();
 }
 

@@ -2,7 +2,7 @@
  * Tests del boundary de mutaciones de embarques.
  * Cubre validación zod, propagación de errores Supabase y shape de RPC.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -23,6 +23,15 @@ import {
 
 const UUID = "11111111-1111-4111-8111-111111111111";
 const UUID2 = "22222222-2222-4222-8222-222222222222";
+
+// Reset cross-test state del mock hoisted (auditoría 13.137.28 - CRÍTICA).
+// Sin esto, rpcCalls/tableCalls acumulan entre tests del mismo archivo y
+// pueden producir falsos positivos al hacer .find() por nombre de RPC.
+beforeEach(() => {
+  mock.rpcCalls.length = 0;
+  mock.tableCalls.length = 0;
+});
+
 
 const embarqueValido = {
   cliente_nombre: "Acme SA",
