@@ -39,6 +39,8 @@ export function emptyPorRegla(): Record<ReglaAuditoria, number> {
     venta_sin_costo: 0, costo_sin_venta: 0, proforma_vencida: 0,
     proforma_borrador_abandonada: 0, proforma_inconsistente: 0,
     embarque_huerfano: 0,
+    factura_sin_timbrar: 0, rep_pendiente: 0,
+    factura_cancelada_sin_sustitucion: 0,
   };
 }
 
