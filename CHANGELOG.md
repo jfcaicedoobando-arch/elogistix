@@ -6,6 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.31] - 2026-06-27
+- **fix(tests) — barrido transversal de mutaciones globales sin restauración**: cerrado el pendiente #4 de la auditoría de los 12 shards. Inventario completo con `rg` sobre `global.X = …`, `globalThis.X = …`, `Object.defineProperty(window|navigator|document|globalThis, …)`, `Object.assign(navigator|URL|window|document, …)` y `URL.createObjectURL/revokeObjectURL = …` en toda la suite.
+  - **CRÍTICOS (4 archivos sin restauración alguna)**:
+    - `useEmbarqueDetalleTracking.test.tsx`: `Object.assign(navigator, { clipboard })` a nivel módulo migrado a `vi.stubGlobal("navigator", {...navigator, clipboard: { writeText: clipboardWriteMock }})` en `beforeEach` + `vi.unstubAllGlobals()` en `afterEach`. Las aserciones ahora usan la referencia local `clipboardWriteMock` en lugar de `vi.mocked(navigator.clipboard.writeText)`.
+    - `pdf/render/descargarPdf.test.ts`: `global.URL.createObjectURL = vi.fn()` a nivel módulo migrado a `beforeAll`/`afterAll` que guarda/restaura las funciones originales.
+    - `InvitarAgenteCredencialesView.test.tsx`: `Object.assign(navigator, { clipboard })` en `beforeEach` migrado a `vi.stubGlobal("navigator", ...)` + `vi.unstubAllGlobals()` en `afterEach`. El test "notifica error si el clipboard falla" usa `vi.stubGlobal` propio en lugar de mutar `navigator` directo.
+    - `descargarCfdiFacturapi.test.ts`: `Object.assign(URL, { createObjectURL, revokeObjectURL })` dentro del test migrado a guardado/restauración explícita con `try/finally` para garantizar la restauración aunque la aserción lance.
+  - **FRÁGILES (1 archivo, restauración añadida)**:
+    - `ErrorBoundary.test.tsx`: `Object.defineProperty(window, "location", ...)` dentro de un `it` no tenía `afterEach` que restaurara el pathname original (`/embarques/123` persistía para archivos posteriores del shard). Capturado `originalLocation` y restaurado en `afterEach`.
+  - **OK sin cambios (2 archivos)**: `environment.test.ts` (ya tenía `afterEach` con restore desde antes) y `enviarPorEmail.test.ts` (`navigator.onLine` es getter no escribible — `defineProperty` es obligatorio; restauración via `originalOnLineDesc` añadida en `13.137.28`).
+- Re-verificación con `rg` confirma cero matches residuales de mutaciones globales sin restauración. Tipos limpios con `tsgo`.
+
 ## [13.137.30] - 2026-06-27
 - **fix(tests) — oleada 3 (BAJA) de fixes de auditoría 12 shards**: limpieza cosmética final.
   - `ReporteEjecutivoDocument.test.tsx`: eliminado `afterEach(() => { cleanup(); })` redundante — `src/test/setup.ts` ya ejecuta `cleanup()` global tras cada test. Imports de `cleanup` y `afterEach` removidos. Único archivo de la suite que aún tenía este patrón.
