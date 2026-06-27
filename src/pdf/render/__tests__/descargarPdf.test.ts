@@ -1,4 +1,4 @@
-import { expect, it, describe, vi, beforeEach } from "vitest";
+import { expect, it, describe, vi, beforeEach, beforeAll, afterAll } from "vitest";
 import React from "react";
 
 // 13.85.3 — Eliminamos el `vi.mock("@react-pdf/renderer", ...)` local porque
@@ -13,8 +13,22 @@ vi.mock("@/lib/downloadBlob", () => ({
 
 import { descargarPdf } from "../descargarPdf";
 
-global.URL.createObjectURL = vi.fn(() => "mock-url");
-global.URL.revokeObjectURL = vi.fn();
+// Auditoría 13.137.31 (barrido de mutaciones globales): la asignación directa a
+// `global.URL.createObjectURL/revokeObjectURL` a nivel módulo dejaba estos métodos
+// reemplazados de forma permanente para todos los archivos del shard bajo singleFork.
+// Migrado a guardado/restauración explícita en beforeAll/afterAll del archivo.
+const origCreateObjectURL = URL.createObjectURL;
+const origRevokeObjectURL = URL.revokeObjectURL;
+
+beforeAll(() => {
+  URL.createObjectURL = vi.fn(() => "mock-url");
+  URL.revokeObjectURL = vi.fn();
+});
+
+afterAll(() => {
+  URL.createObjectURL = origCreateObjectURL;
+  URL.revokeObjectURL = origRevokeObjectURL;
+});
 
 describe("pdf/render/descargarPdf", () => {
   beforeEach(() => {

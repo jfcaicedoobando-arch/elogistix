@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const sonnerErrorMock = vi.fn();
@@ -20,8 +20,16 @@ describe("InvitarAgenteCredencialesView", () => {
 
   beforeEach(() => {
     writeText.mockClear();
+    writeText.mockImplementation(() => Promise.resolve());
     sonnerErrorMock.mockReset();
-    Object.assign(navigator, { clipboard: { writeText } });
+    // Auditoría 13.137.31: `Object.assign(navigator, { clipboard })` dejaba el
+    // clipboard parcheado para archivos posteriores del shard bajo singleFork.
+    // Migrado a `vi.stubGlobal("navigator", ...)` + `vi.unstubAllGlobals()` en afterEach.
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("renderiza email y contraseña como readonly", () => {
@@ -46,9 +54,8 @@ describe("InvitarAgenteCredencialesView", () => {
   });
 
   it("notifica error si el clipboard falla", async () => {
-    Object.assign(navigator, {
-      clipboard: { writeText: () => Promise.reject(new Error("nope")) },
-    });
+    const failingWrite = vi.fn(() => Promise.reject(new Error("nope")));
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText: failingWrite } });
     render(<InvitarAgenteCredencialesView email="a@b.com" password="pw" onClose={() => {}} />);
     fireEvent.click(screen.getByLabelText(/copiar email/i));
     await waitFor(() => expect(sonnerErrorMock).toHaveBeenCalled());
