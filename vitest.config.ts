@@ -126,12 +126,19 @@ export default defineConfig({
       // (v13.135.68). En su lugar se añaden tests para CambiarPasswordDialog,
       // OrgInfoCard, InvitarAgentePortalDialog y servicios asociados para
       // restaurar el coverage real ≥ 38%. Ver mem://principles/coverage-threshold.
-      thresholds: {
-        lines: 38,
-        statements: 38,
-        functions: 52,
-        branches: 72,
-      },
+      // 13.137.38 — Sólo aplicamos thresholds en modo merge (suite completa).
+      // En modo shard la cobertura medida es naturalmente baja (sólo un
+      // subset de tests corre) y los `--coverage.thresholds.*=0` por CLI no
+      // siempre vencen a la config nested en Vitest 3 → CI fallaba con
+      // exit 1 en shards individuales. Detectamos shard mirando argv.
+      thresholds: process.argv.some((a) => a.startsWith("--shard"))
+        ? undefined
+        : {
+            lines: 38,
+            statements: 38,
+            functions: 52,
+            branches: 72,
+          },
 
 
     },
