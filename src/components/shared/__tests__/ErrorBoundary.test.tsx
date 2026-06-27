@@ -51,8 +51,14 @@ beforeEach(() => {
   mocks.logClientError.mockClear();
 });
 
+// Auditoría 13.137.31: capturamos location original ANTES del primer test que la
+// muta (it "captura en Sentry con tag crashed_route ..."). Sin restauración, el
+// pathname `/embarques/123` persistía para archivos posteriores del shard.
+const originalLocation = window.location;
+
 afterEach(() => {
   errSpy.mockRestore();
+  Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
   cleanup();
 });
 
