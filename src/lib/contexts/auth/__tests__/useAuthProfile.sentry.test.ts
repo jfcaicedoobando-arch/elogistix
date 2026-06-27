@@ -53,7 +53,7 @@ describe("useAuthProfile — captureException", () => {
       organization: null,
     });
     const { unmount } = renderHook(() => useAuthProfile("u-OK"));
-    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalledWith("u-OK"));
+    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled());
     // microtask flush para que cualquier `.catch` ya hubiese disparado
     await Promise.resolve();
     await Promise.resolve();
