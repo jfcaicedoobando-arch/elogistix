@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.8] - 2026-06-27
+- **fix(e2e) — Endurecimiento de specs Playwright (hallazgos 1-9 de auditoría)**. Reduce flakiness y refuerza assertions:
+  - `01-login`: el assert de error de credenciales ahora filtra por `[role="alert"]` / `[data-sonner-toast]` para no matchear copy ambiental.
+  - `02-embarque`: espera la respuesta REST `/rest/v1/embarques` en vez de `networkidle`; valida que el detalle muestra el heading con el expediente real (`EL(IMP|EXP|GEN)\d+`) en vez de palabras sueltas del sidebar.
+  - `04-conciliacion`: reemplaza `Promise.race` por `locator.or(...).or(...)` con mensaje custom.
+  - `05-portal`: valida un heading propio del portal (`/portal|mis embarques|bienvenid/i`) en vez de cualquier texto del sidebar; añade guard contra error boundary.
+  - `06-security-cross-org`: cambia `waitForTimeout(2000)` por `waitForResponse` del recurso pedido.
+  - `08-flujo-fiscal`: `forma de pago` soporta tanto `<select>` nativo como Radix Select (combobox + option).
+  - `globalSetup`: si el login en setup falla, escribe `EMPTY_STATE` y loguea warning para que los specs caigan al `loginAs` clásico en vez de heredar un estado "logueado" falso.
+
 ## [13.139.6] - 2026-06-27
 - **fix(ui) — Auditoría visual a 1920×1080**. Cinco arreglos de presentación:
   1. `TabDemoras` — el placeholder `"naviera"` en la columna *Días libres (override)* se confundía con un valor cargado; ahora dice `usa naviera` en cursiva muted con tooltip nativo.
