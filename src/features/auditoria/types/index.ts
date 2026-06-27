@@ -19,7 +19,11 @@ export type ReglaAuditoria =
   // Fase 2 — Reglas fiscales (FacturAPI)
   | "factura_sin_timbrar"
   | "rep_pendiente"
-  | "factura_cancelada_sin_sustitucion";
+  | "factura_cancelada_sin_sustitucion"
+  // Fase 2B — Cobranza (CXC) y Compras (CXP)
+  | "cxc_vencida"
+  | "cxp_por_capturar_estancada"
+  | "cxp_vencida";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 
