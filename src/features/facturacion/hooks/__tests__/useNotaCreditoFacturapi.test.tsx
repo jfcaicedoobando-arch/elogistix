@@ -1,0 +1,101 @@
+/**
+ * @vitest-environment jsdom
+ *
+ * Branches: timbrar y cancelar nota de crédito (onSuccess/onError).
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+
+const timbrarNotaCreditoFacturapi = vi.fn();
+const cancelarNotaCreditoFacturapi = vi.fn();
+const toastSuccess = vi.fn();
+const notifyError = vi.fn();
+
+vi.mock("sonner", () => ({ toast: { success: (...a: unknown[]) => toastSuccess(...a) } }));
+vi.mock("@/features/facturacion/services/notasCreditoFacturapi", () => ({
+  timbrarNotaCreditoFacturapi: (...a: unknown[]) => timbrarNotaCreditoFacturapi(...a),
+  cancelarNotaCreditoFacturapi: (...a: unknown[]) => cancelarNotaCreditoFacturapi(...a),
+}));
+vi.mock("@/components/shared/utils/appFeedback", () => ({
+  notifyError: (...a: unknown[]) => notifyError(...a),
+}));
+
+import {
+  useTimbrarNotaCredito,
+  useCancelarNotaCredito,
+} from "../useNotaCreditoFacturapi";
+import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
+
+function wrapper(qc: QueryClient) {
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  );
+}
+
+beforeEach(() => {
+  timbrarNotaCreditoFacturapi.mockReset();
+  cancelarNotaCreditoFacturapi.mockReset();
+  toastSuccess.mockReset();
+  notifyError.mockReset();
+});
+
+describe("useTimbrarNotaCredito", () => {
+  it("onSuccess: muestra UUID truncado e invalida cache de notas de crédito", async () => {
+    timbrarNotaCreditoFacturapi.mockResolvedValue({ uuid: "NCAAAAAA-rest" });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useTimbrarNotaCredito("fac-1"), { wrapper: wrapper(qc) });
+
+    result.current.mutate("nc-1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(timbrarNotaCreditoFacturapi).toHaveBeenCalledWith("nc-1");
+    expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("NCAAAAAA"));
+    expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.notasCredito("fac-1") });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["factura_notas_credito", "recientes"] });
+    qc.clear();
+  });
+
+  it("onError: notifyError con mensaje", async () => {
+    timbrarNotaCreditoFacturapi.mockRejectedValue(new Error("nc fail"));
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useTimbrarNotaCredito("fac-1"), { wrapper: wrapper(qc) });
+
+    result.current.mutate("nc-2");
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(notifyError.mock.calls[0]![1].title).toContain("nc fail");
+    qc.clear();
+  });
+});
+
+describe("useCancelarNotaCredito", () => {
+  it("onSuccess: toast 'cancelada' e invalida caches", async () => {
+    cancelarNotaCreditoFacturapi.mockResolvedValue({ ok: true });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useCancelarNotaCredito("fac-2"), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ notaCreditoId: "nc-9", motivo: "02" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(cancelarNotaCreditoFacturapi).toHaveBeenCalledWith("nc-9", "02", undefined);
+    expect(toastSuccess).toHaveBeenCalledWith("Nota de crédito cancelada");
+    expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.notasCredito("fac-2") });
+    qc.clear();
+  });
+
+  it("onError: notifyError", async () => {
+    cancelarNotaCreditoFacturapi.mockRejectedValue(new Error("cancel fail"));
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const { result } = renderHook(() => useCancelarNotaCredito("fac-2"), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ notaCreditoId: "nc-10", motivo: "01", sustituyeUuid: "u-old" });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(notifyError.mock.calls[0]![1].title).toContain("cancel fail");
+    qc.clear();
+  });
+});
