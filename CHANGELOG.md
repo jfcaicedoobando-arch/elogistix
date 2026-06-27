@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.1] - 2026-06-27
+- **feat(auditoria) — Selección múltiple de hallazgos + "Marcar como revisados" en bulk**. En la tabla `/auditoria` ahora hay un checkbox por fila (sólo para hallazgos pendientes) y un checkbox maestro tri-estado en el header que selecciona todos los pendientes de la página actual. Cuando hay ≥1 seleccionado aparece una barra `HallazgosBulkBar` con "Limpiar" y "Marcar como revisados"; el botón abre `MarcarRevisadosBulkDialog` que pide una sola "Acción tomada" (≥3 caracteres) y la aplica a todos vía `useMarcarRevisadosBulk` (chunks de 5 con `Promise.allSettled`, reutiliza `upsertAuditoriaRevision` idempotente). Reporta éxitos/fallos parciales por toast, escribe en bitácora marcando `bulk: true`, e invalida `AUDITORIA_REVISIONES_KEY` + `queryKeys.auditoria.embarques`. La selección se limpia automáticamente al cambiar de página, cambiar filtros o cerrar el diálogo con éxito. Cambios frontend-only: nuevos `useHallazgosSelection`, `useMarcarRevisadosBulk`, `HallazgosBulkBar`, `MarcarRevisadosBulkDialog`, `hallazgosTablaSelectColumn`; refactor de `useHallazgosTablaState` para exponer selección y de `HallazgosTabla`/`HallazgosTablaPaginada` para integrarla. Sin migraciones SQL.
+
+
 ## [13.139.0] - 2026-06-27
 - **feat(auditoria) — Fase 3 modernización: score 60/40, regresión 7 días, snooze acotado y notificación al asignar**. Cambios al módulo Auditoría Operativa:
   - **Score rebalanceado (60 % económico / 40 % higiene)** en `calcularScore` (`ejecutivoAgregados.ts`). Si una organización tiene fugas financieras detectadas (regla `margen_negativo`, `margen_bajo`, `proforma_vencida`), el `riesgoFinancieroMxn` arrastra el score hacia abajo con un umbral de saturación `RIESGO_UMBRAL_MXN = 500_000` MXN. Sin riesgo financiero se conserva el comportamiento histórico (sólo higiene) para no inflar tenants sin reglas financieras emitidas.
