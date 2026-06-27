@@ -1,44 +1,58 @@
-# Plan: auditoría exhaustiva del shard 2/12
+# Plan: Auditoría línea por línea del shard 6/12
 
 ## Contexto
 
-Los fixes de `13.137.24` cubrieron 8 archivos sospechosos en shards 2 y 6, pero el CI sigue colgándose >20 min. La auditoría previa fue **heurística** (grep de patrones conocidos: `waitFor` sin timeout, `act` sin `await`, etc.). Esta vez vamos **línea por línea** sobre los 46 archivos del shard 2, sin filtrar por patrón.
+El shard 2 ya fue auditado en la versión `13.137.25` y se aplicaron varios fixes (act async, fake timers, stubGlobal). Sin embargo el CI sigue cayendo por timeout, y los logs muestran que el shard 6/12 también excede los 20 minutos. Como `singleFork: true` corre todos los archivos en un solo proceso de Node, basta con que **un solo archivo** filtre timers, listeners, promesas o módulos para colgar todo el shard.
 
-## Analogía
+Hay que revisar los **45 archivos** de shard 6 línea por línea, sin correr el shard (ya confirmamos que reproducirlo localmente es lento e inestable).
 
-La auditoría anterior fue como buscar las llaves debajo del farol porque ahí hay luz. Ahora vamos a barrer toda la habitación con lámpara en mano: cada test del shard 2 se lee completo, no sólo los que coinciden con sospechas previas.
+## Estrategia
 
-## Cómo se reparte el trabajo
+Dividir los 45 archivos en 4 lotes de ~11 archivos. Lanzar **4 subagentes en paralelo** con instrucciones idénticas. Cada subagente lee cada archivo de su lote completo y reporta hallazgos clasificados por severidad.
 
-1. **Resolver la lista exacta del shard 2/12** ejecutando localmente `vitest list --shard=2/12` para obtener los 46 paths actuales (la lista puede haber cambiado tras los fixes de `13.137.24`).
+### Patrones a buscar (mismos que shard 2)
 
-2. **Dividir en 4 lotes de ~12 archivos** y lanzar **4 subagentes en paralelo** (`acp_subagent--spawn_agent`, modelo `capable`). Cada uno recibe:
-   - Lista exacta de archivos a leer.
-   - Instrucción de leer **el archivo completo** y reportar por archivo:
-     - Timers reales (`sleep`, `setTimeout` sin fake timers) con duración estimada.
-     - `waitFor` / `findBy*` sin timeout custom y con condición costosa.
-     - Mocks de Supabase / fetch sin todos los métodos encadenables.
-     - Promesas creadas en el test que nunca se resuelven (sin `.resolves`/`.rejects`).
-     - `renderHook` / `render` sin `unmount` al final, especialmente con suscripciones realtime o `onAuthStateChange`.
-     - QueryClient o wrappers compartidos a nivel módulo.
-     - Loops `for`/`while` que generan trabajo pesado sin yield (PDF, parsers, fixtures grandes).
-     - `vi.useFakeTimers` sin `vi.useRealTimers` en cleanup.
-     - `act` sin `await`.
-     - Cualquier `import` que dispare side effects pesados al cargar (PDF font loaders, Sentry init).
-   - Para cada hallazgo: ruta, líneas, severidad (alta/media/baja), justificación de por qué podría colgar o ralentizar el shard.
+1. **Timers sin limpiar**: `setInterval`, `setTimeout`, `vi.useFakeTimers()` sin `useRealTimers()` en cleanup, o fake timers en `beforeAll`/`afterAll` (deben ir en `beforeEach`/`afterEach`).
+2. **Promesas sin resolver / `act` síncrono envolviendo async**: `act(() => mutateAsync())`, `act(() => trigger())`, `act(() => router.push())` — todo lo async requiere `await act(async () => ...)`.
+3. **Globals mutados sin `vi.stubGlobal`**: asignaciones directas a `global.fetch`, `navigator.clipboard`, `window.location`, `document.cookie` sin restauración.
+4. **Listeners sin remover**: `addEventListener`, `subscribe`, `EventTarget`, observers (`ResizeObserver`, `IntersectionObserver`) sin cleanup.
+5. **Canales/realtime Supabase**: mocks que no llaman `removeChannel`/`unsubscribe`.
+6. **React Query / QueryClient compartido entre tests** (no `new QueryClient()` por test).
+7. **Imports dinámicos (`await import(...)`) dentro de tests** sin reset de módulos, que dejan cache.
+8. **PDF / `@react-pdf/renderer`**: renders sin `unmount`/cleanup explícito (riesgo de leak ya documentado).
+9. **`waitFor` con timeout custom alto** o sin assertion fuerte.
+10. **`it.only` / `describe.only` / tests skippeados accidentalmente**.
+11. **Mocks de Supabase sin `mockReset`** entre tests.
+12. **Loops `for`/`while` sin condición de salida clara** o creando muchas promesas.
 
-3. **Consolidar hallazgos** en un solo plan de fixes con orden por severidad. Si aparece evidencia clara del culpable del timeout (ej. un test que carga `react-pdf` sin stub, o suscripción realtime sin unmount), priorizar ese fix primero y validar localmente con `vitest run --shard=2/12` cronometrado.
+### Lotes
 
-4. **Aplicar fixes** sólo después de tener el reporte consolidado, no en streaming, para evitar tocar archivos que otros subagentes están leyendo.
+- **Lote A (11)**: `architecture/fase2-pages-and-formatters` → `comisiones/devengadas`
+- **Lote B (11)**: `costeo/demorasVenta.extra` → `embarques/cotizacionVinculadaContext`
+- **Lote C (11)**: `embarques/embarque.extra` → `facturacion/pagos/pagos`
+- **Lote D (12)**: `portal/usePortalDocumentDownload` → `pdf/theme/stylesLayout`
 
-## Entregables
+### Formato de reporte por subagente
 
-- Reporte consolidado en `.lovable/plan-shard2-audit.md` con tabla de 46 archivos × estado (clean / sospechoso / culpable probable).
-- PR de fixes con bump `13.137.25` y entrada en `CHANGELOG.md`.
-- Si el shard 2 vuelve a colgar tras los fixes, abrir follow-up con instrumentación (`VITEST_POOL_LOGS=1`, `--reporter=verbose`) para capturar qué test es el último en empezar antes del timeout.
+Por cada hallazgo:
 
-## Fuera de alcance
+```
+ARCHIVO: <ruta>
+LÍNEA: <número>
+SEVERIDAD: ALTA | MEDIA | BAJA
+PATRÓN: <uno de los 12>
+DESCRIPCIÓN: <1 línea>
+FIX SUGERIDO: <1-2 líneas>
+```
 
-- Shards distintos al 2/12.
-- Cambios al workflow CI (ya endurecido en `13.137.23`).
-- Refactor de tests sin bug detectado, sólo por estilo.
+Si un archivo está limpio: `ARCHIVO: <ruta> — OK`.
+
+## Entregable
+
+Tras consolidar los 4 reportes, aplicaré los fixes ALTA y MEDIA en una sola pasada, agregaré la instrumentación `[shard-trace]` si no está activa, bumpeo de versión + entrada en `CHANGELOG.md`.
+
+## Detalles técnicos
+
+- No correr `vitest --shard=6/12`. Auditoría puramente estática.
+- Los subagentes son read-only; sólo yo aplicaré edits en build mode.
+- Si un patrón aparece >3 veces en distintos archivos, considerar moverlo al setup global (`src/test/setup.ts`).
