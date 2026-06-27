@@ -17,6 +17,7 @@ describe("buildChecksRep", () => {
   it("acepta todos los checks cuando los datos son válidos", () => {
     const r = buildChecksRep(baseOk);
     expect(r.puedeTimbrar).toBe(true);
+    expect(r.checks.length).toBeGreaterThan(0);
     expect(r.checks.every((c) => c.ok)).toBe(true);
   });
 

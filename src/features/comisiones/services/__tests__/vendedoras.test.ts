@@ -15,6 +15,8 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 describe("vendedoras service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
+    mock.resetResults();
   });
 
   it("fetchVendedorasConfig mezcla con emails de usuarios", async () => {
@@ -28,6 +30,7 @@ describe("vendedoras service", () => {
     const config: TablesInsert<"vendedora_config"> = { organization_id: "o1", user_id: "u1", porcentaje_default: 5 };
     await upsertVendedoraConfig(config);
     const call = mock.tableCalls.find(c => c.table === "vendedora_config");
+    expect(call).toBeDefined();
     expect(call?.ops).toContain("upsert");
   });
 

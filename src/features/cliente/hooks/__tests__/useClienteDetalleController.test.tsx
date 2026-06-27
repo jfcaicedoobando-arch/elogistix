@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useClienteDetalleController } from "../useClienteDetalleController";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
@@ -34,21 +34,30 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 
+import { notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useUpdateCliente } from "@/features/cliente/hooks/useClientes";
+
 describe("useClienteDetalleController", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("opens the contact dialog for a new contact", () => {
     const { result } = renderHook(() => useClienteDetalleController(), { wrapper: createWrapper() });
-    
+
     act(() => {
       result.current.openNewContact();
     });
-    
+
     expect(result.current.contactDialogOpen).toBe(true);
     expect(result.current.editingContacto).toBeNull();
   });
 
   it("handles saving a client with audit logs", async () => {
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useUpdateCliente).mockReturnValue({ mutateAsync, isPending: false } as never);
     const { result } = renderHook(() => useClienteDetalleController(), { wrapper: createWrapper() });
-    
+
     const formData = {
       nombre: "Client One Updated",
       rfc: "RFC123",
@@ -62,11 +71,13 @@ describe("useClienteDetalleController", () => {
       regimen_fiscal: "601",
       uso_cfdi_default: "G03",
     };
-    
+
     await act(async () => {
       await result.current.handleSaveCliente(formData);
     });
-    
+
+    expect(mutateAsync).toHaveBeenCalled();
     expect(result.current.editClienteOpen).toBe(false);
+    expect(notifySuccess).toHaveBeenCalled();
   });
 });

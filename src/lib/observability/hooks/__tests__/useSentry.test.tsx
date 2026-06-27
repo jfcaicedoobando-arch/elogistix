@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import * as Sentry from '@sentry/react';
 
@@ -9,6 +9,10 @@ vi.mock('@sentry/react', () => ({
 import { useSentryInfo, maskDsn } from '../useSentryInfo';
 
 describe('useSentry Hooks', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('useSentryInfo returns client options', () => {
     const mockClient = {
       getOptions: () => ({ dsn: 'https://key@host/123', release: '1.0', environment: 'prod' }),

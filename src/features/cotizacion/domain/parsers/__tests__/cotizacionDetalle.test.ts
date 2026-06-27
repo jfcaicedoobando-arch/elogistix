@@ -42,24 +42,30 @@ describe("cotizacionDetalleHelpers", () => {
 
     it("retorna [] y loggea ante JSON string inválido", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      expect(parseConceptos("{not json")).toEqual([]);
-      expect(warn).toHaveBeenCalled();
-      warn.mockRestore();
+      try {
+        expect(parseConceptos("{not json")).toEqual([]);
+        expect(warn).toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
 
     it("descarta filas con schema inválido (moneda desconocida o campos faltantes)", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      const mixed = [
-        concepto({ moneda: "USD" }),
-        { moneda: "EUR", cantidad: 1, precio_unitario: 10 },
-        { moneda: "USD", precio_unitario: 10 },
-        { foo: "bar" },
-        null,
-      ];
-      const r = parseConceptos(mixed);
-      expect(r).toHaveLength(1);
-      expect(warn).toHaveBeenCalled();
-      warn.mockRestore();
+      try {
+        const mixed = [
+          concepto({ moneda: "USD" }),
+          { moneda: "EUR", cantidad: 1, precio_unitario: 10 },
+          { moneda: "USD", precio_unitario: 10 },
+          { foo: "bar" },
+          null,
+        ];
+        const r = parseConceptos(mixed);
+        expect(r).toHaveLength(1);
+        expect(warn).toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
   });
 

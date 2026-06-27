@@ -40,9 +40,14 @@ function makeClient() {
   });
 }
 
-async function flush() {
-  for (let i = 0; i < 6; i++) await Promise.resolve();
-  await new Promise((r) => setTimeout(r, 0));
+async function flush(): Promise<void> {
+  // Poll until microtask + dynamic import resolve, hasta 200ms. Antes
+  // usábamos un `setTimeout(r, 0)` único que reventaba si el `import()`
+  // dinámico tardaba >0ms bajo carga de CI.
+  for (let i = 0; i < 40; i++) {
+    if (sentryMock.captureException.mock.calls.length > 0) return;
+    await new Promise((r) => setTimeout(r, 5));
+  }
 }
 
 beforeEach(() => sentryMock.captureException.mockClear());

@@ -15,7 +15,7 @@ const validInsert = {
   organization_id: "00000000-0000-0000-0000-000000000001",
 } as Parameters<typeof createCliente>[0];
 
-beforeEach(() => { mock.tableCalls.length = 0; });
+beforeEach(() => { mock.tableCalls.length = 0; mock.rpcCalls.length = 0; mock.resetResults(); });
 
 describe("createCliente", () => {
   it("happy path: inserta y devuelve data", async () => {

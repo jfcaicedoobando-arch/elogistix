@@ -18,6 +18,8 @@ const EMBARQUE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 // pueden leer llamadas de tests previos si se reordena la suite.
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+  mock.resetResults();
 });
 
 describe("fetchEventosEmbarque", () => {
