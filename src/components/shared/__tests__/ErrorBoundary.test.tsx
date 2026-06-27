@@ -42,19 +42,18 @@ function Boom(): JSX.Element {
 }
 
 let errSpy: ReturnType<typeof vi.spyOn>;
+// Auditoría 13.137.32: capturamos location dentro de beforeEach para evitar
+// snapshot contaminado si otro archivo del shard mutó window.location antes.
+let originalLocation: Location;
 
 beforeEach(() => {
+  originalLocation = window.location;
   errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   mocks.withScope.mockClear();
   mocks.setTag.mockClear();
   mocks.captureException.mockClear();
   mocks.logClientError.mockClear();
 });
-
-// Auditoría 13.137.31: capturamos location original ANTES del primer test que la
-// muta (it "captura en Sentry con tag crashed_route ..."). Sin restauración, el
-// pathname `/embarques/123` persistía para archivos posteriores del shard.
-const originalLocation = window.location;
 
 afterEach(() => {
   errSpy.mockRestore();

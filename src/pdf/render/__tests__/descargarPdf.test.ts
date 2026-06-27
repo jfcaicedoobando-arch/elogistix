@@ -1,4 +1,4 @@
-import { expect, it, describe, vi, beforeEach, beforeAll, afterAll } from "vitest";
+import { expect, it, describe, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 
 // 13.85.3 — Eliminamos el `vi.mock("@react-pdf/renderer", ...)` local porque
@@ -13,27 +13,28 @@ vi.mock("@/lib/downloadBlob", () => ({
 
 import { descargarPdf } from "../descargarPdf";
 
-// Auditoría 13.137.31 (barrido de mutaciones globales): la asignación directa a
-// `global.URL.createObjectURL/revokeObjectURL` a nivel módulo dejaba estos métodos
-// reemplazados de forma permanente para todos los archivos del shard bajo singleFork.
-// Migrado a guardado/restauración explícita en beforeAll/afterAll del archivo.
-const origCreateObjectURL = URL.createObjectURL;
-const origRevokeObjectURL = URL.revokeObjectURL;
+// Auditoría 13.137.32: migrado de beforeAll/afterAll a beforeEach/afterEach para
+// garantizar restauración de URL.createObjectURL/revokeObjectURL entre cada test
+// del archivo. Asegura que cualquier excepción intermedia no deje contaminado
+// el global URL para tests subsiguientes del shard.
+let origCreateObjectURL: typeof URL.createObjectURL;
+let origRevokeObjectURL: typeof URL.revokeObjectURL;
 
-beforeAll(() => {
+beforeEach(() => {
+  origCreateObjectURL = URL.createObjectURL;
+  origRevokeObjectURL = URL.revokeObjectURL;
   URL.createObjectURL = vi.fn(() => "mock-url");
   URL.revokeObjectURL = vi.fn();
+  descargarBlobMock.mockClear();
 });
 
-afterAll(() => {
+afterEach(() => {
   URL.createObjectURL = origCreateObjectURL;
   URL.revokeObjectURL = origRevokeObjectURL;
 });
 
 describe("pdf/render/descargarPdf", () => {
-  beforeEach(() => {
-    descargarBlobMock.mockClear();
-  });
+
 
   it("renderiza el elemento y delega la descarga del Blob", async () => {
     const pdfSpy = vi.spyOn(ReactPDF, "pdf");
