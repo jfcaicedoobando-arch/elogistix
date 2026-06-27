@@ -6,8 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.40] - 2026-06-27
+- **chore(ci) — matriz de tests a 20 shards**: `.github/workflows/ci.yml` ahora corre `shard: [1..20]` / `total: [20]`. Cada shard ejecuta ~13 archivos (~130 tests) — margen sano bajo el `timeout-minutes: 20` con `singleFork: true`.
+
 ## [13.137.39] - 2026-06-27
-- **chore(ci) — matriz de tests pasa de 12 a 3 shards**: `.github/workflows/ci.yml` reduce la matriz a `shard: [1,2,3]` / `total: [3]`. Menos jobs paralelos en GitHub Actions; cada shard ejecuta ~4x más tests. Nota: con `singleFork: true` y `fileParallelism: false` en `vitest.config.ts`, los shards corren serializados — vigilar el `timeout-minutes: 20` por si algún shard se acerca al límite.
 
 ## [13.137.38] - 2026-06-27
 - **fix(ci/coverage shard) — exit 1 en shards individuales**: `vitest.config.ts` aplicaba thresholds globales (lines 38, branches 72, etc.) también cuando se corría con `--shard=N/12`, donde sólo un subconjunto de tests ejecuta y la cobertura medida es ~6%. Los overrides `--coverage.thresholds.*=0` por CLI no vencen a la config anidada en Vitest 3. Ahora los thresholds se aplican únicamente cuando NO se pasa `--shard` (sigue activo en `test:coverage:merge`). Esto desbloquea el job "Tests (shard 3/12)" sin debilitar el gate real de cobertura.
