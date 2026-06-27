@@ -7,19 +7,7 @@
  */
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Lock, Unlock } from "lucide-react";
 import {
   useCerrarEmbarque,
@@ -27,10 +15,11 @@ import {
   useReabrirEmbarque,
   useValidacionCierre,
 } from "@/features/embarques/hooks/useCierreEmbarque";
-import { useCierreDialog, CIERRE_MOTIVO_MIN } from "@/features/embarques/hooks/useCierreDialog";
+import { useCierreDialog } from "@/features/embarques/hooks/useCierreDialog";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { CierreChecklistCard } from "./cierre/CierreChecklistCard";
 import { CierreHistorialCard } from "./cierre/CierreHistorialCard";
+import { CerrarEmbarqueDialog, ReabrirEmbarqueDialog } from "./cierre/CierreDialogs";
 
 // v13.89.2 — Etiquetas y mapeos ahora viven en `utils/cierreCheckMeta.ts`.
 
