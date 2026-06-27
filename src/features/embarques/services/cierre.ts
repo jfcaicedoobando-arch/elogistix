@@ -70,8 +70,62 @@ export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry
     .eq("embarque_id", embarqueId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return ((data as unknown) as CierreLogEntry[]) ?? [];
+  const principal = (((data as unknown) as CierreLogEntry[]) ?? []).map((e) => ({
+    ...e,
+    origen: "log" as const,
+  }));
+
+  // Fallback: cierres/reaperturas históricos registrados solo en bitácora
+  // (antes de que existiera cierre_embarque_log o ejecutados con UPDATE directo de estado).
+  const { data: bitacora } = await supabase
+    .from("bitacora_actividad")
+    .select("id, usuario_id, usuario_email, accion, detalles, created_at")
+    .eq("entidad_id", embarqueId)
+    .eq("accion", "cambiar_estado")
+    .order("created_at", { ascending: false });
+
+  const fallback: CierreLogEntry[] = ((bitacora ?? []) as Array<{
+    id: string;
+    usuario_id: string | null;
+    usuario_email: string | null;
+    detalles: Record<string, unknown> | null;
+    created_at: string;
+  }>)
+    .map((b) => {
+      const det = (b.detalles ?? {}) as { estado_nuevo?: string; estado_anterior?: string };
+      const nuevo = (det.estado_nuevo ?? "").toLowerCase();
+      const anterior = (det.estado_anterior ?? "").toLowerCase();
+      let accion: "cerrar" | "reabrir" | null = null;
+      if (nuevo === "cerrado") accion = "cerrar";
+      else if (anterior === "cerrado") accion = "reabrir";
+      if (!accion) return null;
+      return {
+        id: `bit-${b.id}`,
+        embarque_id: embarqueId,
+        accion,
+        usuario_id: b.usuario_id,
+        usuario_email: b.usuario_email,
+        motivo: null,
+        snapshot: null,
+        created_at: b.created_at,
+        origen: "bitacora" as const,
+      } satisfies CierreLogEntry;
+    })
+    .filter((e): e is CierreLogEntry => e !== null);
+
+  // Evitar duplicar si ya hay un registro en cierre_embarque_log con el mismo timestamp aproximado.
+  const principalKeys = new Set(
+    principal.map((p) => `${p.accion}-${p.created_at.slice(0, 16)}`),
+  );
+  const fallbackUnico = fallback.filter(
+    (f) => !principalKeys.has(`${f.accion}-${f.created_at.slice(0, 16)}`),
+  );
+
+  return [...principal, ...fallbackUnico].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  );
 }
+
 
 // ============================================================
 // v13.89.0 — Cierre administrativo: resumen por embarque y conteo global
