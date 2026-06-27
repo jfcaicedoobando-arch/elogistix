@@ -7,12 +7,19 @@ import type {
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/features/auditoria/types";
-import { SCORE_THRESHOLDS } from "@/features/auditoria/constants";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
 export { calcularRanking, type OperadorRanking, type RankingResultado } from "./ejecutivoRanking";
 
-export type ScoreEstado = "excelente" | "bueno" | "regular" | "malo";
+// `calcularScore` / `calcularRegresion` / `RIESGO_UMBRAL_MXN` viven en `./ejecutivoScore` (split Power-of-10 #4).
+export {
+  calcularScore,
+  calcularRegresion,
+  RIESGO_UMBRAL_MXN,
+  type ScoreEstado,
+  type RegresionScore,
+} from "./ejecutivoScore";
+
 
 export const PESOS: Record<SeveridadAuditoria, number> = {
   critico: 5,
