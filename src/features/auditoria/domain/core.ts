@@ -29,6 +29,12 @@ export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "proforma_borrador_abandonada",
   "proforma_inconsistente",
   "embarque_huerfano",
+  "factura_sin_timbrar",
+  "rep_pendiente",
+  "factura_cancelada_sin_sustitucion",
+  "cxc_vencida",
+  "cxp_por_capturar_estancada",
+  "cxp_vencida",
 ];
 
 /** YYYY-MM-DD del día indicado (default: hoy) **en UTC**. */

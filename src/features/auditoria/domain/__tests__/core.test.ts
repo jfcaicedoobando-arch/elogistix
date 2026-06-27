@@ -147,6 +147,12 @@ describe("lib/domain/auditoria", () => {
       "proforma_borrador_abandonada",
       "proforma_inconsistente",
       "embarque_huerfano",
+      "factura_sin_timbrar",
+      "rep_pendiente",
+      "factura_cancelada_sin_sustitucion",
+      "cxc_vencida",
+      "cxp_por_capturar_estancada",
+      "cxp_vencida",
     ];
     expect(REGLAS_AUDITORIA.sort()).toEqual(expected.sort());
   });
