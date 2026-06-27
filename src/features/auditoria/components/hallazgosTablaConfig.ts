@@ -19,6 +19,9 @@ export const reglaLabel: Record<ReglaAuditoria, string> = {
   factura_sin_timbrar: "Factura sin timbrar",
   rep_pendiente: "REP pendiente",
   factura_cancelada_sin_sustitucion: "Cancelada sin sustitución",
+  cxc_vencida: "CXC vencida",
+  cxp_por_capturar_estancada: "CXP por capturar",
+  cxp_vencida: "CXP vencida",
 };
 
 export const reglaToTab: Record<ReglaAuditoria, string> = {
