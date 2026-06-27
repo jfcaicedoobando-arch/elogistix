@@ -14,7 +14,6 @@ if (process.env.CI) {
     try {
       const path = (globalThis as { expect?: { getState?: () => { testPath?: string } } })
         .expect?.getState?.()?.testPath;
-      // eslint-disable-next-line no-console -- shard-trace instrumentation (CI only)
       console.log(`[shard-trace] FILE_START ${path ?? "?"} @ ${new Date().toISOString()}`);
     } catch { /* noop */ }
   });
@@ -22,7 +21,6 @@ if (process.env.CI) {
     try {
       const path = (globalThis as { expect?: { getState?: () => { testPath?: string } } })
         .expect?.getState?.()?.testPath;
-      // eslint-disable-next-line no-console -- shard-trace instrumentation (CI only)
       console.log(`[shard-trace] FILE_END   ${path ?? "?"} @ ${new Date().toISOString()}`);
     } catch { /* noop */ }
   });
