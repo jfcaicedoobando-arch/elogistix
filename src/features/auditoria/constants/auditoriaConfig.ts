@@ -11,6 +11,9 @@ import {
   FileWarning,
   FileX,
   Receipt,
+  FileCheck,
+  Stamp,
+  Ban,
   type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
