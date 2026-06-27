@@ -6,6 +6,31 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.33] - 2026-06-27
+- **fix(tests) — cierre de pendientes #1, #4, #5 de la auditoría de los 12 shards**: barrido sistemático con 4 subagentes en paralelo (mutaciones globales, vi.hoisted mutables, act síncronos, mocks de Supabase). Resultado: pendiente #1 cerrado sin acción (0 hallazgos accionables — los 93 `act(() => …)` síncronos auditados son legítimamente síncronos, todos los handlers async ya usan `await act(async …)`). Pendiente #2 documentado como diferido (sólo cosmético, sin riesgo).
+  - **Fase A — pendiente #5 CRÍTICA (5 archivos, arrays/objetos mutables sin reset)**:
+    - `src/features/admin/services/__tests__/idempotencia.test.ts`: agregado `beforeEach` que limpia `mock.rpcCalls.length = 0` y `mock.tableCalls.length = 0` (antes `rpcCalls` acumulaba a lo largo de 4 tests; `.at(-1)` podía devolver llamada del test anterior).
+    - `src/features/facturacion/services/__tests__/proyeccion.test.ts`: agregado `beforeEach` con `mock.tableCalls.length = 0`.
+    - `src/features/auditoria/services/__tests__/reporte.test.ts`: agregado `beforeEach(() => mockSupabase.rpc.mockReset())`.
+    - `src/services/storage/__tests__/facturas.test.ts`: agregado `beforeEach` con `mockClear()` para `from` y `createSignedUrl`.
+    - `src/services/storage/__tests__/index.test.ts`: agregado `beforeEach` con `mockClear()` + re-aplicación de `mockResolvedValue` por defecto (el segundo test usa `mockResolvedValueOnce` con error que de otro modo se filtraría).
+  - **Fase B — pendiente #4 ALTA (3 hallazgos accionables migrados; 2 dejados con comentario justificativo)**:
+    - `src/lib/observability/sentry/__tests__/environment.test.ts`: `originalLocation` movido de scope-módulo a `let` dentro de `beforeEach` para evitar snapshot contaminado si otro archivo del shard mutó `window.location` antes de cargar este módulo.
+    - `src/components/shared/__tests__/ErrorBoundary.test.tsx`: mismo fix de `originalLocation` dentro de `beforeEach`.
+    - `src/pdf/render/__tests__/descargarPdf.test.ts`: migrado de `beforeAll/afterAll` a `beforeEach/afterEach` para que cualquier excepción intermedia no deje `URL.createObjectURL/revokeObjectURL` contaminados entre tests.
+    - `src/lib/browserStorage/__tests__/browserStorage.test.ts` y `src/features/facturacion/services/__tests__/descargarCfdiFacturapi.test.ts`: no modificados — el primero requiere `delete globalThis.window` literal para simular SSR (vi.stubGlobal no puede simular ausencia de propiedad); el segundo ya tiene `try/finally` robusto.
+  - **Fase C — pendiente #5 ALTA (8 archivos, `vi.fn()` hoisted sin reset)**:
+    - `src/features/admin/hooks/usuario/__tests__/useUsuario.test.tsx`: `beforeEach` con `mockReset()` para `mockFetch`, `mockUpdate`, `mockDelete`.
+    - `src/features/cotizacion/hooks/__tests__/useCotizacionConversions.test.tsx`: `afterEach(() => vi.clearAllMocks())` a nivel módulo (cubre 3 describes).
+    - `src/features/crm/hooks/__tests__/leadsBulk.test.tsx`: `beforeEach` con `mockReset()` para los 3 mocks (test 3 dejaba `mockRejectedValueOnce` residual).
+    - `src/features/operaciones/hooks/__tests__/useOperaciones.test.tsx`: `beforeEach` con `mockFetchStats.mockReset()` (tests 3/4 usaban `mockResolvedValue` permanente).
+    - `src/features/presupuesto/hooks/__tests__/usePresupuesto.test.tsx`: `beforeEach` con `mockReset()` para los 4 mocks.
+    - `src/features/tesoreria/hooks/__tests__/useTesoreria.test.tsx`: implementaciones baked-in del `vi.hoisted` movidas a `beforeEach` (`mockFetchSaldos.mockResolvedValue([])` + `mockCobranza.mockReturnValue({...})` + `mockCxp.mockReturnValue({...})`) para evitar que `mockReturnValueOnce` del test 2 persista.
+    - `src/features/reportes/hooks/__tests__/useReportes.test.tsx`: `beforeEach` con `mockUseRentabilidad.mockReset()`.
+    - `src/features/cotizacion/hooks/__tests__/useCotizacionCostos.test.tsx`: `afterEach(() => vi.clearAllMocks())` a nivel módulo (cubre 2 describes).
+  - **Pendiente #2 diferido**: 5 archivos TRIVIAL identificados (`organization/index`, `auditoria/comentarios`, `auditoria/revisiones`, `auditoria/snooze`, `notificaciones/index`) que usan `createSupabaseChainMock` (legacy) en lugar de `createSupabaseMock`. La migración no arregla bugs — sólo homogeniza el helper, requiere reescribir aserciones `.upsert.mock.calls[0][0]` → `getMutationPayload('tabla','upsert')` en cada archivo (3-8 cambios por archivo). 24 archivos COMPLEJOS/NO MIGRABLES adicionales (auth, functions.invoke, storage.createSignedUrl, paginación stateful) se mantienen con mocks manuales por diseño — `createSupabaseMock` no expone esas APIs.
+  - **Verificación**: ESLint pasa con 0 warnings; tsgo limpio.
+
 ## [13.137.32] - 2026-06-27
 - **fix(lint)**: eliminadas 2 directivas `eslint-disable-next-line no-console` no utilizadas en `src/test/setup.ts` (la regla `no-console` no aplica a archivos de test, por lo que las directivas generaban warnings con `--max-warnings 0`).
 
