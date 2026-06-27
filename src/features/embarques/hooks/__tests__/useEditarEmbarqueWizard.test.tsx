@@ -47,7 +47,7 @@ const makeWrapper = () => {
 
 describe("useEditarEmbarqueWizard", () => {
   it("carga datos del embarque e inicializa formulario", async () => {
-    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper });
+    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper: makeWrapper() });
 
     expect(result.current.embarque?.expediente).toBe("EXP-001");
     // v13.137.24: el `useEffect` de inicialización corre tras el primer render;
