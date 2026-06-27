@@ -148,3 +148,47 @@ describe("conversiones/embarques.ts - extra coverage", () => {
     await expect(convertirCotizacionAEmbarques(makeCot())).rejects.toThrow("update-fail");
   });
 });
+
+describe("conversiones/embarques.ts - final coverage push", () => {
+  it("lanza error si falla la inserción del embarque principal", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: null, error: new Error("emb-fail") });
+
+    await expect(convertirCotizacionAEmbarques(makeCot())).rejects.toThrow("emb-fail");
+  });
+
+  it("lanza error si falla la inserción de contenedores hijos", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: { id: "emb-1" }, error: null });
+    mock.setTableResult("embarque_contenedores", { data: null, error: new Error("hijos-fail") });
+
+    await expect(convertirCotizacionAEmbarques(makeCot())).rejects.toThrow("hijos-fail");
+  });
+
+  it("maneja conceptos_venta no siendo un array", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: { id: "emb-1" }, error: null });
+    mock.setTableResult("embarque_contenedores", { data: [{ id: "h1" }], error: null });
+    mock.setTableResult("cotizaciones", { data: null, error: null });
+
+    const cot = makeCot({ conceptos_venta: null as any });
+    await convertirCotizacionAEmbarques(cot);
+    
+    // Si llegamos aquí sin que explote el Array.isArray check, cubrimos la rama else
+    expect(mock.tableCalls.some(c => c.table === "conceptos_venta")).toBe(false);
+  });
+
+  it("crearEmbarqueBorradorDesdeCotizacion lanza error si falla la consulta inicial", async () => {
+    mock.setTableResult("cotizaciones", { data: null, error: new Error("query-fail") });
+    await expect(crearEmbarqueBorradorDesdeCotizacion("cot-1")).rejects.toThrow("query-fail");
+  });
+
+  it("crearEmbarqueBorradorDesdeCotizacion lanza error si falla la RPC", async () => {
+    mock.setTableResult("cotizaciones", { data: { tipo_documento: "real" }, error: null });
+    mock.setRpcResult("crear_embarque_borrador_desde_cotizacion", { data: null, error: new Error("rpc-fail") });
+    await expect(crearEmbarqueBorradorDesdeCotizacion("cot-1")).rejects.toThrow("rpc-fail");
+  });
+});
