@@ -14,6 +14,10 @@ Matriz vigente (v13.24.1):
 | Aéreo | Factura Comercial, Packing List | + Air Waybill (AWB) | + Certificado de Origen, Ficha Técnica |
 | Terrestre | Factura, Lista de Empaque | + Carta Porte | Carta Porte, Factura, Lista de Empaque |
 
-Severidad: `medio` si estado = Confirmado, `alto` para el resto.
+Severidad `docs_faltantes`: `medio` si estado = Confirmado, `alto` para el resto.
+
+Severidad `docs_pendientes_avanzado`: `alto` (bajada desde `critico` en v13.138.4, Fase 1 modernización auditoría). El candado `validar_cierre_embarque` ya impide cerrar embarques con documentos en estado Pendiente, por lo que dejar este hallazgo como crítico duplicaba una regla que el sistema ya bloquea.
+
+La regla `ventas_sin_facturar` excluye embarques con `etd < 2026-04-01` (fecha de inicio del nuevo modelo de facturación FacturAPI). Los embarques históricos se reconcilian con el backfill en `/admin/auditoria`.
 
 Al agregar un nuevo modo, actualizar **ambos** lugares en la misma PR.
