@@ -58,7 +58,7 @@ describe("useEditarEmbarqueWizard", () => {
   });
 
   it("permite cambiar de paso", () => {
-    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper });
+    const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper: makeWrapper() });
     
     act(() => {
       result.current.setCurrentStep(2);
