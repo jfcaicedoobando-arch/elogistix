@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.46] - 2026-06-27
+- **fix(ci) — cobertura desplomada a 22% en merge**: tras agregar `--reporter=default` junto a `--reporter=blob` en `test:coverage:shard` (v13.137.45), el blob dejó de incluir la cobertura v8 completa de cada shard, así que al fusionar los 20 blobs el reporte daba 22.17% lines (vs umbral 38%) y el job de merge tronaba con exit 1. Revertimos el script a usar SOLO `--reporter=blob` (manteniendo `--retry=2`). Si en el futuro hace falta diagnosticar un shard, correrlo local con `--reporter=default` o revisar el JUnit XML.
+
 ## [13.137.45] - 2026-06-27
 - **fix(ci) — visibilidad de fallas en shards de tests**: el script `test:coverage:shard` usaba solo `--reporter=blob`, que escribe JSON pero no imprime tests fallidos. Cuando un shard reventaba en CI veíamos solo `exit 1` sin pista alguna del culpable (caso shard 5/20 hoy). Agregado `--reporter=default` en paralelo: blob sigue alimentando el merge de cobertura y default imprime el resumen de fallas en stdout. Próximo fallo en CI será diagnosticable directo del log.
 
