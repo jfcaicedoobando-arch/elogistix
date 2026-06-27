@@ -14,6 +14,9 @@ import {
   FileCheck,
   Stamp,
   Ban,
+  Banknote,
+  HandCoins,
+  AlertOctagon,
   type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
@@ -130,11 +133,40 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
       "Factura cancelada con motivo SAT 01 (sustitución) sin folio sustituto emitido tras 24 horas.",
     icon: Ban,
   },
+  cxc_vencida: {
+    shortLabel: "CXC vencida",
+    label: "Cuenta por cobrar vencida",
+    description:
+      "Factura timbrada al cliente cuya fecha de vencimiento ya pasó y conserva saldo pendiente.",
+    icon: AlertOctagon,
+  },
+  cxp_por_capturar_estancada: {
+    shortLabel: "CXP por capturar",
+    label: "Factura de proveedor estancada en captura",
+    description:
+      "Factura de proveedor que permanece en estado 'por capturar' más allá del umbral configurado.",
+    icon: HandCoins,
+  },
+  cxp_vencida: {
+    shortLabel: "CXP vencida",
+    label: "Cuenta por pagar a proveedor vencida",
+    description:
+      "Factura de proveedor vigente cuya fecha de vencimiento ya pasó sin que se haya programado el pago.",
+    icon: Banknote,
+  },
 };
 
 /** Orden canónico de presentación (mayor severidad operativa primero). */
 export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "factura_cancelada_sin_sustitucion",
+  "cxc_vencida",
+  "cxp_vencida",
+  "docs_pendientes_avanzado",
+  "ventas_sin_facturar",
+  "margen_negativo",
+  "factura_sin_timbrar",
+  "rep_pendiente",
+  "cxp_por_capturar_estancada",
   "docs_pendientes_avanzado",
   "ventas_sin_facturar",
   "margen_negativo",
