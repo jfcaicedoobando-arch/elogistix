@@ -7,10 +7,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-const validateWizardStepMock = vi.fn();
-const orchestratorSubmit = vi.fn();
-const notifyErrorMock = vi.fn();
-const clearExpediente = vi.fn();
+const { validateWizardStepMock, orchestratorSubmit, notifyErrorMock, clearExpediente } = vi.hoisted(() => ({
+  validateWizardStepMock: vi.fn(),
+  orchestratorSubmit: vi.fn(),
+  notifyErrorMock: vi.fn(),
+  clearExpediente: vi.fn(),
+}));
 
 vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
   useProveedoresForSelect: () => ({ data: [{ id: "pv-1", nombre: "Prov" }] }),

@@ -19,14 +19,18 @@ import {
 } from "../queries";
 
 describe("proformas queries", () => {
-  beforeEach(() => { mock.tableCalls.length = 0; });
+  beforeEach(() => {
+    mock.resetResults();
+    mock.tableCalls.length = 0;
+  });
 
   it("fetchProformasEmbarque devuelve filas y filtra por embarque_id", async () => {
     mock.setTableResult("proformas", { data: [{ id: "1" }], error: null });
     const res = await fetchProformasEmbarque("emb-1");
     expect(res).toEqual([{ id: "1" }]);
     const call = mock.tableCalls[0];
-    expect(call.opArgs[call.ops.indexOf("eq")]).toEqual(["embarque_id", "emb-1"]);
+    const eqArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "eq");
+    expect(eqArgs).toContainEqual(["eq", ["embarque_id", "emb-1"]]);
   });
 
   it("fetchProformasEmbarque devuelve [] cuando data es null", async () => {

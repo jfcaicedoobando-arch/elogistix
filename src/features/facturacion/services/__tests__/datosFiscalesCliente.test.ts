@@ -9,7 +9,10 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { fetchClienteFiscal, actualizarDatosTimbradoFactura } from "../datosFiscalesCliente";
 
 describe("datosFiscalesCliente service", () => {
-  beforeEach(() => { mock.tableCalls.length = 0; });
+  beforeEach(() => {
+    mock.resetResults();
+    mock.tableCalls.length = 0;
+  });
 
   it("fetchClienteFiscal devuelve la fila", async () => {
     const row = { rfc: "XAXX010101000", codigo_postal: "01000", regimen_fiscal: "601", uso_cfdi_default: "G03" };

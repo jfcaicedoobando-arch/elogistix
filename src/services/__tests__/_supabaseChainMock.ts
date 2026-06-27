@@ -32,6 +32,10 @@ export function createSupabaseMock() {
 
   function setTableResult(table: string, res: Resp) { tableResults.set(table, res); }
   function setRpcResult(fn: string, res: Resp) { rpcResults.set(fn, res); }
+  function resetResults() {
+    tableResults.clear();
+    rpcResults.clear();
+  }
 
   function makeChain(table: string, ops: string[], opArgs: unknown[][]) {
     const res = tableResults.get(table) ?? { data: [], error: null };
@@ -104,7 +108,7 @@ export function createSupabaseMock() {
     return null;
   }
 
-  return { supabase, setTableResult, setRpcResult, tableCalls, rpcCalls, getMutationPayload };
+  return { supabase, setTableResult, setRpcResult, resetResults, tableCalls, rpcCalls, getMutationPayload };
 }
 
 /**
