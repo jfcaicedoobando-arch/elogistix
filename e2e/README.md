@@ -66,7 +66,13 @@ Resultados HTML quedan en `playwright-report/`.
 | 03 | `03-factura.spec.ts` | Listado de facturación carga, tabs principales visibles. |
 | 04 | `04-conciliacion.spec.ts` | Vista de conciliación / proformas con datos. |
 | 05 | `05-portal.spec.ts` | Login portal cliente → dashboard portal. |
-| 07 | `07-wizard-embarque-teclado.spec.ts` | Wizard Nuevo Embarque navegado sólo con teclado: combobox cotización (Tab+Enter), badges HEREDADO aparecen/desaparecen, Enter en input no rompe el form, StepIndicator expone `role=list`. Requiere `E2E_HAS_SEED=1`. |
+| 06 | `06-security-cross-org.spec.ts` | Bloqueo de acceso cross-org vía URL directa (UI guard + REST sin leak). |
+| 07 | `07-wizard-embarque-teclado.spec.ts` | Wizard Nuevo Embarque sólo con teclado (combobox cotización, badges HEREDADO, StepIndicator). Requiere `E2E_HAS_SEED=1`. |
+| 08 | `08-flujo-fiscal.spec.ts` | Happy path: proforma → factura → timbrado → pago PPD → REP. Requiere `E2E_FISCAL=1` + FacturApi sandbox. |
+| 09 | `09-cierre-embarque.spec.ts` | Checklist bloquea el cierre + tooltip; bypass admin_org opcional. **Muta**: reabre el embarque en cleanup. |
+| 10 | `10-auditoria-bulk.spec.ts` | Selección múltiple de hallazgos + marcar revisados; snooze rechaza >30 días. **Muta**: deja revisiones marcadas `E2E_TEST`. |
+| 11 | `11-cotizacion-a-embarque.spec.ts` | Cotización aceptada → `crear_embarque_borrador_desde_cotizacion` → expediente real. **Muta**: borra el embarque borrador en cleanup. |
+| 12 | `12-cxp-factura-pago.spec.ts` | Captura factura proveedor (asigna folio `FP-XXXXXX`) + registra pago. **Muta**: borra pago y factura en cleanup. |
 
 Estos specs son **smoke**: validan que la app navega sin crashear y los
 componentes clave montan. Cuando se estabilicen los selectores se pueden
