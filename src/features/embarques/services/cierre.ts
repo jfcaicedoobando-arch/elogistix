@@ -31,10 +31,13 @@ export interface CierreLogEntry {
   embarque_id: string;
   accion: "cerrar" | "reabrir";
   usuario_id: string | null;
+  usuario_email?: string | null;
   motivo: string | null;
   snapshot: Record<string, unknown> | null;
   created_at: string;
+  origen?: "log" | "bitacora";
 }
+
 
 export async function validarCierre(embarqueId: string): Promise<CierreValidacion> {
   // SAFE-CAST: RPC tipada como Json en types.ts generados.
