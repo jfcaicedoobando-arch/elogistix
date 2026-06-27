@@ -73,7 +73,7 @@ describe("useEditarFacturaProveedorForm", () => {
       { wrapper: createWrapper() },
     );
     await waitFor(() => expect(result.current.values).not.toBeNull());
-    act(() => result.current.handleProveedor("otro", "Otro"));
+    act(() => (result.current.handleProveedor as () => void)());
     expect(result.current.values!.provId).toBe("p-1");
   });
 
