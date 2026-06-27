@@ -59,16 +59,20 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
 import { useEmbarquesPageController } from "../useEmbarquesPageController";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
-const wrapper = ({ children }: { children: React.ReactNode }) => {
+// v13.137.36: factory por-test para evitar QueryClient leak (ver
+// useEmbarqueSubmitOrchestrator.test.tsx).
+const makeWrapper = () => {
   const Q = createWrapper();
-  return <MemoryRouter><Q>{children}</Q></MemoryRouter>;
+  return ({ children }: { children: React.ReactNode }) => (
+    <MemoryRouter><Q>{children}</Q></MemoryRouter>
+  );
 };
 
 beforeEach(() => { vi.clearAllMocks(); });
 
 describe("useEmbarquesPageController", () => {
   it("expone columnas, canEdit y operadores", () => {
-    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper });
+    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper: makeWrapper() });
     expect(result.current.canEdit).toBe(true);
     expect(result.current.columns).toHaveLength(2);
     expect(result.current.operadoresUnicos).toEqual(["op-1"]);
@@ -80,7 +84,7 @@ describe("useEmbarquesPageController", () => {
       { id: "e1", expediente: "EXP-001", cliente_nombre: "ACME", modo: "MAR", tipo: "FCL",
         etd: "2026-01-01", eta: "2026-02-01", estado: "Confirmado", operador: "op-1" },
     ]);
-    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper });
+    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper: makeWrapper() });
     await act(async () => { await result.current.exportarCsv(); });
     expect(exportToCsv).toHaveBeenCalledTimes(1);
     const [fileName, columns, rows] = exportToCsv.mock.calls[0];
@@ -92,7 +96,7 @@ describe("useEmbarquesPageController", () => {
 
   it("exportarCsv sin datos: notifyError 'Sin datos' y NO exporta", async () => {
     fetchExport.mockResolvedValueOnce([]);
-    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper });
+    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper: makeWrapper() });
     await act(async () => { await result.current.exportarCsv(); });
     expect(exportToCsv).not.toHaveBeenCalled();
     expect(notifyError).toHaveBeenCalledWith(
@@ -103,7 +107,7 @@ describe("useEmbarquesPageController", () => {
 
   it("exportarCsv con error de fetch: notifyError con mensaje y resetea flag", async () => {
     fetchExport.mockRejectedValueOnce(new Error("boom"));
-    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper });
+    const { result } = renderHook(() => useEmbarquesPageController(), { wrapper: makeWrapper() });
     await act(async () => { await result.current.exportarCsv(); });
     expect(notifyError).toHaveBeenCalledWith(
       expect.anything(),

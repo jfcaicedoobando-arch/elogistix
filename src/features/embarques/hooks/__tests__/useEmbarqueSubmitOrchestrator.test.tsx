@@ -32,9 +32,12 @@ vi.mock("@/features/embarques/services", () => ({
   subirDocumentosEmbarque: subirDocsMock,
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => {
+// v13.137.36: `createWrapper()` se ejecuta UNA vez por test (factory), no en
+// cada render. Antes el wrapper a nivel módulo invocaba `createWrapper()` dentro
+// del cuerpo del componente → nuevo QueryClient por render, leak global.
+const makeWrapper = () => {
   const QueryWrapper = createWrapper();
-  return (
+  return ({ children }: { children: React.ReactNode }) => (
     <MemoryRouter>
       <QueryWrapper>{children}</QueryWrapper>
     </MemoryRouter>

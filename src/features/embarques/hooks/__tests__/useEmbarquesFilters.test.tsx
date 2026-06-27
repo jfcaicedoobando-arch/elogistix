@@ -1,9 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import { useEmbarquesFilters } from "../useEmbarquesFilters";
 
-const wrapper = withNuqsTestingAdapter({ hasMemory: true });
+// v13.137.36: el adapter de nuqs con `hasMemory: true` retiene URL state entre
+// renders. Reconstruirlo por test elimina la dependencia de orden (test 3
+// arrancaba con `search="test-query"` del test 2).
+let wrapper: ReturnType<typeof withNuqsTestingAdapter>;
+beforeEach(() => {
+  wrapper = withNuqsTestingAdapter({ hasMemory: true });
+});
 
 describe("useEmbarquesFilters", () => {
   it("inicializa con valores por defecto", () => {
@@ -32,11 +38,11 @@ describe("useEmbarquesFilters", () => {
     await act(async () => {
       result.current.setPageRaw(2);
     });
-    
+
     await act(async () => {
       result.current.setFilter("modo", "Marítimo", "todos");
     });
-    
+
     expect(result.current.filters.modo).toBe("Marítimo");
     expect(result.current.page).toBe(0);
   });
