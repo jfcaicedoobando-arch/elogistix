@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.52] - 2026-06-27
+- **test(coverage) — PR-1 ramas en services/utils**: tres lotes paralelos elevan branch coverage en 16 archivos críticos. Batch A: `cotizacionForm.ts` 42→100%, `estadoResultadosDevengado.ts` 52→75.5%, `versionado/index.ts` 39→77.4%, `conversiones/embarques.ts` 51→81.3%. Batch B: `proveedorFacturas.ts` 17→96.2%, `leads/convertir.ts` 56→91.2%, `navieraCondiciones.ts` 50→81.5%, `forecast.ts` 32→81%, `proveedoresCrud.ts` 55→75%. Batch C: `portal/queries.ts` 57→76.9%, `comisiones/vendedoras.ts` 48→86.4%, `cierreCheckFormatters.ts` 40→92.7%, `pdf/layoutContable.ts` 36→100%, `comisiones/devengadas.ts` 58→96%, `embarques/paginados.ts` 43→95.8%, `errorReport.ts` 20→83.3%. Corregidos TS errors en `forecast.test.ts` (uso de `total` inexistente → asserts en `porMes`/`porVendedor`) y `paginados.test.ts` (cast `args as Record<string, unknown>`).
+
 ## [13.137.51] - 2026-06-27
 - **test(facturacion) — `useRegistrarPagoSubmit` (+6 tests)**: nuevo `useRegistrarPagoSubmit.test.tsx` cubre los caminos de mayor peso del flujo de pago: (1) happy PUE sin REP, (2) PPD timbrada con REP exitoso (2 toasts success), (3) PPD con `emitirRep` rechazado → notifica fallo de REP pero llama `onSuccess`, (4) PPD sin `pagoId` no intenta REP, (5) error en `mutateAsync` → notifica error, no registra actividad ni llama `onSuccess`, (6) `timbrandoRep` true durante el await de `emitirRep` y vuelve a false. Hook pasa de 0% a cobertura total de ramas.
 
