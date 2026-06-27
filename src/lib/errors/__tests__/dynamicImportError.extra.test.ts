@@ -92,7 +92,7 @@ describe("dynamicImportError · isDynamicImportError", () => {
 });
 
 describe("dynamicImportError · tryReloadForChunkError", () => {
-  let reloadSpy: ReturnType<typeof vi.fn>;
+  let reloadSpy: () => void;
 
   beforeEach(() => {
     vi.mocked(hasChunkReloadBeenAttempted).mockReturnValue(false);
