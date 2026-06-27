@@ -6,7 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.138.4] - 2026-06-27
+## [13.139.0] - 2026-06-27
+- **feat(auditoria) — Fase 3 modernización: score 60/40, regresión 7 días, snooze acotado y notificación al asignar**. Cambios al módulo Auditoría Operativa:
+  - **Score rebalanceado (60 % económico / 40 % higiene)** en `calcularScore` (`ejecutivoAgregados.ts`). Si una organización tiene fugas financieras detectadas (regla `margen_negativo`, `margen_bajo`, `proforma_vencida`), el `riesgoFinancieroMxn` arrastra el score hacia abajo con un umbral de saturación `RIESGO_UMBRAL_MXN = 500_000` MXN. Sin riesgo financiero se conserva el comportamiento histórico (sólo higiene) para no inflar tenants sin reglas financieras emitidas.
+  - **Detección de regresión 7 días**: `useAuditoriaEjecutivo` ahora consume `useAuditoriaSnapshots(14)` y expone `regresion7d` (`scoreAnterior`, `diferencia`, `fechaAnterior`). `EjecutivoScoreCard` muestra un badge con flecha (▲/▼) que cuantifica la variación contra el snapshot más cercano a hace 7 días (±3 días de tolerancia). Si no hay snapshot comparable, el badge no aparece.
+  - **Snooze acotado**: nuevo trigger BD `validar_snooze_auditoria` sobre `auditoria_revisiones` que bloquea (1) fechas pasadas y (2) snoozes > 30 días sin motivo justificado de al menos 20 caracteres. Validación espejo en cliente dentro de `useSnoozeHallazgo` para feedback inmediato sin viajar al servidor.
+  - **Notificación automática al asignar**: nuevo trigger BD `notificar_asignacion_hallazgo` que inserta en `notificaciones_internas` (tipo `auditoria_asignacion`) cuando un hallazgo se asigna o reasigna a un usuario distinto del que asigna. Auto-asignación (tomar hallazgo) no genera ruido. Si la notificación falla, la asignación no se bloquea.
+  - Tests añadidos en `domain/__tests__/ejecutivoAgregados.test.ts` para score 60/40 y `calcularRegresion`. Mocks de `useAuditoriaSnapshots` agregados a los tests del hook ejecutivo. Total: 128 tests (antes 125).
+  - **Pendientes Fase 3**: recordatorio email al vencer `fecha_limite`, escalamiento automático, y RPC `auditoria_embarques_mios` para operadores con sólo membresía — quedan en backlog para Fase 4.
+
+
 - **refactor(auditoria) — Fase 1 modernización del módulo Auditoría Operativa**: limpieza de reglas que ya están cubiertas por candados nuevos o que generaban falsos positivos contra el modelo viejo de facturación. Cambios en la RPC `auditoria_embarques_org`: (1) `docs_pendientes_avanzado` baja de severidad `critico` → `alto` (el candado `validar_cierre_embarque` ya bloquea el cierre con docs en pendiente, así que dejarlo crítico inflaba el score por duplicado); (2) `ventas_sin_facturar` deja de marcar embarques con `etd < 2026-04-01` (modelo previo a FacturAPI — esos se reconcilian con el backfill en `/admin/auditoria`); (3) piso de 1 día para `dias_borrador_abandonado` por seguridad. Memoria `auditoria-docs-faltantes-rules` actualizada con los nuevos contratos de severidad. No se tocan tablas ni RLS — sólo se reemplaza el cuerpo de la RPC.
 
 ## [13.138.3] - 2026-06-27
