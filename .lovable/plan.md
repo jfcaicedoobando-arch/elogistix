@@ -1,112 +1,61 @@
-## Auditoría visual UI/UX a 1920 × 1080
 
-Capturé 17 vistas clave del producto en resolución Full HD (1920 × 1080) con la sesión real del usuario admin y revisé bugs visuales, jerarquía, espacios y bordes. La consola está limpia (sólo warnings de React Router v7 future flags, no son visuales).
+# Auditoría E2E — Playwright (`/e2e`)
 
-A continuación resumo los hallazgos por severidad y propongo el alcance de la siguiente iteración (sólo UI/presentación, sin tocar lógica de negocio).
+Revisé `playwright.config.ts`, `globalSetup.ts`, `fixtures/auth.ts` y los 8 specs. Resumen analógico: la suite es como una alarma de casa con sensores conectados pero sin batería — el cableado existe, pero varios sensores apuntan a paredes que ya no están ahí (rutas obsoletas) y otros suenan aunque no pase nada (asserts tautológicos).
 
----
+## Hallazgos
 
-### 🔴 Alta prioridad (bugs visuales claros)
+### Bloqueantes (rompen o dan falsos verdes)
 
-1. **Embarques → tab `Demoras y Garantías` · tabla "Demoras por contenedor"**
-   La columna **"Días libres (override)"** muestra el texto `naviera` como si fuera un valor escrito; en realidad es el placeholder del input. Se confunde con un valor cargado.
-   *Fix:* placeholder con estilo `text-muted-foreground italic`, prefijo "ej. usa naviera" o icono ⓘ.
+1. **`globalSetup` escribe `internal.json`/`portal.json` pero ningún `project` los consume.** No hay `use: { storageState: "e2e/.auth/internal.json" }` en `playwright.config.ts`. El ahorro de "3-5s por spec" prometido en el comentario nunca ocurre — cada spec hace login fresco vía `loginAs`.
+2. **Spec 01 "credenciales inválidas" se rompe si `globalSetup` corrió.** Como la sesión queda persistida en el contexto del navegador (cuando lo cableemos según #1), `goto("/")` redirige al dashboard y el formulario nunca se renderiza. Falta `test.use({ storageState: { cookies: [], origins: [] } })` en ese test.
+3. **Spec 06 (cross-org) usa ruta inexistente.** `/facturacion/facturas/${id}` no existe (la real es `/facturacion/:id`). El test pasa porque la SPA muestra 404 genérico, no porque RLS bloquee. Además, un UUID dummy no valida cross-org — sólo valida "registro inexistente".
+4. **Spec 06 assert tautológico.** `expect(page).not.toHaveURL(new RegExp(\`${id}.*\\?\`))` exige `id` seguido de `?` (query string); tras `goto` nunca hay `?`, así que siempre pasa.
+5. **Spec 04 busca tabs obsoletos.** Pide `proformas|pendientes|conciliaci`, pero el rediseño v13.92.0 (que el propio spec 03 documenta) dejó sólo `Por timbrar | Emitidas | Notas de crédito`. El tab "Proformas pendientes" hoy vive en otra ruta.
+6. **Spec 08 usa Locator desactualizado tras `timbrar`.** `borrador` se define con `hasText: /Borrador/i`; después de timbrar el badge cambia a "Timbrada" y `borrador.getByRole("button", { name: /registrar pago/i })` resuelve a 0 elementos.
 
-2. **Embarques → tab `P&L` · card "Margen real"**
-   Muestra `0.0%` en color azul cuando la utilidad real es **-$49,774** y los demás KPIs ya marcan -100%. Inconsistencia visual peligrosa (usuario podría leer "todo bien").
-   *Fix:* mismo cálculo/color que `Utilidad real`; tono `destructive` cuando margen < 0.
+### Altos (afectan robustez)
 
-3. **Facturación (lista) · KPIs superiores**
-   Las sparklines de "FACTURADO" y "COBRADO" se superponen con las etiquetas `E F M A M J` y los puntos verdes/grises se ven cortados. En 1920px hay espacio de sobra para separarlos.
-   *Fix:* aumentar altura del card y dar `padding-right` al sparkline.
+7. **`playwright.config.ts` no tiene `webServer`.** Si el dev no levantó manualmente Vite en 8080, los specs fallan con `ERR_CONNECTION_REFUSED`. Debe agregarse `webServer: { command: "bun run dev", url: BASE_URL, reuseExistingServer: !process.env.CI }`.
+8. **Specs no cargan `.env.e2e`.** El README lo menciona pero ni `globalSetup` ni `playwright.config` hacen `dotenv.config({ path: ".env.e2e" })`. El usuario debe exportar variables manualmente.
+9. **Spec 02 race condition.** `Promise.race([firstRow, emptyState])` resuelve al primero visible; si el estado vacío parpadea antes de hidratar datos, el subsiguiente `firstRow.isVisible()` resulta `false` y el `test.skip` se dispara aunque sí haya datos.
+10. **`loginAs` regex no anclada.** `/\/$|\/login/i` matchea `/loginhistory`, `/loginabc`, etc. Debe ser `/^\/?$|^\/login(\/|$)/i`.
+11. **`globalSetup.saveStorageState`** no espera a que el shell autenticado esté listo (sólo a que la URL cambie). Si Supabase tarda en hidratar la sesión antes del primer `localStorage.setItem`, el `storageState` puede quedar incompleto.
 
-4. **Embarque detalle · header de chips**
-   `ELIMP00154` + chip `EIR` (negro) + ícono ⚓ suelto + chip verde `PROFORMA GENERADA` + chip ámbar `Admin pendiente · 2` mezclan tres formas y un ícono huérfano. Visualmente desordenado.
-   *Fix:* unificar a chips con la misma altura/border-radius; envolver el ícono ⚓ dentro de un chip "Modo: Marítimo" o moverlo a la metadata inferior.
+### Medios (mejoras)
 
-5. **Cierre · botón `Cerrar embarque` deshabilitado**
-   No comunica por qué (hay 3 pendientes en el checklist arriba, pero el botón sólo se ve gris).
-   *Fix:* `Tooltip` con motivo ("Faltan 3 pendientes del checklist") o leyenda en línea.
+12. **Falta `test.describe.configure({ mode: "serial" })`** en specs que mutan (08 fiscal). Aunque `workers: 1` lo cubre globalmente, marcar la intención previene regresiones si se sube a paralelo.
+13. **Spec 06 no intercepta network.** La defensa real es RLS; el spec sólo valida UI. Debe añadir `page.on("response")` y assertear que ningún POST a `/rest/v1/embarques?id=eq.<id>` devuelva una fila.
+14. **`pwRequest` importado y silenciado con `void`.** Eliminar el import sin uso en lugar del workaround.
 
----
+## Plan de remediación (3 lotes)
 
-### 🟡 Media prioridad (jerarquía y densidad en 1920px)
+### Lote 1 — Bloqueantes (1 PR)
+- Cablear `storageState` en `playwright.config.ts` con dos projects: `chromium-internal` (consume `internal.json`) y `chromium-portal` (consume `portal.json`). Spec 05 corre sólo en el segundo project.
+- Spec 01 segundo test: `test.use({ storageState: { cookies: [], origins: [] } })`.
+- Spec 06: corregir ruta a `/facturacion/${id}`. Reescribir assert principal a "UI muestra guard copy O la URL ya no contiene el ID". Documentar que `E2E_CROSS_ORG_*_ID` es **requerido** para validación real (con dummy UUID sólo se valida 404, no cross-org).
+- Spec 04: buscar tab `por timbrar` y luego navegar a la ruta de proformas pendientes real (validar dónde vive hoy: `/cotizaciones` o `/proformas`). Si ya no existe el concepto, eliminar el spec o moverlo a `/facturacion` tab `por timbrar`.
+- Spec 08: re-localizar la fila por número de factura (no por estado "Borrador") después de timbrar.
 
-6. **Compras → Resumen**, **Conciliación**, **Configuración → Empresa**, **Tarifas marítimas (grupo vacío)**
-   Mucho whitespace bajo el contenido en 1920×1080 (la página termina a ~50% del alto). Conciliación usa 4 cards full-width sobre una tabla de 5 filas → se siente diluido.
-   *Fix:* contenedor con `max-w-screen-2xl mx-auto` consistente, o repartir KPIs + tabla en grid 2 columnas cuando la altura lo permita.
+### Lote 2 — Altos (1 PR)
+- Añadir bloque `webServer` en `playwright.config.ts` (no-op cuando `E2E_BASE_URL` es remoto).
+- `globalSetup` y `playwright.config` cargan `dotenv` desde `.env.e2e` si existe.
+- Spec 02: cambiar `Promise.race` por esperar al `data-loading="false"` del DataTable + lectura síncrona del count.
+- `loginAs`: regex anclada `^/?$|^/login(/|$)`.
+- `globalSetup`: tras detectar URL post-login, esperar a `getByText(/libre carga/i)` antes de `storageState`.
 
-7. **Usuarios → tabla `Internos`**
-   La columna **"Cambiar rol"** repite literalmente el badge `ROL` (el select muestra el mismo texto que el chip de al lado). Además el select ocupa casi 1/3 del ancho.
-   *Fix:* mostrar el select **sólo** al pasar el mouse (icono ✎) o convertir el chip de la columna `ROL` en un select inline; eliminar la columna duplicada.
+### Lote 3 — Medios (1 PR)
+- Spec 08: `test.describe.configure({ mode: "serial" })` explícito.
+- Spec 06: agregar `page.on("response")` interceptando `/rest/v1/embarques`, `/rest/v1/facturas`, `/rest/v1/cotizaciones` filtrados por el ID dummy y asegurar que devuelvan `[]`.
+- Limpiar import `pwRequest` no usado.
+- Añadir `e2e/.auth/` a `.gitignore` si no está.
 
-8. **Dashboard · "Cargas activas por cliente"**
-   En 1920px la barra de progreso y el `75% del total` quedan flotando muy a la derecha, separados del nombre del cliente por un océano vacío.
-   *Fix:* limitar el ancho de la barra (`max-w-[480px]`) y agrupar con el porcentaje al lado del cliente.
+## Notas técnicas
 
-9. **Dashboard · timeline de estados (Confirmado → Entregado)**
-   Las líneas conectoras entre los 5 nodos quedan muy largas a 1920px y los nodos parecen islas.
-   *Fix:* `max-w-4xl mx-auto` para el timeline o grosor mayor en la línea.
+- Nada que cambiar en `src/`; toda la cirugía vive en `playwright.config.ts`, `e2e/globalSetup.ts`, `e2e/fixtures/auth.ts` y los 8 specs.
+- No bumpeamos `APP_VERSION` por cambios sólo en E2E; sí actualizamos `CHANGELOG.md` como entrada `chore(e2e)`.
+- No corro los specs como parte de la remediación: requieren credenciales staging que no están en el sandbox.
 
-10. **Embarques (lista) · columnas ETD/ETA/Modo**
-    `Modo` + icono pequeño quedan apretados; los badges `Datos pendientes` empujan la columna BL Master.
-    *Fix:* `min-w` por columna y truncate con tooltip en BL Master.
+## Pregunta antes de implementar
 
-11. **Header global**
-    Toda la zona central de la topbar está vacía (1280px sin contenido), sólo se ve el breadcrumb a la izquierda y los íconos a la derecha.
-    *Fix:* mover el buscador `⌘K` al centro o mostrar breadcrumb expandido.
-
----
-
-### 🟢 Baja prioridad (pulido)
-
-12. **Cotizaciones · header de columna "Subtotal"**
-    El icono de orden colisiona con el `text-right`, queda apretado contra "USD 7,584.02".
-
-13. **Auditoría operativa · card "Tendencia 30 días"**
-    Card vacío con sólo texto descriptivo ocupa el mismo tamaño que el card lleno de la izquierda → desequilibrio visual.
-
-14. **Sidebar · footer**
-    `v13.139.5` muy discreto; no hay separador con el menú del usuario.
-
-15. **Embarques → tab Facturación · cards "Pendiente / En proforma / Facturado"**
-    Las cards alternan border-color (verde, azul, gris) pero el contraste de "En proforma" (azul claro) y "Facturado" (verde claro) es bajo en light mode.
-
----
-
-### Alcance propuesto para la implementación
-
-Si apruebas, procedo en **build mode** con los siguientes lotes:
-
-```text
-Lote 1 — Bugs visuales (🔴 1–5)
-  · Demoras override placeholder
-  · P&L margen color/coherencia
-  · Facturación sparkline overlap
-  · Embarque header chips uniformes
-  · Cierre tooltip de bloqueo
-
-Lote 2 — Densidad y jerarquía (🟡 6–11)
-  · Containers max-w consistentes
-  · Tabla Usuarios sin columna duplicada
-  · Dashboard barras y timeline acotados
-  · Topbar con buscador centrado
-
-Lote 3 — Pulido (🟢 12–15)
-  · Headers de tabla con orden
-  · Auditoría layout balanceado
-  · Sidebar footer
-  · Contraste cards facturación
-```
-
-Cada lote bumpea versión patch (`13.139.x`) y actualiza `CHANGELOG.md`.
-
-### Detalles técnicos
-
-- Sólo se tocan archivos de presentación (`*.tsx` de componentes/features) y tokens CSS si hace falta ajustar contraste; **no se modifica RPC, services ni hooks de datos**.
-- Las capturas quedan en `/tmp/browser/audit/screenshots/` por si quieres revisarlas; puedo adjuntarlas en una captura específica si me pides un hallazgo en detalle.
-- No se detectaron errores de runtime, sólo warnings de React Router v7 (no son bloqueantes y están pinneados por la plataforma Lovable, ver `mem://constraint/lovable-stack-pins`).
-
-### Pregunta
-
-¿Avanzo con los **3 lotes en orden** o prefieres que arranque sólo con el **Lote 1 (bugs 🔴)** y luego decidimos?
+¿Avanzo con los 3 lotes secuenciales en un solo turno (PR único), o prefieres ir lote por lote para revisar entre cada uno?

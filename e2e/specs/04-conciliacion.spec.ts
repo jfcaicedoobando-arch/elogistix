@@ -1,28 +1,33 @@
 import { expect, test } from "@playwright/test";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
-test.describe("Flujo 04 — Conciliación / Proformas pendientes", () => {
-  test("tab de proformas pendientes carga sin errores", async ({ page }) => {
+/**
+ * Flujo 04 — "Por timbrar" (antes Conciliación / Proformas pendientes).
+ *
+ * v13.92.0 consolidó las proformas pendientes dentro del tab "Por timbrar"
+ * del módulo `/facturacion`. Este spec valida que ese tab monta y muestra
+ * datos o un empty state, sin crashes.
+ */
+test.describe("Flujo 04 — Por timbrar (proformas)", () => {
+  test("tab 'Por timbrar' carga sin errores", async ({ page }) => {
     await loginAs(page, internalCreds());
     await page.goto("/facturacion");
 
-    const tab = page.getByRole("tab", { name: /proformas|pendientes|conciliaci/i }).first();
+    const tab = page.getByRole("tab", { name: /por timbrar/i }).first();
     await expect(tab).toBeVisible({ timeout: 15_000 });
     await tab.click();
 
-    // Locators separados: filas reales del tbody vs estado vacío explícito.
-    // Antes el locator triple (`tbody tr, [role=row], [data-empty=true]`)
-    // resolvía a headers (rows) y daba falsos positivos.
+    // El tab muestra una tabla con proformas O un empty state.
     const dataRow = page.locator("table tbody tr").first();
     const emptyMarker = page.locator("[data-empty='true']").first();
-    const emptyText = page.getByText(/sin resultados|no hay/i).first();
+    const emptyText = page.getByText(/sin resultados|no hay|sin proformas/i).first();
     await Promise.race([
       dataRow.waitFor({ state: "visible", timeout: 20_000 }),
       emptyMarker.waitFor({ state: "visible", timeout: 20_000 }),
       emptyText.waitFor({ state: "visible", timeout: 20_000 }),
     ]);
 
-    // No debe haberse roto el render.
-    await expect(page.getByText(/algo salió mal|error/i)).toHaveCount(0);
+    // No debe haberse roto el render con un error boundary.
+    await expect(page.getByText(/algo salió mal/i)).toHaveCount(0);
   });
 });

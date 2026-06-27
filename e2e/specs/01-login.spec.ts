@@ -12,14 +12,20 @@ test.describe("Flujo 01 — Login interno", () => {
     await expect(page.getByText(/credenciales inválidas|error/i)).toHaveCount(0);
   });
 
-  test("credenciales inválidas muestran error", async ({ page }) => {
-    await page.goto("/");
-    await page.getByLabel(/correo|email/i).fill("noexiste@librecarga.test");
-    await page.getByLabel(/contrase/i).fill("incorrecto123");
-    await page.getByRole("button", { name: /iniciar sesión|entrar|ingresar/i }).click();
+  test.describe("formulario sin sesión", () => {
+    // Forzar contexto limpio: ignorar el storageState del project para
+    // ver el formulario de login y validar el error con credenciales malas.
+    test.use({ storageState: { cookies: [], origins: [] } });
 
-    await expect(page.getByText(/inválid|incorrect|error/i).first()).toBeVisible({
-      timeout: 15_000,
+    test("credenciales inválidas muestran error", async ({ page }) => {
+      await page.goto("/");
+      await page.getByLabel(/correo|email/i).fill("noexiste@librecarga.test");
+      await page.getByLabel(/contrase/i).fill("incorrecto123");
+      await page.getByRole("button", { name: /iniciar sesión|entrar|ingresar/i }).click();
+
+      await expect(page.getByText(/inválid|incorrect|error/i).first()).toBeVisible({
+        timeout: 15_000,
+      });
     });
   });
 });

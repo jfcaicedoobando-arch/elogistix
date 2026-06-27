@@ -30,16 +30,20 @@ export const portalCreds = (): Creds => readCreds("E2E_PORTAL");
 /**
  * Login desde / (formulario unificado). Si ya hay sesión cargada vía
  * storageState, salta el formulario verificando la URL después de `goto`.
+ *
+ * Regex anclada: `/login` matchea exacto o seguido de `/`, NO `/loginhistory`.
  */
+const LOGIN_PATH_RE = /^\/?$|^\/login(\/|$)/i;
+
 export async function loginAs(page: Page, creds: Creds): Promise<void> {
   await page.goto("/");
-  // Si el storageState restauró la sesión, la app redirige fuera de login.
   const currentPath = new URL(page.url()).pathname;
-  if (!/\/$|\/login/i.test(currentPath)) return;
+  if (!LOGIN_PATH_RE.test(currentPath)) return;
 
   await page.getByLabel(/correo|email/i).fill(creds.email);
   await page.getByLabel(/contrase/i).fill(creds.password);
   await page.getByRole("button", { name: /iniciar sesión|entrar|ingresar/i }).click();
-  await expect(page).not.toHaveURL(/\/$|\/login/i, { timeout: 20_000 });
+  await expect(page).not.toHaveURL(LOGIN_PATH_RE, { timeout: 20_000 });
 }
+
 
