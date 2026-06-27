@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.10] - 2026-06-27
+- **fix(e2e) — Endurecimiento de cleanup en specs Playwright (auditoría)**. Cierra los 10 hallazgos del audit de cleanup:
+  - `09-cierre-embarque`: cleanup movido a `afterEach` con flag `wasClosed`; ahora pasa `p_motivo` (NOT NULL) al RPC `reabrir_embarque` para que la reapertura no falle silencioso.
+  - `10-auditoria-bulk`: nuevo `afterEach` que borra `auditoria_revisiones` filtradas por `comentario ILIKE '*E2E_TEST*'` y por `created_at >= startTs`.
+  - `11-cotizacion-a-embarque`: cleanup en cascada FK-safe (`eventos_embarque` → `embarque_contenedores` → `conceptos_costo/venta` → `embarques`) y se taguea `notas_internas = 'E2E_TEST'` para localizar huérfanos.
+  - `12-cxp-factura-pago`: `afterAll` valida sesión y cae a `loginAs()` si el storageState está vencido; añade barrido defensivo por tag `referencia ILIKE '*E2E_TEST*'`.
+  - `08-flujo-fiscal`: nuevo `afterAll` que intenta cancelar el CFDI sandbox (motivo SAT 02) y borra `pagos_factura` locales.
+  - `fixtures/cleanup.ts`: la firma acepta `TestInfo` y adjunta los warnings al reporte HTML (`testInfo.attach`) además del `console.warn`.
+  - `fixtures/api.ts`: mensaje de error explícito cuando no hay sesión; soporte para operadores PostgREST (`like.*`, `gte.`, etc.) en `match`.
+  - `e2e/globalTeardown.ts` nuevo: barrido read-only que cuenta filas huérfanas tagueadas `E2E_TEST` en `embarques`, `proveedor_facturas` y `auditoria_revisiones`.
+
 ## [13.139.9] - 2026-06-27
 - **feat(e2e) — Ampliación de cobertura Playwright: 4 specs nuevos (09–12)**.
   - `09-cierre-embarque`: valida bloqueo por checklist incompleto + tooltip de motivo; bypass `admin_org` opcional (`E2E_ADMIN_ORG=1`).

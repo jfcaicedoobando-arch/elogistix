@@ -20,6 +20,22 @@ const IS_ADMIN_ORG = process.env.E2E_ADMIN_ORG === "1";
 test.describe("Flujo 09 — Cierre de embarque", () => {
   test.skip(!EMBARQUE_ID, "E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID requerido");
 
+  let wasClosed = false;
+  let lastPage: import("@playwright/test").Page | null = null;
+
+  test.afterEach(async ({ page }, testInfo) => {
+    if (!wasClosed) return;
+    const target = lastPage ?? page;
+    await bestEffortCleanup(testInfo, "reabrir embarque", async () => {
+      await supabaseRest(target).rpc("reabrir_embarque", {
+        p_embarque_id: EMBARQUE_ID,
+        p_motivo: "cleanup E2E (spec 09)",
+      });
+    });
+    wasClosed = false;
+    lastPage = null;
+  });
+
   test("checklist incompleto bloquea el cierre y muestra pendientes", async ({ page }) => {
     await loginAs(page, internalCreds());
     await page.goto(`/embarques/${EMBARQUE_ID}?tab=cierre`);
@@ -46,6 +62,7 @@ test.describe("Flujo 09 — Cierre de embarque", () => {
   test("admin_org puede cerrar con bypass", async ({ page }) => {
     test.skip(!IS_ADMIN_ORG, "E2E_ADMIN_ORG=1 requerido para probar bypass");
     await loginAs(page, internalCreds());
+    lastPage = page;
     await page.goto(`/embarques/${EMBARQUE_ID}?tab=cierre`);
 
     // El botón sigue deshabilitado UI pero admin puede forzar via toggle/confirm.
@@ -56,17 +73,15 @@ test.describe("Flujo 09 — Cierre de embarque", () => {
     await btnBypass.click();
     await page.getByRole("button", { name: /^confirmar$/i }).click();
 
-    await page
+    const rpc = await page
       .waitForResponse((r) => /\/rpc\/cerrar_embarque/i.test(r.url()) && r.ok(), {
         timeout: 20_000,
       })
       .catch(() => null);
+    // Marcar wasClosed apenas la RPC responde OK — antes de cualquier assert
+    // que pueda fallar y bloquear el cleanup.
+    if (rpc) wasClosed = true;
 
     await expect(page.getByText(/cerrado/i).first()).toBeVisible({ timeout: 15_000 });
-
-    // Cleanup: reabrir si existe la RPC.
-    await bestEffortCleanup("reabrir embarque", async () => {
-      await supabaseRest(page).rpc("reabrir_embarque", { p_embarque_id: EMBARQUE_ID });
-    });
   });
 });
