@@ -3,7 +3,7 @@
  * Covers fetchEmbarquesPaginados (paginados), fetchEmbarquesRelacionados and
  * fetchEmbarquesListExtras (extras).
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -26,6 +26,11 @@ const BASE_FILTERS = {
   page: 0,
   pageSize: 20,
 };
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+});
 
 describe("fetchEmbarquesPaginados", () => {
   it("calls embarques_listado RPC with pagination params", async () => {

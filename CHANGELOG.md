@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.41] - 2026-06-27
+- **fix(tests shard 9) — bugs & memory leaks**: agregado `beforeEach` que limpia `mock.tableCalls`/`rpcCalls` en `embarques/services/queries/__tests__/{conceptos,detalle,listado}.test.ts` (antes acumulaban llamadas entre tests → falsos positivos en `.find()`). `idempotencyHash.test.ts`: assertion tautológica `hexToUuid(hex) === hexToUuid(hex)` reemplazada por comparación contra UUID esperado. `sincronizarEtapa.test.ts`: mock de `fetchEtapasPipelineActivas` migrado a patrón `vi.hoisted` (evita `undefined` si un test corre antes del `beforeEach`). `useMutationsEmbarque.test.tsx`: registro y `cancelQueries → clear → unmount` de cada `QueryClient` en `afterEach` para evitar leaks de subscripciones bajo `singleFork`.
+
 ## [13.137.40] - 2026-06-27
 - **chore(ci) — matriz de tests a 20 shards**: `.github/workflows/ci.yml` ahora corre `shard: [1..20]` / `total: [20]`. Cada shard ejecuta ~13 archivos (~130 tests) — margen sano bajo el `timeout-minutes: 20` con `singleFork: true`.
 

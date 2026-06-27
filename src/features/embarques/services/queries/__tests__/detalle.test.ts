@@ -1,7 +1,7 @@
 /**
  * Tests for src/services/embarque/queries/detalle.ts
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -12,6 +12,11 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { fetchEmbarqueById, fetchEmbarqueFull } from "@/features/embarques/services/queries/detalle";
 
 const UUID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+});
 
 describe("fetchEmbarqueById", () => {
   it("queries embarques table with .single() using the given id", async () => {

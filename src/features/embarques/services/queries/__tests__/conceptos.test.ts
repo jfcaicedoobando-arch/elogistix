@@ -1,7 +1,7 @@
 /**
  * Tests for src/services/embarque/queries/conceptos.ts
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
@@ -15,6 +15,11 @@ import {
 } from "@/features/embarques/services/queries/conceptos";
 
 const EMBARQUE_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
+});
 
 describe("fetchEmbarqueConceptosVenta", () => {
   it("queries conceptos_venta filtered by embarque_id", async () => {
