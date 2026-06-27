@@ -112,7 +112,7 @@ describe("useDialogGenerarProformaController", () => {
     );
     expect(onClose).not.toHaveBeenCalled();
     // captureException se hace lazy; damos un microtick y verificamos
-    await new Promise((r) => setTimeout(r, 5));
+    await new Promise((r) => setTimeout(r, 0));
     expect(hoisted.captureMock).not.toHaveBeenCalled();
   });
 
@@ -130,7 +130,7 @@ describe("useDialogGenerarProformaController", () => {
       expect.objectContaining({ title: "PDF blew up", variant: "destructive" }),
     );
     expect(onClose).not.toHaveBeenCalled();
-    await new Promise((r) => setTimeout(r, 5));
+    await new Promise((r) => setTimeout(r, 0));
     expect(hoisted.captureMock).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({ tags: { feature: "proforma_generate" } }),
