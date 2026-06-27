@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -9,15 +8,9 @@ import type { Row, SortingFn } from "@tanstack/react-table";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { formatDate, formatDateTimeShort } from "@/lib/formatters";
-import {
-  ROLE_BADGE_CLASSES,
-  ROLE_DESCRIPTIONS,
-  obtenerEtiquetaRol,
-  obtenerRangoRol,
-} from "@/features/admin/domain/roles/roleCatalog";
+import { obtenerRangoRol } from "@/features/admin/domain/roles/roleCatalog";
 import { ChangeRoleCell, UsuarioCell } from "./usuariosCells";
 
-const roleBadge = ROLE_BADGE_CLASSES;
 
 interface Options {
   currentUserId: string | undefined;
