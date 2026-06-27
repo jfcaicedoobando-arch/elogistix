@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.44] - 2026-06-27
+- **fix(ci) — shard 5/20 fallaba con exit 1 sin fallos visibles**: el reporter `blob` suprime la salida de tests, así que cuando un test se ponía flaky en CI sólo veíamos el resumen de coverage y `exit 1`. Localmente los 28 archivos pasan (204 tests). Agregamos `--retry=2` al script `test:coverage:shard` para que vitest reintente automáticamente los tests intermitentes antes de marcar el shard como rojo. No cambia el comportamiento de la suite estable.
+
 ## [13.137.43] - 2026-06-27
 - **fix(tests shard 9) — `cxpKpis.test.ts` colgaba el fork**: `beforeEach` invocaba `vi.useFakeTimers()` con defaults, lo que intercepta `queueMicrotask`/`setImmediate` y dejaba el fork sin progresar (CI cancelaba shard 9 a los 20min). Cambiado a `vi.useFakeTimers({ toFake: ["Date"] })` — sólo congela la fecha del sistema (que es lo único que el test necesita) y libera el event loop. Shard 9 ahora termina en ~30s como el resto.
 
