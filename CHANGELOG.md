@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.47] - 2026-06-27
+- **test(cxp) — primer lote de tests para recuperar cobertura ≥38%**: el run `76374375182` confirmó que la baja a 21.65% no es un artefacto del reporter sino código nuevo (módulos `facturacion`, `cxp`, `proformas`, `fiscal`) sin tests. Per `mem://principles/coverage-threshold` NO bajamos el umbral; arrancamos a escribir tests del código nuevo. Este lote agrega 57 tests en 5 archivos sobre helpers/services puros de CXP: `useNuevaFacturaProveedorForm.helpers` (25), `sugerirEmbarques` (11), `proveedorNotasCredito` (9), `proveedorSalud` (6), `historialFactura` (3), `aprobacionFactura` (3). Es trabajo iterativo: cubrir el gap completo requerirá varios turnos más enfocados en hooks/services restantes y componentes presentacionales grandes.
+
 ## [13.137.46] - 2026-06-27
 - **fix(ci) — cobertura desplomada a 22% en merge**: tras agregar `--reporter=default` junto a `--reporter=blob` en `test:coverage:shard` (v13.137.45), el blob dejó de incluir la cobertura v8 completa de cada shard, así que al fusionar los 20 blobs el reporte daba 22.17% lines (vs umbral 38%) y el job de merge tronaba con exit 1. Revertimos el script a usar SOLO `--reporter=blob` (manteniendo `--retry=2`). Si en el futuro hace falta diagnosticar un shard, correrlo local con `--reporter=default` o revisar el JUnit XML.
 
