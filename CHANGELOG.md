@@ -15,6 +15,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - `tracking/index.test.ts`: `global.fetch = vi.fn()` directo dejaba el mock residual para archivos posteriores. Cambiado a `vi.stubGlobal("fetch", …)`.
 - **chore(test-setup) — instrumentación shard-trace**: `src/test/setup.ts` ahora imprime `[shard-trace] FILE_START <ruta>` y `FILE_END <ruta>` en `beforeAll`/`afterAll` cuando `CI=true`. Si un shard vuelve a colgar >20min, el último `FILE_START` sin su `FILE_END` correspondiente identifica al archivo culpable de inmediato.
 
+## [13.137.24] - 2026-06-27
 
 - **fix(tests) — bugs detectados en auditoría de shards 2 y 6**:
   - `parseCfdi.test.ts`: el test de retry hacía 4s de `sleep` reales con `testTimeout=15s` (cero margen). Migrado a `vi.useFakeTimers()` + `vi.runAllTimersAsync()`.
