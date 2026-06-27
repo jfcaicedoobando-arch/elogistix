@@ -59,8 +59,10 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
           score={data.score}
           scoreEstado={data.scoreEstado}
           porSeveridad={data.porSeveridad}
+          regresion7d={data.regresion7d}
           onDrillSeveridad={(sev) => onDrillDown?.({ severidad: sev })}
         />
+
         <EjecutivoAtencionCard
           porcentajeAtendidos={data.porcentajeAtendidos}
           totalRevisados={data.totalRevisados}
