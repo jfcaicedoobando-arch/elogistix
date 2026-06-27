@@ -44,6 +44,7 @@ test.describe("Flujo 08 — Fiscal happy path", () => {
 
   test("proforma aprobada → convertir → timbrar → registrar pago PPD → REP", async ({ page }) => {
     await loginAs(page, internalCreds());
+    lastPage = page;
 
     // 1. Entrar a facturación y localizar la proforma aprobada.
     await page.goto("/facturacion");
@@ -53,10 +54,17 @@ test.describe("Flujo 08 — Fiscal happy path", () => {
     const proformaRow = page.getByRole("row", { name: new RegExp(PROFORMA, "i") });
     await expect(proformaRow).toBeVisible({ timeout: 15_000 });
 
-    // 2. Convertir a factura.
+    // 2. Convertir a factura. Capturar el id que devuelve el RPC para cleanup.
     await proformaRow.getByRole("checkbox").check();
+    const convertResp = page.waitForResponse(
+      (r) => /\/rpc\/convertir_proformas_a_factura/i.test(r.url()) && r.ok(),
+      { timeout: 25_000 },
+    );
     await page.getByRole("button", { name: /convertir a factura/i }).click();
     await page.getByRole("button", { name: /^confirmar$/i }).click();
+    const convertBody = await convertResp.then((r) => r.json().catch(() => null));
+    const firstId = Array.isArray(convertBody) ? convertBody[0]?.factura_id ?? convertBody[0]?.id : null;
+    if (typeof firstId === "string") facturaIdCreada = firstId;
     await expect(page.getByText(/factura.*creada/i)).toBeVisible({ timeout: 20_000 });
 
     // 3. Saltar a Emitidas y timbrar la primera Borrador. Capturamos el
