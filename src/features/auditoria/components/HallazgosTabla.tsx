@@ -6,7 +6,6 @@ import { CheckCircle2, ExternalLink, UserPlus, UserCheck, AlertTriangle } from "
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { cn } from "@/lib/utils";
 import { revisionKey } from "@/features/auditoria/hooks";
@@ -18,6 +17,7 @@ import {
   severidadConfig,
 } from "./hallazgosTablaConfig";
 import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
+import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 
 interface Props {
   visibles: HallazgoAuditoria[];
