@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
   return createSupabaseMock();
@@ -8,6 +8,12 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { listIdempotencyLog } from "@/features/admin/services/idempotencia";
 
 describe("listIdempotencyLog", () => {
+  beforeEach(() => {
+    mock.rpcCalls.length = 0;
+    mock.tableCalls.length = 0;
+  });
+
+
   it("invoca la RPC con limit/offset y devuelve filas casteadas", async () => {
     const rows = [
       { key: "abc", fn: "create-user", hits: 1, created_at: "2026-05-01T00:00:00Z",

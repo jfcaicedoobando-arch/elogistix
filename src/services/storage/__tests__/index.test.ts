@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { uploadFile } from '../index';
 
 const { mockSupabase } = vi.hoisted(() => ({
@@ -15,6 +15,13 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('storage/index', () => {
+  beforeEach(() => {
+    mockSupabase.storage.from.mockClear();
+    mockSupabase.storage.upload.mockClear();
+    mockSupabase.storage.upload.mockResolvedValue({ data: { path: 'test' }, error: null });
+  });
+
+
   it('uploadFile sube archivo al bucket correcto', async () => {
     const file = new File([''], 'test.txt');
     await uploadFile('path/to/file', file);

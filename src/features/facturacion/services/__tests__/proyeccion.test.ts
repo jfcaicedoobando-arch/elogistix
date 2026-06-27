@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
   return createSupabaseMock();
@@ -8,6 +8,12 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import { fetchProyeccionMes } from "@/features/facturacion/services/proyeccion";
 
 describe("fetchProyeccionMes", () => {
+  beforeEach(() => {
+    mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
+  });
+
+
   it("devuelve [] cuando no hay embarques en el mes", async () => {
     mock.setTableResult("embarques", { data: [], error: null });
     const r = await fetchProyeccionMes({ organizationId: "org-1", year: 2026, month: 5 });
