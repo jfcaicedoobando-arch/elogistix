@@ -84,34 +84,34 @@ export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry
     .eq("accion", "cambiar_estado")
     .order("created_at", { ascending: false });
 
-  const fallback: CierreLogEntry[] = ((bitacora ?? []) as Array<{
+  const fallback: CierreLogEntry[] = [];
+  for (const row of (bitacora ?? []) as Array<{
     id: string;
     usuario_id: string | null;
     usuario_email: string | null;
     detalles: Record<string, unknown> | null;
     created_at: string;
-  }>)
-    .map((b) => {
-      const det = (b.detalles ?? {}) as { estado_nuevo?: string; estado_anterior?: string };
-      const nuevo = (det.estado_nuevo ?? "").toLowerCase();
-      const anterior = (det.estado_anterior ?? "").toLowerCase();
-      let accion: "cerrar" | "reabrir" | null = null;
-      if (nuevo === "cerrado") accion = "cerrar";
-      else if (anterior === "cerrado") accion = "reabrir";
-      if (!accion) return null;
-      return {
-        id: `bit-${b.id}`,
-        embarque_id: embarqueId,
-        accion,
-        usuario_id: b.usuario_id,
-        usuario_email: b.usuario_email,
-        motivo: null,
-        snapshot: null,
-        created_at: b.created_at,
-        origen: "bitacora" as const,
-      } satisfies CierreLogEntry;
-    })
-    .filter((e): e is CierreLogEntry => e !== null);
+  }>) {
+    const det = (row.detalles ?? {}) as { estado_nuevo?: string; estado_anterior?: string };
+    const nuevo = (det.estado_nuevo ?? "").toLowerCase();
+    const anterior = (det.estado_anterior ?? "").toLowerCase();
+    let accion: "cerrar" | "reabrir" | null = null;
+    if (nuevo === "cerrado") accion = "cerrar";
+    else if (anterior === "cerrado") accion = "reabrir";
+    if (!accion) continue;
+    fallback.push({
+      id: `bit-${row.id}`,
+      embarque_id: embarqueId,
+      accion,
+      usuario_id: row.usuario_id,
+      usuario_email: row.usuario_email,
+      motivo: null,
+      snapshot: null,
+      created_at: row.created_at,
+      origen: "bitacora",
+    });
+  }
+
 
   // Evitar duplicar si ya hay un registro en cierre_embarque_log con el mismo timestamp aproximado.
   const principalKeys = new Set(
