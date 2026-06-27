@@ -61,43 +61,14 @@ export function HallazgosTabla({
 
   const getRevision = (h: HallazgoAuditoria) => revisiones?.get(revisionKey(h)) ?? null;
 
-  const allSelected = selectablesEnPagina.length > 0 && selectablesEnPagina.every((id) => selectedIds.has(id));
-  const someSelected = selectablesEnPagina.some((id) => selectedIds.has(id));
-  const masterState: boolean | "indeterminate" = allSelected
-    ? true
-    : someSelected
-      ? "indeterminate"
-      : false;
-
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
-    {
-      id: "select",
-      header: () => (
-        <Checkbox
-          checked={masterState}
-          onCheckedChange={onToggleAllVisible}
-          disabled={selectablesEnPagina.length === 0}
-          aria-label="Seleccionar todos los hallazgos pendientes de la página"
-        />
-      ),
-      meta: { width: "w-[36px]" },
-      cell: ({ row }) => {
-        const h = row.original;
-        const rev = getRevision(h);
-        const yaRevisado = rev?.estado_revision === "revisado";
-        const id = revisionKey(h);
-        return (
-          <div onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              checked={selectedIds.has(id)}
-              disabled={yaRevisado}
-              onCheckedChange={() => onToggleSelected(id)}
-              aria-label={`Seleccionar hallazgo ${h.expediente} ${h.regla}`}
-            />
-          </div>
-        );
-      },
-    },
+    buildSelectColumn({
+      revisiones,
+      selectedIds,
+      selectablesEnPagina,
+      onToggleSelected,
+      onToggleAllVisible,
+    }),
     { id: "sev", header: "Severidad", meta: { width: "w-[100px]" },
       cell: ({ row }) => {
         const sev = severidadConfig[row.original.severidad];
