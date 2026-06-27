@@ -79,7 +79,8 @@ describe("bitacoraDescripcion.extra", () => {
       moneda: "MXN",
     }));
     expect(r.titulo).toBe("Generó factura F-0001");
-    expect(r.contexto).toBeDefined();
+    expect(r.contexto).toContain("5,000");
+    expect(r.contexto).toContain("MXN");
   });
 
   it("describirEntrada: crear embarque con modo y tipo", () => {

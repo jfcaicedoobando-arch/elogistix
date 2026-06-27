@@ -3,15 +3,23 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 import { MemoryRouter } from 'react-router-dom';
 
-const erMes = {
-  ingresos: [], costos: [],
-  totalIngresos: { total: 1000 } as any, totalCostos: { total: 0 } as any,
-  utilidad: { total: 1000 } as any, margen: { total: 1 } as any,
+type ERFixture = {
+  ingresos: unknown[];
+  costos: unknown[];
+  totalIngresos: { total: number };
+  totalCostos: { total: number };
+  utilidad: { total: number };
+  margen: { total: number };
 };
-const erDevengado = {
+const erMes: ERFixture = {
   ingresos: [], costos: [],
-  totalIngresos: { total: 999 } as any, totalCostos: { total: 0 } as any,
-  utilidad: { total: 999 } as any, margen: { total: 1 } as any,
+  totalIngresos: { total: 1000 }, totalCostos: { total: 0 },
+  utilidad: { total: 1000 }, margen: { total: 1 },
+};
+const erDevengado: ERFixture = {
+  ingresos: [], costos: [],
+  totalIngresos: { total: 999 }, totalCostos: { total: 0 },
+  utilidad: { total: 999 }, margen: { total: 1 },
 };
 
 const { mockFetchER, mockFetchERDevengado } = vi.hoisted(() => ({
