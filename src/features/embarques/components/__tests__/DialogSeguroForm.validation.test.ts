@@ -49,7 +49,9 @@ describe("DialogSeguroForm — validación", () => {
 
 describe("seguros — cálculo de días restantes de vigencia", () => {
   function diasRestantes(hasta: string, hoy = new Date()): number {
-    const end = new Date(hasta + "T23:59:59").getTime();
+    // v13.137.36: sufijo `Z` para parsear como UTC y alinear con los fixtures `hoy`
+    // (UTC explícito). Sin esto, hosts en zonas extremas (UTC+14) flippan el signo.
+    const end = new Date(hasta + "T23:59:59Z").getTime();
     return Math.ceil((end - hoy.getTime()) / (24 * 60 * 60 * 1000));
   }
 

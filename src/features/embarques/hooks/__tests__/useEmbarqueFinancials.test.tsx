@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const { mockCompute } = vi.hoisted(() => ({ mockCompute: vi.fn() }));
@@ -10,6 +10,10 @@ vi.mock("@/features/embarques/domain/embarqueKpis", () => ({
 import { useEmbarqueFinancials } from "../useEmbarqueFinancials";
 
 describe("useEmbarqueFinancials", () => {
+  // v13.137.36: reset por test del mock hoisted; sin esto, los conteos
+  // (`toHaveBeenCalledTimes(1|2)`) acumulan llamadas entre tests.
+  beforeEach(() => { mockCompute.mockReset(); });
+
   it("delega el cálculo a computeEmbarqueKpis y retorna el resultado", () => {
     const kpis = { totalVentaUSD: 1000, totalCostoUSD: 800, utilidadUSD: 200 };
     mockCompute.mockReturnValue(kpis);

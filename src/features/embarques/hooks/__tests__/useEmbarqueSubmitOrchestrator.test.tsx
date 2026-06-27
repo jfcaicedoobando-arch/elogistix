@@ -32,9 +32,12 @@ vi.mock("@/features/embarques/services", () => ({
   subirDocumentosEmbarque: subirDocsMock,
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => {
+// v13.137.36: `createWrapper()` se ejecuta UNA vez por test (factory), no en
+// cada render. Antes el wrapper a nivel módulo invocaba `createWrapper()` dentro
+// del cuerpo del componente → nuevo QueryClient por render, leak global.
+const makeWrapper = () => {
   const QueryWrapper = createWrapper();
-  return (
+  return ({ children }: { children: React.ReactNode }) => (
     <MemoryRouter>
       <QueryWrapper>{children}</QueryWrapper>
     </MemoryRouter>
@@ -68,13 +71,13 @@ function makeSubmitParams(overrides: Partial<SubmitParams> = {}): SubmitParams {
 
 describe("useEmbarqueSubmitOrchestrator", () => {
   it("inicializa correctamente", () => {
-    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     expect(result.current.submit).toBeDefined();
     expect(result.current.isPending).toBe(false);
   });
 
   it("el flujo de submit llama a las dependencias con argumentos correctos", async () => {
-    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     resolverExpedienteMock.mockClear();
     subirDocsMock.mockClear();
     createEmbarqueMock.mockClear();
@@ -89,7 +92,7 @@ describe("useEmbarqueSubmitOrchestrator", () => {
   it("retorna false y no crea embarque cuando resolverExpediente falla", async () => {
     resolverExpedienteMock.mockRejectedValueOnce(new Error("expediente no resuelto"));
     createEmbarqueMock.mockClear();
-    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     const success = await result.current.submit(makeSubmitParams());
     expect(success).toBe(false);
     expect(createEmbarqueMock).not.toHaveBeenCalled();
@@ -98,7 +101,7 @@ describe("useEmbarqueSubmitOrchestrator", () => {
   it("retorna false cuando subirDocumentos falla", async () => {
     subirDocsMock.mockRejectedValueOnce(new Error("upload error"));
     createEmbarqueMock.mockClear();
-    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     const success = await result.current.submit(makeSubmitParams());
     expect(success).toBe(false);
     expect(createEmbarqueMock).not.toHaveBeenCalled();
@@ -107,7 +110,7 @@ describe("useEmbarqueSubmitOrchestrator", () => {
   it("modo existente: usa expedienteSeleccionado sin invocar resolverExpediente", async () => {
     resolverExpedienteMock.mockClear();
     createEmbarqueMock.mockClear();
-    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper });
+    const { result } = renderHook(() => useEmbarqueSubmitOrchestrator(), { wrapper: makeWrapper() });
     // SAFE-CAST: ExpedienteCliente es opaco; aquí basta con un fixture mínimo.
     const expedienteFixture = { expediente: "EXP-999", cliente_id: "cli-1" } as unknown as SubmitParams["expedienteSeleccionado"];
     const success = await result.current.submit(

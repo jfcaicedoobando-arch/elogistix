@@ -2,6 +2,10 @@ import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCierreDialog, CIERRE_CONFIRM_TEXT, CIERRE_MOTIVO_MIN } from "../useCierreDialog";
 
+// v13.137.36: TODOS los `act()` ahora se `await`ean. React 18 devuelve una
+// Promise desde `act()` para flushear el scheduler concurrente; sin `await` la
+// assertion corre antes del commit del state y puede emitir warnings que
+// rompen la suite bajo strict mode.
 describe("useCierreDialog", () => {
   it("inicia con diálogos cerrados y campos vacíos", () => {
     const { result } = renderHook(() => useCierreDialog());
@@ -13,44 +17,44 @@ describe("useCierreDialog", () => {
     expect(result.current.puedeConfirmarReabrir).toBe(false);
   });
 
-  it("puedeConfirmarCerrar exige texto exacto 'CERRAR'", () => {
+  it("puedeConfirmarCerrar exige texto exacto 'CERRAR'", async () => {
     const { result } = renderHook(() => useCierreDialog());
-    act(() => result.current.setConfirmText("cerrar"));
+    await act(async () => { result.current.setConfirmText("cerrar"); });
     expect(result.current.puedeConfirmarCerrar).toBe(false);
-    act(() => result.current.setConfirmText("CERRAR "));
+    await act(async () => { result.current.setConfirmText("CERRAR "); });
     expect(result.current.puedeConfirmarCerrar).toBe(false);
-    act(() => result.current.setConfirmText(CIERRE_CONFIRM_TEXT));
+    await act(async () => { result.current.setConfirmText(CIERRE_CONFIRM_TEXT); });
     expect(result.current.puedeConfirmarCerrar).toBe(true);
   });
 
-  it(`puedeConfirmarReabrir exige motivo trim ≥${CIERRE_MOTIVO_MIN}`, () => {
+  it(`puedeConfirmarReabrir exige motivo trim ≥${CIERRE_MOTIVO_MIN}`, async () => {
     const { result } = renderHook(() => useCierreDialog());
-    act(() => result.current.setMotivoReapertura("corto"));
+    await act(async () => { result.current.setMotivoReapertura("corto"); });
     expect(result.current.puedeConfirmarReabrir).toBe(false);
-    act(() => result.current.setMotivoReapertura("   " + "x".repeat(CIERRE_MOTIVO_MIN - 1) + "   "));
+    await act(async () => { result.current.setMotivoReapertura("   " + "x".repeat(CIERRE_MOTIVO_MIN - 1) + "   "); });
     expect(result.current.puedeConfirmarReabrir).toBe(false);
-    act(() => result.current.setMotivoReapertura("x".repeat(CIERRE_MOTIVO_MIN)));
+    await act(async () => { result.current.setMotivoReapertura("x".repeat(CIERRE_MOTIVO_MIN)); });
     expect(result.current.puedeConfirmarReabrir).toBe(true);
   });
 
-  it("resetCerrar limpia estado de cerrar", () => {
+  it("resetCerrar limpia estado de cerrar", async () => {
     const { result } = renderHook(() => useCierreDialog());
-    act(() => {
+    await act(async () => {
       result.current.setOpenCerrar(true);
       result.current.setConfirmText("CERRAR");
     });
-    act(() => result.current.resetCerrar());
+    await act(async () => { result.current.resetCerrar(); });
     expect(result.current.openCerrar).toBe(false);
     expect(result.current.confirmText).toBe("");
   });
 
-  it("resetReabrir limpia estado de reapertura", () => {
+  it("resetReabrir limpia estado de reapertura", async () => {
     const { result } = renderHook(() => useCierreDialog());
-    act(() => {
+    await act(async () => {
       result.current.setOpenReabrir(true);
       result.current.setMotivoReapertura("x".repeat(25));
     });
-    act(() => result.current.resetReabrir());
+    await act(async () => { result.current.resetReabrir(); });
     expect(result.current.openReabrir).toBe(false);
     expect(result.current.motivoReapertura).toBe("");
   });

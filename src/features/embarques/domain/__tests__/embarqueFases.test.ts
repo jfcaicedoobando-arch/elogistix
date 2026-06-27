@@ -47,9 +47,18 @@ describe("calcularFasesEmbarque", () => {
   });
 
   it("marca en_transito como actual con etd pasado y eta futuro (marítimo importación)", () => {
-    const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-    const fases = calcularFasesEmbarque({ ...base, etd: ayer, eta: manana });
-    expect(fases[2].estado).toBe("actual");
+    // v13.137.36: pin de reloj para que `ayer`/`manana` y cualquier `Date.now()`
+    // interno del SUT compartan la misma referencia (evita flake en CI lento o
+    // si un test previo dejó timers falsos activos).
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-17T12:00:00Z"));
+    try {
+      const ayer = "2026-06-16";
+      const manana = "2026-06-18";
+      const fases = calcularFasesEmbarque({ ...base, etd: ayer, eta: manana });
+      expect(fases[2].estado).toBe("actual");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

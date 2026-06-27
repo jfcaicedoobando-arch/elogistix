@@ -52,10 +52,13 @@ const mockConceptos = [
   { id: "c2", descripcion: "C2", cantidad: 1, precio_unitario: 200, moneda: "MXN", aplica_iva: true },
 ] as any;
 
-const wrapper = createWrapper();
+// v13.137.36: wrapper por-test (no a nivel módulo). Antes un único QueryClient
+// se compartía entre los 5 tests → cache bleed y leaks de suscripciones.
+let wrapper: ReturnType<typeof createWrapper>;
 
 describe("useDialogGenerarProformaController", () => {
   beforeEach(() => {
+    wrapper = createWrapper();
     hoisted.submitMock.mockReset();
     hoisted.toastMock.mockReset();
     hoisted.captureMock.mockReset();

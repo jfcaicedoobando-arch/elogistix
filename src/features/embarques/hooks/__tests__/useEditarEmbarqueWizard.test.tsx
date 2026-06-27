@@ -57,13 +57,14 @@ describe("useEditarEmbarqueWizard", () => {
     );
   });
 
-  it("permite cambiar de paso", () => {
+  it("permite cambiar de paso", async () => {
     const { result } = renderHook(() => useEditarEmbarqueWizard("emb-1"), { wrapper: makeWrapper() });
-    
-    act(() => {
+
+    // v13.137.36: `await act` para que React 18 flushee el commit antes del assert.
+    await act(async () => {
       result.current.setCurrentStep(2);
     });
-    
+
     expect(result.current.currentStep).toBe(2);
   });
 });

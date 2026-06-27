@@ -12,10 +12,13 @@ vi.mock("@/features/cotizacion/hooks", () => ({
   }),
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => {
+// v13.137.36: `createWrapper()` se invoca una vez por test (no dentro del cuerpo
+// del componente wrapper). Antes cada re-render creaba un QueryClient nuevo y
+// sobrescribía `globalThis.__TEST_QUERY_CLIENT__` → leak + context churn.
+const makeWrapper = (initialState: unknown) => {
   const QueryWrapper = createWrapper();
-  return (
-    <MemoryRouter initialEntries={[{ state: { cotizacionPrevinculadaId: "cot-1" } }]}>
+  return ({ children }: { children: React.ReactNode }) => (
+    <MemoryRouter initialEntries={[{ state: initialState }]}>
       <QueryWrapper>{children}</QueryWrapper>
     </MemoryRouter>
   );
@@ -24,7 +27,9 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 describe("useCotizacionHydration", () => {
   it("llama a onPrevincular cuando detecta id en state", async () => {
     const onPrevincular = vi.fn();
-    renderHook(() => useCotizacionHydration({ onPrevincular }), { wrapper });
+    renderHook(() => useCotizacionHydration({ onPrevincular }), {
+      wrapper: makeWrapper({ cotizacionPrevinculadaId: "cot-1" }),
+    });
 
     await waitFor(() => {
       expect(onPrevincular).toHaveBeenCalledWith(mockCot);
@@ -34,16 +39,9 @@ describe("useCotizacionHydration", () => {
 
   it("no hace nada si no hay id en el state", () => {
     const onPrevincular = vi.fn();
-    const emptyWrapper = ({ children }: { children: React.ReactNode }) => {
-      const QueryWrapper = createWrapper();
-      return (
-        <MemoryRouter initialEntries={[{ state: {} }]}>
-          <QueryWrapper>{children}</QueryWrapper>
-        </MemoryRouter>
-      );
-    };
-    
-    renderHook(() => useCotizacionHydration({ onPrevincular }), { wrapper: emptyWrapper });
+    renderHook(() => useCotizacionHydration({ onPrevincular }), {
+      wrapper: makeWrapper({}),
+    });
     expect(onPrevincular).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
@@ -48,6 +48,8 @@ function makeEmbarqueStub(): EmbarqueRow {
 }
 
 describe("useEmbarqueDocumentosActions", () => {
+  // v13.137.36: restaurar `fetch` stubeado para no contaminar tests siguientes.
+  afterEach(() => { vi.unstubAllGlobals(); });
   it("handleUpload llama mutateAsync con args y notifica éxito", async () => {
     uploadMutateAsync.mockClear();
     registrarActividadFn.mockClear();
