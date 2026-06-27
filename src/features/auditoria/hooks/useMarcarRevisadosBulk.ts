@@ -94,7 +94,11 @@ export function useMarcarRevisadosBulk() {
       if (res.fail === 0) {
         toast.success(`${res.ok} hallazgo${res.ok === 1 ? "" : "s"} marcado${res.ok === 1 ? "" : "s"} como revisado${res.ok === 1 ? "" : "s"}`);
       } else if (res.ok === 0) {
-        toast.error(`No se pudo marcar ningún hallazgo (${res.fail} con error)`);
+        notifyError(toast, {
+          title: "No se pudo marcar ningún hallazgo",
+          description: `${res.fail} con error`,
+          method: "FEATURES_AUDITORIA_HOOKS_BULK_REVISADOS_2",
+        });
       } else {
         toast.warning(`${res.ok} revisado${res.ok === 1 ? "" : "s"}, ${res.fail} con error`);
       }
