@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.55] - 2026-06-27
+- **fix(tests) — shard 9/20 fail silencioso**: re-ejecuté shards 8/20 y 9/20 aislados. Shard 8 pasa limpio (exit 0); shard 9 fallaba 1 test `fetchForecast > aplica filtros de fecha si se proveen` enmascarado por `--retry=2` y reporter `blob` (sin imprimir el error en stdout, sólo exit 1). La aserción `r.porMes` veía `undefined` porque el mock de `computeForecast` retornaba `{ total, ponderado, por_vendedor }` en snake_case en lugar del shape real `ForecastResumen` (`porMes`/`porVendedor`). Alineado el mock al tipo real → shard 9 ahora exit 0 con blob completo.
+
 ## [13.137.54] - 2026-06-27
 - **chore(tests) — hygiene: títulos duplicados**: `bun run audit:tests` reportaba 4 violaciones `duplicate-title` que tumbaban el job `Lint, typecheck, unused code & build`. Renombrados para incluir el nombre de la función bajo prueba: `navieraCondiciones.test.ts` (`lanza error si falla` @45,106 y `maneja data null devolviendo array vacío` @50), `proveedorFacturas.test.ts` (`lanza error si falla` @77,90,116,131 y `maneja data null...` @57), `proveedoresCrud.test.ts` (`lanza error si falla` @104,122,129,154,161), `forecast.test.ts`/`oportunidades.test.ts` (`propaga error supabase` → sufijo de función) y `listado.test.ts` (`describe("fetchEmbarquesPaginados")` → `(listado integration)` para no colisionar con `paginados.test.ts`). `audit:tests` ahora reporta 0 violaciones. Pendiente investigación: shards 8/20 y 9/20 salieron con exit 1 pero su blob subió y el merge contó 3610/3610 tests passed; coverage merge global cayó a 23.44% líneas / 66.9% ramas vs umbrales 38/72 — requiere lote adicional de tests, no se baja el umbral por memoria `principles/coverage-threshold`.
 
