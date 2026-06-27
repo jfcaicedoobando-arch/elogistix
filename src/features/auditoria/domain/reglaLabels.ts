@@ -21,6 +21,9 @@ export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   factura_sin_timbrar: "Factura sin timbrar",
   rep_pendiente: "REP pendiente",
   factura_cancelada_sin_sustitucion: "Cancelada sin sustitución",
+  cxc_vencida: "CXC vencida",
+  cxp_por_capturar_estancada: "CXP por capturar estancada",
+  cxp_vencida: "CXP vencida",
 };
 
 export function reglaShortLabel(regla: ReglaAuditoria): string {
