@@ -35,6 +35,11 @@ vi.mock("@/features/auditoria/hooks/useAuditoriaRevisiones", () => ({
   hallazgoHash: hallazgoHashStub,
   AUDITORIA_REVISIONES_KEY: ["auditoria", "revisiones"],
 }));
+vi.mock("@/features/auditoria/hooks/useAuditoriaSnapshots", () => ({
+  useAuditoriaSnapshots: vi.fn(() => ({ data: [], isLoading: false })),
+  useAutoCapturarSnapshot: vi.fn(),
+  useCapturarSnapshotAuditoria: vi.fn(),
+}));
 
 import { useAuditoria } from "@/features/auditoria/hooks/useAuditoria";
 import {

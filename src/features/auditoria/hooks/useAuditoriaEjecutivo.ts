@@ -12,6 +12,7 @@ import {
   revisionKey,
   useAuditoriaRevisiones,
 } from "@/features/auditoria/hooks/useAuditoriaRevisiones";
+import { useAuditoriaSnapshots } from "@/features/auditoria/hooks/useAuditoriaSnapshots";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
@@ -20,12 +21,15 @@ import type {
 import {
   agregarPendientes,
   calcularScore,
+  calcularRegresion,
   agruparPorEtapaYCliente,
   calcularVencimientos,
   calcularRanking,
   type OperadorRanking,
+  type RegresionScore,
   type ScoreEstado,
 } from "@/features/auditoria/domain/ejecutivoAgregados";
+
 
 export interface AuditoriaEjecutivoData {
   isLoading: boolean;
@@ -48,14 +52,17 @@ export interface AuditoriaEjecutivoData {
   mttrHoras: number | null;
   rankingOperadores: OperadorRanking[];
   rankingRevisores: OperadorRanking[];
+  /** Regresión vs snapshot de hace ~7 días. `null` si no hay histórico. */
+  regresion7d: RegresionScore | null;
   generadoEn: string | null;
 }
 
-export type { OperadorRanking };
+export type { OperadorRanking, RegresionScore };
 
 export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
   const { data, isLoading } = useAuditoria();
   const { data: revisiones } = useAuditoriaRevisiones();
+  const { data: snapshots } = useAuditoriaSnapshots(14);
 
   return useMemo(() => {
     const todos = data?.hallazgos ?? [];
@@ -70,10 +77,19 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       : Math.round((totalRevisados / totalHallazgos) * 100);
 
     const agg = agregarPendientes(pendientes);
-    const { score, scoreEstado } = calcularScore(agg.suma, totalPendientes);
+    const { score, scoreEstado } = calcularScore(
+      agg.suma,
+      totalPendientes,
+      agg.riesgoFinancieroMxn,
+    );
     const { porEtapa, topClientes } = agruparPorEtapaYCliente(pendientes);
     const venc = calcularVencimientos(pendientes);
     const { mttrHoras, rankingOperadores, rankingRevisores } = calcularRanking(revisiones, venc.hoyIso);
+    const regresion7d = calcularRegresion(
+      score,
+      (snapshots ?? []).map((s) => ({ fecha: s.fecha, score: s.score })),
+      7,
+    );
 
     const generadoEn = data?.generated_at
       ? new Date(data.generated_at).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
@@ -89,7 +105,9 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       edadPromediaPendientesDias: venc.edadPromediaPendientesDias,
       riesgoFinancieroMxn: agg.riesgoFinancieroMxn,
       riesgoPorRegla: agg.riesgoPorRegla,
-      mttrHoras, rankingOperadores, rankingRevisores, generadoEn,
+      mttrHoras, rankingOperadores, rankingRevisores,
+      regresion7d, generadoEn,
     };
-  }, [data, revisiones, isLoading]);
+  }, [data, revisiones, snapshots, isLoading]);
 }
+
