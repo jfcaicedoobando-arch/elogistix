@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.137.43] - 2026-06-27
+- **fix(tests shard 9) — `cxpKpis.test.ts` colgaba el fork**: `beforeEach` invocaba `vi.useFakeTimers()` con defaults, lo que intercepta `queueMicrotask`/`setImmediate` y dejaba el fork sin progresar (CI cancelaba shard 9 a los 20min). Cambiado a `vi.useFakeTimers({ toFake: ["Date"] })` — sólo congela la fecha del sistema (que es lo único que el test necesita) y libera el event loop. Shard 9 ahora termina en ~30s como el resto.
+
 ## [13.137.42] - 2026-06-27
 - **fix(tests shards 10/11/12) — bugs & memory leaks**: 9 archivos con `beforeEach` que limpiaba `tableCalls` pero NO `mock.resetResults()` ahora resetean ambos (usuario, crud cliente, leaderboard, plantillas, conceptosCostoVinculables, eventos, proyeccion facturación, duplicadoRfc, vendedoras, cxp facturas conceptos). Hooks sin `beforeEach` (`useTiposContenedor`, `useSentry`, `useClienteDetalleController`) ahora hacen `vi.clearAllMocks()`. `useClienteDetalleController` ahora verifica que `mutateAsync` y `notifySuccess` fueron llamados (antes sólo checaba un cierre de modal). `vendedoras.test.ts` afirma `expect(call).toBeDefined()` antes de leer `.ops` (evita TypeError). `validarDatosTimbradoRep.test.ts` agrega `expect(checks.length).toBeGreaterThan(0)` (antes pasaba con array vacío). `cotizacionDetalle.test.ts` envuelve `mockRestore` de `console.warn` en `try/finally` (antes leak si el assertion fallaba). `queryClient.sentry.test.ts` reemplaza `setTimeout(0)` con polling 40×5ms del `captureException` (evita flake cuando el `import()` dinámico tarda >0ms).
 
