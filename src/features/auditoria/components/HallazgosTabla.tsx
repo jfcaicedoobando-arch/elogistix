@@ -6,6 +6,7 @@ import { CheckCircle2, ExternalLink, UserPlus, UserCheck, AlertTriangle } from "
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { cn } from "@/lib/utils";
 import { revisionKey } from "@/features/auditoria/hooks";
@@ -25,6 +26,11 @@ interface Props {
   currentUserId?: string | null;
   onMarcarRevisado: (h: HallazgoAuditoria) => void;
   onAsignarResponsable: (h: HallazgoAuditoria) => void;
+  // Selección múltiple
+  selectedIds: Set<string>;
+  selectablesEnPagina: string[];
+  onToggleSelected: (id: string) => void;
+  onToggleAllVisible: () => void;
 }
 
 function isVencida(fechaLimite: string | null): boolean {
