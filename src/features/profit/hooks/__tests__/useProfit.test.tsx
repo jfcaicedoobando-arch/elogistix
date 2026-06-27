@@ -50,9 +50,14 @@ describe('useEstadoResultados', () => {
     mockFetchERDevengado.mockReset().mockResolvedValue(erDevengado);
   });
 
-  const wrapper = ({ children }: { children: React.ReactNode }) => {
+  // v13.137.35: `createWrapper()` debe ejecutarse UNA vez por test (no por render).
+  // Antes se invocaba dentro del cuerpo del componente wrapper, creando un nuevo
+  // tipo de componente en cada render → React desmonta/remonta y las queries
+  // duplican `mockFetchER` rompiendo `toHaveBeenCalledTimes(1)`. Además sobrescribía
+  // `globalThis.__TEST_QUERY_CLIENT__` rompiendo `cleanupGlobalQueryClient`.
+  const makeWrapper = () => {
     const QueryWrapper = createWrapper();
-    return (
+    return ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter>
         <QueryWrapper>{children}</QueryWrapper>
       </MemoryRouter>
@@ -60,7 +65,7 @@ describe('useEstadoResultados', () => {
   };
 
   it('llama a fetchEstadoResultadosMes por defecto (fuente=embarques) con organizationId', async () => {
-    const { result } = renderHook(() => useEstadoResultados(), { wrapper });
+    const { result } = renderHook(() => useEstadoResultados(), { wrapper: makeWrapper() });
     await waitFor(() => expect(mockFetchER).toHaveBeenCalledTimes(1));
     expect(mockFetchER.mock.calls[0][0]).toMatchObject({ organizationId: 'org-1' });
     expect(mockFetchERDevengado).not.toHaveBeenCalled();
@@ -69,7 +74,7 @@ describe('useEstadoResultados', () => {
   });
 
   it('cambia a fuente=facturas e invoca fetchEstadoResultadosDevengado', async () => {
-    const { result } = renderHook(() => useEstadoResultados(), { wrapper });
+    const { result } = renderHook(() => useEstadoResultados(), { wrapper: makeWrapper() });
     await waitFor(() => expect(mockFetchER).toHaveBeenCalled());
 
     // v13.137.24: `await act` para que React 18 flushee el re-render y la
