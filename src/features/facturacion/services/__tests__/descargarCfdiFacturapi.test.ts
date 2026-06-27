@@ -110,11 +110,21 @@ describe("descargarCfdiFacturapi", () => {
     );
     const createObjectURL = vi.fn().mockReturnValue("blob:url");
     const revokeObjectURL = vi.fn();
-    Object.assign(URL, { createObjectURL, revokeObjectURL });
+    // Auditoría 13.137.31: `Object.assign(URL, ...)` sin restauración dejaba los
+    // métodos reemplazados para el resto del shard. Guardado/restauración explícita.
+    const origCreate = URL.createObjectURL;
+    const origRevoke = URL.revokeObjectURL;
+    URL.createObjectURL = createObjectURL;
+    URL.revokeObjectURL = revokeObjectURL;
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-    await descargarCfdiFacturapi({ tipo: "pdf", facturaId: "f1" });
-    expect(createObjectURL).toHaveBeenCalled();
-    expect(clickSpy).toHaveBeenCalled();
-    clickSpy.mockRestore();
+    try {
+      await descargarCfdiFacturapi({ tipo: "pdf", facturaId: "f1" });
+      expect(createObjectURL).toHaveBeenCalled();
+      expect(clickSpy).toHaveBeenCalled();
+    } finally {
+      URL.createObjectURL = origCreate;
+      URL.revokeObjectURL = origRevoke;
+      clickSpy.mockRestore();
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
@@ -14,19 +14,26 @@ vi.mock("@/hooks/shared", () => ({
 
 import { useEmbarqueDetalleTracking } from "../useEmbarqueDetalleTracking";
 
-Object.assign(navigator, {
-  clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
-});
+// Auditoría 13.137.31 (barrido de mutaciones globales): el `Object.assign(navigator, ...)`
+// a nivel módulo dejaba `navigator.clipboard` parcheado para TODOS los archivos posteriores
+// del shard bajo singleFork. Migrado a `vi.stubGlobal("navigator", ...)` por test, con
+// `vi.unstubAllGlobals()` en afterEach para restauración garantizada.
+const clipboardWriteMock = vi.fn().mockResolvedValue(undefined);
 
 beforeEach(() => {
   mockCreateLink.mockReset();
-  vi.mocked(navigator.clipboard.writeText).mockReset();
+  clipboardWriteMock.mockReset();
+  clipboardWriteMock.mockResolvedValue(undefined);
+  vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText: clipboardWriteMock } });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("useEmbarqueDetalleTracking", () => {
   it("crea enlace y lo copia al portapapeles", async () => {
     mockCreateLink.mockResolvedValue({ id: "tl-1", embarque_id: "e-1", token: "tok-xyz", expires_at: null });
-    vi.mocked(navigator.clipboard.writeText).mockResolvedValue(undefined);
     const { result } = renderHook(() => useEmbarqueDetalleTracking("e-1"), {
       wrapper: createWrapper(),
     });
@@ -34,7 +41,7 @@ describe("useEmbarqueDetalleTracking", () => {
       await result.current.handleCompartirTracking();
     });
     expect(mockCreateLink).toHaveBeenCalledWith({ embarqueId: "e-1" });
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+    expect(clipboardWriteMock).toHaveBeenCalledWith(
       expect.stringContaining("tok-xyz"),
     );
   });
