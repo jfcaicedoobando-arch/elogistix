@@ -33,6 +33,12 @@ export function HallazgosTablaPaginada({
   const state = useHallazgosTablaState(hallazgos, mostrarRevisadosDefault, initialFilters);
   const [dialogHallazgo, setDialogHallazgo] = useState<HallazgoAuditoria | null>(null);
   const [asignarHallazgo, setAsignarHallazgo] = useState<HallazgoAuditoria | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+
+  const hallazgosSeleccionados = useMemo(
+    () => state.visibles.filter((h) => state.selectedIds.has(revisionKey(h))),
+    [state.visibles, state.selectedIds],
+  );
 
   return (
     <div className="space-y-3">
@@ -60,6 +66,12 @@ export function HallazgosTablaPaginada({
         limpiar={state.limpiar}
       />
 
+      <HallazgosBulkBar
+        count={state.selectedIds.size}
+        onMarcar={() => setBulkOpen(true)}
+        onLimpiar={state.clearSelection}
+      />
+
       <HallazgosTabla
         visibles={state.visibles}
         start={state.start}
@@ -67,7 +79,19 @@ export function HallazgosTablaPaginada({
         currentUserId={user?.id ?? null}
         onMarcarRevisado={setDialogHallazgo}
         onAsignarResponsable={setAsignarHallazgo}
+        selectedIds={state.selectedIds}
+        selectablesEnPagina={state.selectablesEnPagina}
+        onToggleSelected={state.toggleSelected}
+        onToggleAllVisible={state.toggleAllVisible}
       />
+
+      <MarcarRevisadosBulkDialog
+        open={bulkOpen}
+        hallazgos={hallazgosSeleccionados}
+        onOpenChange={setBulkOpen}
+        onSuccess={state.clearSelection}
+      />
+
 
       <MarcarRevisadoDialog
         hallazgo={dialogHallazgo}
